@@ -9,26 +9,7 @@
 namespace GN { namespace gfx2
 {
     class D3D9GraphicsSystem;
-
-    ///
-    /// d3d9 effect port type
-    ///
-    enum D3D9SurfaceType
-    {
-        //@{
-        SURFACE_TYPE_VB,
-        SURFACE_TYPE_IB,
-        SURFACE_TYPE_TEX_2D,
-        SURFACE_TYPE_TEX_3D,
-        SURFACE_TYPE_TEX_CUBE,
-        SURFACE_TYPE_RTT_2D,    ///< 2D render target texture
-        SURFACE_TYPE_RTT_CUBE,  ///< 2D cube texture
-        SURFACE_TYPE_RTS_COLOR, ///< render target surface
-        SURFACE_TYPE_RTS_DEPTH, ///< depth stencil surface
-        SURFACE_TYPE_BACKBUF,   ///< backbuffer
-        SURFACE_TYPE_ANY = -1,  ///< indicate any kind of surfaces.
-        //@}
-    };
+    class D3D9Effect;
 
     ///
     /// D3D9 effect port descriptor
@@ -42,10 +23,74 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// D3D9 effect port class
+    ///
+    //@{
+    class GN_GFX2_D3D9_PUBLIC D3D9EffectPort
+    {
+    protected:
+
+        D3D9EffectPortDesc mDesc; ///< port descriptor
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9EffectPort() {}
+
+        ///
+        /// get descriptor
+        ///
+        const D3D9EffectPortDesc & getDesc() const { return mDesc; }
+
+        ///
+        /// check surface compatility
+        ///
+        virtual bool compatible( const Surface * surf ) const = 0;
+
+        ///
+        /// bind surface to device
+        ///
+        virtual void bind( const EffectPortBinding & ) = 0;
+    };
+
+    class GN_GFX2_D3D9_PUBLIC D3D9RenderTargetPort : public D3D9EffectPort
+    {
+    public:
+
+        //@{
+        virtual bool compatible( const Surface * surf ) const;
+        virtual void bind( const EffectPortBinding & );
+        //@}
+    };
+
+    class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9EffectPort
+    {
+        //@{
+        virtual bool compatible( const Surface * surf ) const;
+        virtual void bind( const EffectPortBinding & );
+        //@}
+    };
+
+    class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9EffectPort {};
+    class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9EffectPort {};
+    class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9EffectPort {};
+    //@}
+
+    ///
     /// base D3D9 effect binding
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9EffectBinding
     {
+        struct BindItem
+        {
+            D3D9EffectPort  * port;
+            EffectPortBinding bind;
+        };
+
+        DynaArray<BindItem> mBindItems;
+
     public:
 
         ///
@@ -61,12 +106,12 @@ namespace GN { namespace gfx2
         ///
         /// binding setup
         ///
-        bool setup( const EffectBindingDesc & ebd );
+        bool setup( D3D9Effect & effect, const EffectBindingDesc & ebd );
 
         ///
         /// apply binding to rendering device
         ///
-        void apply();
+        void apply() const;
     };
 
     ///
@@ -75,13 +120,12 @@ namespace GN { namespace gfx2
     struct GN_GFX2_D3D9_PUBLIC D3D9EffectDesc : public EffectDesc
     {
         //@{
-        typedef std::map<StrA,D3D9EffectPortDesc>  PortDescContainer;
-        typedef std::map<StrA,EffectParameterDesc> ParameterValueDescContainer;
+        typedef std::map<StrA,EffectParameterDesc> ParameterDescContainer;
         //@}
 
         //@{
-        PortDescContainer           ports;
-        ParameterValueDescContainer parameters;
+        D3D9Effect           * effect;
+        ParameterDescContainer parameters;
         //@}
 
         //@{
@@ -100,7 +144,12 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs) {}
+        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs) { mDesc.effect = this; }
+
+        ///
+        /// get D3D9 graphic system
+        ///
+        D3D9GraphicsSystem & d3d9gs() const { return (D3D9GraphicsSystem&)gs(); }
 
         /// \name from Effect
         //@{
@@ -111,15 +160,35 @@ namespace GN { namespace gfx2
         virtual void               bind( EffectBinding );
         //@}
 
+        //@{
+        const D3D9EffectPort * getPort( const StrA & name ) const;
+        D3D9EffectPort * getPort( const StrA & name );
+        //@}
+
     protected:
 
-        D3D9EffectDesc mDesc;     ///< effect descriptor
+        //@{
+
+        ///
+        /// \note D3D9Effect class does _NOT_ hold the ownership of the port instance.
+        ///
+        void addPortRef( const StrA & name, D3D9EffectPort * port );
+
+        ///
+        /// \note D3D9Effect class will hold a copy of the input parmeter descriptor
+        ///
+        EffectParameterHandle addParameter( const StrA & name, const EffectParameterDesc & param );
+
+        //@}
 
     private:
 
-        typedef HandleManager<D3D9EffectBinding*,EffectBinding> EffectBindingManager;
+        typedef NamedHandleManager<D3D9EffectPort*,UInt32> PortContainer;
+        typedef HandleManager<D3D9EffectBinding*,EffectBinding> EffectBindingContainer;
 
-        EffectBindingManager mBindings; ///< bindings
+        D3D9EffectDesc         mDesc;
+        PortContainer          mPorts;
+        EffectBindingContainer mBindings;
     };
 }}
 

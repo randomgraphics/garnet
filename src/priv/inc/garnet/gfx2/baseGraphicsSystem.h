@@ -13,8 +13,9 @@ namespace GN { namespace gfx2
     ///
     /// structure to hold effect parameter value
     ///
-    class EffectParameterContainer : public EffectParameter
+    class EffectParameterContainer
     {
+        EffectParameter  mParam;
         DynaArray<UInt8> mData;
 
     public:
@@ -22,33 +23,46 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        EffectParameterContainer( const EffectParameter & v )
+        EffectParameterContainer()
         {
-            *this = v;
+            unset();
         }
 
         ///
-        /// assignment
+        /// check if parameter has valid value
         ///
-        EffectParameterContainer & operator=( const EffectParameter & v )
+        bool empty() const { return EFFECT_PARAMETER_TYPE_UNKNOWN == mParam.type; }
+
+        ///
+        /// get parameter
+        ///
+        const EffectParameter & get() const { GN_ASSERT(!empty()); return mParam; }
+
+        ///
+        /// set parameter
+        ///
+        void set( const EffectParameter & v )
         {
-            ((EffectParameter&)*this) = v;
+            mParam = v;
 
             if( EFFECT_PARAMETER_TYPE_STRING == v.type )
             {
                 mData.resize( strLen( v.str ) );
                 memcpy( mData.cptr(), v.str, mData.size() );
-                str = (const char *)mData.cptr();
+                mParam.str = (const char *)mData.cptr();
             }
             else if( EFFECT_PARAMETER_TYPE_RAW == v.type )
             {
                 mData.resize( v.raw.bytes );
                 memcpy( mData.cptr(), v.raw.ptr, mData.size() );
-                raw.ptr = mData.cptr();
+                mParam.raw.ptr = mData.cptr();
             }
-
-            return *this;
         }
+
+        ///
+        /// clear to empty
+        ///
+        void unset() { mParam.type = EFFECT_PARAMETER_TYPE_UNKNOWN; }
     };
 
     ///
@@ -70,8 +84,9 @@ namespace GN { namespace gfx2
 
         /// \name from Effect
         //@{
-        virtual void setParameter( const StrA & name, const EffectParameter & value );
-        virtual void unsetParameter( const StrA & name );
+        virtual EffectParameterHandle getParameterHandle( const StrA & name ) const;
+        virtual void                  setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void                  unsetParameter( EffectParameterHandle handle );
         //@}
 
     protected:
@@ -79,30 +94,18 @@ namespace GN { namespace gfx2
         ///
         /// get parameter value
         ///
-        const EffectParameter * getParameter( const StrA & name ) const
-        {
-            GN_GUARD_SLOW;
-
-            UInt32 h = mParameters.name2handle( name );
-
-            if( h )
-            {
-                return &mParameters[h];
-            }
-            else
-            {
-                return mGraphicsSystem.getGlobalEffectParameter( name );
-            }
-
-            GN_UNGUARD_SLOW;
-        }
+        const EffectParameter * getParameter( EffectParameterHandle handle ) const;
 
     private:
 
-        typedef NamedHandleManager<EffectParameterContainer,UInt32> EffectParameterManager;
+        struct ParameterItem
+        {
+            EffectParameterContainer param;
+            EffectParameterHandle    global;
+        };
 
-        GraphicsSystem       & mGraphicsSystem;
-        EffectParameterManager mParameters;
+        GraphicsSystem                                        & mGraphicsSystem;
+        NamedHandleManager<ParameterItem,EffectParameterHandle> mParameters;
     };
 
     ///
@@ -141,13 +144,15 @@ namespace GN { namespace gfx2
 
         //@{
 
-        virtual void setGlobalEffectParameter( const StrA & name, const EffectParameter & value );
-        virtual void unsetGlobalEffectParameter( const StrA & name );
-        virtual const EffectParameter * getGlobalEffectParameter( const StrA & name );
-        virtual void registerEffect( const StrA & name, const EffectFactory & );
+        virtual EffectParameterHandle   getGlobalEffectParameterHandle( const StrA & name );
+        virtual void                    setGlobalEffectParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void                    unsetGlobalEffectParameter( EffectParameterHandle handle );
+        virtual const EffectParameter * getGlobalEffectParameter( EffectParameterHandle handle );
+
+        virtual void     registerEffect( const StrA & name, const EffectFactory & );
         virtual Effect * getEffect( const StrA & name );
-        virtual void deleteEffect( const StrA & name );
-        virtual void deleteAllEffects();
+        virtual void     deleteEffect( const StrA & name );
+        virtual void     deleteAllEffects();
 
         //@}
 
@@ -162,8 +167,8 @@ namespace GN { namespace gfx2
             Effect *      instance;
         };
 
-        NamedHandleManager<EffectParameterContainer,UInt32> mGlobalEffectParameters;
-        NamedHandleManager<EffectItem,UInt32>               mEffects;
+        NamedHandleManager<EffectParameterContainer,EffectParameterHandle> mGlobalEffectParameters;
+        NamedHandleManager<EffectItem,UInt32>                              mEffects;
 
         // ********************************
         // private functions

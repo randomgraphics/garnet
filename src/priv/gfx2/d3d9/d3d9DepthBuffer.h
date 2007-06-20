@@ -13,10 +13,9 @@ namespace GN { namespace gfx2
     ///
     class D3D9DepthBuffer : public D3D9Surface
     {
-        SurfaceDesc         mDesc;
         IDirect3DSurface9 * mSurface;
 
-        D3D9DepthBuffer( const SurfaceDesc & desc ) : mDesc(desc), mSurface(0) {}
+        D3D9DepthBuffer( const D3D9SurfaceDesc & desc ) : D3D9Surface(desc), mSurface(0) {}
 
     public:
 
@@ -32,9 +31,6 @@ namespace GN { namespace gfx2
             const SurfaceLayoutTemplate & templ,
             int                           access,
             const SurfaceCreationHints  & hints );
-
-        // from effect
-        virtual const SurfaceDesc & getDesc() const { return mDesc; }
     };
 }}
 

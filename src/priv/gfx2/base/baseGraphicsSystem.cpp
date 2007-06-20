@@ -47,21 +47,19 @@ void GN::gfx2::BaseGraphicsSystem::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseGraphicsSystem::setGlobalEffectParameter(
-    const StrA & name, const EffectParameter & value )
+GN::gfx2::EffectParameterHandle
+GN::gfx2::BaseGraphicsSystem::getGlobalEffectParameterHandle( const StrA & name )
 {
     GN_GUARD;
 
-    UInt32 h = mGlobalEffectParameters.name2handle( name );
-
+    EffectParameterHandle h = mGlobalEffectParameters.name2handle( name );
+    
     if( 0 == h )
     {
-        mGlobalEffectParameters.add( name, value );
+        h = mGlobalEffectParameters.add( name );
     }
-    else
-    {
-        mGlobalEffectParameters[h] = value;
-    }
+
+    return h;
 
     GN_UNGUARD;
 }
@@ -69,42 +67,59 @@ void GN::gfx2::BaseGraphicsSystem::setGlobalEffectParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseGraphicsSystem::unsetGlobalEffectParameter( const StrA & name )
+void GN::gfx2::BaseGraphicsSystem::setGlobalEffectParameter(
+    EffectParameterHandle handle, const EffectParameter & value )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
-    UInt32 h = mGlobalEffectParameters.name2handle( name );
-    if( h )
+    if( !mGlobalEffectParameters.validHandle( handle ) )
     {
-        mGlobalEffectParameters.remove( h );
-    }
-    else
-    {
-        GN_WARN(sLogger)( "parameter named '%s' does not exist.", name.cptr() );
+        GN_ERROR(sLogger)( "invalid global effect parameter handle : %d", handle );
+        return;
     }
 
-    GN_UNGUARD;
+    mGlobalEffectParameters[handle].set( value );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::BaseGraphicsSystem::unsetGlobalEffectParameter( EffectParameterHandle handle )
+{
+    GN_GUARD_SLOW;
+
+    if( !mGlobalEffectParameters.validHandle( handle ) )
+    {
+        GN_ERROR(sLogger)( "invalid global effect parameter handle : %d", handle );
+        return;
+    }
+
+    mGlobalEffectParameters[handle].unset();
+
+    GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 const GN::gfx2::EffectParameter *
-GN::gfx2::BaseGraphicsSystem::getGlobalEffectParameter( const StrA & name )
+GN::gfx2::BaseGraphicsSystem::getGlobalEffectParameter( EffectParameterHandle handle )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
-    UInt32 h = mGlobalEffectParameters.name2handle( name );
-
-    if( 0 == h )
+    if( !mGlobalEffectParameters.validHandle( handle ) )
     {
-        GN_ERROR(sLogger)( "parameter named '%s' does not exist.", name.cptr() );
+        GN_ERROR(sLogger)( "invalid global effect parameter handle : %d", handle );
         return 0;
     }
 
-    return &mGlobalEffectParameters[h];
+    EffectParameterContainer & c = mGlobalEffectParameters[handle];
 
-    GN_UNGUARD;
+    return c.empty() ? 0 : &c.get();
+
+    GN_UNGUARD_SLOW;
 }
 
 //

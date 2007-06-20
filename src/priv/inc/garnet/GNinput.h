@@ -267,7 +267,9 @@ namespace GN
             virtual void processInputEvents() = 0;
 
             ///
-            /// get the latest key event from event queue, then pop it out of event queue
+            /// get the latest key event from event queue, then pop it out of event queue.
+            ///
+            /// Return a empty event, if there's no more events in event queue.
             ///
             virtual KeyEvent popLastKeyEvent() = 0;
 

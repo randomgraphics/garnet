@@ -267,7 +267,7 @@ namespace GN
     ///
     /// expension to HandleManager class, that object can be referenced by both handle and name.
     ///
-    template< class T, class H>
+    template< class T, class H, bool CASE_INSENSITIVE = false>
     class NamedHandleManager
     {
         typedef std::map<StrA,H> NameMap;
@@ -346,6 +346,11 @@ namespace GN
         ///
         H add( const StrA & name )
         {
+            if( CASE_INSENSITIVE )
+            {
+                GN_UNIMPL();
+            }
+
             if( mNames.end() != mNames.find( name ) )
             {
                 GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
@@ -367,6 +372,11 @@ namespace GN
         ///
         H add( const StrA & name, const T & data )
         {
+            if( CASE_INSENSITIVE )
+            {
+                GN_UNIMPL();
+            }
+
             if( mNames.end() != mNames.find( name ) )
             {
                 GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
@@ -403,6 +413,11 @@ namespace GN
 
         void remove( const StrA & name )
         {
+            if( CASE_INSENSITIVE )
+            {
+                GN_UNIMPL();
+            }
+
             if( !validName( name ) )
             {
                 GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.cptr() );
@@ -420,12 +435,28 @@ namespace GN
             delete item;
         }
 
-        bool validHandle( H h ) const { return mItems.validHandle( h ); }
+        bool validHandle( H h ) const
+        {
+            return mItems.validHandle( h );
+        }
 
-        bool validName( const StrA & name ) const { return mNames.end() != mNames.find( name ); }
+        bool validName( const StrA & name ) const
+        {
+            if( CASE_INSENSITIVE )
+            {
+                GN_UNIMPL();
+            }
+
+            return mNames.end() != mNames.find( name );
+        }
 
         H name2handle( const StrA & name ) const
         {
+            if( CASE_INSENSITIVE )
+            {
+                GN_UNIMPL();
+            }
+
             NameMap::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
@@ -445,7 +476,10 @@ namespace GN
                 return mItems[h]->name;
         }
 
-        T & get( H h ) const { return mItems[h]->data; }
+        T & get( H h ) const
+        {
+            return mItems[h]->data;
+        }
 
         T & get( const StrA & name ) const
         {

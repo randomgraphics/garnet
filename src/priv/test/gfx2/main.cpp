@@ -1,14 +1,47 @@
 #include "pch.h"
 using namespace GN;
 using namespace GN::gfx2;
+using namespace GN::input;
 
-static bool quit = false;
+struct InputInitiator
+{
+    InputInitiator( GraphicsSystem * gs )
+    {
+        Input * i = createInputSystem();
+
+        const GraphicsSystemDesc & desc = gs->getDesc();
+
+        i->attachToWindow( desc.display, desc.window );
+    }
+
+    ~InputInitiator()
+    {
+        delete gInputPtr;
+    }
+};
 
 int run( GraphicsSystem & gs )
 {
-    while( !quit )
+    Input & i = gInput;
+
+    KeyEvent key;
+
+    Effect * clearEffect = gs.getEffect( "clear" );
+    if( 0 == clearEffect ) return -1;
+
+    clearEffect->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
+    clearEffect->setParameter( "DEPTH_VALUE", 1.0f );
+    clearEffect->setParameter( "STENCIL_VALUE", 0 );
+
+    while( true )
     {
-        gs.onFrame();
+        i.processInputEvents();
+        key = i.popLastKeyEvent();
+        if( key.status.down && KEY_ESCAPE == key.code ) break;
+
+        clearEffect->render();
+
+        gs.present();
     }
 
     return 0;
@@ -29,6 +62,8 @@ int main()
     GraphicsSystemCreator gs;
 
     if( !gs.create( gscp ) ) return -1;
+
+    InputInitiator input( gs.get() );
 
     return run( *gs.get() );
 }
