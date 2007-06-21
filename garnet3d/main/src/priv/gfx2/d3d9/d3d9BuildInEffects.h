@@ -13,7 +13,7 @@ namespace GN { namespace gfx2
     ///
     class D3D9ClearEffect : public D3D9Effect
     {
-        D3D9RenderTargetPort mColor0;
+        D3D9RenderTargetPort mTarget0;
         D3D9DepthBufferPort  mDepth;
 
         EffectParameterHandle mColorValue, mDepthValue, mStencilValue;
@@ -39,7 +39,7 @@ namespace GN { namespace gfx2
         D3D9ClearEffect( GraphicsSystem & gs ) : D3D9Effect(gs)
         {
             // setup ports
-            addPortRef( "COLOR0", &mColor0 );
+            addPortRef( "TARGET0", &mTarget0 );
             addPortRef( "DEPTH", &mDepth );
 
             // setup parameters
@@ -62,7 +62,6 @@ namespace GN { namespace gfx2
             //setParameter( mStencilValue, 0 );
          }
 
-        // from Effect
         virtual void render( const EffectParameterSet & param, EffectBinding binding )
         {
             GN_ASSERT( &param.getEffect() == (Effect*)this );
@@ -103,6 +102,59 @@ namespace GN { namespace gfx2
             }
 
             if( flags ) dev->Clear( 0, 0, flags, color, depth, stencil );
+        }
+    };
+
+    ///
+    /// build-in simple solid color effect
+    ///
+    class D3D9SolidColorEffect : public D3D9Effect
+    {
+        EffectParameterHandle mPvw;   ///< 4x4 matrix: project-view-world transformation
+        EffectParameterHandle mColor; ///< 4D float vector: [R,G,B,A]
+        D3D9RenderTargetPort  mTarget0;
+        D3D9DepthBufferPort   mDepth;
+        //D3D9VtxBufPort        mVtxBuf;
+        //D3D9IdxBufPort        mIdxBuf; ///< this is optional.
+
+        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9SolidColorEffect(gs); }
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9SolidColorEffect( GraphicsSystem & gs ) : D3D9Effect( gs )
+        {
+            // setup parameters
+            EffectParameterDesc p;
+
+            p.type  = EFFECT_PARAMETER_TYPE_FLOAT4X4;
+            p.count = 1;
+            mPvw    = addParameter( "PVW", p );
+
+            p.type  = EFFECT_PARAMETER_TYPE_FLOAT4;
+            p.count = 1;
+            mColor  = addParameter( "COLOR", p );
+
+            // setup ports
+            addPortRef( "TARGET0", &mTarget0 );
+            addPortRef( "DEPTH", &mDepth );
+            //addPortRef( "VTXBUF", &mVtxBuf );
+            //addPortRef( "IDXBUF", &mIdxBuf );
+        }
+
+        virtual void render( const EffectParameterSet & param, EffectBinding binding )
+        {
+            GN_ASSERT( &param.getEffect() == (Effect*)this );
+
+            applyBinding( binding );
+
+            const EffectParameter * m = param.getParameter( mPvw );
+            const EffectParameter * c = param.getParameter( mColor );
+
+            GN_UNUSED_PARAM( m );
+            GN_UNUSED_PARAM( c );
         }
     };
 }}

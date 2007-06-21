@@ -23,9 +23,8 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// D3D9 effect port class
+    /// base D3D9 effect port class
     ///
-    //@{
     class GN_GFX2_D3D9_PUBLIC D3D9EffectPort
     {
     protected:
@@ -55,6 +54,9 @@ namespace GN { namespace gfx2
         virtual void bind( const EffectPortBinding & ) = 0;
     };
 
+    ///
+    /// D3D9 render target port (accept render target texture)
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9RenderTargetPort : public D3D9EffectPort
     {
     public:
@@ -65,6 +67,9 @@ namespace GN { namespace gfx2
         //@}
     };
 
+    ///
+    /// D3D9 render target port (accept depth surface)
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9EffectPort
     {
         //@{
@@ -73,10 +78,20 @@ namespace GN { namespace gfx2
         //@}
     };
 
+    ///
+    /// D3D9 render target port (accepts texture)
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9EffectPort {};
+
+    ///
+    /// D3D9 render target port (accepts vertex buffer)
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9EffectPort {};
+
+    ///
+    /// D3D9 render target port (accept index buffer)
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9EffectPort {};
-    //@}
 
     ///
     /// base D3D9 effect binding
@@ -158,7 +173,7 @@ namespace GN { namespace gfx2
         ///
         /// apply port binding
         ///
-        void GN::gfx2::D3D9Effect::applyBinding( EffectBinding b )
+        void applyBinding( EffectBinding b )
         {
             GN_GUARD_SLOW;
 
