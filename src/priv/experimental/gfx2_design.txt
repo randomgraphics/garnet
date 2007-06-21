@@ -77,6 +77,23 @@ RESOLVED USER SCENARIOS
   rendering quality.
   - bad design. effects should control quality by themselves.
 
+- multi-pass rendering:
+	 for( each pass of a effect )
+	 {
+	  	draw_mesh_1();
+	  	draw_mesh_2();
+	  	...
+	 }
+
+	 can be refactored to this:
+
+	 for( each effect in a effect group ) // treat each pass as a effect
+	 {
+	  	draw_mesh_1();
+	  	draw_mesh_2();
+	  	...
+	 }
+
 OPENED USER SCENARIOS
 =====================
 
