@@ -13,7 +13,7 @@ namespace GN { namespace gfx2
     ///
     /// structure to hold effect parameter value
     ///
-    class EffectParameterContainer
+    class EffectParameterWrapper
     {
         EffectParameter  mParam;
         DynaArray<UInt8> mData;
@@ -23,7 +23,7 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        EffectParameterContainer()
+        EffectParameterWrapper()
         {
             unset();
         }
@@ -84,9 +84,10 @@ namespace GN { namespace gfx2
 
         /// \name from Effect
         //@{
-        virtual EffectParameterHandle getParameterHandle( const StrA & name ) const;
-        virtual void                  setParameter( EffectParameterHandle handle, const EffectParameter & value );
-        virtual void                  unsetParameter( EffectParameterHandle handle );
+        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const;
+        virtual EffectParameterHandle       getParameterHandle( const StrA & name ) const;
+        virtual void                        setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void                        unsetParameter( EffectParameterHandle handle );
         //@}
 
     protected:
@@ -96,12 +97,18 @@ namespace GN { namespace gfx2
         ///
         const EffectParameter * getParameter( EffectParameterHandle handle ) const;
 
+        ///
+        /// \note add parameter. Normallly called in constructor
+        ///
+        EffectParameterHandle addParameter( const StrA & name, const EffectParameterDesc & param );
+
     private:
 
         struct ParameterItem
         {
-            EffectParameterContainer param;
-            EffectParameterHandle    global;
+            EffectParameterDesc    desc;
+            EffectParameterWrapper param;
+            EffectParameterHandle  global;
         };
 
         GraphicsSystem                                        & mGraphicsSystem;
@@ -167,8 +174,8 @@ namespace GN { namespace gfx2
             Effect *      instance;
         };
 
-        NamedHandleManager<EffectParameterContainer,EffectParameterHandle> mGlobalEffectParameters;
-        NamedHandleManager<EffectItem,UInt32>                              mEffects;
+        NamedHandleManager<EffectParameterWrapper,EffectParameterHandle> mGlobalEffectParameters;
+        NamedHandleManager<EffectItem,UInt32>                            mEffects;
 
         // ********************************
         // private functions

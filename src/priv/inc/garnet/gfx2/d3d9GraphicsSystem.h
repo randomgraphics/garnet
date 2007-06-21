@@ -128,13 +128,6 @@ namespace GN { namespace gfx2
             }
         }
 
-        const D3D9EffectDesc * getEffectDesc( const StrA & name )
-        {
-            Effect * e = getEffect( name );
-            if( 0 == e ) return 0;
-            return (const D3D9EffectDesc*)&e->getDesc();
-        }
-
         bool handleDeviceLost();
     };
 

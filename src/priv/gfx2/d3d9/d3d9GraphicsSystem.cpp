@@ -531,10 +531,10 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     {
         const SurfaceCreationParameter::EffectBinding & eb = scp.bindings[i];
 
-        const D3D9EffectDesc * desc = getEffectDesc( eb.effect );
-        if( 0 == desc ) return 0;
+        const D3D9Effect * effect = safeCast<const D3D9Effect*>( getEffect( eb.effect ) );
+        if( 0 == effect ) return 0;
 
-        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)desc->getPortDesc( eb.port );
+        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)effect->getPortDesc( eb.port );
         if( 0 == port ) return 0;
 
         // merge layout template

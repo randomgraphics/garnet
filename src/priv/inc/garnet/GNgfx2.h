@@ -373,17 +373,6 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// effect descriptor: describe public interface of the effect
-    ///
-    struct EffectDesc : public NoCopy
-    {
-        //@{
-        virtual const EffectPortDesc      * getPortDesc( const StrA & name ) const = 0;
-        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const = 0;
-        //@}
-    };
-
-    ///
     /// Effect parameter
     ///
     struct EffectParameter
@@ -466,10 +455,16 @@ namespace GN { namespace gfx2
     ///
     struct Effect : public NoCopy
     {
+        /// \name effect descriptions
+        //@{
+
         ///
         /// get effect descriptor
         ///
-        virtual const EffectDesc & getDesc() const = 0;
+        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const = 0;
+        virtual const EffectPortDesc      * getPortDesc( const StrA & name ) const = 0;
+
+        //@}
 
         /// \name parameter management
         //@{
