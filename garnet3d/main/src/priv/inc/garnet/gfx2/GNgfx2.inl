@@ -1,17 +1,17 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx2::Effect::setParameter( const StrA & name, const EffectParameter & value )
+inline void GN::gfx2::EffectParameterSet::setParameter( const StrA & name, const EffectParameter & value )
 {
-    EffectParameterHandle h = getParameterHandle( name );
+    EffectParameterHandle h = mEffect.getParameterHandle( name );
     if( h ) setParameter( h, value );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx2::Effect::unsetParameter( const StrA & name )
+inline void GN::gfx2::EffectParameterSet::unsetParameter( const StrA & name )
 {
-    EffectParameterHandle h = getParameterHandle( name );
+    EffectParameterHandle h = mEffect.getParameterHandle( name );
     if( h ) unsetParameter( h );
 }

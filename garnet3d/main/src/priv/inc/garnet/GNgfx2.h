@@ -422,6 +422,34 @@ namespace GN { namespace gfx2
     ///
     typedef UIntPtr EffectParameterHandle;
 
+    struct Effect;
+
+    ///
+    /// effect parameter set
+    ///
+    struct EffectParameterSet : public NoCopy
+    {
+        //@{
+        inline  Effect                & getEffect() const { return mEffect; }
+        virtual const EffectParameter * getParameter( EffectParameterHandle ) const = 0;
+        virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
+        inline  void                    setParameter( const StrA & name, const EffectParameter & value );
+        virtual void                    unsetParameter( EffectParameterHandle handle ) = 0;
+        inline  void                    unsetParameter( const StrA & name );
+        //@}
+
+    protected:
+
+        ///
+        /// ctor
+        ///
+        EffectParameterSet( Effect & e ) : mEffect( e ) {}
+
+    private:
+
+        Effect & mEffect;
+    };
+
     ///
     /// describe binding a surface to specific effect port.
     ///
@@ -470,10 +498,7 @@ namespace GN { namespace gfx2
         //@{
 
         virtual EffectParameterHandle getParameterHandle( const StrA & name ) const = 0;
-        virtual void                  setParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
-        inline  void                  setParameter( const StrA & name, const EffectParameter & value );
-        virtual void                  unsetParameter( EffectParameterHandle handle ) = 0;
-        inline  void                  unsetParameter( const StrA & name );
+        virtual EffectParameterSet *  createParameterSet() = 0;
 
         //@}
 
@@ -483,15 +508,15 @@ namespace GN { namespace gfx2
         virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
         virtual EffectBinding createBinding( const EffectBindingDesc & ) = 0;
         virtual void          deleteBinding( EffectBinding ) = 0;
-        virtual void          bind( EffectBinding ) = 0;
-        inline  void          bind( const EffectBindingDesc & ebd ) { bind( createBinding( ebd ) ); }
 
         //@}
 
         ///
-        /// do rendering, using the effect and current binding.
+        /// do rendering, with user defined parameter set and binding.
         ///
-        virtual void render() = 0;
+        /// Note that some effects may accept '0' as valid binding
+        ///
+        virtual void render( const EffectParameterSet &, EffectBinding ) = 0;
     };
 
     // *************************************************************************

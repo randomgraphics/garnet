@@ -4,7 +4,81 @@
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseEffect");
 
 // *****************************************************************************
-// public methods
+// BaseEffectParameterSet
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx2::EffectParameter *
+GN::gfx2::BaseEffectParameterSet::getParameter( EffectParameterHandle handle ) const
+{
+    GN_GUARD_SLOW;
+
+    BaseEffect & e = (BaseEffect&)getEffect();
+
+    size_t idx;
+    if( !e.getParameterIndex( idx, handle ) ) return 0;
+
+    GN_ASSERT( idx < mParameters.size() );
+
+    const EffectParameterWrapper & p = mParameters[idx];
+
+    if( p.empty() )
+    {
+        return e.getGlobalParameterByIndex( idx );
+    }
+    else
+    {
+        return &p.get();
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::BaseEffectParameterSet::setParameter(
+    EffectParameterHandle handle, const EffectParameter & value )
+{
+    GN_GUARD_SLOW;
+
+    BaseEffect & e = (BaseEffect&)getEffect();
+
+    size_t idx;
+    if( !e.getParameterIndex( idx, handle ) ) return;
+
+    GN_ASSERT( idx < mParameters.size() );
+
+    mParameters[idx].set( value );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::BaseEffectParameterSet::unsetParameter( EffectParameterHandle handle )
+{
+    GN_GUARD_SLOW;
+
+    BaseEffect & e = (BaseEffect&)getEffect();
+
+    size_t idx;
+    if( !e.getParameterIndex( idx, handle ) ) return;
+
+    GN_ASSERT( idx < mParameters.size() );
+
+    mParameters[idx].unset();
+
+    GN_UNGUARD_SLOW;
+}
+
+
+// *****************************************************************************
+// BaseEffect
 // *****************************************************************************
 
 //
@@ -15,7 +89,7 @@ GN::gfx2::BaseEffect::getParameterDesc( const StrA & name ) const
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameters.name2handle( name );
+    EffectParameterHandle h = mParameterHandles.name2handle( name );
 
     if( 0 == h )
     {
@@ -23,7 +97,7 @@ GN::gfx2::BaseEffect::getParameterDesc( const StrA & name ) const
         return 0;
     }
 
-    return &mParameters[h].desc;
+    return &mParameters[mParameterHandles[h]].desc;
 
     GN_UNGUARD;
 }
@@ -36,7 +110,7 @@ GN::gfx2::BaseEffect::getParameterHandle( const StrA & name ) const
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameters.name2handle( name );
+    EffectParameterHandle h = mParameterHandles.name2handle( name );
 
     if( 0 == h )
     {
@@ -51,38 +125,13 @@ GN::gfx2::BaseEffect::getParameterHandle( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffect::setParameter(
-    EffectParameterHandle handle, const EffectParameter & value )
+GN::gfx2::EffectParameterSet * GN::gfx2::BaseEffect::createParameterSet()
 {
-    GN_GUARD_SLOW;
+    GN_GUARD;
 
-    if( !mParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid arameter handle: %d", handle );
-        return;
-    }
+    return new BaseEffectParameterSet( *this, mParameters.size() );
 
-    mParameters[handle].param.set( value );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffect::unsetParameter( EffectParameterHandle handle )
-{
-    GN_GUARD_SLOW;
-
-    if( !mParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid arameter handle: %d", handle );
-        return;
-    }
-
-    mParameters[handle].param.unset();
-
-    GN_UNGUARD_SLOW;
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
@@ -92,39 +141,12 @@ void GN::gfx2::BaseEffect::unsetParameter( EffectParameterHandle handle )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectParameter * GN::gfx2::BaseEffect::getParameter( EffectParameterHandle handle ) const
-{
-    GN_GUARD_SLOW;
-
-    if( !mParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid arameter handle: %d", handle );
-        return 0;
-    }
-
-    const ParameterItem & pi = mParameters[handle];
-
-    if( pi.param.empty() )
-    {
-        return mGraphicsSystem.getGlobalEffectParameter( pi.global );
-    }
-    else
-    {
-        return &pi.param.get();
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx2::EffectParameterHandle
 GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc & desc )
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameters.name2handle( name );
+    EffectParameterHandle h = mParameterHandles.name2handle( name );
 
     if( h )
     {
@@ -133,12 +155,19 @@ GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc
         return 0;
     }
 
-    h = mParameters.add( name );
+    size_t index = mParameters.size();
 
-    ParameterItem & pi = mParameters[h];
+    mParameters.resize( mParameters.size() + 1 );
 
-    GN_ASSERT( pi.param.empty() );
+    h = mParameterHandles.add( name, index );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "fail to create handle form parameter '%s'.", name.cptr() );
+        mParameters.popBack();
+        return 0;
+    }
 
+    ParameterItem & pi = mParameters.back();
     pi.desc   = desc;
     pi.global = mGraphicsSystem.getGlobalEffectParameterHandle( name );
 

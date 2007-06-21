@@ -66,6 +66,32 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// base effect parameter set
+    ///
+    class BaseEffectParameterSet : public EffectParameterSet
+    {
+        DynaArray<EffectParameterWrapper> mParameters;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        BaseEffectParameterSet( Effect & e, size_t count )
+            : EffectParameterSet( e )
+            , mParameters( count )
+        {
+        }
+
+        /// \name from parent class
+        //@{
+        virtual const EffectParameter * getParameter( EffectParameterHandle handle ) const;
+        virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void                    unsetParameter( EffectParameterHandle handle );
+        //@}
+    };
+
+    ///
     /// base effect class
     ///
     class BaseEffect : public Effect
@@ -82,20 +108,38 @@ namespace GN { namespace gfx2
         ///
         GraphicsSystem & gs() const { return mGraphicsSystem; }
 
+        ///
+        /// convert parameter handle to parameter index.
+        ///
+        bool getParameterIndex( size_t & result, EffectParameterHandle handle ) const
+        {
+            if( !mParameterHandles.validHandle( handle ) )
+            {
+                GN_ERROR(getLogger("GN.gfx2.base.BaseEffect"))( "invalid arameter handle: %d", handle );
+                return false;
+            }
+            result = mParameterHandles[handle];
+            GN_ASSERT( result < mParameters.size() );
+            return true;
+        }
+
+        ///
+        /// get global value of the parameter
+        ///
+        const EffectParameter * getGlobalParameterByIndex( size_t index ) const
+        {
+            GN_ASSERT( index < mParameters.size() );
+            return mGraphicsSystem.getGlobalEffectParameter( mParameters[index].global );
+        }
+
         /// \name from Effect
         //@{
         virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const;
         virtual EffectParameterHandle       getParameterHandle( const StrA & name ) const;
-        virtual void                        setParameter( EffectParameterHandle handle, const EffectParameter & value );
-        virtual void                        unsetParameter( EffectParameterHandle handle );
+        virtual EffectParameterSet        * createParameterSet();
         //@}
 
     protected:
-
-        ///
-        /// get parameter value
-        ///
-        const EffectParameter * getParameter( EffectParameterHandle handle ) const;
 
         ///
         /// \note add parameter. Normallly called in constructor
@@ -107,12 +151,12 @@ namespace GN { namespace gfx2
         struct ParameterItem
         {
             EffectParameterDesc    desc;
-            EffectParameterWrapper param;
             EffectParameterHandle  global;
         };
 
-        GraphicsSystem                                        & mGraphicsSystem;
-        NamedHandleManager<ParameterItem,EffectParameterHandle> mParameters;
+        GraphicsSystem                                 & mGraphicsSystem;
+        DynaArray<ParameterItem>                         mParameters;
+        NamedHandleManager<size_t,EffectParameterHandle> mParameterHandles; ///< convert handle and name to array index.
     };
 
     ///
