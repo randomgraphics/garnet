@@ -140,11 +140,10 @@ namespace GN { namespace gfx2
 
         /// \name from Effect
         //@{
-        virtual const EffectPortDesc      * getPortDesc( const StrA & name ) const;
-        virtual bool                        compatible( const Surface * surf, const StrA & port );
-        virtual EffectBinding               createBinding( const EffectBindingDesc & );
-        virtual void                        deleteBinding( EffectBinding );
-        virtual void                        bind( EffectBinding );
+        virtual const EffectPortDesc * getPortDesc( const StrA & name ) const;
+        virtual bool                   compatible( const Surface * surf, const StrA & port );
+        virtual EffectBinding          createBinding( const EffectBindingDesc & );
+        virtual void                   deleteBinding( EffectBinding );
         //@}
 
     protected:
@@ -155,6 +154,21 @@ namespace GN { namespace gfx2
         /// \note D3D9Effect class does _NOT_ hold the ownership of the port instance.
         ///
         void addPortRef( const StrA & name, D3D9EffectPort * port );
+
+        ///
+        /// apply port binding
+        ///
+        void GN::gfx2::D3D9Effect::applyBinding( EffectBinding b )
+        {
+            GN_GUARD_SLOW;
+
+            GN_ASSERT( mBindings.validHandle( b ) );
+            GN_ASSERT( mBindings[b] );
+
+            mBindings[b]->apply();
+
+            GN_UNGUARD_SLOW;
+        }
 
         //@}
 

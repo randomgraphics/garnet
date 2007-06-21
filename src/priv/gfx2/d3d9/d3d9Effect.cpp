@@ -158,21 +158,6 @@ void GN::gfx2::D3D9Effect::deleteBinding( EffectBinding b )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9Effect::bind( EffectBinding b )
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( mBindings.validHandle( b ) );
-    GN_ASSERT( mBindings[b] );
-
-    mBindings[b]->apply();
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port )
 {
     if( mPorts.name2handle( name ) )

@@ -63,14 +63,18 @@ namespace GN { namespace gfx2
          }
 
         // from Effect
-        virtual void render()
+        virtual void render( const EffectParameterSet & param, EffectBinding binding )
         {
+            GN_ASSERT( &param.getEffect() == (Effect*)this );
+
+            if( binding ) applyBinding( binding );
+
             D3D9GraphicsSystem & gs = d3d9gs();
             IDirect3DDevice9  * dev = gs.d3ddev();
 
-            const EffectParameter * c = getParameter( mColorValue );
-            const EffectParameter * z = getParameter( mDepthValue );
-            const EffectParameter * s = getParameter( mStencilValue );
+            const EffectParameter * c = param.getParameter( mColorValue );
+            const EffectParameter * z = param.getParameter( mDepthValue );
+            const EffectParameter * s = param.getParameter( mStencilValue );
 
             DWORD flags   = 0;
             DWORD color   = 0;

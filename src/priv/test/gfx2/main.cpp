@@ -29,9 +29,12 @@ int run( GraphicsSystem & gs )
     Effect * clearEffect = gs.getEffect( "clear" );
     if( 0 == clearEffect ) return -1;
 
-    clearEffect->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
-    clearEffect->setParameter( "DEPTH_VALUE", 1.0f );
-    clearEffect->setParameter( "STENCIL_VALUE", 0 );
+    AutoObjPtr<EffectParameterSet> clearParam( clearEffect->createParameterSet() );
+    if( 0 == clearParam ) return -1;
+
+    clearParam->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
+    clearParam->setParameter( "DEPTH_VALUE", 1.0f );
+    clearParam->setParameter( "STENCIL_VALUE", 0 );
 
     while( true )
     {
@@ -39,7 +42,7 @@ int run( GraphicsSystem & gs )
         key = i.popLastKeyEvent();
         if( key.status.down && KEY_ESCAPE == key.code ) break;
 
-        clearEffect->render();
+        clearEffect->render( *clearParam , 0 );
 
         gs.present();
     }
