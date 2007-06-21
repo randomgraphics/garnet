@@ -80,6 +80,8 @@ RESOLVED USER SCENARIOS
 OPENED USER SCENARIOS
 =====================
 
+- dynamic vertex buffer
+- draw subset of a mesh
 - user creates too many render targets that can't fit into hardware's local
   memory (like EDRAM)
   - may be resolved by lazy creation
