@@ -983,7 +983,7 @@ def BUILD_program( name, target ):
 	if target.ignoreDefaultDependencies:
 		stdlibs = []
 	else:
-		stdlibs = Split('GNcore GNutil GNgfx2Base GNgfxUtil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfxBase GNcore GNbase GNextern')
+		stdlibs = Split('GNcore GNutil GNgfx2Base GNgfx2D3D9 GNgfxUtil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfxBase GNcore GNbase GNextern')
 
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
