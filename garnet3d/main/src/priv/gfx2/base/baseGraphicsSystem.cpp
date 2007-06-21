@@ -115,9 +115,9 @@ GN::gfx2::BaseGraphicsSystem::getGlobalEffectParameter( EffectParameterHandle ha
         return 0;
     }
 
-    EffectParameterContainer & c = mGlobalEffectParameters[handle];
+    EffectParameterWrapper & p = mGlobalEffectParameters[handle];
 
-    return c.empty() ? 0 : &c.get();
+    return p.empty() ? 0 : &p.get();
 
     GN_UNGUARD_SLOW;
 }

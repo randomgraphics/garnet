@@ -3,38 +3,6 @@
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 
 // *****************************************************************************
-// D3D9EffectDesc
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx2::EffectPortDesc *
-GN::gfx2::D3D9EffectDesc::getPortDesc( const StrA & name ) const
-{
-    GN_ASSERT( effect );
-    const D3D9EffectPort * port = effect->getPort( name );
-    return port ? &port->getDesc() : 0;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx2::EffectParameterDesc *
-GN::gfx2::D3D9EffectDesc::getParameterDesc( const StrA & name ) const
-{
-    ParameterDescContainer::const_iterator i = parameters.find( name);
-
-    if( parameters.end() == i )
-    {
-        GN_ERROR(sLogger)( "invalid parameter name: %s", name.cptr() );
-        return 0;
-    }
-
-    return &i->second;
-}
-
-// *****************************************************************************
 // D3D9EffectBinding
 // *****************************************************************************
 
@@ -102,6 +70,49 @@ void GN::gfx2::D3D9EffectBinding::apply() const
 //
 //
 // -----------------------------------------------------------------------------
+const GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name ) const
+{
+    UInt32 h = mPorts.name2handle( name );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
+        return 0;
+    }
+
+    GN_ASSERT( mPorts[h] );
+
+    return mPorts[h];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name )
+{
+    UInt32 h = mPorts.name2handle( name );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
+        return 0;
+    }
+
+    GN_ASSERT( mPorts[h] );
+
+    return mPorts[h];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx2::EffectPortDesc * GN::gfx2::D3D9Effect::getPortDesc( const StrA & name ) const
+{
+    const D3D9EffectPort * port = getPort( name );
+    return port ? &port->getDesc() : 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx2::D3D9Effect::compatible( const Surface * surf, const StrA & portName )
 {
     const D3D9EffectPort * port = getPort( portName );
@@ -162,40 +173,6 @@ void GN::gfx2::D3D9Effect::bind( EffectBinding b )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name ) const
-{
-    UInt32 h = mPorts.name2handle( name );
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
-        return 0;
-    }
-
-    GN_ASSERT( mPorts[h] );
-
-    return mPorts[h];
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name )
-{
-    UInt32 h = mPorts.name2handle( name );
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
-        return 0;
-    }
-
-    GN_ASSERT( mPorts[h] );
-
-    return mPorts[h];
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port )
 {
     if( mPorts.name2handle( name ) )
@@ -213,22 +190,4 @@ void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port 
     }
 
     mPorts.add( name, port );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx2::EffectParameterHandle
-GN::gfx2::D3D9Effect::addParameter( const StrA & name, const EffectParameterDesc & param )
-{
-    if( mDesc.parameters.end() != mDesc.parameters.find( name ) )
-    {
-        GN_ERROR(sLogger)( "addParameter() failed: parameter named '%s' does exist already.", name.cptr() );
-        GN_UNEXPECTED();
-        return 0;
-    }
-
-    mDesc.parameters[name] = param;
-
-    return getParameterHandle( name );
 }
