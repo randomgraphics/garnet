@@ -137,6 +137,11 @@ namespace GN { namespace gfx2
         virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const;
         virtual EffectParameterHandle       getParameterHandle( const StrA & name ) const;
         virtual EffectParameterSet        * createParameterSet();
+        virtual const EffectProperty      * getProperity( const StrA & ) const
+        {
+            GN_ERROR(getLogger("GN.gfx2.base.BaseEffect"))( "effect has no property." );
+            return 0;
+        }
         //@}
 
     protected:

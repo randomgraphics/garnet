@@ -51,6 +51,8 @@ OPEN ISSUES
 RESOLVED USER SCENARIOS
 =======================
 
+- draw subset of a mesh: use effect parameter to set subset properties
+
 - create MSAA surface, render to it, then use it as texture.
   - create surface with hint: "msaa=true"
   - inside surface class, it'll hold a MSAA render target and a non-MSAA 
@@ -97,8 +99,7 @@ RESOLVED USER SCENARIOS
 OPENED USER SCENARIOS
 =====================
 
-- dynamic vertex buffer
-- draw subset of a mesh
+- dynamic vertex buffer: use hints?
 - user creates too many render targets that can't fit into hardware's local
   memory (like EDRAM)
   - may be resolved by lazy creation

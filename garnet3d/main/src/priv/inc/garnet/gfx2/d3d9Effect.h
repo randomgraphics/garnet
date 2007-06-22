@@ -72,6 +72,8 @@ namespace GN { namespace gfx2
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9EffectPort
     {
+    public:
+
         //@{
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const EffectPortBinding & );
@@ -81,17 +83,54 @@ namespace GN { namespace gfx2
     ///
     /// D3D9 render target port (accepts texture)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9EffectPort {};
+    class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9EffectPort
+    {
+    public:
+
+        //@{
+        virtual bool compatible( const Surface * surf ) const;
+        virtual void bind( const EffectPortBinding & );
+        //@}
+    };
 
     ///
     /// D3D9 render target port (accepts vertex buffer)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9EffectPort {};
+    class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9EffectPort
+    {
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9VtxBufPort();
+
+        //@{
+        void setStride( UInt32 );      // call this only if this port requires fixed stride.
+        void setVertexCount( UInt32 ); // call this only if this port requires a fixed vertex count.
+        void addRequiredAttribute( const SurfaceAttributeTemplate & );
+        void addRequiredAttribute( const char * s, UInt32 offset = -1 );
+        void addOptionalAttribute( const SurfaceAttributeTemplate & );
+        //@}
+
+        //@{
+        virtual bool compatible( const Surface * surf ) const;
+        virtual void bind( const EffectPortBinding & );
+        //@}
+    };
 
     ///
     /// D3D9 render target port (accept index buffer)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9EffectPort {};
+    class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9EffectPort
+    {
+    public:
+
+        //@{
+        virtual bool compatible( const Surface * surf ) const;
+        virtual void bind( const EffectPortBinding & );
+        //@}
+    };
 
     ///
     /// base D3D9 effect binding
