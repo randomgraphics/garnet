@@ -418,6 +418,11 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// effect property
+    ///
+    typedef EffectParameter EffectProperty;
+
+    ///
     /// effect parameter handle
     ///
     typedef UIntPtr EffectParameterHandle;
@@ -508,6 +513,13 @@ namespace GN { namespace gfx2
         virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
         virtual EffectBinding createBinding( const EffectBindingDesc & ) = 0;
         virtual void          deleteBinding( EffectBinding ) = 0;
+
+        //@}
+
+        ///! \name property management. Note that property is read-only, and may change during life-time of a effect.
+        //@{
+
+        virtual const EffectProperty * getProperity( const StrA & name ) const = 0;
 
         //@}
 

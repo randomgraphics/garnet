@@ -20,19 +20,6 @@ namespace GN { namespace gfx2
 
         static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9ClearEffect(gs); }
 
-    public:
-
-        ///
-        /// get clear effect factory
-        ///
-        static EffectFactory sGetFactory()
-        {
-            EffectFactory f;
-            f.quality = 0;
-            f.creator = &sCreator;
-            return f;
-        }
-
         ///
         /// ctor
         ///
@@ -60,7 +47,21 @@ namespace GN { namespace gfx2
             s.count = 1;
             mStencilValue = addParameter( "STENCIL_VALUE", s );
             //setParameter( mStencilValue, 0 );
-         }
+        }
+
+
+    public:
+
+        ///
+        /// get effect factory
+        ///
+        static EffectFactory sGetFactory()
+        {
+            EffectFactory f;
+            f.quality = 0;
+            f.creator = &sCreator;
+            return f;
+        }
 
         virtual void render( const EffectParameterSet & param, EffectBinding binding )
         {
@@ -114,12 +115,10 @@ namespace GN { namespace gfx2
         EffectParameterHandle mColor; ///< 4D float vector: [R,G,B,A]
         D3D9RenderTargetPort  mTarget0;
         D3D9DepthBufferPort   mDepth;
-        //D3D9VtxBufPort        mVtxBuf;
-        //D3D9IdxBufPort        mIdxBuf; ///< this is optional.
+        D3D9VtxBufPort        mVtxBuf;
+        D3D9IdxBufPort        mIdxBuf; ///< this is optional.
 
         static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9SolidColorEffect(gs); }
-
-    public:
 
         ///
         /// ctor
@@ -140,10 +139,26 @@ namespace GN { namespace gfx2
             // setup ports
             addPortRef( "TARGET0", &mTarget0 );
             addPortRef( "DEPTH", &mDepth );
-            //addPortRef( "VTXBUF", &mVtxBuf );
-            //addPortRef( "IDXBUF", &mIdxBuf );
+            addPortRef( "VTXBUF", &mVtxBuf );
+            addPortRef( "IDXBUF", &mIdxBuf );
+
+            // setup vertx buffer port
+            mVtxBuf.addRequiredAttribute( "POSITION0" );
         }
 
+    public:
+
+        ///
+        /// get effect factory
+        ///
+        static EffectFactory sGetFactory()
+        {
+            EffectFactory f;
+            f.quality = 0;
+            f.creator = &sCreator;
+            return f;
+        }
+ 
         virtual void render( const EffectParameterSet & param, EffectBinding binding )
         {
             GN_ASSERT( &param.getEffect() == (Effect*)this );
