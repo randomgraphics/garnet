@@ -14,8 +14,8 @@ namespace GN { namespace gfx2
     class D3D9ScriptEffect : public D3D9Effect
     {
         EffectParameterHandle mVs, mPs;
-        EffectParameterHandle mVsConstants;
-        EffectParameterHandle mPsConstants;
+        EffectParameterHandle mVsConstants, mPsConstants;
+        EffectParameterHandle mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
         D3D9RenderTargetPort mRenderTargets[4];
         D3D9DepthBufferPort  mDepthBuffer;
@@ -40,6 +40,34 @@ namespace GN { namespace gfx2
             p.type  = EFFECT_PARAMETER_TYPE_STRING;
             p.count = 1;
             mPs = addParameter( "PS", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_FLOAT4;
+            p.count = 256;
+            mVsConstants = addParameter( "VSC", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_FLOAT4;
+            p.count = 256;
+            mPsConstants = addParameter( "PSC", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_INT1;
+            p.count = 1;
+            mPrimType = addParameter( "PRIM_TYPE", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_INT1;
+            p.count = 1;
+            mPrimCount = addParameter( "PRIM_COUNT", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_INT1;
+            p.count = 1;
+            mBaseIndex = addParameter( "BASE_INDEX", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_INT1;
+            p.count = 1;
+            mBaseVertex = addParameter( "BASE_VERTEX", p );
+
+            p.type = EFFECT_PARAMETER_TYPE_INT1;
+            p.count = 1;
+            mVertexCount = addParameter( "VERTEX_COUNT", p );
 
             // setup ports
             addPortRef( "TARGET0"  , &mRenderTargets[0] );
@@ -66,9 +94,9 @@ namespace GN { namespace gfx2
             addPortRef( "IDXBUF"   , &mIdxBuf );
 
             // setup properties
-            //addProperty( "RENDER_TARGET_COUNT", 4 );
-            //addProperty( "TEXTURE_COUNT", 4 );
-            //addProperty( "VTXBUF_COUNT", 4 );
+            setProperty( "RENDER_TARGET_COUNT", 4 );
+            setProperty( "TEXTURE_COUNT", 4 );
+            setProperty( "VTXBUF_COUNT", 4 );
         }
  
     public:
@@ -83,7 +111,14 @@ namespace GN { namespace gfx2
             f.creator = &sCreator;
             return f;
         }
- 
+
+        virtual void render( const EffectParameterSet & param, EffectBinding binding );
+
+
+    private:
+
+        inline void applyVS( const EffectParameter * );
+        inline void applyPS( const EffectParameter * );
     };
 }}
 
