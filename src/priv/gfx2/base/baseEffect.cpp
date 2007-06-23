@@ -134,6 +134,29 @@ GN::gfx2::EffectParameterSet * GN::gfx2::BaseEffect::createParameterSet()
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx2::BaseEffect::hasProperity( const StrA & name ) const
+{
+    return 0 != mProperties.name2handle( name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx2::EffectProperty *
+GN::gfx2::BaseEffect::getProperity( const StrA & name ) const
+{
+    UInt32 h = mProperties.name2handle( name );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid property name: %s.", name.cptr() );
+        return 0;
+    }
+    return &mProperties[h].get();
+}
+
 // *****************************************************************************
 // protected methods
 // *****************************************************************************
@@ -174,4 +197,38 @@ GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc
     return h;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::BaseEffect::setProperty(
+    const StrA & name,
+    const EffectProperty & property )
+{
+    UInt32 h = mProperties.name2handle( name );
+
+    if( 0 == h )
+    {
+        h = mProperties.add( name );
+    }
+
+    mProperties[h].set( property );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::BaseEffect::unsetProperty( const StrA & name )
+{
+    UInt32 h = mProperties.name2handle( name );
+
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid property name: %s", name.cptr() );
+    }
+    else
+    {
+        mProperties.remove( h );
+    }
 }

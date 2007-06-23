@@ -38,10 +38,16 @@ bool GN::gfx2::D3D9EffectBinding::setup( D3D9Effect & effect, const EffectBindin
 
         if( !port->compatible( epb.surf ) ) return false;
 
-        b.port = port;
-        b.bind = epb;
+        b.port            = port;
+        b.surf.surf       = epb.surf;
+        b.surf.firstLevel = epb.firstLevel;
+        b.surf.numLevels  = epb.numLevels;
+        b.surf.firstFace  = epb.firstFace;
+        b.surf.numFaces   = epb.numFaces;
         mBindItems.append( b );
     }
+
+    // TODO: 
 
     return true;
 
@@ -59,7 +65,7 @@ void GN::gfx2::D3D9EffectBinding::apply() const
 
         GN_ASSERT( b.port );
 
-        b.port->bind( b.bind );
+        b.port->bind( b.surf );
     }
 }
 
@@ -175,4 +181,25 @@ void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port 
     }
 
     mPorts.add( name, port );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createDefaultBinding()
+{
+    GN_GUARD;
+
+    EffectBindingDesc bindNothing;
+
+    EffectBinding b = createBinding( bindNothing );
+
+    if( 0 == b )
+    {
+        GN_ERROR(sLogger)( "fail to create default binding!" );
+    }
+
+    return b;
+
+    GN_UNGUARD;
 }

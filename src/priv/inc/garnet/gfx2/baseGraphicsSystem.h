@@ -137,11 +137,8 @@ namespace GN { namespace gfx2
         virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const;
         virtual EffectParameterHandle       getParameterHandle( const StrA & name ) const;
         virtual EffectParameterSet        * createParameterSet();
-        virtual const EffectProperty      * getProperity( const StrA & ) const
-        {
-            GN_ERROR(getLogger("GN.gfx2.base.BaseEffect"))( "effect has no property." );
-            return 0;
-        }
+        virtual bool                        hasProperity( const StrA & name ) const;
+        virtual const EffectProperty      * getProperity( const StrA & name ) const;
         //@}
 
     protected:
@@ -151,6 +148,11 @@ namespace GN { namespace gfx2
         ///
         EffectParameterHandle addParameter( const StrA & name, const EffectParameterDesc & param );
 
+        /// \name property management
+        void setProperty( const StrA & name, const EffectProperty & property );
+        void unsetProperty( const StrA & name );
+        //@}
+
     private:
 
         struct ParameterItem
@@ -159,9 +161,10 @@ namespace GN { namespace gfx2
             EffectParameterHandle  global;
         };
 
-        GraphicsSystem                                 & mGraphicsSystem;
-        DynaArray<ParameterItem>                         mParameters;
-        NamedHandleManager<size_t,EffectParameterHandle> mParameterHandles; ///< convert handle and name to array index.
+        GraphicsSystem                                  & mGraphicsSystem;
+        DynaArray<ParameterItem>                          mParameters;
+        NamedHandleManager<size_t,EffectParameterHandle>  mParameterHandles; ///< convert handle and name to array index.
+        NamedHandleManager<EffectParameterWrapper,UInt32> mProperties;
     };
 
     ///

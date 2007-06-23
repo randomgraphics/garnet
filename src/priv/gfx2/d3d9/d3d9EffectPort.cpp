@@ -26,7 +26,7 @@ bool GN::gfx2::D3D9RenderTargetPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9RenderTargetPort::bind( const EffectPortBinding & )
+void GN::gfx2::D3D9RenderTargetPort::bind( const D3D9SurfaceBindingDesc & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -47,7 +47,7 @@ bool GN::gfx2::D3D9DepthBufferPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9DepthBufferPort::bind( const EffectPortBinding & )
+void GN::gfx2::D3D9DepthBufferPort::bind( const D3D9SurfaceBindingDesc & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -68,7 +68,7 @@ bool GN::gfx2::D3D9TexturePort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9TexturePort::bind( const EffectPortBinding & )
+void GN::gfx2::D3D9TexturePort::bind( const D3D9SurfaceBindingDesc & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -142,7 +142,7 @@ bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::bind( const EffectPortBinding & )
+void GN::gfx2::D3D9VtxBufPort::bind( const D3D9SurfaceBindingDesc & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -164,7 +164,7 @@ bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBufPort::bind( const EffectPortBinding & )
+void GN::gfx2::D3D9IdxBufPort::bind( const D3D9SurfaceBindingDesc & ) const
 {
     GN_UNIMPL_WARNING();
 }

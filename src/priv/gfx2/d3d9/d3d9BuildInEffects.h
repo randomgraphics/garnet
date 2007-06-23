@@ -67,7 +67,7 @@ namespace GN { namespace gfx2
         {
             GN_ASSERT( &param.getEffect() == (Effect*)this );
 
-            if( binding ) applyBinding( binding );
+            applyBinding( binding );
 
             D3D9GraphicsSystem & gs = d3d9gs();
             IDirect3DDevice9  * dev = gs.d3ddev();

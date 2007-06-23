@@ -519,6 +519,7 @@ namespace GN { namespace gfx2
         ///! \name property management. Note that property is read-only, and may change during life-time of a effect.
         //@{
 
+        virtual bool                   hasProperity( const StrA & name ) const = 0;
         virtual const EffectProperty * getProperity( const StrA & name ) const = 0;
 
         //@}

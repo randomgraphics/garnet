@@ -12,6 +12,18 @@ namespace GN { namespace gfx2
     class D3D9Effect;
 
     ///
+    /// surface binding information
+    ///
+    struct D3D9SurfaceBindingDesc
+    {
+        Surface         * surf;       ///< surface pointer
+        UInt32            firstLevel; ///< first mipmap level. 0 means the most detailed level.
+        UInt32            numLevels;  ///< set 0 for all levels staring from firstLevel.
+        UInt32            firstFace;  ///< first face index, starting from 0
+        UInt32            numFaces;   ///< set to 0 for all faces starting from firstFace.
+    };
+
+    ///
     /// D3D9 effect port descriptor
     ///
     struct GN_GFX2_D3D9_PUBLIC D3D9EffectPortDesc : public EffectPortDesc
@@ -51,7 +63,7 @@ namespace GN { namespace gfx2
         ///
         /// bind surface to device
         ///
-        virtual void bind( const EffectPortBinding & ) = 0;
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const = 0;
     };
 
     ///
@@ -63,7 +75,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & );
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
         //@}
     };
 
@@ -76,7 +88,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & );
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
         //@}
     };
 
@@ -89,7 +101,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & );
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
         //@}
     };
 
@@ -115,7 +127,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & );
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
         //@}
     };
 
@@ -128,7 +140,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & );
+        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
         //@}
     };
 
@@ -139,8 +151,8 @@ namespace GN { namespace gfx2
     {
         struct BindItem
         {
-            D3D9EffectPort  * port;
-            EffectPortBinding bind;
+            D3D9EffectPort       * port;
+            D3D9SurfaceBindingDesc surf;
         };
 
         DynaArray<BindItem> mBindItems;
@@ -180,7 +192,12 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs) {}
+        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs), mDefaultBinding(0) {}
+
+        ///
+        /// dtor
+        ///
+        ~D3D9Effect() { if( mDefaultBinding ) deleteBinding( mDefaultBinding ); }
 
         ///
         /// get D3D9 graphic system
@@ -216,6 +233,17 @@ namespace GN { namespace gfx2
         {
             GN_GUARD_SLOW;
 
+            if( 0 == b )
+            {
+                if( 0 == mDefaultBinding )
+                {
+                    mDefaultBinding = createDefaultBinding();
+                    if( 0 == mDefaultBinding ) return;
+                }
+
+                b = mDefaultBinding;
+            }
+
             GN_ASSERT( mBindings.validHandle( b ) );
             GN_ASSERT( mBindings[b] );
 
@@ -233,6 +261,11 @@ namespace GN { namespace gfx2
 
         PortContainer          mPorts;
         EffectBindingContainer mBindings;
+        EffectBinding          mDefaultBinding;
+
+    private:
+
+        virtual EffectBinding createDefaultBinding();
     };
 }}
 
