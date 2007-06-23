@@ -197,8 +197,29 @@ static bool sCreateDevice(
         }
     }
 
+    // get device caps
+    GN_DX9_CHECK_RV( desc.d3d->GetDeviceCaps( desc.adapter, desc.devtype, &desc.caps ), false );
+
     // determine behavior
-    UInt32 behavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    UInt32 behavior = 0;
+    UInt32 vsver = (desc.caps.VertexShaderVersion & 0xFFFF);
+    bool   hwtnl = !!(desc.caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT);
+    if( vsver > 0 && hwtnl )
+    {
+        behavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    }
+    else if( 0 == vsver && !hwtnl )
+    {
+        behavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
+    else
+    {
+        behavior |= D3DCREATE_MIXED_VERTEXPROCESSING;
+    }
+    if( desc.caps.DevCaps & D3DDEVCAPS_PUREDEVICE )
+    {
+        behavior |= D3DCREATE_PUREDEVICE;
+    }
 
     // setup present parameters
     memset( &desc.pp, 0, sizeof(desc.pp) );
