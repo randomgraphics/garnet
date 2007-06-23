@@ -201,24 +201,24 @@ static bool sCreateDevice(
     GN_DX9_CHECK_RV( desc.d3d->GetDeviceCaps( desc.adapter, desc.devtype, &desc.caps ), false );
 
     // determine behavior
-    UInt32 behavior = 0;
+    desc.behavior = 0;
     UInt32 vsver = (desc.caps.VertexShaderVersion & 0xFFFF);
     bool   hwtnl = !!(desc.caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT);
     if( vsver > 0 && hwtnl )
     {
-        behavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
+        desc.behavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
     }
     else if( 0 == vsver && !hwtnl )
     {
-        behavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+        desc.behavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
     }
     else
     {
-        behavior |= D3DCREATE_MIXED_VERTEXPROCESSING;
+        desc.behavior |= D3DCREATE_MIXED_VERTEXPROCESSING;
     }
     if( desc.caps.DevCaps & D3DDEVCAPS_PUREDEVICE )
     {
-        behavior |= D3DCREATE_PUREDEVICE;
+        desc.behavior |= D3DCREATE_PUREDEVICE;
     }
 
     // setup present parameters
@@ -251,7 +251,7 @@ static bool sCreateDevice(
             desc.adapter,
             desc.devtype,
             (HWND)desc.window,
-            behavior,
+            desc.behavior,
             &desc.pp,
             &desc.device ),
         false );
@@ -304,6 +304,132 @@ static void sDeleteDevice( GN::gfx2::D3D9GraphicsSystemDesc & desc )
     safeRelease( desc.d3d );
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static const char * sD3DMsaaType2Str( D3DMULTISAMPLE_TYPE type )
+{
+    static const char * sTable[] =
+    {
+        "D3DMULTISAMPLE_NONE", // = 0,
+        "D3DMULTISAMPLE_NONMASKABLE ", // = 1,
+        "D3DMULTISAMPLE_2_SAMPLES", // = 2,
+        "D3DMULTISAMPLE_3_SAMPLES", // = 3,
+        "D3DMULTISAMPLE_4_SAMPLES", // = 4,
+        "D3DMULTISAMPLE_5_SAMPLES", // = 5,
+        "D3DMULTISAMPLE_6_SAMPLES", // = 6,
+        "D3DMULTISAMPLE_7_SAMPLES", // = 7,
+        "D3DMULTISAMPLE_8_SAMPLES", // = 8,
+        "D3DMULTISAMPLE_9__SAMPLES", // = 9,
+        "D3DMULTISAMPLE_10_SAMPLES", // = 10,
+        "D3DMULTISAMPLE_11_SAMPLES", // = 11,
+        "D3DMULTISAMPLE_12_SAMPLES", // = 12,
+        "D3DMULTISAMPLE_13_SAMPLES", // = 13,
+        "D3DMULTISAMPLE_14_SAMPLES", // = 14,
+        "D3DMULTISAMPLE_15_SAMPLES", // = 15,
+        "D3DMULTISAMPLE_16_SAMPLES", // = 16,
+    };
+
+    if( type < GN_ARRAY_COUNT(sTable) ) return sTable[type];
+    else return "UNKNOWN_D3D_MSAA_TYPE";
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sPrintDeviceInfo( GN::gfx2::D3D9GraphicsSystemDesc & desc )
+{
+    using namespace GN;
+
+    StrA devtype;
+    switch( desc.caps.DeviceType )
+    {
+        case D3DDEVTYPE_HAL : devtype = "HAL";     break;
+        case D3DDEVTYPE_REF : devtype = "REF";     break;
+        case D3DDEVTYPE_SW  : devtype = "SW";      break;
+        default             : devtype = "UNKNOWN"; break;
+    }
+    if( D3DCREATE_HARDWARE_VERTEXPROCESSING & desc.behavior &&
+         D3DCREATE_PUREDEVICE & desc.behavior )
+    {
+        devtype += "( Pure-HW )";
+    }
+    else if( D3DCREATE_HARDWARE_VERTEXPROCESSING & desc.behavior )
+    {
+        devtype += "( Hardware )";
+    }
+    else if( D3DCREATE_MIXED_VERTEXPROCESSING & desc.behavior )
+    {
+        devtype += "( Mixed )";
+    }
+    else if( D3DCREATE_SOFTWARE_VERTEXPROCESSING & desc.behavior )
+    {
+        devtype += "( Software )";
+    }
+
+    UInt32 vsVerMajor, vsVerMinor, psVerMajor, psVerMinor;
+    vsVerMajor = (desc.caps.VertexShaderVersion & 0xFF00) >> 8;
+    vsVerMinor = desc.caps.VertexShaderVersion & 0xFF;
+    psVerMajor = (desc.caps.PixelShaderVersion & 0xFF00) >> 8;
+    psVerMinor = desc.caps.PixelShaderVersion & 0xFF;
+    StrA vsver = strFormat( "%d.%d", vsVerMajor, vsVerMinor );
+    StrA psver = strFormat( "%d.%d", psVerMajor, psVerMinor );
+    StrA hwtnl;
+    if( D3DDEVCAPS_HWTRANSFORMANDLIGHT & desc.caps.DevCaps )
+        hwtnl = "Yes";
+    else
+        hwtnl = "No";
+
+    // get adapter and driver information
+    D3DADAPTER_IDENTIFIER9 aid;
+    memset( &aid, 0, sizeof(aid) );
+    GN_DX9_CHECK( desc.d3d->GetAdapterIdentifier( desc.adapter, 0, &aid ) );
+
+    // output device information
+    GN_INFO(sLogger)(
+        "\n\n"
+        "===================================================\n"
+        "        DirectX Implementation Capabilities\n"
+        "---------------------------------------------------\n"
+        "    Device Type                    : %s\n"
+        "    Driver                         : %s(%d.%d.%d.%d)\n"
+        "    Adapter                        : %s\n"
+        "    GDI Device Name                : %s\n"
+        "    Backbuffer Size                : %d,%d\n"
+        "    Display Mode                   : %s\n"
+        "    Vertex Shader Version          : %s\n"
+        "    Pixel Shader Version           : %s\n"
+        "    Max Vertex Shader Constants    : %d\n"
+        "    Hardware TnL (FFP)             : %s\n"
+        "    Texture Blend Stages (FFP)     : %d\n"
+        "    Max Simulaneous Textures (FFP) : %d\n"
+        "    Nax Simulaneous Render Targets : %d\n"
+        "    MSAA Type                      : %s\n"
+        "    MSAA Quality                   : %d\n"
+        "===================================================\n"
+        "\n\n",
+        devtype.cptr(),
+        aid.Driver,
+        HIWORD(aid.DriverVersion.HighPart),
+        LOWORD(aid.DriverVersion.HighPart),
+        HIWORD(aid.DriverVersion.LowPart),
+        LOWORD(aid.DriverVersion.LowPart),
+        aid.Description,
+        aid.DeviceName,
+        desc.pp.BackBufferWidth,
+        desc.pp.BackBufferHeight,
+        desc.pp.Windowed ? "Windowed" : "Fullscreen",
+        vsver.cptr(),
+        psver.cptr(),
+        desc.caps.MaxVertexShaderConst,
+        hwtnl.cptr(),
+        desc.caps.MaxTextureBlendStages,
+        desc.caps.MaxSimultaneousTextures,
+        desc.caps.NumSimultaneousRTs,
+        sD3DMsaaType2Str( desc.pp.MultiSampleType ),
+        desc.pp.MultiSampleQuality );
 }
 
 // *****************************************************************************
@@ -466,6 +592,8 @@ bool GN::gfx2::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter &
     if( 0 == mDesc.window ) return failure();
 
     if( !sCreateDevice( mDesc, gscp ) ) return failure();
+
+    sPrintDeviceInfo( mDesc );
 
     if( !sigDeviceRestore() ) return failure();
 

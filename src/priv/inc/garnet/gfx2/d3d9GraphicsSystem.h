@@ -20,6 +20,7 @@ namespace GN { namespace gfx2
 
         UINT                  adapter;
         D3DDEVTYPE            devtype;
+        UINT                  behavior;
         D3DPRESENT_PARAMETERS pp;
         D3DCAPS9              caps;
 
