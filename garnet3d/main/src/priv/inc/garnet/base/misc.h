@@ -114,7 +114,7 @@ namespace GN
     /// perform dynamic cast in debug build, and static cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO safeCast( FROM from )
+    GN_FORCE_INLINE TO safeCast( const FROM & from )
     {
     #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO>(from);

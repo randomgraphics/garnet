@@ -1,17 +1,60 @@
-#ifndef __GN_GFX2_D3D9SCRIPTEFFECT_H__
-#define __GN_GFX2_D3D9SCRIPTEFFECT_H__
+#ifndef __GN_GFX2_D3D9HLSLEFFECT_H__
+#define __GN_GFX2_D3D9HLSLEFFECT_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9ScriptEffect.h
-//! \brief   d3d9 script effect, which accepts shader code as parameter
+//! \file    d3d9/d3d9HlslEffect.h
+//! \brief   d3d9 HLSL effect, which accepts HLSL shader code as parameter
 //! \author  chenli@@FAREAST (2007.6.22)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
 {
     ///
+    /// parameter set for D3D9 hlsl effect
+    ///
+    class D3D9HlslEffectParameterSet : public BaseEffectParameterSet
+    {
+        D3D9GraphicsSystem               & mGs;
+        AutoComPtr<IDirect3DVertexShader9> mVs;
+        AutoComPtr<IDirect3DPixelShader9>  mPs;
+        AutoComPtr<ID3DXConstantTable>     mVsConsts, mPsConsts;
+
+        EffectParameterHandle mVsHandle, mPsHandle;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9HlslEffectParameterSet( D3D9GraphicsSystem & gs, Effect & e, size_t count )
+            : BaseEffectParameterSet( e, count )
+            , mGs( gs )
+            , mVsHandle( e.getParameterHandle( "VS" ) )
+            , mPsHandle( e.getParameterHandle( "PS" ) )
+        {
+        }
+
+        ///
+        /// dtor
+        ///
+        ~D3D9HlslEffectParameterSet() {}
+
+        //@{
+        IDirect3DVertexShader9 * vs() const { return mVs; }
+        IDirect3DPixelShader9  * ps() const { return mPs; }
+        //@}
+
+        /// \name from parent class
+        //@{
+        virtual const EffectParameter * getParameter( EffectParameterHandle ) const { return 0; }
+        virtual void setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void unsetParameter( EffectParameterHandle handle );
+        //@}
+    };
+
+    ///
     /// general effect that accepts shader code as parameter
     ///
-    class D3D9ScriptEffect : public D3D9Effect
+    class D3D9HlslEffect : public D3D9Effect
     {
         EffectParameterHandle mVs, mPs;
         EffectParameterHandle mVsConstants, mPsConstants;
@@ -23,12 +66,12 @@ namespace GN { namespace gfx2
         D3D9VtxBufPort       mVtxBufs[8];
         D3D9IdxBufPort       mIdxBuf;
 
-        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9ScriptEffect(gs); }
+        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9HlslEffect(gs); }
 
         ///
         /// ctor
         ///
-        D3D9ScriptEffect( GraphicsSystem & gs ) : D3D9Effect( gs )
+        D3D9HlslEffect( GraphicsSystem & gs ) : D3D9Effect( gs )
         {
             // setup parameters
             EffectParameterDesc p;
@@ -112,17 +155,20 @@ namespace GN { namespace gfx2
             return f;
         }
 
-        virtual void render( const EffectParameterSet & param, EffectBinding binding );
-
+        // from base class
+        //@{
+        virtual EffectParameterSet * createParameterSet() { return new D3D9HlslEffectParameterSet( d3d9gs(), *this, getParameterCount() ); }
+        virtual void                 render( const EffectParameterSet & param, EffectBinding binding );
+        //@}
 
     private:
 
-        inline void applyVS( const EffectParameter * );
-        inline void applyPS( const EffectParameter * );
+        inline void applyVS( IDirect3DVertexShader9 * vs );
+        inline void applyPS( IDirect3DPixelShader9 * ps );
     };
 }}
 
 // *****************************************************************************
-//                           End of d3d9ScriptEffect.h
+//                           End of d3d9HlslEffect.h
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9SCRIPTEFFECT_H__
+#endif // __GN_GFX2_D3D9HLSLEFFECT_H__
