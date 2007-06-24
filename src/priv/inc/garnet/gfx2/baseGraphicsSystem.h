@@ -109,6 +109,14 @@ namespace GN { namespace gfx2
         GraphicsSystem & gs() const { return mGraphicsSystem; }
 
         ///
+        /// get number of parameters
+        ///
+        size_t getParameterCount() const
+        {
+            return mParameters.size();
+        }
+
+        ///
         /// convert parameter handle to parameter index.
         ///
         bool getParameterIndex( size_t & result, EffectParameterHandle handle ) const
