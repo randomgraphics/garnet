@@ -670,24 +670,24 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
 {
     GN_GUARD;
 
-    // check input parameter
-    if( !scp.layout.check() ) return 0;
-
     // get surface layout template
     D3D9SurfaceType surftype = SURFACE_TYPE_ANY;
-    SurfaceLayoutTemplate templ = scp.layout;
     for( size_t i = 0; i < scp.bindings.size(); ++i )
     {
-        const SurfaceCreationParameter::EffectBinding & eb = scp.bindings[i];
+        const SurfaceBindingParameter & sbp = scp.bindings[i];
 
-        const D3D9Effect * effect = safeCast<const D3D9Effect*>( getEffect( eb.effect ) );
+        const D3D9Effect * effect = safeCast<const D3D9Effect*>( getEffect( sbp.effect ) );
         if( 0 == effect ) return 0;
 
-        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)effect->getPortDesc( eb.port );
+        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)effect->getPortDesc( sbp.port );
         if( 0 == port ) return 0;
 
-        // merge layout template
-        if( !templ.mergeWith( port->layout ) ) return false;
+        // check layout compability
+        if( !port->layout.compatible( scp.layout ) )
+        {
+            GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of effect '%s'", sbp.port.cptr(), sbp.effect.cptr() );
+            return false;
+        }
 
         // merget surface type
         if( !sMergeSurfaceType( surftype, surftype, port->surfaceType ) ) return false;
@@ -708,7 +708,7 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
             return 0;
 
         case SURFACE_TYPE_RTS_DEPTH :
-            return D3D9DepthBuffer::sNewInstance( templ, scp.forcedAccessFlags, scp.hints );
+            return D3D9DepthBuffer::sNewInstance( scp.layout, scp.forcedAccessFlags, scp.hints );
 
         case SURFACE_TYPE_ANY :
             GN_ERROR(sLogger)( "fail to determine surface type." );

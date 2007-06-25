@@ -15,16 +15,20 @@ using namespace GN::gfx2;
 ///
 class TestD3D9Hlsl : public Gfx2TestApp
 {
-    Effect                       * mEffect;
-    AutoObjPtr<EffectParameterSet> mParam;
-    EffectBinding                  mBinding;
+    Effect             * mEffect;
+    EffectParameterSet * mParam;
+    Surface            * mVtxBuf;
+    Surface            * mIdxBuf;
+    Surface            * mTexture;
+    EffectBinding        mBinding;
+    Matrix44f            mProj, mWorld, mView;
 
 public:
 
     ///
     /// ctor
     ///
-    TestD3D9Hlsl() : mBinding( 0 ) {}
+    TestD3D9Hlsl() : mEffect(0), mParam(0), mVtxBuf(0), mIdxBuf(0), mTexture(0), mBinding( 0 ) {}
 
     // from parent class
     //@{
