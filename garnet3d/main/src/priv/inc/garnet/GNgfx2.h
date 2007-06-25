@@ -36,10 +36,10 @@ namespace GN { namespace gfx2
     enum SurfaceAccessFlag
     {
         //@{
-        HOST_READ    = 0x1, ///< can be readen by host application.
-        HOST_WRITE   = 0x2, ///< can be modified by host application.
-        DEVICE_READ  = 0x4, ///< can bind to input port of a effect
-        DEVICE_WRITE = 0x8, ///< can bind to output port of a effect
+        SURFACE_ACCESS_HOST_READ    = 0x1, ///< can be readen by host application.
+        SURFACE_ACCESS_HOST_WRITE   = 0x2, ///< can be modified by host application.
+        SURFACE_ACCESS_DEVICE_READ  = 0x4, ///< can bind to input port of a effect
+        SURFACE_ACCESS_DEVICE_WRITE = 0x8, ///< can bind to output port of a effect
         //@}
     };
 
@@ -49,11 +49,23 @@ namespace GN { namespace gfx2
     enum SurfaceDimension
     {
         //@{
-        DIM_1D,
-        DIM_2D,
-        DIM_3D,
+        SURFACE_DIMENSION_1D,
+        SURFACE_DIMENSION_2D,
+        SURFACE_DIMENSION_3D,
+        SURFACE_DIMENSION_COUNT, ///< count of valid dimensions.
         //@}
     };
+
+    ///
+    /// convert surface dimension tag to string
+    ///
+    inline const char * surfaceDimension2String( int dim )
+    {
+        static const char * sTable[] = { "1D", "2D", "3D" };
+        GN_CASSERT( GN_ARRAY_COUNT(sTable) == SURFACE_DIMENSION_COUNT );
+        if( 0 <= dim && dim < SURFACE_DIMENSION_COUNT ) return sTable[dim];
+        else return "INVALID_SURFACE_DIMENSION";
+    }
 
     ///
     /// surface attribute semantic (8 characters at most)
@@ -139,8 +151,8 @@ namespace GN { namespace gfx2
         // all values are in unit of element
         //@{
         UInt32 width;        ///< sub surface width in element
-        UInt32 height;       ///< sub surface height in element
-        UInt32 depth;        ///< sub surface depth in element
+        UInt32 height;       ///< sub surface height in element (must be 1 for 1D surface)
+        UInt32 depth;        ///< sub surface depth in element  (must be 1 for 2D surface)
         UInt32 rowBytes;     ///< row pitch in bytes
         UInt32 sliceBytes;   ///< slice pitch in bytes
         //@}
@@ -151,11 +163,11 @@ namespace GN { namespace gfx2
     ///
     struct SurfaceLayout
     {
-        SurfaceDimension dim;     ///< 1D, 2D, 3D
-        UInt32           levels;  ///< LOD levels
-        UInt32           faces;   ///< number of faces
-        SubSurfaceLayout basemap; ///< properties of base map
-        SurfaceElement   element; ///< element descriptor
+        SurfaceDimension dim;      ///< 1D, 2D, 3D
+        UInt32           levels;   ///< LOD levels
+        UInt32           faces;    ///< number of faces
+        SubSurfaceLayout basemap;  ///< properties of base map
+        SurfaceElement   elements; ///< element descriptor
     };
 
     ///
@@ -336,9 +348,9 @@ namespace GN { namespace gfx2
         bool check() const;
 
         ///
-        /// check whether a layout matches the template
+        /// check whether a layout is compatible with the template
         ///
-        bool match( const SurfaceLayout & ) const;
+        bool compatible( const SurfaceLayout & ) const;
 
         ///
         /// apply template to a layout.
@@ -541,28 +553,38 @@ namespace GN { namespace gfx2
     typedef std::map<StrA,StrA> SurfaceCreationHints;
 
     ///
+    /// binding surface to specific port of specific effect
+    ///
+    struct SurfaceBindingParameter
+    {
+        StrA effect; ///< effect name
+        StrA port;   ///< port name
+
+        ///
+        /// default ctor
+        ///
+        SurfaceBindingParameter() {}
+
+        ///
+        /// ctor
+        ///
+        SurfaceBindingParameter( const StrA & e, const StrA & p ) : effect( e ), port( p ) {}
+    };
+
+    ///
     /// surface creation parameters
     ///
     struct SurfaceCreationParameter
     {
         ///
-        /// define binding to specific port of specific effect
-        ///
-        struct EffectBinding
-        {
-            StrA effect; ///< effect name
-            StrA port;   ///< port name
-        };
-
-        ///
         /// define required bindings of the resources
         ///
-        DynaArray<EffectBinding> bindings;
+        DynaArray<SurfaceBindingParameter> bindings;
 
         ///
         /// surface data layout
         ///
-        SurfaceLayoutTemplate layout;
+        SurfaceLayout layout;
 
         ///
         /// Force the created surface supports some access flags.

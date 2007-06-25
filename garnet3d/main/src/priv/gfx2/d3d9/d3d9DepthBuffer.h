@@ -28,7 +28,7 @@ namespace GN { namespace gfx2
         /// create new instance
         ///
         static D3D9DepthBuffer * sNewInstance(
-            const SurfaceLayoutTemplate & templ,
+            const SurfaceLayout         & layout,
             int                           access,
             const SurfaceCreationHints  & hints );
     };

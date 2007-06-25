@@ -6,6 +6,7 @@
 // \author  chenlee (2005.10.9)
 // *****************************************************************************
 
+#include "garnet/GNgfx.h"
 #include "garnet/GNgfx2.h"
 #include "garnet/GNinput.h"
 
