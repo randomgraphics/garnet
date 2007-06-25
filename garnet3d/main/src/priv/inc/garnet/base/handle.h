@@ -468,7 +468,7 @@ namespace GN
             }
         }
 
-        StrA handle2name( H h ) const
+        const StrA & handle2name( H h ) const
         {
             if( !mItems.validHandle( h ) )
                 return StrA::EMPTYSTR;

@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectBinding::D3D9EffectBinding()
+GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e ) : mEffect( e )
 {
 }
 
@@ -23,31 +23,41 @@ GN::gfx2::D3D9EffectBinding::~D3D9EffectBinding()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9EffectBinding::setup( D3D9Effect & effect, const EffectBindingDesc & ebd )
+bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 {
     GN_GUARD;
 
     BindItem b;
-    D3D9EffectPort * port;
 
-    for( size_t i = 0; i < ebd.bindings.size(); ++i )
+    std::map<StrA,EffectPortBinding>::const_iterator iter;
+
+    for(
+        UInt32 portHandle = mEffect.getFirstPortHandle();
+        0 != portHandle;
+        portHandle = mEffect.getNextPortHandle( portHandle ) )
     {
-        const EffectPortBinding & epb = ebd.bindings[i];
+        const D3D9EffectPort & port = mEffect.getPort( portHandle );
 
-        port = effect.getPort( epb.port );
+        iter = ebd.bindings.find( mEffect.getPortName( portHandle ) );
 
-        if( !port->compatible( epb.surf ) ) return false;
+        if( ebd.bindings.end() == iter )
+        {
+            b.port        = portHandle;
+            b.target.surf = 0;
+        }
+        else
+        {
+            if( !port.compatible( iter->second.surf ) )
+            {
+                return false;
+            }
 
-        b.port            = port;
-        b.surf.surf       = epb.surf;
-        b.surf.firstLevel = epb.firstLevel;
-        b.surf.numLevels  = epb.numLevels;
-        b.surf.firstFace  = epb.firstFace;
-        b.surf.numFaces   = epb.numFaces;
+            b.port   = portHandle;
+            b.target = iter->second;
+        }
+
         mBindItems.append( b );
     }
-
-    // TODO: 
 
     return true;
 
@@ -63,9 +73,7 @@ void GN::gfx2::D3D9EffectBinding::apply() const
     {
         const BindItem & b = mBindItems[i];
 
-        GN_ASSERT( b.port );
-
-        b.port->bind( b.surf );
+        mEffect.getPort(b.port).bind( b.target );
     }
 }
 
@@ -133,9 +141,9 @@ GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createBinding( const EffectBinding
 {
     GN_GUARD;
 
-    AutoObjPtr<D3D9EffectBinding> b( new D3D9EffectBinding );
+    AutoObjPtr<D3D9EffectBinding> b( new D3D9EffectBinding(*this) );
 
-    if( !b || !b->setup( *this, ebd ) ) return 0;
+    if( !b || !b->setup( ebd ) ) return 0;
 
     return mBindings.add( b.detach() );
 

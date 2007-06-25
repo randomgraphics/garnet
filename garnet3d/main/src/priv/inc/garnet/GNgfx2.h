@@ -460,7 +460,6 @@ namespace GN { namespace gfx2
     ///
     struct EffectPortBinding
     {
-        StrA      port;       ///< effect port name
         Surface * surf;       ///< surface pointer
         UInt32    firstLevel; ///< first mipmap level. 0 means the most detailed level.
         UInt32    numLevels;  ///< set 0 for all levels staring from firstLevel.
@@ -474,7 +473,7 @@ namespace GN { namespace gfx2
     struct EffectBindingDesc
     {
         //@{
-        DynaArray<EffectPortBinding> bindings;
+        std::map<StrA,EffectPortBinding> bindings; ///< bindings indexed by port name.
         //@}
     };
 

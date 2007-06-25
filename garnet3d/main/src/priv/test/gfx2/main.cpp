@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "testD3D9Hlsl.h"
+
 using namespace GN;
 using namespace GN::gfx2;
 using namespace GN::input;
@@ -20,31 +22,84 @@ struct InputInitiator
     }
 };
 
-int run( GraphicsSystem & gs )
+struct ClearScreen
 {
-    Input & i = gInput;
+    Effect                       * effect;
+    AutoObjPtr<EffectParameterSet> param;
 
-    KeyEvent key;
-
-    Effect * clearEffect = gs.getEffect( "clear" );
-    if( 0 == clearEffect ) return -1;
-
-    AutoObjPtr<EffectParameterSet> clearParam( clearEffect->createParameterSet() );
-    if( 0 == clearParam ) return -1;
-
-    clearParam->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
-    clearParam->setParameter( "DEPTH_VALUE", 1.0f );
-    clearParam->setParameter( "STENCIL_VALUE", 0 );
-
-    while( true )
+    ClearScreen()
     {
-        i.processInputEvents();
-        key = i.popLastKeyEvent();
-        if( key.status.down && KEY_ESCAPE == key.code ) break;
+    }
 
-        clearEffect->render( *clearParam , 0 );
+    bool init( GraphicsSystem & gs )
+    {
+        effect = gs.getEffect( "CLEAR_SCREEN" );
+        if( 0 == effect ) return false;
 
+        param.attach( effect->createParameterSet() );
+        if( 0 == param ) return false;
+
+        param->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
+        param->setParameter( "DEPTH_VALUE", 1.0f );
+        param->setParameter( "STENCIL_VALUE", 0 );
+
+        return true;
+    }
+
+    void draw()
+    {
+        effect->render( *param, 0 );
+    }
+};
+
+static bool runcase( GraphicsSystem & gs, ClearScreen & cs, Gfx2TestApp & c )
+{
+    while( 1 )
+    {
+        gInput.processInputEvents();
+
+        KeyEvent k = gInput.popLastKeyEvent();
+
+        if( k.status.down )
+        {
+            if( KEY_ESCAPE   == k.code ) return false;
+            if( KEY_SPACEBAR == k.code ) return true;
+        }
+
+        cs.draw();
+        c.draw(gs);
         gs.present();
+    }
+}
+
+static int run( GraphicsSystem & gs )
+{
+    // initialize clear effect
+    ClearScreen cs;
+    if( !cs.init( gs ) ) return -1;
+
+    Gfx2TestApp * cases[] =
+    {
+        new TestD3D9Hlsl,
+    };
+
+    for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
+    {
+        Gfx2TestApp * c = cases[i];
+        GN_ASSERT( c );
+
+        bool next = false;
+
+        if( c->init(gs) )
+        {
+            next = runcase( gs, cs, *c );
+        }
+
+        c->quit(gs);
+        delete c;
+        cases[i] = 0;
+
+        if( !next ) break;
     }
 
     return 0;

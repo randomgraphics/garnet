@@ -12,18 +12,6 @@ namespace GN { namespace gfx2
     class D3D9Effect;
 
     ///
-    /// surface binding information
-    ///
-    struct D3D9SurfaceBindingDesc
-    {
-        Surface         * surf;       ///< surface pointer
-        UInt32            firstLevel; ///< first mipmap level. 0 means the most detailed level.
-        UInt32            numLevels;  ///< set 0 for all levels staring from firstLevel.
-        UInt32            firstFace;  ///< first face index, starting from 0
-        UInt32            numFaces;   ///< set to 0 for all faces starting from firstFace.
-    };
-
-    ///
     /// D3D9 effect port descriptor
     ///
     struct GN_GFX2_D3D9_PUBLIC D3D9EffectPortDesc : public EffectPortDesc
@@ -63,7 +51,7 @@ namespace GN { namespace gfx2
         ///
         /// bind surface to device
         ///
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const = 0;
+        virtual void bind( const EffectPortBinding & ) const = 0;
     };
 
     ///
@@ -75,7 +63,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
+        virtual void bind( const EffectPortBinding & ) const;
         //@}
     };
 
@@ -88,7 +76,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
+        virtual void bind( const EffectPortBinding & ) const;
         //@}
     };
 
@@ -101,7 +89,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
+        virtual void bind( const EffectPortBinding & ) const;
         //@}
     };
 
@@ -127,7 +115,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
+        virtual void bind( const EffectPortBinding & ) const;
         //@}
     };
 
@@ -140,7 +128,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const D3D9SurfaceBindingDesc & ) const;
+        virtual void bind( const EffectPortBinding & ) const;
         //@}
     };
 
@@ -149,10 +137,12 @@ namespace GN { namespace gfx2
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9EffectBinding
     {
+        D3D9Effect & mEffect;
+
         struct BindItem
         {
-            D3D9EffectPort       * port;
-            D3D9SurfaceBindingDesc surf;
+            UInt32            port;   ///< port handle
+            EffectPortBinding target; ///< port binding target
         };
 
         DynaArray<BindItem> mBindItems;
@@ -162,7 +152,7 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        D3D9EffectBinding();
+        D3D9EffectBinding( D3D9Effect & e );
 
         ///
         /// dtor
@@ -172,7 +162,7 @@ namespace GN { namespace gfx2
         ///
         /// binding setup
         ///
-        bool setup( D3D9Effect & effect, const EffectBindingDesc & ebd );
+        bool setup( const EffectBindingDesc & ebd );
 
         ///
         /// apply binding to rendering device
@@ -204,8 +194,12 @@ namespace GN { namespace gfx2
         ///
         D3D9GraphicsSystem & d3d9gs() const { return (D3D9GraphicsSystem&)gs(); }
 
-        const D3D9EffectPort * getPort( const StrA & name ) const;
-        D3D9EffectPort * getPort( const StrA & name );
+        UInt32                 getFirstPortHandle() const { return mPorts.first(); }
+        UInt32                 getNextPortHandle( UInt32 current ) const { return mPorts.next( current ); }
+        const StrA           & getPortName( UInt32 h ){ GN_ASSERT(mPorts.validHandle(h)); return mPorts.handle2name(h); }
+        const D3D9EffectPort & getPort( UInt32 h ) const { GN_ASSERT(mPorts.validHandle(h)); return *mPorts[h]; }
+        const D3D9EffectPort * getPort( const StrA & name ) const; ///< return NULL for invalid name
+        D3D9EffectPort       * getPort( const StrA & name ); ///< return NULL for invalid name
 
         //@}
 
