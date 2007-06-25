@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d9DepthBuffer.h"
 #include "d3d9BuildInEffects.h"
-
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -568,7 +567,8 @@ GN::gfx2::D3D9GraphicsSystem::D3D9GraphicsSystem()
     clear();
 
     // register build-in effects
-    registerEffect( "clear", D3D9ClearEffect::sGetFactory() );
+    registerEffect( "CLEAR_SCREEN", D3D9ClearScreenEffect::sGetFactory() );
+    registerEffect( "D3D9_HLSL", D3D9HlslEffect::sGetFactory() );
 }
 
 // *****************************************************************************
