@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "d3d9VtxBuf.h"
 
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9EffectPort" );
 
@@ -80,7 +81,9 @@ void GN::gfx2::D3D9TexturePort::bind( const EffectPortBinding & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort()
+GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
+    : D3D9EffectPort(gs)
+    , mStage(stage)
 {
     mDesc.surfaceType = SURFACE_TYPE_VB;
 
@@ -107,7 +110,7 @@ GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort()
 // -----------------------------------------------------------------------------
 void GN::gfx2::D3D9VtxBufPort::setStride( UInt32 )
 {
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
 }
 
 //
@@ -115,7 +118,7 @@ void GN::gfx2::D3D9VtxBufPort::setStride( UInt32 )
 // -----------------------------------------------------------------------------
 void GN::gfx2::D3D9VtxBufPort::setVertexCount( UInt32 )
 {
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
 }
 
 //
@@ -124,7 +127,7 @@ void GN::gfx2::D3D9VtxBufPort::setVertexCount( UInt32 )
 void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
     const SurfaceAttributeTemplate & )
 {
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
 }
 
 //
@@ -135,7 +138,7 @@ void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
 {
     GN_UNUSED_PARAM( semantic );
     GN_UNUSED_PARAM( offset );
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
 }
 
 //
@@ -144,7 +147,7 @@ void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
 void GN::gfx2::D3D9VtxBufPort::addOptionalAttribute(
     const SurfaceAttributeTemplate & )
 {
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
 }
 
 //
@@ -152,16 +155,27 @@ void GN::gfx2::D3D9VtxBufPort::addOptionalAttribute(
 // -----------------------------------------------------------------------------
 bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * ) const
 {
-    GN_UNIMPL_WARNING();
+    GN_UNIMPL();
     return false;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::bind( const EffectPortBinding & ) const
+void GN::gfx2::D3D9VtxBufPort::bind( const EffectPortBinding & epb ) const
 {
-    GN_UNIMPL_WARNING();
+    IDirect3DDevice9 * dev = gs().d3ddev();
+
+    if( epb.surf )
+    {
+        D3D9VtxBuf * vb = safeCast<D3D9VtxBuf*>(epb.surf);
+        const SurfaceDesc & desc = vb->getDesc();
+        dev->SetStreamSource( mStage, vb->getSurface(), 0, desc.layout.format.stride );
+    }
+    else
+    {
+        dev->SetStreamSource( mStage, 0, 0, 0 );
+    }
 }
 
 

@@ -44,6 +44,15 @@
 #define GN_FIELD_OFFSET( class_, field ) \
     ( (size_t)(UIntPtr) &( ((class_*)(void*)(0))->field ) )
 
+///
+/// safe cast macro: perform dynamic cast in debug build, and static cast in release build.
+///
+#if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
+#define GN_SAFE_CAST dynamic_cast
+#else
+#define GN_SAFE_CAST static_cast
+#endif
+
 namespace GN
 {
     ///

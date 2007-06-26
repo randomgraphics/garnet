@@ -67,6 +67,7 @@ void GN::gfx2::D3D9VtxBuf::download(
     size_t                 srcRowBytes,
     size_t                 srcSliceBytes )
 {
+    GN_UNIMPL();
 }
 
 //
@@ -79,6 +80,7 @@ void GN::gfx2::D3D9VtxBuf::upload(
     size_t              destRowBytes,
     size_t              destSliceBytes )
 {
+    GN_UNIMPL();
 }
 
 //
@@ -86,6 +88,7 @@ void GN::gfx2::D3D9VtxBuf::upload(
 // -----------------------------------------------------------------------------
 void GN::gfx2::D3D9VtxBuf::save( NativeSurfaceData & ) const
 {
+    GN_UNIMPL();
 }
 
 //
@@ -93,6 +96,7 @@ void GN::gfx2::D3D9VtxBuf::save( NativeSurfaceData & ) const
 // -----------------------------------------------------------------------------
 void GN::gfx2::D3D9VtxBuf::load( const NativeSurfaceData & )
 {
+    GN_UNIMPL();
 }
 
 // *****************************************************************************
