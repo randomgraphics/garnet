@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RESOURCETHREAD_H__
 #define __GN_ENGINE_RESOURCETHREAD_H__
 // *****************************************************************************
-//! \file    engine/resourceThread.h
-//! \brief   Async resource loading threads
-//! \author  chen@@CHENLI-HOMEPC (2007.4.27)
+/// \file
+/// \brief   Async resource loading threads
+/// \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
 #include "resourceCache.h"
@@ -100,6 +100,6 @@ namespace GN { namespace engine
 #include "resourceThread.inl"
 
 // *****************************************************************************
-//                           End of resourceThread.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RESOURCETHREAD_H__

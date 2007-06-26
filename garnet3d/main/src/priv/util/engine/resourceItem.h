@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RESOURCEITEM_H__
 #define __GN_ENGINE_RESOURCEITEM_H__
 // *****************************************************************************
-//! \file    engine/resourceItem.h
-//! \brief   Graphics resource cache
-//! \author  chenli@@FAREAST (2007.4.27)
+/// \file
+/// \brief   Graphics resource cache
+/// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
 #include "garnet/base/linkedlist.h"
@@ -117,6 +117,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of resourceItem.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RESOURCEITEM_H__

@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_RENDERWINDOWMSW_H__
 #define __GN_GFX_RENDERWINDOWMSW_H__
 // *****************************************************************************
-/// \file    renderWindowMsw.h
+/// \file
 /// \brief   Render window class on NT platform
 /// \author  chenlee (2005.10.4)
 // *****************************************************************************
@@ -267,6 +267,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of renderWindowMsw.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_RENDERWINDOWMSW_H__

@@ -5,6 +5,7 @@ sources = [
     'd3d9EffectPort.cpp',
     'd3d9GraphicsSystem.cpp',
     'd3d9HlslEffect.cpp',
+    'd3d9VtxBuf.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 target = GN.newTarget( 'shlib', 'GNgfx2D3D9', [cluster], dependencies = ['GNgfx2Base'] )

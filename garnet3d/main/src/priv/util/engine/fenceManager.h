@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_FENCEMANAGER_H__
 #define __GN_ENGINE_FENCEMANAGER_H__
 // *****************************************************************************
-//! \file    engine/fenceManager.h
-//! \brief   fence manager
-//! \author  chen@@CHENLI-HP (2007.5.2)
+/// \file
+/// \brief   fence manager
+/// \author  chen@@CHENLI-HP (2007.5.2)
 // *****************************************************************************
 
 #include "fence.h"
@@ -42,6 +42,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of fenceManager.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_FENCEMANAGER_H__

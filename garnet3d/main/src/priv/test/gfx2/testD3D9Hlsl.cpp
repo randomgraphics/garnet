@@ -82,17 +82,17 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.layout.basemap.depth = 1;
     scp.layout.basemap.rowBytes = 24 * sizeof(Vertex);
     scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.elements.attribs[0].semantic.set( "POSITION0" );
-    scp.layout.elements.attribs[0].offset = 0;
-    scp.layout.elements.attribs[0].format = FMT_FLOAT3;
-    scp.layout.elements.attribs[1].semantic.set( "NORMAL0" );
-    scp.layout.elements.attribs[1].offset = 12;
-    scp.layout.elements.attribs[1].format = FMT_FLOAT3;
-    scp.layout.elements.attribs[1].semantic.set( "TEXCOORD0" );
-    scp.layout.elements.attribs[1].offset = 24;
-    scp.layout.elements.attribs[1].format = FMT_FLOAT2;
-    scp.layout.elements.count = 3;
-    scp.layout.elements.stride = sizeof(Vertex);
+    scp.layout.format.attribs[0].semantic.set( "POSITION0" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = FMT_FLOAT3;
+    scp.layout.format.attribs[1].semantic.set( "NORMAL0" );
+    scp.layout.format.attribs[1].offset = 12;
+    scp.layout.format.attribs[1].format = FMT_FLOAT3;
+    scp.layout.format.attribs[1].semantic.set( "TEXCOORD0" );
+    scp.layout.format.attribs[1].offset = 24;
+    scp.layout.format.attribs[1].format = FMT_FLOAT2;
+    scp.layout.format.count = 3;
+    scp.layout.format.stride = sizeof(Vertex);
     mVtxBuf = gs.createSurface( scp );
     if( 0 == mVtxBuf ) return false;
 

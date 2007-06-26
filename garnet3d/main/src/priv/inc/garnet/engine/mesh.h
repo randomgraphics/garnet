@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_MESH_H__
 #define __GN_ENGINE_MESH_H__
 // *****************************************************************************
-//! \file    engine/mesh.h
-//! \brief   mesh entity class
-//! \author  chenli@@FAREAST (2007.5.8)
+/// \file
+/// \brief   mesh entity class
+/// \author  chenli@@FAREAST (2007.5.8)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -204,6 +204,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of mesh.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_MESH_H__

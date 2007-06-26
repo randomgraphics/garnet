@@ -1,9 +1,9 @@
 #ifndef __GN_SCENE_QUAD_H__
 #define __GN_SCENE_QUAD_H__
 // *****************************************************************************
-//! \file    scene/quad.h
-//! \brief   Quad renderer
-//! \author  chen@@CHENLI-HOMEPC (2007.3.13)
+/// \file
+/// \brief   Quad renderer
+/// \author  chen@@CHENLI-HOMEPC (2007.3.13)
 // *****************************************************************************
 
 namespace GN { namespace scene
@@ -235,6 +235,6 @@ namespace GN { namespace scene
 }}
 
 // *****************************************************************************
-//                           End of quad.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_SCENE_QUAD_H__

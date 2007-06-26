@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_GNBASE_H__
 #define __GN_BASE_GNBASE_H__
 // *****************************************************************************
-/// \file    GNbase.h
+/// \file
 /// \brief   General header of base module
 /// \author  chenlee(2005.4.10)
 // *****************************************************************************

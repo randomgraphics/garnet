@@ -1,7 +1,7 @@
 #ifndef __GN_GUI_CEGUIHEADERS_H__
 #define __GN_GUI_CEGUIHEADERS_H__
 // *****************************************************************************
-/// \file    cegui/ceguiHeaders.h
+/// \file
 /// \brief   CEGUI header wrappers, to disable compiler warnings
 /// \author  chenlee (2006.2.25)
 // *****************************************************************************
@@ -23,6 +23,6 @@
 #endif
 
 // *****************************************************************************
-//                           End of ceguiHeaders.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GUI_CEGUIHEADERS_H__

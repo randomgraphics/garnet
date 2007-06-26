@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_STRING_H__
 #define __GN_BASE_STRING_H__
 // *****************************************************************************
-/// \file    string.h
+/// \file
 /// \brief   custom string implementation
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************

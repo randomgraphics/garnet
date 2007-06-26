@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9GRAPHICSSYSTEM_H__
 #define __GN_GFX2_D3D9GRAPHICSSYSTEM_H__
 // *****************************************************************************
-//! \file    gfx2/d3d9GraphicsSystem.h
-//! \brief   d3d9 graphics system interface
-//! \author  chenli@@FAREAST (2007.6.15)
+/// \file
+/// \brief   d3d9 graphics system interface
+/// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -139,6 +139,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of d3d9GraphicsSystem.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9GRAPHICSSYSTEM_H__

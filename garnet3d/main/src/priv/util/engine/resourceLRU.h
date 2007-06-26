@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RESOURCELRU_H__
 #define __GN_ENGINE_RESOURCELRU_H__
 // *****************************************************************************
-//! \file    engine/resourceLRU.h
-//! \brief   resource LRU manager
-//! \author  chen@@CHENLI-HP (2007.5.2)
+/// \file
+/// \brief   resource LRU manager
+/// \author  chen@@CHENLI-HP (2007.5.2)
 // *****************************************************************************
 
 #include "resourceItem.h"
@@ -80,6 +80,6 @@ namespace GN { namespace engine
     };
 }}
 // *****************************************************************************
-//                           End of resourceLRU.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RESOURCELRU_H__

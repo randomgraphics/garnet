@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RENDERENGINE_H__
 #define __GN_ENGINE_RENDERENGINE_H__
 // *****************************************************************************
-//! \file    engine/renderEngine.h
-//! \brief   interface of render engine
-//! \author  chenli@@FAREAST (2007.4.27)
+/// \file
+/// \brief   interface of render engine
+/// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -588,6 +588,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of renderEngine.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RENDERENGINE_H__

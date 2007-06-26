@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D10_D3D10STATEOBJECT_H__
 #define __GN_GFXD3D10_D3D10STATEOBJECT_H__
 // *****************************************************************************
-//! \file    d3d10/d3d10StateObject.h
-//! \brief   D3D10 state object cache
-//! \author  chenli@@FAREAST (2007.6.11)
+/// \file
+/// \brief   D3D10 state object cache
+/// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
 #include "d3d10Renderer.h"
@@ -568,6 +568,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3d10StateObject.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFXD3D10_D3D10STATEOBJECT_H__

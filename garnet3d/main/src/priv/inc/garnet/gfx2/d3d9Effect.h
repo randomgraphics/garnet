@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9EFFECT_H__
 #define __GN_GFX2_D3D9EFFECT_H__
 // *****************************************************************************
-//! \file    gfx2/d3d9Effect.h
-//! \brief   d3d9 base effect interfaces
-//! \author  chenli@@FAREAST (2007.6.15)
+/// \file
+/// \brief   d3d9 base effect interfaces
+/// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -264,6 +264,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of d3d9Effect.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9EFFECT_H__

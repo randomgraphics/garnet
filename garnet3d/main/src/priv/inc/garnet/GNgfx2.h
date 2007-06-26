@@ -1,12 +1,13 @@
 #ifndef __GN_GFX2_GNGFX2_H__
 #define __GN_GFX2_GNGFX2_H__
 // *****************************************************************************
-//! \file    garnet/GNgfx2.h
-//! \brief   experimental effect based GFX interface
-//! \author  chenli@@FAREAST (2007.6.11)
+/// \file
+/// \brief   experimental effect based GFX interface
+/// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
-#include "garnet/GNcore.h"
+#include "GNcore.h"
+#include "GNgfx.h"
 #include <set>
 
 namespace GN
@@ -20,6 +21,8 @@ namespace GN
 
 namespace GN { namespace gfx2
 {
+    using GN::gfx::ClrFmt; ///< import color format definition from gfx namespace
+
     // *************************************************************************
     // surface
     // *************************************************************************
@@ -119,12 +122,12 @@ namespace GN { namespace gfx2
     {
         SurfaceAttributeSemantic semantic; ///< 8-character sementic. (must be unique in single surfel)
         UInt32                   offset;   ///< offset in element.
-        SInt32                   format;   ///< attribute format. (FMT_XXX).
+        ClrFmt                   format;   ///< attribute format. (FMT_XXX).
 
         ///
         /// set values in attribute descriptor
         ///
-        void set( SurfaceAttributeSemantic s, UInt32 o, SInt32 f )
+        void set( SurfaceAttributeSemantic s, UInt32 o, ClrFmt f )
         {
             semantic = s;
             offset   = o;
@@ -134,9 +137,9 @@ namespace GN { namespace gfx2
     GN_CASSERT( sizeof(SurfaceAttribute) == 16 );
 
     ///
-    /// Surface element (surfel)
+    /// Surface element format
     ///
-    struct SurfaceElement
+    struct SurfaceElementFormat
     {
         SurfaceAttribute attribs[MAX_SURFACE_ELEMENT_ATTRIBUTES]; ///< surfel attribute list
         UInt32           count;                                   ///< surfel attribute count
@@ -163,11 +166,11 @@ namespace GN { namespace gfx2
     ///
     struct SurfaceLayout
     {
-        SurfaceDimension dim;      ///< 1D, 2D, 3D
-        UInt32           levels;   ///< LOD levels
-        UInt32           faces;    ///< number of faces
-        SubSurfaceLayout basemap;  ///< properties of base map
-        SurfaceElement   elements; ///< element descriptor
+        SurfaceDimension     dim;     ///< 1D, 2D, 3D
+        UInt32               levels;  ///< LOD levels
+        UInt32               faces;   ///< number of faces
+        SubSurfaceLayout     basemap; ///< properties of base map
+        SurfaceElementFormat format;  ///< element format descriptor
     };
 
     ///
@@ -281,7 +284,7 @@ namespace GN { namespace gfx2
     {
         SurfaceAttributeSemantic semantic;       ///< attribute semantic
         UInt32                   offset;         ///< -1, means any offset is ok.
-        std::set<SInt32>         allowedFormats; ///< empty, means any format is ok.
+        std::set<ClrFmt>         allowedFormats; ///< empty, means any format is ok.
     };
 
     ///
@@ -518,7 +521,7 @@ namespace GN { namespace gfx2
 
         //@}
 
-        ///! \name port & binding management
+        //// \name port & binding management
         //@{
 
         virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
@@ -527,7 +530,7 @@ namespace GN { namespace gfx2
 
         //@}
 
-        ///! \name property management. Note that property is read-only, and may change during life-time of a effect.
+        //// \name property management. Note that property is read-only, and may change during life-time of a effect.
         //@{
 
         virtual bool                   hasProperity( const StrA & name ) const = 0;
@@ -719,6 +722,6 @@ namespace GN { namespace gfx2
 #include "gfx2/GNgfx2.inl"
 
 // *****************************************************************************
-//                           End of GNgfx2.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_GNGFX2_H__

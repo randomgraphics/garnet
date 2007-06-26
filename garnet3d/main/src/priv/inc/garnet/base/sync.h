@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_SYNC_H__
 #define __GN_BASE_SYNC_H__
 // *****************************************************************************
-//! \file    base/sync.h
-//! \brief   platform independent sync operations
-//! \author  chen@@CHENLI-HOMEPC (2007.4.8)
+/// \file
+/// \brief   platform independent sync operations
+/// \author  chen@@CHENLI-HOMEPC (2007.4.8)
 // *****************************************************************************
 
 namespace GN
@@ -198,6 +198,6 @@ namespace GN
 #endif
 
 // *****************************************************************************
-//                           End of sync.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_SYNC_H__

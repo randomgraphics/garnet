@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9DEPTHBUFFER_H__
 #define __GN_GFX2_D3D9DEPTHBUFFER_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9DepthBuffer.h
-//! \brief   D3D9 depth buffer class
-//! \author  chenli@@FAREAST (2007.6.19)
+/// \file
+/// \brief   D3D9 depth buffer class
+/// \author  chenli@@FAREAST (2007.6.19)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -35,6 +35,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of d3d9DepthBuffer.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9DEPTHBUFFER_H__

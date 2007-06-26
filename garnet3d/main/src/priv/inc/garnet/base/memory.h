@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_MEMORY_H__
 #define __GN_BASE_MEMORY_H__
 // *****************************************************************************
-/// \file    memory.h
+/// \file
 /// \brief   Basic memory management routines
 /// \author  chenlee (2005.7.23)
 // *****************************************************************************
@@ -56,6 +56,6 @@ inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
 #endif
 
 // *****************************************************************************
-//                           End of memory.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_MEMORY_H__

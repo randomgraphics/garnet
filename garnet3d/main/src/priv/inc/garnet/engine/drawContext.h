@@ -1,7 +1,7 @@
 #ifndef _GN_ENGINE_DRAWCONTEXT_H__
 #define _GN_ENGINE_DRAWCONTEXT_H__
 // *****************************************************************************
-/// \file    drawContext.h
+/// \file
 /// \brief   Rendering context
 /// \author  chenlee (2005.9.30)
 // *****************************************************************************
@@ -497,6 +497,6 @@ namespace GN { namespace engine
 #include "drawContext.inl"
 
 // *****************************************************************************
-//                           End of drawContext.h
+//                                     EOF
 // *****************************************************************************
 #endif // _GN_ENGINE_DRAWCONTEXT_H__

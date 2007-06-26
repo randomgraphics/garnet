@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_TEXTURE_H__
 #define __GN_ENGINE_TEXTURE_H__
 // *****************************************************************************
-//! \file    engine/texture.h
-//! \brief   texture manager
-//! \author  chenli@@FAREAST (2007.5.9)
+/// \file
+/// \brief   texture manager
+/// \author  chenli@@FAREAST (2007.5.9)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -40,6 +40,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of texture.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_TEXTURE_H__

@@ -1,9 +1,9 @@
 #ifndef __GN_D3D9WRAPPER_BASERESOURCE_H__
 #define __GN_D3D9WRAPPER_BASERESOURCE_H__
 // *****************************************************************************
-//! \file    d3d9Wrapper/baseResource.h
-//! \brief   Basic D3D9 resource wrapper
-//! \author  chen@@CHENLI-HOMEPC (2007.3.17)
+/// \file
+/// \brief   Basic D3D9 resource wrapper
+/// \author  chen@@CHENLI-HOMEPC (2007.3.17)
 // *****************************************************************************
 
 #include "baseInterface.h"
@@ -62,6 +62,6 @@ HRESULT BasicResource<T>::GetDevice( IDirect3DDevice9 ** ppDevice )
 }
 
 // *****************************************************************************
-//                           End of baseResource.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_D3D9WRAPPER_BASERESOURCE_H__

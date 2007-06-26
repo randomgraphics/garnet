@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_D3D9APP_H__
 #define __GN_GFX_D3D9APP_H__
 // *****************************************************************************
-//! \file    d3d9DumpViewer/d3d9app.h
-//! \brief   interface of d3d9 application framework
-//! \author  chen@@CHENLI-HOMEPC (2007.4.16)
+/// \file
+/// \brief   interface of d3d9 application framework
+/// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
@@ -156,6 +156,6 @@ namespace GN { namespace gfx { namespace d3d9
 }}}
 
 // *****************************************************************************
-//                           End of d3d9app.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_D3D9APP_H__

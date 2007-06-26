@@ -1,9 +1,9 @@
 #ifndef __GN_SHADOWMAP_SIMPLE_H__
 #define __GN_SHADOWMAP_SIMPLE_H__
 // *****************************************************************************
-//! \file    shadowmap/simple.h
-//! \brief   the most primitive shadow map implementation.
-//! \author  chen@@CHENLI-HOMEPC (2007.4.21)
+/// \file
+/// \brief   the most primitive shadow map implementation.
+/// \author  chen@@CHENLI-HOMEPC (2007.4.21)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
@@ -97,6 +97,6 @@ namespace GN
 };
 
 // *****************************************************************************
-//                           End of simple.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_SHADOWMAP_SIMPLE_H__

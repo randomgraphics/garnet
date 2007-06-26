@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_DRAWABLE_H__
 #define __GN_ENGINE_DRAWABLE_H__
 // *****************************************************************************
-//! \file    engine/drawable.h
-//! \brief   Drawable class
-//! \author  chen@@CHENLI-HOMEPC (2007.2.21)
+/// \file
+/// \brief   Drawable class
+/// \author  chen@@CHENLI-HOMEPC (2007.2.21)
 // *****************************************************************************
 
 #include <map>
@@ -205,6 +205,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of drawable.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_DRAWABLE_H__

@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_GNENGINE_H__
 #define __GN_ENGINE_GNENGINE_H__
 // *****************************************************************************
-//! \file    garnet/GNengine.h
-//! \brief   public header of engine module
-//! \author  chenli@@FAREAST (2007.4.27)
+/// \file
+/// \brief   public header of engine module
+/// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
 #include "GNcore.h"
@@ -30,6 +30,6 @@ namespace GN
 #include "engine/drawable.h"
 
 // *****************************************************************************
-//                           End of GNengine.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_GNENGINE_H__

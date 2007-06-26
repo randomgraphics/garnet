@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_BASEGRAPHICSSYSTEM_H__
 #define __GN_GFX2_BASEGRAPHICSSYSTEM_H__
 // *****************************************************************************
-//! \file    gfx2/baseGraphicsSystem.h
-//! \brief   basic graphics system implementation
-//! \author  chenli@@FAREAST (2007.6.15)
+/// \file
+/// \brief   basic graphics system implementation
+/// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
 #include "../GNgfx2.h"
@@ -245,6 +245,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of baseGraphicsSystem.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_BASEGRAPHICSSYSTEM_H__

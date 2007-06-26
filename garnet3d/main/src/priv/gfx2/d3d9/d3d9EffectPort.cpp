@@ -82,7 +82,24 @@ void GN::gfx2::D3D9TexturePort::bind( const EffectPortBinding & ) const
 // -----------------------------------------------------------------------------
 GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort()
 {
-    GN_UNIMPL_WARNING();
+    mDesc.surfaceType = SURFACE_TYPE_VB;
+
+    mDesc.input = true;
+    mDesc.output = false;
+
+    mDesc.layout.flags.u32 = 0;
+
+    // 1D
+    mDesc.layout.flags.dim = 1;
+    mDesc.layout.dim = SURFACE_DIMENSION_1D;
+
+    // no mipmap
+    mDesc.layout.flags.levels = 1;
+    mDesc.layout.levels = 1;
+
+    // no multiple faces
+    mDesc.layout.flags.faces = 1;
+    mDesc.layout.faces = 1;
 }
 
 //

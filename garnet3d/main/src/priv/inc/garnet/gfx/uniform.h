@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_UNIFORM_H__
 #define __GN_GFX_UNIFORM_H__
 // *****************************************************************************
-//! \file    gfx/uniform.h
-//! \brief   Uniform value class
-//! \author  chen@@CHENLI-HOMEPC (2007.2.22)
+/// \file
+/// \brief   Uniform value class
+/// \author  chen@@CHENLI-HOMEPC (2007.2.22)
 // *****************************************************************************
 
 #include <vector>
@@ -131,6 +131,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of uniform.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_UNIFORM_H__

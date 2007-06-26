@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_RENDERWINDOWX11_H__
 #define __GN_GFX_RENDERWINDOWX11_H__
 // *****************************************************************************
-/// \file    renderWindowX11.h
+/// \file
 /// \brief   Window class on X RenderWindowX11 platform
 /// \author  chenlee (2005.10.4)
 // *****************************************************************************
@@ -91,6 +91,6 @@ namespace GN { namespace gfx
 #endif // GN_POSIX
 
 // *****************************************************************************
-//                           End of renderWindowX11.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_RENDERWINDOWX11_H__

@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_DEBUGVAR_H__
 #define __GN_BASE_DEBUGVAR_H__
 // *****************************************************************************
-//! \file    base/debugvar.h
-//! \brief   interface of runtime adjustable debug variable
-//! \author  chen@@CHENLI-HOMEPC (2007.4.18)
+/// \file
+/// \brief   interface of runtime adjustable debug variable
+/// \author  chen@@CHENLI-HOMEPC (2007.4.18)
 // *****************************************************************************
 
 namespace GN
@@ -113,6 +113,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of debugvar.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_DEBUGVAR_H__

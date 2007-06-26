@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_DRAWTHREAD_H__
 #define __GN_ENGINE_DRAWTHREAD_H__
 // *****************************************************************************
-//! \file    engine/drawThread.h
-//! \brief   async rendering thread interface
-//! \author  chen@@CHENLI-HOMEPC (2007.4.27)
+/// \file
+/// \brief   async rendering thread interface
+/// \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
 #include "resourceCache.h"
@@ -238,6 +238,6 @@ namespace GN { namespace engine
 #include "drawThread.inl"
 
 // *****************************************************************************
-//                           End of drawThread.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_DRAWTHREAD_H__

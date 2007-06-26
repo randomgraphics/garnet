@@ -1,9 +1,9 @@
 #ifndef __GN_SCENE_SCENE_H__
 #define __GN_SCENE_SCENE_H__
 // *****************************************************************************
-//! \file    scene/scene.h
-//! \brief   Interface of scene class
-//! \author  chen@@CHENLI-HOMEPC (2007.4.1)
+/// \file
+/// \brief   Interface of scene class
+/// \author  chen@@CHENLI-HOMEPC (2007.4.1)
 // *****************************************************************************
 
 namespace GN { namespace scene
@@ -94,6 +94,6 @@ namespace GN { namespace scene
 }}
 
 // *****************************************************************************
-//                           End of scene.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_SCENE_SCENE_H__

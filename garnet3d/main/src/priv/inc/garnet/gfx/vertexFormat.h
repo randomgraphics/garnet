@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_VERTEXFORMAT_H__
 #define __GN_GFX_VERTEXFORMAT_H__
 // *****************************************************************************
-/// \file    vertexFormat.h
+/// \file
 /// \brief   Vertex format structure
 /// \author  chenlee (2005.11.13)
 // *****************************************************************************
@@ -154,6 +154,6 @@ namespace GN { namespace gfx
 #endif
 
 // *****************************************************************************
-//                           End of vertexFormat.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_VERTEXFORMAT_H__

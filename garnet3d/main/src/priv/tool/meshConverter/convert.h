@@ -1,9 +1,9 @@
 #ifndef __GN_MESHCONVERTER_CONVERT_H__
 #define __GN_MESHCONVERTER_CONVERT_H__
 // *****************************************************************************
-//! \file    meshConverter/convert.h
-//! \brief   Common header of mesh converter
-//! \author  chen@@CHENLI-HOMEPC (2007.3.24)
+/// \file
+/// \brief   Common header of mesh converter
+/// \author  chen@@CHENLI-HOMEPC (2007.3.24)
 // *****************************************************************************
 
 namespace GN
@@ -29,6 +29,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of convert.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_MESHCONVERTER_CONVERT_H__

@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_USERCONFIG_H__
 #define __GN_BASE_USERCONFIG_H__
 // *****************************************************************************
-/// \file    userConfig.h
+/// \file
 /// \brief   User configuable compile switches.
 ///          Please modify this file directly or define these macros in your
 ///          build script to meet your own requirements.
@@ -92,6 +92,6 @@
 #endif
 
 // *****************************************************************************
-//                           End of userConfig.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_USERCONFIG_H__

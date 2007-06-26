@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_GRAPHICSRESOURCE_H__
 #define __GN_ENGINE_GRAPHICSRESOURCE_H__
 // *****************************************************************************
-//! \file    engine/graphicsResource.h
-//! \brief   interface of graphics resource
-//! \author  chenli@@FAREAST (2007.4.27)
+/// \file
+/// \brief   interface of graphics resource
+/// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -158,6 +158,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of graphicsResource.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_GRAPHICSRESOURCE_H__

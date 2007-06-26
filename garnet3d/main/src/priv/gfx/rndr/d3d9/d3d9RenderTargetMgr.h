@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_D3D9RENDERTARGETMGR_H__
 #define __GN_GFX_D3D9RENDERTARGETMGR_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9RenderTargetMgr.h
-//! \brief   D3D9 render target manager
-//! \author  chen@@CHENLI-HOMEPC (2007.1.11)
+/// \file
+/// \brief   D3D9 render target manager
+/// \author  chen@@CHENLI-HOMEPC (2007.1.11)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -133,6 +133,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3d9RenderTargetMgr.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_D3D9RENDERTARGETMGR_H__
