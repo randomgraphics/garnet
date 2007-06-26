@@ -199,7 +199,9 @@ namespace GN
             {
                 ::fprintf(
                     stderr,
-                    "%s(%d) : name(%s), level(%s) : %s\n",
+                    "%s(%d)\n"
+                    "\tname(%s), level(%s)\n"
+                    "\t%s\n\n",
                     desc.file, desc.line,
                     logger.getName().cptr(),
                     sLevel2Str(desc.level).cptr(),
@@ -218,7 +220,9 @@ namespace GN
             {
                 ::fprintf(
                     stderr,
-                    "%s(%d) : name(%s), level(%s) : %S\n",
+                    "%s(%d)\n"
+                    "\tname(%s), level(%s)\n"
+                    "\t%S\n\n",
                     desc.file, desc.line,
                     logger.getName().cptr(),
                     sLevel2Str(desc.level).cptr(),

@@ -160,6 +160,8 @@ namespace GN { namespace gfx2
 
         DynaArray<BindItem> mBindItems;
 
+        IDirect3DVertexDeclaration9 * mVtxDecl;
+
     public:
 
         ///
@@ -170,7 +172,7 @@ namespace GN { namespace gfx2
         ///
         /// dtor
         ///
-        ~D3D9EffectBinding();
+        virtual ~D3D9EffectBinding();
 
         ///
         /// binding setup
