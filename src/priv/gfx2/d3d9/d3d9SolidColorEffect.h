@@ -20,12 +20,17 @@ namespace GN { namespace gfx2
         D3D9VtxBufPort        mVtxBuf;
         D3D9IdxBufPort        mIdxBuf; ///< this is optional.
 
-        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9SolidColorEffect(gs); }
+        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9SolidColorEffect(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs)); }
 
         ///
         /// ctor
         ///
-        D3D9SolidColorEffect( GraphicsSystem & gs ) : D3D9Effect( gs )
+        D3D9SolidColorEffect( D3D9GraphicsSystem & gs )
+            : D3D9Effect( gs )
+            , mTarget0( gs )
+            , mDepth( gs )
+            , mVtxBuf( gs, 0 )
+            , mIdxBuf( gs )
         {
             // setup parameters
             EffectParameterDesc p;

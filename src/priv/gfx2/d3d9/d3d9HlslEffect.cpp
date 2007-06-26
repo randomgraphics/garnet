@@ -111,7 +111,30 @@ void GN::gfx2::D3D9HlslEffectParameterSet::unsetParameter( EffectParameterHandle
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( GraphicsSystem & gs ) : D3D9Effect( gs )
+GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
+    : D3D9Effect( gs )
+    , mRenderTarget0( gs )
+    , mRenderTarget1( gs )
+    , mRenderTarget2( gs )
+    , mRenderTarget3( gs )
+    , mDepthBuffer( gs )
+    , mTexture0( gs )
+    , mTexture1( gs )
+    , mTexture2( gs )
+    , mTexture3( gs )
+    , mTexture4( gs )
+    , mTexture5( gs )
+    , mTexture6( gs )
+    , mTexture7( gs )
+    , mVtxBuf0( gs, 0 )
+    , mVtxBuf1( gs, 1 )
+    , mVtxBuf2( gs, 2 )
+    , mVtxBuf3( gs, 3 )
+    , mVtxBuf4( gs, 4 )
+    , mVtxBuf5( gs, 5 )
+    , mVtxBuf6( gs, 6 )
+    , mVtxBuf7( gs, 7 )
+    , mIdxBuf( gs )
 {
     // setup parameters
     EffectParameterDesc p;
@@ -153,27 +176,27 @@ GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( GraphicsSystem & gs ) : D3D9Effect( gs
     mVertexCount = addParameter( "VERTEX_COUNT", p );
 
     // setup ports
-    addPortRef( "TARGET0"  , &mRenderTargets[0] );
-    addPortRef( "TARGET1"  , &mRenderTargets[1] );
-    addPortRef( "TARGET2"  , &mRenderTargets[2] );
-    addPortRef( "TARGET3"  , &mRenderTargets[3] );
+    addPortRef( "TARGET0"  , &mRenderTarget0 );
+    addPortRef( "TARGET1"  , &mRenderTarget1 );
+    addPortRef( "TARGET2"  , &mRenderTarget2 );
+    addPortRef( "TARGET3"  , &mRenderTarget3 );
     addPortRef( "DEPTH"    , &mDepthBuffer );
-    addPortRef( "TEXTURE0" , &mTextures[0] );
-    addPortRef( "TEXTURE1" , &mTextures[1] );
-    addPortRef( "TEXTURE2" , &mTextures[2] );
-    addPortRef( "TEXTURE3" , &mTextures[3] );
-    addPortRef( "TEXTURE4" , &mTextures[4] );
-    addPortRef( "TEXTURE5" , &mTextures[5] );
-    addPortRef( "TEXTURE6" , &mTextures[6] );
-    addPortRef( "TEXTURE7" , &mTextures[7] );
-    addPortRef( "VTXBUF0"  , &mVtxBufs[0] );
-    addPortRef( "VTXBUF1"  , &mVtxBufs[1] );
-    addPortRef( "VTXBUF2"  , &mVtxBufs[2] );
-    addPortRef( "VTXBUF3"  , &mVtxBufs[3] );
-    addPortRef( "VTXBUF4"  , &mVtxBufs[4] );
-    addPortRef( "VTXBUF5"  , &mVtxBufs[5] );
-    addPortRef( "VTXBUF6"  , &mVtxBufs[6] );
-    addPortRef( "VTXBUF7"  , &mVtxBufs[7] );
+    addPortRef( "TEXTURE0" , &mTexture0 );
+    addPortRef( "TEXTURE1" , &mTexture1 );
+    addPortRef( "TEXTURE2" , &mTexture2 );
+    addPortRef( "TEXTURE3" , &mTexture3 );
+    addPortRef( "TEXTURE4" , &mTexture4 );
+    addPortRef( "TEXTURE5" , &mTexture5 );
+    addPortRef( "TEXTURE6" , &mTexture6 );
+    addPortRef( "TEXTURE7" , &mTexture7 );
+    addPortRef( "VTXBUF0"  , &mVtxBuf0 );
+    addPortRef( "VTXBUF1"  , &mVtxBuf1 );
+    addPortRef( "VTXBUF2"  , &mVtxBuf2 );
+    addPortRef( "VTXBUF3"  , &mVtxBuf3 );
+    addPortRef( "VTXBUF4"  , &mVtxBuf4 );
+    addPortRef( "VTXBUF5"  , &mVtxBuf5 );
+    addPortRef( "VTXBUF6"  , &mVtxBuf6 );
+    addPortRef( "VTXBUF7"  , &mVtxBuf7 );
     addPortRef( "IDXBUF"   , &mIdxBuf );
 
     // setup properties

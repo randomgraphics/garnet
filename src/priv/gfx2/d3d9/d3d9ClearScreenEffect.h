@@ -18,12 +18,15 @@ namespace GN { namespace gfx2
 
         EffectParameterHandle mColorValue, mDepthValue, mStencilValue;
 
-        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenEffect(gs); }
+        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenEffect( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ); }
 
         ///
         /// ctor
         ///
-        D3D9ClearScreenEffect( GraphicsSystem & gs ) : D3D9Effect(gs)
+        D3D9ClearScreenEffect( D3D9GraphicsSystem & gs )
+            : D3D9Effect(gs)
+            , mTarget0(gs)
+            , mDepth(gs)
         {
             // setup ports
             addPortRef( "TARGET0", &mTarget0 );
