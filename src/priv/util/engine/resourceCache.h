@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RESOURCECACHE_H__
 #define __GN_ENGINE_RESOURCECACHE_H__
 // *****************************************************************************
-//! \file    engine/resourceCache.h
-//! \brief   Graphics resource cache
-//! \author  chenli@@FAREAST (2007.4.27)
+/// \file
+/// \brief   Graphics resource cache
+/// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
 #include "resourceItem.h"
@@ -79,6 +79,6 @@ namespace GN { namespace engine
 #include "resourceCache.inl"
 
 // *****************************************************************************
-//                           End of resourceCache.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RESOURCECACHE_H__

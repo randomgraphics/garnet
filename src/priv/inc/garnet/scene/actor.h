@@ -1,9 +1,9 @@
 #ifndef __GN_SCENE_ACTOR_H__
 #define __GN_SCENE_ACTOR_H__
 // *****************************************************************************
-//! \file    scene/actor.h
-//! \brief   Interface of actor class
-//! \author  chen@@CHENLI-HOMEPC (2007.4.1)
+/// \file
+/// \brief   Interface of actor class
+/// \author  chen@@CHENLI-HOMEPC (2007.4.1)
 // *****************************************************************************
 
 namespace GN

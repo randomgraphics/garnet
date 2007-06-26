@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_ENTITY_H__
 #define __GN_ENGINE_ENTITY_H__
 // *****************************************************************************
-//! \file    engine/entity.h
-//! \brief   entity class
-//! \author  chenli@@FAREAST (2007.5.9)
+/// \file
+/// \brief   entity class
+/// \author  chenli@@FAREAST (2007.5.9)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -174,6 +174,6 @@ namespace GN { namespace engine
 #include "entity.inl"
 
 // *****************************************************************************
-//                           End of entity.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_ENTITY_H__

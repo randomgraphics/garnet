@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_NUMERIC_H__
 #define __GN_BASE_NUMERIC_H__
 // *****************************************************************************
-/// \file    base/numeric.h
+/// \file
 /// \brief   Define numeric types
 /// \author  chenlee (2006.3.4)
 // *****************************************************************************
@@ -107,6 +107,6 @@ typedef SInt32 SIntPtr;
 GN_CASSERT( sizeof(SIntPtr) == sizeof(void*) );
 
 // *****************************************************************************
-//                           End of numeric.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_NUMERIC_H__

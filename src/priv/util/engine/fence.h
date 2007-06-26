@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_FENCE_H__
 #define __GN_ENGINE_FENCE_H__
 // *****************************************************************************
-//! \file    engine/fence.h
-//! \brief   fence definition
-//! \author  chen@@CHENLI-HP (2007.5.2)
+/// \file
+/// \brief   fence definition
+/// \author  chen@@CHENLI-HP (2007.5.2)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -105,6 +105,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of fence.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_FENCE_H__

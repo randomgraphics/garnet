@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_D3D9UTILS_H__
 #define __GN_GFX_D3D9UTILS_H__
 // *****************************************************************************
-/// \file    gfx/d3d9utils.h
+/// \file
 /// \brief   Public interface for d3d module (collection of common D3D utils).
 /// \author  chenlee (2005.8.11)
 // *****************************************************************************
@@ -170,6 +170,6 @@ namespace GN { namespace gfx
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of gfx/d3d9utils.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_D3DAPP_GND3D_H__

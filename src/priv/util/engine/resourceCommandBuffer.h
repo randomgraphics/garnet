@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_RESOURCECOMMANDBUFFER_H__
 #define __GN_ENGINE_RESOURCECOMMANDBUFFER_H__
 // *****************************************************************************
-//! \file    engine/resourceCommandBuffer.h
-//! \brief   resource command buffer interface
-//! \author  chenli@@FAREAST (2007.4.29)
+/// \file
+/// \brief   resource command buffer interface
+/// \author  chenli@@FAREAST (2007.4.29)
 // *****************************************************************************
 
 #include "resourceItem.h"
@@ -234,6 +234,6 @@ GN::engine::ResourceCommandBuffer::get()
 }
 
 // *****************************************************************************
-//                           End of resourceCommandBuffer.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_RESOURCECOMMANDBUFFER_H__

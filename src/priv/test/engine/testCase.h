@@ -1,9 +1,9 @@
 #ifndef __GN_TEST_ENGINE_TESTCASE_H__
 #define __GN_TEST_ENGINE_TESTCASE_H__
 // *****************************************************************************
-//! \file    engine/testCase.h
-//! \brief   common test case interface
-//! \author  chen@@CHENLI-HOMEPC (2007.5.7)
+/// \file
+/// \brief   common test case interface
+/// \author  chen@@CHENLI-HOMEPC (2007.5.7)
 // *****************************************************************************
 
 #include "garnet/GNengine.h"
@@ -116,6 +116,6 @@ public:
 
 
 // *****************************************************************************
-//                           End of testCase.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_TEST_ENGINE_TESTCASE_H__

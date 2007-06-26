@@ -132,18 +132,18 @@
 #define INCLUDED_SimpleOpt
 
 
-//! Error values
+/// Error values
 typedef enum _ESOError
 {
-    SO_SUCCESS          =  0,   //!< no error
-    SO_OPT_INVALID      = -1,   //!< valid option format but not registered in the option table
-    SO_OPT_MULTIPLE     = -2,   //!< multiple options matched the supplied option text
-    SO_ARG_INVALID      = -3,   //!< argument was supplied but is not valid for this option
-    SO_ARG_INVALID_TYPE = -4,   //!< argument was supplied in wrong format for this option
-    SO_ARG_MISSING      = -5    //!< required argument was not supplied
+    SO_SUCCESS          =  0,   ///< no error
+    SO_OPT_INVALID      = -1,   ///< valid option format but not registered in the option table
+    SO_OPT_MULTIPLE     = -2,   ///< multiple options matched the supplied option text
+    SO_ARG_INVALID      = -3,   ///< argument was supplied but is not valid for this option
+    SO_ARG_INVALID_TYPE = -4,   ///< argument was supplied in wrong format for this option
+    SO_ARG_MISSING      = -5    ///< required argument was not supplied
 } ESOError;
 
-//! Option flags
+/// Option flags
 enum _ESOFlags
 {
     SO_O_EXACT    = 0x0001, /**< Disallow partial matching of option names */
@@ -167,13 +167,13 @@ enum _ESOFlags
     use only SO_NONE.
  */
 typedef enum _ESOArgType {
-    SO_NONE,    //!< No argument.                -o                 --opt
-    SO_REQ_SEP, //!< Required separate argument. -o ARG             --opt ARG
-    SO_REQ_CMB, //!< Required combined argument. -oARG    -o=ARG    --opt=ARG
-    SO_OPT      //!< Optional combined argument. -o[ARG]  -o[=ARG]  --opt[=ARG]
+    SO_NONE,    ///< No argument.                -o                 --opt
+    SO_REQ_SEP, ///< Required separate argument. -o ARG             --opt ARG
+    SO_REQ_CMB, ///< Required combined argument. -oARG    -o=ARG    --opt=ARG
+    SO_OPT      ///< Optional combined argument. -o[ARG]  -o[=ARG]  --opt[=ARG]
 } ESOArgType;
 
-//! this option definition must be the last entry in the table
+/// this option definition must be the last entry in the table
 #define SO_END_OF_OPTIONS   { -1, 0, SO_NONE }
 
 // use assertions to test the input data
@@ -196,11 +196,11 @@ class CSimpleOptTempl
 {
 public:
     struct SOption {
-        int         nId;        //!< ID to return for this flag. Optional but must be >= 0
-        SOCHAR *    pszArg;     //!< arg string to search for, e.g.  "open", "-", "-f", "--file"
+        int         nId;        ///< ID to return for this flag. Optional but must be >= 0
+        SOCHAR *    pszArg;     ///< arg string to search for, e.g.  "open", "-", "-f", "--file"
                                 // Note that on Windows the slash option marker will be converted
                                 // to a hyphen so that "-f" will also match "/f".
-        ESOArgType  nArgType;   //!< type of argument accepted by this option
+        ESOArgType  nArgType;   ///< type of argument accepted by this option
     };
 
     CSimpleOptTempl() { Init(0, 0, 0, 0); }

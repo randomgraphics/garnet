@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_GNGFX2D3D9_H__
 #define __GN_GFX2_GNGFX2D3D9_H__
 // *****************************************************************************
-//! \file    garnet/GNgfx2D3D9.h
-//! \brief   D3D9 graphics system (for effect developer only)
-//! \author  chenli@@FAREAST (2007.6.15)
+/// \file
+/// \brief   D3D9 graphics system (for effect developer only)
+/// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
 #include "gfx2/baseGraphicsSystem.h"
@@ -37,6 +37,6 @@
 #include "gfx2/d3d9GraphicsSystem.h"
 
 // *****************************************************************************
-//                           End of GNgfx2D3D9.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_GNGFX2D3D9_H__

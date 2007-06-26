@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_DRAWCOMMAND_H__
 #define __GN_ENGINE_DRAWCOMMAND_H__
 // *****************************************************************************
-//! \file    engine/drawCommand.h
-//! \brief   ?
-//! \author  chen@@CHENLI-HOMEPC (2007.5.1)
+/// \file
+/// \brief   ?
+/// \author  chen@@CHENLI-HOMEPC (2007.5.1)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -164,6 +164,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of drawCommand.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_DRAWCOMMAND_H__

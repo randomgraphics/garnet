@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_DUMP_H__
 #define __GN_ENGINE_DUMP_H__
 // *****************************************************************************
-//! \file    engine/dump.h
-//! \brief   Engine dump code
-//! \author  chenli@@FAREAST (2007.5.17)
+/// \file
+/// \brief   Engine dump code
+/// \author  chenli@@FAREAST (2007.5.17)
 // *****************************************************************************
 
 #include "resourceCommandBuffer.h"
@@ -120,6 +120,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of dump.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_DUMP_H__

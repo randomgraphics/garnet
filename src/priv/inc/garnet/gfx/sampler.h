@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_SAMPLER_H__
 #define __GN_GFX_SAMPLER_H__
 // *****************************************************************************
-//! \file    gfx/sampler.h
-//! \brief   texture sampler class
-//! \author  chenli@@FAREAST (2007.6.11)
+/// \file
+/// \brief   texture sampler class
+/// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -203,6 +203,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of sampler.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_SAMPLER_H__

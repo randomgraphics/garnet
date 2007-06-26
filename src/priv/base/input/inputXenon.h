@@ -1,7 +1,7 @@
 #ifndef __GN_INPUT_INPUTXENON_H__
 #define __GN_INPUT_INPUTXENON_H__
 // *****************************************************************************
-/// \file    input/inputXenon.h
+/// \file
 /// \brief   Input device for Xenon
 /// \author  chenlee (2006.3.13)
 // *****************************************************************************
@@ -36,6 +36,6 @@ namespace GN { namespace input
 #endif
 
 // *****************************************************************************
-//                           End of inputXenon.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_INPUT_INPUTXENON_H__

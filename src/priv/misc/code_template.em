@@ -52,14 +52,10 @@ macro GN_HFileHeader()
 	parent_start = n + 1;
 	parent_end = base_start - 1;
 
-	filebase = strmid( fullpath, base_start, base_end )
-	fileext  = strmid( fullpath, ext_start, ext_end )
-	fileparent = strmid( fullpath, parent_start, parent_end )
-	filebase_up = toupper(filebase)
-	fileext_up = toupper(fileext)
-	fileparent_up = toupper(fileparent)
+	filebase = toupper( strmid( fullpath, base_start, base_end ) )
+	fileext  = toupper( strmid( fullpath, ext_start, ext_end ) )
 
-	if( "PCH" == filebase_up && "H" == fileext_up )
+	if( "PCH" == filebase && "H" == fileext )
 	{
 		tag = "__GN_PCH_H__"
 		brief = "PCH header"
@@ -72,21 +68,21 @@ macro GN_HFileHeader()
 		module = toupper(module)
 		tag = "__GN_@module@_@filebase_up@_@fileext_up@__"
 		brief = "?"
-		doxygen = "!"
+		doxygen = "/"
 	}
 
 	// insert header
 	InsBufLine( hbuf,  0, "#ifndef @tag@" )
 	InsBufLine( hbuf,  1, "#define @tag@" )
 	InsBufLine( hbuf,  2, "// *****************************************************************************")
-	InsBufLine( hbuf,  3, "//@doxygen@ \\file    @fileparent@/@filebase@.@fileext@" )
+	InsBufLine( hbuf,  3, "//@doxygen@ \\file" )
 	InsBufLine( hbuf,  4, "//@doxygen@ \\brief   @brief@" )
 	InsBufLine( hbuf,  5, "//@doxygen@ \\author  @username@ (@year@.@month@.@day@)" )
 	InsBufLine( hbuf,  6, "// *****************************************************************************" )
 	InsBufLine( hbuf,  7, "" )
 	InsBufLine( hbuf,  8, "" )
 	InsBufLine( hbuf,  9, "// *****************************************************************************" )
-	InsBufLine( hbuf, 10, "//                           End of @filebase@.@fileext@" )
+	InsBufLine( hbuf, 10, "//                                     EOF" )
 	InsBufLine( hbuf, 11, "// *****************************************************************************" )
 	InsBufLine( hbuf, 12, "#endif // @tag@" )
 

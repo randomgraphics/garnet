@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_RESOURCEMANAGER_H__
 #define __GN_BASE_RESOURCEMANAGER_H__
 // *****************************************************************************
-/// \file    resourceManager.h
+/// \file
 /// \brief   general resource manager: map name to instance
 /// \author  chenlee (2005.8.17)
 // *****************************************************************************
@@ -672,6 +672,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of resourceManager.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_RESOURCEMANAGER_H__

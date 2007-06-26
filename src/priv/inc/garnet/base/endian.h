@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_ENDIAN_H__
 #define __GN_BASE_ENDIAN_H__
 // *****************************************************************************
-//! \file    base/endian.h
-//! \brief   endian tag and routine
-//! \author  chen@@CHENLI-HOMEPC (2007.4.5)
+/// \file
+/// \brief   endian tag and routine
+/// \author  chen@@CHENLI-HOMEPC (2007.4.5)
 // *****************************************************************************
 
 namespace GN
@@ -37,6 +37,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of endian.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_ENDIAN_H__

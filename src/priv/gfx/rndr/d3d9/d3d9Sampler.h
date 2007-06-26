@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D9_D3D9SAMPLER_H__
 #define __GN_GFXD3D9_D3D9SAMPLER_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9Sampler.h
-//! \brief   D3D9 sampler object
-//! \author  chenli@@FAREAST (2007.6.11)
+/// \file
+/// \brief   D3D9 sampler object
+/// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -67,6 +67,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3d9Sampler.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFXD3D9_D3D9SAMPLER_H__

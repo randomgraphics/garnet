@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9SURFACE_H__
 #define __GN_GFX2_D3D9SURFACE_H__
 // *****************************************************************************
-//! \file    gfx2/d3d9Surface.h
-//! \brief   d3d9 base surface interface
-//! \author  chenli@@FAREAST (2007.6.15)
+/// \file
+/// \brief   d3d9 base surface interface
+/// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -80,10 +80,15 @@ namespace GN { namespace gfx2
 
         // from effect
         virtual const SurfaceDesc & getDesc() const { return mDesc; }
+
+        ///
+        /// get D3D9 surface descriptor
+        ///
+        const D3D9SurfaceDesc & getD3D9Desc() const { return mDesc; }
     };
 }}
 
 // *****************************************************************************
-//                           End of d3d9Surface.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9SURFACE_H__

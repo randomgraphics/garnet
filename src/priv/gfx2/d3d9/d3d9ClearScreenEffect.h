@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9CLEARSCREENEFFECT_H__
 #define __GN_GFX2_D3D9CLEARSCREENEFFECT_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9ClearScreenEffect.h
-//! \brief   D3D9 clear screen effect
-//! \author  chenli@@FAREAST (2007.6.19)
+/// \file
+/// \brief   D3D9 clear screen effect
+/// \author  chenli@@FAREAST (2007.6.19)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -108,6 +108,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of d3d9ClearScreenEffect.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9CLEARSCREENEFFECT_H__

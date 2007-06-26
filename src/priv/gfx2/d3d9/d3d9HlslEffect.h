@@ -1,9 +1,9 @@
 #ifndef __GN_GFX2_D3D9HLSLEFFECT_H__
 #define __GN_GFX2_D3D9HLSLEFFECT_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9HlslEffect.h
-//! \brief   d3d9 HLSL effect, which accepts HLSL shader code as parameter
-//! \author  chenli@@FAREAST (2007.6.22)
+/// \file
+/// \brief   d3d9 HLSL effect, which accepts HLSL shader code as parameter
+/// \author  chenli@@FAREAST (2007.6.22)
 // *****************************************************************************
 
 namespace GN { namespace gfx2
@@ -100,6 +100,6 @@ namespace GN { namespace gfx2
 }}
 
 // *****************************************************************************
-//                           End of d3d9HlslEffect.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX2_D3D9HLSLEFFECT_H__

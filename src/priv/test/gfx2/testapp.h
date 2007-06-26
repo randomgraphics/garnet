@@ -1,9 +1,9 @@
 #ifndef __GN_TESTGFX2_TESTAPP_H__
 #define __GN_TESTGFX2_TESTAPP_H__
 // *****************************************************************************
-//! \file    gfx2/testapp.h
-//! \brief   mini GFX2 test application.
-//! \author  chenli@@FAREAST (2007.6.25)
+/// \file
+/// \brief   mini GFX2 test application.
+/// \author  chenli@@FAREAST (2007.6.25)
 // *****************************************************************************
 
 #include "garnet/GNgfx2.h"
@@ -28,6 +28,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of testapp.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_TESTGFX2_TESTAPP_H__

@@ -44,5 +44,5 @@ struct PixPerfScopeEvent
 #define PIXPERF_FUNCTION_EVENT()    PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), GN_FUNCTION )
 
 // *****************************************************************************
-//                           End of pch.h
+//                                     EOF
 // *****************************************************************************

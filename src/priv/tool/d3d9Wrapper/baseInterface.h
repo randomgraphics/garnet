@@ -1,9 +1,9 @@
 #ifndef __GN_D3DWRAPPER_BASEINTERFACE_H__
 #define __GN_D3DWRAPPER_BASEINTERFACE_H__
 // *****************************************************************************
-//! \file    d3d9Wrapper/baseInterface.h
-//! \brief   Basic COM interface wrapper
-//! \author  chen@@CHENLI-HOMEPC (2007.3.17)
+/// \file
+/// \brief   Basic COM interface wrapper
+/// \author  chen@@CHENLI-HOMEPC (2007.3.17)
 // *****************************************************************************
 
 ///
@@ -94,6 +94,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of baseInterface.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_D3DWRAPPER_BASEINTERFACE_H__

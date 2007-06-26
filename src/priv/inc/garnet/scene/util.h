@@ -1,9 +1,9 @@
 #ifndef __GN_SCENE_UTIL_H__
 #define __GN_SCENE_UTIL_H__
 // *****************************************************************************
-//! \file    scene/util.h
-//! \brief   Scene utilities
-//! \author  chen@@CHENLI-HOMEPC (2007.4.1)
+/// \file
+/// \brief   Scene utilities
+/// \author  chen@@CHENLI-HOMEPC (2007.4.1)
 // *****************************************************************************
 
 namespace GN { namespace scene
@@ -60,6 +60,6 @@ namespace GN { namespace scene
 }}
 
 // *****************************************************************************
-//                           End of util.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_SCENE_UTIL_H__

@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_BASICBUFFER_H__
 #define __GN_GFX_BASICBUFFER_H__
 // *****************************************************************************
-/// \file    common/basicBuffer.h
+/// \file
 /// \brief   Basic vertex/index buffer class
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
@@ -216,6 +216,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of basicBuffer.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_BASICBUFFER_H__

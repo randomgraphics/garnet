@@ -1,9 +1,9 @@
 #ifndef __GN_CORE_FILESYS_H__
 #define __GN_CORE_FILESYS_H__
 // *****************************************************************************
-//! \file    core/filesys.h
-//! \brief   platform independent file system
-//! \author  chen@@CHENLI-HOMEPC (2007.1.29)
+/// \file
+/// \brief   platform independent file system
+/// \author  chen@@CHENLI-HOMEPC (2007.1.29)
 // *****************************************************************************
 
 namespace GN { namespace core
@@ -191,6 +191,6 @@ namespace GN { namespace core
 }}
 
 // *****************************************************************************
-//                           End of filesys.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_CORE_FILESYS_H__

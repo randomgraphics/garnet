@@ -1,9 +1,9 @@
 #ifndef __GN_UTIL_CAMERA_H__
 #define __GN_UTIL_CAMERA_H__
 // *****************************************************************************
-//! \file    util/camera.h
-//! \brief   commonly used camera classes
-//! \author  chenli@@FAREAST (2007.1.16)
+/// \file
+/// \brief   commonly used camera classes
+/// \author  chenli@@FAREAST (2007.1.16)
 // *****************************************************************************
 
 #include "garnet/GNinput.h"
@@ -320,6 +320,6 @@ namespace GN { namespace util
 }}
 
 // *****************************************************************************
-//                           End of camera.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_UTIL_CAMERA_H__

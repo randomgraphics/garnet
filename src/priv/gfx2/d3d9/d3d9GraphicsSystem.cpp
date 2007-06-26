@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "d3d9VtxBuf.h"
 #include "d3d9DepthBuffer.h"
 #include "d3d9BuildInEffects.h"
 #include "garnet/GNwin.h"
@@ -697,6 +698,8 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     switch( surftype )
     {
         case SURFACE_TYPE_VB        :
+            return D3D9VtxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
+
         case SURFACE_TYPE_IB        :
         case SURFACE_TYPE_TEX_2D    :
         case SURFACE_TYPE_TEX_3D    :

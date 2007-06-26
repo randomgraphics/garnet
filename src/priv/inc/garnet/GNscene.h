@@ -1,9 +1,9 @@
 #ifndef __GN_SCENE_GNSCENE_H__
 #define __GN_SCENE_GNSCENE_H__
 // *****************************************************************************
-//! \file    garnet/GNscene.h
-//! \brief   public header of scene module
-//! \author  chenli@@FAREAST (2007.2.17)
+/// \file
+/// \brief   public header of scene module
+/// \author  chenli@@FAREAST (2007.2.17)
 // *****************************************************************************
 
 #include "GNengine.h"
@@ -26,6 +26,6 @@ namespace GN
 #include "scene/util.h"
 
 // *****************************************************************************
-//                           End of GNscene.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_SCENE_GNSCENE_H__

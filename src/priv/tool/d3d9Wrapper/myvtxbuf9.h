@@ -1,9 +1,9 @@
 #ifndef __GN_D3DWRAPPER_MYVTXBUF9_H__
 #define __GN_D3DWRAPPER_MYVTXBUF9_H__
 // *****************************************************************************
-//! \file    d3d9Wrapper/myvtxbuf9.h
-//! \brief   vertex buffer wrapper
-//! \author  chen@@CHENLI-HOMEPC (2007.3.17)
+/// \file
+/// \brief   vertex buffer wrapper
+/// \author  chen@@CHENLI-HOMEPC (2007.3.17)
 // *****************************************************************************
 
 #include "baseResource.h"
@@ -50,6 +50,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of myvtxbuf9.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_D3DWRAPPER_MYVTXBUF9_H__

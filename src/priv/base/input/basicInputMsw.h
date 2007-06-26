@@ -1,7 +1,7 @@
 #ifndef __GN_INPUT_BASICINPUTMSW_H__
 #define __GN_INPUT_BASICINPUTMSW_H__
 // *****************************************************************************
-/// \file    basicInputMsw.h
+/// \file
 /// \brief   Basic input system for NT platform
 /// \author  chenlee (2005.10.25)
 // *****************************************************************************
@@ -133,6 +133,6 @@ namespace GN { namespace input
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of basicWinInput.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_INPUT_BASICINPUTMSW_H__

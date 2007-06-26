@@ -1,9 +1,9 @@
 #ifndef __GN_ENGINE_SHADER_H__
 #define __GN_ENGINE_SHADER_H__
 // *****************************************************************************
-//! \file    engine/shader.h
-//! \brief   shader utilities
-//! \author  chenli@@FAREAST (2007.5.29)
+/// \file
+/// \brief   shader utilities
+/// \author  chenli@@FAREAST (2007.5.29)
 // *****************************************************************************
 
 namespace GN { namespace engine
@@ -21,6 +21,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of shader.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_ENGINE_SHADER_H__

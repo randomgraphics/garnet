@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_THREAD_H__
 #define __GN_BASE_THREAD_H__
 // *****************************************************************************
-//! \file    base/thread.h
-//! \brief   platform independent thread wrapper
-//! \author  chen@@CHENLI-HOMEPC (2007.4.8)
+/// \file
+/// \brief   platform independent thread wrapper
+/// \author  chen@@CHENLI-HOMEPC (2007.4.8)
 // *****************************************************************************
 
 namespace GN
@@ -80,6 +80,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of thread.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_THREAD_H__

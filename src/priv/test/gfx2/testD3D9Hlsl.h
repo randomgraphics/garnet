@@ -1,9 +1,9 @@
 #ifndef __GN_TESTGFX2_TESTD3D9HLSL_H__
 #define __GN_TESTGFX2_TESTD3D9HLSL_H__
 // *****************************************************************************
-//! \file    gfx2/testD3D9Hlsl.h
-//! \brief   D3D9 hlsl effect test application
-//! \author  chenli@@FAREAST (2007.6.25)
+/// \file
+/// \brief   D3D9 hlsl effect test application
+/// \author  chenli@@FAREAST (2007.6.25)
 // *****************************************************************************
 
 #include "testapp.h"
@@ -41,6 +41,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of testD3D9Hlsl.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_TESTGFX2_TESTD3D9HLSL_H__

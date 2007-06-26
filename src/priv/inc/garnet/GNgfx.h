@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_GFX_H
 #define __GN_GFX_GFX_H
 // *****************************************************************************
-/// \file    GNgfx.h
+/// \file
 /// \brief   定义了graphics模块的接口，以及公用的数据结构。用于封装底层的
 ///          渲染API。外部用户只能通过这个接口来使用graphics单元。
 /// \author  chenlee(2005.9.30)

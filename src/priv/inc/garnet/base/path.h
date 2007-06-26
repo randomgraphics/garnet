@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_PATH_H__
 #define __GN_BASE_PATH_H__
 // *****************************************************************************
-//! \file    base/path.h
-//! \brief   baisc path utilities
-//! \author  chen@@CHENLI-HOMEPC (2007.1.29)
+/// \file
+/// \brief   baisc path utilities
+/// \author  chen@@CHENLI-HOMEPC (2007.1.29)
 // *****************************************************************************
 
 namespace GN
@@ -145,6 +145,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of path.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_PATH_H__

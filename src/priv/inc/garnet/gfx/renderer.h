@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_RENDERER_H__
 #define __GN_GFX_RENDERER_H__
 // *****************************************************************************
-/// \file    renderer.h
+/// \file
 /// \brief   Main renderer interface of GFX module
 /// \author  chenlee (2005.9.30)
 // *****************************************************************************
@@ -1066,6 +1066,6 @@ namespace GN { namespace gfx
 #include "renderer.inl"
 
 // *****************************************************************************
-//                           End of renderer.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_RENDERER_H__

@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_BASICDEFINES_H__
 #define __GN_BASE_BASICDEFINES_H__
 // *****************************************************************************
-/// \file    basicDefines.h
+/// \file
 /// \brief   Basic defines and types
 /// \author  chenlee (2005.7.24)
 // *****************************************************************************
@@ -310,6 +310,6 @@
 #define GN_DEFINE_HANDLE( type ) typedef struct type##Struct {} * type
 
 // *****************************************************************************
-//                           End of basicDefines.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_BASE_BASICDEFINES_H__

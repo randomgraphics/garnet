@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_OGLRENDERTARGETMGR_H__
 #define __GN_GFX_OGLRENDERTARGETMGR_H__
 // *****************************************************************************
-//! \file    ogl/oglRenderTargetMgr.h
-//! \brief   OGL render target manager
-//! \author  chen@@CHENLI-HOMEPC (2007.1.11)
+/// \file
+/// \brief   OGL render target manager
+/// \author  chen@@CHENLI-HOMEPC (2007.1.11)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -143,6 +143,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of oglRenderTargetMgr.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_OGLRENDERTARGETMGR_H__

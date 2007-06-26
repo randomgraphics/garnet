@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_OGLUTILS_H__
 #define __GN_GFX_OGLUTILS_H__
 // *****************************************************************************
-/// \file    gfx/oglutils.h
+/// \file
 /// \brief   Public interface for opengl module (collection of OGL utils).
 /// \author  chenlee (2005.8.26)
 // *****************************************************************************
@@ -36,6 +36,6 @@ namespace GN { namespace gfx
 #endif
 
 // *****************************************************************************
-//                           End of gfx/oglutils.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_OGLUTILS_H__

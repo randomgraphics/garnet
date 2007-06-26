@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_D3D10UTILS_H__
 #define __GN_GFX_D3D10UTILS_H__
 // *****************************************************************************
-/// \file    gfx/d3d10utils.h
+/// \file
 /// \brief   Public interface for D3D10 module (collection of common D3D utils).
 /// \author  chenlee (2006.9.20)
 // *****************************************************************************
@@ -152,6 +152,6 @@ namespace GN { namespace gfx
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of gfx/d3d10utils.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_D3D10UTILS_H__

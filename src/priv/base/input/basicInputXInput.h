@@ -1,7 +1,7 @@
 #ifndef __GN_INPUT_BASICINPUTXINPUT_H__
 #define __GN_INPUT_BASICINPUTXINPUT_H__
 // *****************************************************************************
-/// \file    input/basicInputXInput.h
+/// \file
 /// \brief   Basic XInput class
 /// \author  chenlee (2006.3.13)
 // *****************************************************************************
@@ -41,6 +41,6 @@ namespace GN { namespace input
 }}
 
 // *****************************************************************************
-//                           End of basicInputXInput.h
+//                                     EOF
 // *****************************************************************************
 #endif // __GN_INPUT_BASICINPUTXINPUT_H__
