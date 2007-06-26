@@ -9,7 +9,9 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e ) : mEffect( e )
+GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e )
+    : mEffect( e )
+    , mVtxDecl( 0 )
 {
 }
 
@@ -18,6 +20,7 @@ GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e ) : mEffect( e )
 // -----------------------------------------------------------------------------
 GN::gfx2::D3D9EffectBinding::~D3D9EffectBinding()
 {
+    safeRelease( mVtxDecl );
 }
 
 //
@@ -59,6 +62,9 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
         mBindItems.append( b );
     }
 
+    GN_TODO( "create vertex decl" );
+
+    // success
     return true;
 
     GN_UNGUARD;
@@ -69,6 +75,13 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 // -----------------------------------------------------------------------------
 void GN::gfx2::D3D9EffectBinding::apply() const
 {
+    // setup vertex decl
+    if( mVtxDecl )
+    {
+        mEffect.d3d9gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
+    }
+
+    // bind each port
     for( size_t i = 0; i < mBindItems.size(); ++i )
     {
         const BindItem & b = mBindItems[i];
