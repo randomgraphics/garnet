@@ -12,10 +12,29 @@ namespace GN { namespace gfx2
     class D3D9Effect;
 
     ///
+    /// D3D9 effect port type
+    ///
+    enum D3D9EffectPortType
+    {
+        //@{
+        D3D9_EFFECT_PORT_RENDER_TARGET,
+        D3D9_EFFECT_PORT_DEPTH_BUFFER,
+        D3D9_EFFECT_PORT_TEXTURE,
+        D3D9_EFFECT_PORT_VTXBUF,
+        D3D9_EFFECT_PORT_IDXBUF,
+        //@}
+    };
+
+    ///
     /// D3D9 effect port descriptor
     ///
     struct GN_GFX2_D3D9_PUBLIC D3D9EffectPortDesc : public EffectPortDesc
     {
+        ///
+        /// the port type
+        ///
+        D3D9EffectPortType portType;
+
         ///
         /// Surface type that this port expects.
         ///
@@ -58,7 +77,7 @@ namespace GN { namespace gfx2
         ///
         /// bind surface to device
         ///
-        virtual void bind( const EffectPortBinding & ) const = 0;
+        virtual void bind( const EffectBindingTarget & ) const = 0;
     };
 
     ///
@@ -69,9 +88,9 @@ namespace GN { namespace gfx2
     public:
 
         //@{
-        D3D9RenderTargetPort( D3D9GraphicsSystem & gs ) : D3D9EffectPort(gs) {}
+        D3D9RenderTargetPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & ) const;
+        virtual void bind( const EffectBindingTarget & ) const;
         //@}
     };
 
@@ -83,9 +102,9 @@ namespace GN { namespace gfx2
     public:
 
         //@{
-        D3D9DepthBufferPort( D3D9GraphicsSystem & gs ) : D3D9EffectPort(gs) {}
+        D3D9DepthBufferPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & ) const;
+        virtual void bind( const EffectBindingTarget & ) const;
         //@}
     };
 
@@ -97,9 +116,9 @@ namespace GN { namespace gfx2
     public:
 
         //@{
-        D3D9TexturePort( D3D9GraphicsSystem & gs ) : D3D9EffectPort(gs) {}
+        D3D9TexturePort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & ) const;
+        virtual void bind( const EffectBindingTarget & ) const;
         //@}
     };
 
@@ -127,7 +146,7 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & ) const;
+        virtual void bind( const EffectBindingTarget & ) const;
         //@}
     };
 
@@ -139,9 +158,9 @@ namespace GN { namespace gfx2
     public:
 
         //@{
-        D3D9IdxBufPort( D3D9GraphicsSystem & gs ) : D3D9EffectPort(gs) {}
+        D3D9IdxBufPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectPortBinding & ) const;
+        virtual void bind( const EffectBindingTarget & ) const;
         //@}
     };
 
@@ -154,13 +173,14 @@ namespace GN { namespace gfx2
 
         struct BindItem
         {
-            UInt32            port;   ///< port handle
-            EffectPortBinding target; ///< port binding target
+            UInt32              port;   ///< port handle
+            EffectBindingTarget target; ///< binding target
         };
 
-        DynaArray<BindItem> mBindItems;
-
+        DynaArray<BindItem>           mBindItems;
         IDirect3DVertexDeclaration9 * mVtxDecl;
+        bool                          mHasZBuf;
+        bool                          mHasIdxBuf;
 
     public:
 
@@ -178,6 +198,12 @@ namespace GN { namespace gfx2
         /// binding setup
         ///
         bool setup( const EffectBindingDesc & ebd );
+
+        /// \name properties
+        //@{
+        bool hasZBuf() const { return mHasZBuf; }
+        bool hasIdxBuf() const { return mHasIdxBuf; }
+        //@}
 
         ///
         /// apply binding to rendering device
@@ -234,6 +260,35 @@ namespace GN { namespace gfx2
         /// \note D3D9Effect class does _NOT_ hold the ownership of the port instance.
         ///
         void addPortRef( const StrA & name, D3D9EffectPort * port );
+
+        ///
+        /// get port binding by handle
+        ///
+        D3D9EffectBinding & getPortBinding( EffectBinding b )
+        {
+            GN_GUARD_SLOW;
+
+            if( 0 == b )
+            {
+                if( 0 == mDefaultBinding )
+                {
+                    mDefaultBinding = createDefaultBinding();
+                    if( 0 == mDefaultBinding )
+                    {
+                        GN_UNEXPECTED();
+                    }
+                }
+
+                b = mDefaultBinding;
+            }
+
+            GN_ASSERT( mBindings.validHandle( b ) );
+            GN_ASSERT( mBindings[b] );
+
+            return *mBindings[b];
+
+            GN_UNGUARD_SLOW;
+        }
 
         ///
         /// apply port binding

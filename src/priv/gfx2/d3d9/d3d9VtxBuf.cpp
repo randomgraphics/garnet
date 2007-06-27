@@ -67,7 +67,7 @@ void GN::gfx2::D3D9VtxBuf::download(
     size_t                 srcRowBytes,
     size_t                 srcSliceBytes )
 {
-    GN_UNIMPL();
+    GN_UNIMPL_WARNING();
 }
 
 //

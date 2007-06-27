@@ -70,10 +70,11 @@ namespace GN { namespace gfx2
         {
             GN_ASSERT( &param.getEffect() == (Effect*)this );
 
-            applyBinding( binding );
-
+            D3D9EffectBinding & b = getPortBinding( binding );
             D3D9GraphicsSystem & gs = d3d9gs();
             IDirect3DDevice9  * dev = gs.d3ddev();
+
+            b.apply();
 
             const EffectParameter * c = param.getParameter( mColorValue );
             const EffectParameter * z = param.getParameter( mDepthValue );
@@ -90,7 +91,7 @@ namespace GN { namespace gfx2
                 color = D3DCOLOR_COLORVALUE( c->float4[0], c->float4[1], c->float4[2], c->float4[3] );
             }
 
-            if( gs.getD3D9Desc().zbuffer )
+            if( b.hasZBuf() )
             {
                 if( z )
                 {

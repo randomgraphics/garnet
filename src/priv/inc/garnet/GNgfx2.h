@@ -93,6 +93,10 @@ namespace GN { namespace gfx2
                     ++str;
                     ++i;
                 }
+                if( *str )
+                {
+                    GN_WARN(getLogger("GN.gfx2.SurfaceAttributeSemantic"))( "semantic string is too long!" );
+                }
             }
         }
 
@@ -397,6 +401,7 @@ namespace GN { namespace gfx2
         {
             bool         bool1;          ///< boolean value
             int          int1;           ///< integer value
+            unsigned int uint1;          ///< unsigned integer
             float        float1;         ///< float value
             float        float4[4];      ///< 4D vector
             float        float4x4[4][4]; ///< raw major 4x4 matrix
@@ -407,6 +412,16 @@ namespace GN { namespace gfx2
                 size_t bytes;            ///< raw data bytes
             } raw;                       ///< raw data
         };
+
+        //@{
+        bool          toBool1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_BOOL == type); return bool1; }
+        int           toInt1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_INT1 == type); return int1; }
+        unsigned int  toUInt1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_INT1 == type); return uint1; }
+        float         toFloat1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT1 == type); return float1; }
+        const float * toFloat4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4 == type); return float4; }
+        const float * toFloat4x4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4X4 == type); return float4x4[0]; }
+        const char  * toStr() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_STRING == type); return str; }
+        //@}
 
         /// \name constructors
         //@{
@@ -471,15 +486,32 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// describe binding a surface to specific effect port.
+    /// describe the target surface that will be bind to specific effect port.
     ///
-    struct EffectPortBinding
+    struct EffectBindingTarget
     {
         Surface * surf;       ///< surface pointer
         UInt32    firstLevel; ///< first mipmap level. 0 means the most detailed level.
         UInt32    numLevels;  ///< set 0 for all levels staring from firstLevel.
         UInt32    firstFace;  ///< first face index, starting from 0
         UInt32    numFaces;   ///< set to 0 for all faces starting from firstFace.
+
+        ///
+        /// setup port binding
+        ///
+        void set(
+            Surface * surf_,
+            UInt32    firstLevel_,
+            UInt32    numLevels_,
+            UInt32    firstFace_,
+            UInt32    numFaces_ )
+        {
+            surf       = surf_;
+            firstLevel = firstLevel_;
+            numLevels  = numLevels_;
+            firstFace  = firstFace_;
+            numFaces   = numFaces_;
+        }
     };
 
     ///
@@ -488,7 +520,7 @@ namespace GN { namespace gfx2
     struct EffectBindingDesc
     {
         //@{
-        std::map<StrA,EffectPortBinding> bindings; ///< bindings indexed by port name.
+        std::map<StrA,EffectBindingTarget> bindings; ///< bindings indexed by port name.
         //@}
     };
 

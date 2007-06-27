@@ -132,7 +132,7 @@ namespace GN
         void      clear() { mCount = 0; }
         const T * cptr() const { return mElements; }
         T       * cptr() { return mElements; }
-        void      empty() const { return 0 == mCount; }
+        bool      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
         T       * end() { return mElements + mCount; }
         /** do nothing if position is invalid or array is empty */

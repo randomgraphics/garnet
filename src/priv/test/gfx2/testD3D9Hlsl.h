@@ -9,6 +9,7 @@
 #include "testapp.h"
 
 using namespace GN::gfx2;
+using namespace GN::util;
 
 ///
 /// D3D9 HLSL effect test application
@@ -21,7 +22,9 @@ class TestD3D9Hlsl : public Gfx2TestApp
     Surface            * mIdxBuf;
     Surface            * mTexture;
     EffectBinding        mBinding;
-    Matrix44f            mProj, mWorld, mView;
+
+    Matrix44f mProjView;
+    ArcBall   mArcBall;
 
 public:
 
