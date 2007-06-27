@@ -60,6 +60,28 @@ static const char * ps_code =
 // -----------------------------------------------------------------------------
 bool TestD3D9Hlsl::init( GraphicsSystem & gs )
 {
+    // initialize matrix
+    Matrix44f view, proj;
+    view.translate( 0, 0, 200 );
+    proj.perspectiveD3DLh( 1.0f, 4.0f/3.0f, 10.0f, 1000.0f );
+    mProjView = proj * view;
+    mArcBall.setHandness( util::LEFT_HAND );
+    mArcBall.setViewMatrix( view );
+    mArcBall.connectToInput();
+
+    // create cube mesh
+    static Vertex vertices[24];
+    static UInt16 indices[36];
+    createBox(
+        100, 100, 100, // box size
+        &vertices[0].x, sizeof(Vertex),
+        &vertices[0].u, sizeof(Vertex),
+         vertices[0].n, sizeof(Vertex),
+        0, 0, 0, 0, // tangend and binormal
+        indices,
+        0 // quad list
+        );
+
     // create effect
     mEffect = gs.getEffect( "D3D9_HLSL" );
     if( 0 == mEffect ) return false;
@@ -69,42 +91,71 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     if( 0 == mParam ) return false;
     mParam->setParameter( "VS", vs_code );
     mParam->setParameter( "PS", ps_code );
+    //mParam->setParameter( "gPvw", ... );
+    mParam->setParameter( "PRIM_TYPE", 4 ); // D3DPT_TRIANGLELIST
+    mParam->setParameter( "PRIM_COUNT", 8 );
+    mParam->setParameter( "BASE_VERTEX", 0 );
 
-    // create surfaces
+    // create vertex buffer
     SurfaceCreationParameter scp;
     scp.bindings.append( SurfaceBindingParameter("D3D9_HLSL","VTXBUF0") );
     scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
     scp.layout.dim = SURFACE_DIMENSION_1D;
     scp.layout.levels = 1;
     scp.layout.faces = 1;
-    scp.layout.basemap.width = 24; // 24 vertices
+    scp.layout.basemap.width = GN_ARRAY_COUNT(vertices);
     scp.layout.basemap.height = 1;
     scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = 24 * sizeof(Vertex);
+    scp.layout.basemap.rowBytes = sizeof(vertices);
     scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.format.attribs[0].semantic.set( "POSITION0" );
+    scp.layout.format.attribs[0].semantic.set( "POS0" );
     scp.layout.format.attribs[0].offset = 0;
     scp.layout.format.attribs[0].format = FMT_FLOAT3;
-    scp.layout.format.attribs[1].semantic.set( "NORMAL0" );
+    scp.layout.format.attribs[1].semantic.set( "NML0" );
     scp.layout.format.attribs[1].offset = 12;
     scp.layout.format.attribs[1].format = FMT_FLOAT3;
-    scp.layout.format.attribs[1].semantic.set( "TEXCOORD0" );
-    scp.layout.format.attribs[1].offset = 24;
-    scp.layout.format.attribs[1].format = FMT_FLOAT2;
+    scp.layout.format.attribs[2].semantic.set( "TEX0" );
+    scp.layout.format.attribs[2].offset = 24;
+    scp.layout.format.attribs[2].format = FMT_FLOAT2;
     scp.layout.format.count = 3;
     scp.layout.format.stride = sizeof(Vertex);
     mVtxBuf = gs.createSurface( scp );
     if( 0 == mVtxBuf ) return false;
+    mVtxBuf->download(
+        0,
+        Box<size_t>( 0, 0, 0, scp.layout.basemap.width, 1, 1 ),
+        vertices,
+        sizeof(vertices),
+        sizeof(vertices) );
+
+    // create index buffer
+    scp.bindings.clear();
+    scp.bindings.append( SurfaceBindingParameter("D3D9_HLSL","IDXBUF") );
+    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
+    scp.layout.dim = SURFACE_DIMENSION_1D;
+    scp.layout.levels = 1;
+    scp.layout.faces = 1;
+    scp.layout.basemap.width = GN_ARRAY_COUNT(indices);
+    scp.layout.basemap.height = 1;
+    scp.layout.basemap.depth = 1;
+    scp.layout.basemap.rowBytes = sizeof(indices);
+    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
+    scp.layout.format.attribs[0].semantic.set( "INDEX" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = FMT_R_16_UINT;
+    scp.layout.format.count = 1;
+    scp.layout.format.stride = sizeof(short);
+    //mIdxBuf = gs.createSurface( scp );
+    //if( 0 == mIdxBuf ) return false;
 
     // create binding
     EffectBindingDesc bd;
+    bd.bindings["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
+    bd.bindings["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
     mBinding = mEffect->createBinding( bd );
     if( 0 == mBinding ) return false;
 
-    mProj.perspectiveD3DLh( 1.0f, 4.0f/3.0f, 10.0f, 1000.0f );
-    mView.translate( 0, 0, 200 );
-    mWorld.identity();
-
+    // success
     return true;
 }
 

@@ -24,8 +24,6 @@ namespace GN { namespace gfx2
         D3DPRESENT_PARAMETERS pp;
         D3DCAPS9              caps;
 
-        bool                  zbuffer; ///< has zbuffer or not
-
         //@}
     };
 
@@ -81,8 +79,6 @@ namespace GN { namespace gfx2
         const D3D9GraphicsSystemDesc & getD3D9Desc() const { return mDesc; }
 
         IDirect3DDevice9 * d3ddev() const { GN_ASSERT(mDesc.device); return mDesc.device; }
-
-        void setZBuffer( IDirect3DSurface9 * surf ) { mDesc.device->SetDepthStencilSurface( surf ); mDesc.zbuffer = !!surf; }
 
         //@}
 

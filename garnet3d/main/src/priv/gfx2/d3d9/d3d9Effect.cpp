@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "d3d9VtxDecl.h"
 
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 
@@ -12,6 +13,8 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e )
     : mEffect( e )
     , mVtxDecl( 0 )
+    , mHasZBuf(0)
+    , mHasIdxBuf(0)
 {
 }
 
@@ -30,9 +33,15 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 {
     GN_GUARD;
 
+    GN_ASSERT( 0 == mVtxDecl );
+    GN_ASSERT( 0 == mHasZBuf );
+    GN_ASSERT( 0 == mHasIdxBuf );
+
     BindItem b;
 
-    std::map<StrA,EffectPortBinding>::const_iterator iter;
+    std::map<StrA,EffectBindingTarget>::const_iterator iter;
+
+    StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
 
     for(
         UInt32 portHandle = mEffect.getFirstPortHandle();
@@ -43,10 +52,18 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 
         iter = ebd.bindings.find( mEffect.getPortName( portHandle ) );
 
+        D3D9EffectPortType portType = port.getDesc().portType;
+
         if( ebd.bindings.end() == iter )
         {
-            b.port        = portHandle;
-            b.target.surf = 0;
+            if( D3D9_EFFECT_PORT_RENDER_TARGET == portType ||
+                D3D9_EFFECT_PORT_DEPTH_BUFFER == portType ||
+                D3D9_EFFECT_PORT_TEXTURE == portType )
+            {
+                b.port        = portHandle;
+                b.target.surf = 0;
+                mBindItems.append( b );
+            }
         }
         else
         {
@@ -57,12 +74,48 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 
             b.port   = portHandle;
             b.target = iter->second;
-        }
 
-        mBindItems.append( b );
+            if( iter->second.surf )
+            {
+                switch( portType )
+                {
+                    case D3D9_EFFECT_PORT_DEPTH_BUFFER:
+                        mHasZBuf = true;
+                        break;
+
+                    case D3D9_EFFECT_PORT_VTXBUF:
+                        vtxfmt.append( &iter->second.surf->getDesc().layout.format );
+                        break;
+
+                    case D3D9_EFFECT_PORT_IDXBUF :
+                        mHasIdxBuf = true;
+                        break;
+
+                    default:
+                        // do nothing
+                        break;
+                };
+
+                mBindItems.append( b );
+            }
+            else
+            {
+                // target surface is NULL.
+
+                if( D3D9_EFFECT_PORT_VTXBUF != portType &&
+                    D3D9_EFFECT_PORT_IDXBUF != portType )
+                {
+                    mBindItems.append( b );
+                }
+            }
+        }
     }
 
-    GN_TODO( "create vertex decl" );
+    // create vertex declaration
+    if( !vtxfmt.empty() )
+    {
+        mVtxDecl = createD3D9VtxDecl( mEffect.d3d9gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
+    }
 
     // success
     return true;

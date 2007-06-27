@@ -165,11 +165,11 @@ GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
     p.count = 1;
-    mBaseIndex = addParameter( "BASE_INDEX", p );
+    mBaseVertex = addParameter( "BASE_VERTEX", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
     p.count = 1;
-    mBaseVertex = addParameter( "BASE_VERTEX", p );
+    mBaseIndex = addParameter( "BASE_INDEX", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
     p.count = 1;
@@ -213,22 +213,46 @@ void GN::gfx2::D3D9HlslEffect::render(
 {
     GN_GUARD_SLOW;
 
-    applyBinding( binding );
+    D3D9EffectBinding & b = getPortBinding( binding );
+
+    b.apply();
 
     const D3D9HlslEffectParameterSet & p = safeCast<const D3D9HlslEffectParameterSet &>(param);
  
     applyVS( p.vs() );
     applyPS( p.ps() );
 
-    /*D3D9GraphicsSystem & gs = d3d9gs();
+    D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
 
     const EffectParameter
         * pt = param.getParameter( mPrimType ),
         * pc = param.getParameter( mPrimCount ),
-        * bi = param.getParameter( mBaseIndex ),
-        * bv = param.getParameter( mBaseVertex ),
-        * vc = param.getParameter( mVertexCount );*/
+        * bv = param.getParameter( mBaseVertex );
+    GN_ASSERT( pt && pc && bv );
+
+    if( b.hasIdxBuf() )
+    {
+        const EffectParameter
+            * bi = param.getParameter( mBaseIndex ),
+            * vc = param.getParameter( mVertexCount );
+
+        GN_DX9_CHECK( dev->DrawIndexedPrimitive(
+            (D3DPRIMITIVETYPE)pt->toInt1(),
+            bv->toInt1(),
+            0, // min index
+            vc->toUInt1(),
+            bi->toUInt1(),
+            pc->toUInt1() ) );
+    }
+    else
+    {
+        GN_DX9_CHECK( dev->DrawPrimitive(
+            (D3DPRIMITIVETYPE)pt->toInt1(),
+            bv->toUInt1(),
+            pc->toUInt1() ) );
+    }
+
 
     GN_UNGUARD_SLOW;
 }

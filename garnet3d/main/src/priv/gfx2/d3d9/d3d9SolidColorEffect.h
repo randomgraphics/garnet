@@ -50,7 +50,7 @@ namespace GN { namespace gfx2
             addPortRef( "IDXBUF", &mIdxBuf );
 
             // setup vertx buffer port
-            mVtxBuf.addRequiredAttribute( "POSITION0" );
+            mVtxBuf.addRequiredAttribute( "POS0" );
         }
 
     public:

@@ -45,7 +45,6 @@ namespace GN { namespace gfx2
 
         /// \name from parent class
         //@{
-        virtual const EffectParameter * getParameter( EffectParameterHandle ) const { return 0; }
         virtual void setParameter( EffectParameterHandle handle, const EffectParameter & value );
         virtual void unsetParameter( EffectParameterHandle handle );
         //@}
