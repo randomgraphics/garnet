@@ -1,1 +1,4 @@
-SConscript( dirs=['base','d3d9'] )
+Import( 'GN' )
+dirs = Split('base')
+if GN.conf['has_d3d9'] and not GN.conf['has_xtl']: dirs += ['d3d9']
+SConscript( dirs=dirs )

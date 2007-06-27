@@ -2,18 +2,20 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 
 class StackTexture : public app::SampleApp
 {
 public:
+
 	StackTexture() {}
 
-	bool onRendererCreate()
+	bool onInit()
 	{
 		return true;
 	}
 
-	void onRendererDestroy()
+	void onQuit()
 	{
 	}
 
@@ -26,8 +28,10 @@ public:
 		app::SampleApp::onKeyPress( ke );
 	}
 
-	void onRenderer()
+	void onRender()
 	{
+        RenderEngine & re = getRenderEngine();
+        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 	}
 };
 

@@ -1,5 +1,14 @@
 #include "pch.h"
+
+#ifdef HAS_D3D9
 #include "garnet/GNgfx2D3D9.h"
+#else if GN_STATIC
+static GN::gfx2::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx2::GraphicsSystemCreationParameter & )
+{
+    GN_UNEXPECTED();
+    return 0;
+}
+#endif
 
 //
 //

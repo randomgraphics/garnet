@@ -3,4 +3,5 @@ if 'xenon' == GN.compiler.os:
     SConscript( dirs=[
         'negativeZRange',
         'stackTexture',
+        'vertexEndian',
         ] )

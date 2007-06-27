@@ -11,28 +11,30 @@ class MyApp : public app::SampleApp
     Scene   mScene;
     Actor   mActor;
     ArcBall mArcBall;
+    float   mRadius;
 
 public:
-	MyApp() {}
+	MyApp() : mScene( getEntityManager(), getRenderEngine() ), mActor(mScene)
+    {
+    }
 
-	bool onRendererCreate()
+	bool onInit()
 	{
         // initialize actor
         loadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
 
         // update camera stuff
         mRadius = mActor.getBoundingSphere().radius * 2.0f;
-        updateRadius();
 
         // initialize mArcBall
         mArcBall.setHandness( util::RIGHT_HAND );
-        mArcBall.setViewMatrix( mView );
+        //mArcBall.setViewMatrix( mView );
         mArcBall.connectToInput();
 
 		return true;
 	}
 
-	void onRendererDestroy()
+	void onQuit()
 	{
 	}
 
@@ -45,7 +47,7 @@ public:
 		app::SampleApp::onKeyPress( ke );
 	}
 
-	void onRenderer()
+	void onRender()
 	{
 	}
 };
