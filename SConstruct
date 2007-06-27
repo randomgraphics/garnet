@@ -377,6 +377,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ============
 	conf['has_d3d9'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
 
+	# ============
+	# 是否支持XTL
+	# ============
+	conf['has_xtl'] = c.CheckCXXHeader('xtl.h')
+
 	# =============
 	# 是否支持D3D10
 	# =============
@@ -1060,6 +1065,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNtestPcre',
 		    'GNtestXenonNegativeZRange',
 		    'GNtestXenonStackTexture',
+		    'GNtestXenonVertexEndian',
 		    'GNtestXml',
 		    'GNut',
 		    ]
