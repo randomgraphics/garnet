@@ -75,14 +75,26 @@ void GN::gfx2::D3D9HlslEffectParameterSet::setParameter(
 
     if( handle == mVsHandle )
     {
-        mVsConsts.clear();
-        mVs.attach( sCreateVs( dev, value, &mVsConsts ) );
+        mVsConstBuffer.clear();
+        mVs.attach( sCreateVs( dev, value, &mVsConstBuffer ) );
     }
     else if( handle == mPsHandle )
     {
-        mPsConsts.clear();
-        mPs.attach( sCreatePs( dev, value, &mPsConsts ) );
+        mPsConstBuffer.clear();
+        mPs.attach( sCreatePs( dev, value, &mPsConstBuffer ) );
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::D3D9HlslEffectParameterSet::setRawParameter(
+    EffectParameterHandle handle,
+    size_t                offset,
+    size_t                bytes,
+    const void          * data )
+{
+    BaseEffectParameterSet::setRawParameter( handle, offset, bytes, data );
 }
 
 //
@@ -95,12 +107,12 @@ void GN::gfx2::D3D9HlslEffectParameterSet::unsetParameter( EffectParameterHandle
     if( handle == mVsHandle )
     {
         mVs.clear();
-        mVsConsts.clear();
+        mVsConstBuffer.clear();
     }
     else if( handle == mPsHandle )
     {
         mPs.clear();
-        mPsConsts.clear();
+        mPsConstBuffer.clear();
     }
 }
 
@@ -140,39 +152,30 @@ GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
     EffectParameterDesc p;
 
     p.type  = EFFECT_PARAMETER_TYPE_STRING;
-    p.count = 1;
     mVs = addParameter( "VS", p );
 
     p.type  = EFFECT_PARAMETER_TYPE_STRING;
-    p.count = 1;
     mPs = addParameter( "PS", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_FLOAT4;
-    p.count = 256;
-    mVsConstants = addParameter( "VSC", p );
+    p.type = EFFECT_PARAMETER_TYPE_RAW;
+    mVsFloatConstants = addParameter( "VSCF", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_FLOAT4;
-    p.count = 256;
-    mPsConstants = addParameter( "PSC", p );
+    p.type = EFFECT_PARAMETER_TYPE_RAW;
+    mPsFloatConstants = addParameter( "PSCF", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
-    p.count = 1;
     mPrimType = addParameter( "PRIM_TYPE", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
-    p.count = 1;
     mPrimCount = addParameter( "PRIM_COUNT", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
-    p.count = 1;
     mBaseVertex = addParameter( "BASE_VERTEX", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
-    p.count = 1;
     mBaseIndex = addParameter( "BASE_INDEX", p );
 
     p.type = EFFECT_PARAMETER_TYPE_INT1;
-    p.count = 1;
     mVertexCount = addParameter( "VERTEX_COUNT", p );
 
     // setup ports
@@ -219,8 +222,7 @@ void GN::gfx2::D3D9HlslEffect::render(
 
     const D3D9HlslEffectParameterSet & p = safeCast<const D3D9HlslEffectParameterSet &>(param);
  
-    applyVS( p.vs() );
-    applyPS( p.ps() );
+    applyShader( p );
 
     D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
@@ -236,6 +238,7 @@ void GN::gfx2::D3D9HlslEffect::render(
         const EffectParameter
             * bi = param.getParameter( mBaseIndex ),
             * vc = param.getParameter( mVertexCount );
+        GN_ASSERT( bi && vc );
 
         GN_DX9_CHECK( dev->DrawIndexedPrimitive(
             (D3DPRIMITIVETYPE)pt->toInt1(),
@@ -264,19 +267,23 @@ void GN::gfx2::D3D9HlslEffect::render(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx2::D3D9HlslEffect::applyVS( IDirect3DVertexShader9 * vs )
+inline void GN::gfx2::D3D9HlslEffect::applyShader( const D3D9HlslEffectParameterSet & param )
 {
     D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
-    dev->SetVertexShader( vs );
-}
 
-//
-//
-// -----------------------------------------------------------------------------
-inline void GN::gfx2::D3D9HlslEffect::applyPS( IDirect3DPixelShader9 * ps )
-{
-    D3D9GraphicsSystem & gs = d3d9gs();
-    IDirect3DDevice9  * dev = gs.d3ddev();
-    dev->SetPixelShader( ps );
+    dev->SetVertexShader( param.vs() );
+    dev->SetPixelShader( param.ps() );
+
+    const EffectParameter * vscf = param.getParameter( mVsFloatConstants );
+    if( vscf )
+    {
+        dev->SetVertexShaderConstantF( 0, (const float*)vscf->toRaw(), (UINT)(vscf->raw.bytes / sizeof(Vector4f)) );
+    }
+
+    const EffectParameter * pscf = param.getParameter( mPsFloatConstants );
+    if( pscf )
+    {
+        dev->SetPixelShaderConstantF( 0, (const float*)pscf->toRaw(), (UINT)(pscf->raw.bytes / sizeof(Vector4f)) );
+    }
 }

@@ -60,6 +60,21 @@ namespace GN { namespace gfx2
         }
 
         ///
+        /// set raw data
+        ///
+        void setRaw( size_t offset, size_t bytes, const void * data )
+        {
+            mParam.type = EFFECT_PARAMETER_TYPE_RAW;
+            if( mData.size() < (offset+bytes) )
+            {
+                mData.resize( offset + bytes );
+            }
+            memcpy( mData.cptr() + offset, data, bytes );
+            mParam.raw.ptr   = mData.cptr();
+            mParam.raw.bytes = mData.size();
+        }
+
+        ///
         /// clear to empty
         ///
         void unset() { mParam.type = EFFECT_PARAMETER_TYPE_UNKNOWN; }
@@ -87,6 +102,7 @@ namespace GN { namespace gfx2
         //@{
         virtual const EffectParameter * getParameter( EffectParameterHandle handle ) const;
         virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void                    setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data );
         virtual void                    unsetParameter( EffectParameterHandle handle );
         //@}
     };

@@ -388,7 +388,6 @@ namespace GN { namespace gfx2
     struct EffectParameterDesc
     {
         EffectParameterType type;  ///< value type
-        UInt32              count; ///< value array count
     };
 
     ///
@@ -421,6 +420,7 @@ namespace GN { namespace gfx2
         const float * toFloat4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4 == type); return float4; }
         const float * toFloat4x4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4X4 == type); return float4x4[0]; }
         const char  * toStr() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_STRING == type); return str; }
+        const void  * toRaw() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_RAW == type); return raw.ptr; }
         //@}
 
         /// \name constructors
@@ -469,6 +469,8 @@ namespace GN { namespace gfx2
         virtual const EffectParameter * getParameter( EffectParameterHandle ) const = 0;
         virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
         inline  void                    setParameter( const StrA & name, const EffectParameter & value );
+        virtual void                    setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data ) = 0;
+        inline  void                    setRawParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
         virtual void                    unsetParameter( EffectParameterHandle handle ) = 0;
         inline  void                    unsetParameter( const StrA & name );
         //@}
@@ -656,7 +658,7 @@ namespace GN { namespace gfx2
         HandleType window;  ///< platform specific render window handle.
         UInt32     width;   ///< graphics screen width
         UInt32     height;  ///< graphics screen height
-        UInt32     depth;   ///< graphics screen color depth
+        UInt32     depth;   ///< graphics screen color depth in bits
         UInt32     refrate; ///< graphics screen refresh rate
     };
 

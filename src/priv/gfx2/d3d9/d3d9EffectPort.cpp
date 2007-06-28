@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d9VtxBuf.h"
+#include "d3d9IdxBuf.h"
 
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9EffectPort" );
 
@@ -199,9 +200,19 @@ bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * surf ) const
 
     const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
 
+    GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
+    GN_ASSERT( 1 == desc.layout.faces );
+    GN_ASSERT( 1 == desc.layout.levels );
+
     if( SURFACE_TYPE_VB != desc.type )
     {
         GN_ERROR(sLogger)( "Vertex buffer port accepts vertex buffer surface only!" );
+        return false;
+    }
+
+    if( desc.layout.basemap.rowBytes < desc.layout.basemap.width * desc.layout.format.stride )
+    {
+        GN_ERROR(sLogger)( "rowBytes must >= stride * width." );
         return false;
     }
 
@@ -288,9 +299,26 @@ bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * surf ) const
     GN_ASSERT( 1 == layout.format.count );
     GN_ASSERT( 0 == layout.format.attribs[0].offset );
 
+    // check format
+    if( gfx::FMT_R_16_UINT != layout.format.attribs[0].format &&
+        gfx::FMT_R_32_UINT != layout.format.attribs[0].format )
+    {
+        GN_ERROR(sLogger)( "incorrect index format." );
+        return false;
+    }
     if( layout.format.stride * 8 != gfx::getClrFmtDesc(layout.format.attribs[0].format).bits )
     {
         GN_ERROR(sLogger)( "incorrect stride." );
+        return false;
+    }
+    if( layout.basemap.rowBytes != layout.basemap.width * layout.format.stride )
+    {
+        GN_ERROR(sLogger)( "incorrect row bytes." );
+        return false;
+    }
+    if( layout.basemap.sliceBytes != layout.basemap.rowBytes )
+    {
+        GN_ERROR(sLogger)( "incorrect slice bytes." );
         return false;
     }
 
@@ -303,8 +331,6 @@ bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * surf ) const
 void GN::gfx2::D3D9IdxBufPort::bind( const EffectBindingTarget & target ) const
 {
     GN_ASSERT( target.surf );
-    //IDirect3DDevice9 * dev = gs().d3ddev();
-    //D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
-    //dev->SetIndices( ib->getSurface() );
-    GN_UNIMPL();
+    D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
+    gs().d3ddev()->SetIndices( ib->getSurface() );
 }

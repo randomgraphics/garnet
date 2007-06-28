@@ -16,9 +16,8 @@ namespace GN { namespace gfx2
         D3D9GraphicsSystem               & mGs;
         AutoComPtr<IDirect3DVertexShader9> mVs;
         AutoComPtr<IDirect3DPixelShader9>  mPs;
-        AutoComPtr<ID3DXConstantTable>     mVsConsts, mPsConsts;
-
-        EffectParameterHandle mVsHandle, mPsHandle;
+        AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
+        EffectParameterHandle              mVsHandle, mPsHandle;
 
     public:
 
@@ -46,6 +45,7 @@ namespace GN { namespace gfx2
         /// \name from parent class
         //@{
         virtual void setParameter( EffectParameterHandle handle, const EffectParameter & value );
+        virtual void setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data );
         virtual void unsetParameter( EffectParameterHandle handle );
         //@}
     };
@@ -56,7 +56,7 @@ namespace GN { namespace gfx2
     class D3D9HlslEffect : public D3D9Effect
     {
         EffectParameterHandle mVs, mPs;
-        EffectParameterHandle mVsConstants, mPsConstants;
+        EffectParameterHandle mVsFloatConstants, mPsFloatConstants;
         EffectParameterHandle mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
         D3D9RenderTargetPort mRenderTarget0;
@@ -110,8 +110,7 @@ namespace GN { namespace gfx2
 
     private:
 
-        inline void applyVS( IDirect3DVertexShader9 * vs );
-        inline void applyPS( IDirect3DPixelShader9 * ps );
+        inline void applyShader( const D3D9HlslEffectParameterSet & param );
     };
 }}
 
