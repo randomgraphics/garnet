@@ -86,8 +86,6 @@ void GN::gfx2::D3D9VtxBuf::download(
 
     GN_DX9_CHECK( mSurface->Unlock() );
 
-    GN_UNIMPL_WARNING();
-
     GN_UNGUARD;
 }
 
