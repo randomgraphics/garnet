@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d9VtxBuf.h"
+#include "d3d9IdxBuf.h"
 #include "d3d9DepthBuffer.h"
 #include "d3d9BuildInEffects.h"
 #include "garnet/GNwin.h"
@@ -235,12 +236,20 @@ static bool sCreateDevice(
     desc.pp.MultiSampleQuality     = 0;
     if( gscp.fullscr )
     {
+        desc.width                         = gscp.fullscrWidth;
+        desc.height                        = gscp.fullscrHeight;
+        desc.depth                         = gscp.fullscrDepth;
+        desc.refrate                       = gscp.fullscrRefrate;
         desc.pp.BackBufferWidth            = gscp.fullscrWidth;
         desc.pp.BackBufferHeight           = gscp.fullscrHeight;
         desc.pp.FullScreen_RefreshRateInHz = gscp.fullscrRefrate;
     }
     else
     {
+        desc.width                         = gscp.windowedWidth;
+        desc.height                        = gscp.windowedHeight;
+        desc.depth                         = 32; // TODO: get current screen depth;
+        desc.refrate                       = 0;
         desc.pp.BackBufferWidth  = gscp.windowedWidth;
         desc.pp.BackBufferHeight = gscp.windowedHeight;
     }
@@ -701,6 +710,8 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
             return D3D9VtxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
 
         case SURFACE_TYPE_IB        :
+            return D3D9IdxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
+
         case SURFACE_TYPE_TEX_2D    :
         case SURFACE_TYPE_TEX_3D    :
         case SURFACE_TYPE_TEX_CUBE  :

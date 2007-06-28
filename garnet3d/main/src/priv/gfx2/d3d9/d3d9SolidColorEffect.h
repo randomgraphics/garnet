@@ -36,11 +36,9 @@ namespace GN { namespace gfx2
             EffectParameterDesc p;
 
             p.type  = EFFECT_PARAMETER_TYPE_FLOAT4X4;
-            p.count = 1;
             mPvw    = addParameter( "PVW", p );
 
             p.type  = EFFECT_PARAMETER_TYPE_FLOAT4;
-            p.count = 1;
             mColor  = addParameter( "COLOR", p );
 
             // setup ports

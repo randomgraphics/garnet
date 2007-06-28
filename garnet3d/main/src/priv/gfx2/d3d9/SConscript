@@ -5,6 +5,7 @@ sources = [
     'd3d9EffectPort.cpp',
     'd3d9GraphicsSystem.cpp',
     'd3d9HlslEffect.cpp',
+    'd3d9IdxBuf.cpp',
     'd3d9VtxBuf.cpp',
     'd3d9VtxDecl.cpp',
 ]

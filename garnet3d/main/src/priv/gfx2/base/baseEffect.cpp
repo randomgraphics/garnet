@@ -60,6 +60,29 @@ void GN::gfx2::BaseEffectParameterSet::setParameter(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx2::BaseEffectParameterSet::setRawParameter(
+    EffectParameterHandle handle,
+    size_t                offset,
+    size_t                bytes,
+    const void          * data )
+{
+    GN_GUARD_SLOW;
+
+    BaseEffect & e = (BaseEffect&)getEffect();
+
+    size_t idx;
+    if( !e.getParameterIndex( idx, handle ) ) return;
+
+    GN_ASSERT( idx < mParameters.size() );
+
+    mParameters[idx].setRaw( offset ,bytes, data );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx2::BaseEffectParameterSet::unsetParameter( EffectParameterHandle handle )
 {
     GN_GUARD_SLOW;

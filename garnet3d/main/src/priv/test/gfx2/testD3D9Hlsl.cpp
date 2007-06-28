@@ -33,7 +33,7 @@ static const char * vs_code =
 "vso main( vsi i )                          \n"
 "{                                          \n"
 "    vso o;                                 \n"
-"    o.pos = mul( gPvw, i.pos );            \n"
+"    o.pos = mul( i.pos, gPvw );            \n"
 "    float3 n = 2*abs(i.nml) + i.nml;       \n"
 "    o.clr = float4( n/3.0, 1.0 );          \n"
 "    o.uv = i.uv;                           \n"
@@ -68,6 +68,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     mArcBall.setHandness( util::LEFT_HAND );
     mArcBall.setViewMatrix( view );
     mArcBall.connectToInput();
+    mArcBall.setMouseMoveWindow( 0, 0, gs.getDesc().width, gs.getDesc().height );
 
     // create cube mesh
     static Vertex vertices[24];
@@ -93,8 +94,10 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     mParam->setParameter( "PS", ps_code );
     //mParam->setParameter( "gPvw", ... );
     mParam->setParameter( "PRIM_TYPE", 4 ); // D3DPT_TRIANGLELIST
-    mParam->setParameter( "PRIM_COUNT", 8 );
+    mParam->setParameter( "PRIM_COUNT", 12 );
     mParam->setParameter( "BASE_VERTEX", 0 );
+    mParam->setParameter( "VERTEX_COUNT", 24 );
+    mParam->setParameter( "BASE_INDEX", 0 );
 
     // create vertex buffer
     SurfaceCreationParameter scp;
@@ -145,8 +148,14 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.layout.format.attribs[0].format = FMT_R_16_UINT;
     scp.layout.format.count = 1;
     scp.layout.format.stride = sizeof(short);
-    //mIdxBuf = gs.createSurface( scp );
-    //if( 0 == mIdxBuf ) return false;
+    mIdxBuf = gs.createSurface( scp );
+    if( 0 == mIdxBuf ) return false;
+    mIdxBuf->download(
+        0,
+        Box<size_t>( 0, 0, 0, scp.layout.basemap.width, 1, 1 ),
+        indices,
+        sizeof(indices),
+        sizeof(indices) );
 
     // create binding
     EffectBindingDesc bd;
@@ -184,5 +193,11 @@ void TestD3D9Hlsl::draw( GraphicsSystem & )
 {
     GN_ASSERT( mEffect );
     GN_ASSERT( mParam );
+
+    Matrix44f world = mArcBall.getRotationMatrix44();
+    Matrix44f pvw = mProjView * world;
+
+    mParam->setRawParameter( "VSCF", 0, sizeof(pvw), pvw );
+
     mEffect->render( *mParam, mBinding );
 }

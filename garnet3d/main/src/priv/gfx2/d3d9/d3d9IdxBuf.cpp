@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "d3d9VtxBuf.h"
+#include "d3d9IdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9VtxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9IdxBuf");
 
 // *****************************************************************************
 // public methods
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9VtxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9VtxBuf * GN::gfx2::D3D9VtxBuf::sNewInstance(
+GN::gfx2::D3D9IdxBuf * GN::gfx2::D3D9IdxBuf::sNewInstance(
     D3D9GraphicsSystem          & gs,
     const SurfaceLayout         & layout,
     int                           access,
@@ -19,15 +19,15 @@ GN::gfx2::D3D9VtxBuf * GN::gfx2::D3D9VtxBuf::sNewInstance(
     GN_GUARD;
 
     D3D9SurfaceDesc desc;
-    desc.type = SURFACE_TYPE_VB;
+    desc.type = SURFACE_TYPE_IB;
     desc.layout = layout;
     desc.access = access;
 
-    AutoObjPtr<D3D9VtxBuf> vb( new D3D9VtxBuf(gs,desc,hints) );
+    AutoObjPtr<D3D9IdxBuf> ib( new D3D9IdxBuf(gs,desc,hints) );
 
-    if( !vb->init() ) return 0;
+    if( !ib->init() ) return 0;
 
-    return vb.detach();
+    return ib.detach();
 
     GN_UNGUARD;
 }
@@ -35,7 +35,7 @@ GN::gfx2::D3D9VtxBuf * GN::gfx2::D3D9VtxBuf::sNewInstance(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9VtxBuf::~D3D9VtxBuf()
+GN::gfx2::D3D9IdxBuf::~D3D9IdxBuf()
 {
     safeRelease( mSurface );
 }
@@ -46,11 +46,11 @@ GN::gfx2::D3D9VtxBuf::~D3D9VtxBuf()
 //
 // -----------------------------------------------------------------------------
 const GN::gfx2::SubSurfaceLayout *
-GN::gfx2::D3D9VtxBuf::getSubSurfaceLayout( size_t subsurface ) const
+GN::gfx2::D3D9IdxBuf::getSubSurfaceLayout( size_t subsurface ) const
 {
     if( 0 == subsurface )
     {
-        GN_ERROR(sLogger)( "Vertex buffer has no subsurfaces" );
+        GN_ERROR(sLogger)( "Index buffer has no subsurfaces" );
         return 0;
     }
 
@@ -60,7 +60,7 @@ GN::gfx2::D3D9VtxBuf::getSubSurfaceLayout( size_t subsurface ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBuf::download(
+void GN::gfx2::D3D9IdxBuf::download(
     size_t                 subsurface,
     const Box<size_t>    & area,
     const void           * source,
@@ -78,6 +78,8 @@ void GN::gfx2::D3D9VtxBuf::download(
 
     size_t stride = getDesc().layout.format.stride;
 
+    GN_ASSERT( 2 == stride || 4 == stride );
+
     UInt8 * data;
 
     GN_DX9_CHECK_R( mSurface->Lock( (UINT)(area.x * stride), (UINT)(area.w * stride), (void**)&data, 0 ) );
@@ -94,7 +96,7 @@ void GN::gfx2::D3D9VtxBuf::download(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBuf::upload(
+void GN::gfx2::D3D9IdxBuf::upload(
     size_t              subsurface,
     const Box<size_t> & area,
     void              * destination,
@@ -107,7 +109,7 @@ void GN::gfx2::D3D9VtxBuf::upload(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBuf::save( NativeSurfaceData & ) const
+void GN::gfx2::D3D9IdxBuf::save( NativeSurfaceData & ) const
 {
     GN_UNIMPL();
 }
@@ -115,7 +117,7 @@ void GN::gfx2::D3D9VtxBuf::save( NativeSurfaceData & ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBuf::load( const NativeSurfaceData & )
+void GN::gfx2::D3D9IdxBuf::load( const NativeSurfaceData & )
 {
     GN_UNIMPL();
 }
@@ -127,7 +129,7 @@ void GN::gfx2::D3D9VtxBuf::load( const NativeSurfaceData & )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9VtxBuf::D3D9VtxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
+GN::gfx2::D3D9IdxBuf::D3D9IdxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
     : D3D9Surface( desc )
     , mGraphicsSystem( gs )
     , mSurface( 0 )
@@ -139,7 +141,7 @@ GN::gfx2::D3D9VtxBuf::D3D9VtxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9VtxBuf::init()
+bool GN::gfx2::D3D9IdxBuf::init()
 {
     GN_GUARD;
 
@@ -147,17 +149,32 @@ bool GN::gfx2::D3D9VtxBuf::init()
 
     const D3D9SurfaceDesc & desc = getD3D9Desc();
 
-    GN_ASSERT( SURFACE_TYPE_VB == desc.type );
+    GN_ASSERT( SURFACE_TYPE_IB == desc.type );
+
+    // check descriptor
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
-    GN_ASSERT( desc.layout.basemap.rowBytes >= desc.layout.basemap.width * desc.layout.format.stride );
+    GN_ASSERT( 1 == desc.layout.format.count );
+    GN_ASSERT( 2 == desc.layout.format.stride || 4 == desc.layout.format.stride );
+    //GN_ASSERT( desc.layout.format.attribs[0].sematic == "INDEX" );
+    GN_ASSERT( 0 == desc.layout.format.attribs[0].offset );
+    GN_ASSERT( gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ||
+               gfx::FMT_R_32_UINT == desc.layout.format.attribs[0].format );
+    GN_ASSERT( gfx::getClrFmtDesc(desc.layout.format.attribs[0].format).bits == desc.layout.format.stride * 8 );
+    GN_ASSERT( desc.layout.basemap.rowBytes == desc.layout.basemap.width * desc.layout.format.stride );
+    GN_ASSERT( desc.layout.basemap.rowBytes == desc.layout.basemap.sliceBytes );
 
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
-    // create vertex buffer
-    GN_TODO( "setup usage and pool from hints" );
-    GN_DX9_CHECK_RV( dev->CreateVertexBuffer( desc.layout.basemap.rowBytes, 0, 0, D3DPOOL_DEFAULT, &mSurface, 0 ), false );
+    // create index buffer
+    GN_TODO( "setup usage and pool based on hints" );
+    GN_DX9_CHECK_RV( dev->CreateIndexBuffer(
+        desc.layout.basemap.rowBytes,
+        0, // usage
+        gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ? D3DFMT_INDEX16 : D3DFMT_INDEX32,
+        D3DPOOL_DEFAULT,
+        &mSurface, 0 ), false );
 
     // success
     return true;

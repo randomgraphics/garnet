@@ -35,19 +35,16 @@ namespace GN { namespace gfx2
             // setup parameters
             EffectParameterDesc c;
             c.type  = EFFECT_PARAMETER_TYPE_FLOAT4;
-            c.count = 1;
             mColorValue = addParameter( "COLOR_VALUE", c );
             //setParameter( mColorValue, EffectParameter(.0f, .0f, .0f, .0f) );
 
             EffectParameterDesc z;
             z.type  = EFFECT_PARAMETER_TYPE_FLOAT1;
-            z.count = 1;
             mDepthValue = addParameter( "DEPTH_VALUE", z );
             //setParameter( mDepthValue, .0f );
 
             EffectParameterDesc s;
             s.type  = EFFECT_PARAMETER_TYPE_INT1;
-            s.count = 1;
             mStencilValue = addParameter( "STENCIL_VALUE", s );
             //setParameter( mStencilValue, 0 );
         }

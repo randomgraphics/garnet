@@ -39,7 +39,7 @@ struct ClearScreen
         param.attach( effect->createParameterSet() );
         if( 0 == param ) return false;
 
-        param->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 1.0f, 1.0f ) );
+        param->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 0.0f, 1.0f ) );
         param->setParameter( "DEPTH_VALUE", 1.0f );
         param->setParameter( "STENCIL_VALUE", 0 );
 
