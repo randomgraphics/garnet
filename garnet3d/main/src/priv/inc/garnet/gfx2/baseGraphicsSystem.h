@@ -8,14 +8,14 @@
 
 #include "../GNgfx2.h"
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
-    /// structure to hold effect parameter value
+    /// structure to hold kernel parameter value
     ///
-    class EffectParameterWrapper
+    class KernelParameterWrapper
     {
-        EffectParameter  mParam;
+        KernelParameter  mParam;
         DynaArray<UInt8> mData;
 
     public:
@@ -23,7 +23,7 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        EffectParameterWrapper()
+        KernelParameterWrapper()
         {
             unset();
         }
@@ -31,27 +31,27 @@ namespace GN { namespace gfx2
         ///
         /// check if parameter has valid value
         ///
-        bool empty() const { return EFFECT_PARAMETER_TYPE_UNKNOWN == mParam.type; }
+        bool empty() const { return KERNEL_PARAMETER_TYPE_UNKNOWN == mParam.type; }
 
         ///
         /// get parameter
         ///
-        const EffectParameter & get() const { GN_ASSERT(!empty()); return mParam; }
+        const KernelParameter & get() const { GN_ASSERT(!empty()); return mParam; }
 
         ///
         /// set parameter
         ///
-        void set( const EffectParameter & v )
+        void set( const KernelParameter & v )
         {
             mParam = v;
 
-            if( EFFECT_PARAMETER_TYPE_STRING == v.type )
+            if( KERNEL_PARAMETER_TYPE_STRING == v.type )
             {
                 mData.resize( strLen( v.str ) );
                 memcpy( mData.cptr(), v.str, mData.size() );
                 mParam.str = (const char *)mData.cptr();
             }
-            else if( EFFECT_PARAMETER_TYPE_RAW == v.type )
+            else if( KERNEL_PARAMETER_TYPE_RAW == v.type )
             {
                 mData.resize( v.raw.bytes );
                 memcpy( mData.cptr(), v.raw.ptr, mData.size() );
@@ -64,7 +64,7 @@ namespace GN { namespace gfx2
         ///
         void setRaw( size_t offset, size_t bytes, const void * data )
         {
-            mParam.type = EFFECT_PARAMETER_TYPE_RAW;
+            mParam.type = KERNEL_PARAMETER_TYPE_RAW;
             if( mData.size() < (offset+bytes) )
             {
                 mData.resize( offset + bytes );
@@ -77,47 +77,47 @@ namespace GN { namespace gfx2
         ///
         /// clear to empty
         ///
-        void unset() { mParam.type = EFFECT_PARAMETER_TYPE_UNKNOWN; }
+        void unset() { mParam.type = KERNEL_PARAMETER_TYPE_UNKNOWN; }
     };
 
     ///
-    /// base effect parameter set
+    /// base kernel parameter set
     ///
-    class BaseEffectParameterSet : public EffectParameterSet
+    class BaseKernelParameterSet : public KernelParameterSet
     {
-        DynaArray<EffectParameterWrapper> mParameters;
+        DynaArray<KernelParameterWrapper> mParameters;
 
     public:
 
         ///
         /// ctor
         ///
-        BaseEffectParameterSet( Effect & e, size_t count )
-            : EffectParameterSet( e )
+        BaseKernelParameterSet( Kernel & e, size_t count )
+            : KernelParameterSet( e )
             , mParameters( count )
         {
         }
 
         /// \name from parent class
         //@{
-        virtual const EffectParameter * getParameter( EffectParameterHandle handle ) const;
-        virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value );
-        virtual void                    setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data );
-        virtual void                    unsetParameter( EffectParameterHandle handle );
+        virtual const KernelParameter * getParameter( KernelParameterHandle handle ) const;
+        virtual void                    setParameter( KernelParameterHandle handle, const KernelParameter & value );
+        virtual void                    setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data );
+        virtual void                    unsetParameter( KernelParameterHandle handle );
         //@}
     };
 
     ///
-    /// base effect class
+    /// base kernel class
     ///
-    class BaseEffect : public Effect
+    class BaseKernel : public Kernel
     {
     public:
 
         ///
         /// ctor
         ///
-        BaseEffect( GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
+        BaseKernel( GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
 
         ///
         /// get reference to graphics system
@@ -135,11 +135,11 @@ namespace GN { namespace gfx2
         ///
         /// convert parameter handle to parameter index.
         ///
-        bool getParameterIndex( size_t & result, EffectParameterHandle handle ) const
+        bool getParameterIndex( size_t & result, KernelParameterHandle handle ) const
         {
             if( !mParameterHandles.validHandle( handle ) )
             {
-                GN_ERROR(getLogger("GN.gfx2.base.BaseEffect"))( "invalid arameter handle: %d", handle );
+                GN_ERROR(getLogger("GN.gfx2.base.BaseKernel"))( "invalid arameter handle: %d", handle );
                 return false;
             }
             result = mParameterHandles[handle];
@@ -150,19 +150,19 @@ namespace GN { namespace gfx2
         ///
         /// get global value of the parameter
         ///
-        const EffectParameter * getGlobalParameterByIndex( size_t index ) const
+        const KernelParameter * getGlobalParameterByIndex( size_t index ) const
         {
             GN_ASSERT( index < mParameters.size() );
-            return mGraphicsSystem.getGlobalEffectParameter( mParameters[index].global );
+            return mGraphicsSystem.getGlobalKernelParameter( mParameters[index].global );
         }
 
-        /// \name from Effect
+        /// \name from Kernel
         //@{
-        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const;
-        virtual EffectParameterHandle       getParameterHandle( const StrA & name ) const;
-        virtual EffectParameterSet        * createParameterSet();
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const;
+        virtual KernelParameterHandle       getParameterHandle( const StrA & name ) const;
+        virtual KernelParameterSet        * createParameterSet();
         virtual bool                        hasProperity( const StrA & name ) const;
-        virtual const EffectProperty      * getProperity( const StrA & name ) const;
+        virtual const KernelProperty      * getProperity( const StrA & name ) const;
         //@}
 
     protected:
@@ -170,10 +170,10 @@ namespace GN { namespace gfx2
         ///
         /// \note add parameter. Normallly called in constructor
         ///
-        EffectParameterHandle addParameter( const StrA & name, const EffectParameterDesc & param );
+        KernelParameterHandle addParameter( const StrA & name, const KernelParameterDesc & param );
 
         /// \name property management
-        void setProperty( const StrA & name, const EffectProperty & property );
+        void setProperty( const StrA & name, const KernelProperty & property );
         void unsetProperty( const StrA & name );
         //@}
 
@@ -181,14 +181,14 @@ namespace GN { namespace gfx2
 
         struct ParameterItem
         {
-            EffectParameterDesc    desc;
-            EffectParameterHandle  global;
+            KernelParameterDesc    desc;
+            KernelParameterHandle  global;
         };
 
         GraphicsSystem                                  & mGraphicsSystem;
         DynaArray<ParameterItem>                          mParameters;
-        NamedHandleManager<size_t,EffectParameterHandle>  mParameterHandles; ///< convert handle and name to array index.
-        NamedHandleManager<EffectParameterWrapper,UInt32> mProperties;
+        NamedHandleManager<size_t,KernelParameterHandle>  mParameterHandles; ///< convert handle and name to array index.
+        NamedHandleManager<KernelParameterWrapper,UInt32> mProperties;
     };
 
     ///
@@ -227,15 +227,15 @@ namespace GN { namespace gfx2
 
         //@{
 
-        virtual EffectParameterHandle   getGlobalEffectParameterHandle( const StrA & name );
-        virtual void                    setGlobalEffectParameter( EffectParameterHandle handle, const EffectParameter & value );
-        virtual void                    unsetGlobalEffectParameter( EffectParameterHandle handle );
-        virtual const EffectParameter * getGlobalEffectParameter( EffectParameterHandle handle );
+        virtual KernelParameterHandle   getGlobalKernelParameterHandle( const StrA & name );
+        virtual void                    setGlobalKernelParameter( KernelParameterHandle handle, const KernelParameter & value );
+        virtual void                    unsetGlobalKernelParameter( KernelParameterHandle handle );
+        virtual const KernelParameter * getGlobalKernelParameter( KernelParameterHandle handle );
 
-        virtual void     registerEffect( const StrA & name, const EffectFactory & );
-        virtual Effect * getEffect( const StrA & name );
-        virtual void     deleteEffect( const StrA & name );
-        virtual void     deleteAllEffects();
+        virtual void     registerKernel( const StrA & name, const KernelFactory & );
+        virtual Kernel * getKernel( const StrA & name );
+        virtual void     deleteKernel( const StrA & name );
+        virtual void     deleteAllKernels();
 
         //@}
 
@@ -244,14 +244,14 @@ namespace GN { namespace gfx2
         // ********************************
     private:
 
-        struct EffectItem
+        struct KernelItem
         {
-            EffectFactory factory;
-            Effect *      instance;
+            KernelFactory factory;
+            Kernel *      instance;
         };
 
-        NamedHandleManager<EffectParameterWrapper,EffectParameterHandle> mGlobalEffectParameters;
-        NamedHandleManager<EffectItem,UInt32>                            mEffects;
+        NamedHandleManager<KernelParameterWrapper,KernelParameterHandle> mGlobalKernelParameters;
+        NamedHandleManager<KernelItem,UInt32>                            mKernels;
 
         // ********************************
         // private functions

@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.3.14)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
     /// create D3D9 decl from vertex format structure

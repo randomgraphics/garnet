@@ -33,7 +33,7 @@
 #endif
 
 #include "gfx2/d3d9Surface.h"
-#include "gfx2/d3d9Effect.h"
+#include "gfx2/d3d9Kernel.h"
 #include "gfx2/d3d9GraphicsSystem.h"
 
 // *****************************************************************************

@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9IdxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9IdxBuf * GN::gfx2::D3D9IdxBuf::sNewInstance(
+GN::gfx::D3D9IdxBuf * GN::gfx::D3D9IdxBuf::sNewInstance(
     D3D9GraphicsSystem          & gs,
     const SurfaceLayout         & layout,
     int                           access,
@@ -35,7 +35,7 @@ GN::gfx2::D3D9IdxBuf * GN::gfx2::D3D9IdxBuf::sNewInstance(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9IdxBuf::~D3D9IdxBuf()
+GN::gfx::D3D9IdxBuf::~D3D9IdxBuf()
 {
     safeRelease( mSurface );
 }
@@ -45,8 +45,8 @@ GN::gfx2::D3D9IdxBuf::~D3D9IdxBuf()
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::SubSurfaceLayout *
-GN::gfx2::D3D9IdxBuf::getSubSurfaceLayout( size_t subsurface ) const
+const GN::gfx::SubSurfaceLayout *
+GN::gfx::D3D9IdxBuf::getSubSurfaceLayout( size_t subsurface ) const
 {
     if( 0 == subsurface )
     {
@@ -60,7 +60,7 @@ GN::gfx2::D3D9IdxBuf::getSubSurfaceLayout( size_t subsurface ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBuf::download(
+void GN::gfx::D3D9IdxBuf::download(
     size_t                 subsurface,
     const Box<size_t>    & area,
     const void           * source,
@@ -94,7 +94,7 @@ void GN::gfx2::D3D9IdxBuf::download(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBuf::upload(
+void GN::gfx::D3D9IdxBuf::upload(
     size_t              subsurface,
     const Box<size_t> & area,
     void              * destination,
@@ -107,7 +107,7 @@ void GN::gfx2::D3D9IdxBuf::upload(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBuf::save( NativeSurfaceData & ) const
+void GN::gfx::D3D9IdxBuf::save( NativeSurfaceData & ) const
 {
     GN_UNIMPL();
 }
@@ -115,7 +115,7 @@ void GN::gfx2::D3D9IdxBuf::save( NativeSurfaceData & ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBuf::load( const NativeSurfaceData & )
+void GN::gfx::D3D9IdxBuf::load( const NativeSurfaceData & )
 {
     GN_UNIMPL();
 }
@@ -127,7 +127,7 @@ void GN::gfx2::D3D9IdxBuf::load( const NativeSurfaceData & )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9IdxBuf::D3D9IdxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
+GN::gfx::D3D9IdxBuf::D3D9IdxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
     : D3D9Surface( desc )
     , mGraphicsSystem( gs )
     , mSurface( 0 )
@@ -139,7 +139,7 @@ GN::gfx2::D3D9IdxBuf::D3D9IdxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9IdxBuf::init()
+bool GN::gfx::D3D9IdxBuf::init()
 {
     GN_GUARD;
 

@@ -9,7 +9,7 @@
 #include "garnet/GNgfx2.h"
 
 using namespace GN;
-using namespace GN::gfx2;
+using namespace GN::gfx;
 
 ///
 /// GFX2 test application

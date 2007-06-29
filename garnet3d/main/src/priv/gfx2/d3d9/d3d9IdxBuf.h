@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.26)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
     /// index buffer surface

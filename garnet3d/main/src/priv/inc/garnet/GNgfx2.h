@@ -2,7 +2,7 @@
 #define __GN_GFX2_GNGFX2_H__
 // *****************************************************************************
 /// \file
-/// \brief   experimental effect based GFX interface
+/// \brief   experimental kernel based GFX interface
 /// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
@@ -10,19 +10,8 @@
 #include "GNgfx.h"
 #include <set>
 
-namespace GN
+namespace GN { namespace gfx
 {
-    ///
-    /// namespace for new experimental graphics system
-    namespace gfx2
-    {
-    }
-}
-
-namespace GN { namespace gfx2
-{
-    using GN::gfx::ClrFmt; ///< import color format definition from gfx namespace
-
     // *************************************************************************
     // surface
     // *************************************************************************
@@ -41,8 +30,8 @@ namespace GN { namespace gfx2
         //@{
         SURFACE_ACCESS_HOST_READ    = 0x1, ///< can be readen by host application.
         SURFACE_ACCESS_HOST_WRITE   = 0x2, ///< can be modified by host application.
-        SURFACE_ACCESS_DEVICE_READ  = 0x4, ///< can bind to input port of a effect
-        SURFACE_ACCESS_DEVICE_WRITE = 0x8, ///< can bind to output port of a effect
+        SURFACE_ACCESS_DEVICE_READ  = 0x4, ///< can bind to input port of a kernel
+        SURFACE_ACCESS_DEVICE_WRITE = 0x8, ///< can bind to output port of a kernel
         //@}
     };
 
@@ -103,7 +92,7 @@ namespace GN { namespace gfx2
                 }
                 if( *str )
                 {
-                    GN_WARN(getLogger("GN.gfx2.SurfaceAttributeSemantic"))( "semantic string is too long!" );
+                    GN_WARN(getLogger("GN.gfx.SurfaceAttributeSemantic"))( "semantic string is too long!" );
                 }
             }
         }
@@ -263,29 +252,29 @@ namespace GN { namespace gfx2
     };
 
     // *************************************************************************
-    // effect
+    // kernel
     //
     // There's 2 way to transter data between device and host: by surface or by
-    // raw host data pointer. A effect may support either one of them, or both.
-    // send/get data to/from effect by the "unsupported" way has no effect but
+    // raw host data pointer. A kernel may support either one of them, or both.
+    // send/get data to/from kernel by the "unsupported" way has no kernel but
     // generate some error messages.
     //
     // *************************************************************************
 
     ///
-    /// effect parameter type
+    /// kernel parameter type
     ///
-    enum EffectParameterType
+    enum KernelParameterType
     {
         //@{
-        EFFECT_PARAMETER_TYPE_UNKNOWN,
-        EFFECT_PARAMETER_TYPE_BOOL,
-        EFFECT_PARAMETER_TYPE_INT1,
-        EFFECT_PARAMETER_TYPE_FLOAT1,
-        EFFECT_PARAMETER_TYPE_FLOAT4,
-        EFFECT_PARAMETER_TYPE_FLOAT4X4,
-        EFFECT_PARAMETER_TYPE_STRING,
-        EFFECT_PARAMETER_TYPE_RAW,
+        KERNEL_PARAMETER_TYPE_UNKNOWN,
+        KERNEL_PARAMETER_TYPE_BOOL,
+        KERNEL_PARAMETER_TYPE_INT1,
+        KERNEL_PARAMETER_TYPE_FLOAT1,
+        KERNEL_PARAMETER_TYPE_FLOAT4,
+        KERNEL_PARAMETER_TYPE_FLOAT4X4,
+        KERNEL_PARAMETER_TYPE_STRING,
+        KERNEL_PARAMETER_TYPE_RAW,
         //@}
     };
 
@@ -379,9 +368,9 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// effect port descriptor: describe a input or output port of the effect
+    /// kernel port descriptor: describe a input or output port of the kernel
     ///
-    struct EffectPortDesc
+    struct KernelPortDesc
     {
         //@{
         SurfaceLayoutTemplate layout;
@@ -391,19 +380,19 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// effect parameter value descriptor
+    /// kernel parameter value descriptor
     ///
-    struct EffectParameterDesc
+    struct KernelParameterDesc
     {
-        EffectParameterType type;  ///< value type
+        KernelParameterType type;  ///< value type
     };
 
     ///
-    /// Effect parameter
+    /// Kernel parameter
     ///
-    struct EffectParameter
+    struct KernelParameter
     {
-        EffectParameterType type; ///< value type.
+        KernelParameterType type; ///< value type.
         union
         {
             bool         bool1;          ///< boolean value
@@ -421,28 +410,28 @@ namespace GN { namespace gfx2
         };
 
         //@{
-        bool          toBool1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_BOOL == type); return bool1; }
-        int           toInt1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_INT1 == type); return int1; }
-        unsigned int  toUInt1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_INT1 == type); return uint1; }
-        float         toFloat1() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT1 == type); return float1; }
-        const float * toFloat4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4 == type); return float4; }
-        const float * toFloat4x4() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_FLOAT4X4 == type); return float4x4[0]; }
-        const char  * toStr() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_STRING == type); return str; }
-        const void  * toRaw() const { GN_ASSERT(EFFECT_PARAMETER_TYPE_RAW == type); return raw.ptr; }
+        bool          toBool1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_BOOL == type); return bool1; }
+        int           toInt1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_INT1 == type); return int1; }
+        unsigned int  toUInt1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_INT1 == type); return uint1; }
+        float         toFloat1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT1 == type); return float1; }
+        const float * toFloat4() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT4 == type); return float4; }
+        const float * toFloat4x4() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT4X4 == type); return float4x4[0]; }
+        const char  * toStr() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_STRING == type); return str; }
+        const void  * toRaw() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_RAW == type); return raw.ptr; }
         //@}
 
         /// \name constructors
         //@{
 
-        EffectParameter() : type(EFFECT_PARAMETER_TYPE_UNKNOWN) {}
+        KernelParameter() : type(KERNEL_PARAMETER_TYPE_UNKNOWN) {}
 
-        EffectParameter( bool b ) : type(EFFECT_PARAMETER_TYPE_BOOL), bool1(b) {}
+        KernelParameter( bool b ) : type(KERNEL_PARAMETER_TYPE_BOOL), bool1(b) {}
 
-        EffectParameter( int i ) : type(EFFECT_PARAMETER_TYPE_INT1), int1(i) {}
+        KernelParameter( int i ) : type(KERNEL_PARAMETER_TYPE_INT1), int1(i) {}
 
-        EffectParameter( float f ) : type(EFFECT_PARAMETER_TYPE_FLOAT1), float1(f) {}
+        KernelParameter( float f ) : type(KERNEL_PARAMETER_TYPE_FLOAT1), float1(f) {}
 
-        EffectParameter( float x, float y, float z, float w ) : type(EFFECT_PARAMETER_TYPE_FLOAT4)
+        KernelParameter( float x, float y, float z, float w ) : type(KERNEL_PARAMETER_TYPE_FLOAT4)
         {
             float4[0] = x;
             float4[1] = y;
@@ -450,36 +439,36 @@ namespace GN { namespace gfx2
             float4[3] = w;
         }
 
-        EffectParameter( const char * s ) : type(EFFECT_PARAMETER_TYPE_STRING), str(s) {}
+        KernelParameter( const char * s ) : type(KERNEL_PARAMETER_TYPE_STRING), str(s) {}
 
         //@}
     };
 
     ///
-    /// effect property
+    /// kernel property
     ///
-    typedef EffectParameter EffectProperty;
+    typedef KernelParameter KernelProperty;
 
     ///
-    /// effect parameter handle
+    /// kernel parameter handle
     ///
-    typedef UIntPtr EffectParameterHandle;
+    typedef UIntPtr KernelParameterHandle;
 
-    struct Effect;
+    struct Kernel;
 
     ///
-    /// effect parameter set
+    /// kernel parameter set
     ///
-    struct EffectParameterSet : public NoCopy
+    struct KernelParameterSet : public NoCopy
     {
         //@{
-        inline  Effect                & getEffect() const { return mEffect; }
-        virtual const EffectParameter * getParameter( EffectParameterHandle ) const = 0;
-        virtual void                    setParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
-        inline  void                    setParameter( const StrA & name, const EffectParameter & value );
-        virtual void                    setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data ) = 0;
+        inline  Kernel                & getKernel() const { return mKernel; }
+        virtual const KernelParameter * getParameter( KernelParameterHandle ) const = 0;
+        virtual void                    setParameter( KernelParameterHandle handle, const KernelParameter & value ) = 0;
+        inline  void                    setParameter( const StrA & name, const KernelParameter & value );
+        virtual void                    setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data ) = 0;
         inline  void                    setRawParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
-        virtual void                    unsetParameter( EffectParameterHandle handle ) = 0;
+        virtual void                    unsetParameter( KernelParameterHandle handle ) = 0;
         inline  void                    unsetParameter( const StrA & name );
         //@}
 
@@ -488,17 +477,17 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        EffectParameterSet( Effect & e ) : mEffect( e ) {}
+        KernelParameterSet( Kernel & e ) : mKernel( e ) {}
 
     private:
 
-        Effect & mEffect;
+        Kernel & mKernel;
     };
 
     ///
-    /// describe the target surface that will be bind to specific effect port.
+    /// describe the target surface that will be bind to specific kernel port.
     ///
-    struct EffectBindingTarget
+    struct KernelBindingTarget
     {
         Surface * surf;       ///< surface pointer
         UInt32    firstLevel; ///< first mipmap level. 0 means the most detailed level.
@@ -525,41 +514,41 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// define surface to effect binding
+    /// define surface to kernel binding
     ///
-    struct EffectBindingDesc
+    struct KernelBindingDesc
     {
         //@{
-        std::map<StrA,EffectBindingTarget> bindings; ///< bindings indexed by port name.
+        std::map<StrA,KernelBindingTarget> bindings; ///< bindings indexed by port name.
         //@}
     };
 
     ///
-    /// effect binding handle
+    /// kernel binding handle
     ///
-    typedef UIntPtr EffectBinding;
+    typedef UIntPtr KernelBinding;
 
     ///
-    /// effect interface: represents a process kernel function
+    /// kernel interface: represents a process kernel function
     ///
-    struct Effect : public NoCopy
+    struct Kernel : public NoCopy
     {
-        /// \name effect descriptions
+        /// \name kernel descriptions
         //@{
 
         ///
-        /// get effect descriptor
+        /// get kernel descriptor
         ///
-        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const = 0;
-        virtual const EffectPortDesc      * getPortDesc( const StrA & name ) const = 0;
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const = 0;
+        virtual const KernelPortDesc      * getPortDesc( const StrA & name ) const = 0;
 
         //@}
 
         /// \name parameter management
         //@{
 
-        virtual EffectParameterHandle getParameterHandle( const StrA & name ) const = 0;
-        virtual EffectParameterSet *  createParameterSet() = 0;
+        virtual KernelParameterHandle getParameterHandle( const StrA & name ) const = 0;
+        virtual KernelParameterSet *  createParameterSet() = 0;
 
         //@}
 
@@ -567,25 +556,25 @@ namespace GN { namespace gfx2
         //@{
 
         virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
-        virtual EffectBinding createBinding( const EffectBindingDesc & ) = 0;
-        virtual void          deleteBinding( EffectBinding ) = 0;
+        virtual KernelBinding createBinding( const KernelBindingDesc & ) = 0;
+        virtual void          deleteBinding( KernelBinding ) = 0;
 
         //@}
 
-        //// \name property management. Note that property is read-only, and may change during life-time of a effect.
+        //// \name property management. Note that property is read-only, and may change during life-time of a kernel.
         //@{
 
         virtual bool                   hasProperity( const StrA & name ) const = 0;
-        virtual const EffectProperty * getProperity( const StrA & name ) const = 0;
+        virtual const KernelProperty * getProperity( const StrA & name ) const = 0;
 
         //@}
 
         ///
         /// do rendering, with user defined parameter set and binding.
         ///
-        /// Note that some effects may accept '0' as valid binding
+        /// Note that some kernels may accept '0' as valid binding
         ///
-        virtual void render( const EffectParameterSet &, EffectBinding ) = 0;
+        virtual void render( const KernelParameterSet &, KernelBinding ) = 0;
     };
 
     // *************************************************************************
@@ -598,11 +587,11 @@ namespace GN { namespace gfx2
     typedef std::map<StrA,StrA> SurfaceCreationHints;
 
     ///
-    /// binding surface to specific port of specific effect
+    /// binding surface to specific port of specific kernel
     ///
     struct SurfaceBindingParameter
     {
-        StrA effect; ///< effect name
+        StrA kernel; ///< kernel name
         StrA port;   ///< port name
 
         ///
@@ -613,7 +602,7 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        SurfaceBindingParameter( const StrA & e, const StrA & p ) : effect( e ), port( p ) {}
+        SurfaceBindingParameter( const StrA & e, const StrA & p ) : kernel( e ), port( p ) {}
     };
 
     ///
@@ -649,12 +638,12 @@ namespace GN { namespace gfx2
     class GraphicsSystem;
 
     ///
-    /// effect factory
+    /// kernel factory
     ///
-    struct EffectFactory
+    struct KernelFactory
     {
-        int       quality;                       ///< effect quality
-        Effect * (*creator)( GraphicsSystem & ); ///< effect creator
+        int       quality;                       ///< kernel quality
+        Kernel * (*creator)( GraphicsSystem & ); ///< kernel creator
     };
 
     ///
@@ -687,23 +676,23 @@ namespace GN { namespace gfx2
         ///
         virtual void present() = 0;
 
-        /// \name global effect parameter management
+        /// \name global kernel parameter management
         //@{
 
-        virtual EffectParameterHandle   getGlobalEffectParameterHandle( const StrA & name ) = 0;
-        virtual void                    setGlobalEffectParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
-        virtual void                    unsetGlobalEffectParameter( EffectParameterHandle handle ) = 0;
-        virtual const EffectParameter * getGlobalEffectParameter( EffectParameterHandle ) = 0;
+        virtual KernelParameterHandle   getGlobalKernelParameterHandle( const StrA & name ) = 0;
+        virtual void                    setGlobalKernelParameter( KernelParameterHandle handle, const KernelParameter & value ) = 0;
+        virtual void                    unsetGlobalKernelParameter( KernelParameterHandle handle ) = 0;
+        virtual const KernelParameter * getGlobalKernelParameter( KernelParameterHandle ) = 0;
 
         //@}
 
-        /// \name effect management
+        /// \name kernel management
         //@{
 
-        virtual void     registerEffect( const StrA & name, const EffectFactory & ) = 0;
-        virtual Effect * getEffect( const StrA & name ) = 0;
-        virtual void     deleteEffect( const StrA & name ) = 0;
-        virtual void     deleteAllEffects() = 0;
+        virtual void     registerKernel( const StrA & name, const KernelFactory & ) = 0;
+        virtual Kernel * getKernel( const StrA & name ) = 0;
+        virtual void     deleteKernel( const StrA & name ) = 0;
+        virtual void     deleteAllKernels() = 0;
 
         //@}
 

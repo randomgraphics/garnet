@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "d3d9HlslEffect.h"
+#include "d3d9HlslKernel.h"
 #include "garnet/GNgfx.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9HlslEffect");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9HlslKernel");
 
 // *****************************************************************************
 // local functions
@@ -13,13 +13,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9HlslEffect");
 // -----------------------------------------------------------------------------
 static IDirect3DVertexShader9 * sCreateVs(
     IDirect3DDevice9                * dev,
-    const GN::gfx2::EffectParameter & param,
+    const GN::gfx::KernelParameter & param,
     ID3DXConstantTable             ** consts )
 {
-    using namespace GN::gfx2;
+    using namespace GN::gfx;
     using namespace GN::gfx::d3d9;
 
-    if( EFFECT_PARAMETER_TYPE_STRING != param.type )
+    if( KERNEL_PARAMETER_TYPE_STRING != param.type )
     {
         GN_ERROR(sLogger)( "Parameter 'VS' accepts only string value." );
         return false;
@@ -38,13 +38,13 @@ static IDirect3DVertexShader9 * sCreateVs(
 // -----------------------------------------------------------------------------
 static IDirect3DPixelShader9 * sCreatePs(
     IDirect3DDevice9                * dev,
-    const GN::gfx2::EffectParameter & param,
+    const GN::gfx::KernelParameter & param,
     ID3DXConstantTable             ** consts )
 {
-    using namespace GN::gfx2;
+    using namespace GN::gfx;
     using namespace GN::gfx::d3d9;
 
-    if( EFFECT_PARAMETER_TYPE_STRING != param.type )
+    if( KERNEL_PARAMETER_TYPE_STRING != param.type )
     {
         GN_ERROR(sLogger)( "Parameter 'PS' accepts only string value." );
         return 0;
@@ -59,17 +59,17 @@ static IDirect3DPixelShader9 * sCreatePs(
 }
 
 // *****************************************************************************
-// D3D9HlslEffectParameterSet
+// D3D9HlslKernelParameterSet
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9HlslEffectParameterSet::setParameter(
-    EffectParameterHandle   handle,
-    const EffectParameter & value )
+void GN::gfx::D3D9HlslKernelParameterSet::setParameter(
+    KernelParameterHandle   handle,
+    const KernelParameter & value )
 {
-    BaseEffectParameterSet::setParameter( handle, value );
+    BaseKernelParameterSet::setParameter( handle, value );
 
     IDirect3DDevice9  * dev = mGs.d3ddev();
 
@@ -88,21 +88,21 @@ void GN::gfx2::D3D9HlslEffectParameterSet::setParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9HlslEffectParameterSet::setRawParameter(
-    EffectParameterHandle handle,
+void GN::gfx::D3D9HlslKernelParameterSet::setRawParameter(
+    KernelParameterHandle handle,
     size_t                offset,
     size_t                bytes,
     const void          * data )
 {
-    BaseEffectParameterSet::setRawParameter( handle, offset, bytes, data );
+    BaseKernelParameterSet::setRawParameter( handle, offset, bytes, data );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9HlslEffectParameterSet::unsetParameter( EffectParameterHandle handle )
+void GN::gfx::D3D9HlslKernelParameterSet::unsetParameter( KernelParameterHandle handle )
 {
-    BaseEffectParameterSet::unsetParameter( handle );
+    BaseKernelParameterSet::unsetParameter( handle );
 
     if( handle == mVsHandle )
     {
@@ -123,8 +123,8 @@ void GN::gfx2::D3D9HlslEffectParameterSet::unsetParameter( EffectParameterHandle
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
-    : D3D9Effect( gs )
+GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
+    : D3D9Kernel( gs )
     , mRenderTarget0( gs )
     , mRenderTarget1( gs )
     , mRenderTarget2( gs )
@@ -149,33 +149,33 @@ GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
     , mIdxBuf( gs )
 {
     // setup parameters
-    EffectParameterDesc p;
+    KernelParameterDesc p;
 
-    p.type  = EFFECT_PARAMETER_TYPE_STRING;
+    p.type  = KERNEL_PARAMETER_TYPE_STRING;
     mVs = addParameter( "VS", p );
 
-    p.type  = EFFECT_PARAMETER_TYPE_STRING;
+    p.type  = KERNEL_PARAMETER_TYPE_STRING;
     mPs = addParameter( "PS", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_RAW;
+    p.type = KERNEL_PARAMETER_TYPE_RAW;
     mVsFloatConstants = addParameter( "VSCF", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_RAW;
+    p.type = KERNEL_PARAMETER_TYPE_RAW;
     mPsFloatConstants = addParameter( "PSCF", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_INT1;
+    p.type = KERNEL_PARAMETER_TYPE_INT1;
     mPrimType = addParameter( "PRIM_TYPE", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_INT1;
+    p.type = KERNEL_PARAMETER_TYPE_INT1;
     mPrimCount = addParameter( "PRIM_COUNT", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_INT1;
+    p.type = KERNEL_PARAMETER_TYPE_INT1;
     mBaseVertex = addParameter( "BASE_VERTEX", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_INT1;
+    p.type = KERNEL_PARAMETER_TYPE_INT1;
     mBaseIndex = addParameter( "BASE_INDEX", p );
 
-    p.type = EFFECT_PARAMETER_TYPE_INT1;
+    p.type = KERNEL_PARAMETER_TYPE_INT1;
     mVertexCount = addParameter( "VERTEX_COUNT", p );
 
     // setup ports
@@ -211,23 +211,23 @@ GN::gfx2::D3D9HlslEffect::D3D9HlslEffect( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9HlslEffect::render(
-    const EffectParameterSet & param, EffectBinding binding )
+void GN::gfx::D3D9HlslKernel::render(
+    const KernelParameterSet & param, KernelBinding binding )
 {
     GN_GUARD_SLOW;
 
-    D3D9EffectBinding & b = getPortBinding( binding );
+    D3D9KernelBinding & b = getPortBinding( binding );
 
     b.apply();
 
-    const D3D9HlslEffectParameterSet & p = safeCast<const D3D9HlslEffectParameterSet &>(param);
+    const D3D9HlslKernelParameterSet & p = safeCast<const D3D9HlslKernelParameterSet &>(param);
  
     applyShader( p );
 
     D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
 
-    const EffectParameter
+    const KernelParameter
         * pt = param.getParameter( mPrimType ),
         * pc = param.getParameter( mPrimCount ),
         * bv = param.getParameter( mBaseVertex );
@@ -235,7 +235,7 @@ void GN::gfx2::D3D9HlslEffect::render(
 
     if( b.hasIdxBuf() )
     {
-        const EffectParameter
+        const KernelParameter
             * bi = param.getParameter( mBaseIndex ),
             * vc = param.getParameter( mVertexCount );
         GN_ASSERT( bi && vc );
@@ -267,7 +267,7 @@ void GN::gfx2::D3D9HlslEffect::render(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx2::D3D9HlslEffect::applyShader( const D3D9HlslEffectParameterSet & param )
+inline void GN::gfx::D3D9HlslKernel::applyShader( const D3D9HlslKernelParameterSet & param )
 {
     D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
@@ -275,13 +275,13 @@ inline void GN::gfx2::D3D9HlslEffect::applyShader( const D3D9HlslEffectParameter
     dev->SetVertexShader( param.vs() );
     dev->SetPixelShader( param.ps() );
 
-    const EffectParameter * vscf = param.getParameter( mVsFloatConstants );
+    const KernelParameter * vscf = param.getParameter( mVsFloatConstants );
     if( vscf )
     {
         dev->SetVertexShaderConstantF( 0, (const float*)vscf->toRaw(), (UINT)(vscf->raw.bytes / sizeof(Vector4f)) );
     }
 
-    const EffectParameter * pscf = param.getParameter( mPsFloatConstants );
+    const KernelParameter * pscf = param.getParameter( mPsFloatConstants );
     if( pscf )
     {
         dev->SetPixelShaderConstantF( 0, (const float*)pscf->toRaw(), (UINT)(pscf->raw.bytes / sizeof(Vector4f)) );

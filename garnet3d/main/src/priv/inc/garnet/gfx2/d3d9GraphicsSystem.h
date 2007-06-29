@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
     /// D3D9 graphics system descriptor

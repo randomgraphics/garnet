@@ -4,7 +4,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9DepthBuffer * GN::gfx2::D3D9DepthBuffer::sNewInstance(
+GN::gfx::D3D9DepthBuffer * GN::gfx::D3D9DepthBuffer::sNewInstance(
     const SurfaceLayout         & layout,
     int                           access,
     const SurfaceCreationHints  & hints )

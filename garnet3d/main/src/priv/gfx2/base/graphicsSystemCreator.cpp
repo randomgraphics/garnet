@@ -3,7 +3,7 @@
 #ifdef HAS_D3D9
 #include "garnet/GNgfx2D3D9.h"
 #else if GN_STATIC
-static GN::gfx2::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx2::GraphicsSystemCreationParameter & )
+static GN::gfx::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx::GraphicsSystemCreationParameter & )
 {
     GN_UNEXPECTED();
     return 0;
@@ -13,8 +13,8 @@ static GN::gfx2::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx2::Grap
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::GraphicsSystem *
-GN::gfx2::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & gscp )
+GN::gfx::GraphicsSystem *
+GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 
@@ -66,7 +66,7 @@ GN::gfx2::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter &
 //
 //
 // -------------------------------------------------------------------------
-void GN::gfx2::GraphicsSystemCreator::destroy()
+void GN::gfx::GraphicsSystemCreator::destroy()
 {
     GN_GUARD;
 

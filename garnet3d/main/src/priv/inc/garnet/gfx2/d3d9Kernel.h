@@ -1,39 +1,39 @@
-#ifndef __GN_GFX2_D3D9EFFECT_H__
-#define __GN_GFX2_D3D9EFFECT_H__
+#ifndef __GN_GFX2_D3D9KERNEL_H__
+#define __GN_GFX2_D3D9KERNEL_H__
 // *****************************************************************************
 /// \file
-/// \brief   d3d9 base effect interfaces
+/// \brief   d3d9 base kernel interfaces
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     class D3D9GraphicsSystem;
-    class D3D9Effect;
+    class D3D9Kernel;
 
     ///
-    /// D3D9 effect port type
+    /// D3D9 kernel port type
     ///
-    enum D3D9EffectPortType
+    enum D3D9KernelPortType
     {
         //@{
-        D3D9_EFFECT_PORT_RENDER_TARGET,
-        D3D9_EFFECT_PORT_DEPTH_BUFFER,
-        D3D9_EFFECT_PORT_TEXTURE,
-        D3D9_EFFECT_PORT_VTXBUF,
-        D3D9_EFFECT_PORT_IDXBUF,
+        D3D9_KERNEL_PORT_RENDER_TARGET,
+        D3D9_KERNEL_PORT_DEPTH_BUFFER,
+        D3D9_KERNEL_PORT_TEXTURE,
+        D3D9_KERNEL_PORT_VTXBUF,
+        D3D9_KERNEL_PORT_IDXBUF,
         //@}
     };
 
     ///
-    /// D3D9 effect port descriptor
+    /// D3D9 kernel port descriptor
     ///
-    struct GN_GFX2_D3D9_PUBLIC D3D9EffectPortDesc : public EffectPortDesc
+    struct GN_GFX2_D3D9_PUBLIC D3D9KernelPortDesc : public KernelPortDesc
     {
         ///
         /// the port type
         ///
-        D3D9EffectPortType portType;
+        D3D9KernelPortType portType;
 
         ///
         /// Surface type that this port expects.
@@ -42,22 +42,22 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// base D3D9 effect port class
+    /// base D3D9 kernel port class
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelPort
     {
         D3D9GraphicsSystem & mGraphicsSystem;
 
     protected:
 
-        D3D9EffectPortDesc mDesc; ///< port descriptor
+        D3D9KernelPortDesc mDesc; ///< port descriptor
 
     public:
 
         ///
         /// ctor
         ///
-        D3D9EffectPort( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
+        D3D9KernelPort( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
 
         ///
         /// get graphics system
@@ -67,7 +67,7 @@ namespace GN { namespace gfx2
         ///
         /// get descriptor
         ///
-        const D3D9EffectPortDesc & getDesc() const { return mDesc; }
+        const D3D9KernelPortDesc & getDesc() const { return mDesc; }
 
         ///
         /// check surface compatility
@@ -77,55 +77,55 @@ namespace GN { namespace gfx2
         ///
         /// bind surface to device
         ///
-        virtual void bind( const EffectBindingTarget & ) const = 0;
+        virtual void bind( const KernelBindingTarget & ) const = 0;
     };
 
     ///
     /// D3D9 render target port (accept render target texture)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9RenderTargetPort : public D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9RenderTargetPort : public D3D9KernelPort
     {
     public:
 
         //@{
         D3D9RenderTargetPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectBindingTarget & ) const;
+        virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
     /// D3D9 render target port (accept depth surface)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9KernelPort
     {
     public:
 
         //@{
         D3D9DepthBufferPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectBindingTarget & ) const;
+        virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
     /// D3D9 render target port (accepts texture)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9KernelPort
     {
     public:
 
         //@{
         D3D9TexturePort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectBindingTarget & ) const;
+        virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
     /// D3D9 render target port (accepts vertex buffer)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9KernelPort
     {
         UInt32 mStage;
 
@@ -146,35 +146,35 @@ namespace GN { namespace gfx2
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectBindingTarget & ) const;
+        virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
     /// D3D9 render target port (accept index buffer)
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9EffectPort
+    class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9KernelPort
     {
     public:
 
         //@{
         D3D9IdxBufPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const EffectBindingTarget & ) const;
+        virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
-    /// base D3D9 effect binding
+    /// base D3D9 kernel binding
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9EffectBinding
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelBinding
     {
-        D3D9Effect & mEffect;
+        D3D9Kernel & mKernel;
 
         struct BindItem
         {
             UInt32              port;   ///< port handle
-            EffectBindingTarget target; ///< binding target
+            KernelBindingTarget target; ///< binding target
         };
 
         DynaArray<BindItem>           mBindItems;
@@ -187,17 +187,17 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        D3D9EffectBinding( D3D9Effect & e );
+        D3D9KernelBinding( D3D9Kernel & e );
 
         ///
         /// dtor
         ///
-        virtual ~D3D9EffectBinding();
+        virtual ~D3D9KernelBinding();
 
         ///
         /// binding setup
         ///
-        bool setup( const EffectBindingDesc & ebd );
+        bool setup( const KernelBindingDesc & ebd );
 
         /// \name properties
         //@{
@@ -212,9 +212,9 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// base D3D9 effect
+    /// base D3D9 kernel
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9Effect : public BaseEffect
+    class GN_GFX2_D3D9_PUBLIC D3D9Kernel : public BaseKernel
     {
     public:
 
@@ -223,12 +223,12 @@ namespace GN { namespace gfx2
         ///
         /// ctor
         ///
-        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs), mDefaultBinding(0) {}
+        D3D9Kernel( GraphicsSystem & gs ) : BaseKernel(gs), mDefaultBinding(0) {}
 
         ///
         /// dtor
         ///
-        ~D3D9Effect() { if( mDefaultBinding ) deleteBinding( mDefaultBinding ); }
+        ~D3D9Kernel() { if( mDefaultBinding ) deleteBinding( mDefaultBinding ); }
 
         ///
         /// get D3D9 graphic system
@@ -238,18 +238,18 @@ namespace GN { namespace gfx2
         UInt32                 getFirstPortHandle() const { return mPorts.first(); }
         UInt32                 getNextPortHandle( UInt32 current ) const { return mPorts.next( current ); }
         const StrA           & getPortName( UInt32 h ){ GN_ASSERT(mPorts.validHandle(h)); return mPorts.handle2name(h); }
-        const D3D9EffectPort & getPort( UInt32 h ) const { GN_ASSERT(mPorts.validHandle(h)); return *mPorts[h]; }
-        const D3D9EffectPort * getPort( const StrA & name ) const; ///< return NULL for invalid name
-        D3D9EffectPort       * getPort( const StrA & name ); ///< return NULL for invalid name
+        const D3D9KernelPort & getPort( UInt32 h ) const { GN_ASSERT(mPorts.validHandle(h)); return *mPorts[h]; }
+        const D3D9KernelPort * getPort( const StrA & name ) const; ///< return NULL for invalid name
+        D3D9KernelPort       * getPort( const StrA & name ); ///< return NULL for invalid name
 
         //@}
 
-        /// \name from Effect
+        /// \name from Kernel
         //@{
-        virtual const EffectPortDesc * getPortDesc( const StrA & name ) const;
+        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const;
         virtual bool                   compatible( const Surface * surf, const StrA & port );
-        virtual EffectBinding          createBinding( const EffectBindingDesc & );
-        virtual void                   deleteBinding( EffectBinding );
+        virtual KernelBinding          createBinding( const KernelBindingDesc & );
+        virtual void                   deleteBinding( KernelBinding );
         //@}
 
     protected:
@@ -257,14 +257,14 @@ namespace GN { namespace gfx2
         //@{
 
         ///
-        /// \note D3D9Effect class does _NOT_ hold the ownership of the port instance.
+        /// \note D3D9Kernel class does _NOT_ hold the ownership of the port instance.
         ///
-        void addPortRef( const StrA & name, D3D9EffectPort * port );
+        void addPortRef( const StrA & name, D3D9KernelPort * port );
 
         ///
         /// get port binding by handle
         ///
-        D3D9EffectBinding & getPortBinding( EffectBinding b )
+        D3D9KernelBinding & getPortBinding( KernelBinding b )
         {
             GN_GUARD_SLOW;
 
@@ -293,7 +293,7 @@ namespace GN { namespace gfx2
         ///
         /// apply port binding
         ///
-        void applyBinding( EffectBinding b )
+        void applyBinding( KernelBinding b )
         {
             GN_GUARD_SLOW;
 
@@ -320,20 +320,20 @@ namespace GN { namespace gfx2
 
     private:
 
-        typedef NamedHandleManager<D3D9EffectPort*,UInt32>      PortContainer;
-        typedef HandleManager<D3D9EffectBinding*,EffectBinding> EffectBindingContainer;
+        typedef NamedHandleManager<D3D9KernelPort*,UInt32>      PortContainer;
+        typedef HandleManager<D3D9KernelBinding*,KernelBinding> KernelBindingContainer;
 
         PortContainer          mPorts;
-        EffectBindingContainer mBindings;
-        EffectBinding          mDefaultBinding;
+        KernelBindingContainer mBindings;
+        KernelBinding          mDefaultBinding;
 
     private:
 
-        virtual EffectBinding createDefaultBinding();
+        virtual KernelBinding createDefaultBinding();
     };
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9EFFECT_H__
+#endif // __GN_GFX2_D3D9KERNEL_H__

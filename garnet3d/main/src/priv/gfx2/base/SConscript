@@ -1,6 +1,6 @@
 Import( 'GN' )
 sources = [
-    'baseEffect.cpp',
+    'baseKernel.cpp',
     'baseGraphicsSystem.cpp',
     'graphicsSystemCreator.cpp',
     'surfaceLayoutTemplate.cpp',

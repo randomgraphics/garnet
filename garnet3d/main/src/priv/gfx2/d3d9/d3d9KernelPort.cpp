@@ -2,10 +2,10 @@
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9EffectPort" );
+static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelPort" );
 
 // *****************************************************************************
-// D3D9EffectPort
+// D3D9KernelPort
 // *****************************************************************************
 
 //
@@ -19,10 +19,10 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9EffectPort" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
-    : D3D9EffectPort(gs)
+GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
+    : D3D9KernelPort(gs)
 {
-    mDesc.portType    = D3D9_EFFECT_PORT_RENDER_TARGET;
+    mDesc.portType    = D3D9_KERNEL_PORT_RENDER_TARGET;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTT_2D;
     GN_UNIMPL_WARNING();
 }
@@ -30,7 +30,7 @@ GN::gfx2::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9RenderTargetPort::compatible( const Surface * ) const
+bool GN::gfx::D3D9RenderTargetPort::compatible( const Surface * ) const
 {
     GN_UNIMPL_WARNING();
     return false;
@@ -39,7 +39,7 @@ bool GN::gfx2::D3D9RenderTargetPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9RenderTargetPort::bind( const EffectBindingTarget & ) const
+void GN::gfx::D3D9RenderTargetPort::bind( const KernelBindingTarget & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -51,10 +51,10 @@ void GN::gfx2::D3D9RenderTargetPort::bind( const EffectBindingTarget & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
-    : D3D9EffectPort(gs)
+GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
+    : D3D9KernelPort(gs)
 {
-    mDesc.portType    = D3D9_EFFECT_PORT_DEPTH_BUFFER;
+    mDesc.portType    = D3D9_KERNEL_PORT_DEPTH_BUFFER;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTS_DEPTH;
     GN_UNIMPL_WARNING();
 }
@@ -62,7 +62,7 @@ GN::gfx2::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9DepthBufferPort::compatible( const Surface * ) const
+bool GN::gfx::D3D9DepthBufferPort::compatible( const Surface * ) const
 {
     GN_UNIMPL_WARNING();
     return false;
@@ -71,7 +71,7 @@ bool GN::gfx2::D3D9DepthBufferPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9DepthBufferPort::bind( const EffectBindingTarget & ) const
+void GN::gfx::D3D9DepthBufferPort::bind( const KernelBindingTarget & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -83,10 +83,10 @@ void GN::gfx2::D3D9DepthBufferPort::bind( const EffectBindingTarget & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs )
-    : D3D9EffectPort(gs)
+GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs )
+    : D3D9KernelPort(gs)
 {
-    mDesc.portType    = D3D9_EFFECT_PORT_TEXTURE;
+    mDesc.portType    = D3D9_KERNEL_PORT_TEXTURE;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX_2D;
     GN_UNIMPL_WARNING();
 }
@@ -94,7 +94,7 @@ GN::gfx2::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9TexturePort::compatible( const Surface * ) const
+bool GN::gfx::D3D9TexturePort::compatible( const Surface * ) const
 {
     GN_UNIMPL_WARNING();
     return false;
@@ -103,7 +103,7 @@ bool GN::gfx2::D3D9TexturePort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9TexturePort::bind( const EffectBindingTarget & ) const
+void GN::gfx::D3D9TexturePort::bind( const KernelBindingTarget & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -115,11 +115,11 @@ void GN::gfx2::D3D9TexturePort::bind( const EffectBindingTarget & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
-    : D3D9EffectPort(gs)
+GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
+    : D3D9KernelPort(gs)
     , mStage(stage)
 {
-    mDesc.portType    = D3D9_EFFECT_PORT_VTXBUF;
+    mDesc.portType    = D3D9_KERNEL_PORT_VTXBUF;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_VB;
 
     mDesc.input = true;
@@ -143,7 +143,7 @@ GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::setStride( UInt32 )
+void GN::gfx::D3D9VtxBufPort::setStride( UInt32 )
 {
     GN_UNIMPL();
 }
@@ -151,7 +151,7 @@ void GN::gfx2::D3D9VtxBufPort::setStride( UInt32 )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::setVertexCount( UInt32 )
+void GN::gfx::D3D9VtxBufPort::setVertexCount( UInt32 )
 {
     GN_UNIMPL();
 }
@@ -159,7 +159,7 @@ void GN::gfx2::D3D9VtxBufPort::setVertexCount( UInt32 )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
+void GN::gfx::D3D9VtxBufPort::addRequiredAttribute(
     const SurfaceAttributeTemplate & )
 {
     GN_UNIMPL();
@@ -168,7 +168,7 @@ void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
+void GN::gfx::D3D9VtxBufPort::addRequiredAttribute(
     const char * semantic, UInt32 offset )
 {
     GN_UNUSED_PARAM( semantic );
@@ -179,7 +179,7 @@ void GN::gfx2::D3D9VtxBufPort::addRequiredAttribute(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::addOptionalAttribute(
+void GN::gfx::D3D9VtxBufPort::addOptionalAttribute(
     const SurfaceAttributeTemplate & )
 {
     GN_UNIMPL();
@@ -188,7 +188,7 @@ void GN::gfx2::D3D9VtxBufPort::addOptionalAttribute(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * surf ) const
+bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf )
     {
@@ -222,7 +222,7 @@ bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * surf ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9VtxBufPort::bind( const EffectBindingTarget & target ) const
+void GN::gfx::D3D9VtxBufPort::bind( const KernelBindingTarget & target ) const
 {
     IDirect3DDevice9 * dev = gs().d3ddev();
 
@@ -241,10 +241,10 @@ void GN::gfx2::D3D9VtxBufPort::bind( const EffectBindingTarget & target ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs )
-    : D3D9EffectPort(gs)
+GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs )
+    : D3D9KernelPort(gs)
 {
-    mDesc.portType    = D3D9_EFFECT_PORT_IDXBUF;
+    mDesc.portType    = D3D9_KERNEL_PORT_IDXBUF;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_IB;
 
     mDesc.input = true;
@@ -277,7 +277,7 @@ GN::gfx2::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * surf ) const
+bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
@@ -328,7 +328,7 @@ bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * surf ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9IdxBufPort::bind( const EffectBindingTarget & target ) const
+void GN::gfx::D3D9IdxBufPort::bind( const KernelBindingTarget & target ) const
 {
     GN_ASSERT( target.surf );
     D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
