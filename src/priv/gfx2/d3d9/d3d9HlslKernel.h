@@ -13,41 +13,53 @@ namespace GN { namespace gfx
     ///
     class D3D9HlslKernelParameterSet : public BaseKernelParameterSet
     {
-        D3D9GraphicsSystem               & mGs;
+        struct ConstUpdate
+        {
+            UInt32 firstRegister;
+            UInt32 registerCount;
+            ConstUpdate( UInt32 f, UInt32 c ) : firstRegister(f), registerCount(c) {}
+        };
+
+        IDirect3DDevice9                 * mDev;
         AutoComPtr<IDirect3DVertexShader9> mVs;
         AutoComPtr<IDirect3DPixelShader9>  mPs;
         AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
-        KernelParameterHandle              mVsHandle, mPsHandle;
+        KernelParameterHandle              mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
+        DynaArray<ConstUpdate>             mVscfUpdate, mPscfUpdate; ///< use pooled memory to avoid runtime heap allocation.
 
     public:
 
         ///
         /// ctor
         ///
-        D3D9HlslKernelParameterSet( D3D9GraphicsSystem & gs, Kernel & e, size_t count )
-            : BaseKernelParameterSet( e, count )
-            , mGs( gs )
-            , mVsHandle( e.getParameterHandle( "VS" ) )
-            , mPsHandle( e.getParameterHandle( "PS" ) )
-        {
-        }
+        D3D9HlslKernelParameterSet( IDirect3DDevice9 * dev, Kernel & e );
 
         ///
         /// dtor
         ///
         ~D3D9HlslKernelParameterSet() {}
 
+        ///
+        /// initialize
+        ///
+        bool init();
+
         //@{
         IDirect3DVertexShader9 * vs() const { return mVs; }
         IDirect3DPixelShader9  * ps() const { return mPs; }
         //@}
 
-        /// \name from parent class
-        //@{
-        virtual void setParameter( KernelParameterHandle handle, const KernelParameter & value );
-        virtual void setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data );
-        virtual void unsetParameter( KernelParameterHandle handle );
-        //@}
+    private:
+
+        void onVsSet( size_t offset, size_t count );
+        void onVsUnset();
+
+        void onPsSet( size_t offset, size_t count );
+        void onPsUnset();
+
+        void onVscfSet( size_t offset, size_t count );
+
+        void onPscfSet( size_t offset, size_t count );
     };
 
     ///
