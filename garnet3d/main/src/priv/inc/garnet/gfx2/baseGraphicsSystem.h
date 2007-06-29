@@ -10,101 +10,139 @@
 
 namespace GN { namespace gfx
 {
+    class BaseKernel;
+    class BaseGraphicsSystem;
+
     ///
     /// structure to hold kernel parameter value
     ///
-    class KernelParameterWrapper
+    class BaseKernelParameter : public KernelParameter
     {
-        KernelParameter  mParam;
-        DynaArray<UInt8> mData;
+        KernelParameterDesc   mDesc;
+        DynaArray<UInt8*>     mData;
+        DynaArray<StrA>       mStr;
+        bool                  mEmpty;
+
+        const void * getData() const { return empty() ? 0 : mData.cptr(); }
+        const StrA * getString() const { return empty() ? 0 : mStr.cptr(); }
 
     public:
 
         ///
+        /// triggered right after the value is set
+        ///
+        Signal2< void, size_t /*offset*/, size_t /*count*/ > sigValueSet;
+
+        ///
+        /// triggered right after the value is unset
+        ///
+        Signal0< void > sigValueUnset;
+
+        ///
         /// ctor
         ///
-        KernelParameterWrapper()
+        BaseKernelParameter( const KernelParameterDesc & desc )
+            : mDesc( desc )
+            , mEmpty( true )
         {
-            unset();
+            if( KERNEL_PARAMETER_TYPE_STRING == mDesc.type )
+            {
+                mStr.resize( mDesc.count );
+            }
+            else
+            {
+                mData.resize( mDesc.count );
+            }
         }
 
         ///
         /// check if parameter has valid value
         ///
-        bool empty() const { return KERNEL_PARAMETER_TYPE_UNKNOWN == mParam.type; }
+        bool empty() const { return mEmpty; }
 
-        ///
-        /// get parameter
-        ///
-        const KernelParameter & get() const { GN_ASSERT(!empty()); return mParam; }
+        /// \name get parameter value
+        //@{
+        const bool         * toBool()     const { GN_ASSERT( KERNEL_PARAMETER_TYPE_BOOL == mDesc.type );     return (const bool*)getData(); }
+        const int          * toInt1()     const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT1 == mDesc.type );     return (const int*)getData(); }
+        const unsigned int * toUInt1()    const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT1 == mDesc.type );     return (const unsigned int*)getData(); }
+        const float        * toFloat1()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT1 == mDesc.type );   return (const float*)getData(); }
+        const float        * toFloat4()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT4 == mDesc.type );   return (const float*)getData(); }
+        const float        * toFloat4x4() const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT4X4 == mDesc.type ); return (const float*)getData(); }
+        const StrA         * toString()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mDesc.type );   return getString(); }
+        //@}
 
-        ///
-        /// set parameter
-        ///
-        void set( const KernelParameter & v )
-        {
-            mParam = v;
+        // from parent class
+        //@{
 
-            if( KERNEL_PARAMETER_TYPE_STRING == v.type )
-            {
-                mData.resize( strLen( v.str ) );
-                memcpy( mData.cptr(), v.str, mData.size() );
-                mParam.str = (const char *)mData.cptr();
-            }
-            else if( KERNEL_PARAMETER_TYPE_RAW == v.type )
-            {
-                mData.resize( v.raw.bytes );
-                memcpy( mData.cptr(), v.raw.ptr, mData.size() );
-                mParam.raw.ptr = mData.cptr();
-            }
-        }
-
-        ///
-        /// set raw data
-        ///
-        void setRaw( size_t offset, size_t bytes, const void * data )
-        {
-            mParam.type = KERNEL_PARAMETER_TYPE_RAW;
-            if( mData.size() < (offset+bytes) )
-            {
-                mData.resize( offset + bytes );
-            }
-            memcpy( mData.cptr() + offset, data, bytes );
-            mParam.raw.ptr   = mData.cptr();
-            mParam.raw.bytes = mData.size();
-        }
-
-        ///
-        /// clear to empty
-        ///
-        void unset() { mParam.type = KERNEL_PARAMETER_TYPE_UNKNOWN; }
+        virtual const KernelParameterDesc & getDesc() const { return mDesc; }
+        virtual void                        set( size_t offset, size_t count, const bool         * values );
+        virtual void                        set( size_t offset, size_t count, const int          * values );
+        virtual void                        set( size_t offset, size_t count, const float        * values );
+        virtual void                        set( size_t offset, size_t count, const Vector4f     * values );
+        virtual void                        set( size_t offset, size_t count, const Matrix44f    * values );
+        virtual void                        set( size_t offset, size_t count, const char * const * values );
+        virtual void                        unset() { mEmpty = true; }
+        //@}
     };
 
     ///
     /// base kernel parameter set
-    ///
-    class BaseKernelParameterSet : public KernelParameterSet
+    ///    
+    class BaseKernelParameterSet : public KernelParameterSet, public StdClass
     {
-        DynaArray<KernelParameterWrapper> mParameters;
+        GN_DECLARE_STDCLASS( BaseKernelParameterSet, StdClass );
 
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
     public:
+        BaseKernelParameterSet( BaseKernel & e );
+        virtual ~BaseKernelParameterSet() { quit(); }
+        //@}
 
-        ///
-        /// ctor
-        ///
-        BaseKernelParameterSet( Kernel & e, size_t count )
-            : KernelParameterSet( e )
-            , mParameters( count )
-        {
-        }
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
 
         /// \name from parent class
         //@{
-        virtual const KernelParameter * getParameter( KernelParameterHandle handle ) const;
-        virtual void                    setParameter( KernelParameterHandle handle, const KernelParameter & value );
-        virtual void                    setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data );
-        virtual void                    unsetParameter( KernelParameterHandle handle );
+        virtual KernelParameter * getParameter( KernelParameterHandle handle ) const;
         //@}
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        DynaArray<BaseKernelParameter*> mParameters;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        ///
+        /// override this method to create your own parameter instance
+        ///
+        virtual BaseKernelParameter * createParameter( const KernelParameterDesc & desc ) const
+        {
+            return new BaseKernelParameter( desc );
+        }
     };
 
     ///
@@ -148,12 +186,12 @@ namespace GN { namespace gfx
         }
 
         ///
-        /// get global value of the parameter
+        /// get parameter descriptor by index
         ///
-        const KernelParameter * getGlobalParameterByIndex( size_t index ) const
+        const KernelParameterDesc & getParameterDescByIndex( size_t index ) const
         {
             GN_ASSERT( index < mParameters.size() );
-            return mGraphicsSystem.getGlobalKernelParameter( mParameters[index].global );
+            return mParameters[index].desc;
         }
 
         /// \name from Kernel
@@ -161,8 +199,6 @@ namespace GN { namespace gfx
         virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const;
         virtual KernelParameterHandle       getParameterHandle( const StrA & name ) const;
         virtual KernelParameterSet        * createParameterSet();
-        virtual bool                        hasProperity( const StrA & name ) const;
-        virtual const KernelProperty      * getProperity( const StrA & name ) const;
         //@}
 
     protected:
@@ -172,23 +208,16 @@ namespace GN { namespace gfx
         ///
         KernelParameterHandle addParameter( const StrA & name, const KernelParameterDesc & param );
 
-        /// \name property management
-        void setProperty( const StrA & name, const KernelProperty & property );
-        void unsetProperty( const StrA & name );
-        //@}
-
     private:
 
         struct ParameterItem
         {
-            KernelParameterDesc    desc;
-            KernelParameterHandle  global;
+            KernelParameterDesc desc;
         };
 
         GraphicsSystem                                  & mGraphicsSystem;
         DynaArray<ParameterItem>                          mParameters;
         NamedHandleManager<size_t,KernelParameterHandle>  mParameterHandles; ///< convert handle and name to array index.
-        NamedHandleManager<KernelParameterWrapper,UInt32> mProperties;
     };
 
     ///
@@ -226,11 +255,9 @@ namespace GN { namespace gfx
     public:
 
         //@{
-
-        virtual KernelParameterHandle   getGlobalKernelParameterHandle( const StrA & name );
-        virtual void                    setGlobalKernelParameter( KernelParameterHandle handle, const KernelParameter & value );
-        virtual void                    unsetGlobalKernelParameter( KernelParameterHandle handle );
-        virtual const KernelParameter * getGlobalKernelParameter( KernelParameterHandle handle );
+        virtual KernelParameterHandle createGlobalParameterHandle( const StrA & name, const KernelParameterDesc & desc );
+        virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const;
+        virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle handle ) const;
 
         virtual void     registerKernel( const StrA & name, const KernelFactory & );
         virtual Kernel * getKernel( const StrA & name );
@@ -250,8 +277,8 @@ namespace GN { namespace gfx
             Kernel *      instance;
         };
 
-        NamedHandleManager<KernelParameterWrapper,KernelParameterHandle> mGlobalKernelParameters;
-        NamedHandleManager<KernelItem,UInt32>                            mKernels;
+        NamedHandleManager<BaseKernelParameter*,KernelParameterHandle> mGlobalKernelParameters;
+        NamedHandleManager<KernelItem,UInt32>                          mKernels;
 
         // ********************************
         // private functions

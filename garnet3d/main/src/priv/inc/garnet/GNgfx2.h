@@ -6,7 +6,6 @@
 /// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
-#include "GNcore.h"
 #include "GNgfx.h"
 #include <set>
 
@@ -267,14 +266,12 @@ namespace GN { namespace gfx
     enum KernelParameterType
     {
         //@{
-        KERNEL_PARAMETER_TYPE_UNKNOWN,
         KERNEL_PARAMETER_TYPE_BOOL,
         KERNEL_PARAMETER_TYPE_INT1,
         KERNEL_PARAMETER_TYPE_FLOAT1,
         KERNEL_PARAMETER_TYPE_FLOAT4,
         KERNEL_PARAMETER_TYPE_FLOAT4X4,
         KERNEL_PARAMETER_TYPE_STRING,
-        KERNEL_PARAMETER_TYPE_RAW,
         //@}
     };
 
@@ -385,11 +382,10 @@ namespace GN { namespace gfx
     struct KernelParameterDesc
     {
         KernelParameterType type;  ///< value type
+        size_t              count; ///< array count
     };
 
-    ///
-    /// Kernel parameter
-    ///
+#if 0
     struct KernelParameter
     {
         KernelParameterType type; ///< value type.
@@ -443,11 +439,31 @@ namespace GN { namespace gfx
 
         //@}
     };
+#endif
+
+    ///
+    /// Kernel parameter
+    ///
+    struct KernelParameter : public NoCopy
+    {
+        //@{
+        virtual const KernelParameterDesc & getDesc() const = 0;
+        virtual void                        set( size_t offset, size_t count, const bool         * values ) = 0;
+        virtual void                        set( size_t offset, size_t count, const int          * values ) = 0;
+        virtual void                        set( size_t offset, size_t count, const float        * values ) = 0;
+        virtual void                        set( size_t offset, size_t count, const Vector4f     * values ) = 0;
+        virtual void                        set( size_t offset, size_t count, const Matrix44f    * values ) = 0;
+        virtual void                        set( size_t offset, size_t count, const char * const * values ) = 0;
+        virtual void                        unset() = 0;
+        inline  void                        set( const char * );
+        inline  void                        set( size_t offset, size_t count, const unsigned int * values );
+        //@}
+    };
 
     ///
     /// kernel property
     ///
-    typedef KernelParameter KernelProperty;
+    typedef Variant KernelProperty;
 
     ///
     /// kernel parameter handle
@@ -462,14 +478,18 @@ namespace GN { namespace gfx
     struct KernelParameterSet : public NoCopy
     {
         //@{
-        inline  Kernel                & getKernel() const { return mKernel; }
-        virtual const KernelParameter * getParameter( KernelParameterHandle ) const = 0;
+        inline  Kernel          & getKernel() const { return mKernel; }
+        virtual KernelParameter * getParameter( KernelParameterHandle ) const = 0;
+
+        inline  KernelParameter * getParameter( const StrA & name ) const;
+        /*
         virtual void                    setParameter( KernelParameterHandle handle, const KernelParameter & value ) = 0;
         inline  void                    setParameter( const StrA & name, const KernelParameter & value );
         virtual void                    setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data ) = 0;
         inline  void                    setRawParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
         virtual void                    unsetParameter( KernelParameterHandle handle ) = 0;
         inline  void                    unsetParameter( const StrA & name );
+        */
         //@}
 
     protected:
@@ -558,14 +578,6 @@ namespace GN { namespace gfx
         virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
         virtual KernelBinding createBinding( const KernelBindingDesc & ) = 0;
         virtual void          deleteBinding( KernelBinding ) = 0;
-
-        //@}
-
-        //// \name property management. Note that property is read-only, and may change during life-time of a kernel.
-        //@{
-
-        virtual bool                   hasProperity( const StrA & name ) const = 0;
-        virtual const KernelProperty * getProperity( const StrA & name ) const = 0;
 
         //@}
 
@@ -679,10 +691,9 @@ namespace GN { namespace gfx
         /// \name global kernel parameter management
         //@{
 
-        virtual KernelParameterHandle   getGlobalKernelParameterHandle( const StrA & name ) = 0;
-        virtual void                    setGlobalKernelParameter( KernelParameterHandle handle, const KernelParameter & value ) = 0;
-        virtual void                    unsetGlobalKernelParameter( KernelParameterHandle handle ) = 0;
-        virtual const KernelParameter * getGlobalKernelParameter( KernelParameterHandle ) = 0;
+        virtual KernelParameterHandle createGlobalParameter( const StrA & name, const KernelParameterDesc & desc ) = 0;
+        virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const = 0;
+        virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle ) const = 0;
 
         //@}
 

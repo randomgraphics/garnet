@@ -32,6 +32,10 @@ void GN::gfx::BaseGraphicsSystem::quit()
 
     deleteAllKernels();
 
+    for( KernelParameterHandle h = mGlobalKernelParameters.first(); 0 != h; h = mGlobalKernelParameters.next( h ) )
+    {
+        safeDelete( mGlobalKernelParameters[h] );
+    }
     mGlobalKernelParameters.clear();
 
     // standard quit procedure
@@ -48,64 +52,20 @@ void GN::gfx::BaseGraphicsSystem::quit()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelParameterHandle
-GN::gfx::BaseGraphicsSystem::getGlobalKernelParameterHandle( const StrA & name )
+GN::gfx::BaseGraphicsSystem::getGlobalKernelParameterHandle( const StrA & name ) const
 {
     GN_GUARD;
 
-    KernelParameterHandle h = mGlobalKernelParameters.name2handle( name );
+    return mGlobalKernelParameters.name2handle( name );
     
-    if( 0 == h )
-    {
-        h = mGlobalKernelParameters.add( name );
-    }
-
-    return h;
-
     GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::setGlobalKernelParameter(
-    KernelParameterHandle handle, const KernelParameter & value )
-{
-    GN_GUARD_SLOW;
-
-    if( !mGlobalKernelParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid global kernel parameter handle : %d", handle );
-        return;
-    }
-
-    mGlobalKernelParameters[handle].set( value );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::unsetGlobalKernelParameter( KernelParameterHandle handle )
-{
-    GN_GUARD_SLOW;
-
-    if( !mGlobalKernelParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid global kernel parameter handle : %d", handle );
-        return;
-    }
-
-    mGlobalKernelParameters[handle].unset();
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx::KernelParameter *
-GN::gfx::BaseGraphicsSystem::getGlobalKernelParameter( KernelParameterHandle handle )
+GN::gfx::KernelParameter *
+GN::gfx::BaseGraphicsSystem::getGlobalKernelParameter( KernelParameterHandle handle ) const
 {
     GN_GUARD_SLOW;
 
@@ -115,9 +75,8 @@ GN::gfx::BaseGraphicsSystem::getGlobalKernelParameter( KernelParameterHandle han
         return 0;
     }
 
-    KernelParameterWrapper & p = mGlobalKernelParameters[handle];
-
-    return p.empty() ? 0 : &p.get();
+    GN_ASSERT( mGlobalKernelParameters[handle] );
+    return mGlobalKernelParameters[handle];
 
     GN_UNGUARD_SLOW;
 }
