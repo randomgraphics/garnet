@@ -52,6 +52,22 @@ void GN::gfx::BaseGraphicsSystem::quit()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelParameterHandle
+GN::gfx::BaseGraphicsSystem::createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc )
+{
+    GN_GUARD;
+
+    GN_UNUSED_PARAM( name );
+    GN_UNUSED_PARAM( desc );
+    GN_UNIMPL();
+    return 0;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::KernelParameterHandle
 GN::gfx::BaseGraphicsSystem::getGlobalKernelParameterHandle( const StrA & name ) const
 {
     GN_GUARD;

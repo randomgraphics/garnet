@@ -62,25 +62,21 @@ namespace GN { namespace gfx
 
         /// \name get parameter value
         //@{
-        const bool         * toBool()     const { GN_ASSERT( KERNEL_PARAMETER_TYPE_BOOL == mDesc.type );     return (const bool*)getData(); }
-        const int          * toInt1()     const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT1 == mDesc.type );     return (const int*)getData(); }
-        const unsigned int * toUInt1()    const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT1 == mDesc.type );     return (const unsigned int*)getData(); }
-        const float        * toFloat1()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT1 == mDesc.type );   return (const float*)getData(); }
-        const float        * toFloat4()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT4 == mDesc.type );   return (const float*)getData(); }
-        const float        * toFloat4x4() const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT4X4 == mDesc.type ); return (const float*)getData(); }
-        const StrA         * toString()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mDesc.type );   return getString(); }
+        const bool         * toBool()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_BOOL == mDesc.type );   return (const bool*)getData(); }
+        const int          * toInt()    const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const int*)getData(); }
+        const unsigned int * toUInt()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const unsigned int*)getData(); }
+        const float        * toFloat()  const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT == mDesc.type );  return (const float*)getData(); }
+        const StrA         * toString() const { GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mDesc.type ); return getString(); }
         //@}
 
         // from parent class
         //@{
 
         virtual const KernelParameterDesc & getDesc() const { return mDesc; }
-        virtual void                        set( size_t offset, size_t count, const bool         * values );
-        virtual void                        set( size_t offset, size_t count, const int          * values );
-        virtual void                        set( size_t offset, size_t count, const float        * values );
-        virtual void                        set( size_t offset, size_t count, const Vector4f     * values );
-        virtual void                        set( size_t offset, size_t count, const Matrix44f    * values );
-        virtual void                        set( size_t offset, size_t count, const char * const * values );
+        virtual void                        setb( size_t offset, size_t count, const bool         * values );
+        virtual void                        seti( size_t offset, size_t count, const int          * values );
+        virtual void                        setf( size_t offset, size_t count, const float        * values );
+        virtual void                        sets( size_t offset, size_t count, const char * const * values );
         virtual void                        unset() { mEmpty = true; }
         //@}
     };
@@ -206,7 +202,11 @@ namespace GN { namespace gfx
         ///
         /// \note add parameter. Normallly called in constructor
         ///
-        KernelParameterHandle addParameter( const StrA & name, const KernelParameterDesc & param );
+        //KernelParameterHandle addParameter( const StrA & name, const KernelParameterDesc & param );
+        KernelParameterHandle addParameter(
+            const StrA        & name,
+            KernelParameterType type,
+            size_t              count );
 
     private:
 
@@ -255,7 +255,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        virtual KernelParameterHandle createGlobalParameterHandle( const StrA & name, const KernelParameterDesc & desc );
+        virtual KernelParameterHandle createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc );
         virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const;
         virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle handle ) const;
 

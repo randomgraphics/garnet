@@ -7,17 +7,74 @@
 // *****************************************************************************
 
 namespace GN { namespace gfx
-{
+{    
     ///
-    /// parameter set for D3D9 hlsl kernel
+    /// 
     ///
     class D3D9HlslKernelParameterSet : public BaseKernelParameterSet
     {
+        GN_DECLARE_STDCLASS( D3D9HlslKernelParameterSet, BaseKernelParameterSet );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D9HlslKernelParameterSet( D3D9Kernel & e );
+        virtual ~D3D9HlslKernelParameterSet() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+    private:
+        void clear() { mVscfUpdate.clear(); mPscfUpdate.clear(); }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        ///
+        /// apply shader and constants to device
+        ///
+        void apply() const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ///
+        /// record offset and range of shader const update
+        ///
         struct ConstUpdate
         {
+            //@{
             UInt32 firstRegister;
             UInt32 registerCount;
-            ConstUpdate( UInt32 f, UInt32 c ) : firstRegister(f), registerCount(c) {}
+            void clear() { firstRegister = 0; registerCount = 0; }
+            void merge( UInt32 f, UInt32 c )
+            {
+                if( 0 == registerCount )
+                {
+                    firstRegister = f;
+                    registerCount = c;
+                }
+                else
+                {
+                    firstRegister = min( firstRegister, f );
+                    registerCount = max( registerCount, c ) - firstRegister;
+                }
+            }
+            //@}
         };
 
         IDirect3DDevice9                 * mDev;
@@ -25,30 +82,11 @@ namespace GN { namespace gfx
         AutoComPtr<IDirect3DPixelShader9>  mPs;
         AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
         KernelParameterHandle              mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
-        DynaArray<ConstUpdate>             mVscfUpdate, mPscfUpdate; ///< use pooled memory to avoid runtime heap allocation.
+        ConstUpdate                        mVscfUpdate, mPscfUpdate;
 
-    public:
-
-        ///
-        /// ctor
-        ///
-        D3D9HlslKernelParameterSet( IDirect3DDevice9 * dev, Kernel & e );
-
-        ///
-        /// dtor
-        ///
-        ~D3D9HlslKernelParameterSet() {}
-
-        ///
-        /// initialize
-        ///
-        bool init();
-
-        //@{
-        IDirect3DVertexShader9 * vs() const { return mVs; }
-        IDirect3DPixelShader9  * ps() const { return mPs; }
-        //@}
-
+        // ********************************
+        // private functions
+        // ********************************
     private:
 
         void onVsSet( size_t offset, size_t count );
@@ -116,13 +154,9 @@ namespace GN { namespace gfx
 
         // from base class
         //@{
-        virtual KernelParameterSet * createParameterSet() { return new D3D9HlslKernelParameterSet( d3d9gs(), *this, getParameterCount() ); }
+        virtual KernelParameterSet * createParameterSet();
         virtual void                 render( const KernelParameterSet & param, KernelBinding binding );
         //@}
-
-    private:
-
-        inline void applyShader( const D3D9HlslKernelParameterSet & param );
     };
 }}
 

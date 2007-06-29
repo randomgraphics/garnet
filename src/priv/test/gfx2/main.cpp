@@ -39,7 +39,7 @@ struct ClearScreen
         param.attach( kernel->createParameterSet() );
         if( 0 == param ) return false;
 
-        param->setParameter( "COLOR_VALUE", KernelParameter( 0.0f, 0.0f, 0.0f, 1.0f ) );
+        param->setParameter( "COLOR_VALUE", Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
         param->setParameter( "DEPTH_VALUE", 1.0f );
         param->setParameter( "STENCIL_VALUE", 0 );
 

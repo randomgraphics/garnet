@@ -33,13 +33,8 @@ namespace GN { namespace gfx
             , mIdxBuf( gs )
         {
             // setup parameters
-            KernelParameterDesc p;
-
-            p.type  = KERNEL_PARAMETER_TYPE_FLOAT4X4;
-            mPvw    = addParameter( "PVW", p );
-
-            p.type  = KERNEL_PARAMETER_TYPE_FLOAT4;
-            mColor  = addParameter( "COLOR", p );
+            mPvw   = addParameter( "PVW", KERNEL_PARAMETER_TYPE_FLOAT, 16 );
+            mColor = addParameter( "COLOR", KERNEL_PARAMETER_TYPE_FLOAT, 4 );
 
             // setup ports
             addPortRef( "TARGET0", &mTarget0 );
@@ -70,8 +65,9 @@ namespace GN { namespace gfx
 
             applyBinding( binding );
 
-            const KernelParameter * m = param.getParameter( mPvw );
-            const KernelParameter * c = param.getParameter( mColor );
+            const BaseKernelParameter * m = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mPvw ) );
+            const BaseKernelParameter * c = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mColor ) );
+            GN_ASSERT( m && c );
 
             GN_UNUSED_PARAM( m );
             GN_UNUSED_PARAM( c );
