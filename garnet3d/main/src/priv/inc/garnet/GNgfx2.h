@@ -79,6 +79,14 @@ namespace GN { namespace gfx2
         char   c8[8]; ///< as 8 characters
 
         ///
+        /// equality check
+        ///
+        bool operator==( const SurfaceAttributeSemantic & rhs ) const
+        {
+            return u64 == rhs.u64;
+        }
+
+        ///
         /// set semantic value
         ///
         void set(const char * str )

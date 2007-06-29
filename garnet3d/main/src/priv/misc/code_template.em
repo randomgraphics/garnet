@@ -66,7 +66,7 @@ macro GN_HFileHeader()
 		// let user input module name
 		module = ask("Module name?")
 		module = toupper(module)
-		tag = "__GN_@module@_@filebase_up@_@fileext_up@__"
+		tag = "__GN_@module@_@filebase@_@fileext@__"
 		brief = "?"
 		doxygen = "/"
 	}

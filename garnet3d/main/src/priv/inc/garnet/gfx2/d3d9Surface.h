@@ -14,16 +14,16 @@ namespace GN { namespace gfx2
     enum D3D9SurfaceType
     {
         //@{
-        SURFACE_TYPE_VB,
-        SURFACE_TYPE_IB,
-        SURFACE_TYPE_TEX_2D,
-        SURFACE_TYPE_TEX_3D,
-        SURFACE_TYPE_TEX_CUBE,
-        SURFACE_TYPE_RTT_2D,    ///< 2D render target texture
-        SURFACE_TYPE_RTT_CUBE,  ///< 2D cube texture
-        SURFACE_TYPE_RTS_COLOR, ///< render target surface
-        SURFACE_TYPE_RTS_DEPTH, ///< depth stencil surface
-        SURFACE_TYPE_ANY = -1,  ///< indicate any kind of surfaces.
+        D3D9_SURFACE_TYPE_VB,
+        D3D9_SURFACE_TYPE_IB,
+        D3D9_SURFACE_TYPE_TEX_2D,
+        D3D9_SURFACE_TYPE_TEX_3D,
+        D3D9_SURFACE_TYPE_TEX_CUBE,
+        D3D9_SURFACE_TYPE_RTT_2D,    ///< 2D render target texture
+        D3D9_SURFACE_TYPE_RTT_CUBE,  ///< 2D cube texture
+        D3D9_SURFACE_TYPE_RTS_COLOR, ///< render target surface
+        D3D9_SURFACE_TYPE_RTS_DEPTH, ///< depth stencil surface
+        D3D9_SURFACE_TYPE_ANY = -1,  ///< indicate any kind of surfaces.
         //@}
     };
 
@@ -47,11 +47,10 @@ namespace GN { namespace gfx2
             "RTS_DEPTH",
             "RTS_BACKBUF",
         };
-        if( 0 <= type && type <= SURFACE_TYPE_RTS_DEPTH ) return table[type];
+        if( 0 <= type && type <= D3D9_SURFACE_TYPE_RTS_DEPTH ) return table[type];
         if( -1 == type ) return "ANY";
         return "INVALID";
     }
-
 
     ///
     /// D3D9 surface descriptor
@@ -62,7 +61,6 @@ namespace GN { namespace gfx2
         D3D9SurfaceType type;
         //@}
     };
-
 
     ///
     /// base D3D9 surface
