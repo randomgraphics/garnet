@@ -193,8 +193,10 @@ namespace GN
 
 #if GN_MSWIN
 #include "syncmsw.inl"
+#elif GN_POSIX
+#include "syncposix.inl"
 #else
-#error unimpl
+#error unsupport platform
 #endif
 
 // *****************************************************************************

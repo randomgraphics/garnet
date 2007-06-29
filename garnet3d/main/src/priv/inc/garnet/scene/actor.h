@@ -346,7 +346,7 @@ namespace GN { namespace scene
         //@{
 
         explicit Actor( Scene & );
-        ~Actor();
+        virtual ~Actor();
 
         //@}
 
