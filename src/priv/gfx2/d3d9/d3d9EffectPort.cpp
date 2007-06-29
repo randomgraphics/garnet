@@ -23,7 +23,7 @@ GN::gfx2::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
     : D3D9EffectPort(gs)
 {
     mDesc.portType    = D3D9_EFFECT_PORT_RENDER_TARGET;
-    mDesc.surfaceType = SURFACE_TYPE_RTT_2D;
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_RTT_2D;
     GN_UNIMPL_WARNING();
 }
 
@@ -55,7 +55,7 @@ GN::gfx2::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
     : D3D9EffectPort(gs)
 {
     mDesc.portType    = D3D9_EFFECT_PORT_DEPTH_BUFFER;
-    mDesc.surfaceType = SURFACE_TYPE_RTS_DEPTH;
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_RTS_DEPTH;
     GN_UNIMPL_WARNING();
 }
 
@@ -87,7 +87,7 @@ GN::gfx2::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs )
     : D3D9EffectPort(gs)
 {
     mDesc.portType    = D3D9_EFFECT_PORT_TEXTURE;
-    mDesc.surfaceType = SURFACE_TYPE_TEX_2D;
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX_2D;
     GN_UNIMPL_WARNING();
 }
 
@@ -120,7 +120,7 @@ GN::gfx2::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage 
     , mStage(stage)
 {
     mDesc.portType    = D3D9_EFFECT_PORT_VTXBUF;
-    mDesc.surfaceType = SURFACE_TYPE_VB;
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_VB;
 
     mDesc.input = true;
     mDesc.output = false;
@@ -204,7 +204,7 @@ bool GN::gfx2::D3D9VtxBufPort::compatible( const Surface * surf ) const
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
 
-    if( SURFACE_TYPE_VB != desc.type )
+    if( D3D9_SURFACE_TYPE_VB != desc.type )
     {
         GN_ERROR(sLogger)( "Vertex buffer port accepts vertex buffer surface only!" );
         return false;
@@ -245,7 +245,7 @@ GN::gfx2::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs )
     : D3D9EffectPort(gs)
 {
     mDesc.portType    = D3D9_EFFECT_PORT_IDXBUF;
-    mDesc.surfaceType = SURFACE_TYPE_IB;
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_IB;
 
     mDesc.input = true;
     mDesc.output = false;
@@ -285,7 +285,7 @@ bool GN::gfx2::D3D9IdxBufPort::compatible( const Surface * surf ) const
 
     const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
 
-    if( SURFACE_TYPE_IB != desc.type )
+    if( D3D9_SURFACE_TYPE_IB != desc.type )
     {
         GN_ERROR(sLogger)( "Vertex buffer port accepts index buffer surface only!" );
         return false;

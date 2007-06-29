@@ -460,12 +460,12 @@ static bool sMergeSurfaceType(
         result = t1;
         return true;
     }
-    else if( SURFACE_TYPE_ANY == t1 )
+    else if( D3D9_SURFACE_TYPE_ANY == t1 )
     {
         result = t2;
         return true;
     }
-    else if( SURFACE_TYPE_ANY == t2 )
+    else if( D3D9_SURFACE_TYPE_ANY == t2 )
     {
         result = t1;
         return true;
@@ -473,18 +473,18 @@ static bool sMergeSurfaceType(
 
     switch( t1 )
     {
-        case SURFACE_TYPE_VB        :
-        case SURFACE_TYPE_IB        :
-        case SURFACE_TYPE_TEX_3D    :
+        case D3D9_SURFACE_TYPE_VB        :
+        case D3D9_SURFACE_TYPE_IB        :
+        case D3D9_SURFACE_TYPE_TEX_3D    :
             break;
 
-        case SURFACE_TYPE_TEX_2D    :
+        case D3D9_SURFACE_TYPE_TEX_2D    :
             switch( t2 )
             {
-                case SURFACE_TYPE_RTT_2D    :
-                case SURFACE_TYPE_RTS_COLOR :
-                case SURFACE_TYPE_RTS_DEPTH :
-                    result = SURFACE_TYPE_RTT_2D;
+                case D3D9_SURFACE_TYPE_RTT_2D    :
+                case D3D9_SURFACE_TYPE_RTS_COLOR :
+                case D3D9_SURFACE_TYPE_RTS_DEPTH :
+                    result = D3D9_SURFACE_TYPE_RTT_2D;
                     return true;
 
                 default:
@@ -492,11 +492,11 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_TEX_CUBE  :
+        case D3D9_SURFACE_TYPE_TEX_CUBE  :
             switch( t2 )
             {
-                case SURFACE_TYPE_RTT_CUBE  :
-                    result = SURFACE_TYPE_RTT_CUBE;
+                case D3D9_SURFACE_TYPE_RTT_CUBE  :
+                    result = D3D9_SURFACE_TYPE_RTT_CUBE;
                     return true;
 
                 default:
@@ -504,13 +504,13 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_RTT_2D    :
+        case D3D9_SURFACE_TYPE_RTT_2D    :
             switch( t2 )
             {
-                case SURFACE_TYPE_TEX_2D    :
-                case SURFACE_TYPE_RTS_COLOR :
-                case SURFACE_TYPE_RTS_DEPTH :
-                    result = SURFACE_TYPE_RTT_2D;
+                case D3D9_SURFACE_TYPE_TEX_2D    :
+                case D3D9_SURFACE_TYPE_RTS_COLOR :
+                case D3D9_SURFACE_TYPE_RTS_DEPTH :
+                    result = D3D9_SURFACE_TYPE_RTT_2D;
                     return true;
 
                 default:
@@ -518,11 +518,11 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_RTT_CUBE  :
+        case D3D9_SURFACE_TYPE_RTT_CUBE  :
             switch( t2 )
             {
-                case SURFACE_TYPE_RTT_2D  :
-                    result = SURFACE_TYPE_RTT_CUBE;
+                case D3D9_SURFACE_TYPE_RTT_2D  :
+                    result = D3D9_SURFACE_TYPE_RTT_CUBE;
                     return true;
 
                 default:
@@ -530,12 +530,12 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_RTS_COLOR :
+        case D3D9_SURFACE_TYPE_RTS_COLOR :
             switch( t2 )
             {
-                case SURFACE_TYPE_TEX_2D    :
-                case SURFACE_TYPE_RTT_2D    :
-                    result = SURFACE_TYPE_RTT_2D;
+                case D3D9_SURFACE_TYPE_TEX_2D    :
+                case D3D9_SURFACE_TYPE_RTT_2D    :
+                    result = D3D9_SURFACE_TYPE_RTT_2D;
                     return true;
 
                 default:
@@ -543,12 +543,12 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_RTS_DEPTH :
+        case D3D9_SURFACE_TYPE_RTS_DEPTH :
             switch( t2 )
             {
-                case SURFACE_TYPE_TEX_2D    :
-                case SURFACE_TYPE_RTT_2D    :
-                    result = SURFACE_TYPE_RTT_2D;
+                case D3D9_SURFACE_TYPE_TEX_2D    :
+                case D3D9_SURFACE_TYPE_RTT_2D    :
+                    result = D3D9_SURFACE_TYPE_RTT_2D;
                     return true;
 
                 default:
@@ -681,7 +681,7 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     GN_GUARD;
 
     // get surface layout template
-    D3D9SurfaceType surftype = SURFACE_TYPE_ANY;
+    D3D9SurfaceType surftype = D3D9_SURFACE_TYPE_ANY;
     for( size_t i = 0; i < scp.bindings.size(); ++i )
     {
         const SurfaceBindingParameter & sbp = scp.bindings[i];
@@ -706,25 +706,25 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     // create surface using the layout and type
     switch( surftype )
     {
-        case SURFACE_TYPE_VB        :
+        case D3D9_SURFACE_TYPE_VB        :
             return D3D9VtxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
 
-        case SURFACE_TYPE_IB        :
+        case D3D9_SURFACE_TYPE_IB        :
             return D3D9IdxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
 
-        case SURFACE_TYPE_TEX_2D    :
-        case SURFACE_TYPE_TEX_3D    :
-        case SURFACE_TYPE_TEX_CUBE  :
-        case SURFACE_TYPE_RTT_2D    :
-        case SURFACE_TYPE_RTT_CUBE  :
-        case SURFACE_TYPE_RTS_COLOR :
+        case D3D9_SURFACE_TYPE_TEX_2D    :
+        case D3D9_SURFACE_TYPE_TEX_3D    :
+        case D3D9_SURFACE_TYPE_TEX_CUBE  :
+        case D3D9_SURFACE_TYPE_RTT_2D    :
+        case D3D9_SURFACE_TYPE_RTT_CUBE  :
+        case D3D9_SURFACE_TYPE_RTS_COLOR :
             GN_UNIMPL();
             return 0;
 
-        case SURFACE_TYPE_RTS_DEPTH :
+        case D3D9_SURFACE_TYPE_RTS_DEPTH :
             return D3D9DepthBuffer::sNewInstance( scp.layout, scp.forcedAccessFlags, scp.hints );
 
-        case SURFACE_TYPE_ANY :
+        case D3D9_SURFACE_TYPE_ANY :
             GN_ERROR(sLogger)( "fail to determine surface type." );
             return 0;
 

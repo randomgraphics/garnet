@@ -19,7 +19,7 @@ GN::gfx2::D3D9IdxBuf * GN::gfx2::D3D9IdxBuf::sNewInstance(
     GN_GUARD;
 
     D3D9SurfaceDesc desc;
-    desc.type = SURFACE_TYPE_IB;
+    desc.type = D3D9_SURFACE_TYPE_IB;
     desc.layout = layout;
     desc.access = access;
 
@@ -147,7 +147,7 @@ bool GN::gfx2::D3D9IdxBuf::init()
 
     const D3D9SurfaceDesc & desc = getD3D9Desc();
 
-    GN_ASSERT( SURFACE_TYPE_IB == desc.type );
+    GN_ASSERT( D3D9_SURFACE_TYPE_IB == desc.type );
 
     // check descriptor
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
@@ -166,7 +166,7 @@ bool GN::gfx2::D3D9IdxBuf::init()
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
     // create index buffer
-    GN_TODO( "setup usage and pool based on hints" );
+    GN_TODO( "setup usage and pool" );
     GN_DX9_CHECK_RV( dev->CreateIndexBuffer(
         desc.layout.basemap.rowBytes,
         0, // usage

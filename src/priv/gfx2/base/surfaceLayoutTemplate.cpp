@@ -43,35 +43,39 @@ bool GN::gfx2::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout )
     CHECK_FIELD3( flags.attributes, attributes, layout.format.count );
     CHECK_FIELD3( flags.stride, stride, layout.format.stride );
 
-    GN_TODO( "check required attributes" );
-    /*for( size_t i = 0; i < requiredAttributes.size(); ++i )
+    // check required attributes
+    for( size_t i = 0; i < requiredAttributes.size(); ++i )
     {
         const SurfaceAttributeTemplate & sat = requiredAttributes[i];
 
-        bool compatible = false;
-
+        bool found = false;
         for( size_t i = 0; i < layout.format.count; ++i )
         {
             const SurfaceAttribute & sa = layout.format.attribs[i];
             if( sa.semantic == sat.semantic )
             {
-                if( -1 == sat.offset || sat.offset == sa.offset )
+                if( -1 != sat.offset && sat.offset != sa.offset )
                 {
-                    if( sat.allowedFormats.empty() || sat.allowedFormats.find(sa.format) )
-                    {
-                        compatible = true;
-                        break;
-                    }
+                    GN_ERROR(sLogger)("offset of attribute #%d is incompatible with template.", i );
+                    return false;
                 }
+                if( !sat.allowedFormats.empty() && sat.allowedFormats.end() == sat.allowedFormats.find(sa.format) )
+                {
+                    GN_ERROR(sLogger)("format of attribute #%d is incompatible with template.", i );
+                    return false;
+                }
+
+                found = true;
+                break;
             }
         }
 
-        if( !compatible )
+        if( !found )
         {
-            GN_ERROR(sLogger)( "..." );
+            GN_ERROR(sLogger)( "required attribute with semantic '%s' is missing.", sat.semantic.str() );
             return false;
         }
-    }*/
+    }
 
     #undef CHECK_FIELD2
     #undef CHECK_FIELD3

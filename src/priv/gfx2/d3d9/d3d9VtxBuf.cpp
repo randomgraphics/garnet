@@ -19,7 +19,7 @@ GN::gfx2::D3D9VtxBuf * GN::gfx2::D3D9VtxBuf::sNewInstance(
     GN_GUARD;
 
     D3D9SurfaceDesc desc;
-    desc.type = SURFACE_TYPE_VB;
+    desc.type = D3D9_SURFACE_TYPE_VB;
     desc.layout = layout;
     desc.access = access;
 
@@ -145,7 +145,7 @@ bool GN::gfx2::D3D9VtxBuf::init()
 
     const D3D9SurfaceDesc & desc = getD3D9Desc();
 
-    GN_ASSERT( SURFACE_TYPE_VB == desc.type );
+    GN_ASSERT( D3D9_SURFACE_TYPE_VB == desc.type );
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
@@ -154,7 +154,7 @@ bool GN::gfx2::D3D9VtxBuf::init()
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
     // create vertex buffer
-    GN_TODO( "setup usage and pool from hints" );
+    GN_TODO( "setup usage and pool" );
     GN_DX9_CHECK_RV( dev->CreateVertexBuffer( desc.layout.basemap.rowBytes, 0, 0, D3DPOOL_DEFAULT, &mSurface, 0 ), false );
 
     // success
