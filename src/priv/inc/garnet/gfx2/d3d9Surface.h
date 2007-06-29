@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
     /// d3d9 effect port type
@@ -32,7 +32,7 @@ namespace GN { namespace gfx2
     ///
     inline const char * d3d9SurfaceType2Str( int type )
     {
-        using namespace GN::gfx2;
+        using namespace GN::gfx;
 
         static const char * table[] =
         {

@@ -1,28 +1,28 @@
 #include "pch.h"
 #include "garnet/gfx2/baseGraphicsSystem.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseEffect");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernel");
 
 // *****************************************************************************
-// BaseEffectParameterSet
+// BaseKernelParameterSet
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectParameter *
-GN::gfx2::BaseEffectParameterSet::getParameter( EffectParameterHandle handle ) const
+const GN::gfx::KernelParameter *
+GN::gfx::BaseKernelParameterSet::getParameter( KernelParameterHandle handle ) const
 {
     GN_GUARD_SLOW;
 
-    BaseEffect & e = (BaseEffect&)getEffect();
+    BaseKernel & e = (BaseKernel&)getKernel();
 
     size_t idx;
     if( !e.getParameterIndex( idx, handle ) ) return 0;
 
     GN_ASSERT( idx < mParameters.size() );
 
-    const EffectParameterWrapper & p = mParameters[idx];
+    const KernelParameterWrapper & p = mParameters[idx];
 
     if( p.empty() )
     {
@@ -40,12 +40,12 @@ GN::gfx2::BaseEffectParameterSet::getParameter( EffectParameterHandle handle ) c
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffectParameterSet::setParameter(
-    EffectParameterHandle handle, const EffectParameter & value )
+void GN::gfx::BaseKernelParameterSet::setParameter(
+    KernelParameterHandle handle, const KernelParameter & value )
 {
     GN_GUARD_SLOW;
 
-    BaseEffect & e = (BaseEffect&)getEffect();
+    BaseKernel & e = (BaseKernel&)getKernel();
 
     size_t idx;
     if( !e.getParameterIndex( idx, handle ) ) return;
@@ -60,15 +60,15 @@ void GN::gfx2::BaseEffectParameterSet::setParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffectParameterSet::setRawParameter(
-    EffectParameterHandle handle,
+void GN::gfx::BaseKernelParameterSet::setRawParameter(
+    KernelParameterHandle handle,
     size_t                offset,
     size_t                bytes,
     const void          * data )
 {
     GN_GUARD_SLOW;
 
-    BaseEffect & e = (BaseEffect&)getEffect();
+    BaseKernel & e = (BaseKernel&)getKernel();
 
     size_t idx;
     if( !e.getParameterIndex( idx, handle ) ) return;
@@ -83,11 +83,11 @@ void GN::gfx2::BaseEffectParameterSet::setRawParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffectParameterSet::unsetParameter( EffectParameterHandle handle )
+void GN::gfx::BaseKernelParameterSet::unsetParameter( KernelParameterHandle handle )
 {
     GN_GUARD_SLOW;
 
-    BaseEffect & e = (BaseEffect&)getEffect();
+    BaseKernel & e = (BaseKernel&)getKernel();
 
     size_t idx;
     if( !e.getParameterIndex( idx, handle ) ) return;
@@ -101,18 +101,18 @@ void GN::gfx2::BaseEffectParameterSet::unsetParameter( EffectParameterHandle han
 
 
 // *****************************************************************************
-// BaseEffect
+// BaseKernel
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectParameterDesc *
-GN::gfx2::BaseEffect::getParameterDesc( const StrA & name ) const
+const GN::gfx::KernelParameterDesc *
+GN::gfx::BaseKernel::getParameterDesc( const StrA & name ) const
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameterHandles.name2handle( name );
+    KernelParameterHandle h = mParameterHandles.name2handle( name );
 
     if( 0 == h )
     {
@@ -128,12 +128,12 @@ GN::gfx2::BaseEffect::getParameterDesc( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::EffectParameterHandle
-GN::gfx2::BaseEffect::getParameterHandle( const StrA & name ) const
+GN::gfx::KernelParameterHandle
+GN::gfx::BaseKernel::getParameterHandle( const StrA & name ) const
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameterHandles.name2handle( name );
+    KernelParameterHandle h = mParameterHandles.name2handle( name );
 
     if( 0 == h )
     {
@@ -148,11 +148,11 @@ GN::gfx2::BaseEffect::getParameterHandle( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::EffectParameterSet * GN::gfx2::BaseEffect::createParameterSet()
+GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
 {
     GN_GUARD;
 
-    return new BaseEffectParameterSet( *this, mParameters.size() );
+    return new BaseKernelParameterSet( *this, mParameters.size() );
 
     GN_UNGUARD;
 }
@@ -160,7 +160,7 @@ GN::gfx2::EffectParameterSet * GN::gfx2::BaseEffect::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::BaseEffect::hasProperity( const StrA & name ) const
+bool GN::gfx::BaseKernel::hasProperity( const StrA & name ) const
 {
     return 0 != mProperties.name2handle( name );
 }
@@ -168,8 +168,8 @@ bool GN::gfx2::BaseEffect::hasProperity( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectProperty *
-GN::gfx2::BaseEffect::getProperity( const StrA & name ) const
+const GN::gfx::KernelProperty *
+GN::gfx::BaseKernel::getProperity( const StrA & name ) const
 {
     UInt32 h = mProperties.name2handle( name );
     if( 0 == h )
@@ -187,12 +187,12 @@ GN::gfx2::BaseEffect::getProperity( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::EffectParameterHandle
-GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc & desc )
+GN::gfx::KernelParameterHandle
+GN::gfx::BaseKernel::addParameter( const StrA & name, const KernelParameterDesc & desc )
 {
     GN_GUARD;
 
-    EffectParameterHandle h = mParameterHandles.name2handle( name );
+    KernelParameterHandle h = mParameterHandles.name2handle( name );
 
     if( h )
     {
@@ -215,7 +215,7 @@ GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc
 
     ParameterItem & pi = mParameters.back();
     pi.desc   = desc;
-    pi.global = mGraphicsSystem.getGlobalEffectParameterHandle( name );
+    pi.global = mGraphicsSystem.getGlobalKernelParameterHandle( name );
 
     return h;
 
@@ -225,9 +225,9 @@ GN::gfx2::BaseEffect::addParameter( const StrA & name, const EffectParameterDesc
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffect::setProperty(
+void GN::gfx::BaseKernel::setProperty(
     const StrA & name,
-    const EffectProperty & property )
+    const KernelProperty & property )
 {
     UInt32 h = mProperties.name2handle( name );
 
@@ -242,7 +242,7 @@ void GN::gfx2::BaseEffect::setProperty(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::BaseEffect::unsetProperty( const StrA & name )
+void GN::gfx::BaseKernel::unsetProperty( const StrA & name )
 {
     UInt32 h = mProperties.name2handle( name );
 

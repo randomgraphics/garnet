@@ -5,7 +5,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.SurfaceLayoutTemplate");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::SurfaceLayoutTemplate::check() const
+bool GN::gfx::SurfaceLayoutTemplate::check() const
 {
     GN_UNIMPL_WARNING();
     return true;
@@ -14,7 +14,7 @@ bool GN::gfx2::SurfaceLayoutTemplate::check() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout ) const
+bool GN::gfx::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout ) const
 {
     #define CHECK_FIELD4( name, flag, expected, actual ) \
         if( flag && expected != actual ) \
@@ -88,7 +88,7 @@ bool GN::gfx2::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::SurfaceLayoutTemplate::apply( SurfaceLayout & layout ) const
+void GN::gfx::SurfaceLayoutTemplate::apply( SurfaceLayout & layout ) const
 {
     GN_UNUSED_PARAM( layout );
     GN_UNIMPL_WARNING();
@@ -97,7 +97,7 @@ void GN::gfx2::SurfaceLayoutTemplate::apply( SurfaceLayout & layout ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::SurfaceLayoutTemplate::mergeWith( const SurfaceLayoutTemplate & templ )
+bool GN::gfx::SurfaceLayoutTemplate::mergeWith( const SurfaceLayoutTemplate & templ )
 {
     GN_UNUSED_PARAM( templ );
     GN_UNIMPL_WARNING();

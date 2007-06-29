@@ -1,30 +1,30 @@
-#ifndef __GN_GFX2_D3D9CLEARSCREENEFFECT_H__
-#define __GN_GFX2_D3D9CLEARSCREENEFFECT_H__
+#ifndef __GN_GFX2_D3D9CLEARSCREENKERNEL_H__
+#define __GN_GFX2_D3D9CLEARSCREENKERNEL_H__
 // *****************************************************************************
 /// \file
-/// \brief   D3D9 clear screen effect
+/// \brief   D3D9 clear screen kernel
 /// \author  chenli@@FAREAST (2007.6.19)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
-    /// clear screen effect
+    /// clear screen kernel
     ///
-    class D3D9ClearScreenEffect : public D3D9Effect
+    class D3D9ClearScreenKernel : public D3D9Kernel
     {
         D3D9RenderTargetPort mTarget0;
         D3D9DepthBufferPort  mDepth;
 
-        EffectParameterHandle mColorValue, mDepthValue, mStencilValue;
+        KernelParameterHandle mColorValue, mDepthValue, mStencilValue;
 
-        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenEffect( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ); }
+        static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ); }
 
         ///
         /// ctor
         ///
-        D3D9ClearScreenEffect( D3D9GraphicsSystem & gs )
-            : D3D9Effect(gs)
+        D3D9ClearScreenKernel( D3D9GraphicsSystem & gs )
+            : D3D9Kernel(gs)
             , mTarget0(gs)
             , mDepth(gs)
         {
@@ -33,18 +33,18 @@ namespace GN { namespace gfx2
             addPortRef( "DEPTH", &mDepth );
 
             // setup parameters
-            EffectParameterDesc c;
-            c.type  = EFFECT_PARAMETER_TYPE_FLOAT4;
+            KernelParameterDesc c;
+            c.type  = KERNEL_PARAMETER_TYPE_FLOAT4;
             mColorValue = addParameter( "COLOR_VALUE", c );
-            //setParameter( mColorValue, EffectParameter(.0f, .0f, .0f, .0f) );
+            //setParameter( mColorValue, KernelParameter(.0f, .0f, .0f, .0f) );
 
-            EffectParameterDesc z;
-            z.type  = EFFECT_PARAMETER_TYPE_FLOAT1;
+            KernelParameterDesc z;
+            z.type  = KERNEL_PARAMETER_TYPE_FLOAT1;
             mDepthValue = addParameter( "DEPTH_VALUE", z );
             //setParameter( mDepthValue, .0f );
 
-            EffectParameterDesc s;
-            s.type  = EFFECT_PARAMETER_TYPE_INT1;
+            KernelParameterDesc s;
+            s.type  = KERNEL_PARAMETER_TYPE_INT1;
             mStencilValue = addParameter( "STENCIL_VALUE", s );
             //setParameter( mStencilValue, 0 );
         }
@@ -53,29 +53,29 @@ namespace GN { namespace gfx2
     public:
 
         ///
-        /// get effect factory
+        /// get kernel factory
         ///
-        static EffectFactory sGetFactory()
+        static KernelFactory sGetFactory()
         {
-            EffectFactory f;
+            KernelFactory f;
             f.quality = 0;
             f.creator = &sCreator;
             return f;
         }
 
-        virtual void render( const EffectParameterSet & param, EffectBinding binding )
+        virtual void render( const KernelParameterSet & param, KernelBinding binding )
         {
-            GN_ASSERT( &param.getEffect() == (Effect*)this );
+            GN_ASSERT( &param.getKernel() == (Kernel*)this );
 
-            D3D9EffectBinding & b = getPortBinding( binding );
+            D3D9KernelBinding & b = getPortBinding( binding );
             D3D9GraphicsSystem & gs = d3d9gs();
             IDirect3DDevice9  * dev = gs.d3ddev();
 
             b.apply();
 
-            const EffectParameter * c = param.getParameter( mColorValue );
-            const EffectParameter * z = param.getParameter( mDepthValue );
-            const EffectParameter * s = param.getParameter( mStencilValue );
+            const KernelParameter * c = param.getParameter( mColorValue );
+            const KernelParameter * z = param.getParameter( mDepthValue );
+            const KernelParameter * s = param.getParameter( mStencilValue );
 
             DWORD flags   = 0;
             DWORD color   = 0;
@@ -111,4 +111,4 @@ namespace GN { namespace gfx2
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9CLEARSCREENEFFECT_H__
+#endif // __GN_GFX2_D3D9CLEARSCREENKERNEL_H__

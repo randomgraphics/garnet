@@ -3,7 +3,6 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::gfx2;
 
 // *****************************************************************************
 // local code
@@ -83,12 +82,12 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
         0 // quad list
         );
 
-    // create effect
-    mEffect = gs.getEffect( "D3D9_HLSL" );
-    if( 0 == mEffect ) return false;
+    // create kernel
+    mKernel = gs.getKernel( "D3D9_HLSL" );
+    if( 0 == mKernel ) return false;
 
     // create parameters
-    mParam = mEffect->createParameterSet();
+    mParam = mKernel->createParameterSet();
     if( 0 == mParam ) return false;
     mParam->setParameter( "VS", vs_code );
     mParam->setParameter( "PS", ps_code );
@@ -158,10 +157,10 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
         sizeof(indices) );
 
     // create binding
-    EffectBindingDesc bd;
+    KernelBindingDesc bd;
     bd.bindings["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
     bd.bindings["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
-    mBinding = mEffect->createBinding( bd );
+    mBinding = mKernel->createBinding( bd );
     if( 0 == mBinding ) return false;
 
     // success
@@ -175,15 +174,15 @@ void TestD3D9Hlsl::quit( GraphicsSystem & )
 {
     if( mBinding )
     {
-        GN_ASSERT( mEffect );
-        mEffect->deleteBinding( mBinding );
+        GN_ASSERT( mKernel );
+        mKernel->deleteBinding( mBinding );
         mBinding = 0;
     }
     safeDelete( mVtxBuf );
     safeDelete( mIdxBuf );
     safeDelete( mTexture );
     safeDelete( mParam );
-    mEffect = 0;
+    mKernel = 0;
 }
 
 //
@@ -191,7 +190,7 @@ void TestD3D9Hlsl::quit( GraphicsSystem & )
 // -----------------------------------------------------------------------------
 void TestD3D9Hlsl::draw( GraphicsSystem & )
 {
-    GN_ASSERT( mEffect );
+    GN_ASSERT( mKernel );
     GN_ASSERT( mParam );
 
     Matrix44f world = mArcBall.getRotationMatrix44();
@@ -199,5 +198,5 @@ void TestD3D9Hlsl::draw( GraphicsSystem & )
 
     mParam->setRawParameter( "VSCF", 0, sizeof(pvw), pvw );
 
-    mEffect->render( *mParam, mBinding );
+    mKernel->render( *mParam, mBinding );
 }

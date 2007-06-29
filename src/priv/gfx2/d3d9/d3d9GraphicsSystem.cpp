@@ -2,7 +2,7 @@
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
 #include "d3d9DepthBuffer.h"
-#include "d3d9BuildInEffects.h"
+#include "d3d9BuildInKernels.h"
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -49,7 +49,7 @@ static LRESULT CALLBACK sStaticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM
 //
 //
 // -----------------------------------------------------------------------------
-static HWND sCreateWindow( const GN::gfx2::GraphicsSystemCreationParameter & gscp )
+static HWND sCreateWindow( const GN::gfx::GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 
@@ -164,8 +164,8 @@ static void sDeleteWindow( HWND window )
 //
 // -----------------------------------------------------------------------------
 static bool sCreateDevice(
-    GN::gfx2::D3D9GraphicsSystemDesc & desc,
-    const GN::gfx2::GraphicsSystemCreationParameter & gscp )
+    GN::gfx::D3D9GraphicsSystemDesc & desc,
+    const GN::gfx::GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 
@@ -277,7 +277,7 @@ static bool sCreateDevice(
 //
 //
 // -----------------------------------------------------------------------------
-static void sDeleteDevice( GN::gfx2::D3D9GraphicsSystemDesc & desc )
+static void sDeleteDevice( GN::gfx::D3D9GraphicsSystemDesc & desc )
 {
     GN_GUARD;
 
@@ -348,7 +348,7 @@ static const char * sD3DMsaaType2Str( D3DMULTISAMPLE_TYPE type )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintDeviceInfo( GN::gfx2::D3D9GraphicsSystemDesc & desc )
+static void sPrintDeviceInfo( GN::gfx::D3D9GraphicsSystemDesc & desc )
 {
     using namespace GN;
 
@@ -449,11 +449,11 @@ static void sPrintDeviceInfo( GN::gfx2::D3D9GraphicsSystemDesc & desc )
 //
 // -----------------------------------------------------------------------------
 static bool sMergeSurfaceType(
-    GN::gfx2::D3D9SurfaceType & result,
-    GN::gfx2::D3D9SurfaceType t1,
-    GN::gfx2::D3D9SurfaceType t2 )
+    GN::gfx::D3D9SurfaceType & result,
+    GN::gfx::D3D9SurfaceType t1,
+    GN::gfx::D3D9SurfaceType t2 )
 {
-    using namespace GN::gfx2;
+    using namespace GN::gfx;
 
     if( t1 == t2 )
     {
@@ -572,13 +572,13 @@ static bool sMergeSurfaceType(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9GraphicsSystem::D3D9GraphicsSystem()
+GN::gfx::D3D9GraphicsSystem::D3D9GraphicsSystem()
 {
     clear();
 
-    // register build-in effects
-    registerEffect( "CLEAR_SCREEN", D3D9ClearScreenEffect::sGetFactory() );
-    registerEffect( "D3D9_HLSL", D3D9HlslEffect::sGetFactory() );
+    // register build-in kernels
+    registerKernel( "CLEAR_SCREEN", D3D9ClearScreenKernel::sGetFactory() );
+    registerKernel( "D3D9_HLSL", D3D9HlslKernel::sGetFactory() );
 }
 
 // *****************************************************************************
@@ -588,12 +588,12 @@ GN::gfx2::D3D9GraphicsSystem::D3D9GraphicsSystem()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & gscp )
+bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx2::D3D9GraphicsSystem, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9GraphicsSystem, () );
 
     mSceneBegun = false;
 
@@ -618,7 +618,7 @@ bool GN::gfx2::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter &
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9GraphicsSystem::quit()
+void GN::gfx::D3D9GraphicsSystem::quit()
 {
     GN_GUARD;
 
@@ -642,7 +642,7 @@ void GN::gfx2::D3D9GraphicsSystem::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9GraphicsSystem::clear()
+void GN::gfx::D3D9GraphicsSystem::clear()
 {
     memset( &mDesc, 0, sizeof(mDesc) );
 }
@@ -654,7 +654,7 @@ void GN::gfx2::D3D9GraphicsSystem::clear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9GraphicsSystem::present()
+void GN::gfx::D3D9GraphicsSystem::present()
 {
     endScene();
 
@@ -675,7 +675,7 @@ void GN::gfx2::D3D9GraphicsSystem::present()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
+GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     const SurfaceCreationParameter & scp )
 {
     GN_GUARD;
@@ -686,16 +686,16 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     {
         const SurfaceBindingParameter & sbp = scp.bindings[i];
 
-        const D3D9Effect * effect = safeCast<const D3D9Effect*>( getEffect( sbp.effect ) );
-        if( 0 == effect ) return 0;
+        const D3D9Kernel * kernel = safeCast<const D3D9Kernel*>( getKernel( sbp.kernel ) );
+        if( 0 == kernel ) return 0;
 
-        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)effect->getPortDesc( sbp.port );
+        const D3D9KernelPortDesc * port = (const D3D9KernelPortDesc *)kernel->getPortDesc( sbp.port );
         if( 0 == port ) return 0;
 
         // check layout compability
         if( !port->layout.compatible( scp.layout ) )
         {
-            GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of effect '%s'", sbp.port.cptr(), sbp.effect.cptr() );
+            GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", sbp.port.cptr(), sbp.kernel.cptr() );
             return false;
         }
 
@@ -743,7 +743,7 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9GraphicsSystem::handleDeviceLost()
+bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
 {
     GN_GUARD;
 
@@ -793,8 +793,8 @@ bool GN::gfx2::D3D9GraphicsSystem::handleDeviceLost()
 //
 //
 // -----------------------------------------------------------------------------
-extern "C" GN_GFX2_D3D9_PUBLIC GN::gfx2::D3D9GraphicsSystem *
-GN::gfx2::createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & gscp )
+extern "C" GN_GFX2_D3D9_PUBLIC GN::gfx::D3D9GraphicsSystem *
+GN::gfx::createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 

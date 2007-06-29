@@ -1,17 +1,17 @@
 #include "pch.h"
 #include "d3d9VtxDecl.h"
 
-static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
+static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Kernel" );
 
 // *****************************************************************************
-// D3D9EffectBinding
+// D3D9KernelBinding
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e )
-    : mEffect( e )
+GN::gfx::D3D9KernelBinding::D3D9KernelBinding( D3D9Kernel & e )
+    : mKernel( e )
     , mVtxDecl( 0 )
     , mHasZBuf(0)
     , mHasIdxBuf(0)
@@ -21,7 +21,7 @@ GN::gfx2::D3D9EffectBinding::D3D9EffectBinding( D3D9Effect & e )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectBinding::~D3D9EffectBinding()
+GN::gfx::D3D9KernelBinding::~D3D9KernelBinding()
 {
     safeRelease( mVtxDecl );
 }
@@ -29,7 +29,7 @@ GN::gfx2::D3D9EffectBinding::~D3D9EffectBinding()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
+bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
 {
     GN_GUARD;
 
@@ -39,26 +39,26 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 
     BindItem b;
 
-    std::map<StrA,EffectBindingTarget>::const_iterator iter;
+    std::map<StrA,KernelBindingTarget>::const_iterator iter;
 
     StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
 
     for(
-        UInt32 portHandle = mEffect.getFirstPortHandle();
+        UInt32 portHandle = mKernel.getFirstPortHandle();
         0 != portHandle;
-        portHandle = mEffect.getNextPortHandle( portHandle ) )
+        portHandle = mKernel.getNextPortHandle( portHandle ) )
     {
-        const D3D9EffectPort & port = mEffect.getPort( portHandle );
+        const D3D9KernelPort & port = mKernel.getPort( portHandle );
 
-        iter = ebd.bindings.find( mEffect.getPortName( portHandle ) );
+        iter = ebd.bindings.find( mKernel.getPortName( portHandle ) );
 
-        D3D9EffectPortType portType = port.getDesc().portType;
+        D3D9KernelPortType portType = port.getDesc().portType;
 
         if( ebd.bindings.end() == iter )
         {
-            if( D3D9_EFFECT_PORT_RENDER_TARGET == portType ||
-                D3D9_EFFECT_PORT_DEPTH_BUFFER == portType ||
-                D3D9_EFFECT_PORT_TEXTURE == portType )
+            if( D3D9_KERNEL_PORT_RENDER_TARGET == portType ||
+                D3D9_KERNEL_PORT_DEPTH_BUFFER == portType ||
+                D3D9_KERNEL_PORT_TEXTURE == portType )
             {
                 b.port        = portHandle;
                 b.target.surf = 0;
@@ -79,15 +79,15 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
             {
                 switch( portType )
                 {
-                    case D3D9_EFFECT_PORT_DEPTH_BUFFER:
+                    case D3D9_KERNEL_PORT_DEPTH_BUFFER:
                         mHasZBuf = true;
                         break;
 
-                    case D3D9_EFFECT_PORT_VTXBUF:
+                    case D3D9_KERNEL_PORT_VTXBUF:
                         vtxfmt.append( &iter->second.surf->getDesc().layout.format );
                         break;
 
-                    case D3D9_EFFECT_PORT_IDXBUF :
+                    case D3D9_KERNEL_PORT_IDXBUF :
                         mHasIdxBuf = true;
                         break;
 
@@ -102,8 +102,8 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
             {
                 // target surface is NULL.
 
-                if( D3D9_EFFECT_PORT_VTXBUF != portType &&
-                    D3D9_EFFECT_PORT_IDXBUF != portType )
+                if( D3D9_KERNEL_PORT_VTXBUF != portType &&
+                    D3D9_KERNEL_PORT_IDXBUF != portType )
                 {
                     mBindItems.append( b );
                 }
@@ -114,7 +114,7 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
     // create vertex declaration
     if( !vtxfmt.empty() )
     {
-        mVtxDecl = createD3D9VtxDecl( mEffect.d3d9gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
+        mVtxDecl = createD3D9VtxDecl( mKernel.d3d9gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
     }
 
     // success
@@ -126,12 +126,12 @@ bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & ebd )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9EffectBinding::apply() const
+void GN::gfx::D3D9KernelBinding::apply() const
 {
     // setup vertex decl
     if( mVtxDecl )
     {
-        mEffect.d3d9gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
+        mKernel.d3d9gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
     }
 
     // bind each port
@@ -139,18 +139,18 @@ void GN::gfx2::D3D9EffectBinding::apply() const
     {
         const BindItem & b = mBindItems[i];
 
-        mEffect.getPort(b.port).bind( b.target );
+        mKernel.getPort(b.port).bind( b.target );
     }
 }
 
 // *****************************************************************************
-// D3D9Effect
+// D3D9Kernel
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name ) const
+const GN::gfx::D3D9KernelPort * GN::gfx::D3D9Kernel::getPort( const StrA & name ) const
 {
     UInt32 h = mPorts.name2handle( name );
     if( 0 == h )
@@ -167,7 +167,7 @@ const GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & nam
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name )
+GN::gfx::D3D9KernelPort * GN::gfx::D3D9Kernel::getPort( const StrA & name )
 {
     UInt32 h = mPorts.name2handle( name );
     if( 0 == h )
@@ -184,18 +184,18 @@ GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectPortDesc * GN::gfx2::D3D9Effect::getPortDesc( const StrA & name ) const
+const GN::gfx::KernelPortDesc * GN::gfx::D3D9Kernel::getPortDesc( const StrA & name ) const
 {
-    const D3D9EffectPort * port = getPort( name );
+    const D3D9KernelPort * port = getPort( name );
     return port ? &port->getDesc() : 0;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9Effect::compatible( const Surface * surf, const StrA & portName )
+bool GN::gfx::D3D9Kernel::compatible( const Surface * surf, const StrA & portName )
 {
-    const D3D9EffectPort * port = getPort( portName );
+    const D3D9KernelPort * port = getPort( portName );
     if( 0 == port ) return false;
     return port->compatible( surf );
 }
@@ -203,11 +203,11 @@ bool GN::gfx2::D3D9Effect::compatible( const Surface * surf, const StrA & portNa
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createBinding( const EffectBindingDesc & ebd )
+GN::gfx::KernelBinding GN::gfx::D3D9Kernel::createBinding( const KernelBindingDesc & ebd )
 {
     GN_GUARD;
 
-    AutoObjPtr<D3D9EffectBinding> b( new D3D9EffectBinding(*this) );
+    AutoObjPtr<D3D9KernelBinding> b( new D3D9KernelBinding(*this) );
 
     if( !b || !b->setup( ebd ) ) return 0;
 
@@ -219,13 +219,13 @@ GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createBinding( const EffectBinding
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9Effect::deleteBinding( EffectBinding b )
+void GN::gfx::D3D9Kernel::deleteBinding( KernelBinding b )
 {
     GN_GUARD;
 
     if( !mBindings.validHandle( b ) )
     {
-        GN_ERROR(sLogger)( "invalid effect binding handle: %d", b );
+        GN_ERROR(sLogger)( "invalid kernel binding handle: %d", b );
         return;
     }
 
@@ -238,7 +238,7 @@ void GN::gfx2::D3D9Effect::deleteBinding( EffectBinding b )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port )
+void GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port )
 {
     if( mPorts.name2handle( name ) )
     {
@@ -260,13 +260,13 @@ void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createDefaultBinding()
+GN::gfx::KernelBinding GN::gfx::D3D9Kernel::createDefaultBinding()
 {
     GN_GUARD;
 
-    EffectBindingDesc bindNothing;
+    KernelBindingDesc bindNothing;
 
-    EffectBinding b = createBinding( bindNothing );
+    KernelBinding b = createBinding( bindNothing );
 
     if( 0 == b )
     {

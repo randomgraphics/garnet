@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.19)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
     /// depthbuffer surface

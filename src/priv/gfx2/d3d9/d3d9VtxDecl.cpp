@@ -2,7 +2,7 @@
 #include "d3d9VtxDecl.h"
 
 using namespace GN::gfx;
-using namespace GN::gfx2;
+using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9VtxDecl");
 
@@ -22,7 +22,7 @@ struct D3D9VtxSemDesc
 ///
 /// convert vertex format to d3d-decl usage
 // -----------------------------------------------------------------------------
-static inline const D3D9VtxSemDesc * sVtxSem2D3D( GN::gfx2::SurfaceAttributeSemantic sem )
+static inline const D3D9VtxSemDesc * sVtxSem2D3D( GN::gfx::SurfaceAttributeSemantic sem )
 {
     using namespace GN;
     using namespace GN::gfx;
@@ -177,7 +177,7 @@ sElementSorting( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
 static bool
 sSurfaceElementFormatToD3D9(
     std::vector<D3DVERTEXELEMENT9>               & elements,
-    const GN::gfx2::SurfaceElementFormat * const * streams,
+    const GN::gfx::SurfaceElementFormat * const * streams,
     size_t                                         count )
 {
     GN_GUARD;
@@ -186,11 +186,11 @@ sSurfaceElementFormatToD3D9(
 
     for( size_t i = 0; i < count; ++i )
     {
-        const GN::gfx2::SurfaceElementFormat & stream = *streams[i];
+        const GN::gfx::SurfaceElementFormat & stream = *streams[i];
 
         for( size_t j = 0; j < stream.count; ++j )
         {
-            const GN::gfx2::SurfaceAttribute & va = stream.attribs[j];
+            const GN::gfx::SurfaceAttribute & va = stream.attribs[j];
 
             D3DVERTEXELEMENT9 elem;
 
@@ -238,7 +238,7 @@ sSurfaceElementFormatToD3D9(
 // create D3D decl from surface format structure
 // -----------------------------------------------------------------------------
 LPDIRECT3DVERTEXDECLARATION9
-GN::gfx2::createD3D9VtxDecl(
+GN::gfx::createD3D9VtxDecl(
     LPDIRECT3DDEVICE9                    dev,
     const SurfaceElementFormat * const * streams,
     size_t                               count )

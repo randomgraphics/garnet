@@ -1,31 +1,31 @@
-#ifndef __GN_GFX2_D3D9HLSLEFFECT_H__
-#define __GN_GFX2_D3D9HLSLEFFECT_H__
+#ifndef __GN_GFX2_D3D9HLSLKERNEL_H__
+#define __GN_GFX2_D3D9HLSLKERNEL_H__
 // *****************************************************************************
 /// \file
-/// \brief   d3d9 HLSL effect, which accepts HLSL shader code as parameter
+/// \brief   d3d9 HLSL kernel, which accepts HLSL shader code as parameter
 /// \author  chenli@@FAREAST (2007.6.22)
 // *****************************************************************************
 
-namespace GN { namespace gfx2
+namespace GN { namespace gfx
 {
     ///
-    /// parameter set for D3D9 hlsl effect
+    /// parameter set for D3D9 hlsl kernel
     ///
-    class D3D9HlslEffectParameterSet : public BaseEffectParameterSet
+    class D3D9HlslKernelParameterSet : public BaseKernelParameterSet
     {
         D3D9GraphicsSystem               & mGs;
         AutoComPtr<IDirect3DVertexShader9> mVs;
         AutoComPtr<IDirect3DPixelShader9>  mPs;
         AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
-        EffectParameterHandle              mVsHandle, mPsHandle;
+        KernelParameterHandle              mVsHandle, mPsHandle;
 
     public:
 
         ///
         /// ctor
         ///
-        D3D9HlslEffectParameterSet( D3D9GraphicsSystem & gs, Effect & e, size_t count )
-            : BaseEffectParameterSet( e, count )
+        D3D9HlslKernelParameterSet( D3D9GraphicsSystem & gs, Kernel & e, size_t count )
+            : BaseKernelParameterSet( e, count )
             , mGs( gs )
             , mVsHandle( e.getParameterHandle( "VS" ) )
             , mPsHandle( e.getParameterHandle( "PS" ) )
@@ -35,7 +35,7 @@ namespace GN { namespace gfx2
         ///
         /// dtor
         ///
-        ~D3D9HlslEffectParameterSet() {}
+        ~D3D9HlslKernelParameterSet() {}
 
         //@{
         IDirect3DVertexShader9 * vs() const { return mVs; }
@@ -44,20 +44,20 @@ namespace GN { namespace gfx2
 
         /// \name from parent class
         //@{
-        virtual void setParameter( EffectParameterHandle handle, const EffectParameter & value );
-        virtual void setRawParameter( EffectParameterHandle handle, size_t offset, size_t bytes, const void * data );
-        virtual void unsetParameter( EffectParameterHandle handle );
+        virtual void setParameter( KernelParameterHandle handle, const KernelParameter & value );
+        virtual void setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data );
+        virtual void unsetParameter( KernelParameterHandle handle );
         //@}
     };
 
     ///
-    /// general effect that accepts shader code as parameter
+    /// general kernel that accepts shader code as parameter
     ///
-    class D3D9HlslEffect : public D3D9Effect
+    class D3D9HlslKernel : public D3D9Kernel
     {
-        EffectParameterHandle mVs, mPs;
-        EffectParameterHandle mVsFloatConstants, mPsFloatConstants;
-        EffectParameterHandle mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
+        KernelParameterHandle mVs, mPs;
+        KernelParameterHandle mVsFloatConstants, mPsFloatConstants;
+        KernelParameterHandle mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
         D3D9RenderTargetPort mRenderTarget0;
         D3D9RenderTargetPort mRenderTarget1;
@@ -82,21 +82,21 @@ namespace GN { namespace gfx2
         D3D9VtxBufPort       mVtxBuf7;
         D3D9IdxBufPort       mIdxBuf;
 
-        static Effect * sCreator( GraphicsSystem & gs ) { return new D3D9HlslEffect(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs)); }
+        static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs)); }
 
         ///
         /// ctor
         ///
-        D3D9HlslEffect( D3D9GraphicsSystem & gs );
+        D3D9HlslKernel( D3D9GraphicsSystem & gs );
  
     public:
 
         ///
-        /// get effect factory
+        /// get kernel factory
         ///
-        static EffectFactory sGetFactory()
+        static KernelFactory sGetFactory()
         {
-            EffectFactory f;
+            KernelFactory f;
             f.quality = 0;
             f.creator = &sCreator;
             return f;
@@ -104,17 +104,17 @@ namespace GN { namespace gfx2
 
         // from base class
         //@{
-        virtual EffectParameterSet * createParameterSet() { return new D3D9HlslEffectParameterSet( d3d9gs(), *this, getParameterCount() ); }
-        virtual void                 render( const EffectParameterSet & param, EffectBinding binding );
+        virtual KernelParameterSet * createParameterSet() { return new D3D9HlslKernelParameterSet( d3d9gs(), *this, getParameterCount() ); }
+        virtual void                 render( const KernelParameterSet & param, KernelBinding binding );
         //@}
 
     private:
 
-        inline void applyShader( const D3D9HlslEffectParameterSet & param );
+        inline void applyShader( const D3D9HlslKernelParameterSet & param );
     };
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9HLSLEFFECT_H__
+#endif // __GN_GFX2_D3D9HLSLKERNEL_H__

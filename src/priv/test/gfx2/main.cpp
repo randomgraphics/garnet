@@ -2,7 +2,7 @@
 #include "testD3D9Hlsl.h"
 
 using namespace GN;
-using namespace GN::gfx2;
+using namespace GN::gfx;
 using namespace GN::input;
 
 struct InputInitiator
@@ -24,8 +24,8 @@ struct InputInitiator
 
 struct ClearScreen
 {
-    Effect                       * effect;
-    AutoObjPtr<EffectParameterSet> param;
+    Kernel                       * kernel;
+    AutoObjPtr<KernelParameterSet> param;
 
     ClearScreen()
     {
@@ -33,13 +33,13 @@ struct ClearScreen
 
     bool init( GraphicsSystem & gs )
     {
-        effect = gs.getEffect( "CLEAR_SCREEN" );
-        if( 0 == effect ) return false;
+        kernel = gs.getKernel( "CLEAR_SCREEN" );
+        if( 0 == kernel ) return false;
 
-        param.attach( effect->createParameterSet() );
+        param.attach( kernel->createParameterSet() );
         if( 0 == param ) return false;
 
-        param->setParameter( "COLOR_VALUE", EffectParameter( 0.0f, 0.0f, 0.0f, 1.0f ) );
+        param->setParameter( "COLOR_VALUE", KernelParameter( 0.0f, 0.0f, 0.0f, 1.0f ) );
         param->setParameter( "DEPTH_VALUE", 1.0f );
         param->setParameter( "STENCIL_VALUE", 0 );
 
@@ -48,7 +48,7 @@ struct ClearScreen
 
     void draw()
     {
-        effect->render( *param, 0 );
+        kernel->render( *param, 0 );
     }
 };
 
@@ -74,7 +74,7 @@ static bool runcase( GraphicsSystem & gs, ClearScreen & cs, Gfx2TestApp & c )
 
 static int run( GraphicsSystem & gs )
 {
-    // initialize clear effect
+    // initialize clear kernel
     ClearScreen cs;
     if( !cs.init( gs ) ) return -1;
 
