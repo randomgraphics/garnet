@@ -33,19 +33,13 @@ namespace GN { namespace gfx
             addPortRef( "DEPTH", &mDepth );
 
             // setup parameters
-            KernelParameterDesc c;
-            c.type  = KERNEL_PARAMETER_TYPE_FLOAT4;
-            mColorValue = addParameter( "COLOR_VALUE", c );
+            mColorValue = addParameter( "COLOR_VALUE", KERNEL_PARAMETER_TYPE_FLOAT, 4 );
             //setParameter( mColorValue, KernelParameter(.0f, .0f, .0f, .0f) );
 
-            KernelParameterDesc z;
-            z.type  = KERNEL_PARAMETER_TYPE_FLOAT1;
-            mDepthValue = addParameter( "DEPTH_VALUE", z );
+            mDepthValue = addParameter( "DEPTH_VALUE", KERNEL_PARAMETER_TYPE_FLOAT, 1 );
             //setParameter( mDepthValue, .0f );
 
-            KernelParameterDesc s;
-            s.type  = KERNEL_PARAMETER_TYPE_INT1;
-            mStencilValue = addParameter( "STENCIL_VALUE", s );
+            mStencilValue = addParameter( "STENCIL_VALUE", KERNEL_PARAMETER_TYPE_INT, 1 );
             //setParameter( mStencilValue, 0 );
         }
 
@@ -73,33 +67,35 @@ namespace GN { namespace gfx
 
             b.apply();
 
-            const KernelParameter * c = param.getParameter( mColorValue );
-            const KernelParameter * z = param.getParameter( mDepthValue );
-            const KernelParameter * s = param.getParameter( mStencilValue );
+            const BaseKernelParameter * c = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mColorValue ) );
+            const BaseKernelParameter * z = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mDepthValue ) );
+            const BaseKernelParameter * s = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mStencilValue ) );
+            GN_ASSERT( c && z && s );
 
             DWORD flags   = 0;
             DWORD color   = 0;
             float depth   = .0f;
             DWORD stencil = 0;
 
-            if( c )
+            if( !c->empty() )
             {
                 flags |= D3DCLEAR_TARGET;
-                color = D3DCOLOR_COLORVALUE( c->float4[0], c->float4[1], c->float4[2], c->float4[3] );
+                const float * p = c->toFloat();
+                color = D3DCOLOR_COLORVALUE( p[0], p[1], p[2], p[3] );
             }
 
             if( b.hasZBuf() )
             {
-                if( z )
+                if( !z->empty() )
                 {
                     flags |= D3DCLEAR_ZBUFFER;
-                    depth = z->float1;
+                    depth = *z->toFloat();
                 }
 
                 if( s )
                 {
                     flags |= D3DCLEAR_STENCIL;
-                    stencil = (DWORD)s->int1;
+                    stencil = *z->toInt();
                 }
             }
 

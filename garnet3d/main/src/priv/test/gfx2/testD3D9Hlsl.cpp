@@ -196,7 +196,7 @@ void TestD3D9Hlsl::draw( GraphicsSystem & )
     Matrix44f world = mArcBall.getRotationMatrix44();
     Matrix44f pvw = mProjView * world;
 
-    mParam->setRawParameter( "VSCF", 0, sizeof(pvw), pvw );
+    mParam->setParameter( "VSCF", pvw );
 
     mKernel->render( *mParam, mBinding );
 }

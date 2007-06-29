@@ -267,10 +267,8 @@ namespace GN { namespace gfx
     {
         //@{
         KERNEL_PARAMETER_TYPE_BOOL,
-        KERNEL_PARAMETER_TYPE_INT1,
-        KERNEL_PARAMETER_TYPE_FLOAT1,
-        KERNEL_PARAMETER_TYPE_FLOAT4,
-        KERNEL_PARAMETER_TYPE_FLOAT4X4,
+        KERNEL_PARAMETER_TYPE_INT,
+        KERNEL_PARAMETER_TYPE_FLOAT,
         KERNEL_PARAMETER_TYPE_STRING,
         //@}
     };
@@ -385,62 +383,6 @@ namespace GN { namespace gfx
         size_t              count; ///< array count
     };
 
-#if 0
-    struct KernelParameter
-    {
-        KernelParameterType type; ///< value type.
-        union
-        {
-            bool         bool1;          ///< boolean value
-            int          int1;           ///< integer value
-            unsigned int uint1;          ///< unsigned integer
-            float        float1;         ///< float value
-            float        float4[4];      ///< 4D vector
-            float        float4x4[4][4]; ///< raw major 4x4 matrix
-            const char * str;            ///< null terminated string
-            struct
-            {
-                void * ptr;              ///< raw data pointer
-                size_t bytes;            ///< raw data bytes
-            } raw;                       ///< raw data
-        };
-
-        //@{
-        bool          toBool1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_BOOL == type); return bool1; }
-        int           toInt1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_INT1 == type); return int1; }
-        unsigned int  toUInt1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_INT1 == type); return uint1; }
-        float         toFloat1() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT1 == type); return float1; }
-        const float * toFloat4() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT4 == type); return float4; }
-        const float * toFloat4x4() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_FLOAT4X4 == type); return float4x4[0]; }
-        const char  * toStr() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_STRING == type); return str; }
-        const void  * toRaw() const { GN_ASSERT(KERNEL_PARAMETER_TYPE_RAW == type); return raw.ptr; }
-        //@}
-
-        /// \name constructors
-        //@{
-
-        KernelParameter() : type(KERNEL_PARAMETER_TYPE_UNKNOWN) {}
-
-        KernelParameter( bool b ) : type(KERNEL_PARAMETER_TYPE_BOOL), bool1(b) {}
-
-        KernelParameter( int i ) : type(KERNEL_PARAMETER_TYPE_INT1), int1(i) {}
-
-        KernelParameter( float f ) : type(KERNEL_PARAMETER_TYPE_FLOAT1), float1(f) {}
-
-        KernelParameter( float x, float y, float z, float w ) : type(KERNEL_PARAMETER_TYPE_FLOAT4)
-        {
-            float4[0] = x;
-            float4[1] = y;
-            float4[2] = z;
-            float4[3] = w;
-        }
-
-        KernelParameter( const char * s ) : type(KERNEL_PARAMETER_TYPE_STRING), str(s) {}
-
-        //@}
-    };
-#endif
-
     ///
     /// Kernel parameter
     ///
@@ -448,15 +390,13 @@ namespace GN { namespace gfx
     {
         //@{
         virtual const KernelParameterDesc & getDesc() const = 0;
-        virtual void                        set( size_t offset, size_t count, const bool         * values ) = 0;
-        virtual void                        set( size_t offset, size_t count, const int          * values ) = 0;
-        virtual void                        set( size_t offset, size_t count, const float        * values ) = 0;
-        virtual void                        set( size_t offset, size_t count, const Vector4f     * values ) = 0;
-        virtual void                        set( size_t offset, size_t count, const Matrix44f    * values ) = 0;
-        virtual void                        set( size_t offset, size_t count, const char * const * values ) = 0;
+        virtual void                        setb( size_t offset, size_t count, const bool         * values ) = 0;
+        virtual void                        seti( size_t offset, size_t count, const int          * values ) = 0;
+        virtual void                        setf( size_t offset, size_t count, const float        * values ) = 0;
+        virtual void                        sets( size_t offset, size_t count, const char * const * values ) = 0;
         virtual void                        unset() = 0;
-        inline  void                        set( const char * );
-        inline  void                        set( size_t offset, size_t count, const unsigned int * values );
+        inline  void                        sets( const char * );
+        inline  void                        setu( size_t offset, size_t count, const unsigned int * values );
         //@}
     };
 
@@ -480,16 +420,19 @@ namespace GN { namespace gfx
         //@{
         inline  Kernel          & getKernel() const { return mKernel; }
         virtual KernelParameter * getParameter( KernelParameterHandle ) const = 0;
-
         inline  KernelParameter * getParameter( const StrA & name ) const;
-        /*
-        virtual void                    setParameter( KernelParameterHandle handle, const KernelParameter & value ) = 0;
-        inline  void                    setParameter( const StrA & name, const KernelParameter & value );
-        virtual void                    setRawParameter( KernelParameterHandle handle, size_t offset, size_t bytes, const void * data ) = 0;
-        inline  void                    setRawParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
-        virtual void                    unsetParameter( KernelParameterHandle handle ) = 0;
-        inline  void                    unsetParameter( const StrA & name );
-        */
+
+        inline  void              setParameter( KernelParameterHandle handle, const char * value );
+        inline  void              setParameter( KernelParameterHandle handle, int value );
+        inline  void              setParameter( KernelParameterHandle handle, float value );
+        inline  void              setParameter( KernelParameterHandle handle, const Vector4f & value );
+        inline  void              setParameter( KernelParameterHandle handle, const Matrix44f & value );
+
+        template<typename T>
+        inline  void              setParameter( const StrA & name, const T & value );
+
+        inline  void              unsetParameter( KernelParameterHandle handle );
+        inline  void              unsetParameter( const StrA & name );
         //@}
 
     protected:
@@ -691,7 +634,7 @@ namespace GN { namespace gfx
         /// \name global kernel parameter management
         //@{
 
-        virtual KernelParameterHandle createGlobalParameter( const StrA & name, const KernelParameterDesc & desc ) = 0;
+        virtual KernelParameterHandle createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc ) = 0;
         virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const = 0;
         virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle ) const = 0;
 

@@ -15,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernelParameter");
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const bool * values )
+void GN::gfx::BaseKernelParameter::setb( size_t offset, size_t count, const bool * values )
 {
     CHECK_INPUT( BOOL );
 
@@ -33,9 +33,9 @@ void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const bool 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const int * values )
+void GN::gfx::BaseKernelParameter::seti( size_t offset, size_t count, const int * values )
 {
-    CHECK_INPUT( INT1 );
+    CHECK_INPUT( INT );
 
     offset *= sizeof(int);
     count  *= sizeof(int);
@@ -51,9 +51,9 @@ void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const int *
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const float * values )
+void GN::gfx::BaseKernelParameter::setf( size_t offset, size_t count, const float * values )
 {
-    CHECK_INPUT( FLOAT1 );
+    CHECK_INPUT( FLOAT );
 
     offset *= sizeof(float);
     count  *= sizeof(float);
@@ -69,48 +69,9 @@ void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const float
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const Vector4f * values )
+void GN::gfx::BaseKernelParameter::sets( size_t offset, size_t count, const char * const * values )
 {
-    CHECK_INPUT( FLOAT4 );
-
-    offset *= sizeof(Vector4f);
-    count  *= sizeof(Vector4f);
-
-    GN_ASSERT( mData.size() >= (offset*count) );
-
-    memcpy( &mData[offset], values, count );
-
-    mEmpty = false;
-    sigValueSet( offset, count );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const Matrix44f * values )
-{
-    CHECK_INPUT( FLOAT4X4 );
-
-    offset *= sizeof(Matrix44f);
-    count  *= sizeof(Matrix44f);
-
-    GN_ASSERT( mData.size() >= (offset*count) );
-
-    memcpy( &mData[offset], values, count );
-
-    mEmpty = false;
-    sigValueSet( offset, count );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameter::set( size_t offset, size_t count, const char * const * values )
-{
-    CHECK_INPUT( FLOAT4X4 );
-
-    offset *= sizeof(Matrix44f);
-    count  *= sizeof(Matrix44f);
+    CHECK_INPUT( STRING );
 
     GN_ASSERT( mStr.size() >= (offset*count) );
 

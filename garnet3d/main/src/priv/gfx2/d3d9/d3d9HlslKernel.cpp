@@ -12,64 +12,72 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9HlslKernel");
 //
 // -----------------------------------------------------------------------------
 static IDirect3DVertexShader9 * sCreateVs(
-    IDirect3DDevice9                * dev,
-    const GN::gfx::KernelParameter & param,
-    ID3DXConstantTable             ** consts )
+    IDirect3DDevice9                   * dev,
+    const GN::gfx::BaseKernelParameter & param,
+    ID3DXConstantTable                ** consts )
 {
+    using namespace GN;
     using namespace GN::gfx;
     using namespace GN::gfx::d3d9;
 
-    if( KERNEL_PARAMETER_TYPE_STRING != param.type )
+    if( KERNEL_PARAMETER_TYPE_STRING != param.getDesc().type )
     {
         GN_ERROR(sLogger)( "Parameter 'VS' accepts only string value." );
         return false;
     }
-    if( 0 == param.str )
+    const StrA * s = param.toString();
+    if( 0 == s || s->empty() )
     {
         GN_ERROR(sLogger)( "Null VS string." );
         return false;
     }
 
-    return compileVS( dev, param.str, 0, 0, "main", 0, consts );
+    return compileVS( dev, s->cptr(), 0, 0, "main", 0, consts );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 static IDirect3DPixelShader9 * sCreatePs(
-    IDirect3DDevice9                * dev,
-    const GN::gfx::KernelParameter & param,
-    ID3DXConstantTable             ** consts )
+    IDirect3DDevice9                   * dev,
+    const GN::gfx::BaseKernelParameter & param,
+    ID3DXConstantTable                ** consts )
 {
+    using namespace GN;
     using namespace GN::gfx;
     using namespace GN::gfx::d3d9;
 
-    if( KERNEL_PARAMETER_TYPE_STRING != param.type )
+    if( KERNEL_PARAMETER_TYPE_STRING != param.getDesc().type )
     {
         GN_ERROR(sLogger)( "Parameter 'PS' accepts only string value." );
         return 0;
     }
-    if( 0 == param.str )
+    const StrA * s = param.toString();
+    if( 0 == s || s->empty() )
     {
         GN_ERROR(sLogger)( "Null PS string." );
         return 0;
     }
 
-    return compilePS( dev, param.str, 0, 0, "main", 0, consts );
+    return compilePS( dev, s->cptr(), 0, 0, "main", 0, consts );
 }
 
 // *****************************************************************************
 // D3D9HlslKernelParameterSet
 // *****************************************************************************
 
-GN::gfx::D3D9HlslKernelParameterSet::D3D9HlslKernelParameterSet( IDirect3DDevice9 * dev, Kernel & e )
-    : BaseKernelParameterSet( e )
-    , mDev( dev )
-    , mVsHandle( e.getParameterHandle( "VS" ) )
-    , mPsHandle( e.getParameterHandle( "PS" ) )
-    , mVscfHandle( e.getParameterHandle( "VSCF" ) )
-    , mPscfHandle( e.getParameterHandle( "PSCF" ) )
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D9HlslKernelParameterSet::D3D9HlslKernelParameterSet( D3D9Kernel & k )
+    : BaseKernelParameterSet( k )
+    , mDev( k.d3d9gs().d3ddev() )
+    , mVsHandle( k.getParameterHandle( "VS" ) )
+    , mPsHandle( k.getParameterHandle( "PS" ) )
+    , mVscfHandle( k.getParameterHandle( "VSCF" ) )
+    , mPscfHandle( k.getParameterHandle( "PSCF" ) )
 {
+    clear();
 }
 
 //
@@ -77,21 +85,80 @@ GN::gfx::D3D9HlslKernelParameterSet::D3D9HlslKernelParameterSet( IDirect3DDevice
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9HlslKernelParameterSet::init()
 {
-    BaseKernelParameter * p = getParameter( mVsHandle );
+    GN_GUARD;
+
+    // standard init procedure
+    GN_STDCLASS_INIT( GN::gfx::D3D9HlslKernelParameterSet, () );
+
+    BaseKernelParameter * p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mVsHandle ) );
     p->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onVsSet );
     p->sigValueUnset.connect( this, &D3D9HlslKernelParameterSet::onVsUnset );
 
-    p = getParameter( mPsHandle );
+    p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mPsHandle ) );
     p->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onPsSet );
     p->sigValueUnset.connect( this, &D3D9HlslKernelParameterSet::onPsUnset );
 
-    p = getParameter( mVscfHandle );
+    p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mVscfHandle ) );
     p->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onVscfSet );
 
-    p = getParameter( mPscfHandle );
+    p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mPscfHandle ) );
     p->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onPscfSet );
 
-    return true;
+    // success
+    return success();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9HlslKernelParameterSet::quit()
+{
+    GN_GUARD;
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9HlslKernelParameterSet::apply() const
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( ok() );
+
+    mDev->SetVertexShader( mVs );
+    mDev->SetPixelShader( mPs );
+
+    BaseKernelParameter * p;
+    const float * v;
+
+    //if( mVscfUpdate.registerCount > 0 )
+    {
+        p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mVscfHandle ) );
+        v = p->toFloat();
+        mDev->SetVertexShaderConstantF(
+            mVscfUpdate.firstRegister,
+            v + mVscfUpdate.firstRegister * 4,
+            mVscfUpdate.registerCount );
+    }
+
+    //if( mPscfUpdate.registerCount > 0 )
+    {
+        p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mPscfHandle ) );
+        v = p->toFloat();
+        mDev->SetPixelShaderConstantF(
+            mPscfUpdate.firstRegister,
+            v + mPscfUpdate.firstRegister * 4,
+            mPscfUpdate.registerCount );
+    }
+
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -103,7 +170,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::onVsSet( size_t, size_t )
     GN_ASSERT( p );
 
     mVsConstBuffer.clear();
-    mVs.attach( sCreateVs( mDev, p->toString()[0].cptr(), &mVsConstBuffer ) );
+    mVs.attach( sCreateVs( mDev, *p, &mVsConstBuffer ) );
 }
 
 //
@@ -124,7 +191,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::onPsSet( size_t, size_t )
     GN_ASSERT( p );
 
     mPsConstBuffer.clear();
-    mPs.attach( sCreatePs( mDev, p->toString()[0].cptr(), &mPsConstBuffer ) );
+    mPs.attach( sCreatePs( mDev, *p, &mPsConstBuffer ) );
 }
 
 //
@@ -141,7 +208,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::onPsUnset()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9HlslKernelParameterSet::onVscfSet( size_t offset, size_t count )
 {
-    mVscfUpdate.append( ConstUpdate( (UInt32)offset, (UInt32)count );
+    mVscfUpdate.merge( (UInt32)offset/4, (UInt32)count/4 );
 }
 
 //
@@ -149,7 +216,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::onVscfSet( size_t offset, size_t count
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9HlslKernelParameterSet::onPscfSet( size_t offset, size_t count )
 {
-    mPscfUpdate.append( ConstUpdate( (UInt32)offset, (UInt32)count );
+    mPscfUpdate.merge( (UInt32)offset/4, (UInt32)count/4 );
 }
 
 // *****************************************************************************
@@ -185,43 +252,17 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     , mIdxBuf( gs )
 {
     // setup parameters
-    KernelParameterDesc p;
+    mVs = addParameter( "VS", KERNEL_PARAMETER_TYPE_STRING, 1 );
+    mPs = addParameter( "PS", KERNEL_PARAMETER_TYPE_STRING, 1 );
 
-    p.type  = KERNEL_PARAMETER_TYPE_STRING;
-    p.count = 1;
-    mVs = addParameter( "VS", p );
+    mVsFloatConstants = addParameter( "VSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
+    mPsFloatConstants = addParameter( "PSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
 
-    p.type  = KERNEL_PARAMETER_TYPE_STRING;
-    p.count = 1;
-    mPs = addParameter( "PS", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_FLOAT4;
-    p.count = 256;
-    mVsFloatConstants = addParameter( "VSCF", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_FLOAT4;
-    p.count = 256;
-    mPsFloatConstants = addParameter( "PSCF", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_INT1;
-    p.count = 1;
-    mPrimType = addParameter( "PRIM_TYPE", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_INT1;
-    p.count = 1;
-    mPrimCount = addParameter( "PRIM_COUNT", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_INT1;
-    p.count = 1;
-    mBaseVertex = addParameter( "BASE_VERTEX", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_INT1;
-    p.count = 1;
-    mBaseIndex = addParameter( "BASE_INDEX", p );
-
-    p.type = KERNEL_PARAMETER_TYPE_INT1;
-    p.count = 1;
-    mVertexCount = addParameter( "VERTEX_COUNT", p );
+    mPrimType = addParameter( "PRIM_TYPE", KERNEL_PARAMETER_TYPE_INT, 1 );
+    mPrimCount = addParameter( "PRIM_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
+    mBaseVertex = addParameter( "BASE_VERTEX", KERNEL_PARAMETER_TYPE_INT, 1 );
+    mBaseIndex = addParameter( "BASE_INDEX", KERNEL_PARAMETER_TYPE_INT, 1 );
+    mVertexCount = addParameter( "VERTEX_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
 
     // setup ports
     addPortRef( "TARGET0"  , &mRenderTarget0 );
@@ -246,11 +287,23 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     addPortRef( "VTXBUF6"  , &mVtxBuf6 );
     addPortRef( "VTXBUF7"  , &mVtxBuf7 );
     addPortRef( "IDXBUF"   , &mIdxBuf );
+}
 
-    // setup properties
-    setProperty( "RENDER_TARGET_COUNT", 4 );
-    setProperty( "TEXTURE_COUNT", 4 );
-    setProperty( "VTXBUF_COUNT", 4 );
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::KernelParameterSet *
+GN::gfx::D3D9HlslKernel::createParameterSet()
+{
+    GN_GUARD;
+
+    AutoObjPtr<D3D9HlslKernelParameterSet> p( new D3D9HlslKernelParameterSet( *this ) );
+
+    if( !p->init() ) return 0;
+
+    return p.detach();
+
+    GN_UNGUARD;
 }
 
 //
@@ -266,39 +319,42 @@ void GN::gfx::D3D9HlslKernel::render(
     b.apply();
 
     const D3D9HlslKernelParameterSet & p = safeCast<const D3D9HlslKernelParameterSet &>(param);
- 
-    applyShader( p );
+
+    p.apply();
 
     D3D9GraphicsSystem & gs = d3d9gs();
     IDirect3DDevice9  * dev = gs.d3ddev();
 
-    const KernelParameter
-        * pt = param.getParameter( mPrimType ),
-        * pc = param.getParameter( mPrimCount ),
-        * bv = param.getParameter( mBaseVertex );
-    GN_ASSERT( pt && pc && bv );
+    const BaseKernelParameter
+        * pt = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mPrimType ) ),
+        * pc = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mPrimCount ) ),
+        * bv = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mBaseVertex ) );
+    GN_ASSERT( pt && !pt->empty() );
+    GN_ASSERT( pc && !pc->empty() );
+    GN_ASSERT( bv && !bv->empty() );
 
     if( b.hasIdxBuf() )
     {
-        const KernelParameter
-            * bi = param.getParameter( mBaseIndex ),
-            * vc = param.getParameter( mVertexCount );
-        GN_ASSERT( bi && vc );
+        const BaseKernelParameter
+            * bi = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mBaseIndex ) ),
+            * vc = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mVertexCount ) );
+        GN_ASSERT( bi && !bi->empty() );
+        GN_ASSERT( vc && !vc->empty() );
 
         GN_DX9_CHECK( dev->DrawIndexedPrimitive(
-            (D3DPRIMITIVETYPE)pt->toInt1(),
-            bv->toInt1(),
+            (D3DPRIMITIVETYPE)*pt->toInt(),
+            *bv->toInt(),
             0, // min index
-            vc->toUInt1(),
-            bi->toUInt1(),
-            pc->toUInt1() ) );
+            *vc->toUInt(),
+            *bi->toUInt(),
+            *pc->toUInt() ) );
     }
     else
     {
         GN_DX9_CHECK( dev->DrawPrimitive(
-            (D3DPRIMITIVETYPE)pt->toInt1(),
-            bv->toUInt1(),
-            pc->toUInt1() ) );
+            (D3DPRIMITIVETYPE)*pt->toInt(),
+            *bv->toUInt(),
+            *pc->toUInt() ) );
     }
 
 
@@ -312,23 +368,3 @@ void GN::gfx::D3D9HlslKernel::render(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx::D3D9HlslKernel::applyShader( const D3D9HlslKernelParameterSet & param )
-{
-    D3D9GraphicsSystem & gs = d3d9gs();
-    IDirect3DDevice9  * dev = gs.d3ddev();
-
-    dev->SetVertexShader( param.vs() );
-    dev->SetPixelShader( param.ps() );
-
-    const KernelParameter * vscf = param.getParameter( mVsFloatConstants );
-    if( vscf )
-    {
-        dev->SetVertexShaderConstantF( 0, (const float*)vscf->toRaw(), (UINT)(vscf->raw.bytes / sizeof(Vector4f)) );
-    }
-
-    const KernelParameter * pscf = param.getParameter( mPsFloatConstants );
-    if( pscf )
-    {
-        dev->SetPixelShaderConstantF( 0, (const float*)pscf->toRaw(), (UINT)(pscf->raw.bytes / sizeof(Vector4f)) );
-    }
-}

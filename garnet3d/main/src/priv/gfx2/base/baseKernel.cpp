@@ -72,7 +72,10 @@ GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelParameterHandle
-GN::gfx::BaseKernel::addParameter( const StrA & name, const KernelParameterDesc & desc )
+GN::gfx::BaseKernel::addParameter(
+    const StrA        & name,
+    KernelParameterType type,
+    size_t              count )
 {
     GN_GUARD;
 
@@ -98,7 +101,8 @@ GN::gfx::BaseKernel::addParameter( const StrA & name, const KernelParameterDesc 
     }
 
     ParameterItem & pi = mParameters.back();
-    pi.desc   = desc;
+    pi.desc.type = type;
+    pi.desc.count = count;
 
     return h;
 
