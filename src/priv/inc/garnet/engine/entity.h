@@ -88,12 +88,17 @@ namespace GN { namespace engine
         /// create new entity type. Name should be unique
         ///
         EntityTypeId createEntityType( const StrA & name );
-
+        
         ///
         /// create new entity. Name must be unique.
         ///
         template<class T>
-        EntityT<T> * createEntity( EntityTypeId type, const StrA & name, const T & data, const Delegate1<void,T&> & dtor = Delegate1<void,T&>() );
+        EntityT<T> *
+        createEntity(
+            EntityTypeId               type,
+            const StrA               & name,
+            const T                  & data,
+            const Delegate1<void,T&> & dtor );// = Delegate1<void,T&>::NULL_DELEGATE );
 
         // delete
         void deleteEntity( const Entity * );
@@ -133,7 +138,7 @@ namespace GN { namespace engine
         struct EntityItemT : public EntityT<T>, public EntityDeletor
         {
             EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d, const Delegate1<void,T&> & dt )
-                : EntityT( m, n, t, i, d, dt )
+                : EntityT<T>( m, n, t, i, d, dt )
             {}
         };
 

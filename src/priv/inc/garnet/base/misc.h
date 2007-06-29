@@ -42,7 +42,7 @@
 /// Get byte offset of class member or struct field
 ///
 #define GN_FIELD_OFFSET( class_, field ) \
-    ( (size_t)(UIntPtr) &( ((class_*)(void*)(0))->field ) )
+    ( (size_t)(UIntPtr) &( ((class_*)(void*)(8))->field ) - 8 )
 
 ///
 /// safe cast macro: perform dynamic cast in debug build, and static cast in release build.

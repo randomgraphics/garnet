@@ -369,8 +369,16 @@ struct SimpleGlobBase
         if (a_uiFlags & SG_GLOB_TILDE)  nFlags |= GLOB_TILDE;
         int rc = glob(a_pszFileSpec, nFlags, NULL, &m_glob);
         if (rc == GLOB_NOSPACE) return SG_ERR_MEMORY;
+#if defined(GLOB_ABORTED)
         if (rc == GLOB_ABORTED) return SG_ERR_FAILURE;
+#elif defined(GLOB_ABEND)
+        if (rc == GLOB_ABEND) return SG_ERR_FAILURE;
+#else
+#error Neither GLOB_ABORTED nor GLOB_ABEND are defined.
+#endif
+#if defined(GLOB_NOMATCH)
         if (rc == GLOB_NOMATCH) return SG_ERR_NOMATCH;
+#endif
         m_uiCurr = 0;
         FilePrep();
         return SG_SUCCESS;
@@ -378,7 +386,7 @@ struct SimpleGlobBase
 
     bool FindNextFileS(char) {
         SG_ASSERT(m_uiCurr != (size_t)-1);
-        if (++m_uiCurr >= m_glob.gl_pathc) {
+        if (++m_uiCurr >= (size_t)m_glob.gl_pathc) {
             return false;
         }
         FilePrep();

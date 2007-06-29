@@ -267,7 +267,7 @@ namespace GN
     ///
     /// expension to HandleManager class, that object can be referenced by both handle and name.
     ///
-    template< class T, class H, bool CASE_INSENSITIVE = false>
+    template< typename T, typename H, bool CASE_INSENSITIVE = false>
     class NamedHandleManager
     {
         typedef std::map<StrA,H> NameMap;
@@ -293,7 +293,7 @@ namespace GN
 
         //@{
 
-        typedef typename H ItemHandle;
+        typedef H ItemHandle;
 
         ///
         /// dtor
@@ -457,7 +457,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            NameMap::const_iterator i = mNames.find( name );
+            typename NameMap::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
                 return (H)0;
@@ -484,7 +484,7 @@ namespace GN
         T & get( const StrA & name ) const
         {
             GN_ASSERT( validName(name) );
-            NameMap::const_iterator i = mNames.find( name );
+            typename NameMap::const_iterator i = mNames.find( name );
             return mItems[mItems.get( i->second )]->data;
         }
 
