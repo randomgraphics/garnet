@@ -1,25 +1,26 @@
-#ifndef __GN_GFX2_D3D9VTXBUF_H__
-#define __GN_GFX2_D3D9VTXBUF_H__
+#ifndef __GN_GFX2_D3D9TEXTURE_H__
+#define __GN_GFX2_D3D9TEXTURE_H__
 // *****************************************************************************
 /// \file
-/// \brief   D3D9 vertex buffer class
-/// \author  chenli@@FAREAST (2007.6.26)
+/// \brief   D3D9 texture surface
+/// \author  chen@@CHENLI-HOMEPC (2007.6.30)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
     ///
-    /// vertex buffer surface
+    /// texture surface
     ///
-    class D3D9VtxBuf : public D3D9Surface
+    class D3D9Texture : public D3D9Surface
     {
     public:
 
         ///
         /// create new instance
         ///
-        static D3D9VtxBuf * sNewInstance(
+        static D3D9Texture * sNewInstance(
             D3D9GraphicsSystem          & gs,
+            D3D9SurfaceType               surftype,
             const SurfaceLayout         & layout,
             int                           access,
             const SurfaceCreationHints  & hints );
@@ -27,12 +28,12 @@ namespace GN { namespace gfx
         ///
         /// dtor
         ///
-        ~D3D9VtxBuf();
+        ~D3D9Texture();
 
         ///
         /// get D3D surface
         ///
-        IDirect3DVertexBuffer9 * getSurface() const { GN_ASSERT(mSurface); return mSurface; }
+        IDirect3DBaseTexture9 * getSurface() const { GN_ASSERT(mSurface); return mSurface; }
 
         // from parent class
         //@{
@@ -56,20 +57,23 @@ namespace GN { namespace gfx
     private:
 
         D3D9GraphicsSystem          & mGraphicsSystem;
-        IDirect3DVertexBuffer9      * mSurface;
+        IDirect3DBaseTexture9       * mSurface;
         SurfaceCreationHints          mHints;
-        SubSurfaceLayout              mSubsurfaceLayout;
+        DynaArray<SubSurfaceLayout>   mSubsurfaces;
 
     private:
 
-        D3D9VtxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints );
+        D3D9Texture( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints );
 
         bool init();
 
+        bool create2DTexture();
+        bool create3DTexture();
+        bool createCubeTexture();
     };
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9VTXBUF_H__
+#endif // __GN_GFX2_D3D9TEXTURE_H__

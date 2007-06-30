@@ -39,13 +39,13 @@ namespace GN { namespace gfx
         virtual const SubSurfaceLayout * getSubSurfaceLayout( size_t subsurface ) const;
         virtual void download(
             size_t                 subsurface,
-            const Box<size_t>    & area,
+            const Box<size_t>    * area,
             const void           * source,
             size_t                 srcRowBytes,
             size_t                 srcSliceBytes );
         virtual void upload(
             size_t              subsurface,
-            const Box<size_t> & area,
+            const Box<size_t> * area,
             void              * destination,
             size_t              destRowBytes,
             size_t              destSliceBytes );

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
+#include "d3d9Texture.h"
 
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelPort" );
 
@@ -83,29 +84,96 @@ void GN::gfx::D3D9DepthBufferPort::bind( const KernelBindingTarget & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs )
+GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, UInt32 stage )
     : D3D9KernelPort(gs)
+    , mStage( stage )
 {
     mDesc.portType    = D3D9_KERNEL_PORT_TEXTURE;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX_2D;
-    GN_UNIMPL_WARNING();
+    mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX;
+
+    mDesc.input = true;
+    mDesc.output = false;
+
+    mDesc.layout.flags.u32 = 0;
+
+    // accept one attribute named "TEXEL"
+    mDesc.layout.flags.attributes = 1;
+    mDesc.layout.attributes = 1;
+    mDesc.layout.requiredAttributes.resize( 1 );
+    mDesc.layout.requiredAttributes[0].semantic.set( "TEXEL" );
+    mDesc.layout.requiredAttributes[0].offset = 0;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9TexturePort::compatible( const Surface * ) const
+bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
 {
-    GN_UNIMPL_WARNING();
-    return false;
+    if( 0 == surf ) return true;
+
+    const D3D9KernelPortDesc & portdesc = getDesc();
+
+    const D3D9Surface * d3d9surf = GN_SAFE_CAST<const D3D9Surface*>(surf);
+
+    const D3D9SurfaceDesc & surfdesc = d3d9surf->getD3D9Desc();
+
+    if( D3D9_SURFACE_TYPE_TEX == portdesc.surfaceType )
+    {
+        if( D3D9_SURFACE_TYPE_TEX      != surfdesc.type &&
+            D3D9_SURFACE_TYPE_TEX_2D   != surfdesc.type &&
+            D3D9_SURFACE_TYPE_TEX_3D   != surfdesc.type &&
+            D3D9_SURFACE_TYPE_TEX_CUBE != surfdesc.type )
+        {
+            GN_ERROR(sLogger)( "Incompatible surface type!" );
+            return false;
+        }
+    }
+    else if( portdesc.surfaceType != surfdesc.type )
+    {
+        GN_ERROR(sLogger)( "Incompatible surface type!" );
+        return false;
+    }
+
+    const SurfaceLayout & layout = surfdesc.layout;
+
+    GN_ASSERT( 1 == layout.format.count );
+    GN_ASSERT( 0 == layout.format.attribs[0].offset );
+    GN_ASSERT( SurfaceAttributeSemantic::sMake("TEXEL") == layout.format.attribs[0].semantic );
+
+    // check format
+    if( layout.format.stride * 8 != gfx::getClrFmtDesc(layout.format.attribs[0].format).bits )
+    {
+        GN_ERROR(sLogger)( "incorrect stride." );
+        return false;
+    }
+    if( layout.basemap.rowBytes < layout.basemap.width * layout.format.stride )
+    {
+        GN_ERROR(sLogger)( "incorrect row bytes." );
+        return false;
+    }
+    if( layout.basemap.sliceBytes < layout.basemap.rowBytes * layout.basemap.height )
+    {
+        GN_ERROR(sLogger)( "incorrect slice bytes." );
+        return false;
+    }
+
+    return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9TexturePort::bind( const KernelBindingTarget & ) const
+void GN::gfx::D3D9TexturePort::bind( const KernelBindingTarget & target ) const
 {
-    GN_UNIMPL_WARNING();
+    if( target.surf )
+    {
+        D3D9Texture * tex = safeCast<D3D9Texture*>(target.surf);
+        gs().setTexture( mStage, tex->getSurface() );
+    }
+    else
+    {
+        gs().setTexture( mStage, 0 );
+    }
 }
 
 // *****************************************************************************
@@ -138,51 +206,6 @@ GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
     // no multiple faces
     mDesc.layout.flags.faces = 1;
     mDesc.layout.faces = 1;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::setStride( UInt32 )
-{
-    GN_UNIMPL();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::setVertexCount( UInt32 )
-{
-    GN_UNIMPL();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::addRequiredAttribute(
-    const SurfaceAttributeTemplate & )
-{
-    GN_UNIMPL();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::addRequiredAttribute(
-    const char * semantic, UInt32 offset )
-{
-    GN_UNUSED_PARAM( semantic );
-    GN_UNUSED_PARAM( offset );
-    GN_UNIMPL();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::addOptionalAttribute(
-    const SurfaceAttributeTemplate & )
-{
-    GN_UNIMPL();
 }
 
 //
@@ -298,6 +321,7 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
     GN_ASSERT( 1 == layout.levels );
     GN_ASSERT( 1 == layout.format.count );
     GN_ASSERT( 0 == layout.format.attribs[0].offset );
+    GN_ASSERT( SurfaceAttributeSemantic::sMake("INDEX") == layout.format.attribs[0].semantic );
 
     // check format
     if( gfx::FMT_R_16_UINT != layout.format.attribs[0].format &&

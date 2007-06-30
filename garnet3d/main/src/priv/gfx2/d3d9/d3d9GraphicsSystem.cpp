@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
+#include "d3d9Texture.h"
 #include "d3d9DepthBuffer.h"
 #include "d3d9BuildInKernels.h"
 #include "garnet/GNwin.h"
@@ -478,9 +479,30 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_TEX_3D    :
             break;
 
+        case D3D9_SURFACE_TYPE_TEX       :
+            switch( t2 )
+            {
+                case D3D9_SURFACE_TYPE_TEX_2D    :
+                case D3D9_SURFACE_TYPE_TEX_3D    :
+                case D3D9_SURFACE_TYPE_TEX_CUBE  :
+                case D3D9_SURFACE_TYPE_RTT_2D    :
+                    result = t2;
+                    return true;
+
+                case D3D9_SURFACE_TYPE_RTS_COLOR :
+                case D3D9_SURFACE_TYPE_RTS_DEPTH :
+                    result = D3D9_SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
         case D3D9_SURFACE_TYPE_TEX_2D    :
             switch( t2 )
             {
+                case D3D9_SURFACE_TYPE_TEX       :
                 case D3D9_SURFACE_TYPE_RTT_2D    :
                 case D3D9_SURFACE_TYPE_RTS_COLOR :
                 case D3D9_SURFACE_TYPE_RTS_DEPTH :
@@ -495,6 +517,7 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_TEX_CUBE  :
             switch( t2 )
             {
+                case D3D9_SURFACE_TYPE_TEX       :
                 case D3D9_SURFACE_TYPE_RTT_CUBE  :
                     result = D3D9_SURFACE_TYPE_RTT_CUBE;
                     return true;
@@ -507,6 +530,7 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_RTT_2D    :
             switch( t2 )
             {
+                case D3D9_SURFACE_TYPE_TEX       :
                 case D3D9_SURFACE_TYPE_TEX_2D    :
                 case D3D9_SURFACE_TYPE_RTS_COLOR :
                 case D3D9_SURFACE_TYPE_RTS_DEPTH :
@@ -521,7 +545,8 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_RTT_CUBE  :
             switch( t2 )
             {
-                case D3D9_SURFACE_TYPE_RTT_2D  :
+                case D3D9_SURFACE_TYPE_TEX       :
+                case D3D9_SURFACE_TYPE_RTT_2D    :
                     result = D3D9_SURFACE_TYPE_RTT_CUBE;
                     return true;
 
@@ -533,6 +558,7 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_RTS_COLOR :
             switch( t2 )
             {
+                case D3D9_SURFACE_TYPE_TEX       :
                 case D3D9_SURFACE_TYPE_TEX_2D    :
                 case D3D9_SURFACE_TYPE_RTT_2D    :
                     result = D3D9_SURFACE_TYPE_RTT_2D;
@@ -546,6 +572,7 @@ static bool sMergeSurfaceType(
         case D3D9_SURFACE_TYPE_RTS_DEPTH :
             switch( t2 )
             {
+                case D3D9_SURFACE_TYPE_TEX       :
                 case D3D9_SURFACE_TYPE_TEX_2D    :
                 case D3D9_SURFACE_TYPE_RTT_2D    :
                     result = D3D9_SURFACE_TYPE_RTT_2D;
@@ -604,6 +631,8 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !sCreateDevice( mDesc, gscp ) ) return failure();
 
     sPrintDeviceInfo( mDesc );
+
+    memset( mCurrentTextures, 0, sizeof(mCurrentTextures) );
 
     if( !sigDeviceRestore() ) return failure();
 
@@ -712,9 +741,12 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
         case D3D9_SURFACE_TYPE_IB        :
             return D3D9IdxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
 
+        case D3D9_SURFACE_TYPE_TEX       :
         case D3D9_SURFACE_TYPE_TEX_2D    :
         case D3D9_SURFACE_TYPE_TEX_3D    :
         case D3D9_SURFACE_TYPE_TEX_CUBE  :
+            return D3D9Texture::sNewInstance( *this, surftype, scp.layout, scp.forcedAccessFlags, scp.hints );
+
         case D3D9_SURFACE_TYPE_RTT_2D    :
         case D3D9_SURFACE_TYPE_RTT_CUBE  :
         case D3D9_SURFACE_TYPE_RTS_COLOR :
