@@ -113,6 +113,16 @@ namespace GN { namespace gfx
             s[8] = 0;
             return s;
         }
+
+        ///
+        /// make surface semantic from string
+        ///
+        static inline SurfaceAttributeSemantic sMake( const char * s )
+        {
+            SurfaceAttributeSemantic semantic;
+            semantic.set( s );
+            return semantic;
+        }
     };
 
     ///
@@ -156,7 +166,7 @@ namespace GN { namespace gfx
         UInt32 width;        ///< sub surface width in element
         UInt32 height;       ///< sub surface height in element (must be 1 for 1D surface)
         UInt32 depth;        ///< sub surface depth in element  (must be 1 for 2D surface)
-        UInt32 rowBytes;     ///< row pitch in bytes
+        UInt32 rowBytes;     ///< bytes of one row of element (for compressed texture, it is bytes of one texel row, not one block row)
         UInt32 sliceBytes;   ///< slice pitch in bytes
         //@}
     };
@@ -202,6 +212,14 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// calculate sub surface index
+    ///
+    inline size_t calcSubSurfaceIndex( size_t face, size_t level, size_t levels )
+    {
+        return face * levels + level;
+    }
+
+    ///
     /// Surface interface: store device dependant data.
     ///
     struct Surface : public NoCopy
@@ -225,7 +243,7 @@ namespace GN { namespace gfx
         ///
         virtual void download(
             size_t                 subsurface,
-            const Box<size_t>    & area,
+            const Box<size_t>    * area,
             const void           * source,
             size_t                 srcRowBytes,
             size_t                 srcSliceBytes ) = 0;
@@ -235,7 +253,7 @@ namespace GN { namespace gfx
         ///
         virtual void upload(
             size_t              subsurface,
-            const Box<size_t> & area,
+            const Box<size_t> * area,
             void              * destination,
             size_t              destRowBytes,
             size_t              destSliceBytes ) = 0;

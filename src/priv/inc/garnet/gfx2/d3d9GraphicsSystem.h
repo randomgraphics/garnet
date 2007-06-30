@@ -80,6 +80,13 @@ namespace GN { namespace gfx
 
         IDirect3DDevice9 * d3ddev() const { GN_ASSERT(mDesc.device); return mDesc.device; }
 
+        void setTexture( UINT stage, IDirect3DBaseTexture9 * tex )
+        {
+            if( mCurrentTextures[stage] == tex ) return;
+            mDesc.device->SetTexture( stage, tex );
+            mCurrentTextures[stage] = tex;
+        }
+
         //@}
 
         // ********************************
@@ -101,6 +108,8 @@ namespace GN { namespace gfx
 
         D3D9GraphicsSystemDesc mDesc;
         bool                   mSceneBegun;
+
+        IDirect3DBaseTexture9 * mCurrentTextures[32];
 
         // ********************************
         // private functions

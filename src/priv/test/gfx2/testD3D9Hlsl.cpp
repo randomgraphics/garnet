@@ -125,7 +125,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     if( 0 == mVtxBuf ) return false;
     mVtxBuf->download(
         0,
-        Box<size_t>( 0, 0, 0, scp.layout.basemap.width, 1, 1 ),
+        0,
         vertices,
         sizeof(vertices),
         sizeof(vertices) );
@@ -151,7 +151,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     if( 0 == mIdxBuf ) return false;
     mIdxBuf->download(
         0,
-        Box<size_t>( 0, 0, 0, scp.layout.basemap.width, 1, 1 ),
+        0,
         indices,
         sizeof(indices),
         sizeof(indices) );

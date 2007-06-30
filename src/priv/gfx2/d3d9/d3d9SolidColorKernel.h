@@ -43,7 +43,7 @@ namespace GN { namespace gfx
             addPortRef( "IDXBUF", &mIdxBuf );
 
             // setup vertx buffer port
-            mVtxBuf.addRequiredAttribute( "POS0" );
+            //mVtxBuf.setLayoutTemplate( ... );
         }
 
     public:

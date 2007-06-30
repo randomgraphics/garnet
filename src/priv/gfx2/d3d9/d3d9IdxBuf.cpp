@@ -40,8 +40,6 @@ GN::gfx::D3D9IdxBuf::~D3D9IdxBuf()
     safeRelease( mSurface );
 }
 
-#pragma warning(disable:4100)
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -62,12 +60,15 @@ GN::gfx::D3D9IdxBuf::getSubSurfaceLayout( size_t subsurface ) const
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9IdxBuf::download(
     size_t                 subsurface,
-    const Box<size_t>    & area,
+    const Box<size_t>    * area,
     const void           * source,
     size_t                 srcRowBytes,
     size_t                 srcSliceBytes )
 {
     GN_GUARD;
+
+    GN_UNUSED_PARAM( srcRowBytes );
+    GN_UNUSED_PARAM( srcSliceBytes );
 
     // check parameter
     if( 0 != subsurface )
@@ -76,15 +77,18 @@ void GN::gfx::D3D9IdxBuf::download(
         return;
     }
 
+    Box<size_t> clippedArea;
+    if( !adjustArea( clippedArea, area ) ) return;
+
     size_t stride = getDesc().layout.format.stride;
 
     GN_ASSERT( 2 == stride || 4 == stride );
 
     UInt8 * data;
 
-    GN_DX9_CHECK_R( mSurface->Lock( (UINT)(area.x * stride), (UINT)(area.w * stride), (void**)&data, 0 ) );
+    GN_DX9_CHECK_R( mSurface->Lock( (UINT)(clippedArea.x * stride), (UINT)(clippedArea.w * stride), (void**)&data, 0 ) );
 
-    memcpy( data, source, area.w * stride );
+    memcpy( data, source, clippedArea.w * stride );
 
     GN_DX9_CHECK( mSurface->Unlock() );
 
@@ -96,11 +100,16 @@ void GN::gfx::D3D9IdxBuf::download(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9IdxBuf::upload(
     size_t              subsurface,
-    const Box<size_t> & area,
+    const Box<size_t> * area,
     void              * destination,
     size_t              destRowBytes,
     size_t              destSliceBytes )
 {
+    GN_UNUSED_PARAM( subsurface );
+    GN_UNUSED_PARAM( area );
+    GN_UNUSED_PARAM( destination );
+    GN_UNUSED_PARAM( destRowBytes );
+    GN_UNUSED_PARAM( destSliceBytes );
     GN_UNIMPL();
 }
 
@@ -171,7 +180,7 @@ bool GN::gfx::D3D9IdxBuf::init()
         desc.layout.basemap.rowBytes,
         0, // usage
         gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ? D3DFMT_INDEX16 : D3DFMT_INDEX32,
-        D3DPOOL_DEFAULT,
+        D3DPOOL_MANAGED,
         &mSurface, 0 ), false );
 
     // success

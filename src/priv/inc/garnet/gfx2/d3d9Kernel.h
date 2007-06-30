@@ -70,6 +70,14 @@ namespace GN { namespace gfx
         const D3D9KernelPortDesc & getDesc() const { return mDesc; }
 
         ///
+        /// setup surface layout template
+        ///
+        void setLayoutTemplate( const SurfaceLayoutTemplate & layout )
+        {
+            mDesc.layout = layout;
+        }
+
+        ///
         /// check surface compatility
         ///
         virtual bool compatible( const Surface * surf ) const = 0;
@@ -95,7 +103,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// D3D9 render target port (accept depth surface)
+    /// D3D9 depth buffer port (accept depth surface)
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9DepthBufferPort : public D3D9KernelPort
     {
@@ -109,21 +117,23 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// D3D9 render target port (accepts texture)
+    /// D3D9 texture port (accepts texture)
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9TexturePort : public D3D9KernelPort
     {
+        UInt32 mStage;
+
     public:
 
         //@{
-        D3D9TexturePort( D3D9GraphicsSystem & gs );
+        D3D9TexturePort( D3D9GraphicsSystem & gs, UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
-    /// D3D9 render target port (accepts vertex buffer)
+    /// D3D9 vertex buffer port (accepts vertex buffer)
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9VtxBufPort : public D3D9KernelPort
     {
@@ -137,21 +147,13 @@ namespace GN { namespace gfx
         D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage );
 
         //@{
-        void setStride( UInt32 );      // call this only if this port requires fixed stride.
-        void setVertexCount( UInt32 ); // call this only if this port requires a fixed vertex count.
-        void addRequiredAttribute( const SurfaceAttributeTemplate & );
-        void addRequiredAttribute( const char * s, UInt32 offset = -1 );
-        void addOptionalAttribute( const SurfaceAttributeTemplate & );
-        //@}
-
-        //@{
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const KernelBindingTarget & ) const;
         //@}
     };
 
     ///
-    /// D3D9 render target port (accept index buffer)
+    /// D3D9 index buffer port (accept index buffer)
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9IdxBufPort : public D3D9KernelPort
     {
