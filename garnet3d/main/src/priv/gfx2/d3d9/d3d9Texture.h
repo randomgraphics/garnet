@@ -60,6 +60,7 @@ namespace GN { namespace gfx
         IDirect3DBaseTexture9       * mSurface;
         SurfaceCreationHints          mHints;
         DynaArray<SubSurfaceLayout>   mSubsurfaces;
+        bool                          mIsRGBA;
 
     private:
 

@@ -66,7 +66,7 @@ namespace GN { namespace gfx
         ClrFmt       format;    ///< color format
         UInt32       numFaces;  ///< number of image faces. 6 for cubemaps, 1 for others
         UInt32       numLevels; ///< number of avaliable mipmaps
-        MipmapDesc * mipmaps;   ///< mipmap array, face major. Mip data of face n, mips m is : mip[f*numFaces+m]
+        MipmapDesc * mipmaps;   ///< mipmap array, face major. Mip data of face n, mips m is : mip[f*numLevels+m]
 
         //@}
 
@@ -181,7 +181,7 @@ namespace GN { namespace gfx
         ///
         /// offset of specific mip level
         ///
-        GN_INLINE size_t getLevelOffset( size_t face, size_t level ) const;
+        GN_INLINE size_t getMipmapOffset( size_t face, size_t level ) const;
 
         ///
         /// offset of specific face

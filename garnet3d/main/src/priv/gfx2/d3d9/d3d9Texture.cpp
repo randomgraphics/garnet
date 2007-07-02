@@ -174,6 +174,35 @@ void GN::gfx::D3D9Texture::download(
     Box<size_t> clippedArea;
     if( !adjustArea( clippedArea, area ) ) return;
 
+    DynaArray<UInt8> bgra;
+    if( mIsRGBA )
+    {
+        // convert from R-G-B-A to B-G-R-A
+        bgra.resize( srcSliceBytes * clippedArea.d );
+        memcpy( bgra.cptr(), source, bgra.size() );
+        Vector4<UInt8> * p = (Vector4<UInt8>*)source;
+        size_t w = srcRowBytes / 4;
+        size_t h = srcSliceBytes / srcRowBytes;
+        GN_ASSERT( w >= clippedArea.w && h >= clippedArea.h );
+        UInt8 tmp;
+        for( size_t z = 0; z < clippedArea.d; ++z )
+        {
+            for( size_t y = 0; y < clippedArea.h; ++y )
+            {
+                for( size_t x = 0; x < clippedArea.w; ++x, ++p )
+                {
+                    // swap R and B
+                    tmp = p->r;
+                    p->r = p->b;
+                    p->b = tmp;
+                }
+                p += (w - clippedArea.w );
+            }
+            p += w * ( h - clippedArea.h );
+        }
+        source = bgra.cptr();
+    }
+
     const D3D9SurfaceDesc & desc = getD3D9Desc();
 
     const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
@@ -193,7 +222,7 @@ void GN::gfx::D3D9Texture::download(
             rc.bottom = (int)( clippedArea.y + clippedArea.h );
 
             D3DLOCKED_RECT lrc;
-            GN_DX9_CHECK_R( tex2d->LockRect( subsurface, &lrc, &rc, 0 ) );
+            GN_DX9_CHECK_R( tex2d->LockRect( (UINT)subsurface, &lrc, &rc, 0 ) );
 
             GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cfd.blockHeight );
 
@@ -206,7 +235,7 @@ void GN::gfx::D3D9Texture::download(
                 d += ssl.rowBytes;
             }
 
-            GN_DX9_CHECK( tex2d->UnlockRect( subsurface ) );
+            GN_DX9_CHECK( tex2d->UnlockRect( (UINT)subsurface ) );
             break;
         }
 
@@ -317,6 +346,22 @@ bool GN::gfx::D3D9Texture::create2DTexture()
     {
         GN_ERROR(sLogger)( "invalid texture format." );
         return false;
+    }
+
+    // special case for R-G-B-A texture
+    if( D3DFMT_A8B8G8R8 == format )
+    {
+        format = D3DFMT_A8R8G8B8;
+        mIsRGBA = true;
+    }
+    else if( D3DFMT_X8B8G8R8 == format )
+    {
+        format = D3DFMT_X8R8G8B8;
+        mIsRGBA = true;
+    }
+    else
+    {
+        mIsRGBA = false;
     }
 
     // create texture

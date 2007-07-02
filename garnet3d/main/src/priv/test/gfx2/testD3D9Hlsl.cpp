@@ -15,6 +15,25 @@ struct Vertex
     float u, v;
 };
 
+struct TextureData
+{
+    AutoObjPtr<File> file;
+    ImageReader      ir;
+    ImageDesc        id;
+    DynaArray<UInt8> buf;
+
+    bool load( const StrA & name )
+    {
+        file.attach( core::openFile( name, "rb" ) );
+        if( !file ) return false;
+        if( !ir.reset( *file ) ) return false;
+        if( !ir.readHeader( id ) ) return false;
+        buf.resize( id.getTotalBytes() );
+        if( !ir.readImage( buf.cptr() ) ) return false;
+        return true;
+    }
+};
+
 static const char * vs_code =
 "uniform float4x4 gPvw : register(c0);      \n"
 "struct vsi                                 \n"
@@ -44,10 +63,12 @@ static const char * ps_code =
 "{                              \n"
 "    float4 pos : POSITION;     \n"
 "    float4 clr : COLOR0;       \n"
+"    float2 uv  : TEXCOORD0;    \n"
 "};                             \n"
+"sampler s0 : register(s0);     \n"
 "float4 main( vso i ) : COLOR0  \n"
 "{                              \n"
-"	return i.clr;               \n"
+"	return tex2D(s0, i.uv) * i.clr; \n"
 "}";
 
 // *****************************************************************************
@@ -156,10 +177,43 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
         sizeof(indices),
         sizeof(indices) );
 
+    // create texture
+    TextureData td;
+    if( !td.load( "media::/texture/rabit.png" ) ) return false;
+    scp.bindings.clear();
+    scp.bindings.append( SurfaceBindingParameter( "D3D9_HLSL", "TEXTURE0" ) );
+    scp.layout.dim = SURFACE_DIMENSION_2D;
+    scp.layout.levels = td.id.numLevels;
+    scp.layout.faces  = td.id.numFaces;
+    scp.layout.basemap.width  = td.id.mipmaps[0].width;
+    scp.layout.basemap.height = td.id.mipmaps[0].height;
+    scp.layout.basemap.depth  = td.id.mipmaps[0].depth;
+    scp.layout.basemap.rowBytes = td.id.mipmaps[0].rowPitch;
+    scp.layout.basemap.sliceBytes = td.id.mipmaps[0].slicePitch;
+    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = td.id.format;
+    scp.layout.format.count = 1;
+    scp.layout.format.stride = getClrFmtDesc(td.id.format).bits / 8;
+    mTexture = gs.createSurface( scp );
+    if( 0 == mTexture ) return false;
+    for( size_t f = 0; f < scp.layout.faces; ++f )
+    for( size_t l = 0; l < scp.layout.levels; ++l )
+    {
+        const MipmapDesc & mmd = td.id.getMipmap( f, l );
+        mTexture->download(
+            calcSubSurfaceIndex( f, l, scp.layout.levels ),
+            0,
+            td.buf.cptr() + td.id.getMipmapOffset( f, l ),
+            mmd.rowPitch,
+            mmd.slicePitch );
+    }
+
     // create binding
     KernelBindingDesc bd;
     bd.bindings["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
     bd.bindings["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
+    bd.bindings["TEXTURE0"].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
     mBinding = mKernel->createBinding( bd );
     if( 0 == mBinding ) return false;
 
