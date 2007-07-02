@@ -99,7 +99,7 @@ public:
             {
                 const MipmapDesc & md = indesc->getMipmap( face, level );
 
-                const UInt8 * src = data + indesc->getLevelOffset( face, level );
+                const UInt8 * src = data + indesc->getMipmapOffset( face, level );
 
                 TexLockedResult tlr;
                 if( !tex->lock( tlr, face, level, NULL, LOCK_DISCARD ) ) return false;

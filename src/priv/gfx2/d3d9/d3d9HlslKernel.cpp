@@ -138,7 +138,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::apply() const
     BaseKernelParameter * p;
     const float * v;
 
-    //if( mVscfUpdate.registerCount > 0 )
+    if( mVscfUpdate.registerCount > 0 )
     {
         p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mVscfHandle ) );
         v = p->toFloat();
@@ -148,7 +148,7 @@ void GN::gfx::D3D9HlslKernelParameterSet::apply() const
             mVscfUpdate.registerCount );
     }
 
-    //if( mPscfUpdate.registerCount > 0 )
+    if( mPscfUpdate.registerCount > 0 )
     {
         p = GN_SAFE_CAST<BaseKernelParameter*>( getParameter( mPscfHandle ) );
         v = p->toFloat();

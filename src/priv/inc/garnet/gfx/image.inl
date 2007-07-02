@@ -121,13 +121,13 @@ GN_INLINE size_t GN::gfx::ImageDesc::getSliceOffset(
 {
     const MipmapDesc & m = getMipmap( face, level );
     GN_ASSERT( z < m.depth );
-    return getLevelOffset(face,level) + m.slicePitch * z;
+    return getMipmapOffset(face,level) + m.slicePitch * z;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::ImageDesc::getLevelOffset( size_t face, size_t level ) const
+GN_INLINE size_t GN::gfx::ImageDesc::getMipmapOffset( size_t face, size_t level ) const
 {
     size_t sz = 0;
     for( size_t i = 0; i < level; ++i )
