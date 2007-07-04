@@ -269,6 +269,41 @@ namespace GN { namespace gfx
     };
 
     // *************************************************************************
+    // stream source
+    // *************************************************************************
+
+    ///
+    /// stream source descriptor
+    ///
+    struct StreamSourceDesc
+    {
+        //@{
+        SurfaceElementFormat format;   ///< element format
+        size_t               maxBytes; ///< max stream data size.
+        //@}
+    };
+
+    ///
+    /// stream data source of kernel function
+    ///
+    struct StreamSource : public NoCopy
+    {
+        //@{
+        virtual const StreamSourceDesc & getDesc() const = 0;
+
+        ///
+        /// push data into stream
+        ///
+        virtual void push( const void * data, size_t bytes ) = 0;
+
+        ///
+        /// get free/available bytes in stream
+        ///
+        virtual size_t freeBytes() const = 0;
+        //@}
+    };
+
+    // *************************************************************************
     // kernel
     //
     // There's 2 way to transter data between device and host: by surface or by
