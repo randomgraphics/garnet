@@ -593,6 +593,28 @@ static bool sMergeSurfaceType(
 }
 
 // *****************************************************************************
+// D3D9UnstableResource
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D9UnstableResource::D3D9UnstableResource( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs)
+{
+    gs.sigDeviceRestore.connect( this, &D3D9UnstableResource::onRestore );
+    gs.sigDeviceDispose.connect( this, &D3D9UnstableResource::onDispose );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D9UnstableResource::~D3D9UnstableResource()
+{
+    mGraphicsSystem.sigDeviceRestore.disconnect( this );
+    mGraphicsSystem.sigDeviceDispose.disconnect( this );
+}
+
+// *****************************************************************************
 // ctor / dtor
 // *****************************************************************************
 
