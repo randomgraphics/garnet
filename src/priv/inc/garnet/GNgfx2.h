@@ -453,16 +453,6 @@ namespace GN { namespace gfx
         //@}
     };
 
-    ///
-    /// kernel property
-    ///
-    typedef Variant KernelProperty;
-
-    ///
-    /// kernel parameter handle
-    ///
-    typedef UIntPtr KernelParameterHandle;
-
     struct Kernel;
 
     ///
@@ -472,19 +462,20 @@ namespace GN { namespace gfx
     {
         //@{
         inline  Kernel          & getKernel() const { return mKernel; }
-        virtual KernelParameter * getParameter( KernelParameterHandle ) const = 0;
+
+        virtual KernelParameter * getParameter( size_t index ) const = 0;
         inline  KernelParameter * getParameter( const StrA & name ) const;
 
-        inline  void              setParameter( KernelParameterHandle handle, const char * value );
-        inline  void              setParameter( KernelParameterHandle handle, int value );
-        inline  void              setParameter( KernelParameterHandle handle, float value );
-        inline  void              setParameter( KernelParameterHandle handle, const Vector4f & value );
-        inline  void              setParameter( KernelParameterHandle handle, const Matrix44f & value );
+        inline  void              setParameter( size_t index, const char * value );
+        inline  void              setParameter( size_t index, int value );
+        inline  void              setParameter( size_t index, float value );
+        inline  void              setParameter( size_t index, const Vector4f & value );
+        inline  void              setParameter( size_t index, const Matrix44f & value );
 
         template<typename T>
         inline  void              setParameter( const StrA & name, const T & value );
 
-        inline  void              unsetParameter( KernelParameterHandle handle );
+        inline  void              unsetParameter( size_t index );
         inline  void              unsetParameter( const StrA & name );
         //@}
 
@@ -549,31 +540,40 @@ namespace GN { namespace gfx
     ///
     struct Kernel : public NoCopy
     {
-        /// \name kernel descriptions
+        //// \name port & binding management
         //@{
 
-        ///
-        /// get kernel descriptor
-        ///
-        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const = 0;
-        virtual const KernelPortDesc      * getPortDesc( const StrA & name ) const = 0;
+        virtual size_t                 getNumPorts() const = 0;
+        virtual const StrA           & getPortName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t                 getPortIndex( const StrA & name ) const = 0;
+        virtual const KernelPortDesc * getPortDesc( size_t index ) const = 0;
+        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const = 0;
+        virtual bool                   compatible( const Surface * surf, const StrA & port ) = 0;
+        virtual KernelBinding          createBinding( const KernelBindingDesc & ) = 0;
+        virtual void                   deleteBinding( KernelBinding ) = 0;
+
+        //@}
+
+        /// \name stream management
+        //@{
+
+        virtual size_t               getNumStreams() const = 0;
+        virtual const StrA         & getStreamName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t               getStreamIndex( const StrA & name ) const = 0;
+        virtual const StreamSource * getStream( size_t index ) const = 0;
+        virtual const StreamSource * getStream( const StrA & name ) const = 0;
 
         //@}
 
         /// \name parameter management
         //@{
 
-        virtual KernelParameterHandle getParameterHandle( const StrA & name ) const = 0;
-        virtual KernelParameterSet *  createParameterSet() = 0;
-
-        //@}
-
-        //// \name port & binding management
-        //@{
-
-        virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
-        virtual KernelBinding createBinding( const KernelBindingDesc & ) = 0;
-        virtual void          deleteBinding( KernelBinding ) = 0;
+        virtual size_t                      getNumParameters() const = 0;
+        virtual const StrA                & getParameterName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t                      getParameterIndex( const StrA & name ) const = 0; ///< return -1, if name is invalid.
+        virtual const KernelParameterDesc * getParameterDesc( size_t index ) const = 0;
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const = 0;
+        virtual KernelParameterSet       *  createParameterSet() = 0;
 
         //@}
 
@@ -687,9 +687,9 @@ namespace GN { namespace gfx
         /// \name global kernel parameter management
         //@{
 
-        virtual KernelParameterHandle createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc ) = 0;
-        virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const = 0;
-        virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle ) const = 0;
+        //virtual size_t            createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc ) = 0;
+        //virtual size_t            getGlobalKernelParameterIndex( const StrA & name ) const = 0;
+        //virtual KernelParameter * getGlobalKernelParameter( size_t ) const = 0;
 
         //@}
 
@@ -698,8 +698,8 @@ namespace GN { namespace gfx
 
         virtual void     registerKernel( const StrA & name, const KernelFactory & ) = 0;
         virtual Kernel * getKernel( const StrA & name ) = 0;
-        virtual void     deleteKernel( const StrA & name ) = 0;
-        virtual void     deleteAllKernels() = 0;
+        virtual void     unregisterKernel( const StrA & name ) = 0;
+        virtual void     unregisterAllKernels() = 0;
 
         //@}
 

@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {    
     ///
-    /// 
+    /// parameter set for D3D9 hlsl kernel
     ///
     class D3D9HlslKernelParameterSet : public BaseKernelParameterSet
     {
@@ -81,7 +81,7 @@ namespace GN { namespace gfx
         AutoComPtr<IDirect3DVertexShader9> mVs;
         AutoComPtr<IDirect3DPixelShader9>  mPs;
         AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
-        KernelParameterHandle              mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
+        size_t                             mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
         ConstUpdate                        mVscfUpdate, mPscfUpdate;
 
         // ********************************
@@ -105,9 +105,9 @@ namespace GN { namespace gfx
     ///
     class D3D9HlslKernel : public D3D9Kernel
     {
-        KernelParameterHandle mVs, mPs;
-        KernelParameterHandle mVsFloatConstants, mPsFloatConstants;
-        KernelParameterHandle mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
+        size_t mVs, mPs;
+        size_t mVsFloatConstants, mPsFloatConstants;
+        size_t mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
         D3D9RenderTargetPort mRenderTarget0;
         D3D9RenderTargetPort mRenderTarget1;

@@ -43,14 +43,11 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
 
     StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
 
-    for(
-        UInt32 portHandle = mKernel.getFirstPortHandle();
-        0 != portHandle;
-        portHandle = mKernel.getNextPortHandle( portHandle ) )
+    for( size_t i = 0; i < mKernel.getNumPorts(); ++i )
     {
-        const D3D9KernelPort & port = mKernel.getPort( portHandle );
+        const D3D9KernelPort & port = mKernel.getPort( i );
 
-        iter = ebd.bindings.find( mKernel.getPortName( portHandle ) );
+        iter = ebd.bindings.find( mKernel.getPortName( i ) );
 
         D3D9KernelPortType portType = port.getDesc().portType;
 
@@ -60,7 +57,7 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
                 D3D9_KERNEL_PORT_DEPTH_BUFFER == portType ||
                 D3D9_KERNEL_PORT_TEXTURE == portType )
             {
-                b.port        = portHandle;
+                b.port        = i;
                 b.target.surf = 0;
                 mBindItems.append( b );
             }
@@ -72,7 +69,7 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
                 return false;
             }
 
-            b.port   = portHandle;
+            b.port   = i;
             b.target = iter->second;
 
             if( iter->second.surf )
@@ -150,54 +147,11 @@ void GN::gfx::D3D9KernelBinding::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::D3D9KernelPort * GN::gfx::D3D9Kernel::getPort( const StrA & name ) const
-{
-    UInt32 h = mPorts.name2handle( name );
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
-        return 0;
-    }
-
-    GN_ASSERT( mPorts[h] );
-
-    return mPorts[h];
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::D3D9KernelPort * GN::gfx::D3D9Kernel::getPort( const StrA & name )
-{
-    UInt32 h = mPorts.name2handle( name );
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
-        return 0;
-    }
-
-    GN_ASSERT( mPorts[h] );
-
-    return mPorts[h];
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx::KernelPortDesc * GN::gfx::D3D9Kernel::getPortDesc( const StrA & name ) const
-{
-    const D3D9KernelPort * port = getPort( name );
-    return port ? &port->getDesc() : 0;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::gfx::D3D9Kernel::compatible( const Surface * surf, const StrA & portName )
 {
-    const D3D9KernelPort * port = getPort( portName );
+    const D3D9KernelPort * const * port = mPorts.get( portName );
     if( 0 == port ) return false;
-    return port->compatible( surf );
+    return (*port)->compatible( surf );
 }
 
 //
@@ -238,23 +192,16 @@ void GN::gfx::D3D9Kernel::deleteBinding( KernelBinding b )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port )
+size_t GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port )
 {
-    if( mPorts.name2handle( name ) )
-    {
-        GN_ERROR(sLogger)( "addPortRef() failed: port named '%s' does exist already.", name.cptr() );
-        GN_UNEXPECTED();
-        return;
-    }
-
     if( 0 == port )
     {
         GN_ERROR(sLogger)( "addPortRef() failed: NULL port pointer." );
         GN_UNEXPECTED();
-        return;
+        return (size_t)-1;
     }
 
-    mPorts.add( name, port );
+    return mPorts.add( name, port );
 }
 
 //

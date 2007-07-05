@@ -4,17 +4,20 @@
 inline GN::gfx::KernelParameter *
 GN::gfx::KernelParameterSet::getParameter( const StrA & name ) const
 {
-    KernelParameterHandle h = mKernel.getParameterHandle( name );
-    return h ? getParameter( h ) : 0;
+    GN_GUARD_SLOW;
+
+    return getParameter( mKernel.getParameterIndex( name ) );
+
+    GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::KernelParameterSet::setParameter(
-    KernelParameterHandle handle, const char * value )
+    size_t index, const char * value )
 {
-    KernelParameter * p = getParameter( handle );
+    KernelParameter * p = getParameter( index );
     if( p ) p->sets( 0, 1, &value );
 }
 
@@ -22,9 +25,9 @@ inline void GN::gfx::KernelParameterSet::setParameter(
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::KernelParameterSet::setParameter(
-    KernelParameterHandle handle, int value )
+    size_t index, int value )
 {
-    KernelParameter * p = getParameter( handle );
+    KernelParameter * p = getParameter( index );
     if( p ) p->seti( 0, 1, &value );
 }
 
@@ -32,9 +35,9 @@ inline void GN::gfx::KernelParameterSet::setParameter(
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::KernelParameterSet::setParameter(
-    KernelParameterHandle handle, float value )
+    size_t index, float value )
 {
-    KernelParameter * p = getParameter( handle );
+    KernelParameter * p = getParameter( index );
     if( p ) p->setf( 0, 1, &value );
 }
 
@@ -42,9 +45,9 @@ inline void GN::gfx::KernelParameterSet::setParameter(
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::KernelParameterSet::setParameter(
-    KernelParameterHandle handle, const Vector4f & value )
+    size_t index, const Vector4f & value )
 {
-    KernelParameter * p = getParameter( handle );
+    KernelParameter * p = getParameter( index );
     if( p ) p->setf( 0, 4, value );
 }
 
@@ -52,9 +55,9 @@ inline void GN::gfx::KernelParameterSet::setParameter(
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::KernelParameterSet::setParameter(
-    KernelParameterHandle handle, const Matrix44f & value )
+    size_t index, const Matrix44f & value )
 {
-    KernelParameter * p = getParameter( handle );
+    KernelParameter * p = getParameter( index );
     if( p ) p->setf( 0, 16, value[0] );
 }
 
@@ -65,6 +68,6 @@ template<typename T>
 inline void GN::gfx::KernelParameterSet::setParameter(
     const StrA & name, const T & value )
 {
-    KernelParameterHandle h = mKernel.getParameterHandle( name );
-    if( h ) setParameter( h, value );
+    size_t index = mKernel.getParameterIndex( name );
+    if( (size_t)-1 != index ) setParameter( index, value );
 }

@@ -10,42 +10,30 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernel");
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::KernelParameterDesc *
-GN::gfx::BaseKernel::getParameterDesc( const StrA & name ) const
+const GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
 {
-    GN_GUARD;
-
-    KernelParameterHandle h = mParameterHandles.name2handle( name );
-
-    if( 0 == h )
+    if( index >= mStreams.size() )
     {
-        GN_ERROR(sLogger)( "invalid parameter name: %s", name.cptr() );
+        GN_ERROR(sLogger)( "stream index is out of range." );
         return 0;
     }
 
-    return &mParameters[mParameterHandles[h]].desc;
+    GN_ASSERT( mStreams.at(index) );
 
-    GN_UNGUARD;
+    return mStreams.at(index);
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelParameterHandle
-GN::gfx::BaseKernel::getParameterHandle( const StrA & name ) const
+const GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( const StrA & name ) const
 {
-    GN_GUARD;
+    size_t index = mStreams.getIndex( name );
+    if( (size_t)-1 == index ) return 0;
 
-    KernelParameterHandle h = mParameterHandles.name2handle( name );
+    GN_ASSERT( mStreams.at(index) );
 
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "parameter named '%s' does not exist.", name.cptr() );
-    }
-
-    return h;
-
-    GN_UNGUARD;
+    return mStreams.at(index);
 }
 
 //
@@ -71,7 +59,22 @@ GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelParameterHandle
+size_t GN::gfx::BaseKernel::addStreamRef( const StrA & name, StreamSource * stream )
+{
+    if( 0 == stream )
+    {
+        GN_ERROR(sLogger)( "addStreamRef() failed: NULL stream pointer." );
+        GN_UNEXPECTED();
+        return (size_t)-1;
+    }
+
+    return mStreams.add( name, stream );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t
 GN::gfx::BaseKernel::addParameter(
     const StrA        & name,
     KernelParameterType type,
@@ -79,32 +82,11 @@ GN::gfx::BaseKernel::addParameter(
 {
     GN_GUARD;
 
-    KernelParameterHandle h = mParameterHandles.name2handle( name );
+    KernelParameterDesc desc;
+    desc.type  = type;
+    desc.count = count;
 
-    if( h )
-    {
-        GN_ERROR(sLogger)( "parameter named '%s' does exist already.", name.cptr() );
-        GN_UNEXPECTED();
-        return 0;
-    }
-
-    size_t index = mParameters.size();
-
-    mParameters.resize( mParameters.size() + 1 );
-
-    h = mParameterHandles.add( name, index );
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "fail to create handle form parameter '%s'.", name.cptr() );
-        mParameters.popBack();
-        return 0;
-    }
-
-    ParameterItem & pi = mParameters.back();
-    pi.desc.type = type;
-    pi.desc.count = count;
-
-    return h;
+    return mParameters.add( name, desc );
 
     GN_UNGUARD;
 }

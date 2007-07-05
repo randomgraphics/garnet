@@ -72,10 +72,10 @@ static IDirect3DPixelShader9 * sCreatePs(
 GN::gfx::D3D9HlslKernelParameterSet::D3D9HlslKernelParameterSet( D3D9Kernel & k )
     : BaseKernelParameterSet( k )
     , mDev( k.d3d9gs().d3ddev() )
-    , mVsHandle( k.getParameterHandle( "VS" ) )
-    , mPsHandle( k.getParameterHandle( "PS" ) )
-    , mVscfHandle( k.getParameterHandle( "VSCF" ) )
-    , mPscfHandle( k.getParameterHandle( "PSCF" ) )
+    , mVsHandle( k.getParameterIndex( "VS" ) )
+    , mPsHandle( k.getParameterIndex( "PS" ) )
+    , mVscfHandle( k.getParameterIndex( "VSCF" ) )
+    , mPscfHandle( k.getParameterIndex( "PSCF" ) )
 {
     clear();
 }
