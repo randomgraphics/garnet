@@ -16,7 +16,7 @@ namespace GN { namespace gfx
         D3D9RenderTargetPort mTarget0;
         D3D9DepthBufferPort  mDepth;
 
-        KernelParameterHandle mColorValue, mDepthValue, mStencilValue;
+        size_t mColorValue, mDepthValue, mStencilValue;
 
         static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ); }
 

@@ -13,8 +13,8 @@ namespace GN { namespace gfx
     ///
     class D3D9SolidColorKernel : public D3D9Kernel
     {
-        KernelParameterHandle mPvw;   ///< 4x4 matrix: project-view-world transformation
-        KernelParameterHandle mColor; ///< 4D float vector: [R,G,B,A]
+        size_t                mPvw;   ///< 4x4 matrix: project-view-world transformation
+        size_t                mColor; ///< 4D float vector: [R,G,B,A]
         D3D9RenderTargetPort  mTarget0;
         D3D9DepthBufferPort   mDepth;
         D3D9VtxBufPort        mVtxBuf;

@@ -14,6 +14,138 @@ namespace GN { namespace gfx
     class BaseGraphicsSystem;
 
     ///
+    /// array of items with unique name
+    ///
+    template<typename T>
+    class NamedArray
+    {
+        struct Item
+        {
+            StrA   name;
+            size_t index;
+            T      value;
+        };
+
+        DynaArray<Item>       mItems;
+        std::map<StrA,size_t> mNames;
+
+        const T * getByIndex( size_t index ) const
+        {
+            if( index >= mItems.size() )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                return 0;
+            }
+            return &mItems[index].value;
+        }
+
+        T * getByIndex( size_t index )
+        {
+            if( index >= mItems.size() )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                return 0;
+            }
+            return &mItems[index].value;
+        }
+
+        const T * getByName( const StrA & name ) const
+        {
+            std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+            if( mNames.end() == i )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                return 0;
+            }
+            return &mItems[i->second].value;
+        }
+
+        T * getByName( const StrA & name )
+        {
+            std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+            if( mNames.end() == i )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                return 0;
+            }
+            return &mItems[i->second].value;
+        }
+
+        const StrA & getNameByIndex( size_t index ) const
+        {
+            if( index >= mItems.size() )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                return StrA::EMPTYSTR;
+            }
+            return mItems[index].name;
+        }
+
+        size_t getIndexByName( const StrA & name ) const
+        {
+            std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+            if( mNames.end() == i )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                return (size_t)-1;
+            }
+            return i->second;
+        }
+
+        size_t doAdd( const StrA & name, const T & value )
+        {
+            std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+            if( mNames.end() != i )
+            {
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "item named '%s' does exist already." );
+                return (size_t)-1;
+            }
+
+            Item item;
+            item.name  = name;
+            item.index = mItems.size();
+            item.value = value;
+
+            mNames[name] = mItems.size();
+            mItems.append( item );
+
+            return item.index;
+        }
+
+    public:
+
+        //@{
+
+        NamedArray()
+        {
+        }
+
+        ~NamedArray()
+        {
+        }
+
+        bool         empty() const { return mItems.empty(); }
+        size_t       size() const { GN_ASSERT( mItems.size() == mNames.size() ); return mItems.size(); }
+        const T    * get( size_t index ) const { return getByIndex( index ); }
+        const T    * get( const StrA & name ) const { return getByName( name ); }
+        const StrA & getName( size_t index ) const { return getNameByIndex( index ); }
+        size_t       getIndex( const StrA & name ) const { return getIndexByName( name ); }
+        size_t       add( const StrA & name, const T & value ) { return doAdd( name, value ); }
+
+        ///
+        /// this function does not allow invalid index
+        ///
+        const T    & at( size_t index ) const { GN_ASSERT( index < size() ); return mItems[index].value; }
+
+        ///
+        /// this function does not allow invalid name
+        ///
+        const T    & at( const StrA & name ) const { std::map<StrA,size_t>::const_iterator i = mNames.find(name); GN_ASSERT( mNames.end() != i ); return mItems[i->second].value; }
+
+        //@}
+    };
+
+    ///
     /// structure to hold kernel parameter value
     ///
     class BaseKernelParameter : public KernelParameter
@@ -117,7 +249,7 @@ namespace GN { namespace gfx
 
         /// \name from parent class
         //@{
-        virtual KernelParameter * getParameter( KernelParameterHandle handle ) const;
+        virtual KernelParameter * getParameter( size_t index ) const;
         //@}
 
         // ********************************
@@ -158,66 +290,45 @@ namespace GN { namespace gfx
         ///
         GraphicsSystem & gs() const { return mGraphicsSystem; }
 
-        ///
-        /// get number of parameters
-        ///
-        size_t getParameterCount() const
-        {
-            return mParameters.size();
-        }
-
-        ///
-        /// convert parameter handle to parameter index.
-        ///
-        bool getParameterIndex( size_t & result, KernelParameterHandle handle ) const
-        {
-            if( !mParameterHandles.validHandle( handle ) )
-            {
-                GN_ERROR(getLogger("GN.gfx2.base.BaseKernel"))( "invalid arameter handle: %d", handle );
-                return false;
-            }
-            result = mParameterHandles[handle];
-            GN_ASSERT( result < mParameters.size() );
-            return true;
-        }
-
-        ///
-        /// get parameter descriptor by index
-        ///
-        const KernelParameterDesc & getParameterDescByIndex( size_t index ) const
-        {
-            GN_ASSERT( index < mParameters.size() );
-            return mParameters[index].desc;
-        }
-
         /// \name from Kernel
         //@{
-        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const;
-        virtual KernelParameterHandle       getParameterHandle( const StrA & name ) const;
+
+        virtual size_t               getNumStreams() const { return mStreams.size(); }
+        virtual const StrA         & getStreamName( size_t index ) const { return mStreams.getName( index ); }
+        virtual size_t               getStreamIndex( const StrA & name ) const { return mStreams.getIndex( name ); }
+        virtual const StreamSource * getStream( size_t index ) const;
+        virtual const StreamSource * getStream( const StrA & name ) const;
+
+        virtual size_t                      getNumParameters() const { return mParameters.size(); }
+        virtual const StrA                & getParameterName( size_t index ) const { return mParameters.getName( index ); }
+        virtual size_t                      getParameterIndex( const StrA & name ) const { return mParameters.getIndex( name ); }
+        virtual const KernelParameterDesc * getParameterDesc( size_t index ) const { return mParameters.get( index ); }
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const { return mParameters.get( name ); }
         virtual KernelParameterSet        * createParameterSet();
         //@}
 
     protected:
 
         ///
-        /// \note add parameter. Normallly called in constructor
+        /// \return index of the stream. -1 means failed.
         ///
-        //KernelParameterHandle addParameter( const StrA & name, const KernelParameterDesc & param );
-        KernelParameterHandle addParameter(
+        /// \note Kernel class does _NOT_ hold the ownership of the stream instance.
+        ///
+        size_t addStreamRef( const StrA & name, StreamSource * stream );
+
+        ///
+        /// \note add parameter. Return index of newly inserted index. Return -1, if failed.
+        ///
+        size_t addParameter(
             const StrA        & name,
             KernelParameterType type,
             size_t              count );
 
     private:
 
-        struct ParameterItem
-        {
-            KernelParameterDesc desc;
-        };
-
-        GraphicsSystem                                  & mGraphicsSystem;
-        DynaArray<ParameterItem>                          mParameters;
-        NamedHandleManager<size_t,KernelParameterHandle>  mParameterHandles; ///< convert handle and name to array index.
+        GraphicsSystem                & mGraphicsSystem;
+        NamedArray<KernelParameterDesc> mParameters;
+        NamedArray<StreamSource*>       mStreams;
     };
 
     ///
@@ -255,14 +366,11 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        virtual KernelParameterHandle createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc );
-        virtual KernelParameterHandle getGlobalKernelParameterHandle( const StrA & name ) const;
-        virtual KernelParameter     * getGlobalKernelParameter( KernelParameterHandle handle ) const;
 
         virtual void     registerKernel( const StrA & name, const KernelFactory & );
         virtual Kernel * getKernel( const StrA & name );
-        virtual void     deleteKernel( const StrA & name );
-        virtual void     deleteAllKernels();
+        virtual void     unregisterKernel( const StrA & name );
+        virtual void     unregisterAllKernels();
 
         //@}
 
@@ -277,8 +385,7 @@ namespace GN { namespace gfx
             Kernel *      instance;
         };
 
-        NamedHandleManager<BaseKernelParameter*,KernelParameterHandle> mGlobalKernelParameters;
-        NamedHandleManager<KernelItem,UInt32>                          mKernels;
+        NamedHandleManager<KernelItem,UInt32> mKernels;
 
         // ********************************
         // private functions

@@ -106,13 +106,13 @@ bool GN::gfx::BaseKernelParameterSet::init()
 
     BaseKernel & k = GN_SAFE_CAST<BaseKernel&>( getKernel() );
 
-    size_t count = k.getParameterCount();
+    size_t count = k.getNumParameters();
 
     mParameters.resize( count );
 
     for( size_t i = 0; i < count; ++i )
     {
-        mParameters[i] = createParameter( k.getParameterDescByIndex(i) );
+        mParameters[i] = createParameter( *k.getParameterDesc(i) );
         if( 0 == mParameters[i] ) return failure();
     }
 
@@ -146,17 +146,15 @@ void GN::gfx::BaseKernelParameterSet::quit()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelParameter *
-GN::gfx::BaseKernelParameterSet::getParameter( KernelParameterHandle handle ) const
+GN::gfx::BaseKernelParameterSet::getParameter( size_t index ) const
 {
     GN_GUARD_SLOW;
 
-    BaseKernel & k = GN_SAFE_CAST<BaseKernel&>( getKernel() );
-
-    size_t index;
-
-    if( !k.getParameterIndex( index, handle ) ) return 0;
-
-    GN_ASSERT( index < mParameters.size() );
+    if( index >= mParameters.size() )
+    {
+        GN_ERROR(sLogger)( "index is out of range." );
+        return 0;
+    }
 
     GN_ASSERT( mParameters[index] );
 

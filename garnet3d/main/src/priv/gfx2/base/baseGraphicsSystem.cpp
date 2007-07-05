@@ -30,13 +30,7 @@ void GN::gfx::BaseGraphicsSystem::quit()
 {
     GN_GUARD;
 
-    deleteAllKernels();
-
-    for( KernelParameterHandle h = mGlobalKernelParameters.first(); 0 != h; h = mGlobalKernelParameters.next( h ) )
-    {
-        safeDelete( mGlobalKernelParameters[h] );
-    }
-    mGlobalKernelParameters.clear();
+    unregisterAllKernels();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -47,55 +41,6 @@ void GN::gfx::BaseGraphicsSystem::quit()
 // *****************************************************************************
 // public methods
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::KernelParameterHandle
-GN::gfx::BaseGraphicsSystem::createGlobalKernelParameter( const StrA & name, const KernelParameterDesc & desc )
-{
-    GN_GUARD;
-
-    GN_UNUSED_PARAM( name );
-    GN_UNUSED_PARAM( desc );
-    GN_UNIMPL();
-    return 0;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::KernelParameterHandle
-GN::gfx::BaseGraphicsSystem::getGlobalKernelParameterHandle( const StrA & name ) const
-{
-    GN_GUARD;
-
-    return mGlobalKernelParameters.name2handle( name );
-    
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::KernelParameter *
-GN::gfx::BaseGraphicsSystem::getGlobalKernelParameter( KernelParameterHandle handle ) const
-{
-    GN_GUARD_SLOW;
-
-    if( !mGlobalKernelParameters.validHandle( handle ) )
-    {
-        GN_ERROR(sLogger)( "invalid global kernel parameter handle : %d", handle );
-        return 0;
-    }
-
-    GN_ASSERT( mGlobalKernelParameters[handle] );
-    return mGlobalKernelParameters[handle];
-
-    GN_UNGUARD_SLOW;
-}
 
 //
 //
@@ -154,7 +99,7 @@ GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::deleteKernel( const StrA & name )
+void GN::gfx::BaseGraphicsSystem::unregisterKernel( const StrA & name )
 {
     UInt32 h = mKernels.name2handle( name );
 
@@ -172,7 +117,7 @@ void GN::gfx::BaseGraphicsSystem::deleteKernel( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::deleteAllKernels()
+void GN::gfx::BaseGraphicsSystem::unregisterAllKernels()
 {
     for ( UInt32 h = mKernels.first(); 0 != h; h = mKernels.next( h ) )
     {

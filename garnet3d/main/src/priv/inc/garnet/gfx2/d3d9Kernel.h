@@ -175,7 +175,7 @@ namespace GN { namespace gfx
 
         struct BindItem
         {
-            UInt32              port;   ///< port handle
+            size_t              port;   ///< port index
             KernelBindingTarget target; ///< binding target
         };
 
@@ -237,18 +237,17 @@ namespace GN { namespace gfx
         ///
         D3D9GraphicsSystem & d3d9gs() const { return (D3D9GraphicsSystem&)gs(); }
 
-        UInt32                 getFirstPortHandle() const { return mPorts.first(); }
-        UInt32                 getNextPortHandle( UInt32 current ) const { return mPorts.next( current ); }
-        const StrA           & getPortName( UInt32 h ){ GN_ASSERT(mPorts.validHandle(h)); return mPorts.handle2name(h); }
-        const D3D9KernelPort & getPort( UInt32 h ) const { GN_ASSERT(mPorts.validHandle(h)); return *mPorts[h]; }
-        const D3D9KernelPort * getPort( const StrA & name ) const; ///< return NULL for invalid name
-        D3D9KernelPort       * getPort( const StrA & name ); ///< return NULL for invalid name
+        const D3D9KernelPort & getPort( size_t index ) const { return *mPorts.at(index); }
 
         //@}
 
         /// \name from Kernel
         //@{
-        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const;
+        virtual size_t                 getNumPorts() const { return mPorts.size(); }
+        virtual const StrA           & getPortName( size_t index ) const { return mPorts.getName( index ); }
+        virtual size_t                 getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
+        virtual const KernelPortDesc * getPortDesc( size_t index ) const { const D3D9KernelPort * const * port = mPorts.get( index ); return port ? &(*port)->getDesc() : 0; }
+        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const { const D3D9KernelPort * const * port = mPorts.get( name ); return port ? &(*port)->getDesc() : 0; }
         virtual bool                   compatible( const Surface * surf, const StrA & port );
         virtual KernelBinding          createBinding( const KernelBindingDesc & );
         virtual void                   deleteBinding( KernelBinding );
@@ -259,9 +258,11 @@ namespace GN { namespace gfx
         //@{
 
         ///
+        /// \return index of the port. -1 means failed.
+        ///
         /// \note D3D9Kernel class does _NOT_ hold the ownership of the port instance.
         ///
-        void addPortRef( const StrA & name, D3D9KernelPort * port );
+        size_t addPortRef( const StrA & name, D3D9KernelPort * port );
 
         ///
         /// get port binding by handle
@@ -322,12 +323,11 @@ namespace GN { namespace gfx
 
     private:
 
-        typedef NamedHandleManager<D3D9KernelPort*,UInt32>      PortContainer;
         typedef HandleManager<D3D9KernelBinding*,KernelBinding> KernelBindingContainer;
 
-        PortContainer          mPorts;
-        KernelBindingContainer mBindings;
-        KernelBinding          mDefaultBinding;
+        NamedArray<D3D9KernelPort*> mPorts;
+        KernelBindingContainer      mBindings;
+        KernelBinding               mDefaultBinding;
 
     private:
 
