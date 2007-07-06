@@ -18,7 +18,11 @@ namespace GN { namespace gfx
 
         size_t mColorValue, mDepthValue, mStencilValue;
 
-        static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ); }
+        static Kernel * sCreator( GraphicsSystem & gs )
+        {
+            PIXPERF_FUNCTION_EVENT();
+            return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) );
+        }
 
         ///
         /// ctor

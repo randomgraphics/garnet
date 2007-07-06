@@ -314,6 +314,8 @@ void GN::gfx::D3D9HlslKernel::render(
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_FUNCTION_EVENT();
+
     D3D9KernelBinding & b = getPortBinding( binding );
 
     b.apply();

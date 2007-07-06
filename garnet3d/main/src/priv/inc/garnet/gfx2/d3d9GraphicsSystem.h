@@ -61,31 +61,27 @@ namespace GN { namespace gfx
     {
         struct StateValue
         {
-            DWORD                        stage; ///< ignored for render states
-            union
-            {
-                D3DRENDERSTATETYPE       rs;
-                D3DSAMPLERSTATETYPE      ss;
-                D3DTEXTURESTAGESTATETYPE ts;
-            };
             DWORD                        value;
-            bool                         empty;
+            bool                         valid;
 
-            StateValue() : empty(true) {}
+            StateValue() : valid(false) {}
         };
 
-        IDirect3DDevice9    * mDevice;
-        DynaArray<StateValue> mRenderStates;
-        DynaArray<StateValue> mSamplerStates;
-        DynaArray<StateValue> mTextureStates;
+        IDirect3DDevice9                   * mDevice;
+
+        StackArray<D3DRENDERSTATETYPE,210>   mRsTypes;
+        StateValue                           mRsValues[210];
+
+        //StackArray<StateValue,14*20>         mSamplerStates;
+        //StackArray<StateValue,33*20>         mTextureStates;
+        //StateValue                           mSsMasks[20][14];
+        //StateValue                           mTsMasks[20][33];
 
     public:
 
         //@{
 
-        static void sSetDefaultRs( D3DRENDERSTATETYPE type, DWORD value );
-        static void sSetDefaultSs( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value );
-        static void sSetDefaultTs( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
+        static void sSetupDefaultDeviceStates( D3D9GraphicsSystem & gs );
 
         D3D9RenderStateBlock( D3D9GraphicsSystem & gs );
 
@@ -194,6 +190,8 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+
+        bool restoreDevice();
 
         bool beginScene()
         {
