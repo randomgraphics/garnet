@@ -164,161 +164,6 @@ static void sDeleteWindow( HWND window )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sCreateDevice(
-    GN::gfx::D3D9GraphicsSystemDesc & desc,
-    const GN::gfx::GraphicsSystemCreationParameter & gscp )
-{
-    GN_GUARD;
-
-    GN_ASSERT( ::IsWindow( (HWND)desc.window ) );
-
-    // create D3D
-    desc.d3d = Direct3DCreate9( D3D_SDK_VERSION );
-    if( 0 == desc.d3d ) { GN_ERROR(sLogger)( "fail to create D3D object!" ); return false; }
-
-    // determine devtype
-    desc.devtype = D3DDEVTYPE_HAL;
-
-    // determine adapter
-    desc.adapter = gscp.monitor;
-
-	// Look up nvidia adapter
-    UINT nAdapter = desc.d3d->GetAdapterCount();
-    GN_ASSERT( nAdapter );
-    for( UInt32 i = 0; i < nAdapter; ++i )
-    {
-        D3DADAPTER_IDENTIFIER9 Identifier;
-        GN_DX9_CHECK( desc.d3d->GetAdapterIdentifier( i, 0, &Identifier ) );
-        GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
-        if( strstr(Identifier.Description,"NVPerfHUD") )
-        {
-            GN_TRACE(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
-            desc.adapter = i;
-            desc.devtype = D3DDEVTYPE_REF;
-            break;
-        }
-    }
-
-    // get device caps
-    GN_DX9_CHECK_RV( desc.d3d->GetDeviceCaps( desc.adapter, desc.devtype, &desc.caps ), false );
-
-    // determine behavior
-    desc.behavior = 0;
-    UInt32 vsver = (desc.caps.VertexShaderVersion & 0xFFFF);
-    bool   hwtnl = !!(desc.caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT);
-    if( vsver > 0 && hwtnl )
-    {
-        desc.behavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
-    }
-    else if( 0 == vsver && !hwtnl )
-    {
-        desc.behavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-    }
-    else
-    {
-        desc.behavior |= D3DCREATE_MIXED_VERTEXPROCESSING;
-    }
-    if( desc.caps.DevCaps & D3DDEVCAPS_PUREDEVICE )
-    {
-        desc.behavior |= D3DCREATE_PUREDEVICE;
-    }
-
-    // setup present parameters
-    memset( &desc.pp, 0, sizeof(desc.pp) );
-    desc.pp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
-    desc.pp.EnableAutoDepthStencil = FALSE;
-    desc.pp.BackBufferCount        = 0;
-    desc.pp.BackBufferFormat       = D3DFMT_X8R8G8B8;
-    desc.pp.Windowed               = !gscp.fullscr;
-    desc.pp.SwapEffect             = D3DSWAPEFFECT_DISCARD;
-    desc.pp.PresentationInterval   = gscp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-    desc.pp.hDeviceWindow          = (HWND)desc.window;
-    desc.pp.MultiSampleType        = D3DMULTISAMPLE_NONE;
-    desc.pp.MultiSampleQuality     = 0;
-    if( gscp.fullscr )
-    {
-        desc.width                         = gscp.fullscrWidth;
-        desc.height                        = gscp.fullscrHeight;
-        desc.depth                         = gscp.fullscrDepth;
-        desc.refrate                       = gscp.fullscrRefrate;
-        desc.pp.BackBufferWidth            = gscp.fullscrWidth;
-        desc.pp.BackBufferHeight           = gscp.fullscrHeight;
-        desc.pp.FullScreen_RefreshRateInHz = gscp.fullscrRefrate;
-    }
-    else
-    {
-        desc.width                         = gscp.windowedWidth;
-        desc.height                        = gscp.windowedHeight;
-        desc.depth                         = 32; // TODO: get current screen depth;
-        desc.refrate                       = 0;
-        desc.pp.BackBufferWidth  = gscp.windowedWidth;
-        desc.pp.BackBufferHeight = gscp.windowedHeight;
-    }
-
-    // create device
-    GN_DX9_CHECK_RV(
-        desc.d3d->CreateDevice(
-            desc.adapter,
-            desc.devtype,
-            (HWND)desc.window,
-            desc.behavior,
-            &desc.pp,
-            &desc.device ),
-        false );
-
-    // get device caps
-    GN_DX9_CHECK_RV( desc.device->GetDeviceCaps( &desc.caps ), false );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void sDeleteDevice( GN::gfx::D3D9GraphicsSystemDesc & desc )
-{
-    GN_GUARD;
-
-#ifdef D3D_DEBUG_INFO
-    if( desc.device )
-    {
-		desc.device->SetVertexShader(0);
-		desc.device->SetPixelShader(0);
-
-		GN_TRACE(sLogger)(
-			"\n"
-			"====== Dump unreleased D3D resources ========\n"
-			"	SwapChains: %d\n"
-			"	Textures: %d\n"
-			"	VertexBuffers: %d\n"
-			"	IndexBuffers: %d\n"
-			"	VertexShaders: %d\n"
-			"	PixelShaders: %d\n"
-			"=============================================\n"
-			"\n",
-			desc.device->SwapChains,
-			desc.device->Textures,
-			desc.device->VertexBuffers,
-			desc.device->IndexBuffers,
-			desc.device->VertexShaders,
-			desc.device->PixelShaders );
-	}
-#endif
-
-    using namespace GN;
-
-    safeRelease( desc.device );
-    safeRelease( desc.d3d );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static const char * sD3DMsaaType2Str( D3DMULTISAMPLE_TYPE type )
 {
     static const char * sTable[] =
@@ -440,6 +285,166 @@ static void sPrintDeviceInfo( GN::gfx::D3D9GraphicsSystemDesc & desc )
         desc.caps.NumSimultaneousRTs,
         sD3DMsaaType2Str( desc.pp.MultiSampleType ),
         desc.pp.MultiSampleQuality );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sCreateDevice(
+    GN::gfx::D3D9GraphicsSystemDesc & desc,
+    const GN::gfx::GraphicsSystemCreationParameter & gscp )
+{
+    GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
+
+    GN_ASSERT( ::IsWindow( (HWND)desc.window ) );
+
+    // create D3D
+    desc.d3d = Direct3DCreate9( D3D_SDK_VERSION );
+    if( 0 == desc.d3d ) { GN_ERROR(sLogger)( "fail to create D3D object!" ); return false; }
+
+    // determine devtype
+    desc.devtype = D3DDEVTYPE_HAL;
+
+    // determine adapter
+    desc.adapter = gscp.monitor;
+
+	// Look up nvidia adapter
+    UINT nAdapter = desc.d3d->GetAdapterCount();
+    GN_ASSERT( nAdapter );
+    for( UInt32 i = 0; i < nAdapter; ++i )
+    {
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        GN_DX9_CHECK( desc.d3d->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
+        if( strstr(Identifier.Description,"NVPerfHUD") )
+        {
+            GN_TRACE(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
+            desc.adapter = i;
+            desc.devtype = D3DDEVTYPE_REF;
+            break;
+        }
+    }
+
+    // get device caps
+    GN_DX9_CHECK_RV( desc.d3d->GetDeviceCaps( desc.adapter, desc.devtype, &desc.caps ), false );
+
+    // determine behavior
+    desc.behavior = 0;
+    UInt32 vsver = (desc.caps.VertexShaderVersion & 0xFFFF);
+    bool   hwtnl = !!(desc.caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT);
+    if( vsver > 0 && hwtnl )
+    {
+        desc.behavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    }
+    else if( 0 == vsver && !hwtnl )
+    {
+        desc.behavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
+    else
+    {
+        desc.behavior |= D3DCREATE_MIXED_VERTEXPROCESSING;
+    }
+    if( desc.caps.DevCaps & D3DDEVCAPS_PUREDEVICE )
+    {
+        desc.behavior |= D3DCREATE_PUREDEVICE;
+    }
+
+    // setup present parameters
+    memset( &desc.pp, 0, sizeof(desc.pp) );
+    desc.pp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+    desc.pp.EnableAutoDepthStencil = FALSE;
+    desc.pp.BackBufferCount        = 0;
+    desc.pp.BackBufferFormat       = D3DFMT_X8R8G8B8;
+    desc.pp.Windowed               = !gscp.fullscr;
+    desc.pp.SwapEffect             = D3DSWAPEFFECT_DISCARD;
+    desc.pp.PresentationInterval   = gscp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+    desc.pp.hDeviceWindow          = (HWND)desc.window;
+    desc.pp.MultiSampleType        = D3DMULTISAMPLE_NONE;
+    desc.pp.MultiSampleQuality     = 0;
+    if( gscp.fullscr )
+    {
+        desc.width                         = gscp.fullscrWidth;
+        desc.height                        = gscp.fullscrHeight;
+        desc.depth                         = gscp.fullscrDepth;
+        desc.refrate                       = gscp.fullscrRefrate;
+        desc.pp.BackBufferWidth            = gscp.fullscrWidth;
+        desc.pp.BackBufferHeight           = gscp.fullscrHeight;
+        desc.pp.FullScreen_RefreshRateInHz = gscp.fullscrRefrate;
+    }
+    else
+    {
+        desc.width                         = gscp.windowedWidth;
+        desc.height                        = gscp.windowedHeight;
+        desc.depth                         = 32; // TODO: get current screen depth;
+        desc.refrate                       = 0;
+        desc.pp.BackBufferWidth  = gscp.windowedWidth;
+        desc.pp.BackBufferHeight = gscp.windowedHeight;
+    }
+
+    // create device
+    GN_DX9_CHECK_RV(
+        desc.d3d->CreateDevice(
+            desc.adapter,
+            desc.devtype,
+            (HWND)desc.window,
+            desc.behavior,
+            &desc.pp,
+            &desc.device ),
+        false );
+
+    // get device caps
+    GN_DX9_CHECK_RV( desc.device->GetDeviceCaps( &desc.caps ), false );
+
+    // print device information
+    sPrintDeviceInfo( desc );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteDevice( GN::gfx::D3D9GraphicsSystemDesc & desc )
+{
+    GN_GUARD;
+
+#ifdef D3D_DEBUG_INFO
+    if( desc.device )
+    {
+		desc.device->SetVertexShader(0);
+		desc.device->SetPixelShader(0);
+
+		GN_TRACE(sLogger)(
+			"\n"
+			"====== Dump unreleased D3D resources ========\n"
+			"	SwapChains: %d\n"
+			"	Textures: %d\n"
+			"	VertexBuffers: %d\n"
+			"	IndexBuffers: %d\n"
+			"	VertexShaders: %d\n"
+			"	PixelShaders: %d\n"
+			"=============================================\n"
+			"\n",
+			desc.device->SwapChains,
+			desc.device->Textures,
+			desc.device->VertexBuffers,
+			desc.device->IndexBuffers,
+			desc.device->VertexShaders,
+			desc.device->PixelShaders );
+	}
+#endif
+
+    using namespace GN;
+
+    safeRelease( desc.device );
+    safeRelease( desc.d3d );
+
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
@@ -650,11 +655,11 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     mDesc.window  = sCreateWindow( gscp );
     if( 0 == mDesc.window ) return failure();
 
+    PIXPERF_FUNCTION_EVENT();
+
     if( !sCreateDevice( mDesc, gscp ) ) return failure();
 
-    sPrintDeviceInfo( mDesc );
-
-    if( !sigDeviceRestore() ) return failure();
+    if( !restoreDevice() ) return failure();
 
     if( !beginScene() ) return failure();
 
@@ -670,6 +675,8 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
 void GN::gfx::D3D9GraphicsSystem::quit()
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     endScene();
 
@@ -730,6 +737,8 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     const SurfaceCreationParameter & scp )
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     // get surface layout template
     D3D9SurfaceType surftype = D3D9_SURFACE_TYPE_ANY;
@@ -797,6 +806,16 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::D3D9GraphicsSystem::restoreDevice()
+{
+    D3D9RenderStateBlock::sSetupDefaultDeviceStates( *this );
+
+    return sigDeviceRestore();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
 {
     GN_GUARD;
@@ -817,7 +836,7 @@ bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
         GN_DX9_CHECK_RV( mDesc.device->Reset( &mDesc.pp ), false );
 
         // send restore signal
-        if( !sigDeviceRestore() ) return false;
+        if( !restoreDevice() ) return false;
 
         GN_INFO(sLogger)( "=================================================\n" );
     }

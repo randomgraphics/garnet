@@ -132,7 +132,11 @@ namespace GN { namespace gfx
         D3D9VtxBufPort       mVtxBuf7;
         D3D9IdxBufPort       mIdxBuf;
 
-        static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs)); }
+        static Kernel * sCreator( GraphicsSystem & gs )
+        {
+            PIXPERF_FUNCTION_EVENT();
+            return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
+        }
 
         ///
         /// ctor
