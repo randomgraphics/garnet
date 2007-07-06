@@ -75,6 +75,19 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// default contructor
+        ///
+        SurfaceAttributeSemantic() {}
+
+        ///
+        /// contruct from string
+        ///
+        SurfaceAttributeSemantic( const char * str )
+        {
+            set( str );
+        }
+
+        ///
         /// set semantic value
         ///
         void set(const char * str )
