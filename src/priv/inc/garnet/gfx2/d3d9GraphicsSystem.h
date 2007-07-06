@@ -57,6 +57,49 @@ namespace GN { namespace gfx
         //@}
     };
 
+    class GN_GFX2_D3D9_PUBLIC D3D9RenderStateBlock
+    {
+        struct StateValue
+        {
+            DWORD                        stage; ///< ignored for render states
+            union
+            {
+                D3DRENDERSTATETYPE       rs;
+                D3DSAMPLERSTATETYPE      ss;
+                D3DTEXTURESTAGESTATETYPE ts;
+            };
+            DWORD                        value;
+            bool                         empty;
+
+            StateValue() : empty(true) {}
+        };
+
+        IDirect3DDevice9    * mDevice;
+        DynaArray<StateValue> mRenderStates;
+        DynaArray<StateValue> mSamplerStates;
+        DynaArray<StateValue> mTextureStates;
+
+    public:
+
+        //@{
+
+        static void sSetDefaultRs( D3DRENDERSTATETYPE type, DWORD value );
+        static void sSetDefaultSs( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value );
+        static void sSetDefaultTs( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
+
+        D3D9RenderStateBlock( D3D9GraphicsSystem & gs );
+
+        ~D3D9RenderStateBlock() {}
+
+        void setRenderState( D3DRENDERSTATETYPE type, DWORD value );
+        void setSamplerState( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value );
+        void setTextureState( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
+
+        void apply( const D3D9RenderStateBlock * last ) const;
+
+        //@}
+    };
+
     ///
     /// D3D9 graphics system
     ///
@@ -110,6 +153,12 @@ namespace GN { namespace gfx
 
         IDirect3DDevice9 * d3ddev() const { GN_ASSERT(mDesc.device); return mDesc.device; }
 
+        void setRenderStateBlock( const D3D9RenderStateBlock & rsb )
+        {
+            rsb.apply( mCurrentRsb );
+            mCurrentRsb = &rsb;
+        }
+
         void setTexture( UINT stage, IDirect3DBaseTexture9 * tex )
         {
             if( mCurrentTextures[stage] == tex ) return;
@@ -136,10 +185,10 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        D3D9GraphicsSystemDesc mDesc;
-        bool                   mSceneBegun;
-
-        IDirect3DBaseTexture9 * mCurrentTextures[32];
+        D3D9GraphicsSystemDesc       mDesc;
+        bool                         mSceneBegun;
+        const D3D9RenderStateBlock * mCurrentRsb;
+        IDirect3DBaseTexture9      * mCurrentTextures[20];
 
         // ********************************
         // private functions

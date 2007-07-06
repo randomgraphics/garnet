@@ -654,8 +654,6 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
 
     sPrintDeviceInfo( mDesc );
 
-    memset( mCurrentTextures, 0, sizeof(mCurrentTextures) );
-
     if( !sigDeviceRestore() ) return failure();
 
     if( !beginScene() ) return failure();
@@ -696,6 +694,8 @@ void GN::gfx::D3D9GraphicsSystem::quit()
 void GN::gfx::D3D9GraphicsSystem::clear()
 {
     memset( &mDesc, 0, sizeof(mDesc) );
+    memset( mCurrentTextures, 0, sizeof(mCurrentTextures) );
+    mCurrentRsb = 0;
 }
 
 // *****************************************************************************
