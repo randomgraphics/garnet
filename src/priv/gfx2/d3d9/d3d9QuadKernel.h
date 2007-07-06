@@ -42,12 +42,20 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        enum
+        {
+            NUM_VTXBUFS = 128,
+            MAX_QUADS   = 256,
+        };
+
         // from parents
         virtual const StreamSourceDesc & getDesc() const { return mDesc; }
         virtual void                     push( const void * data, size_t bytes );
         virtual size_t                   freeBytes() const { return (MAX_QUADS - mNumQuads) * sizeof(QuadVertex); }
         virtual bool                     onRestore() { return true; }
         virtual void                     onDispose() {}
+
+        inline void                      draw();
 
         // ********************************
         // private variables
@@ -62,12 +70,6 @@ namespace GN { namespace gfx
             float        _[2]; // padding to 32 bytes
         };
         GN_CASSERT( sizeof(QuadVertex) == 32 );
-
-        enum
-        {
-            NUM_VTXBUFS = 128,
-            MAX_QUADS   = 256,
-        };
 
         StreamSourceDesc                   mDesc;
         AutoComPtr<IDirect3DVertexBuffer9> mVtxBufs[NUM_VTXBUFS];

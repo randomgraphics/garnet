@@ -27,6 +27,36 @@ namespace GN { namespace gfx
         //@}
     };
 
+    class D3D9GraphicsSystem;
+
+    ///
+    /// D3D9 resource that can not suvive device lost.
+    ///
+    class D3D9UnstableResource
+    {
+        D3D9GraphicsSystem & mGraphicsSystem;
+
+    protected:
+
+        //@{
+
+        D3D9UnstableResource( D3D9GraphicsSystem & gs );
+        virtual ~D3D9UnstableResource();
+
+        //@}
+
+    public:
+
+        //@{
+
+        D3D9GraphicsSystem & gs() const { return mGraphicsSystem; }
+
+        virtual bool onRestore() = 0; ///< restore device data after device reset
+        virtual void onDispose() = 0; ///< dispose device data after device lost
+
+        //@}
+    };
+
     ///
     /// D3D9 graphics system
     ///
