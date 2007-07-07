@@ -26,6 +26,7 @@ namespace GN { namespace gfx
             T      value;
         };
 
+        StrA                  mTypeName;
         DynaArray<Item>       mItems;
         std::map<StrA,size_t> mNames;
 
@@ -33,7 +34,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -43,7 +44,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -54,7 +55,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -65,7 +66,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -75,7 +76,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "index is out of range." );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
                 return StrA::EMPTYSTR;
             }
             return mItems[index].name;
@@ -86,7 +87,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid name '%s'.", name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
                 return (size_t)-1;
             }
             return i->second;
@@ -97,7 +98,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() != i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "item named '%s' does exist already." );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s named '%s' does exist already.", mTypeName.cptr() );
                 return (size_t)-1;
             }
 
@@ -116,7 +117,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        NamedArray()
+        NamedArray( const char * typeName = "item" ) : mTypeName(typeName)
         {
         }
 
@@ -276,7 +277,11 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        BaseKernel( GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
+        BaseKernel( GraphicsSystem & gs )
+            : mGraphicsSystem(gs)
+            , mParameters( "PARAMETER" )
+            , mStreams( "STREAM" )
+        {}
 
         ///
         /// get reference to graphics system
@@ -289,8 +294,8 @@ namespace GN { namespace gfx
         virtual size_t               getNumStreams() const { return mStreams.size(); }
         virtual const StrA         & getStreamName( size_t index ) const { return mStreams.getName( index ); }
         virtual size_t               getStreamIndex( const StrA & name ) const { return mStreams.getIndex( name ); }
-        virtual const StreamSource * getStream( size_t index ) const;
-        virtual const StreamSource * getStream( const StrA & name ) const;
+        virtual StreamSource       * getStream( size_t index ) const;
+        virtual StreamSource       * getStream( const StrA & name ) const;
 
         virtual size_t                      getNumParameters() const { return mParameters.size(); }
         virtual const StrA                & getParameterName( size_t index ) const { return mParameters.getName( index ); }

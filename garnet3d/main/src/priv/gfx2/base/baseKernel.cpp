@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernel");
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
+GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
 {
     if( index >= mStreams.size() )
     {
@@ -26,7 +26,7 @@ const GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) con
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( const StrA & name ) const
+GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( const StrA & name ) const
 {
     size_t index = mStreams.getIndex( name );
     if( (size_t)-1 == index ) return 0;

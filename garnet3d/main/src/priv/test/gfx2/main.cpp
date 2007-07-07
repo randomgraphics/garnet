@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "testD3D9Hlsl.h"
+#include "font.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
+using namespace GN::test;
 
 struct InputInitiator
 {
@@ -52,7 +54,7 @@ struct ClearScreen
     }
 };
 
-static bool runcase( GraphicsSystem & gs, ClearScreen & cs, Gfx2TestApp & c )
+static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & font, Gfx2TestApp & c )
 {
     while( 1 )
     {
@@ -66,8 +68,15 @@ static bool runcase( GraphicsSystem & gs, ClearScreen & cs, Gfx2TestApp & c )
             if( KEY_SPACEBAR == k.code ) return true;
         }
 
+        // clear screen
         cs.draw();
+
+        // run test app
         c.draw(gs);
+
+        // draw some text
+        font.drawText( L"GFX2 test application", 10, 10 );
+
         gs.present();
     }
 }
@@ -77,6 +86,14 @@ static int run( GraphicsSystem & gs )
     // initialize clear kernel
     ClearScreen cs;
     if( !cs.init( gs ) ) return -1;
+
+    // initialize font
+    QuadKernelFont font( gs );
+    scene::FontFaceDesc ffd;
+    ffd.fontname = "font::/simsun.ttc";
+    ffd.width = 32;
+    ffd.height = 32;
+    if( !font.init( ffd ) ) return -1;
 
     Gfx2TestApp * cases[] =
     {
@@ -92,7 +109,7 @@ static int run( GraphicsSystem & gs )
 
         if( c->init(gs) )
         {
-            next = runcase( gs, cs, *c );
+            next = runcase( gs, cs, font, *c );
         }
 
         c->quit(gs);

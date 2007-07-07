@@ -66,6 +66,131 @@ static IDirect3DPixelShader9 * sCreatePs(
 // D3D9HlslKernelParameterSet
 // *****************************************************************************
 
+namespace GN { namespace gfx
+{
+    ///
+    /// parameter set for D3D9 hlsl kernel
+    ///
+    class D3D9HlslKernelParameterSet : public BaseKernelParameterSet, public SlotBase
+    {
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D9HlslKernelParameterSet( D3D9Kernel & e );
+        ~D3D9HlslKernelParameterSet() {}
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        ///
+        /// apply shader and constants to device
+        ///
+        void apply() const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ///
+        /// record offset and range of shader const update
+        ///
+        struct ConstUpdate
+        {
+            //@{
+            UInt32 firstRegister;
+            UInt32 registerCount;
+            void clear() { firstRegister = 0; registerCount = 0; }
+            void merge( UInt32 f, UInt32 c )
+            {
+                if( 0 == registerCount )
+                {
+                    firstRegister = f;
+                    registerCount = c;
+                }
+                else
+                {
+                    firstRegister = min( firstRegister, f );
+                    registerCount = max( registerCount, c ) - firstRegister;
+                }
+            }
+            //@}
+        };
+
+        class RenderStateUpdate
+        {
+            D3D9RenderStateBlock & mRsb;
+            BaseKernelParameter  & mParam;
+            D3DRENDERSTATETYPE     mType;
+
+            void onSet( size_t, size_t, size_t )
+            {
+                mRsb.setRenderState( mType, *mParam.toUInt() );
+            }
+
+            void onUnset( size_t )
+            {
+                mRsb.unsetRenderState( mType );
+            }
+
+        public:
+
+            RenderStateUpdate( D3D9RenderStateBlock & r, BaseKernelParameter & p, D3DRENDERSTATETYPE t )
+                : mRsb(r)
+                , mParam( p )
+                , mType( t )
+            {
+                p.sigValueSet.connect( this, &RenderStateUpdate::onSet );
+                p.sigValueUnset.connect( this, &RenderStateUpdate::onUnset );
+            }
+
+            ~RenderStateUpdate()
+            {
+                mParam.sigValueSet.disconnect( this );
+                mParam.sigValueUnset.disconnect( this );
+            }
+        };
+
+        IDirect3DDevice9                 * mDev;
+
+        AutoComPtr<IDirect3DVertexShader9> mVs;
+        AutoComPtr<IDirect3DPixelShader9>  mPs;
+        AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
+        ConstUpdate                        mVscfUpdate, mPscfUpdate;
+        D3D9RenderStateBlock               mRsb;
+
+        // shader parameters
+        size_t mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
+
+        // render states parameters
+        RenderStateUpdate mBlending;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        void onVsSet( size_t, size_t offset, size_t count );
+        void onVsUnset( size_t );
+
+        void onPsSet( size_t, size_t offset, size_t count );
+        void onPsUnset( size_t );
+
+        void onVscfSet( size_t, size_t offset, size_t count );
+
+        void onPscfSet( size_t, size_t offset, size_t count );
+
+        void onRsbSet( size_t index, size_t, size_t );
+        void onRsbUnset( size_t index, size_t, size_t );
+    };
+}}
+
 //
 //
 // -----------------------------------------------------------------------------

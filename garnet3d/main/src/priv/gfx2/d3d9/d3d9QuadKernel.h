@@ -10,7 +10,7 @@ namespace GN { namespace gfx
 {
     ///
     /// quad vertex stream
-    ///    
+    ///
     class D3D9QuadStream : public StreamSource, public D3D9UnstableResource, public StdClass
     {
         GN_DECLARE_STDCLASS( D3D9QuadStream, StdClass );
@@ -130,6 +130,7 @@ namespace GN { namespace gfx
             return f;
         }
 
+        virtual KernelParameterSet * createParameterSet();
         virtual void render( const KernelParameterSet &, KernelBinding );
 
         //@}
@@ -145,12 +146,12 @@ namespace GN { namespace gfx
         D3D9QuadStream                          mQuads;
 
         AutoComPtr<IDirect3DVertexShader9>      mVs;
-        AutoComPtr<IDirect3DPixelShader9>       mPsTex; ///< textured
-        AutoComPtr<IDirect3DPixelShader9>       mPsClr; ///< solid color
+        AutoComPtr<IDirect3DPixelShader9>       mPs;
         AutoComPtr<IDirect3DVertexDeclaration9> mDecl;
         AutoComPtr<IDirect3DIndexBuffer9>       mIdxBuf;
 
-        size_t mOption;
+        // parameter handles(s)
+        size_t mTextured;
 
         // ********************************
         // private functions

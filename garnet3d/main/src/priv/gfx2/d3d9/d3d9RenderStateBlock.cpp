@@ -173,15 +173,40 @@ void GN::gfx::D3D9RenderStateBlock::apply( const D3D9RenderStateBlock * last ) c
     // apply render states
     if( last )
     {
-        D3DRENDERSTATETYPE t;
+        // unapply last rsb
+        for( size_t i = 0; i < last->mRsTypes.size(); ++i )
+        {
+            D3DRENDERSTATETYPE t = last->mRsTypes[i];
+
+            const StateValue & oldv = last->mRsValues[t];
+            const StateValue & newv = mRsValues[t];
+
+            GN_ASSERT( oldv.valid );
+
+            if( !newv.valid )
+            {
+                mDevice->SetRenderState( t, sDefaultD3D9DeviceStates.rs[t].value );
+            }
+            else if( newv.value != oldv.value )
+            {
+                mDevice->SetRenderState( t, newv.value );
+            }
+        }
+
+        // apply new rsb
         for( size_t i = 0; i < mRsTypes.size(); ++i )
         {
-            t = mRsTypes[i];
-            const StateValue & v = mRsValues[t];
-            GN_ASSERT( v.valid );
-            if( !last->mRsValues[t].valid || last->mRsValues[t].value != v.value )
+            D3DRENDERSTATETYPE t = mRsTypes[i];
+
+            const StateValue & oldv = last->mRsValues[t];
+
+            const StateValue & newv = mRsValues[t];
+
+            GN_ASSERT( newv.valid );
+
+            if( !oldv.valid )
             {
-                mDevice->SetRenderState( t, v.value );
+                mDevice->SetRenderState( t, newv.value );
             }
         }
     }
