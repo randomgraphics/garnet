@@ -118,6 +118,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     mParam->setParameter( "BASE_VERTEX", 0 );
     mParam->setParameter( "VERTEX_COUNT", 24 );
     mParam->setParameter( "BASE_INDEX", 0 );
+    //mParam->setParameter( "BLENDING", 1 );
 
     // create vertex buffer
     SurfaceCreationParameter scp;

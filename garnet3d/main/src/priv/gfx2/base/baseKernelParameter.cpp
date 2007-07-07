@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernelParameter");
 // *****************************************************************************
 
 #define CHECK_INPUT( T ) \
-    if( KERNEL_PARAMETER_TYPE_##T != mDesc.type ) { GN_ERROR(sLogger)( "not a " #T "parameter." ); return; } \
+    if( KERNEL_PARAMETER_TYPE_##T != mDesc.type ) { GN_ERROR(sLogger)( "not a " #T " parameter." ); return; } \
     if( (offset+count) > mDesc.count ) { GN_ERROR(sLogger)( "data overflow!" ); return; } \
     if( 0 == values ) { GN_ERROR(sLogger)( "null values" ); return; }
 
@@ -27,7 +27,7 @@ void GN::gfx::BaseKernelParameter::setb( size_t offset, size_t count, const bool
     memcpy( &mData[offset], values, count );
 
     mEmpty = false;
-    sigValueSet( offset, count );
+    sigValueSet( mIndex, offset, count );
 }
 
 //
@@ -45,7 +45,7 @@ void GN::gfx::BaseKernelParameter::seti( size_t offset, size_t count, const int 
     memcpy( &mData[offset], values, count );
 
     mEmpty = false;
-    sigValueSet( offset, count );
+    sigValueSet( mIndex, offset, count );
 }
 
 //
@@ -63,7 +63,7 @@ void GN::gfx::BaseKernelParameter::setf( size_t offset, size_t count, const floa
     memcpy( &mData[offset], values, count );
 
     mEmpty = false;
-    sigValueSet( offset, count );
+    sigValueSet( mIndex, offset, count );
 }
 
 //
@@ -81,7 +81,16 @@ void GN::gfx::BaseKernelParameter::sets( size_t offset, size_t count, const char
     }
 
     mEmpty = false;
-    sigValueSet( offset, count );
+    sigValueSet( mIndex, offset, count );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BaseKernelParameter::unset()
+{
+    mEmpty = true;
+    sigValueUnset( mIndex );
 }
 
 // *****************************************************************************
@@ -91,19 +100,6 @@ void GN::gfx::BaseKernelParameter::sets( size_t offset, size_t count, const char
 GN::gfx::BaseKernelParameterSet::BaseKernelParameterSet( BaseKernel & e )
     : KernelParameterSet(e)
 {
-    clear();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::BaseKernelParameterSet::init()
-{
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::BaseKernelParameterSet, () );
-
     BaseKernel & k = GN_SAFE_CAST<BaseKernel&>( getKernel() );
 
     size_t count = k.getNumParameters();
@@ -112,20 +108,14 @@ bool GN::gfx::BaseKernelParameterSet::init()
 
     for( size_t i = 0; i < count; ++i )
     {
-        mParameters[i] = createParameter( *k.getParameterDesc(i) );
-        if( 0 == mParameters[i] ) return failure();
+        mParameters[i] = new BaseKernelParameter( *k.getParameterDesc(i), i );
     }
-
-    // success
-    return success();
-
-    GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseKernelParameterSet::quit()
+GN::gfx::BaseKernelParameterSet::~BaseKernelParameterSet()
 {
     GN_GUARD;
 
@@ -135,9 +125,6 @@ void GN::gfx::BaseKernelParameterSet::quit()
     }
 
     mParameters.clear();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
@@ -161,4 +148,15 @@ GN::gfx::BaseKernelParameterSet::getParameter( size_t index ) const
     return mParameters[index];
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::BaseKernelParameter *
+GN::gfx::BaseKernelParameterSet::getBaseParameterByName( const StrA & name ) const
+{
+    size_t index = getKernel().getParameterIndex( name );
+    if( (size_t)-1 == index ) return 0;
+    return GN_SAFE_CAST<BaseKernelParameter*>( mParameters[index] );
 }
