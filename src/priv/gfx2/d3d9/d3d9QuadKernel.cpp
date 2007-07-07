@@ -3,6 +3,70 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9QuadKernel");
 
+namespace GN { namespace gfx
+{
+    ///
+    /// parameter set for D3D9 hlsl kernel
+    ///
+    class D3D9QuadKernelParameterSet : public BaseKernelParameterSet, public SlotBase
+    {
+        D3D9RenderStateBlock  mRsb;
+        BaseKernelParameter * mTransparent;
+
+        void onSet( size_t, size_t, size_t )
+        {
+            const bool * trans = mTransparent->toBool();
+            if( *trans )
+            {
+                setDefaultRsb( 0 );
+            }
+            else
+            {
+                mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
+            }
+        }
+
+        void setDefaultRsb( size_t )
+        {
+            mRsb.setRenderState( D3DRS_ZENABLE         , FALSE );
+            mRsb.setRenderState( D3DRS_ZWRITEENABLE    , FALSE );
+            mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
+            mRsb.setRenderState( D3DRS_BLENDOP         , D3DBLENDOP_ADD );
+            mRsb.setRenderState( D3DRS_SRCBLEND        , D3DBLEND_SRCALPHA );
+            mRsb.setRenderState( D3DRS_DESTBLEND       , D3DBLEND_INVSRCALPHA );
+            mRsb.setRenderState( D3DRS_BLENDOPALPHA    , D3DBLENDOP_ADD );
+            mRsb.setRenderState( D3DRS_SRCBLENDALPHA   , D3DBLEND_ONE );
+            mRsb.setRenderState( D3DRS_DESTBLENDALPHA  , D3DBLEND_ZERO );
+            mRsb.setRenderState( D3DRS_CULLMODE        , D3DCULL_NONE );
+        }
+
+    public:
+
+        //@{
+
+        D3D9QuadKernelParameterSet( D3D9Kernel & k )
+            : BaseKernelParameterSet( k )
+            , mRsb( k.d3d9gs() )
+            , mTransparent( getBaseParameterByName( "TRANSPARENT" ) )
+        {
+            setDefaultRsb( 0 );
+            mTransparent->sigValueSet.connect( this, &D3D9QuadKernelParameterSet::onSet );
+            mTransparent->sigValueUnset.connect( this, &D3D9QuadKernelParameterSet::setDefaultRsb );
+        }
+
+        ~D3D9QuadKernelParameterSet()
+        {
+        }
+
+        virtual void apply() const
+        {
+            GN_SAFE_CAST<D3D9Kernel&>(getKernel()).d3d9gs().setRenderStateBlock( mRsb );
+        }
+
+        //@}
+    };
+}}
+
 // *****************************************************************************
 // D3D9QuadStream
 // *****************************************************************************
@@ -89,7 +153,7 @@ void GN::gfx::D3D9QuadStream::push( const void * source, size_t bytes )
     IDirect3DVertexBuffer9 * vb = mVtxBufs[mActiveVB];
     GN_ASSERT( vb );
 
-    UInt32 newQuads = (UInt32)( bytes / sizeof(QuadVertex) );
+    UInt32 newQuads = (UInt32)( bytes / sizeof(QuadVertex) / 4 );
 
     void * dest;
 
@@ -144,13 +208,15 @@ GN::gfx::D3D9QuadKernel::D3D9QuadKernel( D3D9GraphicsSystem & gs )
 {
     // setup ports
     addPortRef( "TARGET0", &mTarget0 );
-    addPortRef( "DEPTH", &mDepth );
+    addPortRef( "DEPTH"  , &mDepth );
+    addPortRef( "TEXTURE0", &mTexture );
 
     // setup streams
     addStreamRef( "QUADS", &mQuads );
 
     // setup parameters
-    mOption = addParameter( "OPTION", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "TRANSPARENT", KERNEL_PARAMETER_TYPE_BOOL, 1 );
+    mTextured = addParameter( "TEXTURED",    KERNEL_PARAMETER_TYPE_BOOL, 1 );
 }
 
 //
@@ -185,7 +251,7 @@ bool GN::gfx::D3D9QuadKernel::init()
         "   o.tex = tex;                    \n"
         "   return o;                       \n"
         "}";
-    static const char * pscodeTex =
+    static const char * pscode =
         "struct VSOUT                       \n"
         "{                                  \n"
         "   float4 pos : POSITION;          \n"
@@ -195,25 +261,13 @@ bool GN::gfx::D3D9QuadKernel::init()
         "sampler s0 : register(s0);         \n"
         "float4 main( VSOUT i ) : COLOR     \n"
         "{                                  \n"
-        "   return tex2D( s0, i.tex );      \n"
-        "}";
-    static const char * pscodeClr =
-        "struct VSOUT                       \n"
-        "{                                  \n"
-        "   float4 pos : POSITION;          \n"
-        "   float4 clr : COLOR0;            \n"
-        "   float2 tex : TEXCOORD0;         \n"
-        "};                                 \n"
-        "float4 main( VSOUT i ) : COLOR     \n"
-        "{                                  \n"
-        "   return i.clr;                   \n"
+        "   return i.clr * tex2D( s0, i.tex ); \n"
         "}";
 
     // create shader
     mVs.attach( d3d9::compileVS( dev, vscode ) );
-    mPsTex.attach( d3d9::compilePS( dev, pscodeTex ) );
-    mPsClr.attach( d3d9::compilePS( dev, pscodeClr ) );
-    if( !mVs || !mPsTex || !mPsClr ) return failure();
+    mPs.attach( d3d9::compilePS( dev, pscode ) );
+    if( !mVs || !mPs ) return failure();
 
     // create decl
     D3DVERTEXELEMENT9 elements[] = {
@@ -258,8 +312,7 @@ void GN::gfx::D3D9QuadKernel::quit()
     GN_GUARD;
 
     mVs.clear();
-    mPsTex.clear();
-    mPsClr.clear();
+    mPs.clear();
     mDecl.clear();
     mIdxBuf.clear();
     mQuads.quit();
@@ -273,21 +326,37 @@ void GN::gfx::D3D9QuadKernel::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet &, KernelBinding binding )
+GN::gfx::KernelParameterSet * GN::gfx::D3D9QuadKernel::createParameterSet()
+{
+    return new D3D9QuadKernelParameterSet(*this);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet & param, KernelBinding binding )
 {
     GN_GUARD_SLOW;
+
+    PIXPERF_FUNCTION_EVENT();
 
     D3D9KernelBinding & b = getPortBinding( binding );
     b.apply();
 
+    const D3D9QuadKernelParameterSet & p = GN_SAFE_CAST<const D3D9QuadKernelParameterSet &>(param);
+
+    p.apply();
+
     IDirect3DDevice9 * dev = d3d9gs().d3ddev();
 
     dev->SetVertexShader( mVs );
-    dev->SetPixelShader( mPsTex );
+    dev->SetPixelShader( mPs );
     dev->SetVertexDeclaration( mDecl );
     dev->SetIndices( mIdxBuf );
 
-    // TODO: setup render states
+    //dev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+    //dev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+    //dev->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
 
     mQuads.draw();
 

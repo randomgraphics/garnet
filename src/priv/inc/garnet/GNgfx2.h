@@ -573,8 +573,8 @@ namespace GN { namespace gfx
         virtual size_t               getNumStreams() const = 0;
         virtual const StrA         & getStreamName( size_t index ) const = 0; ///< return empty string, if failed.
         virtual size_t               getStreamIndex( const StrA & name ) const = 0;
-        virtual const StreamSource * getStream( size_t index ) const = 0;
-        virtual const StreamSource * getStream( const StrA & name ) const = 0;
+        virtual StreamSource       * getStream( size_t index ) const = 0;
+        virtual StreamSource       * getStream( const StrA & name ) const = 0;
 
         //@}
 

@@ -629,10 +629,6 @@ GN::gfx::D3D9UnstableResource::~D3D9UnstableResource()
 GN::gfx::D3D9GraphicsSystem::D3D9GraphicsSystem()
 {
     clear();
-
-    // register build-in kernels
-    registerKernel( "CLEAR_SCREEN", D3D9ClearScreenKernel::sGetFactory() );
-    registerKernel( "D3D9_HLSL", D3D9HlslKernel::sGetFactory() );
 }
 
 // *****************************************************************************
@@ -662,6 +658,11 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !restoreDevice() ) return failure();
 
     if( !beginScene() ) return failure();
+
+    // register build-in kernels
+    registerKernel( "CLEAR_SCREEN", D3D9ClearScreenKernel::sGetFactory() );
+    registerKernel( "D3D9_HLSL", D3D9HlslKernel::sGetFactory() );
+    registerKernel( "QUAD", D3D9QuadKernel::sGetFactory() );
 
     // success
     return success();
