@@ -11,10 +11,8 @@ namespace GN { namespace gfx
     ///
     /// parameter set for D3D9 hlsl kernel
     ///
-    class D3D9HlslKernelParameterSet : public BaseKernelParameterSet
+    class D3D9HlslKernelParameterSet : public BaseKernelParameterSet, public SlotBase
     {
-        GN_DECLARE_STDCLASS( D3D9HlslKernelParameterSet, BaseKernelParameterSet );
-
         // ********************************
         // ctor/dtor
         // ********************************
@@ -22,19 +20,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9HlslKernelParameterSet( D3D9Kernel & e );
-        virtual ~D3D9HlslKernelParameterSet() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear() { mVscfUpdate.clear(); mPscfUpdate.clear(); }
+        ~D3D9HlslKernelParameterSet() {}
         //@}
 
         // ********************************
@@ -77,27 +63,71 @@ namespace GN { namespace gfx
             //@}
         };
 
+        class RenderStateUpdate
+        {
+            D3D9RenderStateBlock & mRsb;
+            BaseKernelParameter  & mParam;
+            D3DRENDERSTATETYPE     mType;
+
+            void onSet( size_t, size_t, size_t )
+            {
+                mRsb.setRenderState( mType, *mParam.toUInt() );
+            }
+
+            void onUnset( size_t )
+            {
+                mRsb.unsetRenderState( mType );
+            }
+
+        public:
+
+            RenderStateUpdate( D3D9RenderStateBlock & r, BaseKernelParameter & p, D3DRENDERSTATETYPE t )
+                : mRsb(r)
+                , mParam( p )
+                , mType( t )
+            {
+                p.sigValueSet.connect( this, &RenderStateUpdate::onSet );
+                p.sigValueUnset.connect( this, &RenderStateUpdate::onUnset );
+            }
+
+            ~RenderStateUpdate()
+            {
+                mParam.sigValueSet.disconnect( this );
+                mParam.sigValueUnset.disconnect( this );
+            }
+        };
+
         IDirect3DDevice9                 * mDev;
+
         AutoComPtr<IDirect3DVertexShader9> mVs;
         AutoComPtr<IDirect3DPixelShader9>  mPs;
         AutoComPtr<ID3DXConstantTable>     mVsConstBuffer, mPsConstBuffer;
-        size_t                             mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
         ConstUpdate                        mVscfUpdate, mPscfUpdate;
+        D3D9RenderStateBlock               mRsb;
+
+        // shader parameters
+        size_t mVsHandle, mPsHandle, mVscfHandle, mPscfHandle;
+
+        // render states parameters
+        RenderStateUpdate mBlending;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
-        void onVsSet( size_t offset, size_t count );
-        void onVsUnset();
+        void onVsSet( size_t, size_t offset, size_t count );
+        void onVsUnset( size_t );
 
-        void onPsSet( size_t offset, size_t count );
-        void onPsUnset();
+        void onPsSet( size_t, size_t offset, size_t count );
+        void onPsUnset( size_t );
 
-        void onVscfSet( size_t offset, size_t count );
+        void onVscfSet( size_t, size_t offset, size_t count );
 
-        void onPscfSet( size_t offset, size_t count );
+        void onPscfSet( size_t, size_t offset, size_t count );
+
+        void onRsbSet( size_t index, size_t, size_t );
+        void onRsbUnset( size_t index, size_t, size_t );
     };
 
     ///
@@ -105,10 +135,9 @@ namespace GN { namespace gfx
     ///
     class D3D9HlslKernel : public D3D9Kernel
     {
-        size_t mVs, mPs;
-        size_t mVsFloatConstants, mPsFloatConstants;
         size_t mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
+        // ports
         D3D9RenderTargetPort mRenderTarget0;
         D3D9RenderTargetPort mRenderTarget1;
         D3D9RenderTargetPort mRenderTarget2;

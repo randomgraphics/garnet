@@ -150,10 +150,11 @@ namespace GN { namespace gfx
     ///
     class BaseKernelParameter : public KernelParameter
     {
-        KernelParameterDesc   mDesc;
-        DynaArray<UInt8*>     mData;
-        DynaArray<StrA>       mStr;
-        bool                  mEmpty;
+        const KernelParameterDesc mDesc;
+        const size_t              mIndex;
+        DynaArray<UInt8*>         mData;
+        DynaArray<StrA>           mStr;
+        bool                      mEmpty;
 
         const void * getData() const { return empty() ? 0 : mData.cptr(); }
         const StrA * getString() const { return empty() ? 0 : mStr.cptr(); }
@@ -163,18 +164,19 @@ namespace GN { namespace gfx
         ///
         /// triggered right after the value is set
         ///
-        Signal2< void, size_t /*offset*/, size_t /*count*/ > sigValueSet;
+        Signal3< void, size_t /*index*/, size_t /*offset*/, size_t /*count*/ > sigValueSet;
 
         ///
         /// triggered right after the value is unset
         ///
-        Signal0< void > sigValueUnset;
+        Signal1< void, size_t /*index*/ > sigValueUnset;
 
         ///
         /// ctor
         ///
-        BaseKernelParameter( const KernelParameterDesc & desc )
+        BaseKernelParameter( const KernelParameterDesc & desc, size_t index )
             : mDesc( desc )
+            , mIndex( index )
             , mEmpty( true )
         {
             if( KERNEL_PARAMETER_TYPE_STRING == mDesc.type )
@@ -209,17 +211,15 @@ namespace GN { namespace gfx
         virtual void                        seti( size_t offset, size_t count, const int          * values );
         virtual void                        setf( size_t offset, size_t count, const float        * values );
         virtual void                        sets( size_t offset, size_t count, const char * const * values );
-        virtual void                        unset() { mEmpty = true; }
+        virtual void                        unset();
         //@}
     };
 
     ///
     /// base kernel parameter set
     ///    
-    class BaseKernelParameterSet : public KernelParameterSet, public StdClass
+    class BaseKernelParameterSet : public KernelParameterSet
     {
-        GN_DECLARE_STDCLASS( BaseKernelParameterSet, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
@@ -227,19 +227,7 @@ namespace GN { namespace gfx
         //@{
     public:
         BaseKernelParameterSet( BaseKernel & e );
-        virtual ~BaseKernelParameterSet() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear() {}
+        virtual ~BaseKernelParameterSet();
         //@}
 
         // ********************************
@@ -252,6 +240,19 @@ namespace GN { namespace gfx
         virtual KernelParameter * getParameter( size_t index ) const;
         //@}
 
+        ///
+        /// get parameter instance by name
+        ///
+        BaseKernelParameter * getBaseParameterByIndex( size_t index ) const
+        {
+            return GN_SAFE_CAST<BaseKernelParameter*>( getParameter( index ) );
+        }
+
+        ///
+        /// get parameter instance by name
+        ///
+        BaseKernelParameter * getBaseParameterByName( const StrA & name ) const;
+
         // ********************************
         // private variables
         // ********************************
@@ -263,14 +264,6 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-
-        ///
-        /// override this method to create your own parameter instance
-        ///
-        virtual BaseKernelParameter * createParameter( const KernelParameterDesc & desc ) const
-        {
-            return new BaseKernelParameter( desc );
-        }
     };
 
     ///

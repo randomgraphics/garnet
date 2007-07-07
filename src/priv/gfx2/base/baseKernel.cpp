@@ -43,11 +43,7 @@ GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
 {
     GN_GUARD;
 
-    AutoObjPtr<BaseKernelParameterSet> p( new BaseKernelParameterSet( *this ) );
-
-    if( !p->init() ) return 0;
-
-    return p.detach();
+    return new BaseKernelParameterSet( *this );
 
     GN_UNGUARD;
 }

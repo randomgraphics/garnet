@@ -88,7 +88,10 @@ namespace GN { namespace gfx
         ~D3D9RenderStateBlock() {}
 
         void setRenderState( D3DRENDERSTATETYPE type, DWORD value );
+        void unsetRenderState( D3DRENDERSTATETYPE type );
+
         void setSamplerState( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value );
+
         void setTextureState( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
 
         void apply( const D3D9RenderStateBlock * last ) const;
