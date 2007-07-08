@@ -116,7 +116,7 @@ static HWND sCreateWindow( const GN::gfx::GraphicsSystemCreationParameter & gscp
         L"Garnet Render Window",
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        width, height,
+        rc.right - rc.left, rc.bottom - rc.top,
         0, // no parent
         0, // no menu
         module,
