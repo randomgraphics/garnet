@@ -231,7 +231,10 @@ bool GN::gfx::D3D9QuadKernel::init()
 
     IDirect3DDevice9 * dev = d3d9gs().d3ddev();
 
-    static const char * vscode =
+    const GraphicsSystemDesc & gsdesc = gs().getDesc();
+
+    StrA vscode;
+    vscode.format(
         "struct VSOUT                       \n"
         "{                                  \n"
         "   float4 pos : POSITION;          \n"
@@ -244,13 +247,13 @@ bool GN::gfx::D3D9QuadKernel::init()
         "   in float2 tex : TEXCOORD0 )     \n"
         "{                                  \n"
         "   VSOUT o;                        \n"
-        "   o.pos.x = pos.x *  2.0 - 1.0;   \n"
-        "   o.pos.y = pos.y * -2.0 + 1.0;   \n"
+        "   o.pos.x = pos.x *  2.0 - 1.0 - 0.5 / %d; \n"
+        "   o.pos.y = pos.y * -2.0 + 1.0 - 0.5 / %d; \n"
         "   o.pos.zw = pos.zw;              \n"
-        "   o.clr = clr;                    \n"
+        "   o.clr = clr.zyxw; // BGRA->RGBA \n"
         "   o.tex = tex;                    \n"
         "   return o;                       \n"
-        "}";
+        "}", gsdesc.width, gsdesc.height );
     static const char * pscode =
         "struct VSOUT                       \n"
         "{                                  \n"
@@ -265,7 +268,7 @@ bool GN::gfx::D3D9QuadKernel::init()
         "}";
 
     // create shader
-    mVs.attach( d3d9::compileVS( dev, vscode ) );
+    mVs.attach( d3d9::compileVS( dev, vscode.cptr() ) );
     mPs.attach( d3d9::compilePS( dev, pscode ) );
     if( !mVs || !mPs ) return failure();
 
