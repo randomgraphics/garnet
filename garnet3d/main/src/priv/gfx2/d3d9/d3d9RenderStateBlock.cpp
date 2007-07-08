@@ -17,12 +17,17 @@ struct D3D9DeviceStateValue
 struct D3D9DefaultDeviceStates
 {
     GN::FixedArray<D3D9DeviceStateValue,210> rs;
+    GN::FixedArray<D3D9DeviceStateValue,14>  ss;
 
     D3D9DefaultDeviceStates()
     {
         #define GN_D3D9_RENDER_STATE( x, y ) rs[x].valid = true; rs[x].value = y;
         #include "d3d9RenderStateMeta.h"
         #undef  GN_D3D9_RENDER_STATE
+
+        #define GN_D3D9_SAMPLER_STATE( x, y ) ss[x].valid = true; ss[x].value = y;
+        #include "d3d9SamplerStateMeta.h"
+        #undef  GN_D3D9_SAMPLER_STATE
     }
 };
 
@@ -35,22 +40,18 @@ static D3D9DefaultDeviceStates sDefaultD3D9DeviceStates;
 //
 //
 // -----------------------------------------------------------------------------
-static void sSetRs(
-    IDirect3DDevice9 * dev,
-    D3DRENDERSTATETYPE type,
-    DWORD              value,
-    bool               pure )
+static UInt32 sGetNumTextureStages( const D3DCAPS9 & d3dcaps )
 {
-    if( pure )
-    {
-        dev->SetRenderState( type, value );
-    }
-    else
-    {
-        DWORD old;
-        dev->GetRenderState( type, &old );
-        if( old != value ) dev->SetRenderState( type, value );
-    }
+    UInt32 s = 0;
+
+    if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0) ) s += 4;
+
+    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0) ) s += 16;
+    else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4) ) s += 6;
+    else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1) ) s += 4;
+    else s += d3dcaps.MaxTextureBlendStages;
+
+    return s;
 }
 
 // *****************************************************************************
@@ -73,7 +74,36 @@ void GN::gfx::D3D9RenderStateBlock::sSetupDefaultDeviceStates( D3D9GraphicsSyste
         const D3D9DeviceStateValue & v = sDefaultD3D9DeviceStates.rs[i];
         if( v.valid )
         {
-            sSetRs( desc.device, (D3DRENDERSTATETYPE)i, sDefaultD3D9DeviceStates.rs[i].value, pure );
+            if( pure )
+            {
+                desc.device->SetRenderState( (D3DRENDERSTATETYPE)i, v.value );
+            }
+            else
+            {
+                DWORD old;
+                desc.device->GetRenderState( (D3DRENDERSTATETYPE)i, &old );
+                if( old != v.value ) desc.device->SetRenderState( (D3DRENDERSTATETYPE)i, v.value );
+            }
+        }
+    }
+
+    UInt32 numStages = sGetNumTextureStages( desc.caps );
+    for( UInt32 s = 0; s < numStages; ++s )
+    for( size_t i = 0; i < GN_ARRAY_COUNT(sDefaultD3D9DeviceStates.ss); ++i )
+    {
+        const D3D9DeviceStateValue & v = sDefaultD3D9DeviceStates.ss[i];
+        if( v.valid )
+        {
+            if( pure )
+            {
+                desc.device->SetSamplerState( s, (D3DSAMPLERSTATETYPE)i, v.value );
+            }
+            else
+            {
+                DWORD old;
+                desc.device->GetSamplerState( s, (D3DSAMPLERSTATETYPE)i, &old );
+                if( old != v.value ) desc.device->SetSamplerState( s, (D3DSAMPLERSTATETYPE)i, v.value );
+            }
         }
     }
 }
@@ -148,10 +178,42 @@ void GN::gfx::D3D9RenderStateBlock::unsetRenderState( D3DRENDERSTATETYPE type )
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9RenderStateBlock::setSamplerState( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value )
 {
-    GN_UNUSED_PARAM( stage );
-    GN_UNUSED_PARAM( type );
-    GN_UNUSED_PARAM( value );
-    GN_UNIMPL();
+    GN_ASSERT( stage < 20 );
+    GN_ASSERT( sDefaultD3D9DeviceStates.ss[type].valid );
+
+    StageState newss = { stage, type };
+
+    if( value == sDefaultD3D9DeviceStates.ss[type].value )
+    {
+        if( mSsValues[stage][type].valid )
+        {
+            // set to default value
+            mSsValues[stage][type].valid = false;
+            GN_ASSERT( 1 == std::count( mSsTypes.begin(), mSsTypes.end(), newss ) );
+            std::remove( mSsTypes.begin(), mSsTypes.end(), newss );
+            mSsTypes.popBack();
+        }
+        else
+        {
+            GN_ASSERT( 0 == std::count( mSsTypes.begin(), mSsTypes.end(), newss ) );
+        }
+    }
+    else if( mSsValues[stage][type].valid )
+    {
+        // update to new (non-default) value
+        GN_ASSERT( 1 == std::count( mSsTypes.begin(), mSsTypes.end(), newss ) );
+        const StageState * t = std::find( mSsTypes.begin(), mSsTypes.end(), newss );
+        GN_ASSERT( mSsTypes.begin() <= t && t < mSsTypes.end() );
+        mSsValues[t->stage][t->type].value = value;
+    }
+    else
+    {
+        // set to non-default value
+        GN_ASSERT( 0 == std::count( mSsTypes.begin(), mSsTypes.end(), newss ) );
+        mSsValues[stage][type].valid = true;
+        mSsValues[stage][type].value = value;
+        mSsTypes.pushBack( newss );
+    }
 }
 
 //
@@ -170,54 +232,125 @@ void GN::gfx::D3D9RenderStateBlock::setTextureState( size_t stage, D3DTEXTURESTA
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9RenderStateBlock::apply( const D3D9RenderStateBlock * last ) const
 {
-    // apply render states
     if( last )
     {
-        // unapply last rsb
-        for( size_t i = 0; i < last->mRsTypes.size(); ++i )
-        {
-            D3DRENDERSTATETYPE t = last->mRsTypes[i];
-
-            const StateValue & oldv = last->mRsValues[t];
-            const StateValue & newv = mRsValues[t];
-
-            GN_ASSERT( oldv.valid );
-
-            if( !newv.valid )
-            {
-                mDevice->SetRenderState( t, sDefaultD3D9DeviceStates.rs[t].value );
-            }
-            else if( newv.value != oldv.value )
-            {
-                mDevice->SetRenderState( t, newv.value );
-            }
-        }
-
-        // apply new rsb
-        for( size_t i = 0; i < mRsTypes.size(); ++i )
-        {
-            D3DRENDERSTATETYPE t = mRsTypes[i];
-
-            const StateValue & oldv = last->mRsValues[t];
-
-            const StateValue & newv = mRsValues[t];
-
-            GN_ASSERT( newv.valid );
-
-            if( !oldv.valid )
-            {
-                mDevice->SetRenderState( t, newv.value );
-            }
-        }
+        applyRenderStates( *last );
+        applySamplerStates( *last );
     }
     else
     {
-        D3DRENDERSTATETYPE t;
-        for( size_t i = 0; i < mRsTypes.size(); ++i )
+        applyRenderStates();
+        applySamplerStates();
+    }
+}
+
+// *****************************************************************************
+// private method
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::gfx::D3D9RenderStateBlock::applyRenderStates() const
+{
+    for( size_t i = 0; i < mRsTypes.size(); ++i )
+    {
+        D3DRENDERSTATETYPE t = mRsTypes[i];
+        GN_ASSERT( mRsValues[t].valid );
+        mDevice->SetRenderState( t, mRsValues[t].value );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::gfx::D3D9RenderStateBlock::applyRenderStates( const D3D9RenderStateBlock & last ) const
+{
+    for( size_t i = 0; i < last.mRsTypes.size(); ++i )
+    {
+        D3DRENDERSTATETYPE t = last.mRsTypes[i];
+
+        const StateValue & oldv = last.mRsValues[t];
+        const StateValue & newv = mRsValues[t];
+
+        GN_ASSERT( oldv.valid );
+
+        if( !newv.valid )
         {
-            t = mRsTypes[i];
-            GN_ASSERT( mRsValues[t].valid );
-            mDevice->SetRenderState( t, mRsValues[t].value );
+            mDevice->SetRenderState( t, sDefaultD3D9DeviceStates.rs[t].value );
+        }
+        else if( newv.value != oldv.value )
+        {
+            mDevice->SetRenderState( t, newv.value );
+        }
+    }
+
+    // apply new rsb
+    for( size_t i = 0; i < mRsTypes.size(); ++i )
+    {
+        D3DRENDERSTATETYPE t = mRsTypes[i];
+
+        const StateValue & oldv = last.mRsValues[t];
+
+        const StateValue & newv = mRsValues[t];
+
+        GN_ASSERT( newv.valid );
+
+        if( !oldv.valid )
+        {
+            mDevice->SetRenderState( t, newv.value );
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::gfx::D3D9RenderStateBlock::applySamplerStates() const
+{
+    for( size_t i = 0; i < mSsTypes.size(); ++i )
+    {
+        const StageState & t = mSsTypes[i];
+        GN_ASSERT( mSsValues[t.stage][t.type].valid );
+        mDevice->SetSamplerState( t.stage, t.type, mSsValues[t.stage][t.type].value );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::gfx::D3D9RenderStateBlock::applySamplerStates( const D3D9RenderStateBlock & last ) const
+{
+    for( size_t i = 0; i < last.mSsTypes.size(); ++i )
+    {
+        const StageState &    t = last.mSsTypes[i];
+        const StateValue & oldv = last.mSsValues[t.stage][t.type];
+        const StateValue & newv = mSsValues[t.stage][t.type];
+
+        GN_ASSERT( oldv.valid );
+
+        if( !newv.valid )
+        {
+            mDevice->SetSamplerState( t.stage, t.type, sDefaultD3D9DeviceStates.ss[t.type].value );
+        }
+        else if( newv.value != oldv.value )
+        {
+            mDevice->SetSamplerState( t.stage, t.type, newv.value );
+        }
+    }
+
+    // apply new rsb
+    for( size_t i = 0; i < mSsTypes.size(); ++i )
+    {
+        const StageState &    t = mSsTypes[i];
+        const StateValue & oldv = last.mSsValues[t.stage][t.type];
+        const StateValue & newv = mSsValues[t.stage][t.type];
+
+        GN_ASSERT( newv.valid );
+
+        if( !oldv.valid )
+        {
+            mDevice->SetSamplerState( t.stage, t.type, newv.value );
         }
     }
 }
