@@ -82,6 +82,11 @@ namespace GN { namespace gfx
         ///
         LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0 );
 
+        ///
+        /// Compile effect from string
+        ///
+        LPD3DXEFFECT compileEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, LPD3DXEFFECTPOOL pool = 0 );
+
         //@}
 
         /// \name color format utils

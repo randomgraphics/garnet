@@ -83,11 +83,11 @@ namespace GN { namespace gfx
         StackArray<D3DRENDERSTATETYPE,210> mRsTypes;
         StateValue                         mRsValues[210];
 
-        StackArray<StageState,20*14>       mSsTypes;
-        StateValue                         mSsValues[20][14];
+        StackArray<StageState,21*14>       mSsTypes;
+        StateValue                         mSsValues[21][14];
 
-        //StackArray<StateValue,20*33>          mTextureStates;
-        //StateValue                            mTsMasks[20][33];
+        //StackArray<StateValue,21*33>          mTextureStates;
+        //StateValue                            mTsMasks[21][33];
 
         inline void applyRenderStates() const;
         inline void applyRenderStates( const D3D9RenderStateBlock & last ) const;
@@ -178,9 +178,16 @@ namespace GN { namespace gfx
 
         void setTexture( UINT stage, IDirect3DBaseTexture9 * tex )
         {
-            if( mCurrentTextures[stage] == tex ) return;
-            mDesc.device->SetTexture( stage, tex );
-            mCurrentTextures[stage] = tex;
+            if( stage < 16 )
+            {
+                if( mCurrentTextures[stage] == tex ) return;
+                mDesc.device->SetTexture( stage, tex );
+                mCurrentTextures[stage] = tex;
+            }
+            else
+            {
+                GN_UNIMPL();
+            }
         }
 
         //@}
@@ -205,7 +212,7 @@ namespace GN { namespace gfx
         D3D9GraphicsSystemDesc       mDesc;
         bool                         mSceneBegun;
         const D3D9RenderStateBlock * mCurrentRsb;
-        IDirect3DBaseTexture9      * mCurrentTextures[20];
+        IDirect3DBaseTexture9      * mCurrentTextures[21];
 
         // ********************************
         // private functions
