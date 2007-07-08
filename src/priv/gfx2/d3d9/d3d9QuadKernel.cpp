@@ -13,23 +13,8 @@ namespace GN { namespace gfx
         D3D9RenderStateBlock  mRsb;
         BaseKernelParameter * mTransparent;
 
-        void onSet( size_t, size_t, size_t )
+        void enableBlend( size_t )
         {
-            const bool * trans = mTransparent->toBool();
-            if( *trans )
-            {
-                setDefaultRsb( 0 );
-            }
-            else
-            {
-                mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
-            }
-        }
-
-        void setDefaultRsb( size_t )
-        {
-            mRsb.setRenderState( D3DRS_ZENABLE         , FALSE );
-            mRsb.setRenderState( D3DRS_ZWRITEENABLE    , FALSE );
             mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
             mRsb.setRenderState( D3DRS_BLENDOP         , D3DBLENDOP_ADD );
             mRsb.setRenderState( D3DRS_SRCBLEND        , D3DBLEND_SRCALPHA );
@@ -37,7 +22,32 @@ namespace GN { namespace gfx
             mRsb.setRenderState( D3DRS_BLENDOPALPHA    , D3DBLENDOP_ADD );
             mRsb.setRenderState( D3DRS_SRCBLENDALPHA   , D3DBLEND_ONE );
             mRsb.setRenderState( D3DRS_DESTBLENDALPHA  , D3DBLEND_ZERO );
-            mRsb.setRenderState( D3DRS_CULLMODE        , D3DCULL_NONE );
+        }
+
+        void onSet( size_t, size_t, size_t )
+        {
+            const bool * trans = mTransparent->toBool();
+            if( *trans )
+            {
+                enableBlend( 0 );
+            }
+            else
+            {
+                mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
+            }
+        }
+
+        void setDefaultRsb()
+        {
+            enableBlend( 0 );
+
+            mRsb.setRenderState( D3DRS_ZENABLE         , FALSE );
+            mRsb.setRenderState( D3DRS_ZWRITEENABLE    , FALSE );
+            mRsb.setRenderState( D3DRS_CULLMODE        , D3DCULL_CW );
+
+            mRsb.setSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+            mRsb.setSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+            mRsb.setSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
         }
 
     public:
@@ -49,9 +59,9 @@ namespace GN { namespace gfx
             , mRsb( k.d3d9gs() )
             , mTransparent( getBaseParameterByName( "TRANSPARENT" ) )
         {
-            setDefaultRsb( 0 );
+            setDefaultRsb();
             mTransparent->sigValueSet.connect( this, &D3D9QuadKernelParameterSet::onSet );
-            mTransparent->sigValueUnset.connect( this, &D3D9QuadKernelParameterSet::setDefaultRsb );
+            mTransparent->sigValueUnset.connect( this, &D3D9QuadKernelParameterSet::enableBlend );
         }
 
         ~D3D9QuadKernelParameterSet()
@@ -356,10 +366,6 @@ void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet & param, KernelBi
     dev->SetPixelShader( mPs );
     dev->SetVertexDeclaration( mDecl );
     dev->SetIndices( mIdxBuf );
-
-    //dev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
-    //dev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
-    //dev->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
 
     mQuads.draw();
 

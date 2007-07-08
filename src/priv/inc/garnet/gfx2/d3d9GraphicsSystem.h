@@ -67,15 +67,33 @@ namespace GN { namespace gfx
             StateValue() : valid(false) {}
         };
 
-        IDirect3DDevice9                   * mDevice;
+        struct StageState
+        {
+            DWORD               stage;
+            D3DSAMPLERSTATETYPE type;
 
-        StackArray<D3DRENDERSTATETYPE,210>   mRsTypes;
-        StateValue                           mRsValues[210];
+            bool operator==( const StageState & rhs ) const
+            {
+                return stage == rhs.stage && type == rhs.type;
+            }
+        };
 
-        //StackArray<StateValue,14*20>         mSamplerStates;
-        //StackArray<StateValue,33*20>         mTextureStates;
-        //StateValue                           mSsMasks[20][14];
-        //StateValue                           mTsMasks[20][33];
+        IDirect3DDevice9                 * mDevice;
+
+        StackArray<D3DRENDERSTATETYPE,210> mRsTypes;
+        StateValue                         mRsValues[210];
+
+        StackArray<StageState,20*14>       mSsTypes;
+        StateValue                         mSsValues[20][14];
+
+        //StackArray<StateValue,20*33>          mTextureStates;
+        //StateValue                            mTsMasks[20][33];
+
+        inline void applyRenderStates() const;
+        inline void applyRenderStates( const D3D9RenderStateBlock & last ) const;
+
+        inline void applySamplerStates() const;
+        inline void applySamplerStates( const D3D9RenderStateBlock & last ) const;
 
     public:
 
