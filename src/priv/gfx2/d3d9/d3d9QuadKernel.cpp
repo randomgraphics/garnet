@@ -157,7 +157,7 @@ void GN::gfx::D3D9QuadStream::push( const void * source, size_t bytes )
 
     void * dest;
 
-    GN_DX9_CHECK_R( vb->Lock( (UInt32)mNumQuads * 4 * sizeof(QuadVertex), (UInt32)newQuads * sizeof(QuadVertex), &dest, 0 ) );
+    GN_DX9_CHECK_R( vb->Lock( (UInt32)mNumQuads * 4 * sizeof(QuadVertex), (UInt32)newQuads * 4 * sizeof(QuadVertex), &dest, 0 ) );
 
     memcpy( dest, source, bytes );
 

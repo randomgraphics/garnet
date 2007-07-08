@@ -41,7 +41,7 @@ struct ClearScreen
         param.attach( kernel->createParameterSet() );
         if( 0 == param ) return false;
 
-        param->setParameter( "COLOR_VALUE", Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+        param->setParameter( "COLOR_VALUE", Vector4f( 0.3f, 0.5f, 0.7f, 1.0f ) );
         param->setParameter( "DEPTH_VALUE", 1.0f );
         param->setParameter( "STENCIL_VALUE", 0 );
 
@@ -91,8 +91,8 @@ static int run( GraphicsSystem & gs )
     QuadKernelFont font( gs );
     scene::FontFaceDesc ffd;
     ffd.fontname = "font::/simsun.ttc";
-    ffd.width = 32;
-    ffd.height = 32;
+    ffd.width  = 16;
+    ffd.height = 16;
     if( !font.init( ffd ) ) return -1;
 
     Gfx2TestApp * cases[] =

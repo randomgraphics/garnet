@@ -343,10 +343,6 @@ GN::test::QuadKernelFont::createSlot( wchar_t ch )
 
         for( size_t x = 0; x < slotw; ++x, d += 4 )
         {
-#if GN_BIG_ENDIAN
-            d[3] = 0xFF;
-            d[2] = 0xFF;
-            d[1] = 0xFF;
             if( x < fbm.width && y >= margin_y )
             {
                 d[0] = fbm.buffer[x + (y-margin_y) * fbm.width];
@@ -355,19 +351,9 @@ GN::test::QuadKernelFont::createSlot( wchar_t ch )
             {
                 d[0] = 0;
             }
-#else
-            d[0] = 0xFF;
-            d[1] = 0xFF;
-            d[2] = 0xFF;
-            if( x < fbm.width && y >= margin_y )
-            {
-                d[3] = fbm.buffer[x + (y-margin_y) * fbm.width];
-            }
-            else
-            {
-                d[3] = 0;
-            }
-#endif
+            d[1] = d[0];
+            d[2] = d[0];
+            d[3] = d[0];
 		}
 
         dst += pitch;
@@ -426,8 +412,8 @@ bool GN::test::QuadKernelFont::slotInit( UInt16 fontw, UInt16 fonth )
     // initialize font slots
     float stepu = float(rectw) / texw;
     float stepv = float(recth) / texh;
-    UInt16 x = 0, y = 0;
-    float u = 0.0f, v = 0.0f;
+    UInt16 x, y;
+    float  u, v;
     FontSlot * slot = mFontSlots;
     UInt32 numcols = texw / rectw;
     UInt32 numrows = texh / recth;
@@ -435,10 +421,10 @@ bool GN::test::QuadKernelFont::slotInit( UInt16 fontw, UInt16 fonth )
     FontSlot * end = &mFontSlots[MAX_SLOTS];
     for( UInt32 itex = 0; itex < numtex; ++itex )
     {
-        u = 0.0f; x = 0;
+        u = 0.5f / texw; x = 0;
         for( UInt32 icol = 0; icol < numcols; ++icol )
         {
-            v = 0.0f; y = 0;
+            v = 0.5f / texh; y = 0;
             for( UInt32 irow = 0; irow < numrows; ++irow )
             {
                 // setup slot
