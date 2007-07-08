@@ -93,6 +93,42 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
     GN_UNGUARD;
 }
 
+#if 0
+#include <io.h>
+//
+// save shader code to temporary file
+// -----------------------------------------------------------------------------
+static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
+{
+    using namespace GN;
+
+    const char * templ = "app::/XXXXXX";
+    char fname[256];
+    memcpy( fname, templ, 13 );
+    if( 0 != _mktemp_s( fname, 13 ) )
+    {
+        GN_ERROR(sLogger)( "fail to generate temporary file name" );
+        return StrA::EMPTYSTR;
+    }
+
+    AutoObjPtr<File> fp( core::openFile( fname, "wt" ) );
+    if( 0 == fp )
+    {
+        GN_ERROR(sLogger)( "fail to open temporary file." );
+        return StrA::EMPTYSTR;
+    }
+
+    if( !fp->write( code, len ? len : strLen(code), 0 ) )
+    {
+        GN_ERROR(sLogger)( "fail to write to temporary file." );
+        return StrA::EMPTYSTR;
+    }
+
+    GN_INFO(sLogger)( "save shader code to file '%s'", fname );
+    return core::toNative(fname);
+}
+#endif
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -430,6 +466,41 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::assemblePSFromFile( LPDIRECT3DDEVICE9 dev,
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
+
+    // success
+    return result;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LPD3DXEFFECT GN::gfx::d3d9::compileEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, LPD3DXEFFECTPOOL pool )
+{
+    GN_GUARD;
+
+    GN_ASSERT( dev );
+
+    //StrA tmpfile = sSaveCodeToTemporaryFile( code, len );
+    //if( tmpfile.empty() ) return 0;
+
+    LPD3DXEFFECT result;
+    AutoComPtr<ID3DXBuffer> err;
+
+    HRESULT hr;
+    if( FAILED(hr = D3DXCreateEffect(
+            dev,
+            code, len?len:strLen(code), //tmpfile.cptr(),
+            NULL, NULL, // no macros, no includes,
+            sRefineFlags(flags),
+            pool,
+            &result,
+            &err )) )
+    {
+        sPrintShaderCompileError( hr, code, err );
+        return 0;
+    };
 
     // success
     return result;

@@ -44,7 +44,7 @@ static UInt32 sGetNumTextureStages( const D3DCAPS9 & d3dcaps )
 {
     UInt32 s = 0;
 
-    if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0) ) s += 4;
+    //if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0) ) s += 4;
 
     if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0) ) s += 16;
     else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4) ) s += 6;
@@ -178,7 +178,14 @@ void GN::gfx::D3D9RenderStateBlock::unsetRenderState( D3DRENDERSTATETYPE type )
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9RenderStateBlock::setSamplerState( size_t stage, D3DSAMPLERSTATETYPE type, DWORD value )
 {
-    GN_ASSERT( stage < 20 );
+    if( stage >= 16 )
+    {
+        GN_UNIMPL();
+        GN_ASSERT( stage >= D3DDMAPSAMPLER );
+        stage -= D3DDMAPSAMPLER;
+        GN_ASSERT( stage < 21 );
+    }
+
     GN_ASSERT( sDefaultD3D9DeviceStates.ss[type].valid );
 
     StageState newss = { stage, type };

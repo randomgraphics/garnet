@@ -39,6 +39,8 @@ namespace GN { namespace gfx
         D3D9VtxBufPort       mVtxBuf7;
         D3D9IdxBufPort       mIdxBuf;
 
+        D3D9RenderStateBlock mRsb;
+
         static Kernel * sCreator( GraphicsSystem & gs )
         {
             PIXPERF_FUNCTION_EVENT();

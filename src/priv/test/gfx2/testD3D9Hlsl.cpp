@@ -34,41 +34,46 @@ struct TextureData
     }
 };
 
-static const char * vs_code =
-"uniform float4x4 gPvw : register(c0);      \n"
-"struct vsi                                 \n"
-"{                                          \n"
-"    float4 pos : POSITION;                 \n"
-"    float3 nml : NORMAL;                   \n"
-"    float2 uv  : TEXCOORD0;                \n"
-"};                                         \n"
-"struct vso                                 \n"
-"{                                          \n"
-"    float4 pos : POSITION;                 \n"
-"    float4 clr : COLOR0;                   \n"
-"    float2 uv  : TEXCOORD0;                \n"
-"};                                         \n"
-"vso main( vsi i )                          \n"
-"{                                          \n"
-"    vso o;                                 \n"
-"    o.pos = mul( i.pos, gPvw );            \n"
-"    float3 n = 2*abs(i.nml) + i.nml;       \n"
-"    o.clr = float4( n/3.0, 1.0 );          \n"
-"    o.uv = i.uv;                           \n"
-"    return o;                              \n"
-"};";
-
-static const char * ps_code =
-"struct vso                     \n"
-"{                              \n"
-"    float4 pos : POSITION;     \n"
-"    float4 clr : COLOR0;       \n"
-"    float2 uv  : TEXCOORD0;    \n"
-"};                             \n"
-"sampler s0 : register(s0);     \n"
-"float4 main( vso i ) : COLOR0  \n"
-"{                              \n"
-"	return tex2D(s0, i.uv) * i.clr; \n"
+static const char * fxcode =
+"uniform float4x4 gPvw : register(c0);             \n"
+"sampler s0 : register(s0);                        \n"
+"                                                  \n"
+"struct vsi                                        \n"
+"{                                                 \n"
+"    float4 pos : POSITION;                        \n"
+"    float3 nml : NORMAL;                          \n"
+"    float2 uv  : TEXCOORD0;                       \n"
+"};                                                \n"
+"                                                  \n"
+"struct vso                                        \n"
+"{                                                 \n"
+"    float4 pos : POSITION;                        \n"
+"    float4 clr : COLOR0;                          \n"
+"    float2 uv  : TEXCOORD0;                       \n"
+"};                                                \n"
+"                                                  \n"
+"vso vsmain( vsi i )                               \n"
+"{                                                 \n"
+"    vso o;                                        \n"
+"    o.pos = mul( i.pos, gPvw );                   \n"
+"    float3 n = 2*abs(i.nml) + i.nml;              \n"
+"    o.clr = float4( n/3.0, 1.0 );                 \n"
+"    o.uv = i.uv;                                  \n"
+"    return o;                                     \n"
+"}                                                 \n"
+"                                                  \n"
+"float4 psmain( vso i ) : COLOR0                   \n"
+"{                                                 \n"
+"	return tex2D(s0, i.uv) * i.clr;                \n"
+"}                                                 \n"
+"                                                  \n"
+"technique                                         \n"
+"{                                                 \n"
+"	pass                                           \n"
+"	{                                              \n"
+"		vertexshader = compile vs_2_0 vsmain();    \n"
+"		pixelshader  = compile ps_2_0 psmain();    \n"
+"	}                                              \n"
 "}";
 
 // *****************************************************************************
@@ -110,15 +115,12 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     // create parameters
     mParam = mKernel->createParameterSet();
     if( 0 == mParam ) return false;
-    mParam->setParameter( "VS", vs_code );
-    mParam->setParameter( "PS", ps_code );
-    //mParam->setParameter( "gPvw", ... );
+    mParam->setParameter( "FX", fxcode );
     mParam->setParameter( "PRIM_TYPE", 4 ); // D3DPT_TRIANGLELIST
     mParam->setParameter( "PRIM_COUNT", 12 );
     mParam->setParameter( "BASE_VERTEX", 0 );
     mParam->setParameter( "VERTEX_COUNT", 24 );
     mParam->setParameter( "BASE_INDEX", 0 );
-    //mParam->setParameter( "BLENDING", 1 );
 
     // create vertex buffer
     SurfaceCreationParameter scp;
