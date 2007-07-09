@@ -41,11 +41,6 @@ namespace GN { namespace gfx
 
         D3D9RenderStateBlock mRsb;
 
-        static Kernel * sCreator( GraphicsSystem & gs )
-        {
-            PIXPERF_FUNCTION_EVENT();
-            return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
-        }
 
         ///
         /// ctor
@@ -55,14 +50,12 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// get kernel factory
+        /// kernel creator
         ///
-        static KernelFactory sGetFactory()
+        static Kernel * sCreator( GraphicsSystem & gs )
         {
-            KernelFactory f;
-            f.quality = 0;
-            f.creator = &sCreator;
-            return f;
+            PIXPERF_FUNCTION_EVENT();
+            return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
         }
 
         // from base class

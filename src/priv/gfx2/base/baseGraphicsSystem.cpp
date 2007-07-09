@@ -46,9 +46,9 @@ void GN::gfx::BaseGraphicsSystem::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::BaseGraphicsSystem::registerKernel(
-    const StrA & name, const KernelFactory & factory )
+    const StrA & name, KernelCreator creator )
 {
-    if( !factory.creator )
+    if( !creator )
     {
         GN_ERROR(sLogger)( "null kernel creator: %s.", name.cptr() );
         return;
@@ -63,7 +63,7 @@ void GN::gfx::BaseGraphicsSystem::registerKernel(
     }
 
     KernelItem ei;
-    ei.factory  = factory;
+    ei.creator  = creator;
     ei.instance = 0;
 
     mKernels.add( name, ei );
@@ -86,7 +86,7 @@ GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
 
     if( 0 == ei.instance )
     {
-        ei.instance = ei.factory.creator( *this );
+        ei.instance = ei.creator( *this );
         if( 0 == ei.instance )
         {
             GN_ERROR(sLogger)( "fail to create kernel named '%s'.", name.cptr() );

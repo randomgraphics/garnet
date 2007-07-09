@@ -120,14 +120,13 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// get kernel factory
+        /// kernel creator
         ///
-        static KernelFactory sGetFactory()
+        static Kernel * sCreator( GraphicsSystem & gs )
         {
-            KernelFactory f;
-            f.quality = 0;
-            f.creator = &sCreator;
-            return f;
+            AutoObjPtr<D3D9QuadKernel> p( new D3D9QuadKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ) );
+            if( !p->init() ) return 0;
+            return p.detach();
         }
 
         virtual KernelParameterSet * createParameterSet();
@@ -158,12 +157,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        static Kernel * sCreator( GraphicsSystem & gs )
-        {
-            AutoObjPtr<D3D9QuadKernel> p( new D3D9QuadKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ) );
-            if( !p->init() ) return 0;
-            return p.detach();
-        }
     };
 }}
 // *****************************************************************************
