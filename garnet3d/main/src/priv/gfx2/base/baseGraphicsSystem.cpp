@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "garnet/gfx2/baseGraphicsSystem.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseGraphicsSystem");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx2.BaseGraphicsSystem");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -30,7 +29,7 @@ void GN::gfx::BaseGraphicsSystem::quit()
 {
     GN_GUARD;
 
-    unregisterAllKernels();
+    deleteAllKernels();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -45,12 +44,12 @@ void GN::gfx::BaseGraphicsSystem::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::registerKernel(
-    const StrA & name, KernelCreator creator )
+void GN::gfx::BaseGraphicsSystem::registerKernelFactory(
+    const StrA & name, KernelFactory factory, int quality )
 {
-    if( !creator )
+    if( !factory )
     {
-        GN_ERROR(sLogger)( "null kernel creator: %s.", name.cptr() );
+        GN_ERROR(sLogger)( "null factory for kernel %s.", name.cptr() );
         return;
     }
 
@@ -58,15 +57,25 @@ void GN::gfx::BaseGraphicsSystem::registerKernel(
 
     if( h )
     {
-        GN_ERROR(sLogger)( "kernel named '%s' does already exist.", name.cptr() );
-        return;
+        KernelItem & ei = mKernels[h];
+        if( ei.quality < quality )
+        {
+            ei.factory = factory;
+            ei.quality = quality;
+        }
+        else
+        {
+            GN_TRACE(sLogger)( "Factory for kernel %s is ignored : not pass quality bar.", name.cptr() );
+        }
     }
-
-    KernelItem ei;
-    ei.creator  = creator;
-    ei.instance = 0;
-
-    mKernels.add( name, ei );
+    else
+    {
+        KernelItem ei;
+        ei.factory  = factory;
+        ei.quality  = quality;
+        ei.instance = 0;
+        mKernels.add( name, ei );
+    }
 }
 
 //
@@ -86,7 +95,7 @@ GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
 
     if( 0 == ei.instance )
     {
-        ei.instance = ei.creator( *this );
+        ei.instance = ei.factory( *this );
         if( 0 == ei.instance )
         {
             GN_ERROR(sLogger)( "fail to create kernel named '%s'.", name.cptr() );
@@ -99,25 +108,7 @@ GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::unregisterKernel( const StrA & name )
-{
-    UInt32 h = mKernels.name2handle( name );
-
-    if( 0 == h )
-    {
-        GN_ERROR(sLogger)( "kernel named '%s' not found.", name.cptr() );
-        return;
-    }
-
-    KernelItem & ei = mKernels[h];
-
-    safeDelete( ei.instance );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BaseGraphicsSystem::unregisterAllKernels()
+void GN::gfx::BaseGraphicsSystem::deleteAllKernels()
 {
     for ( UInt32 h = mKernels.first(); 0 != h; h = mKernels.next( h ) )
     {

@@ -353,7 +353,7 @@ void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet & param, KernelBi
 
     PIXPERF_FUNCTION_EVENT();
 
-    D3D9KernelBinding & b = getPortBinding( binding );
+    D3D9KernelPortBinding & b = getPortBinding( binding );
     b.apply();
 
     const D3D9QuadKernelParameterSet & p = GN_SAFE_CAST<const D3D9QuadKernelParameterSet &>(param);

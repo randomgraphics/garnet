@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-#include "gfx2/baseGraphicsSystem.h"
+#include "GNgfx2Base.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX ///< disable min/max macro in windows.h

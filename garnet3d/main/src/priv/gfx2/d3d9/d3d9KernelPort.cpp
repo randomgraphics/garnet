@@ -40,7 +40,7 @@ bool GN::gfx::D3D9RenderTargetPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9RenderTargetPort::bind( const KernelBindingTarget & ) const
+void GN::gfx::D3D9RenderTargetPort::bind( const SurfaceView & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -72,7 +72,7 @@ bool GN::gfx::D3D9DepthBufferPort::compatible( const Surface * ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9DepthBufferPort::bind( const KernelBindingTarget & ) const
+void GN::gfx::D3D9DepthBufferPort::bind( const SurfaceView & ) const
 {
     GN_UNIMPL_WARNING();
 }
@@ -163,7 +163,7 @@ bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9TexturePort::bind( const KernelBindingTarget & target ) const
+void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
 {
     if( target.surf )
     {
@@ -245,7 +245,7 @@ bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9VtxBufPort::bind( const KernelBindingTarget & target ) const
+void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 {
     IDirect3DDevice9 * dev = gs().d3ddev();
 
@@ -352,7 +352,7 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9IdxBufPort::bind( const KernelBindingTarget & target ) const
+void GN::gfx::D3D9IdxBufPort::bind( const SurfaceView & target ) const
 {
     GN_ASSERT( target.surf );
     D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
