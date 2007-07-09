@@ -4,4 +4,4 @@
 // \author  chenlee (2005.11.11)
 // *****************************************************************************
 
-#include "garnet/GNgfx2.h"
+#include "garnet/GNgfx2Base.h"

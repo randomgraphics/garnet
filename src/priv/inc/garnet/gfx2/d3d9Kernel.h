@@ -28,17 +28,15 @@ namespace GN { namespace gfx
     ///
     /// D3D9 kernel port descriptor
     ///
-    struct GN_GFX2_D3D9_PUBLIC D3D9KernelPortDesc : public KernelPortDesc
+    struct D3D9KernelPortDesc
     {
-        ///
-        /// the port type
-        ///
-        D3D9KernelPortType portType;
-
-        ///
-        /// Surface type that this port expects.
-        ///
-        D3D9SurfaceType surfaceType;
+        //@{
+        D3D9KernelPortType    portType;
+        D3D9SurfaceType       surfaceType;
+        SurfaceLayoutTemplate layout;
+        bool                  input;
+        bool                  output;
+        //@}
     };
 
     ///
@@ -70,14 +68,6 @@ namespace GN { namespace gfx
         const D3D9KernelPortDesc & getDesc() const { return mDesc; }
 
         ///
-        /// setup surface layout template
-        ///
-        void setLayoutTemplate( const SurfaceLayoutTemplate & layout )
-        {
-            mDesc.layout = layout;
-        }
-
-        ///
         /// check surface compatility
         ///
         virtual bool compatible( const Surface * surf ) const = 0;
@@ -85,7 +75,7 @@ namespace GN { namespace gfx
         ///
         /// bind surface to device
         ///
-        virtual void bind( const KernelBindingTarget & ) const = 0;
+        virtual void bind( const SurfaceView & ) const = 0;
     };
 
     ///
@@ -98,7 +88,7 @@ namespace GN { namespace gfx
         //@{
         D3D9RenderTargetPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const KernelBindingTarget & ) const;
+        virtual void bind( const SurfaceView & ) const;
         //@}
     };
 
@@ -112,7 +102,7 @@ namespace GN { namespace gfx
         //@{
         D3D9DepthBufferPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const KernelBindingTarget & ) const;
+        virtual void bind( const SurfaceView & ) const;
         //@}
     };
 
@@ -128,7 +118,7 @@ namespace GN { namespace gfx
         //@{
         D3D9TexturePort( D3D9GraphicsSystem & gs, UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const KernelBindingTarget & ) const;
+        virtual void bind( const SurfaceView & ) const;
         //@}
     };
 
@@ -148,7 +138,7 @@ namespace GN { namespace gfx
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const KernelBindingTarget & ) const;
+        virtual void bind( const SurfaceView & ) const;
         //@}
     };
 
@@ -162,21 +152,32 @@ namespace GN { namespace gfx
         //@{
         D3D9IdxBufPort( D3D9GraphicsSystem & gs );
         virtual bool compatible( const Surface * surf ) const;
-        virtual void bind( const KernelBindingTarget & ) const;
+        virtual void bind( const SurfaceView & ) const;
         //@}
+    };
+
+    ///
+    /// D3D9 kernel port binding descriptor
+    ///
+    struct D3D9KernelPortBindingDesc
+    {
+        ///
+        /// surface binding indexed by port name
+        ///
+        std::map<StrA,SurfaceView> bindings;
     };
 
     ///
     /// base D3D9 kernel binding
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9KernelBinding
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelPortBinding
     {
         D3D9Kernel & mKernel;
 
         struct BindItem
         {
-            size_t              port;   ///< port index
-            KernelBindingTarget target; ///< binding target
+            size_t      port;   ///< port index
+            SurfaceView target; ///< binding target
         };
 
         DynaArray<BindItem>           mBindItems;
@@ -189,17 +190,17 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelBinding( D3D9Kernel & e );
+        D3D9KernelPortBinding( D3D9Kernel & e );
 
         ///
         /// dtor
         ///
-        virtual ~D3D9KernelBinding();
+        virtual ~D3D9KernelPortBinding();
 
         ///
         /// binding setup
         ///
-        bool setup( const KernelBindingDesc & ebd );
+        bool setup( const D3D9KernelPortBindingDesc & ebd );
 
         /// \name properties
         //@{
@@ -225,32 +226,33 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9Kernel( GraphicsSystem & gs ) : BaseKernel(gs), mDefaultBinding(0) {}
+        D3D9Kernel( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs), mDefaultBinding(0) {}
 
         ///
         /// dtor
         ///
-        ~D3D9Kernel() { if( mDefaultBinding ) deleteBinding( mDefaultBinding ); }
+        ~D3D9Kernel();
 
-        ///
-        /// get D3D9 graphic system
-        ///
-        D3D9GraphicsSystem & d3d9gs() const { return (D3D9GraphicsSystem&)gs(); }
+        D3D9GraphicsSystem      & gs() const { return mGraphicsSystem; }
 
-        const D3D9KernelPort & getPort( size_t index ) const { return *mPorts.at(index); }
+        size_t                    getNumPorts() const { return mPorts.size(); }
+        const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
+        const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
+        const StrA              & getPortName( size_t index ) const { return mPorts.getName( index ); }
+        virtual KernelPortBinding createPortBinding( const D3D9KernelPortBindingDesc & );
 
         //@}
 
         /// \name from Kernel
         //@{
+        virtual bool              compatible( const Surface * surf, const StrA & port );
+        virtual void              deletePortBinding( KernelPortBinding );
+        /*
         virtual size_t                 getNumPorts() const { return mPorts.size(); }
-        virtual const StrA           & getPortName( size_t index ) const { return mPorts.getName( index ); }
         virtual size_t                 getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
         virtual const KernelPortDesc * getPortDesc( size_t index ) const { const D3D9KernelPort * const * port = mPorts.get( index ); return port ? &(*port)->getDesc() : 0; }
         virtual const KernelPortDesc * getPortDesc( const StrA & name ) const { const D3D9KernelPort * const * port = mPorts.get( name ); return port ? &(*port)->getDesc() : 0; }
-        virtual bool                   compatible( const Surface * surf, const StrA & port );
-        virtual KernelBinding          createBinding( const KernelBindingDesc & );
-        virtual void                   deleteBinding( KernelBinding );
+        */
         //@}
 
     protected:
@@ -267,7 +269,7 @@ namespace GN { namespace gfx
         ///
         /// get port binding by handle
         ///
-        D3D9KernelBinding & getPortBinding( KernelBinding b )
+        D3D9KernelPortBinding & getPortBinding( KernelPortBinding b )
         {
             GN_GUARD_SLOW;
 
@@ -293,45 +295,20 @@ namespace GN { namespace gfx
             GN_UNGUARD_SLOW;
         }
 
-        ///
-        /// apply port binding
-        ///
-        void applyBinding( KernelBinding b )
-        {
-            GN_GUARD_SLOW;
-
-            if( 0 == b )
-            {
-                if( 0 == mDefaultBinding )
-                {
-                    mDefaultBinding = createDefaultBinding();
-                    if( 0 == mDefaultBinding ) return;
-                }
-
-                b = mDefaultBinding;
-            }
-
-            GN_ASSERT( mBindings.validHandle( b ) );
-            GN_ASSERT( mBindings[b] );
-
-            mBindings[b]->apply();
-
-            GN_UNGUARD_SLOW;
-        }
-
         //@}
 
     private:
 
-        typedef HandleManager<D3D9KernelBinding*,KernelBinding> KernelBindingContainer;
+        typedef HandleManager<D3D9KernelPortBinding*,KernelPortBinding> KernelBindingContainer;
 
+        D3D9GraphicsSystem        & mGraphicsSystem;
         NamedArray<D3D9KernelPort*> mPorts;
         KernelBindingContainer      mBindings;
-        KernelBinding               mDefaultBinding;
+        KernelPortBinding           mDefaultBinding;
 
     private:
 
-        virtual KernelBinding createDefaultBinding();
+        virtual KernelPortBinding createDefaultBinding();
     };
 }}
 

@@ -59,7 +59,7 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( &param.getKernel() == (Kernel*)this );
 
-            applyBinding( binding );
+            getPortBinding( binding ).apply();
 
             const BaseKernelParameter * m = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mPvw ) );
             const BaseKernelParameter * c = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mColor ) );

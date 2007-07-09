@@ -4,13 +4,13 @@
 static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Kernel" );
 
 // *****************************************************************************
-// D3D9KernelBinding
+// D3D9KernelPortBinding
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9KernelBinding::D3D9KernelBinding( D3D9Kernel & e )
+GN::gfx::D3D9KernelPortBinding::D3D9KernelPortBinding( D3D9Kernel & e )
     : mKernel( e )
     , mVtxDecl( 0 )
     , mHasZBuf(0)
@@ -21,7 +21,7 @@ GN::gfx::D3D9KernelBinding::D3D9KernelBinding( D3D9Kernel & e )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9KernelBinding::~D3D9KernelBinding()
+GN::gfx::D3D9KernelPortBinding::~D3D9KernelPortBinding()
 {
     safeRelease( mVtxDecl );
 }
@@ -29,7 +29,7 @@ GN::gfx::D3D9KernelBinding::~D3D9KernelBinding()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
+bool GN::gfx::D3D9KernelPortBinding::setup( const D3D9KernelPortBindingDesc & ebd )
 {
     GN_GUARD;
 
@@ -39,13 +39,13 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
 
     BindItem b;
 
-    std::map<StrA,KernelBindingTarget>::const_iterator iter;
+    std::map<StrA,SurfaceView>::const_iterator iter;
 
     StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
 
     for( size_t i = 0; i < mKernel.getNumPorts(); ++i )
     {
-        const D3D9KernelPort & port = mKernel.getPort( i );
+        const D3D9KernelPort & port = mKernel.getPortByIndex( i );
 
         iter = ebd.bindings.find( mKernel.getPortName( i ) );
 
@@ -111,7 +111,7 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
     // create vertex declaration
     if( !vtxfmt.empty() )
     {
-        mVtxDecl = createD3D9VtxDecl( mKernel.d3d9gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
+        mVtxDecl = createD3D9VtxDecl( mKernel.gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
     }
 
     // success
@@ -123,12 +123,12 @@ bool GN::gfx::D3D9KernelBinding::setup( const KernelBindingDesc & ebd )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9KernelBinding::apply() const
+void GN::gfx::D3D9KernelPortBinding::apply() const
 {
     // setup vertex decl
     if( mVtxDecl )
     {
-        mKernel.d3d9gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
+        mKernel.gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
     }
 
     // bind each port
@@ -136,13 +136,37 @@ void GN::gfx::D3D9KernelBinding::apply() const
     {
         const BindItem & b = mBindItems[i];
 
-        mKernel.getPort(b.port).bind( b.target );
+        mKernel.getPortByIndex(b.port).bind( b.target );
     }
 }
 
 // *****************************************************************************
 // D3D9Kernel
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::D3D9Kernel::~D3D9Kernel()
+{
+    for( KernelPortBinding b = mBindings.first(); b != 0; b = mBindings.next(b) )
+    {
+        delete mBindings[b];
+    };
+    mBindings.clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx::D3D9KernelPort *
+GN::gfx::D3D9Kernel::getPortByName( const StrA & name ) const
+{
+    const D3D9KernelPort * const * port = mPorts.get( name );
+    if( 0 == port ) return 0;
+    GN_ASSERT( *port );
+    return *port;
+}
 
 //
 //
@@ -157,11 +181,11 @@ bool GN::gfx::D3D9Kernel::compatible( const Surface * surf, const StrA & portNam
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelBinding GN::gfx::D3D9Kernel::createBinding( const KernelBindingDesc & ebd )
+GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createPortBinding( const D3D9KernelPortBindingDesc & ebd )
 {
     GN_GUARD;
 
-    AutoObjPtr<D3D9KernelBinding> b( new D3D9KernelBinding(*this) );
+    AutoObjPtr<D3D9KernelPortBinding> b( new D3D9KernelPortBinding(*this) );
 
     if( !b || !b->setup( ebd ) ) return 0;
 
@@ -173,7 +197,7 @@ GN::gfx::KernelBinding GN::gfx::D3D9Kernel::createBinding( const KernelBindingDe
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Kernel::deleteBinding( KernelBinding b )
+void GN::gfx::D3D9Kernel::deletePortBinding( KernelPortBinding b )
 {
     GN_GUARD;
 
@@ -207,13 +231,13 @@ size_t GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelBinding GN::gfx::D3D9Kernel::createDefaultBinding()
+GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createDefaultBinding()
 {
     GN_GUARD;
 
-    KernelBindingDesc bindNothing;
+    D3D9KernelPortBindingDesc bindNothing;
 
-    KernelBinding b = createBinding( bindNothing );
+    KernelPortBinding b = createPortBinding( bindNothing );
 
     if( 0 == b )
     {

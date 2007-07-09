@@ -1,9 +1,9 @@
 Import( 'GN' )
 sources = [
-    'baseKernel.cpp',
-    'baseKernelParameter.cpp',
+    #'baseKernel.cpp',
+    #'baseKernelParameter.cpp',
     'baseGraphicsSystem.cpp',
-    'graphicsSystemCreator.cpp',
+#    'graphicsSystemCreator.cpp',
     'surfaceLayoutTemplate.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

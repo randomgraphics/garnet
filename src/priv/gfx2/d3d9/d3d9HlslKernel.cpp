@@ -250,7 +250,7 @@ void GN::gfx::D3D9HlslKernel::render(
     ID3DXEffect * fx = p.getEffect();
     if( 0 == fx ) return;
 
-    D3D9KernelBinding & b = getPortBinding( binding );
+    D3D9KernelPortBinding & b = getPortBinding( binding );
     b.apply();
 
     D3D9GraphicsSystem & gs = d3d9gs();

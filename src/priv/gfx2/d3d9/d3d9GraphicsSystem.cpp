@@ -3,7 +3,7 @@
 #include "d3d9IdxBuf.h"
 #include "d3d9Texture.h"
 #include "d3d9DepthBuffer.h"
-#include "d3d9BuildInKernels.h"
+//#include "d3d9BuildInKernels.h"
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -660,9 +660,9 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !beginScene() ) return failure();
 
     // register build-in kernels
-    registerKernel( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sCreator );
-    registerKernel( "D3D9_HLSL", &D3D9HlslKernel::sCreator );
-    registerKernel( "QUAD", &D3D9QuadKernel::sCreator );
+    //registerKernelFactory( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sCreator );
+    //registerKernelFactory( "D3D9_HLSL", &D3D9HlslKernel::sCreator );
+    //registerKernelFactory( "QUAD", &D3D9QuadKernel::sCreator );
 
     // success
     return success();
@@ -745,23 +745,23 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     D3D9SurfaceType surftype = D3D9_SURFACE_TYPE_ANY;
     for( size_t i = 0; i < scp.bindings.size(); ++i )
     {
-        const SurfaceBindingParameter & sbp = scp.bindings[i];
+        const SurfaceCreationParameter::SurfaceBindingParameter & sbp = scp.bindings[i];
 
-        const D3D9Kernel * kernel = safeCast<const D3D9Kernel*>( getKernel( sbp.kernel ) );
+        const D3D9Kernel * kernel = GN_SAFE_CAST<const D3D9Kernel*>( getKernel( sbp.kernel ) );
         if( 0 == kernel ) return 0;
 
-        const D3D9KernelPortDesc * port = (const D3D9KernelPortDesc *)kernel->getPortDesc( sbp.port );
+        const D3D9KernelPort * port = kernel->getPortByName( sbp.port );
         if( 0 == port ) return 0;
 
         // check layout compability
-        if( !port->layout.compatible( scp.layout ) )
+        if( !port->getDesc().layout.compatible( scp.layout ) )
         {
             GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", sbp.port.cptr(), sbp.kernel.cptr() );
             return false;
         }
 
         // merget surface type
-        if( !sMergeSurfaceType( surftype, surftype, port->surfaceType ) ) return false;
+        if( !sMergeSurfaceType( surftype, surftype, port->getDesc().surfaceType ) ) return false;
     }
 
     // create surface using the layout and type
