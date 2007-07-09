@@ -402,22 +402,28 @@ namespace GN { namespace gfx
     // Kernel
     // *************************************************************************
 
-    /*//
-    /// Kernel port descriptor: describe a input or output port of the kernel
     ///
-    struct KernelPortDesc
+    /// kernel port binding descriptor
+    ///
+    struct KernelPortBindingDesc
     {
-        //@{
-        SurfaceLayoutTemplate layout;
-        unsigned int          input  : 1; ///< non zero for input port
-        unsigned int          output : 1; ///< non zero for output port
-        //@}
-    };*/
+        ///
+        /// surface binding indexed by port name
+        ///
+        std::map<StrA,SurfaceView> bindings;
+    };
 
     ///
     /// kernel binding handle
     ///
     typedef UIntPtr KernelPortBinding;
+
+    ///
+    /// kernel parameter set
+    ///
+    struct KernelParameterSet : public NoCopy
+    {
+    };
 
     ///
     /// kernel interface
@@ -426,19 +432,10 @@ namespace GN { namespace gfx
     {
         //@{
 
-        virtual const StrA           & getName() const = 0;
-
-        // port management
-        //virtual size_t                 getNumPorts() const = 0;
-        //virtual const StrA           & getPortName( size_t index ) const = 0; ///< return empty string, if failed.
-        //virtual size_t                 getPortIndex( const StrA & name ) const = 0;
-        //virtual const KernelPortDesc * getPortDesc( size_t index ) const = 0;
-        //virtual const KernelPortDesc * getPortDesc( const StrA & name ) const = 0;
-        virtual bool                   compatible( const Surface * surf, const StrA & port ) = 0;
-
-        // binding management
-        virtual void                   deletePortBinding( KernelPortBinding ) = 0;
-
+        virtual const char * getName() const = 0;
+        virtual bool         compatible( const Surface * surf, const StrA & port ) const = 0;
+        virtual void         deletePortBinding( KernelPortBinding ) = 0;
+        virtual void         render( const KernelParameterSet &, KernelPortBinding ) = 0;
         //@}
     };
 
@@ -545,6 +542,14 @@ namespace GN { namespace gfx
         virtual void     registerKernelFactory( const StrA & kernelName, KernelFactory factory, int quality = 100 ) = 0;
         virtual Kernel * getKernel( const StrA & name ) = 0;
         virtual void     deleteAllKernels() = 0;
+
+        template<typename T>
+        T * getKernel( const StrA & name )
+        {
+            Kernel * k = getKernel( name );
+            if( 0 == k ) return 0;
+            return GN_SAFE_CAST<T*>(k);
+        }
 
         //@}
 

@@ -3,7 +3,7 @@
 #include "d3d9IdxBuf.h"
 #include "d3d9Texture.h"
 #include "d3d9DepthBuffer.h"
-//#include "d3d9BuildInKernels.h"
+#include "d3d9BuildInKernels.h"
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -660,9 +660,9 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !beginScene() ) return failure();
 
     // register build-in kernels
-    //registerKernelFactory( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sCreator );
-    //registerKernelFactory( "D3D9_HLSL", &D3D9HlslKernel::sCreator );
-    //registerKernelFactory( "QUAD", &D3D9QuadKernel::sCreator );
+    registerKernelFactory( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sFactory, 0 );
+    //registerKernelFactory( "D3D9_HLSL", &D3D9HlslKernel::sFactory );
+    //registerKernelFactory( "QUAD", &D3D9QuadKernel::sFactory );
 
     // success
     return success();
@@ -747,7 +747,7 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     {
         const SurfaceCreationParameter::SurfaceBindingParameter & sbp = scp.bindings[i];
 
-        const D3D9Kernel * kernel = GN_SAFE_CAST<const D3D9Kernel*>( getKernel( sbp.kernel ) );
+        const D3D9KernelBase * kernel = GN_SAFE_CAST<const D3D9KernelBase*>( getKernel( sbp.kernel ) );
         if( 0 == kernel ) return 0;
 
         const D3D9KernelPort * port = kernel->getPortByName( sbp.port );

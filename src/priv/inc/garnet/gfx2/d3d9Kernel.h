@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     class D3D9GraphicsSystem;
-    class D3D9Kernel;
+    class D3D9KernelBase;
 
     ///
     /// D3D9 kernel port type
@@ -172,7 +172,7 @@ namespace GN { namespace gfx
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9KernelPortBinding
     {
-        D3D9Kernel & mKernel;
+        D3D9KernelBase & mKernel;
 
         struct BindItem
         {
@@ -190,7 +190,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelPortBinding( D3D9Kernel & e );
+        D3D9KernelPortBinding( D3D9KernelBase & e );
 
         ///
         /// dtor
@@ -200,7 +200,7 @@ namespace GN { namespace gfx
         ///
         /// binding setup
         ///
-        bool setup( const D3D9KernelPortBindingDesc & ebd );
+        bool setup( const D3D9KernelPortBindingDesc & );
 
         /// \name properties
         //@{
@@ -217,7 +217,7 @@ namespace GN { namespace gfx
     ///
     /// base D3D9 kernel
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9Kernel : public BaseKernel
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelBase
     {
     public:
 
@@ -226,43 +226,26 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9Kernel( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs), mDefaultBinding(0) {}
+        D3D9KernelBase( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs), mDefaultBinding(0) {}
 
         ///
         /// dtor
         ///
-        ~D3D9Kernel();
+        ~D3D9KernelBase();
 
         D3D9GraphicsSystem      & gs() const { return mGraphicsSystem; }
-
         size_t                    getNumPorts() const { return mPorts.size(); }
         const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
         const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
         const StrA              & getPortName( size_t index ) const { return mPorts.getName( index ); }
-        virtual KernelPortBinding createPortBinding( const D3D9KernelPortBindingDesc & );
-
-        //@}
-
-        /// \name from Kernel
-        //@{
-        virtual bool              compatible( const Surface * surf, const StrA & port );
-        virtual void              deletePortBinding( KernelPortBinding );
-        /*
-        virtual size_t                 getNumPorts() const { return mPorts.size(); }
-        virtual size_t                 getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
-        virtual const KernelPortDesc * getPortDesc( size_t index ) const { const D3D9KernelPort * const * port = mPorts.get( index ); return port ? &(*port)->getDesc() : 0; }
-        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const { const D3D9KernelPort * const * port = mPorts.get( name ); return port ? &(*port)->getDesc() : 0; }
-        */
-        //@}
-
-    protected:
-
-        //@{
+        KernelPortBinding         createPortBinding( const D3D9KernelPortBindingDesc & );
+        bool                      compatible( const Surface * surf, const StrA & port ) const;
+        void                      deletePortBinding( KernelPortBinding );
 
         ///
         /// \return index of the port. -1 means failed.
         ///
-        /// \note D3D9Kernel class does _NOT_ hold the ownership of the port instance.
+        /// \note D3D9KernelBase class does _NOT_ hold the ownership of the port instance.
         ///
         size_t addPortRef( const StrA & name, D3D9KernelPort * port );
 

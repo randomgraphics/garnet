@@ -39,7 +39,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D9HlslKernelParameterSet( D3D9Kernel & k )
+        D3D9HlslKernelParameterSet( D3D9KernelBase & k )
             : BaseKernelParameterSet( k )
             , mDev( k.d3d9gs().d3ddev() )
         {
@@ -161,7 +161,7 @@ namespace GN { namespace gfx
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
-    : D3D9Kernel( gs )
+    : D3D9KernelBase( gs )
     , mRenderTarget0( gs )
     , mRenderTarget1( gs )
     , mRenderTarget2( gs )
@@ -239,8 +239,40 @@ GN::gfx::D3D9HlslKernel::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::KernelPortBinding
+GN::gfx::D3D9HlslKernel::createPortBinding( const Hlsl9PortBinding & b )
+{
+    D3D9KernelPortBindingDesc desc;
+    desc.bindings["TARGET0"]  = b.renderTargets[0];
+    desc.bindings["TARGET1"]  = b.renderTargets[1];
+    desc.bindings["TARGET2"]  = b.renderTargets[2];
+    desc.bindings["TARGET3"]  = b.renderTargets[3];
+    desc.bindings["DEPTH"]    = b.depth;
+    desc.bindings["TEXTURE0"] = b.textures[0];
+    desc.bindings["TEXTURE1"] = b.textures[1];
+    desc.bindings["TEXTURE2"] = b.textures[2];
+    desc.bindings["TEXTURE3"] = b.textures[3];
+    desc.bindings["TEXTURE4"] = b.textures[4];
+    desc.bindings["TEXTURE5"] = b.textures[5];
+    desc.bindings["TEXTURE6"] = b.textures[6];
+    desc.bindings["TEXTURE7"] = b.textures[7];
+    desc.bindings["VTXBUF0"]  = b.vtxbufs[0];
+    desc.bindings["VTXBUF1"]  = b.vtxbufs[1];
+    desc.bindings["VTXBUF2"]  = b.vtxbufs[2];
+    desc.bindings["VTXBUF3"]  = b.vtxbufs[3];
+    desc.bindings["VTXBUF4"]  = b.vtxbufs[4];
+    desc.bindings["VTXBUF5"]  = b.vtxbufs[5];
+    desc.bindings["VTXBUF6"]  = b.vtxbufs[6];
+    desc.bindings["VTXBUF7"]  = b.vtxbufs[7];
+    desc.bindings["IDXBUF"]   = b.idxbuf;
+    return D3D9KernelBase::createPortBinding( desc );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3D9HlslKernel::render(
-    const KernelParameterSet & param, KernelBinding binding )
+    const KernelParameterSet & param, KernelPortBinding binding )
 {
     GN_GUARD_SLOW;
 
