@@ -365,7 +365,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void     registerKernel( const StrA & name, const KernelFactory & );
+        virtual void     registerKernel( const StrA & name, KernelCreator creator );
         virtual Kernel * getKernel( const StrA & name );
         virtual void     unregisterKernel( const StrA & name );
         virtual void     unregisterAllKernels();
@@ -379,7 +379,7 @@ namespace GN { namespace gfx
 
         struct KernelItem
         {
-            KernelFactory factory;
+            KernelCreator creator;
             Kernel *      instance;
         };
 

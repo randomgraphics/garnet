@@ -659,13 +659,9 @@ namespace GN { namespace gfx
     class GraphicsSystem;
 
     ///
-    /// kernel factory
+    /// kernel creation function
     ///
-    struct KernelFactory
-    {
-        int       quality;                       ///< kernel quality
-        Kernel * (*creator)( GraphicsSystem & ); ///< kernel creator
-    };
+    typedef Kernel * (*KernelCreator)( GraphicsSystem & );
 
     ///
     /// Describe common graphics system properties (platform independent)
@@ -709,7 +705,7 @@ namespace GN { namespace gfx
         /// \name kernel management
         //@{
 
-        virtual void     registerKernel( const StrA & name, const KernelFactory & ) = 0;
+        virtual void     registerKernel( const StrA & name, KernelCreator creator ) = 0;
         virtual Kernel * getKernel( const StrA & name ) = 0;
         virtual void     unregisterKernel( const StrA & name ) = 0;
         virtual void     unregisterAllKernels() = 0;

@@ -660,9 +660,9 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !beginScene() ) return failure();
 
     // register build-in kernels
-    registerKernel( "CLEAR_SCREEN", D3D9ClearScreenKernel::sGetFactory() );
-    registerKernel( "D3D9_HLSL", D3D9HlslKernel::sGetFactory() );
-    registerKernel( "QUAD", D3D9QuadKernel::sGetFactory() );
+    registerKernel( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sCreator );
+    registerKernel( "D3D9_HLSL", &D3D9HlslKernel::sCreator );
+    registerKernel( "QUAD", &D3D9QuadKernel::sCreator );
 
     // success
     return success();

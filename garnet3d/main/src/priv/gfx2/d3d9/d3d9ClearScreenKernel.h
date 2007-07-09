@@ -18,12 +18,6 @@ namespace GN { namespace gfx
 
         size_t mColorValue, mDepthValue, mStencilValue;
 
-        static Kernel * sCreator( GraphicsSystem & gs )
-        {
-            PIXPERF_FUNCTION_EVENT();
-            return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) );
-        }
-
         ///
         /// ctor
         ///
@@ -51,14 +45,12 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// get kernel factory
+        /// kernel creator
         ///
-        static KernelFactory sGetFactory()
+        static Kernel * sCreator( GraphicsSystem & gs )
         {
-            KernelFactory f;
-            f.quality = 0;
-            f.creator = &sCreator;
-            return f;
+            PIXPERF_FUNCTION_EVENT();
+            return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) );
         }
 
         virtual void render( const KernelParameterSet & param, KernelBinding binding )

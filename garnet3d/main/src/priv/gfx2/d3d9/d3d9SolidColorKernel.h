@@ -20,7 +20,6 @@ namespace GN { namespace gfx
         D3D9VtxBufPort        mVtxBuf;
         D3D9IdxBufPort        mIdxBuf; ///< this is optional.
 
-        static Kernel * sCreator( GraphicsSystem & gs ) { return new D3D9SolidColorKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs)); }
 
         ///
         /// ctor
@@ -49,14 +48,11 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// get kernel factory
+        /// kernel creator
         ///
-        static KernelFactory sGetFactory()
+        static Kernel * sCreator( GraphicsSystem & gs )
         {
-            KernelFactory f;
-            f.quality = 0;
-            f.creator = &sCreator;
-            return f;
+            return new D3D9SolidColorKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
         }
  
         virtual void render( const KernelParameterSet & param, KernelBinding binding )
