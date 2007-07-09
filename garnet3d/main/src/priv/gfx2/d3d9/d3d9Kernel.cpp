@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9VtxDecl.h"
 
-static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Kernel" );
+static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelBase" );
 
 // *****************************************************************************
 // D3D9KernelPortBinding
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Kernel" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9KernelPortBinding::D3D9KernelPortBinding( D3D9Kernel & e )
+GN::gfx::D3D9KernelPortBinding::D3D9KernelPortBinding( D3D9KernelBase & e )
     : mKernel( e )
     , mVtxDecl( 0 )
     , mHasZBuf(0)
@@ -141,13 +141,13 @@ void GN::gfx::D3D9KernelPortBinding::apply() const
 }
 
 // *****************************************************************************
-// D3D9Kernel
+// D3D9KernelBase
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9Kernel::~D3D9Kernel()
+GN::gfx::D3D9KernelBase::~D3D9KernelBase()
 {
     for( KernelPortBinding b = mBindings.first(); b != 0; b = mBindings.next(b) )
     {
@@ -160,7 +160,7 @@ GN::gfx::D3D9Kernel::~D3D9Kernel()
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::D3D9KernelPort *
-GN::gfx::D3D9Kernel::getPortByName( const StrA & name ) const
+GN::gfx::D3D9KernelBase::getPortByName( const StrA & name ) const
 {
     const D3D9KernelPort * const * port = mPorts.get( name );
     if( 0 == port ) return 0;
@@ -171,7 +171,7 @@ GN::gfx::D3D9Kernel::getPortByName( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Kernel::compatible( const Surface * surf, const StrA & portName )
+bool GN::gfx::D3D9KernelBase::compatible( const Surface * surf, const StrA & portName ) const
 {
     const D3D9KernelPort * const * port = mPorts.get( portName );
     if( 0 == port ) return false;
@@ -181,7 +181,7 @@ bool GN::gfx::D3D9Kernel::compatible( const Surface * surf, const StrA & portNam
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createPortBinding( const D3D9KernelPortBindingDesc & ebd )
+GN::gfx::KernelPortBinding GN::gfx::D3D9KernelBase::createPortBinding( const D3D9KernelPortBindingDesc & ebd )
 {
     GN_GUARD;
 
@@ -197,7 +197,7 @@ GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createPortBinding( const D3D9Ker
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Kernel::deletePortBinding( KernelPortBinding b )
+void GN::gfx::D3D9KernelBase::deletePortBinding( KernelPortBinding b )
 {
     GN_GUARD;
 
@@ -216,7 +216,7 @@ void GN::gfx::D3D9Kernel::deletePortBinding( KernelPortBinding b )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port )
+size_t GN::gfx::D3D9KernelBase::addPortRef( const StrA & name, D3D9KernelPort * port )
 {
     if( 0 == port )
     {
@@ -231,7 +231,7 @@ size_t GN::gfx::D3D9Kernel::addPortRef( const StrA & name, D3D9KernelPort * port
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createDefaultBinding()
+GN::gfx::KernelPortBinding GN::gfx::D3D9KernelBase::createDefaultBinding()
 {
     GN_GUARD;
 

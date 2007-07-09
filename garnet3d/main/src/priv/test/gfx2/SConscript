@@ -1,10 +1,10 @@
 Import( 'GN' )
 
 sources = [
-	'font.cpp',
-    'testD3D9Hlsl.cpp',
+#	'font.cpp',
+#    'testD3D9Hlsl.cpp',
     'main.cpp',
     ]
 
-#cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-#GN.newTarget( 'prog', 'GNtestGfx2', [cluster] )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'prog', 'GNtestGfx2', [cluster] )

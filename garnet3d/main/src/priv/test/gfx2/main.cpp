@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "testD3D9Hlsl.h"
-#include "font.h"
+//#include "testD3D9Hlsl.h"
+//#include "font.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
-using namespace GN::test;
+//using namespace GN::test;
 
 struct InputInitiator
 {
@@ -26,8 +26,8 @@ struct InputInitiator
 
 struct ClearScreen
 {
-    Kernel                       * kernel;
-    AutoObjPtr<KernelParameterSet> param;
+    ClearScreenKernel                 * kernel;
+    AutoObjPtr<ClearScreenParameterSet> param;
 
     ClearScreen()
     {
@@ -35,15 +35,13 @@ struct ClearScreen
 
     bool init( GraphicsSystem & gs )
     {
-        kernel = gs.getKernel( "CLEAR_SCREEN" );
+        kernel = gs.getKernel<ClearScreenKernel>( "CLEAR_SCREEN" );
         if( 0 == kernel ) return false;
 
         param.attach( kernel->createParameterSet() );
         if( 0 == param ) return false;
 
-        param->setParameter( "COLOR_VALUE", Vector4f( 0.3f, 0.5f, 0.7f, 1.0f ) );
-        param->setParameter( "DEPTH_VALUE", 1.0f );
-        param->setParameter( "STENCIL_VALUE", 0 );
+        param->setClearColor( true, 0.3f, 0.5f, 0.7f, 1.0f );
 
         return true;
     }
@@ -54,7 +52,7 @@ struct ClearScreen
     }
 };
 
-static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & font, Gfx2TestApp & c )
+static bool runcase( GraphicsSystem & gs, ClearScreen & cs )//, QuadKernelFont & font, Gfx2TestApp & c )
 {
     while( 1 )
     {
@@ -72,10 +70,10 @@ static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & fon
         cs.draw();
 
         // run test app
-        c.draw(gs);
+        //c.draw(gs);
 
         // draw some text
-        font.drawText( L"GFX2 test application", 10, 10 );
+        //font.drawText( L"GFX2 test application", 10, 10 );
 
         gs.present();
     }
@@ -87,7 +85,9 @@ static int run( GraphicsSystem & gs )
     ClearScreen cs;
     if( !cs.init( gs ) ) return -1;
 
-    // initialize font
+    runcase( gs, cs );
+
+    /* initialize font
     QuadKernelFont font( gs );
     scene::FontFaceDesc ffd;
     ffd.fontname = "font::/simsun.ttc";
@@ -97,7 +97,7 @@ static int run( GraphicsSystem & gs )
 
     Gfx2TestApp * cases[] =
     {
-        new TestD3D9Hlsl,
+        //new TestD3D9Hlsl,
     };
 
     for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
@@ -109,7 +109,7 @@ static int run( GraphicsSystem & gs )
 
         if( c->init(gs) )
         {
-            next = runcase( gs, cs, font, *c );
+            next = runcase( gs, cs );//, font, *c );
         }
 
         c->quit(gs);
@@ -117,7 +117,7 @@ static int run( GraphicsSystem & gs )
         cases[i] = 0;
 
         if( !next ) break;
-    }
+    }*/
 
     return 0;
 }

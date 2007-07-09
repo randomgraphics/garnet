@@ -10,12 +10,12 @@ namespace GN { namespace gfx
 {
     //@{
 
-    struct ClearScreenParameterSet : public NoCopy
+    struct ClearScreenParameterSet : public KernelParameterSet
     {
         //@{
-        virtual void setClearColor( bool enabled, float r, float g, float b, float a ) = 0;
-        virtual void setClearDepth( bool enabled, float z ) = 0;
-        virtual void setClearStencil( bool enabled, int s ) = 0;
+        virtual void setClearColor( bool enabled, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.0f ) = 0;
+        virtual void setClearDepth( bool enabled, float z = 1.0f ) = 0;
+        virtual void setClearStencil( bool enabled, int s = 0 ) = 0;
         //@}
     };
 
@@ -30,13 +30,13 @@ namespace GN { namespace gfx
     struct ClearScreenKernel : public Kernel
     {
         //@{
+        virtual const char              * getName() const { return "CLEAR_SCREEN"; }
         virtual ClearScreenParameterSet * createParameterSet() = 0;
         virtual KernelPortBinding         createPortBinding( const ClearScreenPortBinding & ) = 0;
-        virtual void                      render( const ClearScreenParameterSet &, KernelPortBinding ) = 0;
         //@}
     };
 
-    struct D3D9FxParameterSet : public NoCopy
+    struct Hlsl9ParameterSet : public NoCopy
     {
         //@{
         virtual void setFx( const StrA & ) = 0;
@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         //@}
     };
 
-    struct D3D9FxPortBinding
+    struct Hlsl9PortBinding
     {
         //@{
         SurfaceView renderTargets[4];
@@ -61,12 +61,12 @@ namespace GN { namespace gfx
         //@}
     };
 
-    struct D3D9FxKernel : public Kernel
+    struct Hlsl9Kernel : public Kernel
     {
         //@{
-        virtual D3D9FxParameterSet * createParameterSet() = 0;
-        virtual KernelPortBinding    createPortBinding( const D3D9FxPortBinding & ) = 0;
-        virtual void                 render( const D3D9FxParameterSet &, KernelPortBinding ) = 0;
+        virtual const char        * getName() const { return "HLSL9"; }
+        virtual Hlsl9ParameterSet * createParameterSet() = 0;
+        virtual KernelPortBinding   createPortBinding( const Hlsl9PortBinding & ) = 0;
         //@}
     };
 

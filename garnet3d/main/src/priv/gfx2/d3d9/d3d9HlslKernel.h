@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// general kernel that accepts shader code as parameter
     ///
-    class D3D9HlslKernel : public D3D9Kernel
+    class D3D9HlslKernel : public Hlsl9Kernel, public D3D9Kernel
     {
         size_t mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
 
@@ -60,8 +60,11 @@ namespace GN { namespace gfx
 
         // from base class
         //@{
-        virtual KernelParameterSet * createParameterSet();
-        virtual void                 render( const KernelParameterSet & param, KernelBinding binding );
+        virtual Hlsl9ParameterSet * createParameterSet();
+        virtual KernelPortBinding   createPortBinding( const Hlsl9PortBinding & );
+        virtual void                deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
+        virtual bool                compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
+        virtual void                render( const KernelParameterSet & param, KernelPortBinding binding );
         //@}
     };
 }}
