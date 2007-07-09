@@ -491,7 +491,7 @@ LPD3DXEFFECT GN::gfx::d3d9::compileEffect( LPDIRECT3DDEVICE9 dev, const char * c
     HRESULT hr;
     if( FAILED(hr = D3DXCreateEffect(
             dev,
-            code, len?len:strLen(code), //tmpfile.cptr(),
+            code, (UINT)(len?len:strLen(code)), //tmpfile.cptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             pool,

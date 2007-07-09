@@ -188,7 +188,7 @@ void GN::gfx::D3D9RenderStateBlock::setSamplerState( size_t stage, D3DSAMPLERSTA
 
     GN_ASSERT( sDefaultD3D9DeviceStates.ss[type].valid );
 
-    StageState newss = { stage, type };
+    StageState newss = { (UINT32)stage, type };
 
     if( value == sDefaultD3D9DeviceStates.ss[type].value )
     {

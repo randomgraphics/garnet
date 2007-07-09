@@ -45,11 +45,11 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
     scp.layout.dim = SURFACE_DIMENSION_2D;
     scp.layout.levels = 1;
     scp.layout.faces  = 1;
-    scp.layout.basemap.width  = mTexWidth;
-    scp.layout.basemap.height = mTexHeight;
+    scp.layout.basemap.width  = (UInt32)mTexWidth;
+    scp.layout.basemap.height = (UInt32)mTexHeight;
     scp.layout.basemap.depth  = 1;
-    scp.layout.basemap.rowBytes = mTexWidth * 4;
-    scp.layout.basemap.sliceBytes = mTexWidth * mTexHeight * 4;
+    scp.layout.basemap.rowBytes = (UInt32)mTexWidth * 4;
+    scp.layout.basemap.sliceBytes = (UInt32)(mTexWidth * mTexHeight * 4);
     scp.layout.format.attribs[0].semantic.set( "TEXEL" );
     scp.layout.format.attribs[0].offset = 0;
     scp.layout.format.attribs[0].format = FMT_RGBA32;
