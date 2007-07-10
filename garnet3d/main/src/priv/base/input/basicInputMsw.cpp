@@ -398,7 +398,7 @@ GN::input::BasicInputMsw::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = safeCast<BasicInputMsw*>(gInputPtr);
+    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const MSG * p = (const MSG*)lParam;
@@ -420,7 +420,7 @@ GN::input::BasicInputMsw::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = safeCast<BasicInputMsw*>(gInputPtr);
+    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;

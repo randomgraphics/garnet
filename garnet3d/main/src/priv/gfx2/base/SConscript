@@ -1,7 +1,5 @@
 Import( 'GN' )
 sources = [
-    #'baseKernel.cpp',
-    #'baseKernelParameter.cpp',
     'baseGraphicsSystem.cpp',
     'graphicsSystemCreator.cpp',
     'surfaceLayoutTemplate.cpp',

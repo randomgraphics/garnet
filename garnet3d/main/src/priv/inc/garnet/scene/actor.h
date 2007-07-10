@@ -226,7 +226,7 @@ namespace GN
             GN_ASSERT( current );
 
             // if( has child ) next is child
-            T * n = safeCast<T*>( current->getFirstChild() );
+            T * n = safeCastPtr<T>( current->getFirstChild() );
             if( n )
             {
                 if( level ) ++(*level);
@@ -234,15 +234,15 @@ namespace GN
             }
 
             // if( has brother ) next is brother
-            n = safeCast<T*>( current->getNextSibling() );
+            n = safeCastPtr<T>( current->getNextSibling() );
             if( n ) return n;
 
             // check parent
-            T * p = safeCast<T*>( current->getParent() );
+            T * p = safeCastPtr<T>( current->getParent() );
             while( p )
             {
                 // if( parent has next ) next is parent's next
-                n = safeCast<T*>( p->getNextSibling() );
+                n = safeCastPtr<T>( p->getNextSibling() );
                 if( n )
                 {
                     if( level ) --(*level);
@@ -250,7 +250,7 @@ namespace GN
                 }
 
                 // loop one level up
-                p = safeCast<T*>( p->getParent() );
+                p = safeCastPtr<T>( p->getParent() );
             }
 
             // if( no parent ) done.
@@ -277,7 +277,7 @@ namespace GN
         {
             GN_ASSERT( root );
             T * c;
-            while( NULL != ( c = safeCast<T*>( root->getFirstChild() ) ) ) root = c;
+            while( NULL != ( c = safeCastPtr<T>( root->getFirstChild() ) ) ) root = c;
             mFirstNode = root;
             GN_ASSERT( root );
         }
@@ -290,18 +290,18 @@ namespace GN
         {
             GN_ASSERT( current );
 
-            T * n = safeCast<T*>( current->getNextSibling() );
+            T * n = safeCastPtr<T>( current->getNextSibling() );
 
             if( n )
             {
                 T * c;
-                while( NULL != ( c = safeCast<T*>( n->getFirstChild() ) ) ) n = c;
+                while( NULL != ( c = safeCastPtr<T>( n->getFirstChild() ) ) ) n = c;
                 GN_ASSERT( n );
                 return n;
             }
             else
             {
-                return safeCast<T*>( current->getParent() );
+                return safeCastPtr<T>( current->getParent() );
             }
         }
 

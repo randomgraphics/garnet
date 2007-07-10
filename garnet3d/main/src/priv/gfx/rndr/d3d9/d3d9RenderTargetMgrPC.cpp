@@ -93,7 +93,7 @@ void GN::gfx::D3D9RTMgrPC::bind(
         if( 0 == oldDesc.count || oldDesc.cbuffers[0] != *newSurf || forceRebind )
         {
             AutoComPtr<IDirect3DSurface9> surf;
-            const D3D9Texture * tex = safeCast<const D3D9Texture*>( newSurf->texture );
+            const D3D9Texture * tex = safeCastPtr<const D3D9Texture>( newSurf->texture );
             surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
             GN_DX9_CHECK( dev.SetRenderTarget( 0, surf ) );
         }
@@ -110,7 +110,7 @@ void GN::gfx::D3D9RTMgrPC::bind(
 
         if( i >= oldDesc.count || *newSurf != oldDesc.cbuffers[i] || forceRebind )
         {
-            const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
+            const D3D9Texture * tex = safeCastPtr<const D3D9Texture>(newSurf->texture);
             AutoComPtr<IDirect3DSurface9> surf;
             surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
             GN_ASSERT( surf );
@@ -188,7 +188,7 @@ void GN::gfx::D3D9RTMgrPC::bind(
     else if( *newSurf != oldDesc.zbuffer || forceRebind )
     {
         AutoComPtr<IDirect3DSurface9> surf;
-        const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
+        const D3D9Texture * tex = safeCastPtr<const D3D9Texture>(newSurf->texture);
         surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
         GN_DX9_CHECK( dev.SetDepthStencilSurface( surf ) );
     }

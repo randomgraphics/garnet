@@ -1321,12 +1321,12 @@ static bool sBuildNodeTree( AseScene & scene )
         n->node.bbox = n->mesh.bbox;
 
         // then merge with all childrens' bbox
-        AseGeoObject * c = safeCast<AseGeoObject*>( n->getFirstChild() );
+        AseGeoObject * c = safeCastPtr<AseGeoObject>( n->getFirstChild() );
         while( c )
         {
             Boxf::sGetUnion( n->node.bbox, n->node.bbox, c->node.bbox );
 
-            c = safeCast<AseGeoObject*>( c->getNextSibling() );
+            c = safeCastPtr<AseGeoObject>( c->getNextSibling() );
         }
 
         // next node
@@ -1773,11 +1773,11 @@ static bool sWriteNode(
         identstr.cptr(), center.x, center.y, center.z, radius );
 
     // write sub nodes
-    const AseGeoObject * c = safeCast<AseGeoObject*>( o.getFirstChild() );
+    const AseGeoObject * c = safeCastPtr<AseGeoObject>( o.getFirstChild() );
     while( c )
     {
         sWriteNode( xml, scene, *c, ident+1, name );
-        c = safeCast<AseGeoObject*>( c->getNextSibling() );
+        c = safeCastPtr<AseGeoObject>( c->getNextSibling() );
     }
 
     // write actor tail

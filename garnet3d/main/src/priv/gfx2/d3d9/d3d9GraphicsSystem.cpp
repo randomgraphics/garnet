@@ -660,9 +660,9 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !beginScene() ) return failure();
 
     // register build-in kernels
-    registerKernelFactory( "CLEAR_SCREEN", &D3D9ClearScreenKernel::sFactory, 100 );
-    registerKernelFactory( "HLSL9", &D3D9HlslKernel::sFactory, 100 );
-    //registerKernelFactory( "QUAD", &D3D9QuadKernel::sFactory );
+    registerKernelFactory( D3D9ClearScreenKernel::KERNEL_NAME(), &D3D9ClearScreenKernel::sFactory, 100 );
+    registerKernelFactory( D3D9HlslKernel::KERNEL_NAME(), &D3D9HlslKernel::sFactory, 100 );
+    registerKernelFactory( D3D9QuadKernel::KERNEL_NAME(), &D3D9QuadKernel::sFactory, 100 );
 
     // success
     return success();
@@ -747,7 +747,7 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     {
         const SurfaceCreationParameter::SurfaceBindingParameter & sbp = scp.bindings[i];
 
-        const D3D9KernelBase * kernel = GN_SAFE_CAST<const D3D9KernelBase*>( getKernel( sbp.kernel ) );
+        const D3D9KernelBase * kernel = safeCastPtr<const D3D9KernelBase>( getKernel( sbp.kernel ) );
         if( 0 == kernel ) return 0;
 
         const D3D9KernelPort * port = kernel->getPortByName( sbp.port );

@@ -204,7 +204,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
             {
                 if( n )
                 {
-                    GN::safeCast<const GN::gfx::D3D10BasicShader*>(n)->apply();
+                    GN::safeCastPtr<const GN::gfx::D3D10BasicShader>(n)->apply();
                 }
                 else switch( i )
                 {
@@ -216,11 +216,11 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
             }
             else if( n )
             {
-                GN::safeCast<const GN::gfx::D3D10BasicShader*>(n)->applyDirtyUniforms();
+                GN::safeCastPtr<const GN::gfx::D3D10BasicShader>(n)->applyDirtyUniforms();
             }
         } else if( o )
         {
-            GN::safeCast<const GN::gfx::D3D10BasicShader*>(o)->applyDirtyUniforms();
+            GN::safeCastPtr<const GN::gfx::D3D10BasicShader>(o)->applyDirtyUniforms();
         }
     }
 
@@ -341,7 +341,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
             if( vb != mContext.vtxbufs[i] || forceRebind )
             {
                 bind      = true;
-                buf[i]    = safeCast<const D3D10VtxBuf*>(vb.buffer)->getD3DBuffer();
+                buf[i]    = safeCastPtr<const D3D10VtxBuf>(vb.buffer)->getD3DBuffer();
                 stride[i] = vb.stride;
                 offset[i] = vb.offset;
             }
@@ -360,7 +360,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
       ( newContext.idxbuf != mContext.idxbuf || forceRebind ) )
     {
         mDevice->IASetIndexBuffer(
-            newContext.idxbuf ? safeCast<const D3D10IdxBuf*>(newContext.idxbuf)->getD3DBuffer() : 0,
+            newContext.idxbuf ? safeCastPtr<const D3D10IdxBuf>(newContext.idxbuf)->getD3DBuffer() : 0,
             DXGI_FORMAT_R16_UINT,
             0 );
     }
@@ -383,7 +383,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
             {
                 if( tex )
                 {
-                    safeCast<const D3D10Texture*>(tex)->bind( stage );
+                    safeCastPtr<const D3D10Texture>(tex)->bind( stage );
                 }
                 else
                 {

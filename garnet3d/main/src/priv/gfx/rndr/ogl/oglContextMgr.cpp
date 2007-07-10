@@ -284,12 +284,12 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
         {
             if( oldVtxShader )
             {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
+                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldVtxShader);
                 sh->disable();
             }
             if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
             {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
+                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newVtxShader);
                 sh->apply();
             }
             else
@@ -300,7 +300,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
         }
         else if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
         {
-            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
+            const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newVtxShader);
             sh->applyDirtyUniforms();
         }
         else
@@ -311,7 +311,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
     }
     else if( oldVtxShader && LANG_OGL_GLSL != oldVtxShader->getLang() )
     {
-        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
+        const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldVtxShader);
         sh->applyDirtyUniforms();
     }
     else
@@ -330,12 +330,12 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
         {
             if( oldPxlShader )
             {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
+                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldPxlShader);
                 sh->disable();
             }
             if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
             {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
+                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newPxlShader);
                 sh->apply();
             }
             else
@@ -346,7 +346,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
         }
         else if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
         {
-            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
+            const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newPxlShader);
             sh->applyDirtyUniforms();
         }
         else
@@ -357,7 +357,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
     }
     else if( oldPxlShader && LANG_OGL_GLSL != oldPxlShader->getLang() )
     {
-        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
+        const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldPxlShader);
         sh->applyDirtyUniforms();
     }
     else
@@ -382,8 +382,8 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
             // not found. we have to create a new GLSL program object
             AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
             if( !newProg->init(
-            	safeCast<const OGLBasicShaderGLSL*>(glslVs),
-            	safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
+            	safeCastPtr<const OGLBasicShaderGLSL>(glslVs),
+            	safeCastPtr<const OGLBasicShaderGLSL>(glslPs) ) ) return ;
             mGLSLProgramMap[key] = newProg;
             newProg.detach()->apply();
         }
@@ -681,7 +681,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
             {
                 chooseTextureStage( i );
 
-                safeCast<const OGLTexture *>(newContext.textures[i])->bind();
+                safeCastPtr<const OGLTexture>(newContext.textures[i])->bind();
 
                 SamplerHandle samp = ( i < newContext.numSamplers ) ? newContext.samplers[i] : mDefaultSampler;
                 mSamplers[samp]->bind();

@@ -408,14 +408,18 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     ///
-    /// kernel port binding descriptor
+    /// single kernel port
     ///
-    struct KernelPortBindingDesc
+    struct KernelPort
     {
+        const char * const kernel; ///< kernel name (constant)
+        const char * const name;   ///< port name (constant)
+        SurfaceView        view;   ///< target surface view
+
         ///
-        /// surface binding indexed by port name
+        /// ctor
         ///
-        std::map<StrA,SurfaceView> bindings;
+        KernelPort( const char * k, const char * n ) : kernel(k), name(n) {}
     };
 
     ///
@@ -501,11 +505,11 @@ namespace GN { namespace gfx
         ///
         /// add new binding
         ///
-        void bindTo( const StrA & k, const StrA & p )
+        void bindTo( const KernelPort & port )
         {
             SurfaceBindingParameter b;
-            b.kernel = k;
-            b.port   = p;
+            b.kernel = port.kernel;
+            b.port   = port.name;
             bindings.append( b );
         }
     };
@@ -550,11 +554,11 @@ namespace GN { namespace gfx
         virtual void     deleteAllKernels() = 0;
 
         template<typename T>
-        T * getKernel( const StrA & name )
+        T * getKernel()
         {
-            Kernel * k = getKernel( name );
+            Kernel * k = getKernel( T::KERNEL_NAME() );
             if( 0 == k ) return 0;
-            return GN_SAFE_CAST<T*>(k);
+            return safeCastPtr<T>(k);
         }
 
         //@}

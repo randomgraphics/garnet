@@ -44,15 +44,6 @@
 #define GN_FIELD_OFFSET( class_, field ) \
     ( (size_t)(UIntPtr) &( ((class_*)(void*)(8))->field ) - 8 )
 
-///
-/// safe cast macro: perform dynamic cast in debug build, and static cast in release build.
-///
-#if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
-#define GN_SAFE_CAST dynamic_cast
-#else
-#define GN_SAFE_CAST static_cast
-#endif
-
 namespace GN
 {
     ///
@@ -123,13 +114,32 @@ namespace GN
     /// perform dynamic cast in debug build, and static cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO safeCast( const FROM & from )
+    GN_FORCE_INLINE TO & safeCastRef( FROM & from )
     {
     #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
-        return dynamic_cast<TO>(from);
+        return dynamic_cast<TO&>(from);
     #else
-        return static_cast<TO>(from);
+        return static_cast<TO&>(from);
     #endif
+    }
+
+    ///
+    /// type cast function
+    ///
+    /// perform dynamic cast in debug build, and static cast in release build.
+    // ------------------------------------------------------------------------
+    template < class TO, class FROM >
+    GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
+    {
+    #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
+        TO * to = dynamic_cast<TO*>(from);
+    #else
+        TO * to = static_cast<TO*>(from);
+    #endif
+
+        GN_ASSERT( 0 == from || 0 != to );
+
+        return to;
     }
 
     ///

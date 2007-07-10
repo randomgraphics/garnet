@@ -1,7 +1,7 @@
 Import( 'GN' )
 
 sources = [
-#	'font.cpp',
+	'font.cpp',
     'testD3D9Hlsl.cpp',
     'main.cpp',
     ]

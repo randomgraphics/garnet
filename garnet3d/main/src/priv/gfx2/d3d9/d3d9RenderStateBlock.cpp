@@ -112,6 +112,7 @@ void GN::gfx::D3D9RenderStateBlock::sSetupDefaultDeviceStates( D3D9GraphicsSyste
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9RenderStateBlock::D3D9RenderStateBlock( D3D9GraphicsSystem & gs )
+    : mGfxSys( gs )
 {
     mDevice = gs.d3ddev();
 
@@ -249,6 +250,14 @@ void GN::gfx::D3D9RenderStateBlock::apply( const D3D9RenderStateBlock * last ) c
         applyRenderStates();
         applySamplerStates();
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9RenderStateBlock::apply() const
+{
+    mGfxSys.setRenderStateBlock( *this );
 }
 
 // *****************************************************************************
