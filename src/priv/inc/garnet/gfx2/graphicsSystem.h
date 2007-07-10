@@ -381,6 +381,11 @@ namespace GN { namespace gfx
         UInt32    numFaces;   ///< set to 0 for all faces starting from firstFace.
 
         ///
+        /// ctor
+        ///
+        SurfaceView() : surf(0) {}
+
+        ///
         /// setup port binding
         ///
         void set(
@@ -467,16 +472,6 @@ namespace GN { namespace gfx
         {
             StrA kernel; ///< kernel name
             StrA port;   ///< port name
-
-            ///
-            /// default ctor
-            ///
-            SurfaceBindingParameter() {}
-
-            ///
-            /// ctor
-            ///
-            SurfaceBindingParameter( const StrA & e, const StrA & p ) : kernel( e ), port( p ) {}
         };
 
         ///
@@ -502,6 +497,17 @@ namespace GN { namespace gfx
         /// creation hints (name and value pairs)
         ///
         SurfaceCreationHints hints;
+
+        ///
+        /// add new binding
+        ///
+        void bindTo( const StrA & k, const StrA & p )
+        {
+            SurfaceBindingParameter b;
+            b.kernel = k;
+            b.port   = p;
+            bindings.append( b );
+        }
     };
 
     class GraphicsSystem;

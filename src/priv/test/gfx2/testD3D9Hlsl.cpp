@@ -109,22 +109,22 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
         );
 
     // create kernel
-    mKernel = gs.getKernel( "D3D9_HLSL" );
+    mKernel = gs.getKernel<Hlsl9Kernel>( "HLSL9" );
     if( 0 == mKernel ) return false;
 
     // create parameters
     mParam = mKernel->createParameterSet();
     if( 0 == mParam ) return false;
-    mParam->setParameter( "FX", fxcode );
-    mParam->setParameter( "PRIM_TYPE", 4 ); // D3DPT_TRIANGLELIST
-    mParam->setParameter( "PRIM_COUNT", 12 );
-    mParam->setParameter( "BASE_VERTEX", 0 );
-    mParam->setParameter( "VERTEX_COUNT", 24 );
-    mParam->setParameter( "BASE_INDEX", 0 );
+    mParam->setFx( fxcode );
+    mParam->setPrimType( TRIANGLE_LIST ); // D3DPT_TRIANGLELIST
+    mParam->setPrimCount( 12 );
+    mParam->setBaseVertex( 0 );
+    mParam->setVertexCount( 24 );
+    mParam->setBaseIndex( 0 );
 
     // create vertex buffer
     SurfaceCreationParameter scp;
-    scp.bindings.append( SurfaceBindingParameter("D3D9_HLSL","VTXBUF0") );
+    scp.bindTo( "HLSL9", "VTXBUF0" );
     scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
     scp.layout.dim = SURFACE_DIMENSION_1D;
     scp.layout.levels = 1;
@@ -156,7 +156,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
 
     // create index buffer
     scp.bindings.clear();
-    scp.bindings.append( SurfaceBindingParameter("D3D9_HLSL","IDXBUF") );
+    scp.bindTo( "HLSL9", "IDXBUF" );
     scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
     scp.layout.dim = SURFACE_DIMENSION_1D;
     scp.layout.levels = 1;
@@ -184,7 +184,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     TextureData td;
     if( !td.load( "media::/texture/rabit.png" ) ) return false;
     scp.bindings.clear();
-    scp.bindings.append( SurfaceBindingParameter( "D3D9_HLSL", "TEXTURE0" ) );
+    scp.bindTo( "HLSL9", "TEXTURE0" );
     scp.layout.dim = SURFACE_DIMENSION_2D;
     scp.layout.levels = td.id.numLevels;
     scp.layout.faces  = td.id.numFaces;
@@ -213,11 +213,11 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     }
 
     // create binding
-    KernelBindingDesc bd;
-    bd.bindings["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
-    bd.bindings["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
-    bd.bindings["TEXTURE0"].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
-    mBinding = mKernel->createBinding( bd );
+    Hlsl9PortBinding bd;
+    bd.vtxbufs[0].set( mVtxBuf, 0, 1, 0, 1 );
+    bd.idxbuf.set( mIdxBuf, 0, 1, 0, 1 );
+    bd.textures[0].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
+    mBinding = mKernel->createPortBinding( bd );
     if( 0 == mBinding ) return false;
 
     // success
@@ -232,7 +232,7 @@ void TestD3D9Hlsl::quit( GraphicsSystem & )
     if( mBinding )
     {
         GN_ASSERT( mKernel );
-        mKernel->deleteBinding( mBinding );
+        mKernel->deletePortBinding( mBinding );
         mBinding = 0;
     }
     safeDelete( mVtxBuf );
@@ -253,7 +253,7 @@ void TestD3D9Hlsl::draw( GraphicsSystem & )
     Matrix44f world = mArcBall.getRotationMatrix44();
     Matrix44f pvw = mProjView * world;
 
-    mParam->setParameter( "VSCF", pvw );
+    mParam->setVSConstF( 0, 4, pvw[0] );
 
     mKernel->render( *mParam, mBinding );
 }

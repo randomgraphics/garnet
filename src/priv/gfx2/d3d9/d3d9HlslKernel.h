@@ -11,11 +11,8 @@ namespace GN { namespace gfx
     ///
     /// general kernel that accepts shader code as parameter
     ///
-    class D3D9HlslKernel : public Hlsl9Kernel, public D3D9Kernel
+    class D3D9HlslKernel : public Hlsl9Kernel, public D3D9KernelBase
     {
-        size_t mPrimType, mPrimCount, mBaseIndex, mBaseVertex, mVertexCount;
-
-        // ports
         D3D9RenderTargetPort mRenderTarget0;
         D3D9RenderTargetPort mRenderTarget1;
         D3D9RenderTargetPort mRenderTarget2;
@@ -41,7 +38,6 @@ namespace GN { namespace gfx
 
         D3D9RenderStateBlock mRsb;
 
-
         ///
         /// ctor
         ///
@@ -50,9 +46,9 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// kernel creator
+        /// kernel factory
         ///
-        static Kernel * sCreator( GraphicsSystem & gs )
+        static Kernel * sFactory( GraphicsSystem & gs )
         {
             PIXPERF_FUNCTION_EVENT();
             return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
