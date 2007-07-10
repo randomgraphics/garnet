@@ -31,6 +31,7 @@ namespace GN { namespace gfx
     struct D3D9KernelPortDesc
     {
         //@{
+        StrA                  name;
         D3D9KernelPortType    portType;
         D3D9SurfaceType       surfaceType;
         SurfaceLayoutTemplate layout;
@@ -55,7 +56,10 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelPort( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs) {}
+        D3D9KernelPort( D3D9GraphicsSystem & gs, const char * name ) : mGraphicsSystem(gs)
+        {
+            mDesc.name = name;
+        }
 
         ///
         /// get graphics system
@@ -83,10 +87,11 @@ namespace GN { namespace gfx
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9RenderTargetPort : public D3D9KernelPort
     {
+        UInt32 mStage;
     public:
 
         //@{
-        D3D9RenderTargetPort( D3D9GraphicsSystem & gs );
+        D3D9RenderTargetPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -100,7 +105,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9DepthBufferPort( D3D9GraphicsSystem & gs );
+        D3D9DepthBufferPort( D3D9GraphicsSystem & gs, const char * name );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -116,7 +121,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9TexturePort( D3D9GraphicsSystem & gs, UInt32 stage );
+        D3D9TexturePort( D3D9GraphicsSystem & gs, const char * name , UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -134,7 +139,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage );
+        D3D9VtxBufPort( D3D9GraphicsSystem & gs, const char * name , UInt32 stage );
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
@@ -150,21 +155,10 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9IdxBufPort( D3D9GraphicsSystem & gs );
+        D3D9IdxBufPort( D3D9GraphicsSystem & gs, const char * name );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
-    };
-
-    ///
-    /// D3D9 kernel port binding descriptor
-    ///
-    struct D3D9KernelPortBindingDesc
-    {
-        ///
-        /// surface binding indexed by port name
-        ///
-        std::map<StrA,SurfaceView> bindings;
     };
 
     ///
@@ -200,7 +194,7 @@ namespace GN { namespace gfx
         ///
         /// binding setup
         ///
-        bool setup( const D3D9KernelPortBindingDesc & );
+        bool setup( const KernelPort * ports );
 
         /// \name properties
         //@{
@@ -226,7 +220,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelBase( D3D9GraphicsSystem & gs ) : mGraphicsSystem(gs), mDefaultBinding(0) {}
+        D3D9KernelBase( D3D9GraphicsSystem & gs, const char * kernelName );
 
         ///
         /// dtor
@@ -238,7 +232,7 @@ namespace GN { namespace gfx
         const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
         const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
         const StrA              & getPortName( size_t index ) const { return mPorts.getName( index ); }
-        KernelPortBinding         createPortBinding( const D3D9KernelPortBindingDesc & );
+        KernelPortBinding         createPortBinding(  const KernelPort * ports );
         bool                      compatible( const Surface * surf, const StrA & port ) const;
         void                      deletePortBinding( KernelPortBinding );
 
@@ -247,7 +241,7 @@ namespace GN { namespace gfx
         ///
         /// \note D3D9KernelBase class does _NOT_ hold the ownership of the port instance.
         ///
-        size_t addPortRef( const StrA & name, D3D9KernelPort * port );
+        size_t addPortRef( D3D9KernelPort & port );
 
         ///
         /// get port binding by handle

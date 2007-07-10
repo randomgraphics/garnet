@@ -300,7 +300,7 @@ namespace GN
         template<typename T>
         T * createInstance( PluginID id, void * param = 0 ) const
         {
-            return safeCast<T*>(doInstanceCreation( id, param ));
+            return safeCastPtr<T>(doInstanceCreation( id, param ));
         }
 
         ///

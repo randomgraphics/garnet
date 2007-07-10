@@ -31,7 +31,7 @@ namespace GN { namespace gfx
     ///
     /// parameter set for D3D9 hlsl kernel
     ///
-    class D3D9HlslKernelParameterSet : public Hlsl9ParameterSet
+    class D3D9HlslKernelParameterSet : public Hlsl9KernelParameterSet
     {
         // ********************************
         // ctor/dtor
@@ -60,13 +60,13 @@ namespace GN { namespace gfx
 
         virtual void setVSConstF( size_t firstRegister, size_t numRegisters, const float * data )
         {
-            mVscfUpdate.merge( firstRegister, numRegisters );
+            mVscfUpdate.merge( (UInt32)firstRegister, (UInt32)numRegisters );
             memcpy( &mVscf[firstRegister], data, numRegisters * sizeof(float)*4 );
         }
 
         virtual void setPSConstF( size_t firstRegister, size_t numRegisters, const float * data )
         {
-            mPscfUpdate.merge( firstRegister, numRegisters );
+            mPscfUpdate.merge( (UInt32)firstRegister, (UInt32)numRegisters );
             memcpy( &mPscf[firstRegister], data, numRegisters * sizeof(float)*4 );
         }
 
@@ -236,60 +236,60 @@ namespace GN { namespace gfx
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
-    : D3D9KernelBase( gs )
-    , mRenderTarget0( gs )
-    , mRenderTarget1( gs )
-    , mRenderTarget2( gs )
-    , mRenderTarget3( gs )
-    , mDepthBuffer( gs )
-    , mTexture0( gs, 0 )
-    , mTexture1( gs, 1 )
-    , mTexture2( gs, 2 )
-    , mTexture3( gs, 3 )
-    , mTexture4( gs, 4 )
-    , mTexture5( gs, 5 )
-    , mTexture6( gs, 6 )
-    , mTexture7( gs, 7 )
-    , mVtxBuf0( gs, 0 )
-    , mVtxBuf1( gs, 1 )
-    , mVtxBuf2( gs, 2 )
-    , mVtxBuf3( gs, 3 )
-    , mVtxBuf4( gs, 4 )
-    , mVtxBuf5( gs, 5 )
-    , mVtxBuf6( gs, 6 )
-    , mVtxBuf7( gs, 7 )
-    , mIdxBuf( gs )
+    : D3D9KernelBase( gs, KERNEL_NAME() )
+    , mRenderTarget0( gs, "TARGET0", 0 )
+    , mRenderTarget1( gs, "TARGET1", 1 )
+    , mRenderTarget2( gs, "TARGET2", 2 )
+    , mRenderTarget3( gs, "TARGET3", 3 )
+    , mDepthBuffer( gs, "DEPTH" )
+    , mTexture0( gs, "TEXTURE0", 0 )
+    , mTexture1( gs, "TEXTURE1", 1 )
+    , mTexture2( gs, "TEXTURE2", 2 )
+    , mTexture3( gs, "TEXTURE3", 3 )
+    , mTexture4( gs, "TEXTURE4", 4 )
+    , mTexture5( gs, "TEXTURE5", 5 )
+    , mTexture6( gs, "TEXTURE6", 6 )
+    , mTexture7( gs, "TEXTURE7", 7 )
+    , mVtxBuf0( gs, "VTXBUF0", 0 )
+    , mVtxBuf1( gs, "VTXBUF1", 1 )
+    , mVtxBuf2( gs, "VTXBUF2", 2 )
+    , mVtxBuf3( gs, "VTXBUF3", 3 )
+    , mVtxBuf4( gs, "VTXBUF4", 4 )
+    , mVtxBuf5( gs, "VTXBUF5", 5 )
+    , mVtxBuf6( gs, "VTXBUF6", 6 )
+    , mVtxBuf7( gs, "VTXBUF7", 7 )
+    , mIdxBuf( gs, "IDXBUF" )
     , mRsb( gs )
 {
     // setup ports
-    addPortRef( "TARGET0"  , &mRenderTarget0 );
-    addPortRef( "TARGET1"  , &mRenderTarget1 );
-    addPortRef( "TARGET2"  , &mRenderTarget2 );
-    addPortRef( "TARGET3"  , &mRenderTarget3 );
-    addPortRef( "DEPTH"    , &mDepthBuffer );
-    addPortRef( "TEXTURE0" , &mTexture0 );
-    addPortRef( "TEXTURE1" , &mTexture1 );
-    addPortRef( "TEXTURE2" , &mTexture2 );
-    addPortRef( "TEXTURE3" , &mTexture3 );
-    addPortRef( "TEXTURE4" , &mTexture4 );
-    addPortRef( "TEXTURE5" , &mTexture5 );
-    addPortRef( "TEXTURE6" , &mTexture6 );
-    addPortRef( "TEXTURE7" , &mTexture7 );
-    addPortRef( "VTXBUF0"  , &mVtxBuf0 );
-    addPortRef( "VTXBUF1"  , &mVtxBuf1 );
-    addPortRef( "VTXBUF2"  , &mVtxBuf2 );
-    addPortRef( "VTXBUF3"  , &mVtxBuf3 );
-    addPortRef( "VTXBUF4"  , &mVtxBuf4 );
-    addPortRef( "VTXBUF5"  , &mVtxBuf5 );
-    addPortRef( "VTXBUF6"  , &mVtxBuf6 );
-    addPortRef( "VTXBUF7"  , &mVtxBuf7 );
-    addPortRef( "IDXBUF"   , &mIdxBuf );
+    addPortRef( mRenderTarget0 );
+    addPortRef( mRenderTarget1 );
+    addPortRef( mRenderTarget2 );
+    addPortRef( mRenderTarget3 );
+    addPortRef( mDepthBuffer );
+    addPortRef( mTexture0 );
+    addPortRef( mTexture1 );
+    addPortRef( mTexture2 );
+    addPortRef( mTexture3 );
+    addPortRef( mTexture4 );
+    addPortRef( mTexture5 );
+    addPortRef( mTexture6 );
+    addPortRef( mTexture7 );
+    addPortRef( mVtxBuf0 );
+    addPortRef( mVtxBuf1 );
+    addPortRef( mVtxBuf2 );
+    addPortRef( mVtxBuf3 );
+    addPortRef( mVtxBuf4 );
+    addPortRef( mVtxBuf5 );
+    addPortRef( mVtxBuf6 );
+    addPortRef( mVtxBuf7 );
+    addPortRef( mIdxBuf );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Hlsl9ParameterSet *
+GN::gfx::Hlsl9KernelParameterSet *
 GN::gfx::D3D9HlslKernel::createParameterSet()
 {
     GN_GUARD;
@@ -303,32 +303,9 @@ GN::gfx::D3D9HlslKernel::createParameterSet()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelPortBinding
-GN::gfx::D3D9HlslKernel::createPortBinding( const Hlsl9PortBinding & b )
+GN::gfx::D3D9HlslKernel::createPortBinding( const Hlsl9KernelPortBinding & b )
 {
-    D3D9KernelPortBindingDesc desc;
-    desc.bindings["TARGET0"]  = b.renderTargets[0];
-    desc.bindings["TARGET1"]  = b.renderTargets[1];
-    desc.bindings["TARGET2"]  = b.renderTargets[2];
-    desc.bindings["TARGET3"]  = b.renderTargets[3];
-    desc.bindings["DEPTH"]    = b.depth;
-    desc.bindings["TEXTURE0"] = b.textures[0];
-    desc.bindings["TEXTURE1"] = b.textures[1];
-    desc.bindings["TEXTURE2"] = b.textures[2];
-    desc.bindings["TEXTURE3"] = b.textures[3];
-    desc.bindings["TEXTURE4"] = b.textures[4];
-    desc.bindings["TEXTURE5"] = b.textures[5];
-    desc.bindings["TEXTURE6"] = b.textures[6];
-    desc.bindings["TEXTURE7"] = b.textures[7];
-    desc.bindings["VTXBUF0"]  = b.vtxbufs[0];
-    desc.bindings["VTXBUF1"]  = b.vtxbufs[1];
-    desc.bindings["VTXBUF2"]  = b.vtxbufs[2];
-    desc.bindings["VTXBUF3"]  = b.vtxbufs[3];
-    desc.bindings["VTXBUF4"]  = b.vtxbufs[4];
-    desc.bindings["VTXBUF5"]  = b.vtxbufs[5];
-    desc.bindings["VTXBUF6"]  = b.vtxbufs[6];
-    desc.bindings["VTXBUF7"]  = b.vtxbufs[7];
-    desc.bindings["IDXBUF"]   = b.idxbuf;
-    return D3D9KernelBase::createPortBinding( desc );
+    return D3D9KernelBase::createPortBinding( &b.target0 );
 }
 
 //
@@ -344,7 +321,7 @@ void GN::gfx::D3D9HlslKernel::render(
     D3D9KernelPortBinding & b = getPortBinding( binding );
     b.apply();
 
-    const D3D9HlslKernelParameterSet & p = safeCast<const D3D9HlslKernelParameterSet &>(param);
+    const D3D9HlslKernelParameterSet & p = safeCastRef<const D3D9HlslKernelParameterSet>(param);
 
     // restore to default render states
     gfxsys().setRenderStateBlock( mRsb );

@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "testD3D9Hlsl.h"
-//#include "font.h"
+#include "font.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
-//using namespace GN::test;
+using namespace GN::test;
 
 struct InputInitiator
 {
@@ -27,7 +27,7 @@ struct InputInitiator
 struct ClearScreen
 {
     ClearScreenKernel                 * kernel;
-    AutoObjPtr<ClearScreenParameterSet> param;
+    AutoObjPtr<ClearScreenKernelParameterSet> param;
 
     ClearScreen()
     {
@@ -35,7 +35,7 @@ struct ClearScreen
 
     bool init( GraphicsSystem & gs )
     {
-        kernel = gs.getKernel<ClearScreenKernel>( "CLEAR_SCREEN" );
+        kernel = gs.getKernel<ClearScreenKernel>();
         if( 0 == kernel ) return false;
 
         param.attach( kernel->createParameterSet() );
@@ -52,7 +52,7 @@ struct ClearScreen
     }
 };
 
-static bool runcase( GraphicsSystem & gs, ClearScreen & cs , /*QuadKernelFont & font,*/ Gfx2TestApp & c )
+static bool runcase( GraphicsSystem & gs, ClearScreen & cs , QuadKernelFont & font, Gfx2TestApp & c )
 {
     while( 1 )
     {
@@ -73,7 +73,7 @@ static bool runcase( GraphicsSystem & gs, ClearScreen & cs , /*QuadKernelFont & 
         c.draw(gs);
 
         // draw some text
-        //font.drawText( L"GFX2 test application", 10, 10 );
+        font.drawText( L"GFX2 test application", 10, 10 );
 
         gs.present();
     }
@@ -85,13 +85,13 @@ static int run( GraphicsSystem & gs )
     ClearScreen cs;
     if( !cs.init( gs ) ) return -1;
 
-    /* initialize font
+    // initialize font
     QuadKernelFont font( gs );
     scene::FontFaceDesc ffd;
     ffd.fontname = "font::/simsun.ttc";
     ffd.width  = 16;
     ffd.height = 16;
-    if( !font.init( ffd ) ) return -1;*/
+    if( !font.init( ffd ) ) return -1;
 
     Gfx2TestApp * cases[] =
     {
@@ -107,7 +107,7 @@ static int run( GraphicsSystem & gs )
 
         if( c->init(gs) )
         {
-            next = runcase( gs, cs, *c );//, font, *c );
+            next = runcase( gs, cs, font, *c );
         }
 
         c->quit(gs);

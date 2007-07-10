@@ -51,7 +51,7 @@ namespace GN { namespace test
             {
                 mCharList[i]       = 0;
                 mNumChars[i]       = 0;
-                mKernelBindings[i] = 0;
+                mKernelPortBindings[i] = 0;
             }
         }
         //@}
@@ -159,49 +159,33 @@ namespace GN { namespace test
             FontTexture() : texture(0) {}
         };
 
-        struct FontVertex
-        {
-            GN::Vector3f pos;
-            UInt32       clr; // color in R-G-B-A format
-            GN::Vector2f tex;
-            float        _[2]; // padding to 32 bytes
+        GraphicsSystem            & mGfxSys;
 
-            void set( float x, float y, float z, UInt32 c, float u, float v )
-            {
-                pos.set( x, y, z );
-                clr = c;
-                tex.set( u, v );
-            }
-        };
-
-        GraphicsSystem         & mGfxSys;
-
-        Kernel                 * mKernel;
-        KernelParameterSet     * mKernelParam;
-        KernelBinding            mKernelBindings[MAX_TEXTURES];
-        StreamSource           * mQuadStream;
+        QuadKernel                * mKernel;
+        QuadKernelParameterSet    * mKernelParam;
+        KernelPortBinding           mKernelPortBindings[MAX_TEXTURES];
 
         // font face data
-        AutoRef<FontFace>        mFont;
+        AutoRef<FontFace>           mFont;
 
         // font texture list
-        FontTexture              mTextures[MAX_TEXTURES];
-        size_t                   mNumTextures;
+        FontTexture                 mTextures[MAX_TEXTURES];
+        size_t                      mNumTextures;
 
         // texture size
-        size_t                   mTexWidth;
-        size_t                   mTexHeight;
+        size_t                      mTexWidth;
+        size_t                      mTexHeight;
 
         // font slot
-        size_t                   mNumSlots; // number of used slots
-        FontSlot *               mFontSlots;
-        std::map<wchar_t,size_t> mSlotMap;  // map that convert charcode to slot index
+        size_t                      mNumSlots; // number of used slots
+        FontSlot                  * mFontSlots;
+        std::map<wchar_t,size_t>    mSlotMap;  // map that convert charcode to slot index
 
         // texture list
-        CharInfo *               mCharList[MAX_TEXTURES];
-        size_t                   mNumChars[MAX_TEXTURES];
+        CharInfo                  * mCharList[MAX_TEXTURES];
+        size_t                      mNumChars[MAX_TEXTURES];
 
-        DynaArray<FontVertex>    mQuadBuffer;
+        DynaArray<QuadKernelVertex> mQuadBuffer;
 
         // ********************************
         // private functions

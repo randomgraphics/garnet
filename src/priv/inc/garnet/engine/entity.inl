@@ -51,7 +51,7 @@ template< class T>
 inline const T & GN::engine::entity2Object( const Entity * e, const T & nil )
 {
     if( 0 == e ) return nil;
-    const EntityT<T> * et = safeCast<const EntityT<T>*>(e);
+    const EntityT<T> * et = safeCastPtr<const EntityT<T> >(e);
     if( 0 == et )
     {
         static Logger * sLogger = getLogger("GN.engine.Entity");

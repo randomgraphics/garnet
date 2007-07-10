@@ -52,21 +52,11 @@ namespace GN { namespace gfx
         ///
         static Kernel * sCreator( GraphicsSystem & gs )
         {
-            return new D3D9SolidColorKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
+            return new D3D9SolidColorKernel(safeCastRef<D3D9GraphicsSystem>(gs));
         }
  
         virtual void render( const KernelParameterSet & param, KernelBinding binding )
         {
-            GN_ASSERT( &param.getKernel() == (Kernel*)this );
-
-            getPortBinding( binding ).apply();
-
-            const BaseKernelParameter * m = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mPvw ) );
-            const BaseKernelParameter * c = GN_SAFE_CAST<const BaseKernelParameter*>( param.getParameter( mColor ) );
-            GN_ASSERT( m && c );
-
-            GN_UNUSED_PARAM( m );
-            GN_UNUSED_PARAM( c );
         }
     };
 }}

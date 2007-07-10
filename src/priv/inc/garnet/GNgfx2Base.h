@@ -26,6 +26,7 @@ namespace GN { namespace gfx
             T      value;
         };
 
+        StrA                  mLogPrefix;
         StrA                  mTypeName;
         DynaArray<Item>       mItems;
         std::map<StrA,size_t> mNames;
@@ -34,7 +35,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -44,7 +45,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -55,7 +56,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -66,7 +67,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -76,7 +77,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s index is out of range.", mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
                 return StrA::EMPTYSTR;
             }
             return mItems[index].name;
@@ -87,7 +88,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "invalid %s name '%s'.", mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
                 return (size_t)-1;
             }
             return i->second;
@@ -98,7 +99,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() != i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s named '%s' does exist already.", mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s named '%s' does exist already.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
                 return (size_t)-1;
             }
 
@@ -117,7 +118,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        NamedArray( const char * typeName = "item" ) : mTypeName(typeName)
+        NamedArray( const StrA & prefix = StrA::EMPTYSTR, const StrA & typeName = "item" ) : mLogPrefix(prefix), mTypeName(typeName)
         {
         }
 

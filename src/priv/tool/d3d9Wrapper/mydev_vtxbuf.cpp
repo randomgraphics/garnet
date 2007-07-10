@@ -46,7 +46,7 @@ HRESULT MyDevice9::SetStreamSource(
     UINT OffsetInBytes,
     UINT Stride)
 {
-    MyVtxBuf9 * vb = pStreamData ? safeCast<MyVtxBuf9*>( pStreamData ) : 0;
+    MyVtxBuf9 * vb = pStreamData ? safeCastPtr<MyVtxBuf9>( pStreamData ) : 0;
 
     HRESULT hr = realobj()->SetStreamSource( StreamNumber, vb ? vb->realobj() : 0, OffsetInBytes, Stride );
     if( FAILED(hr) ) return hr;

@@ -36,12 +36,14 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
     if( !slotInit( ffd.width, ffd.height ) ) return failure();
 
     // get quad kernel
-    mKernel = mGfxSys.getKernel( "QUAD" );
+    mKernel = mGfxSys.getKernel<QuadKernel>();
     if( 0 == mKernel ) return failure();
+
+    QuadKernelPortBinding bd;
 
     // create font textures and binding
     SurfaceCreationParameter scp;
-    scp.bindings.append( SurfaceBindingParameter( "QUAD", "TEXTURE0" ) );
+    scp.bindTo( bd.texture );
     scp.layout.dim = SURFACE_DIMENSION_2D;
     scp.layout.levels = 1;
     scp.layout.faces  = 1;
@@ -65,20 +67,17 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
             return failure();
         }
 
-        KernelBindingDesc bd;
-        bd.bindings["TEXTURE0"].set( tex.texture, 0, 1, 0, 1 );
-        mKernelBindings[i] = mKernel->createBinding( bd );
-        if( 0 == mKernelBindings[i] ) return failure();
+        bd.texture.view.set( tex.texture, 0, 1, 0, 1 );
+        mKernelPortBindings[i] = mKernel->createPortBinding( bd );
+        if( 0 == mKernelPortBindings[i] ) return failure();
     }
 
     // create parameter set
     mKernelParam = mKernel->createParameterSet();
     if( 0 == mKernelParam ) return failure();
 
-    // get kernel stream source
-    mQuadStream = mKernel->getStream( "QUADS" );
-    if( 0 == mQuadStream ) return failure();
-    mQuadBuffer.resize( mQuadStream->freeBytes() / sizeof(FontVertex) );
+    // initialize quad buffer
+    mQuadBuffer.resize( mKernel->getAvailableVertices() );
 
     // success
     return success();
@@ -108,7 +107,7 @@ void GN::test::QuadKernelFont::quit()
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
         safeDelete( mTextures[i].texture );
-        if( mKernelBindings[i] ) mKernel->deleteBinding( mKernelBindings[i] );
+        if( mKernelPortBindings[i] ) mKernel->deletePortBinding( mKernelPortBindings[i] );
     }
 
     safeDelete( mKernelParam );
@@ -226,7 +225,7 @@ void GN::test::QuadKernelFont::drawText( const TextDesc & td )
 
         for( size_t j = 0; j < n1; ++j )
         {
-            FontVertex * v = mQuadBuffer.cptr();
+            QuadKernelVertex * v = mQuadBuffer.cptr();
             for( size_t k = 0; k < MAX_QUADS; ++k, ++ci, v+=4 )
             {
                 fs = ci->fs;
@@ -236,17 +235,17 @@ void GN::test::QuadKernelFont::drawText( const TextDesc & td )
                 float x2 = (float)( ci->x + fs->x2 - fs->x1 ) * scalex;
                 float y2 = (float)( ci->y + fs->y2 - fs->y1 ) * scaley;
 
-                v[0].set( x1, y1, td.z, 0xFFFFFFFF, fs->u1, fs->v1 );
-                v[1].set( x1, y2, td.z, 0xFFFFFFFF, fs->u1, fs->v2 );
-                v[2].set( x2, y2, td.z, 0xFFFFFFFF, fs->u2, fs->v2 );
-                v[3].set( x2, y1, td.z, 0xFFFFFFFF, fs->u2, fs->v1 );
+                v[0].set( x1, y1, td.z, 255, 255, 255, 255, fs->u1, fs->v1 );
+                v[1].set( x1, y2, td.z, 255, 255, 255, 255, fs->u1, fs->v2 );
+                v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
+                v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
             }
 
-            mQuadStream->push( mQuadBuffer.cptr(), mQuadBuffer.size() * sizeof(FontVertex) );
-            mKernel->render( *mKernelParam, mKernelBindings[i] );
+            mKernel->pushVertices( mQuadBuffer.cptr(), mQuadBuffer.size() );
+            mKernel->render( *mKernelParam, mKernelPortBindings[i] );
         }
 
-        FontVertex * v = mQuadBuffer.cptr();
+        QuadKernelVertex * v = mQuadBuffer.cptr();
         for( size_t j = 0; j < n2; ++j, ++ci, v+=4 )
         {
             fs = ci->fs;
@@ -256,13 +255,13 @@ void GN::test::QuadKernelFont::drawText( const TextDesc & td )
             float x2 = (float)( ci->x + fs->x2 - fs->x1 ) * scalex;
             float y2 = (float)( ci->y + fs->y2 - fs->y1 ) * scaley;
 
-            v[0].set( x1, y1, td.z, 0xFFFFFFFF, fs->u1, fs->v1 );
-            v[1].set( x1, y2, td.z, 0xFFFFFFFF, fs->u1, fs->v2 );
-            v[2].set( x2, y2, td.z, 0xFFFFFFFF, fs->u2, fs->v2 );
-            v[3].set( x2, y1, td.z, 0xFFFFFFFF, fs->u2, fs->v1 );
+            v[0].set( x1, y1, td.z, 255, 255, 255, 255, fs->u1, fs->v1 );
+            v[1].set( x1, y2, td.z, 255, 255, 255, 255, fs->u1, fs->v2 );
+            v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
+            v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
         }
-        mQuadStream->push( mQuadBuffer.cptr(), n2 * 4 * sizeof(FontVertex) );
-        mKernel->render( *mKernelParam, mKernelBindings[i] );
+        mKernel->pushVertices( mQuadBuffer.cptr(), n2 * 4 );
+        mKernel->render( *mKernelParam, mKernelPortBindings[i] );
 
         mNumChars[i] = 0;
     }

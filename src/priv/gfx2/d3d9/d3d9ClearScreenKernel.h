@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    struct D3D9ClearScreenParameterSet : public ClearScreenParameterSet
+    struct D3D9ClearScreenParameterSet : public ClearScreenKernelParameterSet
     {
         DWORD    flags;
         D3DCOLOR color;
@@ -79,12 +79,12 @@ namespace GN { namespace gfx
         /// ctor
         ///
         D3D9ClearScreenKernel( D3D9GraphicsSystem & gs )
-            : D3D9KernelBase(gs)
-            , mTarget0(gs)
-            , mDepth(gs)
+            : D3D9KernelBase(gs,KERNEL_NAME())
+            , mTarget0(gs,"TARGET0",0)
+            , mDepth(gs,"DEPTH")
         {
-            addPortRef( "TARGET0", &mTarget0 );
-            addPortRef( "DEPTH", &mDepth );
+            addPortRef( mTarget0 );
+            addPortRef( mDepth );
         }
 
     public:
@@ -95,19 +95,16 @@ namespace GN { namespace gfx
         static Kernel * sFactory( GraphicsSystem & gs )
         {
             PIXPERF_FUNCTION_EVENT();
-            return new D3D9ClearScreenKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) );
+            return new D3D9ClearScreenKernel( safeCastRef<D3D9GraphicsSystem>(gs) );
         }
 
         virtual bool                      compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
 
-        virtual ClearScreenParameterSet * createParameterSet() { return new D3D9ClearScreenParameterSet; }
+        virtual ClearScreenKernelParameterSet * createParameterSet() { return new D3D9ClearScreenParameterSet; }
 
-        virtual KernelPortBinding         createPortBinding( const ClearScreenPortBinding & b )
+        virtual KernelPortBinding         createPortBinding( const ClearScreenKernelPortBinding & b )
         {
-            D3D9KernelPortBindingDesc desc;
-            desc.bindings["TARGET0"] = b.colorSurface;
-            desc.bindings["DEPTH"]   = b.depthSurface;
-            return D3D9KernelBase::createPortBinding( desc );
+            return D3D9KernelBase::createPortBinding( &b.target );
         }
 
         virtual void                      deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
@@ -117,7 +114,7 @@ namespace GN { namespace gfx
             D3D9KernelPortBinding & b = getPortBinding( binding );
             b.apply();
 
-            const D3D9ClearScreenParameterSet & p = GN_SAFE_CAST<const D3D9ClearScreenParameterSet &>( param );
+            const D3D9ClearScreenParameterSet & p = safeCastRef<const D3D9ClearScreenParameterSet>( param );
 
             DWORD flags;
             if( b.hasZBuf() )

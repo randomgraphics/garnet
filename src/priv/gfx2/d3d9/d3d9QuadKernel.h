@@ -9,83 +9,9 @@
 namespace GN { namespace gfx
 {
     ///
-    /// quad vertex stream
-    ///
-    class D3D9QuadStream : public StreamSource, public D3D9UnstableResource, public StdClass
-    {
-        GN_DECLARE_STDCLASS( D3D9QuadStream, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        D3D9QuadStream( D3D9GraphicsSystem & gs );
-        virtual ~D3D9QuadStream() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear() {}
-        //@}
-
-        // ********************************
-        // public methods
-        // ********************************
-    public:
-
-        enum
-        {
-            NUM_VTXBUFS = 128,
-            MAX_QUADS   = 256,
-        };
-
-        // from parents
-        virtual const StreamSourceDesc & getDesc() const { return mDesc; }
-        virtual void                     push( const void * data, size_t bytes );
-        virtual size_t                   freeBytes() const { return (MAX_QUADS - mNumQuads) * sizeof(QuadVertex); }
-        virtual bool                     onRestore() { return true; }
-        virtual void                     onDispose() {}
-
-        inline void                      draw();
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        struct QuadVertex
-        {
-            GN::Vector3f pos;  // position in [0,1] space. [0,0] is left-top corner; [1,1] is right-bottom corner.
-            UInt32       clr;  // color in R-G-B-A format
-            GN::Vector2f tex;
-            float        _[2]; // padding to 32 bytes
-        };
-        GN_CASSERT( sizeof(QuadVertex) == 32 );
-
-        StreamSourceDesc                   mDesc;
-        AutoComPtr<IDirect3DVertexBuffer9> mVtxBufs[NUM_VTXBUFS];
-        size_t                             mActiveVB;
-        size_t                             mNumQuads;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-    };
-
-    ///
     /// rendering 2D quads
-    ///    
-    class D3D9QuadKernel : public D3D9Kernel, public StdClass
+    ///
+    class D3D9QuadKernel : public QuadKernel, public D3D9KernelBase, public StdClass
     {
         GN_DECLARE_STDCLASS( D3D9QuadKernel, StdClass );
 
@@ -120,17 +46,22 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// kernel creator
+        /// kernel factory
         ///
-        static Kernel * sCreator( GraphicsSystem & gs )
+        static Kernel * sFactory( GraphicsSystem & gs )
         {
-            AutoObjPtr<D3D9QuadKernel> p( new D3D9QuadKernel( GN_SAFE_CAST<D3D9GraphicsSystem&>(gs) ) );
+            AutoObjPtr<D3D9QuadKernel> p( new D3D9QuadKernel( safeCastRef<D3D9GraphicsSystem>(gs) ) );
             if( !p->init() ) return 0;
             return p.detach();
         }
 
-        virtual KernelParameterSet * createParameterSet();
-        virtual void render( const KernelParameterSet &, KernelBinding );
+        virtual QuadKernelParameterSet * createParameterSet();
+        virtual KernelPortBinding        createPortBinding( const QuadKernelPortBinding & b ) { return D3D9KernelBase::createPortBinding( &b.target ); }
+        virtual void                     deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
+        virtual bool                     compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
+        virtual void                     pushVertices( const QuadKernelVertex * vertices, size_t count );
+        virtual size_t                   getAvailableVertices() const;
+        virtual void                     render( const KernelParameterSet &, KernelPortBinding );
 
         //@}
 
@@ -139,24 +70,28 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
+        enum
+        {
+            NUM_VTXBUFS = 128,
+            MAX_QUADS   = 256,
+        };
+
         D3D9RenderTargetPort                    mTarget0;
         D3D9DepthBufferPort                     mDepth;
         D3D9TexturePort                         mTexture;
-        D3D9QuadStream                          mQuads;
 
         AutoComPtr<IDirect3DVertexShader9>      mVs;
         AutoComPtr<IDirect3DPixelShader9>       mPs;
         AutoComPtr<IDirect3DVertexDeclaration9> mDecl;
         AutoComPtr<IDirect3DIndexBuffer9>       mIdxBuf;
-
-        // parameter handles(s)
-        size_t mTextured;
+        AutoComPtr<IDirect3DVertexBuffer9>      mVtxBufs[NUM_VTXBUFS];
+        size_t                                  mActiveVB;
+        size_t                                  mNumQuads;
 
         // ********************************
         // private functions
         // ********************************
     private:
-
     };
 }}
 // *****************************************************************************

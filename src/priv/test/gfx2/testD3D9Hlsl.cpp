@@ -109,7 +109,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
         );
 
     // create kernel
-    mKernel = gs.getKernel<Hlsl9Kernel>( "HLSL9" );
+    mKernel = gs.getKernel<Hlsl9Kernel>();
     if( 0 == mKernel ) return false;
 
     // create parameters
@@ -122,9 +122,11 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     mParam->setVertexCount( 24 );
     mParam->setBaseIndex( 0 );
 
+    Hlsl9KernelPortBinding bd;
+
     // create vertex buffer
     SurfaceCreationParameter scp;
-    scp.bindTo( "HLSL9", "VTXBUF0" );
+    scp.bindTo( bd.vtxbuf0 );
     scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
     scp.layout.dim = SURFACE_DIMENSION_1D;
     scp.layout.levels = 1;
@@ -156,7 +158,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
 
     // create index buffer
     scp.bindings.clear();
-    scp.bindTo( "HLSL9", "IDXBUF" );
+    scp.bindTo( bd.idxbuf );
     scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
     scp.layout.dim = SURFACE_DIMENSION_1D;
     scp.layout.levels = 1;
@@ -184,7 +186,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     TextureData td;
     if( !td.load( "media::/texture/rabit.png" ) ) return false;
     scp.bindings.clear();
-    scp.bindTo( "HLSL9", "TEXTURE0" );
+    scp.bindTo( bd.texture0 );
     scp.layout.dim = SURFACE_DIMENSION_2D;
     scp.layout.levels = td.id.numLevels;
     scp.layout.faces  = td.id.numFaces;
@@ -213,10 +215,9 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     }
 
     // create binding
-    Hlsl9PortBinding bd;
-    bd.vtxbufs[0].set( mVtxBuf, 0, 1, 0, 1 );
-    bd.idxbuf.set( mIdxBuf, 0, 1, 0, 1 );
-    bd.textures[0].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
+    bd.vtxbuf0.view.set( mVtxBuf, 0, 1, 0, 1 );
+    bd.idxbuf.view.set( mIdxBuf, 0, 1, 0, 1 );
+    bd.texture0.view.set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
     mBinding = mKernel->createPortBinding( bd );
     if( 0 == mBinding ) return false;
 

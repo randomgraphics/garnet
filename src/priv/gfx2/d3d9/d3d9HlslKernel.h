@@ -51,13 +51,13 @@ namespace GN { namespace gfx
         static Kernel * sFactory( GraphicsSystem & gs )
         {
             PIXPERF_FUNCTION_EVENT();
-            return new D3D9HlslKernel(GN_SAFE_CAST<D3D9GraphicsSystem&>(gs));
+            return new D3D9HlslKernel( safeCastRef<D3D9GraphicsSystem>( gs ) );
         }
 
         // from base class
         //@{
-        virtual Hlsl9ParameterSet * createParameterSet();
-        virtual KernelPortBinding   createPortBinding( const Hlsl9PortBinding & );
+        virtual Hlsl9KernelParameterSet * createParameterSet();
+        virtual KernelPortBinding   createPortBinding( const Hlsl9KernelPortBinding & );
         virtual void                deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
         virtual bool                compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
         virtual void                render( const KernelParameterSet & param, KernelPortBinding binding );

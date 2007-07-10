@@ -20,8 +20,9 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelPort" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
-    : D3D9KernelPort(gs)
+GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
+    : D3D9KernelPort(gs,name)
+    , mStage( stage )
 {
     mDesc.portType    = D3D9_KERNEL_PORT_RENDER_TARGET;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTT_2D;
@@ -52,8 +53,8 @@ void GN::gfx::D3D9RenderTargetPort::bind( const SurfaceView & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
-    : D3D9KernelPort(gs)
+GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs, const char * name )
+    : D3D9KernelPort(gs,name)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_DEPTH_BUFFER;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTS_DEPTH;
@@ -84,8 +85,8 @@ void GN::gfx::D3D9DepthBufferPort::bind( const SurfaceView & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, UInt32 stage )
-    : D3D9KernelPort(gs)
+GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
+    : D3D9KernelPort(gs,name)
     , mStage( stage )
 {
     mDesc.portType    = D3D9_KERNEL_PORT_TEXTURE;
@@ -113,7 +114,7 @@ bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
 
     const D3D9KernelPortDesc & portdesc = getDesc();
 
-    const D3D9Surface * d3d9surf = GN_SAFE_CAST<const D3D9Surface*>(surf);
+    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
 
     const D3D9SurfaceDesc & surfdesc = d3d9surf->getD3D9Desc();
 
@@ -167,7 +168,7 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
 {
     if( target.surf )
     {
-        D3D9Texture * tex = safeCast<D3D9Texture*>(target.surf);
+        D3D9Texture * tex = safeCastPtr<D3D9Texture>(target.surf);
         gfxsys().setTexture( mStage, tex->getSurface() );
     }
     else
@@ -183,8 +184,8 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
-    : D3D9KernelPort(gs)
+GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
+    : D3D9KernelPort(gs,name)
     , mStage(stage)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_VTXBUF;
@@ -215,7 +216,7 @@ bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
-    const D3D9Surface * d3d9surf = GN_SAFE_CAST<const D3D9Surface*>(surf);
+    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
 
     const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
 
@@ -247,7 +248,7 @@ void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 
     GN_ASSERT( target.surf );
 
-    D3D9VtxBuf * vb = safeCast<D3D9VtxBuf*>(target.surf);
+    D3D9VtxBuf * vb = safeCastPtr<D3D9VtxBuf>(target.surf);
     const SurfaceDesc & desc = vb->getDesc();
     dev->SetStreamSource( mStage, vb->getSurface(), 0, desc.layout.format.stride );
 }
@@ -260,8 +261,8 @@ void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs )
-    : D3D9KernelPort(gs)
+GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs, const char * name )
+    : D3D9KernelPort(gs,name)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_IDXBUF;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_IB;
@@ -300,7 +301,7 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
-    const D3D9Surface * d3d9surf = GN_SAFE_CAST<const D3D9Surface*>(surf);
+    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
 
     const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
 
@@ -351,6 +352,6 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
 void GN::gfx::D3D9IdxBufPort::bind( const SurfaceView & target ) const
 {
     GN_ASSERT( target.surf );
-    D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
+    D3D9IdxBuf * ib = safeCastPtr<D3D9IdxBuf>(target.surf);
     gfxsys().d3ddev()->SetIndices( ib->getSurface() );
 }

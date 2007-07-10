@@ -300,7 +300,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             {
                 if( n )
                 {
-                    GN::safeCast<const GN::gfx::D3D9BasicShader*>(n)->apply();
+                    GN::safeCastPtr<const GN::gfx::D3D9BasicShader>(n)->apply();
                 }
                 else switch( i )
                 {
@@ -312,11 +312,11 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             }
             else if( n )
             {
-                GN::safeCast<const GN::gfx::D3D9BasicShader*>(n)->applyDirtyUniforms();
+                GN::safeCastPtr<const GN::gfx::D3D9BasicShader>(n)->applyDirtyUniforms();
             }
         } else if( o )
         {
-            GN::safeCast<const GN::gfx::D3D9BasicShader*>(o)->applyDirtyUniforms();
+            GN::safeCastPtr<const GN::gfx::D3D9BasicShader>(o)->applyDirtyUniforms();
         }
     }
 
@@ -677,7 +677,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
                 GN_ASSERT( vb.buffer );
                 GN_DX9_CHECK( mDevice->SetStreamSource(
                     i,
-                    safeCast<const D3D9VtxBuf*>(vb.buffer)->getD3DVb(),
+                    safeCastPtr<const D3D9VtxBuf>(vb.buffer)->getD3DVb(),
                     (UINT)vb.offset,
                     (UINT)vb.stride ) );
             }
@@ -691,7 +691,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
       ( newContext.idxbuf != mContext.idxbuf || forceRebind ) )
     {
         GN_DX9_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? safeCast<const D3D9IdxBuf*>(newContext.idxbuf)->getD3DIb()
+            ? safeCastPtr<const D3D9IdxBuf>(newContext.idxbuf)->getD3DIb()
             : 0 ) );
     }
 
@@ -712,7 +712,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
             {
                 if( tex )
                 {
-                    safeCast<const D3D9Texture*>(tex)->bind( stage );
+                    safeCastPtr<const D3D9Texture>(tex)->bind( stage );
                 }
                 else
                 {

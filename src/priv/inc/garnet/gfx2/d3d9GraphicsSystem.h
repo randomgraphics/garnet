@@ -78,6 +78,7 @@ namespace GN { namespace gfx
             }
         };
 
+        D3D9GraphicsSystem               & mGfxSys;
         IDirect3DDevice9                 * mDevice;
 
         StackArray<D3DRENDERSTATETYPE,210> mRsTypes;
@@ -113,6 +114,7 @@ namespace GN { namespace gfx
         void setTextureState( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
 
         void apply( const D3D9RenderStateBlock * last ) const;
+        void apply() const;
 
         //@}
     };

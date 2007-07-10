@@ -293,7 +293,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContext.idxbuf );
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf );
 
 #if GN_DEBUG_BUILD
     // Verify index buffer
@@ -595,7 +595,7 @@ inline void GN::gfx::OGLRenderer::applyVtxBuf(
             const RendererContext::VtxBufDesc & vbd = vtxbufs[i];
             if( vbd.buffer )
             {
-                const UInt8 * data = safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData();
+                const UInt8 * data = safeCastPtr<const OGLBasicVtxBuf>(vbd.buffer)->getVtxData();
                 vtxfmt.bindBuffer(
                     i,
                     data + vbd.offset + startvtx * vbd.stride,
