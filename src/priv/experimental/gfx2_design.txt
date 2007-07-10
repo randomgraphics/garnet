@@ -48,6 +48,14 @@ OPEN ISSUES
 
 - Is it possible to implement effect with CUDA?
 
+- Uniform or kernel-specific interface?
+  - Uniform:
+    - pros: easy to wrap with multi-thread layer
+    - cons: not intuitive
+  - kernel-specific:
+    - pros: intuitive, elegant, and sometimes faster
+    - cons: not easy to wrap with multi-thread layer
+
 RESOLVED USER SCENARIOS
 =======================
 
@@ -96,10 +104,11 @@ RESOLVED USER SCENARIOS
 	  	...
 	 }
 
+- dynamic resource: use hints
+
 OPENED USER SCENARIOS
 =====================
 
-- dynamic vertex buffer: use hints?
 - user creates too many render targets that can't fit into hardware's local
   memory (like EDRAM)
   - may be resolved by lazy creation
