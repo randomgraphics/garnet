@@ -34,7 +34,7 @@ GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs )
 bool GN::gfx::D3D9RenderTargetPort::compatible( const Surface * ) const
 {
     GN_UNIMPL_WARNING();
-    return false;
+    return true;
 }
 
 //
@@ -66,7 +66,7 @@ GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs )
 bool GN::gfx::D3D9DepthBufferPort::compatible( const Surface * ) const
 {
     GN_UNIMPL_WARNING();
-    return false;
+    return true;
 }
 
 //
@@ -168,11 +168,11 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
     if( target.surf )
     {
         D3D9Texture * tex = safeCast<D3D9Texture*>(target.surf);
-        gs().setTexture( mStage, tex->getSurface() );
+        gfxsys().setTexture( mStage, tex->getSurface() );
     }
     else
     {
-        gs().setTexture( mStage, 0 );
+        gfxsys().setTexture( mStage, 0 );
     }
 }
 
@@ -213,11 +213,7 @@ GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, UInt32 stage )
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 {
-    if( 0 == surf )
-    {
-        GN_ERROR(sLogger)( "Vertex buffer port does not accept NULL surface!" );
-        return false;
-    }
+    if( 0 == surf ) return true;
 
     const D3D9Surface * d3d9surf = GN_SAFE_CAST<const D3D9Surface*>(surf);
 
@@ -247,7 +243,7 @@ bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 {
-    IDirect3DDevice9 * dev = gs().d3ddev();
+    IDirect3DDevice9 * dev = gfxsys().d3ddev();
 
     GN_ASSERT( target.surf );
 
@@ -356,5 +352,5 @@ void GN::gfx::D3D9IdxBufPort::bind( const SurfaceView & target ) const
 {
     GN_ASSERT( target.surf );
     D3D9IdxBuf * ib = safeCast<D3D9IdxBuf*>(target.surf);
-    gs().d3ddev()->SetIndices( ib->getSurface() );
+    gfxsys().d3ddev()->SetIndices( ib->getSurface() );
 }

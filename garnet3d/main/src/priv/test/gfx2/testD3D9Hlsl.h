@@ -16,12 +16,12 @@ using namespace GN::util;
 ///
 class TestD3D9Hlsl : public Gfx2TestApp
 {
-    Kernel             * mKernel;
-    KernelParameterSet * mParam;
+    Hlsl9Kernel        * mKernel;
+    Hlsl9ParameterSet  * mParam;
     Surface            * mVtxBuf;
     Surface            * mIdxBuf;
     Surface            * mTexture;
-    KernelBinding        mBinding;
+    KernelPortBinding    mBinding;
 
     Matrix44f mProjView;
     ArcBall   mArcBall;

@@ -104,7 +104,7 @@ bool GN::gfx::D3D9QuadStream::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9QuadStream, () );
 
-    IDirect3DDevice9 * dev = gs().d3ddev();
+    IDirect3DDevice9 * dev = gfxsys().d3ddev();
 
     // create vb
     for( int i = 0; i < NUM_VTXBUFS; ++i )
@@ -184,7 +184,7 @@ void GN::gfx::D3D9QuadStream::push( const void * source, size_t bytes )
 // -----------------------------------------------------------------------------
 inline void GN::gfx::D3D9QuadStream::draw()
 {
-    IDirect3DDevice9 * dev = gs().d3ddev();
+    IDirect3DDevice9 * dev = gfxsys().d3ddev();
 
     // bind vertex buffer
     dev->SetStreamSource( 0, mVtxBufs[mActiveVB], 0, sizeof(QuadVertex) );
@@ -241,7 +241,7 @@ bool GN::gfx::D3D9QuadKernel::init()
 
     IDirect3DDevice9 * dev = d3d9gs().d3ddev();
 
-    const GraphicsSystemDesc & gsdesc = gs().getDesc();
+    const GraphicsSystemDesc & gsdesc = gfxsys().getDesc();
 
     StrA vscode;
     vscode.format(

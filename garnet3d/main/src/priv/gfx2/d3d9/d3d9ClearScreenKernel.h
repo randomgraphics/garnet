@@ -129,7 +129,7 @@ namespace GN { namespace gfx
                 flags = p.flags & ~(D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL);
             }
 
-            if( flags ) gs().d3ddev()->Clear( 0, 0, flags, p.color, p.depth, p.stencil );
+            if( flags ) gfxsys().d3ddev()->Clear( 0, 0, flags, p.color, p.depth, p.stencil );
         }
     };
 }}

@@ -49,7 +49,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        D3D9GraphicsSystem & gs() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem & gfxsys() const { return mGraphicsSystem; }
 
         virtual bool onRestore() = 0; ///< restore device data after device reset
         virtual void onDispose() = 0; ///< dispose device data after device lost

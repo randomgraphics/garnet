@@ -111,7 +111,7 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const D3D9KernelPortBindingDesc & eb
     // create vertex declaration
     if( !vtxfmt.empty() )
     {
-        mVtxDecl = createD3D9VtxDecl( mKernel.gs().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
+        mVtxDecl = createD3D9VtxDecl( mKernel.gfxsys().d3ddev(), vtxfmt.cptr(), vtxfmt.size() );
     }
 
     // success
@@ -128,7 +128,7 @@ void GN::gfx::D3D9KernelPortBinding::apply() const
     // setup vertex decl
     if( mVtxDecl )
     {
-        mKernel.gs().d3ddev()->SetVertexDeclaration( mVtxDecl );
+        mKernel.gfxsys().d3ddev()->SetVertexDeclaration( mVtxDecl );
     }
 
     // bind each port

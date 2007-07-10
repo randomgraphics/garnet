@@ -31,7 +31,7 @@ namespace GN { namespace gfx
     ///
     /// parameter set for D3D9 hlsl kernel
     ///
-    class D3D9HlslKernelParameterSet : public BaseKernelParameterSet, public SlotBase
+    class D3D9HlslKernelParameterSet : public Hlsl9ParameterSet
     {
         // ********************************
         // ctor/dtor
@@ -40,20 +40,10 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9HlslKernelParameterSet( D3D9KernelBase & k )
-            : BaseKernelParameterSet( k )
-            , mDev( k.d3d9gs().d3ddev() )
+            : mDev( k.gfxsys().d3ddev() )
         {
             mVscfUpdate.clear();
             mPscfUpdate.clear();
-
-            mParamFx = getBaseParameterByName( "FX" );
-            mParamFx->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onFxSet );
-
-            mParamVscf = getBaseParameterByName( "VSCF" );
-            mParamVscf->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onVscfSet );
-
-            mParamPscf = getBaseParameterByName( "PSCF" );
-            mParamPscf->sigValueSet.connect( this, &D3D9HlslKernelParameterSet::onPscfSet );
         }
         ~D3D9HlslKernelParameterSet() {}
         //@}
@@ -63,27 +53,91 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        ID3DXEffect * getEffect() const { return mFx; }
-
-        void applyShaderConstants() const
+        virtual void setFx( const StrA & s )
         {
-            // apply shader constants
-            const float * v;
-            if( mVscfUpdate.registerCount > 0 )
+            mFx.attach( d3d9::compileEffect( mDev, s.cptr(), s.size() ) );
+        }
+
+        virtual void setVSConstF( size_t firstRegister, size_t numRegisters, const float * data )
+        {
+            mVscfUpdate.merge( firstRegister, numRegisters );
+            memcpy( &mVscf[firstRegister], data, numRegisters * sizeof(float)*4 );
+        }
+
+        virtual void setPSConstF( size_t firstRegister, size_t numRegisters, const float * data )
+        {
+            mPscfUpdate.merge( firstRegister, numRegisters );
+            memcpy( &mPscf[firstRegister], data, numRegisters * sizeof(float)*4 );
+        }
+
+        virtual void setPrimType( PrimitiveType pt ) { mPrimType = pt2d3d( pt ); }
+        virtual void setPrimCount( size_t n ) { mPrimCount = (UINT)n; }
+        virtual void setBaseVertex( size_t n ) { mBaseVertex = (UINT)n; }
+        virtual void setBaseIndex( size_t n ) { mBaseIndex = (UINT)n; }
+        virtual void setVertexCount( size_t n ) { mVertexCount = (UINT)n; }
+
+
+        void drawIndexed() const
+        {
+            UINT passes;
+            if( SUCCEEDED( mFx->Begin( &passes, 0 ) ) )
             {
-                v = mParamVscf->toFloat();
-                mDev->SetVertexShaderConstantF(
-                    mVscfUpdate.firstRegister,
-                    v + mVscfUpdate.firstRegister * 4,
-                    mVscfUpdate.registerCount );
+                for( UINT i = 0; i < passes; ++i )
+                {
+                    {
+                        D3D9DebugMuter muter;
+                        mFx->BeginPass( i );
+                        mFx->CommitChanges();
+                    }
+
+                    applyShaderConstants();
+
+                    GN_DX9_CHECK( mDev->DrawIndexedPrimitive(
+                        mPrimType,
+                        mBaseVertex,
+                        0, // min index
+                        mVertexCount,
+                        mBaseIndex,
+                        mPrimCount ) );
+
+                    mFx->EndPass();
+                }
+
+                {
+                    D3D9DebugMuter muter;
+                    mFx->End();
+                }
             }
-            if( mPscfUpdate.registerCount > 0 )
+        }
+
+
+        void draw() const
+        {
+            UINT passes;
+            if( SUCCEEDED( mFx->Begin( &passes, 0 ) ) )
             {
-                v = mParamPscf->toFloat();
-                mDev->SetPixelShaderConstantF(
-                    mPscfUpdate.firstRegister,
-                    v + mPscfUpdate.firstRegister * 4,
-                    mPscfUpdate.registerCount );
+                for( UINT i = 0; i < passes; ++i )
+                {
+                    {
+                        D3D9DebugMuter muter;
+                        mFx->BeginPass( i );
+                        mFx->CommitChanges();
+                    }
+
+                    applyShaderConstants();
+
+                    GN_DX9_CHECK( mDev->DrawPrimitive(
+                        mPrimType,
+                        mBaseVertex,
+                        mPrimCount ) );
+
+                    mFx->EndPass();
+                }
+
+                {
+                    D3D9DebugMuter muter;
+                    mFx->End();
+                }
             }
         }
 
@@ -119,36 +173,57 @@ namespace GN { namespace gfx
 
         IDirect3DDevice9      * mDev;
         AutoComPtr<ID3DXEffect> mFx;
+        Vector4f                mVscf[256], mPscf[256];
         ConstUpdate             mVscfUpdate, mPscfUpdate;
-        BaseKernelParameter   * mParamFx, * mParamVscf, * mParamPscf;
+        D3DPRIMITIVETYPE        mPrimType;
+        UINT                    mPrimCount;
+        UINT                    mBaseVertex;
+        UINT                    mBaseIndex;
+        UINT                    mVertexCount;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
-        void onFxSet( size_t, size_t, size_t )
+        void applyShaderConstants() const
         {
-            GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mParamFx->getDesc().type );
-
-            const StrA * s = mParamFx->toString();
-            if( 0 == s || s->empty() )
+            // apply shader constants
+            if( mVscfUpdate.registerCount > 0 )
             {
-                GN_ERROR(sLogger)( "Null FX string." );
-                return;
+                mDev->SetVertexShaderConstantF(
+                    mVscfUpdate.firstRegister,
+                    mVscf[mVscfUpdate.firstRegister],
+                    mVscfUpdate.registerCount );
             }
-
-            mFx.attach( d3d9::compileEffect( mDev, s->cptr(), s->size() ) );
+            if( mPscfUpdate.registerCount > 0 )
+            {
+                mDev->SetPixelShaderConstantF(
+                    mPscfUpdate.firstRegister,
+                    mPscf[mPscfUpdate.firstRegister],
+                    mPscfUpdate.registerCount );
+            }
         }
 
-        void onVscfSet( size_t, size_t offset, size_t count )
+        static inline D3DPRIMITIVETYPE pt2d3d( PrimitiveType pt )
         {
-            mVscfUpdate.merge( (UInt32)offset/4, (UInt32)count/4 );
-        }
-
-        void onPscfSet( size_t, size_t offset, size_t count )
-        {
-            mPscfUpdate.merge( (UInt32)offset/4, (UInt32)count/4 );
+            static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
+            {
+                D3DPT_POINTLIST,
+                D3DPT_LINELIST,
+                D3DPT_LINESTRIP,
+                D3DPT_TRIANGLELIST,
+                D3DPT_TRIANGLESTRIP,
+            };
+            if( pt > TRIANGLE_STRIP )
+            {
+                GN_ERROR(sLogger)( "invalid primitive type: %d", pt );
+                return D3DPT_FORCE_DWORD;
+            }
+            else
+            {
+                return sPrimMap[pt];
+            }
         }
     };
 }}
@@ -186,18 +261,6 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     , mIdxBuf( gs )
     , mRsb( gs )
 {
-    // setup parameters
-    addParameter( "FX", KERNEL_PARAMETER_TYPE_STRING, 1 );
-
-    addParameter( "VSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
-    addParameter( "PSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
-
-    mPrimType = addParameter( "PRIM_TYPE", KERNEL_PARAMETER_TYPE_INT, 1 );
-    mPrimCount = addParameter( "PRIM_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
-    mBaseVertex = addParameter( "BASE_VERTEX", KERNEL_PARAMETER_TYPE_INT, 1 );
-    mBaseIndex = addParameter( "BASE_INDEX", KERNEL_PARAMETER_TYPE_INT, 1 );
-    mVertexCount = addParameter( "VERTEX_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
-
     // setup ports
     addPortRef( "TARGET0"  , &mRenderTarget0 );
     addPortRef( "TARGET1"  , &mRenderTarget1 );
@@ -226,7 +289,7 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelParameterSet *
+GN::gfx::Hlsl9ParameterSet *
 GN::gfx::D3D9HlslKernel::createParameterSet()
 {
     GN_GUARD;
@@ -278,94 +341,22 @@ void GN::gfx::D3D9HlslKernel::render(
 
     PIXPERF_FUNCTION_EVENT();
 
-    const D3D9HlslKernelParameterSet & p = safeCast<const D3D9HlslKernelParameterSet &>(param);
-    ID3DXEffect * fx = p.getEffect();
-    if( 0 == fx ) return;
-
     D3D9KernelPortBinding & b = getPortBinding( binding );
     b.apply();
 
-    D3D9GraphicsSystem & gs = d3d9gs();
-    IDirect3DDevice9  * dev = gs.d3ddev();
-
-    const BaseKernelParameter
-        * pt = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mPrimType ) ),
-        * pc = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mPrimCount ) ),
-        * bv = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mBaseVertex ) );
-    GN_ASSERT( pt && !pt->empty() );
-    GN_ASSERT( pc && !pc->empty() );
-    GN_ASSERT( bv && !bv->empty() );
+    const D3D9HlslKernelParameterSet & p = safeCast<const D3D9HlslKernelParameterSet &>(param);
 
     // restore to default render states
-    gs.setRenderStateBlock( mRsb );
+    gfxsys().setRenderStateBlock( mRsb );
 
+    // do rendering
     if( b.hasIdxBuf() )
     {
-        const BaseKernelParameter
-            * bi = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mBaseIndex ) ),
-            * vc = GN_SAFE_CAST<BaseKernelParameter*>( param.getParameter( mVertexCount ) );
-        GN_ASSERT( bi && !bi->empty() );
-        GN_ASSERT( vc && !vc->empty() );
-
-        UINT passes;
-        if( SUCCEEDED( fx->Begin( &passes, 0 ) ) )
-        {
-            for( UINT i = 0; i < passes; ++i )
-            {
-                {
-                    D3D9DebugMuter muter;
-                    fx->BeginPass( i );
-                    fx->CommitChanges();
-                }
-
-                p.applyShaderConstants();
-
-                GN_DX9_CHECK( dev->DrawIndexedPrimitive(
-                    (D3DPRIMITIVETYPE)*pt->toInt(),
-                    *bv->toInt(),
-                    0, // min index
-                    *vc->toUInt(),
-                    *bi->toUInt(),
-                    *pc->toUInt() ) );
-
-                fx->EndPass();
-            }
-
-            {
-                D3D9DebugMuter muter;
-                fx->End();
-            }
-        }
-
+        p.drawIndexed();
     }
     else
     {
-        UINT passes;
-        if( SUCCEEDED( fx->Begin( &passes, 0 ) ) )
-        {
-            for( UINT i = 0; i < passes; ++i )
-            {
-                {
-                    D3D9DebugMuter muter;
-                    fx->BeginPass( i );
-                    fx->CommitChanges();
-                }
-
-                p.applyShaderConstants();
-
-                GN_DX9_CHECK( dev->DrawPrimitive(
-                    (D3DPRIMITIVETYPE)*pt->toInt(),
-                    *bv->toUInt(),
-                    *pc->toUInt() ) );
-
-                fx->EndPass();
-            }
-
-            {
-                D3D9DebugMuter muter;
-                fx->End();
-            }
-        }
+        p.draw();
     }
 
     GN_UNGUARD_SLOW;

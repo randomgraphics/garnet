@@ -36,7 +36,7 @@ namespace GN { namespace gfx
         //@}
     };
 
-    struct Hlsl9ParameterSet : public NoCopy
+    struct Hlsl9ParameterSet : public KernelParameterSet
     {
         //@{
         virtual void setFx( const StrA & ) = 0;

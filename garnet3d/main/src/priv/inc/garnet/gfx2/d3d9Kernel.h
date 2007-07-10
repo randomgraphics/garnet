@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         ///
         /// get graphics system
         ///
-        D3D9GraphicsSystem & gs() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem & gfxsys() const { return mGraphicsSystem; }
 
         ///
         /// get descriptor
@@ -233,7 +233,7 @@ namespace GN { namespace gfx
         ///
         ~D3D9KernelBase();
 
-        D3D9GraphicsSystem      & gs() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem      & gfxsys() const { return mGraphicsSystem; }
         size_t                    getNumPorts() const { return mPorts.size(); }
         const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
         const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
