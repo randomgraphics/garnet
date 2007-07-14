@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// rendering 2D quads
     ///
-    class D3D9QuadKernel : public QuadKernel, public D3D9KernelBase, public StdClass
+    class D3D9QuadKernel : public D3D9KernelBaseT<QuadKernel>, public StdClass
     {
         GN_DECLARE_STDCLASS( D3D9QuadKernel, StdClass );
 
@@ -55,13 +55,10 @@ namespace GN { namespace gfx
             return p.detach();
         }
 
-        virtual QuadKernelParameterSet * createParameterSet();
-        virtual KernelPortBinding        createPortBinding( const QuadKernelPortBinding & b ) { return D3D9KernelBase::createPortBinding( &b.target ); }
-        virtual void                     deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
-        virtual bool                     compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
-        virtual void                     pushVertices( const QuadKernelVertex * vertices, size_t count );
-        virtual size_t                   getAvailableVertices() const;
-        virtual void                     render( const KernelParameterSet &, KernelPortBinding );
+        virtual KernelParameterSet * createParameterSet();
+        virtual void                 render( const KernelParameterSet &, KernelPortBinding );
+        virtual void                 pushVertices( const QuadKernelVertex * vertices, size_t count );
+        virtual size_t               getAvailableVertices() const;
 
         //@}
 

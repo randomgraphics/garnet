@@ -194,7 +194,7 @@ namespace GN { namespace gfx
         ///
         /// binding setup
         ///
-        bool setup( const KernelPort * ports );
+        bool setup( const KernelPort * ports, size_t count );
 
         /// \name properties
         //@{
@@ -232,7 +232,7 @@ namespace GN { namespace gfx
         const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
         const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
         const StrA              & getPortName( size_t index ) const { return mPorts.getName( index ); }
-        KernelPortBinding         createPortBinding(  const KernelPort * ports );
+        KernelPortBinding         createPortBinding(  const KernelPort * ports, size_t count );
         bool                      compatible( const Surface * surf, const StrA & port ) const;
         void                      deletePortBinding( KernelPortBinding );
 
@@ -286,6 +286,32 @@ namespace GN { namespace gfx
     private:
 
         virtual KernelPortBinding createDefaultBinding();
+    };
+
+    ///
+    /// templated D3D9 kernel base
+    ///
+    template< class KERNEL >
+    class D3D9KernelBaseT : public KERNEL, public D3D9KernelBase
+    {
+    protected:
+
+        ///
+        /// ctor
+        ///
+        D3D9KernelBaseT( D3D9GraphicsSystem & gs )
+            : D3D9KernelBase( gs, KERNEL::KERNEL_NAME() )
+        {
+        }
+
+    public:
+
+        /// inherited from Kernel
+        //@{
+        virtual bool              compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
+        virtual KernelPortBinding createPortBinding( const KernelPort * ports, size_t count ) { return D3D9KernelBase::createPortBinding( ports, count ); }
+        virtual void              deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
+        //@}
     };
 }}
 

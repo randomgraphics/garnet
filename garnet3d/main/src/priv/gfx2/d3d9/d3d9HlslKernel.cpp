@@ -236,7 +236,7 @@ namespace GN { namespace gfx
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
-    : D3D9KernelBase( gs, KERNEL_NAME() )
+    : D3D9KernelBaseT<Hlsl9Kernel>( gs )
     , mRenderTarget0( gs, "TARGET0", 0 )
     , mRenderTarget1( gs, "TARGET1", 1 )
     , mRenderTarget2( gs, "TARGET2", 2 )
@@ -289,23 +289,13 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Hlsl9KernelParameterSet *
-GN::gfx::D3D9HlslKernel::createParameterSet()
+GN::gfx::KernelParameterSet * GN::gfx::D3D9HlslKernel::createParameterSet()
 {
     GN_GUARD;
 
     return new D3D9HlslKernelParameterSet( *this );
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::KernelPortBinding
-GN::gfx::D3D9HlslKernel::createPortBinding( const Hlsl9KernelPortBinding & b )
-{
-    return D3D9KernelBase::createPortBinding( &b.target0 );
 }
 
 //

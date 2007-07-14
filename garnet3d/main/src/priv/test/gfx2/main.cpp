@@ -38,7 +38,7 @@ struct ClearScreen
         kernel = gs.getKernel<ClearScreenKernel>();
         if( 0 == kernel ) return false;
 
-        param.attach( kernel->createParameterSet() );
+        param.attach( kernel->createParameterSetT<ClearScreenKernelParameterSet>() );
         if( 0 == param ) return false;
 
         param->setClearColor( true, 0.3f, 0.5f, 0.7f, 1.0f );
