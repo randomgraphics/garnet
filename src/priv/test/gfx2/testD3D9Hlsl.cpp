@@ -113,7 +113,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     if( 0 == mKernel ) return false;
 
     // create parameters
-    mParam = mKernel->createParameterSet();
+    mParam = mKernel->createParameterSetT<Hlsl9KernelParameterSet>();
     if( 0 == mParam ) return false;
     mParam->setFx( fxcode );
     mParam->setPrimType( TRIANGLE_LIST ); // D3DPT_TRIANGLELIST
@@ -218,7 +218,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     bd.vtxbuf0.view.set( mVtxBuf, 0, 1, 0, 1 );
     bd.idxbuf.view.set( mIdxBuf, 0, 1, 0, 1 );
     bd.texture0.view.set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
-    mBinding = mKernel->createPortBinding( bd );
+    mBinding = mKernel->createPortBindingT( bd );
     if( 0 == mBinding ) return false;
 
     // success

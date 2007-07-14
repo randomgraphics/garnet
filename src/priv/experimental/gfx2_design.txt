@@ -2,64 +2,47 @@ OVERVIEW
 ========
 The basic idea comes from the famous thread "material/shader system" on gamedev 
 forum:
-  - Each effect is a c++ class (bunch of code) that user don't know its 
-    implementation detail. It could be treated as general processing unit. 
-  - Effect class accepts 2 kinds of inputs: 1) buffer, 2) const
-    - Buffer stores vertex and pixel data.
-    - Buffer can hold both GPU and CPU data.
-    - Pixel buffer can havel sub buffers:
-      - Each mipmap of a top-level texture can be a independant sub texture
-        - sub textures can't have mipmaps.
-      - Each face of a cube texture can have a 2D texture.
-      - Each slice of a 3D texture can be a 2D texture.
-    - Consts are pure CPU data.
+  - graphics system is kernel/effect based.
+  - graphics system does NOT handle multi-thread problem. It is leaved to higher
+    level system.
+  - there's no pre-defined interface of the kernel, besides some basic 
+    management routines. every kernel could define their own interface freely.
+  - device/graphics data are stored in "surface" class, which can be read/write by both 
+    host and graphics system.
 
 RESOLVED ISSUES
 ===============
-- Is effect ID compiled-time constant?
-  - Yes
-  - pros:
-    - less error prone: can do compile time check.
-  - cons: runtime creation of new effect is impossible.
-
-- Is it desirable to create multiple instances of single effect?
+- Is it possible to create multiple instances of same kernel?
   - No.
     Why we need that?
 
-- Is it beneficial to group different types of constants into single buffer?
-  - No.
-    Independant constants are easy and intuitive to use.
+- Which on is better, independent constants or constant buffer?
+  - Independent constants. It is more intuitive.
 
-- Is it possible to use meta data to describe interface of a effect class? Then 
-  use an script to generate the c++ class interface.
-  - No.
-    All effects will have same interface. Effect parameters are referenced 
-    by name and/or handle.
-    Could be implemented using wrapper class in the future.
-
-- Is it possible to extend an exising effect library without knowing its 
+- Is it possible to extend an exising kernel library without knowing its 
   internal implementation details?
   - No.
-    If a effect library is mean to be extensible, it should provide its own
-    interfaces and rules for effect and surface implementation.
+    If a kernel library is mean to be extensible, it should provide its own
+    interfaces and rules for kernel and surface implementation.
+- Why not use uniform kernel interface?
+  - pros of uniform kernel interface
+    - easy to wrap with multi-thread layer
+  - cons of uniform kernel interface
+    - not intuitive
+    - restrict kernel functionalities to that interface.
+    - slower then kernel-specific interface.
 
 OPEN ISSUES
 ===========
 
-- Is it possible to implement effect with CUDA?
-
-- Uniform or kernel-specific interface?
-  - Uniform:
-    - pros: easy to wrap with multi-thread layer
-    - cons: not intuitive
-  - kernel-specific:
-    - pros: intuitive, elegant, and sometimes faster
-    - cons: not easy to wrap with multi-thread layer
+- Is it possible to implement kernel with CUDA?
+  - It is possible. But it'll be hard to make CUDA kernels compatible with 
+    non-CUDA kernels (to let them work together)
 
 RESOLVED USER SCENARIOS
 =======================
 
-- draw subset of a mesh: use effect parameter to set subset properties
+- draw subset of a mesh: use kernel parameter to set subset properties
 
 - create MSAA surface, render to it, then use it as texture.
   - create surface with hint: "msaa=true"
@@ -77,8 +60,8 @@ RESOLVED USER SCENARIOS
 - render to one face of a cubemap, or one slice of a 3D texture, or one mipmap 
   level of a 2D texture
 
-- adjust effect behavior from outside
-  - use effect parameter.
+- adjust kernel behavior from outside
+  - use kernel parameter.
 
 - separate depth and stencil buffer.
   - why?
@@ -88,7 +71,7 @@ RESOLVED USER SCENARIOS
   - bad design. effects should control quality by themselves.
 
 - multi-pass rendering:
-	 for( each pass of a effect )
+	 for( each pass of a kernel )
 	 {
 	  	draw_mesh_1();
 	  	draw_mesh_2();
@@ -97,7 +80,7 @@ RESOLVED USER SCENARIOS
 
 	 can be refactored to this:
 
-	 for( each effect in a effect group ) // treat each pass as a effect
+	 for( each kernel in a kernel group ) // treat each pass as a kernel
 	 {
 	  	draw_mesh_1();
 	  	draw_mesh_2();
@@ -117,7 +100,7 @@ OPENED USER SCENARIOS
   - by now, we leave that to application: application should always check
     return value of surface creation method.
 
-- effect convert general CPU data buffer to whatever format it needs:
+- kernel convert general CPU data buffer to whatever format it needs:
   - create specific vertice buffer from fat vertex buffer
   - create DXT texture from bitmap image
   - create cubemap from 6 2D textures

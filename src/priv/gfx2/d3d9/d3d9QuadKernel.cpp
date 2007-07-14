@@ -73,7 +73,7 @@ namespace GN { namespace gfx
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9QuadKernel::D3D9QuadKernel( D3D9GraphicsSystem & gs )
-    : D3D9KernelBase(gs,D3D9QuadKernel::KERNEL_NAME())
+    : D3D9KernelBaseT<QuadKernel>( gs )
     , mTarget0(gs,"TARGET",0)
     , mDepth(gs,"DEPTH")
     , mTexture(gs,"TEXTURE",0)
@@ -204,7 +204,7 @@ void GN::gfx::D3D9QuadKernel::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::QuadKernelParameterSet * GN::gfx::D3D9QuadKernel::createParameterSet()
+GN::gfx::KernelParameterSet * GN::gfx::D3D9QuadKernel::createParameterSet()
 {
     return new D3D9QuadKernelParameterSet( gfxsys() );
 }

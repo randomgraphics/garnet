@@ -68,12 +68,12 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
         }
 
         bd.texture.view.set( tex.texture, 0, 1, 0, 1 );
-        mKernelPortBindings[i] = mKernel->createPortBinding( bd );
+        mKernelPortBindings[i] = mKernel->createPortBindingT( bd );
         if( 0 == mKernelPortBindings[i] ) return failure();
     }
 
     // create parameter set
-    mKernelParam = mKernel->createParameterSet();
+    mKernelParam = mKernel->createParameterSetT<QuadKernelParameterSet>();
     if( 0 == mKernelParam ) return failure();
 
     // initialize quad buffer

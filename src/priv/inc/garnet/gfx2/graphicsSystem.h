@@ -428,7 +428,7 @@ namespace GN { namespace gfx
     typedef UIntPtr KernelPortBinding;
 
     ///
-    /// kernel parameter set
+    /// base kernel parameter set
     ///
     struct KernelParameterSet : public NoCopy
     {
@@ -441,10 +441,16 @@ namespace GN { namespace gfx
     {
         //@{
 
-        virtual const char * getName() const = 0;
-        virtual bool         compatible( const Surface * surf, const StrA & port ) const = 0;
-        virtual void         deletePortBinding( KernelPortBinding ) = 0;
-        virtual void         render( const KernelParameterSet &, KernelPortBinding ) = 0;
+        virtual const char         * getName() const = 0;
+        virtual bool                 compatible( const Surface * surf, const StrA & port ) const = 0;
+        virtual KernelParameterSet * createParameterSet() = 0;
+        virtual KernelPortBinding    createPortBinding( const KernelPort * port, size_t count ) = 0;
+        virtual void                 deletePortBinding( KernelPortBinding ) = 0;
+        virtual void                 render( const KernelParameterSet &, KernelPortBinding ) = 0;
+
+        template<class T> T               * createParameterSetT() { return safeCastPtr<T>( createParameterSet() ); }
+        template<class T> KernelPortBinding createPortBindingT( const T & p ) { return createPortBinding( (const KernelPort*)&p, sizeof(T)/sizeof(KernelPort) ); }
+
         //@}
     };
 
@@ -510,6 +516,17 @@ namespace GN { namespace gfx
             SurfaceBindingParameter b;
             b.kernel = port.kernel;
             b.port   = port.name;
+            bindings.append( b );
+        }
+
+        ///
+        /// add new binding
+        ///
+        void bindTo( const StrA & kernel, const StrA & port )
+        {
+            SurfaceBindingParameter b;
+            b.kernel = kernel;
+            b.port   = port;
             bindings.append( b );
         }
     };
