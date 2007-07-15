@@ -1,3 +1,11 @@
+0.8.2 (2007.7.15)
+=================
+- add
+  - multi-thread render engine: now rendering code runs in its own thread
+  - resource reusable cache to support graphics content streaming
+- experimental
+  - new kernel based graphics system (under construction)
+
 0.8.1 (2007.5.21)
 =================
 - add
@@ -30,7 +38,7 @@
   - new quad rendering option: DQ_DEPTH_ENABLE
   - log4j like Log system
   - refine interface of File class
-  - simplify variant and registry class to make them more intuitive 
+  - simplify variant and registry class to make them more intuitive
   - refine build script
 - experimental
   - D3D10 renderer (working in progress)

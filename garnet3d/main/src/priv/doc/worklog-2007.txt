@@ -1,3 +1,8 @@
+- 2007.7.15
+  - upgrade to version 0.8.2
+  - experimental kernel based rendering system (woring in progress)
+  - multi-thread rendering architecture is ready to use.
+
 - 2007.6.11
   - multi-thread rendering architecture: RenderEngine class
   - independent sampler object.
