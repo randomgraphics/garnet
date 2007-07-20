@@ -1077,6 +1077,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNsampleShadowMap',
 		    ]
 		tools = [
+		    'GNtoolD3D10DumpViewer',
 		    'GNtoolD3D9DumpViewer',
 		    'GNtoolD3D9Wrapper',
 		    'GNtoolGPUBenchmark',

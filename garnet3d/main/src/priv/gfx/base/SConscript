@@ -4,6 +4,7 @@ sources = [
     'd3d9FormatUtils.cpp',
     'd3d9ShaderUtils.cpp',
     'd3d10FormatUtils.cpp',
+    'd3d10StateDumper.cpp',
     'image.cpp',
     'imageBMP.cpp',
     'imageDDS.cpp',

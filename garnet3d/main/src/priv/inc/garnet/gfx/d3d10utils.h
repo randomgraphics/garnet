@@ -13,6 +13,7 @@
 #endif
 #include <windows.h>
 #include <d3d10.h>
+#include <d3dx10.h>
 
 namespace GN { namespace gfx
 {
@@ -21,6 +22,25 @@ namespace GN { namespace gfx
     ///
     namespace d3d10
     {
+        /// \name state dumper
+        //@{
+
+        ID3D10VertexShader   * createDumpableVertexShader( ID3D10Device & device, const void * binary, size_t bytes );
+        ID3D10GeometryShader * createDumpableGeometryShader( ID3D10Device & device, const void * binary, size_t bytes );
+        ID3D10PixelShader    * createDumpablePixelShader( ID3D10Device & device, const void * binary, size_t bytes );
+        ID3D10InputLayout    * createDumpableInputLayout(
+            ID3D10Device                   & device,
+            const D3D10_INPUT_ELEMENT_DESC * elements,
+            size_t                           count,
+            const void                     * signature,
+            size_t                           bytes );
+
+        void setDumpFilePrefix( const StrA & );
+    	void dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex );
+    	void dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
+
+        //@}
+
         /*! \name Shader compilation utils
         //@{
 

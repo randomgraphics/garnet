@@ -71,7 +71,7 @@ enum DdsFlag
 static struct DdpfDesc
 {
     GN::gfx::ClrFmt    clrfmt;
-    DDPixelFormat ddpf;
+    DDPixelFormat      ddpf;
 } const s_ddpfDescTable[] = {
     { GN::gfx::FMT_BGR_8_8_8_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 24,   0xff0000,   0x00ff00,   0x0000ff,          0 } },
     { GN::gfx::FMT_BGRA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
@@ -121,6 +121,13 @@ static struct DdpfDesc
     { GN::gfx::FMT_RG_32_32_FLOAT,                { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                 DDS_FOURCC_G32R32F,  0,          0,          0,          0,          0 } },
     { GN::gfx::FMT_RGBA_32_32_32_32_FLOAT,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,           DDS_FOURCC_A32B32G32R32F,  0,          0,          0,          0,          0 } },
   //{ GN::gfx::FMT_CxV8U8,                        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                  DDS_FOURCC_CxV8U8,  0,          0,          0,          0,          0 } },
+};
+
+struct DX10Info
+{
+    DXGI_FORMAT              format;
+    D3D10_RESOURCE_DIMENSION dim;
+    UInt32                   reserved[3];
 };
 
 // *****************************************************************************
@@ -218,7 +225,7 @@ static GN::gfx::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
         // found!
         GN_ASSERT( 0 <= desc.clrfmt && desc.clrfmt < GN::gfx::NUM_CLRFMTS );
         return desc.clrfmt;
-   }
+    }
 
     // failed
     GN_ERROR(sLogger)( "unknown DDS format!" );
@@ -281,22 +288,35 @@ bool DDSReader::readHeader(
     i_size -= sizeof(mHeader);
 
     // validate header flags
-    UInt32 required_flags = DDS_DDSD_WIDTH
-                            | DDS_DDSD_HEIGHT
-                            | DDS_DDSD_CAPS
-                            | DDS_DDSD_PIXELFORMAT;
+    UInt32 required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
     if( required_flags != (required_flags & mHeader.flags) )
     {
         GN_ERROR(sLogger)( "damage DDS header!" );
         return false;
     }
 
-    //mImgDesc.type = getImageType( mHeader );
-    //if( GN::gfx::ImageDesc::IMG_INVALID == mImgDesc.type ) return false;
+    // get image format
+    if( GN_MAKE_FOURCC('D','X','1','0') == mHeader.ddpf.fourcc )
+    {
+        // special for DX10
+        if( i_size <= sizeof(DX10Info) )
+        {
+            GN_ERROR(sLogger)( "fail to read DX10 info header!" );
+            return false;
+        }
 
-    // grok image format
-    mImgDesc.format = getImageFormat( mHeader.ddpf );
-    if( GN::gfx::FMT_UNKNOWN == mImgDesc.format ) return false;
+        const DX10Info * dx10info = (const DX10Info*)i_buff;
+        i_buff += sizeof(DX10Info);
+        i_size -= sizeof(DX10Info);
+
+        mImgDesc.format = GN::gfx::d3d10::dxgiFormat2ClrFmt( dx10info->format );
+        if( GN::gfx::FMT_UNKNOWN == mImgDesc.format ) return false;
+    }
+    else
+    {
+        mImgDesc.format = getImageFormat( mHeader.ddpf );
+        if( GN::gfx::FMT_UNKNOWN == mImgDesc.format ) return false;
+    }
 
     // grok image dimension
     size_t faces = sGetImageFaceCount( mHeader );
