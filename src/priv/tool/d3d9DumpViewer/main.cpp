@@ -506,42 +506,42 @@ struct D3D9StateDump
             }
             else if( "viewport" == e->name )
             {
-                if( !sGetNumbericAttr( *e, "x", (UInt32&)viewport.X ) ) return false;
-                if( !sGetNumbericAttr( *e, "y", (UInt32&)viewport.Y ) ) return false;
-                if( !sGetNumbericAttr( *e, "w", (UInt32&)viewport.Width ) ) return false;
-                if( !sGetNumbericAttr( *e, "h", (UInt32&)viewport.Height ) ) return false;
-                if( !sGetNumbericAttr( *e, "zmin", viewport.MinZ ) ) return false;
-                if( !sGetNumbericAttr( *e, "zmax", viewport.MaxZ ) ) return false;
+                if( !sGetNumericAttr( *e, "x", (UInt32&)viewport.X ) ) return false;
+                if( !sGetNumericAttr( *e, "y", (UInt32&)viewport.Y ) ) return false;
+                if( !sGetNumericAttr( *e, "w", (UInt32&)viewport.Width ) ) return false;
+                if( !sGetNumericAttr( *e, "h", (UInt32&)viewport.Height ) ) return false;
+                if( !sGetNumericAttr( *e, "zmin", viewport.MinZ ) ) return false;
+                if( !sGetNumericAttr( *e, "zmax", viewport.MaxZ ) ) return false;
             }
             else if( "scissor" == e->name )
             {
-                if( !sGetNumbericAttr( *e, "l", (SInt32&)scissorrect.left ) ) return false;
-                if( !sGetNumbericAttr( *e, "t", (SInt32&)scissorrect.top ) ) return false;
-                if( !sGetNumbericAttr( *e, "r", (SInt32&)scissorrect.right ) ) return false;
-                if( !sGetNumbericAttr( *e, "b", (SInt32&)scissorrect.bottom ) ) return false;
+                if( !sGetNumericAttr( *e, "l", (SInt32&)scissorrect.left ) ) return false;
+                if( !sGetNumericAttr( *e, "t", (SInt32&)scissorrect.top ) ) return false;
+                if( !sGetNumericAttr( *e, "r", (SInt32&)scissorrect.right ) ) return false;
+                if( !sGetNumericAttr( *e, "b", (SInt32&)scissorrect.bottom ) ) return false;
             }
             else if( "drawindexed" == e->name )
             {
                 operation.indexed = true;
-                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
-                if( !sGetNumbericAttr( *e, "minidx", operation.minvtxidx ) ) return false;
-                if( !sGetNumbericAttr( *e, "numvtx", operation.numvtx ) ) return false;
-                if( !sGetNumbericAttr( *e, "startidx", operation.startidx ) ) return false;
-                if( !sGetNumbericAttr( *e, "numprim", operation.numprim ) ) return false;
+                if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumericAttr( *e, "startvtx", operation.startvtx ) ) return false;
+                if( !sGetNumericAttr( *e, "minidx", operation.minvtxidx ) ) return false;
+                if( !sGetNumericAttr( *e, "numvtx", operation.numvtx ) ) return false;
+                if( !sGetNumericAttr( *e, "startidx", operation.startidx ) ) return false;
+                if( !sGetNumericAttr( *e, "numprim", operation.numprim ) ) return false;
             }
             else if( "draw" == e->name )
             {
                 operation.indexed = false;
-                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
-                if( !sGetNumbericAttr( *e, "numprim", operation.numprim ) ) return false;
+                if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumericAttr( *e, "startvtx", operation.startvtx ) ) return false;
+                if( !sGetNumericAttr( *e, "numprim", operation.numprim ) ) return false;
             }
             else if( "operation" == e->name )
             {
                 operation.indexed = true;
-                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
+                if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumericAttr( *e, "startvtx", operation.startvtx ) ) return false;
             }
             else
             {
@@ -573,7 +573,7 @@ private:
     }
 
     template<typename T>
-    static bool sGetNumbericAttr( const XmlElement & node, const StrA & attrname, T & result )
+    static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
         const XmlAttrib * a = node.findAttrib( attrname );
         if ( !a || !str2Number<T>( result, a->value.cptr() ) )
@@ -620,7 +620,7 @@ private:
             }
 
             size_t index;
-            if( !sGetNumbericAttr( *e, "index", index ) ) return false;
+            if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
                 GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
@@ -628,10 +628,10 @@ private:
             }
 
             float * c = result + index * 4;
-            if( !sGetNumbericAttr( *e, "x", c[0] ) ) return false;
-            if( !sGetNumbericAttr( *e, "y", c[1] ) ) return false;
-            if( !sGetNumbericAttr( *e, "z", c[2] ) ) return false;
-            if( !sGetNumbericAttr( *e, "w", c[3] ) ) return false;
+            if( !sGetNumericAttr( *e, "x", c[0] ) ) return false;
+            if( !sGetNumericAttr( *e, "y", c[1] ) ) return false;
+            if( !sGetNumericAttr( *e, "z", c[2] ) ) return false;
+            if( !sGetNumericAttr( *e, "w", c[3] ) ) return false;
         }
 
         // success
@@ -646,7 +646,7 @@ private:
             if( !e ) continue;
 
             size_t index;
-            if( !sGetNumbericAttr( *e, "index", index ) ) return false;
+            if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
                 GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
@@ -657,7 +657,7 @@ private:
             const char * names[] = { "x", "y", "z", "w" };
              for( size_t i = 0; i < dim; ++i  )
             {
-                 if( !sGetNumbericAttr( *e, names[i], c[i] ) ) return false;
+                 if( !sGetNumericAttr( *e, names[i], c[i] ) ) return false;
             }
         }
 
@@ -722,12 +722,12 @@ private:
 
             D3DVERTEXELEMENT9 & ve = vtxdecl.elements[count];
 
-            if( !sGetNumbericAttr( *e, "stream", ve.Stream     ) ) return false;
-            if( !sGetNumbericAttr( *e, "offset", ve.Offset     ) ) return false;
-            if( !sGetNumbericAttr( *e, "type"  , ve.Type       ) ) return false;
-            if( !sGetNumbericAttr( *e, "method", ve.Method     ) ) return false;
-            if( !sGetNumbericAttr( *e, "usage" , ve.Usage      ) ) return false;
-            if( !sGetNumbericAttr( *e, "index" , ve.UsageIndex ) ) return false;
+            if( !sGetNumericAttr( *e, "stream", ve.Stream     ) ) return false;
+            if( !sGetNumericAttr( *e, "offset", ve.Offset     ) ) return false;
+            if( !sGetNumericAttr( *e, "type"  , ve.Type       ) ) return false;
+            if( !sGetNumericAttr( *e, "method", ve.Method     ) ) return false;
+            if( !sGetNumericAttr( *e, "usage" , ve.Usage      ) ) return false;
+            if( !sGetNumericAttr( *e, "index" , ve.UsageIndex ) ) return false;
 
             ++count;
         }
@@ -739,7 +739,7 @@ private:
     bool loadVtxBuf( const XmlElement & node, const StrA & basedir )
     {
         size_t stream;
-        if( !sGetNumbericAttr( node, "stream", stream ) ) return false;
+        if( !sGetNumericAttr( node, "stream", stream ) ) return false;
         if( stream >= GN_ARRAY_COUNT(vtxbufs) )
         {
             GN_ERROR(sLogger)( "invalid stream index." );
@@ -748,8 +748,8 @@ private:
 
         D3D9VtxBufDump & vb = vtxbufs[stream];
 
-        if( !sGetNumbericAttr( node, "offset", vb.offset ) ) return false;
-        if( !sGetNumbericAttr( node, "stride", vb.stride ) ) return false;
+        if( !sGetNumericAttr( node, "offset", vb.offset ) ) return false;
+        if( !sGetNumericAttr( node, "stride", vb.stride ) ) return false;
         if( !sGetRefString( node, basedir, vb.ref ) ) return false;
 
         return true;
@@ -757,8 +757,8 @@ private:
 
     bool loadIdxBuf( const XmlElement & node, const StrA & basedir )
     {
-        if( !sGetNumbericAttr( node, "format", idxbuf.format ) ) return false;
-        if( !sGetNumbericAttr( node, "startvtx", idxbuf.startvtx ) ) return false;
+        if( !sGetNumericAttr( node, "format", idxbuf.format ) ) return false;
+        if( !sGetNumericAttr( node, "startvtx", idxbuf.startvtx ) ) return false;
         if( !sGetRefString( node, basedir, idxbuf.ref ) ) return false;
         return true;
     }
@@ -766,7 +766,7 @@ private:
     bool loadTexture( const XmlElement & node, const StrA & basedir )
     {
         size_t stage;
-        if( !sGetNumbericAttr( node, "stage", stage ) ) return false;
+        if( !sGetNumericAttr( node, "stage", stage ) ) return false;
         if( stage >= GN_ARRAY_COUNT(textures) )
         {
             GN_ERROR(sLogger)( "invalid stage." );
@@ -783,7 +783,7 @@ private:
     bool loadRenderTarget( const XmlElement & node, const StrA & basedir )
     {
         size_t stage;
-        if( !sGetNumbericAttr( node, "stage", stage ) ) return false;
+        if( !sGetNumericAttr( node, "stage", stage ) ) return false;
         if( stage >= GN_ARRAY_COUNT(rendertargets) )
         {
             GN_ERROR(sLogger)( "invalid stage." );
@@ -792,11 +792,11 @@ private:
 
         D3D9RtDump & rt = rendertargets[stage];
 
-        if( !sGetNumbericAttr( node, "width", rt.width ) ) return false;
-        if( !sGetNumbericAttr( node, "height", rt.height ) ) return false;
-        if( !sGetNumbericAttr( node, "format", rt.format ) ) return false;
-        if( !sGetNumbericAttr( node, "msaa", rt.msaa ) ) return false;
-        if( !sGetNumbericAttr( node, "quality", rt.quality ) ) return false;
+        if( !sGetNumericAttr( node, "width", rt.width ) ) return false;
+        if( !sGetNumericAttr( node, "height", rt.height ) ) return false;
+        if( !sGetNumericAttr( node, "format", rt.format ) ) return false;
+        if( !sGetNumericAttr( node, "msaa", rt.msaa ) ) return false;
+        if( !sGetNumericAttr( node, "quality", rt.quality ) ) return false;
         if( !sGetRefString( node, basedir, rt.ref ) ) return false;
 
         rt.inuse = true;
@@ -805,11 +805,11 @@ private:
 
     bool loadDepthStencil( const XmlElement & node, const StrA & basedir )
     {
-        if( !sGetNumbericAttr( node, "width", depthstencil.width ) ) return false;
-        if( !sGetNumbericAttr( node, "height", depthstencil.height ) ) return false;
-        if( !sGetNumbericAttr( node, "format", depthstencil.format ) ) return false;
-        if( !sGetNumbericAttr( node, "msaa", depthstencil.msaa ) ) return false;
-        if( !sGetNumbericAttr( node, "quality", depthstencil.quality ) ) return false;
+        if( !sGetNumericAttr( node, "width", depthstencil.width ) ) return false;
+        if( !sGetNumericAttr( node, "height", depthstencil.height ) ) return false;
+        if( !sGetNumericAttr( node, "format", depthstencil.format ) ) return false;
+        if( !sGetNumericAttr( node, "msaa", depthstencil.msaa ) ) return false;
+        if( !sGetNumericAttr( node, "quality", depthstencil.quality ) ) return false;
         if( !sGetRefString( node, basedir, depthstencil.ref ) ) return false;
 
         depthstencil.inuse = true;
@@ -838,8 +838,8 @@ private:
 
             D3D9RsDump & rs = renderstates[count];
 
-            if( !sGetNumbericAttr( *e, "type", rs.type ) ) return false;
-            if( !sGetNumbericAttr( *e, "value", rs.value ) ) return false;
+            if( !sGetNumericAttr( *e, "type", rs.type ) ) return false;
+            if( !sGetNumericAttr( *e, "value", rs.value ) ) return false;
 
             ++count;
         }
@@ -867,8 +867,8 @@ private:
             }
 
             UInt32 stage, type;
-            if( !sGetNumbericAttr( *e, "stage", stage ) ) return false;
-            if( !sGetNumbericAttr( *e, "type", type ) ) return false;
+            if( !sGetNumericAttr( *e, "stage", stage ) ) return false;
+            if( !sGetNumericAttr( *e, "type", type ) ) return false;
 
             if( stage > 15 || type > 13 )
             {
@@ -876,7 +876,7 @@ private:
                 return false;
             }
 
-            if( !sGetNumbericAttr( *e, "value", samplerstates[stage][type] ) ) return false;
+            if( !sGetNumericAttr( *e, "value", samplerstates[stage][type] ) ) return false;
         }
 
         // success

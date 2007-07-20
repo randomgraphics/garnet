@@ -739,12 +739,21 @@ namespace GN
         ///
         /// Get address of pointer.
         ///
-        /// The assert on operator& usually indicates a bug.  If this is really
-        /// what is needed, however, take the address of the mPtr member explicitly.
+        /// This operator is normally used during resource creation.
+        /// This function will ensure that the internal pointer is NULL.
         ///
         T ** operator&() throw()
         {
-            GN_ASSERT(mPtr==NULL);
+            GN_ASSERT( NULL == mPtr );
+            return &mPtr;
+        }
+
+        ///
+        /// Get address of pointer.
+        ///
+        T * const * operator&() const throw()
+        {
+            GN_ASSERT( mPtr );
             return &mPtr;
         }
 

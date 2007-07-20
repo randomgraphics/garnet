@@ -35,7 +35,7 @@ struct DDSFileHeader
     UInt32        depth;
     UInt32        mipCount;
     UInt32        reserved[11];
-    DDPixelFormat   ddpf;
+    DDPixelFormat ddpf;
     UInt32        caps;
     UInt32        caps2;
     UInt32        caps3;
@@ -43,6 +43,7 @@ struct DDSFileHeader
     UInt32        reserved2;
     /// \endcond
 };
+GN_CASSERT( sizeof(DDSFileHeader) == 124 );
 
 ///
 /// dds image reader

@@ -1,3 +1,7 @@
+- 2007.7.20
+  - add support to DX10 DDS file
+  - D3D10 state dumper and player
+
 - 2007.7.15
   - upgrade to version 0.8.2
   - experimental kernel based rendering system (woring in progress)

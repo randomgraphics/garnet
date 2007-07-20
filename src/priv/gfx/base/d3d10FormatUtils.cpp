@@ -191,6 +191,7 @@ GN::gfx::ClrFmt GN::gfx::d3d10::dxgiFormat2ClrFmt( DXGI_FORMAT dxgifmt )
         //   DXGI_FORMAT_BC5_SNORM         
 
         // depth formats
+        case DXGI_FORMAT_R32G8X24_TYPELESS     : return FMT_DSX_32_8_24;
         //   DXGI_FORMAT_D32_FLOAT_S8X24_UINT
         //   DXGI_FORMAT_D32_FLOAT
         case DXGI_FORMAT_D24_UNORM_S8_UINT     : FMT_DS_24_8;
@@ -250,6 +251,7 @@ DXGI_FORMAT GN::gfx::d3d10::clrFmt2DxgiFormat( ClrFmt clrfmt )
         // depth formats
         case FMT_D_16                   : dxgifmt = DXGI_FORMAT_D16_UNORM; break;
         case FMT_DS_24_8                : dxgifmt = DXGI_FORMAT_D24_UNORM_S8_UINT; break;
+        case FMT_DSX_32_8_24            : dxgifmt = DXGI_FORMAT_R32G8X24_TYPELESS; break;
 
         // failed
         default : return DXGI_FORMAT_UNKNOWN;
