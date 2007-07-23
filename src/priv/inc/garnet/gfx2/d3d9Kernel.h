@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     class D3D9GraphicsSystem;
-    class D3D9KernelBase;
+    class D3D9Kernel;
 
     ///
     /// D3D9 kernel port type
@@ -28,22 +28,19 @@ namespace GN { namespace gfx
     ///
     /// D3D9 kernel port descriptor
     ///
-    struct D3D9KernelPortDesc
+    struct D3D9KernelPortDesc : public KernelPortDesc
     {
         //@{
         StrA                  name;
         D3D9KernelPortType    portType;
         D3D9SurfaceType       surfaceType;
-        SurfaceLayoutTemplate layout;
-        bool                  input;
-        bool                  output;
         //@}
     };
 
     ///
     /// base D3D9 kernel port class
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9KernelPort
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelPort : public BaseKernelPort
     {
         D3D9GraphicsSystem & mGraphicsSystem;
 
@@ -70,11 +67,6 @@ namespace GN { namespace gfx
         /// get descriptor
         ///
         const D3D9KernelPortDesc & getDesc() const { return mDesc; }
-
-        ///
-        /// check surface compatility
-        ///
-        virtual bool compatible( const Surface * surf ) const = 0;
 
         ///
         /// bind surface to device
@@ -166,7 +158,7 @@ namespace GN { namespace gfx
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9KernelPortBinding
     {
-        D3D9KernelBase & mKernel;
+        D3D9Kernel & mKernel;
 
         struct BindItem
         {
@@ -184,7 +176,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelPortBinding( D3D9KernelBase & e );
+        D3D9KernelPortBinding( D3D9Kernel & e );
 
         ///
         /// dtor
@@ -194,7 +186,7 @@ namespace GN { namespace gfx
         ///
         /// binding setup
         ///
-        bool setup( const KernelPort * ports, size_t count );
+        bool setup( const KernelPortBindingDesc & );
 
         /// \name properties
         //@{
@@ -211,7 +203,7 @@ namespace GN { namespace gfx
     ///
     /// base D3D9 kernel
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9KernelBase
+    class GN_GFX2_D3D9_PUBLIC D3D9Kernel : public BaseKernel
     {
     public:
 
@@ -220,28 +212,16 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelBase( D3D9GraphicsSystem & gs, const char * kernelName );
+        D3D9Kernel( D3D9GraphicsSystem & gs );
 
         ///
         /// dtor
         ///
-        ~D3D9KernelBase();
+        ~D3D9Kernel();
 
         D3D9GraphicsSystem      & gfxsys() const { return mGraphicsSystem; }
-        size_t                    getNumPorts() const { return mPorts.size(); }
-        const D3D9KernelPort    & getPortByIndex( size_t index ) const { return *mPorts.at(index); }
-        const D3D9KernelPort    * getPortByName( const StrA & name ) const; ///< return NULL for invalid name
-        const StrA              & getPortName( size_t index ) const { return mPorts.getName( index ); }
-        KernelPortBinding         createPortBinding(  const KernelPort * ports, size_t count );
-        bool                      compatible( const Surface * surf, const StrA & port ) const;
+        KernelPortBinding         createPortBinding( const KernelPortBindingDesc & );
         void                      deletePortBinding( KernelPortBinding );
-
-        ///
-        /// \return index of the port. -1 means failed.
-        ///
-        /// \note D3D9KernelBase class does _NOT_ hold the ownership of the port instance.
-        ///
-        size_t addPortRef( D3D9KernelPort & port );
 
         ///
         /// get port binding by handle
@@ -279,39 +259,12 @@ namespace GN { namespace gfx
         typedef HandleManager<D3D9KernelPortBinding*,KernelPortBinding> KernelBindingContainer;
 
         D3D9GraphicsSystem        & mGraphicsSystem;
-        NamedArray<D3D9KernelPort*> mPorts;
         KernelBindingContainer      mBindings;
         KernelPortBinding           mDefaultBinding;
 
     private:
 
         virtual KernelPortBinding createDefaultBinding();
-    };
-
-    ///
-    /// templated D3D9 kernel base
-    ///
-    template< class KERNEL >
-    class D3D9KernelBaseT : public KERNEL, public D3D9KernelBase
-    {
-    protected:
-
-        ///
-        /// ctor
-        ///
-        D3D9KernelBaseT( D3D9GraphicsSystem & gs )
-            : D3D9KernelBase( gs, KERNEL::KERNEL_NAME() )
-        {
-        }
-
-    public:
-
-        /// inherited from Kernel
-        //@{
-        virtual bool              compatible( const Surface * surf, const StrA & port ) const { return D3D9KernelBase::compatible( surf, port ); }
-        virtual KernelPortBinding createPortBinding( const KernelPort * ports, size_t count ) { return D3D9KernelBase::createPortBinding( ports, count ); }
-        virtual void              deletePortBinding( KernelPortBinding b ) { D3D9KernelBase::deletePortBinding( b ); }
-        //@}
     };
 }}
 

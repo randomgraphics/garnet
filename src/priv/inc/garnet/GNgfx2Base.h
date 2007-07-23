@@ -96,6 +96,7 @@ namespace GN { namespace gfx
 
         size_t doAdd( const StrA & name, const T & value )
         {
+            GN_ASSERT( !name.empty() );
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() != i )
             {
@@ -148,10 +149,221 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// structure to hold kernel parameter value
+    ///
+    class BaseKernelParameter : public KernelParameter
+    {
+        const KernelParameterDesc mDesc;
+        const size_t              mIndex; ///< index into kenel parameter array
+        DynaArray<UInt8*>         mData;
+        DynaArray<StrA>           mStr;
+        bool                      mEmpty;
+
+        const void * getData() const { return empty() ? 0 : mData.cptr(); }
+        const StrA * getString() const { return empty() ? 0 : mStr.cptr(); }
+
+    public:
+
+        ///
+        /// triggered right after the value is set
+        ///
+        Signal3< void, size_t /*index*/, size_t /*offset*/, size_t /*count*/ > sigValueSet;
+
+        ///
+        /// triggered right after the value is unset
+        ///
+        Signal1< void, size_t /*index*/ > sigValueUnset;
+
+        ///
+        /// ctor
+        ///
+        BaseKernelParameter( const KernelParameterDesc & desc, size_t index )
+            : mDesc( desc )
+            , mIndex( index )
+            , mEmpty( true )
+        {
+            if( KERNEL_PARAMETER_TYPE_STRING == mDesc.type )
+            {
+                mStr.resize( mDesc.count );
+            }
+            else
+            {
+                mData.resize( mDesc.count );
+            }
+        }
+
+        ///
+        /// check if parameter has valid value
+        ///
+        bool empty() const { return mEmpty; }
+
+        /// \name get parameter value
+        //@{
+        const bool         * toBool()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_BOOL == mDesc.type );   return (const bool*)getData(); }
+        const int          * toInt()    const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const int*)getData(); }
+        const unsigned int * toUInt()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const unsigned int*)getData(); }
+        const float        * toFloat()  const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT == mDesc.type );  return (const float*)getData(); }
+        const StrA         * toString() const { GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mDesc.type ); return getString(); }
+        //@}
+
+        // from parent class
+        //@{
+
+        virtual const KernelParameterDesc & getDesc() const { return mDesc; }
+        virtual void                        setb( size_t offset, size_t count, const bool         * values );
+        virtual void                        seti( size_t offset, size_t count, const int          * values );
+        virtual void                        setf( size_t offset, size_t count, const float        * values );
+        virtual void                        sets( size_t offset, size_t count, const char * const * values );
+        virtual void                        unset();
+        //@}
+    };
+
+    ///
+    /// base kernel parameter set
+    ///    
+    class BaseKernelParameterSet : public KernelParameterSet
+    {
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        BaseKernelParameterSet( BaseKernel & e );
+        virtual ~BaseKernelParameterSet();
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        /// \name from parent class
+        //@{
+        virtual KernelParameter * get( size_t index ) const;
+        //@}
+
+        ///
+        /// get typed parameter by index
+        ///
+        template<typename T>
+        T * getT( size_t index ) const { return safeCastPtr<T>( get( index ) ); }
+
+        ///
+        /// get parameter instance by name
+        ///
+        BaseKernelParameter * getBaseParameterByName( const StrA & name ) const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        DynaArray<BaseKernelParameter*> mParameters;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+    class BaseKernelPort : public NoCopy
+    {
+    public:
+
+        ///
+        /// get port descriptor
+        ///
+        virtual const KernelPortDesc & getDesc() const = 0;
+
+        ///
+        /// check if the surface is compatible with the port
+        ///
+        virtual bool compatible( const Surface * ) const = 0;
+    };
+
+    ///
     /// base kernel class
     ///
     class BaseKernel : public Kernel
     {
+    public:
+
+        ///
+        /// ctor
+        ///
+        BaseKernel()
+            : mStreams( "STREAM" )
+            , mParameters( "PARAMETER" )
+            , mPorts( "PORT" )
+        {}
+
+        //@{
+
+        virtual size_t               getNumStreams() const { return mStreams.size(); }
+        virtual const StrA         & getStreamName( size_t index ) const { return mStreams.getName( index ); }
+        virtual size_t               getStreamIndex( const StrA & name ) const { return mStreams.getIndex( name ); }
+        virtual StreamSource       * getStream( size_t index ) const;
+        virtual StreamSource       * getStream( const StrA & name ) const;
+
+        //@}
+
+        //@{
+
+        virtual size_t                      getNumParameters() const { return mParameters.size(); }
+        virtual const StrA                & getParameterName( size_t index ) const { return mParameters.getName( index ); }
+        virtual size_t                      getParameterIndex( const StrA & name ) const { return mParameters.getIndex( name ); }
+        virtual const KernelParameterDesc * getParameterDesc( size_t index ) const { return mParameters.get( index ); }
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const { return mParameters.get( name ); }
+        virtual KernelParameterSet        * createParameterSet();
+
+        //@}
+
+        //@{
+
+        virtual size_t                 getNumPorts() const { return mPorts.size(); }
+        virtual const StrA           & getPortName( size_t index ) const { return mPorts.getName( index ); }
+        virtual size_t                 getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
+        virtual const KernelPortDesc * getPortDesc( size_t index ) const;
+        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const;
+        virtual bool                   compatible( const Surface * surf, const StrA & port ) const;
+
+        inline  BaseKernelPort       * getPort( const StrA & name ) const { BaseKernelPort * const * p = mPorts.get(name); return p ? *p : 0; }
+        template<typename T>
+        inline  T                    * getPortT( const StrA & name ) const { return safeCastPtr<T>( getPort( name ) ); }
+
+        inline  BaseKernelPort       & getPort( size_t index ) const { return *mPorts.at(index); }
+        template<typename T>
+        inline  T                    & getPortT( size_t index ) const { return safeCastRef<T>( getPort( index ) ); }
+
+        //@}
+
+    protected:
+
+        ///
+        /// \return index of the stream. -1 means failed.
+        ///
+        /// \note Kernel class does _NOT_ hold the ownership of the stream instance.
+        ///
+        size_t addStreamRef( const StrA & name, StreamSource & stream );
+
+        ///
+        /// \note add parameter. Return index of newly inserted index. Return -1, if failed.
+        ///
+        size_t addParameter( const StrA & name, KernelParameterType type, size_t count );
+
+        ///
+        /// \return index of the port. -1 means failed.
+        ///
+        /// \note Kernel class does _NOT_ hold the ownership of the port instance.
+        ///
+        size_t addPortRef( const StrA & name, BaseKernelPort & port );
+
+    private:
+
+        NamedArray<StreamSource*>       mStreams;
+        NamedArray<KernelParameterDesc> mParameters;
+        NamedArray<BaseKernelPort*>     mPorts;
     };
 
     ///

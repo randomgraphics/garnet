@@ -11,7 +11,7 @@
 namespace GN { namespace gfx
 {
     // *************************************************************************
-    // surface
+    // surface that stores device data
     // *************************************************************************
 
     enum
@@ -404,22 +404,142 @@ namespace GN { namespace gfx
     };
 
     // *************************************************************************
-    // Kernel
+    // stream source that transters host data to kernel
     // *************************************************************************
 
     ///
-    /// single kernel port
+    /// stream source descriptor
     ///
-    struct KernelPort
+    struct StreamSourceDesc
     {
-        const char * const kernel; ///< kernel name (constant)
-        const char * const name;   ///< port name (constant)
-        SurfaceView        view;   ///< target surface view
+        //@{
+        SurfaceElementFormat format;   ///< element format
+        size_t               maxBytes; ///< max stream data size.
+        //@}
+    };
+
+    ///
+    /// stream data source of kernel function
+    ///
+    struct StreamSource : public NoCopy
+    {
+        //@{
+        virtual const StreamSourceDesc & getDesc() const = 0;
+
+        ///
+        /// push data into stream
+        ///
+        virtual void push( const void * data, size_t bytes ) = 0;
+
+        ///
+        /// get free/available bytes in stream
+        ///
+        virtual size_t freeBytes() const = 0;
+        //@}
+    };
+
+    // *************************************************************************
+    // Kernel parameter that controls behavior of the kernel
+    // *************************************************************************
+
+    ///
+    /// kernel parameter type
+    ///
+    enum KernelParameterType
+    {
+        //@{
+        KERNEL_PARAMETER_TYPE_BOOL,
+        KERNEL_PARAMETER_TYPE_INT,
+        KERNEL_PARAMETER_TYPE_FLOAT,
+        KERNEL_PARAMETER_TYPE_STRING,
+        //@}
+    };
+
+    ///
+    /// kernel parameter value descriptor
+    ///
+    struct KernelParameterDesc
+    {
+        KernelParameterType type;  ///< value type
+        size_t              count; ///< array count
+    };
+
+    ///
+    /// Kernel parameter
+    ///
+    struct KernelParameter : public NoCopy
+    {
+        //@{
+        virtual const KernelParameterDesc & getDesc() const = 0;
+        virtual void                        setb( size_t offset, size_t count, const bool         * values ) = 0;
+        virtual void                        seti( size_t offset, size_t count, const int          * values ) = 0;
+        virtual void                        setf( size_t offset, size_t count, const float        * values ) = 0;
+        virtual void                        sets( size_t offset, size_t count, const char * const * values ) = 0;
+        virtual void                        unset() = 0;
+        inline  void                        sets( const char * );
+        inline  void                        setu( size_t offset, size_t count, const unsigned int * values );
+        //@}
+    };
+
+    struct Kernel;
+
+    ///
+    /// kernel parameter set
+    ///
+    struct KernelParameterSet : public NoCopy
+    {
+        //@{
+        inline  Kernel          & getKernel() const { return mKernel; }
+
+        virtual KernelParameter * get( size_t index ) const = 0;
+        inline  KernelParameter * get( const StrA & name ) const;
+
+        inline  void              sets( size_t index, const char * value );
+        inline  void              seti( size_t index, int value );
+        inline  void              setf( size_t index, float value );
+        inline  void              setv( size_t index, const Vector4f & value );
+        inline  void              setm( size_t index, const Matrix44f & value );
+
+        inline  void              unset( size_t index );
+        inline  void              unset( const StrA & name );
+        //@}
+
+    protected:
 
         ///
         /// ctor
         ///
-        KernelPort( const char * k, const char * n ) : kernel(k), name(n) {}
+        KernelParameterSet( Kernel & e ) : mKernel( e ) {}
+
+    private:
+
+        Kernel & mKernel;
+    };
+
+    // *************************************************************************
+    // Kernel Port that defines surface binding slot of the kernel
+    // *************************************************************************
+
+    ///
+    /// kernel port descriptor.
+    ///
+    struct KernelPortDesc
+    {
+        //@{
+        SurfaceLayoutTemplate layout;     ///< surface layout that the port accepts.
+        unsigned int          input  : 1; ///< non zero for input port
+        unsigned int          output : 1; ///< non zero for output port
+        //@}
+    };
+
+    ///
+    /// define surface binding to kernel ports
+    ///
+    struct KernelPortBindingDesc
+    {
+        //@{
+        std::map<StrA,SurfaceView> bindings; ///< bindings indexed by port name.
+        //@}
     };
 
     ///
@@ -427,29 +547,61 @@ namespace GN { namespace gfx
     ///
     typedef UIntPtr KernelPortBinding;
 
-    ///
-    /// base kernel parameter set
-    ///
-    struct KernelParameterSet : public NoCopy
-    {
-    };
+    // *************************************************************************
+    // Kernel: main kernel interface
+    // *************************************************************************
 
     ///
     /// kernel interface
     ///
     struct Kernel : public NoCopy
     {
+        ///
+        /// get kernel name
+        ///
+        virtual const char * getName() const = 0;
+
+        ///
+        /// do rendering, with user defined parameter set and binding.
+        ///
+        /// Note that some kernels accepts '0' as valid binding
+        ///
+        virtual void render( const KernelParameterSet &, KernelPortBinding ) = 0;
+
+        /// \name stream management
         //@{
 
-        virtual const char         * getName() const = 0;
-        virtual bool                 compatible( const Surface * surf, const StrA & port ) const = 0;
-        virtual KernelParameterSet * createParameterSet() = 0;
-        virtual KernelPortBinding    createPortBinding( const KernelPort * port, size_t count ) = 0;
-        virtual void                 deletePortBinding( KernelPortBinding ) = 0;
-        virtual void                 render( const KernelParameterSet &, KernelPortBinding ) = 0;
+        virtual size_t               getNumStreams() const = 0;
+        virtual const StrA         & getStreamName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t               getStreamIndex( const StrA & name ) const = 0;
+        virtual StreamSource       * getStream( size_t index ) const = 0;
+        virtual StreamSource       * getStream( const StrA & name ) const = 0;
 
-        template<class T> T               * createParameterSetT() { return safeCastPtr<T>( createParameterSet() ); }
-        template<class T> KernelPortBinding createPortBindingT( const T & p ) { return createPortBinding( (const KernelPort*)&p, sizeof(T)/sizeof(KernelPort) ); }
+        //@}
+
+        /// \name parameter management
+        //@{
+
+        virtual size_t                      getNumParameters() const = 0;
+        virtual const StrA                & getParameterName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t                      getParameterIndex( const StrA & name ) const = 0; ///< return -1, if name is invalid.
+        virtual const KernelParameterDesc * getParameterDesc( size_t index ) const = 0;
+        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const = 0;
+        virtual KernelParameterSet       *  createParameterSet() = 0;
+
+        //@}
+
+        //// \name port & binding management
+        //@{
+
+        virtual size_t                 getNumPorts() const = 0;
+        virtual const StrA           & getPortName( size_t index ) const = 0; ///< return empty string, if failed.
+        virtual size_t                 getPortIndex( const StrA & name ) const = 0;
+        virtual const KernelPortDesc * getPortDesc( size_t index ) const = 0;
+        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const = 0;
+        virtual bool                   compatible( const Surface * surf, const StrA & port ) const = 0;
+        virtual KernelPortBinding      createBinding( const KernelPortBindingDesc & ) = 0;
+        virtual void                   deleteBinding( KernelPortBinding ) = 0;
 
         //@}
     };
@@ -511,17 +663,6 @@ namespace GN { namespace gfx
         ///
         /// add new binding
         ///
-        void bindTo( const KernelPort & port )
-        {
-            SurfaceBindingParameter b;
-            b.kernel = port.kernel;
-            b.port   = port.name;
-            bindings.append( b );
-        }
-
-        ///
-        /// add new binding
-        ///
         void bindTo( const StrA & kernel, const StrA & port )
         {
             SurfaceBindingParameter b;
@@ -530,8 +671,6 @@ namespace GN { namespace gfx
             bindings.append( b );
         }
     };
-
-    class GraphicsSystem;
 
     ///
     /// Describe common graphics system properties (platform independent)
