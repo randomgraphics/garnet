@@ -24,10 +24,12 @@ RESOLVED ISSUES
   - No.
     If a kernel library is mean to be extensible, it should provide its own
     interfaces and rules for kernel and surface implementation.
-- Why not use uniform kernel interface?
-  - pros of uniform kernel interface
+- use uniform kernel interface or not?
+  - pros
     - easy to wrap with multi-thread layer
-  - cons of uniform kernel interface
+    - easy for script binding
+    - easy for parameter sharing/aliasing
+  - cons
     - not intuitive
     - restrict kernel functionalities to that interface.
     - slower then kernel-specific interface.
