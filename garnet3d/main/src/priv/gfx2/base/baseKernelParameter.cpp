@@ -132,7 +132,7 @@ GN::gfx::BaseKernelParameterSet::~BaseKernelParameterSet()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::KernelParameter *
-GN::gfx::BaseKernelParameterSet::get( size_t index ) const
+GN::gfx::BaseKernelParameterSet::get( size_t index )
 {
     GN_GUARD_SLOW;
 

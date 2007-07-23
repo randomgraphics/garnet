@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "d3d9HlslKernel.h"
-#include "garnet/GNgfx.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9HlslKernel");
 

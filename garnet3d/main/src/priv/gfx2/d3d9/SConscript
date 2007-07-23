@@ -1,5 +1,6 @@
 Import( 'GN' )
 sources = [
+	'd3d9ClearScreenKernel.cpp',
     'd3d9DepthBuffer.cpp',
     'd3d9GraphicsSystem.cpp',
 #    'd3d9HlslKernel.cpp',
