@@ -240,7 +240,7 @@ namespace GN { namespace gfx
 
         /// \name from parent class
         //@{
-        virtual KernelParameter * get( size_t index ) const;
+        virtual KernelParameter * get( size_t index );
         //@}
 
         ///
@@ -292,49 +292,51 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        BaseKernel()
-            : mStreams( "STREAM" )
+        BaseKernel( const char * name )
+            : mName( name )
+            , mStreams( "STREAM" )
             , mParameters( "PARAMETER" )
             , mPorts( "PORT" )
-        {}
+        {
+            if( strEmpty( name ) )
+            {
+                GN_UNEXPECTED();
+            }
+        }
+
+        const char                        * getName() const { GN_ASSERT(!strEmpty(mName)); return mName; }
 
         //@{
 
-        virtual size_t               getNumStreams() const { return mStreams.size(); }
-        virtual const StrA         & getStreamName( size_t index ) const { return mStreams.getName( index ); }
-        virtual size_t               getStreamIndex( const StrA & name ) const { return mStreams.getIndex( name ); }
-        virtual StreamSource       * getStream( size_t index ) const;
-        virtual StreamSource       * getStream( const StrA & name ) const;
+        virtual size_t                      getNumStreams() const { return mStreams.size(); }
+        virtual size_t                      getStreamIndex( const StrA & name ) const { return mStreams.getIndex( name ); }
+        virtual StreamSource              * getStream( size_t index ) const;
 
         //@}
 
         //@{
 
         virtual size_t                      getNumParameters() const { return mParameters.size(); }
-        virtual const StrA                & getParameterName( size_t index ) const { return mParameters.getName( index ); }
         virtual size_t                      getParameterIndex( const StrA & name ) const { return mParameters.getIndex( name ); }
         virtual const KernelParameterDesc * getParameterDesc( size_t index ) const { return mParameters.get( index ); }
-        virtual const KernelParameterDesc * getParameterDesc( const StrA & name ) const { return mParameters.get( name ); }
         virtual KernelParameterSet        * createParameterSet();
 
         //@}
 
         //@{
 
-        virtual size_t                 getNumPorts() const { return mPorts.size(); }
-        virtual const StrA           & getPortName( size_t index ) const { return mPorts.getName( index ); }
-        virtual size_t                 getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
-        virtual const KernelPortDesc * getPortDesc( size_t index ) const;
-        virtual const KernelPortDesc * getPortDesc( const StrA & name ) const;
-        virtual bool                   compatible( const Surface * surf, const StrA & port ) const;
+        virtual size_t                      getNumPorts() const { return mPorts.size(); }
+        virtual size_t                      getPortIndex( const StrA & name ) const { return mPorts.getIndex( name ); }
+        virtual const KernelPortDesc      * getPortDesc( size_t index ) const;
+        virtual bool                        compatible( const Surface * surf, const StrA & port ) const;
 
-        inline  BaseKernelPort       * getPort( const StrA & name ) const { BaseKernelPort * const * p = mPorts.get(name); return p ? *p : 0; }
+        inline  BaseKernelPort            * getPort( const StrA & name ) const { BaseKernelPort * const * p = mPorts.get(name); return p ? *p : 0; }
         template<typename T>
-        inline  T                    * getPortT( const StrA & name ) const { return safeCastPtr<T>( getPort( name ) ); }
+        inline  T                         * getPortT( const StrA & name ) const { return safeCastPtr<T>( getPort( name ) ); }
 
-        inline  BaseKernelPort       & getPort( size_t index ) const { return *mPorts.at(index); }
+        inline  BaseKernelPort            & getPort( size_t index ) const { return *mPorts.at(index); }
         template<typename T>
-        inline  T                    & getPortT( size_t index ) const { return safeCastRef<T>( getPort( index ) ); }
+        inline  T                         & getPortT( size_t index ) const { return safeCastRef<T>( getPort( index ) ); }
 
         //@}
 
@@ -345,7 +347,7 @@ namespace GN { namespace gfx
         ///
         /// \note Kernel class does _NOT_ hold the ownership of the stream instance.
         ///
-        size_t addStreamRef( const StrA & name, StreamSource & stream );
+        size_t addStreamRef( StreamSource & stream );
 
         ///
         /// \note add parameter. Return index of newly inserted index. Return -1, if failed.
@@ -357,10 +359,11 @@ namespace GN { namespace gfx
         ///
         /// \note Kernel class does _NOT_ hold the ownership of the port instance.
         ///
-        size_t addPortRef( const StrA & name, BaseKernelPort & port );
+        size_t addPortRef( BaseKernelPort & port );
 
     private:
 
+        const char *                    mName;
         NamedArray<StreamSource*>       mStreams;
         NamedArray<KernelParameterDesc> mParameters;
         NamedArray<BaseKernelPort*>     mPorts;

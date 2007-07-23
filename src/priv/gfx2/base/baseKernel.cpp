@@ -20,19 +20,6 @@ GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( const StrA & name ) const
-{
-    size_t index = mStreams.getIndex( name );
-    if( (size_t)-1 == index ) return 0;
-
-    GN_ASSERT( mStreams.at(index) );
-
-    return mStreams.at(index);
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
 {
     GN_GUARD;
@@ -62,19 +49,6 @@ const GN::gfx::KernelPortDesc * GN::gfx::BaseKernel::getPortDesc( size_t index )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::KernelPortDesc * GN::gfx::BaseKernel::getPortDesc( const StrA & name ) const
-{
-    size_t index = mPorts.getIndex( name );
-    if( (size_t)-1 == index ) return 0;
-
-    GN_ASSERT( mPorts.at(index) );
-
-    return &mPorts.at(index)->getDesc();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::gfx::BaseKernel::compatible( const Surface * surf, const StrA & portName ) const
 {
     const BaseKernelPort * const * port = mPorts.get( portName );
@@ -89,16 +63,15 @@ bool GN::gfx::BaseKernel::compatible( const Surface * surf, const StrA & portNam
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::BaseKernel::addStreamRef( const StrA & name, StreamSource & stream )
+size_t GN::gfx::BaseKernel::addStreamRef( StreamSource & stream )
 {
-    return mStreams.add( name, &stream );
+    return mStreams.add( stream.getDesc().name, &stream );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-size_t
-GN::gfx::BaseKernel::addParameter(
+size_t GN::gfx::BaseKernel::addParameter(
     const StrA        & name,
     KernelParameterType type,
     size_t              count )
@@ -106,6 +79,7 @@ GN::gfx::BaseKernel::addParameter(
     GN_GUARD;
 
     KernelParameterDesc desc;
+    desc.name  = name;
     desc.type  = type;
     desc.count = count;
 
@@ -117,7 +91,7 @@ GN::gfx::BaseKernel::addParameter(
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::BaseKernel::addPortRef( const StrA & name, BaseKernelPort & port )
+size_t GN::gfx::BaseKernel::addPortRef( BaseKernelPort & port )
 {
-    return mPorts.add( name, &port );
+    return mPorts.add( port.getDesc().name, &port );
 }

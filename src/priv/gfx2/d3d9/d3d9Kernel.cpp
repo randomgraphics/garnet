@@ -162,8 +162,9 @@ void GN::gfx::D3D9KernelPortBinding::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9Kernel::D3D9Kernel( D3D9GraphicsSystem & gs )
-    : mGraphicsSystem(gs)
+GN::gfx::D3D9Kernel::D3D9Kernel( const char * name, D3D9GraphicsSystem & gs )
+    : BaseKernel( name )
+    , mGraphicsSystem(gs)
     , mDefaultBinding(0)
 {
 }

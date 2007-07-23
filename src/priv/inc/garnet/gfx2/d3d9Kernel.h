@@ -31,7 +31,6 @@ namespace GN { namespace gfx
     struct D3D9KernelPortDesc : public KernelPortDesc
     {
         //@{
-        StrA                  name;
         D3D9KernelPortType    portType;
         D3D9SurfaceType       surfaceType;
         //@}
@@ -212,7 +211,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9Kernel( D3D9GraphicsSystem & gs );
+        D3D9Kernel( const char * name, D3D9GraphicsSystem & gs );
 
         ///
         /// dtor
@@ -220,13 +219,18 @@ namespace GN { namespace gfx
         ~D3D9Kernel();
 
         D3D9GraphicsSystem      & gfxsys() const { return mGraphicsSystem; }
+
+        //@{
+
         KernelPortBinding         createPortBinding( const KernelPortBindingDesc & );
         void                      deletePortBinding( KernelPortBinding );
+
+        //@}
 
         ///
         /// get port binding by handle
         ///
-        D3D9KernelPortBinding & getPortBinding( KernelPortBinding b )
+        D3D9KernelPortBinding   & getPortBinding( KernelPortBinding b )
         {
             GN_GUARD_SLOW;
 
