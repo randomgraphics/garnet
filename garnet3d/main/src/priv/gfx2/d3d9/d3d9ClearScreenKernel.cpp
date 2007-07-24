@@ -111,15 +111,17 @@ namespace GN { namespace gfx
         {
         }
 
-        virtual KernelParameter * get( size_t index )
+        virtual KernelParameter & get( size_t index )
         {
             switch( index )
             {
-                case 0  : return &flags;
-                case 1  : return &color;
-                case 2  : return &depth;
-                case 3  : return &stencil;
-                default : GN_UNEXPECTED(); return 0;
+                case 0  : return flags;
+                case 1  : return color;
+                case 2  : return depth;
+                case 3  : return stencil;
+                default :
+                    GN_ERROR(sLogger)( "parameter index is out of range!" );
+                    return DummyKernelParameter::sGetInstance();
             }
         }
 

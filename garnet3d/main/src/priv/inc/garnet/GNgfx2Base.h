@@ -27,7 +27,6 @@ namespace GN { namespace gfx
         };
 
         StrA                  mLogPrefix;
-        StrA                  mTypeName;
         DynaArray<Item>       mItems;
         std::map<StrA,size_t> mNames;
 
@@ -35,7 +34,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -45,7 +44,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
                 return 0;
             }
             return &mItems[index].value;
@@ -56,7 +55,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -67,7 +66,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                 return 0;
             }
             return &mItems[i->second].value;
@@ -77,7 +76,7 @@ namespace GN { namespace gfx
         {
             if( index >= mItems.size() )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s index is out of range.", mLogPrefix.cptr(), mTypeName.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
                 return StrA::EMPTYSTR;
             }
             return mItems[index].name;
@@ -88,7 +87,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() == i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid %s name '%s'.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                 return (size_t)-1;
             }
             return i->second;
@@ -100,7 +99,7 @@ namespace GN { namespace gfx
             std::map<StrA,size_t>::const_iterator i = mNames.find( name );
             if( mNames.end() != i )
             {
-                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: %s named '%s' does exist already.", mLogPrefix.cptr(), mTypeName.cptr(), name.cptr() );
+                GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: name '%s' does exist already.", mLogPrefix.cptr(), name.cptr() );
                 return (size_t)-1;
             }
 
@@ -119,7 +118,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        NamedArray( const StrA & prefix = StrA::EMPTYSTR, const StrA & typeName = "item" ) : mLogPrefix(prefix), mTypeName(typeName)
+        NamedArray( const StrA & logPrefix ) : mLogPrefix(logPrefix)
         {
         }
 
@@ -144,6 +143,36 @@ namespace GN { namespace gfx
         /// this function does not allow invalid name
         ///
         const T    & at( const StrA & name ) const { std::map<StrA,size_t>::const_iterator i = mNames.find(name); GN_ASSERT( mNames.end() != i ); return mItems[i->second].value; }
+
+        //@}
+    };
+
+    ///
+    /// dummy kernel parameter
+    ///
+    class DummyKernelParameter : public GN::gfx::KernelParameter
+    {
+        KernelParameterDesc mDesc;
+
+        DummyKernelParameter()
+        {
+            mDesc.name  = "DUMMY";
+            mDesc.type  = KERNEL_PARAMETER_TYPE_BOOL;
+            mDesc.count = 0;
+        }
+
+    public:
+
+        //@{
+
+        static DummyKernelParameter & sGetInstance() { static DummyKernelParameter sInstance; return sInstance; }
+
+        virtual const KernelParameterDesc & getDesc() const { return mDesc; }
+        virtual void setb( size_t, size_t, const bool         * ) {}
+        virtual void seti( size_t, size_t, const int          * ) {}
+        virtual void setf( size_t, size_t, const float        * ) {}
+        virtual void sets( size_t, size_t, const char * const * ) {}
+        virtual void unset() {}
 
         //@}
     };
@@ -238,21 +267,16 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        /// \name from parent class
-        //@{
-        virtual KernelParameter * get( size_t index );
-        //@}
+        ///
+        /// get untyped parameter by index
+        ///
+        virtual KernelParameter & get( size_t index );
 
         ///
         /// get typed parameter by index
         ///
         template<typename T>
-        T * getT( size_t index ) const { return safeCastPtr<T>( get( index ) ); }
-
-        ///
-        /// get parameter instance by name
-        ///
-        BaseKernelParameter * getBaseParameterByName( const StrA & name ) const;
+        T & getT( size_t index ) const { return safeCastRef<T>( get( index ) ); }
 
         // ********************************
         // private variables
@@ -294,9 +318,9 @@ namespace GN { namespace gfx
         ///
         BaseKernel( const char * name )
             : mName( name )
-            , mStreams( "STREAM" )
-            , mParameters( "PARAMETER" )
-            , mPorts( "PORT" )
+            , mStreams( "KERNEL STREAM" )
+            , mParameters( "KERNEL PARAMETER" )
+            , mPorts( "KEREL PORT" )
         {
             if( strEmpty( name ) )
             {
