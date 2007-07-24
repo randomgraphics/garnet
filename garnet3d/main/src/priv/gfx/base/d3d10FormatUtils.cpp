@@ -1,5 +1,5 @@
 #include "pch.h"
-#ifdef HAS_D3D10
+#ifdef HAS_D3D10_H
 
 //
 //

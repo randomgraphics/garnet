@@ -12,7 +12,6 @@ sources = [
     'imagePNG.cpp',
     'imageTGA.cpp',
     'renderState.cpp',
-    #'nes.cpp',
     'sampler.cpp',
     'shape.cpp',
     'uniform.cpp',
@@ -20,6 +19,7 @@ sources = [
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 if GN.conf['has_d3d9'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D9'] )
+if GN.conf['has_d3d10_h'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10_H'] )
 if GN.conf['has_d3d10'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
 if GN.conf['has_ogl'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_OGL'] )
 GN.newTarget( 'stlib', 'GNgfxBase', [cluster] )

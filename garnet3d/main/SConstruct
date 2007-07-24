@@ -394,7 +394,8 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		stdout.close()
 		import string
 		return string.find( str, "6.0" ) >= 0
-	conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVista(env) or not UTIL_staticBuild( variant ) )
+	conf['has_d3d10_h'] = c.CheckCXXHeader( 'd3d10.h' )
+	conf['has_d3d10'] = conf['has_d3d10_h'] and ( isVista(env) or not UTIL_staticBuild( variant ) )
 
 	# ===================
 	#  «∑Ò÷ß≥÷DirectInput
