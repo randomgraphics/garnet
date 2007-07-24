@@ -8,7 +8,7 @@
 
 #include "d3d9ClearScreenKernel.h"
 //#include "d3d9HlslKernel.h"
-//#include "d3d9QuadKernel.h"
+#include "d3d9QuadKernel.h"
 
 // *****************************************************************************
 //                                     EOF

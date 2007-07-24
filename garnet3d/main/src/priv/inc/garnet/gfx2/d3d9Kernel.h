@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         ///
         /// get graphics system
         ///
-        D3D9GraphicsSystem & gfxsys() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem & d3d9gs() const { return mGraphicsSystem; }
 
         ///
         /// get descriptor
@@ -218,7 +218,7 @@ namespace GN { namespace gfx
         ///
         ~D3D9Kernel();
 
-        D3D9GraphicsSystem      & gfxsys() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem      & d3d9gs() const { return mGraphicsSystem; }
 
         //@{
 

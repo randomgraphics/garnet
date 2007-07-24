@@ -49,7 +49,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        D3D9GraphicsSystem & gfxsys() const { return mGraphicsSystem; }
+        D3D9GraphicsSystem & d3d9gs() const { return mGraphicsSystem; }
 
         virtual bool onRestore() = 0; ///< restore device data after device reset
         virtual void onDispose() = 0; ///< dispose device data after device lost
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
         void setTextureState( size_t stage, D3DTEXTURESTAGESTATETYPE type, DWORD value );
 
         void apply( const D3D9RenderStateBlock * last ) const;
-        void apply() const;
+        inline void apply() const;
 
         //@}
     };
@@ -248,6 +248,19 @@ namespace GN { namespace gfx
     /// create D3D9 graphics system
     ///
     extern "C" GN_GFX2_D3D9_PUBLIC D3D9GraphicsSystem * createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & );
+
+
+    // *************************************************************************
+    // inline functions
+    // *************************************************************************
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    inline void D3D9RenderStateBlock::apply() const
+    {
+        mGfxSys.setRenderStateBlock( *this );
+    }
 }}
 
 // *****************************************************************************
