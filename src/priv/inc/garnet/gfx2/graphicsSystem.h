@@ -491,8 +491,8 @@ namespace GN { namespace gfx
         //@{
         inline  Kernel          & getKernel() const { return mKernel; }
 
-        virtual KernelParameter * get( size_t index ) = 0;
-        inline  KernelParameter * get( const StrA & name );
+        virtual KernelParameter & get( size_t index ) = 0; ///< return dummy parameter, if index is invalid.
+        inline  KernelParameter & get( const StrA & name );
 
         inline  void              sets( size_t index, const char * value );
         inline  void              seti( size_t index, int value );
@@ -784,11 +784,12 @@ namespace GN { namespace gfx
     // inline functions
     // *************************************************************************
 
+    inline KernelParameter & KernelParameterSet::get( const StrA & name ) { return get( getKernel().getParameterIndex(name) ); }
     //inline void KernelParameterSet::sets( size_t index, const char * value );
     //inline void KernelParameterSet::seti( size_t index, int value );
-    inline void KernelParameterSet::setu( size_t index, unsigned int value ) { get(index)->seti( 0, 1, (const int*)&value ); }
+    inline void KernelParameterSet::setu( size_t index, unsigned int value ) { get(index).seti( 0, 1, (const int*)&value ); }
     //inline void KernelParameterSet::setf( size_t index, float value );
-    inline void KernelParameterSet::setv( size_t index, const Vector4f & value ) { get(index)->setf( 0, 4, value ); }
+    inline void KernelParameterSet::setv( size_t index, const Vector4f & value ) { get(index).setf( 0, 4, value ); }
     //inline void KernelParameterSet::setm( size_t index, const Matrix44f & value );
     //inline void KernelParameterSet::unset( size_t index );
 
@@ -803,7 +804,7 @@ namespace GN { namespace gfx
     //
     //
     // -----------------------------------------------------------------------------
-    inline StreamSource *  Kernel::getStream( const StrA & name ) const
+    inline StreamSource * Kernel::getStream( const StrA & name ) const
     {
         size_t index =  getStreamIndex( name );
         if( (size_t)-1 == index ) return 0;

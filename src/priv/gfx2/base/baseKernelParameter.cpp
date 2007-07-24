@@ -3,7 +3,7 @@
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernelParameter");
 
 // *****************************************************************************
-//
+// BaseKernelParameter
 // *****************************************************************************
 
 #define CHECK_INPUT( T ) \
@@ -131,20 +131,20 @@ GN::gfx::BaseKernelParameterSet::~BaseKernelParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelParameter *
+GN::gfx::KernelParameter &
 GN::gfx::BaseKernelParameterSet::get( size_t index )
 {
     GN_GUARD_SLOW;
 
     if( index >= mParameters.size() )
     {
-        GN_ERROR(sLogger)( "index is out of range." );
-        return 0;
+        GN_ERROR(sLogger)( "parameter index is out of range." );
+        return DummyKernelParameter::sGetInstance();
     }
 
     GN_ASSERT( mParameters[index] );
 
-    return mParameters[index];
+    return *mParameters[index];
 
     GN_UNGUARD_SLOW;
 }
