@@ -178,6 +178,106 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// simple kernel parameter that contains single typed value.
+    ///
+    template<typename T>
+    class SimpleKernelParameter : public KernelParameter
+    {
+        KernelParameterDesc mDesc;
+
+    public:
+
+        //@{
+
+        T value;
+
+        operator const T & () const { return value; }
+
+        SimpleKernelParameter( const KernelParameterDesc & desc, const T & initial ) : value(initial) { mDesc.name = desc.name; mDesc.type = desc.type; mDesc.count = desc.count; }
+        const KernelParameterDesc & getDesc() const { return mDesc; }
+        virtual void                setb( size_t, size_t, const bool         * ) { GN_UNEXPECTED(); }
+        virtual void                seti( size_t, size_t, const int          * ) { GN_UNEXPECTED(); }
+        virtual void                setf( size_t, size_t, const float        * ) { GN_UNEXPECTED(); }
+        virtual void                sets( size_t, size_t, const char * const * ) { GN_UNEXPECTED(); }
+        virtual void                unset() {}
+
+        //@}
+    };
+
+    ///
+    /// kernel parameter that represents boolean value.
+    ///
+    struct BoolKernelParameter : SimpleKernelParameter<bool>
+    {
+        //@{
+
+        BoolKernelParameter( const KernelParameterDesc & desc, bool initial )
+            : SimpleKernelParameter( desc, initial ) {}
+
+        void setb( size_t offset, size_t count, const bool * values )
+        {
+            if( 0 != offset || 1 != count || NULL == values )
+            {
+                GN_ERROR(getLogger("GN.gfx2.BoolKernelParameter"))( "invalid parameter value." );
+                return;
+            }
+
+            value = *values;
+        }
+
+        //@}
+    };
+
+    ///
+    /// kernel parameter that represents 32bit integer.
+    ///
+    template<typename T>
+    struct IntKernelParameter : SimpleKernelParameter<T>
+    {
+        //@{
+
+        IntKernelParameter( const KernelParameterDesc & desc, const T & initial )
+            : SimpleKernelParameter( desc, initial ) {}
+
+        void seti( size_t offset, size_t count, const int * values )
+        {
+            if( 0 != offset || 1 != count || NULL == values )
+            {
+                GN_ERROR(getLogger("GN.gfx2.IntKernelParameter"))( "invalid parameter value." );
+                return;
+            }
+
+            value = *values;
+        }
+
+        //@}
+    };
+
+    ///
+    /// kernel parameter that represents 32bit float.
+    ///
+    struct FloatKernelParameter : SimpleKernelParameter<float>
+    {
+        //@{
+
+        FloatKernelParameter( const KernelParameterDesc & desc, float initial )
+            : SimpleKernelParameter( desc, initial ) {}
+
+        void setf( size_t offset, size_t count, const float * values )
+        {
+            if( 0 != offset || 1 != count || NULL == values )
+            {
+                GN_ERROR(getLogger("GN.gfx2.FloatKernelParameter"))( "invalid parameter value." );
+                return;
+            }
+
+            value = *values;
+        }
+
+        //@}
+    };
+
+    ///
     /// structure to hold kernel parameter value
     ///
     class BaseKernelParameter : public KernelParameter

@@ -169,11 +169,11 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
     if( target.surf )
     {
         D3D9Texture * tex = safeCastPtr<D3D9Texture>(target.surf);
-        gfxsys().setTexture( mStage, tex->getSurface() );
+        d3d9gs().setTexture( mStage, tex->getSurface() );
     }
     else
     {
-        gfxsys().setTexture( mStage, 0 );
+        d3d9gs().setTexture( mStage, 0 );
     }
 }
 
@@ -244,7 +244,7 @@ bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 {
-    IDirect3DDevice9 * dev = gfxsys().d3ddev();
+    IDirect3DDevice9 * dev = d3d9gs().d3ddev();
 
     GN_ASSERT( target.surf );
 
@@ -353,5 +353,5 @@ void GN::gfx::D3D9IdxBufPort::bind( const SurfaceView & target ) const
 {
     GN_ASSERT( target.surf );
     D3D9IdxBuf * ib = safeCastPtr<D3D9IdxBuf>(target.surf);
-    gfxsys().d3ddev()->SetIndices( ib->getSurface() );
+    d3d9gs().d3ddev()->SetIndices( ib->getSurface() );
 }

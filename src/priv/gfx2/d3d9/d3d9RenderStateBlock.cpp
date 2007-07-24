@@ -252,14 +252,6 @@ void GN::gfx::D3D9RenderStateBlock::apply( const D3D9RenderStateBlock * last ) c
     }
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9RenderStateBlock::apply() const
-{
-    mGfxSys.setRenderStateBlock( *this );
-}
-
 // *****************************************************************************
 // private method
 // *****************************************************************************

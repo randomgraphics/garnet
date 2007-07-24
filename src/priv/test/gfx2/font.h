@@ -92,6 +92,32 @@ namespace GN { namespace test
         // ********************************
     private:
 
+        struct QuadVertex
+        {
+            //@{
+
+            float   x, y, z;    ///< position in normalized screen space, [0,0] is left-top corner, (1,1) is right-bottom corner
+            UInt8   r, g, b, a; ///< vertex color
+            float   u, v;       ///< texture coordinates
+            UInt32  _[2];       ///< padding to 32 bytes
+
+            void set( float x_, float y_, float z_, UInt8 r_, UInt8 g_, UInt8 b_, UInt8 a_, float u_, float v_ )
+            {
+                x = x_;
+                y = y_;
+                z = z_;
+                r = r_;
+                g = g_;
+                b = b_;
+                a = a_;
+                u = u_;
+                v = v_;
+            }
+
+            //@}
+        };
+        GN_CASSERT( 32 == sizeof(QuadVertex) );
+
         ///
         /// font slot structure.
         ///
@@ -161,8 +187,9 @@ namespace GN { namespace test
 
         GraphicsSystem            & mGfxSys;
 
-        QuadKernel                * mKernel;
-        QuadKernelParameterSet    * mKernelParam;
+        Kernel                    * mKernel;
+        StreamSource              * mStream;
+        KernelParameterSet        * mKernelParam;
         KernelPortBinding           mKernelPortBindings[MAX_TEXTURES];
 
         // font face data
@@ -185,7 +212,7 @@ namespace GN { namespace test
         CharInfo                  * mCharList[MAX_TEXTURES];
         size_t                      mNumChars[MAX_TEXTURES];
 
-        DynaArray<QuadKernelVertex> mQuadBuffer;
+        DynaArray<QuadVertex>       mQuadBuffer;
 
         // ********************************
         // private functions

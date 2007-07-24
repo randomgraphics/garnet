@@ -9,77 +9,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9ClearScreenKernel");
 
 namespace GN { namespace gfx
 {
-    template<typename T>
-    class SimpleParameter : public KernelParameter
-    {
-        KernelParameterDesc mDesc;
-
-    public:
-
-        //@{
-
-        T value;
-
-        operator const T & () const { return value; }
-
-        SimpleParameter( const KernelParameterDesc & desc, const T & initial ) : value(initial) { mDesc.name = desc.name; mDesc.type = desc.type; mDesc.count = desc.count; }
-        const KernelParameterDesc & getDesc() const { return mDesc; }
-        virtual void                setb( size_t, size_t, const bool         * ) { GN_UNEXPECTED(); }
-        virtual void                seti( size_t, size_t, const int          * ) { GN_UNEXPECTED(); }
-        virtual void                setf( size_t, size_t, const float        * ) { GN_UNEXPECTED(); }
-        virtual void                sets( size_t, size_t, const char * const * ) { GN_UNEXPECTED(); }
-        virtual void                unset() {}
-
-        //@}
-    };
-
-    template<typename T>
-    struct SimpleIntParameter : SimpleParameter<T>
-    {
-        //@{
-
-        SimpleIntParameter( const KernelParameterDesc & desc, const T & initial )
-            : SimpleParameter( desc, initial ) {}
-
-        void seti( size_t offset, size_t count, const int * values )
-        {
-            if( 0 != offset || 1 != count || NULL == values )
-            {
-                GN_ERROR(sLogger)( "invalid parameter value." );
-                return;
-            }
-
-            value = *values;
-        }
-
-        //@}
-    };
-
-    struct SimpleFloatParameter : SimpleParameter<float>
-    {
-        //@{
-
-        SimpleFloatParameter( const KernelParameterDesc & desc, float initial )
-            : SimpleParameter( desc, initial ) {}
-
-        void setf( size_t offset, size_t count, const float * values )
-        {
-            if( 0 != offset || 1 != count || NULL == values )
-            {
-                GN_ERROR(sLogger)( "invalid parameter value." );
-                return;
-            }
-
-            value = *values;
-        }
-
-        //@}
-    };
-
-    struct D3D9ColorParameter : public SimpleParameter<D3DCOLOR>
+    struct D3D9ColorParameter : public SimpleKernelParameter<D3DCOLOR>
     {
         D3D9ColorParameter( const KernelParameterDesc & desc, D3DCOLOR initial )
-            : SimpleParameter<D3DCOLOR>( desc, initial ) {}
+            : SimpleKernelParameter<D3DCOLOR>( desc, initial ) {}
 
         void setf( size_t offset, size_t count, const float * values )
         {
@@ -95,10 +28,10 @@ namespace GN { namespace gfx
 
     struct D3D9ClearScreenParameterSet : public KernelParameterSet
     {
-        SimpleIntParameter<DWORD> flags;
+        IntKernelParameter<DWORD> flags;
         D3D9ColorParameter        color;
-        SimpleFloatParameter      depth;
-        SimpleIntParameter<int>   stencil;
+        FloatKernelParameter      depth;
+        IntKernelParameter<int>   stencil;
 
         //@{
 
@@ -162,7 +95,7 @@ void GN::gfx::D3D9ClearScreenKernel::render( const KernelParameterSet & param, K
         flags = p.flags & ~(D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL);
     }
 
-    if( flags ) gfxsys().d3ddev()->Clear( 0, 0, flags, p.color, p.depth, p.stencil );
+    if( flags ) d3d9gs().d3ddev()->Clear( 0, 0, flags, p.color, p.depth, p.stencil );
 }
 
 // *****************************************************************************
