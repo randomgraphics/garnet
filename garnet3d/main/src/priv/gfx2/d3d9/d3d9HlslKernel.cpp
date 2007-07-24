@@ -28,21 +28,189 @@ struct D3D9DebugMuter
 namespace GN { namespace gfx
 {
     ///
+    /// FX parameter
+    ///
+    class D3D9FxParameter : public BaseKernelParameter
+    {
+        IDirect3DDevice9      * mDev;
+        AutoComPtr<ID3DXEffect> mFx;
+
+    public:
+
+        D3D9FxParameter( const KernelParameterDesc & desc, IDirect3DDevice9 * dev )
+            : BaseKernelParameter( desc )
+            , mDev( dev )
+        {
+        }
+
+        ID3DXEffect * operator->() const { GN_ASSERT( mFx ); return mFx; }
+
+        void sets( size_t offset, size_t count, const char * const * values )
+        {
+            if( 0 != offset || 1 != count || NULL == values )
+            {
+                GN_ERROR(getLogger("GN.gfx2.D3D9FxParameter"))( "invalid parameter value." );
+                return;
+            }
+
+            mFx.attach( d3d9::compileEffect( mDev, *values ) );
+        }
+
+        void unset() { mFx.clear(); }
+    };
+
+    ///
+    /// Const parameter
+    ///
+    class D3D9ConstParameter : public BaseKernelParameter
+    {
+        ///
+        /// record offset and range of shader const update
+        ///
+        struct ConstUpdate
+        {
+            //@{
+            UInt32 firstRegister;
+            UInt32 registerCount;
+            void clear() { firstRegister = 0; registerCount = 0; }
+            void merge( UInt32 f, UInt32 c )
+            {
+                if( 0 == registerCount )
+                {
+                    firstRegister = f;
+                    registerCount = c;
+                }
+                else
+                {
+                    firstRegister = min( firstRegister, f );
+                    registerCount = max( registerCount, c ) - firstRegister;
+                }
+            }
+            //@}
+        };
+
+        Vector4f     mConstants[256];
+        ConstUpdate  mUpdate;
+
+    public:
+
+        D3D9ConstParameter( const KernelParameterDesc & desc ) : BaseKernelParameter( desc ) { mUpdate.clear(); }
+
+        void setVscf( IDirect3DDevice9 * dev ) const
+        {
+            if( mUpdate.registerCount > 0 )
+            {
+                dev->SetVertexShaderConstantF(
+                    mUpdate.firstRegister,
+                    mConstants[mUpdate.firstRegister],
+                    mUpdate.registerCount );
+            }
+        }
+
+        void setPscf( IDirect3DDevice9 * dev ) const
+        {
+            if( mUpdate.registerCount > 0 )
+            {
+                dev->SetPixelShaderConstantF(
+                    mUpdate.firstRegister,
+                    mConstants[mUpdate.firstRegister],
+                    mUpdate.registerCount );
+            }
+        }
+
+        void setf( size_t offset, size_t count, const float * values )
+        {
+            if( offset >= 256*4 || (offset+count) > 256*4 || NULL == values )
+            {
+                GN_ERROR(sLogger)( "invalid parameter value." );
+                return;
+            }
+
+            UINT firstRegister = (UINT)offset / 4;
+            UINT numRegisters  = (UINT)count / 4;
+
+            mUpdate.merge( firstRegister, numRegisters );
+            memcpy( &mConstants[firstRegister], values, numRegisters * sizeof(float) * 4 );
+        }
+    };
+
+    ///
+    /// primitive type parameter
+    ///
+    class D3D9PrimTypeParameter : public TypedKernelParameter<D3DPRIMITIVETYPE>
+    {
+        static inline D3DPRIMITIVETYPE pt2d3d( int pt )
+        {
+            static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
+            {
+                D3DPT_POINTLIST,
+                D3DPT_LINELIST,
+                D3DPT_LINESTRIP,
+                D3DPT_TRIANGLELIST,
+                D3DPT_TRIANGLESTRIP,
+            };
+            if( pt > TRIANGLE_STRIP )
+            {
+                GN_ERROR(sLogger)( "invalid primitive type: %d", pt );
+                return D3DPT_FORCE_DWORD;
+            }
+            else
+            {
+                return sPrimMap[pt];
+            }
+        }
+
+    public:
+
+        D3D9PrimTypeParameter( const KernelParameterDesc & desc, D3DPRIMITIVETYPE initial )
+            : TypedKernelParameter<D3DPRIMITIVETYPE>( desc, initial )
+        {
+        }
+
+        void seti( size_t offset, size_t count, const int * values )
+        {
+            if( 0 != offset || 1 != count || NULL == values )
+            {
+                GN_ERROR(getLogger("GN.gfx2.D3D9PrimTypeParameter"))( "invalid parameter value." );
+                return;
+            }
+
+            value = pt2d3d( *values );
+        }
+    };
+
+    ///
     /// parameter set for D3D9 hlsl kernel
     ///
-    class D3D9HlslKernelParameterSet : public Hlsl9KernelParameterSet
+    class D3D9HlslKernelParameterSet : public KernelParameterSet
     {
+        IDirect3DDevice9                   * mDev;
+        D3D9FxParameter                      mFx;
+        D3D9ConstParameter                   mVscf, mPscf;
+        D3D9PrimTypeParameter                mPrimType;
+        IntKernelParameter<UINT>             mPrimCount;
+        IntKernelParameter<UINT>             mBaseVertex;
+        IntKernelParameter<UINT>             mBaseIndex;
+        IntKernelParameter<UINT>             mVertexCount;
+
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     public:
-        D3D9HlslKernelParameterSet( D3D9KernelBase & k )
-            : mDev( k.gfxsys().d3ddev() )
+        D3D9HlslKernelParameterSet( D3D9Kernel & k )
+            : KernelParameterSet( k )
+            , mDev( k.d3d9gs().d3ddev() )
+            , mFx( *k.getParameterDesc(0), k.d3d9gs().d3ddev() )
+            , mVscf( *k.getParameterDesc(1) )
+            , mPscf( *k.getParameterDesc(2) )
+            , mPrimType( *k.getParameterDesc(3), D3DPT_TRIANGLELIST )
+            , mPrimCount( *k.getParameterDesc(4), 0 )
+            , mBaseVertex( *k.getParameterDesc(5), 0 )
+            , mBaseIndex( *k.getParameterDesc(6), 0 )
+            , mVertexCount( *k.getParameterDesc(7), 0 )
         {
-            mVscfUpdate.clear();
-            mPscfUpdate.clear();
         }
         ~D3D9HlslKernelParameterSet() {}
         //@}
@@ -51,30 +219,6 @@ namespace GN { namespace gfx
         // public functions
         // ********************************
     public:
-
-        virtual void setFx( const StrA & s )
-        {
-            mFx.attach( d3d9::compileEffect( mDev, s.cptr(), s.size() ) );
-        }
-
-        virtual void setVSConstF( size_t firstRegister, size_t numRegisters, const float * data )
-        {
-            mVscfUpdate.merge( (UInt32)firstRegister, (UInt32)numRegisters );
-            memcpy( &mVscf[firstRegister], data, numRegisters * sizeof(float)*4 );
-        }
-
-        virtual void setPSConstF( size_t firstRegister, size_t numRegisters, const float * data )
-        {
-            mPscfUpdate.merge( (UInt32)firstRegister, (UInt32)numRegisters );
-            memcpy( &mPscf[firstRegister], data, numRegisters * sizeof(float)*4 );
-        }
-
-        virtual void setPrimType( PrimitiveType pt ) { mPrimType = pt2d3d( pt ); }
-        virtual void setPrimCount( size_t n ) { mPrimCount = (UINT)n; }
-        virtual void setBaseVertex( size_t n ) { mBaseVertex = (UINT)n; }
-        virtual void setBaseIndex( size_t n ) { mBaseIndex = (UINT)n; }
-        virtual void setVertexCount( size_t n ) { mVertexCount = (UINT)n; }
-
 
         void drawIndexed() const
         {
@@ -89,7 +233,9 @@ namespace GN { namespace gfx
                         mFx->CommitChanges();
                     }
 
-                    applyShaderConstants();
+                    // apply shader constants
+                    mVscf.setVscf( mDev );
+                    mPscf.setPscf( mDev );
 
                     GN_DX9_CHECK( mDev->DrawIndexedPrimitive(
                         mPrimType,
@@ -123,7 +269,9 @@ namespace GN { namespace gfx
                         mFx->CommitChanges();
                     }
 
-                    applyShaderConstants();
+                    // apply shader constants
+                    mVscf.setVscf( mDev );
+                    mPscf.setPscf( mDev );
 
                     GN_DX9_CHECK( mDev->DrawPrimitive(
                         mPrimType,
@@ -140,88 +288,21 @@ namespace GN { namespace gfx
             }
         }
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        ///
-        /// record offset and range of shader const update
-        ///
-        struct ConstUpdate
+        virtual KernelParameter & get( size_t index )
         {
-            //@{
-            UInt32 firstRegister;
-            UInt32 registerCount;
-            void clear() { firstRegister = 0; registerCount = 0; }
-            void merge( UInt32 f, UInt32 c )
+            switch( index )
             {
-                if( 0 == registerCount )
-                {
-                    firstRegister = f;
-                    registerCount = c;
-                }
-                else
-                {
-                    firstRegister = min( firstRegister, f );
-                    registerCount = max( registerCount, c ) - firstRegister;
-                }
-            }
-            //@}
-        };
-
-        IDirect3DDevice9      * mDev;
-        AutoComPtr<ID3DXEffect> mFx;
-        Vector4f                mVscf[256], mPscf[256];
-        ConstUpdate             mVscfUpdate, mPscfUpdate;
-        D3DPRIMITIVETYPE        mPrimType;
-        UINT                    mPrimCount;
-        UINT                    mBaseVertex;
-        UINT                    mBaseIndex;
-        UINT                    mVertexCount;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-
-        void applyShaderConstants() const
-        {
-            // apply shader constants
-            if( mVscfUpdate.registerCount > 0 )
-            {
-                mDev->SetVertexShaderConstantF(
-                    mVscfUpdate.firstRegister,
-                    mVscf[mVscfUpdate.firstRegister],
-                    mVscfUpdate.registerCount );
-            }
-            if( mPscfUpdate.registerCount > 0 )
-            {
-                mDev->SetPixelShaderConstantF(
-                    mPscfUpdate.firstRegister,
-                    mPscf[mPscfUpdate.firstRegister],
-                    mPscfUpdate.registerCount );
-            }
-        }
-
-        static inline D3DPRIMITIVETYPE pt2d3d( PrimitiveType pt )
-        {
-            static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
-            {
-                D3DPT_POINTLIST,
-                D3DPT_LINELIST,
-                D3DPT_LINESTRIP,
-                D3DPT_TRIANGLELIST,
-                D3DPT_TRIANGLESTRIP,
-            };
-            if( pt > TRIANGLE_STRIP )
-            {
-                GN_ERROR(sLogger)( "invalid primitive type: %d", pt );
-                return D3DPT_FORCE_DWORD;
-            }
-            else
-            {
-                return sPrimMap[pt];
+                case 0  : return mFx;
+                case 1  : return mVscf;
+                case 2  : return mPscf;
+                case 3  : return mPrimType;
+                case 4  : return mPrimCount;
+                case 5  : return mBaseVertex;
+                case 6  : return mBaseIndex;
+                case 7  : return mVertexCount;
+                default :
+                    GN_ERROR(sLogger)( "parameter index is out of range!" );
+                    return DummyKernelParameter::sGetInstance();
             }
         }
     };
@@ -235,7 +316,7 @@ namespace GN { namespace gfx
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
-    : D3D9KernelBaseT<Hlsl9Kernel>( gs )
+    : D3D9Kernel( KERNEL_NAME(), gs )
     , mRenderTarget0( gs, "TARGET0", 0 )
     , mRenderTarget1( gs, "TARGET1", 1 )
     , mRenderTarget2( gs, "TARGET2", 2 )
@@ -260,6 +341,16 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     , mIdxBuf( gs, "IDXBUF" )
     , mRsb( gs )
 {
+    // setup parameters
+    addParameter( "FX", KERNEL_PARAMETER_TYPE_STRING, 1 );
+    addParameter( "VSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
+    addParameter( "PSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
+    addParameter( "PRIM_TYPE", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "PRIM_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "BASE_VERTEX", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "BASE_INDEX", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "VERTEX_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
+
     // setup ports
     addPortRef( mRenderTarget0 );
     addPortRef( mRenderTarget1 );
@@ -313,7 +404,7 @@ void GN::gfx::D3D9HlslKernel::render(
     const D3D9HlslKernelParameterSet & p = safeCastRef<const D3D9HlslKernelParameterSet>(param);
 
     // restore to default render states
-    gfxsys().setRenderStateBlock( mRsb );
+    mRsb.apply();
 
     // do rendering
     if( b.hasIdxBuf() )

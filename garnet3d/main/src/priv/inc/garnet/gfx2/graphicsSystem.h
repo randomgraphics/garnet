@@ -785,21 +785,21 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     inline KernelParameter & KernelParameterSet::get( const StrA & name ) { return get( getKernel().getParameterIndex(name) ); }
-    //inline void KernelParameterSet::sets( size_t index, const char * value );
-    //inline void KernelParameterSet::seti( size_t index, int value );
+    inline void KernelParameterSet::sets( size_t index, const char * value ) { get(index).sets( 0, 1, &value ); }
+    inline void KernelParameterSet::seti( size_t index, int value ) { get(index).seti( 0, 1, &value ); }
     inline void KernelParameterSet::setu( size_t index, unsigned int value ) { get(index).seti( 0, 1, (const int*)&value ); }
-    //inline void KernelParameterSet::setf( size_t index, float value );
+    inline void KernelParameterSet::setf( size_t index, float value ) { get(index).setf( 0, 1, &value ); }
     inline void KernelParameterSet::setv( size_t index, const Vector4f & value ) { get(index).setf( 0, 4, value ); }
-    //inline void KernelParameterSet::setm( size_t index, const Matrix44f & value );
-    //inline void KernelParameterSet::unset( size_t index );
+    inline void KernelParameterSet::setm( size_t index, const Matrix44f & value ) { get(index).setf( 0, 16, value[0] ); }
+    inline void KernelParameterSet::unset( size_t index ) { get(index).unset(); }
 
-    //inline void KernelParameterSet::sets( const StrA & name, const char * value );
-    //inline void KernelParameterSet::seti( const StrA & name, int value );
+    inline void KernelParameterSet::sets( const StrA & name, const char * value ) { sets( getKernel().getParameterIndex(name), value ); }
+    inline void KernelParameterSet::seti( const StrA & name, int value ) { seti( getKernel().getParameterIndex(name), value ); }
     inline void KernelParameterSet::setu( const StrA & name, unsigned int value ) { setu( getKernel().getParameterIndex(name), value ); }
-    //inline void KernelParameterSet::setf( const StrA & name, float value );
+    inline void KernelParameterSet::setf( const StrA & name, float value ) { setf( getKernel().getParameterIndex(name), value ); }
     inline void KernelParameterSet::setv( const StrA & name, const Vector4f & value ) { setv( getKernel().getParameterIndex(name), value ); }
-    //inline void KernelParameterSet::setm( const StrA & name, const Matrix44f & value );
-    //inline void KernelParameterSet::unset( const StrA & name );
+    inline void KernelParameterSet::setm( const StrA & name, const Matrix44f & value ) { setm( getKernel().getParameterIndex(name), value ); }
+    inline void KernelParameterSet::unset( const StrA & name ) { unset( getKernel().getParameterIndex(name) ); }
 
     //
     //

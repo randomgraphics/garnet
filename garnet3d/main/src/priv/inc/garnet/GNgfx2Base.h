@@ -178,10 +178,9 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// simple kernel parameter that contains single typed value.
+    /// base kernel parameter.
     ///
-    template<typename T>
-    class SimpleKernelParameter : public KernelParameter
+    class BaseKernelParameter : public KernelParameter
     {
         KernelParameterDesc mDesc;
 
@@ -189,17 +188,36 @@ namespace GN { namespace gfx
 
         //@{
 
-        T value;
+        BaseKernelParameter( const KernelParameterDesc & desc ) { mDesc.name = desc.name; mDesc.type = desc.type; mDesc.count = desc.count; }
 
-        operator const T & () const { return value; }
-
-        SimpleKernelParameter( const KernelParameterDesc & desc, const T & initial ) : value(initial) { mDesc.name = desc.name; mDesc.type = desc.type; mDesc.count = desc.count; }
         const KernelParameterDesc & getDesc() const { return mDesc; }
         virtual void                setb( size_t, size_t, const bool         * ) { GN_UNEXPECTED(); }
         virtual void                seti( size_t, size_t, const int          * ) { GN_UNEXPECTED(); }
         virtual void                setf( size_t, size_t, const float        * ) { GN_UNEXPECTED(); }
         virtual void                sets( size_t, size_t, const char * const * ) { GN_UNEXPECTED(); }
-        virtual void                unset() {}
+        virtual void                unset() { GN_UNEXPECTED(); }
+
+        //@}
+    };
+
+    ///
+    /// kernel parameter that contains typed value
+    ///
+    template<typename T>
+    struct TypedKernelParameter : public BaseKernelParameter
+    {
+        //@{
+
+        T value;
+
+        operator const T & () const { return value; }
+
+        TypedKernelParameter( const KernelParameterDesc & desc, const T & initial )
+            : BaseKernelParameter(desc), value(initial)
+        {
+        }
+
+        virtual void unset() {}
 
         //@}
     };
@@ -207,12 +225,15 @@ namespace GN { namespace gfx
     ///
     /// kernel parameter that represents boolean value.
     ///
-    struct BoolKernelParameter : SimpleKernelParameter<bool>
+    struct BoolKernelParameter : TypedKernelParameter<bool>
     {
         //@{
 
         BoolKernelParameter( const KernelParameterDesc & desc, bool initial )
-            : SimpleKernelParameter( desc, initial ) {}
+            : TypedKernelParameter( desc, initial )
+        {
+            GN_ASSERT( desc.count == 1 );
+        }
 
         void setb( size_t offset, size_t count, const bool * values )
         {
@@ -232,12 +253,15 @@ namespace GN { namespace gfx
     /// kernel parameter that represents 32bit integer.
     ///
     template<typename T>
-    struct IntKernelParameter : SimpleKernelParameter<T>
+    struct IntKernelParameter : TypedKernelParameter<T>
     {
         //@{
 
         IntKernelParameter( const KernelParameterDesc & desc, const T & initial )
-            : SimpleKernelParameter( desc, initial ) {}
+            : TypedKernelParameter( desc, initial )
+        {
+            GN_ASSERT( desc.count == 1 );
+        }
 
         void seti( size_t offset, size_t count, const int * values )
         {
@@ -247,7 +271,7 @@ namespace GN { namespace gfx
                 return;
             }
 
-            value = *values;
+            value = (T)*values;
         }
 
         //@}
@@ -256,12 +280,15 @@ namespace GN { namespace gfx
     ///
     /// kernel parameter that represents 32bit float.
     ///
-    struct FloatKernelParameter : SimpleKernelParameter<float>
+    struct FloatKernelParameter : TypedKernelParameter<float>
     {
         //@{
 
         FloatKernelParameter( const KernelParameterDesc & desc, float initial )
-            : SimpleKernelParameter( desc, initial ) {}
+            : TypedKernelParameter( desc, initial )
+        {
+            GN_ASSERT( desc.count == 1 );
+        }
 
         void setf( size_t offset, size_t count, const float * values )
         {
@@ -275,120 +302,6 @@ namespace GN { namespace gfx
         }
 
         //@}
-    };
-
-    ///
-    /// structure to hold kernel parameter value
-    ///
-    class BaseKernelParameter : public KernelParameter
-    {
-        const KernelParameterDesc mDesc;
-        const size_t              mIndex; ///< index into kenel parameter array
-        DynaArray<UInt8*>         mData;
-        DynaArray<StrA>           mStr;
-        bool                      mEmpty;
-
-        const void * getData() const { return empty() ? 0 : mData.cptr(); }
-        const StrA * getString() const { return empty() ? 0 : mStr.cptr(); }
-
-    public:
-
-        ///
-        /// triggered right after the value is set
-        ///
-        Signal3< void, size_t /*index*/, size_t /*offset*/, size_t /*count*/ > sigValueSet;
-
-        ///
-        /// triggered right after the value is unset
-        ///
-        Signal1< void, size_t /*index*/ > sigValueUnset;
-
-        ///
-        /// ctor
-        ///
-        BaseKernelParameter( const KernelParameterDesc & desc, size_t index )
-            : mDesc( desc )
-            , mIndex( index )
-            , mEmpty( true )
-        {
-            if( KERNEL_PARAMETER_TYPE_STRING == mDesc.type )
-            {
-                mStr.resize( mDesc.count );
-            }
-            else
-            {
-                mData.resize( mDesc.count );
-            }
-        }
-
-        ///
-        /// check if parameter has valid value
-        ///
-        bool empty() const { return mEmpty; }
-
-        /// \name get parameter value
-        //@{
-        const bool         * toBool()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_BOOL == mDesc.type );   return (const bool*)getData(); }
-        const int          * toInt()    const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const int*)getData(); }
-        const unsigned int * toUInt()   const { GN_ASSERT( KERNEL_PARAMETER_TYPE_INT == mDesc.type );    return (const unsigned int*)getData(); }
-        const float        * toFloat()  const { GN_ASSERT( KERNEL_PARAMETER_TYPE_FLOAT == mDesc.type );  return (const float*)getData(); }
-        const StrA         * toString() const { GN_ASSERT( KERNEL_PARAMETER_TYPE_STRING == mDesc.type ); return getString(); }
-        //@}
-
-        // from parent class
-        //@{
-
-        virtual const KernelParameterDesc & getDesc() const { return mDesc; }
-        virtual void                        setb( size_t offset, size_t count, const bool         * values );
-        virtual void                        seti( size_t offset, size_t count, const int          * values );
-        virtual void                        setf( size_t offset, size_t count, const float        * values );
-        virtual void                        sets( size_t offset, size_t count, const char * const * values );
-        virtual void                        unset();
-        //@}
-    };
-
-    ///
-    /// base kernel parameter set
-    ///    
-    class BaseKernelParameterSet : public KernelParameterSet
-    {
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        BaseKernelParameterSet( BaseKernel & e );
-        virtual ~BaseKernelParameterSet();
-        //@}
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        ///
-        /// get untyped parameter by index
-        ///
-        virtual KernelParameter & get( size_t index );
-
-        ///
-        /// get typed parameter by index
-        ///
-        template<typename T>
-        T & getT( size_t index ) const { return safeCastRef<T>( get( index ) ); }
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        DynaArray<BaseKernelParameter*> mParameters;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
     };
 
     class BaseKernelPort : public NoCopy
@@ -443,7 +356,6 @@ namespace GN { namespace gfx
         virtual size_t                      getNumParameters() const { return mParameters.size(); }
         virtual size_t                      getParameterIndex( const StrA & name ) const { return mParameters.getIndex( name ); }
         virtual const KernelParameterDesc * getParameterDesc( size_t index ) const { return mParameters.get( index ); }
-        virtual KernelParameterSet        * createParameterSet();
 
         //@}
 

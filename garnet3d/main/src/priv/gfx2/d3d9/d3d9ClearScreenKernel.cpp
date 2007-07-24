@@ -9,10 +9,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9ClearScreenKernel");
 
 namespace GN { namespace gfx
 {
-    struct D3D9ColorParameter : public SimpleKernelParameter<D3DCOLOR>
+    struct D3D9ColorParameter : public TypedKernelParameter<D3DCOLOR>
     {
         D3D9ColorParameter( const KernelParameterDesc & desc, D3DCOLOR initial )
-            : SimpleKernelParameter<D3DCOLOR>( desc, initial ) {}
+            : TypedKernelParameter<D3DCOLOR>( desc, initial ) {}
 
         void setf( size_t offset, size_t count, const float * values )
         {

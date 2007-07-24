@@ -8,7 +8,6 @@
 
 #include "GNgfx.h"
 #include "gfx2/graphicsSystem.h"
-//#include "gfx2/buildInKernels.h"
 
 // *****************************************************************************
 //                                     EOF
