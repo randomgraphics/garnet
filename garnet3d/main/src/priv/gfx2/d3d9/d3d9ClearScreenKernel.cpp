@@ -28,7 +28,9 @@ namespace GN { namespace gfx
 
     struct D3D9ClearScreenParameterSet : public KernelParameterSet
     {
-        IntKernelParameter<DWORD> flags;
+        BoolKernelParameter       cc;
+        BoolKernelParameter       cd;
+        BoolKernelParameter       cs;
         D3D9ColorParameter        color;
         FloatKernelParameter      depth;
         IntKernelParameter<int>   stencil;
@@ -37,10 +39,12 @@ namespace GN { namespace gfx
 
         D3D9ClearScreenParameterSet( Kernel & k )
             : KernelParameterSet( k )
-            , flags( *k.getParameterDesc(0), D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL )
-            , color( *k.getParameterDesc(1), D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
-            , depth( *k.getParameterDesc(2), 1.0f )
-            , stencil( *k.getParameterDesc(3), 0 )
+            , cc( *k.getParameterDesc(0), true )
+            , cd( *k.getParameterDesc(1), true )
+            , cs( *k.getParameterDesc(2), true )
+            , color( *k.getParameterDesc(3), D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
+            , depth( *k.getParameterDesc(4), 1.0f )
+            , stencil( *k.getParameterDesc(5), 0 )
         {
         }
 
@@ -48,10 +52,12 @@ namespace GN { namespace gfx
         {
             switch( index )
             {
-                case 0  : return flags;
-                case 1  : return color;
-                case 2  : return depth;
-                case 3  : return stencil;
+                case 0  : return cc;
+                case 1  : return cd;
+                case 2  : return cs;
+                case 3  : return color;
+                case 4  : return depth;
+                case 5  : return stencil;
                 default :
                     GN_ERROR(sLogger)( "parameter index is out of range!" );
                     return DummyKernelParameter::sGetInstance();
@@ -85,14 +91,14 @@ void GN::gfx::D3D9ClearScreenKernel::render( const KernelParameterSet & param, K
 
     const D3D9ClearScreenParameterSet & p = safeCastRef<const D3D9ClearScreenParameterSet>( param );
 
-    DWORD flags;
+    DWORD flags = 0;
+
+    if( p.cc ) flags |= D3DCLEAR_TARGET;
+
     if( b.hasZBuf() )
     {
-        flags = p.flags;
-    }
-    else
-    {
-        flags = p.flags & ~(D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL);
+        if( p.cd ) flags |= D3DCLEAR_ZBUFFER;
+        if( p.cs ) flags |= D3DCLEAR_STENCIL;
     }
 
     if( flags ) d3d9gs().d3ddev()->Clear( 0, 0, flags, p.color, p.depth, p.stencil );
@@ -113,7 +119,9 @@ GN::gfx::D3D9ClearScreenKernel::D3D9ClearScreenKernel( D3D9GraphicsSystem & gs )
     addPortRef( mTarget0 );
     addPortRef( mDepth );
 
-    addParameter( "FLAGS", KERNEL_PARAMETER_TYPE_INT, 1 );
+    addParameter( "CLEAR_TARGET", KERNEL_PARAMETER_TYPE_BOOL, 1 );
+    addParameter( "CLEAR_DEPTH", KERNEL_PARAMETER_TYPE_BOOL, 1 );
+    addParameter( "CLEAR_STENCIL", KERNEL_PARAMETER_TYPE_BOOL, 1 );
     addParameter( "COLOR", KERNEL_PARAMETER_TYPE_FLOAT, 4 );
     addParameter( "DEPTH", KERNEL_PARAMETER_TYPE_FLOAT, 1 );
     addParameter( "STENCIL", KERNEL_PARAMETER_TYPE_INT, 1 );
