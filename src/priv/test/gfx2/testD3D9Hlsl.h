@@ -16,8 +16,8 @@ using namespace GN::util;
 ///
 class TestD3D9Hlsl : public Gfx2TestApp
 {
-    Hlsl9Kernel        * mKernel;
-    Hlsl9KernelParameterSet  * mParam;
+    Kernel             * mKernel;
+    KernelParameterSet * mParam;
     Surface            * mVtxBuf;
     Surface            * mIdxBuf;
     Surface            * mTexture;

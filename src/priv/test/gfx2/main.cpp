@@ -1,5 +1,5 @@
 #include "pch.h"
-//#include "testD3D9Hlsl.h"
+#include "testD3D9Hlsl.h"
 #include "font.h"
 
 using namespace GN;
@@ -52,7 +52,7 @@ struct ClearScreen
     }
 };
 
-static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & font/*, Gfx2TestApp & c*/ )
+static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & font, Gfx2TestApp & c )
 {
     while( 1 )
     {
@@ -70,7 +70,7 @@ static bool runcase( GraphicsSystem & gs, ClearScreen & cs, QuadKernelFont & fon
         cs.draw();
 
         // run test app
-        //c.draw(gs);
+        c.draw(gs);
 
         // draw some text
         font.drawText( L"GFX2 test application", 10, 10 );
@@ -93,9 +93,7 @@ static int run( GraphicsSystem & gs )
     ffd.height = 16;
     if( !font.init( ffd ) ) return -1;
 
-    runcase( gs, cs, font );
-
-    /*Gfx2TestApp * cases[] =
+    Gfx2TestApp * cases[] =
     {
         new TestD3D9Hlsl,
     };
@@ -117,7 +115,7 @@ static int run( GraphicsSystem & gs )
         cases[i] = 0;
 
         if( !next ) break;
-    }*/
+    }
 
     return 0;
 }

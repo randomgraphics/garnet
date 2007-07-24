@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// general kernel that accepts shader code as parameter
     ///
-    class D3D9HlslKernel : public D3D9KernelBaseT<Hlsl9Kernel>
+    class D3D9HlslKernel : public D3D9Kernel
     {
         D3D9RenderTargetPort mRenderTarget0;
         D3D9RenderTargetPort mRenderTarget1;
@@ -44,6 +44,11 @@ namespace GN { namespace gfx
         D3D9HlslKernel( D3D9GraphicsSystem & gs );
  
     public:
+
+        ///
+        /// kernel name
+        ///
+        static const char * KERNEL_NAME() { return "HLSL9"; }
 
         ///
         /// kernel factory

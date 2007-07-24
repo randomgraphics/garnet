@@ -20,18 +20,6 @@ GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelParameterSet * GN::gfx::BaseKernel::createParameterSet()
-{
-    GN_GUARD;
-
-    return new BaseKernelParameterSet( *this );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 const GN::gfx::KernelPortDesc * GN::gfx::BaseKernel::getPortDesc( size_t index ) const
 {
     if( index >= mPorts.size() )
