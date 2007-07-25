@@ -825,18 +825,20 @@ bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
 
     GN_ASSERT( mDesc.device );
 
+    HRESULT hr = mDesc.device->TestCooperativeLevel();
+    if( D3D_OK == hr ) return true;
+
+    GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
+
     for(;;)
     {
-        HRESULT hr = mDesc.device->TestCooperativeLevel();
-
         if( D3D_OK == hr )
         {
+            GN_INFO(sLogger)( "=================================================\n" );
             return true;
         }
         else if( D3DERR_DEVICENOTRESET == hr )
         {
-            GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
-
             // send dispose signal
             sigDeviceDispose();
 
@@ -846,9 +848,8 @@ bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
             // send restore signal
             if( !restoreDevice() ) return false;
 
-            GN_INFO(sLogger)( "=================================================\n" );
-
             // success
+            GN_INFO(sLogger)( "=================================================\n" );
             return true;
         }
         else if( D3DERR_DEVICELOST == hr )
@@ -860,8 +861,11 @@ bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
         {
             // fatal error
             GN_ERROR(sLogger)( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
+            GN_INFO(sLogger)( "=================================================\n" );
             return false;
         }
+
+        hr = mDesc.device->TestCooperativeLevel();
     }
 
     GN_UNGUARD;
