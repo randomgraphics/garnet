@@ -42,6 +42,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        //@{
+
         enum
         {
             NUM_VTXBUFS = 128,
@@ -56,6 +58,8 @@ namespace GN { namespace gfx
         virtual void                     onDispose() {}
 
         inline void                      draw();
+
+        //@}
 
         // ********************************
         // private variables

@@ -57,6 +57,9 @@ namespace GN { namespace gfx
         //@}
     };
 
+    ///
+    /// D3D9 render state block class
+    ///
     class GN_GFX2_D3D9_PUBLIC D3D9RenderStateBlock
     {
         struct StateValue

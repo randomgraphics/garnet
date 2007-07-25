@@ -304,6 +304,9 @@ namespace GN { namespace gfx
         //@}
     };
 
+    ///
+    /// base kernel port class
+    ///
     class BaseKernelPort : public NoCopy
     {
     public:
