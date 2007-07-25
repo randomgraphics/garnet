@@ -595,7 +595,7 @@ namespace GN { namespace gfx
         inline  StrA                        getParameterName( size_t index ) const; ///< return empty string, if index is invalid.
         virtual const KernelParameterDesc * getParameterDesc( size_t index ) const = 0;
         inline  const KernelParameterDesc * getParameterDesc( const StrA & name ) const;
-        virtual KernelParameterSet        * createParameterSet() = 0;
+        virtual KernelParameterSet        * createParameterSet() = 0; ///< create new parameter set
 
         //@}
 

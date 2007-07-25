@@ -1,0 +1,10 @@
+Import( 'GN' )
+sources = [
+    'drawThread.cpp',
+	'renderEngine.cpp',
+	'resourceCache.cpp',
+	'resourceLRU.cpp',
+	'resourceThread.cpp',
+	]
+r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+Return( 'r' )
