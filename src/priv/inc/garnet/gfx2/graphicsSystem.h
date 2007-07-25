@@ -753,6 +753,9 @@ namespace GN { namespace gfx
         UInt32 windowedHeight;
         bool   fullscr;
         bool   vsync;
+
+        bool operator==( const GraphicsSystemCreationParameter & rhs ) const { return 0 == memcmp( this, &rhs, sizeof(rhs) ); }
+        bool operator!=( const GraphicsSystemCreationParameter & rhs ) const { return 0 != memcmp( this, &rhs, sizeof(rhs) ); }
         //@}
     };
 

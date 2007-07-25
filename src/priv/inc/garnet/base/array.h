@@ -250,6 +250,21 @@ namespace GN
             }
         }
 
+        void doSwap( DynaArray & another )
+        {
+            T *    p = mElements;
+            size_t n = mCount;
+            size_t c = mCapacity;
+
+            mElements = another.mElements;
+            mCount    = another.mCount;
+            mCapacity = another.mCapacity;
+
+            another.mElements = p;
+            another.mCount    = n;
+            another.mCapacity = c;
+        }
+
         bool equal( const DynaArray & other ) const
         {
             if( mCount != other.mCount ) return false;
@@ -307,6 +322,7 @@ namespace GN
         void      resize( size_t count ) { doReserve( count ); mCount = count; }
         void      popBack() { if( mCount > 0 ) --mCount; }
         size_t    size() const { return mCount; }
+        void      swap( DynaArray & another ) { doSwap( another ); } ///< swap data with another array
         //@}
 
         /// \name common operators
