@@ -225,7 +225,7 @@ inline void GN::gfx::D3D9QuadStream::draw()
         0, // start index
         (UInt32)mNumQuads * 2 ); // prim count
 
-    mActiveVB = ( mActiveVB + 1 ) & 0x7F; // (n+1)%128;
+    mActiveVB = ( mActiveVB + 1 ) & (NUM_VTXBUFS-1); // (n+1) % NUM_VTXBUFS;
     mNumQuads = 0;
 }
 

@@ -825,37 +825,44 @@ bool GN::gfx::D3D9GraphicsSystem::handleDeviceLost()
 
     GN_ASSERT( mDesc.device );
 
-    HRESULT hr = mDesc.device->TestCooperativeLevel();
-    if( D3DERR_DEVICENOTRESET == hr )
+    for(;;)
     {
-        GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
+        HRESULT hr = mDesc.device->TestCooperativeLevel();
 
-        // send dispose signal
-        sigDeviceDispose();
+        if( D3D_OK == hr )
+        {
+            return true;
+        }
+        else if( D3DERR_DEVICENOTRESET == hr )
+        {
+            GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
 
-        // reset d3ddevice
-        GN_DX9_CHECK_RV( mDesc.device->Reset( &mDesc.pp ), false );
+            // send dispose signal
+            sigDeviceDispose();
 
-        // send restore signal
-        if( !restoreDevice() ) return false;
+            // reset d3ddevice
+            GN_DX9_CHECK_RV( mDesc.device->Reset( &mDesc.pp ), false );
 
-        GN_INFO(sLogger)( "=================================================\n" );
+            // send restore signal
+            if( !restoreDevice() ) return false;
+
+            GN_INFO(sLogger)( "=================================================\n" );
+
+            // success
+            return true;
+        }
+        else if( D3DERR_DEVICELOST == hr )
+        {
+            GN_INFO(sLogger)( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
+            ::Sleep( 2000 );
+        }
+        else
+        {
+            // fatal error
+            GN_ERROR(sLogger)( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
+            return false;
+        }
     }
-    else if( D3DERR_DEVICELOST == hr )
-    {
-        GN_INFO(sLogger)( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
-        ::Sleep( 2000 );
-        return false;
-    }
-    else if (D3D_OK != hr)
-    {
-        // fatal error
-        GN_ERROR(sLogger)( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
-        return false;
-    }
-
-    // success
-    return true;
 
     GN_UNGUARD;
 }
