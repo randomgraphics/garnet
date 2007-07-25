@@ -1058,6 +1058,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNtestD3D9',
 		    'GNtestD3D10',
 		    'GNtestEngine',
+		    'GNtestEngine2',
 		    'GNtestFt2',
 		    'GNtestGfx',
 		    'GNtestGfx2',

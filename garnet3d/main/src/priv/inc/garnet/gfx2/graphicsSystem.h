@@ -743,7 +743,7 @@ namespace GN { namespace gfx
     struct GraphicsSystemCreationParameter
     {
         //@{
-        FOURCC api;     ///< could be: 'OGL', 'DX9', 'DX10', 'XB2'
+        FOURCC api;     ///< could be: 'AUTO', 'OGL', 'DX9', 'DX10', 'XB2'
         UInt32 monitor; ///< monitor index. 0 is the first monitor.
         UInt32 fullscrWidth;
         UInt32 fullscrHeight;
