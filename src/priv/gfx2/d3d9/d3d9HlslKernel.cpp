@@ -30,17 +30,29 @@ namespace GN { namespace gfx
     ///
     /// FX parameter
     ///
-    class D3D9FxParameter : public BaseKernelParameter
+    class D3D9FxParameter : public BaseKernelParameter, public D3D9UnstableResource
     {
         IDirect3DDevice9      * mDev;
         AutoComPtr<ID3DXEffect> mFx;
 
     public:
 
-        D3D9FxParameter( const KernelParameterDesc & desc, IDirect3DDevice9 * dev )
+        D3D9FxParameter( const KernelParameterDesc & desc, D3D9GraphicsSystem & gs )
             : BaseKernelParameter( desc )
-            , mDev( dev )
+            , D3D9UnstableResource( gs )
+            , mDev( gs.d3ddev() )
         {
+        }
+
+        virtual bool onRestore()
+        {
+            if( mFx ) GN_DX9_CHECK_RV( mFx->OnResetDevice(), false );
+            return true;
+        }
+
+        virtual void onDispose()
+        {
+            if( mFx ) GN_DX9_CHECK( mFx->OnLostDevice() );
         }
 
         ID3DXEffect * operator->() const { GN_ASSERT( mFx ); return mFx; }
@@ -202,7 +214,7 @@ namespace GN { namespace gfx
         D3D9HlslKernelParameterSet( D3D9Kernel & k )
             : KernelParameterSet( k )
             , mDev( k.d3d9gs().d3ddev() )
-            , mFx( *k.getParameterDesc(0), k.d3d9gs().d3ddev() )
+            , mFx( *k.getParameterDesc(0), k.d3d9gs() )
             , mVscf( *k.getParameterDesc(1) )
             , mPscf( *k.getParameterDesc(2) )
             , mPrimType( *k.getParameterDesc(3), D3DPT_TRIANGLELIST )
