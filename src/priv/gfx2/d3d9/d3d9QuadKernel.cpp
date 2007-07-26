@@ -239,6 +239,7 @@ GN::gfx::D3D9QuadKernel::D3D9QuadKernel( D3D9GraphicsSystem & gs )
     , mTexture( gs, baseref(), "TEXTURE0", 0 )
     , mQuads( gs, baseref(), "QUADS" )
 {
+    GN_ASSERT( validate() );
 }
 
 //

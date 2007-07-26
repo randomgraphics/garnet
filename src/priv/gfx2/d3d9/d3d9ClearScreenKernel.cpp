@@ -115,4 +115,5 @@ GN::gfx::D3D9ClearScreenKernel::D3D9ClearScreenKernel( D3D9GraphicsSystem & gs )
     , mTarget0( gs, baseref(), "TARGET0", 0 )
     , mDepth( gs, baseref(), "DEPTH" )
 {
+    GN_ASSERT( validate() );
 }

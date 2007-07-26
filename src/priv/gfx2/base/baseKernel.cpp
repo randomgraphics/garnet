@@ -52,10 +52,6 @@ bool GN::gfx::BaseKernel::compatible( const Surface * surf, const StrA & portNam
     return port->compatible( surf );
 }
 
-// *****************************************************************************
-// protected methods
-// *****************************************************************************
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -72,4 +68,45 @@ void GN::gfx::BaseKernel::setPortRef( size_t index, BaseKernelPort & port )
 {
     GN_ASSERT( index <= mPorts.size() );
     mPorts[index] = &port;
+}
+
+// *****************************************************************************
+// protected methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BaseKernel::validate() const
+{
+    const KernelReflection & refl = getRefl();
+
+    if( &refl != &getKernelReflection( getName() ) )
+    {
+        GN_ERROR(sLogger)( "%s validate() failed : invalid kernel reflection reference.", getName().cptr() );
+        return false;
+    }
+
+    // check streams
+    for( size_t i = 0; i < refl.streams.size(); ++i )
+    {
+        if( !getStream( i ) )
+        {
+            GN_ERROR(sLogger)( "%s validate() failed : stream(%s) : null pointer.", getName().cptr(), refl.streams[i].name.cptr() );
+            return false;
+        }
+    }
+
+    // check ports
+    for( size_t i = 0; i < refl.ports.size(); ++i )
+    {
+        if( !getPort( refl.ports[i].name ) )
+        {
+            GN_ERROR(sLogger)( "%s validate() failed : port(%s) : null pointer.", getName().cptr(), refl.ports[i].name.cptr() );
+            return false;
+        }
+    }
+
+    // success
+    return true;
 }

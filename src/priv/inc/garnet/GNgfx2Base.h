@@ -209,6 +209,11 @@ namespace GN { namespace gfx
         ///
         BaseKernel & baseref() { return *this; }
 
+        ///
+        /// check validity of itself
+        ///
+        bool validate() const;
+
     private:
 
         const KernelReflection   & mRefl;
