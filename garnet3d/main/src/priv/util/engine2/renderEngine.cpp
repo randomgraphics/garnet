@@ -7,8 +7,6 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine");
 
-#pragma warning( disable : 4100 )
-
 // *****************************************************************************
 // local classes
 // *****************************************************************************
@@ -48,14 +46,63 @@ public:
 };
 
 ///
-/// kernel parameter loader
+/// kernel boolean parameter loader
 ///
-template<typename T, size_t COUNT>
-struct ParameterLoader : public GN::engine2::GraphicsResourceLoader
+template<size_t OFFSET, size_t COUNT>
+struct BoolParameterLoader : public DummyLoader
 {
-    size_t index;         ///< parameter index
-    T      values[COUNT]; ///< parameter value
+    size_t index;
+    bool   values[COUNT];
+
+    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( res.paramset );
+        res.paramset->get( index ).setb( OFFSET, COUNT, values );
+        return true;
+    }
 };
+
+///
+/// kernel float parameter loader
+///
+template<size_t OFFSET, size_t COUNT>
+struct FloatParameterLoader : public DummyLoader
+{
+    size_t index;
+    float  values[COUNT];
+
+    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( res.paramset );
+        res.paramset->get( index ).setf( OFFSET, COUNT, values );
+        return true;
+    }
+};
+
+/*
+        }
+        else if( KERNEL_PARAMETER_TYPE_INT == TYPE )
+        {
+            res.paramset->get( index ).seti( OFFSET, COUNT, values );
+        }
+        else if( KERNEL_PARAMETER_TYPE_FLOAT == TYPE )
+        {
+            res.paramset->get( index ).setf( OFFSET, COUNT, values );
+        }
+        else if( KERNEL_PARAMETER_TYPE_STRING == TYPE )
+        {
+            const char * str[COUNT];
+
+            for( size_t i = 0; i < COUNT; ++i ) str[i] = values[i].cstr();
+
+            res.paramset->get( index ).sets( OFFSET, COUNT, str );
+        }
+
+        return true;
+    }
+};*/
 
 // *****************************************************************************
 // local functions
@@ -114,6 +161,73 @@ static void sDisposeAllResources(
     }
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void sPrepareResource(
+    GN::engine2::RenderEngine::ResourceCache  & cache,
+    GN::engine2::RenderEngine::ResourceLRU    & lru,
+    GN::engine2::RenderEngine::ResourceThread & rt,
+    GN::engine2::GraphicsResource             * res )
+{
+    using namespace GN;
+    using namespace GN::engine2;
+
+    GN_ASSERT( res );
+    GN_ASSERT( cache.checkResource(res) );
+
+    GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
+
+    bool reload;
+
+    lru.realize( item, &reload );
+
+    GN_ASSERT( GRS_REALIZED == item->state );
+
+    if( reload )
+    {
+        // reload using last loader
+        GN_ASSERT( item->lastSubmittedLoader );
+        rt.submitResourceLoadingCommand( item, item->lastSubmittedLoader );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void sSetupWaitingListAndReferenceFence(
+    GN::engine2::RenderEngine::ResourceCache & cache,
+    GN::engine2::GraphicsResource            * res,
+    GN::engine2::DrawCommandHeader           & dr )
+{
+    using namespace GN;
+    using namespace GN::engine2;
+
+    GN_ASSERT( res );
+    GN_ASSERT( cache.checkResource(res) );
+
+    GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
+
+    GN_ASSERT( GRS_REALIZED == item->state );
+
+    // reference and update can't happen at same fence.
+    GN_ASSERT( item->lastReferenceFence != item->lastSubmissionFence );
+
+    if( item->lastSubmissionFence > item->lastReferenceFence )
+    {
+        // resource is updated after last time used. Now it is being used again.
+        // So we have to wait for completion of last update.
+        dr.resourceWaitingList[dr.resourceWaitingCount].resource = item;
+        dr.resourceWaitingList[dr.resourceWaitingCount].waitForUpdate = item->lastSubmissionFence;
+        dr.resourceWaitingCount++;
+    }
+
+    // note: this should be the only place to modify lastReferenceFence
+    item->lastReferenceFence = dr.fence;
+
+    GN_ASSERT( item->lastReferenceFence != item->lastSubmissionFence );
 }
 
 // *****************************************************************************
@@ -463,14 +577,44 @@ void GN::engine2::RenderEngine::updateResource(
 //
 // -----------------------------------------------------------------------------
 void GN::engine2::RenderEngine::draw(
-    const GraphicsResource * kernel,
-    const GraphicsResource * param,
-    const GraphicsResource * binding )
+    GraphicsResource * kernel,
+    GraphicsResource * param,
+    GraphicsResource * binding )
 {
     GN_GUARD_SLOW;
 
     RENDER_ENGINE_API();
-    GN_UNIMPL();
+
+    // check parameter
+    if( 0 == kernel || mResourceCache->checkResource( kernel ) || GRT_KERNEL != kernel->desc.type )
+    {
+        GN_ERROR(sLogger)( "invalid kernel resource" );
+        return;
+    }
+    if( 0 == param || mResourceCache->checkResource( param ) || GRT_PARAMETER_SET != param->desc.type )
+    {
+        GN_ERROR(sLogger)( "invalid parameter set resource" );
+        return;
+    }
+    if( 0 != binding && ( !mResourceCache->checkResource( binding ) || GRT_PORT_BINDING != binding->desc.type ) )
+    {
+        GN_ERROR(sLogger)( "invalid port binding resource" );
+        return;
+    }
+
+    // prepare resources, make sure that they are usable.
+    sPrepareResource( *mResourceCache, *mResourceLRU, *mResourceThread, kernel );
+    sPrepareResource( *mResourceCache, *mResourceLRU, *mResourceThread, param );
+    if( binding ) sPrepareResource( *mResourceCache, *mResourceLRU, *mResourceThread, binding );
+
+    // submit new draw command
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, kernel, param, binding );
+    if( 0 == dr ) return;
+
+    // setup resource waiting list, to make sure draw command happens after resource updating.
+    sSetupWaitingListAndReferenceFence( *mResourceCache, kernel, *dr );
+    sSetupWaitingListAndReferenceFence( *mResourceCache, param, *dr );
+    if( binding ) sSetupWaitingListAndReferenceFence( *mResourceCache, binding, *dr );
 
     GN_UNGUARD_SLOW;
 }
@@ -498,11 +642,82 @@ void GN::engine2::RenderEngine::present()
 // helpers
 // *****************************************************************************
 
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createSurface( const gfx::SurfaceCreationParameter & ) { GN_UNIMPL(); return 0; }
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream ) { GN_UNIMPL(); return 0; }
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::getKernel( const StrA & name ) { GN_UNIMPL(); return 0; }
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createParameterSet( const StrA & kernel ) { GN_UNIMPL(); return 0; }
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createPortBinding( const StrA & kernel, const gfx::KernelPortBindingDesc & ) { GN_UNIMPL(); return 0; }
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & creation )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name             = resname;
+    grd.type             = GRT_SURFACE;
+    grd.surface.creation = creation;
+
+    return createResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const StrA & kernel )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name         = resname;
+    grd.type         = GRT_PARAMETER_SET;
+    grd.param.kernel = kernel;
+
+    return createResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const StrA & kernel, const gfx::KernelPortBindingDesc & desc )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name           = resname;
+    grd.type           = GRT_PORT_BINDING;
+    grd.binding.kernel = kernel;
+    grd.binding.desc   = desc;
+
+    return createResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name          = strFormat( "stream %s::%s", kernel.cptr(), stream.cptr() );
+    grd.type          = GRT_STREAM;
+    grd.stream.kernel = kernel;
+    grd.stream.stream = stream;
+
+    return createResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::getKernel( const StrA & kernel )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name          = kernel;
+    grd.type          = GRT_KERNEL;
+    grd.kernel.kernel = kernel;
+
+    return createResource( grd );
+}
 
 // *****************************************************************************
 // ClearScreen class
@@ -513,15 +728,35 @@ GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createPortBinding( co
 // -----------------------------------------------------------------------------
 bool GN::engine2::ClearScreen::init( RenderEngine & re )
 {
+    GN_GUARD;
+
     mKernel = re.getKernel( "CLEAR_SCREEN" );
     if( 0 == mKernel ) return false;
 
-    mParam = re.createParameterSet( "CLEAR_SCREEN" );
+    mParam = re.createParameterSet( StrA::EMPTYSTR, "CLEAR_SCREEN" );
     if( 0 == mParam ) return false;
 
-    //mBinding = re.createPortBinding( "CLEAR_SCREEN" );
+    const gfx::KernelReflection & refl = gfx::getKernelReflection( "CLEAR_SCREEN" );
 
+    // get parameter index
+
+#define GET_INDEX( x ) \
+    x = refl.parameters.name2idx( #x ); \
+    if( (size_t)-1 == x ) return false;
+
+    GET_INDEX( CLEAR_COLOR   );
+    GET_INDEX( CLEAR_DEPTH   );
+    GET_INDEX( CLEAR_STENCIL );
+    GET_INDEX( COLOR         );
+    GET_INDEX( DEPTH         );
+    GET_INDEX( STENCIL       );
+
+#undef GET_INDEX
+
+    // success
     return true;
+
+    GN_UNGUARD;
 }
 
 //
@@ -531,11 +766,21 @@ void GN::engine2::ClearScreen::setClearColor( bool enabled, float r, float g, fl
 {
     GN_ASSERT( mParam );
 
-    GN_UNUSED_PARAM( enabled );
-    GN_UNUSED_PARAM( r );
-    GN_UNUSED_PARAM( g );
-    GN_UNUSED_PARAM( b );
-    GN_UNUSED_PARAM( a );
+    {
+        AutoRef< BoolParameterLoader<0,1> > loader( new BoolParameterLoader<0,1> );
+        loader->index = CLEAR_COLOR;
+        loader->values[0] = enabled;
+        mKernel->engine.updateResource( mParam, loader );
+    }
 
-    GN_UNIMPL();
+    if( enabled )
+    {
+        AutoRef< FloatParameterLoader<0,4> > loader( new FloatParameterLoader<0,4> );
+        loader->index = COLOR;
+        loader->values[0] = r;
+        loader->values[1] = g;
+        loader->values[2] = b;
+        loader->values[3] = a;
+        mKernel->engine.updateResource( mParam, loader );
+    }
 };

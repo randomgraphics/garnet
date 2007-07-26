@@ -2,6 +2,15 @@
 //
 // -----------------------------------------------------------------------------
 inline bool
+GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res ) const
+{
+    return checkResource( safeCastPtr<const GraphicsResourceItem>( res ) );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline bool
 GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResourceItem * item ) const
 {
     ScopeMutex<SpinLoop> lock(mResourceMutex);

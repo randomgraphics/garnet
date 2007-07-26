@@ -53,6 +53,7 @@ namespace GN { namespace engine2
         //@{
         GraphicsResourceItem * createResource( const GraphicsResourceDesc & );
         void                   deleteResource( GraphicsResourceItem * );
+        bool                   checkResource( const GraphicsResource * ) const;
         bool                   checkResource( const GraphicsResourceItem * ) const;
         GraphicsResourceItem * firstResource() const;
         GraphicsResourceItem * nextResource( const GraphicsResourceItem * ) const;

@@ -454,20 +454,20 @@ namespace GN { namespace gfx
         virtual KernelParameter & get( size_t index ) = 0; ///< return dummy parameter, if index is invalid.
         inline  KernelParameter & get( const StrA & name );
 
-        inline  void              sets( size_t index, const char * value );
         inline  void              seti( size_t index, int value );
         inline  void              setu( size_t index, unsigned int value );
         inline  void              setf( size_t index, float value );
         inline  void              setv( size_t index, const Vector4f & value );
         inline  void              setm( size_t index, const Matrix44f & value );
+        inline  void              sets( size_t index, const char * value );
         inline  void              unset( size_t index );
 
-        inline  void              sets( const StrA & name, const char * value );
         inline  void              seti( const StrA & name, int value );
         inline  void              setu( const StrA & name, unsigned int value );
         inline  void              setf( const StrA & name, float value );
         inline  void              setv( const StrA & name, const Vector4f & value );
         inline  void              setm( const StrA & name, const Matrix44f & value );
+        inline  void              sets( const StrA & name, const char * value );
         inline  void              unset( const StrA & name );
         //@}
 
