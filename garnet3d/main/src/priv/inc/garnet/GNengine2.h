@@ -48,8 +48,8 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         struct StreamDesc
         {
             //@{
-            StrA kernelName; ///< kernel name
-            StrA streamName; ///< stream name
+            StrA kernel; ///< kernel name
+            StrA stream; ///< stream name
             //@}
         } stream;
 
@@ -57,7 +57,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         struct ParameterSetDesc
         {
             //@{
-            StrA kernelName;
+            StrA kernel;
             //@}
         } parameterSet;
 
@@ -65,7 +65,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         struct PortBindingDesc
         {
             //@{
-            StrA kernelName;
+            StrA kernel;
             //@}
         } portBinding;
 
@@ -239,15 +239,25 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         // ********************************
     public:
 
-        /// createResource() and deleteResource() will stall rendering process.
-        /// Do not call them too frequently in hot path.
+        /// All these methods are executed asyncronizly, unless explicitly speficied.
         //@{
 
+        ///
+        /// create new resource
+        ///
         GraphicsResource * createResource( const GraphicsResourceDesc & desc );
-        void               deleteResource( GraphicsResource * );
+
+        ///
+        /// delete an exisiting resource.
+        ///
+        /// \note This function runs syncronizly. Do not call it too frequently in hot path.
+        ///
+        void deleteResource( GraphicsResource * );
 
         ///
         /// make sure a valid resource pointer
+        ///
+        /// \note This function runs syncronizly. Do not call it too frequently in hot path.
         ///
         bool checkResource( const GraphicsResource * ) const;
 
@@ -269,7 +279,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         //@}
 
         // ********************************
-        /// \name draw request management.
+        /// \name async. draw commands
         // ********************************
     public:
 
@@ -286,13 +296,6 @@ namespace GN { /** namespace for engine2 */ namespace engine2
     public:
 
         //@{
-
-        void clearScreen(
-            const Vector4f & c = Vector4f(0,0,0,1),
-            float z = 1.0f, UInt8 s = 0,
-            bool clearTarget = true,
-            bool clearDepth  = true,
-            bool clearStencil = true );
 
         GraphicsResource * createSurface( const gfx::SurfaceCreationParameter & );
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
@@ -356,7 +359,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         };
 
         FenceManager                    * mFenceManager;
-        ResourceCache           * mResourceCache;
+        ResourceCache                   * mResourceCache;
         ResourceLRU                     * mResourceLRU;
         DrawThread                      * mDrawThread;
         ResourceThread                  * mResourceThread;
@@ -373,10 +376,14 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
     };
 
+    // *************************************************************************
+    // helper classes and functions
+    // *************************************************************************
+
     ///
-    /// free graphics resource safely
+    /// delete graphics resource safely
     ///
-    inline void safeFreeGraphicsResource( GraphicsResource * & res )
+    inline void safeDeleteGraphicsResource( GraphicsResource * & res )
     {
         if( res )
         {
@@ -418,6 +425,55 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         /// arrow operator
         ///
         GraphicsResource * operator->() const { return get(); }
+    };
+
+    ///
+    /// helper class to use CLEAR_SCREEN kernel
+    ///
+    class ClearScreen
+    {
+        GraphicsResource * mKernel;
+        GraphicsResource * mParam;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        ClearScreen() : mKernel( 0 ), mParam( 0 )
+        {
+        }
+
+        ///
+        /// dtor
+        ///
+        ~ClearScreen()
+        {
+            safeDeleteGraphicsResource( mKernel );
+            safeDeleteGraphicsResource( mParam );
+        }
+
+        ///
+        /// initialize
+        ///
+        bool init( RenderEngine & re );
+
+        ///
+        /// do screen clear
+        ///
+        void draw( GraphicsResource * binding = 0 )
+        {
+            GN_ASSERT( mKernel );
+            mKernel->engine.draw( mKernel, mParam, binding );
+        }
+
+        /// \name setup clear properites
+        //@{
+
+        void setClearColor( bool enabled, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.0f );
+
+        //@}
+
     };
 }}
 
