@@ -22,8 +22,8 @@ namespace GN { namespace gfx
 
     public:
 
-        TransparentParameter( const KernelParameterDesc & desc, bool initial, D3D9RenderStateBlock & rsb )
-            : BoolKernelParameter( desc, initial )
+        TransparentParameter( bool initial, D3D9RenderStateBlock & rsb )
+            : BoolKernelParameter( initial )
             , mRsb( rsb )
         {
         }
@@ -76,7 +76,7 @@ namespace GN { namespace gfx
 
         D3D9QuadKernelParameterSet( D3D9Kernel & k )
             : KernelParameterSet( k )
-            , mTransparent( *k.getParameterDesc(0), true )
+            , mTransparent( true )
             , mRsb( k.d3d9gs() )
         {
             setDefaultRsb();
@@ -107,18 +107,14 @@ namespace GN { namespace gfx
 // D3D9QuadStream
 // *****************************************************************************
 
-GN::gfx::D3D9QuadStream::D3D9QuadStream( D3D9GraphicsSystem & gs, const char * name )
+GN::gfx::D3D9QuadStream::D3D9QuadStream( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
     : D3D9UnstableResource( gs )
 {
-    clear();
+    const StreamSourceReflection & refl = k.getRefl().streams[name];
 
-    mDesc.name = name;
-    mDesc.format.attribs[0].set( "POSITION",  0, FMT_FLOAT3 );
-    mDesc.format.attribs[1].set( "COLOR"   , 12, FMT_RGBA32 );
-    mDesc.format.attribs[2].set( "TEXCOORD", 16, FMT_FLOAT2 );
-    mDesc.format.count = 3;
-    mDesc.format.stride = 32;
-    mDesc.maxBytes = MAX_QUADS * sizeof(QuadVertex);
+    k.setStreamRef( refl.index, *this );
+
+    clear();
 }
 
 //
@@ -238,21 +234,11 @@ inline void GN::gfx::D3D9QuadStream::draw()
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9QuadKernel::D3D9QuadKernel( D3D9GraphicsSystem & gs )
     : D3D9Kernel( KERNEL_NAME(), gs )
-    , mTarget0( gs, "TARGET0", 0 )
-    , mDepth( gs, "DEPTH" )
-    , mTexture( gs, "TEXTURE0", 0 )
-    , mQuads( gs, "QUADS" )
+    , mTarget0( gs, baseref(), "TARGET0", 0 )
+    , mDepth  ( gs, baseref(), "DEPTH" )
+    , mTexture( gs, baseref(), "TEXTURE0", 0 )
+    , mQuads( gs, baseref(), "QUADS" )
 {
-    // setup ports
-    addPortRef( mTarget0 );
-    addPortRef( mDepth );
-    addPortRef( mTexture );
-
-    // setup streams
-    addStreamRef( mQuads );
-
-    // setup parameters
-    addParameter( "TRANSPARENT", KERNEL_PARAMETER_TYPE_BOOL, 1 );
 }
 
 //

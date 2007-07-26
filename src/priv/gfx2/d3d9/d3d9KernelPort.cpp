@@ -20,8 +20,8 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelPort" );
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
-    : D3D9KernelPort(gs,name)
+GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
+    : D3D9KernelPort(gs,k,name)
     , mStage( stage )
 {
     mDesc.portType    = D3D9_KERNEL_PORT_RENDER_TARGET;
@@ -53,12 +53,11 @@ void GN::gfx::D3D9RenderTargetPort::bind( const SurfaceView & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs, const char * name )
-    : D3D9KernelPort(gs,name)
+GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
+    : D3D9KernelPort(gs,k,name)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_DEPTH_BUFFER;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTS_DEPTH;
-    GN_UNIMPL_WARNING();
 }
 
 //
@@ -85,24 +84,12 @@ void GN::gfx::D3D9DepthBufferPort::bind( const SurfaceView & ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
-    : D3D9KernelPort(gs,name)
+GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
+    : D3D9KernelPort(gs,k,name)
     , mStage( stage )
 {
     mDesc.portType    = D3D9_KERNEL_PORT_TEXTURE;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX;
-
-    mDesc.input = true;
-    mDesc.output = false;
-
-    mDesc.layout.flags.u32 = 0;
-
-    // accept one attribute named "TEXEL"
-    mDesc.layout.flags.attributes = 1;
-    mDesc.layout.attributes = 1;
-    mDesc.layout.requiredAttributes.resize( 1 );
-    mDesc.layout.requiredAttributes[0].semantic.set( "TEXEL" );
-    mDesc.layout.requiredAttributes[0].offset = 0;
 }
 
 //
@@ -184,29 +171,12 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage )
-    : D3D9KernelPort(gs,name)
+GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
+    : D3D9KernelPort(gs,k,name)
     , mStage(stage)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_VTXBUF;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_VB;
-
-    mDesc.input = true;
-    mDesc.output = false;
-
-    mDesc.layout.flags.u32 = 0;
-
-    // 1D
-    mDesc.layout.flags.dim = 1;
-    mDesc.layout.dim = SURFACE_DIMENSION_1D;
-
-    // no mipmap
-    mDesc.layout.flags.levels = 1;
-    mDesc.layout.levels = 1;
-
-    // no multiple faces
-    mDesc.layout.flags.faces = 1;
-    mDesc.layout.faces = 1;
 }
 
 //
@@ -261,37 +231,11 @@ void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs, const char * name )
-    : D3D9KernelPort(gs,name)
+GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
+    : D3D9KernelPort(gs,k,name)
 {
     mDesc.portType    = D3D9_KERNEL_PORT_IDXBUF;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_IB;
-
-    mDesc.input = true;
-    mDesc.output = false;
-
-    mDesc.layout.flags.u32 = 0;
-
-    // 1D
-    mDesc.layout.flags.dim = 1;
-    mDesc.layout.dim = SURFACE_DIMENSION_1D;
-
-    // no mipmap
-    mDesc.layout.flags.levels = 1;
-    mDesc.layout.levels = 1;
-
-    // no multiple faces
-    mDesc.layout.flags.faces = 1;
-    mDesc.layout.faces = 1;
-
-    // accept 16-bits or 32-bits indices
-    mDesc.layout.flags.attributes = 1;
-    mDesc.layout.attributes = 1;
-    mDesc.layout.requiredAttributes.resize( 1 );
-    mDesc.layout.requiredAttributes[0].semantic.set( "INDEX" );
-    mDesc.layout.requiredAttributes[0].offset = 0;
-    mDesc.layout.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_16_UINT );
-    mDesc.layout.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_32_UINT );
 }
 
 //

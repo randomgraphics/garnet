@@ -408,25 +408,10 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     ///
-    /// stream source descriptor
-    ///
-    struct StreamSourceDesc
-    {
-        //@{
-        StrA                 name;     ///< stream name
-        SurfaceElementFormat format;   ///< element format
-        size_t               maxBytes; ///< max stream data size.
-        //@}
-    };
-
-    ///
     /// stream data source of kernel function
     ///
     struct StreamSource : public NoCopy
     {
-        //@{
-        virtual const StreamSourceDesc & getDesc() const = 0;
-
         ///
         /// push data into stream
         ///
@@ -436,7 +421,6 @@ namespace GN { namespace gfx
         /// get free/available bytes in stream
         ///
         virtual size_t freeBytes() const = 0;
-        //@}
     };
 
     // *************************************************************************
@@ -444,40 +428,16 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     ///
-    /// kernel parameter type
-    ///
-    enum KernelParameterType
-    {
-        //@{
-        KERNEL_PARAMETER_TYPE_BOOL,
-        KERNEL_PARAMETER_TYPE_INT,
-        KERNEL_PARAMETER_TYPE_FLOAT,
-        KERNEL_PARAMETER_TYPE_STRING,
-        //@}
-    };
-
-    ///
-    /// kernel parameter value descriptor
-    ///
-    struct KernelParameterDesc
-    {
-        StrA                name;  ///< parameter name
-        KernelParameterType type;  ///< value type
-        size_t              count; ///< array count
-    };
-
-    ///
     /// Kernel parameter
     ///
     struct KernelParameter : public NoCopy
     {
         //@{
-        virtual const KernelParameterDesc & getDesc() const = 0;
-        virtual void                        setb( size_t offset, size_t count, const bool         * values ) = 0;
-        virtual void                        seti( size_t offset, size_t count, const int          * values ) = 0;
-        virtual void                        setf( size_t offset, size_t count, const float        * values ) = 0;
-        virtual void                        sets( size_t offset, size_t count, const char * const * values ) = 0;
-        virtual void                        unset() = 0;
+        virtual void setb( size_t offset, size_t count, const bool         * values ) = 0;
+        virtual void seti( size_t offset, size_t count, const int          * values ) = 0;
+        virtual void setf( size_t offset, size_t count, const float        * values ) = 0;
+        virtual void sets( size_t offset, size_t count, const char * const * values ) = 0;
+        virtual void unset() = 0;
         //@}
     };
 
@@ -528,19 +488,6 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     ///
-    /// kernel port descriptor.
-    ///
-    struct KernelPortDesc
-    {
-        //@{
-        StrA                  name;       ///< port name
-        SurfaceLayoutTemplate layout;     ///< surface layout that the port accepts.
-        unsigned int          input  : 1; ///< non zero for input port
-        unsigned int          output : 1; ///< non zero for output port
-        //@}
-    };
-
-    ///
     /// define surface binding to kernel ports
     ///
     struct KernelPortBindingDesc
@@ -567,49 +514,36 @@ namespace GN { namespace gfx
         ///
         /// get kernel name
         ///
-        virtual const char                * getName() const = 0;
+        virtual const StrA         & getName() const = 0;
 
         ///
         /// do rendering, with user defined parameter set and binding.
         ///
         /// Note that some kernels accepts '0' as valid binding
         ///
-        virtual void                        render( const KernelParameterSet &, KernelPortBinding ) = 0;
+        virtual void                 render( const KernelParameterSet &, KernelPortBinding ) = 0;
 
         /// \name stream management
         //@{
 
-        virtual size_t                      getNumStreams() const = 0;
-        virtual size_t                      getStreamIndex( const StrA & name ) const = 0; ///< return -1, if name is invalid.
-        inline  StrA                        getStreamName( size_t index ) const; ///< return empty string, if index is invalid.
-        virtual StreamSource              * getStream( size_t index ) const = 0;
-        inline  StreamSource              * getStream( const StrA & name ) const;
+        virtual StreamSource       * getStream( size_t index ) const = 0;
+        inline  StreamSource       * getStream( const StrA & name ) const;
 
         //@}
 
         /// \name parameter management
         //@{
 
-        virtual size_t                      getNumParameters() const = 0;
-        virtual size_t                      getParameterIndex( const StrA & name ) const = 0; ///< return -1, if name is invalid.
-        inline  StrA                        getParameterName( size_t index ) const; ///< return empty string, if index is invalid.
-        virtual const KernelParameterDesc * getParameterDesc( size_t index ) const = 0;
-        inline  const KernelParameterDesc * getParameterDesc( const StrA & name ) const;
-        virtual KernelParameterSet        * createParameterSet() = 0; ///< create new parameter set
+        virtual KernelParameterSet * createParameterSet() = 0; ///< create new parameter set
 
         //@}
 
         //// \name port & binding management
         //@{
 
-        virtual size_t                      getNumPorts() const = 0;
-        virtual size_t                      getPortIndex( const StrA & name ) const = 0; ///< return -1, if name is invalid.
-        inline  StrA                        getPortName( size_t index ) const; ///< return empty string, if index is invalid.
-        virtual const KernelPortDesc      * getPortDesc( size_t index ) const = 0;
-        inline  const KernelPortDesc      * getPortDesc( const StrA & name ) const;
-        virtual bool                        compatible( const Surface * surf, const StrA & port ) const = 0;
-        virtual KernelPortBinding           createPortBinding( const KernelPortBindingDesc & ) = 0;
-        virtual void                        deletePortBinding( KernelPortBinding ) = 0;
+        virtual bool                 compatible( const Surface * surf, const StrA & port ) const = 0;
+        virtual KernelPortBinding    createPortBinding( const KernelPortBindingDesc & ) = 0;
+        virtual void                 deletePortBinding( KernelPortBinding ) = 0;
 
         //@}
     };
@@ -712,7 +646,6 @@ namespace GN { namespace gfx
 
         /// \name kernel management
         //@{
-
         virtual void     registerKernelFactory( const StrA & kernelName, KernelFactory factory, int quality = 100 ) = 0;
         virtual Kernel * getKernel( const StrA & name ) = 0;
         virtual void     deleteAllKernels() = 0;
@@ -734,8 +667,6 @@ namespace GN { namespace gfx
 
         //@}
     };
-
-    //@{
 
     ///
     /// graphics system creation parameters
@@ -781,13 +712,285 @@ namespace GN { namespace gfx
         //@}
     };
 
-    //@}
+    // *************************************************************************
+    // graphics system reflections
+    // *************************************************************************
+
+    //@{
+
+    ///
+    /// kernel parameter type
+    ///
+    enum KernelParameterType
+    {
+        //@{
+        KERNEL_PARAMETER_TYPE_BOOL,
+        KERNEL_PARAMETER_TYPE_INT,
+        KERNEL_PARAMETER_TYPE_FLOAT,
+        KERNEL_PARAMETER_TYPE_STRING,
+        //@}
+    };
+
+    struct KernelReflection;
+
+    ///
+    /// stream source reflection
+    ///
+    struct StreamSourceReflection
+    {
+        //@{
+        StrA                 kernel; ///< kernel name
+        StrA                 name;   ///< stream name
+        size_t               index;  ///< stream index
+        SurfaceElementFormat format; ///< element format
+        //@}
+    };
+
+    ///
+    /// kernel parameter reflection
+    ///
+    struct KernelParameterReflection
+    {
+        //@{
+        StrA                kernel; ///< kernel name
+        StrA                name;   ///< parameter name
+        size_t              index;  ///< parameter index
+        KernelParameterType type;   ///< value type
+        size_t              count;  ///< array count
+        //@}
+    };
+
+    ///
+    /// kernel port reflection
+    ///
+    struct KernelPortReflection
+    {
+        //@{
+        StrA                  kernel;     ///< kernel name
+        StrA                  name;       ///< port name
+        size_t                index;      ///< port index
+        SurfaceLayoutTemplate layout;     ///< surface layout that the port accepts.
+        unsigned int          input  : 1; ///< non zero for input port
+        unsigned int          output : 1; ///< non zero for output port
+        //@}
+    };
+
+    ///
+    /// kernel reflection, describe interface of the kernel
+    ///
+    struct KernelReflection
+    {
+        ///
+        /// array of items with unique name
+        ///
+        template<typename T>
+        class NamedArray
+        {
+            struct Item
+            {
+                StrA   name;
+                size_t index;
+                T      value;
+            };
+
+            StrA                  mLogPrefix;
+            DynaArray<Item>       mItems;
+            std::map<StrA,size_t> mNames;
+
+            const T * getByIndex( size_t index ) const
+            {
+                if( index >= mItems.size() )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    return 0;
+                }
+                return &mItems[index].value;
+            }
+
+            T * getByIndex( size_t index )
+            {
+                if( index >= mItems.size() )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    return 0;
+                }
+                return &mItems[index].value;
+            }
+
+            const T * getByName( const StrA & name ) const
+            {
+                std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+                if( mNames.end() == i )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    return 0;
+                }
+                return &mItems[i->second].value;
+            }
+
+            T * getByName( const StrA & name )
+            {
+                std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+                if( mNames.end() == i )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    return 0;
+                }
+                return &mItems[i->second].value;
+            }
+
+            const StrA & getNameByIndex( size_t index ) const
+            {
+                if( index >= mItems.size() )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    return StrA::EMPTYSTR;
+                }
+                return mItems[index].name;
+            }
+
+            size_t getIndexByName( const StrA & name ) const
+            {
+                std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+                if( mNames.end() == i )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    return (size_t)-1;
+                }
+                return i->second;
+            }
+
+            size_t doAdd( const StrA & name, const T & value )
+            {
+                GN_ASSERT( !name.empty() );
+                std::map<StrA,size_t>::const_iterator i = mNames.find( name );
+                if( mNames.end() != i )
+                {
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: name '%s' does exist already.", mLogPrefix.cptr(), name.cptr() );
+                    return (size_t)-1;
+                }
+
+                Item item;
+                item.name  = name;
+                item.index = mItems.size();
+                item.value = value;
+
+                mNames[name] = mItems.size();
+                mItems.append( item );
+
+                return item.index;
+            }
+
+        public:
+
+            //@{
+
+            NamedArray( const StrA & logPrefix ) : mLogPrefix(logPrefix)
+            {
+            }
+
+            ~NamedArray()
+            {
+            }
+
+            bool         empty() const { return mItems.empty(); }
+            size_t       size() const { GN_ASSERT( mItems.size() == mNames.size() ); return mItems.size(); }
+            const T    * find( size_t index ) const { return getByIndex( index ); }
+            const T    * find( const StrA & name ) const { return getByName( name ); }
+            const StrA & idx2name( size_t index ) const { return getNameByIndex( index ); }
+            size_t       name2idx( const StrA & name ) const { return getIndexByName( name ); }
+            size_t       add( const StrA & name, const T & value ) { return doAdd( name, value ); }
+
+            ///
+            /// this function does not allow invalid index
+            ///
+            const T    & at( size_t index ) const { GN_ASSERT( index < size() ); return mItems[index].value; }
+
+            ///
+            /// this function does not allow invalid name
+            ///
+            const T    & at( const StrA & name ) const { std::map<StrA,size_t>::const_iterator i = mNames.find(name); GN_ASSERT( mNames.end() != i ); return mItems[i->second].value; }
+
+            const T    & operator[]( size_t index ) const { return at(index); }
+
+            const T    & operator[]( const StrA & name ) const { return at(name); }
+
+            //@}
+        };
+
+        //@{
+        const StrA                            name;
+        NamedArray<StreamSourceReflection>    streams;
+        NamedArray<KernelParameterReflection> parameters;
+        NamedArray<KernelPortReflection>      ports;
+        //@}
+
+        ///
+        /// ctor
+        ///
+        KernelReflection( const StrA & name_ )
+            : name( name_ )
+            , streams( strFormat( "kernel '%s' : streams :", name.cptr() ) )
+            , parameters( strFormat( "kernel '%s' : parameters :", name.cptr() ) )
+            , ports( strFormat( "kernel '%s' : ports :", name.cptr() ) )
+        {
+        }
+
+        ///
+        /// check validity of itself.
+        ///
+        bool validate() const;
+
+        ///
+        /// add new stream into the reflection
+        ///
+        void addNewStream( const StrA & name, const SurfaceElementFormat & format );
+
+        ///
+        /// add new parameter into the reflection
+        ///
+        void addNewParameter( const StrA & name, KernelParameterType type, size_t count );
+
+        ///
+        /// add new portr into the reflection
+        ///
+        void addNewPort( const StrA & name, const SurfaceLayoutTemplate & layout, bool input, bool output );
+    };
+
+    ///
+    /// add new kernel reflection to global kernel registry.
+    ///
+    /// \note There's no way to delete a existing kernel
+    ///
+    void registerKernelReflection( const KernelReflection & refl );
+
+    ///
+    /// get reflection of specific kernel.
+    ///
+    /// \param kernelName
+    ///     Kernel name
+    /// \param success
+    ///     Optional. Setted to true, if returned a dummy relfection (aka. name is invalid).
+    /// \return
+    ///     dummy reflection for empty or invalid kernel name.
+    ///
+    const KernelReflection & getKernelReflection( const StrA & kernelName, bool * dummy = NULL );
+
+    ///
+    /// get reflection of specific kernel.
+    ///
+    inline const KernelReflection & getKernelReflection( const Kernel & k, bool * dummy = NULL ) { return getKernelReflection( k.getName(), dummy ); }
+
+    ///
+    /// check kernel name. Make sure it is valid.
+    ///
+    inline bool checkKernelName( const StrA & name ) { bool dummy; getKernelReflection( name, &dummy ); return !dummy; }
 
     // *************************************************************************
     // inline functions
     // *************************************************************************
 
-    inline KernelParameter & KernelParameterSet::get( const StrA & name ) { return get( getKernel().getParameterIndex(name) ); }
+    inline KernelParameter & KernelParameterSet::get( const StrA & name ) { return get( getKernelReflection(getKernel()).parameters.name2idx(name) ); }
     inline void KernelParameterSet::sets( size_t index, const char * value ) { get(index).sets( 0, 1, &value ); }
     inline void KernelParameterSet::seti( size_t index, int value ) { get(index).seti( 0, 1, &value ); }
     inline void KernelParameterSet::setu( size_t index, unsigned int value ) { get(index).seti( 0, 1, (const int*)&value ); }
@@ -796,42 +999,22 @@ namespace GN { namespace gfx
     inline void KernelParameterSet::setm( size_t index, const Matrix44f & value ) { get(index).setf( 0, 16, value[0] ); }
     inline void KernelParameterSet::unset( size_t index ) { get(index).unset(); }
 
-    inline void KernelParameterSet::sets( const StrA & name, const char * value ) { sets( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::seti( const StrA & name, int value ) { seti( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::setu( const StrA & name, unsigned int value ) { setu( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::setf( const StrA & name, float value ) { setf( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::setv( const StrA & name, const Vector4f & value ) { setv( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::setm( const StrA & name, const Matrix44f & value ) { setm( getKernel().getParameterIndex(name), value ); }
-    inline void KernelParameterSet::unset( const StrA & name ) { unset( getKernel().getParameterIndex(name) ); }
+    inline void KernelParameterSet::sets( const StrA & name, const char * value ) { sets( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::seti( const StrA & name, int value ) { seti( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::setu( const StrA & name, unsigned int value ) { setu( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::setf( const StrA & name, float value ) { setf( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::setv( const StrA & name, const Vector4f & value ) { setv( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::setm( const StrA & name, const Matrix44f & value ) { setm( getKernelReflection(getKernel()).parameters.name2idx(name), value ); }
+    inline void KernelParameterSet::unset( const StrA & name ) { unset( getKernelReflection(getKernel()).parameters.name2idx(name) ); }
 
     //
     //
     // -----------------------------------------------------------------------------
     inline StreamSource * Kernel::getStream( const StrA & name ) const
     {
-        size_t index =  getStreamIndex( name );
+        size_t index =  getKernelReflection( getName() ).streams.name2idx( name );
         if( (size_t)-1 == index ) return 0;
         return getStream( index );
-    }
-
-    //
-    //
-    // -----------------------------------------------------------------------------
-    const KernelParameterDesc * Kernel::getParameterDesc( const StrA & name ) const
-    {
-        size_t index =  getParameterIndex( name );
-        if( (size_t)-1 == index ) return 0;
-        return getParameterDesc( index );
-    }
-
-    //
-    //
-    // -----------------------------------------------------------------------------
-    const KernelPortDesc * Kernel::getPortDesc( const StrA & name ) const
-    {
-        size_t index = getPortIndex( name );
-        if( (size_t)-1 == index ) return 0;
-        return getPortDesc( index );
     }
 }}
 

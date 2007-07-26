@@ -1,9 +1,10 @@
 Import( 'GN' )
 sources = [
-    'baseGraphicsSystem.cpp',
-    'baseKernel.cpp',
-    'graphicsSystemCreator.cpp',
-    'surfaceLayoutTemplate.cpp',
+	'baseGraphicsSystem.cpp',
+	'baseKernel.cpp',
+	'graphicsSystemCreator.cpp',
+	'kernelRegistry.cpp',
+	'surfaceLayoutTemplate.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 if GN.conf['has_d3d9'] :

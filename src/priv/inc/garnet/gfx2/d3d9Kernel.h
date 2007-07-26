@@ -28,11 +28,11 @@ namespace GN { namespace gfx
     ///
     /// D3D9 kernel port descriptor
     ///
-    struct D3D9KernelPortDesc : public KernelPortDesc
+    struct D3D9KernelPortDesc
     {
         //@{
-        D3D9KernelPortType    portType;
-        D3D9SurfaceType       surfaceType;
+        D3D9KernelPortType portType;
+        D3D9SurfaceType    surfaceType;
         //@}
     };
 
@@ -52,9 +52,10 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9KernelPort( D3D9GraphicsSystem & gs, const char * name ) : mGraphicsSystem(gs)
+        D3D9KernelPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
+            : mGraphicsSystem(gs)
+            , BaseKernelPort( k, name )
         {
-            mDesc.name = name;
         }
 
         ///
@@ -82,7 +83,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9RenderTargetPort( D3D9GraphicsSystem & gs, const char * name, UInt32 stage );
+        D3D9RenderTargetPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -96,7 +97,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9DepthBufferPort( D3D9GraphicsSystem & gs, const char * name );
+        D3D9DepthBufferPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -112,7 +113,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9TexturePort( D3D9GraphicsSystem & gs, const char * name , UInt32 stage );
+        D3D9TexturePort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}
@@ -130,7 +131,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9VtxBufPort( D3D9GraphicsSystem & gs, const char * name , UInt32 stage );
+        D3D9VtxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage );
 
         //@{
         virtual bool compatible( const Surface * surf ) const;
@@ -146,7 +147,7 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        D3D9IdxBufPort( D3D9GraphicsSystem & gs, const char * name );
+        D3D9IdxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name );
         virtual bool compatible( const Surface * surf ) const;
         virtual void bind( const SurfaceView & ) const;
         //@}

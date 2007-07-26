@@ -11,8 +11,7 @@ namespace GN { namespace gfx
 {
     struct D3D9ColorParameter : public TypedKernelParameter<D3DCOLOR>
     {
-        D3D9ColorParameter( const KernelParameterDesc & desc, D3DCOLOR initial )
-            : TypedKernelParameter<D3DCOLOR>( desc, initial ) {}
+        D3D9ColorParameter( D3DCOLOR initial ) : TypedKernelParameter<D3DCOLOR>( initial ) {}
 
         void setf( size_t offset, size_t count, const float * values )
         {
@@ -39,12 +38,12 @@ namespace GN { namespace gfx
 
         D3D9ClearScreenParameterSet( Kernel & k )
             : KernelParameterSet( k )
-            , cc( *k.getParameterDesc(0), true )
-            , cd( *k.getParameterDesc(1), true )
-            , cs( *k.getParameterDesc(2), true )
-            , color( *k.getParameterDesc(3), D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
-            , depth( *k.getParameterDesc(4), 1.0f )
-            , stencil( *k.getParameterDesc(5), 0 )
+            , cc( true )
+            , cd( true )
+            , cs( true )
+            , color( D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
+            , depth( 1.0f )
+            , stencil( 0 )
         {
         }
 
@@ -113,16 +112,7 @@ void GN::gfx::D3D9ClearScreenKernel::render( const KernelParameterSet & param, K
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9ClearScreenKernel::D3D9ClearScreenKernel( D3D9GraphicsSystem & gs )
     : D3D9Kernel( KERNEL_NAME(), gs )
-    , mTarget0(gs,"TARGET0",0)
-    , mDepth(gs,"DEPTH")
+    , mTarget0( gs, baseref(), "TARGET0", 0 )
+    , mDepth( gs, baseref(), "DEPTH" )
 {
-    addPortRef( mTarget0 );
-    addPortRef( mDepth );
-
-    addParameter( "CLEAR_TARGET", KERNEL_PARAMETER_TYPE_BOOL, 1 );
-    addParameter( "CLEAR_DEPTH", KERNEL_PARAMETER_TYPE_BOOL, 1 );
-    addParameter( "CLEAR_STENCIL", KERNEL_PARAMETER_TYPE_BOOL, 1 );
-    addParameter( "COLOR", KERNEL_PARAMETER_TYPE_FLOAT, 4 );
-    addParameter( "DEPTH", KERNEL_PARAMETER_TYPE_FLOAT, 1 );
-    addParameter( "STENCIL", KERNEL_PARAMETER_TYPE_INT, 1 );
 }

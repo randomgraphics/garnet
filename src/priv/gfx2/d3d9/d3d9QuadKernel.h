@@ -21,7 +21,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D9QuadStream( D3D9GraphicsSystem & gs, const char * name );
+        D3D9QuadStream( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name );
         virtual ~D3D9QuadStream() { quit(); }
         //@}
 
@@ -51,7 +51,6 @@ namespace GN { namespace gfx
         };
 
         // from parents
-        virtual const StreamSourceDesc & getDesc() const { return mDesc; }
         virtual void                     push( const void * data, size_t bytes );
         virtual size_t                   freeBytes() const { return (MAX_QUADS - mNumQuads) * sizeof(QuadVertex); }
         virtual bool                     onRestore() { return true; }
@@ -75,7 +74,6 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( sizeof(QuadVertex) == 32 );
 
-        StreamSourceDesc                   mDesc;
         AutoComPtr<IDirect3DVertexBuffer9> mVtxBufs[NUM_VTXBUFS];
         size_t                             mActiveVB;
         size_t                             mNumQuads;
