@@ -51,9 +51,9 @@ namespace GN { namespace engine2
         enum
         {
             ///
-            /// maximum resources used per draw
+            /// draw will wait for at most 3 resources: 1 kernel, 1 parameter set and 1 binding
             ///
-            MAX_RESOURCES_PER_DRAW = 256
+            MAX_RESOURCES_PER_DRAW = 3
         };
 
         ///
@@ -72,8 +72,8 @@ namespace GN { namespace engine2
         DrawFunction func;
 
         //@{
-        ResourceWaitingItem resourceWaitingList[MAX_RESOURCES_PER_DRAW];
-        UInt32              resourceWaitingCount;
+        FixedArray<ResourceWaitingItem,MAX_RESOURCES_PER_DRAW> resourceWaitingList;
+        UInt32                                                 resourceWaitingCount;
         //@}
 
         ///

@@ -59,20 +59,21 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             //@{
             StrA kernel;
             //@}
-        } parameterSet;
+        } param;
 
         /// ...
         struct PortBindingDesc
         {
             //@{
-            StrA kernel;
+            StrA                       kernel;
+            gfx::KernelPortBindingDesc desc;
             //@}
-        } portBinding;
+        } binding;
 
         /// ...
         struct KernelDesc
         {
-            StrA name; ///< kernel name
+            StrA kernel; ///< kernel name
         } kernel;
 
         //@}
@@ -285,7 +286,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         //@{
 
-        void draw( const GraphicsResource * kernel, const GraphicsResource * param, const GraphicsResource * binding );
+        void draw( GraphicsResource * kernel, GraphicsResource * param, GraphicsResource * binding );
         void present();
 
         //@}
@@ -297,11 +298,12 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         //@{
 
-        GraphicsResource * createSurface( const gfx::SurfaceCreationParameter & );
+        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
+        GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
+        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const gfx::KernelPortBindingDesc & );
+
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
-        GraphicsResource * getKernel( const StrA & name );
-        GraphicsResource * createParameterSet( const StrA & kernel );
-        GraphicsResource * createPortBinding( const StrA & kernel, const gfx::KernelPortBindingDesc & );
+        GraphicsResource * getKernel( const StrA & kernel );
 
         //@}
 
@@ -434,6 +436,14 @@ namespace GN { /** namespace for engine2 */ namespace engine2
     {
         GraphicsResource * mKernel;
         GraphicsResource * mParam;
+
+        size_t
+            CLEAR_COLOR,
+            CLEAR_DEPTH,
+            CLEAR_STENCIL,
+            COLOR,
+            DEPTH,
+            STENCIL;
 
     public:
 
