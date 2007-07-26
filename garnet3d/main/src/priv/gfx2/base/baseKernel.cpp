@@ -2,36 +2,44 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseKernel");
 
+static const GN::gfx::KernelReflection & sGetNonDummyReflection( const char * name )
+{
+    bool dummy;
+    const GN::gfx::KernelReflection & refl = GN::gfx::getKernelReflection( name, &dummy );
+    if( dummy )
+    {
+        GN_UNEXPECTED();
+    }
+    return refl;
+}
+
 // *****************************************************************************
 // BaseKernel
 // *****************************************************************************
+
+GN::gfx::BaseKernel::BaseKernel( const char * name )
+    : mRefl( sGetNonDummyReflection( name ) )
+    , mStreams( mRefl.streams.size() )
+    , mPorts( mRefl.ports.size() )
+{
+    memset( mStreams.cptr(), 0, mStreams.size() * sizeof(void*) );
+    memset( mPorts.cptr(), 0, mPorts.size() * sizeof(void*) );
+}
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::StreamSource * GN::gfx::BaseKernel::getStream( size_t index ) const
 {
-    StreamSource * const * p = mStreams.get( index );
-    if( 0 == p ) return 0;
-    GN_ASSERT( *p );
-    return *p;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx::KernelPortDesc * GN::gfx::BaseKernel::getPortDesc( size_t index ) const
-{
-    if( index >= mPorts.size() )
+    if( index > mStreams.size() )
     {
-        GN_ERROR(sLogger)( "Port index is out of range." );
+        GN_ERROR(sLogger)( "stream index is out of range!" );
         return 0;
     }
-    const BaseKernelPort * p = mPorts.at( index );
 
-    GN_ASSERT( p );
+    GN_ASSERT( mStreams[index] );
 
-    return &p->getDesc();
+    return mStreams[index];
 }
 
 //
@@ -39,9 +47,9 @@ const GN::gfx::KernelPortDesc * GN::gfx::BaseKernel::getPortDesc( size_t index )
 // -----------------------------------------------------------------------------
 bool GN::gfx::BaseKernel::compatible( const Surface * surf, const StrA & portName ) const
 {
-    const BaseKernelPort * const * port = mPorts.get( portName );
+    const BaseKernelPort * port = getPort( portName );
     if( 0 == port ) return false;
-    return (*port)->compatible( surf );
+    return port->compatible( surf );
 }
 
 // *****************************************************************************
@@ -51,35 +59,17 @@ bool GN::gfx::BaseKernel::compatible( const Surface * surf, const StrA & portNam
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::BaseKernel::addStreamRef( StreamSource & stream )
+void GN::gfx::BaseKernel::setStreamRef( size_t index, StreamSource & stream )
 {
-    return mStreams.add( stream.getDesc().name, &stream );
+    GN_ASSERT( index <= mStreams.size() );
+    mStreams[index] = &stream;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::BaseKernel::addParameter(
-    const StrA        & name,
-    KernelParameterType type,
-    size_t              count )
+void GN::gfx::BaseKernel::setPortRef( size_t index, BaseKernelPort & port )
 {
-    GN_GUARD;
-
-    KernelParameterDesc desc;
-    desc.name  = name;
-    desc.type  = type;
-    desc.count = count;
-
-    return mParameters.add( name, desc );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-size_t GN::gfx::BaseKernel::addPortRef( BaseKernelPort & port )
-{
-    return mPorts.add( port.getDesc().name, &port );
+    GN_ASSERT( index <= mPorts.size() );
+    mPorts[index] = &port;
 }

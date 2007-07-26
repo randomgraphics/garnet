@@ -752,7 +752,7 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
         if( 0 == port ) return 0;
 
         // check layout compability
-        if( !port->getDesc().layout.compatible( scp.layout ) )
+        if( !port->getRefl().layout.compatible( scp.layout ) )
         {
             GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", sbp.port.cptr(), sbp.kernel.cptr() );
             return false;

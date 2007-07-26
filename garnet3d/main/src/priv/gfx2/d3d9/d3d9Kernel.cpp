@@ -57,14 +57,14 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const KernelPortBindingDesc & bindin
 
     StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
 
-    size_t numPorts = mKernel.getNumPorts();
+    size_t numPorts = mKernel.getRefl().ports.size();
     for( size_t i = 0; i < numPorts; ++i )
     {
         const D3D9KernelPort & port = mKernel.getPortT<D3D9KernelPort>( i );
 
         const D3D9KernelPortDesc & desc = port.getDesc();
 
-        const SurfaceView * view = sFindViewByName( desc.name, bindings );
+        const SurfaceView * view = sFindViewByName( port.getRefl().name, bindings );
 
         if( 0 == view || 0 == view->surf )
         {

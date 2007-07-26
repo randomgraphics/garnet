@@ -52,6 +52,8 @@ void GN::gfx::BaseGraphicsSystem::registerKernelFactory(
         GN_ERROR(sLogger)( "null factory for kernel %s.", name.cptr() );
         return;
     }
+    
+    if( !checkKernelName( name ) ) return;
 
     UInt32 h = mKernels.name2handle( name );
 
@@ -83,11 +85,15 @@ void GN::gfx::BaseGraphicsSystem::registerKernelFactory(
 // -----------------------------------------------------------------------------
 GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
 {
+    GN_GUARD;
+
+    if( !checkKernelName( name ) ) return 0;
+
     UInt32 h = mKernels.name2handle( name );
 
     if( 0 == h )
     {
-        GN_ERROR(sLogger)( "kernel named '%s' not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Factory for kernel '%s' is not found.", name.cptr() );
         return 0;
     }
 
@@ -103,6 +109,8 @@ GN::gfx::Kernel * GN::gfx::BaseGraphicsSystem::getKernel( const StrA & name )
     }
 
     return ei.instance;
+
+    GN_UNGUARD;
 }
 
 //

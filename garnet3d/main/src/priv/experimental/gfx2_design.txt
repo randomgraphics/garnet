@@ -9,6 +9,8 @@ forum:
     management routines. every kernel could define their own interface freely.
   - device/graphics data are stored in "surface" class, which can be read/write by both 
     host and graphics system.
+  - graphics system has a independent reflection system, that can be used to 
+    query informance and usage of kernels, which is thread safe.
 
 RESOLVED ISSUES
 ===============

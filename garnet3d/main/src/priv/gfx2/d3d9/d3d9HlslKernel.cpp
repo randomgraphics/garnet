@@ -37,9 +37,8 @@ namespace GN { namespace gfx
 
     public:
 
-        D3D9FxParameter( const KernelParameterDesc & desc, D3D9GraphicsSystem & gs )
-            : BaseKernelParameter( desc )
-            , D3D9UnstableResource( gs )
+        D3D9FxParameter( D3D9GraphicsSystem & gs )
+            : D3D9UnstableResource( gs )
             , mDev( gs.d3ddev() )
         {
         }
@@ -106,7 +105,7 @@ namespace GN { namespace gfx
 
     public:
 
-        D3D9ConstParameter( const KernelParameterDesc & desc ) : BaseKernelParameter( desc ) { mUpdate.clear(); }
+        D3D9ConstParameter() { mUpdate.clear(); }
 
         void setVscf( IDirect3DDevice9 * dev ) const
         {
@@ -174,8 +173,8 @@ namespace GN { namespace gfx
 
     public:
 
-        D3D9PrimTypeParameter( const KernelParameterDesc & desc, D3DPRIMITIVETYPE initial )
-            : TypedKernelParameter<D3DPRIMITIVETYPE>( desc, initial )
+        D3D9PrimTypeParameter( D3DPRIMITIVETYPE initial )
+            : TypedKernelParameter<D3DPRIMITIVETYPE>( initial )
         {
         }
 
@@ -214,14 +213,12 @@ namespace GN { namespace gfx
         D3D9HlslKernelParameterSet( D3D9Kernel & k )
             : KernelParameterSet( k )
             , mDev( k.d3d9gs().d3ddev() )
-            , mFx( *k.getParameterDesc(0), k.d3d9gs() )
-            , mVscf( *k.getParameterDesc(1) )
-            , mPscf( *k.getParameterDesc(2) )
-            , mPrimType( *k.getParameterDesc(3), D3DPT_TRIANGLELIST )
-            , mPrimCount( *k.getParameterDesc(4), 0 )
-            , mBaseVertex( *k.getParameterDesc(5), 0 )
-            , mBaseIndex( *k.getParameterDesc(6), 0 )
-            , mVertexCount( *k.getParameterDesc(7), 0 )
+            , mFx( k.d3d9gs() )
+            , mPrimType( D3DPT_TRIANGLELIST )
+            , mPrimCount( 0 )
+            , mBaseVertex( 0 )
+            , mBaseIndex( 0 )
+            , mVertexCount( 0 )
         {
         }
         ~D3D9HlslKernelParameterSet() {}
@@ -329,63 +326,30 @@ namespace GN { namespace gfx
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     : D3D9Kernel( KERNEL_NAME(), gs )
-    , mRenderTarget0( gs, "TARGET0", 0 )
-    , mRenderTarget1( gs, "TARGET1", 1 )
-    , mRenderTarget2( gs, "TARGET2", 2 )
-    , mRenderTarget3( gs, "TARGET3", 3 )
-    , mDepthBuffer( gs, "DEPTH" )
-    , mTexture0( gs, "TEXTURE0", 0 )
-    , mTexture1( gs, "TEXTURE1", 1 )
-    , mTexture2( gs, "TEXTURE2", 2 )
-    , mTexture3( gs, "TEXTURE3", 3 )
-    , mTexture4( gs, "TEXTURE4", 4 )
-    , mTexture5( gs, "TEXTURE5", 5 )
-    , mTexture6( gs, "TEXTURE6", 6 )
-    , mTexture7( gs, "TEXTURE7", 7 )
-    , mVtxBuf0( gs, "VTXBUF0", 0 )
-    , mVtxBuf1( gs, "VTXBUF1", 1 )
-    , mVtxBuf2( gs, "VTXBUF2", 2 )
-    , mVtxBuf3( gs, "VTXBUF3", 3 )
-    , mVtxBuf4( gs, "VTXBUF4", 4 )
-    , mVtxBuf5( gs, "VTXBUF5", 5 )
-    , mVtxBuf6( gs, "VTXBUF6", 6 )
-    , mVtxBuf7( gs, "VTXBUF7", 7 )
-    , mIdxBuf( gs, "IDXBUF" )
+    , mRenderTarget0( gs, baseref(), "TARGET0", 0 )
+    , mRenderTarget1( gs, baseref(), "TARGET1", 1 )
+    , mRenderTarget2( gs, baseref(), "TARGET2", 2 )
+    , mRenderTarget3( gs, baseref(), "TARGET3", 3 )
+    , mDepthBuffer( gs, baseref(), "DEPTH" )
+    , mTexture0( gs, baseref(), "TEXTURE0", 0 )
+    , mTexture1( gs, baseref(), "TEXTURE1", 1 )
+    , mTexture2( gs, baseref(), "TEXTURE2", 2 )
+    , mTexture3( gs, baseref(), "TEXTURE3", 3 )
+    , mTexture4( gs, baseref(), "TEXTURE4", 4 )
+    , mTexture5( gs, baseref(), "TEXTURE5", 5 )
+    , mTexture6( gs, baseref(), "TEXTURE6", 6 )
+    , mTexture7( gs, baseref(), "TEXTURE7", 7 )
+    , mVtxBuf0( gs, baseref(), "VTXBUF0", 0 )
+    , mVtxBuf1( gs, baseref(), "VTXBUF1", 1 )
+    , mVtxBuf2( gs, baseref(), "VTXBUF2", 2 )
+    , mVtxBuf3( gs, baseref(), "VTXBUF3", 3 )
+    , mVtxBuf4( gs, baseref(), "VTXBUF4", 4 )
+    , mVtxBuf5( gs, baseref(), "VTXBUF5", 5 )
+    , mVtxBuf6( gs, baseref(), "VTXBUF6", 6 )
+    , mVtxBuf7( gs, baseref(), "VTXBUF7", 7 )
+    , mIdxBuf( gs, baseref(), "IDXBUF" )
     , mRsb( gs )
 {
-    // setup parameters
-    addParameter( "FX", KERNEL_PARAMETER_TYPE_STRING, 1 );
-    addParameter( "VSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
-    addParameter( "PSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256 * 4 );
-    addParameter( "PRIM_TYPE", KERNEL_PARAMETER_TYPE_INT, 1 );
-    addParameter( "PRIM_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
-    addParameter( "BASE_VERTEX", KERNEL_PARAMETER_TYPE_INT, 1 );
-    addParameter( "BASE_INDEX", KERNEL_PARAMETER_TYPE_INT, 1 );
-    addParameter( "VERTEX_COUNT", KERNEL_PARAMETER_TYPE_INT, 1 );
-
-    // setup ports
-    addPortRef( mRenderTarget0 );
-    addPortRef( mRenderTarget1 );
-    addPortRef( mRenderTarget2 );
-    addPortRef( mRenderTarget3 );
-    addPortRef( mDepthBuffer );
-    addPortRef( mTexture0 );
-    addPortRef( mTexture1 );
-    addPortRef( mTexture2 );
-    addPortRef( mTexture3 );
-    addPortRef( mTexture4 );
-    addPortRef( mTexture5 );
-    addPortRef( mTexture6 );
-    addPortRef( mTexture7 );
-    addPortRef( mVtxBuf0 );
-    addPortRef( mVtxBuf1 );
-    addPortRef( mVtxBuf2 );
-    addPortRef( mVtxBuf3 );
-    addPortRef( mVtxBuf4 );
-    addPortRef( mVtxBuf5 );
-    addPortRef( mVtxBuf6 );
-    addPortRef( mVtxBuf7 );
-    addPortRef( mIdxBuf );
 }
 
 //
