@@ -350,6 +350,7 @@ GN::gfx::D3D9HlslKernel::D3D9HlslKernel( D3D9GraphicsSystem & gs )
     , mIdxBuf( gs, baseref(), "IDXBUF" )
     , mRsb( gs )
 {
+    GN_ASSERT( validate() );
 }
 
 //

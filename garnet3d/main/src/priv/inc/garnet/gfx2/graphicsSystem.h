@@ -801,7 +801,7 @@ namespace GN { namespace gfx
             {
                 if( index >= mItems.size() )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : index is out of range.", mLogPrefix.cptr() );
                     return 0;
                 }
                 return &mItems[index].value;
@@ -811,7 +811,7 @@ namespace GN { namespace gfx
             {
                 if( index >= mItems.size() )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : index is out of range.", mLogPrefix.cptr() );
                     return 0;
                 }
                 return &mItems[index].value;
@@ -822,7 +822,7 @@ namespace GN { namespace gfx
                 std::map<StrA,size_t>::const_iterator i = mNames.find( name );
                 if( mNames.end() == i )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                     return 0;
                 }
                 return &mItems[i->second].value;
@@ -833,7 +833,7 @@ namespace GN { namespace gfx
                 std::map<StrA,size_t>::const_iterator i = mNames.find( name );
                 if( mNames.end() == i )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                     return 0;
                 }
                 return &mItems[i->second].value;
@@ -843,7 +843,7 @@ namespace GN { namespace gfx
             {
                 if( index >= mItems.size() )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: index is out of range.", mLogPrefix.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : index is out of range.", mLogPrefix.cptr() );
                     return StrA::EMPTYSTR;
                 }
                 return mItems[index].name;
@@ -854,7 +854,7 @@ namespace GN { namespace gfx
                 std::map<StrA,size_t>::const_iterator i = mNames.find( name );
                 if( mNames.end() == i )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : invalid name '%s'.", mLogPrefix.cptr(), name.cptr() );
                     return (size_t)-1;
                 }
                 return i->second;
@@ -866,7 +866,7 @@ namespace GN { namespace gfx
                 std::map<StrA,size_t>::const_iterator i = mNames.find( name );
                 if( mNames.end() != i )
                 {
-                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s: name '%s' does exist already.", mLogPrefix.cptr(), name.cptr() );
+                    GN_ERROR(getLogger("GN.gfx2.NamedArray"))( "%s : name '%s' does exist already.", mLogPrefix.cptr(), name.cptr() );
                     return (size_t)-1;
                 }
 
@@ -930,9 +930,9 @@ namespace GN { namespace gfx
         ///
         KernelReflection( const StrA & name_ )
             : name( name_ )
-            , streams( strFormat( "kernel '%s' : streams :", name.cptr() ) )
-            , parameters( strFormat( "kernel '%s' : parameters :", name.cptr() ) )
-            , ports( strFormat( "kernel '%s' : ports :", name.cptr() ) )
+            , streams( strFormat( "kernel '%s' streams", name.cptr() ) )
+            , parameters( strFormat( "kernel '%s' parameters", name.cptr() ) )
+            , ports( strFormat( "kernel '%s' ports", name.cptr() ) )
         {
         }
 

@@ -26,7 +26,6 @@ GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs, Ba
 {
     mDesc.portType    = D3D9_KERNEL_PORT_RENDER_TARGET;
     mDesc.surfaceType = D3D9_SURFACE_TYPE_RTT_2D;
-    GN_UNIMPL_WARNING();
 }
 
 //

@@ -82,13 +82,13 @@ struct KernelRegistry
         streamFormat.count = 3;
         streamFormat.stride = 32;
 
-        KernelReflection QUADS( "QUADS" );
-        QUADS.addNewStream( "QUADS", streamFormat );
-        QUADS.addNewParameter( "TRANSPARENT", KERNEL_PARAMETER_TYPE_BOOL, 1 );
-        QUADS.addNewPort( "TARGET0", rendertarget, true, true );
-        QUADS.addNewPort( "DEPTH", depth, true, true );
-        QUADS.addNewPort( "TEXTURE0", texture, true, false );
-        registerKernelReflection( QUADS );
+        KernelReflection QUAD( "QUAD" );
+        QUAD.addNewStream( "QUADS", streamFormat );
+        QUAD.addNewParameter( "TRANSPARENT", KERNEL_PARAMETER_TYPE_BOOL, 1 );
+        QUAD.addNewPort( "TARGET0", rendertarget, true, true );
+        QUAD.addNewPort( "DEPTH", depth, true, true );
+        QUAD.addNewPort( "TEXTURE0", texture, true, false );
+        registerKernelReflection( QUAD );
 
         // hlsl9 kernel
         KernelReflection HLSL9( "HLSL9" );
@@ -173,7 +173,7 @@ void GN::gfx::KernelReflection::addNewParameter( const StrA & name, KernelParame
 
     r.kernel = this->name;
     r.name   = name;
-    r.index  = streams.size();
+    r.index  = parameters.size();
     r.type   = type;
     r.count  = count;
 
@@ -193,7 +193,7 @@ void GN::gfx::KernelReflection::addNewPort(
 
     r.kernel = this->name;
     r.name   = name;
-    r.index  = streams.size();
+    r.index  = ports.size();
     r.layout = layout;
     r.input  = input;
     r.output = output;
@@ -234,6 +234,8 @@ GN::gfx::getKernelReflection( const StrA & kernelName, bool * dummy )
 
     if( 0 == h )
     {
+        GN_ERROR(sLogger)( "invalid kernel name: %s.", kernelName.cptr() );
+
         static KernelReflection sDummy( "DUMMY" );
 
         GN_ASSERT( sDummy.validate() );
