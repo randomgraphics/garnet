@@ -10,8 +10,87 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine");
 #pragma warning( disable : 4100 )
 
 // *****************************************************************************
+// local classes
+// *****************************************************************************
+
+///
+/// dummy loader that does nothing.
+///
+class DummyLoader : public GN::engine2::GraphicsResourceLoader
+{
+protected:
+
+    DummyLoader() {}
+    ~DummyLoader() {}
+
+public:
+
+    static DummyLoader * sGetInstance()
+    {
+        static GN::AutoRef<DummyLoader> sInstance( new DummyLoader );
+        return sInstance;
+    }
+
+    virtual bool load( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    bool decompress( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, const GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool copy( GN::engine2::GraphicsResource &, const GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+};
+
+///
+/// kernel parameter loader
+///
+template<typename T, size_t COUNT>
+struct ParameterLoader : public GN::engine2::GraphicsResourceLoader
+{
+    size_t index;         ///< parameter index
+    T      values[COUNT]; ///< parameter value
+};
+
+// *****************************************************************************
 // local functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteAllResources(
+    GN::engine2::RenderEngine::ResourceCache & cache,
+    GN::engine2::RenderEngine::ResourceLRU   & lru,
+    GN::engine2::RenderEngine::DrawThread    & dt )
+{
+    GN_GUARD;
+
+    using namespace GN::engine2;
+
+    for( GraphicsResourceItem * item = cache.firstResource();
+         item;
+         item = cache.nextResource( item ) )
+    {
+        // dispose it first
+        lru.dispose( item );
+        dt.submitResourceDisposingCommand( item );
+        dt.waitForIdle();
+
+        // then remove from LRU
+        lru.remove( item );
+
+        // finally, delete from cache
+        cache.deleteResource( item );
+    }
+
+    GN_UNGUARD;
+}
 
 //
 //
@@ -177,12 +256,10 @@ void GN::engine2::RenderEngine::quit()
 
     RENDER_ENGINE_API();
 
-    // dispose all resources
     if( ok() )
     {
-        sDisposeAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
-        mResourceThread->waitForIdle();
-        mDrawThread->waitForIdle();
+        // delete all resources
+        sDeleteAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
     }
 
     safeDelete( mDrawThread );
@@ -202,11 +279,11 @@ void GN::engine2::RenderEngine::quit()
 // -----------------------------------------------------------------------------
 void GN::engine2::RenderEngine::clear()
 {
+    mFenceManager = 0;
     mResourceCache = 0;
     mResourceLRU = 0;
-    mDrawThread = 0;
     mResourceThread = 0;
-    mFenceManager = 0;
+    mDrawThread = 0;
 }
 
 // *****************************************************************************
@@ -224,7 +301,6 @@ bool GN::engine2::RenderEngine::reset( const gfx::GraphicsSystemCreationParamete
 
     // dispose all graphics resources
     sDisposeAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
-    mResourceThread->waitForIdle();
     mDrawThread->waitForIdle();
 
     // do reset
@@ -296,10 +372,9 @@ void GN::engine2::RenderEngine::deleteResource( GraphicsResource * res )
 
     if( !mResourceCache->checkResource( item ) ) return;
 
-    // TODO: check if the resource is using by current context.
-
     // dispose it first
     mResourceLRU->dispose( item );
+    mDrawThread->submitResourceDisposingCommand( item );
     mDrawThread->waitForIdle();
 
     // then remove from LRU
@@ -423,7 +498,44 @@ void GN::engine2::RenderEngine::present()
 // helpers
 // *****************************************************************************
 
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createSurface( const gfx::SurfaceCreationParameter & ) { GN_UNIMPL(); return 0; }
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream ) { GN_UNIMPL(); return 0; }
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::getKernel( const StrA & name ) { GN_UNIMPL(); return 0; }
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createParameterSet( const StrA & kernel ) { GN_UNIMPL(); return 0; }
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::createPortBinding( const StrA & kernel, const gfx::KernelPortBindingDesc & ) { GN_UNIMPL(); return 0; }
+
+// *****************************************************************************
+// ClearScreen class
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::engine2::ClearScreen::init( RenderEngine & re )
+{
+    mKernel = re.getKernel( "CLEAR_SCREEN" );
+    if( 0 == mKernel ) return false;
 
+    mParam = re.createParameterSet( "CLEAR_SCREEN" );
+    if( 0 == mParam ) return false;
+
+    //mBinding = re.createPortBinding( "CLEAR_SCREEN" );
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine2::ClearScreen::setClearColor( bool enabled, float r, float g, float b, float a )
+{
+    GN_ASSERT( mParam );
+
+    GN_UNUSED_PARAM( enabled );
+    GN_UNUSED_PARAM( r );
+    GN_UNUSED_PARAM( g );
+    GN_UNUSED_PARAM( b );
+    GN_UNUSED_PARAM( a );
+
+    GN_UNIMPL();
+};
