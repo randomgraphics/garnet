@@ -18,8 +18,6 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9GraphicsSystem");
 
-bool gD3D9EnablePixPerf = true;
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -883,7 +881,8 @@ GN::gfx::createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & gscp 
 {
     GN_GUARD;
 
-    GN_ASSERT( GN_MAKE_FOURCC('D','X','9',0) == gscp.api.u32 );
+    GN_ASSERT( GN_MAKE_FOURCC('D','X','9', 0 ) == gscp.api.u32 ||
+               GN_MAKE_FOURCC('A','U','T','O') == gscp.api.u32 );
 
     AutoObjPtr<D3D9GraphicsSystem> gs( new D3D9GraphicsSystem );
 

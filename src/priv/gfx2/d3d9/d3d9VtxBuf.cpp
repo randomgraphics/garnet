@@ -35,14 +35,6 @@ GN::gfx::D3D9VtxBuf * GN::gfx::D3D9VtxBuf::sNewInstance(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9VtxBuf::~D3D9VtxBuf()
-{
-    safeRelease( mSurface );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 const GN::gfx::SubSurfaceLayout *
 GN::gfx::D3D9VtxBuf::getSubSurfaceLayout( size_t subsurface ) const
 {

@@ -70,6 +70,168 @@ void GN::Mutex::unlock()
 }
 
 // *****************************************************************************
+// SyncEventGroup class
+// *****************************************************************************
+
+///
+/// sync event group on MS Windows.
+///
+class SyncEventGroupMsw : public SyncEventGroup, public StdClass
+{
+    GN_DECLARE_STDCLASS( SyncEventGroupMsw, StdClass );
+
+    // ********************************
+    // ctor/dtor
+    // ********************************
+
+    //@{
+public:
+    SyncEventGroupMsw()          { clear(); }
+    virtual ~SyncEventGroupMsw() { quit(); }
+    //@}
+
+    // ********************************
+    // from StdClass
+    // ********************************
+
+    //@{
+public:
+    bool init( size_t count, bool initialSignaled, bool autoreset, const char * name )
+    {
+        GN_GUARD;
+
+        // standard init procedure
+        GN_STDCLASS_INIT( SyncEventMsw, () );
+
+        if( count < 1 || count > 32 )
+        {
+            GN_ERROR(sLogger)( "count must be in range [1,32]." );
+            return failure();
+        }
+
+        for( size_t i = 0; i < count; ++i )
+        {
+            GN_MSW_CHECK_RV(
+                mHandles[i] = CreateEventA( 0, !autoreset, initialSignaled, name ),
+                failure() );
+        }
+
+        mCount     = count;
+        mAutoReset = autoreset;
+
+        // success
+        return success();
+
+        GN_UNGUARD;
+    }
+    void quit()
+    {
+        GN_GUARD;
+
+        for( int i = 0; i < GN_ARRAY_COUNT(mHandles); ++i )
+        {
+            if( mHandles[i] )
+            {
+                CloseHandle( mHandles[i] );
+                mHandles[i] = 0;
+            }
+        }
+
+        // standard quit procedure
+        GN_STDCLASS_QUIT();
+
+        GN_UNGUARD;
+    }
+private:
+    void clear() { memset( mHandles, 0, sizeof(mHandles) ); }
+    //@}
+
+    // ********************************
+    // from SyncEvent
+    // ********************************
+public:
+
+    virtual size_t count() const { return mCount; }
+    virtual bool   autoreset() const { return mAutoReset; }
+
+    virtual void signal( size_t index )
+    {
+        if( index >= mCount )
+        {
+            GN_ERROR(sLogger)( "invalid event index." );
+            return;
+        }
+
+        GN_ASSERT( mHandles[index] );
+
+        GN_MSW_CHECK( SetEvent( mHandles[index] ) );
+    }
+
+    virtual void unsignal( size_t index )
+    {
+        if( index >= mCount )
+        {
+            GN_ERROR(sLogger)( "invalid event index." );
+            return;
+        }
+
+        GN_ASSERT( mHandles[index] );
+
+        GN_MSW_CHECK( ResetEvent( mHandles[index] ) );
+    }
+
+    virtual bool wait( size_t index, float seconds )
+    {
+        if( index >= mCount )
+        {
+            GN_ERROR(sLogger)( "invalid event index." );
+            return false;
+        }
+
+        GN_ASSERT( mHandles[index] );
+
+        return WAIT_OBJECT_0 == WaitForSingleObject( mHandles[index], sec2usec( seconds ) );
+    }
+
+    virtual int waitAny( float seconds )
+    {
+        DWORD result = WaitForMultipleObjects( (DWORD)mCount, mHandles, false, sec2usec( seconds ) );
+
+        if( WAIT_OBJECT_0 <= result && result < (WAIT_OBJECT_0+mCount) )
+        {
+            return result - WAIT_OBJECT_0;
+        }
+        else if( WAIT_ABANDONED_0 <= result && result < (WAIT_ABANDONED_0+mCount) )
+        {
+            return result - WAIT_ABANDONED_0;
+        }
+        else if( WAIT_TIMEOUT == result )
+        {
+            return -1;
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "WaitForMultipleObjects() failed: %s", getOSErrorInfo() );
+            return -1;
+        }
+    }
+
+    // ********************************
+    // private variables
+    // ********************************
+private:
+
+    HANDLE mHandles[32];
+    size_t mCount;
+    bool   mAutoReset;
+
+    // ********************************
+    // private functions
+    // ********************************
+private:
+};
+
+// *****************************************************************************
 // syncevent class
 // *****************************************************************************
 
@@ -252,6 +414,26 @@ private:
 // *****************************************************************************
 // public functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::SyncEventGroup * GN::createSyncEventGroup(
+    size_t       count,
+    bool         initialSignaled,
+    bool         autoreset,
+    const char * name )
+{
+    GN_GUARD;
+
+    AutoObjPtr<SyncEventGroupMsw> s( new SyncEventGroupMsw );
+
+    if( !s->init( count, initialSignaled, autoreset, name ) ) return 0;
+
+    return s.detach();
+
+    GN_UNGUARD;
+}
 
 //
 //

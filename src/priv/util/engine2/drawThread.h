@@ -61,6 +61,7 @@ namespace GN { namespace engine2
         bool resetGraphicsSystem( const gfx::GraphicsSystemCreationParameter & );
         const gfx::GraphicsSystemCreationParameter & getGraphicsSystemCreationParameter() const { return mGraphicsSystemCreationParameter; }
         const gfx::GraphicsSystemDesc & getGraphicsSystemDesc() const { return mGraphicsSystemDesc; }
+        gfx::GraphicsSystem * getGraphicsSystem() const { return mGraphicsSystemCreater.get(); }
         //@}
 
         //@{
@@ -79,6 +80,11 @@ namespace GN { namespace engine2
         /// wait until specific resource is processed by both resource and draw thread
         ///
         void waitForResource( GraphicsResourceItem * item );
+
+        ///
+        /// do per-frame performance evaluation
+        ///
+        void profileFrameTime() { mFrameProfiler.nextFrame(); }
 
         //@}
 
@@ -226,7 +232,7 @@ namespace GN { namespace engine2
         // ********************************
     private:
 
-        void submitDrawBuffer(); // called by any threads other than draw thead.
+        void flushDrawBuffer(); // called by any threads other than draw thead.
 
         // methods runs in draw thread
         UInt32 threadProc( void * );

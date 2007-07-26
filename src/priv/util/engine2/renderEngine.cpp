@@ -409,7 +409,7 @@ void GN::engine2::RenderEngine::present()
 
     RENDER_ENGINE_API();
 
-    GN_UNIMPL();
+    mDrawThread->present();
 
     // profile frame time
 #if GN_PROFILE_ENABLED
