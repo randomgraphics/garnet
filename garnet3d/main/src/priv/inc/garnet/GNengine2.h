@@ -290,7 +290,9 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         void clearScreen(
             const Vector4f & c = Vector4f(0,0,0,1),
             float z = 1.0f, UInt8 s = 0,
-            BitFields flags = gfx::CLEAR_ALL );
+            bool clearTarget = true,
+            bool clearDepth  = true,
+            bool clearStencil = true );
 
         GraphicsResource * createSurface( const gfx::SurfaceCreationParameter & );
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );

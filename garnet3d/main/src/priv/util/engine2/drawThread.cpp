@@ -29,11 +29,13 @@ namespace GN { namespace engine2
     //
     //
     // -------------------------------------------------------------------------
-    static void DRAWFUNC_PRESENT( RenderEngine &, const void *, size_t )
+    static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
     {
-        // dummy function.
-        // program should not reach here.
-        GN_UNEXPECTED();
+        re.drawThread().getGraphicsSystem()->present();
+
+#if GN_PROFILE_ENABLED
+        re.drawThread().profileFrameTime();
+#endif
     }
 }};
 
@@ -226,7 +228,7 @@ bool GN::engine2::RenderEngine::DrawThread::resetGraphicsSystem( const gfx::Grap
 void GN::engine2::RenderEngine::DrawThread::waitForIdle( float time )
 {
     // flush pending draw commands
-    submitDrawBuffer();
+    flushDrawBuffer();
 
     if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time );
 
@@ -241,7 +243,7 @@ void GN::engine2::RenderEngine::DrawThread::waitForIdle( float time )
 // -----------------------------------------------------------------------------
 void GN::engine2::RenderEngine::DrawThread::waitForResource( GraphicsResourceItem * item )
 {
-    submitDrawBuffer();
+    flushDrawBuffer();
 
     while( item->lastCompletedFence < item->lastSubmissionFence )
     {
@@ -256,7 +258,7 @@ void GN::engine2::RenderEngine::DrawThread::waitForResource( GraphicsResourceIte
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::submitDrawBuffer()
+void GN::engine2::RenderEngine::DrawThread::flushDrawBuffer()
 {
     // must not be called in draw thread
     GN_ASSERT( !mDrawThread->isCurrentThread() );
@@ -330,8 +332,8 @@ UInt32 GN::engine2::RenderEngine::DrawThread::threadProc( void * )
         }
     }
 
-    // delete Renderer
-    GN::gfx::deleteRenderer();
+    // destroy graphics system
+    mGraphicsSystemCreater.destroy();
 
     // quit thread
     return 0;
@@ -379,21 +381,9 @@ void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
 
         if( 0 == command->resourceWaitingCount )
         {
-            if( &DRAWFUNC_PRESENT == command->func )
-            {
-                // do present
-                mGraphicsSystemCreater.get()->present();
-
-#if GN_PROFILE_ENABLED
-                mFrameProfiler.nextFrame();
-#endif
-            }
-            else
-            {
-                // all resources are ready. do it!
-                GN_ASSERT( command->func );
-                command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
-            }
+            // all resources are ready. do it!
+            GN_ASSERT( command->func );
+            command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
 
             // update draw fence
             mCompletedDrawFence = command->fence;
@@ -501,7 +491,14 @@ bool GN::engine2::RenderEngine::DrawThread::doGraphicsSystemReset()
         mNewGraphicsSystemCreationParameter != mGraphicsSystemCreationParameter )
     {
         if( !mGraphicsSystemCreater.create( mNewGraphicsSystemCreationParameter ) ) return false;
+
         mGraphicsSystemCreationParameter = mNewGraphicsSystemCreationParameter;
+        mGraphicsSystemDesc              = mGraphicsSystemCreater.get()->getDesc();
+
+        if( gInputPtr )
+        {
+            gInput.attachToWindow( mGraphicsSystemDesc.display, mGraphicsSystemDesc.window );
+        }
     }
 
     return true;

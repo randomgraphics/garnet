@@ -13,6 +13,19 @@ static GN::gfx::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx::Graphi
 //
 //
 // -----------------------------------------------------------------------------
+static UInt32 sDetermineGraphicsSystemAPI()
+{
+#if GN_MSWIN
+        // TODO: return "DX10" on vista system
+        return GN_MAKE_FOURCC('D','X','9',0);
+#else
+        return GN_MAKE_FOURCC('O','G','L',0);
+#endif
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::GraphicsSystem *
 GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & gscp )
 {
@@ -22,9 +35,14 @@ GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & 
 
     GN_ASSERT( 0 == mInstance );
 
+    // determine API
+    FOURCC api;
+    if( GN_MAKE_FOURCC('A','U','T','O') == gscp.api.u32 ) api.u32 = sDetermineGraphicsSystemAPI();
+    else api.u32 = gscp.api.u32;
+
 #if GN_STATIC
 
-    switch( gscp.api.u32 )
+    switch( api.u32 )
     {
         case GN_MAKE_FOURCC('D','X','9',0)   : mInstance = createD3D9GraphicsSystem( gscp ); break;
         case GN_MAKE_FOURCC('O','G','L',0)   :
@@ -41,7 +59,7 @@ GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & 
     const char * symbol;
     GraphicsSystemCreateFunc func;
 
-    switch( gscp.api.u32 )
+    switch( api.u32 )
     {
         case GN_MAKE_FOURCC('D','X','9',0)   : dllname = "GNgfx2D3D9"; symbol = "createD3D9GraphicsSystem"; break;
         case GN_MAKE_FOURCC('O','G','L',0)   :

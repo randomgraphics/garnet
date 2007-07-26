@@ -4,7 +4,7 @@
 inline void GN::engine2::RenderEngine::DrawThread::present()
 {
     submitDrawCommand( DCT_PRESENT, 0 );
-    submitDrawBuffer();
+    flushDrawBuffer();
 }
 
 //
@@ -22,7 +22,7 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand(
 
     if( mDrawBuffers[mWritingIndex].rooms() < commandBytes )
     {
-        submitDrawBuffer();
+        flushDrawBuffer();
     }
 
     DrawBuffer & db = mDrawBuffers[mWritingIndex];

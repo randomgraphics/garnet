@@ -125,14 +125,6 @@ GN::gfx::D3D9Texture * GN::gfx::D3D9Texture::sNewInstance(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9Texture::~D3D9Texture()
-{
-    safeRelease( mSurface );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 const GN::gfx::SubSurfaceLayout *
 GN::gfx::D3D9Texture::getSubSurfaceLayout( size_t subsurface ) const
 {

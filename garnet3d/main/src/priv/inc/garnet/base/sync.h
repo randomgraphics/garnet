@@ -153,14 +153,14 @@ namespace GN
     struct SyncEventGroup : public NoCopy
     {
         //@{
-        virtual int  count() const = 0;     ///< return event count in the group. Should be [1..32];
-        virtual bool autoreset() const = 0; ///< true means that wait() function will unsignal the event automatically before returning.
+        virtual size_t count() const = 0;     ///< return event count in the group. Should be [1..32];
+        virtual bool   autoreset() const = 0; ///< true means that wait() function will unsignal the event automatically before returning.
         //@}
 
         //@{
-        virtual void signal( int index ) = 0;
-        virtual void unsignal( int index ) = 0;
-        virtual void wait( int index, float seconds = INFINITE_TIME ) = 0;
+        virtual void signal( size_t index ) = 0;
+        virtual void unsignal( size_t index ) = 0;
+        virtual bool wait( size_t index, float seconds = INFINITE_TIME ) = 0; ///< return false, if timeout.
         virtual int  waitAny( float seconds = INFINITE_TIME ) = 0; ///< return index of the event that is signaled, or -1 when timeout.
         //@}
     };
@@ -182,7 +182,7 @@ namespace GN
 
     //@{
 
-    SyncEventGroup * createSyncEventGroup( int count, bool initialSignaled, bool autoreset, const char * name = 0 );
+    SyncEventGroup * createSyncEventGroup( size_t count, bool initialSignaled, bool autoreset, const char * name = 0 );
 
     SyncEvent * createSyncEvent( bool initialSignaled, bool autoreset, const char * name = 0 );
 

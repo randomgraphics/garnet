@@ -30,8 +30,8 @@ namespace GN
     }
 }
 
-// Basic graphics definition and utilities that are mainly building blocks of
-// renderer interface and higher level graphics classes.
+// Basic graphics definition and utilities that are building blocks of
+// higher level graphics system.
 #include "gfx/colorFormat.h"
 #include "gfx/image.h"
 #include "gfx/renderState.h"

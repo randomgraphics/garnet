@@ -28,7 +28,7 @@ namespace GN { namespace gfx
         ///
         /// dtor
         ///
-        ~D3D9Texture();
+        ~D3D9Texture() { safeRelease( mSurface ); }
 
         ///
         /// get D3D surface
