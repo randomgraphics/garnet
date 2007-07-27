@@ -36,9 +36,9 @@ int run( RenderEngine & re )
                 if( KEY_SPACEBAR == k.code ) { next = true; break; }
             }
 
-            cs.draw(); // clear screen
+            cs.render(); // clear screen
 
-            if( c ) c->draw();
+            if( c ) c->render();
 
             re.present();
         }
