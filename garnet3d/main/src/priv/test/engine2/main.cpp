@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "testCase.h"
+//#include "triangle.h"
 
 using namespace GN;
 using namespace GN::input;
@@ -11,23 +12,48 @@ int run( RenderEngine & re )
     ClearScreen cs;
     if( !cs.init( re ) ) return -1;
 
-    while( 1 )
+    TestCase * cases[] =
     {
-        gInput.processInputEvents();
+        //new TestCube(em,re,qr),
+        0, //new TestTriangle(re),
+    };
 
-        KeyEvent k = gInput.popLastKeyEvent();
-        if( k.status.down )
+    for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
+    {
+        TestCase * c = cases[i];
+
+        bool next = false;
+
+        // run the case
+        while( 1 )
         {
-            if( KEY_ESCAPE == k.code ) return 0;
-            if( KEY_SPACEBAR == k.code ) return 0;
+            gInput.processInputEvents();
+
+            KeyEvent k = gInput.popLastKeyEvent();
+            if( k.status.down )
+            {
+                if( KEY_ESCAPE == k.code ) { next = false; break; }
+                if( KEY_SPACEBAR == k.code ) { next = true; break; }
+            }
+
+            cs.draw(); // clear screen
+
+            if( c ) c->draw();
+
+            re.present();
         }
 
-        cs.draw(); // clear screen
+        // delete the case
+        if( c )
+        {
+            c->quit();
+            delete c;
+        }
 
-        //c.draw();
-
-        re.present();
+        if( !next ) break;
     }
+
+    return 0;
 }
 
 struct InputInitiator

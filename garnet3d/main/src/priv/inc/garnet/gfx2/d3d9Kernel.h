@@ -156,7 +156,7 @@ namespace GN { namespace gfx
     ///
     /// base D3D9 kernel binding
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9KernelPortBinding
+    class GN_GFX2_D3D9_PUBLIC D3D9KernelPortBinding : public KernelPortBinding
     {
         D3D9Kernel & mKernel;
 
@@ -221,38 +221,29 @@ namespace GN { namespace gfx
 
         D3D9GraphicsSystem      & d3d9gs() const { return mGraphicsSystem; }
 
-        //@{
-
-        KernelPortBinding         createPortBinding( const KernelPortBindingDesc & );
-        void                      deletePortBinding( KernelPortBinding );
-
-        //@}
+        ///
+        /// create port binding (inherited from Kernel)
+        ///
+        KernelPortBinding       * createPortBinding( const KernelPortBindingDesc & );
 
         ///
         /// get port binding by handle
         ///
-        D3D9KernelPortBinding   & getPortBinding( KernelPortBinding b )
+        D3D9KernelPortBinding   * getDefaultPortBinding()
         {
             GN_GUARD_SLOW;
 
-            if( 0 == b )
+            if( 0 == mDefaultPortBinding )
             {
-                if( 0 == mDefaultBinding )
+                KernelPortBindingDesc desc;
+                mDefaultPortBinding = safeCastPtr<D3D9KernelPortBinding>( createPortBinding( desc ) );
+                if( 0 == mDefaultPortBinding )
                 {
-                    mDefaultBinding = createDefaultBinding();
-                    if( 0 == mDefaultBinding )
-                    {
-                        GN_UNEXPECTED();
-                    }
+                    GN_UNEXPECTED();
                 }
-
-                b = mDefaultBinding;
             }
 
-            GN_ASSERT( mBindings.validHandle( b ) );
-            GN_ASSERT( mBindings[b] );
-
-            return *mBindings[b];
+            return mDefaultPortBinding;
 
             GN_UNGUARD_SLOW;
         }
@@ -261,15 +252,8 @@ namespace GN { namespace gfx
 
     private:
 
-        typedef HandleManager<D3D9KernelPortBinding*,KernelPortBinding> KernelBindingContainer;
-
         D3D9GraphicsSystem        & mGraphicsSystem;
-        KernelBindingContainer      mBindings;
-        KernelPortBinding           mDefaultBinding;
-
-    private:
-
-        virtual KernelPortBinding createDefaultBinding();
+        D3D9KernelPortBinding     * mDefaultPortBinding;
     };
 }}
 

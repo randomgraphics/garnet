@@ -165,7 +165,7 @@ void GN::gfx::D3D9KernelPortBinding::apply() const
 GN::gfx::D3D9Kernel::D3D9Kernel( const char * name, D3D9GraphicsSystem & gs )
     : BaseKernel( name )
     , mGraphicsSystem(gs)
-    , mDefaultBinding(0)
+    , mDefaultPortBinding(0)
 {
 }
 
@@ -174,17 +174,14 @@ GN::gfx::D3D9Kernel::D3D9Kernel( const char * name, D3D9GraphicsSystem & gs )
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9Kernel::~D3D9Kernel()
 {
-    for( KernelPortBinding b = mBindings.first(); b != 0; b = mBindings.next(b) )
-    {
-        delete mBindings[b];
-    };
-    mBindings.clear();
+    delete mDefaultPortBinding;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createPortBinding( const KernelPortBindingDesc & desc )
+GN::gfx::KernelPortBinding *
+GN::gfx::D3D9Kernel::createPortBinding( const KernelPortBindingDesc & desc )
 {
     GN_GUARD;
 
@@ -192,47 +189,7 @@ GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createPortBinding( const KernelP
 
     if( !b || !b->setup( desc ) ) return 0;
 
-    return mBindings.add( b.detach() );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Kernel::deletePortBinding( KernelPortBinding b )
-{
-    GN_GUARD;
-
-    if( !mBindings.validHandle( b ) )
-    {
-        GN_ERROR(sLogger)( "invalid kernel binding handle: %d", b );
-        return;
-    }
-
-    delete mBindings[b];
-    mBindings.remove( b );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::KernelPortBinding GN::gfx::D3D9Kernel::createDefaultBinding()
-{
-    GN_GUARD;
-
-    KernelPortBindingDesc desc;
-
-    KernelPortBinding b = createPortBinding( desc );
-
-    if( 0 == b )
-    {
-        GN_ERROR(sLogger)( "fail to create default binding!" );
-    }
-
-    return b;
+    return b.detach();
 
     GN_UNGUARD;
 }

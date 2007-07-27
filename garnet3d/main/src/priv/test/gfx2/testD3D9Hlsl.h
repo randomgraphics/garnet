@@ -21,7 +21,7 @@ class TestD3D9Hlsl : public Gfx2TestApp
     Surface            * mVtxBuf;
     Surface            * mIdxBuf;
     Surface            * mTexture;
-    KernelPortBinding    mBinding;
+    KernelPortBinding  * mBinding;
 
     Matrix44f mProjView;
     ArcBall   mArcBall;

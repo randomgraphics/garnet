@@ -135,7 +135,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             gfx::Surface            * surface;
             gfx::StreamSource       * stream;
             gfx::KernelParameterSet * paramset;
-            gfx::KernelPortBinding    binding;
+            gfx::KernelPortBinding  * binding;
             gfx::Kernel             * kernel;
             //@}
         };
@@ -375,6 +375,22 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         // ********************************
     private:
 
+        struct RefCountedResource
+        {
+            GraphicsResource * resource;
+            size_t             refcounter;
+            RefCountedResource() : resource(0), refcounter(0) {}
+        };
+
+        struct NamedResourceManager
+        {
+            std::map<StrA,RefCountedResource> resources;
+            void               clear() { resources.clear(); }
+            void               add( const StrA & name, GraphicsResource * res );
+            size_t             del( const StrA & name, GraphicsResource * res ); ///< return modified reference counter
+            GraphicsResource * get( const StrA & name );
+        };
+
         struct DrawContext
         {
             DynaArray<GraphicsResource*> resources;
@@ -409,6 +425,9 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ResourceLRU                      * mResourceLRU;
         DrawThread                       * mDrawThread;
         ResourceThread                   * mResourceThread;
+
+        NamedResourceManager               mKernels;
+        NamedResourceManager               mStreams;
 
         HandleManager<DrawContext,UIntPtr> mDrawContexts;
 

@@ -368,15 +368,15 @@ GN::gfx::KernelParameterSet * GN::gfx::D3D9HlslKernel::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9HlslKernel::render(
-    const KernelParameterSet & param, KernelPortBinding binding )
+void GN::gfx::D3D9HlslKernel::render( const KernelParameterSet & param, const KernelPortBinding * binding )
 {
     GN_GUARD_SLOW;
 
     PIXPERF_FUNCTION_EVENT();
 
-    D3D9KernelPortBinding & b = getPortBinding( binding );
-    b.apply();
+    const D3D9KernelPortBinding * b = binding ? safeCastPtr<const D3D9KernelPortBinding>( binding ) : getDefaultPortBinding();
+    GN_ASSERT( b );
+    b->apply();
 
     const D3D9HlslKernelParameterSet & p = safeCastRef<const D3D9HlslKernelParameterSet>(param);
 
@@ -384,7 +384,7 @@ void GN::gfx::D3D9HlslKernel::render(
     mRsb.apply();
 
     // do rendering
-    if( b.hasIdxBuf() )
+    if( b->hasIdxBuf() )
     {
         p.drawIndexed();
     }

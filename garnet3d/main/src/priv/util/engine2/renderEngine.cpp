@@ -111,37 +111,6 @@ struct FloatParameterLoader : public DummyLoader
 //
 //
 // -----------------------------------------------------------------------------
-static void sDeleteAllResources(
-    GN::engine2::RenderEngine::ResourceCache & cache,
-    GN::engine2::RenderEngine::ResourceLRU   & lru,
-    GN::engine2::RenderEngine::DrawThread    & dt )
-{
-    GN_GUARD;
-
-    using namespace GN::engine2;
-
-    for( GraphicsResourceItem * item = cache.firstResource();
-         item;
-         item = cache.nextResource( item ) )
-    {
-        // dispose it first
-        lru.dispose( item );
-        dt.submitResourceDisposingCommand( item );
-        dt.waitForIdle();
-
-        // then remove from LRU
-        lru.remove( item );
-
-        // finally, delete from cache
-        cache.deleteResource( item );
-    }
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static void sDisposeAllResources(
     GN::engine2::RenderEngine::ResourceCache & cache,
     GN::engine2::RenderEngine::ResourceLRU   & lru,
@@ -377,8 +346,25 @@ void GN::engine2::RenderEngine::quit()
     if( ok() )
     {
         // delete all resources
-        sDeleteAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
+        for( GraphicsResourceItem * item = mResourceCache->firstResource();
+             item;
+             item = mResourceCache->nextResource( item ) )
+        {
+            // dispose it first
+            mResourceLRU->dispose( item );
+            mDrawThread->submitResourceDisposingCommand( item );
+            mDrawThread->waitForIdle();
+
+            // then remove from LRU
+            mResourceLRU->remove( item );
+
+            // finally, delete from cache
+            mResourceCache->deleteResource( item );
+        }
     }
+
+    mKernels.clear();
+    mStreams.clear();
 
     safeDelete( mDrawThread );
     safeDelete( mResourceThread );
@@ -463,11 +449,34 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 
     RENDER_ENGINE_API();
 
+    // special for kernel and stream: try get it from local cache first.
+    StrA streamName;
+    if( GRT_KERNEL == desc.type )
+    {
+        GraphicsResource * res = mKernels.get( desc.kernel.kernel );
+        if( res ) return res;
+    }
+    else if( GRT_STREAM == desc.type )
+    {
+        streamName.format( "%s::%s", desc.stream.kernel.cptr(), desc.stream.stream.cptr() );
+        GraphicsResource * res = mStreams.get( streamName );
+        if( res ) return res;
+    }
+
+    // create new resource item
     GraphicsResourceItem * item = mResourceCache->createResource( desc );
-
     if( 0 == item ) return 0;
-
     mResourceLRU->insert( item );
+
+    // special for kernel and stream: insert to local cache.
+    if( GRT_KERNEL == desc.type )
+    {
+        mKernels.add( desc.kernel.kernel, item );
+    }
+    else if( GRT_STREAM == desc.type )
+    {
+        mStreams.add( streamName, item );
+    }
 
     return item;
 
@@ -488,6 +497,24 @@ void GN::engine2::RenderEngine::deleteResource( GraphicsResource * res )
     GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
 
     if( !mResourceCache->checkResource( item ) ) return;
+
+    // special for kernel and stream: try remove it from local cache first.
+    if( GRT_KERNEL == item->desc.type )
+    {
+        if( mKernels.del( item->desc.kernel.kernel, item ) > 0 )
+        {
+            return;
+        }
+    }
+    else if( GRT_STREAM == item->desc.type )
+    {
+        StrA streamName;
+        streamName.format( "%s::%s", item->desc.stream.kernel.cptr(), item->desc.stream.stream.cptr() );
+        if( mStreams.del( streamName, item ) > 0 )
+        {
+            return;
+        }
+    }
 
     // dispose it first
     mResourceLRU->dispose( item );
@@ -810,6 +837,63 @@ GN::engine2::RenderEngine::getKernel( const StrA & kernel )
 }
 
 // *****************************************************************************
+// NamedResourceManager class
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine2::RenderEngine::NamedResourceManager::add( const StrA & name, GraphicsResource * res )
+{
+    GN_ASSERT( resources.end() == resources.find( name ) );
+    GN_ASSERT( res );
+
+    RefCountedResource & rcr = resources[name];
+
+    rcr.resource = res;
+    rcr.refcounter = 1;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::engine2::RenderEngine::NamedResourceManager::del( const StrA & name, GraphicsResource * res )
+{
+    GN_ASSERT( resources.end() != resources.find( name ) );
+    GN_ASSERT( res );
+
+    RefCountedResource & rcr = resources[name];
+
+    GN_ASSERT( rcr.refcounter > 0 );
+
+    size_t ret = --rcr.refcounter;
+
+    if( 0 == ret )
+    {
+        resources.erase( name );
+    }
+
+    return ret;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource * GN::engine2::RenderEngine::NamedResourceManager::get( const StrA & name )
+{
+    std::map<StrA,RefCountedResource>::iterator i = resources.find( name );
+
+    if( resources.end() == i ) return 0;
+
+    GN_ASSERT( i->second.resource );
+    GN_ASSERT( i->second.refcounter > 0 );
+
+    ++(i->second.refcounter);
+
+    return i->second.resource;
+}
+
+// *****************************************************************************
 // ClearScreen class
 // *****************************************************************************
 
@@ -825,6 +909,14 @@ bool GN::engine2::ClearScreen::init( RenderEngine & re, GraphicsResource * bindi
 
     mKernel = re.getKernel( "CLEAR_SCREEN" );
     if( 0 == mKernel ) return failure();
+
+    if( GN_ASSERT_ENABLED )
+    {
+        // make sure kenrel cache is working
+        GraphicsResource * res = re.getKernel( "CLEAR_SCREEN" );
+        GN_ASSERT( res == mKernel );
+        re.deleteResource( res );
+    }
 
     mParam = re.createParameterSet( StrA::EMPTYSTR, "CLEAR_SCREEN" );
     if( 0 == mParam ) return failure();
