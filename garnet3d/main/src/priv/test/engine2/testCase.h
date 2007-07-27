@@ -33,7 +33,7 @@ public:
 
     virtual bool init() = 0;
     virtual void quit() = 0;
-    virtual void draw() = 0;
+    virtual void render() = 0;
 
     //@}
 };

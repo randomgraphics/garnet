@@ -322,10 +322,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         //@{
 
-        UIntPtr createDrawContext( GraphicsResource * kernel, GraphicsResource * param, GraphicsResource * binding );
-        void    deleteDrawContext( UIntPtr );
+        UIntPtr createRenderContext( GraphicsResource * kernel, GraphicsResource * param, GraphicsResource * binding );
+        void    deleteRenderContext( UIntPtr );
 
-        void draw( UIntPtr context );
+        void render( UIntPtr context );
         void present();
 
         //@}
@@ -538,10 +538,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         /// do screen clear
         ///
-        void draw()
+        void render()
         {
             GN_ASSERT( mKernel && mParam && mContext );
-            mKernel->engine.draw( mContext );
+            mKernel->engine.render( mContext );
         }
 
         // ********************************
@@ -565,6 +565,79 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         // private functions
         // ********************************
     private:
+    };
+
+    // *************************************************************************
+    // drawable class
+    // *************************************************************************
+
+    ///
+    /// drawable class
+    ///
+    class Drawable
+    {
+        GraphicsResource * mKernel;
+        GraphicsResource * mParam;
+        GraphicsResource * mBinding;
+        UIntPtr            mContext;
+
+    public:
+
+        //@{
+
+        ///
+        /// constructor
+        ///
+        Drawable() : mKernel( 0 ), mParam( 0 ), mBinding(0), mContext(0)
+        {
+        }
+
+        ///
+        /// dtor
+        ///
+        ~Drawable();
+
+        ///
+        /// clear to empty
+        ///
+        void clear()
+        {
+            mKernel = 0;
+            mParam = 0;
+            mBinding = 0;
+            mContext = 0;
+        }
+
+        ///
+        /// is empty drawable or not
+        ///
+        bool empty() const { return 0 == mContext; }
+
+        ///
+        /// load drawable from XML node
+        ///
+        bool loadFromXmlNode(
+            RenderEngine  & re,
+            const XmlNode & node,
+            const StrA    & basedir );
+
+        ///
+        /// load drawable from XML file
+        ///
+        bool loadFromXmlFile(
+            RenderEngine  & re,
+            const StrA    & filename );
+
+        ///
+        /// render the drawable
+        void render()
+        {
+            if( empty() ) return;
+
+            GN_ASSERT( mKernel && mParam );
+
+            mKernel->engine.render( mContext );
+        }
     };
 }}
 

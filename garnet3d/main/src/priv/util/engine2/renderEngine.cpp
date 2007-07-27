@@ -606,7 +606,7 @@ void GN::engine2::RenderEngine::updateResource(
 //
 //
 // -----------------------------------------------------------------------------
-UIntPtr GN::engine2::RenderEngine::createDrawContext(
+UIntPtr GN::engine2::RenderEngine::createRenderContext(
     GraphicsResource * kernel,
     GraphicsResource * paramset,
     GraphicsResource * binding )
@@ -681,7 +681,7 @@ UIntPtr GN::engine2::RenderEngine::createDrawContext(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::deleteDrawContext( UIntPtr context )
+void GN::engine2::RenderEngine::deleteRenderContext( UIntPtr context )
 {
     if( 0 == context ) return; // silently ignore NULL context.
 
@@ -697,7 +697,7 @@ void GN::engine2::RenderEngine::deleteDrawContext( UIntPtr context )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::draw( UIntPtr context )
+void GN::engine2::RenderEngine::render( UIntPtr context )
 {
     GN_GUARD_SLOW;
 
@@ -939,7 +939,7 @@ bool GN::engine2::ClearScreen::init( RenderEngine & re, GraphicsResource * bindi
 #undef GET_INDEX
 
     // create context
-    mContext = re.createDrawContext( mKernel, mParam, binding );
+    mContext = re.createRenderContext( mKernel, mParam, binding );
     if( 0 == mContext ) return failure();
 
     // success
@@ -958,7 +958,7 @@ void GN::engine2::ClearScreen::quit()
     if( mContext )
     {
         GN_ASSERT( mKernel );
-        mKernel->engine.deleteDrawContext( mContext );
+        mKernel->engine.deleteRenderContext( mContext );
     }
 
     safeDeleteGraphicsResource( mKernel );
