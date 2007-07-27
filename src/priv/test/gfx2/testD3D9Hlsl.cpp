@@ -214,9 +214,9 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
 
     // create binding
     KernelPortBindingDesc bd;
-    bd.bindings["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
-    bd.bindings["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
-    bd.bindings["TEXTURE0"].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
+    bd.views["VTXBUF0"].set( mVtxBuf, 0, 1, 0, 1 );
+    bd.views["IDXBUF"].set( mIdxBuf, 0, 1, 0, 1 );
+    bd.views["TEXTURE0"].set( mTexture, 0, td.id.numLevels, 0, td.id.numFaces );
     mBinding = mKernel->createPortBinding( bd );
     if( 0 == mBinding ) return false;
 

@@ -66,7 +66,7 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
             return failure();
         }
 
-        bd.bindings["TEXTURE0"].set( tex.texture, 0, 1, 0, 1 );
+        bd.views["TEXTURE0"].set( tex.texture, 0, 1, 0, 1 );
         mKernelPortBindings[i] = mKernel->createPortBinding( bd );
         if( 0 == mKernelPortBindings[i] ) return failure();
     }

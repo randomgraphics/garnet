@@ -12,9 +12,9 @@ sFindViewByName( const GN::StrA & name, const GN::gfx::KernelPortBindingDesc & d
     using namespace GN;
     using namespace GN::gfx;
 
-    std::map<StrA,SurfaceView>::const_iterator i = desc.bindings.find( name );
+    std::map<StrA,SurfaceView>::const_iterator i = desc.views.find( name );
 
-    if( desc.bindings.end() == i ) return 0;
+    if( desc.views.end() == i ) return 0;
 
     return &i->second;
 }

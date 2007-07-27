@@ -6,8 +6,11 @@ using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine2;
 
-void run( RenderEngine & re )
+int run( RenderEngine & re )
 {
+    ClearScreen cs;
+    if( !cs.init( re ) ) return -1;
+
     while( 1 )
     {
         gInput.processInputEvents();
@@ -15,12 +18,14 @@ void run( RenderEngine & re )
         KeyEvent k = gInput.popLastKeyEvent();
         if( k.status.down )
         {
-            if( KEY_ESCAPE == k.code ) return;
-            if( KEY_SPACEBAR == k.code ) return;
+            if( KEY_ESCAPE == k.code ) return 0;
+            if( KEY_SPACEBAR == k.code ) return 0;
         }
 
-        //re.clearScreen( Vector4f(0,0,1,0) );
+        cs.draw(); // clear screen
+
         //c.draw();
+
         re.present();
     }
 }
@@ -57,8 +62,5 @@ int main()
 
     if( !re.init(reip) || !re.reset( gscp ) ) return -1;
 
-    run( re );
-
-    // success
-    return 0;
+    return run( re );
 }

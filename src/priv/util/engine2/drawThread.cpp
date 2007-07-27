@@ -4,86 +4,218 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.DrawThread");
 
+using namespace GN::engine2;
+using namespace GN::gfx;
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
 
-// *****************************************************************************
-// draw command functions
-// *****************************************************************************
-
-#if ( GN_BUILD_VARIANT != GN_DEBUG_BUILD ) && GN_MSVC
-#pragma warning(disable:4100)
-#endif
-
-namespace GN { namespace engine2
+//
+//
+// -----------------------------------------------------------------------------
+static bool sCreateDeviceData( GraphicsSystem & gs, GN::engine2::GraphicsResource & res )
 {
-    //
-    //
-    // -------------------------------------------------------------------------
-    static void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t bytes )
+    const GraphicsResourceDesc & desc = res.desc;
+
+    switch( desc.type )
     {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
-    {
-        re.drawThread().getGraphicsSystem()->present();
-
-#if GN_PROFILE_ENABLED
-        re.drawThread().profileFrameTime();
-#endif
-    }
-}};
-
-// *****************************************************************************
-// draw command functions
-// *****************************************************************************
-
-namespace GN { namespace engine2
-{
-    void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
-    {
-        GN_GUARD;
-
-        GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
-
-        if( 0 == cmd.resource->data )
+        case GRT_SURFACE :
         {
-            /*if( !sCreateDeviceData( *cmd.resource ) )
-            {
-                cmd.noerr = false;
+            GN_ASSERT( 0 == res.surface );
 
-                // free data loader
-                cmd.loader.clear();
-                return;
-            }*/
-            GN_UNIMPL();
+            res.surface = gs.createSurface( desc.surface.creation );
+            if( 0 == res.surface ) return false;
+
+            break;
         }
 
-        GN_ASSERT( cmd.loader );
-        cmd.noerr = cmd.loader->copy( *cmd.resource, cmd.tmpbuf );
+        case GRT_STREAM :
+        {
+            GN_ASSERT( 0 == res.stream );
 
-        cmd.loader.clear();
+            Kernel * kernel = gs.getKernel( desc.stream.kernel );
+            if( 0 == kernel ) return false;
 
-        GN_UNGUARD;
+            res.stream = kernel->getStream( desc.stream.stream );
+            if( 0 == res.stream ) return false;
+
+            break;
+        }
+
+        case GRT_PARAMETER_SET :
+        {
+            GN_ASSERT( 0 == res.paramset );
+
+            Kernel * kernel = gs.getKernel( desc.paramset.kernel );
+            if( 0 == kernel ) return false;
+
+            res.paramset = kernel->createParameterSet();
+            if( 0 == res.paramset ) return false;
+
+            break;
+        }
+
+        case GRT_PORT_BINDING :
+        {
+            GN_ASSERT( 0 == res.binding );
+
+            Kernel * kernel = gs.getKernel( desc.binding.kernel );
+            if( 0 == kernel ) return false;
+
+            KernelPortBindingDesc pbd;
+
+            std::map<GN::StrA,SurfaceResourceView>::const_iterator iter = desc.binding.views.begin();
+            for( ; iter != desc.binding.views.end(); ++iter )
+            {
+                SurfaceView & view = pbd.views[iter->first];
+                view.surf       = iter->second.surf ? iter->second.surf->surface : 0,
+                view.firstLevel = iter->second.firstLevel;
+                view.numLevels  = iter->second.numLevels;
+                view.firstFace  = iter->second.firstFace;
+                view.numFaces   = iter->second.numFaces;
+            }
+
+            res.binding = kernel->createPortBinding( pbd );
+            if( 0 == res.binding ) return false;
+
+            break;
+        }
+
+        case GRT_KERNEL :
+        {
+            GN_ASSERT( 0 == res.kernel );
+
+            res.kernel = gs.getKernel( desc.kernel.kernel );
+            if( 0 == res.kernel ) return false;
+
+            break;
+        }
+
+        default:
+            GN_UNEXPECTED();
+            return false;
     }
 
-    void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
+    return true;
+}
+// *****************************************************************************
+// draw command functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t )
+{
+    GN_GUARD_SLOW;
+
+    struct Param
     {
-        GN_GUARD;
+        GraphicsResource * kernel;
+        GraphicsResource * paramset;
+        GraphicsResource * binding;
+    };
 
-        GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
+    const Param * p = (const Param *)param;
 
-        //sDeleteDeviceData( *cmd.resource );
-        GN_UNIMPL();
+    GN_ASSERT( p );
+    GN_ASSERT( p->kernel && GRT_KERNEL == p->kernel->desc.type && p->kernel->kernel );
+    GN_ASSERT( p->paramset && GRT_PARAMETER_SET == p->paramset->desc.type && p->paramset->paramset );
 
-        GN_UNGUARD;
+    p->kernel->kernel->render( *p->paramset->paramset, p->binding ? p->binding->binding : 0 );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
+{
+    GN_GUARD_SLOW;
+
+    re.drawThread().getGraphicsSystem()->present();
+
+#if GN_PROFILE_ENABLED
+    re.drawThread().profileFrameTime();
+#endif
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// resource command functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
+{
+    GN_GUARD;
+
+    GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
+
+    if( 0 == cmd.resource->data )
+    {
+        if( !sCreateDeviceData( *engine.drawThread().getGraphicsSystem(), *cmd.resource ) )
+        {
+            cmd.noerr = false;
+
+            // free data loader
+            cmd.loader.clear();
+            return;
+        }
     }
-}}
+
+    GN_ASSERT( cmd.loader );
+    cmd.noerr = cmd.loader->copy( *cmd.resource, cmd.tmpbuf );
+
+    cmd.loader.clear();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
+{
+    GN_GUARD;
+
+    GN_UNUSED_PARAM( engine );
+    GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
+
+    switch( cmd.resource->desc.type )
+    {
+        case GRT_SURFACE :
+            safeDelete( cmd.resource->surface );
+            break;
+
+        case GRT_STREAM :
+            safeDelete( cmd.resource->stream );
+            break;
+
+        case GRT_PARAMETER_SET :
+            safeDelete( cmd.resource->paramset );
+            break;
+
+        case GRT_PORT_BINDING :
+            GN_TODO( "delete port binding" );
+            break;
+
+        case GRT_KERNEL :
+            // no need to delete kernel
+            cmd.resource->kernel = 0;
+            break;
+
+        default:
+            GN_UNEXPECTED();
+    }
+
+    GN_UNGUARD;
+}
 
 // *****************************************************************************
 // Initialize and shutdown
