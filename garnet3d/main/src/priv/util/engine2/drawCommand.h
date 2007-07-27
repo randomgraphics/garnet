@@ -51,9 +51,9 @@ namespace GN { namespace engine2
         enum
         {
             ///
-            /// draw will wait for at most 3 resources: 1 kernel, 1 parameter set and 1 binding
+            /// draw will wait for at least 3 resources: 1 kernel, 1 parameter set and 1 binding
             ///
-            MAX_RESOURCES_PER_DRAW = 3
+            MAX_RESOURCES_PER_DRAW = 256
         };
 
         ///

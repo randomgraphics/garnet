@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "resourceThread.h"
-//#include "drawThread.h"
+#include "drawThread.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceThread");
 
@@ -180,8 +180,7 @@ UInt32 GN::engine2::RenderEngine::ResourceThread::decompress( void * param )
         // TODO: resource commands submitted in later in render engine may submit to
         // TODO: draw thread earlier.
         cmd->op = GROP_COPY;
-        //mEngine.drawThread().submitResourceCommand( cmd );
-        GN_UNIMPL();
+        mEngine.drawThread().submitResourceCommand( cmd );
 
         commands->consumeEnd();
     }

@@ -27,6 +27,42 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         //@}
     };
 
+    struct GraphicsResource;
+
+    ///
+    /// describe view to surface resource
+    ///
+    struct SurfaceResourceView
+    {
+        GraphicsResource * surf;       ///< surface pointer
+        UInt32             firstLevel; ///< first mipmap level. 0 means the most detailed level.
+        UInt32             numLevels;  ///< set 0 for all levels staring from firstLevel.
+        UInt32             firstFace;  ///< first face index, starting from 0
+        UInt32             numFaces;   ///< set to 0 for all faces starting from firstFace.
+
+        ///
+        /// ctor
+        ///
+        SurfaceResourceView() : surf(0) {}
+
+        ///
+        /// setup port binding
+        ///
+        inline void set(
+            GraphicsResource * surf_,
+            UInt32             firstLevel_,
+            UInt32             numLevels_,
+            UInt32             firstFace_,
+            UInt32             numFaces_ )
+        {
+            surf       = surf_;
+            firstLevel = firstLevel_;
+            numLevels  = numLevels_;
+            firstFace  = firstFace_;
+            numFaces   = numFaces_;
+        }
+    };
+
     ///
     /// graphics resource descriptor
     ///
@@ -59,14 +95,14 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             //@{
             StrA kernel;
             //@}
-        } param;
+        } paramset;
 
         /// ...
         struct PortBindingDesc
         {
             //@{
-            StrA                       kernel;
-            gfx::KernelPortBindingDesc desc;
+            StrA                               kernel;
+            std::map<StrA,SurfaceResourceView> views;
             //@}
         } binding;
 
@@ -286,7 +322,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         //@{
 
-        void draw( GraphicsResource * kernel, GraphicsResource * param, GraphicsResource * binding );
+        UIntPtr createDrawContext( GraphicsResource * kernel, GraphicsResource * param, GraphicsResource * binding );
+        void    deleteDrawContext( UIntPtr );
+
+        void draw( UIntPtr context );
         void present();
 
         //@}
@@ -300,7 +339,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
-        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const gfx::KernelPortBindingDesc & );
+        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
 
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
         GraphicsResource * getKernel( const StrA & kernel );
@@ -336,6 +375,11 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         // ********************************
     private:
 
+        struct DrawContext
+        {
+            DynaArray<GraphicsResource*> resources;
+        };
+
         struct FrameProfiler
         {
             ProfileTimer & timer;
@@ -360,16 +404,18 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             }
         };
 
-        FenceManager                    * mFenceManager;
-        ResourceCache                   * mResourceCache;
-        ResourceLRU                     * mResourceLRU;
-        DrawThread                      * mDrawThread;
-        ResourceThread                  * mResourceThread;
+        FenceManager                     * mFenceManager;
+        ResourceCache                    * mResourceCache;
+        ResourceLRU                      * mResourceLRU;
+        DrawThread                       * mDrawThread;
+        ResourceThread                   * mResourceThread;
 
-        FrameProfiler                     mFrameProfiler;
+        HandleManager<DrawContext,UIntPtr> mDrawContexts;
+
+        FrameProfiler                      mFrameProfiler;
 
         // to avoid render engine API re-entrance
-        mutable volatile SInt32           mApiReentrantFlag;
+        mutable volatile SInt32            mApiReentrantFlag;
 
         // ********************************
         // private functions
@@ -431,11 +477,62 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
     ///
     /// helper class to use CLEAR_SCREEN kernel
-    ///
-    class ClearScreen
+    ///    
+    class ClearScreen : public StdClass
     {
+        GN_DECLARE_STDCLASS( ClearScreen, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        ClearScreen()          { clear(); }
+        virtual ~ClearScreen() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( RenderEngine & re, GraphicsResource * binding = 0 );
+        void quit();
+    private:
+        void clear() { mKernel = 0; mParam = 0; mContext = 0; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        /// \name setup clear properites
+        //@{
+
+        void setClearColor( bool enabled, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.0f );
+
+        //@}
+
+        ///
+        /// do screen clear
+        ///
+        void draw()
+        {
+            GN_ASSERT( mKernel && mParam && mContext );
+            mKernel->engine.draw( mContext );
+        }
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
         GraphicsResource * mKernel;
         GraphicsResource * mParam;
+        UIntPtr            mContext;
 
         size_t
             CLEAR_COLOR,
@@ -445,45 +542,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             DEPTH,
             STENCIL;
 
-    public:
-
-        ///
-        /// ctor
-        ///
-        ClearScreen() : mKernel( 0 ), mParam( 0 )
-        {
-        }
-
-        ///
-        /// dtor
-        ///
-        ~ClearScreen()
-        {
-            safeDeleteGraphicsResource( mKernel );
-            safeDeleteGraphicsResource( mParam );
-        }
-
-        ///
-        /// initialize
-        ///
-        bool init( RenderEngine & re );
-
-        ///
-        /// do screen clear
-        ///
-        void draw( GraphicsResource * binding = 0 )
-        {
-            GN_ASSERT( mKernel );
-            mKernel->engine.draw( mKernel, mParam, binding );
-        }
-
-        /// \name setup clear properites
-        //@{
-
-        void setClearColor( bool enabled, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 1.0f );
-
-        //@}
-
+        // ********************************
+        // private functions
+        // ********************************
+    private:
     };
 }}
 

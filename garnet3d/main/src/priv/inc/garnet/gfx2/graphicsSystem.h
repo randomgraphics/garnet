@@ -493,7 +493,7 @@ namespace GN { namespace gfx
     struct KernelPortBindingDesc
     {
         //@{
-        std::map<StrA,SurfaceView> bindings; ///< bindings indexed by port name.
+        std::map<StrA,SurfaceView> views; ///< bindings indexed by port name.
         //@}
     };
 
