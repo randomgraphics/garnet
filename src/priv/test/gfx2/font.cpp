@@ -108,7 +108,7 @@ void GN::test::QuadKernelFont::quit()
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
         safeDelete( mTextures[i].texture );
-        if( mKernelPortBindings[i] ) mKernel->deletePortBinding( mKernelPortBindings[i] );
+        safeDelete( mKernelPortBindings[i] );
     }
 
     safeDelete( mKernelParam );

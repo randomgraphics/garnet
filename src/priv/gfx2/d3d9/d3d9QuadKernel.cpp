@@ -360,16 +360,17 @@ GN::gfx::KernelParameterSet * GN::gfx::D3D9QuadKernel::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet & param, KernelPortBinding binding )
+void GN::gfx::D3D9QuadKernel::render( const KernelParameterSet & paramset, const KernelPortBinding * binding )
 {
     GN_GUARD_SLOW;
 
     PIXPERF_FUNCTION_EVENT();
 
-    D3D9KernelPortBinding & b = getPortBinding( binding );
-    b.apply();
+    const D3D9KernelPortBinding * b = binding ? safeCastPtr<const D3D9KernelPortBinding>( binding ) : getDefaultPortBinding();
+    GN_ASSERT( b );
+    b->apply();
 
-    const D3D9QuadKernelParameterSet & p = safeCastRef<const D3D9QuadKernelParameterSet>(param);
+    const D3D9QuadKernelParameterSet & p = safeCastRef<const D3D9QuadKernelParameterSet>(paramset);
 
     p.applyRsb();
 

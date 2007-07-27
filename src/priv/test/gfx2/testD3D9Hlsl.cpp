@@ -229,12 +229,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
 // -----------------------------------------------------------------------------
 void TestD3D9Hlsl::quit( GraphicsSystem & )
 {
-    if( mBinding )
-    {
-        GN_ASSERT( mKernel );
-        mKernel->deletePortBinding( mBinding );
-        mBinding = 0;
-    }
+    safeDelete( mBinding );
     safeDelete( mVtxBuf );
     safeDelete( mIdxBuf );
     safeDelete( mTexture );

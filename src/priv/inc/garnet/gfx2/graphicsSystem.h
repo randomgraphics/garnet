@@ -498,9 +498,9 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// kernel port binding handle
+    /// kernel port binding
     ///
-    typedef UIntPtr KernelPortBinding;
+    struct KernelPortBinding : public NoCopy { protected: /**ctor*/ KernelPortBinding() {} };
 
     // *************************************************************************
     // Kernel: main kernel interface
@@ -517,11 +517,9 @@ namespace GN { namespace gfx
         virtual const StrA         & getName() const = 0;
 
         ///
-        /// do rendering, with user defined parameter set and binding.
+        /// do rendering, with user defined parameter set and binding. Note that binding is optional for some kenerl.
         ///
-        /// Note that some kernels accepts '0' as valid binding
-        ///
-        virtual void                 render( const KernelParameterSet &, KernelPortBinding ) = 0;
+        virtual void                 render( const KernelParameterSet &, const KernelPortBinding * ) = 0;
 
         /// \name stream management
         //@{
@@ -542,8 +540,7 @@ namespace GN { namespace gfx
         //@{
 
         virtual bool                 compatible( const Surface * surf, const StrA & port ) const = 0;
-        virtual KernelPortBinding    createPortBinding( const KernelPortBindingDesc & ) = 0;
-        virtual void                 deletePortBinding( KernelPortBinding ) = 0;
+        virtual KernelPortBinding  * createPortBinding( const KernelPortBindingDesc & ) = 0;
 
         //@}
     };

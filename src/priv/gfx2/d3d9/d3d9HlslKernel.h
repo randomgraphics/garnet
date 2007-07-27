@@ -62,7 +62,7 @@ namespace GN { namespace gfx
         // from base class
         //@{
         virtual KernelParameterSet * createParameterSet();
-        virtual void                 render( const KernelParameterSet & param, KernelPortBinding binding );
+        virtual void                 render( const KernelParameterSet & paramset, const KernelPortBinding * binding );
         //@}
     };
 }}

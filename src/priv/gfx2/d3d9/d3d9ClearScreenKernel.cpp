@@ -83,18 +83,19 @@ GN::gfx::D3D9ClearScreenKernel::createParameterSet()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9ClearScreenKernel::render( const KernelParameterSet & param, KernelPortBinding binding )
+void GN::gfx::D3D9ClearScreenKernel::render( const KernelParameterSet & paramset, const KernelPortBinding * binding )
 {
-    D3D9KernelPortBinding & b = getPortBinding( binding );
-    b.apply();
+    const D3D9KernelPortBinding * b = binding ? safeCastPtr<const D3D9KernelPortBinding>( binding ) : getDefaultPortBinding();
+    GN_ASSERT( b );
+    b->apply();
 
-    const D3D9ClearScreenParameterSet & p = safeCastRef<const D3D9ClearScreenParameterSet>( param );
+    const D3D9ClearScreenParameterSet & p = safeCastRef<const D3D9ClearScreenParameterSet>( paramset );
 
     DWORD flags = 0;
 
     if( p.cc ) flags |= D3DCLEAR_TARGET;
 
-    if( b.hasZBuf() )
+    if( b->hasZBuf() )
     {
         if( p.cd ) flags |= D3DCLEAR_ZBUFFER;
         if( p.cs ) flags |= D3DCLEAR_STENCIL;

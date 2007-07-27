@@ -190,7 +190,7 @@ namespace GN { namespace test
         Kernel                    * mKernel;
         StreamSource              * mStream;
         KernelParameterSet        * mKernelParam;
-        KernelPortBinding           mKernelPortBindings[MAX_TEXTURES];
+        KernelPortBinding         * mKernelPortBindings[MAX_TEXTURES];
 
         // font face data
         AutoRef<FontFace>           mFont;

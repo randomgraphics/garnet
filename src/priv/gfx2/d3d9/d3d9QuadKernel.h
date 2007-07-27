@@ -137,7 +137,7 @@ namespace GN { namespace gfx
         }
 
         virtual KernelParameterSet * createParameterSet();
-        virtual void                 render( const KernelParameterSet &, KernelPortBinding );
+        virtual void                 render( const KernelParameterSet &, const KernelPortBinding * );
 
         //@}
 

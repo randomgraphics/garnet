@@ -202,7 +202,7 @@ void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
             break;
 
         case GRT_PORT_BINDING :
-            GN_TODO( "delete port binding" );
+            safeDelete( cmd.resource->binding );
             break;
 
         case GRT_KERNEL :
