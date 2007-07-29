@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
-    'drawThread.cpp',
+	'drawable.cpp',
+	'drawThread.cpp',
 	'renderEngine.cpp',
 	'resourceCache.cpp',
 	'resourceLRU.cpp',

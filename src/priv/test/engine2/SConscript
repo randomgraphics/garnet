@@ -1,5 +1,6 @@
 Import( 'GN' )
 sources = [
+	'font.cpp',
 	'main.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

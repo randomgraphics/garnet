@@ -337,12 +337,16 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         //@{
 
-        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
-        GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
-        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
+        GraphicsResource * getKernel( const StrA & kernel );
 
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
-        GraphicsResource * getKernel( const StrA & kernel );
+        GraphicsResource * getStream( GraphicsResource & kernel, const StrA & stream );
+
+        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
+        GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
+        GraphicsResource * createParameterSet( const StrA & resname, GraphicsResource & kernel );
+        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
+        GraphicsResource * createPortBinding( const StrA & resname, GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
 
         void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
         void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );
@@ -579,10 +583,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
     ///
     class Drawable
     {
-        AutoGraphicsResource mKernel;
-        AutoGraphicsResource mParam;
-        AutoGraphicsResource mBinding;
-        UIntPtr              mContext;
+        GraphicsResource * mKernel;
+        GraphicsResource * mParamSet;
+        GraphicsResource * mBinding;
+        UIntPtr            mContext;
 
     public:
 
@@ -591,9 +595,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         /// constructor
         ///
-        Drawable() : mContext(0)
-        {
-        }
+        Drawable();
 
         ///
         /// dtor
@@ -603,18 +605,34 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         /// clear to empty
         ///
-        void clear()
-        {
-            mKernel.clear();
-            mParam.clear();
-            mBinding.clear();
-            mContext = 0;
-        }
+        void clear();
 
         ///
         /// is empty drawable or not
         ///
         bool empty() const { return 0 == mContext; }
+
+        ///
+        /// get kernel of the drawable
+        ///
+        GraphicsResource * getKernel() const { return mKernel; }
+
+        ///
+        /// get parameter set of the kernel
+        ///
+        GraphicsResource * getParamSet() const { return mParamSet; }
+
+        ///
+        /// render the drawable
+        ///
+        void render()
+        {
+            if( empty() ) return;
+
+            GN_ASSERT( mKernel && mParamSet );
+
+            mKernel->engine.render( mContext );
+        }
 
         ///
         /// load drawable from XML node
@@ -630,27 +648,6 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         bool loadFromXmlFile(
             RenderEngine  & re,
             const StrA    & filename );
-
-        ///
-        /// set kernel parameter
-        ///
-        void setParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
-
-        ///
-        /// set kernel parameter
-        ///
-        void setParameter( size_t index, size_t offset, size_t bytes, const void * data );
-
-        ///
-        /// render the drawable
-        void render()
-        {
-            if( empty() ) return;
-
-            GN_ASSERT( mKernel && mParam );
-
-            mKernel->engine.render( mContext );
-        }
     };
 }}
 
