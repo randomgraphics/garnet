@@ -26,10 +26,7 @@ namespace GN { namespace gfx
 
         static DummyKernelParameter & sGetInstance() { static DummyKernelParameter sInstance; return sInstance; }
 
-        virtual void setb( size_t, size_t, const bool         * ) {}
-        virtual void seti( size_t, size_t, const int          * ) {}
-        virtual void setf( size_t, size_t, const float        * ) {}
-        virtual void sets( size_t, size_t, const char * const * ) {}
+        virtual void set( size_t, size_t, const void * ) {}
         virtual void unset() {}
 
         //@}
@@ -46,10 +43,7 @@ namespace GN { namespace gfx
 
         BaseKernelParameter() {}
 
-        virtual void setb( size_t, size_t, const bool         * ) { GN_UNEXPECTED(); }
-        virtual void seti( size_t, size_t, const int          * ) { GN_UNEXPECTED(); }
-        virtual void setf( size_t, size_t, const float        * ) { GN_UNEXPECTED(); }
-        virtual void sets( size_t, size_t, const char * const * ) { GN_UNEXPECTED(); }
+        virtual void set( size_t, size_t, const void * ) { GN_UNEXPECTED(); }
         virtual void unset() { GN_UNEXPECTED(); }
 
         //@}
@@ -83,15 +77,15 @@ namespace GN { namespace gfx
 
         BoolKernelParameter( bool initial ) : TypedKernelParameter( initial ) {}
 
-        void setb( size_t offset, size_t count, const bool * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            if( 0 != offset || 1 != bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.BoolKernelParameter"))( "invalid parameter value." );
                 return;
             }
 
-            value = *values;
+            value = *(const bool*)values;
         }
 
         //@}
@@ -107,15 +101,17 @@ namespace GN { namespace gfx
 
         IntKernelParameter( const T & initial ) : TypedKernelParameter( initial ) {}
 
-        void seti( size_t offset, size_t count, const int * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            GN_CASSERT( 4 == sizeof(T) );
+
+            if( 0 != offset || 4 != bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.IntKernelParameter"))( "invalid parameter value." );
                 return;
             }
 
-            value = (T)*values;
+            value = *(const T*)values;
         }
 
         //@}
@@ -130,15 +126,15 @@ namespace GN { namespace gfx
 
         FloatKernelParameter( float initial ) : TypedKernelParameter( initial ) {}
 
-        void setf( size_t offset, size_t count, const float * values )
+        void set( size_t offset, size_t bytes, const float * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            if( 0 != offset || 4 != bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.FloatKernelParameter"))( "invalid parameter value." );
                 return;
             }
 
-            value = *values;
+            value = *(const float*)values;
         }
 
         //@}

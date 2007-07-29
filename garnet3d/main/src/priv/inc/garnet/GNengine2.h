@@ -344,6 +344,9 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
         GraphicsResource * getKernel( const StrA & kernel );
 
+        void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
+        void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );
+
         //@}
 
         // ********************************
@@ -576,10 +579,10 @@ namespace GN { /** namespace for engine2 */ namespace engine2
     ///
     class Drawable
     {
-        GraphicsResource * mKernel;
-        GraphicsResource * mParam;
-        GraphicsResource * mBinding;
-        UIntPtr            mContext;
+        AutoGraphicsResource mKernel;
+        AutoGraphicsResource mParam;
+        AutoGraphicsResource mBinding;
+        UIntPtr              mContext;
 
     public:
 
@@ -588,7 +591,7 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         /// constructor
         ///
-        Drawable() : mKernel( 0 ), mParam( 0 ), mBinding(0), mContext(0)
+        Drawable() : mContext(0)
         {
         }
 
@@ -602,9 +605,9 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         void clear()
         {
-            mKernel = 0;
-            mParam = 0;
-            mBinding = 0;
+            mKernel.clear();
+            mParam.clear();
+            mBinding.clear();
             mContext = 0;
         }
 
@@ -627,6 +630,16 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         bool loadFromXmlFile(
             RenderEngine  & re,
             const StrA    & filename );
+
+        ///
+        /// set kernel parameter
+        ///
+        void setParameter( const StrA & name, size_t offset, size_t bytes, const void * data );
+
+        ///
+        /// set kernel parameter
+        ///
+        void setParameter( size_t index, size_t offset, size_t bytes, const void * data );
 
         ///
         /// render the drawable

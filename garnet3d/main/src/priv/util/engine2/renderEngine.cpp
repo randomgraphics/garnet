@@ -46,9 +46,37 @@ public:
 };
 
 ///
+/// kernel parameter loader
+///
+class KernelParameterLoader : public DummyLoader
+{
+    size_t               mIndex;
+    size_t               mOffset;
+    GN::DynaArray<UInt8> mValues;
+
+public:
+
+    KernelParameterLoader( size_t index, size_t offset, size_t bytes, const void * data )
+        : mIndex( index )
+        , mOffset( offset )
+        , mValues( bytes )
+    {
+        memcpy( mValues.cptr(), data, bytes );
+    }
+
+    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( res.paramset );
+        res.paramset->get( mIndex ).set( mOffset, mValues.size(), mValues.cptr() );
+        return true;
+    }
+};
+
+///
 /// kernel boolean parameter loader
 ///
-template<size_t OFFSET, size_t COUNT>
+template<size_t START, size_t COUNT>
 struct BoolParameterLoader : public DummyLoader
 {
     size_t index;
@@ -58,7 +86,7 @@ struct BoolParameterLoader : public DummyLoader
     {
         GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
-        res.paramset->get( index ).setb( OFFSET, COUNT, values );
+        res.paramset->get( index ).set( START, COUNT, values );
         return true;
     }
 };
@@ -66,7 +94,7 @@ struct BoolParameterLoader : public DummyLoader
 ///
 /// kernel float parameter loader
 ///
-template<size_t OFFSET, size_t COUNT>
+template<size_t START, size_t COUNT>
 struct FloatParameterLoader : public DummyLoader
 {
     size_t index;
@@ -76,33 +104,10 @@ struct FloatParameterLoader : public DummyLoader
     {
         GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
-        res.paramset->get( index ).setf( OFFSET, COUNT, values );
+        res.paramset->get( index ).set( START*4, COUNT*4, values );
         return true;
     }
 };
-
-/*
-        }
-        else if( KERNEL_PARAMETER_TYPE_INT == TYPE )
-        {
-            res.paramset->get( index ).seti( OFFSET, COUNT, values );
-        }
-        else if( KERNEL_PARAMETER_TYPE_FLOAT == TYPE )
-        {
-            res.paramset->get( index ).setf( OFFSET, COUNT, values );
-        }
-        else if( KERNEL_PARAMETER_TYPE_STRING == TYPE )
-        {
-            const char * str[COUNT];
-
-            for( size_t i = 0; i < COUNT; ++i ) str[i] = values[i].cstr();
-
-            res.paramset->get( index ).sets( OFFSET, COUNT, str );
-        }
-
-        return true;
-    }
-};*/
 
 // *****************************************************************************
 // local functions
@@ -834,6 +839,56 @@ GN::engine2::RenderEngine::getKernel( const StrA & kernel )
     updateResource( res, DummyLoader::sGetInstance() );
 
     return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine2::RenderEngine::setParameter(
+    GraphicsResource * paramset,
+    size_t             index,
+    size_t             offset,
+    size_t             bytes,
+    const void       * data )
+{
+    if( mResourceCache->checkResource( paramset ) ) return;
+
+    if( GRT_PARAMETER_SET != paramset->desc.type )
+    {
+        GN_ERROR(sLogger)( "the resource is not a parameter set" );
+        return;
+    }
+
+    AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
+
+    updateResource( paramset, loader );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine2::RenderEngine::setParameter(
+    GraphicsResource * paramset,
+    const StrA       & name,
+    size_t             offset,
+    size_t             bytes,
+    const void       * data )
+{
+    if( mResourceCache->checkResource( paramset ) ) return;
+
+    if( GRT_PARAMETER_SET != paramset->desc.type )
+    {
+        GN_ERROR(sLogger)( "the resource is not a parameter set" );
+        return;
+    }
+
+    const gfx::KernelReflection & refl = gfx::getKernelReflection( paramset->desc.paramset.kernel );
+
+    size_t index = refl.parameters.name2idx( name );
+
+    AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
+
+    updateResource( paramset, loader );
 }
 
 // *****************************************************************************
