@@ -749,6 +749,60 @@ void GN::engine2::RenderEngine::present()
 // helpers
 // *****************************************************************************
 
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::getKernel( const StrA & kernel )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name          = kernel;
+    grd.type          = GRT_KERNEL;
+    grd.kernel.kernel = kernel;
+
+    GraphicsResource * res = createResource( grd );
+    if( 0 == res ) return 0;
+
+    updateResource( res, DummyLoader::sGetInstance() );
+
+    return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream )
+{
+    GraphicsResourceDesc grd;
+
+    grd.name          = strFormat( "stream %s::%s", kernel.cptr(), stream.cptr() );
+    grd.type          = GRT_STREAM;
+    grd.stream.kernel = kernel;
+    grd.stream.stream = stream;
+
+    return createResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::getStream( const GraphicsResource & kernel, const StrA & stream )
+{
+    if( !mResourceCache->checkResource( &kernel ) ) return 0;
+
+    if( GRT_KERNEL != kernel.desc.type )
+    {
+        GN_ERROR(sLogger)( "input graphics resource is not a kernel." );
+        return 0;
+    }
+
+    return getStream( kernel.desc.kernel.kernel, stream );
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -788,6 +842,23 @@ GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const StrA 
 //
 // -----------------------------------------------------------------------------
 GN::engine2::GraphicsResource *
+GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const GraphicsResource & kernel )
+{
+    if( !mResourceCache->checkResource( &kernel ) ) return 0;
+
+    if( GRT_KERNEL != kernel.desc.type )
+    {
+        GN_ERROR(sLogger)( "input graphics resource is not a kernel." );
+        return 0;
+    }
+
+    return createParameterSet( resname, kernel.desc.kernel.kernel );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine2::GraphicsResource *
 GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
     GraphicsResourceDesc grd;
@@ -809,36 +880,17 @@ GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const StrA &
 //
 // -----------------------------------------------------------------------------
 GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream )
+GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
-    GraphicsResourceDesc grd;
+    if( !mResourceCache->checkResource( &kernel ) ) return 0;
 
-    grd.name          = strFormat( "stream %s::%s", kernel.cptr(), stream.cptr() );
-    grd.type          = GRT_STREAM;
-    grd.stream.kernel = kernel;
-    grd.stream.stream = stream;
+    if( GRT_KERNEL != kernel.desc.type )
+    {
+        GN_ERROR(sLogger)( "input graphics resource is not a kernel." );
+        return 0;
+    }
 
-    return createResource( grd );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::getKernel( const StrA & kernel )
-{
-    GraphicsResourceDesc grd;
-
-    grd.name          = kernel;
-    grd.type          = GRT_KERNEL;
-    grd.kernel.kernel = kernel;
-
-    GraphicsResource * res = createResource( grd );
-    if( 0 == res ) return 0;
-
-    updateResource( res, DummyLoader::sGetInstance() );
-
-    return res;
+    return createPortBinding( resname, kernel.desc.kernel.kernel, views );
 }
 
 //

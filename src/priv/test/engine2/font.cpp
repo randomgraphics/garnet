@@ -60,7 +60,7 @@ bool GN::test::BitmapFont::init( const FontFaceDesc & ffd )
     {
         FontTexture & tex = mTextures[i];
 
-        tex.texture = mRenderEngine.createResource( strFormat( "bitmap font texture #%d", i ), scp );
+        tex.texture = mRenderEngine.createSurface( strFormat( "bitmap font texture #%d", i ), scp );
 
         if( 0 == tex.texture )
         {
@@ -215,7 +215,7 @@ void GN::test::BitmapFont::drawText( const TextDesc & td )
     }
 
     // get current screen size
-    const GraphicsSystemDesc & dd = mRenderEngine.getDesc();
+    const GraphicsSystemDesc & dd = mRenderEngine.getGraphicsSystemDesc();
     float scalex = 1.0f / dd.width;
     float scaley = 1.0f / dd.height;
 
@@ -264,7 +264,8 @@ void GN::test::BitmapFont::drawText( const TextDesc & td )
                 v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
             }
 
-            mStream->push( mQuadBuffer.cptr(), MAX_QUADS * 4 * sizeof(QuadVertex) );
+            //mStream->push( mQuadBuffer.cptr(), MAX_QUADS * 4 * sizeof(QuadVertex) );
+            GN_UNIMPL();
             mRenderEngine.render( mContexts[i] );
         }
 
@@ -283,7 +284,8 @@ void GN::test::BitmapFont::drawText( const TextDesc & td )
             v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
             v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
         }
-        mStream->push( mQuadBuffer.cptr(), n2 * 4 * sizeof(QuadVertex) );
+        //mStream->push( mQuadBuffer.cptr(), n2 * 4 * sizeof(QuadVertex) );
+        GN_UNIMPL();
         mRenderEngine.render( mContexts[i] );
 
         mNumChars[i] = 0;
@@ -389,12 +391,13 @@ GN::test::BitmapFont::createSlot( wchar_t ch )
     slot.advy = fbm.advy;
 
     // update texture content
-    tex.texture->download(
-        0, // subsurface
-        0, // area
-        tex.syscopy.cptr(), // source
-        pitch, //srcRowBytes
-        pitch * mTexHeight );
+    //tex.texture->download(
+    //    0, // subsurface
+    //    0, // area
+    //    tex.syscopy.cptr(), // source
+    //    pitch, //srcRowBytes
+    //    pitch * mTexHeight );
+    GN_UNIMPL();
 
     // success
     return &slot;

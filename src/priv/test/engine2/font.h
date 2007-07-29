@@ -1,5 +1,5 @@
-#ifndef __GN_TESTGFX2_FONT_H__
-#define __GN_TESTGFX2_FONT_H__
+#ifndef __GN_TESTENGINE2_FONT_H__
+#define __GN_TESTENGINE2_FONT_H__
 // *****************************************************************************
 /// \file
 /// \brief   font class using render engine
@@ -51,7 +51,7 @@ namespace GN { namespace test
             {
                 mTextures[i].texture   = 0;
                 mKernelPortBindings[i] = 0;
-                mContexts              = 0;
+                mContexts[i]           = 0;
                 mCharList[i]           = 0;
                 mNumChars[i]           = 0;
             }
@@ -244,4 +244,4 @@ namespace GN { namespace test
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_TESTGFX2_FONT_H__
+#endif // __GN_TESTENGINE2_FONT_H__
