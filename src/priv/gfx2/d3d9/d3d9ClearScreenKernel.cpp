@@ -13,15 +13,17 @@ namespace GN { namespace gfx
     {
         D3D9ColorParameter( D3DCOLOR initial ) : TypedKernelParameter<D3DCOLOR>( initial ) {}
 
-        void setf( size_t offset, size_t count, const float * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 4 != count || NULL == values )
+            if( 0 != offset || 16 != bytes || NULL == values )
             {
                 GN_ERROR(sLogger)( "invalid parameter value." );
                 return;
             }
 
-            value = D3DCOLOR_COLORVALUE( values[0], values[1], values[2], values[3] );
+            const float * c = (const float*)values;
+
+            value = D3DCOLOR_COLORVALUE( c[0], c[1], c[2], c[3] );
         }
     };
 

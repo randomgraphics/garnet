@@ -28,15 +28,15 @@ namespace GN { namespace gfx
         {
         }
 
-        void setb( size_t offset, size_t count, const bool * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            if( 0 != offset || 1 != bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.TransparentParameter"))( "invalid parameter value." );
                 return;
             }
 
-            value = *values;
+            value = *(const bool*)values;
 
             if( value )
             {

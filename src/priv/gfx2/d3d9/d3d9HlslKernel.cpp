@@ -56,15 +56,15 @@ namespace GN { namespace gfx
 
         ID3DXEffect * operator->() const { GN_ASSERT( mFx ); return mFx; }
 
-        void sets( size_t offset, size_t count, const char * const * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            if( 0 != offset || 0 == bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.D3D9FxParameter"))( "invalid parameter value." );
                 return;
             }
 
-            mFx.attach( d3d9::compileEffect( mDev, *values ) );
+            mFx.attach( d3d9::compileEffect( mDev, (const char*)values ) );
         }
 
         void unset() { mFx.clear(); }
@@ -129,19 +129,19 @@ namespace GN { namespace gfx
             }
         }
 
-        void setf( size_t offset, size_t count, const float * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( offset >= 256*4 || (offset+count) > 256*4 || NULL == values )
+            if( offset >= 256*16 || (offset+bytes) > 256*16 || NULL == values )
             {
                 GN_ERROR(sLogger)( "invalid parameter value." );
                 return;
             }
 
-            UINT firstRegister = (UINT)offset / 4;
-            UINT numRegisters  = (UINT)count / 4;
+            UINT firstRegister = (UINT)offset / 16;
+            UINT numRegisters  = (UINT)bytes / 16;
 
             mUpdate.merge( firstRegister, numRegisters );
-            memcpy( &mConstants[firstRegister], values, numRegisters * sizeof(float) * 4 );
+            memcpy( &mConstants[firstRegister], values, numRegisters * 16 );
         }
     };
 
@@ -178,15 +178,15 @@ namespace GN { namespace gfx
         {
         }
 
-        void seti( size_t offset, size_t count, const int * values )
+        void set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != count || NULL == values )
+            if( 0 != offset || 4 != bytes || NULL == values )
             {
                 GN_ERROR(getLogger("GN.gfx2.D3D9PrimTypeParameter"))( "invalid parameter value." );
                 return;
             }
 
-            value = pt2d3d( *values );
+            value = pt2d3d( *(const int*)values );
         }
     };
 
