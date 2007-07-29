@@ -1,5 +1,5 @@
-#ifndef __GN_ENGINE_GNENGINE_H__
-#define __GN_ENGINE_GNENGINE_H__
+#ifndef __GN_ENGINE2_GNENGINE2_H__
+#define __GN_ENGINE2_GNENGINE2_H__
 // *****************************************************************************
 /// \file
 /// \brief   public header of engine module
@@ -340,13 +340,13 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         GraphicsResource * getKernel( const StrA & kernel );
 
         GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
-        GraphicsResource * getStream( GraphicsResource & kernel, const StrA & stream );
+        GraphicsResource * getStream( const GraphicsResource & kernel, const StrA & stream );
 
         GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
-        GraphicsResource * createParameterSet( const StrA & resname, GraphicsResource & kernel );
+        GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
-        GraphicsResource * createPortBinding( const StrA & resname, GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
+        GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
 
         void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
         void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );
@@ -654,4 +654,4 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_ENGINE_GNENGINE_H__
+#endif // __GN_ENGINE2_GNENGINE2_H__
