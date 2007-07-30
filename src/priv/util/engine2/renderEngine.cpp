@@ -12,6 +12,40 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine");
 // *****************************************************************************
 
 ///
+/// Render engine API is not reentrant safe.
+///
+struct ApiReentrantChecker
+{
+    volatile SInt32 * mFlag;
+
+    ApiReentrantChecker( volatile SInt32 * flag ) : mFlag(flag)
+    {
+        if( 0 != GN::atomCmpXchg32( mFlag, 1, 0 ) )
+        {
+            // We're doomed....
+            GN_FATAL(sLogger)( "Render engine API reentrant!" );
+            GN_DEBUG_BREAK();
+        }
+    }
+
+    ~ApiReentrantChecker()
+    {
+        GN::atomDec32( mFlag );
+    }
+};
+
+
+#if GN_RENDER_ENGINE_API_DUMP_ENABLED
+#define RENDER_ENGINE_API() \
+    ApiReentrantChecker checker( &mApiReentrantFlag ); \
+    RenderEngineApiDumper apidumper( GN_FUNCTION )
+#else
+#define RENDER_ENGINE_API() \
+    ApiReentrantChecker checker( &mApiReentrantFlag );
+#endif
+
+
+///
 /// dummy loader that does nothing.
 ///
 class DummyLoader : public GN::engine2::GraphicsResourceLoader
@@ -50,20 +84,21 @@ public:
 ///
 class StreamSourceLoader : public DummyLoader
 {
+    size_t               mIndex;
     GN::DynaArray<UInt8> mData;
 
 public:
 
-    StreamSourceLoader( size_t bytes, const void * data ) : mData( bytes )
+    StreamSourceLoader( size_t streamIndex, size_t bytes, const void * data ) : mIndex(streamIndex), mData( bytes )
     {
         memcpy( mData.cptr(), data, bytes );
     }
 
     virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_ASSERT( GN::engine2::GRT_STREAM == res.desc.type );
-        GN_ASSERT( res.stream );
-        res.stream->push( mData.cptr(), mData.size() );
+        GN_ASSERT( GN::engine2::GRT_KERNEL == res.desc.type );
+        GN_ASSERT( res.kernel );
+        res.kernel->getStream( mIndex )->push( mData.cptr(), mData.size() );
         return true;
     }
 };
@@ -236,75 +271,26 @@ static inline void sSetupWaitingListAndReferenceFence(
 //
 //
 // -----------------------------------------------------------------------------
-GN::StrA GN::engine2::GraphicsResource::toString() const
+GN::StrA GN::engine2::GraphicsResource::sToString( const GraphicsResource * resource )
 {
-    struct Local
-    {
-        static const char * sType2Str( GN::engine2::GraphicsResourceType type )
-        {
-            static const char * table[] = {
-                "SURFACE",
-                "STREAM",
-                "PARAMETER_SET",
-                "PORT_BINDING",
-                "KERNEL",
-            };
-
-            if( 0 <= type && type < GN::engine2::NUM_GRAPHICS_RESOURCE_TYPES )
-                return table[type];
-            else
-                return "INVALID";
-        }
-    };
-
     StrA s;
 
-    s.format( "type=\"%s\" name=\"%s\"",
-        Local::sType2Str( desc.type ),
-        desc.name.empty() ? "unnamed" : desc.name.cptr() );
+    if( 0 == resource )
+    {
+        s = "<resource/>NULL</resource>";
+    }
+    else
+    {
+        s.format( "<resource type=\"%s\" name=\"%s\"/>",
+            graphicsResourceType2String( resource->desc.type ),
+            resource->desc.name.empty() ? "unnamed" : resource->desc.name.cptr() );
+    }
 
     return s;
 }
 
 // *****************************************************************************
 // Render engine
-// *****************************************************************************
-
-///
-/// Render engine API is not reentrant safe.
-///
-struct ApiReentrantChecker
-{
-    volatile SInt32 * mFlag;
-
-    ApiReentrantChecker( volatile SInt32 * flag ) : mFlag(flag)
-    {
-        if( 0 != GN::atomCmpXchg32( mFlag, 1, 0 ) )
-        {
-            // We're doomed....
-            GN_FATAL(sLogger)( "Render engine API reentrant!" );
-            GN_DEBUG_BREAK();
-        }
-    }
-
-    ~ApiReentrantChecker()
-    {
-        GN::atomDec32( mFlag );
-    }
-};
-
-
-#if GN_RENDER_ENGINE_API_DUMP_ENABLED
-#define RENDER_ENGINE_API() \
-    ApiReentrantChecker checker( &mApiReentrantFlag ); \
-    RenderEngineApiDumper apidumper( GN_FUNCTION )
-#else
-#define RENDER_ENGINE_API() \
-    ApiReentrantChecker checker( &mApiReentrantFlag );
-#endif
-
-// *****************************************************************************
-// ctor / dtor
 // *****************************************************************************
 
 //
@@ -478,16 +464,9 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
     RENDER_ENGINE_API();
 
     // special cases
-    StrA streamName;
     if( GRT_KERNEL == desc.type )
     {
         GraphicsResource * res = mKernels.get( desc.kernel.kernel );
-        if( res ) return res;
-    }
-    else if( GRT_STREAM == desc.type )
-    {
-        streamName.format( "%s::%s", desc.stream.kernel.cptr(), desc.stream.stream.cptr() );
-        GraphicsResource * res = mStreams.get( streamName );
         if( res ) return res;
     }
     else if( GRT_PORT_BINDING == desc.type )
@@ -518,14 +497,10 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
     if( 0 == item ) return 0;
     mResourceLRU->insert( item );
 
-    // special for kernel and stream: insert to local cache.
+    // special for kernel: insert to local cache.
     if( GRT_KERNEL == desc.type )
     {
         mKernels.add( desc.kernel.kernel, item );
-    }
-    else if( GRT_STREAM == desc.type )
-    {
-        mStreams.add( streamName, item );
     }
 
     return item;
@@ -548,19 +523,10 @@ void GN::engine2::RenderEngine::deleteResource( GraphicsResource * res )
 
     if( !mResourceCache->checkResource( item ) ) return;
 
-    // special for kernel and stream: try remove it from local cache first.
+    // special for kernel: try remove it from local cache first.
     if( GRT_KERNEL == item->desc.type )
     {
         if( mKernels.del( item->desc.kernel.kernel, item ) > 0 )
-        {
-            return;
-        }
-    }
-    else if( GRT_STREAM == item->desc.type )
-    {
-        StrA streamName;
-        streamName.format( "%s::%s", item->desc.stream.kernel.cptr(), item->desc.stream.stream.cptr() );
-        if( mStreams.del( streamName, item ) > 0 )
         {
             return;
         }
@@ -662,26 +628,8 @@ UIntPtr GN::engine2::RenderEngine::createRenderContext(
     GraphicsResource * binding )
 {
     // check arguments
-    if( !mResourceCache->checkResource( kernel ) )
-    {
-        GN_ERROR(sLogger)( "invalid kernel pointer" );
-        return 0;
-    }
-    if( GRT_KERNEL != kernel->desc.type )
-    {
-        GN_ERROR(sLogger)( "kernel pointer points to non-kernel resource." );
-        return 0;
-    }
-    if( !mResourceCache->checkResource( paramset ) )
-    {
-        GN_ERROR(sLogger)( "invalid parameter pointer" );
-        return 0;
-    }
-    if( GRT_PARAMETER_SET != paramset->desc.type )
-    {
-        GN_ERROR(sLogger)( "parameter pointer points to non-parameter resource." );
-        return 0;
-    }
+    if( !mResourceCache->checkResource( kernel, GRT_KERNEL ) ) return 0;
+    if( !mResourceCache->checkResource( paramset, GRT_PARAMETER_SET ) ) return 0;
     if( kernel->desc.kernel.kernel != paramset->desc.paramset.kernel )
     {
         GN_ERROR(sLogger)( "parameter resource belongs to another kernel then the input one." );
@@ -689,16 +637,7 @@ UIntPtr GN::engine2::RenderEngine::createRenderContext(
     }
     if( 0 != binding )
     {
-        if( !mResourceCache->checkResource( binding ) )
-        {
-            GN_ERROR(sLogger)( "invalid binding pointer" );
-            return 0;
-        }
-        if( GRT_PORT_BINDING != binding->desc.type )
-        {
-            GN_ERROR(sLogger)( "binding pointer points to non-binding resource." );
-            return 0;
-        }
+        if( !mResourceCache->checkResource( binding, GRT_PORT_BINDING ) ) return false;
         if( kernel->desc.kernel.kernel != binding->desc.binding.kernel )
         {
             GN_ERROR(sLogger)( "binding resource belongs to another kernel then the input one." );
@@ -706,11 +645,14 @@ UIntPtr GN::engine2::RenderEngine::createRenderContext(
         }
     }
 
+
     // build draw context
     DrawContext dc;
 
     dc.resources.append( kernel );
+
     dc.resources.append( paramset );
+
     if( binding )
     {
         std::map<StrA,SurfaceResourceView>::const_iterator iter = binding->desc.binding.views.begin();
@@ -819,39 +761,6 @@ GN::engine2::RenderEngine::getKernel( const StrA & kernel )
 //
 // -----------------------------------------------------------------------------
 GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::getStream( const StrA & kernel, const StrA & stream )
-{
-    GraphicsResourceDesc grd;
-
-    grd.name          = strFormat( "stream %s::%s", kernel.cptr(), stream.cptr() );
-    grd.type          = GRT_STREAM;
-    grd.stream.kernel = kernel;
-    grd.stream.stream = stream;
-
-    return createResource( grd );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::getStream( const GraphicsResource & kernel, const StrA & stream )
-{
-    if( !mResourceCache->checkResource( &kernel ) ) return 0;
-
-    if( GRT_KERNEL != kernel.desc.type )
-    {
-        GN_ERROR(sLogger)( "input graphics resource is not a kernel." );
-        return 0;
-    }
-
-    return getStream( kernel.desc.kernel.kernel, stream );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
 GN::engine2::RenderEngine::createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & creation )
 {
     GraphicsResourceDesc grd;
@@ -889,13 +798,7 @@ GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const StrA 
 GN::engine2::GraphicsResource *
 GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const GraphicsResource & kernel )
 {
-    if( !mResourceCache->checkResource( &kernel ) ) return 0;
-
-    if( GRT_KERNEL != kernel.desc.type )
-    {
-        GN_ERROR(sLogger)( "input graphics resource is not a kernel." );
-        return 0;
-    }
+    if( !mResourceCache->checkResource( &kernel, GRT_KERNEL ) ) return 0;
 
     return createParameterSet( resname, kernel.desc.kernel.kernel );
 }
@@ -942,21 +845,39 @@ GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const Graphi
 //
 // -----------------------------------------------------------------------------
 void GN::engine2::RenderEngine::pushStreamData(
-    GraphicsResource * stream,
+    GraphicsResource * kernel,
+    size_t             streamIndex,
     size_t             bytes,
     const void       * data )
 {
-    if( !mResourceCache->checkResource( stream ) ) return;
+    if( !mResourceCache->checkResource( kernel, GRT_KERNEL ) ) return;
 
-    if( GRT_STREAM != stream->desc.type )
+    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( streamIndex, bytes, data ) );
+
+    updateResource( kernel, loader );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine2::RenderEngine::pushStreamData(
+    GraphicsResource * kernel,
+    const StrA &       streamName,
+    size_t             bytes,
+    const void       * data )
+{
+    if( !mResourceCache->checkResource( kernel, GRT_KERNEL ) ) return;
+
+    size_t index = gfx::getKernelReflection( kernel->desc.kernel.kernel ).streams.name2idx(streamName);
+    if( (size_t)-1 == index )
     {
-        GN_ERROR(sLogger)( "the resource is not a stream source" );
+        GN_ERROR(sLogger)( "invalid stream name: %s", streamName.cptr() );
         return;
     }
 
-    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( bytes, data ) );
+    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( index, bytes, data ) );
 
-    updateResource( stream, loader );
+    updateResource( kernel, loader );
 }
 
 //
@@ -969,13 +890,7 @@ void GN::engine2::RenderEngine::setParameter(
     size_t             bytes,
     const void       * data )
 {
-    if( !mResourceCache->checkResource( paramset ) ) return;
-
-    if( GRT_PARAMETER_SET != paramset->desc.type )
-    {
-        GN_ERROR(sLogger)( "the resource is not a parameter set" );
-        return;
-    }
+    if( !mResourceCache->checkResource( paramset, GRT_PARAMETER_SET ) ) return;
 
     AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
 
@@ -992,13 +907,7 @@ void GN::engine2::RenderEngine::setParameter(
     size_t             bytes,
     const void       * data )
 {
-    if( !mResourceCache->checkResource( paramset ) ) return;
-
-    if( GRT_PARAMETER_SET != paramset->desc.type )
-    {
-        GN_ERROR(sLogger)( "the resource is not a parameter set" );
-        return;
-    }
+    if( !mResourceCache->checkResource( paramset, GRT_PARAMETER_SET ) ) return;
 
     const gfx::KernelReflection & refl = gfx::getKernelReflection( paramset->desc.paramset.kernel );
 

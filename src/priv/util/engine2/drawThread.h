@@ -214,18 +214,18 @@ namespace GN { namespace engine2
         FenceId                           mCompletedResourceFence;
 
         // data to handle draw commands
-        DrawFunction     mDrawFunctions[NUM_DRAW_COMMAND_TYPES];
-        DrawBuffer       mDrawBuffers[DRAW_BUFFER_COUNT];
-        volatile SInt32  mReadingIndex;
-        volatile SInt32  mWritingIndex;
-        FenceId          mCompletedDrawFence;   // means that draws before or equal this fence are done.
-        Mutex            mDrawBufferMutex;
-        SyncEvent      * mDrawBufferEmpty;
-        Semaphore      * mDrawBufferNotFull;
-        //Semaphore     * mDrawBufferNotEmpty;
-        FrameProfiler    mFrameProfiler;
+        FixedArray<DrawFunction,NUM_DRAW_COMMAND_TYPES> mDrawFunctions;
+        FixedArray<DrawBuffer,DRAW_BUFFER_COUNT>        mDrawBuffers;
+        volatile SInt32                                 mReadingIndex;
+        volatile SInt32                                 mWritingIndex;
+        FenceId                                         mCompletedDrawFence;   // means that draws before or equal this fence are done.
+        Mutex                                           mDrawBufferMutex;
+        SyncEvent                                     * mDrawBufferEmpty;
+        Semaphore                                     * mDrawBufferNotFull;
+        FrameProfiler                                   mFrameProfiler;
 
-        Thread         * mDrawThread;
+        // draw thread object
+        Thread * mDrawThread;
 
         // ********************************
         // private functions

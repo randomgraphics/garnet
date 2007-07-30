@@ -461,7 +461,7 @@ namespace GN { namespace gfx
         inline  Kernel          & getKernel() const { return mKernel; }
 
         virtual KernelParameter & get( size_t index ) = 0; ///< return dummy parameter, if index is invalid.
-        inline  KernelParameter & get( const StrA & name );
+        inline  KernelParameter & get( const StrA & name ); ///< get kernel parameter by name. return dummy for invalid name.
 
         inline  KernelParameter & operator[]( size_t index ) { return get( index ); }
         inline  KernelParameter & operator[]( const StrA & name ) { return get( name ); }
@@ -963,7 +963,7 @@ namespace GN { namespace gfx
     ///
     /// \param kernelName
     ///     Kernel name
-    /// \param success
+    /// \param dummy
     ///     Optional. Setted to true, if returned a dummy relfection (aka. name is invalid).
     /// \return
     ///     dummy reflection for empty or invalid kernel name.
@@ -984,7 +984,13 @@ namespace GN { namespace gfx
     // inline functions
     // *************************************************************************
 
-    inline KernelParameter & KernelParameterSet::get( const StrA & name ) { return get( getKernelReflection(getKernel()).parameters.name2idx(name) ); }
+    //
+    //
+    // -----------------------------------------------------------------------------
+    inline KernelParameter & KernelParameterSet::get( const StrA & name )
+    {
+        return get( getKernelReflection(getKernel()).parameters.name2idx(name) );
+    }
 
     //
     //

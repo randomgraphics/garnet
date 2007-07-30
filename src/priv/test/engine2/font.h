@@ -204,7 +204,6 @@ namespace GN { namespace test
         RenderEngine              & mRenderEngine;
 
         GraphicsResource          * mKernel;
-        GraphicsResource          * mStream;
         GraphicsResource          * mKernelParam;
         GraphicsResource          * mKernelPortBindings[MAX_TEXTURES];
         GraphicsResource          * mTextures[MAX_TEXTURES];

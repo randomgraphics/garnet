@@ -18,7 +18,6 @@ namespace GN { /** namespace for engine2 */ namespace engine2
     {
         //@{
         GRT_SURFACE,
-        GRT_STREAM,
         GRT_PARAMETER_SET,
         GRT_PORT_BINDING,
         GRT_KERNEL,
@@ -26,6 +25,25 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         GRT_INVALID = NUM_GRAPHICS_RESOURCE_TYPES,
         //@}
     };
+
+    ///
+    /// convert graphics resource type to string
+    ///
+    inline const char * graphicsResourceType2String( int type )
+    {
+        static const char * table[] = {
+            "SURFACE",
+            "PARAMETER_SET",
+            "PORT_BINDING",
+            "KERNEL",
+        };
+        GN_CASSERT( GN_ARRAY_COUNT(table) == NUM_GRAPHICS_RESOURCE_TYPES );
+
+        if( 0 <= type && type < NUM_GRAPHICS_RESOURCE_TYPES )
+            return table[type];
+        else
+            return "INVALID";
+    }
 
     struct GraphicsResource;
 
@@ -81,15 +99,6 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         } surface;
 
         /// ...
-        struct StreamDesc
-        {
-            //@{
-            StrA kernel; ///< kernel name
-            StrA stream; ///< stream name
-            //@}
-        } stream;
-
-        /// ...
         struct ParameterSetDesc
         {
             //@{
@@ -133,14 +142,16 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             //@{
             void                    * data;
             gfx::Surface            * surface;
-            gfx::StreamSource       * stream;
             gfx::KernelParameterSet * paramset;
             gfx::KernelPortBinding  * binding;
             gfx::Kernel             * kernel;
             //@}
         };
 
-        StrA toString() const; ///< convert to string (for log only)
+        ///
+        /// convert resource to string (for log only)
+        ///
+        static StrA sToString( const GraphicsResource * );
 
     protected:
 
@@ -339,16 +350,14 @@ namespace GN { /** namespace for engine2 */ namespace engine2
 
         GraphicsResource * getKernel( const StrA & kernel );
 
-        GraphicsResource * getStream( const StrA & kernel, const StrA & stream );
-        GraphicsResource * getStream( const GraphicsResource & kernel, const StrA & stream );
-
         GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
         GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
 
-        void               pushStreamData( GraphicsResource * stream, size_t bytes, const void * data );
+        void               pushStreamData( GraphicsResource * kernel, size_t streamIndex, size_t bytes, const void * data );
+        void               pushStreamData( GraphicsResource * kernel, const StrA & streamName, size_t bytes, const void * data );
 
         void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
         void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );

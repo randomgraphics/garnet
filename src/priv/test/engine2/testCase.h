@@ -11,7 +11,7 @@
 using namespace GN::engine2;
 
 ///
-/// coming soon ...
+/// base class of engine2 test case
 ///
 class TestCase
 {
