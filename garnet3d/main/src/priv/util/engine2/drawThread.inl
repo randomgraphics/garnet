@@ -31,9 +31,9 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand(
 
     DrawCommandHeader * header = (DrawCommandHeader * )db.next;
 
+    header->type  = type;
     header->bytes = (UInt32)commandBytes;
     header->fence = mEngine.fenceManager().getAndIncFence();
-    header->func  = mDrawFunctions[type];
     header->resourceWaitingCount = 0;
 
     db.last = (UInt8*)header;

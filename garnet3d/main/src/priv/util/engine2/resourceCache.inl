@@ -11,6 +11,26 @@ GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource 
 //
 // -----------------------------------------------------------------------------
 inline bool
+GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res, GraphicsResourceType mustBeThisType ) const
+{
+    if( !checkResource( res ) ) return false;
+
+    if( mustBeThisType != res->desc.type )
+    {
+        GN_ERROR(GN::getLogger("GN.engine2.RenderEngine.ResourceCache"))(
+            "Unexpected resource type: expected(%s), actual(%s)",
+            graphicsResourceType2String( mustBeThisType ),
+            graphicsResourceType2String( res->desc.type ) );
+        return false;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline bool
 GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResourceItem * item ) const
 {
     ScopeMutex<SpinLoop> lock(mResourceMutex);

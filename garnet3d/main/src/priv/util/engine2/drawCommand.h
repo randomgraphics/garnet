@@ -57,6 +57,11 @@ namespace GN { namespace engine2
         };
 
         ///
+        /// command type.
+        ///
+        DrawCommandType type;
+
+        ///
         /// bytes of the command, including this header
         ///
         UInt32 bytes;
@@ -65,11 +70,6 @@ namespace GN { namespace engine2
         /// fence ID of this draw
         ///
         FenceId fence;
-
-        ///
-        /// function pointer that handles the command.
-        ///
-        DrawFunction func;
 
         //@{
         FixedArray<ResourceWaitingItem,MAX_RESOURCES_PER_DRAW> resourceWaitingList;

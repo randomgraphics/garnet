@@ -38,7 +38,6 @@ static size_t sEstimateResourceSize( const GN::engine2::GraphicsResourceDesc & d
         case GRT_SURFACE  :
             return sEstimateSurfaceSize( desc.surface.creation );
 
-        case GRT_STREAM   :
         case GRT_PARAMETER_SET :
         case GRT_PORT_BINDING :
         case GRT_KERNEL :

@@ -90,6 +90,24 @@ namespace GN
         virtual bool eof() const = 0;
 
         ///
+        /// write string to file
+        ///
+        inline bool print( const StrA & s ) { return write( s.cptr(), s.size(), 0 ); }
+
+        ///
+        /// write formatted string to file
+        ///
+        inline bool printf( const char * fmt, ... )
+        {
+            StrA s;
+            va_list arglist;
+            va_start( arglist, fmt );
+            s.formatv( fmt, arglist );
+            va_end( arglist );
+            return print( s );
+        }
+
+        ///
         /// 设定文件读写游标的位置
         ///
         /// \return   return false if error

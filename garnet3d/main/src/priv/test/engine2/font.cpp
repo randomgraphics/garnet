@@ -203,9 +203,7 @@ bool GN::test::BitmapFont::init( const FontFaceDesc & ffd )
     if( 0 == mKernelParam ) return failure();
 
     // initialize quad stream
-    mStream = mRenderEngine.getStream( *mKernel, "QUADS" );
-    if( 0 == mStream ) return failure();
-    GN_TODO( "get freebyte() of the stream" );
+    GN_TODO( "get freebyte() of quad stream" );
     mQuadBuffer.resize( 1024 );
 
     // create render context
@@ -248,8 +246,6 @@ void GN::test::BitmapFont::quit()
     }
 
     safeDeleteGraphicsResource( mKernelParam );
-
-    safeDeleteGraphicsResource( mStream );
 
     safeDeleteGraphicsResource( mKernel );
 
@@ -382,7 +378,7 @@ void GN::test::BitmapFont::drawText( const TextDesc & td )
                 v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
             }
 
-            mRenderEngine.pushStreamData( mStream, MAX_QUADS * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
+            mRenderEngine.pushStreamData( mKernel, 0, MAX_QUADS * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
             mRenderEngine.render( mContexts[i] );
         }
 
@@ -401,7 +397,7 @@ void GN::test::BitmapFont::drawText( const TextDesc & td )
             v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
             v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
         }
-        mRenderEngine.pushStreamData( mStream, n2 * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
+        mRenderEngine.pushStreamData( mKernel, 0, n2 * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
         mRenderEngine.render( mContexts[i] );
 
         mNumChars[i] = 0;

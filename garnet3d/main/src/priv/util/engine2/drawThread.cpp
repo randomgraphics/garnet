@@ -8,6 +8,108 @@ using namespace GN::engine2;
 using namespace GN::gfx;
 
 // *****************************************************************************
+// draw thread dumper
+// *****************************************************************************
+
+#define DUMP_DRAW_THREAD_COMMANDS 0
+
+class DrawThreadDumper
+{
+    GN::File * mFile;
+
+    static const char * sDrawCommandType2String( int cmd )
+    {
+        static const char * table[] =
+        {
+            "DRAW",
+            "PRESENT",
+        };
+
+        if( 0 <= cmd && cmd < GN::engine2::NUM_DRAW_COMMAND_TYPES )
+            return table[cmd];
+        else
+            return "INVALID_DRAW_COMMAND";
+    }
+
+public:
+
+    DrawThreadDumper()
+    {
+        if( DUMP_DRAW_THREAD_COMMANDS )
+        {
+            mFile = GN::core::openFile( "drawthread.xml", "wt" );
+        }
+        else
+        {
+            mFile = 0;
+        }
+
+        if( mFile )
+        {
+            mFile->print(
+                "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
+                "<DrawThreadDump>\n" );
+        }
+    }
+
+    ~DrawThreadDumper()
+    {
+        if( mFile )
+        {
+            mFile->print( "</DrawThreadDump>" );
+
+            delete mFile;
+        }
+    }
+
+    void dumpString( const char * fmt, ... )
+    {
+        GN::StrA s;
+
+        va_list arglist;
+        va_start( arglist, fmt );
+        s.formatv( fmt, arglist );
+        va_end( arglist );
+
+        mFile->print( s );
+        mFile->print( "\n" );
+    }
+
+    void dumpCommandOpenTag( GN::engine2::DrawCommandHeader & cmd )
+    {
+        using namespace GN;
+
+        if( 0 == mFile ) return;
+
+        mFile->print( strFormat( "\t<%s fence=\"%d\">\n",
+            sDrawCommandType2String( cmd.type ),
+            cmd.fence ) );
+
+        mFile->print( strFormat( "\t\t<resource_waiting_list count=\"%u\">\n", cmd.resourceWaitingCount ) );
+
+        for( size_t i = 0; i < cmd.resourceWaitingCount; ++i )
+        {
+            const GN::engine2::DrawCommandHeader::ResourceWaitingItem & rwi = cmd.resourceWaitingList[i];
+
+            mFile->print( strFormat( "\t\t\t<rwi fence=\"%d\">%s</rwi>\n",
+                rwi.waitForUpdate,
+                GraphicsResource::sToString(rwi.resource).cptr() ) );
+        }
+
+        mFile->print( "\t\t</resource_waiting_list>\n" );
+    }
+
+    void dumpCommandEndTag( GN::engine2::DrawCommandHeader & cmd )
+    {
+        if( 0 == mFile ) return;
+
+        mFile->print( GN::strFormat( "\t</%s>\n", sDrawCommandType2String( cmd.type ) ) );
+    }
+};
+
+static DrawThreadDumper sDumper;
+
+// *****************************************************************************
 // local functions
 // *****************************************************************************
 
@@ -26,19 +128,6 @@ static bool sCreateDeviceData( GraphicsSystem & gs, GN::engine2::GraphicsResourc
 
             res.surface = gs.createSurface( desc.surface.creation );
             if( 0 == res.surface ) return false;
-
-            break;
-        }
-
-        case GRT_STREAM :
-        {
-            GN_ASSERT( 0 == res.stream );
-
-            Kernel * kernel = gs.getKernel( desc.stream.kernel );
-            if( 0 == kernel ) return false;
-
-            res.stream = kernel->getStream( desc.stream.stream );
-            if( 0 == res.stream ) return false;
 
             break;
         }
@@ -125,6 +214,11 @@ static void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t )
 
     p->kernel->kernel->render( *p->paramset->paramset, p->binding ? p->binding->binding : 0 );
 
+    if( DUMP_DRAW_THREAD_COMMANDS )
+    {
+        sDumper.dumpString( "kernel=\"%s\"", p->kernel->desc.kernel.kernel.cptr() );
+    }
+
     GN_UNGUARD_SLOW;
 }
 
@@ -193,11 +287,6 @@ void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
             safeDelete( cmd.resource->surface );
             break;
 
-        case GRT_STREAM :
-            // no need to delete stream
-            cmd.resource->stream = 0;
-            break;
-
         case GRT_PARAMETER_SET :
             safeDelete( cmd.resource->paramset );
             break;
@@ -233,7 +322,7 @@ bool GN::engine2::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferByt
     GN_STDCLASS_INIT( DrawThread, () );
 
     // initialize draw function pointers
-    memset( mDrawFunctions, 0, sizeof(mDrawFunctions) );
+    memset( &mDrawFunctions, 0, sizeof(mDrawFunctions) );
     mDrawFunctions[DCT_DRAW]            = &DRAWFUNC_DRAW;
     mDrawFunctions[DCT_PRESENT]         = &DRAWFUNC_PRESENT;
     if( GN_ASSERT_ENABLED )
@@ -514,9 +603,19 @@ void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
 
         if( 0 == command->resourceWaitingCount )
         {
+            if( DUMP_DRAW_THREAD_COMMANDS )
+            {
+                sDumper.dumpCommandOpenTag( *command );
+            }
+
             // all resources are ready. do it!
-            GN_ASSERT( command->func );
-            command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
+            GN_ASSERT( mDrawFunctions[command->type] );
+            mDrawFunctions[command->type]( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
+
+            if( DUMP_DRAW_THREAD_COMMANDS )
+            {
+                sDumper.dumpCommandEndTag( *command );
+            }
 
             // update draw fence
             mCompletedDrawFence = command->fence;
