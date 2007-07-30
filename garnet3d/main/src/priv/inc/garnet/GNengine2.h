@@ -178,12 +178,12 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         ///
         /// decompress or do other process to prepare for copy to graphics resource.
         ///
-        virtual bool decompress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, const DynaArray<UInt8> & inbuf ) = 0;
+        virtual bool decompress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf ) = 0;
 
         ///
         /// copy data to graphics resource
         ///
-        virtual bool copy( GraphicsResource & res, const DynaArray<UInt8> & inbuf ) = 0;
+        virtual bool copy( GraphicsResource & res, DynaArray<UInt8> & inbuf ) = 0;
     };
 
     ///
@@ -347,6 +347,8 @@ namespace GN { /** namespace for engine2 */ namespace engine2
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
         GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
+
+        void               pushStreamData( GraphicsResource * stream, size_t bytes, const void * data );
 
         void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
         void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );

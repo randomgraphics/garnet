@@ -194,7 +194,8 @@ void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
             break;
 
         case GRT_STREAM :
-            safeDelete( cmd.resource->stream );
+            // no need to delete stream
+            cmd.resource->stream = 0;
             break;
 
         case GRT_PARAMETER_SET :
