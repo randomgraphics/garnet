@@ -34,13 +34,36 @@ public:
         return true;
     }
 
-    bool decompress( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, const GN::DynaArray<UInt8> & )
+    bool decompress( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
     {
         return true;
     }
 
-    virtual bool copy( GN::engine2::GraphicsResource &, const GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine2::GraphicsResource &, GN::DynaArray<UInt8> & )
     {
+        return true;
+    }
+};
+
+///
+/// kernel stream loader
+///
+class StreamSourceLoader : public DummyLoader
+{
+    GN::DynaArray<UInt8> mData;
+
+public:
+
+    StreamSourceLoader( size_t bytes, const void * data ) : mData( bytes )
+    {
+        memcpy( mData.cptr(), data, bytes );
+    }
+
+    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GN::engine2::GRT_STREAM == res.desc.type );
+        GN_ASSERT( res.stream );
+        res.stream->push( mData.cptr(), mData.size() );
         return true;
     }
 };
@@ -64,7 +87,7 @@ public:
         memcpy( mValues.cptr(), data, bytes );
     }
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
@@ -82,7 +105,7 @@ struct BoolParameterLoader : public DummyLoader
     size_t index;
     bool   values[COUNT];
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
@@ -100,7 +123,7 @@ struct FloatParameterLoader : public DummyLoader
     size_t index;
     float  values[COUNT];
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, const GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
@@ -454,7 +477,7 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 
     RENDER_ENGINE_API();
 
-    // special for kernel and stream: try get it from local cache first.
+    // special cases
     StrA streamName;
     if( GRT_KERNEL == desc.type )
     {
@@ -466,6 +489,28 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
         streamName.format( "%s::%s", desc.stream.kernel.cptr(), desc.stream.stream.cptr() );
         GraphicsResource * res = mStreams.get( streamName );
         if( res ) return res;
+    }
+    else if( GRT_PORT_BINDING == desc.type )
+    {
+        // realize disposed surfaces before creating port binding
+        std::map<GN::StrA,SurfaceResourceView>::const_iterator iter = desc.binding.views.begin();
+        for( ; iter != desc.binding.views.end(); ++iter )
+        {
+            GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( iter->second.surf );
+
+            if( item && GRS_DISPOSED == item->state )
+            {
+                mResourceLRU->realize( item, 0 );
+                if( item->lastSubmittedLoader )
+                {
+                    mResourceThread->submitResourceLoadingCommand( item, item->lastSubmittedLoader );
+                }
+                else
+                {
+                    mResourceThread->submitResourceLoadingCommand( item, DummyLoader::sGetInstance() );
+                }
+            }
+        }
     }
 
     // create new resource item
@@ -649,7 +694,7 @@ UIntPtr GN::engine2::RenderEngine::createRenderContext(
             GN_ERROR(sLogger)( "invalid binding pointer" );
             return 0;
         }
-        if( GRT_PARAMETER_SET != binding->desc.type )
+        if( GRT_PORT_BINDING != binding->desc.type )
         {
             GN_ERROR(sLogger)( "binding pointer points to non-binding resource." );
             return 0;
@@ -896,6 +941,27 @@ GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const Graphi
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine2::RenderEngine::pushStreamData(
+    GraphicsResource * stream,
+    size_t             bytes,
+    const void       * data )
+{
+    if( !mResourceCache->checkResource( stream ) ) return;
+
+    if( GRT_STREAM != stream->desc.type )
+    {
+        GN_ERROR(sLogger)( "the resource is not a stream source" );
+        return;
+    }
+
+    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( bytes, data ) );
+
+    updateResource( stream, loader );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine2::RenderEngine::setParameter(
     GraphicsResource * paramset,
     size_t             index,
@@ -903,7 +969,7 @@ void GN::engine2::RenderEngine::setParameter(
     size_t             bytes,
     const void       * data )
 {
-    if( mResourceCache->checkResource( paramset ) ) return;
+    if( !mResourceCache->checkResource( paramset ) ) return;
 
     if( GRT_PARAMETER_SET != paramset->desc.type )
     {
@@ -926,7 +992,7 @@ void GN::engine2::RenderEngine::setParameter(
     size_t             bytes,
     const void       * data )
 {
-    if( mResourceCache->checkResource( paramset ) ) return;
+    if( !mResourceCache->checkResource( paramset ) ) return;
 
     if( GRT_PARAMETER_SET != paramset->desc.type )
     {

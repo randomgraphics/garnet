@@ -74,9 +74,9 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( sizeof(QuadVertex) == 32 );
 
-        AutoComPtr<IDirect3DVertexBuffer9> mVtxBufs[NUM_VTXBUFS];
-        size_t                             mActiveVB;
-        size_t                             mNumQuads;
+        FixedArray<AutoComPtr<IDirect3DVertexBuffer9>,NUM_VTXBUFS> mVtxBufs;
+        size_t                                                     mActiveVB;
+        size_t                                                     mNumQuads;
 
         // ********************************
         // private functions

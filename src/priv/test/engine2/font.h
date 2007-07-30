@@ -49,8 +49,8 @@ namespace GN { namespace test
             mFont.clear();
             for( size_t i = 0; i < MAX_TEXTURES; ++i )
             {
-                mTextures[i].texture   = 0;
                 mKernelPortBindings[i] = 0;
+                mTextures[i]           = 0;
                 mContexts[i]           = 0;
                 mCharList[i]           = 0;
                 mNumChars[i]           = 0;
@@ -164,6 +164,22 @@ namespace GN { namespace test
             UInt16 x1, y1, x2, y2;
         };
 
+        class FontTextureLoader : public GraphicsResourceLoader
+        {
+            DynaArray<UInt8>   mFontImage;
+            size_t             mFontWidth, mFontHeight;
+            const FontSlot   & mSlot;
+            GraphicsResource & mTexture;
+
+        public:
+
+            FontTextureLoader( const FontImage & font, const FontSlot & slot, GraphicsResource & tex );
+
+            virtual bool load( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf );
+            virtual bool decompress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf );
+            virtual bool copy( GraphicsResource & res, DynaArray<UInt8> & inbuf );
+        };
+
         // private constants
         enum
         {
@@ -182,8 +198,6 @@ namespace GN { namespace test
         struct FontTexture
         {
             GraphicsResource * texture;
-            DynaArray<UInt8>   syscopy;
-
             FontTexture() : texture(0) {}
         };
 
@@ -193,9 +207,9 @@ namespace GN { namespace test
         GraphicsResource          * mStream;
         GraphicsResource          * mKernelParam;
         GraphicsResource          * mKernelPortBindings[MAX_TEXTURES];
-        FontTexture                 mTextures[MAX_TEXTURES];
-        size_t                      mNumTextures;
+        GraphicsResource          * mTextures[MAX_TEXTURES];
         UIntPtr                     mContexts[MAX_TEXTURES];
+        size_t                      mNumTextures;
 
         // font face data
         AutoRef<FontFace>           mFont;

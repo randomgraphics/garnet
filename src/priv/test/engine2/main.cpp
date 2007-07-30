@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "font.h"
 #include "testCase.h"
 //#include "triangle.h"
 
@@ -6,11 +7,19 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine2;
+using namespace GN::scene;
 
 int run( RenderEngine & re )
 {
     ClearScreen cs;
     if( !cs.init( re ) ) return -1;
+
+    test::BitmapFont font( re );
+    FontFaceDesc ffd;
+    ffd.fontname = "font::/simsun.ttc";
+    ffd.width  = 16;
+    ffd.height = 16;
+    if( !font.init( ffd ) ) return -1;
 
     TestCase * cases[] =
     {
@@ -39,6 +48,9 @@ int run( RenderEngine & re )
             cs.render(); // clear screen
 
             if( c ) c->render();
+
+            // draw some text
+            font.drawText( L"ENGINE2 test application", 10, 10 );
 
             re.present();
         }

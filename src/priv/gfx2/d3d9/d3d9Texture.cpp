@@ -220,7 +220,7 @@ void GN::gfx::D3D9Texture::download(
 
             const UInt8 * s = (const UInt8 * )source;
             UInt8       * d = (UInt8*)lrc.pBits;
-            for( size_t i = 0; i < ssl.height; ++i )
+            for( size_t i = 0; i < clippedArea.h; ++i )
             {
                 memcpy( d, s, clippedArea.w * cfd.bits / 8 );
                 s += srcRowBytes;
