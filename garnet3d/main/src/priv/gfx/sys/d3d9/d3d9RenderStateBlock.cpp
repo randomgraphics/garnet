@@ -125,6 +125,17 @@ GN::gfx::D3D9RenderStateBlock::D3D9RenderStateBlock( D3D9GraphicsSystem & gs )
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::D3D9RenderStateBlock::~D3D9RenderStateBlock()
+{
+    if( this == mGfxSys.getCurrentRenderStateBlock() )
+    {
+        mGfxSys.setRenderStateBlock( 0 );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3D9RenderStateBlock::setRenderState( D3DRENDERSTATETYPE type, DWORD value )
 {
     GN_ASSERT( sDefaultD3D9DeviceStates.rs[type].valid );

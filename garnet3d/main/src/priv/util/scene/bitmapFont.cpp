@@ -60,7 +60,7 @@ GN::scene::BitmapFont::FontTextureLoader::FontTextureLoader(
 bool GN::scene::BitmapFont::FontTextureLoader::load( const GraphicsResourceDesc &, DynaArray<UInt8> & outbuf )
 {
     GN_ASSERT( mFontImage.size() == mFontWidth * mFontHeight );
-    outbuf.swap( mFontImage );
+    outbuf = mFontImage;
     return true;
 }
 
