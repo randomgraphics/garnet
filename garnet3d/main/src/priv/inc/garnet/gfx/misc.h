@@ -9,25 +9,6 @@
 namespace GN { namespace gfx
 {
     ///
-    /// Display mode structure
-    ///
-    struct DisplayMode
-    {
-        UInt32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
-        UInt32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
-        UInt32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
-        UInt32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
-
-        ///
-        /// Set display mode parameters
-        ///
-        void set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
-        {
-            width = w; height = h; depth = d; refrate = r;
-        }
-    };
-
-    ///
     /// »æÍ¼Ô­Óï
     ///
     enum PrimitiveType

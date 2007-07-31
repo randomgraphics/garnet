@@ -1,3 +1,0 @@
-/// \cond NEVER
-
-/// \endcond

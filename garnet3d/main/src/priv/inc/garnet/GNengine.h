@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #include "GNcore.h"
-#include "GNgfx2.h"
+#include "GNgfx.h"
 
 namespace GN { /** namespace for engine module */ namespace engine
 {

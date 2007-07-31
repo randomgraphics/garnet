@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #define GN_GFX2_D3D9_IMPL
-#include "garnet/GNgfx2D3D9.h"
+#include "garnet/GNgfxsysD3D9.h"
 
 #if GN_RETAIL_BUILD // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )

@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.7.7)
 // *****************************************************************************
 
-#include "garnet/GNgfx2.h"
+#include "garnet/GNgfx.h"
 #include "garnet/GNscene.h"
 
 using namespace GN::gfx;

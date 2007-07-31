@@ -11,11 +11,7 @@ sources = [
     'imageJPG.cpp',
     'imagePNG.cpp',
     'imageTGA.cpp',
-    'renderState.cpp',
-    'sampler.cpp',
     'shape.cpp',
-    'uniform.cpp',
-    'vertex.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 if GN.conf['has_d3d9'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D9'] )

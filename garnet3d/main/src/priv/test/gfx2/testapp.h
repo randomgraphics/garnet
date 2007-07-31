@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.25)
 // *****************************************************************************
 
-#include "garnet/GNgfx2.h"
+#include "garnet/GNgfx.h"
 
 using namespace GN;
 using namespace GN::gfx;
