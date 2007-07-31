@@ -323,6 +323,11 @@ namespace GN { /** namespace for engine module */ namespace engine
         bool checkResource( const GraphicsResource * ) const;
 
         ///
+        /// \param resource
+        ///     The resource that will be updated.
+        /// \param loader
+        ///     The resource loader
+        ///
         /// \note
         ///     Render engine will hold a reference to the loader. So users can
         ///     safely release their own reference to the loader.

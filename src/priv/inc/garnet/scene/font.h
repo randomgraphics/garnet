@@ -315,7 +315,7 @@ namespace GN { namespace scene
         {
             DynaArray<UInt8>   mFontImage;
             size_t             mFontWidth, mFontHeight;
-            const FontSlot   & mSlot;
+            const FontSlot     mSlot;
             engine::GraphicsResource & mTexture;
 
         public:

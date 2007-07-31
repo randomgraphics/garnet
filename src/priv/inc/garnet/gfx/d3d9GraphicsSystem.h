@@ -107,7 +107,7 @@ namespace GN { namespace gfx
 
         D3D9RenderStateBlock( D3D9GraphicsSystem & gs );
 
-        ~D3D9RenderStateBlock() {}
+        ~D3D9RenderStateBlock();
 
         void setRenderState( D3DRENDERSTATETYPE type, DWORD value );
         void unsetRenderState( D3DRENDERSTATETYPE type );
@@ -175,10 +175,20 @@ namespace GN { namespace gfx
 
         IDirect3DDevice9 * d3ddev() const { GN_ASSERT(mDesc.device); return mDesc.device; }
 
-        void setRenderStateBlock( const D3D9RenderStateBlock & rsb )
+        const D3D9RenderStateBlock * getCurrentRenderStateBlock() const { return mCurrentRsb; }
+
+        void setRenderStateBlock( const D3D9RenderStateBlock * rsb )
         {
-            rsb.apply( mCurrentRsb );
-            mCurrentRsb = &rsb;
+            if( rsb == mCurrentRsb ) return;
+            if( 0 == rsb )
+            {
+                D3D9RenderStateBlock::sSetupDefaultDeviceStates( *this );
+            }
+            else
+            {
+                rsb->apply( mCurrentRsb );
+            }
+            mCurrentRsb = rsb;
         }
 
         void setTexture( UINT stage, IDirect3DBaseTexture9 * tex )
@@ -262,7 +272,7 @@ namespace GN { namespace gfx
     // -----------------------------------------------------------------------------
     inline void D3D9RenderStateBlock::apply() const
     {
-        mGfxSys.setRenderStateBlock( *this );
+        mGfxSys.setRenderStateBlock( this );
     }
 }}
 

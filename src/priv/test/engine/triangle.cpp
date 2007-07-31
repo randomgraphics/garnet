@@ -157,8 +157,6 @@ bool TestTriangle::init()
 {
     RenderEngine & re = renderEngine();
 
-    GraphicsResourceDesc desc;
-
     // get kernel
     GraphicsResource * kernel = re.getKernel( "HLSL9" );
     if( 0 == kernel ) return false;
