@@ -27,7 +27,7 @@ namespace GN
 
         /// \name protected ctor/dtor to prevent user from creatiing/deleting this class.
         //@{
-        XmlAttrib()          {}
+        XmlAttrib() : node(0), next(0) {}
         virtual ~XmlAttrib() {}
         //@}
     };
@@ -106,7 +106,15 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlNode( XmlDocument & d, XmlNodeType t ) : doc(d), type(t) { GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES ); }
+        XmlNode( XmlDocument & d, XmlNodeType t )
+            : doc(d)
+            , type(t)
+            , parent(0)
+            , sibling(0)
+            , child(0)
+        {
+            GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES );
+        }
     };
 
     ///
@@ -183,7 +191,11 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlElement( XmlDocument & d ) : XmlNode(d,XML_ELEMENT) {}
+        XmlElement( XmlDocument & d )
+            : XmlNode(d,XML_ELEMENT)
+            , attrib(0)
+        {
+        }
     };
 
     ///
