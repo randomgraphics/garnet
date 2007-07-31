@@ -51,6 +51,7 @@ GN::scene::BitmapFont::FontTextureLoader::FontTextureLoader(
 {
     mFontImage.resize( font.width * font.height );
     memcpy( mFontImage.cptr(), font.buffer, mFontImage.size() );
+    GN_ASSERT( mFontImage.size() == mFontWidth * mFontHeight );
 }
 
 //
@@ -58,6 +59,7 @@ GN::scene::BitmapFont::FontTextureLoader::FontTextureLoader(
 // -----------------------------------------------------------------------------
 bool GN::scene::BitmapFont::FontTextureLoader::load( const GraphicsResourceDesc &, DynaArray<UInt8> & outbuf )
 {
+    GN_ASSERT( mFontImage.size() == mFontWidth * mFontHeight );
     outbuf.swap( mFontImage );
     return true;
 }
@@ -98,7 +100,7 @@ bool GN::scene::BitmapFont::FontTextureLoader::decompress( const GraphicsResourc
             dst[1] = dst[0];
             dst[2] = dst[0];
             dst[3] = dst[0];
-		}
+        }
     }
 
     return true;

@@ -54,7 +54,7 @@ namespace GN { namespace gfx
             if( mFx ) GN_DX9_CHECK( mFx->OnLostDevice() );
         }
 
-        ID3DXEffect * operator->() const { GN_ASSERT( mFx ); return mFx; }
+        ID3DXEffect * getD3DXEffect() const { return mFx; }
 
         void set( size_t offset, size_t bytes, const void * values )
         {
@@ -231,15 +231,19 @@ namespace GN { namespace gfx
 
         void drawIndexed() const
         {
+            ID3DXEffect * effect = mFx.getD3DXEffect();
+
+            if( 0 == effect ) return;
+
             UINT passes;
-            if( SUCCEEDED( mFx->Begin( &passes, 0 ) ) )
+            if( SUCCEEDED( effect->Begin( &passes, 0 ) ) )
             {
                 for( UINT i = 0; i < passes; ++i )
                 {
                     {
                         D3D9DebugMuter muter;
-                        mFx->BeginPass( i );
-                        mFx->CommitChanges();
+                        effect->BeginPass( i );
+                        effect->CommitChanges();
                     }
 
                     // apply shader constants
@@ -254,12 +258,12 @@ namespace GN { namespace gfx
                         mBaseIndex,
                         mPrimCount ) );
 
-                    mFx->EndPass();
+                    effect->EndPass();
                 }
 
                 {
                     D3D9DebugMuter muter;
-                    mFx->End();
+                    effect->End();
                 }
             }
         }
@@ -267,15 +271,20 @@ namespace GN { namespace gfx
 
         void draw() const
         {
+            ID3DXEffect * effect = mFx.getD3DXEffect();
+
+            if( 0 == effect ) return;
+
             UINT passes;
-            if( SUCCEEDED( mFx->Begin( &passes, 0 ) ) )
+
+            if( SUCCEEDED( effect->Begin( &passes, 0 ) ) )
             {
                 for( UINT i = 0; i < passes; ++i )
                 {
                     {
                         D3D9DebugMuter muter;
-                        mFx->BeginPass( i );
-                        mFx->CommitChanges();
+                        effect->BeginPass( i );
+                        effect->CommitChanges();
                     }
 
                     // apply shader constants
@@ -287,12 +296,12 @@ namespace GN { namespace gfx
                         mBaseVertex,
                         mPrimCount ) );
 
-                    mFx->EndPass();
+                    effect->EndPass();
                 }
 
                 {
                     D3D9DebugMuter muter;
-                    mFx->End();
+                    effect->End();
                 }
             }
         }
