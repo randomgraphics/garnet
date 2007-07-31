@@ -125,7 +125,8 @@ static void sCompactAttributes( GN::File & fp, const GN::XmlAttrib * att )
     }
 }
 
-static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
+static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root );
+static bool sCompactNodeAndChildren( GN::File & fp, const GN::XmlNode * root )
 {
     GN_ASSERT( root );
 
@@ -176,10 +177,20 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
             return false;
     };
 
-    // print brothers
-    return root->sibling ? sCompactNodes( fp, root->sibling ) : true;
+    return true;
 }
 
+static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
+{
+    GN_ASSERT( root );
+
+    do{
+        if( !sCompactNodeAndChildren( fp, root ) ) return false;
+        root = root->sibling;
+    } while( root );
+
+    return true;
+}
 
 static void sParseFail( ParseTracer * tracer, const char * errInfo )
 {
@@ -487,7 +498,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     //static const UInt8 bom[3] = { 0xEF, 0xBB, 0xBF };
     //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
-    file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+    file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 
     if( compact )
     {
@@ -495,7 +506,6 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     }
     else
     {
-        file << "\n";
         return sFormatNodes( file, &root, 0 );
     }
 
