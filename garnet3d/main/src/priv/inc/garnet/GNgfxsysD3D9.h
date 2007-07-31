@@ -2,7 +2,7 @@
 #define __GN_GFX2_GNGFX2D3D9_H__
 // *****************************************************************************
 /// \file
-/// \brief   D3D9 graphics system (for effect developer only)
+/// \brief   D3D9 graphics system (for D3D9 kernel developement only)
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 

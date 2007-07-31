@@ -61,7 +61,7 @@ GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & 
 
     switch( api.u32 )
     {
-        case GN_MAKE_FOURCC('D','X','9',0)   : dllname = "GNgfx2D3D9"; symbol = "createD3D9GraphicsSystem"; break;
+        case GN_MAKE_FOURCC('D','X','9',0)   : dllname = "GNgfxsysD3D9"; symbol = "createD3D9GraphicsSystem"; break;
         case GN_MAKE_FOURCC('O','G','L',0)   :
         case GN_MAKE_FOURCC('D','X','1','0') :
         case GN_MAKE_FOURCC('X','B','2',0)   : GN_UNIMPL(); return 0;

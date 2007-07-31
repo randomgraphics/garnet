@@ -2,7 +2,7 @@
 #define __GN_GFX2_GFX2BASE_H__
 // *****************************************************************************
 /// \file
-/// \brief   basic graphics system implementation
+/// \brief   basic graphics system implementation (for graphics system development only)
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
