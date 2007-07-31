@@ -9,7 +9,7 @@
 #include "garnet/base/linkedlist.h"
 #include "fence.h"
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     ///
     /// TBD

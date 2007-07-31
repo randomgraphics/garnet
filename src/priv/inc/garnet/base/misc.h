@@ -339,6 +339,16 @@ namespace GN
         }
 
         ///
+        /// Make FOURCC from string
+        ///
+        static FOURCC sMake( const char * str )
+        {
+            FOURCC r;
+            r.fromStr( str );
+            return r;
+        }
+
+        ///
         /// Make FOURCC by 4 characters
         ///
         static FOURCC sMake( char c0, char c1, char c2, char c3 )

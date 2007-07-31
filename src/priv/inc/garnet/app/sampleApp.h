@@ -17,7 +17,7 @@ namespace GN { namespace app
     ///
     class FpsCounter
     {
-        GN::Clock mClock;
+        Clock     mClock;
         float     mFpsValue;
         StrW      mFormatString;
         StrW      mFpsString;
@@ -114,11 +114,10 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::RendererAPI                   rapi; ///< renderer API
-            gfx::RendererOptions               ro;   ///< renderer options
-            engine::RenderEngineInitParameters reip; ///< render engine initialization parameters
-            input::InputApi                    iapi; ///< input API
-            scene::FontFaceDesc                ffd;  ///< default font face descriptor
+            gfx::GraphicsSystemCreationParameter gscp; ///< graphics system creation parameters
+            engine::RenderEngineInitParameters  reip; ///< render engine initialization parameters
+            input::InputApi                      iapi; ///< input API
+            scene::FontFaceDesc                  ffd;  ///< default font face descriptor
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
@@ -162,7 +161,7 @@ namespace GN { namespace app
         ///
         /// switch renderer API
         ///
-        bool switchRenderer();
+        bool switchGraphicsAPI( const FOURCC & newapi );
 
 		///
 		/// show HUD or not?
@@ -177,17 +176,7 @@ namespace GN { namespace app
         ///
         /// as is
         ///
-        engine::EntityManager & getEntityManager() { return mEntityManager; }
-
-        ///
-        /// as is
-        ///
         engine::RenderEngine & getRenderEngine() { return mRenderEngine; }
-
-        ///
-        /// as is
-        ///
-        scene::QuadRenderer & getQuadRenderer() { return mQuadRenderer; }
 
         ///
         /// get font renderer
@@ -203,9 +192,7 @@ namespace GN { namespace app
 
         InitParam             mInitParam;
 
-        engine::RenderEngine  mRenderEngine;
-        engine::EntityManager mEntityManager;
-        scene::QuadRenderer   mQuadRenderer;
+        engine::RenderEngine mRenderEngine;
         scene::BitmapFont     mFont;
 
         // time stuff

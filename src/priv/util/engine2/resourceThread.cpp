@@ -2,7 +2,7 @@
 #include "resourceThread.h"
 #include "drawThread.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceThread");
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceThread");
 
 // *****************************************************************************
 // SubThread class
@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceThr
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::ResourceThread::SubThread::init( const ThreadProcedure & proc, const char * name )
+bool GN::engine::RenderEngine::ResourceThread::SubThread::init( const ThreadProcedure & proc, const char * name )
 {
     commands.clear();
 
@@ -25,7 +25,7 @@ bool GN::engine2::RenderEngine::ResourceThread::SubThread::init( const ThreadPro
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceThread::SubThread::quit()
+void GN::engine::RenderEngine::ResourceThread::SubThread::quit()
 {
     commands.clear();
     if( thread )
@@ -43,7 +43,7 @@ void GN::engine2::RenderEngine::ResourceThread::SubThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::ResourceThread::init()
+bool GN::engine::RenderEngine::ResourceThread::init()
 {
     GN_GUARD;
 
@@ -75,7 +75,7 @@ bool GN::engine2::RenderEngine::ResourceThread::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceThread::quit()
+void GN::engine::RenderEngine::ResourceThread::quit()
 {
     GN_GUARD;
 
@@ -95,7 +95,7 @@ void GN::engine2::RenderEngine::ResourceThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceThread::waitForIdle()
+void GN::engine::RenderEngine::ResourceThread::waitForIdle()
 {
     while( !mLoader.commands.empty() || !mDecompressor.commands.empty() )
         sleepCurrentThread( 0 );
@@ -108,7 +108,7 @@ void GN::engine2::RenderEngine::ResourceThread::waitForIdle()
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine2::RenderEngine::ResourceThread::load( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 {
     GN_SCOPE_PROFILER( RenderEngine_ResourceThread_load );
 
@@ -144,7 +144,7 @@ UInt32 GN::engine2::RenderEngine::ResourceThread::load( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine2::RenderEngine::ResourceThread::decompress( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 {
     GN_SCOPE_PROFILER( RenderEngine_ResourceThread_decompress );
 

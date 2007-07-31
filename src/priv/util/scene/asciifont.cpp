@@ -8,10 +8,10 @@ using namespace GN::engine;
 // local functions
 // *****************************************************************************
 
-//
+/*
 // calculate bounding box of text paragraph
 // ------------------------------------------------------------------------
-static void sCalcBoundingRect( GN::Recti & rc, const char * text, int x, int y )
+static void sCalcBoundingRect( Recti & rc, const char * text, int x, int y )
 {
     rc.x = x;
     rc.y = y;
@@ -42,7 +42,7 @@ static void sCalcBoundingRect( GN::Recti & rc, const char * text, int x, int y )
     }
 
     if( w > rc.w ) rc.w = w;
-}
+}*/
 
 class AsciiFontTextureLoader : public GraphicsResourceLoader
 {
@@ -50,22 +50,19 @@ public:
 
     AsciiFontTextureLoader() {}
 
-    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    virtual bool load( const GraphicsResourceDesc &, DynaArray<UInt8> & )
     {
-        outbuf   = 0;
-        outbytes = 0;
         return true;
     }
 
-    virtual bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    virtual bool decompress( const GraphicsResourceDesc &, DynaArray<UInt8> &, DynaArray<UInt8> & )
     {
-        outbuf   = 0;
-        outbytes = 0;
         return true;
     }
 
-    virtual bool copy( GraphicsResource & res, const void *, size_t, int )
+    virtual bool copy( GraphicsResource &, DynaArray<UInt8> & )
     {
+        /*
         gfx::Texture * tex = res.texture;
         GN_ASSERT( tex );
 
@@ -103,14 +100,10 @@ public:
         tex->unlock();
 
         //tex->setFilter( gfx::TEXFILTER_NEAREST, gfx::TEXFILTER_NEAREST );
-        GN_TODO( "setup sampler" );
+        GN_TODO( "setup sampler" );*/
 
         // success
         return true;
-    }
-
-    virtual void freebuf( void *, size_t )
-    {
     }
 };
 
@@ -128,14 +121,13 @@ bool GN::scene::AsciiFont::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::scene::AsciiFont, () );
 
-    RenderEngine & eng = mQuadRenderer.renderEngine();
-
-    // create texture
+    /* create texture
     mTexture = eng.create2DTexture( "Ascii font texture", 128, 256, 1, gfx::FMT_LA_8_8_UNORM );
     if( 0 == mTexture ) return failure();
 
     AutoRef<AsciiFontTextureLoader> loader( new AsciiFontTextureLoader );
-    eng.updateResource( mTexture, 0, loader );
+    eng.updateResource( mTexture, 0, loader );*/
+    GN_UNIMPL();
 
     // success
     return success();
@@ -150,7 +142,8 @@ void GN::scene::AsciiFont::quit()
 {
     GN_GUARD;
 
-    safeFreeGraphicsResource( mTexture );
+    safeDeleteGraphicsResource( mTexture );
+    GN_UNIMPL();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -169,7 +162,12 @@ void GN::scene::AsciiFont::drawText( const char * text, int x, int y, UInt32 )
 {
     GN_GUARD_SLOW;
 
-    // get current screen size
+    GN_UNUSED_PARAM( text );
+    GN_UNUSED_PARAM( x );
+    GN_UNUSED_PARAM( y );
+    GN_UNIMPL_WARNING();
+
+    /* get current screen size
     const gfx::DispDesc & dd = mQuadRenderer.renderEngine().getDispDesc();
 
     float sx = 1.0f / dd.width;
@@ -224,7 +222,7 @@ void GN::scene::AsciiFont::drawText( const char * text, int x, int y, UInt32 )
         // next char
         ++text;
     }
-    mQuadRenderer.drawEnd();
+    mQuadRenderer.drawEnd();*/
 
     GN_UNGUARD_SLOW;
 }

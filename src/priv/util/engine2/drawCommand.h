@@ -8,7 +8,7 @@
 
 #include "fence.h"
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     ///
     /// draw command type

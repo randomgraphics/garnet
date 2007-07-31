@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "resourceCache.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceCache");
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
 
 #pragma warning(disable:4100)
 
@@ -29,9 +29,9 @@ static size_t sEstimateSurfaceSize( const GN::gfx::SurfaceCreationParameter & de
 //
 //
 // -----------------------------------------------------------------------------
-static size_t sEstimateResourceSize( const GN::engine2::GraphicsResourceDesc & desc )
+static size_t sEstimateResourceSize( const GN::engine::GraphicsResourceDesc & desc )
 {
-    using namespace GN::engine2;
+    using namespace GN::engine;
 
     switch( desc.type )
     {
@@ -56,12 +56,12 @@ static size_t sEstimateResourceSize( const GN::engine2::GraphicsResourceDesc & d
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::ResourceCache::init()
+bool GN::engine::RenderEngine::ResourceCache::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::engine2::RenderEngine::ResourceCache, () );
+    GN_STDCLASS_INIT( GN::engine::RenderEngine::ResourceCache, () );
 
     // success
     return success();
@@ -72,7 +72,7 @@ bool GN::engine2::RenderEngine::ResourceCache::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceCache::quit()
+void GN::engine::RenderEngine::ResourceCache::quit()
 {
     GN_GUARD;
 
@@ -106,8 +106,8 @@ void GN::engine2::RenderEngine::ResourceCache::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResourceItem *
-GN::engine2::RenderEngine::ResourceCache::createResource(
+GN::engine::GraphicsResourceItem *
+GN::engine::RenderEngine::ResourceCache::createResource(
     const GraphicsResourceDesc & desc )
 {
     size_t bytes = sEstimateResourceSize( desc );
@@ -128,7 +128,7 @@ GN::engine2::RenderEngine::ResourceCache::createResource(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceCache::deleteResource( GraphicsResourceItem * item )
+void GN::engine::RenderEngine::ResourceCache::deleteResource( GraphicsResourceItem * item )
 {
     if( 0 == item ) return;
 

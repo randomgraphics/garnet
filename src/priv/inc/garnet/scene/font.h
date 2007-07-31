@@ -21,7 +21,7 @@ namespace GN { namespace scene
 
         //@{
     public:
-        AsciiFont( QuadRenderer & qr ) : mQuadRenderer(qr) { clear(); }
+        AsciiFont( engine::RenderEngine & re ) : mRenderEngine(re) { clear(); }
         virtual ~AsciiFont() { quit(); }
         //@}
 
@@ -34,7 +34,7 @@ namespace GN { namespace scene
         bool init();
         void quit();
     private:
-        void clear() { mTexture = 0; }
+        void clear() { mKernel = 0; mKernelParam = 0; mKernelPortBinding = 0; mTexture = 0; mContext = 0; }
         //@}
 
         // ********************************
@@ -52,9 +52,12 @@ namespace GN { namespace scene
         // ********************************
     private:
 
-        QuadRenderer & mQuadRenderer;
-
+        engine::RenderEngine     & mRenderEngine;
+        engine::GraphicsResource * mKernel;
+        engine::GraphicsResource * mKernelParam;
+        engine::GraphicsResource * mKernelPortBinding;
         engine::GraphicsResource * mTexture;
+        UIntPtr                     mContext;
 
         // ********************************
         // private functions
@@ -159,7 +162,7 @@ namespace GN { namespace scene
     };
 
     ///
-    /// Bitmap font renderer
+    /// bitmap font renderer
     ///
     class BitmapFont : public StdClass
     {
@@ -171,7 +174,7 @@ namespace GN { namespace scene
 
         //@{
     public:
-        BitmapFont( QuadRenderer & qr ) : mQuadRenderer(qr) { clear(); }
+        BitmapFont( engine::RenderEngine & re ) : mRenderEngine(re) { clear(); }
         virtual ~BitmapFont() { quit(); }
         //@}
 
@@ -186,13 +189,18 @@ namespace GN { namespace scene
     private:
         void clear()
         {
+            mKernel = 0;
+            mKernelParam = 0;
             mNumTextures = 0;
             mFontSlots = 0;
             mFont.clear();
             for( size_t i = 0; i < MAX_TEXTURES; ++i )
             {
-                mCharList[i] = 0;
-                mNumChars[i] = 0;
+                mKernelPortBindings[i] = 0;
+                mTextures[i]           = 0;
+                mContexts[i]           = 0;
+                mCharList[i]           = 0;
+                mNumChars[i]           = 0;
             }
         }
         //@}
@@ -232,6 +240,32 @@ namespace GN { namespace scene
         // private variables
         // ********************************
     private:
+
+        struct QuadVertex
+        {
+            //@{
+
+            float   x, y, z;    ///< position in normalized screen space, [0,0] is left-top corner, (1,1) is right-bottom corner
+            UInt8   r, g, b, a; ///< vertex color
+            float   u, v;       ///< texture coordinates
+            UInt32  _[2];       ///< padding to 32 bytes
+
+            void set( float x_, float y_, float z_, UInt8 r_, UInt8 g_, UInt8 b_, UInt8 a_, float u_, float v_ )
+            {
+                x = x_;
+                y = y_;
+                z = z_;
+                r = r_;
+                g = g_;
+                b = b_;
+                a = a_;
+                u = u_;
+                v = v_;
+            }
+
+            //@}
+        };
+        GN_CASSERT( 32 == sizeof(QuadVertex) );
 
         ///
         /// font slot structure.
@@ -277,6 +311,22 @@ namespace GN { namespace scene
             UInt16 x1, y1, x2, y2;
         };
 
+        class FontTextureLoader : public engine::GraphicsResourceLoader
+        {
+            DynaArray<UInt8>   mFontImage;
+            size_t             mFontWidth, mFontHeight;
+            const FontSlot   & mSlot;
+            engine::GraphicsResource & mTexture;
+
+        public:
+
+            FontTextureLoader( const FontImage & font, const FontSlot & slot, engine::GraphicsResource & tex );
+
+            virtual bool load( const engine::GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf );
+            virtual bool decompress( const engine::GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf );
+            virtual bool copy( engine::GraphicsResource & res, DynaArray<UInt8> & inbuf );
+        };
+
         // private constants
         enum
         {
@@ -289,36 +339,41 @@ namespace GN { namespace scene
         struct CharInfo
         {
             const FontSlot * fs;
-            float          x, y;
+            float            x, y;
         };
 
         struct FontTexture
         {
-            engine::AutoGraphicsResource texture;
-            DynaArray<UInt8>             syscopy;
+            engine::GraphicsResource * texture;
+            FontTexture() : texture(0) {}
         };
 
-        QuadRenderer &           mQuadRenderer;
+        engine::RenderEngine     & mRenderEngine;
+
+        engine::GraphicsResource * mKernel;
+        engine::GraphicsResource * mKernelParam;
+        engine::GraphicsResource * mKernelPortBindings[MAX_TEXTURES];
+        engine::GraphicsResource * mTextures[MAX_TEXTURES];
+        UIntPtr                     mContexts[MAX_TEXTURES];
+        size_t                      mNumTextures;
 
         // font face data
-        AutoRef<FontFace>        mFont;
-
-        // font texture list
-        FontTexture              mTextures[MAX_TEXTURES];
-        size_t                   mNumTextures;
+        AutoRef<FontFace>           mFont;
 
         // texture size
-        size_t                   mTexWidth;
-        size_t                   mTexHeight;
+        size_t                      mTexWidth;
+        size_t                      mTexHeight;
 
         // font slot
-        size_t                   mNumSlots; // number of used slots
-        FontSlot *               mFontSlots;
-        std::map<wchar_t,size_t> mSlotMap;  // map that convert charcode to slot index
+        size_t                      mNumSlots; // number of used slots
+        FontSlot                  * mFontSlots;
+        std::map<wchar_t,size_t>    mSlotMap;  // map that convert charcode to slot index
 
         // texture list
-        CharInfo *               mCharList[MAX_TEXTURES];
-        size_t                   mNumChars[MAX_TEXTURES];
+        CharInfo                  * mCharList[MAX_TEXTURES];
+        size_t                      mNumChars[MAX_TEXTURES];
+
+        DynaArray<QuadVertex>       mQuadBuffer;
 
         // ********************************
         // private functions

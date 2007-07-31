@@ -2,7 +2,7 @@
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res ) const
+GN::engine::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res ) const
 {
     return checkResource( safeCastPtr<const GraphicsResourceItem>( res ) );
 }
@@ -11,13 +11,13 @@ GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource 
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res, GraphicsResourceType mustBeThisType ) const
+GN::engine::RenderEngine::ResourceCache::checkResource( const GraphicsResource * res, GraphicsResourceType mustBeThisType ) const
 {
     if( !checkResource( res ) ) return false;
 
     if( mustBeThisType != res->desc.type )
     {
-        GN_ERROR(GN::getLogger("GN.engine2.RenderEngine.ResourceCache"))(
+        GN_ERROR(GN::getLogger("GN.engine.RenderEngine.ResourceCache"))(
             "Unexpected resource type: expected(%s), actual(%s)",
             graphicsResourceType2String( mustBeThisType ),
             graphicsResourceType2String( res->desc.type ) );
@@ -31,14 +31,14 @@ GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResource 
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResourceItem * item ) const
+GN::engine::RenderEngine::ResourceCache::checkResource( const GraphicsResourceItem * item ) const
 {
     ScopeMutex<SpinLoop> lock(mResourceMutex);
 
     if( 0 == item )
     {
         mResourceMutex.unlock();
-        static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceCache");
+        static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
         GN_ERROR(sLogger)( "invalid graphics resource pointer : 0x%p", item );
         GN_ASSERT_EX( 0, "invalid graphics resource pointer" );
         return false;
@@ -49,7 +49,7 @@ GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResourceI
         mResources[item->id] != item )
     {
         mResourceMutex.unlock();
-        static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceCache");
+        static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
         GN_ERROR(sLogger)( "invalid graphics resource pointer : 0x%p", item );
         GN_ASSERT_EX( 0, "invalid graphics resource pointer" );
         return false;
@@ -61,8 +61,8 @@ GN::engine2::RenderEngine::ResourceCache::checkResource( const GraphicsResourceI
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::GraphicsResourceItem *
-GN::engine2::RenderEngine::ResourceCache::firstResource() const
+inline GN::engine::GraphicsResourceItem *
+GN::engine::RenderEngine::ResourceCache::firstResource() const
 {
     UInt32 id = mResources.first();
     return id ? mResources[id] : 0;
@@ -71,8 +71,8 @@ GN::engine2::RenderEngine::ResourceCache::firstResource() const
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::GraphicsResourceItem *
-GN::engine2::RenderEngine::ResourceCache::nextResource( const GraphicsResourceItem * item ) const
+inline GN::engine::GraphicsResourceItem *
+GN::engine::RenderEngine::ResourceCache::nextResource( const GraphicsResourceItem * item ) const
 {
     GN_ASSERT( checkResource( item ) );
     UInt32 nextid = mResources.next( item->id );

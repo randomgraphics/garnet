@@ -9,9 +9,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene.Scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Scene::Scene( engine::EntityManager & em, engine::RenderEngine & re )
-    : mEntityManager(em)
-    , mRenderEngine(re)
+GN::scene::Scene::Scene( engine::RenderEngine & re )
+    : mRenderEngine(re)
 {
     clear();
 }

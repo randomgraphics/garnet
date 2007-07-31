@@ -12,9 +12,7 @@ class TestScene
 {
     SampleApp & app;
 
-    Entity * tex0;
-
-    Entity * eff0;
+    Drawable quad0, quad1, quad2, quad3;
 
     Scene scene;
 
@@ -34,19 +32,19 @@ public:
     {
         GN_GUARD;
 
-        EntityManager & em = app.getEntityManager();
         RenderEngine  & re = app.getRenderEngine();
 
         // load box
         if( !loadFromXmlFile( box, "media::cube/cube.actor.xml" ) ) return false;
 
-        // load texture
-        tex0 = loadTextureEntityFromFile( em, re, "media::texture/rabit.png" );
-        if( 0 == tex0 ) return false;
-
-        // load effect
-        eff0 = loadEffectEntityFromXmlFile( em, re, "media::effect/sprite.xml" );
+        // load quad effect
+        eff0 = re.getKernel( "QUAD" );
         if( 0 == eff0 ) return false;
+
+        // load texture
+        //tex0 = loadSurfaceFromFile( re, &eff0, 1, "media::texture/rabit.png" );
+        //if( 0 == tex0 ) return false;
+        GN_UNIMPL();
 
         // initialize matrices
         float r = box.getBoundingSphere().radius * 1.0f;
@@ -167,6 +165,9 @@ public:
 class GfxTestApp : public SampleApp
 {
     TestScene * mScene;
+
+    ClearScreen mCs;
+
 public:
 
     GfxTestApp() : mScene(0) {}
@@ -174,14 +175,21 @@ public:
     bool onInit()
     {
         GN_GUARD;
+
         mScene = new TestScene(*this);
-        return mScene->init();
+        if( !mScene->init() ) return false;
+
+        if( mCs.init( getRenderEngine() ) ) return false;
+
+        return true;
+
         GN_UNGUARD;
     }
 
     void onQuit()
     {
         GN_GUARD;
+        mCs.quit();
         safeDelete(mScene);
         GN_UNGUARD;
     }
@@ -195,7 +203,8 @@ public:
     {
         RenderEngine & re = getRenderEngine();
 
-        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
+        // clear screen
+        mCs.render();
 
         // draw scene
         GN_ASSERT( mScene );
