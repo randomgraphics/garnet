@@ -135,7 +135,7 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
         {
             const GN::XmlCdata * c = root->toCdata();
             GN_ASSERT( !c->child ); // cdata node should have no child.
-            fp << "<![CDATA[" << c->text << "]]>";
+            fp << "<![CDATA[" << c->text << "]]>\n";
             break;
         }
 
@@ -143,7 +143,7 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
         {
             const GN::XmlComment * c = root->toComment();
             GN_ASSERT( c && !c->child ); // comment node should have no child.
-            fp << "<!-- " << c->text << " -->";
+            fp << "<!-- " << c->text << " -->\n";
             break;
         }
 
@@ -158,14 +158,14 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
             }
             if( !e->text.empty() || e->child )
             {
-                fp << ">";
+                fp << ">\n";
                 if( !e->text.empty() ) fp << e->text;
                 if( e->child ) sCompactNodes( fp, e->child );
-                fp << "</" << e->name << ">";
+                fp << "</" << e->name << ">\n";
             }
             else
             {
-                fp << "/>";
+                fp << "/>\n";
             }
             break;
         }

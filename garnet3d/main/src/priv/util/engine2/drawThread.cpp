@@ -8,14 +8,180 @@ using namespace GN::engine2;
 using namespace GN::gfx;
 
 // *****************************************************************************
+// xml file dumper
+// *****************************************************************************
+
+namespace GN
+{
+    ///
+    /// build a XML tree
+    ///
+    class XmlBuilder
+    {
+        XmlDocument mXml;
+        XmlNode   * mRootNode;
+        XmlNode   * mCurrentNode;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        XmlBuilder( const char * root )
+        {
+            if( strEmpty(root) )
+            {
+                mRootNode = 0;
+            }
+            else
+            {
+                mRootNode = mXml.createNode( XML_ELEMENT );
+                if( mRootNode )
+                {
+                    mRootNode->toElement()->name = root;
+                }
+                else
+                {
+                    GN_ERROR(sLogger)( "fail to create root node." );
+                }
+            }
+
+            mCurrentNode = mRootNode;
+        }
+
+        ///
+        /// dtor
+        ///
+        ~XmlBuilder()
+        {
+        }
+
+        ///
+        /// open new node
+        ///
+        void openNode( const StrA & name, XmlNodeType type = XML_ELEMENT )
+        {
+            if( 0 == mRootNode ) return;
+
+            XmlNode * n = mXml.createNode( type );
+            if( 0 == n ) return;
+            if( XML_ELEMENT == type )
+            {
+                n->toElement()->name = name;
+            }
+
+            if( mCurrentNode )
+            {
+                n->parent = mCurrentNode;
+
+                if( mCurrentNode->child )
+                {
+                    mCurrentNode = mCurrentNode->child;
+                    while( mCurrentNode->sibling )
+                    {
+                        mCurrentNode = mCurrentNode->sibling;
+                    }
+                    mCurrentNode->sibling = n;
+                }
+                else
+                {
+                    mCurrentNode->child = n;
+                }
+            }
+
+            mCurrentNode = n;
+        }
+
+        ///
+        /// close current node
+        ///
+        void closeNode()
+        {
+            if( 0 == mRootNode ) return;
+
+            if( 0 == mCurrentNode )
+            {
+                GN_ERROR(sLogger)( "invalid call to closeNode() without openNode()" );
+                return;
+            }
+
+            mCurrentNode = mCurrentNode->parent;
+        }
+
+        ///
+        /// add attribute to current node
+        ///
+        void addAttrib( const StrA & name, const StrA & value )
+        {
+            if( 0 == mRootNode ) return;
+
+            if( 0 == mCurrentNode )
+            {
+                GN_ERROR(sLogger)( "there's no node opened for attribute adding." );
+                return;
+            }
+
+            XmlElement * e = mCurrentNode->toElement();
+            if( 0 == e )
+            {
+                GN_ERROR(sLogger)( "current node is not an element." );
+                return;
+            }
+
+            // create new node
+            XmlAttrib * a = mXml.createAttrib();
+            if( 0 == a ) return;
+            a->node = e;
+            a->next = 0;
+            a->name = name;
+            a->value = value;
+
+            // add to element's attribute list
+            if( e->attrib )
+            {
+                XmlAttrib * lastAttrib = e->attrib;
+                while( lastAttrib->next ) lastAttrib = lastAttrib->next;
+                lastAttrib->next = a;
+            }
+            else
+            {
+                e->attrib = a;
+            }
+        }
+
+        ///
+        /// add integer attribute to current node
+        ///
+        template<typename T>
+        void addIntAttrib( const StrA & name, T value )
+        {
+            addAttrib( name, strFormat( "%d", value ) );
+        }
+
+        ///
+        /// write xml content to file
+        ///
+        void writeToFile( const StrA & filename )
+        {
+            if( 0 == mRootNode ) return;
+
+            DiskFile f;
+            if( !f.open( filename, "wt" ) ) return;
+
+            mXml.writeToFile( f, *mRootNode, true );
+        }
+    };
+}
+
+// *****************************************************************************
 // draw thread dumper
 // *****************************************************************************
 
-#define DUMP_DRAW_THREAD_COMMANDS 0
+#define DUMP_DRAW_THREAD_COMMANDS 1
 
 class DrawThreadDumper
 {
-    GN::File * mFile;
+    GN::XmlBuilder mXml;
 
     static const char * sDrawCommandType2String( int cmd )
     {
@@ -31,79 +197,100 @@ class DrawThreadDumper
             return "INVALID_DRAW_COMMAND";
     }
 
-public:
-
-    DrawThreadDumper()
+    static const char * sResourceCommandOp2String( int op )
     {
-        if( DUMP_DRAW_THREAD_COMMANDS )
+        using namespace GN::engine2;
+
+        const char * opstr;
+
+        switch( op )
         {
-            mFile = GN::core::openFile( "drawthread.xml", "wt" );
+            case GROP_LOAD       : opstr = "LOAD"; break;
+            case GROP_DECOMPRESS : opstr = "DECOMPRESS"; break;
+            case GROP_COPY       : opstr = "COPY"; break;
+            case GROP_DISPOSE    : opstr = "DISPOSE"; break;
+            default              : GN_UNEXPECTED(); opstr = "INVALID"; break;
+        }
+
+        return opstr;
+    }
+
+    void addResourceAttribs( const GraphicsResource * res )
+    {
+        if( res )
+        {
+            mXml.addAttrib( "resource_type", GN::engine2::graphicsResourceType2String( res->desc.type ) );
+            mXml.addAttrib( "resource_name", res->desc.name );
         }
         else
         {
-            mFile = 0;
+            mXml.addAttrib( "resource", "NULL" );
         }
+    }
 
-        if( mFile )
-        {
-            mFile->print(
-                "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-                "<DrawThreadDump>\n" );
-        }
+public:
+
+    DrawThreadDumper() : mXml( DUMP_DRAW_THREAD_COMMANDS ? "DrawThreadDump" : 0 )
+    {
     }
 
     ~DrawThreadDumper()
     {
-        if( mFile )
-        {
-            mFile->print( "</DrawThreadDump>" );
-
-            delete mFile;
-        }
+        mXml.writeToFile( "drawthreaddump.xml" );
     }
 
-    void dumpString( const char * fmt, ... )
+    GN::XmlBuilder & xml() { return mXml; }
+
+    void beginResource( const GN::engine2::ResourceCommand & cmd )
     {
-        GN::StrA s;
-
-        va_list arglist;
-        va_start( arglist, fmt );
-        s.formatv( fmt, arglist );
-        va_end( arglist );
-
-        mFile->print( s );
-        mFile->print( "\n" );
+        mXml.openNode( "RESOURCE" );
+        mXml.addAttrib( "op", sResourceCommandOp2String( cmd.op) );
+        mXml.addIntAttrib( "fence", cmd.submittedAtThisFence );
+        addResourceAttribs( cmd.resource );
     }
 
-    void dumpCommandOpenTag( GN::engine2::DrawCommandHeader & cmd )
+    void endResource()
+    {
+        mXml.closeNode();
+    }
+
+    void postponeResource( const GN::engine2::ResourceCommand & cmd )
+    {
+        mXml.openNode( "RESOURCE_POSTPONE" );
+        mXml.addAttrib( "op", sResourceCommandOp2String( cmd.op) );
+        mXml.addIntAttrib( "fence", cmd.submittedAtThisFence );
+        mXml.addIntAttrib( "wait_for_resource_fence", cmd.mustAfterThisResourceFence );
+        mXml.addIntAttrib( "wait_for_draw_fence", cmd.mustAfterThisDrawFence );
+        addResourceAttribs( cmd.resource );
+        mXml.closeNode();
+    }
+
+    void beginCommand( GN::engine2::DrawCommandHeader & cmd )
     {
         using namespace GN;
 
-        if( 0 == mFile ) return;
+        mXml.openNode( sDrawCommandType2String( cmd.type ) );
+        mXml.addIntAttrib( "fence", cmd.fence );
 
-        mFile->print( strFormat( "\t<%s fence=\"%d\">\n",
-            sDrawCommandType2String( cmd.type ),
-            cmd.fence ) );
-
-        mFile->print( strFormat( "\t\t<resource_waiting_list count=\"%u\">\n", cmd.resourceWaitingCount ) );
+        mXml.openNode( "resource_wait_list" );
+        mXml.addIntAttrib( "count", cmd.resourceWaitingCount );
 
         for( size_t i = 0; i < cmd.resourceWaitingCount; ++i )
         {
             const GN::engine2::DrawCommandHeader::ResourceWaitingItem & rwi = cmd.resourceWaitingList[i];
 
-            mFile->print( strFormat( "\t\t\t<rwi fence=\"%d\">%s</rwi>\n",
-                rwi.waitForUpdate,
-                GraphicsResource::sToString(rwi.resource).cptr() ) );
+            mXml.openNode( "rwi" );
+            mXml.addIntAttrib( "fence", rwi.waitForUpdate );
+            addResourceAttribs( rwi.resource );
+            mXml.closeNode();
         }
 
-        mFile->print( "\t\t</resource_waiting_list>\n" );
+        mXml.closeNode();
     }
 
-    void dumpCommandEndTag( GN::engine2::DrawCommandHeader & cmd )
+    void endCommand()
     {
-        if( 0 == mFile ) return;
-
-        mFile->print( GN::strFormat( "\t</%s>\n", sDrawCommandType2String( cmd.type ) ) );
+        mXml.closeNode();
     }
 };
 
@@ -216,7 +403,7 @@ static void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t )
 
     if( DUMP_DRAW_THREAD_COMMANDS )
     {
-        sDumper.dumpString( "kernel=\"%s\"", p->kernel->desc.kernel.kernel.cptr() );
+        sDumper.xml().addAttrib( "kernel", p->kernel->desc.kernel.kernel );
     }
 
     GN_UNGUARD_SLOW;
@@ -253,6 +440,11 @@ void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
 
     if( 0 == cmd.resource->data )
     {
+        if( DUMP_DRAW_THREAD_COMMANDS )
+        {
+            sDumper.xml().addAttrib( "CREATE", "true" );
+        }
+
         if( !sCreateDeviceData( *engine.drawThread().getGraphicsSystem(), *cmd.resource ) )
         {
             cmd.noerr = false;
@@ -605,7 +797,7 @@ void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
         {
             if( DUMP_DRAW_THREAD_COMMANDS )
             {
-                sDumper.dumpCommandOpenTag( *command );
+                sDumper.beginCommand( *command );
             }
 
             // all resources are ready. do it!
@@ -614,7 +806,7 @@ void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
 
             if( DUMP_DRAW_THREAD_COMMANDS )
             {
-                sDumper.dumpCommandEndTag( *command );
+                sDumper.endCommand();
             }
 
             // update draw fence
@@ -667,6 +859,11 @@ void GN::engine2::RenderEngine::DrawThread::handleResourceCommands()
                 mResourceCommands.remove( prev );
                 mResourceMutex.unlock();
 
+                if( DUMP_DRAW_THREAD_COMMANDS )
+                {
+                    sDumper.beginResource( *prev );
+                }
+
                 if( prev->noerr )
                 {
                     switch( prev->op )
@@ -685,6 +882,11 @@ void GN::engine2::RenderEngine::DrawThread::handleResourceCommands()
                     }
                 }
 
+                if( DUMP_DRAW_THREAD_COMMANDS )
+                {
+                    sDumper.endResource();
+                }
+
                 // update resource's complete fence
                 prev->resource->lastCompletedFence = prev->submittedAtThisFence;
 
@@ -701,6 +903,11 @@ void GN::engine2::RenderEngine::DrawThread::handleResourceCommands()
             else
             {
                 GN_SCOPE_PROFILER( RenderEngine_DrawThread_resource_postponed );
+
+                if( DUMP_DRAW_THREAD_COMMANDS )
+                {
+                    sDumper.postponeResource( *cmd );
+                }
 
                 postponed = true;
 

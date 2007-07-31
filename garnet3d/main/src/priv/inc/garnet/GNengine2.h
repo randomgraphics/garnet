@@ -148,11 +148,6 @@ namespace GN { /** namespace for engine2 */ namespace engine2
             //@}
         };
 
-        ///
-        /// convert resource to string (for log only)
-        ///
-        static StrA sToString( const GraphicsResource * );
-
     protected:
 
         ///

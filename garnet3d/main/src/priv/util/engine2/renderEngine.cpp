@@ -265,31 +265,6 @@ static inline void sSetupWaitingListAndReferenceFence(
 }
 
 // *****************************************************************************
-// graphics resource
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::StrA GN::engine2::GraphicsResource::sToString( const GraphicsResource * resource )
-{
-    StrA s;
-
-    if( 0 == resource )
-    {
-        s = "<resource/>NULL</resource>";
-    }
-    else
-    {
-        s.format( "<resource type=\"%s\" name=\"%s\"/>",
-            graphicsResourceType2String( resource->desc.type ),
-            resource->desc.name.empty() ? "unnamed" : resource->desc.name.cptr() );
-    }
-
-    return s;
-}
-
-// *****************************************************************************
 // Render engine
 // *****************************************************************************
 
