@@ -177,7 +177,7 @@ namespace GN
 // draw thread dumper
 // *****************************************************************************
 
-#define DUMP_DRAW_THREAD_COMMANDS 1
+#define DUMP_DRAW_THREAD_COMMANDS 0
 
 class DrawThreadDumper
 {
