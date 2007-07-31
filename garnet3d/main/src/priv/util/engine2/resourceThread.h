@@ -10,7 +10,7 @@
 #include "resourceCache.h"
 #include "resourceCommandBuffer.h"
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     class RenderEngine;
 

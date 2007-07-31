@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "triangle.h"
-#include "cube.h"
+#include "testCase.h"
+//#include "triangle.h"
 
 using namespace GN;
 using namespace GN::input;
@@ -8,51 +8,63 @@ using namespace GN::gfx;
 using namespace GN::engine;
 using namespace GN::scene;
 
-bool runcase( RenderEngine & re, TestCase & c )
+int run( RenderEngine & re )
 {
-    while( 1 )
-    {
-        gInput.processInputEvents();
+    ClearScreen cs;
+    if( !cs.init( re ) ) return -1;
 
-        KeyEvent k = gInput.popLastKeyEvent();
-        if( k.status.down )
-        {
-            if( KEY_ESCAPE == k.code ) return false;
-            if( KEY_SPACEBAR == k.code ) return true;
-        }
+    BitmapFont font( re );
+    FontFaceDesc ffd;
+    ffd.fontname = "font::/simsun.ttc";
+    ffd.width  = 16;
+    ffd.height = 16;
+    if( !font.init( ffd ) ) return -1;
 
-        re.clearScreen( Vector4f(0,0,1,0) );
-        c.draw();
-        re.present();
-    }
-}
-
-void run( EntityManager & em, RenderEngine & re, QuadRenderer & qr )
-{
     TestCase * cases[] =
     {
-        new TestCube(em,re,qr),
-        new TestTriangle(em,re,qr),
+        //new TestCube(em,re,qr),
+        0, //new TestTriangle(re),
     };
 
     for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
     {
         TestCase * c = cases[i];
-        GN_ASSERT( c );
 
         bool next = false;
 
-        if( c->init() )
+        // run the case
+        while( 1 )
         {
-            next = runcase( re, *c );
+            gInput.processInputEvents();
+
+            KeyEvent k = gInput.popLastKeyEvent();
+            if( k.status.down )
+            {
+                if( KEY_ESCAPE == k.code ) { next = false; break; }
+                if( KEY_SPACEBAR == k.code ) { next = true; break; }
+            }
+
+            cs.render(); // clear screen
+
+            if( c ) c->render();
+
+            // draw some text
+            font.drawText( L"ENGINE2 test application", 10, 10 );
+
+            re.present();
         }
 
-        c->quit();
-        delete c;
-        cases[i] = 0;
+        // delete the case
+        if( c )
+        {
+            c->quit();
+            delete c;
+        }
 
         if( !next ) break;
     }
+
+    return 0;
 }
 
 struct InputInitiator
@@ -71,24 +83,21 @@ struct InputInitiator
 int main()
 {
     InputInitiator input;
+    RenderEngine   re;
 
-    RenderEngine  re;
-    EntityManager em;
-    QuadRenderer  qr(re);
+    size_t MB = 1024 * 1024;
+    RenderEngineInitParameters reip = { 32*MB, 4*MB };
 
-    UInt32 MB = 1024 * 1024;
-    RenderEngineInitParameters reip = { 32*MB, 32*MB, 4*MB };
+    GraphicsSystemCreationParameter gscp = {
+        GN_MAKE_FOURCC( 'A', 'U', 'T', 'O' ),
+        0, // monitor
+        640, 480, 32, 0, // fullscreen properties
+        640, 480, // windowed properties
+        false, // windowed mode
+        false, // no vsync
+    };
 
-    RendererOptions ro;
+    if( !re.init(reip) || !re.reset( gscp ) ) return -1;
 
-    if( !re.init(reip) ) return -1;
-
-    if( !re.resetRenderer( API_D3D9, ro ) ) return -1;
-
-    if( !qr.init() ) return -1;
-
-    run( em, re, qr );
-
-    // success
-    return 0;
+    return run( re );
 }

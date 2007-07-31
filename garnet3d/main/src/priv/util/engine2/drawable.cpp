@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::Drawable::Drawable()
+GN::engine::Drawable::Drawable()
     : mKernel(0), mParamSet(0), mBinding(0), mContext(0)
 {
 }
@@ -11,14 +11,14 @@ GN::engine2::Drawable::Drawable()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::Drawable::~Drawable()
+GN::engine::Drawable::~Drawable()
 {
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::Drawable::clear()
+void GN::engine::Drawable::clear()
 {
     mKernel = 0;
     mParamSet = 0;
@@ -29,7 +29,7 @@ void GN::engine2::Drawable::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::Drawable::loadFromXmlNode(
+bool GN::engine::Drawable::loadFromXmlNode(
     RenderEngine  & ,
     const XmlNode & ,
     const StrA    &  )
@@ -41,7 +41,7 @@ bool GN::engine2::Drawable::loadFromXmlNode(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::Drawable::loadFromXmlFile(
+bool GN::engine::Drawable::loadFromXmlFile(
     RenderEngine  & ,
     const StrA    & )
 {

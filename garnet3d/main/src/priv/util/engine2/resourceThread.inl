@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::ResourceThread::submitResourceCommand(
+inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
     ResourceCommand * cmd )
 {
     GN_ASSERT( cmd );
@@ -24,7 +24,7 @@ inline void GN::engine2::RenderEngine::ResourceThread::submitResourceCommand(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::ResourceThread::submitResourceLoadingCommand(
+inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingCommand(
     GraphicsResourceItem   * item,
     GraphicsResourceLoader * loader )
 {

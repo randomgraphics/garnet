@@ -2,9 +2,9 @@
 #include "drawThread.h"
 #include "garnet/GNinput.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.DrawThread");
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
-using namespace GN::engine2;
+using namespace GN::engine;
 using namespace GN::gfx;
 
 // *****************************************************************************
@@ -191,7 +191,7 @@ class DrawThreadDumper
             "PRESENT",
         };
 
-        if( 0 <= cmd && cmd < GN::engine2::NUM_DRAW_COMMAND_TYPES )
+        if( 0 <= cmd && cmd < GN::engine::NUM_DRAW_COMMAND_TYPES )
             return table[cmd];
         else
             return "INVALID_DRAW_COMMAND";
@@ -199,7 +199,7 @@ class DrawThreadDumper
 
     static const char * sResourceCommandOp2String( int op )
     {
-        using namespace GN::engine2;
+        using namespace GN::engine;
 
         const char * opstr;
 
@@ -219,7 +219,7 @@ class DrawThreadDumper
     {
         if( res )
         {
-            mXml.addAttrib( "resource_type", GN::engine2::graphicsResourceType2String( res->desc.type ) );
+            mXml.addAttrib( "resource_type", GN::engine::graphicsResourceType2String( res->desc.type ) );
             mXml.addAttrib( "resource_name", res->desc.name );
         }
         else
@@ -241,7 +241,7 @@ public:
 
     GN::XmlBuilder & xml() { return mXml; }
 
-    void beginResource( const GN::engine2::ResourceCommand & cmd )
+    void beginResource( const GN::engine::ResourceCommand & cmd )
     {
         mXml.openNode( "RESOURCE" );
         mXml.addAttrib( "op", sResourceCommandOp2String( cmd.op) );
@@ -254,7 +254,7 @@ public:
         mXml.closeNode();
     }
 
-    void postponeResource( const GN::engine2::ResourceCommand & cmd )
+    void postponeResource( const GN::engine::ResourceCommand & cmd )
     {
         mXml.openNode( "RESOURCE_POSTPONE" );
         mXml.addAttrib( "op", sResourceCommandOp2String( cmd.op) );
@@ -265,7 +265,7 @@ public:
         mXml.closeNode();
     }
 
-    void beginCommand( GN::engine2::DrawCommandHeader & cmd )
+    void beginCommand( GN::engine::DrawCommandHeader & cmd )
     {
         using namespace GN;
 
@@ -277,7 +277,7 @@ public:
 
         for( size_t i = 0; i < cmd.resourceWaitingCount; ++i )
         {
-            const GN::engine2::DrawCommandHeader::ResourceWaitingItem & rwi = cmd.resourceWaitingList[i];
+            const GN::engine::DrawCommandHeader::ResourceWaitingItem & rwi = cmd.resourceWaitingList[i];
 
             mXml.openNode( "rwi" );
             mXml.addIntAttrib( "fence", rwi.waitForUpdate );
@@ -303,7 +303,7 @@ static DrawThreadDumper sDumper;
 //
 //
 // -----------------------------------------------------------------------------
-static bool sCreateDeviceData( GraphicsSystem & gs, GN::engine2::GraphicsResource & res )
+static bool sCreateDeviceData( GraphicsSystem & gs, GN::engine::GraphicsResource & res )
 {
     const GraphicsResourceDesc & desc = res.desc;
 
@@ -506,7 +506,7 @@ void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferBytes )
+bool GN::engine::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferBytes )
 {
     GN_GUARD;
 
@@ -567,7 +567,7 @@ bool GN::engine2::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferByt
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::quit()
+void GN::engine::RenderEngine::DrawThread::quit()
 {
     GN_GUARD;
 
@@ -628,7 +628,7 @@ void GN::engine2::RenderEngine::DrawThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::DrawThread::resetGraphicsSystem( const gfx::GraphicsSystemCreationParameter & gscp )
+bool GN::engine::RenderEngine::DrawThread::resetGraphicsSystem( const gfx::GraphicsSystemCreationParameter & gscp )
 {
     mNewGraphicsSystemCreationParameter = gscp;
     mAction->signal( RESET_ACTION );
@@ -639,7 +639,7 @@ bool GN::engine2::RenderEngine::DrawThread::resetGraphicsSystem( const gfx::Grap
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::waitForIdle( float time )
+void GN::engine::RenderEngine::DrawThread::waitForIdle( float time )
 {
     // flush pending draw commands
     flushDrawBuffer();
@@ -655,7 +655,7 @@ void GN::engine2::RenderEngine::DrawThread::waitForIdle( float time )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::waitForResource( GraphicsResourceItem * item )
+void GN::engine::RenderEngine::DrawThread::waitForResource( GraphicsResourceItem * item )
 {
     flushDrawBuffer();
 
@@ -672,7 +672,7 @@ void GN::engine2::RenderEngine::DrawThread::waitForResource( GraphicsResourceIte
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::flushDrawBuffer()
+void GN::engine::RenderEngine::DrawThread::flushDrawBuffer()
 {
     // must not be called in draw thread
     GN_ASSERT( !mDrawThread->isCurrentThread() );
@@ -699,7 +699,7 @@ void GN::engine2::RenderEngine::DrawThread::flushDrawBuffer()
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine2::RenderEngine::DrawThread::threadProc( void * )
+UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 {
     GN_SCOPE_PROFILER( RenderEngine_DrawThread_all );
 
@@ -756,7 +756,7 @@ UInt32 GN::engine2::RenderEngine::DrawThread::threadProc( void * )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
+void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 {
     DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
@@ -829,7 +829,7 @@ void GN::engine2::RenderEngine::DrawThread::handleDrawCommands()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::DrawThread::handleResourceCommands()
+void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
     bool loopAgain;
     do
@@ -922,7 +922,7 @@ void GN::engine2::RenderEngine::DrawThread::handleResourceCommands()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::DrawThread::doGraphicsSystemReset()
+bool GN::engine::RenderEngine::DrawThread::doGraphicsSystemReset()
 {
     GN_GUARD;
 

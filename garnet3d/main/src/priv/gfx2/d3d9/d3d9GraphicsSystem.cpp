@@ -90,11 +90,11 @@ static HWND sCreateWindow( const GN::gfx::GraphicsSystemCreationParameter & gscp
     DWORD style;
     DWORD width;
     DWORD height;
-    if( gscp.fullscr )
+    if( gscp.fullscreen )
     {
         style  = WS_POPUP;
-        width  = gscp.fullscrWidth;
-        height = gscp.fullscrHeight;
+        width  = gscp.fullscreenWidth;
+        height = gscp.fullscreenHeight;
     }
     else
     {
@@ -355,21 +355,21 @@ static bool sCreateDevice(
     desc.pp.EnableAutoDepthStencil = FALSE;
     desc.pp.BackBufferCount        = 0;
     desc.pp.BackBufferFormat       = D3DFMT_X8R8G8B8;
-    desc.pp.Windowed               = !gscp.fullscr;
+    desc.pp.Windowed               = !gscp.fullscreen;
     desc.pp.SwapEffect             = D3DSWAPEFFECT_DISCARD;
     desc.pp.PresentationInterval   = gscp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     desc.pp.hDeviceWindow          = (HWND)desc.window;
     desc.pp.MultiSampleType        = D3DMULTISAMPLE_NONE;
     desc.pp.MultiSampleQuality     = 0;
-    if( gscp.fullscr )
+    if( gscp.fullscreen )
     {
-        desc.width                         = gscp.fullscrWidth;
-        desc.height                        = gscp.fullscrHeight;
-        desc.depth                         = gscp.fullscrDepth;
-        desc.refrate                       = gscp.fullscrRefrate;
-        desc.pp.BackBufferWidth            = gscp.fullscrWidth;
-        desc.pp.BackBufferHeight           = gscp.fullscrHeight;
-        desc.pp.FullScreen_RefreshRateInHz = gscp.fullscrRefrate;
+        desc.width                         = gscp.fullscreenWidth;
+        desc.height                        = gscp.fullscreenHeight;
+        desc.depth                         = gscp.fullscreenDepth;
+        desc.refrate                       = gscp.fullscreenRefrate;
+        desc.pp.BackBufferWidth            = gscp.fullscreenWidth;
+        desc.pp.BackBufferHeight           = gscp.fullscreenHeight;
+        desc.pp.FullScreen_RefreshRateInHz = gscp.fullscreenRefrate;
     }
     else
     {

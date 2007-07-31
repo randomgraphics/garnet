@@ -9,7 +9,7 @@
 #include "fence.h"
 #include "resourceItem.h"
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     ///
     /// resource operations will happens in strict order as the enum itself.
@@ -133,7 +133,7 @@ namespace GN { namespace engine2
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::ResourceCommandBuffer::ResourceCommandBuffer()
+inline GN::engine::ResourceCommandBuffer::ResourceCommandBuffer()
     : mBufferNotEmpty( createSyncEvent( false, false ) ) // initial unsignaled, manual reset
     , mEmpty( true )
     , mQuit( false )
@@ -147,7 +147,7 @@ inline GN::engine2::ResourceCommandBuffer::ResourceCommandBuffer()
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::ResourceCommandBuffer::~ResourceCommandBuffer()
+inline GN::engine::ResourceCommandBuffer::~ResourceCommandBuffer()
 {
     clear();
     safeDelete( mBufferNotEmpty );
@@ -156,7 +156,7 @@ inline GN::engine2::ResourceCommandBuffer::~ResourceCommandBuffer()
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::ResourceCommandBuffer::clear()
+inline void GN::engine::ResourceCommandBuffer::clear()
 {
     mMutex.lock();
 
@@ -182,7 +182,7 @@ inline void GN::engine2::ResourceCommandBuffer::clear()
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::engine2::ResourceCommandBuffer::empty() const
+inline bool GN::engine::ResourceCommandBuffer::empty() const
 {
     return mEmpty;
 }
@@ -190,7 +190,7 @@ inline bool GN::engine2::ResourceCommandBuffer::empty() const
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::ResourceCommandBuffer::submit(
+inline void GN::engine::ResourceCommandBuffer::submit(
      ResourceCommand * item )
 {
     GN_ASSERT( item );
@@ -206,8 +206,8 @@ inline void GN::engine2::ResourceCommandBuffer::submit(
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::ResourceCommand *
-GN::engine2::ResourceCommandBuffer::consumeBegin()
+inline GN::engine::ResourceCommand *
+GN::engine::ResourceCommandBuffer::consumeBegin()
 {
     mBufferNotEmpty->wait();
     if( mQuit ) return NULL;
@@ -243,7 +243,7 @@ GN::engine2::ResourceCommandBuffer::consumeBegin()
 //
 // -----------------------------------------------------------------------------
 inline void
-GN::engine2::ResourceCommandBuffer::consumeEnd()
+GN::engine::ResourceCommandBuffer::consumeEnd()
 {
     mMutex.lock();
     if( mCommands.empty() )

@@ -2,7 +2,7 @@
 #include "resourceLRU.h"
 #include "resourceCache.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceLRU");
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceLRU");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine.ResourceLRU
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::ResourceLRU::init( size_t capacity )
+bool GN::engine::RenderEngine::ResourceLRU::init( size_t capacity )
 {
     GN_GUARD;
 
@@ -30,7 +30,7 @@ bool GN::engine2::RenderEngine::ResourceLRU::init( size_t capacity )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceLRU::quit()
+void GN::engine::RenderEngine::ResourceLRU::quit()
 {
     GN_GUARD;
 
@@ -47,7 +47,7 @@ void GN::engine2::RenderEngine::ResourceLRU::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceLRU::insert( GraphicsResourceItem * item )
+void GN::engine::RenderEngine::ResourceLRU::insert( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
 
@@ -59,7 +59,7 @@ void GN::engine2::RenderEngine::ResourceLRU::insert( GraphicsResourceItem * item
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceLRU::remove( GraphicsResourceItem * item )
+void GN::engine::RenderEngine::ResourceLRU::remove( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     mLRUList.remove( item );
@@ -68,7 +68,7 @@ void GN::engine2::RenderEngine::ResourceLRU::remove( GraphicsResourceItem * item
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item, bool * needReload )
+void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item, bool * needReload )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
 
@@ -118,7 +118,7 @@ void GN::engine2::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * ite
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item )
+void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
 
@@ -137,7 +137,7 @@ void GN::engine2::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * ite
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
+inline void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     mLRUList.remove( item );

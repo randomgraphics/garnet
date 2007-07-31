@@ -249,7 +249,7 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         else if( "drawable" == e->name )
         {
             Drawable d;
-            if( !d.loadFromXmlNode( mScene.entityManager(), mScene.renderEngine(), *e, basedir ) ) return false;
+            if( !d.loadFromXmlNode( mScene.renderEngine(), *e, basedir ) ) return false;
             addDrawable( d );
         }
         else if( "actor" == e->name )
@@ -278,20 +278,15 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
 // -----------------------------------------------------------------------------
 void GN::scene::Actor::draw()
 {
-    const Matrix44f & world = getLocal2Root();
+    //const Matrix44f & world = getLocal2Root();
 
-    EffectItemID id;
-
-    Effect * e;
-
-    // TODO: sort drawable by effect.
+    // TODO: sort drawable by kernel
 
     for( size_t i = 0; i < mDrawables.size(); ++i )
     {
         Drawable & d = mDrawables[i];
 
-        e = entity2Object<Effect*>( d.effect, 0 );
-
+        /*
         if( d.hasUniform( "pvw" ) )
         {
             Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
@@ -321,9 +316,9 @@ void GN::scene::Actor::draw()
         else if( e->hasUniform( "light0_pos", &id ) )
         {
             e->setUniform( id, Vector4f( mScene.light(0).position, 1.0f ) );
-        }
+        }*/
 
-        d.draw();
+        d.render();
     }
 
     // draw children

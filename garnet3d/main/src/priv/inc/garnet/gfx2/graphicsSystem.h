@@ -670,13 +670,13 @@ namespace GN { namespace gfx
         //@{
         FOURCC api;     ///< could be: 'AUTO', 'OGL', 'DX9', 'DX10', 'XB2'
         UInt32 monitor; ///< monitor index. 0 is the first monitor.
-        UInt32 fullscrWidth;
-        UInt32 fullscrHeight;
-        UInt32 fullscrDepth;
-        UInt32 fullscrRefrate;
+        UInt32 fullscreenWidth;
+        UInt32 fullscreenHeight;
+        UInt32 fullscreenDepth;
+        UInt32 fullscreenRefrate;
         UInt32 windowedWidth;
         UInt32 windowedHeight;
-        bool   fullscr;
+        bool   fullscreen;
         bool   vsync;
 
         bool operator==( const GraphicsSystemCreationParameter & rhs ) const { return 0 == memcmp( this, &rhs, sizeof(rhs) ); }

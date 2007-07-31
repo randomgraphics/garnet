@@ -1,3 +1,6 @@
+- 2007.7.31
+  - replace engine module with engine2
+
 - 2007.7.25
   - new experimental render engine system that is built on new GFX2 system.
   - fix some doc bugs.

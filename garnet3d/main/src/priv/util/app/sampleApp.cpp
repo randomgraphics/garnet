@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "garnet/GNapp.h"
-#include "garnet/GNscene.h"
 #define SO_ASSERT GN_ASSERT
 #include <SimpleOpt.h>
+
+using namespace GN::gfx;
+using namespace GN::engine;
+using namespace GN::input;
 
 float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 
@@ -16,8 +19,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
 //
 // -----------------------------------------------------------------------------
 GN::app::SampleApp::SampleApp()
-    : mQuadRenderer(mRenderEngine)
-    , mFont(mQuadRenderer)
+    : mFont(mRenderEngine)
     , mShowHUD(true)
     , mShowHelp(false)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
@@ -111,14 +113,12 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
     else if( input::KEY_R == ke.code && !ke.status.down ) mRenderEngine.disposeAllResources();
     else if( input::KEY_F == ke.code && !ke.status.down )
     {
-        GN_TODO( "make it thread safe" );
-        gRenderer.dumpNextFrame();
+        GN_TODO( "dump graphics system states" );
     }
     else if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
-        GN::gfx::RendererOptions ro = mRenderEngine.getRendererOptions();
-        ro.fullscreen = !ro.fullscreen;
-        if( !mRenderEngine.resetRenderer( mInitParam.rapi, ro ) ) postExitEvent();
+        mInitParam.gscp.fullscreen = !mInitParam.gscp.fullscreen;
+        if( !recreateRenderer() ) postExitEvent();
     }
     else if( input::KEY_F1 == ke.code && !ke.status.down )
     {
@@ -129,11 +129,14 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::switchRenderer()
+bool GN::app::SampleApp::switchGraphicsAPI( const FOURCC & newapi )
 {
     GN_GUARD;
 
-    mInitParam.rapi = (gfx::RendererAPI)((mInitParam.rapi+1)%gfx::NUM_RENDERER_API);
+    if( newapi == mInitParam.gscp.api ) return true;
+
+    mInitParam.gscp.api = newapi;
+
     return recreateRenderer();
 
     GN_UNGUARD;
@@ -176,7 +179,6 @@ void GN::app::SampleApp::quit()
 
     onQuit();
     quitFont();
-    mEntityManager.deleteAllEntities();
     quitRenderer();
     quitInput();
 
@@ -192,32 +194,31 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 
     UInt32 MB = 1024 * 1024;
 
+    mInitParam.gscp.fullscreenWidth = 640;
+    mInitParam.gscp.fullscreenHeight = 480;
+    mInitParam.gscp.fullscreenDepth = 32;
+    mInitParam.gscp.fullscreenRefrate = 0;
+    mInitParam.gscp.windowedWidth = 800;
+    mInitParam.gscp.windowedHeight = 600;
+    mInitParam.gscp.fullscreen = false;
+    mInitParam.gscp.vsync = false;
+    mInitParam.reip.resourceCapacityInBytes = 256*MB;
+    mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
+    mInitParam.ffd.fontname = "font::/simsun.ttc";
+    mInitParam.ffd.width = 16;
+    mInitParam.ffd.height = 16;
+    mInitParam.iapi = input::API_NATIVE;
+
 #if GN_XENON
+
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
-    mInitParam.rapi = gfx::API_D3D9;
-    mInitParam.ro = gfx::RendererOptions();
-    mInitParam.reip.maxTexBytes = 256*MB;
-    mInitParam.reip.maxMeshBytes = 128*MB;
-    mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
-    mInitParam.iapi = input::API_NATIVE;
-    mInitParam.ffd.fontname = "font::/simsun.ttc";
-    mInitParam.ffd.width = 16;
-    mInitParam.ffd.height = 16;
+    mInitParam.gscp.api = FOURCC::sMake( "XB2" );
     if( !onCheckCmdLine( argc, argv ) ) return false;
+
 #else
-    // setup default parameters
-    mInitParam.rapi = gfx::API_AUTO;
-    mInitParam.ro = gfx::RendererOptions();
-    mInitParam.ro.windowedWidth = 640;
-    mInitParam.ro.windowedHeight = 480;
-    mInitParam.reip.maxTexBytes = 128*MB;
-    mInitParam.reip.maxMeshBytes = 64*MB;
-    mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
-    mInitParam.iapi = input::API_NATIVE;
-    mInitParam.ffd.fontname = "font::/simsun.ttc";
-    mInitParam.ffd.width = 16;
-    mInitParam.ffd.height = 16;
+
+    mInitParam.gscp.api = FOURCC::sMake( "AUTO" );
 
     DynaArray<const char*> unknownArgs;
     unknownArgs.append( argv[0] );
@@ -230,11 +231,11 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         { 0, "-ww",    SO_REQ_SEP }, // window width
         { 0, "-wh",    SO_REQ_SEP }, // window height
         { 0, "-fs",    SO_NONE    },
-        { 0, "-ref",   SO_NONE    },
-        { 0, "-msaa",  SO_NONE    },
-        { 0, "-sw",    SO_NONE    },
-        { 0, "-pure",  SO_NONE    },
         { 0, "-vsync", SO_NONE    },
+        //{ 0, "-ref",   SO_NONE    },
+        //{ 0, "-msaa",  SO_NONE    },
+        //{ 0, "-sw",    SO_NONE    },
+        //{ 0, "-pure",  SO_NONE    },
         { 0, "-m",     SO_REQ_SEP }, // specify monitor index
         { 0, "-di",    SO_NONE    },
         { 0, "-le",    SO_REQ_SEP }, // enable logger
@@ -263,11 +264,11 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -ww [num]              : Windows width. Default is 640.\n"
                     "    -wh [num]              : Windows width. Default is 480.\n"
                     "    -fs                    : Use fullsreen mode.\n"
-                    "    -ref                   : Use reference device.\n"
-                    "    -msaa                  : Enable MSAA/FSAA.\n"
-                    "    -sw                    : Use software vertex processing. (D3D only)\n"
-                    "    -pure                  : Use pure device (D3D only).\n"
-                    "    -vsync                 : Enale vsync.\n"
+                    "    -vsync                 : Enable vsync.\n"
+                    //"    -ref                   : Use reference device.\n"
+                    //"    -msaa                  : Enable MSAA/FSAA.\n"
+                    //"    -sw                    : Use software vertex processing. (D3D only)\n"
+                    //"    -pure                  : Use pure device (D3D only).\n"
                     "    -m [num]               : Specify monitor index. Default is 0.\n"
                     "    -di                    : Use direct input.\n"
                     "    -le [name]             : Enable specific logger.\n"
@@ -286,9 +287,10 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     , baseName(argv[0]).cptr() );
                 return false;
             }
-            else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
-            else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
-            else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+            else if( 0 == strCmpI( a, "-d3d9"  ) ) mInitParam.gscp.api = FOURCC::sMake( "DX9" );
+            else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.gscp.api = FOURCC::sMake( "DX10" );
+            else if( 0 == strCmpI( a, "-ogl"   ) ) mInitParam.gscp.api = FOURCC::sMake( "OGL" );
+            else if( 0 == strCmpI( a, "-fake"  ) ) mInitParam.gscp.api = FOURCC::sMake( "FAKE" );
             else if( 0 == strCmpI( a, "-ww" ) )
             {
                 UInt32 i;
@@ -298,7 +300,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 }
                 else
                 {
-                    mInitParam.ro.windowedWidth = i;
+                    mInitParam.gscp.windowedWidth = i;
                 }
             }
             else if( 0 == strCmpI( a, "-wh" ) )
@@ -310,16 +312,14 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 }
                 else
                 {
-                    mInitParam.ro.windowedHeight = i;
+                    mInitParam.gscp.windowedHeight = i;
                 }
             }
-            else if( 0 == strCmpI( a, "-fs" ) ) mInitParam.ro.fullscreen = true;
-            else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
-            else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
-            else if( 0 == strCmpI( a, "-msaa" ) ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
-            else if( 0 == strCmpI( a, "-sw" ) ) mInitParam.ro.software = true;
-            else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
-            else if( 0 == strCmpI( a, "-vsync" ) ) mInitParam.ro.vsync = true;
+            else if( 0 == strCmpI( a, "-fs" ) ) mInitParam.gscp.fullscreen = true;
+            else if( 0 == strCmpI( a, "-vsync" ) ) mInitParam.gscp.vsync = true;
+            //else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.gscp.reference = true;
+            //else if( 0 == strCmpI( a, "-sw" ) ) mInitParam.ro.software = true;
+            //else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
             else if( 0 == strCmpI( a, "-m" ) )
             {
                 UInt32 idx;
@@ -328,7 +328,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     GN_ERROR(sLogger)( "monitor index must be integer." );
                     return false;
                 }
-                mInitParam.ro.monitorHandle = win::getMonitorByIndex( idx );
+                mInitParam.gscp.monitor = idx;
             }
             else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
             else if( 0 == strCmpI( a, "-le") ) getLogger( so.OptionArg() )->setEnabled( true );
@@ -369,6 +369,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         unknownArgs.append( so.File( i ) );
     }
     if( !onCheckCmdLine( (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
+
 #endif
 
     // success
@@ -385,7 +386,7 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    gSigRendererWindowClose.connect( this, &SampleApp::postExitEvent );
+    //gSigRendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
     // initialize render engine
     if( !mRenderEngine.init( mInitParam.reip ) ) return false;
@@ -407,7 +408,7 @@ void GN::app::SampleApp::quitRenderer()
     mRenderEngine.quit();
 
     // disconnect to renderer signals
-    gSigRendererWindowClose.disconnect( this );
+    //gSigRendererWindowClose.disconnect( this );
 
     GN_UNGUARD;
 }
@@ -419,7 +420,7 @@ bool GN::app::SampleApp::recreateRenderer()
 {
     GN_GUARD;
 
-    return mRenderEngine.resetRenderer( mInitParam.rapi, mInitParam.ro );
+    return mRenderEngine.reset( mInitParam.gscp );
 
     GN_UNGUARD;
 }
@@ -440,14 +441,11 @@ bool GN::app::SampleApp::initInput()
     quitInput();
 
     // create INPUT system
-    GN::input::Input * input = GN::input::createInputSystem( mInitParam.iapi );
+    Input * input = createInputSystem( mInitParam.iapi );
     if( 0 == input ) return false;
 
-    if( gRendererPtr )
-    {
-        const GN::gfx::DispDesc & dd = mRenderEngine.getDispDesc();
-        if( !input->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
-    }
+    const GraphicsSystemDesc & gsd = mRenderEngine.getGraphicsSystemDesc();
+    if( !input->attachToWindow( gsd.display, gsd.window ) ) return false;
 
     // success
     return true;
@@ -474,8 +472,6 @@ bool GN::app::SampleApp::initFont()
 {
     GN_GUARD;
 
-    if( !mQuadRenderer.init() ) return false;
-
     return mFont.init( mInitParam.ffd );
 
     GN_UNGUARD;
@@ -489,8 +485,6 @@ void GN::app::SampleApp::quitFont()
     GN_GUARD;
 
     mFont.quit();
-
-    mQuadRenderer.quit();
 
     GN_UNGUARD;
 }

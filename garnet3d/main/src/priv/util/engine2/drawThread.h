@@ -11,7 +11,7 @@
 #include "resourceCommandBuffer.h"
 #include "drawCommand.h"
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     class RenderEngine;
 

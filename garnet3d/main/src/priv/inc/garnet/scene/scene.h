@@ -47,7 +47,7 @@ namespace GN { namespace scene
 
         //@{
 
-        Scene( engine::EntityManager & em, engine::RenderEngine & re );
+        Scene( engine::RenderEngine & re );
 
         ~Scene();
 
@@ -62,7 +62,6 @@ namespace GN { namespace scene
         //@}
 
         //@{
-        engine::EntityManager & entityManager() const { return mEntityManager; }
         engine::RenderEngine  & renderEngine() const { return mRenderEngine; }
         //@}
 
@@ -80,7 +79,6 @@ namespace GN { namespace scene
 
     private:
 
-        engine::EntityManager & mEntityManager;
         engine::RenderEngine  & mRenderEngine;
 
         Matrix44f mProj, mView;

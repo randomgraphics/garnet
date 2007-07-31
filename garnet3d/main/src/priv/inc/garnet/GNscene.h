@@ -19,7 +19,6 @@ namespace GN
     }
 }
 
-#include "scene/quad.h"
 #include "scene/font.h"
 #include "scene/scene.h"
 #include "scene/actor.h"

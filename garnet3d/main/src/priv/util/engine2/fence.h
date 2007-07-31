@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-HP (2007.5.2)
 // *****************************************************************************
 
-namespace GN { namespace engine2
+namespace GN { namespace engine
 {
     ///
     /// Fence ID type.

@@ -7,73 +7,127 @@ using namespace GN::scene;
 
 static GN::Logger * sLogger = GN::getLogger("GN.scene.BitmapFont");
 
-class BitmapFontTextureLoader : public GraphicsResourceLoader
+namespace GN
 {
-    const UInt8 * mData;
-    size_t mPitch;
-    size_t mHeight;
-public:
-
-    BitmapFontTextureLoader( const UInt8 * data, size_t pitch, size_t height )
-        : mData(data), mPitch(pitch), mHeight(height)
+    template<typename T>
+    class SafeArrayAccessor
     {
-    }
+        T    * mData;
+        size_t mSize;
 
-    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf   = 0;
-        outbytes = 0;
-        return true;
-    }
+    public:
 
-    virtual bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
-    {
-        outbuf   = 0;
-        outbytes = 0;
-        return true;
-    }
+        //@{
 
-    virtual bool copy( GraphicsResource & res, const void *, size_t, int )
-    {
-        Texture * tex = res.texture;
-        GN_ASSERT( tex );
+        SafeArrayAccessor( T * data, size_t bytes ) : mData(data), mSize(bytes) {}
 
-        // lock texture
-        TexLockedResult tlr;
-        if( !tex->lock( tlr, 0, 0, 0, LOCK_DISCARD ) ) return false;
+        T * operator->() { GN_ASSERT(mSize>0); return mData; }
 
-        // fill data
-        if( tlr.rowBytes == mPitch )
+        T & operator[]( size_t index ) { GN_ASSERT( index < mSize ); return mData[index]; }
+
+        SafeArrayAccessor & operator+=( size_t offset )
         {
-            memcpy( tlr.data, mData, mPitch * mHeight );
+            GN_ASSERT( offset <= mSize );
+            mData += offset;
+            mSize -= offset;
+            return *this;
         }
-        else
-        {
-            GN_ASSERT( tlr.rowBytes > mPitch );
 
-            const UInt8 * src = mData;
-            UInt8 * dst = (UInt8*)tlr.data;
-            for( size_t y = 0; y < mHeight; ++y )
+        //@}
+    };
+}
+
+// *****************************************************************************
+// Font texture loader
+// *****************************************************************************
+
+GN::scene::BitmapFont::FontTextureLoader::FontTextureLoader(
+    const FontImage  & font,
+    const FontSlot   & slot,
+    GraphicsResource & tex )
+    : mFontWidth( font.width )
+    , mFontHeight( font.height )
+    , mSlot(slot), mTexture(tex)
+{
+    mFontImage.resize( font.width * font.height );
+    memcpy( mFontImage.cptr(), font.buffer, mFontImage.size() );
+}
+
+//
+// load font image
+// -----------------------------------------------------------------------------
+bool GN::scene::BitmapFont::FontTextureLoader::load( const GraphicsResourceDesc &, DynaArray<UInt8> & outbuf )
+{
+    outbuf.swap( mFontImage );
+    return true;
+}
+
+//
+// convert font image to R-G-B-A
+// -----------------------------------------------------------------------------
+bool GN::scene::BitmapFont::FontTextureLoader::decompress( const GraphicsResourceDesc &, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf )
+{
+    GN_ASSERT( inbuf.size() == mFontWidth * mFontHeight );
+
+    size_t dstw = mSlot.x2 - mSlot.x1;
+    size_t dsth = mSlot.y2 - mSlot.y1;
+
+    outbuf.resize( dstw * dsth * 4 );
+    SafeArrayAccessor<UInt8> dst( outbuf.cptr(), outbuf.size() );
+
+    size_t srcw = mFontWidth;
+    size_t srch = mFontHeight;
+
+    SafeArrayAccessor<const UInt8> src( inbuf.cptr(), srcw * srch );
+
+    GN_ASSERT( srch <= dsth );
+    size_t margin_y = dsth - srch;
+
+    for( size_t y = 0; y < dsth; ++y )
+    {
+        for( size_t x = 0; x < dstw; ++x, dst += 4 )
+        {
+            if( x < srcw && y >= margin_y )
             {
-                memcpy( dst, src, mPitch );
-                src += mPitch;
-                dst += tlr.rowBytes;
+                dst[0] = src[x + (y-margin_y) * srcw];
             }
-        }
-
-        tex->unlock();
-
-        //tex->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
-        GN_TODO( "setup sampler" );
-
-        // success
-        return true;
+            else
+            {
+                dst[0] = 0;
+            }
+            dst[1] = dst[0];
+            dst[2] = dst[0];
+            dst[3] = dst[0];
+		}
     }
 
-    virtual void freebuf( void *, size_t )
-    {
-    }
-};
+    return true;
+}
+
+//
+// copy to texture
+// -----------------------------------------------------------------------------
+bool GN::scene::BitmapFont::FontTextureLoader::copy( GraphicsResource & res, DynaArray<UInt8> & inbuf )
+{
+    GN_ASSERT( GRT_SURFACE == res.desc.type );
+
+    size_t width  = mSlot.x2 - mSlot.x1;
+
+    size_t height = mSlot.y2 - mSlot.y1;
+
+    GN_ASSERT( inbuf.size() == width * 4 * height );
+
+    Box<size_t> area( mSlot.x1, mSlot.y1, 0, width, height, 1 );
+
+    res.surface->download(
+        0,
+        &area,
+        inbuf.cptr(),
+        width * 4,
+        width * 4 * height );
+
+    return true;
+}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -88,7 +142,6 @@ bool GN::scene::BitmapFont::init( const FontFaceDesc & ffd )
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::scene::BitmapFont, () );
-
     // create slot map array
     mFontSlots = new FontSlot[MAX_SLOTS];
 
@@ -105,17 +158,61 @@ bool GN::scene::BitmapFont::init( const FontFaceDesc & ffd )
     // initialize font slots
     if( !slotInit( ffd.width, ffd.height ) ) return failure();
 
-    // create font textures
-    RenderEngine & eng = mQuadRenderer.renderEngine();
+    // get quad kernel
+    mKernel = mRenderEngine.getKernel( "QUAD" );
+    if( 0 == mKernel ) return failure();
+
+    // create font textures and binding
+    SurfaceCreationParameter scp;
+    scp.bindTo( "QUAD", "TEXTURE0" );
+    scp.layout.dim    = SURFACE_DIMENSION_2D;
+    scp.layout.levels = 1;
+    scp.layout.faces  = 1;
+    scp.layout.basemap.width  = (UInt32)mTexWidth;
+    scp.layout.basemap.height = (UInt32)mTexHeight;
+    scp.layout.basemap.depth  = 1;
+    scp.layout.basemap.rowBytes = (UInt32)mTexWidth * 4;
+    scp.layout.basemap.sliceBytes = (UInt32)(mTexWidth * mTexHeight * 4);
+    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = FMT_RGBA32;
+    scp.layout.format.count = 1;
+    scp.layout.format.stride = 4;
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        FontTexture & tex = mTextures[i];
-        tex.texture.attach( eng.create2DTexture( "BitmapFontTexture", mTexWidth, mTexHeight, 1, FMT_RGBA32 ) );
-        if( tex.texture.empty() )
+        mTextures[i] = mRenderEngine.createSurface( strFormat( "bitmap font texture #%d", i ), scp );
+
+        if( 0 == mTextures[i] )
         {
-            GN_ERROR(sLogger)( "fail to create font texture!" );
+            GN_ERROR(sLogger)( "fail to create font texture #%d!", i );
             return failure();
         }
+    }
+
+    // create port binding
+    std::map<StrA,SurfaceResourceView> views;
+    for( int i = 0; i < MAX_TEXTURES; ++i )
+    {
+        views["TEXTURE0"].set( mTextures[i], 0, 1, 0, 1 );
+
+        mKernelPortBindings[i] = mRenderEngine.createPortBinding( strFormat( "bitmap font binding #%d", i ), *mKernel, views );
+
+        if( 0 == mKernelPortBindings[i] ) return failure();
+    }
+
+    // create parameter set
+    mKernelParam = mRenderEngine.createParameterSet( "bitmap font", *mKernel );
+    if( 0 == mKernelParam ) return failure();
+
+    // initialize quad stream
+    GN_TODO( "get freebyte() of quad stream" );
+    mQuadBuffer.resize( 1024 );
+
+    // create render context
+    for( int i = 0; i < MAX_TEXTURES; ++i )
+    {
+        mContexts[i] = mRenderEngine.createRenderContext( mKernel, mKernelParam, mKernelPortBindings[i] );
+        if( 0 == mContexts[i] ) return failure();
     }
 
     // success
@@ -142,11 +239,17 @@ void GN::scene::BitmapFont::quit()
         safeDeleteArray( mCharList[i] );
     }
 
-    // delete all textures
+    // delete per-texture resources
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        mTextures[i].texture.clear();
+        safeDeleteGraphicsResource( mKernelPortBindings[i] );
+        safeDeleteGraphicsResource( mTextures[i] );
+        mRenderEngine.deleteRenderContext( mContexts[i] );
     }
+
+    safeDeleteGraphicsResource( mKernelParam );
+
+    safeDeleteGraphicsResource( mKernel );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -228,15 +331,14 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
     }
 
     // get current screen size
-    const DispDesc & dd = mQuadRenderer.renderEngine().getDispDesc();
+    const GraphicsSystemDesc & dd = mRenderEngine.getGraphicsSystemDesc();
     float scalex = 1.0f / dd.width;
     float scaley = 1.0f / dd.height;
-
-    QuadRenderer & qr = mQuadRenderer;
 
     // draw background box
     if( td.background )
     {
+#if 0
         qr.drawSingleSolidQuad(
             GN_RGBA32( 0, 0, 0, 128 ),
             0, // option
@@ -245,6 +347,7 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
             ( bbox.y ) * scaley,
             ( bbox.x+bbox.w ) * scalex,
             ( bbox.y+bbox.h ) * scaley );
+#endif
     }
 
     // draw all characters in charlist
@@ -253,32 +356,53 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
     {
         if( 0 == mNumChars[i] ) continue;
 
-        qr.drawBegin( mTextures[mCharList[i][0].fs->texidx].texture );
+        size_t MAX_QUADS = mQuadBuffer.size() / 4;
+        size_t n1 = mNumChars[i] / MAX_QUADS;
+        size_t n2 = mNumChars[i] % MAX_QUADS;
 
-        size_t & nc = mNumChars[i];
-        ci = &mCharList[i][0];
-        while( nc > 0 )
+        ci = mCharList[i];
+
+        for( size_t j = 0; j < n1; ++j )
         {
-            fs = ci->fs;
-            qr.drawTextured(
-                td.z,
-                ci->x * scalex,
-                ci->y * scaley,
-                (float)( ci->x + fs->x2 - fs->x1 ) * scalex,
-                (float)( ci->y + fs->y2 - fs->y1 ) * scaley,
-                fs->u1,
-                fs->v1,
-                fs->u2,
-                fs->v2 );
+            QuadVertex * v = mQuadBuffer.cptr();
+            for( size_t k = 0; k < MAX_QUADS; ++k, ++ci, v+=4 )
+            {
+                fs = ci->fs;
 
-            // next char
-            --nc;
-            ++ci;
+                float x1 = ci->x * scalex;
+                float y1 = ci->y * scaley;
+                float x2 = (float)( ci->x + fs->x2 - fs->x1 ) * scalex;
+                float y2 = (float)( ci->y + fs->y2 - fs->y1 ) * scaley;
+
+                v[0].set( x1, y1, td.z, 255, 255, 255, 255, fs->u1, fs->v1 );
+                v[1].set( x1, y2, td.z, 255, 255, 255, 255, fs->u1, fs->v2 );
+                v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
+                v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
+            }
+
+            mRenderEngine.pushStreamData( mKernel, 0, MAX_QUADS * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
+            mRenderEngine.render( mContexts[i] );
         }
 
-        qr.drawEnd();
+        QuadVertex * v = mQuadBuffer.cptr();
+        for( size_t j = 0; j < n2; ++j, ++ci, v+=4 )
+        {
+            fs = ci->fs;
 
-        GN_ASSERT( 0 == mNumChars[i] );
+            float x1 = ci->x * scalex;
+            float y1 = ci->y * scaley;
+            float x2 = (float)( ci->x + fs->x2 - fs->x1 ) * scalex;
+            float y2 = (float)( ci->y + fs->y2 - fs->y1 ) * scaley;
+
+            v[0].set( x1, y1, td.z, 255, 255, 255, 255, fs->u1, fs->v1 );
+            v[1].set( x1, y2, td.z, 255, 255, 255, 255, fs->u1, fs->v2 );
+            v[2].set( x2, y2, td.z, 255, 255, 255, 255, fs->u2, fs->v2 );
+            v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
+        }
+        mRenderEngine.pushStreamData( mKernel, 0, n2 * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
+        mRenderEngine.render( mContexts[i] );
+
+        mNumChars[i] = 0;
     }
 
     GN_UNGUARD_SLOW;
@@ -326,78 +450,26 @@ GN::scene::BitmapFont::createSlot( wchar_t ch )
     FontSlot & slot = mFontSlots[mNumSlots];
     ++mNumSlots;
 
-    // get font bitmap data
+    // load font image
     FontImage fbm;
     if( !mFont->loadFontImage( fbm, ch ) )
     {
         GN_ERROR(sLogger)( "fail to get font bitmap for character!" );
-        return 0;
+        return false;
     }
 
     //imdebug( "lum w=%d h=%d %p", fbm.width, fbm.height, fbm.buffer );
 
-    // get font texture
-    FontTexture & tex = mTextures[slot.texidx];
-    if( tex.syscopy.empty() )
-    {
-        tex.syscopy.resize( mTexWidth * mTexHeight * 4 );
-        memset( tex.syscopy.cptr(), 0, tex.syscopy.size() );
-    }
-
-    // fill the slot with font image
-    size_t pitch = mTexWidth * 4;
-    UInt8 * dst = (UInt8*)tex.syscopy.cptr() + slot.y1 * pitch + slot.x1 * 4;
-    size_t slotw = (size_t)( slot.x2 - slot.x1 );
-    size_t sloth = (size_t)( slot.y2 - slot.y1 );
-    GN_ASSERT( fbm.height <= sloth );
-    size_t margin_y = sloth - fbm.height;
-    for( size_t y = 0; y < sloth; ++y )
-    {
-        UInt8 * d = dst;
-
-        for( size_t x = 0; x < slotw; ++x, d += 4 )
-        {
-#if GN_BIG_ENDIAN
-            d[3] = 0xFF;
-            d[2] = 0xFF;
-            d[1] = 0xFF;
-            if( x < fbm.width && y >= margin_y )
-            {
-                d[0] = fbm.buffer[x + (y-margin_y) * fbm.width];
-            }
-            else
-            {
-                d[0] = 0;
-            }
-#else
-            d[0] = 0xFF;
-            d[1] = 0xFF;
-            d[2] = 0xFF;
-            if( x < fbm.width && y >= margin_y )
-            {
-                d[3] = fbm.buffer[x + (y-margin_y) * fbm.width];
-            }
-            else
-            {
-                d[3] = 0;
-            }
-#endif
-		}
-
-        dst += pitch;
-    }
-
-    // set slot fields
+    // update slot fields
     slot.ch   = ch;
     slot.offx = fbm.offx;
     slot.offy = fbm.offy;
     slot.advx = fbm.advx;
     slot.advy = fbm.advy;
 
-    // update texture content
-    RenderEngine & eng = mQuadRenderer.renderEngine();
-    AutoRef<BitmapFontTextureLoader> loader( new BitmapFontTextureLoader( tex.syscopy.cptr(), pitch, mTexHeight ) );
-    eng.updateResource( tex.texture,  0, loader );
+    // load texture data
+    AutoRef<FontTextureLoader> loader( new FontTextureLoader( fbm, slot, *mTextures[slot.texidx] ) );
+    mRenderEngine.updateResource( mTextures[slot.texidx], loader );
 
     // success
     return &slot;
@@ -416,8 +488,8 @@ bool GN::scene::BitmapFont::slotInit( UInt16 fontw, UInt16 fonth )
     UInt16 rectw = fontw + 0;
     UInt16 recth = fonth + 0;
 
-    // query maximum texture size
-    UInt32 max_size = mQuadRenderer.renderEngine().getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
+    GN_TODO( "query maximum texture size from graphics system" );
+    UInt32 max_size = 1024;
 
     // calculate texture size
     UInt32 texw = ceilPowerOf2(rectw*32);
@@ -437,8 +509,8 @@ bool GN::scene::BitmapFont::slotInit( UInt16 fontw, UInt16 fonth )
     // initialize font slots
     float stepu = float(rectw) / texw;
     float stepv = float(recth) / texh;
-    UInt16 x = 0, y = 0;
-    float u = 0.0f, v = 0.0f;
+    UInt16 x, y;
+    float  u, v;
     FontSlot * slot = mFontSlots;
     UInt32 numcols = texw / rectw;
     UInt32 numrows = texh / recth;
@@ -446,10 +518,10 @@ bool GN::scene::BitmapFont::slotInit( UInt16 fontw, UInt16 fonth )
     FontSlot * end = &mFontSlots[MAX_SLOTS];
     for( UInt32 itex = 0; itex < numtex; ++itex )
     {
-        u = 0.0f; x = 0;
+        u = 0.5f / texw; x = 0;
         for( UInt32 icol = 0; icol < numcols; ++icol )
         {
-            v = 0.0f; y = 0;
+            v = 0.5f / texh; y = 0;
             for( UInt32 irow = 0; irow < numrows; ++irow )
             {
                 // setup slot
@@ -495,4 +567,3 @@ loop_end :
 
     GN_UNGUARD;
 }
-

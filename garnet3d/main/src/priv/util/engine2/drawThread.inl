@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::DrawThread::present()
+inline void GN::engine::RenderEngine::DrawThread::present()
 {
     submitDrawCommand( DCT_PRESENT, 0 );
     flushDrawBuffer();
@@ -10,8 +10,8 @@ inline void GN::engine2::RenderEngine::DrawThread::present()
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand(
     DrawCommandType type, size_t parameterBytes )
 {
     GN_ASSERT( 0 <= type && type < NUM_DRAW_COMMAND_TYPES );
@@ -47,8 +47,8 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand(
 //
 // -----------------------------------------------------------------------------
 template<typename T1>
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand1(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand1(
     DrawCommandType type, const T1 & a1 )
 {
     DrawCommandHeader * header = submitDrawCommand( type, sizeof(T1) );
@@ -66,8 +66,8 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand1(
 //
 // -----------------------------------------------------------------------------
 template<typename T1, typename T2>
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand2(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand2(
     DrawCommandType type, const T1 & a1, const T2 & a2 )
 {
     DrawCommandHeader * header = submitDrawCommand(
@@ -88,8 +88,8 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand2(
 //
 // -----------------------------------------------------------------------------
 template<typename T1, typename T2, typename T3>
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand3(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand3(
     DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3 )
 {
     DrawCommandHeader * header = submitDrawCommand(
@@ -112,8 +112,8 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand3(
 //
 // -----------------------------------------------------------------------------
 template<typename T1, typename T2, typename T3, typename T4>
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand4(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand4(
     DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3, const T4 & a4 )
 {
     DrawCommandHeader * header = submitDrawCommand(
@@ -138,8 +138,8 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand4(
 //
 // -----------------------------------------------------------------------------
 template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-inline GN::engine2::DrawCommandHeader *
-GN::engine2::RenderEngine::DrawThread::submitDrawCommand6(
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand6(
     DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3, const T4 & a4, const T5 & a5, const T6 & a6 )
 {
     DrawCommandHeader * header = submitDrawCommand(
@@ -168,7 +168,7 @@ GN::engine2::RenderEngine::DrawThread::submitDrawCommand6(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::DrawThread::submitResourceCommand(
+inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     ResourceCommand * item  )
 {
     GN_ASSERT( item );
@@ -183,7 +183,7 @@ inline void GN::engine2::RenderEngine::DrawThread::submitResourceCommand(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine2::RenderEngine::DrawThread::submitResourceDisposingCommand(
+inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand(
     GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );

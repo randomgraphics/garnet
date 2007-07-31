@@ -5,7 +5,7 @@
 #include "resourceThread.h"
 #include "drawThread.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.engine2.RenderEngine");
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 
 // *****************************************************************************
 // local classes
@@ -48,7 +48,7 @@ struct ApiReentrantChecker
 ///
 /// dummy loader that does nothing.
 ///
-class DummyLoader : public GN::engine2::GraphicsResourceLoader
+class DummyLoader : public GN::engine::GraphicsResourceLoader
 {
 protected:
 
@@ -63,17 +63,17 @@ public:
         return sInstance;
     }
 
-    virtual bool load( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
     {
         return true;
     }
 
-    bool decompress( const GN::engine2::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
     {
         return true;
     }
 
-    virtual bool copy( GN::engine2::GraphicsResource &, GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
     {
         return true;
     }
@@ -94,9 +94,9 @@ public:
         memcpy( mData.cptr(), data, bytes );
     }
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_ASSERT( GN::engine2::GRT_KERNEL == res.desc.type );
+        GN_ASSERT( GN::engine::GRT_KERNEL == res.desc.type );
         GN_ASSERT( res.kernel );
         res.kernel->getStream( mIndex )->push( mData.cptr(), mData.size() );
         return true;
@@ -122,9 +122,9 @@ public:
         memcpy( mValues.cptr(), data, bytes );
     }
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
         res.paramset->get( mIndex ).set( mOffset, mValues.size(), mValues.cptr() );
         return true;
@@ -140,9 +140,9 @@ struct BoolParameterLoader : public DummyLoader
     size_t index;
     bool   values[COUNT];
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
         res.paramset->get( index ).set( START, COUNT, values );
         return true;
@@ -158,9 +158,9 @@ struct FloatParameterLoader : public DummyLoader
     size_t index;
     float  values[COUNT];
 
-    virtual bool copy( GN::engine2::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_ASSERT( GN::engine2::GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
         res.paramset->get( index ).set( START*4, COUNT*4, values );
         return true;
@@ -175,13 +175,13 @@ struct FloatParameterLoader : public DummyLoader
 //
 // -----------------------------------------------------------------------------
 static void sDisposeAllResources(
-    GN::engine2::RenderEngine::ResourceCache & cache,
-    GN::engine2::RenderEngine::ResourceLRU   & lru,
-    GN::engine2::RenderEngine::DrawThread    & dt )
+    GN::engine::RenderEngine::ResourceCache & cache,
+    GN::engine::RenderEngine::ResourceLRU   & lru,
+    GN::engine::RenderEngine::DrawThread    & dt )
 {
     GN_GUARD;
 
-    using namespace GN::engine2;
+    using namespace GN::engine;
 
     for( GraphicsResourceItem * item = cache.firstResource();
          item;
@@ -198,13 +198,14 @@ static void sDisposeAllResources(
 //
 //
 // -----------------------------------------------------------------------------
+template< typename RESOURCE_ARRAY >
 static inline void sPrepareResources(
-    GN::engine2::RenderEngine::ResourceLRU               & lru,
-    GN::engine2::RenderEngine::ResourceThread            & rt,
-    const GN::DynaArray<GN::engine2::GraphicsResource *> & resources )
+    GN::engine::RenderEngine::ResourceLRU    & lru,
+    GN::engine::RenderEngine::ResourceThread & rt,
+    const RESOURCE_ARRAY                      & resources )
 {
     using namespace GN;
-    using namespace GN::engine2;
+    using namespace GN::engine;
 
     for( size_t i = 0; i < resources.size(); ++i )
     {
@@ -230,12 +231,13 @@ static inline void sPrepareResources(
 //
 //
 // -----------------------------------------------------------------------------
+template< typename RESOURCE_ARRAY >
 static inline void sSetupWaitingListAndReferenceFence(
-    const GN::DynaArray<GN::engine2::GraphicsResource *> & resources,
-    GN::engine2::DrawCommandHeader                       & dr )
+    GN::engine::DrawCommandHeader & dr,
+    const RESOURCE_ARRAY           & resources )
 {
     using namespace GN;
-    using namespace GN::engine2;
+    using namespace GN::engine;
 
     for( size_t i = 0; i < resources.size(); ++i )
     {
@@ -271,7 +273,7 @@ static inline void sSetupWaitingListAndReferenceFence(
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::RenderEngine::RenderEngine() : mApiReentrantFlag(0)
+GN::engine::RenderEngine::RenderEngine() : mApiReentrantFlag(0)
 {
     clear();
 }
@@ -279,7 +281,7 @@ GN::engine2::RenderEngine::RenderEngine() : mApiReentrantFlag(0)
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::RenderEngine::~RenderEngine()
+GN::engine::RenderEngine::~RenderEngine()
 {
     quit();
 }
@@ -291,14 +293,14 @@ GN::engine2::RenderEngine::~RenderEngine()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::init( const RenderEngineInitParameters & p )
+bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 {
     GN_GUARD;
 
     RENDER_ENGINE_API();
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::engine2::RenderEngine, () );
+    GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
 
     // create sub components
     mFenceManager = new FenceManager( *this );
@@ -324,7 +326,7 @@ bool GN::engine2::RenderEngine::init( const RenderEngineInitParameters & p )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::quit()
+void GN::engine::RenderEngine::quit()
 {
     GN_GUARD;
 
@@ -370,7 +372,7 @@ void GN::engine2::RenderEngine::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::clear()
+void GN::engine::RenderEngine::clear()
 {
     mFenceManager = 0;
     mResourceCache = 0;
@@ -386,7 +388,7 @@ void GN::engine2::RenderEngine::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::reset( const gfx::GraphicsSystemCreationParameter & gscp )
+bool GN::engine::RenderEngine::reset( const gfx::GraphicsSystemCreationParameter & gscp )
 {
     GN_GUARD;
 
@@ -406,7 +408,7 @@ bool GN::engine2::RenderEngine::reset( const gfx::GraphicsSystemCreationParamete
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::GraphicsSystemCreationParameter &
-GN::engine2::RenderEngine::getGraphicsSystemCreationParameter() const
+GN::engine::RenderEngine::getGraphicsSystemCreationParameter() const
 {
     RENDER_ENGINE_API();
 
@@ -417,7 +419,7 @@ GN::engine2::RenderEngine::getGraphicsSystemCreationParameter() const
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::GraphicsSystemDesc &
-GN::engine2::RenderEngine::getGraphicsSystemDesc() const
+GN::engine::RenderEngine::getGraphicsSystemDesc() const
 {
     RENDER_ENGINE_API();
 
@@ -431,8 +433,8 @@ GN::engine2::RenderEngine::getGraphicsSystemDesc() const
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 {
     GN_GUARD;
 
@@ -486,7 +488,7 @@ GN::engine2::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::deleteResource( GraphicsResource * res )
+void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
 {
     GN_GUARD;
 
@@ -524,7 +526,7 @@ void GN::engine2::RenderEngine::deleteResource( GraphicsResource * res )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::RenderEngine::checkResource( const GraphicsResource * res ) const
+bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) const
 {
     GN_GUARD;
 
@@ -537,7 +539,7 @@ bool GN::engine2::RenderEngine::checkResource( const GraphicsResource * res ) co
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::disposeResource( GraphicsResource * res )
+void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
     GN_GUARD;
 
@@ -557,7 +559,7 @@ void GN::engine2::RenderEngine::disposeResource( GraphicsResource * res )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::disposeAllResources()
+void GN::engine::RenderEngine::disposeAllResources()
 {
     GN_GUARD;
 
@@ -571,7 +573,7 @@ void GN::engine2::RenderEngine::disposeAllResources()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::updateResource(
+void GN::engine::RenderEngine::updateResource(
     GraphicsResource       * res,
     GraphicsResourceLoader * loader )
 {
@@ -597,7 +599,7 @@ void GN::engine2::RenderEngine::updateResource(
 //
 //
 // -----------------------------------------------------------------------------
-UIntPtr GN::engine2::RenderEngine::createRenderContext(
+UIntPtr GN::engine::RenderEngine::createRenderContext(
     GraphicsResource * kernel,
     GraphicsResource * paramset,
     GraphicsResource * binding )
@@ -648,7 +650,7 @@ UIntPtr GN::engine2::RenderEngine::createRenderContext(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::deleteRenderContext( UIntPtr context )
+void GN::engine::RenderEngine::deleteRenderContext( UIntPtr context )
 {
     if( 0 == context ) return; // silently ignore NULL context.
 
@@ -664,7 +666,7 @@ void GN::engine2::RenderEngine::deleteRenderContext( UIntPtr context )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::render( UIntPtr context )
+void GN::engine::RenderEngine::render( UIntPtr context )
 {
     GN_GUARD_SLOW;
 
@@ -683,7 +685,7 @@ void GN::engine2::RenderEngine::render( UIntPtr context )
     if( 0 == dr ) return;
 
     // setup resource waiting list, to make sure draw command happens after resource updating.
-    sSetupWaitingListAndReferenceFence( dc.resources, *dr );
+    sSetupWaitingListAndReferenceFence( *dr, dc.resources );
 
     GN_UNGUARD_SLOW;
 }
@@ -691,7 +693,64 @@ void GN::engine2::RenderEngine::render( UIntPtr context )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::present()
+void GN::engine::RenderEngine::render( GraphicsResource * kernel, GraphicsResource * paramset, GraphicsResource * binding )
+{
+    GN_GUARD_SLOW;
+
+    RENDER_ENGINE_API();
+
+    // check arguments
+    if( !mResourceCache->checkResource( kernel, GRT_KERNEL ) ) return;
+    if( !mResourceCache->checkResource( paramset, GRT_PARAMETER_SET ) ) return;
+    if( kernel->desc.kernel.kernel != paramset->desc.paramset.kernel )
+    {
+        GN_ERROR(sLogger)( "parameter resource belongs to another kernel then the input one." );
+        return;
+    }
+    if( 0 != binding )
+    {
+        if( !mResourceCache->checkResource( binding, GRT_PORT_BINDING ) ) return;
+        if( kernel->desc.kernel.kernel != binding->desc.binding.kernel )
+        {
+            GN_ERROR(sLogger)( "binding resource belongs to another kernel then the input one." );
+            return;
+        }
+    }
+
+    // build resource array
+    StackArray<GraphicsResource*,DrawCommandHeader::MAX_RESOURCES_PER_DRAW> resources;
+    resources.append( kernel );
+    resources.append( paramset );
+    if( binding )
+    {
+        std::map<StrA,SurfaceResourceView>::const_iterator iter = binding->desc.binding.views.begin();
+        for( ; iter != binding->desc.binding.views.end(); ++iter )
+        {
+            if( iter->second.surf )
+            {
+                resources.append( iter->second.surf );
+            }
+        }
+        resources.append( binding );
+    }
+
+    // prepare resources, make sure that they are usable.
+    sPrepareResources( *mResourceLRU, *mResourceThread, resources );
+
+    // submit new draw command
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, kernel, paramset, binding );
+    if( 0 == dr ) return;
+
+    // setup resource waiting list, to make sure draw command happens after resource updating.
+    sSetupWaitingListAndReferenceFence( *dr, resources );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::present()
 {
     GN_GUARD_SLOW;
 
@@ -715,8 +774,8 @@ void GN::engine2::RenderEngine::present()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::getKernel( const StrA & kernel )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::getKernel( const StrA & kernel )
 {
     GraphicsResourceDesc grd;
 
@@ -735,8 +794,8 @@ GN::engine2::RenderEngine::getKernel( const StrA & kernel )
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & creation )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & creation )
 {
     GraphicsResourceDesc grd;
 
@@ -750,8 +809,8 @@ GN::engine2::RenderEngine::createSurface( const StrA & resname, const gfx::Surfa
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const StrA & kernel )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createParameterSet( const StrA & resname, const StrA & kernel )
 {
     GraphicsResourceDesc grd;
 
@@ -770,8 +829,8 @@ GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const StrA 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const GraphicsResource & kernel )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createParameterSet( const StrA & resname, const GraphicsResource & kernel )
 {
     if( !mResourceCache->checkResource( &kernel, GRT_KERNEL ) ) return 0;
 
@@ -781,8 +840,8 @@ GN::engine2::RenderEngine::createParameterSet( const StrA & resname, const Graph
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & views )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
     GraphicsResourceDesc grd;
 
@@ -802,8 +861,8 @@ GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const StrA &
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource *
-GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & views )
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
     if( !mResourceCache->checkResource( &kernel ) ) return 0;
 
@@ -819,7 +878,7 @@ GN::engine2::RenderEngine::createPortBinding( const StrA & resname, const Graphi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::pushStreamData(
+void GN::engine::RenderEngine::pushStreamData(
     GraphicsResource * kernel,
     size_t             streamIndex,
     size_t             bytes,
@@ -835,7 +894,7 @@ void GN::engine2::RenderEngine::pushStreamData(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::pushStreamData(
+void GN::engine::RenderEngine::pushStreamData(
     GraphicsResource * kernel,
     const StrA &       streamName,
     size_t             bytes,
@@ -858,7 +917,7 @@ void GN::engine2::RenderEngine::pushStreamData(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::setParameter(
+void GN::engine::RenderEngine::setParameter(
     GraphicsResource * paramset,
     size_t             index,
     size_t             offset,
@@ -875,7 +934,7 @@ void GN::engine2::RenderEngine::setParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::setParameter(
+void GN::engine::RenderEngine::setParameter(
     GraphicsResource * paramset,
     const StrA       & name,
     size_t             offset,
@@ -900,7 +959,7 @@ void GN::engine2::RenderEngine::setParameter(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::RenderEngine::NamedResourceManager::add( const StrA & name, GraphicsResource * res )
+void GN::engine::RenderEngine::NamedResourceManager::add( const StrA & name, GraphicsResource * res )
 {
     GN_ASSERT( resources.end() == resources.find( name ) );
     GN_ASSERT( res );
@@ -914,7 +973,7 @@ void GN::engine2::RenderEngine::NamedResourceManager::add( const StrA & name, Gr
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::engine2::RenderEngine::NamedResourceManager::del( const StrA & name, GraphicsResource * res )
+size_t GN::engine::RenderEngine::NamedResourceManager::del( const StrA & name, GraphicsResource * res )
 {
     GN_ASSERT( resources.end() != resources.find( name ) );
     GN_ASSERT( res );
@@ -936,7 +995,7 @@ size_t GN::engine2::RenderEngine::NamedResourceManager::del( const StrA & name, 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine2::GraphicsResource * GN::engine2::RenderEngine::NamedResourceManager::get( const StrA & name )
+GN::engine::GraphicsResource * GN::engine::RenderEngine::NamedResourceManager::get( const StrA & name )
 {
     std::map<StrA,RefCountedResource>::iterator i = resources.find( name );
 
@@ -957,12 +1016,12 @@ GN::engine2::GraphicsResource * GN::engine2::RenderEngine::NamedResourceManager:
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine2::ClearScreen::init( RenderEngine & re, GraphicsResource * binding )
+bool GN::engine::ClearScreen::init( RenderEngine & re, GraphicsResource * binding )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::engine2::ClearScreen, () );
+    GN_STDCLASS_INIT( GN::engine::ClearScreen, () );
 
     mKernel = re.getKernel( "CLEAR_SCREEN" );
     if( 0 == mKernel ) return failure();
@@ -1008,7 +1067,7 @@ bool GN::engine2::ClearScreen::init( RenderEngine & re, GraphicsResource * bindi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::ClearScreen::quit()
+void GN::engine::ClearScreen::quit()
 {
     GN_GUARD;
 
@@ -1030,7 +1089,7 @@ void GN::engine2::ClearScreen::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine2::ClearScreen::setClearColor( bool enabled, float r, float g, float b, float a )
+void GN::engine::ClearScreen::setClearColor( bool enabled, float r, float g, float b, float a )
 {
     GN_ASSERT( mKernel && mParam );
 
