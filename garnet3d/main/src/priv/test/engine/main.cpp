@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "testCase.h"
-//#include "triangle.h"
+#include "triangle.h"
 
 using namespace GN;
 using namespace GN::input;
@@ -23,12 +23,19 @@ int run( RenderEngine & re )
     TestCase * cases[] =
     {
         //new TestCube(em,re,qr),
-        0, //new TestTriangle(re),
+        new TestTriangle(re),
     };
 
     for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
     {
         TestCase * c = cases[i];
+
+        if( c && !c->init() )
+        {
+            c->quit();
+            delete c;
+            continue;
+        }
 
         bool next = false;
 

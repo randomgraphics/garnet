@@ -165,14 +165,17 @@ namespace GN { /** namespace for engine module */ namespace engine
     /// Application defined graphics resource loader.
     ///
     /// Details about concurrency:
-    ///  - load() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///  - copy() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///  - decompress() and freebuf() could be called concurrently with any methods.
+    //   - If a loader instance is assigned to multiple resources:
+    ///    - load() won't be called concurrently with load(), but might be called concurrently with other methods
+    ///    - copy() won't be called concurrently with copy(), but might be called concurrently with other methods
+    ///    - decompress() might be called concurrently with any methods, including decompress().
+    ///  - Else:
+    ///    - It won't be called by multiple threads simultaneously (no multi-thread issue).
     ///
-    /// So, to achieve maximum performance, it is advised to avoid using sync objects as much as possible.
-    /// The possible implementation could be:
-    ///  - keep data used by each method separated. So they won't mess with each other, when called concurrently.
-    ///  - do not modify any states in decompress(). So it can be safely called anytime anywhere, w/o using sync objects.
+    /// To achieve best performance as well as code simplicity, one resource one loader instance whenever possible.
+    /// Or else:
+    ///    - Try not modify any varialbes other then outbuf and inbuf in loader methods.
+    ///    - Or using sync object to prevent racing.
     ///
     struct GraphicsResourceLoader : public RefCounter
     {
@@ -375,6 +378,12 @@ namespace GN { /** namespace for engine module */ namespace engine
 
         void               setParameter( GraphicsResource * paramset, size_t index, size_t offset, size_t bytes, const void * data );
         void               setParameter( GraphicsResource * paramset, const StrA & name, size_t offset, size_t bytes, const void * data );
+
+        template<typename T>
+        void               setParameterT( GraphicsResource * paramset, size_t index, const T & value ) { return setParameter( paramset, index, 0, sizeof(value), &value ); }
+
+        template<typename T>
+        void               setParameterT( GraphicsResource * paramset, const StrA & name, const T & value ) { return setParameter( paramset, name, 0, sizeof(value), &value ); }
 
         //@}
 
