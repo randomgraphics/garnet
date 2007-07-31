@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-#include "GNgfx2Base.h"
+#include "GNgfxsysBase.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX ///< disable min/max macro in windows.h
@@ -32,9 +32,9 @@
 #define GN_GFX2_D3D9_PUBLIC GN_IMPORT
 #endif
 
-#include "gfx2/d3d9Surface.h"
-#include "gfx2/d3d9Kernel.h"
-#include "gfx2/d3d9GraphicsSystem.h"
+#include "gfx/d3d9Surface.h"
+#include "gfx/d3d9Kernel.h"
+#include "gfx/d3d9GraphicsSystem.h"
 
 // *****************************************************************************
 //                                     EOF

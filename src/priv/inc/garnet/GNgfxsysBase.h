@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-#include "GNgfx2.h"
+#include "GNgfx.h"
 
 namespace GN { namespace gfx
 {

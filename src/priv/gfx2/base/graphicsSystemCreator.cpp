@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #ifdef HAS_D3D9
-#include "garnet/GNgfx2D3D9.h"
+#include "garnet/GNgfxsysD3D9.h"
 #else if GN_STATIC
 static GN::gfx::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx::GraphicsSystemCreationParameter & )
 {

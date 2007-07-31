@@ -18,10 +18,6 @@ namespace GN
 
 #include "garnet/gfx/colorFormat.h"
 #include "garnet/gfx/image.h"
-#include "garnet/gfx/renderState.h"
-#include "garnet/gfx/sampler.h"
-#include "garnet/gfx/vertexFormat.h"
-#include "garnet/gfx/uniform.h"
 #include "garnet/gfx/shape.h"
 #include "garnet/gfx/misc.h"
 #include "garnet/gfx/d3d9utils.h"
