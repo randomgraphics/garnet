@@ -4,7 +4,7 @@
 //
 // -----------------------------------------------------------------------------
 GN::engine::Drawable::Drawable()
-    : mKernel(0), mParamSet(0), mBinding(0), mContext(0)
+    : mKernel(0), mParamSet(0), mContext(0)
 {
 }
 
@@ -22,7 +22,6 @@ void GN::engine::Drawable::clear()
 {
     mKernel = 0;
     mParamSet = 0;
-    mBinding = 0;
     mContext = 0;
 }
 

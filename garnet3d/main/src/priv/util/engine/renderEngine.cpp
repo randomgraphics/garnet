@@ -198,6 +198,38 @@ static void sDisposeAllResources(
 //
 //
 // -----------------------------------------------------------------------------
+static void sDeleteAllResources(
+    GN::engine::RenderEngine::ResourceCache & cache,
+    GN::engine::RenderEngine::ResourceLRU   & lru,
+    GN::engine::RenderEngine::DrawThread    & dt )
+{
+    GN_GUARD;
+
+    using namespace GN::engine;
+
+    // dispose all of them
+    sDisposeAllResources( cache, lru, dt );
+
+    // wait for completion of dipose
+    dt.waitForIdle();
+
+    // remove from LRU
+    for( GraphicsResourceItem * item = cache.firstResource();
+         item;
+         item = cache.nextResource( item ) )
+    {
+        lru.remove( item );
+    }
+
+    // clear cache
+    cache.deleteAllResources();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 template< typename RESOURCE_ARRAY >
 static inline void sPrepareResources(
     GN::engine::RenderEngine::ResourceLRU    & lru,
@@ -336,26 +368,10 @@ void GN::engine::RenderEngine::quit()
 
     if( ok() )
     {
-        // delete all resources
-        for( GraphicsResourceItem * item = mResourceCache->firstResource();
-             item;
-             item = mResourceCache->nextResource( item ) )
-        {
-            // dispose it first
-            mResourceLRU->dispose( item );
-            mDrawThread->submitResourceDisposingCommand( item );
-            mDrawThread->waitForIdle();
-
-            // then remove from LRU
-            mResourceLRU->remove( item );
-
-            // finally, delete from cache
-            mResourceCache->deleteResource( item );
-        }
+        sDeleteAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
     }
 
     mKernels.clear();
-    mStreams.clear();
 
     safeDelete( mDrawThread );
     safeDelete( mResourceThread );
@@ -521,6 +537,15 @@ void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
     return mResourceCache->deleteResource( item );
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::deleteAllResources()
+{
+    sDeleteAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
+    mKernels.clear();
 }
 
 //
@@ -1076,9 +1101,6 @@ void GN::engine::ClearScreen::quit()
         GN_ASSERT( mKernel );
         mKernel->engine.deleteRenderContext( mContext );
     }
-
-    safeDeleteGraphicsResource( mKernel );
-    safeDeleteGraphicsResource( mParam );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
