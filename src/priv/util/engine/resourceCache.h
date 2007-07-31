@@ -53,6 +53,7 @@ namespace GN { namespace engine
         //@{
         GraphicsResourceItem * createResource( const GraphicsResourceDesc & );
         void                   deleteResource( GraphicsResourceItem * );
+        void                   deleteAllResources();
         bool                   checkResource( const GraphicsResource * ) const;
         bool                   checkResource( const GraphicsResource *, GraphicsResourceType mustBeThisType ) const;
         bool                   checkResource( const GraphicsResourceItem * ) const;

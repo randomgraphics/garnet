@@ -282,11 +282,19 @@ namespace GN { /** namespace for engine module */ namespace engine
         // ********************************
     public:
 
-        /// All these methods are executed asyncronizly, unless explicitly speficied.
+        /// \note
+        ///
         //@{
 
         ///
-        /// create new resource
+        /// Create new resource.
+        ///
+        /// \note
+        /// - createResource() is a very fast operation that creates resources in "DISPOSED" state.
+        /// - Disposed resource occupies very little main memory and zero device memory, which means
+        ///   that you cand create extreamly large number of resources before running out of memory.
+        /// - render engine class will ensure that memory footprint of all "REALIZED" graphics resources
+        ///   is in user defined limit.
         ///
         GraphicsResource * createResource( const GraphicsResourceDesc & desc );
 
@@ -296,6 +304,13 @@ namespace GN { /** namespace for engine module */ namespace engine
         /// \note This function runs syncronizly. Do not call it too frequently in hot path.
         ///
         void deleteResource( GraphicsResource * );
+
+        ///
+        /// delete all resource.
+        ///
+        /// \note This function runs syncronizly.
+        ///
+        void deleteAllResources();
 
         ///
         /// make sure a valid resource pointer
@@ -317,6 +332,9 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///
         void disposeResource( GraphicsResource * );
 
+        ///
+        /// dispose all resources
+        ///
         void disposeAllResources();
 
         //@}
@@ -441,7 +459,6 @@ namespace GN { /** namespace for engine module */ namespace engine
         ResourceThread                   * mResourceThread;
 
         NamedResourceManager               mKernels;
-        NamedResourceManager               mStreams;
 
         HandleManager<DrawContext,UIntPtr> mDrawContexts;
 
@@ -592,7 +609,6 @@ namespace GN { /** namespace for engine module */ namespace engine
     {
         GraphicsResource * mKernel;
         GraphicsResource * mParamSet;
-        GraphicsResource * mBinding;
         UIntPtr            mContext;
 
     public:
@@ -644,7 +660,7 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///
         /// setup the drawable
         ///
-        bool initialize( const StrA & kernelName );
+        bool initialize( const StrA & kernelName, GraphicsResource * binding );
 
         ///
         /// load drawable from XML node

@@ -39,9 +39,9 @@ static size_t sEstimateResourceSize( const GN::engine::GraphicsResourceDesc & de
             return sEstimateSurfaceSize( desc.surface.creation );
 
         case GRT_PARAMETER_SET :
-        case GRT_PORT_BINDING :
-        case GRT_KERNEL :
-            return 1;
+        case GRT_PORT_BINDING  :
+        case GRT_KERNEL        :
+            return 1024; // we assume that each one of these resources will occupy 1K device memory.
 
         default :
             GN_UNEXPECTED();
@@ -138,6 +138,21 @@ void GN::engine::RenderEngine::ResourceCache::deleteResource( GraphicsResourceIt
 
     mResources.remove( item->id );
     delete item;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::ResourceCache::deleteAllResources()
+{
+    ScopeMutex<SpinLoop> lock( mResourceMutex );
+
+    for( UInt32 i = mResources.first(); i != 0; i = mResources.next( i ) )
+    {
+        GN_ASSERT( mResources[i] );
+        delete mResources[i];
+    }
+    mResources.clear();
 }
 
 // *****************************************************************************
