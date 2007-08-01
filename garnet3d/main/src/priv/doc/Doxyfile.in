@@ -1,7 +1,7 @@
 # Doxyfile 1.4.6
 PROJECT_NAME           = Garnet3D
 OUTPUT_DIRECTORY       = "$OUTPUT_DIRECTORY"
-OUTPUT_LANGUAGE        = Chinese
+#OUTPUT_LANGUAGE        = Chinese
 TAB_SIZE               = 4
 EXTRACT_LOCAL_CLASSES  = NO
 JAVADOC_AUTOBRIEF      = YES

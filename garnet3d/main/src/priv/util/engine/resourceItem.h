@@ -61,7 +61,7 @@ namespace GN { namespace engine
         ///
         /// the loader used by the lasted update command.
         ///
-        AutoRef<GraphicsResourceLoader,Mutex> lastSubmittedLoader;
+        DynaArray< AutoRef<GraphicsResourceLoader,Mutex> > loaders;
 
         ///
         /// the fence of the lastest update command.

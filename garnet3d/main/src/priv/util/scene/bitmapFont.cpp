@@ -471,7 +471,7 @@ GN::scene::BitmapFont::createSlot( wchar_t ch )
 
     // load texture data
     AutoRef<FontTextureLoader> loader( new FontTextureLoader( fbm, slot, *mTextures[slot.texidx] ) );
-    mRenderEngine.updateResource( mTextures[slot.texidx], loader );
+    mRenderEngine.updateResource( mTextures[slot.texidx], loader, false );
 
     // success
     return &slot;

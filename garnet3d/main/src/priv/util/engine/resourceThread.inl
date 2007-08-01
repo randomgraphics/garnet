@@ -25,32 +25,35 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingCommand(
-    GraphicsResourceItem   * item,
-    GraphicsResourceLoader * loader )
+    GraphicsResourceItem * item )
 {
     // check parameters
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
-    GN_ASSERT( loader );
 
-    FenceId fence = mEngine.fenceManager().getAndIncFence();
+    GN_ASSERT( !item->loaders.empty() );
 
-    ResourceCommand * cmd = ResourceCommand::alloc();
-    if( 0 == cmd ) return;
-    cmd->noerr                      = true;
-    cmd->op                         = GROP_LOAD;
-    cmd->resource                   = item;
-    cmd->loader.set( loader );
-    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
-    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
-    cmd->submittedAtThisFence       = fence;
+    for( size_t i = 0; i < item->loaders.size(); ++i )
+    {
+        FenceId fence = mEngine.fenceManager().getAndIncFence();
 
-    item->lastSubmissionFence       = fence;
-    item->lastSubmittedLoader.set( loader );
+        ResourceCommand * cmd = ResourceCommand::alloc();
 
-    GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
-    GN_ASSERT( item->lastCompletedFence < item->lastSubmissionFence );
+        if( 0 == cmd ) return;
+        cmd->noerr                      = true;
+        cmd->op                         = GROP_LOAD;
+        cmd->resource                   = item;
+        cmd->loader                     = item->loaders[i];
+        cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+        cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
+        cmd->submittedAtThisFence       = fence;
 
-    submitResourceCommand( cmd );
+        item->lastSubmissionFence       = fence;
+
+        GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
+        GN_ASSERT( item->lastCompletedFence < item->lastSubmissionFence );
+
+        submitResourceCommand( cmd );
+    }
 }
 
 
