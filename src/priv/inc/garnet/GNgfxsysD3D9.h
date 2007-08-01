@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_GNGFX2D3D9_H__
-#define __GN_GFX2_GNGFX2D3D9_H__
+#ifndef __GN_GFX_GNGFX2D3D9_H__
+#define __GN_GFX_GNGFX2D3D9_H__
 // *****************************************************************************
 /// \file
 /// \brief   D3D9 graphics system (for D3D9 kernel developement only)
@@ -39,4 +39,4 @@
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_GNGFX2D3D9_H__
+#endif // __GN_GFX_GNGFX2D3D9_H__

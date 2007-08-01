@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_GRAPHICSSYSTEM_H__
-#define __GN_GFX2_GRAPHICSSYSTEM_H__
+#ifndef __GN_GFX_GRAPHICSSYSTEM_H__
+#define __GN_GFX_GRAPHICSSYSTEM_H__
 // *****************************************************************************
 /// \file
 /// \brief   interface of experimental kernel based graphics system
@@ -1006,4 +1006,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_GRAPHICSSYSTEM_H__
+#endif // __GN_GFX_GRAPHICSSYSTEM_H__

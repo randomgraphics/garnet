@@ -7,36 +7,6 @@ using namespace GN::scene;
 
 static GN::Logger * sLogger = GN::getLogger("GN.scene.BitmapFont");
 
-namespace GN
-{
-    template<typename T>
-    class SafeArrayAccessor
-    {
-        T    * mData;
-        size_t mSize;
-
-    public:
-
-        //@{
-
-        SafeArrayAccessor( T * data, size_t bytes ) : mData(data), mSize(bytes) {}
-
-        T * operator->() { GN_ASSERT(mSize>0); return mData; }
-
-        T & operator[]( size_t index ) { GN_ASSERT( index < mSize ); return mData[index]; }
-
-        SafeArrayAccessor & operator+=( size_t offset )
-        {
-            GN_ASSERT( offset <= mSize );
-            mData += offset;
-            mSize -= offset;
-            return *this;
-        }
-
-        //@}
-    };
-}
-
 // *****************************************************************************
 // Font texture loader
 // *****************************************************************************

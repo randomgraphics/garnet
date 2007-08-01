@@ -658,6 +658,7 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     if( !beginScene() ) return failure();
 
     // register build-in kernels
+    registerKernelFactory( D3D9StandardResourcesKernel::KERNEL_NAME(), &D3D9StandardResourcesKernel::sFactory, 100 );
     registerKernelFactory( D3D9ClearScreenKernel::KERNEL_NAME(), &D3D9ClearScreenKernel::sFactory, 100 );
     registerKernelFactory( D3D9HlslKernel::KERNEL_NAME(), &D3D9HlslKernel::sFactory, 100 );
     registerKernelFactory( D3D9QuadKernel::KERNEL_NAME(), &D3D9QuadKernel::sFactory, 100 );

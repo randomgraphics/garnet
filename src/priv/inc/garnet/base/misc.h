@@ -839,6 +839,66 @@ namespace GN
             return pt;
         }
     };
+
+    ///
+    /// array accessor with out-of-boundary check in debug build.
+    ///
+    template<typename T>
+    class SafeArrayAccessor
+    {
+        T    * mBegin;
+        T    * mEnd;
+        T    * mPtr;
+
+    public:
+
+        //@{
+
+        SafeArrayAccessor( T * data, size_t count )
+            : mBegin(data), mPtr(data), mEnd( data + count )
+        {
+        }
+
+        T * subrange( size_t index, size_t length ) const
+        {
+            GN_ASSERT( mBegin <= (mPtr+index) );
+            GN_ASSERT( (mPtr+index) < mEnd );
+            GN_ASSERT( (mPtr+index+length) <= mEnd );
+            GN_UNUSED_PARAM( length );
+            return mPtr + index;
+        }
+
+        T * operator->() const
+        {
+            GN_ASSERT( mBegin <= mPtr && mPtr < mEnd );
+            return mPtr;
+        }
+
+        T & operator[]( size_t index ) const
+        {
+            GN_ASSERT( mBegin <= (mPtr+index) );
+            GN_ASSERT( (mPtr+index) < mEnd );
+            return mPtr[index];
+        }
+
+        SafeArrayAccessor & operator++() { ++mPtr; return *this; }
+
+        SafeArrayAccessor & operator--() { --mPtr; return *this; }
+
+        SafeArrayAccessor & operator+=( size_t offset )
+        {
+            mPtr += offset;
+            return *this;
+        }
+
+        SafeArrayAccessor & operator-=( size_t offset )
+        {
+            mPtr -= offset;
+            return *this;
+        }
+
+        //@}
+    };
 }
 
 // *****************************************************************************

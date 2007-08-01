@@ -24,7 +24,43 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingCommand(
+inline void GN::engine::RenderEngine::ResourceThread::loadResource(
+    GraphicsResourceItem   * item,
+    GraphicsResourceLoader * loader )
+{
+    // check parameters
+    GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
+    GN_ASSERT( loader );
+
+    // get new fence
+    FenceId fence = mEngine.fenceManager().getAndIncFence();
+
+    // create new command
+    ResourceCommand * cmd = ResourceCommand::alloc();
+    if( 0 == cmd ) return;
+
+    // setup command fields
+    cmd->noerr                      = true;
+    cmd->op                         = GROP_LOAD;
+    cmd->resource                   = item;
+    cmd->loader.set( loader );
+    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
+    cmd->submittedAtThisFence       = fence;
+
+    // update resource item
+    item->lastSubmissionFence       = fence;
+
+    GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
+    GN_ASSERT( item->lastCompletedFence < item->lastSubmissionFence );
+
+    submitResourceCommand( cmd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::engine::RenderEngine::ResourceThread::reloadResource(
     GraphicsResourceItem * item )
 {
     // check parameters

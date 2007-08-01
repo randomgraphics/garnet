@@ -166,13 +166,13 @@ void GN::gfx::D3D9Texture::download(
     Box<size_t> clippedArea;
     if( !adjustArea( clippedArea, area ) ) return;
 
-    DynaArray<UInt8> bgra;
+    static DynaArray<UInt8> bgra;
     if( mIsRGBA )
     {
         // convert from R-G-B-A to B-G-R-A
         bgra.resize( srcSliceBytes * clippedArea.d );
         memcpy( bgra.cptr(), source, bgra.size() );
-        Vector4<UInt8> * p = (Vector4<UInt8>*)source;
+        Vector4<UInt8> * p = (Vector4<UInt8>*)bgra.cptr();
         size_t w = srcRowBytes / 4;
         size_t h = srcSliceBytes / srcRowBytes;
         GN_ASSERT( w >= clippedArea.w && h >= clippedArea.h );

@@ -82,6 +82,11 @@ namespace GN { /** namespace for engine module */ namespace engine
     };
 
     ///
+    /// a bunch of surface views with unique name to each of them.
+    ///
+    typedef std::map<StrA,SurfaceResourceView> NamedSurfaceResourceViews;
+
+    ///
     /// graphics resource descriptor
     ///
     struct GraphicsResourceDesc
@@ -110,8 +115,8 @@ namespace GN { /** namespace for engine module */ namespace engine
         struct PortBindingDesc
         {
             //@{
-            StrA                               kernel;
-            std::map<StrA,SurfaceResourceView> views;
+            StrA                      kernel;
+            NamedSurfaceResourceViews views;
             //@}
         } binding;
 
@@ -379,8 +384,27 @@ namespace GN { /** namespace for engine module */ namespace engine
         GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
-        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
-        GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
+        GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const NamedSurfaceResourceViews & );
+        GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const NamedSurfaceResourceViews & );
+
+        ///
+        /// create vertex buffer
+        ///
+        GraphicsResource * createVtxBuf(
+            const StrA                      & name,
+            const gfx::SurfaceElementFormat & format,
+            size_t                            count );
+
+        ///
+        /// create index buffer
+        ///
+        GraphicsResource * createIdxBuf( const StrA & name, size_t count );
+
+        ///
+        /// create texture from image file
+        ///
+        GraphicsResource * createTextureFromImageFile( const StrA & filename );
+
 
         // note: below methods will discard old resource content.
 
@@ -492,6 +516,86 @@ namespace GN { /** namespace for engine module */ namespace engine
         // ********************************
     private:
 
+    };
+
+    // *************************************************************************
+    // drawable class
+    // *************************************************************************
+
+    ///
+    /// drawable class
+    ///
+    class Drawable
+    {
+        GraphicsResource * mKernel;
+        GraphicsResource * mParamSet;
+        UIntPtr            mContext;
+
+    public:
+
+        //@{
+
+        ///
+        /// constructor
+        ///
+        Drawable();
+
+        ///
+        /// dtor
+        ///
+        ~Drawable();
+
+        ///
+        /// clear to empty
+        ///
+        void clear();
+
+        ///
+        /// is empty drawable or not
+        ///
+        bool empty() const { return 0 == mContext; }
+
+        ///
+        /// get kernel of the drawable
+        ///
+        GraphicsResource * getKernel() const { return mKernel; }
+
+        ///
+        /// get parameter set of the kernel
+        ///
+        GraphicsResource * getParamSet() const { return mParamSet; }
+
+        ///
+        /// render the drawable
+        ///
+        void render()
+        {
+            if( empty() ) return;
+
+            GN_ASSERT( mKernel && mParamSet );
+
+            mKernel->engine.render( mContext );
+        }
+
+        ///
+        /// setup the drawable
+        ///
+        bool initialize( const StrA & kernelName, GraphicsResource * binding );
+
+        ///
+        /// load drawable from XML node
+        ///
+        bool loadFromXmlNode(
+            RenderEngine  & re,
+            const XmlNode & node,
+            const StrA    & basedir );
+
+        ///
+        /// load drawable from XML file
+        ///
+        bool loadFromXmlFile(
+            RenderEngine  & re,
+            const StrA    & filename );
     };
 
     // *************************************************************************
@@ -616,86 +720,6 @@ namespace GN { /** namespace for engine module */ namespace engine
         // private functions
         // ********************************
     private:
-    };
-
-    // *************************************************************************
-    // drawable class
-    // *************************************************************************
-
-    ///
-    /// drawable class
-    ///
-    class Drawable
-    {
-        GraphicsResource * mKernel;
-        GraphicsResource * mParamSet;
-        UIntPtr            mContext;
-
-    public:
-
-        //@{
-
-        ///
-        /// constructor
-        ///
-        Drawable();
-
-        ///
-        /// dtor
-        ///
-        ~Drawable();
-
-        ///
-        /// clear to empty
-        ///
-        void clear();
-
-        ///
-        /// is empty drawable or not
-        ///
-        bool empty() const { return 0 == mContext; }
-
-        ///
-        /// get kernel of the drawable
-        ///
-        GraphicsResource * getKernel() const { return mKernel; }
-
-        ///
-        /// get parameter set of the kernel
-        ///
-        GraphicsResource * getParamSet() const { return mParamSet; }
-
-        ///
-        /// render the drawable
-        ///
-        void render()
-        {
-            if( empty() ) return;
-
-            GN_ASSERT( mKernel && mParamSet );
-
-            mKernel->engine.render( mContext );
-        }
-
-        ///
-        /// setup the drawable
-        ///
-        bool initialize( const StrA & kernelName, GraphicsResource * binding );
-
-        ///
-        /// load drawable from XML node
-        ///
-        bool loadFromXmlNode(
-            RenderEngine  & re,
-            const XmlNode & node,
-            const StrA    & basedir );
-
-        ///
-        /// load drawable from XML file
-        ///
-        bool loadFromXmlFile(
-            RenderEngine  & re,
-            const StrA    & filename );
     };
 }}
 

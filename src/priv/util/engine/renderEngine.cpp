@@ -80,6 +80,61 @@ public:
 };
 
 ///
+/// texture loader: load texture from image file
+///
+class TextureLoader : public DummyLoader
+{
+    const GN::StrA           mFileName;
+    GN::AutoObjPtr<GN::File> mFile;
+    GN::gfx::ImageDesc       mImageDesc;
+    GN::DynaArray<UInt8>     mBuffer;
+
+public:
+
+    TextureLoader( const GN::StrA & name ) : mFileName( name ) {}
+
+    bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        GN::gfx::ImageReader ir;
+
+        mFile.attach( GN::core::openFile( mFileName, "rb" ) );
+
+        if( !mFile ) return false;
+
+        if( !ir.reset( *mFile ) ) return false;
+
+        if( !ir.readHeader( mImageDesc ) ) return false;
+
+        mBuffer.resize( mImageDesc.getTotalBytes() );
+
+        if( !ir.readImage( mBuffer.cptr() ) ) return false;
+
+        return true;
+    }
+
+    bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GN::engine::GRT_SURFACE == res.desc.type );
+        GN_ASSERT( res.surface );
+
+        GN::SafeArrayAccessor<UInt8> saa( mBuffer.cptr(), mBuffer.size() );
+
+        for( size_t f = 0; f < mImageDesc.numFaces; ++f )
+        for( size_t l = 0; l < mImageDesc.numLevels; ++l )
+        {
+            const GN::gfx::MipmapDesc & mmd = mImageDesc.getMipmap( f, l );
+            res.surface->download(
+                GN::gfx::calcSubSurfaceIndex( f, l, mImageDesc.numLevels ),
+                0,
+                saa.subrange( mImageDesc.getMipmapOffset( f, l ), mmd.slicePitch ),
+                mmd.rowPitch,
+                mmd.slicePitch );
+        }
+        return true;
+    }
+};
+
+///
 /// kernel stream loader
 ///
 class StreamSourceLoader : public DummyLoader
@@ -230,7 +285,7 @@ static void sDeleteAllResources(
 //
 //
 // -----------------------------------------------------------------------------
-static void sRealizeResource(
+static void sReloadResource(
     GN::engine::RenderEngine::ResourceLRU    & lru,
     GN::engine::RenderEngine::ResourceThread & rt,
     GN::engine::GraphicsResourceItem         * item )
@@ -246,7 +301,7 @@ static void sRealizeResource(
     if( reload )
     {
         GN_ASSERT( !item->loaders.empty() );
-        rt.submitResourceLoadingCommand( item );
+        rt.reloadResource( item );
     }
 
     GN_UNGUARD_SLOW;
@@ -270,7 +325,7 @@ static inline void sPrepareResources(
 
         GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( resources[i] );
 
-        sRealizeResource( lru, rt, item );
+        sReloadResource( lru, rt, item );
     }
 }
 
@@ -491,7 +546,7 @@ GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
                     item->loaders.resize( item->loaders.size() + 1 );
                     item->loaders.back().set( DummyLoader::sGetInstance() );
                 }
-                sRealizeResource( *mResourceLRU, *mResourceThread, item );
+                sReloadResource( *mResourceLRU, *mResourceThread, item );
             }
         }
     }
@@ -614,10 +669,11 @@ void GN::engine::RenderEngine::updateResource(
     GraphicsResourceLoader * loader,
     bool                     discard )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     RENDER_ENGINE_API();
 
+    // check parameters
     GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
 
     if( !mResourceCache->checkResource( item ) ) return;
@@ -628,14 +684,19 @@ void GN::engine::RenderEngine::updateResource(
         return;
     }
 
-    if( discard ) item->loaders.clear();
+    // realize the resource
+    mResourceLRU->realize( item, 0 );
+    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
 
+    // update resource loader list
+    if( discard ) item->loaders.clear();
     item->loaders.resize( item->loaders.size() + 1 );
     item->loaders.back().set( loader );
 
-    sRealizeResource( *mResourceLRU, *mResourceThread, item );
+    // submit loading command to resource thread.
+    mResourceThread->loadResource( item, loader );
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************
@@ -919,6 +980,117 @@ GN::engine::RenderEngine::createPortBinding( const StrA & resname, const Graphic
     }
 
     return createPortBinding( resname, kernel.desc.kernel.kernel, views );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createVtxBuf(
+    const StrA                      & name,
+    const gfx::SurfaceElementFormat & format,
+    size_t                            count )
+{
+    using namespace GN::gfx;
+
+    SurfaceCreationParameter scp;
+
+    scp.bindTo( "STANDARD_RESOURCES", "VERTEX_BUFFER" );
+    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
+    scp.layout.dim = SURFACE_DIMENSION_1D;
+    scp.layout.levels = 1;
+    scp.layout.faces = 1;
+    scp.layout.basemap.width = count;
+    scp.layout.basemap.height = 1;
+    scp.layout.basemap.depth = 1;
+    scp.layout.basemap.rowBytes = count * format.stride;
+    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
+    scp.layout.format = format;
+
+    return createSurface( name, scp );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createIdxBuf(
+    const StrA   & name,
+    size_t         count )
+{
+    using namespace GN::gfx;
+
+    SurfaceCreationParameter scp;
+
+    scp.bindTo( "STANDARD_RESOURCES", "INDEX_BUFFER" );
+    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
+    scp.layout.dim = SURFACE_DIMENSION_1D;
+    scp.layout.levels = 1;
+    scp.layout.faces = 1;
+    scp.layout.basemap.width = count;
+    scp.layout.basemap.height = 1;
+    scp.layout.basemap.depth = 1;
+    scp.layout.basemap.rowBytes = 3 * sizeof(UInt16);
+    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
+    scp.layout.format.attribs[0].semantic.set( "INDEX" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = FMT_R_16_UINT;
+    scp.layout.format.count = 1;
+    scp.layout.format.stride = sizeof(short);
+
+    return createSurface( name, scp );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
+{
+    GN_GUARD;
+
+    using namespace GN::gfx;
+
+    // open file
+    AutoObjPtr<File> file;
+    file.attach( core::openFile( filename, "rb" ) );
+    if( !file ) return false;
+
+    // get image information
+    ImageReader ir;
+    ImageDesc   id;
+    if( !ir.reset( *file ) ) return false;
+    if( !ir.readHeader( id ) ) return false;
+
+    // setup texture creation parameters
+    SurfaceCreationParameter scp;
+    scp.bindTo( "STANDARD_RESOURCES", "TEXTURE" );
+     scp.layout.dim = SURFACE_DIMENSION_2D;
+    scp.layout.levels = id.numLevels;
+    scp.layout.faces  = id.numFaces;
+    scp.layout.basemap.width  = id.mipmaps[0].width;
+    scp.layout.basemap.height = id.mipmaps[0].height;
+    scp.layout.basemap.depth  = id.mipmaps[0].depth;
+    scp.layout.basemap.rowBytes = id.mipmaps[0].rowPitch;
+    scp.layout.basemap.sliceBytes = id.mipmaps[0].slicePitch;
+    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.layout.format.attribs[0].offset = 0;
+    scp.layout.format.attribs[0].format = id.format;
+    scp.layout.format.count = 1;
+    scp.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
+
+    // create texture
+    GraphicsResource * tex = createSurface( "texture", scp );
+    if( 0 == tex ) return 0;
+
+    // load texture
+    AutoRef<TextureLoader> loader( new TextureLoader( filename ) );
+    updateResource( tex, loader );
+
+    // sucess
+    return tex;
+
+    GN_UNGUARD;
 }
 
 //
