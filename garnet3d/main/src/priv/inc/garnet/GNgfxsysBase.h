@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_GFX2BASE_H__
-#define __GN_GFX2_GFX2BASE_H__
+#ifndef __GN_GFX_GFX2BASE_H__
+#define __GN_GFX_GFX2BASE_H__
 // *****************************************************************************
 /// \file
 /// \brief   basic graphics system implementation (for graphics system development only)
@@ -312,4 +312,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_GFX2BASE_H__
+#endif // __GN_GFX_GFX2BASE_H__

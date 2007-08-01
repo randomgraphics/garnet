@@ -62,6 +62,15 @@ struct KernelRegistry
         idxbuf.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_16_UINT );
         idxbuf.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_32_UINT );
 
+        // standard resource kernel
+        KernelReflection STANDARD_RESOURCES( "STANDARD_RESOURCES" );
+        STANDARD_RESOURCES.addNewPort( "VERTEX_BUFFER", vtxbuf, true, false );
+        STANDARD_RESOURCES.addNewPort( "INDEX_BUFFER" , idxbuf, true, false );
+        STANDARD_RESOURCES.addNewPort( "TEXTURE" , texture, true, false );
+        STANDARD_RESOURCES.addNewPort( "RENDER_TARGET", rendertarget, true, true );
+        STANDARD_RESOURCES.addNewPort( "DEPTH_BUFFER" , depth, true, true );
+        registerKernelReflection( STANDARD_RESOURCES );
+
         // clear screen kernel
         KernelReflection CLEAR_SCREEN( "CLEAR_SCREEN" );
         CLEAR_SCREEN.addNewParameter( "CLEAR_COLOR", KERNEL_PARAMETER_TYPE_BOOL, 1 );

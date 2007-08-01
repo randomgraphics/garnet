@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_D3D9HLSLKERNEL_H__
-#define __GN_GFX2_D3D9HLSLKERNEL_H__
+#ifndef __GN_GFX_D3D9HLSLKERNEL_H__
+#define __GN_GFX_D3D9HLSLKERNEL_H__
 // *****************************************************************************
 /// \file
 /// \brief   d3d9 HLSL kernel, which accepts HLSL shader code as parameter
@@ -70,4 +70,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9HLSLKERNEL_H__
+#endif // __GN_GFX_D3D9HLSLKERNEL_H__

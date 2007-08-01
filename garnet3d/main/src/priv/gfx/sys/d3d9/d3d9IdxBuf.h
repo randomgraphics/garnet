@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_D3D9IDXBUF_H__
-#define __GN_GFX2_D3D9IDXBUF_H__
+#ifndef __GN_GFX_D3D9IDXBUF_H__
+#define __GN_GFX_D3D9IDXBUF_H__
 // *****************************************************************************
 /// \file
 /// \brief   D3D9 index buffer class
@@ -71,4 +71,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9IDXBUF_H__
+#endif // __GN_GFX_D3D9IDXBUF_H__

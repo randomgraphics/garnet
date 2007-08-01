@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_D3D9DEPTHBUFFER_H__
-#define __GN_GFX2_D3D9DEPTHBUFFER_H__
+#ifndef __GN_GFX_D3D9DEPTHBUFFER_H__
+#define __GN_GFX_D3D9DEPTHBUFFER_H__
 // *****************************************************************************
 /// \file
 /// \brief   D3D9 depth buffer class
@@ -37,4 +37,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9DEPTHBUFFER_H__
+#endif // __GN_GFX_D3D9DEPTHBUFFER_H__

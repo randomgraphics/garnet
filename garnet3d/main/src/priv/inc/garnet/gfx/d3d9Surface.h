@@ -1,5 +1,5 @@
-#ifndef __GN_GFX2_D3D9SURFACE_H__
-#define __GN_GFX2_D3D9SURFACE_H__
+#ifndef __GN_GFX_D3D9SURFACE_H__
+#define __GN_GFX_D3D9SURFACE_H__
 // *****************************************************************************
 /// \file
 /// \brief   d3d9 base surface interface
@@ -135,4 +135,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX2_D3D9SURFACE_H__
+#endif // __GN_GFX_D3D9SURFACE_H__

@@ -78,8 +78,8 @@ bool JPGReader::readHeader(
     size_t bpp;
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
-        // force RGB output, if not gray-scale image
-        o_desc.format = GN::gfx::FMT_RGBX_8_8_8_8_UNORM;
+        // force RGBA output, if not gray-scale image
+        o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM;
         bpp = 4;
     }
     else
@@ -175,7 +175,7 @@ bool JPGReader::readImage( void * o_data )
 
     jpeg_finish_decompress( &mCInfo );
 
-    // convert RGB_8_8_8 to BGRX_8_8_8_8
+    // convert RGB_8_8_8 to RGBA_8_8_8_8
     if( !grayscale )
     {
         GN_ASSERT( rgbBuf );
