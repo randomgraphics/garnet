@@ -52,9 +52,7 @@ namespace GN { namespace engine
 
         void waitForIdle();
 
-        inline void submitResourceLoadingCommand(
-            GraphicsResourceItem   * item,
-            GraphicsResourceLoader * loader );
+        inline void submitResourceLoadingCommand( GraphicsResourceItem * item );
 
         //@}
 

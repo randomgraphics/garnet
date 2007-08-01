@@ -269,7 +269,7 @@ namespace GN { /** namespace for engine module */ namespace engine
         const gfx::GraphicsSystemDesc & getGraphicsSystemDesc() const;
 
         ///
-        /// get total video meory size in bytes
+        /// get total video memory size in bytes
         ///
         size_t getTotalVideoMemorySize() const;
 
@@ -327,13 +327,17 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///     The resource that will be updated.
         /// \param loader
         ///     The resource loader
+        /// \param discard
+        ///     True, to discard old resource content.
+        ///     Set this value to true whenever possible to achieve optimal performance.
         ///
         /// \note
         ///     Render engine will hold a reference to the loader. So users can
         ///     safely release their own reference to the loader.
         ///
         void updateResource( GraphicsResource       * resource,
-                             GraphicsResourceLoader * loader );
+                             GraphicsResourceLoader * loader,
+                             bool                     discard = true );
 
         ///
         /// Dispose resource to force it to be reloaded.
@@ -377,6 +381,8 @@ namespace GN { /** namespace for engine module */ namespace engine
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & );
         GraphicsResource * createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & );
+
+        // note: below methods will discard old resource content.
 
         void               pushStreamData( GraphicsResource * kernel, size_t streamIndex, size_t bytes, const void * data );
         void               pushStreamData( GraphicsResource * kernel, const StrA & streamName, size_t bytes, const void * data );

@@ -230,11 +230,36 @@ static void sDeleteAllResources(
 //
 //
 // -----------------------------------------------------------------------------
+static void sRealizeResource(
+    GN::engine::RenderEngine::ResourceLRU    & lru,
+    GN::engine::RenderEngine::ResourceThread & rt,
+    GN::engine::GraphicsResourceItem         * item )
+{
+    GN_GUARD_SLOW;
+
+    bool reload;
+    
+    lru.realize( item, &reload );
+
+    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
+
+    if( reload )
+    {
+        GN_ASSERT( !item->loaders.empty() );
+        rt.submitResourceLoadingCommand( item );
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 template< typename RESOURCE_ARRAY >
 static inline void sPrepareResources(
     GN::engine::RenderEngine::ResourceLRU    & lru,
     GN::engine::RenderEngine::ResourceThread & rt,
-    const RESOURCE_ARRAY                      & resources )
+    const RESOURCE_ARRAY                     & resources )
 {
     using namespace GN;
     using namespace GN::engine;
@@ -245,18 +270,7 @@ static inline void sPrepareResources(
 
         GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( resources[i] );
 
-        bool reload;
-
-        lru.realize( item, &reload );
-
-        GN_ASSERT( GRS_REALIZED == item->state );
-
-        if( reload )
-        {
-            // reload using last loader
-            GN_ASSERT( item->lastSubmittedLoader );
-            rt.submitResourceLoadingCommand( item, item->lastSubmittedLoader );
-        }
+        sRealizeResource( lru, rt, item );
     }
 }
 
@@ -266,7 +280,7 @@ static inline void sPrepareResources(
 template< typename RESOURCE_ARRAY >
 static inline void sSetupWaitingListAndReferenceFence(
     GN::engine::DrawCommandHeader & dr,
-    const RESOURCE_ARRAY           & resources )
+    const RESOURCE_ARRAY          & resources )
 {
     using namespace GN;
     using namespace GN::engine;
@@ -470,17 +484,14 @@ GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
         {
             GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( iter->second.surf );
 
-            if( item && GRS_DISPOSED == item->state )
+            if( item )
             {
-                mResourceLRU->realize( item, 0 );
-                if( item->lastSubmittedLoader )
+                if( item->loaders.empty() )
                 {
-                    mResourceThread->submitResourceLoadingCommand( item, item->lastSubmittedLoader );
+                    item->loaders.resize( item->loaders.size() + 1 );
+                    item->loaders.back().set( DummyLoader::sGetInstance() );
                 }
-                else
-                {
-                    mResourceThread->submitResourceLoadingCommand( item, DummyLoader::sGetInstance() );
-                }
+                sRealizeResource( *mResourceLRU, *mResourceThread, item );
             }
         }
     }
@@ -600,7 +611,8 @@ void GN::engine::RenderEngine::disposeAllResources()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::updateResource(
     GraphicsResource       * res,
-    GraphicsResourceLoader * loader )
+    GraphicsResourceLoader * loader,
+    bool                     discard )
 {
     GN_GUARD;
 
@@ -610,9 +622,18 @@ void GN::engine::RenderEngine::updateResource(
 
     if( !mResourceCache->checkResource( item ) ) return;
 
-    mResourceLRU->realize( item, 0 );
+    if( 0 == loader )
+    {
+        GN_ERROR(sLogger)( "NULL loader pointer!" );
+        return;
+    }
 
-    mResourceThread->submitResourceLoadingCommand( item, loader );
+    if( discard ) item->loaders.clear();
+
+    item->loaders.resize( item->loaders.size() + 1 );
+    item->loaders.back().set( loader );
+
+    sRealizeResource( *mResourceLRU, *mResourceThread, item );
 
     GN_UNGUARD;
 }
