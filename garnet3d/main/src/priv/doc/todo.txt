@@ -3,47 +3,22 @@
 - p1
   - big-endian DDS loader
   - big-endina mesh binary loader
-  - store non-default values only in renderer context.
   - render engine todo:
-    - todo
-      - merge vtxfmt and vertex shader
-      - treat all resources as parameter of shader
-      - constant buffer
-    - done
-      - configuable resource cache with limited video memory footprint.
-      - update thread: major game logic thread
-      - render thread: the only thread that touches rendering device
-      - resource loading thread(s)
-    - issues:
-      - dispose shader will invalidate dirty uniforms. So if a shader is 
-        disposed after SET_UNIFORM and before SET_CONTEXT, its uniform value 
-        will lost.
-        - possible solution: use independent constant buffer
-  - shared uniform
+    - redesign resource loader to support partial resource update.
+    - shared parameters
+    - query graphics system caps
 
 - p2
   - render state block redesign: using packed bit fields.
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
-  - Drawable optimization:
-  	- using hashed string map to reference uniforms and textures.
-  - refine sigslot class to allow any type of functor
+  - sigslot class:
+    - allow any type of functor
+    - check behavior of redundant slot functors.
   - smart enum class
   - skin mesh test case: porting DXSDK sample.
   - memory-mapped IO.
-  - GFX system
-    - render target management
-     - D3D: msaa
-      - OGL: FBO with AA
-    - set sampling parameters (such as filters wrapping) at binding time
-    - recreate OGL context, when monitor changed.
-    - queryXXX(....)
-    - support using "c0" as uniform name of D3D HLSL shader.
-    - consider remove drawBegin() and drawEnd()
-    - add support to OGL FSAA
-    - support render-to-texture on xenon (including depth texture)
-    - test: IDirect3DDevice9::UpdateTexture() when target is render target texture.
 
 - p3
   - code page convertor and test application
@@ -59,8 +34,7 @@
   - in game GUI:
   - debug variable registry
     - debug variable viewer and modifier
-  - renderer state dump system
-    - OGL dumper has priority (for D3D,we can use PIX)
+  - opengl renderer state dumper
   - COLLADA loader
   - ASE loader
     - save texture to target directory
@@ -82,6 +56,7 @@ ISSUES
 
 - Unified interface for different APIs is too difficult, and maybe pointless.
   How about a higher level abstraction: material/effect system?
+  - RESOLVED: higher effect based system is the way to go.
 
 - Do we need embed buffer for short string?
 
