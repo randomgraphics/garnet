@@ -12,7 +12,7 @@
 namespace GN { namespace engine
 {
     ///
-    /// TBD
+    /// graphics resource states
     ///
     enum GraphicsResourceState
     {
@@ -59,7 +59,7 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// the loader used by the lasted update command.
+        /// resource loaders
         ///
         DynaArray< AutoRef<GraphicsResourceLoader,Mutex> > loaders;
 

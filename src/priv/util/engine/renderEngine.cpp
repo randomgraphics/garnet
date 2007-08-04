@@ -367,6 +367,45 @@ static inline void sSetupWaitingListAndReferenceFence(
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+template< typename RESOURCE_ARRAY >
+static void sDoRender(
+    GN::engine::RenderEngine::ResourceLRU    & lru,
+    GN::engine::RenderEngine::ResourceThread & rt,
+    GN::engine::RenderEngine::DrawThread     & dt,
+    const RESOURCE_ARRAY                     & resources )
+{
+    GN_GUARD_SLOW;
+
+    using namespace GN::engine;
+
+    // prepare resources, make sure that they are usable.
+    sPrepareResources( lru, rt, resources );
+
+    // submit new draw command
+    GraphicsResource * kernel   = resources[0]; // the first resource in draw context is always kernel
+    GraphicsResource * paramset = resources[1]; // the second is always parameter set
+    GraphicsResource * binding  = resources.size() > 2 ? resources.back() : 0; // the last is always biding, if have.
+    DrawCommandHeader * dr = dt.submitDrawCommand3( DCT_DRAW, kernel, paramset, binding );
+    if( 0 == dr ) return;
+
+    // setup resource waiting list, to make sure draw command happens after resource updating.
+    sSetupWaitingListAndReferenceFence( *dr, resources );
+
+    // Release all loaders for kernel:
+    //  There's only one kind of update to kernel: pushing stream data.
+    //  After rendering, all stream data are eaten by kernel, thus lost permenantly.
+    //  So there's no need to keep the loaders.
+    GraphicsResourceItem * ki = GN::safeCastPtr<GraphicsResourceItem>( kernel );
+    ki->loaders.resize( 1 );
+    ki->loaders.back().set( DummyLoader::sGetInstance() );
+
+    GN_UNGUARD_SLOW;
+}
+
+
 // *****************************************************************************
 // Render engine
 // *****************************************************************************
@@ -525,7 +564,6 @@ GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 
     RENDER_ENGINE_API();
 
-    // special cases
     if( GRT_KERNEL == desc.type )
     {
         GraphicsResource * res = mKernels.get( desc.kernel.kernel );
@@ -630,6 +668,44 @@ bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) con
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::updateResource(
+    GraphicsResource       * res,
+    GraphicsResourceLoader * loader,
+    bool                     discard )
+{
+    GN_GUARD_SLOW;
+
+    RENDER_ENGINE_API();
+
+    GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
+
+    if( !mResourceCache->checkResource( item ) ) return;
+
+    if( 0 == loader )
+    {
+        GN_ERROR(sLogger)( "NULL loader pointer!" );
+        return;
+    }
+
+    if( discard ) item->loaders.clear();
+
+    // append loader
+    item->loaders.resize( item->loaders.size() + 1 );
+    item->loaders.back().set( loader );
+
+    // realize the resource
+    mResourceLRU->realize( item, 0 );
+    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
+
+    // submit loading command to resource thread.
+    mResourceThread->loadResource( item, loader );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
     GN_GUARD;
@@ -659,44 +735,6 @@ void GN::engine::RenderEngine::disposeAllResources()
     sDisposeAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::updateResource(
-    GraphicsResource       * res,
-    GraphicsResourceLoader * loader,
-    bool                     discard )
-{
-    GN_GUARD_SLOW;
-
-    RENDER_ENGINE_API();
-
-    // check parameters
-    GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
-
-    if( !mResourceCache->checkResource( item ) ) return;
-
-    if( 0 == loader )
-    {
-        GN_ERROR(sLogger)( "NULL loader pointer!" );
-        return;
-    }
-
-    // realize the resource
-    mResourceLRU->realize( item, 0 );
-    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
-
-    // update resource loader list
-    if( discard ) item->loaders.clear();
-    item->loaders.resize( item->loaders.size() + 1 );
-    item->loaders.back().set( loader );
-
-    // submit loading command to resource thread.
-    mResourceThread->loadResource( item, loader );
-
-    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************
@@ -779,20 +817,7 @@ void GN::engine::RenderEngine::render( UIntPtr context )
 
     RENDER_ENGINE_API();
 
-    const DrawContext & dc = mDrawContexts[context];
-
-    // prepare resources, make sure that they are usable.
-    sPrepareResources( *mResourceLRU, *mResourceThread, dc.resources );
-
-    // submit new draw command
-    GraphicsResource * kernel   = dc.resources[0]; // the first resource in draw context is always kernel
-    GraphicsResource * paramset = dc.resources[1]; // the second is always parameter set
-    GraphicsResource * binding  = dc.resources.size() > 2 ? dc.resources.back() : 0; // the last is always biding, if have.
-    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, kernel, paramset, binding );
-    if( 0 == dr ) return;
-
-    // setup resource waiting list, to make sure draw command happens after resource updating.
-    sSetupWaitingListAndReferenceFence( *dr, dc.resources );
+    sDoRender( *mResourceLRU, *mResourceThread, *mDrawThread, mDrawContexts[context].resources );
 
     GN_UNGUARD_SLOW;
 }
@@ -841,15 +866,7 @@ void GN::engine::RenderEngine::render( GraphicsResource * kernel, GraphicsResour
         resources.append( binding );
     }
 
-    // prepare resources, make sure that they are usable.
-    sPrepareResources( *mResourceLRU, *mResourceThread, resources );
-
-    // submit new draw command
-    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, kernel, paramset, binding );
-    if( 0 == dr ) return;
-
-    // setup resource waiting list, to make sure draw command happens after resource updating.
-    sSetupWaitingListAndReferenceFence( *dr, resources );
+    sDoRender( *mResourceLRU, *mResourceThread, *mDrawThread, resources );
 
     GN_UNGUARD_SLOW;
 }
@@ -1106,7 +1123,7 @@ void GN::engine::RenderEngine::pushStreamData(
 
     AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( streamIndex, bytes, data ) );
 
-    updateResource( kernel, loader );
+    updateResource( kernel, loader, false );
 }
 
 //
@@ -1129,7 +1146,7 @@ void GN::engine::RenderEngine::pushStreamData(
 
     AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( index, bytes, data ) );
 
-    updateResource( kernel, loader );
+    updateResource( kernel, loader, false );
 }
 
 //
@@ -1146,7 +1163,7 @@ void GN::engine::RenderEngine::setParameter(
 
     AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
 
-    updateResource( paramset, loader );
+    updateResource( paramset, loader, false );
 }
 
 //
@@ -1167,7 +1184,7 @@ void GN::engine::RenderEngine::setParameter(
 
     AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
 
-    updateResource( paramset, loader );
+    updateResource( paramset, loader, false );
 }
 
 // *****************************************************************************
@@ -1308,21 +1325,11 @@ void GN::engine::ClearScreen::setClearColor( bool enabled, float r, float g, flo
 {
     GN_ASSERT( mKernel && mParam );
 
-    {
-        AutoRef< BoolParameterLoader<0,1> > loader( new BoolParameterLoader<0,1> );
-        loader->index = CLEAR_COLOR;
-        loader->values[0] = enabled;
-        mKernel->engine.updateResource( mParam, loader );
-    }
+    mKernel->engine.setParameterT( mParam, CLEAR_COLOR, enabled );
 
     if( enabled )
     {
-        AutoRef< FloatParameterLoader<0,4> > loader( new FloatParameterLoader<0,4> );
-        loader->index = COLOR;
-        loader->values[0] = r;
-        loader->values[1] = g;
-        loader->values[2] = b;
-        loader->values[3] = a;
-        mKernel->engine.updateResource( mParam, loader );
+        Vector4f rgba( r, g, b, a );
+        mKernel->engine.setParameterT( mParam, COLOR, rgba );
     }
 };

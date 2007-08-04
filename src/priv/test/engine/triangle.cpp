@@ -109,6 +109,7 @@ bool TestTriangle::init()
     re.setParameterT( param, "BASE_VERTEX", 0 );
     re.setParameterT( param, "VERTEX_COUNT", 3 );
     re.setParameterT( param, "BASE_INDEX", 0 );
+    re.setParameterT( param, "VSCF", Matrix44f::IDENTITY );
 
     // create vertex buffer
     SurfaceElementFormat vtxfmt;
@@ -157,22 +158,9 @@ void TestTriangle::render()
 
     // dispose all
     static int k = 0;
-    if( 0 == k % 1000 )
-        re.disposeAllResources();
+    if( 100 < (k % 200) ) re.disposeAllResources();
     ++k;
 
-    // update uniform
-    Matrix44f m44;
-    m44.identity();
-    re.setParameterT( param, "VSCF", m44 );
-    re.setParameter( param, "FX", 0, strLen(fxcode)+1, fxcode );
-    re.setParameterT( param, "PRIM_TYPE", TRIANGLE_LIST );
-    re.setParameterT( param, "PRIM_COUNT", 1 );
-    re.setParameterT( param, "BASE_VERTEX", 0 );
-    re.setParameterT( param, "VERTEX_COUNT", 3 );
-    re.setParameterT( param, "BASE_INDEX", 0 );
-
-    // do draw
     re.render( context );
 
     //font.drawText( "render engine triangle test", 10, 10 );

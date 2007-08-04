@@ -405,9 +405,6 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///
         GraphicsResource * createTextureFromImageFile( const StrA & filename );
 
-
-        // note: below methods will discard old resource content.
-
         void               pushStreamData( GraphicsResource * kernel, size_t streamIndex, size_t bytes, const void * data );
         void               pushStreamData( GraphicsResource * kernel, const StrA & streamName, size_t bytes, const void * data );
 
