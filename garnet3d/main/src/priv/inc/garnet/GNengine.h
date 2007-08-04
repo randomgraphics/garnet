@@ -460,7 +460,7 @@ namespace GN { /** namespace for engine module */ namespace engine
             std::map<StrA,RefCountedResource> resources;
             void               clear() { resources.clear(); }
             void               add( const StrA & name, GraphicsResource * res );
-            size_t             del( const StrA & name, GraphicsResource * res ); ///< return modified reference counter
+            size_t             del( const StrA & name ); ///< return modified reference counter
             GraphicsResource * get( const StrA & name );
         };
 

@@ -623,7 +623,7 @@ void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
     // special for kernel: try remove it from local cache first.
     if( GRT_KERNEL == item->desc.type )
     {
-        if( mKernels.del( item->desc.kernel.kernel, item ) > 0 )
+        if( mKernels.del( item->desc.kernel.kernel ) > 0 )
         {
             return;
         }
@@ -1208,10 +1208,9 @@ void GN::engine::RenderEngine::NamedResourceManager::add( const StrA & name, Gra
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::engine::RenderEngine::NamedResourceManager::del( const StrA & name, GraphicsResource * res )
+size_t GN::engine::RenderEngine::NamedResourceManager::del( const StrA & name )
 {
     GN_ASSERT( resources.end() != resources.find( name ) );
-    GN_ASSERT( res );
 
     RefCountedResource & rcr = resources[name];
 
