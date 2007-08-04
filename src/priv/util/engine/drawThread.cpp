@@ -652,19 +652,6 @@ void GN::engine::RenderEngine::DrawThread::waitForIdle( float time )
     }
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::waitForResource( GraphicsResourceItem * item )
-{
-    flushDrawBuffer();
-
-    while( item->lastCompletedFence < item->lastSubmissionFence )
-    {
-        sleepCurrentThread( 0 );
-    }
-}
-
 // *****************************************************************************
 // private functions
 // *****************************************************************************

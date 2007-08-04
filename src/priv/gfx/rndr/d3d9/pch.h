@@ -26,9 +26,6 @@
 #include <windows.h>
 #endif
 
-#if GN_DEBUG_BUILD && !defined(D3D_DEBUG_INFO)
-#define D3D_DEBUG_INFO
-#endif
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>

@@ -13,7 +13,6 @@
 #endif
 #include <windows.h>
 
-#define D3D_DEBUG_INFO ///< Enable "Enhanced D3DDebugging"
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>

@@ -77,11 +77,6 @@ namespace GN { namespace engine
         void waitForIdle( float time = INFINITE_TIME );
 
         ///
-        /// wait until specific resource is processed by both resource and draw thread
-        ///
-        void waitForResource( GraphicsResourceItem * item );
-
-        ///
         /// do per-frame performance evaluation
         ///
         void profileFrameTime() { mFrameProfiler.nextFrame(); }
