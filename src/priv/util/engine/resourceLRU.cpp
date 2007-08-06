@@ -68,25 +68,16 @@ void GN::engine::RenderEngine::ResourceLRU::remove( GraphicsResourceItem * item 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item, bool * needReload )
+void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
+
+    GN_ASSERT( GRS_DISPOSED == item->state );
 
     // mark as recently used.
     markAsRecentlyUsed( item );
 
-    if( GRS_REALIZED == item->state )
-    {
-        // is already realized, do nothing
-        if( needReload ) *needReload = false;
-        return;
-    }
-
-    // need reload resource content
-    if( needReload ) *needReload = true;
-
     // checkResource if there's enough space to hold it.
-
     if( item->bytes > mCapacity )
     {
         GN_FATAL(sLogger)( "resource cache (%dMB) is not large enough to hold resources '%s' (%dMB).",
@@ -122,7 +113,7 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
 
-    if( GRS_DISPOSED == item->state ) return;
+    GN_ASSERT( GRS_REALIZED == item->state );
 
     item->state = GRS_DISPOSED;
 

@@ -59,9 +59,14 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// resource loaders
+        /// full loadstore
         ///
-        DynaArray< AutoRef<GraphicsResourceLoader> > loaders;
+        AutoRef<GraphicsResourceLoadStore> loadstore;
+
+        ///
+        /// progressive/partial updater
+        ///
+        AutoRef<GraphicsResourceUpdater>   updater;
 
         ///
         /// the fence of the lastest update command.

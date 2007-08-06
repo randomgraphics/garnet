@@ -49,7 +49,7 @@ namespace GN { namespace engine
         //@{
         void insert( GraphicsResourceItem * );
         void remove( GraphicsResourceItem * );
-        void realize( GraphicsResourceItem *, bool * needReload );
+        void realize( GraphicsResourceItem * );
         void dispose( GraphicsResourceItem * );
         //@}
 

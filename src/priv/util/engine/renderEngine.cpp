@@ -46,20 +46,20 @@ struct ApiReentrantChecker
 
 
 ///
-/// dummy loader that does nothing.
+/// dummy loadstore that does nothing.
 ///
-class DummyLoader : public GN::engine::GraphicsResourceLoader
+class DummyLoadStore : public GN::engine::GraphicsResourceLoadStore
 {
 protected:
 
-    DummyLoader() {}
-    ~DummyLoader() {}
+    DummyLoadStore() {}
+    ~DummyLoadStore() {}
 
 public:
 
-    static DummyLoader * sGetInstance()
+    static DummyLoadStore * sGetInstance()
     {
-        static GN::AutoRef<DummyLoader> sInstance( new DummyLoader );
+        static GN::AutoRef<DummyLoadStore> sInstance( new DummyLoadStore );
         return sInstance;
     }
 
@@ -73,7 +73,22 @@ public:
         return true;
     }
 
-    virtual bool copy( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    virtual bool download( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
     {
         return true;
     }
@@ -82,13 +97,13 @@ public:
 ///
 /// texture loader: load texture from image file
 ///
-class TextureLoader : public DummyLoader
+class TextureLoadStore : public DummyLoadStore
 {
-    const GN::StrA           mFileName;
+    const GN::StrA mFileName;
 
 public:
 
-    TextureLoader( const GN::StrA & name ) : mFileName( name ) {}
+    TextureLoadStore( const GN::StrA & name ) : mFileName( name ) {}
 
     bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & outbuf )
     {
@@ -126,9 +141,7 @@ public:
         return true;
     }
 
-    bool failure() { GN_ERROR(sLogger)("texture loader failed"); return false; }
-
-    bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & inbuf )
+    bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & inbuf )
     {
         using namespace GN;
         using namespace GN::gfx;
@@ -166,21 +179,31 @@ public:
 };
 
 ///
-/// kernel stream loader
+/// kernel stream updater
 ///
-class StreamSourceLoader : public DummyLoader
+class StreamSourceUpdater : public GN::engine::GraphicsResourceUpdater
 {
     size_t               mIndex;
     GN::DynaArray<UInt8> mData;
 
 public:
 
-    StreamSourceLoader( size_t streamIndex, size_t bytes, const void * data ) : mIndex(streamIndex), mData( bytes )
+    StreamSourceUpdater( size_t streamIndex, size_t bytes, const void * data ) : mIndex(streamIndex), mData( bytes )
     {
         memcpy( mData.cptr(), data, bytes );
     }
 
-    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         GN_ASSERT( GN::engine::GRT_KERNEL == res.desc.type );
         GN_ASSERT( res.kernel );
@@ -190,9 +213,9 @@ public:
 };
 
 ///
-/// kernel parameter loader
+/// kernel parameter updater
 ///
-class KernelParameterLoader : public DummyLoader
+class KernelParameteUpdater : public GN::engine::GraphicsResourceUpdater
 {
     size_t               mIndex;
     size_t               mOffset;
@@ -200,7 +223,7 @@ class KernelParameterLoader : public DummyLoader
 
 public:
 
-    KernelParameterLoader( size_t index, size_t offset, size_t bytes, const void * data )
+    KernelParameteUpdater( size_t index, size_t offset, size_t bytes, const void * data )
         : mIndex( index )
         , mOffset( offset )
         , mValues( bytes )
@@ -208,47 +231,21 @@ public:
         memcpy( mValues.cptr(), data, bytes );
     }
 
-    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
         GN_ASSERT( res.paramset );
         res.paramset->get( mIndex ).set( mOffset, mValues.size(), mValues.cptr() );
-        return true;
-    }
-};
-
-///
-/// kernel boolean parameter loader
-///
-template<size_t START, size_t COUNT>
-struct BoolParameterLoader : public DummyLoader
-{
-    size_t index;
-    bool   values[COUNT];
-
-    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
-    {
-        GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
-        GN_ASSERT( res.paramset );
-        res.paramset->get( index ).set( START, COUNT, values );
-        return true;
-    }
-};
-
-///
-/// kernel float parameter loader
-///
-template<size_t START, size_t COUNT>
-struct FloatParameterLoader : public DummyLoader
-{
-    size_t index;
-    float  values[COUNT];
-
-    virtual bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
-    {
-        GN_ASSERT( GN::engine::GRT_PARAMETER_SET == res.desc.type );
-        GN_ASSERT( res.paramset );
-        res.paramset->get( index ).set( START*4, COUNT*4, values );
         return true;
     }
 };
@@ -273,9 +270,11 @@ static void sDisposeAllResources(
          item;
          item = cache.nextResource( item ) )
     {
+        if( GRS_DISPOSED == item->state ) continue;
+
         lru.dispose( item );
 
-        dt.submitResourceDisposingCommand( item );
+        dt.submitResourceDisposeCommand( item );
     }
 
     GN_UNGUARD;
@@ -323,17 +322,17 @@ static void sReloadResource(
 {
     GN_GUARD_SLOW;
 
-    bool reload;
-    
-    lru.realize( item, &reload );
+    using namespace GN::engine;
 
+    if( GRS_REALIZED == item->state ) return;
+
+    lru.realize( item );
     GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
 
-    if( reload )
-    {
-        GN_ASSERT( !item->loaders.empty() );
-        rt.reloadResource( item );
-    }
+    GN_ASSERT( item->loadstore );
+    rt.loadResource( item, item->loadstore );
+
+    if( item->updater ) rt.loadResource( item, item->updater );
 
     GN_UNGUARD_SLOW;
 }
@@ -425,13 +424,14 @@ static void sDoRender(
     // setup resource waiting list, to make sure draw command happens after resource updating.
     sSetupWaitingListAndReferenceFence( *dr, resources );
 
-    // Release all loaders for kernel:
+    // Release progressive upater for kernel:
     //  There's only one kind of update to kernel: pushing stream data.
     //  After rendering, all stream data are eaten by kernel, thus lost permenantly.
-    //  So there's no need to keep the loaders.
+    //  So there's no need to keep the updaters.
     GraphicsResourceItem * ki = GN::safeCastPtr<GraphicsResourceItem>( kernel );
-    ki->loaders.resize( 1 );
-    ki->loaders.back().set( DummyLoader::sGetInstance() );
+    ki->updater.clear();
+
+    GN_TODO( "delete updater for output resources" );
 
     GN_UNGUARD_SLOW;
 }
@@ -589,11 +589,19 @@ GN::engine::RenderEngine::getGraphicsSystemDesc() const
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource *
-GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
+GN::engine::RenderEngine::createResource(
+    const GraphicsResourceDesc & desc,
+    GraphicsResourceLoadStore * loadstore )
 {
     GN_GUARD;
 
     RENDER_ENGINE_API();
+
+    if( NULL == loadstore )
+    {
+        GN_ERROR(sLogger)( "null loadstore pointer is not allowed!" );
+        return 0;
+    }
 
     if( GRT_KERNEL == desc.type )
     {
@@ -610,11 +618,6 @@ GN::engine::RenderEngine::createResource( const GraphicsResourceDesc & desc )
 
             if( item )
             {
-                if( item->loaders.empty() )
-                {
-                    item->loaders.resize( item->loaders.size() + 1 );
-                    item->loaders.back().set( DummyLoader::sGetInstance() );
-                }
                 sReloadResource( *mResourceLRU, *mResourceThread, item );
             }
         }
@@ -662,7 +665,7 @@ void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
 
     // dispose it first
     mResourceLRU->dispose( item );
-    mDrawThread->submitResourceDisposingCommand( item );
+    mDrawThread->submitResourceDeleteCommand( item );
     mDrawThread->waitForIdle();
 
     // then remove from LRU
@@ -699,10 +702,9 @@ bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) con
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::updateResource(
-    GraphicsResource       * res,
-    GraphicsResourceLoader * loader,
-    bool                     discard )
+void GN::engine::RenderEngine::loadResource(
+    GraphicsResource          * res,
+    GraphicsResourceLoadStore * loadstore )
 {
     GN_GUARD_SLOW;
 
@@ -712,24 +714,56 @@ void GN::engine::RenderEngine::updateResource(
 
     if( !mResourceCache->checkResource( item ) ) return;
 
-    if( 0 == loader )
+    if( 0 == loadstore )
     {
-        GN_ERROR(sLogger)( "NULL loader pointer!" );
+        GN_ERROR(sLogger)( "NULL loadstore pointer!" );
         return;
     }
 
-    if( discard ) item->loaders.clear();
-
-    // append loader
-    item->loaders.resize( item->loaders.size() + 1 );
-    item->loaders.back().set( loader );
-
     // realize the resource
-    mResourceLRU->realize( item, 0 );
+    mResourceLRU->realize( item );
     GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
 
+    // update item loaders
+    item->loadstore.set( loadstore );
+    item->updater.clear();
+
     // submit loading command to resource thread.
-    mResourceThread->loadResource( item, loader );
+    mResourceThread->loadResource( item, loadstore );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::updateResource(
+    GraphicsResource        * res,
+    GraphicsResourceUpdater * updater )
+{
+    GN_GUARD_SLOW;
+
+    RENDER_ENGINE_API();
+
+    GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( res );
+
+    if( !mResourceCache->checkResource( item ) ) return;
+
+    if( 0 == updater )
+    {
+        GN_ERROR(sLogger)( "NULL updater pointer!" );
+        return;
+    }
+
+    // reload the resource
+    sReloadResource( *mResourceLRU, *mResourceThread, item );
+    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
+
+    // update item updater
+    item->updater.set( updater );
+
+    // submit loading command to resource thread.
+    mResourceThread->loadResource( item, updater );
 
     GN_UNGUARD_SLOW;
 }
@@ -747,9 +781,12 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 
     if( !mResourceCache->checkResource( item ) ) return;
 
-    mResourceLRU->dispose( item );
+    if( GRS_DISPOSED == item->state ) return;
 
-    mDrawThread->submitResourceDisposingCommand( item );
+    mResourceLRU->dispose( item );
+    GN_ASSERT( GN::engine::GRS_DISPOSED == item->state );
+
+    mDrawThread->submitResourceDisposeCommand( item );
 
     GN_UNGUARD;
 }
@@ -925,6 +962,7 @@ void GN::engine::RenderEngine::present()
 // helpers
 // *****************************************************************************
 
+#pragma warning(disable:4100)
 
 //
 //
@@ -932,7 +970,8 @@ void GN::engine::RenderEngine::present()
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::getKernel( const StrA & kernel )
 {
-    GraphicsResourceDesc grd;
+    GN_UNIMPL(); return 0;
+    /*GraphicsResourceDesc grd;
 
     grd.name          = kernel;
     grd.type          = GRT_KERNEL;
@@ -941,9 +980,9 @@ GN::engine::RenderEngine::getKernel( const StrA & kernel )
     GraphicsResource * res = createResource( grd );
     if( 0 == res ) return 0;
 
-    updateResource( res, DummyLoader::sGetInstance() );
+    updateResource( res, DummyLoadStore::sGetInstance() );
 
-    return res;
+    return res;*/
 }
 
 //
@@ -952,13 +991,14 @@ GN::engine::RenderEngine::getKernel( const StrA & kernel )
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & creation )
 {
-    GraphicsResourceDesc grd;
+    GN_UNIMPL(); return 0;
+    /*GraphicsResourceDesc grd;
 
     grd.name             = resname;
     grd.type             = GRT_SURFACE;
     grd.surface.creation = creation;
 
-    return createResource( grd );
+    return createResource( grd );*/
 }
 
 //
@@ -967,7 +1007,8 @@ GN::engine::RenderEngine::createSurface( const StrA & resname, const gfx::Surfac
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::createParameterSet( const StrA & resname, const StrA & kernel )
 {
-    GraphicsResourceDesc grd;
+    GN_UNIMPL(); return 0;
+    /*GraphicsResourceDesc grd;
 
     grd.name            = resname;
     grd.type            = GRT_PARAMETER_SET;
@@ -976,9 +1017,9 @@ GN::engine::RenderEngine::createParameterSet( const StrA & resname, const StrA &
     GraphicsResource * res = createResource( grd );
     if( 0 == res ) return 0;
 
-    updateResource( res, DummyLoader::sGetInstance() );
+    updateResource( res, DummyLoadStore::sGetInstance() );
 
-    return res;
+    return res;*/
 }
 
 //
@@ -987,9 +1028,10 @@ GN::engine::RenderEngine::createParameterSet( const StrA & resname, const StrA &
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::createParameterSet( const StrA & resname, const GraphicsResource & kernel )
 {
-    if( !mResourceCache->checkResource( &kernel, GRT_KERNEL ) ) return 0;
+    GN_UNIMPL(); return 0;
+    /*if( !mResourceCache->checkResource( &kernel, GRT_KERNEL ) ) return 0;
 
-    return createParameterSet( resname, kernel.desc.kernel.kernel );
+    return createParameterSet( resname, kernel.desc.kernel.kernel );*/
 }
 
 //
@@ -998,7 +1040,8 @@ GN::engine::RenderEngine::createParameterSet( const StrA & resname, const Graphi
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::createPortBinding( const StrA & resname, const StrA & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
-    GraphicsResourceDesc grd;
+    GN_UNIMPL(); return 0;
+    /*GraphicsResourceDesc grd;
 
     grd.name           = resname;
     grd.type           = GRT_PORT_BINDING;
@@ -1008,9 +1051,9 @@ GN::engine::RenderEngine::createPortBinding( const StrA & resname, const StrA & 
     GraphicsResource * res = createResource( grd );
     if( 0 == res ) return 0;
 
-    updateResource( res, DummyLoader::sGetInstance() );
+    updateResource( res, DummyLoadStore::sGetInstance() );
 
-    return res;
+    return res;*/
 }
 
 //
@@ -1019,7 +1062,8 @@ GN::engine::RenderEngine::createPortBinding( const StrA & resname, const StrA & 
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::createPortBinding( const StrA & resname, const GraphicsResource & kernel, const std::map<StrA,SurfaceResourceView> & views )
 {
-    if( !mResourceCache->checkResource( &kernel ) ) return 0;
+    GN_UNIMPL(); return 0;
+    /*if( !mResourceCache->checkResource( &kernel ) ) return 0;
 
     if( GRT_KERNEL != kernel.desc.type )
     {
@@ -1027,7 +1071,7 @@ GN::engine::RenderEngine::createPortBinding( const StrA & resname, const Graphic
         return 0;
     }
 
-    return createPortBinding( resname, kernel.desc.kernel.kernel, views );
+    return createPortBinding( resname, kernel.desc.kernel.kernel, views );*/
 }
 
 //
@@ -1039,7 +1083,8 @@ GN::engine::RenderEngine::createVtxBuf(
     const gfx::SurfaceElementFormat & format,
     size_t                            count )
 {
-    using namespace GN::gfx;
+    GN_UNIMPL(); return 0;
+    /*using namespace GN::gfx;
 
     SurfaceCreationParameter scp;
 
@@ -1055,7 +1100,7 @@ GN::engine::RenderEngine::createVtxBuf(
     scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
     scp.layout.format = format;
 
-    return createSurface( name, scp );
+    return createSurface( name, scp );*/
 }
 
 //
@@ -1066,7 +1111,8 @@ GN::engine::RenderEngine::createIdxBuf(
     const StrA   & name,
     size_t         count )
 {
-    using namespace GN::gfx;
+    GN_UNIMPL(); return 0;
+    /*using namespace GN::gfx;
 
     SurfaceCreationParameter scp;
 
@@ -1086,7 +1132,7 @@ GN::engine::RenderEngine::createIdxBuf(
     scp.layout.format.count = 1;
     scp.layout.format.stride = sizeof(short);
 
-    return createSurface( name, scp );
+    return createSurface( name, scp );*/
 }
 
 //
@@ -1097,7 +1143,8 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
 {
     GN_GUARD;
 
-    using namespace GN::gfx;
+    GN_UNIMPL(); return 0;
+    /*using namespace GN::gfx;
 
     // open file
     AutoObjPtr<File> file;
@@ -1132,11 +1179,11 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
     if( 0 == tex ) return 0;
 
     // load texture
-    AutoRef<TextureLoader> loader( new TextureLoader( filename ) );
+    AutoRef<TextureLoadStore> loader( new TextureLoadStore( filename ) );
     updateResource( tex, loader );
 
     // sucess
-    return tex;
+    return tex;*/
 
     GN_UNGUARD;
 }
@@ -1152,9 +1199,9 @@ void GN::engine::RenderEngine::pushStreamData(
 {
     if( !mResourceCache->checkResource( kernel, GRT_KERNEL ) ) return;
 
-    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( streamIndex, bytes, data ) );
+    AutoRef<StreamSourceUpdater> loader( new StreamSourceUpdater( streamIndex, bytes, data ) );
 
-    updateResource( kernel, loader, false );
+    updateResource( kernel, loader );
 }
 
 //
@@ -1175,9 +1222,9 @@ void GN::engine::RenderEngine::pushStreamData(
         return;
     }
 
-    AutoRef<StreamSourceLoader> loader( new StreamSourceLoader( index, bytes, data ) );
+    AutoRef<StreamSourceUpdater> loader( new StreamSourceUpdater( index, bytes, data ) );
 
-    updateResource( kernel, loader, false );
+    updateResource( kernel, loader );
 }
 
 //
@@ -1192,9 +1239,9 @@ void GN::engine::RenderEngine::setParameter(
 {
     if( !mResourceCache->checkResource( paramset, GRT_PARAMETER_SET ) ) return;
 
-    AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
+    AutoRef<KernelParameteUpdater> loader( new KernelParameteUpdater( index, offset, bytes, data ) );
 
-    updateResource( paramset, loader, false );
+    updateResource( paramset, loader );
 }
 
 //
@@ -1213,9 +1260,9 @@ void GN::engine::RenderEngine::setParameter(
 
     size_t index = refl.parameters.name2idx( name );
 
-    AutoRef<KernelParameterLoader> loader( new KernelParameterLoader( index, offset, bytes, data ) );
+    AutoRef<KernelParameteUpdater> loader( new KernelParameteUpdater( index, offset, bytes, data ) );
 
-    updateResource( paramset, loader, false );
+    updateResource( paramset, loader );
 }
 
 // *****************************************************************************

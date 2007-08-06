@@ -172,7 +172,7 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     ResourceCommand * item  )
 {
     GN_ASSERT( item );
-    GN_ASSERT( GROP_DISPOSE == item->op || GROP_COPY == item->op );
+    GN_ASSERT( GROP_DELETE == item->op || GROP_DOWNLOAD == item->op );
     mResourceMutex.lock();
     mResourceCommands.append( item );
     mAction->signal( RESOURCE_ACTION );
@@ -183,7 +183,7 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand(
+inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposeCommand(
     GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
@@ -197,6 +197,34 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand
     cmd->noerr                      = true;
     cmd->op                         = GROP_DISPOSE;
     cmd->resource                   = item;
+    cmd->loadstore                  = item->loadstore;
+    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
+    cmd->submittedAtThisFence       = fence;
+
+    item->lastSubmissionFence = fence;
+
+    submitResourceCommand( cmd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::engine::RenderEngine::DrawThread::submitResourceDeleteCommand(
+    GraphicsResourceItem * item )
+{
+    GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
+    GN_ASSERT( GRS_DISPOSED == item->state );
+
+    ResourceCommand * cmd = ResourceCommand::alloc();
+    if( 0 == cmd ) return;
+
+    FenceId fence = mEngine.fenceManager().getAndIncFence();
+
+    cmd->noerr                      = true;
+    cmd->op                         = GROP_DELETE;
+    cmd->resource                   = item;
+    cmd->loadstore.clear();
     cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
