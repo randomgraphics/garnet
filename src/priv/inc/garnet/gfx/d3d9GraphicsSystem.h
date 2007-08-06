@@ -195,9 +195,9 @@ namespace GN { namespace gfx
         {
             if( stage < 16 )
             {
-                if( mCurrentTextures[stage] == tex ) return;
+                //if( mCurrentTextures[stage] == tex ) return;
                 mDesc.device->SetTexture( stage, tex );
-                mCurrentTextures[stage] = tex;
+                //mCurrentTextures[stage] = tex;
             }
             else
             {

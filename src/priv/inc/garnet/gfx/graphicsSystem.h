@@ -750,7 +750,7 @@ namespace GN { namespace gfx
         StrA                name;   ///< parameter name
         size_t              index;  ///< parameter index
         KernelParameterType type;   ///< value type
-        size_t              count;  ///< array count
+        size_t              count;  ///< array count. 0 means no predefine size. Normally for string parameter.
         //@}
     };
 

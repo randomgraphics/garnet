@@ -101,7 +101,7 @@ struct KernelRegistry
 
         // hlsl9 kernel
         KernelReflection HLSL9( "HLSL9" );
-        HLSL9.addNewParameter( "FX", KERNEL_PARAMETER_TYPE_STRING, 1 );
+        HLSL9.addNewParameter( "FX", KERNEL_PARAMETER_TYPE_STRING, 0 );
         HLSL9.addNewParameter( "VSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256*4 );
         HLSL9.addNewParameter( "PSCF", KERNEL_PARAMETER_TYPE_FLOAT, 256*4 );
         HLSL9.addNewParameter( "PRIM_TYPE", KERNEL_PARAMETER_TYPE_INT, 1 );

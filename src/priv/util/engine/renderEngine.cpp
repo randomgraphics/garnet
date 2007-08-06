@@ -85,48 +85,79 @@ public:
 class TextureLoader : public DummyLoader
 {
     const GN::StrA           mFileName;
-    GN::AutoObjPtr<GN::File> mFile;
-    GN::gfx::ImageDesc       mImageDesc;
-    GN::DynaArray<UInt8>     mBuffer;
 
 public:
 
     TextureLoader( const GN::StrA & name ) : mFileName( name ) {}
 
-    bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & outbuf )
     {
-        GN::gfx::ImageReader ir;
+        using namespace GN;
+        using namespace GN::gfx;
 
-        mFile.attach( GN::core::openFile( mFileName, "rb" ) );
+        ImageReader ir;
 
-        if( !mFile ) return false;
+        AutoObjPtr<File> file( core::openFile( mFileName, "rb" ) );
 
-        if( !ir.reset( *mFile ) ) return false;
+        if( !file ) return false;
 
-        if( !ir.readHeader( mImageDesc ) ) return false;
+        if( !ir.reset( *file ) ) return false;
 
-        mBuffer.resize( mImageDesc.getTotalBytes() );
+        ImageDesc id;
+        if( !ir.readHeader( id ) ) return false;
 
-        if( !ir.readImage( mBuffer.cptr() ) ) return false;
+        size_t mdbytes  = id.numFaces * id.numLevels * sizeof(MipmapDesc);
+        size_t imgbytes = id.getTotalBytes();
+        size_t bytes    = sizeof(id) + mdbytes + imgbytes;
+
+        outbuf.resize( bytes );
+
+        memcpy( &outbuf[0], &id, sizeof(id) );
+        memcpy( &outbuf[sizeof(id)], id.mipmaps, mdbytes );
+
+        if( !ir.readImage( &outbuf[sizeof(id)+mdbytes] ) ) return false;
 
         return true;
     }
 
-    bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & outbuf, GN::DynaArray<UInt8> & inbuf )
     {
-        GN_ASSERT( GN::engine::GRT_SURFACE == res.desc.type );
+        outbuf.swap( inbuf );
+        return true;
+    }
+
+    bool failure() { GN_ERROR(sLogger)("texture loader failed"); return false; }
+
+    bool copy( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & inbuf )
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+
+        GN_ASSERT( engine::GRT_SURFACE == res.desc.type );
         GN_ASSERT( res.surface );
 
-        GN::SafeArrayAccessor<UInt8> saa( mBuffer.cptr(), mBuffer.size() );
+        SafeArrayAccessor<UInt8> saa( inbuf.cptr(), inbuf.size() );
 
-        for( size_t f = 0; f < mImageDesc.numFaces; ++f )
-        for( size_t l = 0; l < mImageDesc.numLevels; ++l )
+        ImageDesc * id = (ImageDesc*)saa.subrange( 0, sizeof(ImageDesc) );
+
+        size_t mdbytes  = id->numFaces * id->numLevels * sizeof(MipmapDesc);
+
+        id->mipmaps = (MipmapDesc *)saa.subrange( sizeof(ImageDesc), mdbytes );
+
+        size_t imgbytes = id->getTotalBytes();
+
+        GN_ASSERT( inbuf.size() == sizeof(ImageDesc) + mdbytes + imgbytes );
+
+        SafeArrayAccessor<UInt8> imgdata( saa.subrange( sizeof(ImageDesc)+mdbytes, imgbytes ), imgbytes );
+
+        for( size_t f = 0; f < id->numFaces; ++f )
+        for( size_t l = 0; l < id->numLevels; ++l )
         {
-            const GN::gfx::MipmapDesc & mmd = mImageDesc.getMipmap( f, l );
+            const GN::gfx::MipmapDesc & mmd = id->getMipmap( f, l );
             res.surface->download(
-                GN::gfx::calcSubSurfaceIndex( f, l, mImageDesc.numLevels ),
+                GN::gfx::calcSubSurfaceIndex( f, l, id->numLevels ),
                 0,
-                saa.subrange( mImageDesc.getMipmapOffset( f, l ), mmd.slicePitch ),
+                imgdata.subrange( id->getMipmapOffset( f, l ), mmd.slicePitch ),
                 mmd.rowPitch,
                 mmd.slicePitch );
         }
@@ -1047,7 +1078,7 @@ GN::engine::RenderEngine::createIdxBuf(
     scp.layout.basemap.width = count;
     scp.layout.basemap.height = 1;
     scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = 3 * sizeof(UInt16);
+    scp.layout.basemap.rowBytes = count * sizeof(UInt16);
     scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
     scp.layout.format.attribs[0].semantic.set( "INDEX" );
     scp.layout.format.attribs[0].offset = 0;
@@ -1097,7 +1128,7 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
     scp.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
 
     // create texture
-    GraphicsResource * tex = createSurface( "texture", scp );
+    GraphicsResource * tex = createSurface( filename, scp );
     if( 0 == tex ) return 0;
 
     // load texture

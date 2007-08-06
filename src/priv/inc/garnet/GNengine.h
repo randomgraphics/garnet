@@ -170,17 +170,13 @@ namespace GN { /** namespace for engine module */ namespace engine
     /// Application defined graphics resource loader.
     ///
     /// Details about concurrency:
-    //   - If a loader instance is assigned to multiple resources:
-    ///    - load() won't be called concurrently with load(), but might be called concurrently with other methods
-    ///    - copy() won't be called concurrently with copy(), but might be called concurrently with other methods
-    ///    - decompress() might be called concurrently with any methods, including decompress().
-    ///  - Else:
-    ///    - It won't be called by multiple threads simultaneously (no multi-thread issue).
+    ///  - load() won't be called concurrently with load(), but might be called concurrently with other methods
+    ///  - copy() won't be called concurrently with copy(), but might be called concurrently with other methods
+    ///  - decompress() might be called concurrently with any methods, including decompress().
     ///
-    /// To achieve best performance as well as code simplicity, one resource one loader instance whenever possible.
-    /// Or else:
+    /// To achieve best performance as well as code simplicity:
     ///    - Try not modify any varialbes other then outbuf and inbuf in loader methods.
-    ///    - Or using sync object to prevent racing.
+    ///    - Or using sync object to prevent content racing.
     ///
     struct GraphicsResourceLoader : public RefCounter
     {
