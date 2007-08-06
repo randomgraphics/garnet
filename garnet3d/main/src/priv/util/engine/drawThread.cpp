@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "drawThread.h"
+#include "resourceThread.h"
 #include "garnet/GNinput.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
@@ -205,11 +206,10 @@ class DrawThreadDumper
 
         switch( op )
         {
-            case GROP_LOAD       : opstr = "LOAD"; break;
-            case GROP_DECOMPRESS : opstr = "DECOMPRESS"; break;
-            case GROP_COPY       : opstr = "COPY"; break;
-            case GROP_DISPOSE    : opstr = "DISPOSE"; break;
-            default              : GN_UNEXPECTED(); opstr = "INVALID"; break;
+            case GROP_DOWNLOAD : opstr = "DOWNLOAD"; break;
+            case GROP_DISPOSE  : opstr = "DISPOSE"; break;
+            case GROP_DELETE   : opstr = "DELETE"; break;
+            default            : GN_UNEXPECTED(); opstr = "INVALID"; break;
         }
 
         return opstr;
@@ -432,7 +432,7 @@ static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
 //
 //
 // -----------------------------------------------------------------------------
-void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
+void RESFUNC_DOWNLOAD( RenderEngine & engine, ResourceCommand & cmd )
 {
     GN_GUARD;
 
@@ -448,17 +448,12 @@ void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
         if( !sCreateDeviceData( *engine.drawThread().getGraphicsSystem(), *cmd.resource ) )
         {
             cmd.noerr = false;
-
-            // free data loader
-            cmd.loader.clear();
             return;
         }
     }
 
-    GN_ASSERT( cmd.loader );
-    cmd.noerr = cmd.loader->copy( *cmd.resource, cmd.tmpbuf );
-
-    cmd.loader.clear();
+    GN_ASSERT( cmd.loadstore );
+    cmd.noerr = cmd.loadstore->download( *cmd.resource, cmd.tmpbuf );
 
     GN_UNGUARD;
 }
@@ -466,7 +461,7 @@ void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
 //
 //
 // -----------------------------------------------------------------------------
-void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
+void RESFUNC_DELETE( RenderEngine & engine, ResourceCommand & cmd )
 {
     GN_GUARD;
 
@@ -495,6 +490,25 @@ void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
         default:
             GN_UNEXPECTED();
     }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
+{
+    GN_GUARD;
+
+    GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
+
+    GN_ASSERT( cmd.resource->data );
+
+    GN_ASSERT( cmd.loadstore );
+    cmd.noerr = cmd.loadstore->upload( *cmd.resource, cmd.tmpbuf );
+
+    RESFUNC_DELETE( engine, cmd );
 
     GN_UNGUARD;
 }
@@ -855,12 +869,21 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 {
                     switch( prev->op )
                     {
-                        case GROP_COPY :
-                            RESFUNC_COPY( mEngine, *prev );
+                        case GROP_DOWNLOAD :
+                            RESFUNC_DOWNLOAD( mEngine, *prev );
+                            ResourceCommand::free( prev );
                             break;
 
                         case GROP_DISPOSE :
                             RESFUNC_DISPOSE( mEngine, *prev );
+                            // push to resource thread for compress
+                            prev->op = GROP_COMPRESS;
+                            mEngine.resourceThread().submitResourceCommand( prev );
+                            break;
+
+                        case GROP_DELETE :
+                            RESFUNC_DELETE( mEngine, *prev );
+                            ResourceCommand::free( prev );
                             break;
 
                         default:
@@ -879,9 +902,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 // update resource fence
                 mCompletedResourceFence = prev->submittedAtThisFence;
-
-                // the resource command is done. Free it.
-                ResourceCommand::free( prev );
 
                 if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
 

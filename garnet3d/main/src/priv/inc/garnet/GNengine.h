@@ -167,18 +167,17 @@ namespace GN { /** namespace for engine module */ namespace engine
     };
 
     ///
-    /// Application defined graphics resource loader.
+    /// Application defined resource content manipulator that are used to store/restore resource content
     ///
     /// Details about concurrency:
-    ///  - load() won't be called concurrently with load(), but might be called concurrently with other methods
-    ///  - copy() won't be called concurrently with copy(), but might be called concurrently with other methods
-    ///  - decompress() might be called concurrently with any methods, including decompress().
+    ///  - load()/store()/download()/upload() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - decompress()/compress() might be called concurrently with any methods.
     ///
     /// To achieve best performance as well as code simplicity:
     ///    - Try not modify any varialbes other then outbuf and inbuf in loader methods.
     ///    - Or using sync object to prevent content racing.
     ///
-    struct GraphicsResourceLoader : public RefCounter
+    struct GraphicsResourceLoadStore : public RefCounter
     {
         ///
         /// load from external/slow storage (disk, cdrom, network)
@@ -193,7 +192,36 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///
         /// copy data to graphics resource
         ///
-        virtual bool copy( GraphicsResource & res, DynaArray<UInt8> & inbuf ) = 0;
+        virtual bool download( GraphicsResource & res, DynaArray<UInt8> & inbuf ) = 0;
+
+        ///
+        /// store resource data to external/persistent storage
+        ///
+        virtual bool store( const GraphicsResourceDesc & desc, DynaArray<UInt8> & inbuf ) = 0;
+
+        ///
+        /// compress or process data to prepare for store.
+        ///
+        virtual bool compress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf ) = 0;
+
+        ///
+        /// copy data from graphics resource to out buffer
+        ///
+        virtual bool upload( GraphicsResource & res, DynaArray<UInt8> & outbuf ) = 0;
+    };
+
+    ///
+    /// resource update is a kind of special resource loader that are use for progressive/partial resource update.
+    ///
+    /// store(), compress() and upload() will never be called for updater.
+    ///
+    struct GraphicsResourceUpdater : public GraphicsResourceLoadStore
+    {
+        //@{
+        virtual bool store( const GraphicsResourceDesc &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
+        virtual bool compress( const GraphicsResourceDesc &, DynaArray<UInt8> &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
+        virtual bool upload( GraphicsResource &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
+        //@}
     };
 
     ///
@@ -300,7 +328,7 @@ namespace GN { /** namespace for engine module */ namespace engine
         /// - render engine class will ensure that memory footprint of all "REALIZED" graphics resources
         ///   is in user defined limit.
         ///
-        GraphicsResource * createResource( const GraphicsResourceDesc & desc );
+        GraphicsResource * createResource( const GraphicsResourceDesc & desc, GraphicsResourceLoadStore * loadstore );
 
         ///
         /// delete an exisiting resource.
@@ -324,21 +352,16 @@ namespace GN { /** namespace for engine module */ namespace engine
         bool checkResource( const GraphicsResource * ) const;
 
         ///
-        /// \param resource
-        ///     The resource that will be updated.
-        /// \param loader
-        ///     The resource loader
-        /// \param discard
-        ///     True, to discard old resource content.
-        ///     Set this value to true whenever possible to achieve optimal performance.
+        /// load resource content, discarding old content.
         ///
-        /// \note
-        ///     Render engine will hold a reference to the loader. So users can
-        ///     safely release their own reference to the loader.
+        void loadResource( GraphicsResource          * resource,
+                           GraphicsResourceLoadStore * loadstore );
+
         ///
-        void updateResource( GraphicsResource       * resource,
-                             GraphicsResourceLoader * loader,
-                             bool                     discard = true );
+        /// progressive/partial update to the resource
+        ///
+        void updateResource( GraphicsResource        * resource,
+                             GraphicsResourceUpdater * updater );
 
         ///
         /// Dispose resource to force it to be reloaded.

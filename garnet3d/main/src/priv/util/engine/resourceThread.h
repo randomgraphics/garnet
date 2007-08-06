@@ -52,15 +52,11 @@ namespace GN { namespace engine
 
         void waitForIdle();
 
-        inline void loadResource( GraphicsResourceItem * item, GraphicsResourceLoader * loader );
-
-        inline void reloadResource( GraphicsResourceItem * item );
-
-        //@}
-
-    private:
+        inline void loadResource( GraphicsResourceItem * item, GraphicsResourceLoadStore * loadstore );
 
         inline void submitResourceCommand( ResourceCommand * item );
+
+        //@}
 
         // ********************************
         // private variables
@@ -91,8 +87,8 @@ namespace GN { namespace engine
     private:
 
         // thread procedures
-        UInt32 load( void * );
-        UInt32 decompress( void * );
+        UInt32 loadstore( void * );
+        UInt32 process( void * );
     };
 }}
 
