@@ -127,7 +127,9 @@ struct DX10Info
 {
     DXGI_FORMAT              format;
     D3D10_RESOURCE_DIMENSION dim;
-    UInt32                   reserved[3];
+    UInt32                   miscFlag; // Used for D3D10_RESOURCE_MISC_FLAG
+    UInt32                   arraySize;
+    UInt32                   reserved;                   
 };
 
 // *****************************************************************************
