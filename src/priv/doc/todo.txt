@@ -3,10 +3,14 @@
 - p1
   - big-endian DDS loader
   - big-endina mesh binary loader
-  - render engine todo:
+  - render engine:
     - redesign resource loader to support partial resource update.
     - shared parameters
     - query graphics system caps
+  - graphics system:
+    - using special surface class to replace stream in quad kernel.
+    - consider delete stream source class.
+    - delete surface dimension enum
 
 - p2
   - render state block redesign: using packed bit fields.

@@ -865,31 +865,29 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                     sDumper.beginResource( *prev );
                 }
 
-                if( prev->noerr )
+                bool deleteTheCommand = false;
+                switch( prev->op )
                 {
-                    switch( prev->op )
-                    {
-                        case GROP_DOWNLOAD :
-                            RESFUNC_DOWNLOAD( mEngine, *prev );
-                            ResourceCommand::free( prev );
-                            break;
+                    case GROP_DOWNLOAD :
+                        if( prev->noerr ) RESFUNC_DOWNLOAD( mEngine, *prev );
+                        deleteTheCommand = true;
+                        break;
 
-                        case GROP_DISPOSE :
-                            RESFUNC_DISPOSE( mEngine, *prev );
-                            // push to resource thread for compress
-                            prev->op = GROP_COMPRESS;
-                            mEngine.resourceThread().submitResourceCommand( prev );
-                            break;
+                    case GROP_DISPOSE :
+                        if( prev->noerr ) RESFUNC_DISPOSE( mEngine, *prev );
+                        // push to resource thread for compress
+                        prev->op = GROP_COMPRESS;
+                        mEngine.resourceThread().submitResourceCommand( prev );
+                        break;
 
-                        case GROP_DELETE :
-                            RESFUNC_DELETE( mEngine, *prev );
-                            ResourceCommand::free( prev );
-                            break;
+                    case GROP_DELETE :
+                        RESFUNC_DELETE( mEngine, *prev );
+                        deleteTheCommand = true;
+                        break;
 
-                        default:
-                            GN_UNEXPECTED();
-                            break;
-                    }
+                    default:
+                        GN_UNEXPECTED();
+                        break;
                 }
 
                 if( DUMP_DRAW_THREAD_COMMANDS )
@@ -903,6 +901,10 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 // update resource fence
                 mCompletedResourceFence = prev->submittedAtThisFence;
 
+                // delete command instance, if required.
+                if( deleteTheCommand ) ResourceCommand::free( prev );
+
+                // set empty flag
                 if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
 
                 loopAgain = true;

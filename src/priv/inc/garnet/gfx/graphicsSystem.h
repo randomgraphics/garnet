@@ -288,6 +288,17 @@ namespace GN { namespace gfx
         SurfaceAttributeSemantic semantic;       ///< attribute semantic
         UInt32                   offset;         ///< -1, means any offset is ok.
         std::set<ClrFmt>         allowedFormats; ///< empty, means any format is ok.
+
+        ///
+        /// set to fixed format
+        ///
+        void set( SurfaceAttributeSemantic s, UInt32 o, ClrFmt f )
+        {
+            semantic = s;
+            offset   = o;
+            allowedFormats.clear();
+            allowedFormats.insert( f );
+        }
     };
 
     ///
@@ -764,8 +775,8 @@ namespace GN { namespace gfx
         StrA                  name;       ///< port name
         size_t                index;      ///< port index
         SurfaceLayoutTemplate layout;     ///< surface layout that the port accepts.
-        unsigned int          input  : 1; ///< non zero for input port
-        unsigned int          output : 1; ///< non zero for output port
+        unsigned int          input  : 1; ///< true, means kernel will read from this port.
+        unsigned int          output : 1; ///< true, means kernel will write to this port.
         //@}
     };
 

@@ -79,7 +79,7 @@ bool GN::scene::BitmapFont::FontTextureLoader::decompress( const GraphicsResourc
 //
 // copy to texture
 // -----------------------------------------------------------------------------
-bool GN::scene::BitmapFont::FontTextureLoader::copy( GraphicsResource & res, DynaArray<UInt8> & inbuf )
+bool GN::scene::BitmapFont::FontTextureLoader::download( GraphicsResource & res, DynaArray<UInt8> & inbuf )
 {
     GN_ASSERT( GRT_SURFACE == res.desc.type );
 
@@ -441,7 +441,7 @@ GN::scene::BitmapFont::createSlot( wchar_t ch )
 
     // load texture data
     AutoRef<FontTextureLoader> loader( new FontTextureLoader( fbm, slot, *mTextures[slot.texidx] ) );
-    mRenderEngine.updateResource( mTextures[slot.texidx], loader, false );
+    mRenderEngine.updateResource( mTextures[slot.texidx], loader );
 
     // success
     return &slot;

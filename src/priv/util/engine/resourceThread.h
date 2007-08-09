@@ -81,6 +81,8 @@ namespace GN { namespace engine
         SubThread mLoader;       // IO tread
         SubThread mDecompressor; // decompress thread
 
+        SpinLoop  mMutex;
+
         // ********************************
         // private functions
         // ********************************

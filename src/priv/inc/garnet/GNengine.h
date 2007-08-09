@@ -400,7 +400,7 @@ namespace GN { /** namespace for engine module */ namespace engine
 
         GraphicsResource * getKernel( const StrA & kernel );
 
-        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter & );
+        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter &, GraphicsResourceLoadStore * = NULL );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const NamedSurfaceResourceViews & );
@@ -412,12 +412,16 @@ namespace GN { /** namespace for engine module */ namespace engine
         GraphicsResource * createVtxBuf(
             const StrA                      & name,
             const gfx::SurfaceElementFormat & format,
-            size_t                            count );
+            size_t                            count,
+            GraphicsResourceLoadStore      * loadstore = NULL);
 
         ///
         /// create index buffer
         ///
-        GraphicsResource * createIdxBuf( const StrA & name, size_t count );
+        GraphicsResource * createIdxBuf(
+            const StrA                & name,
+            size_t                      count,
+            GraphicsResourceLoadStore * loadstore = NULL );
 
         ///
         /// create texture from image file

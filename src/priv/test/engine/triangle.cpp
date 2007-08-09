@@ -13,7 +13,28 @@ struct Vertex
     float x, y, z;
 };
 
-class VtxBufLoader : public GraphicsResourceLoader
+class StaticResouceLoadStore : public GN::engine::GraphicsResourceLoadStore
+{
+public:
+
+    virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    {
+        return true;
+    }
+};
+
+
+class VtxBufLoader : public StaticResouceLoadStore
 {
 public:
 
@@ -27,7 +48,7 @@ public:
         return true;
     }
 
-    bool copy( GraphicsResource & res, DynaArray<UInt8> & )
+    bool download( GraphicsResource & res, DynaArray<UInt8> & )
     {
         static const Vertex vertices[] =
         {
@@ -40,7 +61,7 @@ public:
     }
 };
 
-class IdxBufLoader : public GraphicsResourceLoader
+class IdxBufLoader : public StaticResouceLoadStore
 {
 public:
 
@@ -54,7 +75,7 @@ public:
         return true;
     }
 
-    bool copy( GraphicsResource & res, DynaArray<UInt8> & )
+    bool download( GraphicsResource & res, DynaArray<UInt8> & )
     {
         static const UInt16 indices[] = { 0, 1, 2 };
         res.surface->download( 0, 0, indices, sizeof(indices), sizeof(indices) );
@@ -118,16 +139,14 @@ bool TestTriangle::init()
     vtxfmt.attribs[0].format = FMT_FLOAT3;
     vtxfmt.count = 1;
     vtxfmt.stride = sizeof(Vertex);
-    GraphicsResource * vb = re.createVtxBuf( "vb", vtxfmt, 3 );
-    if( 0 == vb ) return false;
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
-    re.updateResource( vb, vbloader );
+    GraphicsResource * vb = re.createVtxBuf( "vb", vtxfmt, 3, vbloader );
+    if( 0 == vb ) return false;
 
     // create index buffer
-    GraphicsResource * ib = re.createIdxBuf( "idxbuf", 3 );
-    if( 0 == ib ) return false;
     AutoRef<IdxBufLoader> ibloader( new IdxBufLoader );
-    re.updateResource( ib, ibloader );
+    GraphicsResource * ib = re.createIdxBuf( "idxbuf", 3, ibloader );
+    if( 0 == ib ) return false;
 
     // create texture
     GraphicsResource * tex = re.createTextureFromImageFile( "media::/texture/earth.jpg" );
@@ -157,9 +176,9 @@ void TestTriangle::render()
     RenderEngine & re = renderEngine();
 
     // dispose all
-    static int k = 0;
-    if( 100 < (k % 200) ) re.disposeAllResources();
-    ++k;
+    //static int k = 0;
+    //if( 100 < (k % 200) ) re.disposeAllResources();
+    //++k;
 
     re.render( context );
 

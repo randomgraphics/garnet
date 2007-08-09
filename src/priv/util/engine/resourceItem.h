@@ -64,11 +64,6 @@ namespace GN { namespace engine
         AutoRef<GraphicsResourceLoadStore> loadstore;
 
         ///
-        /// progressive/partial updater
-        ///
-        AutoRef<GraphicsResourceUpdater>   updater;
-
-        ///
         /// the fence of the lastest update command.
         ///
         FenceId lastSubmissionFence;

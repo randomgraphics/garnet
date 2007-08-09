@@ -311,7 +311,7 @@ namespace GN { namespace scene
             UInt16 x1, y1, x2, y2;
         };
 
-        class FontTextureLoader : public engine::GraphicsResourceLoader
+        class FontTextureLoader : public engine::GraphicsResourceUpdater
         {
             DynaArray<UInt8>   mFontImage;
             size_t             mFontWidth, mFontHeight;
@@ -324,7 +324,7 @@ namespace GN { namespace scene
 
             virtual bool load( const engine::GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf );
             virtual bool decompress( const engine::GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf );
-            virtual bool copy( engine::GraphicsResource & res, DynaArray<UInt8> & inbuf );
+            virtual bool download( engine::GraphicsResource & res, DynaArray<UInt8> & inbuf );
         };
 
         // private constants
