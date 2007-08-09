@@ -172,7 +172,7 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     ResourceCommand * item  )
 {
     GN_ASSERT( item );
-    GN_ASSERT( GROP_DELETE == item->op || GROP_DOWNLOAD == item->op );
+    GN_ASSERT( GROP_DISPOSE == item->op || GROP_DELETE == item->op || GROP_DOWNLOAD == item->op );
     mResourceMutex.lock();
     mResourceCommands.append( item );
     mAction->signal( RESOURCE_ACTION );

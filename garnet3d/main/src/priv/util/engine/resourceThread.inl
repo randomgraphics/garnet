@@ -8,10 +8,12 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
     switch( cmd->op )
     {
         case GROP_LOAD:
+        case GROP_STORE:
             mLoader.commands.submit( cmd );
             break;
 
         case GROP_DECOMPRESS:
+        case GROP_COMPRESS:
             mDecompressor.commands.submit( cmd );
             break;
 
@@ -28,6 +30,8 @@ inline void GN::engine::RenderEngine::ResourceThread::loadResource(
     GraphicsResourceItem      * item,
     GraphicsResourceLoadStore * loadstore )
 {
+    ScopeMutex<SpinLoop> lock( mMutex );
+
     // check parameters
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     GN_ASSERT( GRS_REALIZED == item->state );
@@ -55,5 +59,6 @@ inline void GN::engine::RenderEngine::ResourceThread::loadResource(
     GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
     GN_ASSERT( item->lastCompletedFence < item->lastSubmissionFence );
 
+    // submit command item
     submitResourceCommand( cmd );
 }

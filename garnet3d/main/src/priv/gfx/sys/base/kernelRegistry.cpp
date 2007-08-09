@@ -79,8 +79,8 @@ struct KernelRegistry
         CLEAR_SCREEN.addNewParameter( "COLOR", KERNEL_PARAMETER_TYPE_FLOAT, 4 );
         CLEAR_SCREEN.addNewParameter( "DEPTH", KERNEL_PARAMETER_TYPE_FLOAT, 1 );
         CLEAR_SCREEN.addNewParameter( "STENCIL", KERNEL_PARAMETER_TYPE_INT, 1 );
-        CLEAR_SCREEN.addNewPort( "TARGET0", rendertarget, true, true );
-        CLEAR_SCREEN.addNewPort( "DEPTH", depth, true, true );
+        CLEAR_SCREEN.addNewPort( "TARGET0", rendertarget, false, true );
+        CLEAR_SCREEN.addNewPort( "DEPTH", depth, false, true );
         registerKernelReflection( CLEAR_SCREEN );
 
         // quad kernel
