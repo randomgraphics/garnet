@@ -26,8 +26,10 @@ namespace GN { namespace gfx
 
         static DummyKernelParameter & sGetInstance() { static DummyKernelParameter sInstance; return sInstance; }
 
-        virtual void set( size_t, size_t, const void * ) {}
-        virtual void unset() {}
+        virtual size_t size() const { return 0; }
+        virtual void   get( size_t, size_t, void * ) const {}
+        virtual bool   set( size_t, size_t, const void * ) { return true; }
+        virtual void   unset() {}
 
         //@}
     };
@@ -37,14 +39,96 @@ namespace GN { namespace gfx
     ///
     class BaseKernelParameter : public KernelParameter
     {
+        const KernelParameterReflection & mRefl;
+        DynaArray<UInt8>                  mData;
+
+    protected:
+
+        //@{
+        template<typename T>
+        const T & getRef() const { return *(const T*)mData.cptr(); }
+
+        template<typename T>
+        T & getRef() { return *(T*)mData.cptr(); }
+
+        template<typename T>
+        const T * getPtr() const { return (const T*)mData.cptr(); }
+
+        template<typename T>
+        T * getPtr() { return (T*)mData.cptr(); }
+        //@}
+
+        void error( const char * msg ) const
+        {
+            GN_ERROR(getLogger("GN.gfx2.BaseKernelParameter"))(
+                "kernel(%s), parameter(%s): %s",
+                mRefl.kernel.cptr(),
+                mRefl.name.cptr(),
+                msg );
+        }
+
     public:
 
         //@{
 
-        BaseKernelParameter() {}
+        BaseKernelParameter( const KernelParameterReflection & refl )
+            : mRefl(refl), mData( refl.calcSizeInBytes() )
+        {
+        }
 
-        virtual void set( size_t, size_t, const void * ) { GN_UNEXPECTED(); }
-        virtual void unset() { GN_UNEXPECTED(); }
+        virtual size_t size() const
+        {
+            return mData.size();
+        }
+
+        virtual void get( size_t offset, size_t bytes, void * values ) const
+        {
+            if( offset >= mData.size() || (offset+bytes) > mData.size() )
+            {
+                error( "out of range." );
+                return;
+            }
+            if( NULL == values )
+            {
+                error( "NULL values." );
+                return;
+            }
+            memcpy( values, &mData[offset], bytes );
+        }
+
+        virtual bool set( size_t offset, size_t bytes, const void * values )
+        {
+            if( NULL == values )
+            {
+                error( "NULL values." );
+                return false;
+            }
+            if( 0 == mRefl.count )
+            {
+                size_t newsize = offset + bytes;
+                if( mData.size() < newsize ) mData.resize( newsize );
+            }
+            else
+            {
+                if( offset >= mData.size() || (offset+bytes) > mData.size() )
+                {
+                    error( "out of range." );
+                    return false;
+                }
+            }
+
+            memcpy( &mData[offset], values, bytes );
+
+            return true;
+        }
+
+        virtual void unset()
+        {
+            if( 0 == mRefl.count )
+            {
+                mData.clear();
+            }
+        }
 
         //@}
     };
@@ -57,13 +141,13 @@ namespace GN { namespace gfx
     {
         //@{
 
-        T value;
+        operator const T & () const { return getRef<T>(); }
 
-        operator const T & () const { return value; }
-
-        TypedKernelParameter( const T & initial ) : value(initial) {}
-
-        virtual void unset() {}
+        TypedKernelParameter( const KernelParameterReflection & refl, const T & initial )
+            : BaseKernelParameter( refl )
+        {
+            getRef<T>() = initial;
+        }
 
         //@}
     };
@@ -75,18 +159,8 @@ namespace GN { namespace gfx
     {
         //@{
 
-        BoolKernelParameter( bool initial ) : TypedKernelParameter( initial ) {}
-
-        void set( size_t offset, size_t bytes, const void * values )
-        {
-            if( 0 != offset || 1 != bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.BoolKernelParameter"))( "invalid parameter value." );
-                return;
-            }
-
-            value = *(const bool*)values;
-        }
+        BoolKernelParameter( const KernelParameterReflection & refl, bool initial )
+            : TypedKernelParameter( refl, initial ) {}
 
         //@}
     };
@@ -99,20 +173,8 @@ namespace GN { namespace gfx
     {
         //@{
 
-        IntKernelParameter( const T & initial ) : TypedKernelParameter( initial ) {}
-
-        void set( size_t offset, size_t bytes, const void * values )
-        {
-            GN_CASSERT( 4 == sizeof(T) );
-
-            if( 0 != offset || 4 != bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.IntKernelParameter"))( "invalid parameter value." );
-                return;
-            }
-
-            value = *(const T*)values;
-        }
+        IntKernelParameter( const KernelParameterReflection & refl, const T & initial )
+            : TypedKernelParameter( refl, initial ) {}
 
         //@}
     };
@@ -124,18 +186,8 @@ namespace GN { namespace gfx
     {
         //@{
 
-        FloatKernelParameter( float initial ) : TypedKernelParameter( initial ) {}
-
-        void set( size_t offset, size_t bytes, const float * values )
-        {
-            if( 0 != offset || 4 != bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.FloatKernelParameter"))( "invalid parameter value." );
-                return;
-            }
-
-            value = *(const float*)values;
-        }
+        FloatKernelParameter( const KernelParameterReflection & refl, float initial )
+            : TypedKernelParameter( refl, initial ) {}
 
         //@}
     };

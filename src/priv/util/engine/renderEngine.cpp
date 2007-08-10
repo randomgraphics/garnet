@@ -127,11 +127,61 @@ public:
 ///
 class ParameterSetLoadStore : public DummyLoadStore
 {
+    GN::DynaArray< GN::DynaArray<UInt8> > mData;
+
 public:
+
+    ParameterSetLoadStore( const GN::StrA & kernel )
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+
+        const KernelReflection & refl = getKernelReflection( kernel );
+
+        size_t n = refl.parameters.size();
+
+        mData.resize( n );
+
+        for( size_t i = 0; i < n; ++i )
+        {
+            const KernelParameterReflection & p = refl.parameters[i];
+            mData[i].resize( p.calcSizeInBytes() );
+        }
+    }
+
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        GN_UNIMPL_WARNING();
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        GN_UNIMPL_WARNING();
+        return true;
+    }
+
+    virtual bool download( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    {
+        GN_UNIMPL_WARNING();
+        return true;
+    }
+
+    virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
+    {
+        GN_UNIMPL_WARNING();
+        return true;
+    }
+
+    virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
+    {
+        GN_UNIMPL_WARNING();
+        return true;
+    }
 
     virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
     {
-        GN_TODO( "read data from kernel parameter set" );
+        GN_UNIMPL_WARNING();
         return true;
     }
 };
@@ -1047,7 +1097,7 @@ GN::engine::RenderEngine::createParameterSet( const StrA & resname, const StrA &
     grd.type            = GRT_PARAMETER_SET;
     grd.paramset.kernel = kernel;
 
-    AutoRef<ParameterSetLoadStore> ls( new ParameterSetLoadStore );
+    AutoRef<ParameterSetLoadStore> ls( new ParameterSetLoadStore(kernel) );
 
     return createResource( grd, ls );
 }

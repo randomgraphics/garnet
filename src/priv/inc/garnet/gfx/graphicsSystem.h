@@ -444,20 +444,22 @@ namespace GN { namespace gfx
     struct KernelParameter : public NoCopy
     {
         //@{
-        virtual void set( size_t offset, size_t bytes, const void * data ) = 0;
+        virtual size_t size() const = 0;
+        virtual void get( size_t offset, size_t bytes, void * data ) const = 0;
+        virtual bool set( size_t offset, size_t bytes, const void * data ) = 0;
         virtual void unset() = 0;
 
         template<typename T>
-        inline  void set( const T & value ) { set( 0, sizeof(T), &value ); }
+        inline  bool set( const T & value ) { return set( 0, sizeof(T), &value ); }
 
         template<>
-        inline  void set<const char*>( const char * const & value ) { set( 0, strLen(value), value ); }
+        inline  bool set<const char*>( const char * const & value ) { return set( 0, strLen(value), value ); }
 
         template<>
-        inline  void set<char*>( char * const & value ) { set( 0, strLen(value), value ); }
+        inline  bool set<char*>( char * const & value ) { return set( 0, strLen(value), value ); }
 
         template<>
-        inline  void set<StrA>( const StrA & value ) { set( 0, value.size(), value.cptr() ); }
+        inline  bool set<StrA>( const StrA & value ) { return set( 0, value.size(), value.cptr() ); }
         //@}
     };
 
@@ -763,6 +765,25 @@ namespace GN { namespace gfx
         KernelParameterType type;   ///< value type
         size_t              count;  ///< array count. 0 means no predefine size. Normally for string parameter.
         //@}
+
+        ///
+        /// calculate parameter sizes in bytes
+        ///
+        size_t calcSizeInBytes() const
+        {
+            size_t stride;
+
+            switch( type )
+            {
+                case KERNEL_PARAMETER_TYPE_BOOL   : stride = 1; break;
+                case KERNEL_PARAMETER_TYPE_INT    :
+                case KERNEL_PARAMETER_TYPE_FLOAT  : stride = 4; break;
+                case KERNEL_PARAMETER_TYPE_STRING : stride = 1; break;
+                default : GN_UNEXPECTED(); return 0;
+            }
+
+            return count * stride;
+        }
     };
 
     ///

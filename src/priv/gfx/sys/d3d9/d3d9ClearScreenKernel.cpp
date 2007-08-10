@@ -9,43 +9,25 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9ClearScreenKernel");
 
 namespace GN { namespace gfx
 {
-    struct D3D9ColorParameter : public TypedKernelParameter<D3DCOLOR>
-    {
-        D3D9ColorParameter( D3DCOLOR initial ) : TypedKernelParameter<D3DCOLOR>( initial ) {}
-
-        void set( size_t offset, size_t bytes, const void * values )
-        {
-            if( 0 != offset || 16 != bytes || NULL == values )
-            {
-                GN_ERROR(sLogger)( "invalid parameter value." );
-                return;
-            }
-
-            const float * c = (const float*)values;
-
-            value = D3DCOLOR_COLORVALUE( c[0], c[1], c[2], c[3] );
-        }
-    };
-
     struct D3D9ClearScreenParameterSet : public KernelParameterSet
     {
-        BoolKernelParameter       cc;
-        BoolKernelParameter       cd;
-        BoolKernelParameter       cs;
-        D3D9ColorParameter        color;
-        FloatKernelParameter      depth;
-        IntKernelParameter<int>   stencil;
+        BoolKernelParameter            cc;
+        BoolKernelParameter            cd;
+        BoolKernelParameter            cs;
+        TypedKernelParameter<D3DCOLOR> color;
+        FloatKernelParameter           depth;
+        IntKernelParameter<int>        stencil;
 
         //@{
 
         D3D9ClearScreenParameterSet( Kernel & k )
             : KernelParameterSet( k )
-            , cc( true )
-            , cd( true )
-            , cs( true )
-            , color( D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
-            , depth( 1.0f )
-            , stencil( 0 )
+            , cc( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["CLEAR_COLOR"], true )
+            , cd( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["CLEAR_DEPTH"], true )
+            , cs( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["CLEAR_STENCIL"], true )
+            , color( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["COLOR"], D3DCOLOR_RGBA( 0, 0, 0, 255 ) )
+            , depth( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["DEPTH"], 1.0f )
+            , stencil( getKernelReflection(D3D9ClearScreenKernel::KERNEL_NAME()).parameters["STENCIL"], 0 )
         {
         }
 

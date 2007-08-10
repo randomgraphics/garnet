@@ -23,22 +23,16 @@ namespace GN { namespace gfx
     public:
 
         TransparentParameter( bool initial, D3D9RenderStateBlock & rsb )
-            : BoolKernelParameter( initial )
+            : BoolKernelParameter( getKernelReflection(D3D9QuadKernel::KERNEL_NAME()).parameters["TRANSPARENT"], initial )
             , mRsb( rsb )
         {
         }
 
-        void set( size_t offset, size_t bytes, const void * values )
+        bool set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 1 != bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.TransparentParameter"))( "invalid parameter value." );
-                return;
-            }
+            if( !BaseKernelParameter::set( offset, bytes, values ) ) return false;
 
-            value = *(const bool*)values;
-
-            if( value )
+            if( getRef<bool>() )
             {
                 sEnableBlend( mRsb );
             }
@@ -46,6 +40,8 @@ namespace GN { namespace gfx
             {
                 mRsb.setRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
             }
+
+            return true;
         }
     };
 
@@ -54,8 +50,8 @@ namespace GN { namespace gfx
     ///
     class D3D9QuadKernelParameterSet : public KernelParameterSet
     {
-        BoolKernelParameter   mTransparent;
         D3D9RenderStateBlock  mRsb;
+        TransparentParameter  mTransparent;
 
         void setDefaultRsb()
         {
@@ -76,8 +72,8 @@ namespace GN { namespace gfx
 
         D3D9QuadKernelParameterSet( D3D9Kernel & k )
             : KernelParameterSet( k )
-            , mTransparent( true )
             , mRsb( k.d3d9gs() )
+            , mTransparent( true, mRsb )
         {
             setDefaultRsb();
         }
