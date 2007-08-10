@@ -38,7 +38,8 @@ namespace GN { namespace gfx
     public:
 
         D3D9FxParameter( D3D9GraphicsSystem & gs )
-            : D3D9UnstableResource( gs )
+            : BaseKernelParameter( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["FX"] )
+            , D3D9UnstableResource( gs )
             , mDev( gs.d3ddev() )
         {
         }
@@ -56,18 +57,20 @@ namespace GN { namespace gfx
 
         ID3DXEffect * getD3DXEffect() const { return mFx; }
 
-        void set( size_t offset, size_t bytes, const void * values )
+        bool set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 0 == bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.D3D9FxParameter"))( "invalid parameter value." );
-                return;
-            }
+            if( !BaseKernelParameter::set( offset, bytes, values ) ) return false;
 
             mFx.attach( d3d9::compileEffect( mDev, (const char*)values ) );
+
+            return !mFx.empty();
         }
 
-        void unset() { mFx.clear(); }
+        void unset()
+        {
+            BaseKernelParameter::unset();
+            mFx.clear();
+        }
     };
 
     ///
@@ -100,12 +103,15 @@ namespace GN { namespace gfx
             //@}
         };
 
-        Vector4f     mConstants[256];
         ConstUpdate  mUpdate;
 
     public:
 
-        D3D9ConstParameter() { mUpdate.clear(); }
+        D3D9ConstParameter( const char * name )
+            : BaseKernelParameter( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters[name] )
+        {
+            mUpdate.clear();
+        }
 
         void setVscf( IDirect3DDevice9 * dev ) const
         {
@@ -113,7 +119,7 @@ namespace GN { namespace gfx
             {
                 dev->SetVertexShaderConstantF(
                     mUpdate.firstRegister,
-                    mConstants[mUpdate.firstRegister],
+                    getPtr<const Vector4f>()[mUpdate.firstRegister],
                     mUpdate.registerCount );
             }
         }
@@ -124,31 +130,31 @@ namespace GN { namespace gfx
             {
                 dev->SetPixelShaderConstantF(
                     mUpdate.firstRegister,
-                    mConstants[mUpdate.firstRegister],
+                    getPtr<const Vector4f>()[mUpdate.firstRegister],
                     mUpdate.registerCount );
             }
         }
 
-        void set( size_t offset, size_t bytes, const void * values )
+        bool set( size_t offset, size_t bytes, const void * values )
         {
-            if( offset >= 256*16 || (offset+bytes) > 256*16 || NULL == values )
-            {
-                GN_ERROR(sLogger)( "invalid parameter value." );
-                return;
-            }
+            if( !BaseKernelParameter::set( offset, bytes, values ) ) return false;
 
             UINT firstRegister = (UINT)offset / 16;
             UINT numRegisters  = (UINT)bytes / 16;
 
+            GN_ASSERT( firstRegister < 256 );
+            GN_ASSERT( ( firstRegister + numRegisters ) <= 256 );
+
             mUpdate.merge( firstRegister, numRegisters );
-            memcpy( &mConstants[firstRegister], values, numRegisters * 16 );
+
+            return true;
         }
     };
 
     ///
     /// primitive type parameter
     ///
-    class D3D9PrimTypeParameter : public TypedKernelParameter<D3DPRIMITIVETYPE>
+    class D3D9PrimTypeParameter : public TypedKernelParameter<PrimitiveType>
     {
         static inline D3DPRIMITIVETYPE pt2d3d( int pt )
         {
@@ -171,23 +177,25 @@ namespace GN { namespace gfx
             }
         }
 
+        D3DPRIMITIVETYPE mD3DPrimType;
+
     public:
 
-        D3D9PrimTypeParameter( D3DPRIMITIVETYPE initial )
-            : TypedKernelParameter<D3DPRIMITIVETYPE>( initial )
+        D3D9PrimTypeParameter( PrimitiveType initial )
+            : TypedKernelParameter<PrimitiveType>( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["PRIM_TYPE"], initial )
         {
         }
 
-        void set( size_t offset, size_t bytes, const void * values )
+        bool set( size_t offset, size_t bytes, const void * values )
         {
-            if( 0 != offset || 4 != bytes || NULL == values )
-            {
-                GN_ERROR(getLogger("GN.gfx2.D3D9PrimTypeParameter"))( "invalid parameter value." );
-                return;
-            }
+            if( !BaseKernelParameter::set( offset, bytes, values ) ) return false;
 
-            value = pt2d3d( *(const int*)values );
+            mD3DPrimType = pt2d3d( getRef<int>() );
+
+            return D3DPT_FORCE_DWORD != mD3DPrimType;
         }
+
+        const D3DPRIMITIVETYPE & d3dpt() const { return mD3DPrimType; }
     };
 
     ///
@@ -214,11 +222,13 @@ namespace GN { namespace gfx
             : KernelParameterSet( k )
             , mDev( k.d3d9gs().d3ddev() )
             , mFx( k.d3d9gs() )
-            , mPrimType( D3DPT_TRIANGLELIST )
-            , mPrimCount( 0 )
-            , mBaseVertex( 0 )
-            , mBaseIndex( 0 )
-            , mVertexCount( 0 )
+            , mVscf( "VSCF" )
+            , mPscf( "PSCF" )
+            , mPrimType( TRIANGLE_LIST )
+            , mPrimCount( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["PRIM_COUNT"], 0 )
+            , mBaseVertex( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["BASE_VERTEX"], 0 )
+            , mBaseIndex( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["BASE_INDEX"], 0 )
+            , mVertexCount( getKernelReflection(D3D9HlslKernel::KERNEL_NAME()).parameters["VERTEX_COUNT"], 0 )
         {
         }
         ~D3D9HlslKernelParameterSet() {}
@@ -251,7 +261,7 @@ namespace GN { namespace gfx
                     mPscf.setPscf( mDev );
 
                     GN_DX9_CHECK( mDev->DrawIndexedPrimitive(
-                        mPrimType,
+                        mPrimType.d3dpt(),
                         mBaseVertex,
                         0, // min index
                         mVertexCount,
@@ -292,7 +302,7 @@ namespace GN { namespace gfx
                     mPscf.setPscf( mDev );
 
                     GN_DX9_CHECK( mDev->DrawPrimitive(
-                        mPrimType,
+                        mPrimType.d3dpt(),
                         mBaseVertex,
                         mPrimCount ) );
 
