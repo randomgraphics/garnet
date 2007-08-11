@@ -188,7 +188,7 @@ namespace GN { namespace engine
             RESOURCE_ACTION,
             NUM_ACTIONS,
 
-            DRAW_BUFFER_COUNT = 2, // must be 2^N, to avoid % operation.
+            DRAW_BUFFER_COUNT = 16, // must be 2^N, to avoid % operation.
         };
 
         RenderEngine & mEngine;

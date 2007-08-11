@@ -97,12 +97,30 @@ void GN::gfx::D3D9IdxBuf::upload(
     size_t              destRowBytes,
     size_t              destSliceBytes )
 {
-    GN_UNUSED_PARAM( subsurface );
-    GN_UNUSED_PARAM( area );
-    GN_UNUSED_PARAM( destination );
     GN_UNUSED_PARAM( destRowBytes );
     GN_UNUSED_PARAM( destSliceBytes );
-    GN_UNIMPL();
+
+    // check parameter
+    if( 0 != subsurface )
+    {
+        GN_ERROR(sLogger)( "Vertex buffer has no subsurfaces" );
+        return;
+    }
+
+    Box<size_t> clippedArea;
+    if( !adjustArea( clippedArea, area ) ) return;
+
+    size_t stride = getDesc().layout.format.stride;
+
+    GN_ASSERT( 2 == stride || 4 == stride );
+
+    void * source;
+
+    GN_DX9_CHECK_R( mSurface->Lock( (UINT)(clippedArea.x * stride), (UINT)(clippedArea.w * stride), &source, D3DLOCK_READONLY ) );
+
+    memcpy( destination, source, clippedArea.w * stride );
+
+    GN_DX9_CHECK( mSurface->Unlock() );
 }
 
 //

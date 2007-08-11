@@ -99,11 +99,57 @@ public:
 ///
 class SurfaceLoadStore : public DummyLoadStore
 {
+    GN::DynaArray<UInt8> mBaseMap;
+
 public:
 
-    virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    virtual bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_TODO( "read data from kernel surface" );
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::engine;
+
+        GN_ASSERT( GRT_SURFACE == res.desc.type );
+
+        if( mBaseMap.empty() ) return true;
+
+        Surface * s = res.surface;
+
+        const SurfaceDesc & sd = s->getDesc();
+
+        const SubSurfaceLayout & baselayout = sd.layout.basemap;
+
+        GN_ASSERT( mBaseMap.size() == baselayout.sliceBytes * baselayout.depth );
+
+        s->download( 0, 0, mBaseMap.cptr(), baselayout.rowBytes, baselayout.sliceBytes );
+
+        mBaseMap.clear();
+
+        return true;
+    }
+
+    virtual bool upload( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::engine;
+
+        GN_ASSERT( GRT_SURFACE == res.desc.type );
+
+        GN_ASSERT( mBaseMap.empty() );
+
+        Surface * s = res.surface;
+
+        const SurfaceDesc & sd = s->getDesc();
+
+        const SubSurfaceLayout & baselayout = sd.layout.basemap;
+
+        mBaseMap.resize( baselayout.sliceBytes * baselayout.depth );
+
+        s->upload( 0, 0, mBaseMap.cptr(), baselayout.rowBytes, baselayout.sliceBytes );
+
+        GN_TODO( "store sub surface data" );
+
         return true;
     }
 };
@@ -128,28 +174,12 @@ public:
 class ParameterSetLoadStore : public DummyLoadStore
 {
     GN::DynaArray< GN::DynaArray<UInt8> > mData;
-    GN::SpinLoop                          mMutex;
 
 public:
 
     ParameterSetLoadStore( const GN::StrA & kernel )
+        : mData( GN::gfx::getKernelReflection( kernel ).parameters.size() )
     {
-        using namespace GN;
-        using namespace GN::gfx;
-
-        const KernelReflection & refl = getKernelReflection( kernel );
-
-        mData.resize( refl.parameters.size() );
-    }
-
-    virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-
-    bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
-    {
-        return true;
     }
 
     virtual bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
@@ -157,8 +187,6 @@ public:
         using namespace GN;
         using namespace GN::gfx;
         using namespace GN::engine;
-
-        ScopeMutex<SpinLoop> lock( mMutex );
 
         GN_ASSERT( GRT_PARAMETER_SET == res.desc.type );
 
@@ -179,23 +207,11 @@ public:
         return true;
     }
 
-    virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-
-    virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-
     virtual bool upload( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
         using namespace GN;
         using namespace GN::gfx;
         using namespace GN::engine;
-
-        ScopeMutex<SpinLoop> lock( mMutex );
 
         GN_ASSERT( GRT_PARAMETER_SET == res.desc.type );
 

@@ -8,8 +8,85 @@ using namespace GN::gfx;
 using namespace GN::engine;
 using namespace GN::scene;
 
+///
+/// Simple FPS counter
+///
+class FpsCounter
+{
+    Clock     mClock;
+    float     mFpsValue;
+    StrW      mFormatString;
+    StrW      mFpsString;
+    size_t    mFrameCounter;
+    double    mLastFrameTime;
+    double    mCurrentTime;
+    bool      mBeforeFirstUpdate;
+
+public:
+
+    ///
+    /// Constructor
+    ///
+    FpsCounter( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { reset(); }
+
+    ///
+    /// Get time
+    ///
+    double getCurrentTime() const { return mCurrentTime; }
+
+    ///
+    /// reset the counter
+    ///
+    void reset()
+    {
+        mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
+        mFpsString.format( mFormatString.cptr(), 0 );
+        mFrameCounter = 0;
+        mCurrentTime = mClock.getTimeD();
+        mLastFrameTime = mCurrentTime - 1.0f/60.0f;
+        mBeforeFirstUpdate = true;
+    }
+
+    ///
+    /// Update the counter
+    ///
+    void onFrame()
+    {
+        mCurrentTime = mClock.getTimeD();
+        ++mFrameCounter;
+        double duration = mCurrentTime - mLastFrameTime;
+        if( duration >= 1.0f )
+        {
+            mBeforeFirstUpdate = false;
+            mFpsValue = (float)( mFrameCounter / duration );
+            mFpsString.format( mFormatString.cptr(), mFpsValue );
+            mLastFrameTime = mCurrentTime;
+            mFrameCounter = 0;
+            static Logger * sLogger = getLogger("GN.app.fps");
+            GN_DETAIL(sLogger)( "FPS : %.2f", mFpsValue );
+        }
+        else if( mBeforeFirstUpdate )
+        {
+            mFpsValue = (float)( (mCurrentTime - mLastFrameTime) / mFrameCounter );
+            mFpsString.format( mFormatString.cptr(), mFpsValue );
+        }
+    }
+
+    ///
+    /// Get FPS value
+    ///
+    float getFps() const { return mFpsValue; }
+
+    ///
+    /// Get FPS string
+    ///
+    const StrW & getFpsString() const { return mFpsString; }
+};
+
 int run( RenderEngine & re )
 {
+    FpsCounter fps( L"ENGINE2 test application. FPS = %.2f" );
+
     ClearScreen cs;
     if( !cs.init( re ) ) return -1;
 
@@ -51,12 +128,14 @@ int run( RenderEngine & re )
                 if( KEY_SPACEBAR == k.code ) { next = true; break; }
             }
 
+            fps.onFrame();
+
             cs.render(); // clear screen
 
             if( c ) c->render();
 
             // draw some text
-            font.drawText( L"ENGINE2 test application", 10, 10 );
+            font.drawText( fps.getFpsString().cptr(), 10, 10 );
 
             re.present();
         }

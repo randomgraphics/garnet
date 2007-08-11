@@ -681,7 +681,7 @@ void GN::engine::RenderEngine::DrawThread::flushDrawBuffer()
     // switch to next command buffer
     // note: this is the only place to modify write pointer
     {
-        GN_SCOPE_PROFILER( RenderEngine_frame_idle );
+        GN_SCOPE_PROFILER( RenderEngine_FrameIdle );
         mDrawBufferNotFull->wait();
         mDrawBufferMutex.lock();
     }
@@ -709,7 +709,7 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
         // wait for something to do
         int action;
         {
-            GN_SCOPE_PROFILER( RenderEngine_DrawThread_idle );
+            GN_SCOPE_PROFILER( RenderEngine_DrawThread_FrameIdle );
             action = mAction->waitAny();
         }
 
@@ -769,6 +769,8 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
     {
         // resource command has priority
         handleResourceCommands();
+
+        GN_SCOPE_PROFILER( RenderEngine_DrawThread_handle_draw_commands );
 
         // update command's resource waiting list
         int count = (int)command->resourceWaitingCount;
@@ -832,6 +834,8 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
+    GN_SCOPE_PROFILER( RenderEngine_DrawThread_handle_resource_commands );
+
     bool loopAgain;
     do
     {
