@@ -181,6 +181,4 @@ void TestTriangle::render()
     ++k;
 
     re.render( context );
-
-    //font.drawText( "render engine triangle test", 10, 10 );
 }

@@ -149,8 +149,6 @@ void GN::gfx::D3D9Texture::download(
 {
     GN_GUARD;
 
-    GN_UNUSED_PARAM( srcSliceBytes );
-
     // check parameter
     if( subsurface >= mSubsurfaces.size() )
     {
@@ -257,12 +255,99 @@ void GN::gfx::D3D9Texture::upload(
     size_t              destRowBytes,
     size_t              destSliceBytes )
 {
-    GN_UNUSED_PARAM( subsurface );
-    GN_UNUSED_PARAM( area );
-    GN_UNUSED_PARAM( destination );
-    GN_UNUSED_PARAM( destRowBytes );
-    GN_UNUSED_PARAM( destSliceBytes );
-    GN_UNIMPL();
+    // check parameter
+    if( subsurface >= mSubsurfaces.size() )
+    {
+        GN_ERROR(sLogger)( "Subsurface index is too large." );
+        return;
+    }
+    if( 0 == destination )
+    {
+        GN_ERROR(sLogger)( "null destination pointer" );
+        return;
+    }
+
+    Box<size_t> clippedArea;
+    if( !adjustArea( clippedArea, area ) ) return;
+
+    const D3D9SurfaceDesc & desc = getD3D9Desc();
+
+    const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
+
+    const ClrFmtDesc & cfd = getClrFmtDesc(desc.layout.format.attribs[0].format);
+
+    switch( desc.type )
+    {
+        case D3D9_SURFACE_TYPE_TEX_2D:
+        {
+            IDirect3DTexture9 * tex2d = (IDirect3DTexture9*)mSurface;
+
+            RECT rc;
+            rc.left   = (int)clippedArea.x;
+            rc.top    = (int)clippedArea.y;
+            rc.right  = (int)( clippedArea.x + clippedArea.w );
+            rc.bottom = (int)( clippedArea.y + clippedArea.h );
+
+            D3DLOCKED_RECT lrc;
+            GN_DX9_CHECK_R( tex2d->LockRect( (UINT)subsurface, &lrc, &rc, D3DLOCK_READONLY ) );
+
+            GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cfd.blockHeight );
+
+            SafeArrayAccessor<const UInt8> s( (const UInt8*)lrc.pBits, ssl.sliceBytes );
+            SafeArrayAccessor<UInt8>       d( (UInt8*)destination, destSliceBytes );
+
+            for( size_t i = 0; i < clippedArea.h; ++i )
+            {
+                s.copyTo( 0, d, 0, clippedArea.w * cfd.bits / 8 );
+                s += ssl.rowBytes;
+                d += destRowBytes;
+            }
+
+            GN_DX9_CHECK( tex2d->UnlockRect( (UINT)subsurface ) );
+            break;
+        }
+
+        case D3D9_SURFACE_TYPE_TEX_3D:
+            GN_UNIMPL();
+            break;
+
+        case D3D9_SURFACE_TYPE_TEX_CUBE:
+            GN_UNIMPL();
+            break;
+
+        default:
+            GN_UNEXPECTED();
+            return;
+    }
+
+    if( mIsRGBA )
+    {
+        // convert from B-G-R-A to R-G-B-A
+        SafeArrayAccessor<UInt8> p( (UInt8*)destination, destSliceBytes );
+
+        size_t w = destRowBytes / 4;
+        size_t h = destSliceBytes / destRowBytes;
+
+        GN_ASSERT( w >= clippedArea.w && h >= clippedArea.h );
+
+        UInt8 tmp;
+
+        for( size_t z = 0; z < clippedArea.d; ++z )
+        {
+            for( size_t y = 0; y < clippedArea.h; ++y )
+            {
+                for( size_t x = 0; x < clippedArea.w; ++x, p+=4 )
+                {
+                    // swap R and B
+                    tmp  = p[0];
+                    p[0] = p[2];
+                    p[2] = tmp;
+                }
+                p += ( w - clippedArea.w ) * 4;
+            }
+            p += w * ( h - clippedArea.h ) * 4;
+        }
+    }
 }
 
 //

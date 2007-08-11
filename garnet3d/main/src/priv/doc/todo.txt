@@ -7,13 +7,14 @@
     - redesign resource loader to support partial resource update.
     - shared parameters
     - query graphics system caps
+    - runtime configuable draw command buffer count
   - graphics system:
     - using special surface class to replace stream in quad kernel.
     - consider delete stream source class.
     - delete surface dimension enum
 
 - p2
-  - render state block redesign: using packed bit fields.
+  - runtime configuable profilers, like loggers
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net

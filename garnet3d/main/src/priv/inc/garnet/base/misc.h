@@ -868,6 +868,13 @@ namespace GN
             return mPtr + index;
         }
 
+        template<typename T2>
+        void copyTo( size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes )
+        {
+            GN_CASSERT( sizeof(T) == sizeof(T2) );
+            memcpy( dest.subrange( dstOffset, bytes ), subrange( srcOffset, bytes ), bytes );
+        }
+
         T * operator->() const
         {
             GN_ASSERT( mBegin <= mPtr && mPtr < mEnd );
