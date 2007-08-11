@@ -62,7 +62,7 @@ namespace GN
 
         //@{
         bool trylock() { return 0 == atomCmpXchg32( &mLock, 1, 0 ); }
-        void lock() { while( 0 != atomCmpXchg32( &mLock, 1, 0 ) ); }
+        void lock();
         void unlock() { atomSet32( &mLock, 0 ); }
         //@}
     };

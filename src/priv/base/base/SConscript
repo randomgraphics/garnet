@@ -12,6 +12,7 @@ sources = [
 	'profiler.cpp',
 	'registry.cpp',
 	'sharedLib.cpp',
+	'spinloop.cpp',
 	'string.cpp',
 	'syncmsw.cpp',
 	'threadmsw.cpp',

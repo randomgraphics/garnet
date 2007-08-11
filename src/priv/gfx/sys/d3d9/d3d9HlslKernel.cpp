@@ -166,7 +166,7 @@ namespace GN { namespace gfx
                 D3DPT_TRIANGLELIST,
                 D3DPT_TRIANGLESTRIP,
             };
-            if( pt > TRIANGLE_STRIP )
+            if( pt < 0 || pt > TRIANGLE_STRIP )
             {
                 GN_ERROR(sLogger)( "invalid primitive type: %d", pt );
                 return D3DPT_FORCE_DWORD;
