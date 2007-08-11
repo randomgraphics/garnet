@@ -865,24 +865,28 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                     sDumper.beginResource( *prev );
                 }
 
-                bool deleteTheCommand = false;
                 switch( prev->op )
                 {
                     case GROP_DOWNLOAD :
                         if( prev->noerr ) RESFUNC_DOWNLOAD( mEngine, *prev );
-                        deleteTheCommand = true;
+                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
+                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
+                        ResourceCommand::free( prev );                                   // delete command instance
                         break;
 
                     case GROP_DISPOSE :
                         if( prev->noerr ) RESFUNC_DISPOSE( mEngine, *prev );
-                        // push to resource thread for compress
+                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
+                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
                         prev->op = GROP_COMPRESS;
-                        mEngine.resourceThread().submitResourceCommand( prev );
+                        mEngine.resourceThread().submitResourceCommand( prev );          // push to resource thread for compress
                         break;
 
                     case GROP_DELETE :
                         RESFUNC_DELETE( mEngine, *prev );
-                        deleteTheCommand = true;
+                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
+                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
+                        ResourceCommand::free( prev );                                   // delete command instance
                         break;
 
                     default:
@@ -894,15 +898,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 {
                     sDumper.endResource();
                 }
-
-                // update resource's complete fence
-                prev->resource->lastCompletedFence = prev->submittedAtThisFence;
-
-                // update resource fence
-                mCompletedResourceFence = prev->submittedAtThisFence;
-
-                // delete command instance, if required.
-                if( deleteTheCommand ) ResourceCommand::free( prev );
 
                 // set empty flag
                 if( mResourceCommands.empty() ) mResourceCommandEmpty = true;

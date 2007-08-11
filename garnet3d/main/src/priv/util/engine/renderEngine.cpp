@@ -128,6 +128,7 @@ public:
 class ParameterSetLoadStore : public DummyLoadStore
 {
     GN::DynaArray< GN::DynaArray<UInt8> > mData;
+    GN::SpinLoop                          mMutex;
 
 public:
 
@@ -138,50 +139,79 @@ public:
 
         const KernelReflection & refl = getKernelReflection( kernel );
 
-        size_t n = refl.parameters.size();
-
-        mData.resize( n );
-
-        for( size_t i = 0; i < n; ++i )
-        {
-            const KernelParameterReflection & p = refl.parameters[i];
-            mData[i].resize( p.calcSizeInBytes() );
-        }
+        mData.resize( refl.parameters.size() );
     }
 
     virtual bool load( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
         return true;
     }
 
     bool decompress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
         return true;
     }
 
-    virtual bool download( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    virtual bool download( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::engine;
+
+        ScopeMutex<SpinLoop> lock( mMutex );
+
+        GN_ASSERT( GRT_PARAMETER_SET == res.desc.type );
+
+        KernelParameterSet & ps = *res.paramset;
+
+        size_t N = mData.size();
+
+        for( size_t i = 0; i < N; ++i )
+        {
+            KernelParameter & p = ps[i];
+
+            if( !mData[i].empty() )
+            {
+                p.set( 0, mData[i].size(), mData[i].cptr() );
+            }
+        }
+
         return true;
     }
 
     virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
         return true;
     }
 
     virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
         return true;
     }
 
-    virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
+    virtual bool upload( GN::engine::GraphicsResource & res, GN::DynaArray<UInt8> & )
     {
-        GN_UNIMPL_WARNING();
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::engine;
+
+        ScopeMutex<SpinLoop> lock( mMutex );
+
+        GN_ASSERT( GRT_PARAMETER_SET == res.desc.type );
+
+        KernelParameterSet & ps = *res.paramset;
+
+        size_t N = mData.size();
+
+        for( size_t i = 0; i < N; ++i )
+        {
+            KernelParameter & p = ps[i];
+
+            mData[i].resize( p.size() );
+
+            p.get( 0, p.size(), mData[i].cptr() );
+        }
+
         return true;
     }
 };

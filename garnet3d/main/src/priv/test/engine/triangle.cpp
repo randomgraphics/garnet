@@ -176,9 +176,9 @@ void TestTriangle::render()
     RenderEngine & re = renderEngine();
 
     // dispose all
-    //static int k = 0;
-    //if( 100 < (k % 200) ) re.disposeAllResources();
-    //++k;
+    static int k = 0;
+    if( 100 < (k % 200) ) re.disposeAllResources();
+    ++k;
 
     re.render( context );
 
