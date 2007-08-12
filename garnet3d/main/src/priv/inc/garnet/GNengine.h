@@ -129,7 +129,37 @@ namespace GN { /** namespace for engine module */ namespace engine
         //@}
     };
 
-    class RenderEngine;
+    class  RenderEngine;
+    struct GraphicsResource;
+
+    ///
+    /// Application defined resource content loader
+    ///
+    /// Details about concurrency:
+    ///  - load()/download() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - decompress()/compress() might be called concurrently with any methods.
+    ///
+    /// To achieve best performance as well as code simplicity:
+    ///    - Try not modify any varialbes other then outbuf and inbuf in loader methods.
+    ///    - Or using sync object to prevent content racing.
+    ///
+    struct GraphicsResourceLoader : public RefCounter
+    {
+        ///
+        /// load from external/slow storage (disk, cdrom, network)
+        ///
+        virtual bool load( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf ) = 0;
+
+        ///
+        /// decompress or do other process to prepare for copy to graphics resource.
+        ///
+        virtual bool decompress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf ) = 0;
+
+        ///
+        /// copy data to graphics resource
+        ///
+        virtual bool download( GraphicsResource & res, DynaArray<UInt8> & inbuf ) = 0;
+    };
 
     ///
     /// Graphics resource class.
@@ -153,6 +183,16 @@ namespace GN { /** namespace for engine module */ namespace engine
             //@}
         };
 
+        ///
+        /// triggered after the resource is reloaded.
+        ///
+        Signal2<void,GraphicsResource*,AutoRef<GraphicsResourceLoader>&> sigReload;
+
+        ///
+        /// triggered after the resource is disposed.
+        ///
+        Signal1<void,GraphicsResource*> sigDispose;
+
     protected:
 
         ///
@@ -164,64 +204,6 @@ namespace GN { /** namespace for engine module */ namespace engine
         /// protected destructor
         ///
         ~GraphicsResource() {}
-    };
-
-    ///
-    /// Application defined resource content manipulator that are used to store/restore resource content
-    ///
-    /// Details about concurrency:
-    ///  - load()/store()/download()/upload() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///  - decompress()/compress() might be called concurrently with any methods.
-    ///
-    /// To achieve best performance as well as code simplicity:
-    ///    - Try not modify any varialbes other then outbuf and inbuf in loader methods.
-    ///    - Or using sync object to prevent content racing.
-    ///
-    struct GraphicsResourceLoadStore : public RefCounter
-    {
-        ///
-        /// load from external/slow storage (disk, cdrom, network)
-        ///
-        virtual bool load( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf ) = 0;
-
-        ///
-        /// decompress or do other process to prepare for copy to graphics resource.
-        ///
-        virtual bool decompress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf ) = 0;
-
-        ///
-        /// copy data to graphics resource
-        ///
-        virtual bool download( GraphicsResource & res, DynaArray<UInt8> & inbuf ) = 0;
-
-        ///
-        /// store resource data to external/persistent storage
-        ///
-        virtual bool store( const GraphicsResourceDesc & desc, DynaArray<UInt8> & inbuf ) = 0;
-
-        ///
-        /// compress or process data to prepare for store.
-        ///
-        virtual bool compress( const GraphicsResourceDesc & desc, DynaArray<UInt8> & outbuf, DynaArray<UInt8> & inbuf ) = 0;
-
-        ///
-        /// copy data from graphics resource to out buffer
-        ///
-        virtual bool upload( GraphicsResource & res, DynaArray<UInt8> & outbuf ) = 0;
-    };
-
-    ///
-    /// resource update is a kind of special resource loader that are use for progressive/partial resource update.
-    ///
-    /// store(), compress() and upload() will never be called for updater.
-    ///
-    struct GraphicsResourceUpdater : public GraphicsResourceLoadStore
-    {
-        //@{
-        virtual bool store( const GraphicsResourceDesc &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
-        virtual bool compress( const GraphicsResourceDesc &, DynaArray<UInt8> &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
-        virtual bool upload( GraphicsResource &, DynaArray<UInt8> & ) { GN_UNEXPECTED(); return false; }
-        //@}
     };
 
     ///
@@ -328,7 +310,7 @@ namespace GN { /** namespace for engine module */ namespace engine
         /// - render engine class will ensure that memory footprint of all "REALIZED" graphics resources
         ///   is in user defined limit.
         ///
-        GraphicsResource * createResource( const GraphicsResourceDesc & desc, GraphicsResourceLoadStore * loadstore );
+        GraphicsResource * createResource( const GraphicsResourceDesc & desc, GraphicsResourceLoader * loader = NULL );
 
         ///
         /// delete an exisiting resource.
@@ -352,16 +334,10 @@ namespace GN { /** namespace for engine module */ namespace engine
         bool checkResource( const GraphicsResource * ) const;
 
         ///
-        /// load resource content, discarding old content.
+        /// update resource content
         ///
-        void loadResource( GraphicsResource          * resource,
-                           GraphicsResourceLoadStore * loadstore );
-
-        ///
-        /// progressive/partial update to the resource
-        ///
-        void updateResource( GraphicsResource        * resource,
-                             GraphicsResourceUpdater * updater );
+        void updateResource( GraphicsResource       * resource,
+                             GraphicsResourceLoader * loader );
 
         ///
         /// Dispose resource to force it to be reloaded.
@@ -400,7 +376,7 @@ namespace GN { /** namespace for engine module */ namespace engine
 
         GraphicsResource * getKernel( const StrA & kernel );
 
-        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter &, GraphicsResourceLoadStore * = NULL );
+        GraphicsResource * createSurface( const StrA & resname, const gfx::SurfaceCreationParameter &, GraphicsResourceLoader * = NULL );
         GraphicsResource * createParameterSet( const StrA & resname, const StrA & kernel );
         GraphicsResource * createParameterSet( const StrA & resname, const GraphicsResource & kernel );
         GraphicsResource * createPortBinding( const StrA & resname, const StrA & kernel, const NamedSurfaceResourceViews & );
@@ -413,7 +389,7 @@ namespace GN { /** namespace for engine module */ namespace engine
             const StrA                      & name,
             const gfx::SurfaceElementFormat & format,
             size_t                            count,
-            GraphicsResourceLoadStore      * loadstore = NULL);
+            GraphicsResourceLoader      * loader = NULL);
 
         ///
         /// create index buffer
@@ -421,7 +397,7 @@ namespace GN { /** namespace for engine module */ namespace engine
         GraphicsResource * createIdxBuf(
             const StrA                & name,
             size_t                      count,
-            GraphicsResourceLoadStore * loadstore = NULL );
+            GraphicsResourceLoader * loader = NULL );
 
         ///
         /// create texture from image file

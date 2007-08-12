@@ -172,12 +172,38 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     ResourceCommand * item  )
 {
     GN_ASSERT( item );
-    GN_ASSERT( GROP_DISPOSE == item->op || GROP_DELETE == item->op || GROP_DOWNLOAD == item->op );
+    GN_ASSERT( GROP_CREATE == item->op || GROP_DISPOSE == item->op || GROP_DOWNLOAD == item->op );
     mResourceMutex.lock();
     mResourceCommands.append( item );
     mAction->signal( RESOURCE_ACTION );
     mResourceCommandEmpty = false;
     mResourceMutex.unlock();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::engine::RenderEngine::DrawThread::submitResourceCreateCommand(
+    GraphicsResourceItem * item )
+{
+    GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
+    GN_ASSERT( GRS_REALIZED == item->state );
+
+    ResourceCommand * cmd = ResourceCommand::alloc();
+    if( 0 == cmd ) return;
+
+    FenceId fence = mEngine.fenceManager().getAndIncFence();
+
+    cmd->noerr                      = true;
+    cmd->op                         = GROP_CREATE;
+    cmd->resource                   = item;
+    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
+    cmd->submittedAtThisFence       = fence;
+
+    item->lastSubmissionFence = fence;
+
+    submitResourceCommand( cmd );
 }
 
 //
@@ -197,7 +223,7 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposeCommand(
     cmd->noerr                      = true;
     cmd->op                         = GROP_DISPOSE;
     cmd->resource                   = item;
-    cmd->loadstore                  = item->loadstore;
+    cmd->loader                  = item->loader;
     cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
@@ -205,31 +231,6 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposeCommand(
     item->lastSubmissionFence = fence;
 
     submitResourceCommand( cmd );
-}
 
-//
-//
-// -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::DrawThread::submitResourceDeleteCommand(
-    GraphicsResourceItem * item )
-{
-    GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
-    GN_ASSERT( GRS_DISPOSED == item->state );
-
-    ResourceCommand * cmd = ResourceCommand::alloc();
-    if( 0 == cmd ) return;
-
-    FenceId fence = mEngine.fenceManager().getAndIncFence();
-
-    cmd->noerr                      = true;
-    cmd->op                         = GROP_DELETE;
-    cmd->resource                   = item;
-    cmd->loadstore.clear();
-    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
-    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
-    cmd->submittedAtThisFence       = fence;
-
-    item->lastSubmissionFence = fence;
-
-    submitResourceCommand( cmd );
+    item->sigDispose(item);
 }

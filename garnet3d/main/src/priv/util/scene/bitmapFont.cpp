@@ -134,7 +134,7 @@ bool GN::scene::BitmapFont::init( const FontFaceDesc & ffd )
     mKernel = mRenderEngine.getKernel( "QUAD" );
     if( 0 == mKernel ) return failure();
 
-    // create font textures and binding
+    // create font textures
     SurfaceCreationParameter scp;
     scp.bindTo( "QUAD", "TEXTURE0" );
     scp.layout.dim    = SURFACE_DIMENSION_2D;
@@ -159,6 +159,8 @@ bool GN::scene::BitmapFont::init( const FontFaceDesc & ffd )
             GN_ERROR(sLogger)( "fail to create font texture #%d!", i );
             return failure();
         }
+
+        mTextures[i]->sigDispose.connect( this, &BitmapFont::deleteAllSlots );
     }
 
     // create port binding
@@ -383,6 +385,15 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
 // *****************************************************************************
 //                       private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::BitmapFont::deleteAllSlots( engine::GraphicsResource * )
+{
+    mNumSlots = 0;
+    mSlotMap.clear();
+}
 
 //
 //

@@ -51,12 +51,12 @@ bool GN::engine::RenderEngine::ResourceThread::init()
     GN_STDCLASS_INIT( ResourceThread, () );
 
     if( !mLoader.init(
-            makeDelegate( this, &ResourceThread::loadstore ),
+            makeDelegate( this, &ResourceThread::load ),
             "Loading thread" ) )
         return failure();
 
     if( !mDecompressor.init(
-            makeDelegate( this, &ResourceThread::process ),
+            makeDelegate( this, &ResourceThread::decompress ),
             "Decompressing thread" ) )
         return failure();
 
@@ -108,7 +108,7 @@ void GN::engine::RenderEngine::ResourceThread::waitForIdle()
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::loadstore( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 {
     GN_SCOPE_PROFILER( RenderEngine_ResourceThread_load );
 
@@ -126,37 +126,18 @@ UInt32 GN::engine::RenderEngine::ResourceThread::loadstore( void * param )
 
         if( NULL == cmd ) break;
 
-        GN_ASSERT( cmd->loadstore );
+        GN_ASSERT( cmd->loader );
 
-        switch( cmd->op )
+        GN_ASSERT( GROP_LOAD == cmd->op );
+
+        if( cmd->noerr )
         {
-            case GROP_LOAD:
-            {
-                if( cmd->noerr )
-                {
-                    cmd->noerr = cmd->loadstore->load( cmd->resource->desc, cmd->tmpbuf );
-                }
-                // push to process thread for decompress
-                cmd->op = GROP_DECOMPRESS;
-                submitResourceCommand( cmd );
-                break;
-            }
-
-            case GROP_STORE:
-            {
-                if( cmd->noerr )
-                {
-                    cmd->loadstore->store( cmd->resource->desc, cmd->tmpbuf );
-                }
-                // This is the last command, free the loader
-                ResourceCommand::free( cmd );
-                break;
-            }
-
-            default:
-                GN_UNEXPECTED();
-                break;
+            cmd->noerr = cmd->loader->load( cmd->resource->desc, cmd->tmpbuf );
         }
+
+        // push to process thread for decompress
+        cmd->op = GROP_DECOMPRESS;
+        submitResourceCommand( cmd );
 
         commands->consumeEnd();
     }
@@ -167,7 +148,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::loadstore( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::process( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 {
     GN_SCOPE_PROFILER( RenderEngine_ResourceThread_decompress );
 
@@ -185,40 +166,19 @@ UInt32 GN::engine::RenderEngine::ResourceThread::process( void * param )
 
         if( 0 == cmd ) break;
 
-        GN_ASSERT( cmd->noerr );
-        GN_ASSERT( cmd->loadstore );
+        GN_ASSERT( cmd->loader );
+        GN_ASSERT( GROP_DECOMPRESS == cmd->op );
 
-        DynaArray<UInt8> processed;
-
-        switch( cmd->op )
+        if( cmd->noerr )
         {
-            case GROP_DECOMPRESS:
-            {
-                if( cmd->noerr )
-                {
-                    cmd->noerr = cmd->loadstore->decompress( cmd->resource->desc, processed, cmd->tmpbuf );
-                    cmd->tmpbuf.swap( processed );
-                }
-                // push to draw thread for download
-                cmd->op = GROP_DOWNLOAD;
-                mEngine.drawThread().submitResourceCommand( cmd );
-                break;
-            }
-
-            case GROP_COMPRESS:
-                if( cmd->noerr )
-                {
-                    cmd->noerr = cmd->loadstore->decompress( cmd->resource->desc, processed, cmd->tmpbuf );
-                    cmd->tmpbuf.swap( processed );
-                }
-                // push to load thread for store
-                cmd->op = GROP_STORE;
-                submitResourceCommand( cmd );
-                break;
-
-            default:
-                GN_UNEXPECTED();
+            DynaArray<UInt8> processed;
+            cmd->noerr = cmd->loader->decompress( cmd->resource->desc, processed, cmd->tmpbuf );
+            cmd->tmpbuf.swap( processed );
         }
+
+        // push to draw thread for download
+        cmd->op = GROP_DOWNLOAD;
+        mEngine.drawThread().submitResourceCommand( cmd );
 
         commands->consumeEnd();
     }

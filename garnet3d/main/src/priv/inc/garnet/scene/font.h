@@ -311,11 +311,11 @@ namespace GN { namespace scene
             UInt16 x1, y1, x2, y2;
         };
 
-        class FontTextureLoader : public engine::GraphicsResourceUpdater
+        class FontTextureLoader : public engine::GraphicsResourceLoader
         {
-            DynaArray<UInt8>   mFontImage;
-            size_t             mFontWidth, mFontHeight;
-            const FontSlot     mSlot;
+            DynaArray<UInt8>           mFontImage;
+            size_t                     mFontWidth, mFontHeight;
+            const FontSlot             mSlot;
             engine::GraphicsResource & mTexture;
 
         public:
@@ -379,6 +379,11 @@ namespace GN { namespace scene
         // private functions
         // ********************************
     private:
+
+        ///
+        /// delete all font slots. Called when texture resources are disposed.
+        ///
+        void deleteAllSlots( engine::GraphicsResource * );
 
         ///
         /// get slot of specific character

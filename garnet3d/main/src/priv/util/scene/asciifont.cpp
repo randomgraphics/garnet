@@ -44,7 +44,7 @@ static void sCalcBoundingRect( Recti & rc, const char * text, int x, int y )
     if( w > rc.w ) rc.w = w;
 }*/
 
-class AsciiFontTextureLoader : public GraphicsResourceUpdater
+class AsciiFontTextureLoader : public GraphicsResourceLoader
 {
 public:
 

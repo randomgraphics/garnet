@@ -119,6 +119,8 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item
 
     GN_ASSERT( mRealizedBytes >= item->bytes );
     mRealizedBytes -= item->bytes;
+
+    GN_TODO( "submit dispose command to draw thread!" );
 }
 
 // *****************************************************************************

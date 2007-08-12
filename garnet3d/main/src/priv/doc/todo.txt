@@ -14,6 +14,7 @@
     - delete surface dimension enum
 
 - p2
+  - XML: pointer from parent to last child, for constant time child appending.
   - runtime configuable profilers, like loggers
   - memory pool class is not looking good
     - when call dtor and when not?

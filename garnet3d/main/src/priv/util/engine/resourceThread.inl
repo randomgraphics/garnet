@@ -8,12 +8,10 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
     switch( cmd->op )
     {
         case GROP_LOAD:
-        case GROP_STORE:
             mLoader.commands.submit( cmd );
             break;
 
         case GROP_DECOMPRESS:
-        case GROP_COMPRESS:
             mDecompressor.commands.submit( cmd );
             break;
 
@@ -26,16 +24,15 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::ResourceThread::loadResource(
-    GraphicsResourceItem      * item,
-    GraphicsResourceLoadStore * loadstore )
+inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadCommand(
+    GraphicsResourceItem * item )
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 
     // check parameters
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     GN_ASSERT( GRS_REALIZED == item->state );
-    GN_ASSERT( loadstore );
+    GN_ASSERT( item->loader );
 
     // get new fence
     FenceId fence = mEngine.fenceManager().getAndIncFence();
@@ -48,7 +45,7 @@ inline void GN::engine::RenderEngine::ResourceThread::loadResource(
     cmd->noerr                      = true;
     cmd->op                         = GROP_LOAD;
     cmd->resource                   = item;
-    cmd->loadstore.set( loadstore );
+    cmd->loader                     = item->loader;
     cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;

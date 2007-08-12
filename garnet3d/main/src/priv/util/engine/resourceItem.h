@@ -59,9 +59,9 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// full loadstore
+        /// full loader
         ///
-        AutoRef<GraphicsResourceLoadStore> loadstore;
+        AutoRef<GraphicsResourceLoader> loader;
 
         ///
         /// the fence of the lastest update command.

@@ -206,9 +206,9 @@ class DrawThreadDumper
 
         switch( op )
         {
+            case GROP_CREATE   : opstr = "CREATE"; break;
             case GROP_DOWNLOAD : opstr = "DOWNLOAD"; break;
             case GROP_DISPOSE  : opstr = "DISPOSE"; break;
-            case GROP_DELETE   : opstr = "DELETE"; break;
             default            : GN_UNEXPECTED(); opstr = "INVALID"; break;
         }
 
@@ -432,6 +432,27 @@ static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
 //
 //
 // -----------------------------------------------------------------------------
+void RESFUNC_CREATE( RenderEngine & engine, ResourceCommand & cmd )
+{
+    GN_GUARD;
+
+    GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
+
+    if( 0 == cmd.resource->data )
+    {
+        if( !sCreateDeviceData( *engine.drawThread().getGraphicsSystem(), *cmd.resource ) )
+        {
+            cmd.noerr = false;
+            return;
+        }
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void RESFUNC_DOWNLOAD( RenderEngine & engine, ResourceCommand & cmd )
 {
     GN_GUARD;
@@ -452,8 +473,8 @@ void RESFUNC_DOWNLOAD( RenderEngine & engine, ResourceCommand & cmd )
         }
     }
 
-    GN_ASSERT( cmd.loadstore );
-    cmd.noerr = cmd.loadstore->download( *cmd.resource, cmd.tmpbuf );
+    GN_ASSERT( cmd.loader );
+    cmd.noerr = cmd.loader->download( *cmd.resource, cmd.tmpbuf );
 
     GN_UNGUARD;
 }
@@ -461,7 +482,7 @@ void RESFUNC_DOWNLOAD( RenderEngine & engine, ResourceCommand & cmd )
 //
 //
 // -----------------------------------------------------------------------------
-void RESFUNC_DELETE( RenderEngine & engine, ResourceCommand & cmd )
+void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
 {
     GN_GUARD;
 
@@ -490,25 +511,6 @@ void RESFUNC_DELETE( RenderEngine & engine, ResourceCommand & cmd )
         default:
             GN_UNEXPECTED();
     }
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
-{
-    GN_GUARD;
-
-    GN_ASSERT( engine.resourceCache().checkResource( cmd.resource ) );
-
-    GN_ASSERT( cmd.resource->data );
-
-    GN_ASSERT( cmd.loadstore );
-    cmd.noerr = cmd.loadstore->upload( *cmd.resource, cmd.tmpbuf );
-
-    RESFUNC_DELETE( engine, cmd );
 
     GN_UNGUARD;
 }
@@ -871,32 +873,31 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 switch( prev->op )
                 {
+                    case GROP_CREATE :
+                        if( prev->noerr ) RESFUNC_CREATE( mEngine, *prev );
+                        break;
+
                     case GROP_DOWNLOAD :
                         if( prev->noerr ) RESFUNC_DOWNLOAD( mEngine, *prev );
-                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
-                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
-                        ResourceCommand::free( prev );                                   // delete command instance
                         break;
 
                     case GROP_DISPOSE :
                         if( prev->noerr ) RESFUNC_DISPOSE( mEngine, *prev );
-                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
-                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
-                        prev->op = GROP_COMPRESS;
-                        mEngine.resourceThread().submitResourceCommand( prev );          // push to resource thread for compress
-                        break;
-
-                    case GROP_DELETE :
-                        RESFUNC_DELETE( mEngine, *prev );
-                        prev->resource->lastCompletedFence = prev->submittedAtThisFence; // update resource's complete fence
-                        mCompletedResourceFence = prev->submittedAtThisFence;            // update resource fence
-                        ResourceCommand::free( prev );                                   // delete command instance
                         break;
 
                     default:
                         GN_UNEXPECTED();
                         break;
                 }
+
+                // update resource's complete fence
+                prev->resource->lastCompletedFence = prev->submittedAtThisFence;
+
+                // update draw thread's resource complete fence
+                mCompletedResourceFence = prev->submittedAtThisFence;
+
+                // delete command instance
+                ResourceCommand::free( prev );
 
                 if( DUMP_DRAW_THREAD_COMMANDS )
                 {

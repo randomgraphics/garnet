@@ -13,28 +13,7 @@ struct Vertex
     float x, y, z;
 };
 
-class StaticResouceLoadStore : public GN::engine::GraphicsResourceLoadStore
-{
-public:
-
-    virtual bool store( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-
-    virtual bool compress( const GN::engine::GraphicsResourceDesc &, GN::DynaArray<UInt8> &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-
-    virtual bool upload( GN::engine::GraphicsResource &, GN::DynaArray<UInt8> & )
-    {
-        return true;
-    }
-};
-
-
-class VtxBufLoader : public StaticResouceLoadStore
+class VtxBufLoader : public GN::engine::GraphicsResourceLoader
 {
 public:
 
@@ -61,7 +40,7 @@ public:
     }
 };
 
-class IdxBufLoader : public StaticResouceLoadStore
+class IdxBufLoader : public GN::engine::GraphicsResourceLoader
 {
 public:
 
@@ -123,7 +102,7 @@ bool TestTriangle::init()
     if( 0 == kernel ) return false;
 
     // create parameter set
-    param = re.createParameterSet( "triangle", *kernel );
+    param = re.createParameterSet( "triangle ps", *kernel );
     re.setParameter( param, "FX", 0, strLen(fxcode)+1, fxcode );
     re.setParameterT( param, "PRIM_TYPE", TRIANGLE_LIST );
     re.setParameterT( param, "PRIM_COUNT", 1 );
@@ -140,12 +119,12 @@ bool TestTriangle::init()
     vtxfmt.count = 1;
     vtxfmt.stride = sizeof(Vertex);
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
-    GraphicsResource * vb = re.createVtxBuf( "vb", vtxfmt, 3, vbloader );
+    GraphicsResource * vb = re.createVtxBuf( "triangle vb", vtxfmt, 3, vbloader );
     if( 0 == vb ) return false;
 
     // create index buffer
     AutoRef<IdxBufLoader> ibloader( new IdxBufLoader );
-    GraphicsResource * ib = re.createIdxBuf( "idxbuf", 3, ibloader );
+    GraphicsResource * ib = re.createIdxBuf( "triangle ib", 3, ibloader );
     if( 0 == ib ) return false;
 
     // create texture
@@ -156,7 +135,7 @@ bool TestTriangle::init()
     views["VTXBUF0"].set( vb, 0, 1, 0, 1 );
     views["IDXBUF"].set( ib, 0, 1, 0, 1 );
     views["TEXTURE0"].set( tex, 0, tex->desc.surface.creation.layout.levels, 0, tex->desc.surface.creation.layout.faces );
-    GraphicsResource * binding = re.createPortBinding( "binding", *kernel, views );
+    GraphicsResource * binding = re.createPortBinding( "triangle binding", *kernel, views );
     if( 0 == binding ) return false;
 
     // create context

@@ -16,19 +16,15 @@ namespace GN { namespace engine
     ///
     enum GraphicsResourceOperation
     {
+        GROP_CREATE,     ///< create resource instance, leave resource content uninitialized. Handled by draw thread.
+
         GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
 
         GROP_DECOMPRESS, ///< prepare data for download. Handled by process thread.
 
         GROP_DOWNLOAD,   ///< copy data to graphics resource. Handled by draw thread.
 
-        GROP_STORE,      ///< store resource data to persistent storage. Handled by IO thread.
-
-        GROP_COMPRESS,   ///< prepare data for store. Handled by process thread.
-
-        GROP_DISPOSE,    ///< store resource content, then delete resource instance. Handled by draw thread.
-
-        GROP_DELETE,     ///< delete resource only. Handled by draw thread.
+        GROP_DISPOSE,    ///< dispose resource. Handled by draw thread.
     };
 
     ///
@@ -42,7 +38,7 @@ namespace GN { namespace engine
         bool                                  noerr;                      ///< true means this request has no error
         GraphicsResourceOperation             op;                         ///< requested operation.
         GraphicsResourceItem *                resource;                   ///< target resource
-        AutoRef<GraphicsResourceLoadStore>    loadstore;                  ///< ignored by GROP_DELETE
+        AutoRef<GraphicsResourceLoader>       loader;                     ///< ignored by GROP_DELETE
         FenceId                               mustAfterThisDrawFence;     ///< the request must happens after this draw fence. For copy/dispose only.
         FenceId                               mustAfterThisResourceFence; ///< the request must happens after this resource fence. For copy/dispose only
         FenceId                               submittedAtThisFence;       ///< the request is submitted at this fence.
