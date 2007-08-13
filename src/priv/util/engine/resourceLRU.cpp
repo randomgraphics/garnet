@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "resourceLRU.h"
 #include "resourceCache.h"
+#include "resourceThread.h"
+#include "drawThread.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceLRU");
 
@@ -72,38 +74,60 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
 
-    GN_ASSERT( GRS_DISPOSED == item->state );
+    if( GRS_REALIZED == item->state ) return;
 
-    // mark as recently used.
+    // recursive realize all prerequites.
+    for( size_t i = 0; i < item->prerequisites.size(); ++i )
+    {
+        GraphicsResourceItem * p = item->prerequisites[i];
+        realize( p );
+    }
+
     markAsRecentlyUsed( item );
 
-    // checkResource if there's enough space to hold it.
-    if( item->bytes > mCapacity )
-    {
-        GN_FATAL(sLogger)( "resource cache (%dMB) is not large enough to hold resources '%s' (%dMB).",
-            mCapacity/1024/1024, item->desc.name.cptr(), item->bytes/1024/1024 );
-        GN_UNEXPECTED();
-        return;
-    }
-    else if( (mRealizedBytes + item->bytes) > mCapacity )
+    if( (mRealizedBytes + item->bytes) > mCapacity )
     {
         GraphicsResourceItem * old = mLRUList.tail();
 
-        while( mRealizedBytes + item->bytes > mCapacity )
+        GN_ASSERT( old && old != item );
+
+        while( mRealizedBytes + item->bytes > mCapacity && old )
         {
-            GN_ASSERT( old && old != item );
+            GN_TODO( "make sure old is not in item's prerequisite list" );
+
             dispose( old );
+
             old = old->prev;
         }
     }
 
-    GN_ASSERT( (mRealizedBytes + item->bytes) <= mCapacity );
+    if( (mRealizedBytes + item->bytes) > mCapacity )
+    {
+        GN_FATAL(sLogger)( "There's no enough space in resource cache, to hold the resource xxxx and its prerequisits." );
+        GN_UNEXPECTED();
+        return;
+    }
 
     item->state = GRS_REALIZED;
 
     mRealizedBytes += item->bytes;
 
-    GN_ASSERT( mRealizedBytes <= mCapacity );
+    GN::AutoRef<GraphicsResourceLoader> newLoader;
+    item->sigReload( item, newLoader );
+
+    if( newLoader )
+    {
+        item->loader = newLoader;
+        mEngine.resourceThread().submitResourceLoadCommand( item );
+    }
+    else if( item->loader )
+    {
+        mEngine.resourceThread().submitResourceLoadCommand( item );
+    }
+    else
+    {
+        mEngine.drawThread().submitResourceCreateCommand( item );
+    }
 }
 
 //
@@ -115,12 +139,29 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item
 
     GN_ASSERT( GRS_REALIZED == item->state );
 
-    item->state = GRS_DISPOSED;
+    DrawThread & dt = mEngine.drawThread();
 
+    // dispose dependents
+    for( size_t i = 0; i < item->dependents.size(); ++i )
+    {
+        GraphicsResourceItem * d = item->dependents[i];
+
+        GN_ASSERT( mEngine.resourceCache().checkResource( d ) );
+
+        if( GRS_REALIZED == d->state )
+        {
+            d->state = GRS_DISPOSED;
+            GN_ASSERT( mRealizedBytes >= d->bytes );
+            mRealizedBytes -= d->bytes;
+            dt.submitResourceDisposeCommand( item );
+        }
+    }
+
+    // then dispose itself
+    item->state = GRS_DISPOSED;
     GN_ASSERT( mRealizedBytes >= item->bytes );
     mRealizedBytes -= item->bytes;
-
-    GN_TODO( "submit dispose command to draw thread!" );
+    dt.submitResourceDisposeCommand( item );
 }
 
 // *****************************************************************************

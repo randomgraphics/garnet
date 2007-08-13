@@ -27,6 +27,9 @@ namespace GN { namespace engine
     ///
     struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
     {
+        /// constant resource item properties
+        //@{
+
         ///
         /// resource id
         ///
@@ -36,6 +39,8 @@ namespace GN { namespace engine
         /// estimated resource size in bytes.
         ///
         const size_t bytes;
+
+        //@}
 
         /// managed by LRU manager, which runs in render engine's thread.
         ///
@@ -57,6 +62,16 @@ namespace GN { namespace engine
 
         /// managemented by render engine
         //@{
+
+        ///
+        /// resources that this resource depends on
+        ///
+        DynaArray<GraphicsResourceItem*> prerequisites;
+
+        ///
+        /// resources that depent on this resource
+        ///
+        DynaArray<GraphicsResourceItem*> dependents;
 
         ///
         /// full loader
