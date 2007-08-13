@@ -174,7 +174,7 @@ bool GN::gfx::D3D9VtxBuf::init()
 
     // create vertex buffer
     GN_TODO( "setup usage and pool" );
-    GN_DX9_CHECK_RV( dev->CreateVertexBuffer( desc.layout.basemap.rowBytes, 0, 0, D3DPOOL_MANAGED, &mSurface, 0 ), false );
+    GN_DX9_CHECK_RV( dev->CreateVertexBuffer( (UINT)desc.layout.basemap.rowBytes, 0, 0, D3DPOOL_MANAGED, &mSurface, 0 ), false );
 
     // success
     return true;

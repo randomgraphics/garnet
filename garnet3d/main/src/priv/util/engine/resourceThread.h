@@ -52,7 +52,7 @@ namespace GN { namespace engine
 
         void waitForIdle();
 
-        inline void submitResourceLoadCommand( GraphicsResourceItem * item );
+        inline void submitResourceLoadCommand( GraphicsResourceItem * item, DynaArray<ResourceCommandWaitItem> * waitingList = NULL );
 
         //@}
 

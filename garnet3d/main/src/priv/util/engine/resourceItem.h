@@ -120,6 +120,28 @@ namespace GN { namespace engine
             , lastReferenceFence( 0 )
             , lastCompletedFence( 0 )
         {}
+
+        ///
+        /// dtor
+        ///
+        ~GraphicsResourceItem()
+        {
+            // remove itself from prerequisits' dependent list
+            for( size_t i = 0; i < prerequisites.size(); ++i )
+            {
+                GraphicsResourceItem * p = prerequisites[i];
+                std::remove( p->dependents.begin(), p->dependents.end(), this );
+                p->dependents.popBack();
+            }
+
+            // remove itself from dependents' prerequisit list
+            for( size_t i = 0; i < dependents.size(); ++i )
+            {
+                GraphicsResourceItem * d = dependents[i];
+                std::remove( d->prerequisites.begin(), d->prerequisites.end(), this );
+                d->prerequisites.popBack();
+            }
+        }
     };
 }}
 

@@ -25,7 +25,8 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadCommand(
-    GraphicsResourceItem * item )
+    GraphicsResourceItem               * item,
+    DynaArray<ResourceCommandWaitItem> * waitingList )
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 
@@ -49,6 +50,8 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadCommand(
     cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
+
+    if( waitingList ) cmd->waitingList.swap( *waitingList );
 
     // update resource item
     item->lastSubmissionFence       = fence;

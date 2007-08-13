@@ -444,9 +444,9 @@ bool GN::gfx::D3D9Texture::create2DTexture()
     // create texture
     AutoComPtr<IDirect3DTexture9> tex2d;
     GN_DX9_CHECK_RV( dev->CreateTexture(
-        desc.layout.basemap.width,
-        desc.layout.basemap.height,
-        desc.layout.levels,
+        (UINT)desc.layout.basemap.width,
+        (UINT)desc.layout.basemap.height,
+        (UINT)desc.layout.levels,
         0, // no usage
         format,
         D3DPOOL_MANAGED,
@@ -504,10 +504,10 @@ bool GN::gfx::D3D9Texture::create3DTexture()
     // create texture
     AutoComPtr<IDirect3DVolumeTexture9> tex3d;
     GN_DX9_CHECK_RV( dev->CreateVolumeTexture(
-        desc.layout.basemap.width,
-        desc.layout.basemap.height,
-        desc.layout.basemap.depth,
-        desc.layout.levels,
+        (UINT)desc.layout.basemap.width,
+        (UINT)desc.layout.basemap.height,
+        (UINT)desc.layout.basemap.depth,
+        (UINT)desc.layout.levels,
         0, // no usage
         format,
         D3DPOOL_MANAGED,
@@ -566,8 +566,8 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
     // create texture
     AutoComPtr<IDirect3DCubeTexture9> texcube;
     GN_DX9_CHECK_RV( dev->CreateCubeTexture(
-        desc.layout.basemap.width,
-        desc.layout.levels,
+        (UINT)desc.layout.basemap.width,
+        (UINT)desc.layout.levels,
         0, // no usage
         format,
         D3DPOOL_MANAGED,

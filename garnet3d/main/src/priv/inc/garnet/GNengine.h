@@ -53,10 +53,10 @@ namespace GN { /** namespace for engine module */ namespace engine
     struct SurfaceResourceView
     {
         GraphicsResource * surf;       ///< surface pointer
-        UInt32             firstLevel; ///< first mipmap level. 0 means the most detailed level.
-        UInt32             numLevels;  ///< set 0 for all levels staring from firstLevel.
-        UInt32             firstFace;  ///< first face index, starting from 0
-        UInt32             numFaces;   ///< set to 0 for all faces starting from firstFace.
+        size_t             firstLevel; ///< first mipmap level. 0 means the most detailed level.
+        size_t             numLevels;  ///< set 0 for all levels staring from firstLevel.
+        size_t             firstFace;  ///< first face index, starting from 0
+        size_t             numFaces;   ///< set to 0 for all faces starting from firstFace.
 
         ///
         /// ctor
@@ -68,10 +68,10 @@ namespace GN { /** namespace for engine module */ namespace engine
         ///
         inline void set(
             GraphicsResource * surf_,
-            UInt32             firstLevel_,
-            UInt32             numLevels_,
-            UInt32             firstFace_,
-            UInt32             numFaces_ )
+            size_t             firstLevel_,
+            size_t             numLevels_,
+            size_t             firstFace_,
+            size_t             numFaces_ )
         {
             surf       = surf_;
             firstLevel = firstLevel_;

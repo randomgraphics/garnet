@@ -493,23 +493,6 @@ GN::engine::RenderEngine::createResource(
         GraphicsResource * res = mKernels.get( desc.kernel.kernel );
         if( res ) return res;
     }
-    else if( GRT_PORT_BINDING == desc.type )
-    {
-        // realize disposed surfaces before creating port binding
-        std::map<GN::StrA,SurfaceResourceView>::const_iterator iter = desc.binding.views.begin();
-        for( ; iter != desc.binding.views.end(); ++iter )
-        {
-            GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( iter->second.surf );
-
-            if( item )
-            {
-                mResourceLRU->realize( item );
-            }
-        }
-
-        mResourceThread->waitForIdle();
-        mDrawThread->waitForIdle();
-    }
 
     // create new resource item
     GraphicsResourceItem * item = mResourceCache->createResource( desc );
@@ -523,6 +506,32 @@ GN::engine::RenderEngine::createResource(
     if( GRT_KERNEL == desc.type )
     {
         mKernels.add( desc.kernel.kernel, item );
+    }
+    // for port binding: setup dependencies
+    else if( GRT_PORT_BINDING == desc.type )
+    {
+        // realize disposed surfaces before creating port binding
+        std::map<GN::StrA,SurfaceResourceView>::const_iterator iter = desc.binding.views.begin();
+        for( ; iter != desc.binding.views.end(); ++iter )
+        {
+            GraphicsResourceItem * surf = safeCastPtr<GraphicsResourceItem>( iter->second.surf );
+
+            if( mResourceCache->checkResource( surf, GRT_SURFACE ) )
+            {
+                if( item->prerequisites.end() == std::find( item->prerequisites.begin(), item->prerequisites.end(), surf ) )
+                {
+                    item->prerequisites.append( surf );
+
+                    GN_ASSERT( surf->dependents.end() == std::find( surf->dependents.begin(), surf->dependents.end(), item ) );
+
+                    surf->dependents.append( item );
+                }
+            }
+            else
+            {
+                GN_ERROR(sLogger)( "invalid binding!" );
+            }
+        }
     }
 
     return item;
@@ -565,7 +574,7 @@ void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
     mResourceLRU->remove( item );
 
     // finally, delete from cache
-    return mResourceCache->deleteResource( item );
+    mResourceCache->deleteResource( item );
 
     GN_UNGUARD;
 }

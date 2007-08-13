@@ -187,7 +187,7 @@ bool GN::gfx::D3D9IdxBuf::init()
     // create index buffer
     GN_TODO( "setup usage and pool" );
     GN_DX9_CHECK_RV( dev->CreateIndexBuffer(
-        desc.layout.basemap.rowBytes,
+        (UINT)desc.layout.basemap.rowBytes,
         0, // usage
         gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ? D3DFMT_INDEX16 : D3DFMT_INDEX32,
         D3DPOOL_MANAGED,
