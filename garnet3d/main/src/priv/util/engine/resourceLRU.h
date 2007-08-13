@@ -70,10 +70,14 @@ namespace GN { namespace engine
         size_t mCapacity;
         size_t mRealizedBytes;
 
+        int    mRealizeStamp;
+
         // ********************************
         // private functions
         // ********************************
     private:
+
+        inline void doRealize( GraphicsResourceItem * item );
 
         inline void markAsRecentlyUsed( GraphicsResourceItem * item );
     };

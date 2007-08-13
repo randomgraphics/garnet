@@ -54,6 +54,11 @@ namespace GN { namespace engine
         GraphicsResourceState state;
 
         ///
+        /// This is used to mark realize time stamp. Note that 0 is reserved for newly created resource.
+        ///
+        int realizeStamp;
+
+        ///
         /// this is used to store dispose resource list returned by makeRoomFromResource()
         ///
         GraphicsResourceItem * nextItemToDispose;
@@ -116,6 +121,7 @@ namespace GN { namespace engine
             , id( id_ )
             , bytes( bytes_ )
             , state( GRS_DISPOSED )
+            , realizeStamp( 0 )
             , lastSubmissionFence( 0 )
             , lastReferenceFence( 0 )
             , lastCompletedFence( 0 )
