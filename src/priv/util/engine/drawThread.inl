@@ -184,7 +184,8 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::DrawThread::submitResourceCreateCommand(
-    GraphicsResourceItem * item )
+    GraphicsResourceItem               * item,
+    DynaArray<ResourceCommandWaitItem> * waitingList )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     GN_ASSERT( GRS_REALIZED == item->state );
@@ -201,6 +202,8 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCreateCommand(
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
 
+    if( waitingList ) cmd->waitingList.swap( *waitingList );
+
     item->lastSubmissionFence = fence;
 
     submitResourceCommand( cmd );
@@ -210,7 +213,8 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCreateCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposeCommand(
-    GraphicsResourceItem * item )
+    GraphicsResourceItem               * item,
+    DynaArray<ResourceCommandWaitItem> * waitingList )
 {
     GN_ASSERT( mEngine.resourceCache().checkResource( item ) );
     GN_ASSERT( GRS_DISPOSED == item->state );
@@ -227,6 +231,8 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposeCommand(
     cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
     cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
+
+    if( waitingList ) cmd->waitingList.swap( *waitingList );
 
     item->lastSubmissionFence = fence;
 

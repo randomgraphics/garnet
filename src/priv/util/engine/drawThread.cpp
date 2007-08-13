@@ -557,7 +557,6 @@ bool GN::engine::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferByte
     // initial other data
     mReadingIndex = 0;
     mWritingIndex = 0;
-    mCompletedResourceFence = 0;
     mCompletedDrawFence = 0;
 
     // create thread
@@ -838,6 +837,26 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
     GN_SCOPE_PROFILER( RenderEngine_DrawThread_handle_resource_commands );
 
+    struct Local
+    {
+        static inline bool sWaitingListDone( GN::engine::ResourceCommand & cmd )
+        {
+            size_t N = cmd.waitingList.size();
+
+            while( N > 0 )
+            {
+                const GN::engine::ResourceCommandWaitItem & w = cmd.waitingList[N-1];
+
+                if( w.item->lastCompletedFence < w.fence ) return false;
+
+                cmd.waitingList.popBack();
+                --N;
+            }
+
+            return true;
+        }
+    };
+
     bool loopAgain;
     do
     {
@@ -856,7 +875,8 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             GN_ASSERT( mEngine.resourceCache().checkResource( cmd->resource ) );
 
             // process the resource command
-            if( cmd->mustAfterThisDrawFence <= mCompletedDrawFence &&
+            if( Local::sWaitingListDone( *cmd ) &&
+                cmd->mustAfterThisDrawFence <= mCompletedDrawFence &&
                 cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
             {
                 // remove it from resource command buffer
@@ -892,9 +912,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 // update resource's complete fence
                 prev->resource->lastCompletedFence = prev->submittedAtThisFence;
-
-                // update draw thread's resource complete fence
-                mCompletedResourceFence = prev->submittedAtThisFence;
 
                 // delete command instance
                 ResourceCommand::free( prev );

@@ -93,6 +93,41 @@ static const char * fxcode =
 "    }                                              \n"
 "}";
 
+class ParamSetLoader : public GN::engine::GraphicsResourceLoader
+{
+    bool load( const GraphicsResourceDesc &, DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    bool decompress( const GraphicsResourceDesc &, DynaArray<UInt8> & , DynaArray<UInt8> & )
+    {
+        return true;
+    }
+
+    bool download( GraphicsResource & res, DynaArray<UInt8> & )
+    {
+        GN_ASSERT( GRT_PARAMETER_SET == res.desc.type );
+        GN_ASSERT( res.paramset );
+
+        KernelParameterSet & ps = *res.paramset;
+
+        ps["FX"].set( fxcode );
+        ps["PRIM_TYPE"].set( TRIANGLE_LIST );
+        ps["PRIM_COUNT"].set( 1 );
+        ps["BASE_VERTEX"].set( 0 );
+        ps["VERTEX_COUNT"].set( 3 );
+        ps["BASE_INDEX"].set( 0 );
+
+        return true;
+    }
+};
+
+static void resetDrawParameters( GraphicsResource *, AutoRef<GraphicsResourceLoader> & reloader )
+{
+    reloader.attach( new ParamSetLoader );
+}
+
 bool TestTriangle::init()
 {
     RenderEngine & re = renderEngine();
@@ -103,13 +138,7 @@ bool TestTriangle::init()
 
     // create parameter set
     param = re.createParameterSet( "triangle ps", *kernel );
-    re.setParameter( param, "FX", 0, strLen(fxcode)+1, fxcode );
-    re.setParameterT( param, "PRIM_TYPE", TRIANGLE_LIST );
-    re.setParameterT( param, "PRIM_COUNT", 1 );
-    re.setParameterT( param, "BASE_VERTEX", 0 );
-    re.setParameterT( param, "VERTEX_COUNT", 3 );
-    re.setParameterT( param, "BASE_INDEX", 0 );
-    re.setParameterT( param, "VSCF", Matrix44f::IDENTITY );
+    param->sigReload.connect( &resetDrawParameters );
 
     // create vertex buffer
     SurfaceElementFormat vtxfmt;
@@ -158,6 +187,17 @@ void TestTriangle::render()
     static int k = 0;
     if( 100 < (k % 200) ) re.disposeAllResources();
     ++k;
+
+    static float scale = 0.1f;
+    scale += 0.005f;
+    if( scale > 1.0f ) scale = 0.1f;
+    Matrix44f m44;
+    m44.identity();
+    m44[0][0] = scale;
+    m44[1][1] = scale;
+    m44[2][2] = scale;
+
+    re.setParameterT( param, "VSCF", m44 );
 
     re.render( context );
 }

@@ -28,6 +28,17 @@ namespace GN { namespace engine
     };
 
     ///
+    /// means resouce command must wait resource 'item' pass 'fence'
+    ///
+    struct ResourceCommandWaitItem
+    {
+        //@{
+        GraphicsResourceItem * item;
+        FenceId                fence;
+        //@}
+    };
+
+    ///
     /// basic resource command item class.
     ///
     // TODO: use pooled memory to avoid runtime heap operation
@@ -39,6 +50,7 @@ namespace GN { namespace engine
         GraphicsResourceOperation             op;                         ///< requested operation.
         GraphicsResourceItem *                resource;                   ///< target resource
         AutoRef<GraphicsResourceLoader>       loader;                     ///< ignored by GROP_DELETE
+        DynaArray<ResourceCommandWaitItem>    waitingList;                ///< the request must happens after items in waiting list are all done.
         FenceId                               mustAfterThisDrawFence;     ///< the request must happens after this draw fence. For copy/dispose only.
         FenceId                               mustAfterThisResourceFence; ///< the request must happens after this resource fence. For copy/dispose only
         FenceId                               submittedAtThisFence;       ///< the request is submitted at this fence.

@@ -175,11 +175,11 @@ namespace GN { namespace gfx
     {
         // all values are in unit of element
         //@{
-        UInt32 width;        ///< sub surface width in element
-        UInt32 height;       ///< sub surface height in element (must be 1 for 1D surface)
-        UInt32 depth;        ///< sub surface depth in element  (must be 1 for 2D surface)
-        UInt32 rowBytes;     ///< bytes of one row of element (for compressed texture, it is bytes of one texel row, not one block row)
-        UInt32 sliceBytes;   ///< slice pitch in bytes
+        size_t width;        ///< sub surface width in element
+        size_t height;       ///< sub surface height in element (must be 1 for 1D surface)
+        size_t depth;        ///< sub surface depth in element  (must be 1 for 2D surface)
+        size_t rowBytes;     ///< bytes of one row of element (for compressed texture, it is bytes of one texel row, not one block row)
+        size_t sliceBytes;   ///< slice pitch in bytes
         //@}
     };
 
@@ -189,8 +189,8 @@ namespace GN { namespace gfx
     struct SurfaceLayout
     {
         SurfaceDimension     dim;     ///< 1D, 2D, 3D
-        UInt32               levels;  ///< LOD levels
-        UInt32               faces;   ///< number of faces
+        size_t               levels;  ///< LOD levels
+        size_t               faces;   ///< number of faces
         SubSurfaceLayout     basemap; ///< properties of base map
         SurfaceElementFormat format;  ///< element format descriptor
     };
@@ -201,7 +201,7 @@ namespace GN { namespace gfx
     struct SurfaceDesc
     {
         SurfaceLayout layout; ///< surface data layout
-        UInt32        access; ///< surface access flags, combination of SurfaceAccessFlag.
+        BitFields     access; ///< surface access flags, combination of SurfaceAccessFlag.
     };
 
     ///
@@ -386,10 +386,10 @@ namespace GN { namespace gfx
     struct SurfaceView
     {
         Surface * surf;       ///< surface pointer
-        UInt32    firstLevel; ///< first mipmap level. 0 means the most detailed level.
-        UInt32    numLevels;  ///< set 0 for all levels staring from firstLevel.
-        UInt32    firstFace;  ///< first face index, starting from 0
-        UInt32    numFaces;   ///< set to 0 for all faces starting from firstFace.
+        size_t    firstLevel; ///< first mipmap level. 0 means the most detailed level.
+        size_t    numLevels;  ///< set 0 for all levels staring from firstLevel.
+        size_t    firstFace;  ///< first face index, starting from 0
+        size_t    numFaces;   ///< set to 0 for all faces starting from firstFace.
 
         ///
         /// ctor
@@ -401,10 +401,10 @@ namespace GN { namespace gfx
         ///
         void set(
             Surface * surf_,
-            UInt32    firstLevel_,
-            UInt32    numLevels_,
-            UInt32    firstFace_,
-            UInt32    numFaces_ )
+            size_t    firstLevel_,
+            size_t    numLevels_,
+            size_t    firstFace_,
+            size_t    numFaces_ )
         {
             surf       = surf_;
             firstLevel = firstLevel_;
@@ -453,13 +453,13 @@ namespace GN { namespace gfx
         inline  bool set( const T & value ) { return set( 0, sizeof(T), &value ); }
 
         template<>
-        inline  bool set<const char*>( const char * const & value ) { return set( 0, strLen(value), value ); }
+        inline  bool set<const char*>( const char * const & value ) { return set( 0, strLen(value)+1, value ); }
 
         template<>
-        inline  bool set<char*>( char * const & value ) { return set( 0, strLen(value), value ); }
+        inline  bool set<char*>( char * const & value ) { return set( 0, strLen(value)+1, value ); }
 
         template<>
-        inline  bool set<StrA>( const StrA & value ) { return set( 0, value.size(), value.cptr() ); }
+        inline  bool set<StrA>( const StrA & value ) { return set( 0, value.size()+1, value.cptr() ); }
         //@}
     };
 

@@ -116,9 +116,9 @@ namespace GN { namespace engine
 
         inline void submitResourceCommand( ResourceCommand * item );
 
-        inline void submitResourceCreateCommand( GraphicsResourceItem * item );
+        inline void submitResourceCreateCommand( GraphicsResourceItem * item, DynaArray<ResourceCommandWaitItem> * waitingList = NULL );
 
-        inline void submitResourceDisposeCommand( GraphicsResourceItem * item );
+        inline void submitResourceDisposeCommand( GraphicsResourceItem * item, DynaArray<ResourceCommandWaitItem> * waitingList = NULL );
 
         //@}
 
@@ -208,7 +208,6 @@ namespace GN { namespace engine
         DoubleLinkedList<ResourceCommand> mResourceCommands;
         Mutex                             mResourceMutex;
         volatile bool                     mResourceCommandEmpty;
-        FenceId                           mCompletedResourceFence;
 
         // data to handle draw commands
         FixedArray<DrawFunction,NUM_DRAW_COMMAND_TYPES> mDrawFunctions;

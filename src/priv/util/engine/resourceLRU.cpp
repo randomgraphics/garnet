@@ -76,11 +76,17 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
 
     if( GRS_REALIZED == item->state ) return;
 
-    // recursive realize all prerequites.
+    // recursive realize all prerequites, setup resource waiting list
+    DynaArray<ResourceCommandWaitItem> waitingList;
     for( size_t i = 0; i < item->prerequisites.size(); ++i )
     {
         GraphicsResourceItem * p = item->prerequisites[i];
+
         realize( p );
+
+        waitingList.resize( waitingList.size() + 1 );
+        waitingList.back().item  = p;
+        waitingList.back().fence = p->lastSubmissionFence;
     }
 
     markAsRecentlyUsed( item );
@@ -118,15 +124,15 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
     if( newLoader )
     {
         item->loader = newLoader;
-        mEngine.resourceThread().submitResourceLoadCommand( item );
+        mEngine.resourceThread().submitResourceLoadCommand( item, &waitingList );
     }
     else if( item->loader )
     {
-        mEngine.resourceThread().submitResourceLoadCommand( item );
+        mEngine.resourceThread().submitResourceLoadCommand( item, &waitingList  );
     }
     else
     {
-        mEngine.drawThread().submitResourceCreateCommand( item );
+        mEngine.drawThread().submitResourceCreateCommand( item, &waitingList  );
     }
 }
 
@@ -153,7 +159,7 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item
             d->state = GRS_DISPOSED;
             GN_ASSERT( mRealizedBytes >= d->bytes );
             mRealizedBytes -= d->bytes;
-            dt.submitResourceDisposeCommand( item );
+            dt.submitResourceDisposeCommand( d );
         }
     }
 
