@@ -218,8 +218,7 @@ public:
 // -----------------------------------------------------------------------------
 static void sDisposeAllResources(
     GN::engine::RenderEngine::ResourceCache & cache,
-    GN::engine::RenderEngine::ResourceLRU   & lru,
-    GN::engine::RenderEngine::DrawThread    & dt )
+    GN::engine::RenderEngine::ResourceLRU   & lru )
 {
     GN_GUARD;
 
@@ -229,11 +228,7 @@ static void sDisposeAllResources(
          item;
          item = cache.nextResource( item ) )
     {
-        if( GRS_DISPOSED == item->state ) continue;
-
-        lru.dispose( item );
-
-        dt.submitResourceDisposeCommand( item );
+        if( GRS_REALIZED == item->state ) lru.dispose( item );
     }
 
     GN_UNGUARD;
@@ -252,7 +247,7 @@ static void sDeleteAllResources(
     using namespace GN::engine;
 
     // dispose all of them
-    sDisposeAllResources( cache, lru, dt );
+    sDisposeAllResources( cache, lru );
 
     // wait for completion of dipose
     dt.waitForIdle();
@@ -274,48 +269,9 @@ static void sDeleteAllResources(
 //
 //
 // -----------------------------------------------------------------------------
-static void sRealizeResource(
-    GN::engine::RenderEngine::ResourceLRU    & lru,
-    GN::engine::RenderEngine::ResourceThread & rt,
-    GN::engine::RenderEngine::DrawThread     & dt,
-    GN::engine::GraphicsResourceItem         * item )
-{
-    GN_GUARD_SLOW;
-
-    using namespace GN::engine;
-
-    if( GRS_REALIZED == item->state ) return;
-
-    lru.realize( item );
-    GN_ASSERT( GN::engine::GRS_REALIZED == item->state );
-
-    GN::AutoRef<GraphicsResourceLoader> newLoader;
-    item->sigReload( item, newLoader );
-
-    if( newLoader )
-    {
-        item->loader = newLoader;
-        rt.submitResourceLoadCommand( item );
-    }
-    else if( item->loader )
-    {
-        rt.submitResourceLoadCommand( item );
-    }
-    else
-    {
-        dt.submitResourceCreateCommand( item );
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 template< typename RESOURCE_ARRAY >
 static void sDoRender(
     GN::engine::RenderEngine::ResourceLRU    & lru,
-    GN::engine::RenderEngine::ResourceThread & rt,
     GN::engine::RenderEngine::DrawThread     & dt,
     const RESOURCE_ARRAY                     & resources )
 {
@@ -331,7 +287,7 @@ static void sDoRender(
 
         GraphicsResourceItem * item = safeCastPtr<GraphicsResourceItem>( resources[i] );
 
-        sRealizeResource( lru, rt, dt, item );
+        lru.realize( item );
     }
 
     // submit new draw command
@@ -485,7 +441,7 @@ bool GN::engine::RenderEngine::reset( const gfx::GraphicsSystemCreationParameter
     RENDER_ENGINE_API();
 
     // dispose all graphics resources
-    sDisposeAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
+    sDisposeAllResources( *mResourceCache, *mResourceLRU );
     mDrawThread->waitForIdle();
 
     // do reset
@@ -547,7 +503,7 @@ GN::engine::RenderEngine::createResource(
 
             if( item )
             {
-                sRealizeResource( *mResourceLRU, *mResourceThread, *mDrawThread, item );
+                mResourceLRU->realize( item );
             }
         }
 
@@ -599,9 +555,11 @@ void GN::engine::RenderEngine::deleteResource( GraphicsResource * res )
     }
 
     // dispose it first
-    if( GRS_REALIZED == item->state ) mResourceLRU->dispose( item );
-    mDrawThread->submitResourceDisposeCommand( item );
-    mDrawThread->waitForIdle();
+    if( GRS_REALIZED == item->state )
+    {
+        mResourceLRU->dispose( item );
+        mDrawThread->waitForIdle();
+    }
 
     // then remove from LRU
     mResourceLRU->remove( item );
@@ -656,7 +614,7 @@ void GN::engine::RenderEngine::updateResource(
     }
 
     // realize the resource, if it is disposed.
-    sRealizeResource(  *mResourceLRU, *mResourceThread, *mDrawThread, item );
+    mResourceLRU->realize( item );
 
     // update item loaders
     item->loader.set( loader );
@@ -683,9 +641,8 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
     if( GRS_DISPOSED == item->state ) return;
 
     mResourceLRU->dispose( item );
-    GN_ASSERT( GN::engine::GRS_DISPOSED == item->state );
 
-    mDrawThread->submitResourceDisposeCommand( item );
+    GN_ASSERT( GN::engine::GRS_DISPOSED == item->state );
 
     GN_UNGUARD;
 }
@@ -699,7 +656,7 @@ void GN::engine::RenderEngine::disposeAllResources()
 
     RENDER_ENGINE_API();
 
-    sDisposeAllResources( *mResourceCache, *mResourceLRU, *mDrawThread );
+    sDisposeAllResources( *mResourceCache, *mResourceLRU );
 
     GN_UNGUARD;
 }
@@ -784,7 +741,7 @@ void GN::engine::RenderEngine::render( UIntPtr context )
 
     RENDER_ENGINE_API();
 
-    sDoRender( *mResourceLRU, *mResourceThread, *mDrawThread, mDrawContexts[context].resources );
+    sDoRender( *mResourceLRU, *mDrawThread, mDrawContexts[context].resources );
 
     GN_UNGUARD_SLOW;
 }
@@ -833,7 +790,7 @@ void GN::engine::RenderEngine::render( GraphicsResource * kernel, GraphicsResour
         resources.append( binding );
     }
 
-    sDoRender( *mResourceLRU, *mResourceThread, *mDrawThread, resources );
+    sDoRender( *mResourceLRU, *mDrawThread, resources );
 
     GN_UNGUARD_SLOW;
 }
