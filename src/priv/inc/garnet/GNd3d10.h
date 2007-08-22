@@ -1,12 +1,12 @@
-#ifndef __GN_GFX_D3D10APP_H__
-#define __GN_GFX_D3D10APP_H__
+#ifndef __GN_D3D10_H__
+#define __GN_D3D10_H__
 // *****************************************************************************
 /// \file
-/// \brief   interface of d3d10 application framework
+/// \brief   interface of d3d10 utils
 /// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
+#include "garnet/GNcore.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -16,7 +16,7 @@
 #include <d3d10.h>
 #include <d3dx10.h>
 
-namespace GN { namespace gfx { namespace d3d10
+namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 {
     ///
     /// scoped PIX event
@@ -34,6 +34,25 @@ namespace GN { namespace gfx { namespace d3d10
         }
         //@}
     };
+
+    /// \name state dumper
+    //@{
+
+    ID3D10VertexShader   * createDumpableVertexShader( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10GeometryShader * createDumpableGeometryShader( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10PixelShader    * createDumpablePixelShader( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10InputLayout    * createDumpableInputLayout(
+        ID3D10Device                   & device,
+        const D3D10_INPUT_ELEMENT_DESC * elements,
+        size_t                           count,
+        const void                     * signature,
+        size_t                           bytes );
+
+    void setDumpFilePrefix( const StrA & );
+	void dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex );
+	void dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
+
+    //@}
 
     ///
     /// D3D10 application framework
@@ -139,9 +158,9 @@ namespace GN { namespace gfx { namespace d3d10
 		ID3D10Debug         * mDebug;
 		ID3D10InfoQueue     * mInfoQueue;
     };
-}}}
+}}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_D3D10APP_H__
+#endif // __GN_D3D10_H__

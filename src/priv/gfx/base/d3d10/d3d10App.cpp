@@ -1,15 +1,19 @@
 #include "pch.h"
-#include "d3d9app.h"
 
 using namespace GN;
-using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.d3d9.d3d9app");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )
-#pragma comment( lib, "d3dx9.lib" )
-#pragma comment( lib, "dxerr9.lib" )
+#pragma comment( lib, "d3d10.lib" )
+#pragma comment( lib, "dxerr.lib" )
+#pragma comment( lib, "dxguid.lib" )
+#if GN_DEBUG_BUILD
+#pragma comment( lib, "d3dx10d.lib" )
+#else
+#pragma comment( lib, "d3dx10.lib" )
+#endif
 #endif
 
 // *****************************************************************************
@@ -32,6 +36,13 @@ sStaticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 
         case WM_ERASEBKGND:
             return 0;
+
+        case WM_KEYUP:
+            if( VK_ESCAPE == wp )
+            {
+                ::PostQuitMessage(0);
+            }
+            break;
 
         default: ; // do nothing
     }
@@ -155,55 +166,6 @@ static void sDestroyWindow( HWND hwnd )
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
 }
 
-//
-//
-// ------------------------------------------------------------------------
-static bool
-sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
-             HWND window,
-             IDirect3D9 & d3d,
-             UINT adapter,
-             D3DDEVTYPE devtype,
-             const GN::gfx::d3d9::D3D9AppOption & o )
-{
-    GN_UNUSED_PARAM( d3d );
-    GN_UNUSED_PARAM( adapter );
-    GN_UNUSED_PARAM( devtype );
-
-    // clear all field, first
-    ZeroMemory( &d3dpp, sizeof(d3dpp) );
-
-    // setup depth parameters
-    d3dpp.EnableAutoDepthStencil = true;
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-    d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
-
-    // set display mode parameters
-    d3dpp.Windowed = !o.fullscreen;
-    if( o.fullscreen )
-    {
-        d3dpp.BackBufferCount  = 0;
-        d3dpp.BackBufferWidth  = o.dm.width;
-        d3dpp.BackBufferHeight = o.dm.height;
-        d3dpp.BackBufferFormat = D3DFMT_A8R8G8B8;
-    }
-    else
-    {
-        d3dpp.BackBufferCount  = 0;
-        d3dpp.BackBufferWidth  = o.windowedWidth;
-        d3dpp.BackBufferHeight = o.windowedHeight;
-        d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-    }
-
-    // set other parameters
-    d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
-    d3dpp.PresentationInterval = o.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-    d3dpp.hDeviceWindow        = window;
-
-    // success
-    return true;
-}
-
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -211,25 +173,27 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::d3d9::D3D9Application::D3D9Application()
+GN::d3d10::D3D10Application::D3D10Application()
     : mWindow(0)
-    , mD3D(0)
+    , mAdapter(0)
     , mDevice(0)
-    , mRunning(false)
+    , mSwapChain(0)
+    , mDebug(0)
+    , mInfoQueue(0)
 {
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::d3d9::D3D9Application::~D3D9Application()
+GN::d3d10::D3D10Application::~D3D10Application()
 {
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::d3d9::D3D9Application::run( const D3D9AppOption * )
+int GN::d3d10::D3D10Application::run( const D3D10AppOption * )
 {
     GN_GUARD_ALWAYS;
 
@@ -276,12 +240,11 @@ int GN::gfx::d3d9::D3D9Application::run( const D3D9AppOption * )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
+bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 {
-    disposeDevice();
     destroyDevice();
     mOption = o;
-    return createDevice() && restoreDevice();
+    return createDevice();
 }
 
 // *****************************************************************************
@@ -291,7 +254,7 @@ bool GN::gfx::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::d3d9::D3D9Application::init()
+bool GN::d3d10::D3D10Application::init()
 {
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
@@ -300,36 +263,23 @@ bool GN::gfx::d3d9::D3D9Application::init()
     mWindow = sCreateWindow(
             mOption.parent,
             mOption.monitor,
-            mOption.windowedWidth,
-            mOption.windowedHeight,
+            mOption.width,
+            mOption.height,
             mOption.fullscreen );
     if( 0 == mWindow ) return false;
 
-    mD3D = Direct3DCreate9( D3D_SDK_VERSION );
-    if( 0 == mD3D )
-    {
-        GN_ERROR(sLogger)( "fail to create D3D instance!" );
-        return false;
-    }
-
     // success
-    mRunning = true;
     return onInit( mOption );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::d3d9::D3D9Application::quit()
+void GN::d3d10::D3D10Application::quit()
 {
-    mRunning = false;
-
-    disposeDevice();
-    destroyDevice();
-
     onQuit();
 
-    safeRelease( mD3D );
+    destroyDevice();
 
     sDestroyWindow( mWindow ); mWindow = 0;
 }
@@ -337,64 +287,63 @@ void GN::gfx::d3d9::D3D9Application::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::d3d9::D3D9Application::createDevice()
+bool GN::d3d10::D3D10Application::createDevice()
 {
     PixPerfScopeEvent pixevent( 0, L"Create" );
 
     GN_ASSERT( IsWindow(mWindow) );
     GN_ASSERT( 0 == mDevice );
 
-    // Initiate adapter ID
-    mAdapter = 0;
+    // adjust render window
+    if( !sAdjustWindow( mWindow, mOption.width, mOption.height, mOption.fullscreen ) ) return false;
 
-    mDeviceType = D3DDEVTYPE_HAL;
+    // setup creation flags
+    UINT flags = 0;
+#if GN_DEBUG_BUILD
+    flags |= D3D10_CREATE_DEVICE_DEBUG;
+#endif
+    flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
 
-	// Look for nvidia adapter
-    UINT nAdapter = mD3D->GetAdapterCount();
-    GN_ASSERT( nAdapter );
-    for( UInt32 i = 0; i < nAdapter; ++i )
-    {
-        D3DADAPTER_IDENTIFIER9 Identifier;
-        GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
-        GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
-        if( strstr(Identifier.Description,"NVPerfHUD") )
-        {
-            GN_TRACE(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
-            mAdapter = i;
-            mDeviceType = D3DDEVTYPE_REF;
-            break;
-        }
-    }
+    // setup swap chain descriptor
+    GN_CASSERT( D3D10_SDK_VERSION >= 28 );
+    DXGI_SWAP_CHAIN_DESC sd;
+    ::memset( &sd, 0, sizeof(sd) );
+    sd.BufferCount = 1;
+    sd.BufferDesc.Width = mOption.width;
+    sd.BufferDesc.Height = mOption.height;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Denominator = 1;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    sd.OutputWindow = mWindow;
+    sd.SampleDesc.Count = 1;
+    sd.SampleDesc.Quality = 0;
+    sd.Windowed = !mOption.fullscreen;
 
-    // Look for an adapter ordinal that is tied to a HMONITOR
-    if( 0 == mAdapter && 0 != mOption.monitor )
-    {
-        for( UINT i = 0; i < nAdapter; ++i )
-        {
-            if( mD3D->GetAdapterMonitor( i ) == mOption.monitor )
-            {
-                mAdapter = i;
-                break;
-            }
-        }
-    }
-
-    // init d3d present parameters
-    if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
-
-    // define device behavior
-    mBehavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-
-    // device found, create it!
-    GN_DX9_CHECK_RV(
-        mD3D->CreateDevice(
+    // create device
+    GN_DX10_CHECK_RV(
+        D3D10CreateDeviceAndSwapChain(
             mAdapter,
-            mDeviceType,
-            mWindow,
-            mBehavior,
-            &mPresentParameters,
+            D3D10_DRIVER_TYPE_HARDWARE,
+            NULL, // software module handle
+            flags,
+            D3D10_SDK_VERSION,
+            &sd,
+            &mSwapChain,
             &mDevice ),
         false );
+
+	// setup debug and info-queue layer
+	if( SUCCEEDED( mDevice->QueryInterface( IID_ID3D10Debug, (void**)&mDebug ) ) )
+	{
+		if( SUCCEEDED( mDebug->QueryInterface( IID_ID3D10InfoQueue, (void**)&mInfoQueue ) ) )
+		{
+			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_CORRUPTION, true );
+			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_ERROR, true );
+			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_WARNING, true );
+			//mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_INFO, true );
+		}
+	}
 
     // success
     return onCreate();
@@ -403,44 +352,17 @@ bool GN::gfx::d3d9::D3D9Application::createDevice()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::d3d9::D3D9Application::restoreDevice()
-{
-    PixPerfScopeEvent pixevent( 0, L"Restore" );
-
-    GN_ASSERT( mWindow );
-    GN_ASSERT( mDevice );
-
-    UInt32 w = mOption.fullscreen ? mOption.dm.width : mOption.windowedWidth;
-    UInt32 h = mOption.fullscreen ? mOption.dm.height : mOption.windowedHeight;
-    sAdjustWindow( mWindow, w, h, mOption.fullscreen );
-
-    if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
-    GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
-
-    // success
-    return onRestore();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::d3d9::D3D9Application::disposeDevice()
+void GN::d3d10::D3D10Application::destroyDevice()
 {
     if( mDevice )
     {
-        onDispose();
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::d3d9::D3D9Application::destroyDevice()
-{
-    if( mDevice )
-    {
+        mDevice->ClearState();
         onDestroy();
-        mDevice->Release();
-        mDevice = 0;
     }
+
+	safeRelease( mInfoQueue );
+	safeRelease( mDebug );
+	safeRelease( mSwapChain );
+	safeRelease( mDevice );
+	safeRelease( mAdapter );
 }

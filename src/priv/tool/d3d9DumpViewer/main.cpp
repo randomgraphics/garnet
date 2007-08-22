@@ -1,8 +1,7 @@
 #include "pch.h"
-#include "d3d9app.h"
 
 using namespace GN;
-using namespace GN::gfx;
+using namespace GN::d3d9;
 
 ///
 /// define to non-zero to render directly into back buffer;
@@ -179,14 +178,14 @@ struct D3D9StateDump
         // vs
         if( !vs.code.empty() )
         {
-            vs.vs.attach( d3d9::assembleVS( &dev, vs.code.cptr(), 0 ) );
+            vs.vs.attach( assembleVS( &dev, vs.code.cptr(), 0 ) );
             if( vs.vs.empty() ) return false;
         }
 
         // ps
         if( !ps.code.empty() )
         {
-            ps.ps.attach( d3d9::assemblePS( &dev, ps.code.cptr(), 0 ) );
+            ps.ps.attach( assemblePS( &dev, ps.code.cptr(), 0 ) );
             if( ps.ps.empty() ) return false;
         }
 
@@ -342,7 +341,7 @@ struct D3D9StateDump
 
     void bind( IDirect3DDevice9 & dev ) const
     {
-        d3d9::PixPerfScopeEvent pixevent( 0, L"Bind" );
+        PixPerfScopeEvent pixevent( 0, L"Bind" );
 
         // vs
         dev.SetVertexShader( vs.vs );
@@ -420,7 +419,7 @@ struct D3D9StateDump
     {
         // load RT data
         {
-            d3d9::PixPerfScopeEvent pixevent( 0, L"Load RT data" );
+            PixPerfScopeEvent pixevent( 0, L"Load RT data" );
             for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
             {
                 D3D9RtDump & rtd = rendertargets[i];
@@ -889,14 +888,14 @@ struct D3D9StateResource
     //@}
 };
 
-class MyApp : public GN::gfx::d3d9::D3D9Application
+class MyApp : public D3D9Application
 {
     D3D9StateDump mState;
     AutoComPtr<IDirect3DSurface9> mBackBuf;
 
 protected:
 
-    bool onInit( d3d9::D3D9AppOption & o )
+    bool onInit( D3D9AppOption & o )
     {
         mState.clear();
         if( !scene::loadFromXmlFile( mState, sDumpFileName ) ) return false;

@@ -10,9 +10,6 @@ namespace GN
 {
     namespace gfx
     {
-        namespace detail
-        {
-        }
     }
 }
 
@@ -20,6 +17,3 @@ namespace GN
 #include "garnet/gfx/image.h"
 #include "garnet/gfx/shape.h"
 #include "garnet/gfx/misc.h"
-#include "garnet/gfx/d3d9utils.h"
-#include "garnet/gfx/d3d10utils.h"
-#include "garnet/gfx/oglutils.h"

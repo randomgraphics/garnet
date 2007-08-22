@@ -418,7 +418,7 @@ bool GN::gfx::D3D9Texture::create2DTexture()
     GN_ASSERT( 1 == desc.layout.format.count );
 
     // determine format
-    D3DFORMAT format = d3d9::clrFmt2D3DFormat( desc.layout.format.attribs[0].format, false );
+    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );
@@ -494,7 +494,7 @@ bool GN::gfx::D3D9Texture::create3DTexture()
     GN_ASSERT( 1 == desc.layout.format.count );
 
     // determine format
-    D3DFORMAT format = d3d9::clrFmt2D3DFormat( desc.layout.format.attribs[0].format, false );
+    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );
@@ -556,7 +556,7 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
     GN_ASSERT( 1 == desc.layout.format.count );
 
     // determine format
-    D3DFORMAT format = d3d9::clrFmt2D3DFormat( desc.layout.format.attribs[0].format, false );
+    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );

@@ -125,11 +125,11 @@ static struct DdpfDesc
 
 struct DX10Info
 {
-    DXGI_FORMAT              format;
-    D3D10_RESOURCE_DIMENSION dim;
-    UInt32                   miscFlag; // Used for D3D10_RESOURCE_MISC_FLAG
-    UInt32                   arraySize;
-    UInt32                   reserved;                   
+    SInt32 format;
+    SInt32 dim;
+    UInt32 miscFlag; // Used for D3D10_RESOURCE_MISC_FLAG
+    UInt32 arraySize;
+    UInt32 reserved;                   
 };
 
 // *****************************************************************************
@@ -311,7 +311,7 @@ bool DDSReader::readHeader(
         i_buff += sizeof(DX10Info);
         i_size -= sizeof(DX10Info);
 
-        mImgDesc.format = GN::gfx::d3d10::dxgiFormat2ClrFmt( dx10info->format );
+        mImgDesc.format = GN::gfx::dxgiFormat2ClrFmt( dx10info->format );
         if( GN::gfx::FMT_UNKNOWN == mImgDesc.format ) return false;
     }
     else

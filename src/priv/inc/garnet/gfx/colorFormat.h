@@ -225,6 +225,51 @@ namespace GN { namespace gfx
             ( (UInt32)(color.b*255.0f) << 16 ) |
             ( (UInt32)(color.a*255.0f) << 24 );
     }*/
+
+    ///
+    /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
+    ///
+    const char * d3d9Format2Str( int );
+
+    ///
+    /// Convert D3DFMT to ClrFmt. Return FMT_UNKNOWN if failed.
+    ///
+    ClrFmt d3d9Format2ClrFmt( int );
+
+    ///
+    /// Convert ClrFmt to D3D9 format. Return D3DFMT_UNKNOWN if failed.
+    ///
+    int clrFmt2D3D9Format( ClrFmt );
+
+    ///
+    /// Xenon texture format to string. Return "INVALID Xenon FORMAT" if failed.
+    ///
+    const char * xenonFormat2Str( int );
+
+    ///
+    /// Convert Xenon texture format to ClrFmt. Return FMT_UNKNOWN if failed.
+    ///
+    ClrFmt xenonFormat2ClrFmt( int );
+
+    ///
+    /// Convert ClrFmt to Xenon texture format. Return D3DFMT_UNKNOWN if failed.
+    ///
+    int clrFmt2XenonFormat( ClrFmt, bool tiled );
+
+    ///
+    /// DXGI_FORMAT to string. Return "INVALID DXGI_FORMAT" if failed.
+    ///
+    const char * dxgiFormat2Str( int );
+
+    ///
+    /// Convert DXGI_FORMAT to ClrFmt. Return DXGI_FORMAT_UNKNOWN if failed.
+    ///
+    ClrFmt dxgiFormat2ClrFmt( int );
+
+    ///
+    /// Convert ClrFmt to DXGI_FORMAT. Return DXGI_FORMAT_UNKNOWN if failed.
+    ///
+    int clrFmt2DxgiFormat( ClrFmt );
 }}
 
 ///
