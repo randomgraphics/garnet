@@ -1,7 +1,7 @@
 #include "pch.h"
 #ifdef HAS_D3D10
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.d3d10.statedumper");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.statedumper");
 
 using namespace GN;
 
@@ -690,7 +690,7 @@ void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 // public function
 // *****************************************************************************
 
-void GN::gfx::d3d10::setDumpFilePrefix( const StrA & prefix )
+void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 {
     size_t n = min<size_t>( prefix.size(), _MAX_PATH );
     memcpy( sDumpFilePrefix, prefix.cptr(), n );
@@ -700,7 +700,7 @@ void GN::gfx::d3d10::setDumpFilePrefix( const StrA & prefix )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10VertexShader * GN::gfx::d3d10::createDumpableVertexShader(
+ID3D10VertexShader * GN::d3d10::createDumpableVertexShader(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -717,7 +717,7 @@ ID3D10VertexShader * GN::gfx::d3d10::createDumpableVertexShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10GeometryShader * GN::gfx::d3d10::createDumpableGeometryShader(
+ID3D10GeometryShader * GN::d3d10::createDumpableGeometryShader(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -734,7 +734,7 @@ ID3D10GeometryShader * GN::gfx::d3d10::createDumpableGeometryShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10PixelShader * GN::gfx::d3d10::createDumpablePixelShader(
+ID3D10PixelShader * GN::d3d10::createDumpablePixelShader(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -751,7 +751,7 @@ ID3D10PixelShader * GN::gfx::d3d10::createDumpablePixelShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10InputLayout * GN::gfx::d3d10::createDumpableInputLayout(
+ID3D10InputLayout * GN::d3d10::createDumpableInputLayout(
     ID3D10Device                   & device,
     const D3D10_INPUT_ELEMENT_DESC * elements,
     size_t                           count,
@@ -778,7 +778,7 @@ ID3D10InputLayout * GN::gfx::d3d10::createDumpableInputLayout(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex )
+void GN::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex )
 {
 	DumpFile file;
 
@@ -797,7 +797,7 @@ void GN::gfx::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::d3d10::dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex )
+void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex )
 {
 	DumpFile file;
 

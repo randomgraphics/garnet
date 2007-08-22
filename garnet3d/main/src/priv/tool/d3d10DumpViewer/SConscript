@@ -1,7 +1,6 @@
 Import( 'GN' )
 
 sources = [
-	'd3d10app.cpp',
 	'main.cpp',
 ]
 

@@ -1,21 +1,6 @@
 Import( 'GN' )
-sources = [
-    'colorFormat.cpp',
-    'd3d9FormatUtils.cpp',
-    'd3d9ShaderUtils.cpp',
-    'd3d10FormatUtils.cpp',
-    'd3d10StateDumper.cpp',
-    'image.cpp',
-    'imageBMP.cpp',
-    'imageDDS.cpp',
-    'imageJPG.cpp',
-    'imagePNG.cpp',
-    'imageTGA.cpp',
-    'shape.cpp',
-]
-cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-if GN.conf['has_d3d9'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D9'] )
-if GN.conf['has_d3d10_h'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10_H'] )
-if GN.conf['has_d3d10'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
-if GN.conf['has_ogl'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_OGL'] )
-GN.newTarget( 'stlib', 'GNgfxBase', [cluster] )
+sources = [ SConscript( 'base/SConscript' ) ]
+if GN.conf['has_d3d9']  : sources.append( SConscript( 'd3d9/SConscript' ) )
+if GN.conf['has_d3d10'] : sources.append( SConscript( 'd3d10/SConscript' ) )
+#if GN.conf['has_ogl']   : sources.append( SConscript( 'ogl/SConscript' ) )
+GN.newTarget( 'stlib', 'GNgfxBase', sources )

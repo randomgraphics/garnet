@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "d3d10app.h"
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::d3d10;
 
 ///
 /// define to non-zero to render directly into back buffer;
@@ -619,15 +619,15 @@ struct D3D10OperationDump
         dev.IASetPrimitiveTopology( (D3D10_PRIMITIVE_TOPOLOGY)prim );
         if( indexed )
         {
-            //d3d10::setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
-            //d3d10::dumpDrawIndexed( dev, numidx, startidx, startvtx );
+            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+            //dumpDrawIndexed( dev, numidx, startidx, startvtx );
 
             dev.DrawIndexed( numidx, startidx, startvtx );
         }
         else
         {
-            //d3d10::setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
-            //d3d10::dumpDraw( dev, numvtx, startvtx );
+            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+            //dumpDraw( dev, numvtx, startvtx );
 
             dev.Draw( numvtx, startvtx );
         }
@@ -974,7 +974,7 @@ struct D3D10StateDump
     {
         GN_GUARD_SLOW;
 
-        d3d10::PixPerfScopeEvent pixevent( 0, L"Bind" );
+        PixPerfScopeEvent pixevent( 0, L"Bind" );
 
         // shaders
         dev.VSSetShader( vs.comptr );
@@ -1072,7 +1072,7 @@ struct D3D10StateDump
     //@}
 };
 
-class MyApp : public GN::gfx::d3d10::D3D10Application
+class MyApp : public D3D10Application
 {
     D3D10StateDump mState;
 	AutoComPtr<ID3D10Texture2D>        mBackBuf;
@@ -1081,7 +1081,7 @@ class MyApp : public GN::gfx::d3d10::D3D10Application
 
     void copyRt0ToBackbuf()
     {
-        gfx::d3d10::PixPerfScopeEvent pixevent( 0, L"Copy RT0 to back buffer" );
+        PixPerfScopeEvent pixevent( 0, L"Copy RT0 to back buffer" );
 
         ID3D10Device & dev = device();
         
@@ -1108,7 +1108,7 @@ class MyApp : public GN::gfx::d3d10::D3D10Application
 
 protected:
 
-    bool onInit( d3d10::D3D10AppOption & o )
+    bool onInit( D3D10AppOption & o )
     {
         GN_GUARD;
 

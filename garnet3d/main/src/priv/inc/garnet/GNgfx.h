@@ -24,9 +24,6 @@ namespace GN
 #include "gfx/image.h"
 #include "gfx/shape.h"
 #include "gfx/misc.h"
-#include "gfx/d3d9utils.h"
-#include "gfx/d3d10utils.h"
-#include "gfx/oglutils.h"
 
 // basic graphics system interface
 #include "gfx/graphicsSystem.h"
