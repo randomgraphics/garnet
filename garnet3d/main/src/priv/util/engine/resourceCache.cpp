@@ -16,7 +16,7 @@ static size_t sEstimateSurfaceSize( const GN::gfx::SurfaceCreationParameter & de
 {
     using namespace GN::gfx;
 
-    const SurfaceLayout & l = desc.layout;
+    const SurfaceLayout & l = desc.desc.layout;
 
     size_t basebytes = l.basemap.sliceBytes * l.basemap.depth;
     size_t mipbytes  = basebytes / 3;

@@ -163,7 +163,7 @@ bool TestTriangle::init()
     std::map<StrA,SurfaceResourceView> views;
     views["VTXBUF0"].set( vb, 0, 1, 0, 1 );
     views["IDXBUF"].set( ib, 0, 1, 0, 1 );
-    views["TEXTURE0"].set( tex, 0, tex->desc.surface.creation.layout.levels, 0, tex->desc.surface.creation.layout.faces );
+    views["TEXTURE0"].set( tex, 0, tex->desc.surface.creation.desc.layout.levels, 0, tex->desc.surface.creation.desc.layout.faces );
     GraphicsResource * binding = re.createPortBinding( "triangle binding", *kernel, views );
     if( 0 == binding ) return false;
 

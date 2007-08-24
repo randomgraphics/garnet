@@ -28,8 +28,7 @@ namespace GN { namespace gfx
         /// create new instance
         ///
         static D3D9DepthBuffer * sNewInstance(
-            const SurfaceLayout         & layout,
-            int                           access,
+            const SurfaceDesc           & desc,
             const SurfaceCreationHints  & hints );
     };
 }}

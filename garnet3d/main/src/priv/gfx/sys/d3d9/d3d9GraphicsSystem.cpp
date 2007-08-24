@@ -753,7 +753,7 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
         if( 0 == port ) return 0;
 
         // check layout compability
-        if( !port->getRefl().layout.compatible( scp.layout ) )
+        if( !port->getRefl().layout.compatible( scp.desc.layout ) )
         {
             GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", sbp.port.cptr(), sbp.kernel.cptr() );
             return false;
@@ -767,16 +767,16 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
     switch( surftype )
     {
         case D3D9_SURFACE_TYPE_VB        :
-            return D3D9VtxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
+            return D3D9VtxBuf::sNewInstance( *this, scp.desc, scp.hints );
 
         case D3D9_SURFACE_TYPE_IB        :
-            return D3D9IdxBuf::sNewInstance( *this, scp.layout, scp.forcedAccessFlags, scp.hints );
+            return D3D9IdxBuf::sNewInstance( *this, scp.desc, scp.hints );
 
         case D3D9_SURFACE_TYPE_TEX       :
         case D3D9_SURFACE_TYPE_TEX_2D    :
         case D3D9_SURFACE_TYPE_TEX_3D    :
         case D3D9_SURFACE_TYPE_TEX_CUBE  :
-            return D3D9Texture::sNewInstance( *this, surftype, scp.layout, scp.forcedAccessFlags, scp.hints );
+            return D3D9Texture::sNewInstance( *this, surftype, scp.desc, scp.hints );
 
         case D3D9_SURFACE_TYPE_RTT_2D    :
         case D3D9_SURFACE_TYPE_RTT_CUBE  :
@@ -785,7 +785,7 @@ GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
             return 0;
 
         case D3D9_SURFACE_TYPE_RTS_DEPTH :
-            return D3D9DepthBuffer::sNewInstance( scp.layout, scp.forcedAccessFlags, scp.hints );
+            return D3D9DepthBuffer::sNewInstance( scp.desc, scp.hints );
 
         case D3D9_SURFACE_TYPE_ANY :
             GN_ERROR(sLogger)( "fail to determine surface type." );

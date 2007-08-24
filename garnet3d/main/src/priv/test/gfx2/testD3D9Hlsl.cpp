@@ -125,26 +125,26 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     // create vertex buffer
     SurfaceCreationParameter scp;
     scp.bindTo( "HLSL9", "VTXBUF0" );
-    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
-    scp.layout.dim = SURFACE_DIMENSION_1D;
-    scp.layout.levels = 1;
-    scp.layout.faces = 1;
-    scp.layout.basemap.width = GN_ARRAY_COUNT(vertices);
-    scp.layout.basemap.height = 1;
-    scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = sizeof(vertices);
-    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.format.attribs[0].semantic.set( "POS0" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = FMT_FLOAT3;
-    scp.layout.format.attribs[1].semantic.set( "NML0" );
-    scp.layout.format.attribs[1].offset = 12;
-    scp.layout.format.attribs[1].format = FMT_FLOAT3;
-    scp.layout.format.attribs[2].semantic.set( "TEX0" );
-    scp.layout.format.attribs[2].offset = 24;
-    scp.layout.format.attribs[2].format = FMT_FLOAT2;
-    scp.layout.format.count = 3;
-    scp.layout.format.stride = sizeof(Vertex);
+    scp.desc.access = SURFACE_ACCESS_HOST_WRITE;
+    scp.desc.layout.dim = SURFACE_DIMENSION_1D;
+    scp.desc.layout.levels = 1;
+    scp.desc.layout.faces = 1;
+    scp.desc.layout.basemap.width = GN_ARRAY_COUNT(vertices);
+    scp.desc.layout.basemap.height = 1;
+    scp.desc.layout.basemap.depth = 1;
+    scp.desc.layout.basemap.rowBytes = sizeof(vertices);
+    scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs[0].semantic.set( "POS0" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = FMT_FLOAT3;
+    scp.desc.layout.format.attribs[1].semantic.set( "NML0" );
+    scp.desc.layout.format.attribs[1].offset = 12;
+    scp.desc.layout.format.attribs[1].format = FMT_FLOAT3;
+    scp.desc.layout.format.attribs[2].semantic.set( "TEX0" );
+    scp.desc.layout.format.attribs[2].offset = 24;
+    scp.desc.layout.format.attribs[2].format = FMT_FLOAT2;
+    scp.desc.layout.format.count = 3;
+    scp.desc.layout.format.stride = sizeof(Vertex);
     mVtxBuf = gs.createSurface( scp );
     if( 0 == mVtxBuf ) return false;
     mVtxBuf->download(
@@ -157,20 +157,20 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     // create index buffer
     scp.bindings.clear();
     scp.bindTo( "HLSL9", "IDXBUF" );
-    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
-    scp.layout.dim = SURFACE_DIMENSION_1D;
-    scp.layout.levels = 1;
-    scp.layout.faces = 1;
-    scp.layout.basemap.width = GN_ARRAY_COUNT(indices);
-    scp.layout.basemap.height = 1;
-    scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = sizeof(indices);
-    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.format.attribs[0].semantic.set( "INDEX" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = FMT_R_16_UINT;
-    scp.layout.format.count = 1;
-    scp.layout.format.stride = sizeof(short);
+    scp.desc.access = SURFACE_ACCESS_HOST_WRITE;
+    scp.desc.layout.dim = SURFACE_DIMENSION_1D;
+    scp.desc.layout.levels = 1;
+    scp.desc.layout.faces = 1;
+    scp.desc.layout.basemap.width = GN_ARRAY_COUNT(indices);
+    scp.desc.layout.basemap.height = 1;
+    scp.desc.layout.basemap.depth = 1;
+    scp.desc.layout.basemap.rowBytes = sizeof(indices);
+    scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs[0].semantic.set( "INDEX" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = FMT_R_16_UINT;
+    scp.desc.layout.format.count = 1;
+    scp.desc.layout.format.stride = sizeof(short);
     mIdxBuf = gs.createSurface( scp );
     if( 0 == mIdxBuf ) return false;
     mIdxBuf->download(
@@ -185,27 +185,27 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     if( !td.load( "media::/texture/rabit.png" ) ) return false;
     scp.bindings.clear();
     scp.bindTo( "HLSL9", "TEXTURE0" );
-    scp.layout.dim = SURFACE_DIMENSION_2D;
-    scp.layout.levels = td.id.numLevels;
-    scp.layout.faces  = td.id.numFaces;
-    scp.layout.basemap.width  = td.id.mipmaps[0].width;
-    scp.layout.basemap.height = td.id.mipmaps[0].height;
-    scp.layout.basemap.depth  = td.id.mipmaps[0].depth;
-    scp.layout.basemap.rowBytes = td.id.mipmaps[0].rowPitch;
-    scp.layout.basemap.sliceBytes = td.id.mipmaps[0].slicePitch;
-    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = td.id.format;
-    scp.layout.format.count = 1;
-    scp.layout.format.stride = getClrFmtDesc(td.id.format).bits / 8;
+    scp.desc.layout.dim = SURFACE_DIMENSION_2D;
+    scp.desc.layout.levels = td.id.numLevels;
+    scp.desc.layout.faces  = td.id.numFaces;
+    scp.desc.layout.basemap.width  = td.id.mipmaps[0].width;
+    scp.desc.layout.basemap.height = td.id.mipmaps[0].height;
+    scp.desc.layout.basemap.depth  = td.id.mipmaps[0].depth;
+    scp.desc.layout.basemap.rowBytes = td.id.mipmaps[0].rowPitch;
+    scp.desc.layout.basemap.sliceBytes = td.id.mipmaps[0].slicePitch;
+    scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = td.id.format;
+    scp.desc.layout.format.count = 1;
+    scp.desc.layout.format.stride = getClrFmtDesc(td.id.format).bits / 8;
     mTexture = gs.createSurface( scp );
     if( 0 == mTexture ) return false;
-    for( size_t f = 0; f < scp.layout.faces; ++f )
-    for( size_t l = 0; l < scp.layout.levels; ++l )
+    for( size_t f = 0; f < scp.desc.layout.faces; ++f )
+    for( size_t l = 0; l < scp.desc.layout.levels; ++l )
     {
         const MipmapDesc & mmd = td.id.getMipmap( f, l );
         mTexture->download(
-            calcSubSurfaceIndex( f, l, scp.layout.levels ),
+            calcSubSurfaceIndex( f, l, scp.desc.layout.levels ),
             0,
             td.buf.cptr() + td.id.getMipmapOffset( f, l ),
             mmd.rowPitch,

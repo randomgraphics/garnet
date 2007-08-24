@@ -43,19 +43,19 @@ bool GN::test::QuadKernelFont::init( const FontFaceDesc & ffd )
     KernelPortBindingDesc bd;
     SurfaceCreationParameter scp;
     scp.bindTo( "QUAD", "TEXTURE0" );
-    scp.layout.dim = SURFACE_DIMENSION_2D;
-    scp.layout.levels = 1;
-    scp.layout.faces  = 1;
-    scp.layout.basemap.width  = (UInt32)mTexWidth;
-    scp.layout.basemap.height = (UInt32)mTexHeight;
-    scp.layout.basemap.depth  = 1;
-    scp.layout.basemap.rowBytes = (UInt32)mTexWidth * 4;
-    scp.layout.basemap.sliceBytes = (UInt32)(mTexWidth * mTexHeight * 4);
-    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = FMT_RGBA32;
-    scp.layout.format.count = 1;
-    scp.layout.format.stride = 4;
+    scp.desc.layout.dim = SURFACE_DIMENSION_2D;
+    scp.desc.layout.levels = 1;
+    scp.desc.layout.faces  = 1;
+    scp.desc.layout.basemap.width  = (UInt32)mTexWidth;
+    scp.desc.layout.basemap.height = (UInt32)mTexHeight;
+    scp.desc.layout.basemap.depth  = 1;
+    scp.desc.layout.basemap.rowBytes = (UInt32)mTexWidth * 4;
+    scp.desc.layout.basemap.sliceBytes = (UInt32)(mTexWidth * mTexHeight * 4);
+    scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = FMT_RGBA32;
+    scp.desc.layout.format.count = 1;
+    scp.desc.layout.format.stride = 4;
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
         FontTexture & tex = mTextures[i];

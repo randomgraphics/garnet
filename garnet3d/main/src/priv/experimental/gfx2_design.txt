@@ -5,8 +5,6 @@ forum:
   - graphics system is kernel/effect based.
   - graphics system does NOT handle multi-thread problem. It is leaved to higher
     level system.
-  - there's no pre-defined interface of the kernel, besides some basic 
-    management routines. every kernel could define their own interface freely.
   - device/graphics data are stored in "surface" class, which can be read/write by both 
     host and graphics system.
   - graphics system has a independent reflection system, that can be used to 
@@ -42,6 +40,8 @@ OPEN ISSUES
 - Is it possible to implement kernel with CUDA?
   - It is possible. But it'll be hard to make CUDA kernels compatible with 
     non-CUDA kernels (to let them work together)
+- How to create MSAA enabled surface?
+
 
 RESOLVED USER SCENARIOS
 =======================

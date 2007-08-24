@@ -5,12 +5,10 @@
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9DepthBuffer * GN::gfx::D3D9DepthBuffer::sNewInstance(
-    const SurfaceLayout         & layout,
-    int                           access,
+    const SurfaceDesc           & desc,
     const SurfaceCreationHints  & hints )
 {
-    GN_UNUSED_PARAM( layout );
-    GN_UNUSED_PARAM( access );
+    GN_UNUSED_PARAM( desc );
     GN_UNUSED_PARAM( hints );
     GN_UNIMPL();
     return 0;
