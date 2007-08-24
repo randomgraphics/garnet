@@ -15,7 +15,7 @@ namespace GN { namespace gfx
     {
         IDirect3DSurface9 * mSurface;
 
-        D3D9DepthBuffer( const D3D9SurfaceDesc & desc ) : D3D9Surface(desc), mSurface(0) {}
+        D3D9DepthBuffer( const SurfaceDesc & desc ) : D3D9Surface(desc), mSurface(0) {}
 
     public:
 

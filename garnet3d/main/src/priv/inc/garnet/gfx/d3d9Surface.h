@@ -8,76 +8,25 @@
 
 namespace GN { namespace gfx
 {
-    ///
-    /// d3d9 effect port type
-    ///
-    enum D3D9SurfaceType
-    {
-        //@{
-        D3D9_SURFACE_TYPE_VB,
-        D3D9_SURFACE_TYPE_IB,
-        D3D9_SURFACE_TYPE_TEX,       ///< texture, no matter 2D, 3D or cube.
-        D3D9_SURFACE_TYPE_TEX_2D,
-        D3D9_SURFACE_TYPE_TEX_3D,
-        D3D9_SURFACE_TYPE_TEX_CUBE,
-        D3D9_SURFACE_TYPE_RTT_2D,    ///< 2D render target texture
-        D3D9_SURFACE_TYPE_RTT_CUBE,  ///< 2D cube texture
-        D3D9_SURFACE_TYPE_RTS_COLOR, ///< render target surface
-        D3D9_SURFACE_TYPE_RTS_DEPTH, ///< depth stencil surface
-        D3D9_SURFACE_TYPE_ANY = -1,  ///< indicate any kind of surfaces.
-        //@}
-    };
-
-    ///
-    /// convert surface type to string
-    ///
-    inline const char * d3d9SurfaceType2Str( int type )
-    {
-        using namespace GN::gfx;
-
-        static const char * table[] =
-        {
-            "VB",
-            "IB",
-            "TEX_2D",
-            "TEX_3D",
-            "TEX_CUBE",
-            "RTT_2D",
-            "RTT_CUBE",
-            "RTS_COLOR",
-            "RTS_DEPTH",
-            "RTS_BACKBUF",
-        };
-        if( 0 <= type && type <= D3D9_SURFACE_TYPE_RTS_DEPTH ) return table[type];
-        if( -1 == type ) return "ANY";
-        return "INVALID";
-    }
-
-    ///
-    /// D3D9 surface descriptor
-    ///
-    struct D3D9SurfaceDesc : public SurfaceDesc
-    {
-        //@{
-
-        D3D9SurfaceType type;
-
-        D3D9SurfaceDesc( const SurfaceDesc & d, D3D9SurfaceType t )
-        {
-            layout = d.layout;
-            access = d.access;
-            type   = t;
-        }
-
-        //@}
-    };
+    /// \name standard D3D9 surface GUIDs
+    //@{
+    extern const Guid D3D9_SURFACE_TYPE_VB;        ///< vertex buffer
+    extern const Guid D3D9_SURFACE_TYPE_IB;        ///< index buffer
+    extern const Guid D3D9_SURFACE_TYPE_TEX_2D;    ///< 2D texture
+    extern const Guid D3D9_SURFACE_TYPE_TEX_3D;    ///< 3D texture
+    extern const Guid D3D9_SURFACE_TYPE_TEX_CUBE;  ///< cube texture
+    extern const Guid D3D9_SURFACE_TYPE_RTT_2D;    ///< 2D render target texture
+    extern const Guid D3D9_SURFACE_TYPE_RTT_CUBE;  ///< 2D cube texture
+    extern const Guid D3D9_SURFACE_TYPE_RTS_COLOR; ///< render target surface
+    extern const Guid D3D9_SURFACE_TYPE_RTS_DEPTH; ///< depth stencil surface
+    //@}
 
     ///
     /// base D3D9 surface
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9Surface : public Surface
     {
-        D3D9SurfaceDesc mDesc;
+        SurfaceDesc mDesc;
 
         static inline bool
         sAdjustOffsetAndRange( size_t & offset, size_t & length, size_t maxLength )
@@ -129,15 +78,10 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        D3D9Surface( const D3D9SurfaceDesc & desc ) : mDesc(desc) {}
+        D3D9Surface( const SurfaceDesc & desc ) : mDesc(desc) {}
 
-        // from effect
+        // from base class
         virtual const SurfaceDesc & getDesc() const { return mDesc; }
-
-        ///
-        /// get D3D9 surface descriptor
-        ///
-        const D3D9SurfaceDesc & getD3D9Desc() const { return mDesc; }
     };
 }}
 

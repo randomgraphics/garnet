@@ -7,87 +7,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9Texture");
 // local functions
 // *****************************************************************************
 
-//
-// return D3D9_SURFACE_TYPE_ANY, if failed.
-// -----------------------------------------------------------------------------
-static GN::gfx::D3D9SurfaceType sDetermineTextureType(
-    GN::gfx::D3D9SurfaceType       surftype,
-    const GN::gfx::SurfaceLayout & layout )
-{
-    using namespace GN::gfx;
-
-    switch( surftype )
-    {
-        case D3D9_SURFACE_TYPE_TEX :
-            if( SURFACE_DIMENSION_2D == layout.dim &&
-                1 == layout.faces &&
-                1 == layout.basemap.depth )
-            {
-                return D3D9_SURFACE_TYPE_TEX_2D;
-            }
-            else if( SURFACE_DIMENSION_3D == layout.dim &&
-                     1 == layout.faces )
-            {
-                return D3D9_SURFACE_TYPE_TEX_3D;
-            }
-            else if( SURFACE_DIMENSION_2D == layout.dim &&
-                     6 == layout.faces &&
-                     1 == layout.basemap.depth &&
-                     layout.basemap.height == layout.basemap.width )
-            {
-                return D3D9_SURFACE_TYPE_TEX_CUBE;
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "surface layout is not a valid texture." );
-                return D3D9_SURFACE_TYPE_ANY;
-            }
-
-        case D3D9_SURFACE_TYPE_TEX_2D :
-            if( SURFACE_DIMENSION_2D == layout.dim &&
-                1 == layout.faces &&
-                1 == layout.basemap.depth )
-            {
-                return D3D9_SURFACE_TYPE_TEX_2D;
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "surface layout is not a valid 2D texture." );
-                return D3D9_SURFACE_TYPE_ANY;
-            }
-
-        case D3D9_SURFACE_TYPE_TEX_3D :
-            if( SURFACE_DIMENSION_3D == layout.dim &&
-                1 == layout.faces )
-            {
-                return D3D9_SURFACE_TYPE_TEX_3D;
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "surface layout is not a valid 3D texture." );
-                return D3D9_SURFACE_TYPE_ANY;
-            }
-
-        case D3D9_SURFACE_TYPE_TEX_CUBE :
-            if( SURFACE_DIMENSION_2D == layout.dim &&
-                6 == layout.faces &&
-                1 == layout.basemap.depth &&
-                layout.basemap.height == layout.basemap.width )
-            {
-                return D3D9_SURFACE_TYPE_TEX_CUBE;
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "surface layout is not a valid CUBE texture." );
-                return D3D9_SURFACE_TYPE_ANY;
-            }
-
-        default:
-            GN_UNEXPECTED();
-            return D3D9_SURFACE_TYPE_ANY;
-    }
-}
-
 // *****************************************************************************
 // public methods
 // *****************************************************************************
@@ -95,21 +14,52 @@ static GN::gfx::D3D9SurfaceType sDetermineTextureType(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9Texture * GN::gfx::D3D9Texture::sNewInstance(
-    D3D9GraphicsSystem          & gs,
-    D3D9SurfaceType               surftype,
+GN::gfx::Surface * GN::gfx::D3D9Texture::sNewTex2D(
+    BaseGraphicsSystem          & gs,
     const SurfaceDesc           & desc,
     const SurfaceCreationHints  & hints )
 {
     GN_GUARD;
 
-    // determin texture type
-    surftype = sDetermineTextureType( surftype, desc.layout );
-    if( D3D9_SURFACE_TYPE_ANY == surftype ) return 0;
+    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(safeCastRef<D3D9GraphicsSystem>(gs),desc,hints,D3DRTYPE_TEXTURE) );
 
-    D3D9SurfaceDesc d3d9desc( desc, surftype );
+    if( !tex->init() ) return 0;
 
-    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(gs,d3d9desc,hints) );
+    return tex.detach();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Surface * GN::gfx::D3D9Texture::sNewTex3D(
+    BaseGraphicsSystem          & gs,
+    const SurfaceDesc           & desc,
+    const SurfaceCreationHints  & hints )
+{
+    GN_GUARD;
+
+    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(safeCastRef<D3D9GraphicsSystem>(gs),desc,hints,D3DRTYPE_VOLUMETEXTURE) );
+
+    if( !tex->init() ) return 0;
+
+    return tex.detach();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Surface * GN::gfx::D3D9Texture::sNewTexCube(
+    BaseGraphicsSystem          & gs,
+    const SurfaceDesc           & desc,
+    const SurfaceCreationHints  & hints )
+{
+    GN_GUARD;
+
+    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(safeCastRef<D3D9GraphicsSystem>(gs),desc,hints,D3DRTYPE_CUBETEXTURE) );
 
     if( !tex->init() ) return 0;
 
@@ -189,15 +139,15 @@ void GN::gfx::D3D9Texture::download(
         source = bgra.cptr();
     }
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
     const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
 
     const ClrFmtDesc & cfd = getClrFmtDesc(desc.layout.format.attribs[0].format);
 
-    switch( desc.type )
+    switch( mDim )
     {
-        case D3D9_SURFACE_TYPE_TEX_2D:
+        case D3DRTYPE_TEXTURE:
         {
             IDirect3DTexture9 * tex2d = (IDirect3DTexture9*)mSurface;
 
@@ -225,11 +175,11 @@ void GN::gfx::D3D9Texture::download(
             break;
         }
 
-        case D3D9_SURFACE_TYPE_TEX_3D:
+        case D3DRTYPE_VOLUMETEXTURE:
             GN_UNIMPL();
             break;
 
-        case D3D9_SURFACE_TYPE_TEX_CUBE:
+        case D3DRTYPE_CUBETEXTURE:
             GN_UNIMPL();
             break;
 
@@ -266,15 +216,15 @@ void GN::gfx::D3D9Texture::upload(
     Box<size_t> clippedArea;
     if( !adjustArea( clippedArea, area ) ) return;
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
     const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
 
     const ClrFmtDesc & cfd = getClrFmtDesc(desc.layout.format.attribs[0].format);
 
-    switch( desc.type )
+    switch( mDim )
     {
-        case D3D9_SURFACE_TYPE_TEX_2D:
+        case D3DRTYPE_TEXTURE:
         {
             IDirect3DTexture9 * tex2d = (IDirect3DTexture9*)mSurface;
 
@@ -303,11 +253,11 @@ void GN::gfx::D3D9Texture::upload(
             break;
         }
 
-        case D3D9_SURFACE_TYPE_TEX_3D:
+        case D3DRTYPE_VOLUMETEXTURE:
             GN_UNIMPL();
             break;
 
-        case D3D9_SURFACE_TYPE_TEX_CUBE:
+        case D3DRTYPE_CUBETEXTURE:
             GN_UNIMPL();
             break;
 
@@ -369,11 +319,12 @@ void GN::gfx::D3D9Texture::load( const NativeSurfaceData & )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9Texture::D3D9Texture( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
+GN::gfx::D3D9Texture::D3D9Texture( D3D9GraphicsSystem & gs, const SurfaceDesc & desc, const SurfaceCreationHints & hints, D3DRESOURCETYPE dim )
     : D3D9Surface( desc )
     , mGraphicsSystem( gs )
     , mSurface( 0 )
     , mHints( hints )
+    , mDim( dim )
 {
 }
 
@@ -386,12 +337,12 @@ bool GN::gfx::D3D9Texture::init()
 
     GN_ASSERT( 0 == mSurface );
 
-    switch( getD3D9Desc().type )
+    switch( mDim )
     {
-        case D3D9_SURFACE_TYPE_TEX_2D   : return create2DTexture();
-        case D3D9_SURFACE_TYPE_TEX_3D   : return create3DTexture();
-        case D3D9_SURFACE_TYPE_TEX_CUBE : return createCubeTexture();
-        default                         : GN_UNEXPECTED(); return false;
+        case D3DRTYPE_TEXTURE       : return create2DTexture();
+        case D3DRTYPE_VOLUMETEXTURE : return create3DTexture();
+        case D3DRTYPE_CUBETEXTURE   : return createCubeTexture();
+        default                     : GN_UNEXPECTED(); return false;
     }
 
     GN_UNGUARD;
@@ -406,9 +357,9 @@ bool GN::gfx::D3D9Texture::create2DTexture()
 
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
-    GN_ASSERT( D3D9_SURFACE_TYPE_TEX_2D == desc.type );
+    GN_ASSERT( D3DRTYPE_TEXTURE == mDim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
     GN_ASSERT( 1 == desc.layout.format.count );
@@ -483,9 +434,9 @@ bool GN::gfx::D3D9Texture::create3DTexture()
 
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
-    GN_ASSERT( D3D9_SURFACE_TYPE_TEX_3D == desc.type );
+    GN_ASSERT( D3DRTYPE_VOLUMETEXTURE == mDim );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
     GN_ASSERT( 1 == desc.layout.format.count );
 
@@ -544,9 +495,9 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
 
     IDirect3DDevice9 * dev = mGraphicsSystem.d3ddev();
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
-    GN_ASSERT( D3D9_SURFACE_TYPE_TEX_CUBE == desc.type );
+    GN_ASSERT( D3DRTYPE_CUBETEXTURE == mDim );
     GN_ASSERT( 6 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
     GN_ASSERT( 1 == desc.layout.format.count );

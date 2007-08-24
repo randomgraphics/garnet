@@ -160,7 +160,6 @@ namespace GN { namespace gfx
 
         virtual const GraphicsSystemDesc & getDesc() const { return mDesc; }
         virtual void present();
-        virtual Surface * createSurface( const SurfaceCreationParameter & scp );
 
         //@}
 

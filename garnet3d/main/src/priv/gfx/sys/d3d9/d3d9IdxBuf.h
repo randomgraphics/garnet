@@ -16,10 +16,10 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// create new instance
+        /// factory
         ///
-        static D3D9IdxBuf * sNewInstance(
-            D3D9GraphicsSystem          & gs,
+        static Surface * sNewInstance(
+            BaseGraphicsSystem          & gs,
             const SurfaceDesc           & desc,
             const SurfaceCreationHints  & hints );
 
@@ -61,7 +61,7 @@ namespace GN { namespace gfx
 
     private:
 
-        D3D9IdxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints );
+        D3D9IdxBuf( D3D9GraphicsSystem & gs, const SurfaceDesc & desc, const SurfaceCreationHints & hints );
 
         bool init();
     };

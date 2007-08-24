@@ -9,6 +9,7 @@ sources = [
 	'd3d9KernelPort.cpp',
 	'd3d9QuadKernel.cpp',
 	'd3d9RenderStateBlock.cpp',
+	'd3d9SurfaceGuid.cpp',
 	'd3d9Texture.cpp',
 	'd3d9VtxBuf.cpp',
 	'd3d9VtxDecl.cpp',

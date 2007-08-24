@@ -62,15 +62,15 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const KernelPortBindingDesc & bindin
     {
         const D3D9KernelPort & port = mKernel.getPortT<D3D9KernelPort>( i );
 
-        const D3D9KernelPortDesc & desc = port.getDesc();
+        const D3D9KernelPortType & portType = port.getPortType();
 
         const SurfaceView * view = sFindViewByName( port.getRefl().name, bindings );
 
         if( 0 == view || 0 == view->surf )
         {
-            if( D3D9_KERNEL_PORT_RENDER_TARGET == desc.portType ||
-                D3D9_KERNEL_PORT_DEPTH_BUFFER == desc.portType ||
-                D3D9_KERNEL_PORT_TEXTURE == desc.portType )
+            if( D3D9_KERNEL_PORT_RENDER_TARGET == portType ||
+                D3D9_KERNEL_PORT_DEPTH_BUFFER == portType ||
+                D3D9_KERNEL_PORT_TEXTURE == portType )
             {
                 b.port        = i;
                 b.target.surf = 0;
@@ -89,7 +89,7 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const KernelPortBindingDesc & bindin
 
             if( view->surf )
             {
-                switch( desc.portType )
+                switch( portType )
                 {
                     case D3D9_KERNEL_PORT_DEPTH_BUFFER:
                         mHasZBuf = true;
@@ -114,8 +114,8 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const KernelPortBindingDesc & bindin
             {
                 // target surface is NULL.
 
-                if( D3D9_KERNEL_PORT_VTXBUF != desc.portType &&
-                    D3D9_KERNEL_PORT_IDXBUF != desc.portType )
+                if( D3D9_KERNEL_PORT_VTXBUF != portType &&
+                    D3D9_KERNEL_PORT_IDXBUF != portType )
                 {
                     mBindItems.append( b );
                 }

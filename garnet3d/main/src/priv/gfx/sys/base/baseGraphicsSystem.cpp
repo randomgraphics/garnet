@@ -123,3 +123,129 @@ void GN::gfx::BaseGraphicsSystem::deleteAllKernels()
         safeDelete( mKernels[h].instance );
     }
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Surface *
+GN::gfx::BaseGraphicsSystem::createSurface( const SurfaceCreationParameter & scp )
+{
+    GN_GUARD;
+
+    // determine surface type
+    DynaArray<Guid> types;
+    DynaArray<Guid> tmp;
+    SurfaceCreationRule rule;
+    SurfaceCreationRuleRegistry::const_iterator newtype;
+    for( size_t i = 0; i < scp.bindings.size(); ++i )
+    {
+        const SurfaceCreationParameter::SurfaceBindingParameter & bp = scp.bindings[i];
+
+        // get kernel
+        const BaseKernel * kernel = safeCastPtr<const BaseKernel>( getKernel( bp.kernel ) );
+        if( 0 == kernel ) return 0;
+
+        // get port
+        const BaseKernelPort * port = kernel->getPortT<BaseKernelPort>( bp.port );
+        if( 0 == port ) return 0;
+
+        // check layout compability
+        if( !port->getRefl().layout.compatible( scp.desc.layout ) )
+        {
+            GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", bp.port.cptr(), bp.kernel.cptr() );
+            return false;
+        }
+
+        if( 0 == i )
+        {
+            types = port->getAllowedSurfaceTypes();
+        }
+        else
+        {
+            const DynaArray<Guid> & haha = port->getAllowedSurfaceTypes();
+
+            for( size_t i1 = 0; i1 < types.size(); ++i1 )
+            for( size_t i2 = 0; i2 < haha.size(); ++i2 )
+            {
+                rule.type1 = types[i1];
+                rule.type2 = haha[i2];
+
+                if( rule.type1 == rule.type2 )
+                {
+                    if( tmp.end() == std::find( tmp.begin(), tmp.end(), rule.type1 ) )
+                    {
+                        tmp.append( rule.type1 );
+                    }
+                }
+                else
+                {
+                    newtype = mSurfaceRules.find( rule );
+                    if( mSurfaceRules.end() != newtype &&
+                        tmp.end() == std::find( tmp.begin(), tmp.end(), newtype->second ) )
+                    {
+                        tmp.append( newtype->second );
+                    }
+                }
+
+                types.swap( tmp );
+            }
+        }
+
+        if( types.empty() )
+        {
+            GN_ERROR(sLogger)( "Port '%s' of kernel '%s' is incompatible with other ports.!", bp.port.cptr(), bp.kernel.cptr() );
+            return 0;
+        }
+    }
+
+    GN_ASSERT( !types.empty() );
+
+    // choose first type in type array
+    const Guid & surfaceType = types[0];
+
+    if( mSurfaceFactories.end() == mSurfaceFactories.find( surfaceType ) )
+    {
+        GN_ERROR(sLogger)( "invalid Surface type!" );
+        return 0;
+    }
+
+    GN_ASSERT( mSurfaceFactories[surfaceType] );
+
+    return mSurfaceFactories[surfaceType]( *this, scp.desc, scp.hints );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BaseGraphicsSystem::registerSurfeceType( const Guid & type, SurfaceFactory factory, const StrA & name )
+{
+    GN_ASSERT( factory );
+
+    if( mSurfaceFactories.end() != mSurfaceFactories.find( type ) )
+    {
+        GN_ERROR(sLogger)( "surface type '%s' does exist already.", name.cptr() );
+        return;
+    }
+
+    mSurfaceFactories[type] = factory;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BaseGraphicsSystem::registerSurfaceCreationRule( const Guid & type1, const Guid & type2, const Guid & result )
+{
+    SurfaceCreationRule rule;
+    rule.type1 = type1;
+    rule.type2 = type2;
+
+    if( mSurfaceRules.end() != mSurfaceRules.find( rule ) )
+    {
+        GN_ERROR(sLogger)( "ignore redundent rule." );
+        return;
+    }
+
+    mSurfaceRules[rule] = result;
+}

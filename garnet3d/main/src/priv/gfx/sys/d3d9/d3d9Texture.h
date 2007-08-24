@@ -16,11 +16,26 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// create new instance
+        /// create new 2D texture
         ///
-        static D3D9Texture * sNewInstance(
-            D3D9GraphicsSystem          & gs,
-            D3D9SurfaceType               surftype,
+        static Surface * sNewTex2D(
+            BaseGraphicsSystem          & gs,
+            const SurfaceDesc           & desc,
+            const SurfaceCreationHints  & hints );
+
+        ///
+        /// create new 3D texture
+        ///
+        static Surface * sNewTex3D(
+            BaseGraphicsSystem          & gs,
+            const SurfaceDesc           & desc,
+            const SurfaceCreationHints  & hints );
+
+        ///
+        /// create new Cube texture
+        ///
+        static Surface * sNewTexCube(
+            BaseGraphicsSystem          & gs,
             const SurfaceDesc           & desc,
             const SurfaceCreationHints  & hints );
 
@@ -58,12 +73,13 @@ namespace GN { namespace gfx
         D3D9GraphicsSystem          & mGraphicsSystem;
         IDirect3DBaseTexture9       * mSurface;
         SurfaceCreationHints          mHints;
+        D3DRESOURCETYPE               mDim;
         DynaArray<SubSurfaceLayout>   mSubsurfaces;
         bool                          mIsRGBA;
 
     private:
 
-        D3D9Texture( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints );
+        D3D9Texture( D3D9GraphicsSystem & gs, const SurfaceDesc & desc, const SurfaceCreationHints & hints, D3DRESOURCETYPE dim );
 
         bool init();
 
