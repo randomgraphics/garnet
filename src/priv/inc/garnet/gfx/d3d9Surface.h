@@ -59,7 +59,16 @@ namespace GN { namespace gfx
     struct D3D9SurfaceDesc : public SurfaceDesc
     {
         //@{
+
         D3D9SurfaceType type;
+
+        D3D9SurfaceDesc( const SurfaceDesc & d, D3D9SurfaceType t )
+        {
+            layout = d.layout;
+            access = d.access;
+            type   = t;
+        }
+
         //@}
     };
 

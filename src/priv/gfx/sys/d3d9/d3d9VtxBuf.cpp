@@ -12,18 +12,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9VtxBuf");
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9VtxBuf * GN::gfx::D3D9VtxBuf::sNewInstance(
     D3D9GraphicsSystem          & gs,
-    const SurfaceLayout         & layout,
-    int                           access,
+    const SurfaceDesc           & desc,
     const SurfaceCreationHints  & hints )
 {
     GN_GUARD;
 
-    D3D9SurfaceDesc desc;
-    desc.type = D3D9_SURFACE_TYPE_VB;
-    desc.layout = layout;
-    desc.access = access;
+    D3D9SurfaceDesc d3d9desc( desc, D3D9_SURFACE_TYPE_VB );
 
-    AutoObjPtr<D3D9VtxBuf> vb( new D3D9VtxBuf(gs,desc,hints) );
+    AutoObjPtr<D3D9VtxBuf> vb( new D3D9VtxBuf(gs,d3d9desc,hints) );
 
     if( !vb->init() ) return 0;
 

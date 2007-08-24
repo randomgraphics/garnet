@@ -98,22 +98,18 @@ static GN::gfx::D3D9SurfaceType sDetermineTextureType(
 GN::gfx::D3D9Texture * GN::gfx::D3D9Texture::sNewInstance(
     D3D9GraphicsSystem          & gs,
     D3D9SurfaceType               surftype,
-    const SurfaceLayout         & layout,
-    int                           access,
+    const SurfaceDesc           & desc,
     const SurfaceCreationHints  & hints )
 {
     GN_GUARD;
 
     // determin texture type
-    surftype = sDetermineTextureType( surftype, layout );
+    surftype = sDetermineTextureType( surftype, desc.layout );
     if( D3D9_SURFACE_TYPE_ANY == surftype ) return 0;
 
-    D3D9SurfaceDesc desc;
-    desc.type = surftype;
-    desc.layout = layout;
-    desc.access = access;
+    D3D9SurfaceDesc d3d9desc( desc, surftype );
 
-    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(gs,desc,hints) );
+    AutoObjPtr<D3D9Texture> tex( new D3D9Texture(gs,d3d9desc,hints) );
 
     if( !tex->init() ) return 0;
 

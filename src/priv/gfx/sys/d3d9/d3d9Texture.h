@@ -21,8 +21,7 @@ namespace GN { namespace gfx
         static D3D9Texture * sNewInstance(
             D3D9GraphicsSystem          & gs,
             D3D9SurfaceType               surftype,
-            const SurfaceLayout         & layout,
-            int                           access,
+            const SurfaceDesc           & desc,
             const SurfaceCreationHints  & hints );
 
         ///

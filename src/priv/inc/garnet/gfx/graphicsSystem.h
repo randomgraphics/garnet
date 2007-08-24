@@ -591,18 +591,9 @@ namespace GN { namespace gfx
         DynaArray<SurfaceBindingParameter> bindings;
 
         ///
-        /// surface data layout
+        /// surface descriptor
         ///
-        SurfaceLayout layout;
-
-        ///
-        /// Force the created surface supports some access flags.
-        ///
-        /// Normally set to zero to let graphics system to determine the optimal access flags.
-        ///
-        /// Set to non-zero value may fail the creation process.
-        ///
-        int forcedAccessFlags;
+        SurfaceDesc desc;
 
         ///
         /// creation hints (name and value pairs)

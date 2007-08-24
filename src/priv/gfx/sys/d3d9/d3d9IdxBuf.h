@@ -20,8 +20,7 @@ namespace GN { namespace gfx
         ///
         static D3D9IdxBuf * sNewInstance(
             D3D9GraphicsSystem          & gs,
-            const SurfaceLayout         & layout,
-            int                           access,
+            const SurfaceDesc           & desc,
             const SurfaceCreationHints  & hints );
 
         ///

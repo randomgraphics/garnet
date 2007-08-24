@@ -934,16 +934,16 @@ GN::engine::RenderEngine::createVtxBuf(
     SurfaceCreationParameter scp;
 
     scp.bindTo( "STANDARD_RESOURCES", "VERTEX_BUFFER" );
-    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
-    scp.layout.dim = SURFACE_DIMENSION_1D;
-    scp.layout.levels = 1;
-    scp.layout.faces = 1;
-    scp.layout.basemap.width = count;
-    scp.layout.basemap.height = 1;
-    scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = count * format.stride;
-    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.format = format;
+    scp.desc.access = SURFACE_ACCESS_HOST_WRITE;
+    scp.desc.layout.dim = SURFACE_DIMENSION_1D;
+    scp.desc.layout.levels = 1;
+    scp.desc.layout.faces = 1;
+    scp.desc.layout.basemap.width = count;
+    scp.desc.layout.basemap.height = 1;
+    scp.desc.layout.basemap.depth = 1;
+    scp.desc.layout.basemap.rowBytes = count * format.stride;
+    scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format = format;
 
     return createSurface( name, scp, loader );
 }
@@ -962,20 +962,20 @@ GN::engine::RenderEngine::createIdxBuf(
     SurfaceCreationParameter scp;
 
     scp.bindTo( "STANDARD_RESOURCES", "INDEX_BUFFER" );
-    scp.forcedAccessFlags = SURFACE_ACCESS_HOST_WRITE;
-    scp.layout.dim = SURFACE_DIMENSION_1D;
-    scp.layout.levels = 1;
-    scp.layout.faces = 1;
-    scp.layout.basemap.width = count;
-    scp.layout.basemap.height = 1;
-    scp.layout.basemap.depth = 1;
-    scp.layout.basemap.rowBytes = count * sizeof(UInt16);
-    scp.layout.basemap.sliceBytes = scp.layout.basemap.rowBytes;
-    scp.layout.format.attribs[0].semantic.set( "INDEX" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = FMT_R_16_UINT;
-    scp.layout.format.count = 1;
-    scp.layout.format.stride = sizeof(short);
+    scp.desc.access = SURFACE_ACCESS_HOST_WRITE;
+    scp.desc.layout.dim = SURFACE_DIMENSION_1D;
+    scp.desc.layout.levels = 1;
+    scp.desc.layout.faces = 1;
+    scp.desc.layout.basemap.width = count;
+    scp.desc.layout.basemap.height = 1;
+    scp.desc.layout.basemap.depth = 1;
+    scp.desc.layout.basemap.rowBytes = count * sizeof(UInt16);
+    scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs[0].semantic.set( "INDEX" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = FMT_R_16_UINT;
+    scp.desc.layout.format.count = 1;
+    scp.desc.layout.format.stride = sizeof(short);
 
     return createSurface( name, scp, loader );
 }
@@ -1004,19 +1004,19 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
     // setup texture creation parameters
     SurfaceCreationParameter scp;
     scp.bindTo( "STANDARD_RESOURCES", "TEXTURE" );
-     scp.layout.dim = SURFACE_DIMENSION_2D;
-    scp.layout.levels = id.numLevels;
-    scp.layout.faces  = id.numFaces;
-    scp.layout.basemap.width  = id.mipmaps[0].width;
-    scp.layout.basemap.height = id.mipmaps[0].height;
-    scp.layout.basemap.depth  = id.mipmaps[0].depth;
-    scp.layout.basemap.rowBytes = id.mipmaps[0].rowPitch;
-    scp.layout.basemap.sliceBytes = id.mipmaps[0].slicePitch;
-    scp.layout.format.attribs[0].semantic.set( "TEXEL" );
-    scp.layout.format.attribs[0].offset = 0;
-    scp.layout.format.attribs[0].format = id.format;
-    scp.layout.format.count = 1;
-    scp.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
+     scp.desc.layout.dim = SURFACE_DIMENSION_2D;
+    scp.desc.layout.levels = id.numLevels;
+    scp.desc.layout.faces  = id.numFaces;
+    scp.desc.layout.basemap.width  = id.mipmaps[0].width;
+    scp.desc.layout.basemap.height = id.mipmaps[0].height;
+    scp.desc.layout.basemap.depth  = id.mipmaps[0].depth;
+    scp.desc.layout.basemap.rowBytes = id.mipmaps[0].rowPitch;
+    scp.desc.layout.basemap.sliceBytes = id.mipmaps[0].slicePitch;
+    scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
+    scp.desc.layout.format.attribs[0].offset = 0;
+    scp.desc.layout.format.attribs[0].format = id.format;
+    scp.desc.layout.format.count = 1;
+    scp.desc.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
 
     // create loader
     AutoRef<StaticTextureLoader> loader( new StaticTextureLoader( filename ) );
