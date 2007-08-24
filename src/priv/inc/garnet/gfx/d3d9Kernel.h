@@ -26,35 +26,27 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// D3D9 kernel port descriptor
-    ///
-    struct D3D9KernelPortDesc
-    {
-        //@{
-        D3D9KernelPortType portType;
-        D3D9SurfaceType    surfaceType;
-        //@}
-    };
-
-    ///
     /// base D3D9 kernel port class
     ///
     class GN_GFX2_D3D9_PUBLIC D3D9KernelPort : public BaseKernelPort
     {
-        D3D9GraphicsSystem & mGraphicsSystem;
-
-    protected:
-
-        D3D9KernelPortDesc mDesc; ///< port descriptor
+        D3D9GraphicsSystem     & mGraphicsSystem;
+        const D3D9KernelPortType mPortType;
 
     public:
 
         ///
         /// ctor
         ///
-        D3D9KernelPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
-            : mGraphicsSystem(gs)
-            , BaseKernelPort( k, name )
+        D3D9KernelPort(
+            D3D9GraphicsSystem & gs,
+            D3D9KernelPortType   type,
+            BaseKernel         & k,
+            const StrA         & name,
+            const Guid         & allowedSurfaceType )
+            : BaseKernelPort( k, name, &allowedSurfaceType, 1 )
+            , mGraphicsSystem(gs)
+            , mPortType(type)
         {
         }
 
@@ -66,7 +58,7 @@ namespace GN { namespace gfx
         ///
         /// get descriptor
         ///
-        const D3D9KernelPortDesc & getDesc() const { return mDesc; }
+        const D3D9KernelPortType & getPortType() const { return mPortType; }
 
         ///
         /// bind surface to device

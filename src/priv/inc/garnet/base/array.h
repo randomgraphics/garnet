@@ -287,6 +287,11 @@ namespace GN
         explicit DynaArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { resize( count ); }
 
         ///
+        /// construct from conventional C array
+        ///
+        DynaArray( const T * p, size_t count ) : mElements(0), mCount(0), mCapacity(0) { doAppend( p, count ); }
+
+        ///
         /// copy constructor
         ///
         DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { doClone( other ); }

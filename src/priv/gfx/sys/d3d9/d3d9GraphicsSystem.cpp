@@ -449,152 +449,6 @@ static void sDeleteDevice( GN::gfx::D3D9GraphicsSystemDesc & desc )
 // surface management
 // *****************************************************************************
 
-//
-//
-// -----------------------------------------------------------------------------
-static bool sMergeSurfaceType(
-    GN::gfx::D3D9SurfaceType & result,
-    GN::gfx::D3D9SurfaceType t1,
-    GN::gfx::D3D9SurfaceType t2 )
-{
-    using namespace GN::gfx;
-
-    if( t1 == t2 )
-    {
-        result = t1;
-        return true;
-    }
-    else if( D3D9_SURFACE_TYPE_ANY == t1 )
-    {
-        result = t2;
-        return true;
-    }
-    else if( D3D9_SURFACE_TYPE_ANY == t2 )
-    {
-        result = t1;
-        return true;
-    }
-
-    switch( t1 )
-    {
-        case D3D9_SURFACE_TYPE_VB        :
-        case D3D9_SURFACE_TYPE_IB        :
-        case D3D9_SURFACE_TYPE_TEX_3D    :
-            break;
-
-        case D3D9_SURFACE_TYPE_TEX       :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX_2D    :
-                case D3D9_SURFACE_TYPE_TEX_3D    :
-                case D3D9_SURFACE_TYPE_TEX_CUBE  :
-                case D3D9_SURFACE_TYPE_RTT_2D    :
-                    result = t2;
-                    return true;
-
-                case D3D9_SURFACE_TYPE_RTS_COLOR :
-                case D3D9_SURFACE_TYPE_RTS_DEPTH :
-                    result = D3D9_SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_TEX_2D    :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_RTT_2D    :
-                case D3D9_SURFACE_TYPE_RTS_COLOR :
-                case D3D9_SURFACE_TYPE_RTS_DEPTH :
-                    result = D3D9_SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_TEX_CUBE  :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_RTT_CUBE  :
-                    result = D3D9_SURFACE_TYPE_RTT_CUBE;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_RTT_2D    :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_TEX_2D    :
-                case D3D9_SURFACE_TYPE_RTS_COLOR :
-                case D3D9_SURFACE_TYPE_RTS_DEPTH :
-                    result = D3D9_SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_RTT_CUBE  :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_RTT_2D    :
-                    result = D3D9_SURFACE_TYPE_RTT_CUBE;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_RTS_COLOR :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_TEX_2D    :
-                case D3D9_SURFACE_TYPE_RTT_2D    :
-                    result = D3D9_SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        case D3D9_SURFACE_TYPE_RTS_DEPTH :
-            switch( t2 )
-            {
-                case D3D9_SURFACE_TYPE_TEX       :
-                case D3D9_SURFACE_TYPE_TEX_2D    :
-                case D3D9_SURFACE_TYPE_RTT_2D    :
-                    result = D3D9_SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
-        default:
-            GN_UNEXPECTED();
-    }
-
-    // failed
-    GN_ERROR(sLogger)( " '%s' and '%s' is incompatible.", d3d9SurfaceType2Str(t1), d3d9SurfaceType2Str(t2) );
-    return false;
-}
-
 // *****************************************************************************
 // D3D9UnstableResource
 // *****************************************************************************
@@ -663,6 +517,19 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
     registerKernelFactory( D3D9HlslKernel::KERNEL_NAME(), &D3D9HlslKernel::sFactory, 100 );
     registerKernelFactory( D3D9QuadKernel::KERNEL_NAME(), &D3D9QuadKernel::sFactory, 100 );
 
+    // register build-in surface types
+    registerSurfeceType( D3D9_SURFACE_TYPE_VB, &D3D9VtxBuf::sNewInstance, "D3D9 vertex buffer" );
+    registerSurfeceType( D3D9_SURFACE_TYPE_IB, &D3D9IdxBuf::sNewInstance, "D3D9 index buffer" );
+    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_2D, &D3D9Texture::sNewTex2D, "D3D9 2D texture" );
+    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_3D, &D3D9Texture::sNewTex3D, "D3D9 3D texture" );
+    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_CUBE, &D3D9Texture::sNewTexCube, "D3D9 cube texture" );
+
+    // register build-in surface creation rules
+    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D );
+    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
+    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE );
+    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
+
     // success
     return success();
 
@@ -728,75 +595,6 @@ void GN::gfx::D3D9GraphicsSystem::present()
         GN_FATAL(sLogger)( "beginScene() failed!" );
         GN_UNEXPECTED();
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::Surface * GN::gfx::D3D9GraphicsSystem::createSurface(
-    const SurfaceCreationParameter & scp )
-{
-    GN_GUARD;
-
-    PIXPERF_FUNCTION_EVENT();
-
-    // get surface layout template
-    D3D9SurfaceType surftype = D3D9_SURFACE_TYPE_ANY;
-    for( size_t i = 0; i < scp.bindings.size(); ++i )
-    {
-        const SurfaceCreationParameter::SurfaceBindingParameter & sbp = scp.bindings[i];
-
-        const D3D9Kernel * kernel = safeCastPtr<const D3D9Kernel>( getKernel( sbp.kernel ) );
-        if( 0 == kernel ) return 0;
-
-        const D3D9KernelPort * port = kernel->getPortT<D3D9KernelPort>( sbp.port );
-        if( 0 == port ) return 0;
-
-        // check layout compability
-        if( !port->getRefl().layout.compatible( scp.desc.layout ) )
-        {
-            GN_ERROR(sLogger)( "Requested surface layout is incompatible with port '%s' of kernel '%s'", sbp.port.cptr(), sbp.kernel.cptr() );
-            return false;
-        }
-
-        // merget surface type
-        if( !sMergeSurfaceType( surftype, surftype, port->getDesc().surfaceType ) ) return false;
-    }
-
-    // create surface using the layout and type
-    switch( surftype )
-    {
-        case D3D9_SURFACE_TYPE_VB        :
-            return D3D9VtxBuf::sNewInstance( *this, scp.desc, scp.hints );
-
-        case D3D9_SURFACE_TYPE_IB        :
-            return D3D9IdxBuf::sNewInstance( *this, scp.desc, scp.hints );
-
-        case D3D9_SURFACE_TYPE_TEX       :
-        case D3D9_SURFACE_TYPE_TEX_2D    :
-        case D3D9_SURFACE_TYPE_TEX_3D    :
-        case D3D9_SURFACE_TYPE_TEX_CUBE  :
-            return D3D9Texture::sNewInstance( *this, surftype, scp.desc, scp.hints );
-
-        case D3D9_SURFACE_TYPE_RTT_2D    :
-        case D3D9_SURFACE_TYPE_RTT_CUBE  :
-        case D3D9_SURFACE_TYPE_RTS_COLOR :
-            GN_UNIMPL();
-            return 0;
-
-        case D3D9_SURFACE_TYPE_RTS_DEPTH :
-            return D3D9DepthBuffer::sNewInstance( scp.desc, scp.hints );
-
-        case D3D9_SURFACE_TYPE_ANY :
-            GN_ERROR(sLogger)( "fail to determine surface type." );
-            return 0;
-
-        default :
-            GN_UNEXPECTED();
-            return 0;
-    }
-
-    GN_UNGUARD;
 }
 
 // *****************************************************************************

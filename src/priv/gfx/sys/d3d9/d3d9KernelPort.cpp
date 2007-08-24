@@ -21,11 +21,9 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9KernelPort" );
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9RenderTargetPort::D3D9RenderTargetPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
-    : D3D9KernelPort(gs,k,name)
+    : D3D9KernelPort(gs,D3D9_KERNEL_PORT_RENDER_TARGET,k,name,D3D9_SURFACE_TYPE_RTT_2D)
     , mStage( stage )
 {
-    mDesc.portType    = D3D9_KERNEL_PORT_RENDER_TARGET;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_RTT_2D;
 }
 
 //
@@ -53,10 +51,9 @@ void GN::gfx::D3D9RenderTargetPort::bind( const SurfaceView & ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9DepthBufferPort::D3D9DepthBufferPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
-    : D3D9KernelPort(gs,k,name)
+    : D3D9KernelPort(gs,D3D9_KERNEL_PORT_DEPTH_BUFFER,k,name,D3D9_SURFACE_TYPE_RTS_DEPTH)
 {
-    mDesc.portType    = D3D9_KERNEL_PORT_DEPTH_BUFFER;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_RTS_DEPTH;
+    //addSurfaceType( D3D9_SURFACE_TYPE_RTT_2D );
 }
 
 //
@@ -84,11 +81,11 @@ void GN::gfx::D3D9DepthBufferPort::bind( const SurfaceView & ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9TexturePort::D3D9TexturePort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
-    : D3D9KernelPort(gs,k,name)
+    : D3D9KernelPort(gs,D3D9_KERNEL_PORT_TEXTURE,k,name,D3D9_SURFACE_TYPE_TEX_2D)
     , mStage( stage )
 {
-    mDesc.portType    = D3D9_KERNEL_PORT_TEXTURE;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_TEX;
+    addSurfaceType( D3D9_SURFACE_TYPE_TEX_3D );
+    addSurfaceType( D3D9_SURFACE_TYPE_TEX_CUBE );
 }
 
 //
@@ -98,30 +95,7 @@ bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
-    const D3D9KernelPortDesc & portdesc = getDesc();
-
-    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
-
-    const D3D9SurfaceDesc & surfdesc = d3d9surf->getD3D9Desc();
-
-    if( D3D9_SURFACE_TYPE_TEX == portdesc.surfaceType )
-    {
-        if( D3D9_SURFACE_TYPE_TEX      != surfdesc.type &&
-            D3D9_SURFACE_TYPE_TEX_2D   != surfdesc.type &&
-            D3D9_SURFACE_TYPE_TEX_3D   != surfdesc.type &&
-            D3D9_SURFACE_TYPE_TEX_CUBE != surfdesc.type )
-        {
-            GN_ERROR(sLogger)( "Incompatible surface type!" );
-            return false;
-        }
-    }
-    else if( portdesc.surfaceType != surfdesc.type )
-    {
-        GN_ERROR(sLogger)( "Incompatible surface type!" );
-        return false;
-    }
-
-    const SurfaceLayout & layout = surfdesc.layout;
+    const SurfaceLayout & layout = surf->getDesc().layout;
 
     GN_ASSERT( 1 == layout.format.count );
     GN_ASSERT( 0 == layout.format.attribs[0].offset );
@@ -171,11 +145,9 @@ void GN::gfx::D3D9TexturePort::bind( const SurfaceView & target ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9VtxBufPort::D3D9VtxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name, UInt32 stage )
-    : D3D9KernelPort(gs,k,name)
+    : D3D9KernelPort(gs,D3D9_KERNEL_PORT_VTXBUF,k,name,D3D9_SURFACE_TYPE_VB)
     , mStage(stage)
 {
-    mDesc.portType    = D3D9_KERNEL_PORT_VTXBUF;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_VB;
 }
 
 //
@@ -185,19 +157,11 @@ bool GN::gfx::D3D9VtxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
-    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
-
-    const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
+    const SurfaceDesc & desc = surf->getDesc();
 
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
-
-    if( D3D9_SURFACE_TYPE_VB != desc.type )
-    {
-        GN_ERROR(sLogger)( "Vertex buffer port accepts vertex buffer surface only!" );
-        return false;
-    }
 
     if( desc.layout.basemap.rowBytes < desc.layout.basemap.width * desc.layout.format.stride )
     {
@@ -231,10 +195,8 @@ void GN::gfx::D3D9VtxBufPort::bind( const SurfaceView & target ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D9IdxBufPort::D3D9IdxBufPort( D3D9GraphicsSystem & gs, BaseKernel & k, const StrA & name )
-    : D3D9KernelPort(gs,k,name)
+    : D3D9KernelPort(gs,D3D9_KERNEL_PORT_IDXBUF,k,name,D3D9_SURFACE_TYPE_IB)
 {
-    mDesc.portType    = D3D9_KERNEL_PORT_IDXBUF;
-    mDesc.surfaceType = D3D9_SURFACE_TYPE_IB;
 }
 
 //
@@ -244,17 +206,7 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
 {
     if( 0 == surf ) return true;
 
-    const D3D9Surface * d3d9surf = safeCastPtr<const D3D9Surface>(surf);
-
-    const D3D9SurfaceDesc & desc = d3d9surf->getD3D9Desc();
-
-    if( D3D9_SURFACE_TYPE_IB != desc.type )
-    {
-        GN_ERROR(sLogger)( "Vertex buffer port accepts index buffer surface only!" );
-        return false;
-    }
-
-    const SurfaceLayout & layout = desc.layout;
+    const SurfaceLayout & layout = surf->getDesc().layout;
 
     GN_ASSERT( SURFACE_DIMENSION_1D == layout.dim );
     GN_ASSERT( 1 == layout.faces );

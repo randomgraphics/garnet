@@ -275,17 +275,28 @@ namespace GN { namespace gfx
     class BaseKernelPort : public NoCopy
     {
         const KernelPortReflection & mRefl;
+        DynaArray<Guid>              mAllowedSurfaceTypes; ///< surface types that accepeted by this port
+
+    protected:
+
+        void addSurfaceType( const Guid & g ) { mAllowedSurfaceTypes.append( g ); }
 
     public:
 
         ///
         /// ctor
         ///
-        BaseKernelPort( BaseKernel & k, const StrA & name )
+        BaseKernelPort( BaseKernel & k, const StrA & name, const Guid * allowedSurfaceTypes, size_t count )
             : mRefl( k.getRefl().ports[name] )
+            , mAllowedSurfaceTypes( allowedSurfaceTypes, count )
         {
             k.setPortRef( mRefl.index, *this );
         }
+
+        ///
+        /// return array of allowed surface types
+        ///
+        const DynaArray<Guid> & getAllowedSurfaceTypes() const { return mAllowedSurfaceTypes; }
 
         ///
         /// get reflection
@@ -297,6 +308,11 @@ namespace GN { namespace gfx
         ///
         virtual bool compatible( const Surface * ) const = 0;
     };
+
+    ///
+    /// surface factory (creator)
+    ///
+    typedef Surface * (*SurfaceFactory)( BaseGraphicsSystem & gs, const SurfaceDesc & desc, const SurfaceCreationHints & hints );
 
     ///
     /// base graphics system
@@ -334,9 +350,22 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void     registerKernelFactory( const StrA & name, KernelFactory factory, int quality );
-        virtual Kernel * getKernel( const StrA & name );
-        virtual void     deleteAllKernels();
+        virtual void      registerKernelFactory( const StrA & name, KernelFactory factory, int quality );
+        virtual Kernel  * getKernel( const StrA & name );
+        virtual void      deleteAllKernels();
+        virtual Surface * createSurface( const SurfaceCreationParameter & );
+
+        //@}
+
+        // ********************************
+        // surface type management
+        // ********************************
+    public:
+
+        //@{
+
+        void registerSurfeceType( const Guid & type, SurfaceFactory factory, const StrA & name );
+        void registerSurfaceCreationRule( const Guid & type1, const Guid & type2, const Guid & result );
 
         //@}
 
@@ -352,12 +381,33 @@ namespace GN { namespace gfx
             Kernel *      instance;
         };
 
+        struct SurfaceCreationRule
+        {
+            Guid type1;
+            Guid type2;
+
+            bool operator<( const SurfaceCreationRule & rhs ) const
+            {
+                if( type1 != rhs.type1 )
+                    return type1 < rhs.type1;
+                else
+                    return type2 < rhs.type2;
+            }
+        };
+
+        typedef std::map<Guid,SurfaceFactory>      SurfaceFactoryRegistry;
+        typedef std::map<SurfaceCreationRule,Guid> SurfaceCreationRuleRegistry;
+
         NamedHandleManager<KernelItem,UInt32> mKernels;
+        SurfaceFactoryRegistry                mSurfaceFactories;
+        SurfaceCreationRuleRegistry           mSurfaceRules;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        bool mergeSurfaceType( const Guid & type1, const Guid & type2, Guid & result );
     };
 }}
 

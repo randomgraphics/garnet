@@ -23,7 +23,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT CALLBACK
+static LRESULT CALLBACK
 sStaticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;

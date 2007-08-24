@@ -371,6 +371,60 @@ namespace GN
     };
 
     ///
+    /// GUID class
+    ///
+    struct Guid
+    {
+        /// \name data members
+        //@{
+        UInt32 data1;
+        UInt16 data2;
+        UInt16 data3;
+        UInt8  data4[8];
+        //@}
+
+        /// \name operators
+        //@{
+
+        Guid & operator=( const Guid & rhs )
+        {
+            UInt64       * a = (UInt64*)this;
+            const UInt64 * b = (const UInt64*)&rhs;
+            a[0] = b[0];
+            a[1] = b[1];
+            return *this;
+        }
+
+        bool operator==( const Guid & rhs ) const
+        {
+            const UInt64 * a = (const UInt64*)this;
+            const UInt64 * b = (const UInt64*)&rhs;
+            return a[0] == b[0] && a[1] == b[1];
+        }
+
+        bool operator!=( const Guid & rhs ) const
+        {
+            const UInt64 * a = (const UInt64*)this;
+            const UInt64 * b = (const UInt64*)&rhs;
+            return a[0] != b[0] || a[1] != b[1];
+        }
+
+        bool operator < ( const Guid & rhs ) const
+        {
+            // Note: may produce different result on machine with different endian.
+            const UInt64 * a = (const UInt64*)this;
+            const UInt64 * b = (const UInt64*)&rhs;
+            if( a[0] != b[0] )
+                return a[0] < b[0];
+            else
+                return a[1] < b[1];
+        }
+
+        //@}
+    };
+    GN_CASSERT( sizeof(Guid) == 128/8 );
+
+    ///
     /// Hard to explain in English, please see code by your self :)
     ///
     struct ScopeBool

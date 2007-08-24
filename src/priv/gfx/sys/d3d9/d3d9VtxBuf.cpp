@@ -10,16 +10,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9VtxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9VtxBuf * GN::gfx::D3D9VtxBuf::sNewInstance(
-    D3D9GraphicsSystem          & gs,
+GN::gfx::Surface * GN::gfx::D3D9VtxBuf::sNewInstance(
+    BaseGraphicsSystem          & gs,
     const SurfaceDesc           & desc,
     const SurfaceCreationHints  & hints )
 {
     GN_GUARD;
 
-    D3D9SurfaceDesc d3d9desc( desc, D3D9_SURFACE_TYPE_VB );
-
-    AutoObjPtr<D3D9VtxBuf> vb( new D3D9VtxBuf(gs,d3d9desc,hints) );
+    AutoObjPtr<D3D9VtxBuf> vb( new D3D9VtxBuf(safeCastRef<D3D9GraphicsSystem>(gs),desc,hints) );
 
     if( !vb->init() ) return 0;
 
@@ -140,7 +138,7 @@ void GN::gfx::D3D9VtxBuf::load( const NativeSurfaceData & )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D9VtxBuf::D3D9VtxBuf( D3D9GraphicsSystem & gs, const D3D9SurfaceDesc & desc, const SurfaceCreationHints & hints )
+GN::gfx::D3D9VtxBuf::D3D9VtxBuf( D3D9GraphicsSystem & gs, const SurfaceDesc & desc, const SurfaceCreationHints & hints )
     : D3D9Surface( desc )
     , mGraphicsSystem( gs )
     , mSurface( 0 )
@@ -158,9 +156,8 @@ bool GN::gfx::D3D9VtxBuf::init()
 
     GN_ASSERT( 0 == mSurface );
 
-    const D3D9SurfaceDesc & desc = getD3D9Desc();
+    const SurfaceDesc & desc = getDesc();
 
-    GN_ASSERT( D3D9_SURFACE_TYPE_VB == desc.type );
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
