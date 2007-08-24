@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
+inline void GN::gfx::D3D9Renderer::setD3DRenderState(
     D3DRENDERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -27,7 +27,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
+inline void GN::gfx::D3D9Renderer::setD3DSamplerState(
     UINT stage, D3DSAMPLERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -57,7 +57,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::setD3DTextureState(
+inline void GN::gfx::D3D9Renderer::setD3DTextureState(
     UINT stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;

@@ -122,9 +122,7 @@ namespace GN { namespace input
     };
 }}
 
-#if GN_ENABLE_INLINE
 #include "basicInput.inl"
-#endif
 
 // *****************************************************************************
 //                                     EOF

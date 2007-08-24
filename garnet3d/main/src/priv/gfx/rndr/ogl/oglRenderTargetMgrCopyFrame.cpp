@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-static GN_INLINE void
+static inline void
 sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 {
     using namespace GN;

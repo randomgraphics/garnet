@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 /*
 /// map filter type to opengl constant
 // -----------------------------------------------------------------------------
-static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
+static inline GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 {
     switch(f)
     {
@@ -28,7 +28,7 @@ static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 ///
 /// map wrap mode to opengl constant
 // -----------------------------------------------------------------------------
-static GN_INLINE GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
+static inline GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
 {
     if( GN::gfx::TEXWRAP_REPEAT == w ) return GL_REPEAT;
     else if( GN::gfx::TEXWRAP_CLAMP == w ) return GL_CLAMP;

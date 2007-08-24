@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
-#if !GN_ENABLE_INLINE
-#include "d3d9ContextMgr.inl"
-#endif
 #include "d3d9RenderTargetMgr.h"
 #include "d3d9Shader.h"
 #include "d3d9Texture.h"
@@ -70,7 +67,7 @@ static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
     #undef GNGFX_DEFINE_TSV
 };
 
-static GN_INLINE void sSetupD3D9Viewport( LPDIRECT3DDEVICE9 dev, float l, float t, float r, float b )
+static inline void sSetupD3D9Viewport( LPDIRECT3DDEVICE9 dev, float l, float t, float r, float b )
 {
     GN_ASSERT(
         0.0f <= l && l <= 1.0f &&
@@ -245,7 +242,7 @@ const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D9Renderer::getCurrentRenderSta
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContext(
+inline void GN::gfx::D3D9Renderer::bindContext(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -278,7 +275,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContext(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
+inline void GN::gfx::D3D9Renderer::bindContextState(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -391,7 +388,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
 /*
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
+inline void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -511,7 +508,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
+inline void GN::gfx::D3D9Renderer::bindContextFfp(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -638,7 +635,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
+inline void GN::gfx::D3D9Renderer::bindContextData(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )

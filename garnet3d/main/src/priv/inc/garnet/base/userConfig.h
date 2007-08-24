@@ -35,15 +35,6 @@
 #define GN_STATIC 0
 #endif
 
-// GN_ENABLE_INLINE
-// ================
-///
-/// Enable inline function build. Enabled by default in non-debug build.
-///
-#ifndef GN_ENABLE_INLINE
-#define GN_ENABLE_INLINE (2 != GN_BUILD_VARIANT)
-#endif
-
 // GN_ENABLE_GUARD
 // ================
 ///

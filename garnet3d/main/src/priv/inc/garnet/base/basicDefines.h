@@ -180,15 +180,6 @@
 #define GN_FORCE_INLINE   inline
 #endif
 
-///
-/// automatic inline macro
-///
-#if GN_ENABLE_INLINE
-#define GN_INLINE       inline
-#else
-#define GN_INLINE
-#endif
-
 // Export/Import function/variable tag
 
 /// \def GN_EXPORT
