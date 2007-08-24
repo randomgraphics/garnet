@@ -40,7 +40,7 @@ public:
 ///
 /// convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
-static GN_INLINE bool sColorFormat2OGL(
+static inline bool sColorFormat2OGL(
     GLint & gl_internalformat,
     GLuint & gl_format,
     GLuint & gl_type,

@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::input::BasicInput::updateMousePosition( int x, int y, bool notify )
+inline void GN::input::BasicInput::updateMousePosition( int x, int y, bool notify )
 {
     GN_GUARD_SLOW;
 

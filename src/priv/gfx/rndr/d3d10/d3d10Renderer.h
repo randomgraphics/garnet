@@ -235,17 +235,17 @@ namespace GN { namespace gfx
         bool contextDeviceCreate();
         void contextDeviceDestroy();
 
-        GN_INLINE void bindContext(
+        inline void bindContext(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextState(
+        inline void bindContextState(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextData(
+        inline void bindContextData(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );

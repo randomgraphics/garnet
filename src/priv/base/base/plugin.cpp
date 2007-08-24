@@ -1,7 +1,4 @@
 #include "pch.h"
-#if !GN_ENABLE_INLINE
-#include "garnet/base/plugin.inl"
-#endif
 
 GN::PluginID GN::PluginID::INVALID(0);
 

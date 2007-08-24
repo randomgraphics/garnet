@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "oglRenderer.h"
-#if !GN_ENABLE_INLINE
-#include "oglContextMgr.inl"
-#endif
 #include "oglRenderTargetMgr.h"
 #include "oglShader.h"
 #include "oglVtxFmt.h"
@@ -193,7 +190,7 @@ GN::gfx::OGLRenderer::getCurrentRenderStateBlock() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContext(
+inline void GN::gfx::OGLRenderer::bindContext(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -257,7 +254,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
+inline void GN::gfx::OGLRenderer::bindContextShaders(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -395,7 +392,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
+inline void GN::gfx::OGLRenderer::bindContextRenderStates(
     const RendererContext & newContext,
     bool forceRebind )
 {
@@ -482,7 +479,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
+inline void GN::gfx::OGLRenderer::bindContextFfp(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -620,7 +617,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
+inline void GN::gfx::OGLRenderer::bindContextData(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )

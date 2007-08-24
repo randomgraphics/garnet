@@ -144,7 +144,7 @@ namespace GN { namespace gfx
     private:
         bool createShader( const StrA & );
         bool analyzeUniforms( const DWORD * shaderFunction );
-        GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
+        inline void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
     ///
@@ -216,7 +216,7 @@ namespace GN { namespace gfx
     private:
         bool createShader( const StrA & );
         bool analyzeUniforms( const DWORD * );
-        GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
+        inline void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
     // *************************************************************************

@@ -327,22 +327,22 @@ namespace GN { namespace gfx
         void contextDeviceDispose();
         void contextDeviceDestroy();
 
-        GN_INLINE void bindContext(
+        inline void bindContext(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextState(
+        inline void bindContextState(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextFfp(
+        inline void bindContextFfp(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextData(
+        inline void bindContextData(
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
@@ -473,9 +473,7 @@ namespace GN { namespace gfx
     //@}
 }}
 
-#if GN_ENABLE_INLINE
 #include "d3d9ContextMgr.inl"
-#endif
 
 // *****************************************************************************
 //                                     EOF

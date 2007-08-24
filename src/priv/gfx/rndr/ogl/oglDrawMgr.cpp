@@ -76,7 +76,7 @@ static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t f
 //
 /// \brief translate garnet primitive to OpenGL primitive
 // ------------------------------------------------------------------------
-static GN_INLINE
+static inline
 bool sPrimitiveType2OGL( GLenum                 & oglPrim,
                          size_t                 & numidx,
                          GN::gfx::PrimitiveType   prim,

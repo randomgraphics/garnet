@@ -14,7 +14,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-static GN_INLINE void sSetupD3D10Viewport(
+static inline void sSetupD3D10Viewport(
     ID3D10Device * dev,
     const GN::Vector2<UInt32> & rtsize, // render target size
     float l, float t, float r, float b )
@@ -153,7 +153,7 @@ const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D10Renderer::getCurrentRenderSt
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D10Renderer::bindContext(
+inline void GN::gfx::D3D10Renderer::bindContext(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -182,7 +182,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContext(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
+inline void GN::gfx::D3D10Renderer::bindContextState(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
@@ -297,7 +297,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
+inline void GN::gfx::D3D10Renderer::bindContextData(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )

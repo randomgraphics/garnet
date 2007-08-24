@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::PluginTypeID
+inline GN::PluginTypeID
 GN::PluginManager::getPluginTypeID( const StrA & type ) const
 {
     GN_GUARD_SLOW;
@@ -14,7 +14,7 @@ GN::PluginManager::getPluginTypeID( const StrA & type ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE const GN::StrA &
+inline const GN::StrA &
 GN::PluginManager::getPluginTypeName( PluginTypeID id ) const
 {
     GN_GUARD_SLOW;
@@ -26,7 +26,7 @@ GN::PluginManager::getPluginTypeName( PluginTypeID id ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE const GN::StrA &
+inline const GN::StrA &
 GN::PluginManager::getPluginTypeDesc( PluginTypeID id ) const
 {
     GN_GUARD_SLOW;
@@ -38,7 +38,7 @@ GN::PluginManager::getPluginTypeDesc( PluginTypeID id ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::PluginManager::validID( PluginID id ) const
+inline bool GN::PluginManager::validID( PluginID id ) const
 {
     GN_GUARD_SLOW;
     std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
@@ -49,7 +49,7 @@ GN_INLINE bool GN::PluginManager::validID( PluginID id ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE const GN::StrA &
+inline const GN::StrA &
 GN::PluginManager::getPluginName( PluginID id ) const
 {
     GN_GUARD_SLOW;
@@ -65,7 +65,7 @@ GN::PluginManager::getPluginName( PluginID id ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE const GN::StrA &
+inline const GN::StrA &
 GN::PluginManager::getPluginDesc( PluginID id ) const
 {
     GN_GUARD_SLOW;

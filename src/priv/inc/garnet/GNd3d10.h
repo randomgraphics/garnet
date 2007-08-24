@@ -120,7 +120,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ID3D10Device & device() const { GN_ASSERT( mDevice ); return *mDevice; }
         IDXGISwapChain & swapChain() const { GN_ASSERT( mSwapChain ); return *mSwapChain; }
 
-        int run( const D3D10AppOption * = 0 );
+        int run( const D3D10AppOption & );
 
         bool changeOption( const D3D10AppOption & );
 

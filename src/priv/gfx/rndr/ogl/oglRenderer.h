@@ -311,11 +311,11 @@ namespace GN { namespace gfx
         void contextDeviceDispose();
         void contextDeviceDestroy();
 
-        GN_INLINE void bindContext( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        GN_INLINE void bindContextShaders( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        GN_INLINE void bindContextRenderStates( const RendererContext & newContext, bool forceRebind );
-        GN_INLINE void bindContextFfp( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        GN_INLINE void bindContextData( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContext( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContextShaders( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContextRenderStates( const RendererContext & newContext, bool forceRebind );
+        inline void bindContextFfp( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContextData( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
 
     private:
 
@@ -420,9 +420,7 @@ namespace GN { namespace gfx
     };
 }}
 
-#if GN_ENABLE_INLINE
 #include "oglContextMgr.inl"
-#endif
 
 // *****************************************************************************
 //                                     EOF

@@ -17,7 +17,7 @@ static const GLuint sBNML_ATTRIB = 15;
 //
 // Compose VTXSEM_TEXn tag based on texture stage.
 // -----------------------------------------------------------------------------
-static GN_INLINE GN::gfx::VtxSem sGetVtxSemFromTexStage( size_t stage )
+static inline GN::gfx::VtxSem sGetVtxSemFromTexStage( size_t stage )
 {
     GN::gfx::VtxSem sem = GN::gfx::VTXSEM_TEX0;
     if( stage < 10 )

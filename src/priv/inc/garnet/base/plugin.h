@@ -197,7 +197,7 @@ namespace GN
         ///
         /// Retrieve specific plugin's type ID by its name.
         ///
-        GN_INLINE PluginTypeID getPluginTypeID( const StrA & ) const;
+        inline PluginTypeID getPluginTypeID( const StrA & ) const;
 
         ///
         /// Get specific plugin's type name
@@ -401,9 +401,7 @@ namespace GN
     };
 }
 
-#if GN_ENABLE_INLINE
 #include "plugin.inl"
-#endif
 
 // *****************************************************************************
 //                                     EOF

@@ -243,7 +243,7 @@ bool GN::gfx::D3D9PxlShaderAsm::analyzeUniforms( const DWORD * func )
 //
 //
 // --------------------------------------------------------------------------------------
-GN_INLINE void
+inline void
 GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
 {
     GN_GUARD_SLOW;

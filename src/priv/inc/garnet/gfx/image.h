@@ -146,47 +146,47 @@ namespace GN { namespace gfx
         ///
         /// Get image type
         ///
-        GN_INLINE ImageType getImageType() const;
+        inline ImageType getImageType() const;
 
         ///
         /// total bytes of the whole image
         ///
-        GN_INLINE size_t getTotalBytes() const;
+        inline size_t getTotalBytes() const;
 
         ///
         /// bytes of one mip level
         ///
-        GN_INLINE size_t getLevelBytes( size_t level ) const;
+        inline size_t getLevelBytes( size_t level ) const;
 
         ///
         /// bytes per face
         ///
-        GN_INLINE size_t getFaceBytes() const;
+        inline size_t getFaceBytes() const;
 
         ///
         /// offset of specific pixel
         ///
-        GN_INLINE size_t getPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
+        inline size_t getPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
 
         ///
         /// offset of specific scanline
         ///
-        GN_INLINE size_t getScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
+        inline size_t getScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
 
         ///
         /// offset of specific slice
         ///
-        GN_INLINE size_t getSliceOffset( size_t face, size_t level, size_t z ) const;
+        inline size_t getSliceOffset( size_t face, size_t level, size_t z ) const;
 
         ///
         /// offset of specific mip level
         ///
-        GN_INLINE size_t getMipmapOffset( size_t face, size_t level ) const;
+        inline size_t getMipmapOffset( size_t face, size_t level ) const;
 
         ///
         /// offset of specific face
         ///
-        GN_INLINE size_t getFaceOffset( size_t face ) const;
+        inline size_t getFaceOffset( size_t face ) const;
 
         //@}
     };
@@ -209,9 +209,7 @@ namespace GN { namespace gfx
     };
 }}
 
-#if GN_ENABLE_INLINE
 #include "image.inl"
-#endif
 
 // *****************************************************************************
 //                                     EOF

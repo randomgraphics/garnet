@@ -193,9 +193,11 @@ GN::d3d10::D3D10Application::~D3D10Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d10::D3D10Application::run( const D3D10AppOption * )
+int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 {
     GN_GUARD_ALWAYS;
+
+    mOption = o;
 
     if( !init() ) { quit(); return -1; }
 

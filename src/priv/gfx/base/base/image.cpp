@@ -1,8 +1,4 @@
 #include "pch.h"
-#if !GN_ENABLE_INLINE
-#include "garnet/gfx/image.inl"
-#endif
-
 #include "imageBMP.h"
 #include "imageDDS.h"
 #include "imagePNG.h"
