@@ -7,6 +7,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )
 #pragma comment( lib, "d3d10.lib" )
+#pragma comment( lib, "dxgi.lib" )
 #pragma comment( lib, "dxerr.lib" )
 #pragma comment( lib, "dxguid.lib" )
 #if GN_DEBUG_BUILD
@@ -166,6 +167,34 @@ static void sDestroyWindow( HWND hwnd )
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
 }
 
+static DXGI_SAMPLE_DESC sGetSampleDesc( ID3D10Device * device, UInt32 msaa, DXGI_FORMAT format )
+{
+    DXGI_SAMPLE_DESC sd;
+
+    if( msaa )
+    {
+        static UINT counts[] = { 32, 16, 8, 4, 2 };
+
+        UINT quality;
+
+        for( size_t i = 0; i < GN_ARRAY_COUNT(counts); ++i )
+        {
+            if( S_OK == device->CheckMultisampleQualityLevels( format, counts[i], &quality ) && quality > 0 )
+            {
+                sd.Count = counts[i];
+                sd.Quality = quality - 1;
+                return sd;
+            }
+        }
+
+        GN_WARN(sLogger)( "current device does not support MSAA" );
+    }
+
+    sd.Count = 1;
+    sd.Quality = 0;
+    return sd;
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -178,6 +207,8 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mAdapter(0)
     , mDevice(0)
     , mSwapChain(0)
+    , mBackRTV(0)
+    , mDepthDSV(0)
     , mDebug(0)
     , mInfoQueue(0)
 {
@@ -226,6 +257,9 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
         {
             // Idle time, do rendering and update
             onDraw();
+
+            // present()
+            mSwapChain->Present( 0, 0 );
         }
     }
 
@@ -247,6 +281,16 @@ bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
     destroyDevice();
     mOption = o;
     return createDevice();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
+{
+    float color[] = { r, g, b, a };
+    mDevice->ClearRenderTargetView( mBackRTV, color );
+    mDevice->ClearDepthStencilView( mDepthDSV, D3D10_CLEAR_DEPTH|D3D10_CLEAR_STENCIL, d, s );
 }
 
 // *****************************************************************************
@@ -299,12 +343,19 @@ bool GN::d3d10::D3D10Application::createDevice()
     // adjust render window
     if( !sAdjustWindow( mWindow, mOption.width, mOption.height, mOption.fullscreen ) ) return false;
 
-    // setup creation flags
+    // create factory
+    AutoComPtr<IDXGIFactory> factory;
+    GN_DX10_CHECK_RV( CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&factory) ), false );
+
+    // create device
     UINT flags = 0;
 #if GN_DEBUG_BUILD
     flags |= D3D10_CREATE_DEVICE_DEBUG;
 #endif
     flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
+    GN_DX10_CHECK_RV(
+        D3D10CreateDevice( mAdapter, D3D10_DRIVER_TYPE_HARDWARE, 0, flags, D3D10_SDK_VERSION, &mDevice ),
+        false );
 
     // setup swap chain descriptor
     GN_CASSERT( D3D10_SDK_VERSION >= 28 );
@@ -318,22 +369,40 @@ bool GN::d3d10::D3D10Application::createDevice()
     sd.BufferDesc.RefreshRate.Denominator = 1;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = mWindow;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
+    sd.SampleDesc = sGetSampleDesc( mDevice, mOption.msaa, DXGI_FORMAT_R8G8B8A8_UNORM );
     sd.Windowed = !mOption.fullscreen;
 
-    // create device
-    GN_DX10_CHECK_RV(
-        D3D10CreateDeviceAndSwapChain(
-            mAdapter,
-            D3D10_DRIVER_TYPE_HARDWARE,
-            NULL, // software module handle
-            flags,
-            D3D10_SDK_VERSION,
-            &sd,
-            &mSwapChain,
-            &mDevice ),
-        false );
+    // create swap chain
+    GN_DX10_CHECK_RV( factory->CreateSwapChain( mDevice, &sd, &mSwapChain ), false );
+
+    // get default back buffer and depth surface
+	DXGI_SWAP_CHAIN_DESC scdesc;
+    mSwapChain->GetDesc( &scdesc );
+	AutoComPtr<ID3D10Texture2D> backbuf;
+    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof(*backbuf), (void**)&backbuf ), false );
+    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( backbuf, NULL, &mBackRTV ), false );
+
+    // create default depth texture
+    AutoComPtr<ID3D10Texture2D> depthbuf;
+    D3D10_TEXTURE2D_DESC td;
+    td.Width              = mOption.width;
+    td.Height             = mOption.height;
+    td.MipLevels          = 1;
+    td.ArraySize          = 1;
+    td.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    td.SampleDesc         = scdesc.SampleDesc;
+    td.Usage              = D3D10_USAGE_DEFAULT;
+    td.BindFlags          = D3D10_BIND_DEPTH_STENCIL;
+    td.CPUAccessFlags     = 0;
+    td.MiscFlags          = 0;
+    GN_DX10_CHECK_RV( mDevice->CreateTexture2D( &td, NULL, &depthbuf ), false );
+
+    // create depth stencil view
+    D3D10_DEPTH_STENCIL_VIEW_DESC dsvd;
+    dsvd.Format             = td.Format;
+    dsvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_DSV_DIMENSION_TEXTURE2DMS : D3D10_DSV_DIMENSION_TEXTURE2D;
+    dsvd.Texture2D.MipSlice = 0;
+    GN_DX10_CHECK_RV( mDevice->CreateDepthStencilView( depthbuf, &dsvd, &mDepthDSV ), false );
 
 	// setup debug and info-queue layer
 	if( SUCCEEDED( mDevice->QueryInterface( IID_ID3D10Debug, (void**)&mDebug ) ) )
@@ -364,6 +433,8 @@ void GN::d3d10::D3D10Application::destroyDevice()
 
 	safeRelease( mInfoQueue );
 	safeRelease( mDebug );
+    safeRelease( mBackRTV );
+    safeRelease( mDepthDSV );
 	safeRelease( mSwapChain );
 	safeRelease( mDevice );
 	safeRelease( mAdapter );

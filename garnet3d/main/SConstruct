@@ -552,7 +552,7 @@ class GarnetEnv :
 	# ´´½¨ source cluster
 	def newSourceCluster( self, sources, pchHeader = None, pchSource = None ):
 		s = SourceCluster()
-		s.sources = [File(x) for x in sources]
+		s.sources = [File(x) for x in Flatten(sources)]
 		if pchHeader: s.pchHeader = pchHeader
 		if pchSource: s.pchSource = File(pchSource)
 		return s
@@ -890,7 +890,7 @@ def BUILD_staticLib( name, target ):
 # handle dependencies
 #
 def BUILD_toList( x ):
-	if x : return x
+	if x : return Flatten(x)
 	else : return []
 
 def BUILD_addLib( env, name, lib, addSuffix ):
