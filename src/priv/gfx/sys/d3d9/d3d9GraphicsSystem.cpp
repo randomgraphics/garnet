@@ -511,25 +511,6 @@ bool GN::gfx::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter & 
 
     if( !beginScene() ) return failure();
 
-    // register build-in kernels
-    registerKernelFactory( D3D9StandardResourcesKernel::KERNEL_NAME(), &D3D9StandardResourcesKernel::sFactory, 100 );
-    registerKernelFactory( D3D9ClearScreenKernel::KERNEL_NAME(), &D3D9ClearScreenKernel::sFactory, 100 );
-    registerKernelFactory( D3D9HlslKernel::KERNEL_NAME(), &D3D9HlslKernel::sFactory, 100 );
-    registerKernelFactory( D3D9QuadKernel::KERNEL_NAME(), &D3D9QuadKernel::sFactory, 100 );
-
-    // register build-in surface types
-    registerSurfeceType( D3D9_SURFACE_TYPE_VB, &D3D9VtxBuf::sNewInstance, "D3D9 vertex buffer" );
-    registerSurfeceType( D3D9_SURFACE_TYPE_IB, &D3D9IdxBuf::sNewInstance, "D3D9 index buffer" );
-    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_2D, &D3D9Texture::sNewTex2D, "D3D9 2D texture" );
-    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_3D, &D3D9Texture::sNewTex3D, "D3D9 3D texture" );
-    registerSurfeceType( D3D9_SURFACE_TYPE_TEX_CUBE, &D3D9Texture::sNewTexCube, "D3D9 cube texture" );
-
-    // register build-in surface creation rules
-    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D );
-    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
-    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE );
-    registerSurfaceCreationRule( D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
-
     // success
     return success();
 
@@ -686,6 +667,25 @@ GN::gfx::createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & gscp 
     AutoObjPtr<D3D9GraphicsSystem> gs( new D3D9GraphicsSystem );
 
     if( !gs->init( gscp ) ) return 0;
+
+    // register build-in kernels
+    gs->registerKernelFactory( D3D9StandardResourcesKernel::KERNEL_NAME(), &D3D9StandardResourcesKernel::sFactory, 100 );
+    gs->registerKernelFactory( D3D9ClearScreenKernel::KERNEL_NAME(), &D3D9ClearScreenKernel::sFactory, 100 );
+    gs->registerKernelFactory( D3D9HlslKernel::KERNEL_NAME(), &D3D9HlslKernel::sFactory, 100 );
+    gs->registerKernelFactory( D3D9QuadKernel::KERNEL_NAME(), &D3D9QuadKernel::sFactory, 100 );
+
+    // register build-in surface types
+    gs->registerSurfeceType( D3D9_SURFACE_TYPE_VB, &D3D9VtxBuf::sNewInstance, "D3D9 vertex buffer" );
+    gs->registerSurfeceType( D3D9_SURFACE_TYPE_IB, &D3D9IdxBuf::sNewInstance, "D3D9 index buffer" );
+    gs->registerSurfeceType( D3D9_SURFACE_TYPE_TEX_2D, &D3D9Texture::sNewTex2D, "D3D9 2D texture" );
+    gs->registerSurfeceType( D3D9_SURFACE_TYPE_TEX_3D, &D3D9Texture::sNewTex3D, "D3D9 3D texture" );
+    gs->registerSurfeceType( D3D9_SURFACE_TYPE_TEX_CUBE, &D3D9Texture::sNewTexCube, "D3D9 cube texture" );
+
+    // register build-in surface creation rules
+    gs->registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D );
+    gs->registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_2D   , D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
+    gs->registerSurfaceCreationRule( D3D9_SURFACE_TYPE_TEX_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE , D3D9_SURFACE_TYPE_RTT_CUBE );
+    gs->registerSurfaceCreationRule( D3D9_SURFACE_TYPE_RTS_COLOR, D3D9_SURFACE_TYPE_RTT_2D   , D3D9_SURFACE_TYPE_RTT_2D );
 
     return gs.detach();
 
