@@ -326,6 +326,8 @@ namespace GN
         void      reserve( size_t count ) { doReserve( count ); }
         void      resize( size_t count ) { doReserve( count ); mCount = count; }
         void      popBack() { if( mCount > 0 ) --mCount; }
+        /** clear array as well as release memory */
+        void      purge() { dealloc(); mCount = 0; mCapacity = 0; mElements = 0; }
         size_t    size() const { return mCount; }
         void      swap( DynaArray & another ) { doSwap( another ); } ///< swap data with another array
         //@}

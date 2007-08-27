@@ -1,5 +1,4 @@
 #include "pch.h"
-#ifdef HAS_D3D10
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d10.statedumper");
 
@@ -70,26 +69,56 @@ static std::string sToBase64( const void * data, size_t bytes )
 //
 //
 // -----------------------------------------------------------------------------
-static const GUID & sGetDumpGuid( size_t index )
+static const GUID & VSGUID()
 {
-	static struct Local
-	{
-		enum { N = 255 };
+    // {B635FED2-E52F-4f85-93EE-BA017B4E40BA}
+    static const GUID guid =
+    { 0xb635fed2, 0xe52f, 0x4f85, { 0x93, 0xee, 0xba, 0x1, 0x7b, 0x4e, 0x40, 0xba } };
+    return guid;
+}
 
-		GUID guids[N];
+//
+//
+// -----------------------------------------------------------------------------
+static const GUID & GSGUID()
+{
+    // {BA28B475-CCFD-4603-B397-0FEDF90DC916}
+    static const GUID guid = 
+    { 0xba28b475, 0xccfd, 0x4603, { 0xb3, 0x97, 0xf, 0xed, 0xf9, 0xd, 0xc9, 0x16 } };
+    return guid;
+}
 
-		Local()
-		{
-			for( size_t i = 0; i < N; ++i )
-			{
-				memset( &guids[i], (int)i, sizeof(GUID) );
-			}
-		}
-	} l;
+//
+//
+// -----------------------------------------------------------------------------
+static const GUID & PSGUID()
+{
+    // {59347569-8552-4679-B86F-9D9CDFF309B2}
+    static const GUID guid = 
+    { 0x59347569, 0x8552, 0x4679, { 0xb8, 0x6f, 0x9d, 0x9c, 0xdf, 0xf3, 0x9, 0xb2 } };
+    return guid;
+}
 
-	GN_ASSERT( index < Local::N );
+//
+//
+// -----------------------------------------------------------------------------
+static const GUID & IL0GUID()
+{
+    // {21523B5E-EB51-4092-8698-0316BDB3E8CE}
+    static const GUID guid = 
+    { 0x21523b5e, 0xeb51, 0x4092, { 0x86, 0x98, 0x3, 0x16, 0xbd, 0xb3, 0xe8, 0xce } };
+    return guid;
+}
 
-	return l.guids[index];
+//
+//
+// -----------------------------------------------------------------------------
+static const GUID & IL1GUID()
+{
+    // {EAC00B60-FAC7-4438-A652-9EAB5D6AE73F}
+    static const GUID guid = 
+    { 0xeac00b60, 0xfac7, 0x4438, { 0xa6, 0x52, 0x9e, 0xab, 0x5d, 0x6a, 0xe7, 0x3f } };
+    return guid;
 }
 
 //
@@ -135,41 +164,16 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
 
 	std::vector<UInt8> binbuf;
 	UINT sz;
-	vs->GetPrivateData( sGetDumpGuid(0), &sz, 0 );
+	vs->GetPrivateData( VSGUID(), &sz, 0 );
     if( 0 == sz )
     {
         GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVertexShader()." );
         return;
     }
 	binbuf.resize( sz );
-	vs->GetPrivateData( sGetDumpGuid(0), &sz, &binbuf[0] );
+	vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
 
 	sDumpShaderCode( fp, &binbuf[0], sz, "vs" );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void sDumpPs( ID3D10Device & device, FILE * fp )
-{
-	AutoComPtr<ID3D10PixelShader> ps;
-
-	device.PSGetShader( &ps );
-
-	if( !ps ) return;
-
-	std::vector<UInt8> binbuf;
-	UINT sz;
-	ps->GetPrivateData( sGetDumpGuid(0), &sz, 0 );
-    if( 0 == sz )
-    {
-        GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePixelShader()." );
-        return;
-    }
-	binbuf.resize( sz );
-	ps->GetPrivateData( sGetDumpGuid(0), &sz, &binbuf[0] );
-
-	sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
 }
 
 //
@@ -185,16 +189,45 @@ static void sDumpGs( ID3D10Device & device, FILE * fp )
 
 	std::vector<UInt8> binbuf;
 	UINT sz;
-	gs->GetPrivateData( sGetDumpGuid(0), &sz, 0 );
+	gs->GetPrivateData( GSGUID(), &sz, 0 );
     if( 0 == sz )
     {
         GN_ERROR(sLogger)( "Geometry shader is not dumpable. Please use createDumpableGeometryShader()." );
         return;
     }
 	binbuf.resize( sz );
-	gs->GetPrivateData( sGetDumpGuid(0), &sz, &binbuf[0] );
+	gs->GetPrivateData( GSGUID(), &sz, &binbuf[0] );
 
 	sDumpShaderCode( fp, &binbuf[0], sz, "gs" );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpPs( ID3D10Device & device, FILE * fp )
+{
+	AutoComPtr<ID3D10PixelShader> ps;
+
+	device.PSGetShader( &ps );
+
+	if( !ps ) return;
+
+    // {70BA5240-59F8-452a-88A0-2C6483AAC86F}
+    static const GUID psguid = 
+    { 0x70ba5240, 0x59f8, 0x452a, { 0x88, 0xa0, 0x2c, 0x64, 0x83, 0xaa, 0xc8, 0x6f } };
+
+	std::vector<UInt8> binbuf;
+	UINT sz;
+	ps->GetPrivateData( PSGUID(), &sz, 0 );
+    if( 0 == sz )
+    {
+        GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePixelShader()." );
+        return;
+    }
+	binbuf.resize( sz );
+	ps->GetPrivateData( PSGUID(), &sz, &binbuf[0] );
+
+	sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
 }
 
 //
@@ -326,14 +359,14 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
 	std::vector<UInt8> signature;
 	char sname[_MAX_PATH];
 	sprintf_s( sname, "%s_inputlayout_signature.bin", sDumpFilePrefix );
-	il->GetPrivateData( sGetDumpGuid(1), &sz, 0 );
+	il->GetPrivateData( IL1GUID(), &sz, 0 );
     if( 0 == sz )
     {
         GN_ERROR(sLogger)( "InputLayout is not dumpable. Please use createDumpableInputLayout()." );
         return;
     }
 	signature.resize( sz );
-	il->GetPrivateData( sGetDumpGuid(1), &sz, &signature[0] );
+	il->GetPrivateData( IL1GUID(), &sz, &signature[0] );
 	sDumpBinary( sname, &signature[0], signature.size() );
 
 	// write IL open tag
@@ -341,9 +374,9 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
 
 	// get element array
 	std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
-	il->GetPrivateData( sGetDumpGuid(0), &sz, 0 );
+	il->GetPrivateData( IL0GUID(), &sz, 0 );
 	elements.resize( sz / sizeof(D3D10_INPUT_ELEMENT_DESC) );
-	il->GetPrivateData( sGetDumpGuid(0), &sz, &elements[0] );
+	il->GetPrivateData( IL0GUID(), &sz, &elements[0] );
 
 	// write element one by one
 	for( size_t i = 0; i < sz / sizeof(D3D10_INPUT_ELEMENT_DESC); ++i )
@@ -506,20 +539,6 @@ static void sDumpVsSrv( ID3D10Device & device, FILE * fp )
 //
 //
 // -----------------------------------------------------------------------------
-static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
-{
-	ID3D10ShaderResourceView * srv[128];
-
-	device.PSGetShaderResources( 0, 128, srv );
-
-	sDumpShaderResources( device, fp, "ps", srv, 128 );
-
-	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 {
 	ID3D10ShaderResourceView * srv[128];
@@ -527,6 +546,20 @@ static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 	device.GSGetShaderResources( 0, 128, srv );
 
 	sDumpShaderResources( device, fp, "gs", srv, 128 );
+
+	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
+{
+	ID3D10ShaderResourceView * srv[128];
+
+	device.PSGetShaderResources( 0, 128, srv );
+
+	sDumpShaderResources( device, fp, "ps", srv, 128 );
 
 	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
@@ -709,7 +742,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVertexShader(
 
     GN_DX10_CHECK_RV( device.CreateVertexShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( sGetDumpGuid(0), (UINT)bytes, binary );
+	shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -726,7 +759,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGeometryShader(
 
     GN_DX10_CHECK_RV( device.CreateGeometryShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( sGetDumpGuid(0), (UINT)bytes, binary );
+	shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -743,7 +776,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePixelShader(
 
     GN_DX10_CHECK_RV( device.CreatePixelShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( sGetDumpGuid(0), (UINT)bytes, binary );
+	shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -763,12 +796,12 @@ ID3D10InputLayout * GN::d3d10::createDumpableInputLayout(
     GN_DX10_CHECK_RV( device.CreateInputLayout( elements, (UINT)count, signature, bytes, &il ), 0 );
 
 	il->SetPrivateData(
-		sGetDumpGuid(0),
+		IL0GUID(),
 		(UINT)( sizeof(D3D10_INPUT_ELEMENT_DESC) * count ),
 		elements );
 
 	il->SetPrivateData(
-		sGetDumpGuid(1),
+		IL1GUID(),
 		(UINT)bytes,
 		signature );
 
@@ -812,5 +845,3 @@ void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt3
 
 	sDumpD3D10States( device, file.fp );
 }
-
-#endif // #ifdef HAS_D3D10
