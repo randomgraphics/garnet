@@ -2,7 +2,7 @@
 
 #ifdef HAS_D3D9
 #include "garnet/GNgfxsysD3D9.h"
-#else if GN_STATIC
+#elif GN_STATIC
 static GN::gfx::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx::GraphicsSystemCreationParameter & )
 {
     GN_UNEXPECTED();

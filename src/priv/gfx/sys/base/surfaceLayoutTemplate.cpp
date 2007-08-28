@@ -54,7 +54,7 @@ bool GN::gfx::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout ) 
             const SurfaceAttribute & sa = layout.format.attribs[i];
             if( sa.semantic == sat.semantic )
             {
-                if( -1 != sat.offset && sat.offset != sa.offset )
+                if( (size_t)-1 != sat.offset && sat.offset != sa.offset )
                 {
                     GN_ERROR(sLogger)("offset of attribute #%d is incompatible with template.", i );
                     return false;
