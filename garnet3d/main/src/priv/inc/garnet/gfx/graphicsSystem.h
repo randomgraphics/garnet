@@ -450,16 +450,10 @@ namespace GN { namespace gfx
         virtual void unset() = 0;
 
         template<typename T>
-        inline  bool set( const T & value ) { return set( 0, sizeof(T), &value ); }
+        inline  bool setAggregate( const T & value ) { return set( 0, sizeof(T), &value ); }
 
-        template<>
-        inline  bool set<const char*>( const char * const & value ) { return set( 0, strLen(value)+1, value ); }
-
-        template<>
-        inline  bool set<char*>( char * const & value ) { return set( 0, strLen(value)+1, value ); }
-
-        template<>
-        inline  bool set<StrA>( const StrA & value ) { return set( 0, value.size()+1, value.cptr() ); }
+        inline  bool setString( const char * value ) { return set( 0, strLen(value)+1, value ); }
+        inline  bool setString( const StrA & value ) { return set( 0, value.size()+1, value.cptr() ); }
         //@}
     };
 

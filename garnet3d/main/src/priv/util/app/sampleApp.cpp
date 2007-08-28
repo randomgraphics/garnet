@@ -20,9 +20,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
 // -----------------------------------------------------------------------------
 GN::app::SampleApp::SampleApp()
     : mFont(mRenderEngine)
+    , mFps( L"FPS: %.2f\n(Press F1 for help)" )
     , mShowHUD(true)
     , mShowHelp(false)
-    , mFps( L"FPS: %.2f\n(Press F1 for help)" )
 {
     enableCRTMemoryCheck();
     mFps.reset();

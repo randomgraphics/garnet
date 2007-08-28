@@ -160,7 +160,7 @@ namespace GN { namespace gfx
         //@{
 
         BoolKernelParameter( const KernelParameterReflection & refl, bool initial )
-            : TypedKernelParameter( refl, initial ) {}
+            : TypedKernelParameter<bool>( refl, initial ) {}
 
         //@}
     };
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
         //@{
 
         IntKernelParameter( const KernelParameterReflection & refl, const T & initial )
-            : TypedKernelParameter( refl, initial ) {}
+            : TypedKernelParameter<T>( refl, initial ) {}
 
         //@}
     };
@@ -187,7 +187,7 @@ namespace GN { namespace gfx
         //@{
 
         FloatKernelParameter( const KernelParameterReflection & refl, float initial )
-            : TypedKernelParameter( refl, initial ) {}
+            : TypedKernelParameter<float>( refl, initial ) {}
 
         //@}
     };
