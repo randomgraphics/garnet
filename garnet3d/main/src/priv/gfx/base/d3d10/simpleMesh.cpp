@@ -34,7 +34,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
     // create input layout
     static const D3D10_INPUT_ELEMENT_DESC elements[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT   , 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
         { "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT   , 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT      , 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
@@ -153,6 +153,16 @@ void GN::d3d10::SimpleMesh::endVertices()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
+{
+    beginVertices();
+    mVertices.append( vertices, count );
+    endVertices();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::beginTriangles()
 {
     mIndices.clear();
@@ -209,6 +219,16 @@ void GN::d3d10::SimpleMesh::endTriangles()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::d3d10::SimpleMesh::setTriangles( const UInt16 * triangles, size_t triangleCount )
+{
+    beginTriangles();
+    mIndices.append( triangles, triangleCount * 3 );
+    endTriangles();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::draw() const
 {
     if( mNumVertices > 0 )
@@ -217,6 +237,7 @@ void GN::d3d10::SimpleMesh::draw() const
         UINT offset = 0;
         mDevice->IASetInputLayout( mLayout );
         mDevice->IASetVertexBuffers( 0, 1, &mVtxBuf, &stride, &offset );
+        mDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
         mDevice->Draw( (UINT)mNumVertices, 0 );
     }
 }
@@ -233,6 +254,7 @@ void GN::d3d10::SimpleMesh::drawIndexed() const
         mDevice->IASetInputLayout( mLayout );
         mDevice->IASetVertexBuffers( 0, 1, &mVtxBuf, &stride, &offset );
         mDevice->IASetIndexBuffer( mIdxBuf, DXGI_FORMAT_R16_UINT, 0 );
+        mDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
         mDevice->DrawIndexed( (UINT)mNumIndices, 0, 0 );
     }
 }

@@ -18,6 +18,17 @@
 
 namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 {
+    enum MultiSampleAntiAlias
+    {
+        MSAA_DISABLE      = 0,
+        MSAA_ENABLE       = 1,
+    };
+
+    ///
+    /// construct sample descriptor based on MSAA flags
+    ///
+    DXGI_SAMPLE_DESC constructSampleDesc( ID3D10Device * device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+
     ///
     /// scoped PIX event
     ///
@@ -66,6 +77,15 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** signature = 0 );
 
+    ID3D10PixelShader * compilePS(
+        ID3D10Device & dev,
+        const char   * code,
+        size_t         len = 0,
+        UInt32         flags = 0,
+        const char   * entry = "main",
+        const char   * profile = "ps_4_0",
+        ID3D10Blob  ** signature = 0 );
+
     //@}
 
     ///
@@ -74,6 +94,22 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     class SimpleMesh : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleMesh, StdClass );
+
+    public:
+
+        ///
+        /// mesh vertex
+        ///
+        struct Vertex
+        {
+            //@{
+            Vector3f pos;
+            Vector3f normal;
+            Vector2f tex;
+            Vector4f color;
+            Vector4f user;   ///< user defined data
+            //@}
+        };
 
         // ********************************
         // ctor/dtor
@@ -120,10 +156,12 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void    tex( float x, float y );
         void    color( float r, float g, float b, float a );
         void endVertices();
+        void setVertices( const Vertex * vertices, size_t count );
 
         void beginTriangles();
         void    triangle( size_t i0, size_t i1, size_t i2 );
         void endTriangles();
+        void setTriangles( const UInt16 * triangles, size_t triangleCount );
 
         void draw() const;
         void drawIndexed() const;
@@ -134,15 +172,6 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         // private variables
         // ********************************
     private:
-
-        struct Vertex
-        {
-            Vector3f pos;
-            Vector3f normal;
-            Vector2f tex;
-            Vector4f color;
-            Vector4f user;
-        };
 
         ID3D10Device           * mDevice;
         ID3D10InputLayout      * mLayout;
@@ -157,6 +186,193 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         DynaArray<UInt16>        mIndices;
         size_t                   mIdxBufCapacity;
         size_t                   mNumIndices;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+    ///
+    /// structure to represent a render-target-texture
+    ///
+    struct RenderTargetTexture
+    {
+        //@{
+        ID3D10Resource           * res;
+        ID3D10RenderTargetView   * rtv;
+        ID3D10DepthStencilView   * dsv;
+        ID3D10ShaderResourceView * srv;
+        //@}
+
+        //@{
+
+        RenderTargetTexture() : res(0), rtv(0), dsv(0), srv(0)
+        {
+        }
+
+        void clear()
+        {
+            safeRelease( res );
+            safeRelease( rtv );
+            safeRelease( dsv );
+            safeRelease( srv );
+        }
+
+        //@}
+    };
+
+    ///
+    /// render-to-texture options
+    ///
+    struct RenderToTextureOption
+    {
+        //@{
+        UInt32               width;
+        UInt32               height;
+        DXGI_FORMAT          format;
+        UInt32               count;
+        MultiSampleAntiAlias msaa;
+        bool                 stencil;
+        //@}
+    };
+
+    ///
+    /// utility class to simplify render-to-texture
+    ///    
+    class RenderToTexture : public StdClass
+    {
+        GN_DECLARE_STDCLASS( RenderToTexture, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        RenderToTexture()          { clear(); }
+        virtual ~RenderToTexture() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( ID3D10Device * device, const RenderToTextureOption & options );
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.size() ); return mColors[index]; }
+        const RenderTargetTexture & getDepthBuffer() const { return mDepth; }
+
+        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), 0 ); }
+        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), mDepth.dsv ); }
+
+        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ID3D10Device                        * mDevice;
+        StackArray<RenderTargetTexture,8>     mColors;
+        FixedArray<ID3D10RenderTargetView*,8> mColorViews;
+        RenderTargetTexture                   mDepth;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+    ///
+    /// screen aligned quad descriptor
+    ///
+    struct ScreenAlignedQuadDesc
+    {
+        float x1, y1;
+        float x2, y2;
+        float u1, v1;
+        float u2, v2;
+        float z;
+        D3D10_DEPTH_WRITE_MASK depthWriteMask;
+        D3D10_COMPARISON_FUNC  depthFunc;
+
+        void makeDefault()
+        {
+            x1 = y1 = -1.0f;
+            x2 = y2 = 1.0f;
+            u1 = 0.0f;
+            v1 = 1.0f;
+            u2 = 1.0f;
+            v2 = 0.0f;
+            z = .0f;
+            depthWriteMask = D3D10_DEPTH_WRITE_MASK_ZERO;
+            depthFunc = D3D10_COMPARISON_ALWAYS;
+        }
+    };
+
+    ///
+    /// sceeen aligned quad mesh
+    ///
+    class ScreenAlignedQuad : public StdClass
+    {
+        GN_DECLARE_STDCLASS( ScreenAlignedQuad, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        ScreenAlignedQuad()          { clear(); }
+        virtual ~ScreenAlignedQuad() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
+        void quit();
+    private:
+        void clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
+        //@}
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        ///
+        ///  \note Does not support multisampled texture
+        ///
+        void drawTexed( ID3D10ShaderResourceView * srv );
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ID3D10Device            * mDevice;
+        ID3D10DepthStencilState * mDepthStencilState;
+        ID3D10VertexShader      * mVs;
+        ID3D10PixelShader       * mPsTexed;
+        ID3D10PixelShader       * mPsSolid;
+        SimpleMesh                mMesh;
 
         // ********************************
         // private functions
@@ -181,7 +397,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             , height(480)
             , depth(0)
             , refrate(0)
-            , msaa(0)
+            , msaa(MSAA_DISABLE)
         {
         }
 
@@ -216,9 +432,9 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         UInt32 refrate; ///< Referesh rate. Ignored for windowed mode.
 
         ///
-        /// MSAA flag. 0: disable; others: enable
+        /// MSAA.
         ///
-        UInt32 msaa;
+        MultiSampleAntiAlias msaa;
     };
 
     ///
@@ -243,7 +459,11 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         bool changeOption( const D3D10AppOption & );
 
+        const D3D10AppOption & getOption() const { return mOption; }
+
         void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+
+        void resetToDefaultRenderTargets() { mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV ); }
 
         //@}
 

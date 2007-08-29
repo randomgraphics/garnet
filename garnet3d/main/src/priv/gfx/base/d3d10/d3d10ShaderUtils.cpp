@@ -140,3 +140,47 @@ ID3D10VertexShader * GN::d3d10::compileVS(
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+ID3D10PixelShader * GN::d3d10::compilePS(
+    ID3D10Device & dev,
+    const char   * code,
+    size_t         len,
+    UInt32         flags,
+    const char   * entry,
+    const char   * profile,
+    ID3D10Blob  ** signature )
+{
+    GN_GUARD;
+
+    AutoComPtr<ID3D10Blob> bin, err;
+    if( FAILED( D3DX10CompileFromMemory(
+            code,
+            (0==len) ? strLen(code) : len,
+            0, 0, 0,
+            entry,
+            profile,
+            sRefineFlags(flags),
+            0,
+            0,
+            &bin,
+            &err,
+            0 ) ) )
+    {
+        sPrintShaderCompileError( code, err );
+        return 0;
+    }
+
+    sPrintShaderCompileInfo( code, bin );
+
+    ID3D10PixelShader * ps = createDumpablePixelShader( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
+    if( 0 == ps ) return 0;
+
+    // success
+    if( signature ) *signature = bin.detach();
+    return ps;
+
+    GN_UNGUARD;
+}
