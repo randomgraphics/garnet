@@ -7,7 +7,7 @@ struct VSInput
 
 struct VSOutput
 {
-    float4 pos : SV_Position;
+    float4 pos : SV_POSITION;
     float2 tex : TEXCOORD0;
     float4 clr : COLOR0;
 };
@@ -20,21 +20,22 @@ VSOutput vsmain( VSInput i )
 
     o.pos = mul( gPVW, i.pos );
     o.tex = i.tex;
-    o.clr = 1;
+    float3 n = 2*abs(i.normal) + i.normal;
+    o.clr = float4( n/3.0, 1.0 );
 
     return o;
 }
 
-float4 psmain( VSOutput i ) : SV_Target0
+float4 psmain( VSOutput i ) : SV_TARGET
 {
     return i.clr;
 }
 
-technique
+technique10 t0
 {
-    pass
+    pass p0
     {
         SetVertexShader( CompileShader( vs_4_0, vsmain() ) );
-        SetPixelShader( CompileShader( ps_4_0,psmain() ) );
+        SetPixelShader( CompileShader( ps_4_0, psmain() ) );
     }
 }

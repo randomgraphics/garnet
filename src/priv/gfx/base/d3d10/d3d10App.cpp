@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/GNinput.h"
 
 using namespace GN;
 
@@ -127,6 +128,27 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     return hwnd;
 }
 
+void sPrintDeviceInfo( const DXGI_SWAP_CHAIN_DESC & scd )
+{
+    GN_INFO(sLogger)(
+        "\n\n"
+        "===================================================\n"
+        "        D3D10 Implementation Information\n"
+        "---------------------------------------------------\n"
+        "    Backbuffer Size                : %d,%d\n"
+        "    Fullscreen                     : %s\n"
+        "    MSAA Sample Count              : %d\n"
+        "    MSAA Sample Quality            : %d\n"
+        "===================================================\n"
+        "\n\n",
+        scd.BufferDesc.Width,
+        scd.BufferDesc.Height,
+        scd.Windowed ? "False" : "True",
+        scd.SampleDesc.Count,
+        scd.SampleDesc.Quality
+        );
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -161,38 +183,12 @@ static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullsc
     return true;
 }
 
-
+//
+//
+// -----------------------------------------------------------------------------
 static void sDestroyWindow( HWND hwnd )
 {
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
-}
-
-static DXGI_SAMPLE_DESC sGetSampleDesc( ID3D10Device * device, UInt32 msaa, DXGI_FORMAT format )
-{
-    DXGI_SAMPLE_DESC sd;
-
-    if( msaa )
-    {
-        static UINT counts[] = { 32, 16, 8, 4, 2 };
-
-        UINT quality;
-
-        for( size_t i = 0; i < GN_ARRAY_COUNT(counts); ++i )
-        {
-            if( S_OK == device->CheckMultisampleQualityLevels( format, counts[i], &quality ) && quality > 0 )
-            {
-                sd.Count = counts[i];
-                sd.Quality = quality - 1;
-                return sd;
-            }
-        }
-
-        GN_WARN(sLogger)( "current device does not support MSAA" );
-    }
-
-    sd.Count = 1;
-    sd.Quality = 0;
-    return sd;
 }
 
 // *****************************************************************************
@@ -212,6 +208,7 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mDebug(0)
     , mInfoQueue(0)
 {
+    input::createInputSystem();
 }
 
 //
@@ -219,7 +216,10 @@ GN::d3d10::D3D10Application::D3D10Application()
 // -----------------------------------------------------------------------------
 GN::d3d10::D3D10Application::~D3D10Application()
 {
+    if( gInputPtr ) delete gInputPtr;
 }
+
+#include <conio.h>
 
 //
 //
@@ -255,7 +255,14 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
         }
         else
         {
+            // process input message
+            if( gInputPtr )
+            {
+                gInput.processInputEvents();
+            }
+
             // Idle time, do rendering and update
+            onUpdate();
             onDraw();
 
             // present()
@@ -268,7 +275,8 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
     return 0;
 
     GN_UNGUARD_ALWAYS_NO_THROW;
-
+    printf( "Press ENTER key to continue..." );
+    _getch();
     quit();
     return -1;
 }
@@ -313,6 +321,11 @@ bool GN::d3d10::D3D10Application::init()
             mOption.height,
             mOption.fullscreen );
     if( 0 == mWindow ) return false;
+
+    if( gInputPtr )
+    {
+        gInput.attachToWindow( 0, mWindow );
+    }
 
     // success
     return onInit( mOption );
@@ -369,17 +382,21 @@ bool GN::d3d10::D3D10Application::createDevice()
     sd.BufferDesc.RefreshRate.Denominator = 1;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = mWindow;
-    sd.SampleDesc = sGetSampleDesc( mDevice, mOption.msaa, DXGI_FORMAT_R8G8B8A8_UNORM );
+    sd.SampleDesc = constructSampleDesc( mDevice, mOption.msaa, DXGI_FORMAT_R8G8B8A8_UNORM );
     sd.Windowed = !mOption.fullscreen;
 
     // create swap chain
     GN_DX10_CHECK_RV( factory->CreateSwapChain( mDevice, &sd, &mSwapChain ), false );
 
-    // get default back buffer and depth surface
+    // get default back buffer
 	DXGI_SWAP_CHAIN_DESC scdesc;
     mSwapChain->GetDesc( &scdesc );
 	AutoComPtr<ID3D10Texture2D> backbuf;
     GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof(*backbuf), (void**)&backbuf ), false );
+    D3D10_RENDER_TARGET_VIEW_DESC rtvd;
+    rtvd.Format             = scdesc.BufferDesc.Format;
+    rtvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_RTV_DIMENSION_TEXTURE2DMS : D3D10_RTV_DIMENSION_TEXTURE2D;
+    rtvd.Texture2D.MipSlice = 0;
     GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( backbuf, NULL, &mBackRTV ), false );
 
     // create default depth texture
@@ -404,17 +421,38 @@ bool GN::d3d10::D3D10Application::createDevice()
     dsvd.Texture2D.MipSlice = 0;
     GN_DX10_CHECK_RV( mDevice->CreateDepthStencilView( depthbuf, &dsvd, &mDepthDSV ), false );
 
+    // setup render targets
+    mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV );
+
 	// setup debug and info-queue layer
 	if( SUCCEEDED( mDevice->QueryInterface( IID_ID3D10Debug, (void**)&mDebug ) ) )
 	{
 		if( SUCCEEDED( mDebug->QueryInterface( IID_ID3D10InfoQueue, (void**)&mInfoQueue ) ) )
 		{
-			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_CORRUPTION, true );
-			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_ERROR, true );
-			mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_WARNING, true );
+			//mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_CORRUPTION, true );
+			//mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_ERROR, true );
+			//mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_WARNING, true );
 			//mInfoQueue->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_INFO, true );
+
+			// ignore some "expected" errors
+  			D3D10_MESSAGE_ID denied [] = {
+  			    D3D10_MESSAGE_ID_DEVICE_DRAW_SAMPLER_NOT_SET,
+                D3D10_MESSAGE_ID_DEVICE_OMSETRENDERTARGETS_HAZARD,
+                D3D10_MESSAGE_ID_DEVICE_PSSETSHADERRESOURCES_HAZARD
+            };
+ 			D3D10_INFO_QUEUE_FILTER filter;
+			memset( &filter, 0, sizeof(filter) );
+			filter.DenyList.NumIDs = GN_ARRAY_COUNT(denied);
+			filter.DenyList.pIDList = denied;
+			mInfoQueue->AddStorageFilterEntries( &filter );
 		}
 	}
+
+    // setup default viewport
+    D3D10_VIEWPORT vp = { 0, 0, scdesc.BufferDesc.Width, scdesc.BufferDesc.Height, 0, 1.0f };
+    mDevice->RSSetViewports( 1, &vp );
+
+    sPrintDeviceInfo( scdesc );
 
     // success
     return onCreate();
