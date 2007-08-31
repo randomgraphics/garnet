@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "testCase.h"
+#include "memstress.h"
 #include "triangle.h"
 
 using namespace GN;
@@ -99,7 +100,7 @@ int run( RenderEngine & re )
 
     TestCase * cases[] =
     {
-        //new TestCube(em,re,qr),
+        new TestMemoryStress(re),
         new TestTriangle(re),
     };
 

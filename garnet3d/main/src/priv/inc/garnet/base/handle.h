@@ -25,8 +25,6 @@ namespace GN
             UInt8 buf[sizeof(T)];
             bool  occupied;
 
-            Item() : occupied(false) {}
-
             T & t() const
             {
                 GN_ASSERT( occupied );
@@ -55,8 +53,9 @@ namespace GN
             }
         };
 
-        std::vector<Item*>  mItems;
-        std::vector<size_t> mFreeList;
+        FixSizedRawMemoryPool<sizeof(Item)> mPool;
+        std::vector<Item*>                  mItems;
+        std::vector<size_t>                 mFreeList;
 
 
         static inline size_t h2idx( HANDLE_TYPE h ) { return (UIntPtr)h - 1; }
@@ -79,7 +78,7 @@ namespace GN
             {
                 GN_ASSERT( mItems[i] );
                 if( mItems[i]->occupied ) mItems[i]->dtor();
-                delete mItems[i];
+                mPool.dealloc( mItems[i] );
             }
             mItems.clear();
             mFreeList.clear();
@@ -148,12 +147,13 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = new Item;
+                Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
                     GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
+                newItem->occupied = false;
                 newItem->ctor( val );
                 mItems.push_back( newItem );
                 return (HANDLE_TYPE)mItems.size();
@@ -175,12 +175,13 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = new Item;
+                Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
                     GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
+                newItem->occupied = false;
                 newItem->ctor();
                 mItems.push_back( newItem );
                 return (HANDLE_TYPE)mItems.size();
@@ -288,6 +289,7 @@ namespace GN
 
         NameMap                     mNames; // name -> handle
         HandleManager<NamedItem*,H> mItems; // handle -> name/data
+        ObjectPool<NamedItem>       mPool;  // named item pool
 
     public:
 
@@ -307,7 +309,7 @@ namespace GN
         {
             for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
             {
-                delete mItems[i];
+                mPool.dealloc( mItems[i] );
             }
             mItems.clear();
             mNames.clear();
@@ -357,10 +359,16 @@ namespace GN
                 return 0;
             }
 
+            // create new item
+            NamedItem * p = mPool.allocUnconstructed();
+            if( 0 == p ) return 0;
+
             H handle = mItems.newItem();
             if( 0 == handle ) return 0;
 
-            mItems[handle] = new NamedItem(*this,handle,name);
+            new (p) NamedItem(*this,handle,name);
+
+            mItems[handle] = p;
 
             mNames.insert( std::make_pair(name,handle) );
 
@@ -383,10 +391,15 @@ namespace GN
                 return 0;
             }
 
+            NamedItem * p = mPool.allocUnconstructed();
+            if( 0 == p ) return 0;
+
             H handle = mItems.newItem();
             if( 0 == handle ) return 0;
 
-            mItems[handle] = new NamedItem(*this,handle,name,data);
+            new (p) NamedItem(*this,handle,name,data);
+
+            mItems[handle] = p;
 
             mNames.insert( std::make_pair(name,handle) );
 
@@ -408,7 +421,7 @@ namespace GN
 
             mItems.remove( item->handle );
 
-            delete item;
+            mPool.dealloc( item );
         }
 
         void remove( const StrA & name )
@@ -432,7 +445,7 @@ namespace GN
 
             mItems.remove( handle );
 
-            delete item;
+            mPool.dealloc( item );
         }
 
         bool validHandle( H h ) const

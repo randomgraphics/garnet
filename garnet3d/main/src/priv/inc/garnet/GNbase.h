@@ -57,6 +57,9 @@ namespace GN
 // exceptions
 #include "base/exception.h"
 
+// memory pool
+#include "base/mempool.h"
+
 // delegate & callback
 #include "base/delegate.h"
 #include "base/sigslot.h"

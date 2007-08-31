@@ -200,33 +200,7 @@ namespace GN { namespace engine
         ///
         /// protected destructor
         ///
-        ~GraphicsResource();
-    };
-
-    ///
-    /// reference counted graphics resource pointer
-    ///
-    class GraphicsResourcePtr : public RefCounter
-    {
-        GraphicsResource * mResource;
-
-    public:
-
-        GraphicsResourcePtr() : mResource(0)
-        {
-        }
-
-        ~GraphicsResourcePtr()
-        {
-            if( mResource )
-            {
-                mResource.engine.deleteResource( mResource );
-            }
-        }
-
-        GraphicsResource * operator->() const { return mResource; }
-
-        GraphicsResource & operator*() const { return *mResource; }
+        ~GraphicsResource() {}
     };
 
     ///
