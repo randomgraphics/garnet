@@ -112,12 +112,12 @@ class ParamSetLoader : public GN::engine::GraphicsResourceLoader
 
         KernelParameterSet & ps = *res.paramset;
 
-        ps["FX"].set( fxcode );
-        ps["PRIM_TYPE"].set( TRIANGLE_LIST );
-        ps["PRIM_COUNT"].set( 1 );
-        ps["BASE_VERTEX"].set( 0 );
-        ps["VERTEX_COUNT"].set( 3 );
-        ps["BASE_INDEX"].set( 0 );
+        ps["FX"].setString( fxcode );
+        ps["PRIM_TYPE"].setAggregate( TRIANGLE_LIST );
+        ps["PRIM_COUNT"].setAggregate( 1 );
+        ps["BASE_VERTEX"].setAggregate( 0 );
+        ps["VERTEX_COUNT"].setAggregate( 3 );
+        ps["BASE_INDEX"].setAggregate( 0 );
 
         return true;
     }
