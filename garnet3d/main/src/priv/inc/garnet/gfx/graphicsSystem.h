@@ -16,7 +16,6 @@ namespace GN { namespace gfx
 
     enum
     {
-        MAX_SURFACE_ELEMENT_ATTRIBUTES = 64,  ///< max attributes in single surface element
         MAX_SUB_SURFACES               = 256, ///< max subsurfaces in single surface
     };
 
@@ -163,9 +162,8 @@ namespace GN { namespace gfx
     ///
     struct SurfaceElementFormat
     {
-        SurfaceAttribute attribs[MAX_SURFACE_ELEMENT_ATTRIBUTES]; ///< surfel attribute list
-        UInt32           count;                                   ///< surfel attribute count
-        UInt32           stride;                                  ///< surfel stride in bytes
+        DynaArray<SurfaceAttribute> attribs; ///< surfel attribute list
+        UInt32                      stride;  ///< surfel stride in bytes
     };
 
     ///
@@ -218,9 +216,8 @@ namespace GN { namespace gfx
             void * data;  ///< chunk data, may points to external data, or somewhere in DeviceSurfaceData::data
         };
 
-        UInt32           numChunks;                ///< chunk count
-        Chunk            chunks[MAX_SUB_SURFACES]; ///< chunks
-        DynaArray<UInt8> data;                     ///< raw data
+        StackArray<Chunk,MAX_SUB_SURFACES> chunks; ///< chunks
+        DynaArray<UInt8>                   data;   ///< raw data
     };
 
     ///
@@ -337,7 +334,7 @@ namespace GN { namespace gfx
             };
         } flags; ///< template data field flags
 
-        typedef StackArray<SurfaceAttributeTemplate,MAX_SURFACE_ELEMENT_ATTRIBUTES> AttributeArray;
+        typedef DynaArray<SurfaceAttributeTemplate> AttributeArray;
 
         SurfaceDimension dim;        ///< surface dimension.
         UInt32           levels;     ///< level count

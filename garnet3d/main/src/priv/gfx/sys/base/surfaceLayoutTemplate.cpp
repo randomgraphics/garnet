@@ -40,7 +40,7 @@ bool GN::gfx::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout ) 
     CHECK_FIELD2( flags.depth, basemap.depth );
     CHECK_FIELD2( flags.rowBytes, basemap.rowBytes );
     CHECK_FIELD2( flags.sliceBytes, basemap.sliceBytes );
-    CHECK_FIELD3( flags.attributes, attributes, layout.format.count );
+    CHECK_FIELD3( flags.attributes, attributes, layout.format.attribs.size() );
     CHECK_FIELD3( flags.stride, stride, layout.format.stride );
 
     // check required attributes
@@ -49,7 +49,7 @@ bool GN::gfx::SurfaceLayoutTemplate::compatible( const SurfaceLayout & layout ) 
         const SurfaceAttributeTemplate & sat = requiredAttributes[i];
 
         bool found = false;
-        for( size_t i = 0; i < layout.format.count; ++i )
+        for( size_t i = 0; i < layout.format.attribs.size(); ++i )
         {
             const SurfaceAttribute & sa = layout.format.attribs[i];
             if( sa.semantic == sat.semantic )

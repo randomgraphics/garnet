@@ -85,10 +85,10 @@ struct KernelRegistry
 
         // quad kernel
         SurfaceElementFormat streamFormat;
+        streamFormat.attribs.resize( 3 );
         streamFormat.attribs[0].set( "POSITION",  0, FMT_FLOAT3 );
         streamFormat.attribs[1].set( "COLOR"   , 12, FMT_RGBA32 );
         streamFormat.attribs[2].set( "TEXCOORD", 16, FMT_FLOAT2 );
-        streamFormat.count = 3;
         streamFormat.stride = 32;
 
         KernelReflection QUAD( "QUAD" );

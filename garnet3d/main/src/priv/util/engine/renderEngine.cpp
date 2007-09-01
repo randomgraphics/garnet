@@ -971,10 +971,10 @@ GN::engine::RenderEngine::createIdxBuf(
     scp.desc.layout.basemap.depth = 1;
     scp.desc.layout.basemap.rowBytes = count * sizeof(UInt16);
     scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs.resize( 1 );
     scp.desc.layout.format.attribs[0].semantic.set( "INDEX" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = FMT_R_16_UINT;
-    scp.desc.layout.format.count = 1;
     scp.desc.layout.format.stride = sizeof(short);
 
     return createSurface( name, scp, loader );
@@ -1012,10 +1012,10 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
     scp.desc.layout.basemap.depth  = id.mipmaps[0].depth;
     scp.desc.layout.basemap.rowBytes = id.mipmaps[0].rowPitch;
     scp.desc.layout.basemap.sliceBytes = id.mipmaps[0].slicePitch;
+    scp.desc.layout.format.attribs.resize( 1 );
     scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = id.format;
-    scp.desc.layout.format.count = 1;
     scp.desc.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
 
     // create loader

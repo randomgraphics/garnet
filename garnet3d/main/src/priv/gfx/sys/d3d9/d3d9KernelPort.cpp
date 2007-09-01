@@ -97,7 +97,7 @@ bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
 
     const SurfaceLayout & layout = surf->getDesc().layout;
 
-    GN_ASSERT( 1 == layout.format.count );
+    GN_ASSERT( 1 == layout.format.attribs.size() );
     GN_ASSERT( 0 == layout.format.attribs[0].offset );
     GN_ASSERT( SurfaceAttributeSemantic::sMake("TEXEL") == layout.format.attribs[0].semantic );
 
@@ -211,7 +211,7 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
     GN_ASSERT( SURFACE_DIMENSION_1D == layout.dim );
     GN_ASSERT( 1 == layout.faces );
     GN_ASSERT( 1 == layout.levels );
-    GN_ASSERT( 1 == layout.format.count );
+    GN_ASSERT( 1 == layout.format.attribs.size() );
     GN_ASSERT( 0 == layout.format.attribs[0].offset );
     GN_ASSERT( SurfaceAttributeSemantic::sMake("INDEX") == layout.format.attribs[0].semantic );
 

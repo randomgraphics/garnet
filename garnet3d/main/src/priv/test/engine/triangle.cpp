@@ -142,10 +142,10 @@ bool TestTriangle::init()
 
     // create vertex buffer
     SurfaceElementFormat vtxfmt;
+    vtxfmt.attribs.resize( 1 );
     vtxfmt.attribs[0].semantic.set( "POS0" );
     vtxfmt.attribs[0].offset = 0;
     vtxfmt.attribs[0].format = FMT_FLOAT3;
-    vtxfmt.count = 1;
     vtxfmt.stride = sizeof(Vertex);
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
     GraphicsResource * vb = re.createVtxBuf( "triangle vb", vtxfmt, 3, vbloader );
