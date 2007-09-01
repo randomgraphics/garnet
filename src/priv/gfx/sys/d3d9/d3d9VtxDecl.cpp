@@ -188,7 +188,7 @@ sSurfaceElementFormatToD3D9(
     {
         const GN::gfx::SurfaceElementFormat & stream = *streams[i];
 
-        for( size_t j = 0; j < stream.count; ++j )
+        for( size_t j = 0; j < stream.attribs.size(); ++j )
         {
             const GN::gfx::SurfaceAttribute & va = stream.attribs[j];
 

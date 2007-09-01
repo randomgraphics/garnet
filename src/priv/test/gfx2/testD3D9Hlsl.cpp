@@ -134,6 +134,7 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.desc.layout.basemap.depth = 1;
     scp.desc.layout.basemap.rowBytes = sizeof(vertices);
     scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs.resize( 3 );
     scp.desc.layout.format.attribs[0].semantic.set( "POS0" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = FMT_FLOAT3;
@@ -143,7 +144,6 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.desc.layout.format.attribs[2].semantic.set( "TEX0" );
     scp.desc.layout.format.attribs[2].offset = 24;
     scp.desc.layout.format.attribs[2].format = FMT_FLOAT2;
-    scp.desc.layout.format.count = 3;
     scp.desc.layout.format.stride = sizeof(Vertex);
     mVtxBuf = gs.createSurface( scp );
     if( 0 == mVtxBuf ) return false;
@@ -166,10 +166,10 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.desc.layout.basemap.depth = 1;
     scp.desc.layout.basemap.rowBytes = sizeof(indices);
     scp.desc.layout.basemap.sliceBytes = scp.desc.layout.basemap.rowBytes;
+    scp.desc.layout.format.attribs.resize( 1 );
     scp.desc.layout.format.attribs[0].semantic.set( "INDEX" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = FMT_R_16_UINT;
-    scp.desc.layout.format.count = 1;
     scp.desc.layout.format.stride = sizeof(short);
     mIdxBuf = gs.createSurface( scp );
     if( 0 == mIdxBuf ) return false;
@@ -193,10 +193,10 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     scp.desc.layout.basemap.depth  = td.id.mipmaps[0].depth;
     scp.desc.layout.basemap.rowBytes = td.id.mipmaps[0].rowPitch;
     scp.desc.layout.basemap.sliceBytes = td.id.mipmaps[0].slicePitch;
+    scp.desc.layout.format.attribs.resize( 1 );
     scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = td.id.format;
-    scp.desc.layout.format.count = 1;
     scp.desc.layout.format.stride = getClrFmtDesc(td.id.format).bits / 8;
     mTexture = gs.createSurface( scp );
     if( 0 == mTexture ) return false;

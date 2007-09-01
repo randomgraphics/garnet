@@ -164,7 +164,7 @@ bool GN::gfx::D3D9IdxBuf::init()
     GN_ASSERT( SURFACE_DIMENSION_1D == desc.layout.dim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.levels );
-    GN_ASSERT( 1 == desc.layout.format.count );
+    GN_ASSERT( 1 == desc.layout.format.attribs.size() );
     GN_ASSERT( 2 == desc.layout.format.stride || 4 == desc.layout.format.stride );
     //GN_ASSERT( desc.layout.format.attribs[0].sematic == "INDEX" );
     GN_ASSERT( 0 == desc.layout.format.attribs[0].offset );

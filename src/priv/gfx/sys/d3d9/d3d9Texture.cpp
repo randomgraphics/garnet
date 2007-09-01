@@ -362,7 +362,7 @@ bool GN::gfx::D3D9Texture::create2DTexture()
     GN_ASSERT( D3DRTYPE_TEXTURE == mDim );
     GN_ASSERT( 1 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
-    GN_ASSERT( 1 == desc.layout.format.count );
+    GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
     D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
@@ -438,7 +438,7 @@ bool GN::gfx::D3D9Texture::create3DTexture()
 
     GN_ASSERT( D3DRTYPE_VOLUMETEXTURE == mDim );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
-    GN_ASSERT( 1 == desc.layout.format.count );
+    GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
     D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
@@ -500,7 +500,7 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
     GN_ASSERT( D3DRTYPE_CUBETEXTURE == mDim );
     GN_ASSERT( 6 == desc.layout.faces );
     GN_ASSERT( 1 == desc.layout.basemap.depth );
-    GN_ASSERT( 1 == desc.layout.format.count );
+    GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
     D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );

@@ -55,7 +55,7 @@ bool GN::gfx::D3D9KernelPortBinding::setup( const KernelPortBindingDesc & bindin
 
     BindItem b;
 
-    StackArray<const SurfaceElementFormat *,MAX_SURFACE_ELEMENT_ATTRIBUTES> vtxfmt;
+    DynaArray<const SurfaceElementFormat *> vtxfmt;
 
     size_t numPorts = mKernel.getRefl().ports.size();
     for( size_t i = 0; i < numPorts; ++i )
