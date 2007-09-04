@@ -301,11 +301,10 @@ namespace GN { namespace engine
         /// Create new resource.
         ///
         /// \note
-        /// - createResource() is a very fast operation that creates resources in "DISPOSED" state.
-        /// - Disposed resource occupies very little main memory and zero device memory, which means
-        ///   that you can create extreamly large number of resources before running out of memory.
-        /// - render engine class will ensure that memory footprint of all "REALIZED" graphics resources
-        ///   is in user defined limit.
+        /// - createResource() is very fast, which creates resources in "DISPOSED" state.
+        /// - Each disposed resource occupies about 2K main memory and zero device memory.
+        /// - Render engine class will ensure that device memory footprint of all "REALIZED" graphics
+        ///   resources is in user defined limit.
         ///
         GraphicsResource * createResource( const GraphicsResourceDesc & desc, GraphicsResourceLoader * loader = NULL );
 
