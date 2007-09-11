@@ -375,7 +375,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ==============
 	# 是否支持OpenGL
 	# ==============
-	conf['has_ogl'] = 'xenon' != compiler.name
+	conf['has_ogl'] = c.CheckCHeader('GL/gl.h')
 
 	# ============
 	# 是否支持D3D9
