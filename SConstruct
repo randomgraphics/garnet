@@ -356,6 +356,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	ccflags = ccflags.replace( '/WX', '' )
 	ccflags = ccflags.replace( '-Werror', '')
 	env.Replace( CCFLAGS = Split( ccflags ) )
+	env.Append( CPPPATH = ['src/extern/inc'] )
 	c = env.Configure(
 		conf_dir = confDir,
 		log_file = os.path.join(confDir,'config.log') )
@@ -375,7 +376,14 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ==============
 	# 是否支持OpenGL
 	# ==============
-	conf['has_ogl'] = c.CheckCHeader('GL/gl.h')
+	if c.CheckLibWithHeader( 'opengl32', ['glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'glu32', ['glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+		conf['has_ogl'] = True
+	elif c.CheckLibWithHeader( 'GL', ['glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'GLU', ['glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+		conf['has_ogl'] = True
+	else :
+		conf['has_ogl'] = False
 
 	# ============
 	# 是否支持D3D9
