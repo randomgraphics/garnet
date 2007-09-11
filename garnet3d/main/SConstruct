@@ -367,7 +367,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	if CONF_enableCg :
 		conf['has_cg']      = c.CheckLibWithHeader( 'cg', 'cg/cg.h', 'C', 'cgCreateContext();' )
 		conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['cg/cg.h','cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
-		conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['windows.h','cg/cg.h','cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+		conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['cg/cg.h','cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
 	else:
 		conf['has_cg']      = 0
 		conf['has_cg_d3d9'] = 0
