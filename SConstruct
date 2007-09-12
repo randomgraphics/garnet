@@ -387,14 +387,14 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		conf['has_ogl'] = False
 
 	# ============
-	# 是否支持D3D9
-	# ============
-	conf['has_d3d9'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
-
-	# ============
 	# 是否支持XTL
 	# ============
-	conf['has_xtl'] = c.CheckCXXHeader('xtl.h')
+	conf['has_xtl'] = c.CheckCHeader( 'xtl.h' )
+
+	# ============
+	# 是否支持D3D9
+	# ============
+	conf['has_d3d9'] = conf['has_xtl'] or c.CheckCHeader( 'd3d9.h' ) and c.CheckCHeader( 'd3dx9.h' )
 
 	# =============
 	# 是否支持D3D10
@@ -408,18 +408,17 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		stdout.close()
 		import string
 		return string.find( str, "6.0" ) >= 0
-	conf['has_d3d10_h'] = c.CheckCXXHeader( 'd3d10.h' )
-	conf['has_d3d10'] = conf['has_d3d10_h'] and ( isVista(env) or not UTIL_staticBuild( variant ) )
+	conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVista(env) or not UTIL_staticBuild( variant ) )
 
 	# ===================
 	# 是否支持DirectInput
 	# ===================
-	conf['has_dinput'] = c.CheckCXXHeader( ['windows.h', 'dinput.h'] )
+	conf['has_dinput'] = c.CheckCHeader( ['windows.h', 'dinput.h'] )
 
 	# ==============
 	# 是否支持XInput
 	# ==============
-	conf['has_xinput'] = c.CheckCXXHeader( ['windows.h', 'XInput.h'] )
+	conf['has_xinput'] = c.CheckCHeader( ['windows.h', 'XInput.h'] )
 
 	# =========================
 	# 检查是否存在boost library
