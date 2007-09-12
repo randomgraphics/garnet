@@ -184,6 +184,7 @@ def UTIL_newEnv( compiler, variant ):
 		ICL_VERSION    = icl_version,
 		ICL_ABI        = icl_abi,
 		ENV            = {
+		                 	'PATH'     : getenv('PATH'),
 		                 	'LANG'     : getenv('LANG'),
 		                 	'LANGUAGE' : getenv('LANGUAGE'),
 		                 }
