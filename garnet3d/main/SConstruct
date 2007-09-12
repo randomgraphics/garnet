@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: GB18030 -*-
 
 import os, os.path, re, fnmatch, SCons.Tool.xenon
 
