@@ -4,7 +4,6 @@
   - big-endian DDS loader
   - big-endina mesh binary loader
   - render engine:
-    - redesign resource loader to support partial resource update.
     - shared parameters
     - query graphics system caps
     - runtime configuable draw command buffer count
@@ -12,6 +11,7 @@
     - using special surface class to replace stream in quad kernel.
     - consider delete stream source class.
     - delete surface dimension enum
+  - drawable and actore classes based on new render engine system.
 
 - p2
   - XML: pointer from parent to last child, for constant time child appending.

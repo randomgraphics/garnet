@@ -1,0 +1,12 @@
+overview
+========
+
+Render engine module implements a multi-thread rendering interface. Client
+application submit rendering commands that are executed in another thread
+asyncronized.
+
+idears
+======
+
+1. graphics resources are grouped in to chunks called "cluster". Every 
+resources must belong to one and only one cluster.
