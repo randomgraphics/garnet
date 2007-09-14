@@ -63,8 +63,8 @@ public:
         void * p3 = a.alloc();
 
 #if GN_X64
-        TS_ASSERT_EQUALS( 32, (UInt8*)p0 - (UInt8*)p1 );
-        TS_ASSERT_EQUALS( 32, (UInt8*)p2 - (UInt8*)p3 );
+        TS_ASSERT_EQUALS( 40, (UInt8*)p0 - (UInt8*)p1 );
+        TS_ASSERT_EQUALS( 40, (UInt8*)p2 - (UInt8*)p3 );
 #else
         TS_ASSERT_EQUALS( 24, (UInt8*)p0 - (UInt8*)p1 );
         TS_ASSERT_EQUALS( 24, (UInt8*)p2 - (UInt8*)p3 );

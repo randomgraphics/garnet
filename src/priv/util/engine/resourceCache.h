@@ -71,10 +71,7 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        typedef HandleManager<GraphicsResourceItem*,UInt32> ResourceHandleManager;
-
         RenderEngine                   & mEngine;
-        ResourceHandleManager            mResources;
         ObjectPool<GraphicsResourceItem> mResourcePool;
         mutable SpinLoop                 mResourceMutex;
     };

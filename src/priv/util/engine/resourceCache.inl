@@ -44,9 +44,7 @@ GN::engine::RenderEngine::ResourceCache::checkResource( const GraphicsResourceIt
         return false;
     }
 
-    if( &mEngine != &item->engine ||
-        !mResources.validHandle( item->id ) ||
-        mResources[item->id] != item )
+    if( &mEngine != &item->engine || !mResourcePool.check( item ) )
     {
         mResourceMutex.unlock();
         static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
@@ -64,8 +62,7 @@ GN::engine::RenderEngine::ResourceCache::checkResource( const GraphicsResourceIt
 inline GN::engine::GraphicsResourceItem *
 GN::engine::RenderEngine::ResourceCache::firstResource() const
 {
-    UInt32 id = mResources.first();
-    return id ? mResources[id] : 0;
+    return mResourcePool.getFirst();
 }
 
 //
@@ -75,6 +72,5 @@ inline GN::engine::GraphicsResourceItem *
 GN::engine::RenderEngine::ResourceCache::nextResource( const GraphicsResourceItem * item ) const
 {
     GN_ASSERT( checkResource( item ) );
-    UInt32 nextid = mResources.next( item->id );
-    return nextid ? mResources[nextid] : 0;
+    return mResourcePool.getNext( item );
 }

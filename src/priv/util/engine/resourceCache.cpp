@@ -79,7 +79,6 @@ void GN::engine::RenderEngine::ResourceCache::quit()
     ScopeMutex<SpinLoop> lock( mResourceMutex );
 
     // free all resources
-    mResources.clear();
     mResourcePool.freeAll();
 
     // standard quit procedure
@@ -105,16 +104,12 @@ GN::engine::RenderEngine::ResourceCache::createResource(
 
     ScopeMutex<SpinLoop> lock( mResourceMutex );
 
-    UInt32 id = mResources.newItem();
-
-    GraphicsResourceItem * item = mResourcePool.allocUnconstructed();
-    new (item) GraphicsResourceItem( mEngine, id, desc, bytes );
+     GraphicsResourceItem * item = mResourcePool.allocUnconstructed();
+    new (item) GraphicsResourceItem( mEngine, desc, bytes );
 
     item->prev = item->next = 0;
 
-    mResources[id] = item;
-
-    return item;
+     return item;
 }
 
 //
@@ -128,9 +123,7 @@ void GN::engine::RenderEngine::ResourceCache::deleteResource( GraphicsResourceIt
 
     ScopeMutex<SpinLoop> lock( mResourceMutex );
 
-    mResources.remove( item->id );
-
-    mResourcePool.dealloc( item );
+     mResourcePool.dealloc( item );
 }
 
 //
@@ -139,7 +132,6 @@ void GN::engine::RenderEngine::ResourceCache::deleteResource( GraphicsResourceIt
 void GN::engine::RenderEngine::ResourceCache::deleteAllResources()
 {
     ScopeMutex<SpinLoop> lock( mResourceMutex );
-    mResources.clear();
     mResourcePool.freeAll();
 }
 
@@ -150,5 +142,4 @@ void GN::engine::RenderEngine::ResourceCache::deleteAllResources()
 //
 //
 // -----------------------------------------------------------------------------
-
 

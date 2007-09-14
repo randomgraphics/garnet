@@ -27,7 +27,7 @@ namespace GN
             static const size_t VALUE = ( N + (A-1) ) & ~(A-1);
         };
 
-        static const size_t ALIGNED_ITEM_SIZE = Alignment< Alignment<ITEM_SIZE,sizeof(void*)>::VALUE + sizeof(void*)*2, ALIGNMENT>::VALUE;
+        static const size_t ALIGNED_ITEM_SIZE = Alignment< Alignment<ITEM_SIZE,sizeof(void*)>::VALUE + sizeof(void*)*3, ALIGNMENT>::VALUE;
 
         union Item
         {
@@ -35,6 +35,7 @@ namespace GN
             struct
             {
                 UInt8  data[ITEM_SIZE];
+                void * pool; ///< pointer to the pool
                 Item * prev; ///< points to previous item
                 Item * next; ///< points to next item
             };
@@ -70,13 +71,19 @@ namespace GN
         ///
         ~FixSizedRawMemoryPool()
         {
-            Block * p;
-            while( mBlocks )
-            {
-                p = mBlocks;
-                mBlocks = mBlocks->next;
-                heapFree( p );
-            }
+            freeAll();
+        }
+
+        ///
+        /// make sure a valid pointer belongs to this pool
+        ///
+        bool check( const void * p ) const
+        {
+            if( 0 == p ) return false;
+
+            Item * i = (Item*)p;
+
+            return i->pool == this;
         }
 
         ///
@@ -103,6 +110,7 @@ namespace GN
                 // build free list
                 for( size_t i = 0; i < ITEMS_PER_BLOCK; ++i )
                 {
+                    b->items[i].pool = this;
                     b->items[i].next = mFreeItems;
                     mFreeItems = &b->items[i];
                 }
@@ -134,6 +142,13 @@ namespace GN
         {
             if( 0 == p ) return;
 
+            Item * i = (Item*)p;
+            if( !check(p) )
+            {
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
+                return;
+            }
+
             if( 0 == mItemCount )
             {
                 GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
@@ -141,8 +156,6 @@ namespace GN
             }
 
             --mItemCount;
-
-            Item * i = (Item*)p;
 
             // remove from item list
             if( i->prev ) i->prev->next = i->next;
@@ -155,6 +168,24 @@ namespace GN
         }
 
         ///
+        /// free all items
+        ///
+        void freeAll()
+        {
+            Block * p;
+            while( mBlocks )
+            {
+                p = mBlocks;
+                mBlocks = mBlocks->next;
+                heapFree( p );
+            }
+            mBlocks = 0;
+            mItems = 0;
+            mFreeItems = 0;
+            mItemCount = 0;
+        }
+
+        ///
         /// get first item in allocator
         ///
         void * getFirst() const { return mItems; }
@@ -162,7 +193,7 @@ namespace GN
         ///
         /// get next item in allocator
         ///
-        void * getNext( void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
+        void * getNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
     };
 
     ///
@@ -176,25 +207,13 @@ namespace GN
         RAW_MEMORY_POOL mRawMem;
         Mutex           mMutex;
 
-        static void ctor( T * p )
-        {
-            GN_ASSERT( p );
-            new (p) T;
-        }
-
-        static void dtor( T * p )
-        {
-            GN_ASSERT( p );
-            p->T::~T();
-        }
-
         T * doAlloc()
         {
             T * p = (T*)mRawMem.alloc();
             if( 0 == p ) return 0;
 
-            // construct the object.
-            ctor( p );
+            // construct the object, using defualt constructor
+            new (p) T;
 
             // success
             return p;
@@ -205,7 +224,7 @@ namespace GN
             if( 0 == p ) return;
 
             // destruct the object
-            dtor( p );
+            p->T::~T();
 
             // free p
             mRawMem.dealloc( p );
@@ -215,11 +234,14 @@ namespace GN
         {
             ScopeMutex<Mutex> lock( mMutex );
 
-            T * p;
-            while( NULL != ( p = (T*)mRawMem.getFirst() ) )
+            // destruct all objects
+            for( T * p = (T*)mRawMem.getFirst(); 0 != p; p = (T*)mRawMem.getNext(p) )
             {
-                doDealloc( p );
+                p->T::~T();
             }
+
+            // free memory
+            mRawMem.freeAll();
         }
 
     public:
@@ -237,6 +259,9 @@ namespace GN
         T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
         void dealloc( void * p ) { doDealloc( (T*)p ); }
         void freeAll() { doFreeAll(); }
+        bool check( const T * p ) const { return mRawMem.check( p ); }
+        T  * getFirst() const { return (T*)mRawMem.getFirst(); }
+        T  * getNext( const T * p ) const { return (T*)mRawMem.getNext(p); }
         //@}
     };
 }
