@@ -1084,14 +1084,16 @@ class MyApp : public D3D10Application
         PixPerfScopeEvent pixevent( 0, L"Copy RT0 to back buffer" );
 
         ID3D10Device & dev = device();
-        
+
+        static const D3DXCOLOR PURE_WHITE( 1.0f, 1.0f, 1.0f, 1.0f );
+
         D3DX10_SPRITE s;
         D3DXMatrixScaling( &s.matWorld, 2.0f, 2.0f, 1.0f );
         s.TexCoord.x    = 0;
         s.TexCoord.y    = 0;
         s.TexSize.x     = 1.0f;
         s.TexSize.y     = 1.0f;
-        s.ColorModulate = 0xFFFFFFFF;
+        s.ColorModulate = PURE_WHITE;
         s.pTexture      = mState.rendertargets[0].srv;
         s.TextureIndex  = 0;
 
@@ -1211,8 +1213,9 @@ int main( int argc, const char * argv [] )
     }
     sDumpFileName = argv[1];
 
+    D3D10AppOption opt;
     MyApp app;
-    return app.run();
+    return app.run( opt );
 
     GN_UNGUARD;
 }

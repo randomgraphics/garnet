@@ -47,9 +47,7 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// One of GraphicsResourceState.
-        ///
-        /// Note that neither GraphicsResourceCache::realize() nor GraphicsResourceCache::dispose() will change resource state.
+        /// resource state.
         ///
         GraphicsResourceState state;
 
@@ -59,7 +57,7 @@ namespace GN { namespace engine
         int realizeStamp;
 
         ///
-        /// this is used to store dispose resource list returned by makeRoomFromResource()
+        /// this is used to store dispose resource list returned by makeRoomForResource()
         ///
         GraphicsResourceItem * nextItemToDispose;
 
@@ -79,7 +77,7 @@ namespace GN { namespace engine
         DynaArray<GraphicsResourceItem*> dependents;
 
         ///
-        /// full loader
+        /// resource loader
         ///
         AutoRef<GraphicsResourceLoader> loader;
 

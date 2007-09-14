@@ -391,6 +391,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         D3D10AppOption()
             : parent(0)
             , monitor(0)
+            , ref(false)
             , vsync(false)
             , fullscreen(false)
             , width(640)
@@ -414,6 +415,11 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         /// - Default is 0.
         ///
         HMONITOR monitor;
+
+        ///
+        /// use reference device
+        ///
+        bool ref;
 
         ///
         /// V-SYNC enable or not. Default is false.
