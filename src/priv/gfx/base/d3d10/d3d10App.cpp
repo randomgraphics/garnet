@@ -360,6 +360,13 @@ bool GN::d3d10::D3D10Application::createDevice()
     AutoComPtr<IDXGIFactory> factory;
     GN_DX10_CHECK_RV( CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&factory) ), false );
 
+    // determine driver type
+    D3D10_DRIVER_TYPE driverType;
+    if( mOption.ref )
+        driverType = D3D10_DRIVER_TYPE_REFERENCE;
+    else
+        driverType = D3D10_DRIVER_TYPE_HARDWARE;
+
     // create device
     UINT flags = 0;
 #if GN_DEBUG_BUILD
@@ -367,7 +374,7 @@ bool GN::d3d10::D3D10Application::createDevice()
 #endif
     flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
     GN_DX10_CHECK_RV(
-        D3D10CreateDevice( mAdapter, D3D10_DRIVER_TYPE_HARDWARE, 0, flags, D3D10_SDK_VERSION, &mDevice ),
+        D3D10CreateDevice( mAdapter, driverType, 0, flags, D3D10_SDK_VERSION, &mDevice ),
         false );
 
     // setup swap chain descriptor

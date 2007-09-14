@@ -11,7 +11,7 @@ namespace GN { namespace engine
     ///
     /// Fence ID type.
     ///
-    /// \note 0 is reserved as initial fence, which is smaller then any other fences.
+    /// \note 0 is reserved as initial fence, which is smaller than any other fences.
     ///
     class FenceId
     {
@@ -31,7 +31,7 @@ namespace GN { namespace engine
                 {
                     int d = v2 - v1;
                     if( d > 0 ) return -1; // v1 <  v2
-                    if( d < 0 ) return  1; // v2 >  v2
+                    if( d < 0 ) return  1; // v1 >  v2
                     return 0;              // v1 == v2
                 }
             }
