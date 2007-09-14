@@ -31,11 +31,6 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// resource id
-        ///
-        const UInt32 id;
-
-        ///
         /// estimated resource size in bytes.
         ///
         const size_t bytes;
@@ -112,11 +107,9 @@ namespace GN { namespace engine
         ///
         GraphicsResourceItem(
                 RenderEngine & engine_,
-                UInt32 id_,
                 const GraphicsResourceDesc & desc_,
                 size_t bytes_ )
             : GraphicsResource( engine_, desc_ )
-            , id( id_ )
             , bytes( bytes_ )
             , state( GRS_DISPOSED )
             , realizeStamp( 0 )
