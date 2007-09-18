@@ -360,9 +360,36 @@ bool GN::d3d10::D3D10Application::createDevice()
     AutoComPtr<IDXGIFactory> factory;
     GN_DX10_CHECK_RV( CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&factory) ), false );
 
+	// select adapter (use NVIDIA PerfHUD device, if avaliable)
+	mAdapter = 0;
+	bool perfhud = false;
+	UINT nadapter = 0;
+	while( factory->EnumAdapters( nadapter, &mAdapter ) != DXGI_ERROR_NOT_FOUND )
+	{
+        if( 0 == mAdapter ) continue;
+
+		DXGI_ADAPTER_DESC adaptDesc;
+
+        GN_DX10_CHECK_DO( mAdapter->GetDesc( &adaptDesc ), continue; );
+
+        GN_INFO(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
+
+		if( 0 == strCmp( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
+		{
+			GN_INFO(sLogger)( "USE NVPerfHUD device." );
+			perfhud = true;
+			break;
+		}
+
+		safeRelease( mAdapter );
+
+		++nadapter;
+	}
+	if( !perfhud ) safeRelease( mAdapter );
+
     // determine driver type
     D3D10_DRIVER_TYPE driverType;
-    if( mOption.ref )
+    if( mOption.ref || perfhud )
         driverType = D3D10_DRIVER_TYPE_REFERENCE;
     else
         driverType = D3D10_DRIVER_TYPE_HARDWARE;

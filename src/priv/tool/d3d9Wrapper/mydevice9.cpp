@@ -44,7 +44,7 @@ HRESULT MyDevice9::create(
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
-        if( strstr(Identifier.Description,"NVPerfHUD") )
+        if( strstr(Identifier.Description,"PerfHUD") )
         {
             Adapter = i;
             DeviceType = D3DDEVTYPE_REF;

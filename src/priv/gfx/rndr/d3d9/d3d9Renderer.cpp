@@ -56,7 +56,7 @@ GNgfxCreateRenderer()
             {
                 D3DADAPTER_IDENTIFIER9 Identifier;
                 GN_DX9_CHECK( d3d->GetAdapterIdentifier( i, 0, &Identifier ) );
-                if( strstr(Identifier.Description,"NVPerfHUD") ) return true;
+                if( strstr(Identifier.Description,"PerfHUD") ) return true;
             }
             return false;
 #endif
