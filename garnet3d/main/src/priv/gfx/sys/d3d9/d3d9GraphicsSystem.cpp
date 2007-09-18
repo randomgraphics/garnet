@@ -316,9 +316,9 @@ static bool sCreateDevice(
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( desc.d3d->GetAdapterIdentifier( i, 0, &Identifier ) );
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
-        if( strstr(Identifier.Description,"NVPerfHUD") )
+        if( strstr(Identifier.Description,"PerfHUD") )
         {
-            GN_TRACE(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
+            GN_INFO(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
             desc.adapter = i;
             desc.devtype = D3DDEVTYPE_REF;
             break;
