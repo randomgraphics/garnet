@@ -16,7 +16,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.path");
 void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
     StrA tmp;
-    
+
     // remove redundent separators, convert to unix style as well
     tmp.setCaps( path.size() );
     for( size_t i = 0; i < path.size(); ++i )
@@ -25,7 +25,7 @@ void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 
         if( '\\' == ch ) ch = '/';
 
-        if( '/' == ch && !tmp.empty() && '/' == tmp.last() )
+        if( '/' == ch && !tmp.empty() && '/' == tmp.last() && 1 != i )
         {
             // ignore redundant path separator
             continue;
@@ -224,7 +224,7 @@ void GN::splitPath( const StrA & path, StrA & root, StrA & child )
     child.clear();
 
     if( path.empty() ) return;
-    
+
     StrA tmpChild;
 
     size_t i = 0;
