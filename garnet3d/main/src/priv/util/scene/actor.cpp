@@ -248,8 +248,8 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         }
         else if( "drawable" == e->name )
         {
-            Drawable d;
-            if( !d.loadFromXmlNode( mScene.renderEngine(), *e, basedir ) ) return false;
+            UIntPtr d = mScene.loadDrawableFromXmlNode( *e, basedir );
+            if( 0 == d ) return false;
             addDrawable( d );
         }
         else if( "actor" == e->name )
@@ -284,7 +284,7 @@ void GN::scene::Actor::draw()
 
     for( size_t i = 0; i < mDrawables.size(); ++i )
     {
-        Drawable & d = mDrawables[i];
+        const Drawable & d = mDrawables[i];
 
         /*
         if( d.hasUniform( "pvw" ) )
@@ -318,7 +318,7 @@ void GN::scene::Actor::draw()
             e->setUniform( id, Vector4f( mScene.light(0).position, 1.0f ) );
         }*/
 
-        d.render();
+        mScene.getRenderEngine().render( d );
     }
 
     // draw children

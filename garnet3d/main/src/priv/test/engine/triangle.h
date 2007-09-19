@@ -8,7 +8,7 @@ using namespace GN::scene;
 ///
 class TestTriangle : public TestCase
 {
-    UIntPtr context;
+    Drawable drawable;
 
     GraphicsResource * param;
 
@@ -18,7 +18,7 @@ public:
 
     TestTriangle( RenderEngine & re )
         : TestCase( re )
-        , context( 0 )
+        , drawable( 0 )
     {}
 
     virtual bool init();

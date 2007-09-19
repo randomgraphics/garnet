@@ -394,7 +394,7 @@ void GN::engine::RenderEngine::quit()
 
     RENDER_ENGINE_API();
 
-    mDrawContexts.clear();
+    mDrawables.clear();
 
     if( ok() )
     {
@@ -677,7 +677,7 @@ void GN::engine::RenderEngine::disposeAllResources()
 //
 //
 // -----------------------------------------------------------------------------
-UIntPtr GN::engine::RenderEngine::createRenderContext(
+GN::engine::Drawable GN::engine::RenderEngine::createDrawable(
     GraphicsResource * kernel,
     GraphicsResource * paramset,
     GraphicsResource * binding )
@@ -702,11 +702,11 @@ UIntPtr GN::engine::RenderEngine::createRenderContext(
 
 
     // build draw context
-    DrawContext dc;
+    DrawableObject d;
 
-    dc.resources.append( kernel );
+    d.resources.append( kernel );
 
-    dc.resources.append( paramset );
+    d.resources.append( paramset );
 
     if( binding )
     {
@@ -715,42 +715,42 @@ UIntPtr GN::engine::RenderEngine::createRenderContext(
         {
             if( iter->second.surf )
             {
-                dc.resources.append( iter->second.surf );
+                d.resources.append( iter->second.surf );
             }
         }
-        dc.resources.append( binding );
+        d.resources.append( binding );
     }
 
     // create draw context handle
-    return mDrawContexts.add( dc );
+    return mDrawables.add( d );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::deleteRenderContext( UIntPtr context )
+void GN::engine::RenderEngine::deleteDrawable( Drawable d )
 {
-    if( 0 == context ) return; // silently ignore NULL context.
+    if( 0 == d ) return; // silently ignore NULL d.
 
-    if( !mDrawContexts.validHandle( context ) )
+    if( !mDrawables.validHandle( d ) )
     {
-        GN_ERROR(sLogger)( "invalid context handle." );
+        GN_ERROR(sLogger)( "invalid drawable." );
         return;
     }
 
-    mDrawContexts.remove( context );
+    mDrawables.remove( d );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::render( UIntPtr context )
+void GN::engine::RenderEngine::render( Drawable d )
 {
     GN_GUARD_SLOW;
 
     RENDER_ENGINE_API();
 
-    sDoRender( *mResourceLRU, *mDrawThread, mDrawContexts[context].resources );
+    sDoRender( *mResourceLRU, *mDrawThread, mDrawables[d].resources );
 
     GN_UNGUARD_SLOW;
 }
@@ -1210,8 +1210,8 @@ bool GN::engine::ClearScreen::init( RenderEngine & re, GraphicsResource * bindin
 #undef GET_INDEX
 
     // create context
-    mContext = re.createRenderContext( mKernel, mParam, binding );
-    if( 0 == mContext ) return failure();
+    mDrawable = re.createDrawable( mKernel, mParam, binding );
+    if( 0 == mDrawable ) return failure();
 
     // success
     return success();
@@ -1226,10 +1226,10 @@ void GN::engine::ClearScreen::quit()
 {
     GN_GUARD;
 
-    if( mContext )
+    if( mDrawable )
     {
         GN_ASSERT( mKernel );
-        mKernel->engine.deleteRenderContext( mContext );
+        mKernel->engine.deleteDrawable( mDrawable );
     }
 
     // standard quit procedure

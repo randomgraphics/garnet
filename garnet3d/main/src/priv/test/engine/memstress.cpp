@@ -30,7 +30,7 @@ bool TestMemoryStress::init()
     const size_t M     = K * K;
     const size_t COUNT = 64 * K;
 
-    RenderEngine & re = renderEngine();
+    RenderEngine & re = getRenderEngine();
 
     StrA name( "test ib" );
 

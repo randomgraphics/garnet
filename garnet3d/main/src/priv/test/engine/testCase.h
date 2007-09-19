@@ -27,7 +27,7 @@ public:
     ///
     /// get engine reference
     ///
-    RenderEngine & renderEngine() const { return mRenderEngine; }
+    RenderEngine & getRenderEngine() const { return mRenderEngine; }
 
     //@{
 

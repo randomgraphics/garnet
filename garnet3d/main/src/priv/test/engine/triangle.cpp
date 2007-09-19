@@ -130,7 +130,7 @@ static void resetDrawParameters( GraphicsResource *, AutoRef<GraphicsResourceLoa
 
 bool TestTriangle::init()
 {
-    RenderEngine & re = renderEngine();
+    RenderEngine & re = getRenderEngine();
 
     // get kernel
     GraphicsResource * kernel = re.getKernel( "HLSL9" );
@@ -167,8 +167,8 @@ bool TestTriangle::init()
     GraphicsResource * binding = re.createPortBinding( "triangle binding", *kernel, views );
     if( 0 == binding ) return false;
 
-    // create context
-    context = re.createRenderContext( kernel, param, binding );
+    // create drawable
+    drawable = re.createDrawable( kernel, param, binding );
 
     // success
     return true;
@@ -176,12 +176,12 @@ bool TestTriangle::init()
 
 void TestTriangle::quit()
 {
-    renderEngine().deleteRenderContext( context );
+    getRenderEngine().deleteDrawable( drawable );
 }
 
 void TestTriangle::render()
 {
-    RenderEngine & re = renderEngine();
+    RenderEngine & re = getRenderEngine();
 
     // dispose all
     static int k = 0;
@@ -199,5 +199,5 @@ void TestTriangle::render()
 
     re.setParameterT( param, "VSCF", m44 );
 
-    re.render( context );
+    re.render( drawable );
 }

@@ -115,12 +115,12 @@ bool TestD3D9Hlsl::init( GraphicsSystem & gs )
     // create parameters
     mParam = mKernel->createParameterSet();
     if( 0 == mParam ) return false;
-    mParam->get( "FX" ).set( fxcode );
-    mParam->get( "PRIM_TYPE" ).set( TRIANGLE_LIST ); // D3DPT_TRIANGLELIST
-    mParam->get( "PRIM_COUNT" ).set( 12 );
-    mParam->get( "BASE_VERTEX" ).set( 0 );
-    mParam->get( "VERTEX_COUNT" ).set( 24 );
-    mParam->get( "BASE_INDEX" ).set( 0 );
+    mParam->get( "FX" ).setString( fxcode );
+    mParam->get( "PRIM_TYPE" ).setAggregate( TRIANGLE_LIST ); // D3DPT_TRIANGLELIST
+    mParam->get( "PRIM_COUNT" ).setAggregate( 12 );
+    mParam->get( "BASE_VERTEX" ).setAggregate( 0 );
+    mParam->get( "VERTEX_COUNT" ).setAggregate( 24 );
+    mParam->get( "BASE_INDEX" ).setAggregate( 0 );
 
     // create vertex buffer
     SurfaceCreationParameter scp;
@@ -248,7 +248,7 @@ void TestD3D9Hlsl::draw( GraphicsSystem & )
     Matrix44f world = mArcBall.getRotationMatrix44();
     Matrix44f pvw = mProjView * world;
 
-    mParam->get( "VSCF" ).set( pvw );
+    mParam->get( "VSCF" ).setAggregate( pvw );
 
     mKernel->render( *mParam, mBinding );
 }

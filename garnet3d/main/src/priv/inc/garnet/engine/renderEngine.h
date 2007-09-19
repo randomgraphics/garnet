@@ -222,6 +222,11 @@ namespace GN { namespace engine
     };
 
     ///
+    /// drawable object
+    ///
+    typedef UIntPtr Drawable;
+
+    ///
     /// major render engine interface.
     ///
     /// \note
@@ -354,12 +359,12 @@ namespace GN { namespace engine
 
         //@{
 
-        UIntPtr createRenderContext( GraphicsResource * kernel, GraphicsResource * paramset, GraphicsResource * binding );
-        void    deleteRenderContext( UIntPtr );
+        Drawable createDrawable( GraphicsResource * kernel, GraphicsResource * paramset, GraphicsResource * binding );
+        void     deleteDrawable ( Drawable );
 
-        void render( UIntPtr context );
-        void render( GraphicsResource * kernel, GraphicsResource * paramset, GraphicsResource * binding );
-        void present();
+        void     render( Drawable drawable );
+        void     render( GraphicsResource * kernel, GraphicsResource * paramset, GraphicsResource * binding );
+        void     present();
 
         //@}
 
@@ -459,7 +464,7 @@ namespace GN { namespace engine
             GraphicsResource * get( const StrA & name );
         };
 
-        struct DrawContext
+        struct DrawableObject
         {
             DynaArray<GraphicsResource*> resources;
         };
@@ -488,106 +493,26 @@ namespace GN { namespace engine
             }
         };
 
-        FenceManager                     * mFenceManager;
-        ResourceCache                    * mResourceCache;
-        ResourceLRU                      * mResourceLRU;
-        DrawThread                       * mDrawThread;
-        ResourceThread                   * mResourceThread;
+        FenceManager                            * mFenceManager;
+        ResourceCache                           * mResourceCache;
+        ResourceLRU                             * mResourceLRU;
+        DrawThread                              * mDrawThread;
+        ResourceThread                          * mResourceThread;
 
-        NamedResourceManager               mKernels;
+        NamedResourceManager                      mKernels;
 
-        HandleManager<DrawContext,UIntPtr> mDrawContexts;
+        HandleManager<DrawableObject,Drawable>    mDrawables;
 
-        FrameProfiler                      mFrameProfiler;
+        FrameProfiler                             mFrameProfiler;
 
         // to avoid render engine API re-entrance
-        mutable volatile SInt32            mApiReentrantFlag;
+        mutable volatile SInt32                   mApiReentrantFlag;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
-    };
-
-    // *************************************************************************
-    // drawable class
-    // *************************************************************************
-
-    ///
-    /// drawable class: minimal unit of visual objects.
-    ///
-    class Drawable
-    {
-        GraphicsResource * mKernel;
-        GraphicsResource * mParamSet;
-        UIntPtr            mContext;
-
-    public:
-
-        //@{
-
-        ///
-        /// constructor
-        ///
-        Drawable();
-
-        ///
-        /// dtor
-        ///
-        ~Drawable();
-
-        ///
-        /// clear to empty
-        ///
-        void clear();
-
-        ///
-        /// is empty drawable or not
-        ///
-        bool empty() const { return 0 == mContext; }
-
-        ///
-        /// get kernel of the drawable
-        ///
-        GraphicsResource * getKernel() const { return mKernel; }
-
-        ///
-        /// get parameter set of the kernel
-        ///
-        GraphicsResource * getParamSet() const { return mParamSet; }
-
-        ///
-        /// render the drawable
-        ///
-        void render()
-        {
-            if( empty() ) return;
-
-            GN_ASSERT( mKernel && mParamSet );
-
-            mKernel->engine.render( mContext );
-        }
-
-        ///
-        /// setup the drawable
-        ///
-        bool initialize( const StrA & kernelName, GraphicsResource * binding );
-
-        ///
-        /// load drawable from XML node
-        ///
-        bool loadFromXmlNode(
-            RenderEngine  & re,
-            const XmlNode & node,
-            const StrA    & basedir );
-
-        ///
-        /// load drawable from XML file
-        ///
-        bool loadFromXmlFile(
-            RenderEngine  & re,
-            const StrA    & filename );
     };
 
     // *************************************************************************
@@ -667,7 +592,7 @@ namespace GN { namespace engine
         bool init( RenderEngine & re, GraphicsResource * binding = 0 );
         void quit();
     private:
-        void clear() { mKernel = 0; mParam = 0; mContext = 0; }
+        void clear() { mKernel = 0; mParam = 0; mDrawable = 0; }
         //@}
 
         // ********************************
@@ -687,8 +612,8 @@ namespace GN { namespace engine
         ///
         void render()
         {
-            GN_ASSERT( mKernel && mParam && mContext );
-            mKernel->engine.render( mContext );
+            GN_ASSERT( mKernel && mParam && mDrawable );
+            mKernel->engine.render( mDrawable );
         }
 
         // ********************************
@@ -698,7 +623,7 @@ namespace GN { namespace engine
 
         GraphicsResource * mKernel;
         GraphicsResource * mParam;
-        UIntPtr            mContext;
+        Drawable           mDrawable;
 
         size_t
             CLEAR_COLOR,
