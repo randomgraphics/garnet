@@ -1072,12 +1072,12 @@ struct D3D10StateDump
     //@}
 };
 
+#define DRAW_TO_BACKBUF 0
+
 class MyApp : public D3D10Application
 {
-    D3D10StateDump mState;
-	AutoComPtr<ID3D10Texture2D>        mBackBuf;
-    AutoComPtr<ID3D10RenderTargetView> mBackRtv;
-    AutoComPtr<ID3DX10Sprite>          mSprite;
+    D3D10StateDump            mState;
+    AutoComPtr<ID3DX10Sprite> mSprite;
 
     void copyRt0ToBackbuf()
     {
@@ -1097,7 +1097,7 @@ class MyApp : public D3D10Application
         s.pTexture      = mState.rendertargets[0].srv;
         s.TextureIndex  = 0;
 
-        ID3D10RenderTargetView * rtv = mBackRtv;
+        ID3D10RenderTargetView * rtv = backrtv();
         dev.ClearState();
         D3D10_VIEWPORT vp = { 0, 0, mState.rendertargets[0].width, mState.rendertargets[0].height, 0.0f, 1.0f };
         dev.RSSetViewports( 1, &vp );
@@ -1116,10 +1116,13 @@ protected:
 
         if( !scene::loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
+#if DRAW_TO_BACKBUF
         o.width  = mState.rendertargets[0].width;
         o.height = mState.rendertargets[0].height;
-        //o.width  = mState.viewport.Width;
-        //o.height = mState.viewport.Height;
+#else
+        o.width  = mState.viewport.Width;
+        o.height = mState.viewport.Height;
+#endif
 
         // success
         return true;
@@ -1130,23 +1133,6 @@ protected:
     bool onCreate()
     {
         GN_GUARD;
-
-    	// get render target view of back buffer
-    	DXGI_SWAP_CHAIN_DESC scdesc;
-
-    	swapChain().GetDesc( &scdesc );
-
-    	if( FAILED( swapChain().GetBuffer( 0, __uuidof(*mBackBuf), (void**)&mBackBuf ) ) )
-    	{
-    		GN_ERROR(sLogger)( "fail to get back buffer!" );
-    		return false;
-    	}
-
-    	if( FAILED( device().CreateRenderTargetView( mBackBuf, NULL, &mBackRtv ) ) )
-    	{
-    		GN_ERROR(sLogger)( "fail to create RTV for back buffer!" );
-    		return false;
-    	}
 
         if( !mState.onCreate( device() ) ) return false;
 
@@ -1162,8 +1148,6 @@ protected:
         GN_GUARD;
 
         mState.onDestroy();
-        mBackRtv.clear();
-        mBackBuf.clear();
         mSprite.clear();
 
         GN_UNGUARD;
@@ -1175,22 +1159,15 @@ protected:
 
         ID3D10Device & dev = device();
 
-        const bool drawToBackBuf = true;
-
-        if( drawToBackBuf )
-        {
-            copyRt0ToBackbuf();
-            mState.bind( dev, mBackRtv );
-            mState.draw( dev );
-        }
-        else
-        {
-            mState.bind( dev, 0 );
-            mState.draw( dev );
-            copyRt0ToBackbuf();
-        }
-
-		swapChain().Present( 0, 0 );
+#if DRAW_TO_BACKBUF
+        copyRt0ToBackbuf();
+        mState.bind( dev, backrtv() );
+        mState.draw( dev );
+#else
+        mState.bind( dev, 0 );
+        mState.draw( dev );
+        copyRt0ToBackbuf();
+#endif
 
         GN_UNGUARD;
     }

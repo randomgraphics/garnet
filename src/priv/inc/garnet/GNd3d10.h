@@ -458,8 +458,9 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ID3D10Device & device() const { GN_ASSERT( mDevice ); return *mDevice; }
         IDXGISwapChain & swapChain() const { GN_ASSERT( mSwapChain ); return *mSwapChain; }
 
-        ID3D10RenderTargetView * backbuf() const { return mBackRTV; }
-        ID3D10DepthStencilView * depthbuf() const { return mDepthDSV; }
+        ID3D10Texture2D        * backbuf() const { return mBackBuf; }
+        ID3D10RenderTargetView * backrtv() const { return mBackRTV; }
+        ID3D10DepthStencilView * depthrtv() const { return mDepthDSV; }
 
         int run( const D3D10AppOption & );
 
@@ -502,8 +503,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         IDXGIAdapter           * mAdapter;
         ID3D10Device           * mDevice;
         IDXGISwapChain         * mSwapChain;
-        ID3D10RenderTargetView * mBackRTV;  // default back buffer
-        ID3D10DepthStencilView * mDepthDSV; // default depth buffer
+        ID3D10Texture2D        * mBackBuf;  // default back buffer
+        ID3D10RenderTargetView * mBackRTV;
+        ID3D10Texture2D        * mDepthBuf; // default depth buffer
+        ID3D10DepthStencilView * mDepthDSV;
         ID3D10Debug            * mDebug;
         ID3D10InfoQueue        * mInfoQueue;
     };

@@ -203,7 +203,9 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mAdapter(0)
     , mDevice(0)
     , mSwapChain(0)
+    , mBackBuf(0)
     , mBackRTV(0)
+    , mDepthBuf(0)
     , mDepthDSV(0)
     , mDebug(0)
     , mInfoQueue(0)
@@ -372,7 +374,7 @@ bool GN::d3d10::D3D10Application::createDevice()
 
         GN_DX10_CHECK_DO( mAdapter->GetDesc( &adaptDesc ), continue; );
 
-        GN_INFO(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
+        GN_TRACE(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
 
 		if( 0 == strCmp( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
 		{
@@ -425,16 +427,14 @@ bool GN::d3d10::D3D10Application::createDevice()
     // get default back buffer
 	DXGI_SWAP_CHAIN_DESC scdesc;
     mSwapChain->GetDesc( &scdesc );
-	AutoComPtr<ID3D10Texture2D> backbuf;
-    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof(*backbuf), (void**)&backbuf ), false );
+    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof(*mBackBuf), (void**)&mBackBuf ), false );
     D3D10_RENDER_TARGET_VIEW_DESC rtvd;
     rtvd.Format             = scdesc.BufferDesc.Format;
     rtvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_RTV_DIMENSION_TEXTURE2DMS : D3D10_RTV_DIMENSION_TEXTURE2D;
     rtvd.Texture2D.MipSlice = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( backbuf, NULL, &mBackRTV ), false );
+    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( mBackBuf, NULL, &mBackRTV ), false );
 
     // create default depth texture
-    AutoComPtr<ID3D10Texture2D> depthbuf;
     D3D10_TEXTURE2D_DESC td;
     td.Width              = mOption.width;
     td.Height             = mOption.height;
@@ -446,14 +446,14 @@ bool GN::d3d10::D3D10Application::createDevice()
     td.BindFlags          = D3D10_BIND_DEPTH_STENCIL;
     td.CPUAccessFlags     = 0;
     td.MiscFlags          = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateTexture2D( &td, NULL, &depthbuf ), false );
+    GN_DX10_CHECK_RV( mDevice->CreateTexture2D( &td, NULL, &mDepthBuf ), false );
 
     // create depth stencil view
     D3D10_DEPTH_STENCIL_VIEW_DESC dsvd;
     dsvd.Format             = td.Format;
     dsvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_DSV_DIMENSION_TEXTURE2DMS : D3D10_DSV_DIMENSION_TEXTURE2D;
     dsvd.Texture2D.MipSlice = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateDepthStencilView( depthbuf, &dsvd, &mDepthDSV ), false );
+    GN_DX10_CHECK_RV( mDevice->CreateDepthStencilView( mDepthBuf, &dsvd, &mDepthDSV ), false );
 
     // setup render targets
     mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV );
@@ -505,7 +505,9 @@ void GN::d3d10::D3D10Application::destroyDevice()
 
 	safeRelease( mInfoQueue );
 	safeRelease( mDebug );
+    safeRelease( mBackBuf );
     safeRelease( mBackRTV );
+    safeRelease( mDepthBuf );
     safeRelease( mDepthDSV );
 	safeRelease( mSwapChain );
 	safeRelease( mDevice );
