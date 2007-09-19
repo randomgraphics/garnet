@@ -55,14 +55,15 @@ namespace GN { namespace scene
 
         //@}
 
-        /// \name actor factory
+        /// \name resource factory
         //@{
-        Actor * loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir );
-        Actor * loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname );
+        engine::Drawable loadDrawableFromXmlNode( const XmlNode & node, const StrA & basedir );
+        Actor          * loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir );
+        Actor          * loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname );
         //@}
 
         //@{
-        engine::RenderEngine  & renderEngine() const { return mRenderEngine; }
+        engine::RenderEngine  & getRenderEngine() const { return mRenderEngine; }
         //@}
 
         //@{
@@ -86,7 +87,7 @@ namespace GN { namespace scene
     };
 
     //@{
-    void releaseActorHiearacy( Actor * );
+    void    releaseActorHiearacy( Actor * );
     Actor * cloneActorHiearacy( const Actor * );
     //@}
 }}

@@ -168,7 +168,7 @@ void GN::scene::AsciiFont::drawText( const char * text, int x, int y, UInt32 )
     GN_UNIMPL_WARNING();
 
     /* get current screen size
-    const gfx::DispDesc & dd = mQuadRenderer.renderEngine().getDispDesc();
+    const gfx::DispDesc & dd = mQuadRenderer.getRenderEngine().getDispDesc();
 
     float sx = 1.0f / dd.width;
     float sy = 1.0f / dd.height;

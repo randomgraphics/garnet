@@ -55,7 +55,7 @@ namespace GN { namespace scene
         ///
         /// get the render engine
         ///
-        engine::RenderEngine & renderEngine() const { return mRenderEngine; }
+        engine::RenderEngine & getRenderEngine() const { return mRenderEngine; }
 
         ///
         /// \note set texture to NULL, to draw solid colored quads

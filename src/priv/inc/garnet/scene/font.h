@@ -198,7 +198,7 @@ namespace GN { namespace scene
             {
                 mKernelPortBindings[i] = 0;
                 mTextures[i]           = 0;
-                mContexts[i]           = 0;
+                mDrawables[i]          = 0;
                 mCharList[i]           = 0;
                 mNumChars[i]           = 0;
             }
@@ -348,13 +348,13 @@ namespace GN { namespace scene
             FontTexture() : texture(0) {}
         };
 
-        engine::RenderEngine     & mRenderEngine;
+        engine::RenderEngine      & mRenderEngine;
 
-        engine::GraphicsResource * mKernel;
-        engine::GraphicsResource * mKernelParam;
-        engine::GraphicsResource * mKernelPortBindings[MAX_TEXTURES];
-        engine::GraphicsResource * mTextures[MAX_TEXTURES];
-        UIntPtr                     mContexts[MAX_TEXTURES];
+        engine::GraphicsResource  * mKernel;
+        engine::GraphicsResource  * mKernelParam;
+        engine::GraphicsResource  * mKernelPortBindings[MAX_TEXTURES];
+        engine::GraphicsResource  * mTextures[MAX_TEXTURES];
+        engine::Drawable            mDrawables[MAX_TEXTURES];
         size_t                      mNumTextures;
 
         // font face data

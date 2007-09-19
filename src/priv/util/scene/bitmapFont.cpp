@@ -185,8 +185,8 @@ bool GN::scene::BitmapFont::init( const FontFaceDesc & ffd )
     // create render context
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        mContexts[i] = mRenderEngine.createRenderContext( mKernel, mKernelParam, mKernelPortBindings[i] );
-        if( 0 == mContexts[i] ) return failure();
+        mDrawables[i] = mRenderEngine.createDrawable( mKernel, mKernelParam, mKernelPortBindings[i] );
+        if( 0 == mDrawables[i] ) return failure();
     }
 
     // success
@@ -218,7 +218,7 @@ void GN::scene::BitmapFont::quit()
     {
         safeDeleteGraphicsResource( mKernelPortBindings[i] );
         safeDeleteGraphicsResource( mTextures[i] );
-        mRenderEngine.deleteRenderContext( mContexts[i] );
+        mRenderEngine.deleteDrawable( mDrawables[i] );
     }
 
     safeDeleteGraphicsResource( mKernelParam );
@@ -355,7 +355,7 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
             }
 
             mRenderEngine.pushStreamData( mKernel, 0, MAX_QUADS * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
-            mRenderEngine.render( mContexts[i] );
+            mRenderEngine.render( mDrawables[i] );
         }
 
         QuadVertex * v = mQuadBuffer.cptr();
@@ -374,7 +374,7 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
             v[3].set( x2, y1, td.z, 255, 255, 255, 255, fs->u2, fs->v1 );
         }
         mRenderEngine.pushStreamData( mKernel, 0, n2 * 4 * sizeof(QuadVertex), mQuadBuffer.cptr() );
-        mRenderEngine.render( mContexts[i] );
+        mRenderEngine.render( mDrawables[i] );
 
         mNumChars[i] = 0;
     }
