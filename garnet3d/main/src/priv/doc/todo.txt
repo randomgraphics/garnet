@@ -7,10 +7,12 @@
     - shared parameters
     - query graphics system caps
     - runtime configuable draw command buffer count
+    - read resource content
   - graphics system:
     - using special surface class to replace stream in quad kernel.
     - consider delete stream source class.
     - delete surface dimension enum
+    - API independant graphics system.
   - drawable and actore classes based on new render engine system.
 
 - p2
