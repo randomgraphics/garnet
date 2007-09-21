@@ -1155,7 +1155,7 @@ protected:
 
     void onDraw()
     {
-        GN_GUARD_SLOW;
+        GN_GUARD;
 
         ID3D10Device & dev = device();
 
@@ -1175,12 +1175,14 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s [dumpname]\n", (baseName(appname) + extName(appname)).cptr() );
+    printf( "Usage: %s <ref|hal> [dumpname]\n", (baseName(appname) + extName(appname)).cptr() );
 }
 
 int main( int argc, const char * argv [] )
 {
     GN_GUARD;
+
+    D3D10AppOption opt;
 
     // parse command line
     if( argc < 2 )
@@ -1188,9 +1190,16 @@ int main( int argc, const char * argv [] )
         printhelp( argv[0] );
         return -1;
     }
-    sDumpFileName = argv[1];
+    else if( argc == 2 )
+    {
+        sDumpFileName = argv[1];
+    }
+    else
+    {
+        opt.ref = ( 0 == strCmpI( "ref", argv[1] ) );
+        sDumpFileName = argv[2];
+    }
 
-    D3D10AppOption opt;
     MyApp app;
     return app.run( opt );
 
