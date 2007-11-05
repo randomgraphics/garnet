@@ -392,6 +392,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             : parent(0)
             , monitor(0)
             , ref(false)
+            , debug(false)
             , vsync(false)
             , fullscreen(false)
             , width(640)
@@ -420,6 +421,11 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         /// use reference device
         ///
         bool ref;
+
+        ///
+        /// use debug device
+        ///
+        bool debug;
 
         ///
         /// V-SYNC enable or not. Default is false.
