@@ -558,13 +558,13 @@ GN::gfx::ClrFmt GN::gfx::d3d9Format2ClrFmt( int d3d9fmt )
         case D3D9_FORMAT_DXT5            : return FMT_DXT5;
 
         // depth formats
-        case D3D9_FORMAT_D16_LOCKABLE    : return FMT_D_16;
+        case D3D9_FORMAT_D16_LOCKABLE    : return FMT_D_16_UNORM;
 
-        case D3D9_FORMAT_D32             : return FMT_D_32;
+        case D3D9_FORMAT_D32             : return FMT_D_32_UNORM;
       //case D3D9_FORMAT_D15S1           : return FMT_DS_15_1;
-        case D3D9_FORMAT_D24S8           : return FMT_DS_24_8;
-        case D3D9_FORMAT_D16             : return FMT_D_16;
-        case D3D9_FORMAT_D24X8           : return FMT_DX_24_8;
+        case D3D9_FORMAT_D24S8           : return FMT_DS_24_8_UNORM;
+        case D3D9_FORMAT_D16             : return FMT_D_16_UNORM;
+        case D3D9_FORMAT_D24X8           : return FMT_DX_24_8_UNORM;
       //case D3D9_FORMAT_D24X4S4         : return FMT_DXS_24_4_4;
 
         // ATI only format:
@@ -618,10 +618,10 @@ int GN::gfx::clrFmt2D3D9Format( ClrFmt clrfmt )
         case FMT_DXT5                   : d3d9fmt = D3D9_FORMAT_DXT5; break;
 
         // depth formats
-        case FMT_D_16                   : d3d9fmt = D3D9_FORMAT_D16; break;
-        case FMT_DX_24_8                : d3d9fmt = D3D9_FORMAT_D24X8; break;
-        case FMT_DS_24_8                : d3d9fmt = D3D9_FORMAT_D24S8; break;
-        case FMT_D_32                   : d3d9fmt = D3D9_FORMAT_D32; break;
+        case FMT_D_16_UNORM             : d3d9fmt = D3D9_FORMAT_D16; break;
+        case FMT_DX_24_8_UNORM          : d3d9fmt = D3D9_FORMAT_D24X8; break;
+        case FMT_DS_24_8_UNORM          : d3d9fmt = D3D9_FORMAT_D24S8; break;
+        case FMT_D_32_UNORM             : d3d9fmt = D3D9_FORMAT_D32; break;
 
         // ATI only format:
         case FMT_D_24_FLOAT             : d3d9fmt = GN_MAKE_FOURCC('D','F','2','4'); break;
@@ -763,11 +763,11 @@ GN::gfx::ClrFmt GN::gfx::xenonFormat2ClrFmt( int xefmt )
         case XENON_FORMAT_DXT4            : return FMT_DXT4;
       //case XENON_FORMAT_DXT5            : return FMT_DXT5;
 
-        case XENON_FORMAT_D32             : return FMT_D_32;
+        case XENON_FORMAT_D32             : return FMT_D_32_UNORM;
       //case XENON_FORMAT_D15S1           : return FMT_DS_15_1;
-        case XENON_FORMAT_D24S8           : return FMT_DS_24_8;
-        case XENON_FORMAT_D16             : return FMT_D_16;
-        case XENON_FORMAT_D24X8           : return FMT_DX_24_8;
+        case XENON_FORMAT_D24S8           : return FMT_DS_24_8_UNORM;
+        case XENON_FORMAT_D16             : return FMT_D_16_UNORM;
+        case XENON_FORMAT_D24X8           : return FMT_DX_24_8_UNORM;
       //case XENON_FORMAT_D24X4S4         : return FMT_DXS_24_4_4;
 
         // failed
@@ -817,10 +817,10 @@ int GN::gfx::clrFmt2XenonFormat( ClrFmt clrfmt, bool tiled )
         case FMT_DXT5                   : xefmt = XENON_FORMAT_DXT5; break;
 
         // depth formats
-        case FMT_D_16                   : xefmt = XENON_FORMAT_D16; break;
-        case FMT_DX_24_8                : xefmt = XENON_FORMAT_D24X8; break;
-        case FMT_DS_24_8                : xefmt = XENON_FORMAT_D24S8; break;
-        case FMT_D_32                   : xefmt = XENON_FORMAT_D32; break;
+        case FMT_D_16_UNORM             : xefmt = XENON_FORMAT_D16; break;
+        case FMT_DX_24_8_UNORM          : xefmt = XENON_FORMAT_D24X8; break;
+        case FMT_DS_24_8_UNORM          : xefmt = XENON_FORMAT_D24S8; break;
+        case FMT_D_32_UNORM             : xefmt = XENON_FORMAT_D32; break;
 
         // ATI only format:
         case FMT_D_24_FLOAT             : xefmt = (XENON_FORMAT)MAKEFOURCC('D','F','2','4'); break;
@@ -1026,11 +1026,12 @@ GN::gfx::ClrFmt GN::gfx::dxgiFormat2ClrFmt( int dxgifmt )
         //   DXGI_FORMAT_BC5_SNORM         
 
         // depth formats
-        case DXGI_FORMAT_R32G8X24_TYPELESS     : return FMT_DSX_32_8_24;
-        //   DXGI_FORMAT_D32_FLOAT_S8X24_UINT
-        //   DXGI_FORMAT_D32_FLOAT
-        case DXGI_FORMAT_D24_UNORM_S8_UINT     : return FMT_DS_24_8;
-        case DXGI_FORMAT_D16_UNORM             : return FMT_D_16;
+        case DXGI_FORMAT_R32G8X24_TYPELESS     :
+        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT  : return FMT_DSX_32_8_24_FLOAT;
+        case DXGI_FORMAT_D32_FLOAT             : return FMT_D_32_FLOAT;
+        case DXGI_FORMAT_R24G8_TYPELESS        :
+        case DXGI_FORMAT_D24_UNORM_S8_UINT     : return FMT_DS_24_8_UNORM;
+        case DXGI_FORMAT_D16_UNORM             : return FMT_D_16_UNORM;
 
         // failed
         default : return FMT_UNKNOWN;
@@ -1084,9 +1085,9 @@ int GN::gfx::clrFmt2DxgiFormat( ClrFmt clrfmt )
         case FMT_DXT2                   : dxgifmt = DXGI_FORMAT_BC2_UNORM; break;
 
         // depth formats
-        case FMT_D_16                   : dxgifmt = DXGI_FORMAT_D16_UNORM; break;
-        case FMT_DS_24_8                : dxgifmt = DXGI_FORMAT_D24_UNORM_S8_UINT; break;
-        case FMT_DSX_32_8_24            : dxgifmt = DXGI_FORMAT_R32G8X24_TYPELESS; break;
+        case FMT_D_16_UNORM             : dxgifmt = DXGI_FORMAT_D16_UNORM; break;
+        case FMT_DS_24_8_UNORM          : dxgifmt = DXGI_FORMAT_D24_UNORM_S8_UINT; break;
+        case FMT_DSX_32_8_24_FLOAT      : dxgifmt = DXGI_FORMAT_D32_FLOAT_S8X24_UINT; break;
 
         // failed
         default : return DXGI_FORMAT_UNKNOWN;

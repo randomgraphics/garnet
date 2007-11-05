@@ -396,12 +396,11 @@ bool GN::d3d10::D3D10Application::createDevice()
     else
         driverType = D3D10_DRIVER_TYPE_HARDWARE;
 
+    // determine creation flags
+    UINT flags = D3D10_CREATE_DEVICE_SINGLETHREADED;
+    if( mOption.debug ) flags |= D3D10_CREATE_DEVICE_DEBUG;
+
     // create device
-    UINT flags = 0;
-#if GN_DEBUG_BUILD
-    flags |= D3D10_CREATE_DEVICE_DEBUG;
-#endif
-    flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
     GN_DX10_CHECK_RV(
         D3D10CreateDevice( mAdapter, driverType, 0, flags, D3D10_SDK_VERSION, &mDevice ),
         false );

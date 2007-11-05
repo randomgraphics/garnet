@@ -267,13 +267,16 @@ struct D3D10ViewDump
         return true;
     }
 
-    bool createTexture( ID3D10Device & dev, UINT bind )
+    bool createTexture( ID3D10Device & dev, UINT bind, DXGI_FORMAT format )
     {
         // get image information
         D3DX10_IMAGE_INFO info;
         GN_DX10_CHECK_RV( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ), false );
 
-        if( DXGI_FORMAT_R32G8X24_TYPELESS == info.Format )
+        if( DXGI_FORMAT_R32G8X24_TYPELESS == info.Format ||
+            DXGI_FORMAT_D32_FLOAT_S8X24_UINT == info.Format ||
+            DXGI_FORMAT_R24G8_TYPELESS == info.Format ||
+            DXGI_FORMAT_D24_UNORM_S8_UINT == info.Format )
         {
             // This is a depth format that is not supported by current D3D10X library.
             // We'll have to use our custom loader
@@ -302,7 +305,7 @@ struct D3D10ViewDump
                         id.mipmaps[0].height,
                         id.numLevels,
                         id.numFaces,
-                        DXGI_FORMAT_R32G8X24_TYPELESS,
+                        (DXGI_FORMAT_UNKNOWN == format ) ? info.Format : format,
                         { 1, 0 }, // samples
                         D3D10_USAGE_STAGING, // usage
                         0, // bind
@@ -354,8 +357,16 @@ struct D3D10ViewDump
         {
             D3DX10_IMAGE_LOAD_INFO load;
 
+            // reset all to default
+            memset( &load, 0xFF, sizeof(load) );
+            load.pSrcInfo = NULL;
+
             load.FirstMipLevel = 0;
             load.MipLevels = info.MipLevels;
+            if( DXGI_FORMAT_UNKNOWN != format )
+            {
+                load.Format = format;
+            }
 
             GN_DX10_CHECK_RV(
                 D3DX10CreateTextureFromMemory(
@@ -404,12 +415,15 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
 {
     bool create( ID3D10Device & dev )
     {
-        if( !createTexture( dev, D3D10_BIND_SHADER_RESOURCE ) ) return false;
+        GN_ASSERT( sizeof(D3D10_SHADER_RESOURCE_VIEW_DESC) == desc.size() );
+
+        const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC*)desc.cptr();
+
+        if( !createTexture( dev, D3D10_BIND_SHADER_RESOURCE, srvdesc->Format ) ) return false;
 
         // create view
-        GN_ASSERT( sizeof(D3D10_SHADER_RESOURCE_VIEW_DESC) == desc.size() );
         GN_DX10_CHECK_RV(
-            dev.CreateShaderResourceView( res, (const D3D10_SHADER_RESOURCE_VIEW_DESC *)desc.cptr(), &view ),
+            dev.CreateShaderResourceView( res, srvdesc, &view ),
             false );
 
         // success
@@ -423,11 +437,11 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
 
     bool create( ID3D10Device & dev )
     {
-        if( !createTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE ) ) return false;
-
         GN_ASSERT( sizeof(D3D10_RENDER_TARGET_VIEW_DESC) == desc.size() );
 
         const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *)desc.cptr();
+
+        if( !createTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format ) ) return false;
 
         GN_DX10_CHECK_RV(
             dev.CreateRenderTargetView( res, rtvdesc, &view ),
@@ -472,12 +486,15 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
 {
     bool create( ID3D10Device & dev )
     {
-        if( !createTexture( dev, D3D10_BIND_DEPTH_STENCIL ) ) return false;
+        GN_ASSERT( sizeof(D3D10_DEPTH_STENCIL_VIEW_DESC) == desc.size() );
+
+        const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *)desc.cptr();
+
+        if( !createTexture( dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format ) ) return false;
 
         // create view
-        GN_ASSERT( sizeof(D3D10_DEPTH_STENCIL_VIEW_DESC) == desc.size() );
         GN_DX10_CHECK_RV(
-            dev.CreateDepthStencilView( res, (const D3D10_DEPTH_STENCIL_VIEW_DESC *)desc.cptr(), &view ),
+            dev.CreateDepthStencilView( res, dsvdesc, &view ),
             false );
 
         // success
@@ -487,83 +504,14 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
     // CopyResource() does not support depth stencil texture.
     void restoreContent( ID3D10Device & dev )
     {
+        if( content.empty() ) return;
+
+        // D3D10 does not support loading data to depth/stencil texture.
+        // We'll have to delete and recreate.
+        view.clear();
+        original.clear();
         res.clear();
-
-        // get image information
-        D3DX10_IMAGE_INFO info;
-        GN_DX10_CHECK_R( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ) );
-
-        GN_ASSERT( DXGI_FORMAT_R32G8X24_TYPELESS == info.Format );
-
-        // This is a depth format that is not supported by current D3D10X library.
-        // We'll have to use our custom loader
-
-        MemFile<UInt8> file( content.cptr(), content.size() );
-
-        ImageReader      ir;
-        ImageDesc        id;
-        DynaArray<UInt8> data;
-
-        if( !ir.reset( file ) ) return;
-        if( !ir.readHeader( id ) ) return;
-        data.resize( id.getTotalBytes() );
-        if( !ir.readImage( data.cptr() ) ) return;
-
-        switch( info.ResourceDimension )
-        {
-            case D3D10_RESOURCE_DIMENSION_TEXTURE1D :
-                GN_UNIMPL();
-                break;
-
-            case D3D10_RESOURCE_DIMENSION_TEXTURE2D :
-            {
-                D3D10_TEXTURE2D_DESC desc2d = {
-                    id.mipmaps[0].width,
-                    id.mipmaps[0].height,
-                    id.numLevels,
-                    id.numFaces,
-                    DXGI_FORMAT_R32G8X24_TYPELESS,
-                    { 1, 0 }, // samples
-                    D3D10_USAGE_DEFAULT, // usage
-                    D3D10_BIND_DEPTH_STENCIL, // bind
-                    0, // CPU access
-                    6 == id.numFaces ? D3D10_RESOURCE_MISC_TEXTURECUBE : 0
-                };
-
-                DynaArray<D3D10_SUBRESOURCE_DATA> subdata;
-                subdata.resize( id.numLevels * id.numFaces );
-                for( UInt32 f = 0; f < id.numFaces; ++f )
-                for( UInt32 l = 0; l < id.numLevels; ++l )
-                {
-                    const MipmapDesc       & m = id.getMipmap( f, l );
-                    D3D10_SUBRESOURCE_DATA & d = subdata[D3D10CalcSubresource( l, f, id.numLevels )];
-
-                    d.pSysMem          = &data[id.getMipmapOffset( f, l )];
-                    d.SysMemPitch      = m.rowPitch;
-                    d.SysMemSlicePitch = m.slicePitch;
-                }
-
-                ID3D10Texture2D * tex2d;
-
-                GN_DX10_CHECK_R( dev.CreateTexture2D( &desc2d, subdata.cptr(), &tex2d ) );
-
-                res.attach( tex2d );
-
-                break;
-            }
-
-            case D3D10_RESOURCE_DIMENSION_TEXTURE3D :
-                GN_UNIMPL();
-                break;
-
-            case D3D10_RESOURCE_DIMENSION_BUFFER :
-                GN_ERROR(sLogger)( "not support loading buffer from DDS" );
-                break;
-
-            default :
-                GN_ERROR(sLogger)( "invalid resource dimension" );
-                break;
-        }
+        create( dev );
     }
 };
 
@@ -970,6 +918,16 @@ struct D3D10StateDump
         GN_UNGUARD;
     }
 
+    /// restore render target cotent
+    void restoreContent( ID3D10Device & dev )
+    {
+        for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+        {
+            rendertargets[i].restoreContent( dev );
+        }
+        depthstencil.restoreContent( dev );
+    }
+
     void bind( ID3D10Device & dev, ID3D10RenderTargetView * backbuf ) const
     {
         GN_GUARD_SLOW;
@@ -1056,13 +1014,6 @@ struct D3D10StateDump
     void draw( ID3D10Device & dev )
     {
         GN_GUARD_SLOW;
-
-        // setup render target cotent
-        for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
-        {
-            rendertargets[i].restoreContent( dev );
-        }
-        depthstencil.restoreContent( dev );
 
         operation.draw( dev );
 
@@ -1159,6 +1110,7 @@ protected:
 
         ID3D10Device & dev = device();
 
+        mState.restoreContent( dev );
 #if DRAW_TO_BACKBUF
         copyRt0ToBackbuf();
         mState.bind( dev, backrtv() );
@@ -1175,7 +1127,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s <ref|hal> [dumpname]\n", (baseName(appname) + extName(appname)).cptr() );
+    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (baseName(appname) + extName(appname)).cptr() );
 }
 
 int main( int argc, const char * argv [] )
@@ -1196,7 +1148,8 @@ int main( int argc, const char * argv [] )
     }
     else
     {
-        opt.ref = ( 0 == strCmpI( "ref", argv[1] ) );
+        opt.ref = ( 0 == strCmpI( "ref", argv[1] ) ) || ( 0 == strCmpI( "refd", argv[1] ) );
+        opt.debug = ( 0 == strCmpI( "hald", argv[1] ) ) || ( 0 == strCmpI( "refd", argv[1] ) );
         sDumpFileName = argv[2];
     }
 
