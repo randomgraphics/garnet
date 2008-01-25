@@ -258,12 +258,28 @@ struct D3D10ViewDump
     {
         if( !sLoadBinary( node, "desc", basedir, desc ) ) return false;
         if( !sLoadBinary( node, "res", basedir, content ) ) return false;
+        return true;
+    }
 
-        D3DX10_IMAGE_INFO info;
-        GN_DX10_CHECK_RV( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ), false );
-        width  = info.Width;
-        height = info.Height;
+    bool createBuffer( ID3D10Device & dev, UINT bind )
+    {
+        width = (UInt32)content.size();
+        height = 1;
 
+        D3D10_BUFFER_DESC bd =
+        {
+            width,
+            D3D10_USAGE_DEFAULT,
+            bind,
+            0,
+            0,
+        };
+
+        ID3D10Buffer * buf;
+
+        GN_DX10_CHECK_RV( dev.CreateBuffer( &bd, 0, &buf ), false );
+
+        res.attach( buf );
         return true;
     }
 
@@ -272,6 +288,8 @@ struct D3D10ViewDump
         // get image information
         D3DX10_IMAGE_INFO info;
         GN_DX10_CHECK_RV( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ), false );
+        width  = info.Width;
+        height = info.Height;
 
         if( DXGI_FORMAT_R32G8X24_TYPELESS == info.Format ||
             DXGI_FORMAT_D32_FLOAT_S8X24_UINT == info.Format ||
@@ -419,7 +437,14 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
 
         const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC*)desc.cptr();
 
-        if( !createTexture( dev, D3D10_BIND_SHADER_RESOURCE, srvdesc->Format ) ) return false;
+        if( D3D10_SRV_DIMENSION_BUFFER == srvdesc->ViewDimension )
+        {
+            if( !createBuffer( dev, D3D10_BIND_SHADER_RESOURCE ) ) return false;
+        }
+        else
+        {
+            if( !createTexture( dev, D3D10_BIND_SHADER_RESOURCE, srvdesc->Format ) ) return false;
+        }
 
         // create view
         GN_DX10_CHECK_RV(
@@ -735,10 +760,24 @@ struct D3D10StateDump
                 if( !ds.load( *e, "ref", basedir ) ) return false;
                 if( !sGetNumericAttr( *e, "stencilref", ds.stencilRef ) ) return false;
             }
-            /*else if( "samplerstates" == e->name )
+            else if( "vssamp" == e->name )
             {
-                if( !loadSamplerStates( *e ) ) return false;
-            }*/
+                UINT slot;
+                if( !sGetSlot<GN_ARRAY_COUNT(vssamp)>( *e, slot ) ) return false;
+                if( !vssamp[slot].load( *e, "desc", basedir ) ) return false;
+            }
+            else if( "gssamp" == e->name )
+            {
+                UINT slot;
+                if( !sGetSlot<GN_ARRAY_COUNT(gssamp)>( *e, slot ) ) return false;
+                if( !gssamp[slot].load( *e, "desc", basedir ) ) return false;
+            }
+            else if( "pssamp" == e->name )
+            {
+                UINT slot;
+                if( !sGetSlot<GN_ARRAY_COUNT(pssamp)>( *e, slot ) ) return false;
+                if( !pssamp[slot].load( *e, "desc", basedir ) ) return false;
+            }
             else if( "viewport" == e->name )
             {
                 if( !sGetNumericAttr( *e, "x", (UInt32&)viewport.TopLeftX ) ) return false;
@@ -1005,8 +1044,6 @@ struct D3D10StateDump
         dev.RSSetScissorRects( 1, &scissorrect );
         dev.OMSetBlendState( bs.comptr, bs.factors, bs.sampleMask );
         dev.OMSetDepthStencilState( ds.comptr, ds.stencilRef );
-
-        GN_TODO( "bind samplers" );
 
         GN_UNGUARD_SLOW;
     }
