@@ -581,28 +581,51 @@ struct D3D10SamplerStateDump : BinaryComDump<ID3D10SamplerState>
 struct D3D10OperationDump
 {
     bool   indexed;
+	bool   instanced;
     SInt32 prim;
-    UInt32 startidx;
-    UInt32 numidx;
-    UInt32 startvtx;
+    UInt32 startidx; // StartIndexLocation
+    UInt32 numidx;   // IndexCountPerInstance
+    UInt32 startvtx; // BaseVertexLocation
     UInt32 numvtx;
+	UInt32 numinst;
+	UInt32 startinst;
+
+	D3D10OperationDump()
+	{
+		memset( this, sizeof(*this), 0 );
+	}
 
     void draw( ID3D10Device & dev )
     {
         dev.IASetPrimitiveTopology( (D3D10_PRIMITIVE_TOPOLOGY)prim );
         if( indexed )
         {
-            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
-            //dumpDrawIndexed( dev, numidx, startidx, startvtx );
+			if( instanced )
+			{
+	            dev.DrawIndexedInstanced( numidx, numinst, startidx, startvtx, startinst );
+			}
+			else
+			{
+	            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+	            //dumpDrawIndexed( dev, numidx, startidx, startvtx );
 
-            dev.DrawIndexed( numidx, startidx, startvtx );
+	            dev.DrawIndexed( numidx, startidx, startvtx );
+			}
+			
         }
         else
         {
-            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
-            //dumpDraw( dev, numvtx, startvtx );
+			if( instanced )
+			{
+				GN_DO_ONCE( GN_FATAL(sLogger)("Do not support DrawInstanced(...) yet.") );
+			}
+			else
+			{
+	            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+	            //dumpDraw( dev, numvtx, startvtx );
 
-            dev.Draw( numvtx, startvtx );
+	            dev.Draw( numvtx, startvtx );
+			}
         }
     }
 };
@@ -797,6 +820,7 @@ struct D3D10StateDump
             else if( "drawindexed" == e->name )
             {
                 operation.indexed = true;
+                operation.instanced = false;
                 if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
                 if( !sGetNumericAttr( *e, "startidx", operation.startidx ) ) return false;
                 if( !sGetNumericAttr( *e, "startvtx", operation.startvtx ) ) return false;
@@ -805,10 +829,22 @@ struct D3D10StateDump
             else if( "draw" == e->name )
             {
                 operation.indexed = false;
+                operation.instanced = false;
                 if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
                 if( !sGetNumericAttr( *e, "startvtx", operation.startvtx ) ) return false;
                 if( !sGetNumericAttr( *e, "numvtx", operation.numvtx ) ) return false;
             }
+			else if( "drawindexedinstanced" == e->name )
+			{
+                operation.indexed = true;
+                operation.instanced = true;
+                if( !sGetNumericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumericAttr( *e, "IndexCountPerInstance", operation.numidx ) ) return false;
+                if( !sGetNumericAttr( *e, "InstanceCount", operation.numinst ) ) return false;
+                if( !sGetNumericAttr( *e, "StartIndexLocation", operation.startidx ) ) return false;
+                if( !sGetNumericAttr( *e, "BaseVertexLocation", operation.startvtx ) ) return false;
+                if( !sGetNumericAttr( *e, "StartInstanceLocation", operation.startinst ) ) return false;
+			}
             else
             {
                 GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
