@@ -275,9 +275,11 @@ struct D3D10ViewDump
             0,
         };
 
+		D3D10_SUBRESOURCE_DATA sd = { content.cptr(), width, width };
+
         ID3D10Buffer * buf;
 
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &bd, 0, &buf ), false );
+        GN_DX10_CHECK_RV( dev.CreateBuffer( &bd, &sd, &buf ), false );
 
         res.attach( buf );
         return true;
