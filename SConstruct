@@ -163,9 +163,7 @@ def UTIL_newEnv( compiler, variant ):
 	msvs_platform = 'x86'
 	icl_version = None
 	icl_abi = 'ia32'
-	if 'vc71' == compiler.name :
-		msvs_version = '7.1'
-	elif 'xenon' == compiler.name:
+	if 'xenon' == compiler.name:
 		tools = ['xenon']
 		msvs_platform = 'Xbox 360'
 	elif 'icl' == compiler.name :
@@ -187,6 +185,8 @@ def UTIL_newEnv( compiler, variant ):
 		                 	'PATH'     : getenv('PATH'),
 		                 	'LANG'     : getenv('LANG'),
 		                 	'LANGUAGE' : getenv('LANGUAGE'),
+		                 	'INCLUDE'  : getenv('INCLUDE'),
+		                 	'LIB'      : getenv('LIB'),
 		                 }
 		)
 	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )

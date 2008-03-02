@@ -15,8 +15,17 @@ goto :EOF
 
 :usage
 echo.
-echo Usage: setupEnv.cmd [/h^|/?] [vc80^|vc71^|icl^|mingw] [x86^|x64^|xenon] [debug^|profile^|retail^|stdbg^|stret^|stprof]
+echo Usage: setupEnv.cmd [/h^|/?] [vc80^|icl^|mingw] [x86^|x64^|xenon] [debug^|profile^|retail^|stdbg^|stret^|stprof]
 echo.
+goto :EOF
+
+:prepend_env
+if not "" == "%~4" (
+	echo %3=%~4
+	set %1=%~4;%~2
+) else (
+	echo INFO: %3 not found.
+)
 goto :EOF
 
 REM ====================
@@ -35,7 +44,6 @@ if not "" == "%1" (
 		if "/?" == "%1" ( goto :usage
 		) else if /I "/h" == "%1" ( goto :usage
 		) else if /I "vc80" == "%1" ( set GN_BUILD_COMPILER=vc80
-		) else if /I "vc71" == "%1" ( set GN_BUILD_COMPILER=vc71
 		) else if /I "icl" == "%1" ( set GN_BUILD_COMPILER=icl
 		) else if /I "mingw" == "%1" ( set GN_BUILD_COMPILER=mingw
 		) else if /I "x86" == "%1" ( set GN_BUILD_TARGET_CPU=x86
@@ -89,41 +97,44 @@ echo GN_BUILD_TARGET_CPU = %GN_BUILD_TARGET_CPU%
 echo GN_BUILD_VARIANT = %GN_BUILD_VARIANT%
 
 REM =====================
-REM setup VS8 environment
+REM setup VS environment
 REM =====================
 if /I "vc80" == "%GN_BUILD_COMPILER%" (
-	if not "" == "%VSINSTALLDIR%" (
-		set "VS8_ROOT=%VSINSTALLDIR%"
-		set "VS8_SETENV=%VSINSTALLDIR%\VC\vcvarsall.bat"
+	if not "" == "%VS90COMNTOOLS%" (
+		set "VS_ROOT=%VS90COMNTOOLS%..\.."
+		set "VS_SETENV=%VS90COMNTOOLS%..\..\VC\vcvarsall.bat"
 	) else if not "" == "%VS80COMNTOOLS%" (
-		set "VS8_ROOT=%VS80COMNTOOLS%..\.."
-		set "VS8_SETENV=%VS80COMNTOOLS%..\..\VC\vcvarsall.bat"
+		set "VS_ROOT=%VS80COMNTOOLS%..\.."
+		set "VS_SETENV=%VS80COMNTOOLS%..\..\VC\vcvarsall.bat"
+	) else if not "" == "%VSINSTALLDIR%" (
+		set "VS_ROOT=%VSINSTALLDIR%"
+		set "VS_SETENV=%VSINSTALLDIR%\VC\vcvarsall.bat"
 	) else (
-		call :warn Neither VSINSTALLDIR nor VS80COMNTOOLS is found. Please install MSVS 2005.
+		call :warn None of VSINSTALLDIR, VS80COMNTOOLS, VS90COMNTOOLS is found. Please install Visual Studio 2005+.
 	)
 )
 
-if not "" == "%VS8_SETENV%" (
+if not "" == "%VS_SETENV%" (
 	if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
-		call "%VS8_SETENV%" x86
+		call "%VS_SETENV%" x86
 	) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
 		if /I "x64" == "%GN_CURRENT_CPU%" (
-			call "%VS8_SETENV%" amd64
+			call "%VS_SETENV%" amd64
 		) else (
-			call "%VS8_SETENV%" x86_amd64
+			call "%VS_SETENV%" x86_amd64
 		)
 	) else if /I "ia64" == "%GN_BUILD_TARGET_CPU%" (
 		if /I "ia64" == "%GN_CURRENT_CPU%" (
-			call "%VS8_SETENV%" ia64
+			call "%VS_SETENV%" ia64
 		) else (
-			call "%VS8_SETENV%" x86_ia64
+			call "%VS_SETENV%" x86_ia64
 		)
 	) else (
 		call :error Unsupport target CPU type: %GN_BUILD_TARGET_CPU%.
 	)
 
 	set VS8_ROOT=
-	set VS8_SETENV=
+	set VS_SETENV=
 )
 
 REM =========================
@@ -143,6 +154,17 @@ if not "" == "%DXSDK_SETENV%" (
 		call "%DXSDK_SETENV%" amd64
 	)
 	set DXSDK_SETENV=
+)
+
+REM =========================
+REM setup GREEN environment
+REM =========================
+if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
+	call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X86 "%GREEN_INC_X86%"
+	call :prepend_env LIB "%LIB%" GREEN_LIB_X86 "%GREEN_LIB_X86%"
+) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
+	call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X64 "%GREEN_INC_X64%"
+	call :prepend_env LIB "%LIB%" GREEN_LIB_X64 "%GREEN_LIB_X64%"
 )
 
 REM =======================
