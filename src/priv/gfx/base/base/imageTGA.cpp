@@ -262,9 +262,9 @@ bool TGAReader::readHeader(
     {   // RGB image
         switch( header.bits )
         {
-            case 16 : o_desc.format = GN::gfx::FMT_BGRA_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
-            case 24 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
-            case 32 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+            case 16 : o_desc.format = GN::gfx::COLOR_FORMAT_BGRA_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
+            case 24 : o_desc.format = GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+            case 32 : o_desc.format = GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
             default :
                 GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", header.bits );
                 return false;
@@ -275,9 +275,9 @@ bool TGAReader::readHeader(
         GN_ASSERT( 3 == header.imagetype );
         switch( header.bits )
         {
-            case  8 : o_desc.format = GN::gfx::FMT_L_8_UNORM; mOutputBytesPerPixel = 1; break;
-            case 16 : o_desc.format = GN::gfx::FMT_L_16_UNORM; mOutputBytesPerPixel = 2; break;
-            case 32 : o_desc.format = GN::gfx::FMT_L_32_UNORM; mOutputBytesPerPixel = 4; break;
+            case  8 : o_desc.format = GN::gfx::COLOR_FORMAT_L_8_UNORM; mOutputBytesPerPixel = 1; break;
+            //case 16 : o_desc.format = GN::gfx::COLOR_FORMAT_L_16_UNORM; mOutputBytesPerPixel = 2; break;
+            //case 32 : o_desc.format = GN::gfx::COLOR_FORMAT_L_32_UNORM; mOutputBytesPerPixel = 4; break;
             default :
                 GN_ERROR(sLogger)( "unsupport/invalid grey image bits: %d.", header.bits );
                 return false;
@@ -332,7 +332,7 @@ bool TGAReader::readImage( void * o_data )
     union ImageDescriptor
     {
         unsigned char u8;
-        struct 
+        struct
         {
             int attr        : 4; // bits of attribute channel.
             int _           : 1; // reserved

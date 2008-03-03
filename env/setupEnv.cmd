@@ -215,6 +215,13 @@ REM Update console title
 REM ====================
 title garnet3d ( %GARNET_ROOT% %GN_BUILD_COMPILER%-%GN_BUILD_TARGET_OS%-%GN_BUILD_TARGET_CPU% %GN_BUILD_VARIANT% )
 
+REM ====================
+REM MISC.
+REM ====================
+set SCONSFLAGS=-U
+title garnet3d ( %GARNET_ROOT% %GN_BUILD_COMPILER%-%GN_BUILD_TARGET_OS%-%GN_BUILD_TARGET_CPU% %GN_BUILD_VARIANT% )
+
+
 REM ===================
 REM End of common setup
 REM ===================

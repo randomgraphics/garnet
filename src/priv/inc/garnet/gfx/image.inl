@@ -99,7 +99,7 @@ inline size_t GN::gfx::ImageDesc::getPixelOffset(
         x < getMipmap( face, level ).width &&
         y < getMipmap( face, level ).height &&
         z < getMipmap( face, level ).depth );
-    return getScanlineOffset(face,level,y,z) + getClrFmtDesc(format).bits * x / 8;
+    return getScanlineOffset(face,level,y,z) + format.getBitsPerPixel() * x / 8;
 }
 
 //
