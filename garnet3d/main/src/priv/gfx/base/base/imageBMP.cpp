@@ -75,9 +75,9 @@ bool BMPReader::readHeader(
     // determine image format
     switch( mHeader.infoHeader.bitCount )
     {
-        case 16 : o_desc.format = GN::gfx::FMT_BGRX_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
-        case 24 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
-        case 32 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+        case 16 : o_desc.format = GN::gfx::COLOR_FORMAT_BGRX_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
+        case 24 : o_desc.format = GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+        case 32 : o_desc.format = GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
         default :
             GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", mHeader.infoHeader.bitCount );
             return false;
@@ -177,7 +177,7 @@ bool BMPReader::readImage( void * o_data ) const
 #endif
                     }
                     src += srcPitch;
-                    dst += dstPitch; 
+                    dst += dstPitch;
                 }
             }
             else
@@ -201,7 +201,7 @@ bool BMPReader::readImage( void * o_data ) const
 #endif
                     }
                     src += srcPitch;
-                    dst -= dstPitch; 
+                    dst -= dstPitch;
                 }
             }
             break;
@@ -228,7 +228,7 @@ bool BMPReader::readImage( void * o_data ) const
 #endif
                     }
                     src += srcPitch;
-                    dst += dstPitch; 
+                    dst += dstPitch;
                 }
             }
             else
@@ -252,7 +252,7 @@ bool BMPReader::readImage( void * o_data ) const
 #endif
                     }
                     src += srcPitch;
-                    dst -= dstPitch; 
+                    dst -= dstPitch;
                 }
             }
             break;

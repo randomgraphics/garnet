@@ -4,7 +4,7 @@
 ///
 /// D3D9 format definition (from d3d9types.h)
 ///
-enum D3D9FORMAT
+enum D3D9_FORMAT
 {
     D3D9_FORMAT_UNKNOWN              =  0,
 
@@ -187,237 +187,76 @@ enum DXGI_FORMAT
 	DXGI_FORMAT_FORCE_UINT	= 0xffffffffUL
 };
 
+struct ColorFormatConvert
+{
+    GN::gfx::ColorFormat gnfmt;
+    D3D9_FORMAT          dx9fmt;
+    DXGI_FORMAT          dxgifmt;
+    XENON_FORMAT         xefmt;
+};
+
+static const ColorFormatConvert s_ColorFormatConvertTable[] =
+{
+    #define GN_DEFINE_COLOR_FORMAT_CONVERTION( gn, dx9, dxgi ) \
+        { \
+            GN::gfx::COLOR_FORMAT_##gn, \
+            D3D9_FORMAT_##dx9, \
+            DXGI_FORMAT_##dxgi, \
+            XENON_FORMAT_UNKNOWN \
+        },
+    #include "colorFormatConvertMeta.h"
+    #undef GN_DEFINE_COLOR_FORMAT_CONVERTION
+};
+static const size_t COLOR_FORMAT_CONVERT_TABLE_SIZE = GN_ARRAY_COUNT(s_ColorFormatConvertTable);
+
+// *****************************************************************************
+// public data
+// *****************************************************************************
+
+const GN::gfx::ColorLayoutDesc GN::gfx::ALL_COLOR_LAYOUTS[] =
+{
+    //BW  BH  BB   BPP   CH      CH0        CH1          CH2          CH3
+    { 0 , 0 , 0  , 0   , 0 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_UNKNOWN,
+    { 8 , 1 , 1  , 1   , 1 , { { 0 , 1  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_1,
+    { 1 , 1 , 1  , 8   , 2 , { { 0 , 4  }, { 4  , 4  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_4_4,
+    { 1 , 1 , 2  , 16  , 4 , { { 0 , 4  }, { 4  , 4  }, { 8  , 4  }, { 12 , 4  } } }, //LAYOUT_4_4_4_4,
+    { 1 , 1 , 2  , 16  , 4 , { { 0 , 5  }, { 10 , 5  }, { 15 , 5  }, { 15 , 1  } } }, //LAYOUT_5_5_5_1,
+    { 1 , 1 , 2  , 16  , 3 , { { 0 , 5  }, { 5  , 6  }, { 11 , 5  }, { 0  , 0  } } }, //LAYOUT_5_6_5,
+    { 1 , 1 , 1  , 8   , 1 , { { 0 , 8  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_8,
+    { 1 , 1 , 2  , 16  , 2 , { { 0 , 8  }, { 8  , 8  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_8_8,
+    { 1 , 1 , 3  , 24  , 3 , { { 0 , 8  }, { 8  , 8  }, { 16 , 8  }, { 0  , 0  } } }, //LAYOUT_8_8_8,
+    { 1 , 1 , 4  , 32  , 4 , { { 0 , 8  }, { 8  , 8  }, { 16 , 8  }, { 24 , 8  } } }, //LAYOUT_8_8_8_8,
+    { 1 , 1 , 4  , 32  , 3 , { { 0 , 10 }, { 10 , 11 }, { 21 , 11 }, { 0  , 0  } } }, //LAYOUT_10_11_11,
+    { 1 , 1 , 4  , 32  , 3 , { { 0 , 11 }, { 11 , 11 }, { 22 , 10 }, { 0  , 0  } } }, //LAYOUT_11_11_10,
+    { 1 , 1 , 4  , 32  , 4 , { { 0 , 10 }, { 10 , 10 }, { 20 , 10 }, { 30 , 2  } } }, //LAYOUT_10_10_10_2,
+    { 1 , 1 , 2  , 16  , 1 , { { 0 , 16 }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_16,
+    { 1 , 1 , 4  , 32  , 2 , { { 0 , 16 }, { 16 , 16 }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_16_16,
+    { 1 , 1 , 8  , 64  , 4 , { { 0 , 16 }, { 16 , 16 }, { 32 , 16 }, { 48 , 1  } } }, //LAYOUT_16_16_16_16,
+    { 1 , 1 , 4  , 32  , 1 , { { 0 , 32 }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_32,
+    { 1 , 1 , 8  , 64  , 2 , { { 0 , 32 }, { 32 , 32 }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_32_32,
+    { 1 , 1 , 12 , 96  , 3 , { { 0 , 32 }, { 32 , 32 }, { 64 , 32 }, { 0  , 0  } } }, //LAYOUT_32_32_32,
+    { 1 , 1 , 16 , 128 , 4 , { { 0 , 32 }, { 32 , 32 }, { 64 , 32 }, { 96 , 32 } } }, //LAYOUT_32_32_32_32,
+    { 1 , 1 , 3  , 24  , 1 , { { 0 , 24 }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_24,
+    { 1 , 1 , 4  , 32  , 2 , { { 0 , 8  }, { 8  , 24 }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_8_24,
+    { 1 , 1 , 4  , 32  , 2 , { { 0 , 24 }, { 24 , 8  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_24_8,
+    { 1 , 1 , 4  , 32  , 4 , { { 0 , 4  }, { 4  , 4  }, { 8  , 24 }, { 0  , 0  } } }, //LAYOUT_4_4_24,
+    { 1 , 1 , 8  , 64  , 3 , { { 0 , 32 }, { 32 , 8  }, { 40 , 24 }, { 0  , 0  } } }, //LAYOUT_32_8_24,
+    { 4 , 4 , 8  , 4   , 4 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXT1,
+    { 4 , 4 , 16 , 8   , 4 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXT3,
+    { 4 , 4 , 8  , 4   , 1 , { { 0 , 4  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXT3A,
+    { 4 , 4 , 16 , 8   , 4 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXT5,
+    { 4 , 4 , 8  , 4   , 1 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXT5A,
+    { 4 , 4 , 16 , 8   , 2 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_DXN,
+    { 4 , 4 , 8  , 4   , 2 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_CTX1,
+    { 4 , 4 , 8  , 4   , 4 , { { 0 , 1  }, { 1  , 1  }, { 2  , 1  }, { 3  , 1  } } }, //LAYOUT_DXT3A_AS_1_1_1_1,
+    { 2 , 1 , 4  , 16  , 4 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_GRGB,
+    { 2 , 1 , 4  , 16  , 4 , { { 0 , 0  }, { 0  , 0  }, { 0  , 0  }, { 0  , 0  } } }, //LAYOUT_RGBG,
+};
+//GN_CASSERT( GN_ARRAY_COUNT(GN::gfx::ALL_COLOR_LAYOUTS) == GN::gfx::NUM_COLOR_LAYOUTS );
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-const GN::gfx::ClrFmtDesc * GN::gfx::detail::generateClrFmtDescTable()
-{
-    GN_GUARD;
-
-    static struct ClrDescGenerator
-    {
-        ClrFmtDesc table[NUM_CLRFMTS+1];
-
-        #define MAKE_FOURCC_INT(ch0, ch1, ch2, ch3) \
-                ((UInt32)(UInt8)(ch0) |         \
-                ((UInt32)(UInt8)(ch1) << 8) |   \
-                ((UInt32)(UInt8)(ch2) << 16) |  \
-                ((UInt32)(UInt8)(ch3) << 24 ))
-
-        #define SWIZZLE(x,y,z,w) MAKE_FOURCC_INT( *#x, *#y, *#z, *#w )
-
-        #define CH(shift,bits,type) shift,bits,TYPE_##type
-
-        #define CH1( sw, ch0 ) \
-            pdesc->blockWidth  = 1; \
-            pdesc->blockHeight = 1; \
-            pdesc->swizzle = sw; \
-            pdesc->numChannels = 1; \
-            setupChannel( pdesc->channels[0], ch0 );
-        #define CH2( sw, ch0, ch1 ) \
-            pdesc->blockWidth  = 1; \
-            pdesc->blockHeight = 1; \
-            pdesc->swizzle = sw; \
-            pdesc->numChannels = 2; \
-            setupChannel( pdesc->channels[0], ch0 ); \
-            setupChannel( pdesc->channels[1], ch1 );
-        #define CH3( sw, ch0, ch1, ch2 ) \
-            pdesc->blockWidth  = 1; \
-            pdesc->blockHeight = 1; \
-            pdesc->swizzle = sw; \
-            pdesc->numChannels = 3; \
-            setupChannel( pdesc->channels[0], ch0 ); \
-            setupChannel( pdesc->channels[1], ch1 ); \
-            setupChannel( pdesc->channels[2], ch2 );
-        #define CH4( sw, ch0, ch1, ch2, ch3 ) \
-            pdesc->blockWidth  = 1; \
-            pdesc->blockHeight = 1; \
-            pdesc->swizzle = sw; \
-            pdesc->numChannels = 4; \
-            setupChannel( pdesc->channels[0], ch0 ); \
-            setupChannel( pdesc->channels[1], ch1 ); \
-            setupChannel( pdesc->channels[2], ch2 ); \
-            setupChannel( pdesc->channels[3], ch3 );
-
-        #define FOURCC(c0,c1,c2,c3) \
-            pdesc->numChannels = 0; \
-            handleFourcc( *pdesc, MAKE_FOURCC_INT(*#c0, *#c1, *#c2, *#c3) );
-
-        ///
-        /// fourcc handler
-        ///
-        static inline void
-        handleFourcc( ClrFmtDesc & desc, UInt32 fourcc )
-        {
-
-            switch( fourcc )
-            {
-                case MAKE_FOURCC_INT('D','X','T','1') :
-                case MAKE_FOURCC_INT('D','X','T','2') :
-                case MAKE_FOURCC_INT('D','X','T','3') :
-                case MAKE_FOURCC_INT('D','X','T','4') :
-                case MAKE_FOURCC_INT('D','X','T','5') :
-                    desc.blockWidth  = 4;
-                    desc.blockHeight = 4;
-                    break;
-
-                default:
-                    GN_UNEXPECTED();
-                    desc.blockWidth  = 1;
-                    desc.blockHeight = 1;
-            }
-        }
-
-        ///
-        /// setup channel properties
-        ///
-        static inline void
-        setupChannel(
-            ChannelDesc & ch, unsigned int shift, unsigned int bits, unsigned int type )
-        {
-            ch.shift = shift;
-            ch.bits = bits;
-            ch.type = type;
-        }
-
-        ///
-        /// constructor
-        ///
-        ClrDescGenerator()
-        {
-            // clear description table
-            memset( table, 0, sizeof(table) );
-
-            ClrFmtDesc * pdesc;
-
-            // initialize the table
-            #define GN_COLOR_FORMAT( format_, bits_, channels_ ) \
-                pdesc = &table[FMT_##format_]; \
-                pdesc->name = "FMT_"#format_; \
-                pdesc->bits = bits_; \
-                channels_;
-            #include "garnet/gfx/colorFormatMeta.h"
-            #undef GN_COLOR_FORMAT
-
-            // special case for FMT_UNKNOWN
-            pdesc = &table[FMT_UNKNOWN];
-            pdesc->name = "FMT_UNKNOWN";
-            pdesc->numChannels = 0;
-            pdesc->bits = 0;
-        }
-    } sGenerator;
-
-    return sGenerator.table;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::str2ClrFmt( ClrFmt & fmt, const StrA & s )
-{
-    for( size_t i = 0; i <= NUM_CLRFMTS; ++i )
-    {
-        if( getClrFmtDesc( (ClrFmt)i ).name == s )
-        {
-            fmt = (ClrFmt)i;
-            return true;
-        }
-    }
-
-    // handle format alias
-#define CHECK_ALIAS( X ) if( #X == s ) { fmt = X; return true; }
-
-    CHECK_ALIAS( FMT_UNKNOWN );
-
-    CHECK_ALIAS( FMT_RGBA32 );
-    CHECK_ALIAS( FMT_BGRA32 );
-
-    CHECK_ALIAS( FMT_DXT_FIRST );
-    CHECK_ALIAS( FMT_DXT_LAST );
-
-    CHECK_ALIAS( FMT_FLOAT4 );
-    CHECK_ALIAS( FMT_FLOAT3 );
-    CHECK_ALIAS( FMT_FLOAT2 );
-    CHECK_ALIAS( FMT_FLOAT1 );
-
-    CHECK_ALIAS( FMT_FLOAT16_4 );
-    CHECK_ALIAS( FMT_FLOAT16_2 );
-
-    CHECK_ALIAS( FMT_INT4 );
-    CHECK_ALIAS( FMT_INT2 );
-    CHECK_ALIAS( FMT_INT1 );
-
-    CHECK_ALIAS( FMT_INT4N );
-    CHECK_ALIAS( FMT_INT2N );
-    CHECK_ALIAS( FMT_INT1N );
-
-    CHECK_ALIAS( FMT_UINT4 );
-    CHECK_ALIAS( FMT_UINT2 );
-    CHECK_ALIAS( FMT_UINT1 );
-
-    CHECK_ALIAS( FMT_UINT4N );
-    CHECK_ALIAS( FMT_UINT2N );
-    CHECK_ALIAS( FMT_UINT1N );
-
-    CHECK_ALIAS( FMT_SHORT4 );
-    CHECK_ALIAS( FMT_SHORT2 );
-
-    CHECK_ALIAS( FMT_SHORT4N );
-    CHECK_ALIAS( FMT_SHORT2N );
-
-    CHECK_ALIAS( FMT_USHORT4 );
-    CHECK_ALIAS( FMT_USHORT2 );
-
-    CHECK_ALIAS( FMT_USHORT4N );
-    CHECK_ALIAS( FMT_USHORT2N );
-
-    CHECK_ALIAS( FMT_BYTE4 );
-    CHECK_ALIAS( FMT_BYTE4N );
-
-    CHECK_ALIAS( FMT_UBYTE4 );
-    CHECK_ALIAS( FMT_UBYTE4N );
-
-    CHECK_ALIAS( FMT_DEC4 );
-    CHECK_ALIAS( FMT_DEC3 );
-    CHECK_ALIAS( FMT_DEC4N );
-    CHECK_ALIAS( FMT_DEC3N );
-
-    CHECK_ALIAS( FMT_UDEC4 );
-    CHECK_ALIAS( FMT_UDEC3 );
-    CHECK_ALIAS( FMT_UDEC4N );
-    CHECK_ALIAS( FMT_UDEC3N );
-
-    CHECK_ALIAS( FMT_HEND4 );
-    CHECK_ALIAS( FMT_HEND3 );
-    CHECK_ALIAS( FMT_HEND4N );
-    CHECK_ALIAS( FMT_HEND3N );
-
-    CHECK_ALIAS( FMT_UHEND4 );
-    CHECK_ALIAS( FMT_UHEND3 );
-    CHECK_ALIAS( FMT_UHEND4N );
-    CHECK_ALIAS( FMT_UHEND3N );
-
-    CHECK_ALIAS( FMT_DHEN4 );
-    CHECK_ALIAS( FMT_DHEN3 );
-    CHECK_ALIAS( FMT_DHEN4N );
-    CHECK_ALIAS( FMT_DHEN3N );
-
-    CHECK_ALIAS( FMT_UDHEN4 );
-    CHECK_ALIAS( FMT_UDHEN3 );
-    CHECK_ALIAS( FMT_UDHEN4N );
-    CHECK_ALIAS( FMT_UDHEN3N );
-
-#undef CHECK_ALIAS
-
-    // failed
-    return false;
-}
 
 //
 //
@@ -504,338 +343,12 @@ const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::d3d9Format2ClrFmt( int d3d9fmt )
-{
-    switch( d3d9fmt )
-    {
-        // 128 bits
-        case D3D9_FORMAT_A32B32G32R32F   : return FMT_RGBA_32_32_32_32_FLOAT;
-
-        // 64 bits
-        case D3D9_FORMAT_A16B16G16R16F   : return FMT_RGBA_16_16_16_16_FLOAT;
-        case D3D9_FORMAT_A16B16G16R16    : return FMT_RGBA_16_16_16_16_UNORM;
-        case D3D9_FORMAT_G32R32F         : return FMT_RG_32_32_FLOAT;
-
-        // 32 bits
-        case D3D9_FORMAT_A8R8G8B8        : return FMT_BGRA_8_8_8_8_UNORM;
-        case D3D9_FORMAT_X8R8G8B8        : return FMT_BGRX_8_8_8_8_UNORM;
-        case D3D9_FORMAT_A2B10G10R10     : return FMT_RGBA_10_10_10_2_UNORM;
-        case D3D9_FORMAT_G16R16F         : return FMT_RG_16_16_FLOAT;
-        case D3D9_FORMAT_G16R16          : return FMT_RG_16_16_UNORM;
-      //case D3D9_FORMAT_X8L8V8U8        : return FMT_UVLX_8_8_8_8_UNORM;
-        case D3D9_FORMAT_Q8W8V8U8        : return FMT_RGBA_8_8_8_8_SNORM;
-        case D3D9_FORMAT_V16U16          : return FMT_RG_16_16_SNORM;
-      //case D3D9_FORMAT_W11V11U10       : return FMT_RGB_10_11_11_SNORM;
-      //case D3D9_FORMAT_A2W10V10U10     : return FMT_RGBA_10_10_10_2_SNORM;
-        case D3D9_FORMAT_R32F            : return FMT_R_32_FLOAT;
-
-        // 16 bits
-        case D3D9_FORMAT_R5G6B5          : return FMT_BGR_5_6_5_UNORM;
-        case D3D9_FORMAT_X1R5G5B5        : return FMT_BGRX_5_5_5_1_UNORM;
-        case D3D9_FORMAT_A1R5G5B5        : return FMT_BGRA_5_5_5_1_UNORM;
-        case D3D9_FORMAT_A4R4G4B4        : return FMT_BGRA_4_4_4_4_UNORM;
-        case D3D9_FORMAT_X4R4G4B4        : return FMT_BGRX_4_4_4_4_UNORM;
-      //case D3D9_FORMAT_A8P8            : return FMT_PA_8_8;
-        case D3D9_FORMAT_A8L8            : return FMT_LA_8_8_UNORM;
-        case D3D9_FORMAT_V8U8            : return FMT_RG_8_8_SNORM;
-      //case D3D9_FORMAT_L6V5U5          : return FMT_UVL_5_5_6;
-
-        // 8 bits
-      //case D3D9_FORMAT_R3G3B2          : return FMT_BGR_2_3_3;
-        case D3D9_FORMAT_A8              : return FMT_A_8_UNORM;
-      //case D3D9_FORMAT_A8R3G3B2        : return FMT_BGRA_2_3_3_8;
-      //case D3D9_FORMAT_P8              : return FMT_P_8;
-        case D3D9_FORMAT_L8              : return FMT_L_8_UNORM;
-      //case D3D9_FORMAT_A4L4            : return FMT_LA_4_4;
-
-        // compressed formats
-      //case D3D9_FORMAT_UYVY            : return FMT_;
-      //case D3D9_FORMAT_YUY2            : return FMT_;
-        case D3D9_FORMAT_DXT1            : return FMT_DXT1;
-        case D3D9_FORMAT_DXT2            : return FMT_DXT2;
-        case D3D9_FORMAT_DXT4            : return FMT_DXT4;
-        case D3D9_FORMAT_DXT3            : return FMT_DXT3;
-        case D3D9_FORMAT_DXT5            : return FMT_DXT5;
-
-        // depth formats
-        case D3D9_FORMAT_D16_LOCKABLE    : return FMT_D_16_UNORM;
-
-        case D3D9_FORMAT_D32             : return FMT_D_32_UNORM;
-      //case D3D9_FORMAT_D15S1           : return FMT_DS_15_1;
-        case D3D9_FORMAT_D24S8           : return FMT_DS_24_8_UNORM;
-        case D3D9_FORMAT_D16             : return FMT_D_16_UNORM;
-        case D3D9_FORMAT_D24X8           : return FMT_DX_24_8_UNORM;
-      //case D3D9_FORMAT_D24X4S4         : return FMT_DXS_24_4_4;
-
-        // ATI only format:
-        case GN_MAKE_FOURCC('D','F','2','4') : return FMT_D_24_FLOAT;
-        case GN_MAKE_FOURCC('D','F','1','6') : return FMT_D_16_FLOAT;
-
-        // failed
-        default : return FMT_UNKNOWN;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-int GN::gfx::clrFmt2D3D9Format( ClrFmt clrfmt )
-{
-    SInt32 d3d9fmt;
-    switch( clrfmt )
-    {
-        // 128 bits
-        case FMT_RGBA_32_32_32_32_FLOAT : d3d9fmt = D3D9_FORMAT_A32B32G32R32F; break;
-
-        // 64 bits
-        case FMT_RGBA_16_16_16_16_FLOAT : d3d9fmt = D3D9_FORMAT_A16B16G16R16F; break;
-        case FMT_RGBA_16_16_16_16_UNORM : d3d9fmt = D3D9_FORMAT_A16B16G16R16; break;
-        case FMT_RG_32_32_FLOAT         : d3d9fmt = D3D9_FORMAT_G32R32F; break;
-
-        // 32 bits
-        case FMT_BGRA_8_8_8_8_UNORM     : d3d9fmt = D3D9_FORMAT_A8R8G8B8; break;
-        case FMT_BGRX_8_8_8_8_UNORM     : d3d9fmt = D3D9_FORMAT_X8R8G8B8; break;
-        case FMT_RGBA_8_8_8_8_UNORM     : d3d9fmt = D3D9_FORMAT_A8B8G8R8; break;
-        case FMT_RGBX_8_8_8_8_UNORM     : d3d9fmt = D3D9_FORMAT_X8B8G8R8; break;
-        case FMT_RG_16_16_FLOAT         : d3d9fmt = D3D9_FORMAT_G16R16F; break;
-        case FMT_RG_16_16_UNORM         : d3d9fmt = D3D9_FORMAT_G16R16; break;
-        case FMT_R_32_FLOAT             : d3d9fmt = D3D9_FORMAT_R32F; break;
-
-        // 16 bits
-        case FMT_BGRA_5_5_5_1_UNORM     : d3d9fmt = D3D9_FORMAT_A1R5G5B5; break;
-        case FMT_BGR_5_6_5_UNORM        : d3d9fmt = D3D9_FORMAT_R5G6B5; break;
-        case FMT_LA_8_8_UNORM           : d3d9fmt = D3D9_FORMAT_A8L8; break;
-        case FMT_RG_8_8_SNORM           : d3d9fmt = D3D9_FORMAT_V8U8; break;
-
-        // 8 bits
-        case FMT_L_8_UNORM              : d3d9fmt = D3D9_FORMAT_L8; break;
-        case FMT_A_8_UNORM              : d3d9fmt = D3D9_FORMAT_A8; break;
-
-        // compressed formats
-        case FMT_DXT1                   : d3d9fmt = D3D9_FORMAT_DXT1; break;
-        case FMT_DXT2                   : d3d9fmt = D3D9_FORMAT_DXT2; break;
-        case FMT_DXT3                   : d3d9fmt = D3D9_FORMAT_DXT3; break;
-        case FMT_DXT5                   : d3d9fmt = D3D9_FORMAT_DXT5; break;
-
-        // depth formats
-        case FMT_D_16_UNORM             : d3d9fmt = D3D9_FORMAT_D16; break;
-        case FMT_DX_24_8_UNORM          : d3d9fmt = D3D9_FORMAT_D24X8; break;
-        case FMT_DS_24_8_UNORM          : d3d9fmt = D3D9_FORMAT_D24S8; break;
-        case FMT_D_32_UNORM             : d3d9fmt = D3D9_FORMAT_D32; break;
-
-        // ATI only format:
-        case FMT_D_24_FLOAT             : d3d9fmt = GN_MAKE_FOURCC('D','F','2','4'); break;
-        case FMT_D_16_FLOAT             : d3d9fmt = GN_MAKE_FOURCC('D','F','1','6'); break;;
-
-        // failed
-        default                         : d3d9fmt = D3D9_FORMAT_UNKNOWN;
-    }
-
-    // sucess
-    return d3d9fmt;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 const char * GN::gfx::xenonFormat2Str( int xefmt )
 {
-    struct Item { int fmt; const char * str; };
-    static const Item sTable[] =
-    {
-        { XENON_FORMAT_UNKNOWN,         "XENON_FORMAT_UNKNOWN" },
-        { XENON_FORMAT_A8R8G8B8,        "XENON_FORMAT_A8R8G8B8" },
-        { XENON_FORMAT_X8R8G8B8,        "XENON_FORMAT_X8R8G8B8" },
-        { XENON_FORMAT_R5G6B5,          "XENON_FORMAT_R5G6B5" },
-        { XENON_FORMAT_X1R5G5B5,        "XENON_FORMAT_X1R5G5B5" },
-        { XENON_FORMAT_A1R5G5B5,        "XENON_FORMAT_A1R5G5B5" },
-        { XENON_FORMAT_A4R4G4B4,        "XENON_FORMAT_A4R4G4B4" },
-        { XENON_FORMAT_A8,              "XENON_FORMAT_A8" },
-        { XENON_FORMAT_X4R4G4B4,        "XENON_FORMAT_X4R4G4B4" },
-        { XENON_FORMAT_A2B10G10R10,     "XENON_FORMAT_A2B10G10R10" },
-        { XENON_FORMAT_A8B8G8R8,        "XENON_FORMAT_A8B8G8R8" },
-        { XENON_FORMAT_X8B8G8R8,        "XENON_FORMAT_X8B8G8R8" },
-        { XENON_FORMAT_G16R16,          "XENON_FORMAT_G16R16" },
-        { XENON_FORMAT_A2R10G10B10,     "XENON_FORMAT_A2R10G10B10" },
-        { XENON_FORMAT_A16B16G16R16,    "XENON_FORMAT_A16B16G16R16" },
-        { XENON_FORMAT_L8,              "XENON_FORMAT_L8" },
-        { XENON_FORMAT_A8L8,            "XENON_FORMAT_A8L8" },
-        { XENON_FORMAT_V8U8,            "XENON_FORMAT_V8U8" },
-        { XENON_FORMAT_L6V5U5,          "XENON_FORMAT_L6V5U5" },
-        { XENON_FORMAT_X8L8V8U8,        "XENON_FORMAT_X8L8V8U8" },
-        { XENON_FORMAT_Q8W8V8U8,        "XENON_FORMAT_Q8W8V8U8" },
-        { XENON_FORMAT_V16U16,          "XENON_FORMAT_V16U16" },
-        { XENON_FORMAT_A2W10V10U10,     "XENON_FORMAT_A2W10V10U10" },
-        { XENON_FORMAT_UYVY,            "XENON_FORMAT_UYVY" },
-        { XENON_FORMAT_R8G8_B8G8,       "XENON_FORMAT_R8G8_B8G8" },
-        { XENON_FORMAT_YUY2,            "XENON_FORMAT_YUY2" },
-        { XENON_FORMAT_G8R8_G8B8,       "XENON_FORMAT_G8R8_G8B8" },
-        { XENON_FORMAT_DXT1,            "XENON_FORMAT_DXT1" },
-        { XENON_FORMAT_DXT2,            "XENON_FORMAT_DXT2" },
-        { XENON_FORMAT_DXT3,            "XENON_FORMAT_DXT3" },
-        { XENON_FORMAT_DXT4,            "XENON_FORMAT_DXT4" },
-        { XENON_FORMAT_DXT5,            "XENON_FORMAT_DXT5" },
-        { XENON_FORMAT_D32,             "XENON_FORMAT_D32" },
-        { XENON_FORMAT_D24S8,           "XENON_FORMAT_D24S8" },
-        { XENON_FORMAT_D24X8,           "XENON_FORMAT_D24X8" },
-        { XENON_FORMAT_D16,             "XENON_FORMAT_D16" },
-        { XENON_FORMAT_D24FS8,          "XENON_FORMAT_D24FS8" },
-        { XENON_FORMAT_L16,             "XENON_FORMAT_L16" },
-        { XENON_FORMAT_VERTEXDATA,      "XENON_FORMAT_VERTEXDATA" },
-        { XENON_FORMAT_INDEX16,         "XENON_FORMAT_INDEX16" },
-        { XENON_FORMAT_INDEX32,         "XENON_FORMAT_INDEX32" },
-        { XENON_FORMAT_Q16W16V16U16,    "XENON_FORMAT_Q16W16V16U16" },
-        { XENON_FORMAT_R16F,            "XENON_FORMAT_R16F" },
-        { XENON_FORMAT_G16R16F,         "XENON_FORMAT_G16R16F" },
-        { XENON_FORMAT_A16B16G16R16F,   "XENON_FORMAT_A16B16G16R16F" },
-        { XENON_FORMAT_R32F,            "XENON_FORMAT_R32F" },
-        { XENON_FORMAT_G32R32F,         "XENON_FORMAT_G32R32F" },
-        { XENON_FORMAT_A32B32G32R32F,   "XENON_FORMAT_A32B32G32R32F" },
-
-        // ATI special formats
-        { MAKEFOURCC('D','F','2','4'),   "MAKEFOURCC('D','F','2','4')" },
-        { MAKEFOURCC('D','F','1','6'),   "MAKEFOURCC('D','F','1','6')" },
-    };
-
-    for( size_t i = 0; i < sizeof(sTable)/sizeof(sTable[0]); ++i )
-    {
-        if( xefmt == sTable[i].fmt ) return sTable[i].str;
-    }
-    return "INVALID XENON_FORMAT";
+    GN_UNUSED_PARAM(xefmt);
+    return "NOT IMPLEMENTED";
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::xenonFormat2ClrFmt( int xefmt )
-{
-    // force TILE flag
-    xefmt = xefmt | ( 1 << XENON_FORMAT_TILED_SHIFT );
-
-    switch( (int)xefmt )
-    {
-        // 128 bits
-        case XENON_FORMAT_A32B32G32R32F   : return FMT_RGBA_32_32_32_32_FLOAT;
-
-        // 64 bits
-        case XENON_FORMAT_A16B16G16R16F   : return FMT_RGBA_16_16_16_16_FLOAT;
-        case XENON_FORMAT_A16B16G16R16    : return FMT_RGBA_16_16_16_16_UNORM;
-        case XENON_FORMAT_G32R32F         : return FMT_RG_32_32_FLOAT;
-
-        // 32 bits
-        case XENON_FORMAT_A8R8G8B8        : return FMT_BGRA_8_8_8_8_UNORM;
-        case XENON_FORMAT_X8R8G8B8        : return FMT_BGRX_8_8_8_8_UNORM;
-        case XENON_FORMAT_A2B10G10R10     : return FMT_RGBA_10_10_10_2_UNORM;
-        case XENON_FORMAT_G16R16F         : return FMT_RG_16_16_FLOAT;
-        case XENON_FORMAT_G16R16          : return FMT_RG_16_16_UNORM;
-      //case XENON_FORMAT_X8L8V8U8        : return FMT_UVLX_8_8_8_8_UNORM;
-        case XENON_FORMAT_Q8W8V8U8        : return FMT_RGBA_8_8_8_8_SNORM;
-        case XENON_FORMAT_V16U16          : return FMT_RG_16_16_SNORM;
-      //case XENON_FORMAT_W11V11U10       : return FMT_RGB_10_11_11_SNORM;
-      //case XENON_FORMAT_A2W10V10U10     : return FMT_RGBA_10_10_10_2_SNORM;
-        case XENON_FORMAT_R32F            : return FMT_R_32_FLOAT;
-
-        // 16 bits
-        case XENON_FORMAT_R5G6B5          : return FMT_BGR_5_6_5_UNORM;
-        case XENON_FORMAT_X1R5G5B5        : return FMT_BGRX_5_5_5_1_UNORM;
-        case XENON_FORMAT_A1R5G5B5        : return FMT_BGRA_5_5_5_1_UNORM;
-        case XENON_FORMAT_A4R4G4B4        : return FMT_BGRA_4_4_4_4_UNORM;
-        case XENON_FORMAT_X4R4G4B4        : return FMT_BGRX_4_4_4_4_UNORM;
-      //case XENON_FORMAT_A8P8            : return FMT_PA_8_8;
-        case XENON_FORMAT_A8L8            : return FMT_LA_8_8_UNORM;
-        case XENON_FORMAT_V8U8            : return FMT_RG_8_8_SNORM;
-      //case XENON_FORMAT_L6V5U5          : return FMT_UVL_5_5_6;
-
-        // 8 bits
-      //case XENON_FORMAT_R3G3B2          : return FMT_BGR_2_3_3;
-        case XENON_FORMAT_A8              : return FMT_A_8_UNORM;
-      //case XENON_FORMAT_A8R3G3B2        : return FMT_BGRA_2_3_3_8;
-      //case XENON_FORMAT_P8              : return FMT_P_8;
-        case XENON_FORMAT_L8              : return FMT_L_8_UNORM;
-      //case XENON_FORMAT_A4L4            : return FMT_LA_4_4;
-
-        // compressed formats
-      //case XENON_FORMAT_UYVY            : return FMT_;
-      //case XENON_FORMAT_YUY2            : return FMT_;
-        case XENON_FORMAT_DXT1            : return FMT_DXT1;
-        case XENON_FORMAT_DXT2            : return FMT_DXT2;
-      //case XENON_FORMAT_DXT3            : return FMT_DXT3;
-        case XENON_FORMAT_DXT4            : return FMT_DXT4;
-      //case XENON_FORMAT_DXT5            : return FMT_DXT5;
-
-        case XENON_FORMAT_D32             : return FMT_D_32_UNORM;
-      //case XENON_FORMAT_D15S1           : return FMT_DS_15_1;
-        case XENON_FORMAT_D24S8           : return FMT_DS_24_8_UNORM;
-        case XENON_FORMAT_D16             : return FMT_D_16_UNORM;
-        case XENON_FORMAT_D24X8           : return FMT_DX_24_8_UNORM;
-      //case XENON_FORMAT_D24X4S4         : return FMT_DXS_24_4_4;
-
-        // failed
-        default : return FMT_UNKNOWN;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-int GN::gfx::clrFmt2XenonFormat( ClrFmt clrfmt, bool tiled )
-{
-    SInt32 xefmt;
-    switch( clrfmt )
-    {
-        // 128 bits
-        case FMT_RGBA_32_32_32_32_FLOAT : xefmt = XENON_FORMAT_A32B32G32R32F; break;
-
-        // 64 bits
-        case FMT_RGBA_16_16_16_16_FLOAT : xefmt = XENON_FORMAT_A16B16G16R16F; break;
-        case FMT_RGBA_16_16_16_16_UNORM : xefmt = XENON_FORMAT_A16B16G16R16; break;
-        case FMT_RG_32_32_FLOAT         : xefmt = XENON_FORMAT_G32R32F; break;
-
-        // 32 bits
-        case FMT_BGRA_8_8_8_8_UNORM     : xefmt = XENON_FORMAT_A8R8G8B8; break;
-        case FMT_BGRX_8_8_8_8_UNORM     : xefmt = XENON_FORMAT_X8R8G8B8; break;
-        case FMT_RGBA_8_8_8_8_UNORM     : xefmt = XENON_FORMAT_A8B8G8R8; break;
-        case FMT_RGBX_8_8_8_8_UNORM     : xefmt = XENON_FORMAT_X8B8G8R8; break;
-        case FMT_RG_16_16_FLOAT         : xefmt = XENON_FORMAT_G16R16F; break;
-        case FMT_RG_16_16_UNORM         : xefmt = XENON_FORMAT_G16R16; break;
-        case FMT_R_32_FLOAT             : xefmt = XENON_FORMAT_R32F; break;
-
-        // 16 bits
-        case FMT_BGRA_5_5_5_1_UNORM     : xefmt = XENON_FORMAT_A1R5G5B5; break;
-        case FMT_BGR_5_6_5_UNORM        : xefmt = XENON_FORMAT_R5G6B5; break;
-        case FMT_LA_8_8_UNORM           : xefmt = XENON_FORMAT_A8L8; break;
-        case FMT_RG_8_8_SNORM           : xefmt = XENON_FORMAT_V8U8; break;
-
-        // 8 bits
-        case FMT_L_8_UNORM              : xefmt = XENON_FORMAT_L8; break;
-        case FMT_A_8_UNORM              : xefmt = XENON_FORMAT_A8; break;
-
-        // compressed formats
-        case FMT_DXT1                   : xefmt = XENON_FORMAT_DXT1; break;
-        case FMT_DXT2                   : xefmt = XENON_FORMAT_DXT2; break;
-        case FMT_DXT3                   : xefmt = XENON_FORMAT_DXT3; break;
-        case FMT_DXT5                   : xefmt = XENON_FORMAT_DXT5; break;
-
-        // depth formats
-        case FMT_D_16_UNORM             : xefmt = XENON_FORMAT_D16; break;
-        case FMT_DX_24_8_UNORM          : xefmt = XENON_FORMAT_D24X8; break;
-        case FMT_DS_24_8_UNORM          : xefmt = XENON_FORMAT_D24S8; break;
-        case FMT_D_32_UNORM             : xefmt = XENON_FORMAT_D32; break;
-
-        // ATI only format:
-        case FMT_D_24_FLOAT             : xefmt = (XENON_FORMAT)MAKEFOURCC('D','F','2','4'); break;
-        case FMT_D_16_FLOAT             : xefmt = (XENON_FORMAT)MAKEFOURCC('D','F','1','6'); break;;
-
-        // failed
-        default : return XENON_FORMAT_UNKNOWN;
-    }
-
-    // remove tiled bit
-    if( !tiled ) xefmt &= ~( 1 << XENON_FORMAT_TILED_SHIFT );
-
-    // sucess
-    return (XENON_FORMAT)xefmt;
-}
 //
 //
 // -----------------------------------------------------------------------------
@@ -945,154 +458,77 @@ const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::dxgiFormat2ClrFmt( int dxgifmt )
+GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
 {
-    switch( dxgifmt )
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
-        // 128 bits
-        case DXGI_FORMAT_R32G32B32A32_FLOAT    : return FMT_RGBA_32_32_32_32_FLOAT;
-        case DXGI_FORMAT_R32G32B32A32_UINT     : return FMT_RGBA_32_32_32_32_UINT;
-        case DXGI_FORMAT_R32G32B32A32_SINT     : return FMT_RGBA_32_32_32_32_SINT;
-
-        // 96 bits
-        case DXGI_FORMAT_R32G32B32_FLOAT       : return FMT_RGB_32_32_32_FLOAT;
-        case DXGI_FORMAT_R32G32B32_UINT        : return FMT_RGB_32_32_32_UINT;
-        case DXGI_FORMAT_R32G32B32_SINT        : return FMT_RGB_32_32_32_SINT;
-
-        // 64 bits
-        case DXGI_FORMAT_R16G16B16A16_FLOAT    : return FMT_RGBA_16_16_16_16_FLOAT;
-        case DXGI_FORMAT_R16G16B16A16_UNORM    : return FMT_RGBA_16_16_16_16_UNORM;
-        case DXGI_FORMAT_R16G16B16A16_SNORM    : return FMT_RGBA_16_16_16_16_SNORM;
-        case DXGI_FORMAT_R16G16B16A16_UINT     : return FMT_RGBA_16_16_16_16_UINT;
-        case DXGI_FORMAT_R16G16B16A16_SINT     : return FMT_RGBA_16_16_16_16_SINT;
-        case DXGI_FORMAT_R32G32_FLOAT          : return FMT_RG_32_32_FLOAT;
-        case DXGI_FORMAT_R32G32_UINT           : return FMT_RG_32_32_UINT;
-        case DXGI_FORMAT_R32G32_SINT           : return FMT_RG_32_32_SINT;
-        //   DXGI_FORMAT_R32G8X24_TYPELESS
-
-        // 32 bits
-        case DXGI_FORMAT_R10G10B10A2_UNORM     : return FMT_RGBA_10_10_10_2_UNORM;
-        case DXGI_FORMAT_R10G10B10A2_UINT      : return FMT_RGBA_10_10_10_2_UINT;
-        //case DXGI_FORMAT_R11G11B10_FLOAT       : return FMT_RGB_11_11_10_FLOAT;
-        case DXGI_FORMAT_B8G8R8A8_UNORM        : return FMT_BGRA_8_8_8_8_UNORM;
-        //   DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
-        case DXGI_FORMAT_R16G16_FLOAT          : return FMT_RG_16_16_FLOAT;
-        case DXGI_FORMAT_R16G16_UNORM          : return FMT_RG_16_16_UNORM;
-        case DXGI_FORMAT_R16G16_SNORM          : return FMT_RG_16_16_SNORM;
-        case DXGI_FORMAT_R16G16_UINT           : return FMT_RG_16_16_UINT;
-        case DXGI_FORMAT_R16G16_SINT           : return FMT_RG_16_16_SINT;
-        case DXGI_FORMAT_R32_FLOAT             : return FMT_R_32_FLOAT;
-        case DXGI_FORMAT_R32_UINT              : return FMT_R_32_UINT;
-        case DXGI_FORMAT_R32_SINT              : return FMT_R_32_SINT;
-
-        // 16 bits
-        case DXGI_FORMAT_R8G8_UNORM            : return FMT_RG_8_8_UNORM;
-        case DXGI_FORMAT_R8G8_SNORM            : return FMT_RG_8_8_SNORM;
-        //case DXGI_FORMAT_R8G8_UINT             : return FMT_RG_8_8_UINT;
-        //case DXGI_FORMAT_R8G8_SINT             : return FMT_RG_8_8_SINT;
-        case DXGI_FORMAT_R16_UNORM             : return FMT_R_16_UNORM;
-        case DXGI_FORMAT_R16_SNORM             : return FMT_R_16_SNORM;
-        case DXGI_FORMAT_R16_UINT              : return FMT_R_16_UINT;
-        case DXGI_FORMAT_R16_SINT              : return FMT_R_16_SINT;
-        case DXGI_FORMAT_B5G6R5_UNORM          : return FMT_BGR_5_6_5_UNORM;
-        case DXGI_FORMAT_B5G5R5A1_UNORM        : return FMT_BGRA_5_5_5_1_UNORM;
-
-        // 8 bits
-        //case DXGI_FORMAT_R8_UNORM              : return FMT_R_8_UNORM;
-        //case DXGI_FORMAT_R8_SNORM              : return FMT_R_8_SNORM;
-        //case DXGI_FORMAT_R8_UINT               : return FMT_R_8_UINT;
-        //case DXGI_FORMAT_R8_SINT               : return FMT_R_8_SINT;
-        //case DXGI_FORMAT_A8_UNORM              : return FMT_A_8_UNORM;
-
-        // compressed formats
-        //   DXGI_FORMAT_R1_UNORM
-        //   DXGI_FORMAT_R9G9B9E5_SHAREDEXP
-        //   DXGI_FORMAT_R8G8_B8G8_UNORM   
-        //   DXGI_FORMAT_G8R8_G8B8_UNORM   
-        //   DXGI_FORMAT_BC1_TYPELESS      
-        case DXGI_FORMAT_BC1_UNORM             : return FMT_DXT1;
-        //   DXGI_FORMAT_BC1_UNORM_SRGB    
-        //   DXGI_FORMAT_BC2_TYPELESS      
-        case DXGI_FORMAT_BC2_UNORM             : return FMT_DXT2;
-        //   DXGI_FORMAT_BC2_UNORM_SRGB    
-        //   DXGI_FORMAT_BC3_TYPELESS      
-        case DXGI_FORMAT_BC3_UNORM             : return FMT_DXT3;
-        //   DXGI_FORMAT_BC3_UNORM_SRGB    
-        //   DXGI_FORMAT_BC4_TYPELESS      
-        case DXGI_FORMAT_BC4_UNORM             : return FMT_DXT4;
-        //   DXGI_FORMAT_BC4_SNORM         
-        //   DXGI_FORMAT_BC5_TYPELESS      
-        case DXGI_FORMAT_BC5_UNORM             : return FMT_DXT5;
-        //   DXGI_FORMAT_BC5_SNORM         
-
-        // depth formats
-        case DXGI_FORMAT_R32G8X24_TYPELESS     :
-        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT  : return FMT_DSX_32_8_24_FLOAT;
-        case DXGI_FORMAT_D32_FLOAT             : return FMT_D_32_FLOAT;
-        case DXGI_FORMAT_R24G8_TYPELESS        :
-        case DXGI_FORMAT_D24_UNORM_S8_UINT     : return FMT_DS_24_8_UNORM;
-        case DXGI_FORMAT_D16_UNORM             : return FMT_D_16_UNORM;
-
-        // failed
-        default : return FMT_UNKNOWN;
+        if( d3d9fmt == s_ColorFormatConvertTable[i].dx9fmt )
+            return s_ColorFormatConvertTable[i].gnfmt;
     }
+    return COLOR_FORMAT_UNKNOWN;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::clrFmt2DxgiFormat( ClrFmt clrfmt )
+int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
 {
-    int dxgifmt;
-    switch( clrfmt )
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
-        // 128 bits
-        case FMT_RGBA_32_32_32_32_FLOAT : dxgifmt = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
-
-        // 96 bits
-        case FMT_RGB_32_32_32_FLOAT     : dxgifmt = DXGI_FORMAT_R32G32B32_FLOAT; break;
-
-        // 64 bits
-        case FMT_RGBA_16_16_16_16_FLOAT : dxgifmt = DXGI_FORMAT_R16G16B16A16_FLOAT; break;
-        case FMT_RGBA_16_16_16_16_UNORM : dxgifmt = DXGI_FORMAT_R16G16B16A16_UNORM; break;
-        case FMT_RG_32_32_FLOAT         : dxgifmt = DXGI_FORMAT_R32G32_FLOAT; break;
-
-        // 32 bits
-        case FMT_RGBA_8_8_8_8_UNORM     : dxgifmt = DXGI_FORMAT_R8G8B8A8_UNORM; break;
-        case FMT_RGBA_8_8_8_8_SNORM     : dxgifmt = DXGI_FORMAT_R8G8B8A8_SNORM; break;
-        case FMT_RGBA_8_8_8_8_UINT      : dxgifmt = DXGI_FORMAT_R8G8B8A8_UINT; break;
-        case FMT_RGBA_8_8_8_8_SINT      : dxgifmt = DXGI_FORMAT_R8G8B8A8_SINT; break;
-
-        case FMT_BGRA_8_8_8_8_UNORM     : dxgifmt = DXGI_FORMAT_B8G8R8A8_UNORM; break;
-        case FMT_BGRX_8_8_8_8_UNORM     : dxgifmt = DXGI_FORMAT_B8G8R8X8_UNORM; break;
-
-        case FMT_RG_16_16_FLOAT         : dxgifmt = DXGI_FORMAT_R16G16_FLOAT; break;
-        case FMT_RG_16_16_UNORM         : dxgifmt = DXGI_FORMAT_R16G16_UNORM; break;
-
-        case FMT_R_32_FLOAT             : dxgifmt = DXGI_FORMAT_R32_FLOAT; break;
-
-        // 16 bits
-        case FMT_BGRA_5_5_5_1_UNORM     : dxgifmt = DXGI_FORMAT_B5G5R5A1_UNORM; break;
-        case FMT_BGR_5_6_5_UNORM        : dxgifmt = DXGI_FORMAT_B5G6R5_UNORM; break;
-        case FMT_RG_8_8_SNORM           : dxgifmt = DXGI_FORMAT_R8G8_SNORM; break;
-
-        // 8 bits
-        //case FMT_R_8_UNORM              : dxgifmt = DXGI_FORMAT_R8_UNORM; break;
-        case FMT_A_8_UNORM              : dxgifmt = DXGI_FORMAT_A8_UNORM; break;
-
-        // compressed formats
-        case FMT_DXT1                   : dxgifmt = DXGI_FORMAT_BC1_UNORM; break;
-        case FMT_DXT2                   : dxgifmt = DXGI_FORMAT_BC2_UNORM; break;
-
-        // depth formats
-        case FMT_D_16_UNORM             : dxgifmt = DXGI_FORMAT_D16_UNORM; break;
-        case FMT_DS_24_8_UNORM          : dxgifmt = DXGI_FORMAT_D24_UNORM_S8_UINT; break;
-        case FMT_DSX_32_8_24_FLOAT      : dxgifmt = DXGI_FORMAT_D32_FLOAT_S8X24_UINT; break;
-
-        // failed
-        default : return DXGI_FORMAT_UNKNOWN;
+        if( clrfmt == s_ColorFormatConvertTable[i].gnfmt )
+            return s_ColorFormatConvertTable[i].dx9fmt;
     }
+    return D3D9_FORMAT_UNKNOWN;
+}
 
-    // sucess
-    return dxgifmt;
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
+{
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
+    {
+        if( xefmt == s_ColorFormatConvertTable[i].xefmt )
+            return s_ColorFormatConvertTable[i].gnfmt;
+    }
+    return COLOR_FORMAT_UNKNOWN;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+int GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
+{
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
+    {
+        if( clrfmt == s_ColorFormatConvertTable[i].gnfmt )
+            return s_ColorFormatConvertTable[i].xefmt;
+    }
+    return XENON_FORMAT_UNKNOWN;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
+{
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
+    {
+        if( dxgifmt == s_ColorFormatConvertTable[i].dxgifmt )
+            return s_ColorFormatConvertTable[i].gnfmt;
+    }
+    return COLOR_FORMAT_UNKNOWN;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
+{
+    for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
+    {
+        if( clrfmt == s_ColorFormatConvertTable[i].gnfmt )
+            return s_ColorFormatConvertTable[i].dxgifmt;
+    }
+    return DXGI_FORMAT_UNKNOWN;
 }

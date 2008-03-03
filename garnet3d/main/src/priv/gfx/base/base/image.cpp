@@ -17,9 +17,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 bool GN::gfx::ImageDesc::valid() const
 {
     // check format
-    if( format < 0 || format >= NUM_CLRFMTS )
+    if( !format.valid() )
     {
-        GN_ERROR(sLogger)( "invalid image format!" );
+        GN_ERROR(sLogger)( "invalid format" );
         return false;
     }
 
@@ -30,7 +30,7 @@ bool GN::gfx::ImageDesc::valid() const
         return false;
     }
 
-    const GN::gfx::ClrFmtDesc & fd = getClrFmtDesc( format );
+    const GN::gfx::ColorLayoutDesc & cld = ALL_COLOR_LAYOUTS[format.layout];
 
     // check mipmaps
     for( size_t f = 0; f < numFaces; ++f )
@@ -46,11 +46,11 @@ bool GN::gfx::ImageDesc::valid() const
         }
 
         // check pitches
-        UInt32 w = m.width / fd.blockWidth;
-        UInt32 h = m.height / fd.blockHeight;
+        UInt32 w = m.width / cld.blockWidth;
+        UInt32 h = m.height / cld.blockHeight;
         if( 0 == w ) w = 1;
         if( 0 == h ) h = 1;
-        if( m.rowPitch != w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
+        if( m.rowPitch != w * cld.blockWidth * cld.blockHeight * cld.bits / 8 )
         {
             GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
