@@ -114,15 +114,15 @@ GN::MemFile<T>::seek( int offset, FileSeekMode origin )
 {
     UInt8 * end = mStart + mSize;
     UInt8 * ptr;
-    if( FSEEK_CUR == origin )
+    if( FILE_SEEK_CUR == origin )
     {
         ptr = mPtr + offset;
     }
-    else if( FSEEK_END == origin )
+    else if( FILE_SEEK_END == origin )
     {
         ptr = end + offset;
     }
-    else if( FSEEK_SET == origin )
+    else if( FILE_SEEK_SET == origin )
     {
         ptr = mStart + offset;
     }
@@ -212,15 +212,15 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
 inline bool GN::VectorFile::seek( int offset, FileSeekMode origin )
 {
     size_t cur;
-    if( FSEEK_CUR == origin )
+    if( FILE_SEEK_CUR == origin )
     {
         cur = mCursor + (size_t)offset;
     }
-    else if( FSEEK_END == origin )
+    else if( FILE_SEEK_END == origin )
     {
         cur = mBuffer.size() + (size_t)offset;
     }
-    else if( FSEEK_SET == origin )
+    else if( FILE_SEEK_SET == origin )
     {
         cur = (size_t)offset;
     }

@@ -143,12 +143,12 @@ namespace GN { namespace gfx
     {
         SurfaceAttributeSemantic semantic; ///< 8-character sementic. (must be unique in single surfel)
         UInt32                   offset;   ///< offset in element.
-        ClrFmt                   format;   ///< attribute format. (FMT_XXX).
+        ColorFormat              format;   ///< attribute format. (FMT_XXX).
 
         ///
         /// set values in attribute descriptor
         ///
-        void set( SurfaceAttributeSemantic s, UInt32 o, ClrFmt f )
+        void set( SurfaceAttributeSemantic s, UInt32 o, ColorFormat f )
         {
             semantic = s;
             offset   = o;
@@ -284,12 +284,12 @@ namespace GN { namespace gfx
     {
         SurfaceAttributeSemantic semantic;       ///< attribute semantic
         UInt32                   offset;         ///< -1, means any offset is ok.
-        std::set<ClrFmt>         allowedFormats; ///< empty, means any format is ok.
+        std::set<ColorFormat>    allowedFormats; ///< empty, means any format is ok.
 
         ///
         /// set to fixed format
         ///
-        void set( SurfaceAttributeSemantic s, UInt32 o, ClrFmt f )
+        void set( SurfaceAttributeSemantic s, UInt32 o, ColorFormat f )
         {
             semantic = s;
             offset   = o;

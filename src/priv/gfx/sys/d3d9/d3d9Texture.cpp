@@ -143,7 +143,7 @@ void GN::gfx::D3D9Texture::download(
 
     const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
 
-    const ClrFmtDesc & cfd = getClrFmtDesc(desc.layout.format.attribs[0].format);
+    const ColorLayoutDesc & cld = desc.layout.format.attribs[0].format.getLayoutDesc();
 
     switch( mDim )
     {
@@ -160,13 +160,13 @@ void GN::gfx::D3D9Texture::download(
             D3DLOCKED_RECT lrc;
             GN_DX9_CHECK_R( tex2d->LockRect( (UINT)subsurface, &lrc, &rc, 0 ) );
 
-            GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cfd.blockHeight );
+            GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cld.blockHeight );
 
             const UInt8 * s = (const UInt8 * )source;
             UInt8       * d = (UInt8*)lrc.pBits;
             for( size_t i = 0; i < clippedArea.h; ++i )
             {
-                memcpy( d, s, clippedArea.w * cfd.bits / 8 );
+                memcpy( d, s, clippedArea.w * cld.bits / 8 );
                 s += srcRowBytes;
                 d += ssl.rowBytes;
             }
@@ -220,7 +220,7 @@ void GN::gfx::D3D9Texture::upload(
 
     const SubSurfaceLayout & ssl = mSubsurfaces[subsurface];
 
-    const ClrFmtDesc & cfd = getClrFmtDesc(desc.layout.format.attribs[0].format);
+    const ColorLayoutDesc & cld = desc.layout.format.attribs[0].format.getLayoutDesc();
 
     switch( mDim )
     {
@@ -237,14 +237,14 @@ void GN::gfx::D3D9Texture::upload(
             D3DLOCKED_RECT lrc;
             GN_DX9_CHECK_R( tex2d->LockRect( (UINT)subsurface, &lrc, &rc, D3DLOCK_READONLY ) );
 
-            GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cfd.blockHeight );
+            GN_ASSERT( ssl.rowBytes == (size_t)lrc.Pitch / cld.blockHeight );
 
             SafeArrayAccessor<const UInt8> s( (const UInt8*)lrc.pBits, ssl.sliceBytes );
             SafeArrayAccessor<UInt8>       d( (UInt8*)destination, destSliceBytes );
 
             for( size_t i = 0; i < clippedArea.h; ++i )
             {
-                s.copyTo( 0, d, 0, clippedArea.w * cfd.bits / 8 );
+                s.copyTo( 0, d, 0, clippedArea.w * cld.bits / 8 );
                 s += ssl.rowBytes;
                 d += destRowBytes;
             }
@@ -365,7 +365,7 @@ bool GN::gfx::D3D9Texture::create2DTexture()
     GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
-    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
+    D3DFORMAT format = (D3DFORMAT)colorFormat2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );
@@ -401,7 +401,7 @@ bool GN::gfx::D3D9Texture::create2DTexture()
 
     // setup subsurface layouts
     mSubsurfaces.resize( desc.layout.levels * desc.layout.faces );
-    const ClrFmtDesc & fd = getClrFmtDesc( desc.layout.format.attribs[0].format );
+    const ColorLayoutDesc & cld = desc.layout.format.attribs[0].format.getLayoutDesc();
     D3DSURFACE_DESC subdesc;
     D3DLOCKED_RECT lrc;
     for( UINT i = 0; i < desc.layout.levels; ++i )
@@ -414,7 +414,7 @@ bool GN::gfx::D3D9Texture::create2DTexture()
         mSubsurfaces[i].width      = subdesc.Width;
         mSubsurfaces[i].height     = subdesc.Width;
         mSubsurfaces[i].depth      = 1;
-        mSubsurfaces[i].rowBytes   = lrc.Pitch / fd.blockHeight;
+        mSubsurfaces[i].rowBytes   = lrc.Pitch / cld.blockHeight;
         mSubsurfaces[i].sliceBytes = mSubsurfaces[i].rowBytes * desc.layout.basemap.height;
     }
 
@@ -441,7 +441,7 @@ bool GN::gfx::D3D9Texture::create3DTexture()
     GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
-    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
+    D3DFORMAT format = (D3DFORMAT)colorFormat2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );
@@ -462,7 +462,7 @@ bool GN::gfx::D3D9Texture::create3DTexture()
 
     // setup subsurface layouts
     mSubsurfaces.resize( desc.layout.levels * desc.layout.faces );
-    const ClrFmtDesc & fd = getClrFmtDesc( desc.layout.format.attribs[0].format );
+    const ColorLayoutDesc & cld = desc.layout.format.attribs[0].format.getLayoutDesc();
     D3DVOLUME_DESC subdesc;
     D3DLOCKED_BOX lbox;
     for( UINT i = 0; i < desc.layout.levels; ++i )
@@ -475,7 +475,7 @@ bool GN::gfx::D3D9Texture::create3DTexture()
         mSubsurfaces[i].width      = subdesc.Width;
         mSubsurfaces[i].height     = subdesc.Width;
         mSubsurfaces[i].depth      = subdesc.Depth;
-        mSubsurfaces[i].rowBytes   = lbox.RowPitch / fd.blockHeight;
+        mSubsurfaces[i].rowBytes   = lbox.RowPitch / cld.blockHeight;
         mSubsurfaces[i].sliceBytes = lbox.SlicePitch;
     }
 
@@ -503,7 +503,7 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
     GN_ASSERT( 1 == desc.layout.format.attribs.size() );
 
     // determine format
-    D3DFORMAT format = (D3DFORMAT)clrFmt2D3D9Format( desc.layout.format.attribs[0].format );
+    D3DFORMAT format = (D3DFORMAT)colorFormat2D3D9Format( desc.layout.format.attribs[0].format );
     if( D3DFMT_UNKNOWN == format )
     {
         GN_ERROR(sLogger)( "invalid texture format." );
@@ -522,7 +522,7 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
 
     // setup subsurface layouts
     mSubsurfaces.resize( desc.layout.levels * desc.layout.faces );
-    const ClrFmtDesc & fd = getClrFmtDesc( desc.layout.format.attribs[0].format );
+    const ColorLayoutDesc & cld = desc.layout.format.attribs[0].format.getLayoutDesc();
     D3DSURFACE_DESC subdesc;
     D3DLOCKED_RECT lrc;
     UINT subsurfaceIndex = 0;
@@ -537,7 +537,7 @@ bool GN::gfx::D3D9Texture::createCubeTexture()
         mSubsurfaces[subsurfaceIndex].width      = subdesc.Width;
         mSubsurfaces[subsurfaceIndex].height     = subdesc.Width;
         mSubsurfaces[subsurfaceIndex].depth      = 1;
-        mSubsurfaces[subsurfaceIndex].rowBytes   = lrc.Pitch / fd.blockHeight;
+        mSubsurfaces[subsurfaceIndex].rowBytes   = lrc.Pitch / cld.blockHeight;
         mSubsurfaces[subsurfaceIndex].sliceBytes = mSubsurfaces[subsurfaceIndex].rowBytes * desc.layout.basemap.height;
     }
 

@@ -81,7 +81,7 @@ bool PNGReader::checkFormat( GN::File & fp )
 
     unsigned char buf[8];
 
-    if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
+    if( !fp.seek( 0, GN::FILE_SEEK_SET ) ) return false;
 
     size_t sz;
     if( !fp.read( buf, 8, &sz ) || 8 != sz ) return false;
@@ -129,7 +129,7 @@ bool PNGReader::readHeader(
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
     if ( GN::gfx::COLOR_FORMAT_UNKNOWN == o_desc.format ) return false;
-    UInt32 bpp = o_desc.format.getBitsPerPixel();
+    UInt32 bpp = (UInt32)o_desc.format.getBitsPerPixel();
 
     // update o_desc
     o_desc.setFaceAndLevel( 1, 1 ); // 2D image

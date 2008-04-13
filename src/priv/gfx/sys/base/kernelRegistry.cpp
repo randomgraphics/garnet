@@ -59,8 +59,8 @@ struct KernelRegistry
         idxbuf.requiredAttributes.resize( 1 );
         idxbuf.requiredAttributes[0].semantic.set( "INDEX" );
         idxbuf.requiredAttributes[0].offset = 0;
-        idxbuf.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_16_UINT );
-        idxbuf.requiredAttributes[0].allowedFormats.insert( gfx::FMT_R_32_UINT );
+        idxbuf.requiredAttributes[0].allowedFormats.insert( COLOR_FORMAT_R_16_UINT );
+        idxbuf.requiredAttributes[0].allowedFormats.insert( COLOR_FORMAT_R_32_UINT );
 
         // standard resource kernel
         KernelReflection STANDARD_RESOURCES( "STANDARD_RESOURCES" );
@@ -86,9 +86,9 @@ struct KernelRegistry
         // quad kernel
         SurfaceElementFormat streamFormat;
         streamFormat.attribs.resize( 3 );
-        streamFormat.attribs[0].set( "POSITION",  0, FMT_FLOAT3 );
-        streamFormat.attribs[1].set( "COLOR"   , 12, FMT_RGBA32 );
-        streamFormat.attribs[2].set( "TEXCOORD", 16, FMT_FLOAT2 );
+        streamFormat.attribs[0].set( "POSITION",  0, COLOR_FORMAT_FLOAT3 );
+        streamFormat.attribs[1].set( "COLOR"   , 12, COLOR_FORMAT_RGBA32 );
+        streamFormat.attribs[2].set( "TEXCOORD", 16, COLOR_FORMAT_FLOAT2 );
         streamFormat.stride = 32;
 
         KernelReflection QUAD( "QUAD" );

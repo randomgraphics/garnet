@@ -117,7 +117,7 @@ bool GN::StdFile::seek( int offset, FileSeekMode origin )
     GN_GUARD;
 
     // NOTE : this table must be always synchronized with definition of
-    //        fseek_t ( see types/file.h )
+    //        FileSeekMode
     static int seek_table[] =
     {
         SEEK_CUR,
@@ -126,7 +126,7 @@ bool GN::StdFile::seek( int offset, FileSeekMode origin )
     };
 
     // check parameter
-    if( origin >= NUM_FSEEKS )
+    if( origin >= NUM_FILE_SEEK_MODES )
     {
         GN_ERROR(myLogger())( "%s: invalid seek origin!", name().cptr() );
         return false;

@@ -34,7 +34,7 @@ public:
         GN::gfx::ImageDesc id;
         GN::gfx::ImageReader ir;
 
-        gFile.seek( 0, GN::FSEEK_SET );
+        gFile.seek( 0, GN::FILE_SEEK_SET );
 
         ir.reset( gFile );
         TS_ASSERT( !ir.readHeader( id ) );

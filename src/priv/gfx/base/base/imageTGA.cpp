@@ -188,7 +188,7 @@ bool TGAReader::checkFormat( GN::File & fp )
     TGA_HEADER header;
 
     // read TGA header
-    if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
+    if( !fp.seek( 0, GN::FILE_SEEK_SET ) ) return false;
     size_t sz;
     if( !fp.read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
 
