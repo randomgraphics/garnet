@@ -974,7 +974,7 @@ GN::engine::RenderEngine::createIdxBuf(
     scp.desc.layout.format.attribs.resize( 1 );
     scp.desc.layout.format.attribs[0].semantic.set( "INDEX" );
     scp.desc.layout.format.attribs[0].offset = 0;
-    scp.desc.layout.format.attribs[0].format = FMT_R_16_UINT;
+    scp.desc.layout.format.attribs[0].format = COLOR_FORMAT_R_16_UINT;
     scp.desc.layout.format.stride = sizeof(short);
 
     return createSurface( name, scp, loader );
@@ -1016,7 +1016,7 @@ GN::engine::RenderEngine::createTextureFromImageFile( const StrA & filename )
     scp.desc.layout.format.attribs[0].semantic.set( "TEXEL" );
     scp.desc.layout.format.attribs[0].offset = 0;
     scp.desc.layout.format.attribs[0].format = id.format;
-    scp.desc.layout.format.stride = getClrFmtDesc(id.format).bits / 8;
+    scp.desc.layout.format.stride = id.format.getBitsPerPixel() / 8;
 
     // create loader
     AutoRef<StaticTextureLoader> loader( new StaticTextureLoader( filename ) );

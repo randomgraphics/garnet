@@ -102,7 +102,7 @@ bool GN::gfx::D3D9TexturePort::compatible( const Surface * surf ) const
     GN_ASSERT( SurfaceAttributeSemantic::sMake("TEXEL") == layout.format.attribs[0].semantic );
 
     // check format
-    if( layout.format.stride * 8 != gfx::getClrFmtDesc(layout.format.attribs[0].format).bits )
+    if( layout.format.stride * 8 != layout.format.attribs[0].format.getBitsPerPixel() )
     {
         GN_ERROR(sLogger)( "incorrect stride." );
         return false;
@@ -216,13 +216,13 @@ bool GN::gfx::D3D9IdxBufPort::compatible( const Surface * surf ) const
     GN_ASSERT( SurfaceAttributeSemantic::sMake("INDEX") == layout.format.attribs[0].semantic );
 
     // check format
-    if( gfx::FMT_R_16_UINT != layout.format.attribs[0].format &&
-        gfx::FMT_R_32_UINT != layout.format.attribs[0].format )
+    if( COLOR_FORMAT_R_16_UINT != layout.format.attribs[0].format &&
+        COLOR_FORMAT_R_32_UINT != layout.format.attribs[0].format )
     {
         GN_ERROR(sLogger)( "incorrect index format." );
         return false;
     }
-    if( layout.format.stride * 8 != gfx::getClrFmtDesc(layout.format.attribs[0].format).bits )
+    if( layout.format.stride * 8 != layout.format.attribs[0].format.getBitsPerPixel() )
     {
         GN_ERROR(sLogger)( "incorrect stride." );
         return false;

@@ -145,7 +145,7 @@ bool TestTriangle::init()
     vtxfmt.attribs.resize( 1 );
     vtxfmt.attribs[0].semantic.set( "POS0" );
     vtxfmt.attribs[0].offset = 0;
-    vtxfmt.attribs[0].format = FMT_FLOAT3;
+    vtxfmt.attribs[0].format = COLOR_FORMAT_FLOAT3;
     vtxfmt.stride = sizeof(Vertex);
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
     GraphicsResource * vb = re.createVtxBuf( "triangle vb", vtxfmt, 3, vbloader );

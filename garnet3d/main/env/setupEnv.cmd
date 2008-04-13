@@ -22,7 +22,7 @@ goto :EOF
 :prepend_env
 if not "" == "%~4" (
 	echo %3=%~4
-	set %1=%~4;%~2
+	set "%1=%~4;%~2"
 ) else (
 	echo INFO: %3 not found.
 )
@@ -190,7 +190,7 @@ if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
 ) else (
 	set "mypath=%GARNET_ROOT%\env\bin\mswin\x86"
 )
-set PATH=%mypath%;%PATH%
+set "PATH=%mypath%;%PATH%"
 set mypath=
 
 REM ===========

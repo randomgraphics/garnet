@@ -18,16 +18,16 @@ namespace GN
     ///
     enum FileOpenMode
     {
-        FOPEN_NONE  = 0x00, ///< indicate a invalid value
+        FILE_OPEN_NONE  = 0x00, ///< indicate a invalid value
 
         // 读写标志
-        FOPEN_READ  = 0x01, ///< 只读模式（文件必须存在），same as "r"
-        FOPEN_WRITE = 0x02, ///< 只写模式，same as "w"
-        FOPEN_RW    = 0x03, ///< 读写模式（文件必须存在），same as "r+"
+        FILE_OPEN_READ  = 0x01, ///< 只读模式（文件必须存在），same as "r"
+        FILE_OPEN_WRITE = 0x02, ///< 只写模式，same as "w"
+        FILE_OPEN_RW    = 0x03, ///< 读写模式（文件必须存在），same as "r+"
 
         // 格式标志
-        FOPEN_BIN   = 0x10, ///< 二进制模式
-        FOPEN_TXT   = 0x20, ///< 文本模式
+        FILE_OPEN_BIN   = 0x10, ///< 二进制模式
+        FILE_OPEN_TXT   = 0x20, ///< 文本模式
     };
 
     ///
@@ -35,10 +35,10 @@ namespace GN
     ///
     enum FileSeekMode
     {
-        FSEEK_CUR,     ///< same as standard SEEK_CUR
-        FSEEK_END,     ///< same as standard SEEK_END
-        FSEEK_SET,     ///< same as standard SEEK_SET
-        NUM_FSEEKS,    ///< number of avaliable seeking modes
+        FILE_SEEK_CUR,       ///< same as standard SEEK_CUR
+        FILE_SEEK_END,       ///< same as standard SEEK_END
+        FILE_SEEK_SET,       ///< same as standard SEEK_SET
+        NUM_FILE_SEEK_MODES, ///< number of avaliable seeking modes
     };
 
     ///

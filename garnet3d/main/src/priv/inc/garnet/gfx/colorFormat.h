@@ -210,6 +210,7 @@ namespace GN { namespace gfx
         COLOR_FORMAT_RGBA_8_8_8_8_UNORM_SRGB     = GN_MAKE_COLOR_FORMAT2( LAYOUT_8_8_8_8, SIGN_UNORM, SIGN_GNORM, SWIZZLE_RGBA ),
         COLOR_FORMAT_RGBA_8_8_8_8_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_SNORM, SWIZZLE_RGBA ),
         COLOR_FORMAT_RGBA32                      = COLOR_FORMAT_RGBA_8_8_8_8_UNORM,
+        COLOR_FORMAT_UBYTE4N                     = COLOR_FORMAT_RGBA_8_8_8_8_UNORM,
 
         COLOR_FORMAT_RGBX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
 
@@ -271,6 +272,7 @@ namespace GN { namespace gfx
         COLOR_FORMAT_RG_32_32_UINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_UINT, SWIZZLE_RG01 ),
         COLOR_FORMAT_RG_32_32_SINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_SINT, SWIZZLE_RG01 ),
         COLOR_FORMAT_RG_32_32_FLOAT              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_FLOAT, SWIZZLE_RG01 ),
+        COLOR_FORMAT_FLOAT2                      = COLOR_FORMAT_RG_32_32_FLOAT,
 
         COLOR_FORMAT_RGX_32_FLOAT_8_UINT_24      = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_RG01 ),
         COLOR_FORMAT_RXX_32_8_24_FLOAT           = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_R001 ),
@@ -282,6 +284,7 @@ namespace GN { namespace gfx
         COLOR_FORMAT_RGB_32_32_32_UINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_UINT , SWIZZLE_RGB1 ),
         COLOR_FORMAT_RGB_32_32_32_SINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_SINT , SWIZZLE_RGB1 ),
         COLOR_FORMAT_RGB_32_32_32_FLOAT          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_FLOAT, SWIZZLE_RGB1 ),
+        COLOR_FORMAT_FLOAT3                      = COLOR_FORMAT_RGB_32_32_32_FLOAT,
 
         // 128 bits
         COLOR_FORMAT_RGBA_32_32_32_32_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UNORM, SWIZZLE_RGBA ),
@@ -412,9 +415,14 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// get layout descriptor
+        ///
+        const ColorLayoutDesc & getLayoutDesc() const { return ALL_COLOR_LAYOUTS[layout]; }
+
+        ///
         /// Get bits-per-pixel
         ///
-        size_t getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
+        UInt8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
 
         ///
         /// convert to string
@@ -437,21 +445,22 @@ namespace GN { namespace gfx
         bool operator!=( const ColorFormat & c ) const { return u32 != c.u32; }
 
         ///
-        /// equality check
-        ///
-        friend bool operator==( const ColorFormatAlias & a, const ColorFormat & c ) { return a == c.alias; }
-
-        ///
-        /// equality check
-        ///
-        friend bool operator!=( const ColorFormatAlias & a, const ColorFormat & c ) { return a != c.alias; }
-
-        ///
         /// less operator
         ///
         bool operator<( const ColorFormat & c ) const { return u32 < c.u32; }
     };
     GN_CASSERT( 4 == sizeof(ColorFormat) );
+
+    ///
+    /// equality check between format alias and format struct
+    ///
+    inline bool operator==( const ColorFormatAlias & a, const ColorFormat & c ) { return a == c.alias; }
+
+    ///
+    /// equality check between format alias and format struct
+    ///
+    inline bool operator!=( const ColorFormatAlias & a, const ColorFormat & c ) { return a != c.alias; }
+
 
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.

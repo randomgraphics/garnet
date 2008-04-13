@@ -168,9 +168,9 @@ bool GN::gfx::D3D9IdxBuf::init()
     GN_ASSERT( 2 == desc.layout.format.stride || 4 == desc.layout.format.stride );
     //GN_ASSERT( desc.layout.format.attribs[0].sematic == "INDEX" );
     GN_ASSERT( 0 == desc.layout.format.attribs[0].offset );
-    GN_ASSERT( gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ||
-               gfx::FMT_R_32_UINT == desc.layout.format.attribs[0].format );
-    GN_ASSERT( gfx::getClrFmtDesc(desc.layout.format.attribs[0].format).bits == desc.layout.format.stride * 8 );
+    GN_ASSERT( COLOR_FORMAT_R_16_UINT == desc.layout.format.attribs[0].format ||
+               COLOR_FORMAT_R_32_UINT == desc.layout.format.attribs[0].format );
+    GN_ASSERT( desc.layout.format.attribs[0].format.getBitsPerPixel() == desc.layout.format.stride * 8 );
     GN_ASSERT( desc.layout.basemap.rowBytes == desc.layout.basemap.width * desc.layout.format.stride );
     GN_ASSERT( desc.layout.basemap.rowBytes == desc.layout.basemap.sliceBytes );
 
@@ -181,7 +181,7 @@ bool GN::gfx::D3D9IdxBuf::init()
     GN_DX9_CHECK_RV( dev->CreateIndexBuffer(
         (UINT)desc.layout.basemap.rowBytes,
         0, // usage
-        gfx::FMT_R_16_UINT == desc.layout.format.attribs[0].format ? D3DFMT_INDEX16 : D3DFMT_INDEX32,
+        COLOR_FORMAT_R_16_UINT == desc.layout.format.attribs[0].format ? D3DFMT_INDEX16 : D3DFMT_INDEX32,
         D3DPOOL_MANAGED,
         &mSurface, 0 ), false );
 

@@ -151,7 +151,7 @@ public:
         // read whole file
         size_t sz = i_file.size();
         mSrc.resize( sz );
-        if( !i_file.seek( 0, FSEEK_SET ) ) return false;
+        if( !i_file.seek( 0, FILE_SEEK_SET ) ) return false;
         if( !i_file.read( &mSrc[0], mSrc.size(), &sz ) ) return false;
         GN_ASSERT( sz <= mSrc.size() );
         if( sz < mSrc.size() ) mSrc.resize( sz );
