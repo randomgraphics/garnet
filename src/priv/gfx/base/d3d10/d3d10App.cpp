@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 #pragma comment( lib, "dxgi.lib" )
 #pragma comment( lib, "dxerr.lib" )
 #pragma comment( lib, "dxguid.lib" )
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment( lib, "d3dx10d.lib" )
 #else
 #pragma comment( lib, "d3dx10.lib" )
@@ -236,7 +236,7 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 
     if( !changeOption(mOption) ) { quit(); return -1; }
 
-    // message loop 
+    // message loop
     MSG msg;
     while( true )
     {

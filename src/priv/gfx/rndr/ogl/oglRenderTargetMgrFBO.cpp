@@ -257,7 +257,7 @@ void GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( ; );
 
     // verify completness of frame buffer
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
     GN_ASSERT( GL_FRAMEBUFFER_COMPLETE_EXT == status );
 #endif

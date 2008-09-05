@@ -8,7 +8,7 @@
 
 #include "GNcore.h"
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 

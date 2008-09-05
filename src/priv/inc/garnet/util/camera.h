@@ -140,7 +140,7 @@ namespace GN { namespace util
         ///
         /// ctor
         ///
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
         ArcBall( Handness h = LEFT_HAND );
 #else
         ArcBall( Handness h = RIGHT_HAND );
@@ -261,7 +261,7 @@ namespace GN { namespace util
         ///
         /// ctor
         ///
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
         FirstPersonCamera( Handness = LEFT_HAND );
 #else
         FirstPersonCamera( Handness = RIGHT_HAND );

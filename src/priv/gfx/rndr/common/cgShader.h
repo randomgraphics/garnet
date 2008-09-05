@@ -22,7 +22,7 @@
     } else void(0)
 #define GN_CG_CHECK_R( func )        GN_CG_CHECK_DO( func, return; )
 #define GN_CG_CHECK_RV( func, rval ) GN_CG_CHECK_DO( func, return rval; )
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_CG_CHECK( func )          GN_CG_CHECK_DO( func, ; )
 #else
 #define GN_CG_CHECK( func )          func
@@ -121,7 +121,7 @@ namespace GN { namespace gfx
     // *************************************************************************
     // Cg shader
     // *************************************************************************
-    
+
     ///
     /// Cg Shader class
     ///

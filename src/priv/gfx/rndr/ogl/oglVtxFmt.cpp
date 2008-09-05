@@ -419,7 +419,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
     mStateBindings.resize( 8 + numStages );
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // fill invalid data
     for( size_t i = 0; i < mStateBindings.size(); ++i )
     {
@@ -470,7 +470,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         mStateBindings[4].func = &sDummyStateBinding;
     }
 
-    // VTXSEM_FOG 
+    // VTXSEM_FOG
     if( GLEW_EXT_fog_coord )
     {
         mStateBindings[5].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableClientState : &sDisableClientState;
@@ -517,7 +517,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         mStateBindings[8+i].info.semantic = GL_TEXTURE_COORD_ARRAY;
     }
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // fill invalid data
     for( size_t i = 0; i < mStateBindings.size(); ++i )
     {

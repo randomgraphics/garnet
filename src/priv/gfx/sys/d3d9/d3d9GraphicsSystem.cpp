@@ -9,7 +9,7 @@
 #if GN_MSVC
 #pragma comment( lib, "dxerr9.lib" )
 #pragma comment( lib, "d3d9.lib")
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment( lib, "d3dx9d.lib")
 #else
 #pragma comment( lib, "d3dx9.lib")

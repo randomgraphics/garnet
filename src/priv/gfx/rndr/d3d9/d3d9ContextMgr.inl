@@ -6,7 +6,7 @@ inline void GN::gfx::D3D9Renderer::setD3DRenderState(
 {
     GN_GUARD_SLOW;
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;
@@ -34,7 +34,7 @@ inline void GN::gfx::D3D9Renderer::setD3DSamplerState(
 
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;
@@ -64,7 +64,7 @@ inline void GN::gfx::D3D9Renderer::setD3DTextureState(
 
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;

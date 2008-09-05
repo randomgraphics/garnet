@@ -31,7 +31,7 @@ static inline D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
     return dc;
 }
 
-#if GN_RETAIL_BUILD
+#if GN_BUILD_RETAIL
 #define DUMP_STATE(X)   // disable dump in retail build
 #else
 #define DUMP_STATE(X) \
@@ -77,7 +77,7 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     mNumBatches = 0;
     mDrawCounter = 0;
 
-#if !GN_RETAIL_BUILD
+#if !GN_BUILD_RETAIL
     if( mDumpNextFrame )
     {
         mDumpNextFrame = false;
@@ -111,7 +111,7 @@ void GN::gfx::D3D9Renderer::drawEnd()
 
     ++mFrameCounter;
 
-#if !GN_RETAIL_BUILD
+#if !GN_BUILD_RETAIL
     mDumpThisFrame = false;
 #endif
 

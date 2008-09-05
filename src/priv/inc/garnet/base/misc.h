@@ -116,7 +116,7 @@ namespace GN
     template < class TO, class FROM >
     GN_FORCE_INLINE TO & safeCastRef( FROM & from )
     {
-    #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
+    #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO&>(from);
     #else
         return static_cast<TO&>(from);
@@ -131,7 +131,7 @@ namespace GN
     template < class TO, class FROM >
     GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
     {
-    #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
+    #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         TO * to = dynamic_cast<TO*>(from);
     #else
         TO * to = static_cast<TO*>(from);

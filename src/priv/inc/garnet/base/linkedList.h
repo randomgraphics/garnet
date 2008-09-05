@@ -16,7 +16,7 @@ namespace GN
     {
         T * prev; ///< pointer to previous item
         T * next; ///< pointer to next item
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
         void * owner; ///< pointer to the double-linked-list that this item belongs to.
 #endif
     };
@@ -95,7 +95,7 @@ namespace GN
                 }
             }
 
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
             newItem->owner = this;
 #endif
         }
@@ -138,7 +138,7 @@ namespace GN
                 next->prev = newItem;
             }
 
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
             newItem->owner = this;
 #endif
         }
@@ -151,7 +151,7 @@ namespace GN
             ItemType * next = item->next;
             if( prev ) prev->next = next;
             if( next ) next->prev = prev;
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
             item->owner = NULL;
 #endif
             if( item == mHead ) mHead = item->next;
@@ -166,7 +166,7 @@ namespace GN
     struct SingleLinkedItem
     {
         T * next; ///< pointer to next item
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
         void * owner; ///< pointer to the single-linked-list that this item belongs to.
 #endif
     };
@@ -218,7 +218,7 @@ namespace GN
             {
                 newItem->next = NULL;
             }
-#if GN_ASSERT_ENABLED
+#if GN_BUILD_ENABLE_ASSERT
             newItem->owner = this;
 #endif
             if( mTail == where ) mTail = newItem;

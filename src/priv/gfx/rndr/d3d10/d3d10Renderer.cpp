@@ -4,7 +4,7 @@
 #if GN_MSVC
 
 #pragma comment(lib, "d3d10.lib")
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment(lib, "d3dx10d.lib")
 #else
 #pragma comment(lib, "d3dx10.lib")
@@ -20,7 +20,7 @@ GN::Logger * GN::gfx::D3D10Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D10"
 
 bool gD3D10EnablePixPerf = true; // default is enabled
 
-#if GN_STATIC
+#if GN_BUILD_STATIC
 GN::gfx::Renderer *
 createD3D10Renderer()
 #else

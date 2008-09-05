@@ -2,7 +2,7 @@
 
 #ifdef HAS_D3D9
 #include "garnet/GNgfxsysD3D9.h"
-#elif GN_STATIC
+#elif GN_BUILD_STATIC
 static GN::gfx::GraphicsSystem * createD3D9GraphicsSystem( const GN::gfx::GraphicsSystemCreationParameter & )
 {
     GN_UNEXPECTED();
@@ -40,7 +40,7 @@ GN::gfx::GraphicsSystemCreator::create( const GraphicsSystemCreationParameter & 
     if( GN_MAKE_FOURCC('A','U','T','O') == gscp.api.u32 ) api.u32 = sDetermineGraphicsSystemAPI();
     else api.u32 = gscp.api.u32;
 
-#if GN_STATIC
+#if GN_BUILD_STATIC
 
     switch( api.u32 )
     {

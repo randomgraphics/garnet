@@ -39,6 +39,12 @@ popd
 REM ============================
 REM setup garnet build parameers
 REM ============================
+
+echo.
+echo ==========================
+echo Setup Garnet build variant
+echo ==========================
+
 :parse_cmdline
 if not "" == "%1" (
 		if "/?" == "%1" ( goto :usage
@@ -100,6 +106,10 @@ REM =====================
 REM setup VS environment
 REM =====================
 if /I "vc80" == "%GN_BUILD_COMPILER%" (
+	echo.
+	echo =====================================
+	echo Setup Visual Studio build environment
+	echo =====================================
 	if not "" == "%VS90COMNTOOLS%" (
 		set "VS_ROOT=%VS90COMNTOOLS%..\.."
 		set "VS_SETENV=%VS90COMNTOOLS%..\..\VC\vcvarsall.bat"
@@ -141,7 +151,12 @@ REM =========================
 REM setup directx environment
 REM =========================
 
+echo.
+echo =============================
+echo Setup DirectX SDK environment
+echo =============================
 if not "" == "%DXSDK_DIR%" (
+	echo Using DirectX SDK at %DXSDK_DIR%
 	set "DXSDK_SETENV=%DXSDK_DIR%Utilities\Bin\dx_setenv.cmd"
 ) else (
 	call :warn Environment variable DXSDK_DIR not found. Please install DirectX SDK.
@@ -159,12 +174,19 @@ if not "" == "%DXSDK_SETENV%" (
 REM =========================
 REM setup GREEN environment
 REM =========================
-if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
-	call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X86 "%GREEN_INC_X86%"
-	call :prepend_env LIB "%LIB%" GREEN_LIB_X86 "%GREEN_LIB_X86%"
-) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
-	call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X64 "%GREEN_INC_X64%"
-	call :prepend_env LIB "%LIB%" GREEN_LIB_X64 "%GREEN_LIB_X64%"
+
+if not "" == "%GREEN_PATH%" (
+	echo.
+	echo =================
+	echo Setup GREEN tools
+	echo =================
+	if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
+		call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X86 "%GREEN_INC_X86%"
+		call :prepend_env LIB "%LIB%" GREEN_LIB_X86 "%GREEN_LIB_X86%"
+	) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
+		call :prepend_env INCLUDE "%INCLUDE%" GREEN_INC_X64 "%GREEN_INC_X64%"
+		call :prepend_env LIB "%LIB%" GREEN_LIB_X64 "%GREEN_LIB_X64%"
+	)
 )
 
 REM =======================
@@ -172,6 +194,9 @@ REM setup xenon environment
 REM =======================
 if "xenon" == "%GN_BUILD_COMPILER%" (
 	echo.
+	echo =============================
+	echo Setup Xenon build environment
+	echo =============================
 	if "" == "%XEDK%" (
 		call :warn Environment variable XEDK not found.
 	) else (
@@ -196,6 +221,10 @@ set mypath=
 REM ===========
 REM setup scons
 REM ===========
+echo.
+echo =============================
+echo Setup SCons build environment
+echo =============================
 echo SCons Directory : %GARNET_ROOT%\env\scons
 set PATH=%GARNET_ROOT%\env\scons\Scripts;%PATH%
 set SCONS_LIB_DIR=%GARNET_ROOT%\env\scons\Lib

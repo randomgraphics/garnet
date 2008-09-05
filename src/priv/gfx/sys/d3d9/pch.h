@@ -9,7 +9,7 @@
 #define GN_GFX2_D3D9_IMPL
 #include "garnet/GNgfxsysD3D9.h"
 
-#if GN_RETAIL_BUILD // disable PIX tag in retail build.
+#if GN_BUILD_RETAIL // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )
 #define PIXPERF_END_EVENT()
 #define PIXPERF_SET_MARKER_EX( color, name )
@@ -30,7 +30,7 @@ struct PixPerfScopeEvent
         D3DPERF_EndEvent();
     }
 };
-#endif // GN_RETAIL_BUILD
+#endif // GN_BUILD_RETAIL
 
 #define PIXPERF_BEGIN_EVENT( name ) PIXPERF_BEGIN_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )

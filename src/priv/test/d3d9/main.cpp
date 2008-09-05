@@ -3,11 +3,11 @@
 #if GN_MSVC
 
 #if GN_XENON
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment(lib, "d3d9d.lib")
 #pragma comment( lib, "xgraphicsd.lib" )
 #pragma comment(lib, "xapilibd.lib")
-#elif GN_PROFILE_BUILD
+#elif GN_BUILD_PROFILE
 #pragma comment(lib, "d3d9i.lib")
 #pragma comment( lib, "xgraphics.lib" )
 #pragma comment(lib, "xapilibi.lib")
@@ -17,7 +17,7 @@
 #pragma comment(lib, "xapilib.lib")
 #endif
 #else
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment( lib, "d3dx9d.lib" )
 #else
 #pragma comment( lib, "d3dx9.lib" )
@@ -117,7 +117,7 @@ public:
     {
         dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
 
-        D3DVERTEXELEMENT9 format[] = 
+        D3DVERTEXELEMENT9 format[] =
         {
             { 0,  0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 0 },
             { 0, 12, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 1 },
@@ -240,7 +240,7 @@ public:
 
     void onQuit()
     {
-        delete getRenderEngine().unregisterMiniApp( mMiniApp ); 
+        delete getRenderEngine().unregisterMiniApp( mMiniApp );
     }
 
     void onUpdate()

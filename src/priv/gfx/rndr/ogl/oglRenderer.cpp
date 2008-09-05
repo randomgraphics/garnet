@@ -7,7 +7,7 @@ GN::Logger * GN::gfx::OGLRenderer::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // Global functions
 // *****************************************************************************
 
-#if GN_STATIC
+#if GN_BUILD_STATIC
 GN::gfx::Renderer * createOGLRenderer()
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer * GNgfxCreateRenderer()
@@ -233,4 +233,4 @@ void GN::gfx::OGLRenderer::deviceDestroy()
     #undef COMPONENT_DESTROY
 
     GN_UNGUARD;
-} 
+}

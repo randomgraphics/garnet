@@ -36,7 +36,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 // -----------------------------------------------------------------------------
 static UInt32 sRefineFlags( UInt32 flags )
 {
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     flags |= D3D10_SHADER_DEBUG;
 #endif
     return flags;
