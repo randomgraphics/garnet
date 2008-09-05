@@ -5,16 +5,16 @@
 #if GN_MSVC
 #pragma comment( lib, "dxerr9.lib" )
 #if GN_XENON
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment(lib, "d3d9d.lib")
 #pragma comment(lib, "d3dx9d.lib")
-#else // GN_DEBUG_BUILD
+#else // GN_BUILD_DEBUG
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
-#endif // GN_DEBUG_BUILD
+#endif // GN_BUILD_DEBUG
 #else // GN_XENON
 #pragma comment(lib, "d3d9.lib")
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment(lib, "d3dx9d.lib")
 #else
 #pragma comment(lib, "d3dx9.lib")
@@ -30,7 +30,7 @@ GN::Logger * GN::gfx::D3D9Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 
 bool gD3D9EnablePixPerf = true; // default is enabled
 
-#if GN_STATIC
+#if GN_BUILD_STATIC
 GN::gfx::Renderer *
 createD3D9Renderer()
 #else

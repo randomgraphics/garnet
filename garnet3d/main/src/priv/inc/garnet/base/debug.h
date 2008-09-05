@@ -44,25 +44,17 @@
 ///
 /// Assert macro with description
 ///
-#if GN_DEBUG_BUILD
+#if GN_BUILD_ENABLE_ASSERT
 #define GN_ASSERT_EX( exp, desc ) GN_DO_ASSERT( exp, desc )
 #else
 #define GN_ASSERT_EX( exp, desc ) void(0)
 #endif
 
-//@{
-#if GN_DEBUG_BUILD
-#define GN_ASSERT_ENABLED 1
-#else
-#define GN_ASSERT_ENABLED 0
-#endif
-//@}
-
 ///
 /// Verification macro with description
 ///
-#if GN_DEBUG_BUILD
-#define GN_VERIFY_EX GN_ASSERT_EX
+#if GN_BUILD_ENABLE_ASSERT
+#define GN_VERIFY_EX( exp, desc ) GN_DO_ASSERT( exp, desc )
 #else
 #define GN_VERIFY_EX( exp, desc ) (exp)
 #endif
@@ -121,7 +113,7 @@
 //
 #define GN_OGL_CHECK_R_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, return; )
 //
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_OGL_CHECK_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, )
 #else
 #define GN_OGL_CHECK_DESC( func, errDesc ) func
@@ -152,7 +144,7 @@
 ///
 /// check return value of Windows function
 ///
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_MSW_CHECK( func ) GN_MSW_CHECK_DO( func, void(0); )
 #else
 #define GN_MSW_CHECK( func )      func
@@ -189,7 +181,7 @@
 ///
 /// DX error check routine
 ///
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_DX9_CHECK( func )         GN_DX9_CHECK_DO( func, )
 #else
 #define GN_DX9_CHECK( func )         func
@@ -222,7 +214,7 @@
 ///
 /// DX error check routine
 ///
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_DX10_CHECK( func )         GN_DX10_CHECK_DO( func, )
 #else
 #define GN_DX10_CHECK( func )         func
@@ -257,7 +249,7 @@
 ///
 /// check return value of XLib function
 ///
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_X_CHECK( func ) GN_X_CHECK_DO( func, void(0); )
 #else
 #define GN_X_CHECK( func ) func

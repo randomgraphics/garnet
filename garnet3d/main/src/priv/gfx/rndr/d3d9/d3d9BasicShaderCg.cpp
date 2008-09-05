@@ -48,7 +48,7 @@ bool GN::gfx::D3D9BasicShaderCg::init( const StrA & code, const StrA & hints )
 
     // load the program
     DWORD asmFlags = 0;
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     asmFlags |= D3DXSHADER_DEBUG;
 #endif
     GN_DX9_CHECK_RV( cgD3D9LoadProgram( mShader.getProgram(), CG_FALSE, asmFlags ), failure() );
@@ -134,7 +134,7 @@ bool GN::gfx::D3D9BasicShaderCg::queryDeviceUniform(
     const char * name, HandleType & userData ) const
 {
     GN_GUARD;
-    
+
     GN_ASSERT( !strEmpty(name) );
 
     CGparameter param = mShader.getUniformHandle( name );

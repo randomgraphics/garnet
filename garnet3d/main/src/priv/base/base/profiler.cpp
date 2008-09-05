@@ -24,7 +24,7 @@ static GN::StrA sTime2Str( double time )
 // -----------------------------------------------------------------------------
 GN::ProfilerManager::~ProfilerManager()
 {
-#if GN_PROFILE_BUILD
+#if GN_BUILD_PROFILE
     // print profile result
     StrA s;
     toString( s );

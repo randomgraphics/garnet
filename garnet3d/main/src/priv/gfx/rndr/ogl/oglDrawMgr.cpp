@@ -295,7 +295,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
     GN_ASSERT( mContext.idxbuf );
     const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf );
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // Verify index buffer
     {
         OGLIdxBuf * testIb = const_cast<OGLIdxBuf*>(ib);
@@ -432,7 +432,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         strideInBytes );
     mNeedRebindVtxBufs |= 1;
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // Verify index buffer
     {
         const UInt16 * idxData = indexData;

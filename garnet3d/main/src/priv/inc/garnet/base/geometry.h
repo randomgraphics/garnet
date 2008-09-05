@@ -1110,7 +1110,7 @@ namespace GN
         Matrix33 & lookAtRh( const Vector3<T> & forward, const Vector3<T> & up );
         Matrix33 & lookAt( const Vector3<T> & forward, const Vector3<T> & up )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return lookAtLh( forward, up );
 #else
             return lookAtRh( forward, up );
@@ -1462,7 +1462,7 @@ namespace GN
                            const Vector3<T> & to,
                            const Vector3<T> & up )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return lookAtLh( eye, to, up );
 #else
             return lookAtRh( eye, to, up );
@@ -1496,7 +1496,7 @@ namespace GN
                              T bottom, T top,
                              T znear, T zfar )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return orthoOGLLh( left, right, bottom, top, znear, zfar );
 #else
             return orthoOGLRh( left, right, bottom, top, znear, zfar );
@@ -1512,7 +1512,7 @@ namespace GN
                              T bottom, T top,
                              T znear, T zfar )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return orthoD3DLh( left, right, bottom, top, znear, zfar );
 #else
             return orthoD3DRh( left, right, bottom, top, znear, zfar );
@@ -1534,7 +1534,7 @@ namespace GN
         Matrix44 & perspectiveOGL( T fovy, T ratio,
                                    T znear, T zfar )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return perspectiveOGLLh( fovy, ratio, znear, zfar );
 #else
             return perspectiveOGLRh( fovy, ratio, znear, zfar );
@@ -1547,7 +1547,7 @@ namespace GN
         Matrix44 & perspectiveD3D( T fovy, T ratio,
                                    T znear, T zfar )
         {
-#if GN_LEFT_HAND
+#if GN_BUILD_LEFT_HAND
             return perspectiveD3DLh( fovy, ratio, znear, zfar );
 #else
             return perspectiveD3DRh( fovy, ratio, znear, zfar );

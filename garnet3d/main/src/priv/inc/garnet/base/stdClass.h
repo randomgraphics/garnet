@@ -29,7 +29,7 @@
 ///
 /// 例如：GN_STDCLASS_INIT( myobject_c, (param1, param2) );
 /// 更多信息参见下面的例子
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #define GN_STDCLASS_INIT( class_name, param_list )                               \
     /* call parent's init() */                                                   \
     if( !MyParent::init param_list ) return failure();                           \
@@ -126,7 +126,7 @@ namespace GN
 
     protected:
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
         ///
         /// Sanity checker for calling either failure() or success() in init().
         ///

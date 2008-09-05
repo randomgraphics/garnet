@@ -4,7 +4,7 @@
 
 #if GN_MSVC
 #pragma comment( lib, "dxerr9.lib" )
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
 #pragma comment( lib, "d3dx9d.lib" )
 #else
 #pragma comment( lib, "d3dx9.lib" )
@@ -119,7 +119,7 @@ struct DenseMesh
             AutoComPtr<ID3DXMesh> tmp;
             GN_DX9_CHECK_RV( sysMesh->CloneMeshFVF(
                     sysMesh->GetOptions(),
-                    D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1, 
+                    D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1,
                     dev, &tmp ), false );
             sysMesh = tmp;
         }

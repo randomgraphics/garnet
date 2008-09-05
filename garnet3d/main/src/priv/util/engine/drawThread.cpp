@@ -418,7 +418,7 @@ static void DRAWFUNC_PRESENT( RenderEngine & re, const void *, size_t )
 
     re.drawThread().getGraphicsSystem()->present();
 
-#if GN_PROFILE_ENABLED
+#if GN_BUILD_PROFILE
     re.drawThread().profileFrameTime();
 #endif
 
@@ -533,7 +533,7 @@ bool GN::engine::RenderEngine::DrawThread::init( size_t maxDrawCommandBufferByte
     memset( &mDrawFunctions, 0, sizeof(mDrawFunctions) );
     mDrawFunctions[DCT_DRAW]            = &DRAWFUNC_DRAW;
     mDrawFunctions[DCT_PRESENT]         = &DRAWFUNC_PRESENT;
-    if( GN_ASSERT_ENABLED )
+    if( GN_BUILD_ENABLE_ASSERT )
     {
         for( int i = 0; i < NUM_DRAW_COMMAND_TYPES; ++i )
         {

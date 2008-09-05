@@ -7,14 +7,6 @@
 // *****************************************************************************
 
 // *****************************************************************************
-// 辨识编译模式
-// *****************************************************************************
-
-#define GN_RETAIL_BUILD (0 == GN_BUILD_VARIANT)  ///< retail build
-#define GN_PROFILE_BUILD (1 == GN_BUILD_VARIANT) ///< profile bulild
-#define GN_DEBUG_BUILD (2 == GN_BUILD_VARIANT)   ///< debug build
-
-// *****************************************************************************
 // 辨识编译器
 // *****************************************************************************
 
@@ -188,7 +180,7 @@
 /// \def GN_IMPORT
 /// Import function tag
 
-#if GN_MSVC && !GN_STATIC
+#if GN_MSVC && !GN_BUILD_STATIC
 #define GN_EXPORT       __declspec(dllexport)
 #define GN_IMPORT       __declspec(dllimport)
 #else

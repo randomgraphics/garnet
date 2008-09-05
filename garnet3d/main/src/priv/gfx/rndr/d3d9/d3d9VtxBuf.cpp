@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // ----------------------------------------------------------------------------
 DWORD sBufUsage2D3D9( bool dynamic )
 {
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     DWORD d3dUsage = 0;
 #else
     DWORD d3dUsage = D3DUSAGE_WRITEONLY;
@@ -55,7 +55,7 @@ DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag flag )
 
     DWORD d3dFlag = dynamic ? dynamicFlags[flag] : staticFlags[flag];
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     d3dFlag |= D3DLOCK_NOSYSLOCK;
 #endif
 
@@ -234,7 +234,7 @@ void GN::gfx::D3D9VtxBuf::unlock()
     else if ( LOCK_RO != mLockFlag )
     {
         const VtxBufDesc & desc = getDesc();
-        
+
         GN_ASSERT(
             mLockOffset < desc.bytes &&
             0 < mLockBytes &&

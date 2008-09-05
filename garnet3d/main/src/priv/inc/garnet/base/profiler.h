@@ -13,9 +13,7 @@
 /// \name prof macros
 //@{
 
-#define GN_PROFILE_ENABLED GN_PROFILE_BUILD || GN_DEBUG_BUILD
-
-#if GN_PROFILE_ENABLED
+#if GN_BUILD_PROFILE
 
 ///
 /// define a static instance of the timer

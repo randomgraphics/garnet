@@ -179,7 +179,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         else if( monitor )
         {
             scr = (int)(intptr_t)monitor;
-        } 
+        }
         else
         {
             GN_UNEXPECTED();
@@ -332,7 +332,7 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
 
     mDisplay = (Display*)display;
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // Trun on synchronous behavior for debug build.
     XSynchronize( mDisplay, true );
 #endif

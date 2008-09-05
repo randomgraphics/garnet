@@ -816,7 +816,7 @@ void GN::engine::RenderEngine::present()
     mDrawThread->present();
 
     // profile frame time
-#if GN_PROFILE_ENABLED
+#if GN_BUILD_PROFILE
     mFrameProfiler.nextFrame();
 #endif
 
@@ -1181,7 +1181,7 @@ bool GN::engine::ClearScreen::init( RenderEngine & re, GraphicsResource * bindin
     mKernel = re.getKernel( "CLEAR_SCREEN" );
     if( 0 == mKernel ) return failure();
 
-    if( GN_ASSERT_ENABLED )
+    if( GN_BUILD_ENABLE_ASSERT )
     {
         // make sure kenrel cache is working
         GraphicsResource * res = re.getKernel( "CLEAR_SCREEN" );

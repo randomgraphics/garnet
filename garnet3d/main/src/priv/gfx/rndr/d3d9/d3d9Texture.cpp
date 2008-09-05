@@ -45,7 +45,7 @@ static inline DWORD sLockFlag2D3D( DWORD d3dUsage, GN::gfx::LockFlag flag )
         }
     }
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     d3dflag |= D3DLOCK_NOSYSLOCK;
 #endif
 
@@ -130,7 +130,7 @@ D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexDim type )
 DWORD GN::gfx::texUsage2D3DUsage( BitFields usage )
 {
     DWORD d3dUsage  = 0;
-    
+
 #if GN_XENON
 
     if( TEXUSAGE_AUTOGEN_MIPMAP & usage )

@@ -199,7 +199,7 @@ void GN::gfx::D3D9Renderer::setContext( const RendererContext & newContext )
 
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-#if GN_DEBUG_BUILD
+#if GN_BUILD_DEBUG
     // make sure bindContext() does not rely on flags in tmp structure.
     RendererContext tmp = newContext;
     RendererContext::FieldFlags flags = tmp.flags;
