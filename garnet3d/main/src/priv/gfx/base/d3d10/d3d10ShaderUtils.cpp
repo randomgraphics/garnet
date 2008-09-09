@@ -131,7 +131,7 @@ ID3D10VertexShader * GN::d3d10::compileVS(
 
     sPrintShaderCompileInfo( code, bin );
 
-    ID3D10VertexShader * vs = createDumpableVertexShader( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
+    ID3D10VertexShader * vs = createDumpableVS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
     if( 0 == vs ) return 0;
 
     // success
@@ -175,7 +175,7 @@ ID3D10PixelShader * GN::d3d10::compilePS(
 
     sPrintShaderCompileInfo( code, bin );
 
-    ID3D10PixelShader * ps = createDumpablePixelShader( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
+    ID3D10PixelShader * ps = createDumpablePS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
     if( 0 == ps ) return 0;
 
     // success

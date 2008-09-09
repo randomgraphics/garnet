@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
     'd3d10App.cpp',
+    'd3d10ResourcePool.cpp',
     'd3d10ShaderUtils.cpp',
     'd3d10StateDumper.cpp',
     'd3d10Utils.cpp',

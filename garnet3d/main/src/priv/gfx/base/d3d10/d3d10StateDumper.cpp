@@ -10,29 +10,29 @@ struct DumpFile
 {
     FILE * fp;
 
-	DumpFile() : fp(0)
-	{
-		char fname[_MAX_PATH];
-		sprintf_s( fname, "%s.xml", sDumpFilePrefix );
+    DumpFile() : fp(0)
+    {
+        char fname[_MAX_PATH];
+        sprintf_s( fname, "%s.xml", sDumpFilePrefix );
 
-		if( 0 != fopen_s( &fp, fname, "wt" ) ) return;
+        if( 0 != fopen_s( &fp, fname, "wt" ) ) return;
 
-		fprintf(
-			fp,
-			"<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-			"<D3D10StateDump>\n" );
-	}
+        fprintf(
+            fp,
+            "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
+            "<D3D10StateDump>\n" );
+    }
 
-	~DumpFile()
-	{
-		if( fp )
-		{
-			fprintf( fp, "</D3D10StateDump>\n" );
-			fclose(fp);
-		}
-	}
+    ~DumpFile()
+    {
+        if( fp )
+        {
+            fprintf( fp, "</D3D10StateDump>\n" );
+            fclose(fp);
+        }
+    }
 
-	operator FILE*() const { return fp; }
+    operator FILE*() const { return fp; }
 };
 
 /*
@@ -40,30 +40,30 @@ struct DumpFile
 // -----------------------------------------------------------------------------
 static std::string sToBase64( const void * data, size_t bytes )
 {
-	char base64_alphabet[]= 
-	{
-		'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P', 
-		'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f', 
-		'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v', 
-		'w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/',
-		'='
-	};
+    char base64_alphabet[]=
+    {
+        'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
+        'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',
+        'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v',
+        'w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/',
+        '='
+    };
 
-	const UInt8 * p = (const UInt8*)data;
+    const UInt8 * p = (const UInt8*)data;
 
-	char s[4];
+    char s[4];
 
-	std::string result;
+    std::string result;
 
-	size_t n = bytes / 3;
-	size_t k = bytes % 3;
+    size_t n = bytes / 3;
+    size_t k = bytes % 3;
 
-	for( size_t i = 0; i < n; ++i, p+=3 )
-	{
-		s[0] = p[0] >> 2;
-		s[1] = ( (p[0]&3) << 4 ) | ( (p[1]&0xF0) >> 4 );
-		s[2] = ( p[1]&0xF) << 2 ) | ( p[2] >> 6 );
-	}
+    for( size_t i = 0; i < n; ++i, p+=3 )
+    {
+        s[0] = p[0] >> 2;
+        s[1] = ( (p[0]&3) << 4 ) | ( (p[1]&0xF0) >> 4 );
+        s[2] = ( p[1]&0xF) << 2 ) | ( p[2] >> 6 );
+    }
 }*/
 
 //
@@ -83,7 +83,7 @@ static const GUID & VSGUID()
 static const GUID & GSGUID()
 {
     // {BA28B475-CCFD-4603-B397-0FEDF90DC916}
-    static const GUID guid = 
+    static const GUID guid =
     { 0xba28b475, 0xccfd, 0x4603, { 0xb3, 0x97, 0xf, 0xed, 0xf9, 0xd, 0xc9, 0x16 } };
     return guid;
 }
@@ -94,7 +94,7 @@ static const GUID & GSGUID()
 static const GUID & PSGUID()
 {
     // {59347569-8552-4679-B86F-9D9CDFF309B2}
-    static const GUID guid = 
+    static const GUID guid =
     { 0x59347569, 0x8552, 0x4679, { 0xb8, 0x6f, 0x9d, 0x9c, 0xdf, 0xf3, 0x9, 0xb2 } };
     return guid;
 }
@@ -105,7 +105,7 @@ static const GUID & PSGUID()
 static const GUID & IL0GUID()
 {
     // {21523B5E-EB51-4092-8698-0316BDB3E8CE}
-    static const GUID guid = 
+    static const GUID guid =
     { 0x21523b5e, 0xeb51, 0x4092, { 0x86, 0x98, 0x3, 0x16, 0xbd, 0xb3, 0xe8, 0xce } };
     return guid;
 }
@@ -116,7 +116,7 @@ static const GUID & IL0GUID()
 static const GUID & IL1GUID()
 {
     // {EAC00B60-FAC7-4438-A652-9EAB5D6AE73F}
-    static const GUID guid = 
+    static const GUID guid =
     { 0xeac00b60, 0xfac7, 0x4438, { 0xa6, 0x52, 0x9e, 0xab, 0x5d, 0x6a, 0xe7, 0x3f } };
     return guid;
 }
@@ -128,14 +128,14 @@ void sDumpBinary( const char * filename, const void * data, size_t bytes )
 {
     FILE * fp;
     if( 0 != fopen_s( &fp, filename, "wb" ) )
-	{
-		GN_ERROR(sLogger)( "fail to open file : %s", filename );
-		return;
-	}
+    {
+        GN_ERROR(sLogger)( "fail to open file : %s", filename );
+        return;
+    }
 
-	fwrite( data, 1, bytes, fp );
+    fwrite( data, 1, bytes, fp );
 
-	fclose( fp );
+    fclose( fp );
 }
 
 //
@@ -143,12 +143,12 @@ void sDumpBinary( const char * filename, const void * data, size_t bytes )
 // -----------------------------------------------------------------------------
 static void sDumpShaderCode( FILE * fp, const void * binary, size_t bytes, const char * tag )
 {
-	char fname[_MAX_PATH];
-	sprintf_s( fname, "%s_%s.bin", sDumpFilePrefix, tag );
+    char fname[_MAX_PATH];
+    sprintf_s( fname, "%s_%s.bin", sDumpFilePrefix, tag );
 
-	sDumpBinary( fname, binary, bytes );
+    sDumpBinary( fname, binary, bytes );
 
-	fprintf( fp, "\t<%s ref=\"%s\"/>\n", tag, fname );
+    fprintf( fp, "\t<%s ref=\"%s\"/>\n", tag, fname );
 }
 
 //
@@ -156,24 +156,24 @@ static void sDumpShaderCode( FILE * fp, const void * binary, size_t bytes, const
 // -----------------------------------------------------------------------------
 static void sDumpVs( ID3D10Device & device, FILE * fp )
 {
-	AutoComPtr<ID3D10VertexShader> vs;
+    AutoComPtr<ID3D10VertexShader> vs;
 
-	device.VSGetShader( &vs );
+    device.VSGetShader( &vs );
 
-	if( !vs ) return;
+    if( !vs ) return;
 
-	std::vector<UInt8> binbuf;
-	UINT sz;
-	vs->GetPrivateData( VSGUID(), &sz, 0 );
+    std::vector<UInt8> binbuf;
+    UINT sz;
+    vs->GetPrivateData( VSGUID(), &sz, 0 );
     if( 0 == sz )
     {
-        GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVertexShader()." );
+        GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVS()." );
         return;
     }
-	binbuf.resize( sz );
-	vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
+    binbuf.resize( sz );
+    vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
 
-	sDumpShaderCode( fp, &binbuf[0], sz, "vs" );
+    sDumpShaderCode( fp, &binbuf[0], sz, "vs" );
 }
 
 //
@@ -181,24 +181,24 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpGs( ID3D10Device & device, FILE * fp )
 {
-	AutoComPtr<ID3D10GeometryShader> gs;
+    AutoComPtr<ID3D10GeometryShader> gs;
 
-	device.GSGetShader( &gs );
+    device.GSGetShader( &gs );
 
-	if( !gs ) return;
+    if( !gs ) return;
 
-	std::vector<UInt8> binbuf;
-	UINT sz;
-	gs->GetPrivateData( GSGUID(), &sz, 0 );
+    std::vector<UInt8> binbuf;
+    UINT sz;
+    gs->GetPrivateData( GSGUID(), &sz, 0 );
     if( 0 == sz )
     {
-        GN_ERROR(sLogger)( "Geometry shader is not dumpable. Please use createDumpableGeometryShader()." );
+        GN_ERROR(sLogger)( "Geometry shader is not dumpable. Please use createDumpableGS()." );
         return;
     }
-	binbuf.resize( sz );
-	gs->GetPrivateData( GSGUID(), &sz, &binbuf[0] );
+    binbuf.resize( sz );
+    gs->GetPrivateData( GSGUID(), &sz, &binbuf[0] );
 
-	sDumpShaderCode( fp, &binbuf[0], sz, "gs" );
+    sDumpShaderCode( fp, &binbuf[0], sz, "gs" );
 }
 
 //
@@ -206,28 +206,28 @@ static void sDumpGs( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpPs( ID3D10Device & device, FILE * fp )
 {
-	AutoComPtr<ID3D10PixelShader> ps;
+    AutoComPtr<ID3D10PixelShader> ps;
 
-	device.PSGetShader( &ps );
+    device.PSGetShader( &ps );
 
-	if( !ps ) return;
+    if( !ps ) return;
 
     // {70BA5240-59F8-452a-88A0-2C6483AAC86F}
-    static const GUID psguid = 
+    static const GUID psguid =
     { 0x70ba5240, 0x59f8, 0x452a, { 0x88, 0xa0, 0x2c, 0x64, 0x83, 0xaa, 0xc8, 0x6f } };
 
-	std::vector<UInt8> binbuf;
-	UINT sz;
-	ps->GetPrivateData( PSGUID(), &sz, 0 );
+    std::vector<UInt8> binbuf;
+    UINT sz;
+    ps->GetPrivateData( PSGUID(), &sz, 0 );
     if( 0 == sz )
     {
-        GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePixelShader()." );
+        GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePS()." );
         return;
     }
-	binbuf.resize( sz );
-	ps->GetPrivateData( PSGUID(), &sz, &binbuf[0] );
+    binbuf.resize( sz );
+    ps->GetPrivateData( PSGUID(), &sz, &binbuf[0] );
 
-	sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
+    sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
 }
 
 //
@@ -235,35 +235,35 @@ static void sDumpPs( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpBuffer( ID3D10Device & device, const char * filename, ID3D10Buffer * buf )
 {
-	GN_ASSERT( buf );
+    GN_ASSERT( buf );
 
-	// read buffer data
-	D3D10_BUFFER_DESC desc;
-	buf->GetDesc( &desc );
-	desc.Usage = D3D10_USAGE_STAGING;
-	desc.BindFlags = 0;
-	desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ | D3D10_CPU_ACCESS_WRITE;
-	AutoComPtr<ID3D10Buffer> syscpy;
-	if( FAILED( device.CreateBuffer( &desc, 0, &syscpy ) ) )
-	{
-		GN_ERROR(sLogger)( "fail to create staging buffer" );
-		return;
-	}
-	device.CopyResource( syscpy, buf );
+    // read buffer data
+    D3D10_BUFFER_DESC desc;
+    buf->GetDesc( &desc );
+    desc.Usage = D3D10_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ | D3D10_CPU_ACCESS_WRITE;
+    AutoComPtr<ID3D10Buffer> syscpy;
+    if( FAILED( device.CreateBuffer( &desc, 0, &syscpy ) ) )
+    {
+        GN_ERROR(sLogger)( "fail to create staging buffer" );
+        return;
+    }
+    device.CopyResource( syscpy, buf );
 
-	// map the buffer
-	void * data;
-	if( FAILED( syscpy->Map( D3D10_MAP_READ, 0, &data ) ) )
-	{
-		GN_ERROR(sLogger)( "fail to map staging buffer" );
-		return;
-	}
+    // map the buffer
+    void * data;
+    if( FAILED( syscpy->Map( D3D10_MAP_READ, 0, &data ) ) )
+    {
+        GN_ERROR(sLogger)( "fail to map staging buffer" );
+        return;
+    }
 
-	// write to file
-	sDumpBinary( filename, data, desc.ByteWidth );
+    // write to file
+    sDumpBinary( filename, data, desc.ByteWidth );
 
-	// done
-	syscpy->Unmap();
+    // done
+    syscpy->Unmap();
 }
 
 //
@@ -271,24 +271,24 @@ static void sDumpBuffer( ID3D10Device & device, const char * filename, ID3D10Buf
 // -----------------------------------------------------------------------------
 static void sDumpVsConsts( ID3D10Device & device, FILE * fp )
 {
-	ID3D10Buffer * cb[14];
+    ID3D10Buffer * cb[14];
 
-	memset( cb, 0, sizeof(cb) );
+    memset( cb, 0, sizeof(cb) );
 
-	device.VSGetConstantBuffers( 0, 14, cb );
+    device.VSGetConstantBuffers( 0, 14, cb );
 
-	for( UInt32 i = 0; i < 14; ++i )
-	{
-		if( cb[i] )
-		{
-			char fname[_MAX_PATH];
-			sprintf_s( fname, "%s_vsc(%02d).bin", sDumpFilePrefix, i );
-			fprintf( fp, "\t<vsc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
-			sDumpBuffer( device, fname, cb[i] );
+    for( UInt32 i = 0; i < 14; ++i )
+    {
+        if( cb[i] )
+        {
+            char fname[_MAX_PATH];
+            sprintf_s( fname, "%s_vsc(%02d).bin", sDumpFilePrefix, i );
+            fprintf( fp, "\t<vsc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
+            sDumpBuffer( device, fname, cb[i] );
 
-			cb[i]->Release();
-		}
-	}
+            cb[i]->Release();
+        }
+    }
 }
 
 
@@ -297,24 +297,24 @@ static void sDumpVsConsts( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpPsConsts( ID3D10Device & device, FILE * fp )
 {
-	ID3D10Buffer * cb[14];
+    ID3D10Buffer * cb[14];
 
-	memset( cb, 0, sizeof(cb) );
+    memset( cb, 0, sizeof(cb) );
 
-	device.PSGetConstantBuffers( 0, 14, cb );
+    device.PSGetConstantBuffers( 0, 14, cb );
 
-	for( UInt32 i = 0; i < 14; ++i )
-	{
-		if( cb[i] )
-		{
-			char fname[_MAX_PATH];
-			sprintf_s( fname, "%s_psc(%02d).bin", sDumpFilePrefix, i );
-			fprintf( fp, "\t<psc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
-			sDumpBuffer( device, fname, cb[i] );
+    for( UInt32 i = 0; i < 14; ++i )
+    {
+        if( cb[i] )
+        {
+            char fname[_MAX_PATH];
+            sprintf_s( fname, "%s_psc(%02d).bin", sDumpFilePrefix, i );
+            fprintf( fp, "\t<psc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
+            sDumpBuffer( device, fname, cb[i] );
 
-			cb[i]->Release();
-		}
-	}
+            cb[i]->Release();
+        }
+    }
 }
 
 //
@@ -322,24 +322,24 @@ static void sDumpPsConsts( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpGsConsts( ID3D10Device & device, FILE * fp )
 {
-	ID3D10Buffer * cb[14];
+    ID3D10Buffer * cb[14];
 
-	memset( cb, 0, sizeof(cb) );
+    memset( cb, 0, sizeof(cb) );
 
-	device.GSGetConstantBuffers( 0, 14, cb );
+    device.GSGetConstantBuffers( 0, 14, cb );
 
-	for( UInt32 i = 0; i < 14; ++i )
-	{
-		if( cb[i] )
-		{
-			char fname[_MAX_PATH];
-			sprintf_s( fname, "%s_gsc(%02d).bin", sDumpFilePrefix, i );
-			fprintf( fp, "\t<gsc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
-			sDumpBuffer( device, fname, cb[i] );
+    for( UInt32 i = 0; i < 14; ++i )
+    {
+        if( cb[i] )
+        {
+            char fname[_MAX_PATH];
+            sprintf_s( fname, "%s_gsc(%02d).bin", sDumpFilePrefix, i );
+            fprintf( fp, "\t<gsc slot=\"%d\" ref=\"%s\"/>\n", i, fname );
+            sDumpBuffer( device, fname, cb[i] );
 
-			cb[i]->Release();
-		}
-	}
+            cb[i]->Release();
+        }
+    }
 }
 
 //
@@ -347,60 +347,60 @@ static void sDumpGsConsts( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
 {
-	AutoComPtr<ID3D10InputLayout> il;
+    AutoComPtr<ID3D10InputLayout> il;
 
-	device.IAGetInputLayout( &il );
+    device.IAGetInputLayout( &il );
 
-	if( !il ) return;
+    if( !il ) return;
 
-	UINT sz;
+    UINT sz;
 
-	// dump signature binary
-	std::vector<UInt8> signature;
-	char sname[_MAX_PATH];
-	sprintf_s( sname, "%s_inputlayout_signature.bin", sDumpFilePrefix );
-	il->GetPrivateData( IL1GUID(), &sz, 0 );
+    // dump signature binary
+    std::vector<UInt8> signature;
+    char sname[_MAX_PATH];
+    sprintf_s( sname, "%s_inputlayout_signature.bin", sDumpFilePrefix );
+    il->GetPrivateData( IL1GUID(), &sz, 0 );
     if( 0 == sz )
     {
-        GN_ERROR(sLogger)( "InputLayout is not dumpable. Please use createDumpableInputLayout()." );
+        GN_ERROR(sLogger)( "InputLayout is not dumpable. Please use createDumpableIL()." );
         return;
     }
-	signature.resize( sz );
-	il->GetPrivateData( IL1GUID(), &sz, &signature[0] );
-	sDumpBinary( sname, &signature[0], signature.size() );
+    signature.resize( sz );
+    il->GetPrivateData( IL1GUID(), &sz, &signature[0] );
+    sDumpBinary( sname, &signature[0], signature.size() );
 
-	// write IL open tag
-	fprintf( fp, "\t<il signature=\"%s\">\n", sname );
+    // write IL open tag
+    fprintf( fp, "\t<il signature=\"%s\">\n", sname );
 
-	// get element array
-	std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
-	il->GetPrivateData( IL0GUID(), &sz, 0 );
-	elements.resize( sz / sizeof(D3D10_INPUT_ELEMENT_DESC) );
-	il->GetPrivateData( IL0GUID(), &sz, &elements[0] );
+    // get element array
+    std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
+    il->GetPrivateData( IL0GUID(), &sz, 0 );
+    elements.resize( sz / sizeof(D3D10_INPUT_ELEMENT_DESC) );
+    il->GetPrivateData( IL0GUID(), &sz, &elements[0] );
 
-	// write element one by one
-	for( size_t i = 0; i < sz / sizeof(D3D10_INPUT_ELEMENT_DESC); ++i )
-	{
-		const D3D10_INPUT_ELEMENT_DESC & e = elements[i];
-		fprintf( fp,
-			"\t\t<element semantic=\"%s\""
-						" index=\"%d\""
-						" format=\"%d\""
-						" slot=\"%d\""
-						" offset=\"%d\""
-						" classification=\"%d\""
-						" steprate=\"%d\"/>\n",
-			e.SemanticName,
-			e.SemanticIndex,
-			e.Format,
-			e.InputSlot,
-			e.AlignedByteOffset,
-			e.InputSlotClass,
-			e.InstanceDataStepRate );
-	}
+    // write element one by one
+    for( size_t i = 0; i < sz / sizeof(D3D10_INPUT_ELEMENT_DESC); ++i )
+    {
+        const D3D10_INPUT_ELEMENT_DESC & e = elements[i];
+        fprintf( fp,
+            "\t\t<element semantic=\"%s\""
+                        " index=\"%d\""
+                        " format=\"%d\""
+                        " slot=\"%d\""
+                        " offset=\"%d\""
+                        " classification=\"%d\""
+                        " steprate=\"%d\"/>\n",
+            e.SemanticName,
+            e.SemanticIndex,
+            e.Format,
+            e.InputSlot,
+            e.AlignedByteOffset,
+            e.InputSlotClass,
+            e.InstanceDataStepRate );
+    }
 
-	// write IL end tag
-	fprintf( fp, "\t</il>\n" );
+    // write IL end tag
+    fprintf( fp, "\t</il>\n" );
 }
 
 //
@@ -408,32 +408,32 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 void sDumpVtxBufs( ID3D10Device & device, FILE * fp )
 {
-	ID3D10Buffer * cb[16];
-	UINT       stride[16];
-	UINT       offset[16];
+    ID3D10Buffer * cb[16];
+    UINT       stride[16];
+    UINT       offset[16];
 
-	device.IAGetVertexBuffers( 0, 16, cb, stride, offset );
+    device.IAGetVertexBuffers( 0, 16, cb, stride, offset );
 
-	char fname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
-	D3D10_BUFFER_DESC desc;
+    D3D10_BUFFER_DESC desc;
 
-	for( DWORD i = 0; i < 16; ++i )
-	{
-		if( cb[i] )
-		{
-			sprintf_s( fname, "%s_vtxbuf(%02d).bin", sDumpFilePrefix, i );
+    for( DWORD i = 0; i < 16; ++i )
+    {
+        if( cb[i] )
+        {
+            sprintf_s( fname, "%s_vtxbuf(%02d).bin", sDumpFilePrefix, i );
 
-			sDumpBuffer( device, fname, cb[i] );
+            sDumpBuffer( device, fname, cb[i] );
 
-			cb[i]->GetDesc( &desc );
+            cb[i]->GetDesc( &desc );
 
-			fprintf( fp, "\t<vtxbuf slot=\"%d\" stride=\"%d\" offset=\"%d\" bytes=\"%d\" ref=\"%s\"/>\n",
-				i, stride[i], offset[i], desc.ByteWidth, fname );
+            fprintf( fp, "\t<vtxbuf slot=\"%d\" stride=\"%d\" offset=\"%d\" bytes=\"%d\" ref=\"%s\"/>\n",
+                i, stride[i], offset[i], desc.ByteWidth, fname );
 
-			cb[i]->Release();
-		}
-	}
+            cb[i]->Release();
+        }
+    }
 }
 
 //
@@ -441,25 +441,25 @@ void sDumpVtxBufs( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 void sDumpIdxBuf( ID3D10Device & device, FILE * fp )
 {
-	AutoComPtr<ID3D10Buffer> ib;
-	DXGI_FORMAT format;
-	UINT        offset;
+    AutoComPtr<ID3D10Buffer> ib;
+    DXGI_FORMAT format;
+    UINT        offset;
 
-	device.IAGetIndexBuffer( &ib, &format, &offset );
+    device.IAGetIndexBuffer( &ib, &format, &offset );
 
-	if( !ib ) return;
+    if( !ib ) return;
 
-	D3D10_BUFFER_DESC desc;
-	ib->GetDesc( &desc );
+    D3D10_BUFFER_DESC desc;
+    ib->GetDesc( &desc );
 
-	char fname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
-	sprintf_s( fname, "%s_idxbuf.bin", sDumpFilePrefix );
+    sprintf_s( fname, "%s_idxbuf.bin", sDumpFilePrefix );
 
-	sDumpBuffer( device, fname, ib );
+    sDumpBuffer( device, fname, ib );
 
-	fprintf( fp, "\t<idxbuf format=\"%d\" offset=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n",
-       	format, offset, desc.ByteWidth, fname );
+    fprintf( fp, "\t<idxbuf format=\"%d\" offset=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n",
+           format, offset, desc.ByteWidth, fname );
 }
 
 //
@@ -467,24 +467,24 @@ void sDumpIdxBuf( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static std::string sDumpResource( ID3D10Device & device, const char * prefix, ID3D10Resource * res )
 {
-	D3D10_RESOURCE_DIMENSION dim;
+    D3D10_RESOURCE_DIMENSION dim;
 
-	res->GetType( &dim );
+    res->GetType( &dim );
 
-	char fname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
-	if( D3D10_RESOURCE_DIMENSION_BUFFER == dim )
-	{
-	    sprintf_s( fname, "%s_buffer.bin", prefix );
-		sDumpBuffer( device, fname, (ID3D10Buffer*)res );
-	}
-	else
-	{
-	    sprintf_s( fname, "%s_texture.dds", prefix );
-		D3DX10SaveTextureToFileA( res, D3DX10_IFF_DDS, fname );
-	}
+    if( D3D10_RESOURCE_DIMENSION_BUFFER == dim )
+    {
+        sprintf_s( fname, "%s_buffer.bin", prefix );
+        sDumpBuffer( device, fname, (ID3D10Buffer*)res );
+    }
+    else
+    {
+        sprintf_s( fname, "%s_texture.dds", prefix );
+        D3DX10SaveTextureToFileA( res, D3DX10_IFF_DDS, fname );
+    }
 
-	return fname;
+    return fname;
 }
 
 //
@@ -493,33 +493,33 @@ static std::string sDumpResource( ID3D10Device & device, const char * prefix, ID
 static void sDumpShaderResources(
     ID3D10Device & device,
     FILE * fp,
-	const char * tag,
-	ID3D10ShaderResourceView * srv[],
-	size_t count )
+    const char * tag,
+    ID3D10ShaderResourceView * srv[],
+    size_t count )
 {
-	char descname[_MAX_PATH];
-	char fname[_MAX_PATH];
+    char descname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
-	D3D10_SHADER_RESOURCE_VIEW_DESC desc;
+    D3D10_SHADER_RESOURCE_VIEW_DESC desc;
 
-	for( DWORD i = 0; i < count; ++i )
-	{
-		if( 0 == srv[i] ) continue;
+    for( DWORD i = 0; i < count; ++i )
+    {
+        if( 0 == srv[i] ) continue;
 
-		// save view descriptor
-		srv[i]->GetDesc( &desc );
-	    sprintf_s( descname, "%s_%s_srv(%03d)_desc.bin", sDumpFilePrefix, tag, i );
-		sDumpBinary( descname, &desc, sizeof(desc) );
+        // save view descriptor
+        srv[i]->GetDesc( &desc );
+        sprintf_s( descname, "%s_%s_srv(%03d)_desc.bin", sDumpFilePrefix, tag, i );
+        sDumpBinary( descname, &desc, sizeof(desc) );
 
-		// save resource
-		AutoComPtr<ID3D10Resource> res;
-		srv[i]->GetResource( &res );
+        // save resource
+        AutoComPtr<ID3D10Resource> res;
+        srv[i]->GetResource( &res );
         sprintf_s( fname, "%s_%s_srv(%03d)",
-			sDumpFilePrefix, tag, i );
-		std::string resname = sDumpResource( device, fname, res );
+            sDumpFilePrefix, tag, i );
+        std::string resname = sDumpResource( device, fname, res );
 
-		fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.c_str() );
-	}
+        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.c_str() );
+    }
 }
 
 //
@@ -527,13 +527,13 @@ static void sDumpShaderResources(
 // -----------------------------------------------------------------------------
 static void sDumpVsSrv( ID3D10Device & device, FILE * fp )
 {
-	ID3D10ShaderResourceView * srv[128];
+    ID3D10ShaderResourceView * srv[128];
 
-	device.VSGetShaderResources( 0, 128, srv );
+    device.VSGetShaderResources( 0, 128, srv );
 
-	sDumpShaderResources( device, fp, "vs", srv, 128 );
+    sDumpShaderResources( device, fp, "vs", srv, 128 );
 
-	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -541,13 +541,13 @@ static void sDumpVsSrv( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 {
-	ID3D10ShaderResourceView * srv[128];
+    ID3D10ShaderResourceView * srv[128];
 
-	device.GSGetShaderResources( 0, 128, srv );
+    device.GSGetShaderResources( 0, 128, srv );
 
-	sDumpShaderResources( device, fp, "gs", srv, 128 );
+    sDumpShaderResources( device, fp, "gs", srv, 128 );
 
-	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -555,13 +555,13 @@ static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
 {
-	ID3D10ShaderResourceView * srv[128];
+    ID3D10ShaderResourceView * srv[128];
 
-	device.PSGetShaderResources( 0, 128, srv );
+    device.PSGetShaderResources( 0, 128, srv );
 
-	sDumpShaderResources( device, fp, "ps", srv, 128 );
+    sDumpShaderResources( device, fp, "ps", srv, 128 );
 
-	for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -569,13 +569,13 @@ static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 {
-	ID3D10RenderTargetView * colors[8];
-	ID3D10DepthStencilView * depth;
+    ID3D10RenderTargetView * colors[8];
+    ID3D10DepthStencilView * depth;
 
-	device.OMGetRenderTargets( 8, colors, &depth );
+    device.OMGetRenderTargets( 8, colors, &depth );
 
-	char descname[_MAX_PATH];
-	char fname[_MAX_PATH];
+    char descname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
     for( DWORD i = 0; i < 8; ++i )
     {
@@ -583,41 +583,41 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 
         D3D10_RENDER_TARGET_VIEW_DESC desc;
         colors[i]->GetDesc( &desc );
-	    sprintf_s( descname, "%s_rendertarget(%d)_desc.bin", sDumpFilePrefix, i );
-		sDumpBinary( descname, &desc, sizeof(desc) );
+        sprintf_s( descname, "%s_rendertarget(%d)_desc.bin", sDumpFilePrefix, i );
+        sDumpBinary( descname, &desc, sizeof(desc) );
 
-		// save render target content
-		AutoComPtr<ID3D10Resource> res;
-		colors[i]->GetResource( &res );
+        // save render target content
+        AutoComPtr<ID3D10Resource> res;
+        colors[i]->GetResource( &res );
         sprintf_s( fname, "%s_rendertarget(%d)",
-	        sDumpFilePrefix, i );
-		std::string resname = sDumpResource( device, fname, res );
+            sDumpFilePrefix, i );
+        std::string resname = sDumpResource( device, fname, res );
 
         fprintf( fp,
             "\t<rendertarget slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n",
             i, descname, resname.c_str() );
 
-		colors[i]->Release();
+        colors[i]->Release();
     }
 
     if( depth )
     {
-	    D3D10_DEPTH_STENCIL_VIEW_DESC desc;
-	    depth->GetDesc( &desc );
-	    sprintf_s( descname, "%s_depthstencil_desc.bin", sDumpFilePrefix );
-		sDumpBinary( descname, &desc, sizeof(desc) );
+        D3D10_DEPTH_STENCIL_VIEW_DESC desc;
+        depth->GetDesc( &desc );
+        sprintf_s( descname, "%s_depthstencil_desc.bin", sDumpFilePrefix );
+        sDumpBinary( descname, &desc, sizeof(desc) );
 
-		// save render target content
-		AutoComPtr<ID3D10Resource> res;
-		depth->GetResource( &res );
-	    sprintf_s( fname, "%s_depthstencil", sDumpFilePrefix );
-		std::string resname = sDumpResource( device, fname, res );
+        // save render target content
+        AutoComPtr<ID3D10Resource> res;
+        depth->GetResource( &res );
+        sprintf_s( fname, "%s_depthstencil", sDumpFilePrefix );
+        std::string resname = sDumpResource( device, fname, res );
 
-	    fprintf( fp,
-	        "\t<depthstencil desc=\"%s\" res=\"%s\"/>\n",
-	        descname, resname.c_str() );
+        fprintf( fp,
+            "\t<depthstencil desc=\"%s\" res=\"%s\"/>\n",
+            descname, resname.c_str() );
 
-		depth->Release();
+        depth->Release();
     }
 }
 
@@ -626,70 +626,70 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpRenderStates( ID3D10Device & device, FILE * fp )
 {
-	char fname[_MAX_PATH];
+    char fname[_MAX_PATH];
 
-	// raster states
-	AutoComPtr<ID3D10RasterizerState> rs;
-	device.RSGetState( &rs );
-	if( rs )
-	{
-		D3D10_RASTERIZER_DESC rsdesc;
-		rs->GetDesc( &rsdesc );
-	    sprintf_s( fname, "%s_rs.bin", sDumpFilePrefix );
-		sDumpBinary( fname, &rsdesc, sizeof(rsdesc) );
-		fprintf( fp, "\t<rs ref=\"%s\"/>\n", fname );
-	}
+    // raster states
+    AutoComPtr<ID3D10RasterizerState> rs;
+    device.RSGetState( &rs );
+    if( rs )
+    {
+        D3D10_RASTERIZER_DESC rsdesc;
+        rs->GetDesc( &rsdesc );
+        sprintf_s( fname, "%s_rs.bin", sDumpFilePrefix );
+        sDumpBinary( fname, &rsdesc, sizeof(rsdesc) );
+        fprintf( fp, "\t<rs ref=\"%s\"/>\n", fname );
+    }
 
-	// blend states
-	AutoComPtr<ID3D10BlendState> bs;
-	float blendFactors[4];
-	UINT sampleMask;
-	device.OMGetBlendState( &bs, blendFactors, &sampleMask );
-	if( bs )
-	{
-		D3D10_BLEND_DESC desc;
-		bs->GetDesc( &desc );
-	    sprintf_s( fname, "%s_bs.bin", sDumpFilePrefix );
-		sDumpBinary( fname, &desc, sizeof(desc) );
-		fprintf( fp, "\t<bs factor_r=\"%f\" factor_g=\"%f\" factor_b=\"%f\" factor_a=\"%f\" mask=\"%d\" ref=\"%s\"/>\n",
-			blendFactors[0],
-			blendFactors[1],
-			blendFactors[2],
-			blendFactors[3],
-			sampleMask,
-			fname );
-	}
+    // blend states
+    AutoComPtr<ID3D10BlendState> bs;
+    float blendFactors[4];
+    UINT sampleMask;
+    device.OMGetBlendState( &bs, blendFactors, &sampleMask );
+    if( bs )
+    {
+        D3D10_BLEND_DESC desc;
+        bs->GetDesc( &desc );
+        sprintf_s( fname, "%s_bs.bin", sDumpFilePrefix );
+        sDumpBinary( fname, &desc, sizeof(desc) );
+        fprintf( fp, "\t<bs factor_r=\"%f\" factor_g=\"%f\" factor_b=\"%f\" factor_a=\"%f\" mask=\"%d\" ref=\"%s\"/>\n",
+            blendFactors[0],
+            blendFactors[1],
+            blendFactors[2],
+            blendFactors[3],
+            sampleMask,
+            fname );
+    }
 
-	// depth states
-	AutoComPtr<ID3D10DepthStencilState> ds;
-	UINT stencilRef;
-	device.OMGetDepthStencilState( &ds, &stencilRef );
-	if( ds )
-	{
-		D3D10_DEPTH_STENCIL_DESC desc;
-		ds->GetDesc( &desc );
-	    sprintf_s( fname, "%s_ds.bin", sDumpFilePrefix );
-		sDumpBinary( fname, &desc, sizeof(desc) );
-		fprintf( fp, "\t<ds stencilref=\"%u\" ref=\"%s\"/>\n", stencilRef, fname );
-	}
+    // depth states
+    AutoComPtr<ID3D10DepthStencilState> ds;
+    UINT stencilRef;
+    device.OMGetDepthStencilState( &ds, &stencilRef );
+    if( ds )
+    {
+        D3D10_DEPTH_STENCIL_DESC desc;
+        ds->GetDesc( &desc );
+        sprintf_s( fname, "%s_ds.bin", sDumpFilePrefix );
+        sDumpBinary( fname, &desc, sizeof(desc) );
+        fprintf( fp, "\t<ds stencilref=\"%u\" ref=\"%s\"/>\n", stencilRef, fname );
+    }
 
-	// viewport
-	UINT vpcount = 1;
-	D3D10_VIEWPORT vp;
-	device.RSGetViewports( &vpcount, &vp );
-	fprintf(
-		fp,
-		"\t<viewport x=\"%d\" y=\"%d\" w=\"%u\" h=\"%u\" zmin=\"%f\" zmax=\"%f\"/>\n",
-		vp.TopLeftX, vp.TopLeftY, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth );
+    // viewport
+    UINT vpcount = 1;
+    D3D10_VIEWPORT vp;
+    device.RSGetViewports( &vpcount, &vp );
+    fprintf(
+        fp,
+        "\t<viewport x=\"%d\" y=\"%d\" w=\"%u\" h=\"%u\" zmin=\"%f\" zmax=\"%f\"/>\n",
+        vp.TopLeftX, vp.TopLeftY, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth );
 
-	// scissor
-	UINT sccount = 1;
-	D3D10_RECT scissor;
-	device.RSGetScissorRects( &sccount, &scissor );
-	fprintf(
-		fp,
-		"\t<scissor l=\"%d\" t=\"%d\" r=\"%d\" b=\"%d\"/>\n",
-		scissor.left, scissor.top, scissor.right, scissor.bottom );
+    // scissor
+    UINT sccount = 1;
+    D3D10_RECT scissor;
+    device.RSGetScissorRects( &sccount, &scissor );
+    fprintf(
+        fp,
+        "\t<scissor l=\"%d\" t=\"%d\" r=\"%d\" b=\"%d\"/>\n",
+        scissor.left, scissor.top, scissor.right, scissor.bottom );
 }
 
 //
@@ -697,26 +697,26 @@ static void sDumpRenderStates( ID3D10Device & device, FILE * fp )
 // -----------------------------------------------------------------------------
 void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 {
-	sDumpVs( device, fp );
-	sDumpVsConsts( device, fp );
-	sDumpPs( device, fp );
-	sDumpPsConsts( device, fp );
-	sDumpGs( device, fp );
-	sDumpGsConsts( device, fp );
+    sDumpVs( device, fp );
+    sDumpVsConsts( device, fp );
+    sDumpPs( device, fp );
+    sDumpPsConsts( device, fp );
+    sDumpGs( device, fp );
+    sDumpGsConsts( device, fp );
 
-	sDumpInputLayout( device, fp );
-	sDumpVtxBufs( device, fp );
-	sDumpIdxBuf( device, fp );
+    sDumpInputLayout( device, fp );
+    sDumpVtxBufs( device, fp );
+    sDumpIdxBuf( device, fp );
 
-	sDumpVsSrv( device, fp );
-	sDumpPsSrv( device, fp );
-	sDumpGsSrv( device, fp );
+    sDumpVsSrv( device, fp );
+    sDumpPsSrv( device, fp );
+    sDumpGsSrv( device, fp );
 
-	sDumpRenderTargets( device, fp );
+    sDumpRenderTargets( device, fp );
 
-	sDumpRenderStates( device, fp );
+    sDumpRenderStates( device, fp );
 
-	// TODO: dump sampler states
+    // TODO: dump sampler states
 }
 
 // *****************************************************************************
@@ -733,7 +733,7 @@ void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10VertexShader * GN::d3d10::createDumpableVertexShader(
+ID3D10VertexShader * GN::d3d10::createDumpableVS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -742,7 +742,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVertexShader(
 
     GN_DX10_CHECK_RV( device.CreateVertexShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
+    shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -750,7 +750,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVertexShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10GeometryShader * GN::d3d10::createDumpableGeometryShader(
+ID3D10GeometryShader * GN::d3d10::createDumpableGS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -759,7 +759,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGeometryShader(
 
     GN_DX10_CHECK_RV( device.CreateGeometryShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
+    shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -767,7 +767,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGeometryShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10PixelShader * GN::d3d10::createDumpablePixelShader(
+ID3D10PixelShader * GN::d3d10::createDumpablePS(
     ID3D10Device & device,
     const void * binary,
     size_t bytes )
@@ -776,7 +776,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePixelShader(
 
     GN_DX10_CHECK_RV( device.CreatePixelShader( binary, bytes, &shader ), 0 );
 
-	shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
+    shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
 
     return shader.detach();
 }
@@ -784,7 +784,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePixelShader(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10InputLayout * GN::d3d10::createDumpableInputLayout(
+ID3D10InputLayout * GN::d3d10::createDumpableIL(
     ID3D10Device                   & device,
     const D3D10_INPUT_ELEMENT_DESC * elements,
     size_t                           count,
@@ -795,15 +795,15 @@ ID3D10InputLayout * GN::d3d10::createDumpableInputLayout(
 
     GN_DX10_CHECK_RV( device.CreateInputLayout( elements, (UINT)count, signature, bytes, &il ), 0 );
 
-	il->SetPrivateData(
-		IL0GUID(),
-		(UINT)( sizeof(D3D10_INPUT_ELEMENT_DESC) * count ),
-		elements );
+    il->SetPrivateData(
+        IL0GUID(),
+        (UINT)( sizeof(D3D10_INPUT_ELEMENT_DESC) * count ),
+        elements );
 
-	il->SetPrivateData(
-		IL1GUID(),
-		(UINT)bytes,
-		signature );
+    il->SetPrivateData(
+        IL1GUID(),
+        (UINT)bytes,
+        signature );
 
     return il;
 }
@@ -813,18 +813,18 @@ ID3D10InputLayout * GN::d3d10::createDumpableInputLayout(
 // -----------------------------------------------------------------------------
 void GN::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex )
 {
-	DumpFile file;
+    DumpFile file;
 
-	if( !file.fp ) return;
+    if( !file.fp ) return;
 
-	D3D10_PRIMITIVE_TOPOLOGY prim;
+    D3D10_PRIMITIVE_TOPOLOGY prim;
 
-	device.IAGetPrimitiveTopology( &prim );
+    device.IAGetPrimitiveTopology( &prim );
 
-	fprintf( file.fp, "\t<draw prim=\"%d\" numvtx=\"%u\" startvtx=\"%u\"/>\n",
-		prim, vertexCount, startVertex );
+    fprintf( file.fp, "\t<draw prim=\"%d\" numvtx=\"%u\" startvtx=\"%u\"/>\n",
+        prim, vertexCount, startVertex );
 
-	sDumpD3D10States( device, file.fp );
+    sDumpD3D10States( device, file.fp );
 }
 
 //
@@ -832,16 +832,16 @@ void GN::d3d10::dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 star
 // -----------------------------------------------------------------------------
 void GN::d3d10::dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex )
 {
-	DumpFile file;
+    DumpFile file;
 
-	if( !file.fp ) return;
+    if( !file.fp ) return;
 
-	D3D10_PRIMITIVE_TOPOLOGY prim;
+    D3D10_PRIMITIVE_TOPOLOGY prim;
 
-	device.IAGetPrimitiveTopology( &prim );
+    device.IAGetPrimitiveTopology( &prim );
 
-	fprintf( file.fp, "\t<drawindexed prim=\"%d\" numidx=\"%u\" startidx=\"%u\" startvtx=\"%u\"/>\n",
-		prim, indexCount, startIndex, startVertex );
+    fprintf( file.fp, "\t<drawindexed prim=\"%d\" numidx=\"%u\" startidx=\"%u\" startvtx=\"%u\"/>\n",
+        prim, indexCount, startIndex, startVertex );
 
-	sDumpD3D10States( device, file.fp );
+    sDumpD3D10States( device, file.fp );
 }
