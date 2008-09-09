@@ -72,7 +72,12 @@
 ///
 /// Meet unexpected value
 ///
-#define GN_UNEXPECTED() GN_ASSERT_FAILURE( "Unexpected value or behaviour" )
+#define GN_UNEXPECTED_EX( message ) GN_ASSERT_FAILURE( message )
+
+///
+/// Meet unexpected value
+///
+#define GN_UNEXPECTED() GN_UNEXPECTED_EX( "Unexpected value or behaviour" )
 
 ///
 /// Assert for unimplemented functionality

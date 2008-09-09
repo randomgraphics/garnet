@@ -15,6 +15,7 @@
 #include <d3d9.h>
 #include <d3d10.h>
 #include <d3dx10.h>
+#include <map>
 
 namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 {
@@ -49,10 +50,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     /// \name state dumper
     //@{
 
-    ID3D10VertexShader   * createDumpableVertexShader( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10GeometryShader * createDumpableGeometryShader( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10PixelShader    * createDumpablePixelShader( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10InputLayout    * createDumpableInputLayout(
+    ID3D10VertexShader   * createDumpableVS( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10GeometryShader * createDumpableGS( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10PixelShader    * createDumpablePS( ID3D10Device & device, const void * binary, size_t bytes );
+    ID3D10InputLayout    * createDumpableIL(
         ID3D10Device                   & device,
         const D3D10_INPUT_ELEMENT_DESC * elements,
         size_t                           count,
@@ -88,9 +89,111 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
     //@}
 
+    /// D3D10 resource pool
+    class ResourcePool : public StdClass
+    {
+        GN_DECLARE_STDCLASS( ResourcePool, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        ResourcePool()          { clear(); }
+        virtual ~ResourcePool() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( ID3D10Device * pDevice );
+        void quit();
+    private:
+        void clear() { m_device = NULL; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        /// create buffer resource
+        ID3D10Buffer * createBuffer( const D3D10_BUFFER_DESC & desc, const D3D10_SUBRESOURCE_DATA * data = NULL );
+
+        /// create buffer resource
+        ID3D10Texture2D * createTexture2D( const D3D10_TEXTURE2D_DESC & desc, const D3D10_SUBRESOURCE_DATA * data = NULL );
+
+        /// return resource back to pool
+        void returnResource( ID3D10Resource * resource );
+
+        // ********************************
+        // private types
+        // ********************************
+    private:
+
+        /// D3D10 pooled resource description
+        struct PooledResourceDesc
+        {
+            D3D10_RESOURCE_DIMENSION dim;
+            union
+            {
+                D3D10_BUFFER_DESC    buf;
+                D3D10_TEXTURE1D_DESC tex1d;
+                D3D10_TEXTURE2D_DESC tex2d;
+                D3D10_TEXTURE3D_DESC tex3d;
+            };
+
+            /// default ctor. Does nothing
+            PooledResourceDesc() {}
+
+            /// Construct from D3D10_BUFFER_DESC
+            PooledResourceDesc( const D3D10_BUFFER_DESC & desc )
+            {
+                ::memset( this, 0, sizeof(*this) );
+                dim = D3D10_RESOURCE_DIMENSION_BUFFER;
+                buf = desc;
+            }
+
+            /// Less operator
+            bool operator<( const PooledResourceDesc & rhs ) const
+            {
+                return ::memcmp( this, &rhs, sizeof(*this) ) < 0;
+            }
+
+            /// if the resource is immutable
+            inline bool isImmutable() const;
+        };
+
+        typedef std::map<PooledResourceDesc,ID3D10Resource*> ResourceMap;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ID3D10Device * m_device;
+
+        ResourceMap m_resources;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        /// find or create new resource from pool
+        ID3D10Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+
+        /// create new D3D10 resource instance
+        ID3D10Resource * createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+    };
+
     ///
     /// simple D3D mesh
-    ///    
+    ///
     class SimpleMesh : public StdClass
     {
         GN_DECLARE_STDCLASS( SimpleMesh, StdClass );
@@ -239,7 +342,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
     ///
     /// utility class to simplify render-to-texture
-    ///    
+    ///
     class RenderToTexture : public StdClass
     {
         GN_DECLARE_STDCLASS( RenderToTexture, StdClass );
