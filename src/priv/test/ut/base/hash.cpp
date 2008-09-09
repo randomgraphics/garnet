@@ -31,7 +31,7 @@ namespace GN
         718678369,      /* 25 */
         1437356741,     /* 26 */
         2147483647      /* 27 (largest signed int prime) */
-    };                
+    };
 
     template<
         class  KEY,
@@ -58,9 +58,9 @@ namespace GN
         ///
         class Iterator
         {
-            HashMap * mMap;
-            size_t    mIdx1;
-            size_t    mIdx2;
+            mutable const HashMap * mMap;
+            mutable size_t          mIdx1;
+            mutable size_t          mIdx2;
 
         public:
 
@@ -70,6 +70,12 @@ namespace GN
             Iterator( const HashMap * m, size_t i1, size_t i2 )
                 : mMap(m), mIdx1(i1), mIdx2(i2)
             {}
+
+            /// copy constructor
+            Iterator( const Iterator & it )
+                : mMap(it.mMap), mIdx1(it.mIdx1), mIdx2(it.mIdx2)
+            {
+            }
 
             /// \name operators
             //@{
@@ -84,11 +90,21 @@ namespace GN
 
             const VALUE & operator->() const
             {
+                GN_ASSERT( mIdx1 < mMap->mValues.size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
+                mMap->mValues[mIdx1].values[mIdx2];
+            }
+
+            bool operator==( const Iterator & rhs ) const
+            {
+                return  mMap == rhs.mMap
+                    && mIdx1 == rhs.mIdx1
+                    && mIdx2 == rhs.mIdx2;
             }
 
             bool operator!=( const Iterator & rhs ) const
             {
-                return &mMap != &rhs.mMap
+                return  mMap != rhs.mMap
                     || mIdx1 != rhs.mIdx1
                     || mIdx2 != rhs.mIdx2;
             }
@@ -100,19 +116,47 @@ namespace GN
                 return mIdx2 < rhs.mIdx2;
             }
 
-            Iterator & operator++()
+            const Iterator & operator=( const Iterator & rhs ) const
+            {
+                mMap  = rhs.mMap;
+                mIdx1 = rhs.mIdx1;
+                mIdx2 = rhs.mIdx2;
+                return *this;
+            }
+
+            /// prefix plus operator
+            const Iterator & operator++() const
             {
                 GN_ASSERT( mIdx1 < mMap->mValues.size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
-
-                typename HashMap::HashItem & hi = mMap->mValues[mIdx1];
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].values.size() );
 
                 ++mIdx2;
-                if( mIdx2 < hi.values.size() ) return *this;
+                if( mIdx2 < mMap->mValues[mIdx1].values.size() ) return *this;
 
-                ++mIdx1;
+                mIdx2 = 0;
+                do {
+
+                    ++mIdx1;
+
+                    if( mIdx1 < mMap->mValues.size() && mIdx2 < mMap->mValues[mIdx1].values.size() )
+                    {
+                        return *this;
+                    }
+                } while( mIdx1 < mMap->mValues.size() );
+
+                // reach the end of the hash map
+                 mMap = 0;
+                mIdx1 = 0;
                 mIdx2 = 0;
                 return *this;
+            }
+
+            /// suffix plus operator
+            friend Iterator operator++( const Iterator & it, int )
+            {
+                Iterator ret( it );
+                ++it;
+                return ret;
             }
 
             //@}
@@ -126,6 +170,30 @@ namespace GN
         /// \name hash map operations
         //@{
 
+        Iterator begin()
+        {
+            for( size_t idx1 = 0; idx1 < mValues.size(); ++idx1 )
+            {
+                if( mValues[idx1].values.size() > 0 )
+                {
+                    return Iterator( this, idx1, 0 );
+                }
+            }
+            return Iterator( 0, 0, 0 );
+        }
+
+        ConstIterator begin() const
+        {
+            for( size_t idx1 = 0; idx1 < mValues.size(); ++idx1 )
+            {
+                if( mValues[idx1].values.size() > 0 )
+                {
+                    return Iterator( this, idx1, 0 );
+                }
+            }
+            return Iterator( 0, 0, 0 );
+        }
+
         void clear()
         {
             mValues.clear();
@@ -136,13 +204,23 @@ namespace GN
 
         bool empty() const { return 0 == mCount; }
 
+        Iterator end()
+        {
+            return Iterator( 0, 0, 0 );
+        }
+
+        ConstIterator end() const
+        {
+            return Iterator( 0, 0, 0 );
+        }
+
         const VALUE * find( const KEY & key ) const
         {
             const size_t N = PRIMARY_ARRAY[mPrimIndex];
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = HASH_FUNC(key) % N;
+            size_t k = compress( HASH_FUNC(key), N );
 
             const HashItem & hi = mValues[k];
 
@@ -166,10 +244,10 @@ namespace GN
         bool insert( const KEY & key, const VALUE & value )
         {
             const size_t N = PRIMARY_ARRAY[mPrimIndex];
-            
+
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = HASH_FUNC(key) % N;
+            size_t k = compress( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -203,7 +281,7 @@ namespace GN
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = HASH_FUNC(key) % N;
+            size_t k = compress( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -241,7 +319,7 @@ namespace GN
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = HASH_FUNC(key) % N;
+            size_t k = compress( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -283,6 +361,15 @@ namespace GN
         size_t                mPrimIndex;
         size_t                mCount;
         std::vector<HashItem> mValues;
+
+    private:
+
+        /// compress arbitrary interger into range [0..N)
+        static inline size_t compress( size_t i, size_t N )
+        {
+            return i % N;
+        }
+
     };
 }
 
@@ -300,6 +387,45 @@ public:
 
         TS_ASSERT( m.empty() );
         TS_ASSERT_EQUALS( 0, m.size() );
+    }
+
+    void testEmptyMapIteration()
+    {
+        StrHashMap m;
+
+        bool isempty = true;
+        StrHashMap::Iterator e = m.end();
+        for( StrHashMap::Iterator i = m.begin(); i != e; ++i )
+        {
+            isempty = false;
+        }
+        TS_ASSERT( isempty );
+    }
+
+    void testNonEmptyMapIteration()
+    {
+        StrHashMap m;
+
+        m.insert( "a", 1 );
+
+        int count = 0;
+        StrHashMap::ConstIterator e = m.end();
+        for( StrHashMap::ConstIterator i = m.begin(); i != e; ++i )
+        {
+            ++count;
+        }
+        TS_ASSERT( 1 == count );
+
+        m.insert( "b", 2 );
+        m.insert( "c", 3 );
+
+        count = 0;
+        e = m.end();
+        for( StrHashMap::ConstIterator i = m.begin(); i != e; i++ )
+        {
+            ++count;
+        }
+        TS_ASSERT( 3 == count );
     }
 
     void testInsertAndFind()
