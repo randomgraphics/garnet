@@ -5,6 +5,7 @@ sources = [
 	'debug.cpp',
 	'endian.cpp',
 	'file.cpp',
+	'hashmap.cpp',
 	'log.cpp',
 	'misc.cpp',
 	'path.cpp',

@@ -193,6 +193,9 @@ namespace GN
 // array types
 #include "base/array.h"
 
+// hash map
+#include "base/hashmap.h"
+
 // code page routines
 #include "base/codepage.h"
 
