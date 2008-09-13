@@ -225,9 +225,9 @@ echo.
 echo =============================
 echo Setup SCons build environment
 echo =============================
-echo SCons Directory : %GARNET_ROOT%\env\scons
-set PATH=%GARNET_ROOT%\env\scons\Scripts;%PATH%
-set SCONS_LIB_DIR=%GARNET_ROOT%\env\scons\Lib
+echo SCons Directory : %GARNET_ROOT%\env\scons\1.0.1
+set PATH=%GARNET_ROOT%\env\scons\1.0.1\Scripts;%PATH%
+set SCONS_LIB_DIR=%GARNET_ROOT%\env\scons\1.0.1\Lib
 
 REM ===========
 REM setup alias
