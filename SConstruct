@@ -1,6 +1,14 @@
 # -*- coding: GB18030 -*-
 
-import os, os.path, re, fnmatch, SCons.Tool.xenon
+import os, os.path, re, fnmatch
+
+# try import xenon module
+try:
+	import SCons.Tool.xenon
+	CONF_has_xenon_extension = True
+except ImportError:
+	CONF_has_xenon_extension = False
+
 
 # enviroment use by local functions
 LOCAL_env = Environment( tools=[] )
@@ -54,7 +62,9 @@ if 'mswin' == CONF_os:
 	CONF_allCompilers.append( Compiler('icl','mswin','x64') )
 	CONF_allCompilers.append( Compiler('icl','mswin','ia64') )
 	CONF_allCompilers.append( Compiler('mingw','mswin','x86') )
-	if SCons.Tool.xenon.exists( LOCAL_env ): CONF_allCompilers.append( Compiler('xenon','xenon','ppc') )
+	if CONF_has_xenon_extension:
+		if SCons.Tool.xenon.exists( LOCAL_env ):
+			CONF_allCompilers.append( Compiler('xenon','xenon','ppc') )
 elif 'cygwin' == CONF_os:
 	CONF_allCompilers.append( Compiler('gcc','cygwin','x86') )
 else:
@@ -791,7 +801,7 @@ def BUILD_getSuffix(): return ""
 # Create new compile environment
 #
 def BUILD_newCompileEnv( cluster ):
-	env = BUILD_env.Copy()
+	env = BUILD_env.Clone()
 
 	env.Prepend( CPPPATH = ['#src/extern/inc', 'src/priv/inc'] )
 
@@ -823,7 +833,7 @@ def BUILD_newCompileEnv( cluster ):
 # Create new link environment
 #
 def BUILD_newLinkEnv( target ):
-	env = BUILD_env.Copy()
+	env = BUILD_env.Clone()
 
 	def extname( path ):
 		p,e = os.path.splitext( str(path) )
@@ -1025,7 +1035,7 @@ def BUILD_program( name, target ):
 #
 def BUILD_custom( name, target ):
 	assert( 'custom' == target.type )
-	env = BUILD_env.Copy()
+	env = BUILD_env.Clone()
 	target.targets = []
 	for s in target.sources:
 		target.targets += s.action( env, s.sources, BUILD_bldDir )
