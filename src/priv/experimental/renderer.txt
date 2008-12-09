@@ -1,0 +1,17 @@
+Design of unified rendering API
+
+
+Rule #1: there's no way to achieve ultimate unification and performance
+simuteneously,
+
+Rule #2: Generally, unification has priority.
+
+
+Issues
+======
+
+* How to define array texture? since some API does not support that.
+  - just define it, return failure for texture creation if API does not support it.
+
+* Is script (renderman?) driven interface the future?
+  - I need to learn renderman first before I can answer this question

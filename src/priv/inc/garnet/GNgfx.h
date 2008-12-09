@@ -25,6 +25,10 @@ namespace GN
 #include "gfx/shape.h"
 #include "gfx/misc.h"
 
+// cross API rendering interface
+#include "gfx/surface.h"  // graphics resources (texture, vertex/index buffer)
+#include "gfx/renderer.h" // main renderer interface
+
 // basic graphics system interface
 #include "gfx/graphicsSystem.h"
 
