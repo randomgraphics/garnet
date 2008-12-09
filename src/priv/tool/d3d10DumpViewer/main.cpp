@@ -13,6 +13,46 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D10DumpViewer");
 
 static StrA sDumpFileName;
 
+///
+/// load something from XML file
+///
+template<class T>
+inline bool loadFromXmlFile( T & t, const StrA & filename )
+{
+    GN_GUARD;
+
+    GN_INFO(getLogger( "GN.scene.util" ))( "Load '%s'", filename.cptr() );
+
+    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+    if( !fp ) return false;
+
+    StrA basedir = dirName( filename );
+
+    XmlDocument doc;
+    XmlParseResult xpr;
+
+    if( !doc.parse( xpr, *fp ) )
+    {
+        static Logger * sLogger = getLogger( "GN.scene.util" );
+        GN_ERROR(sLogger)(
+            "Fail to parse XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp->name().cptr(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return false;
+    }
+
+    GN_ASSERT( xpr.root );
+
+    return t.loadFromXmlNode( *xpr.root, basedir );
+
+    GN_UNGUARD;
+}
+
 /* *****************************************************************************
 // shader function templates
 // *****************************************************************************
@@ -457,7 +497,7 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
         return true;
     }
 };
- 
+
 struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
 {
     AutoComPtr<ID3D10ShaderResourceView> srv;
@@ -613,7 +653,7 @@ struct D3D10OperationDump
 
 	            dev.DrawIndexed( numidx, startidx, startvtx );
 			}
-			
+
         }
         else
         {
@@ -651,7 +691,7 @@ struct D3D10StateDump
     D3D10SamplerStateDump               vssamp[16];
     D3D10SamplerStateDump               pssamp[16];
     D3D10SamplerStateDump               gssamp[16];
- 
+
     D3D10InputLayoutDump                il;
     D3D10VtxBufDump                     vtxbufs[16];
     D3D10IdxBufDump                     idxbuf;
@@ -890,14 +930,17 @@ struct D3D10StateDump
         }
 
         // il
-        GN_DX10_CHECK_RV(
-            dev.CreateInputLayout(
-                il.elements.cptr(),
-                (UINT)il.elements.size(),
-                il.signature.cptr(),
-                (UINT)il.signature.size(),
-                &il.comptr ),
-            false );
+        if( !il.elements.empty() )
+        {
+	        GN_DX10_CHECK_RV(
+	            dev.CreateInputLayout(
+	                il.elements.cptr(),
+	                (UINT)il.elements.size(),
+	                il.signature.cptr(),
+	                (UINT)il.signature.size(),
+	                &il.comptr ),
+	            false );
+        }
 
         // vb
         for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
@@ -1140,7 +1183,7 @@ protected:
     {
         GN_GUARD;
 
-        if( !scene::loadFromXmlFile( mState, sDumpFileName ) ) return false;
+        if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if DRAW_TO_BACKBUF
         o.width  = mState.rendertargets[0].width;
