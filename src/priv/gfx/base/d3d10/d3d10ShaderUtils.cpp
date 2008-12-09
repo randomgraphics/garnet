@@ -75,7 +75,7 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
     // get ASM code
     AutoComPtr<ID3D10Blob> asm_;
 
-    D3DX10DisassembleShader(
+    D3D10DisassembleShader(
         bin->GetBufferPointer(),
         bin->GetBufferSize(),
         false,
