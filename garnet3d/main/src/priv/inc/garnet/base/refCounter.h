@@ -39,6 +39,7 @@ namespace GN
         {
             if( 0 == atomDec32( &mRef ) )
             {
+                // delete itself
                 delete this;
             }
         }
@@ -47,6 +48,21 @@ namespace GN
         /// get current reference counter value
         ///
         SInt32 getref() const throw() { return atomGet32(&mRef); }
+
+        // ********************************
+        //    weak reference management
+        // ********************************
+    public :
+
+        std::list<void*>::iterator _addWeakRef( void * p ) const
+        {
+            return mWeakRefList.insert( mWeakRefList.end(), p );
+        }
+
+        void _removeWeakRef( const std::list<void*>::iterator & iter ) const
+        {
+            mWeakRefList.erase( iter );
+        }
 
         // ********************************
         /// \name protective ctor/dtor
@@ -71,9 +87,23 @@ namespace GN
                     "destructing a refcounter with its reference counter "
                     "greater then zero!" );
             }
+
+            // NULL all weak references
+            while( !mWeakRefList.empty() )
+            {
+                NullifyWeakRef( *mWeakRefList.begin() );
+            }
+            GN_ASSERT( mWeakRefList.empty() );
         }
 
         //@}
+
+        // ********************************
+        // private methods
+        // ********************************
+    private:
+
+        static inline void NullifyWeakRef( void * );
 
         // ********************************
         // private data members
@@ -84,6 +114,8 @@ namespace GN
         /// reference counter
         ///
         mutable SInt32 mRef;
+
+        mutable std::list<void*> mWeakRefList;
     };
 
     ///
@@ -297,6 +329,153 @@ namespace GN
     };
 
     template<typename X,typename M> AutoRef<X,M> AutoRef<X,M>::EMPTYPTR;
+
+    namespace detail
+    {
+        ///
+        /// base class of weak reference
+        ///
+        class WeakRefBase
+        {
+        protected:
+
+            const RefCounter         * mPtr;
+            std::list<void*>::iterator mIter;
+
+        public:
+
+            /// constructor
+            WeakRefBase( const RefCounter * ptr = NULL ) : mPtr(ptr)
+            {
+                if( mPtr )
+                {
+                    mIter = mPtr->_addWeakRef( this );
+                }
+            }
+
+            /// copy constructor
+            WeakRefBase( const WeakRefBase & ref ) : mPtr(ref.mPtr)
+            {
+                if( mPtr )
+                {
+                    mIter = mPtr->_addWeakRef( this );
+                }
+            }
+
+            /// destructor
+            virtual ~WeakRefBase()
+            {
+                clear();
+            }
+
+            /// is empty reference or not.
+            bool empty() const { return NULL == mPtr; }
+
+            /// clear the reference
+            void clear()
+            {
+                if( mPtr )
+                {
+                    mPtr->_removeWeakRef( mIter );
+                    mPtr = NULL;
+                }
+            }
+
+            /// set the pointer
+            void set( const RefCounter * ptr )
+            {
+                if( mPtr == ptr ) return;
+
+                clear();
+
+                if( ptr )
+                {
+                    mPtr = ptr;
+                    mIter = mPtr->_addWeakRef( this );
+                }
+            }
+        };
+    }
+
+    ///
+    /// Weak reference class
+    ///
+    template<class X>
+    class WeakRef : public detail::WeakRefBase
+    {
+        typedef X * XPTR;
+        typedef X & XREF;
+
+    public:
+
+        /// constructor
+        WeakRef( const RefCounter * ptr = NULL ) : detail::WeakRefBase(ptr)
+        {
+        }
+
+        /// copy constructor
+        WeakRef( const WeakRef & ref ) : detail::WeakRefBase(ref)
+        {
+        }
+
+        // get the pointer
+        XPTR get() const { return (X*)mPtr; }
+
+        ///
+        /// Convert to XPTR
+        ///
+        operator XPTR () const { return mPtr; }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator == ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr == rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator != ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr != rhs.mPtr;
+        }
+
+        ///
+        /// 比较操作
+        ///
+        bool operator < ( const WeakRef & rhs ) const throw()
+        {
+            return mPtr < rhs.mPtr;
+        }
+
+        ///
+        /// NOT operator
+        ///
+        bool operator !() const throw() { return !mPtr; }
+
+        ///
+        /// dereference operator.
+        ///
+        /// TODO: is this thread safe?
+        ///
+        XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }
+
+        ///
+        /// arrow operator
+        ///
+        XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
+    };
+
+    ///
+    ///
+    // -------------------------------------------------------------------------
+    inline void RefCounter::NullifyWeakRef( void * ptr )
+    {
+        detail::WeakRefBase * ref = (detail::WeakRefBase *)ptr;
+        ref->clear();
+    }
 }
 
 // *****************************************************************************
