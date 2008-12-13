@@ -44,4 +44,29 @@ public:
         p1b = p1a;
         TS_ASSERT_EQUALS( p1b->getref(), 3 );
     }
+
+    void testWeakRef()
+    {
+        using namespace GN;
+
+        AutoRef<MyRefObj> o1( new MyRefObj );
+
+        WeakRef<MyRefObj> w1( o1.get() );
+        WeakRef<MyRefObj> w2;
+        WeakRef<MyRefObj> w3( w1 );
+
+        w2.set( o1 );
+
+        TS_ASSERT( w1 );
+        TS_ASSERT( w2 );
+        TS_ASSERT( w3 );
+        TS_ASSERT( w1 == w2 );
+        TS_ASSERT( w1 == w3 );
+
+        o1.clear();
+
+        TS_ASSERT( !w1 );
+        TS_ASSERT( !w2 );
+        TS_ASSERT( !w3 );
+    }
 };

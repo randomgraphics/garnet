@@ -35,11 +35,11 @@ namespace GN { namespace gfx
     enum CubeFace
     {
         CUBEFACE_PX = 0, ///< positive X
-        CUBEFACE_NX, ///< negative X
-        CUBEFACE_PY, ///< positive Y
-        CUBEFACE_NY, ///< negative Y
-        CUBEFACE_PZ, ///< positive Z
-        CUBEFACE_NZ, ///< negative Z
+        CUBEFACE_NX,     ///< negative X
+        CUBEFACE_PY,     ///< positive Y
+        CUBEFACE_NY,     ///< negative Y
+        CUBEFACE_PZ,     ///< positive Z
+        CUBEFACE_NZ,     ///< negative Z
         NUM_CUBEFACES
     };
 
@@ -67,7 +67,7 @@ namespace GN { namespace gfx
         UInt32      faces;     ///< face count. When used as parameter of Renderer::createTexture(),
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
         UInt32      levels;    ///< mipmap level count. When used as parameter of Renderer::createTexture(),
-                               ///< you may set it to 0 to create full mipmap tower (down to 1x1).
+                               ///< you may set it to 0 to create full mipmap chain (down to 1x1).
         ColorFormat format;    ///< pixel format.
 
         ///

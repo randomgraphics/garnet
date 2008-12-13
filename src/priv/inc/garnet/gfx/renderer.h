@@ -96,11 +96,11 @@ namespace GN { namespace gfx
     ///
     enum MsaaType
     {
-        MSAA_NONE,   ///< No MSAA
-        MSAA_LOW,    ///< low quality MSAA
-        MSAA_MEDIUM, ///< medium quality MSAA
-        MSAA_HIGH,   ///< high quality MSAA
-        MSAA_ULTRA,  ///< ultra quality MSAA
+        MSAA_NONE,      ///< No MSAA
+        MSAA_LOW,       ///< low quality MSAA
+        MSAA_MEDIUM,    ///< medium quality MSAA
+        MSAA_HIGH,      ///< high quality MSAA
+        MSAA_ULTRA,     ///< ultra quality MSAA
         NUM_MSAA_TYPES, ///< number of MSAA types
     };
 
@@ -263,20 +263,113 @@ namespace GN { namespace gfx
         }
     };
 
-    /// \def GNGFX_CAPS
-    /// Define renderer caps
-
     ///
     /// renderer caps
     ///
-    enum RendererCaps
+    struct RendererCaps
     {
-        #define GNGFX_CAPS(X) CAPS_##X,
-        #include "rendererCapsMeta.h"
-        #undef GNGFX_CAPS
-        NUM_RENDERER_CAPS,
-        CAPS_INVALID
+        UInt32 maxTex1DSize[2];  ///< width, array
+        UInt32 maxTex2DSize[3];  ///< width, height, array
+        UInt32 maxTex3DSize[4];  ///< width, height, array
+        UInt32 maxRenderTargets; ///< max number of simutaneous render targets
+        bool   vsProfiles[NUM_SHADER_PROFILES];
+        bool   gsProfiles[NUM_SHADER_PROFILES];
+        bool   psProfiles[NUM_SHADER_PROFILES];
     };
+
+    ///
+    /// enumerations used by renderer context structure
+    ///
+    enum RendererContextEnums
+    {
+        RC_FILL_SOLID = 0,
+        RC_FILL_WIREFRAME,
+
+        RC_CULL_NONE = 0,
+        RC_CULL_FRONT,
+        RC_CULL_BACK,
+
+        RC_CMP_LT = 0,
+        RC_CMP_LE,
+        RC_CMP_EQ,
+        RC_CMP_GE,
+        RC_CMP_GT,
+        RC_CMP_NE,
+
+        RC_STENCIL_KEEP = 0,
+        RC_STENCIL_ZERO,
+        RC_STENCIL_REPLACE,
+        RC_STENCIL_INC_SAT,
+        RC_STENCIL_DEC_SAT,
+        RC_STENCIL_INVERT,
+        RC_STENCIL_INC,
+        RC_STENCIL_DEC,
+
+        RC_BLEND_ZERO = 0,
+        RC_BLEND_ONE,
+        RC_BLEND_SRC_COLOR,
+        RC_BLEND_INV_SRC_COLOR,
+        RC_BLEND_SRC_ALPHA,
+        RC_BLEND_INV_SRC_ALPHA,
+        RC_BLEND_DEST_ALPHA,
+        RC_BLEND_INV_DEST_ALPHA,
+        RC_BLEND_DEST_COLOR,
+        RC_BLEND_INV_DEST_COLOR,
+        RC_BLEND_BLEND_FACTOR,
+        RC_BLEND_INV_BLEND_FACTOR,
+
+        RC_BLEND_OP_ADD = 0,
+        RC_BLEND_OP_SUB,
+        RC_BLEND_OP_REV_SUB,
+        RC_BLEND_OP_MIN,
+        RC_BLEND_OP_MAX,
+    };
+
+    ///
+    /// renderer context
+    ///
+    struct RendererContext
+    {
+        // DWORD 0
+        UInt32 fillMode       : 2;
+        UInt32 cullMode       : 2;
+        UInt32 scissorEnabled : 1;
+        UInt32 msaaEnabled    : 1;
+        UInt32 depthTest      : 1;
+        UInt32 depthWrite     : 1;
+        UInt32 depthFunc      : 3;
+        UInt32 stencilEnable  : 1;
+        UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
+        UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
+        UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
+        UInt32 blendSrc       : 4;
+        UInt32 blendDst       : 4;
+        UInt32 blendOp        : 3;
+        UInt32 blendSrcAlpha  : 4;
+
+        // DWORD 1
+        UInt32 blendDstAlpha  : 4;
+        UInt32 blendOpAlpha   : 3;
+        UInt32 nouse_1        : 25;
+
+        // TODO: depth bias
+
+        // DWORD 2
+        UInt32 colorWriteMask; ///< 4 bits x 8 render targets.
+
+        // DWORD 3-6
+        float  blendFactors[4];
+
+        // DWORD 7-10
+        Rect<UInt32> viewport;
+
+        // DWORD 11-14
+        Rect<UInt32> scissorRect; ///< scissor rects
+
+        // textures
+        WeakRef<Texture> textures[32];
+    };
+    GN_CASSERT( sizeof(RendererContext) == 14*sizeof(UInt32) );
 
     ///
     /// 清屏标志
@@ -373,19 +466,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    private:
-
-        RendererOptions mOptions;
-
-    protected:
-
-        ///
-        /// Update private renderer option variable.
-        ///
-        void setOptions( const RendererOptions & ro ) { mOptions = ro; }
-
-    public:
-
         ///
         /// Reset renderer with new options.
         ///
@@ -400,7 +480,12 @@ namespace GN { namespace gfx
         ///
         /// Get renderer options
         ///
-        const RendererOptions & getOptions() const { return mOptions; }
+        const RendererOptions & getOptions() const = 0;
+
+        ///
+        /// Get current API
+        ///
+        RendererAPI GetApi() const = 0;
 
         //@}
 
@@ -417,26 +502,10 @@ namespace GN { namespace gfx
 
         //@{
 
-    private:
-
-        DispDesc mDispDesc;
-
-    protected:
-
-        ///
-        /// Update private diplay decriptor
-        ///
-        void setDispDesc( const DispDesc & desc )
-        {
-            mDispDesc = desc;
-        }
-
-    public:
-
         ///
         /// 获得当前的渲染窗口句柄
         ///
-        const DispDesc & getDispDesc() const { return mDispDesc; }
+        const DispDesc & getDispDesc() const = 0;
 
         ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.
@@ -458,41 +527,55 @@ namespace GN { namespace gfx
 
         //@{
 
-    protected:
-
-        UInt32 mCaps[NUM_RENDERER_CAPS];
-
-    public:
-
         ///
         /// Get render device caps
         ///
-        UInt32 getCaps( SInt32 c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
+        virtual const RendererCaps & getCaps() const = 0;
 
         ///
-        /// Check renderer support to specific shader profile. Profile tag could be:
-        ///     vs_1_1 vs_2_0 vs_2_x vs_3_0
-        ///     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0
-        ///     ps_4_0 vs_4_0
-        ///     xvs xps
-        ///     arbvp1, arbfp1,
-        ///     glslvs, glslps,
-        ///     cgvs, cgps
+        /// Check texture format support
         ///
-        /// \note Profile tag is case sensitive.
+        /// \param format       The texture format.
+        /// \param usages       Combination of TextureUsage
         ///
-        virtual bool supportShader( const StrA & ) = 0;
-
-        ///
-        /// Test compability of specific texture format
-        ///
-        virtual bool supportTextureFormat( TexDim type, BitFields usage, ColorFormat format ) const = 0;
+        virtual bool checkTextureFormatSupport( ColorFormat format, BitFields usages ) const = 0;
 
         ///
         /// Get default texture format.
-        /// Return FMT_UNKNOWN, if the type and/or usage are not supported by current renderer.
         ///
-        virtual ColorFormat getDefaultTextureFormat( TexDim type, BitFields usage ) const = 0;
+        /// \param usage        Combination of TextureUsage
+        ///
+        /// \return             Return COLOR_FORMAT_UNKNOWN, if the usage is not supported by current renderer.
+        ///
+        virtual ColorFormat getDefaultTextureFormat( BitFields usage ) const = 0;
+
+        //@}
+
+        // ********************************************************************
+        //
+        /// \name Shader Manager
+        //
+        // ********************************************************************
+
+        //@{
+
+        ///
+        /// Compile shader against specific profile
+        ///
+        virtual CompiledShaderBlob *
+        compileShader( const ShaderDesc & desc, ShaderProfile profile ) = 0;
+
+        ///
+        /// Compile shader against the highest possible profile
+        ///
+        virtual CompiledShaderBlob *
+        compileShader( const ShaderDesc & desc ) = 0;
+
+        ///
+        /// create shader
+        ///
+        Shader *
+        createShader( const CompiledShaderBlob * ) = 0;
 
         //@}
 
@@ -505,159 +588,89 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// Create shader. Parameter 'entry' will be ignored for low-level shading language.
-        ///
-        /// \param type
-        ///     Shader type
-        /// \param lang
-        ///     Shading language
-        /// \param code
-        ///     Shader code
-        /// \param hints
-        ///     Shader compilation hints. Hints string must be in format that can be imported
-        ///     into a registry object. See Registry::importFromStr() for details.
-        ///     \par
-        ///     For D3D shader, several hints are supported:
-        ///     - "entry": specify entry function name, default is "main"
-        ///     - "target": specify HLSL compile target, default is empty, means using the highest possible target.
-        ///     - "sm30": favor shader model 3.0 or not, default is yes.
-        ///       - In DirectX, VS 3.0 and PS 3.0 can _ONLY_ be used with each other. So sometimes, you may want
-        ///         your HLSL shader to be compiled into VS/PS 2.x. So it can be used with other non-SM3 shaders.
-        ///       - This hints has higher priority then "target". So if you set "target" to "vs_3_0", while setting
-        ///         this hint to "true". The shader will be compiled to "vs_2_a".
-        ///
-        virtual Shader *
-        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints = "" ) = 0;
-
-        ///
-        /// create shader from file
-        ///
-        Shader *
-        createShaderFromFile( ShaderType type, ShadingLanguage lang, const StrA & filename, const StrA & hints = "" );
-
-        ///
-        /// Create vetex shader.
-        ///
-        Shader *
-        createVS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
-
-        ///
-        /// Create pixel shader.
-        ///
-        Shader *
-        createPS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
-
-        ///
         /// Create new texture
         /// See TextureDesc for detail explaination of each fields in descriptor.
         ///
         virtual Texture *
-        createTexture( const TextureDesc & desc ) = 0;
+        createTexture( const TextureDesc & desc, BitFields usages = 0 ) = 0;
 
         ///
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( TexDim    dim,
-                       size_t    sx, size_t sy, size_t sz,
-                       size_t    faces = 0,
-                       size_t    levels = 0,
-                       ColorFormat    format = FMT_UNKNOWN,
-                       BitFields usage = 0 )
+        createTexture( size_t      sx,
+                       size_t      sy,
+                       size_t      sz,
+                       size_t      faces  = 1,
+                       size_t      levels = 0, // 0 means full mipmap chain
+                       ColorFormat format = COLOR_FORMAT_UNKNOWN,
+                       BitFields   usages = 0 )
         {
             TextureDesc desc =
             {
-                dim,
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
-                FMT_UNKNOWN == format ? getDefaultTextureFormat( dim, usage ) : format,
-                { usage }
+                COLOR_FORMAT_UNKNOWN == format ? getDefaultTextureFormat( usage ) : format,
             };
-            return createTexture( desc );
+            return createTexture( desc, usages );
         }
 
         ///
         /// Create 1D texture
         ///
         Texture *
-        create1DTexture( size_t    sx,
-                         size_t    levels = 0,
-                         ColorFormat    format = FMT_UNKNOWN,
-                         BitFields usage = 0 )
+        create1DTexture( size_t      sx,
+                         size_t      levels = 0,
+                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
+                         BitFields   usages = 0 )
         {
-            return createTexture( TEXDIM_1D, sx, 0, 0, 1, levels, format, usage );
+            return createTexture( sx, 1, 1, 1, levels, format, usages );
         }
 
         ///
         /// Create 2D texture
         ///
         Texture *
-        create2DTexture( size_t    sx, size_t sy,
-                         size_t    levels = 0,
-                         ColorFormat    format = FMT_UNKNOWN,
-                         BitFields usage = 0 )
+        create2DTexture( size_t      sx,
+                         size_t      sy,
+                         size_t      levels = 0,
+                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
+                         BitFields   usages = 0 )
         {
-            return createTexture( TEXDIM_2D, sx, sy, 0, 1, levels, format, usage );
+            return createTexture( sx, sy, 1, 1, levels, format, usages );
         }
 
         ///
         /// Create 3D texture
         ///
         Texture *
-        create3DTexture( size_t    sx, size_t sy, size_t sz,
-                         size_t    levels = 0,
-                         ColorFormat    format = FMT_UNKNOWN,
-                         BitFields usage = 0 )
+        create3DTexture( size_t      sx,
+                         size_t      sy,
+                         size_t      sz,
+                         size_t      levels = 0,
+                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
+                         BitFields   usages = 0 )
         {
-            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usage );
+            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usages );
         }
 
         ///
         /// Create CUBE texture
         ///
         Texture *
-        createCubeTexture( size_t    sx,
-                           size_t    levels = 0,
-                           ColorFormat    format = FMT_UNKNOWN,
-                           BitFields usage = 0 )
+        createCubeTexture( size_t      sx,
+                           size_t      levels = 0,
+                           ColorFormat format = COLOR_FORMAT_UNKNOWN,
+                           BitFields   usages = 0 )
         {
-            return createTexture( TEXDIM_CUBE, sx, 0, 0, 6, levels, format, usage );
+            return createTexture( sx, sx, 1, 6, levels, format, usages );
         }
-
-        ///
-        /// create sampler
-        ///
-        virtual SamplerHandle createSampler( const SamplerDesc & ) = 0;
-
-        ///
-        /// Create vertex format handle.
-        ///
-        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) = 0;
 
         ///
         /// Create new vertex buffer
         ///
         virtual VtxBuf *
         createVtxBuf( const VtxBufDesc & ) = 0;
-
-        ///
-        /// Create new vertex buffer
-        ///
-        virtual VtxBuf *
-        createVtxBuf( size_t bytes, bool dynamic = false, bool readback = false )
-        {
-            VtxBufDesc desc;
-            desc.bytes = (UInt32)bytes;
-            desc.dynamic = dynamic;
-            desc.readback = readback;
-            return createVtxBuf( desc );
-        }
-
-        ///
-        /// Create new dynamic vertex buffer
-        ///
-        VtxBuf *
-        createDynamicVtxBuf( size_t bytes ) { return createVtxBuf( bytes, true, false ); }
 
         ///
         /// Create new index buffer
@@ -672,17 +685,12 @@ namespace GN { namespace gfx
         createIdxBuf( size_t numidx, bool dynamic = false, bool readback = false )
         {
             IdxBufDesc desc;
-            desc.numidx = (UInt32)numidx;
-            desc.dynamic = dynamic;
+            desc.numidx   = (UInt32)numidx;
+            desc.bits32   = false;
+            desc.dynamic  = dynamic;
             desc.readback = readback;
             return createIdxBuf( desc );
         }
-
-        ///
-        /// Create new dynamic index buffer
-        ///
-        IdxBuf *
-        createDynamicIdxBuf( size_t numidx ) { return createIdxBuf( numidx, true, false ); }
 
         //@}
 
@@ -694,7 +702,7 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
+        // TODO: sampler
 
         ///
         /// Set rendering context.
@@ -706,25 +714,22 @@ namespace GN { namespace gfx
         virtual void setContext( const RendererContext & ) = 0;
 
         ///
-        /// Rebind current rendering context to rendering device.
+        /// Get current render context
         ///
-        /// \par
-        ///     This function will rebind current rendering context to renderer.
-        /// \par
-        ///     Renderer class have internal cache mechanism to avoid
-        ///     redunant state changing. But if you call D3D/OGL functions
-        ///     directly in your code that changes D3D/OGL states, this cache
-        ///     mechanism will be broken. One way to avoid this situation, is
-        ///     to store/restore D3D/OGL states by yourself. Another way is to
-        ///     call this function to force rebinding of current renderer
-        ///     context, which is much easier and less error prone.
-        ///
-        virtual void rebindContext( RendererContext::FieldFlags ) = 0;
+        virtual void getContext( RendererContext & ) const = 0;
 
         ///
-        /// Get current render state block descriptor
+        /// Rebind current rendering context to rendering device.
         ///
-        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const = 0;
+        /// Renderer usually has internal cache mechanism to avoid
+        /// redunant state changing. So if you call D3D/OGL functions
+        /// directly in your code that changes D3D/OGL states, this cache
+        /// mechanism will be broken. One way to avoid this situation, is
+        /// to store/restore D3D/OGL states by yourself. Another way is to
+        /// call this function to force rebinding of current renderer
+        /// context, which is much easier and less error prone.
+        ///
+        virtual void rebindContext() = 0;
 
         //@}
 
@@ -735,13 +740,6 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
-
-    protected:
-
-        AutoInit<size_t,0> mNumPrims;   ///< Number of primitives per frame.
-        AutoInit<size_t,0> mNumBatches; ///< Number of draws per frame.
-
-    public :
 
         ///
         /// 开始绘图操作.
@@ -860,19 +858,21 @@ namespace GN { namespace gfx
         ///
         /// 返回上一次 drawEnd() 到现在所绘制的原语的个数
         ///
-        size_t getNumPrimitives() const { return mNumPrims; }
+        size_t getNumPrimitives() const = 0;
 
         ///
         /// 返回上一次 drawEnd() 到现在 draw() / drawindexed() 的次数
         ///
-        size_t getNumBatches() const { return mNumBatches; }
+        size_t getNumBatches() const = 0;
 
         ///
         /// 返回上一次 drawEnd() 到现在平均每次 draw()/drawIndexed() 的原语数
         ///
         size_t getNumPrimsPerBatch() const
         {
-            return 0 == mNumBatches ? 0 : mNumPrims / mNumBatches;
+            size_t numBatches = getNumBatches();
+            size_t numPrims   = getNumPrimitives();
+            return 0 == numBatches ? 0 : numPrims / numBatches;
         }
 
         //@}
@@ -884,16 +884,6 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
-
-    private:
-
-#if GN_DEBUG_BUILD
-        AutoInit<bool,true> mEnableParameterCheck;
-#else
-        AutoInit<bool,false> mEnableParameterCheck;
-#endif
-
-    public:
 
         ///
         /// This function is provided because different API has different ways
@@ -966,12 +956,12 @@ namespace GN { namespace gfx
         ///
         /// Enabled by default for debug build; disabled by default for release build.
         ///
-        void enableParameterCheck( bool enable ) { mEnableParameterCheck = enable; }
+        void enableParameterCheck( bool enable ) = 0;
 
         ///
         /// Get parameter check flag.
         ///
-        bool parameterCheckEnabled() const { return mEnableParameterCheck; }
+        bool parameterCheckEnabled() const = 0;
 
         ///
         /// dump device states of the next frame.
@@ -984,52 +974,6 @@ namespace GN { namespace gfx
         ///     Check document of specific renderer implementation for details.
         ///
         virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
-
-        //@}
-
-        // ********************************************************************
-        //
-        /// \name Ctor / dtor
-        //
-        // ********************************************************************
-
-        //@{
-
-    public:
-
-        RendererAPI GetApi() const { return m_api; }
-
-    protected:
-
-        ///
-        /// ctor
-        ///
-        Renderer( RendererAPI api ) : mSharedLib(0), m_api(api) {}
-
-        ///
-        /// Dtor
-        ///
-        virtual ~Renderer() {}
-
-    private:
-
-        RendererAPI m_api;
-
-        //@}
-
-        // ********************************************************************
-        //
-        /// \name Instance Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-    private:
-
-        SharedLib * mSharedLib;
-        friend Renderer * createRenderer( RendererAPI );
-        friend void deleteRenderer();
 
         //@}
     };
@@ -1051,4 +995,3 @@ namespace GN { namespace gfx
 //                                     EOF
 // *****************************************************************************
 #endif // __GN_GFX_RENDERER_H__
-

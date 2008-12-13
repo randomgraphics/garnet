@@ -271,7 +271,7 @@ def UTIL_newEnv( compiler, variant ):
 	if 'cl' == env['CC']:
 		#
 		# To workaround an bug in scons 0.96.1, this variable has to be imported
-		# on AMD64 platform, to make msvs link.exe work.
+		# or else, link.exe will report error: cannot open file 'TEMPFILE'
 		#
 		env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
