@@ -1,3 +1,3 @@
 #include "pch.h"
-#include "basicTexture.h"
+#include "basicSurface.h"
 GN::Logger * GN::gfx::BasicTexture::sLogger = GN::getLogger("GN.gfx.rndr.common.BasicTexture");

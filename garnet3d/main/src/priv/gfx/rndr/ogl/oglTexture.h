@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.11.13)
 // *****************************************************************************
 
-#include "../common/basicTexture.h"
+#include "../common/basicSurface.h"
 #include "oglResource.h"
 #include "oglRenderer.h"
 

@@ -17,17 +17,6 @@
 namespace GN { namespace gfx
 {
     ///
-    /// Device-dependent render state block
-    ///
-    struct DeviceRenderStateBlock : public RefCounter
-    {
-        ///
-        /// Apply render states to render device
-        ///
-        virtual void apply() const = 0;
-    };
-
-    ///
     /// basic renderer class
     ///
     class BasicRenderer : public Renderer, public StdClass
@@ -42,7 +31,12 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRenderer() { clear(); }
+        BasicRenderer( RendererAPI api )
+            : mApi(api)
+        {
+             mWindow.setRenderer( this );
+             clear();
+        }
         virtual ~BasicRenderer() {}
         //@}
 
@@ -57,9 +51,6 @@ namespace GN { namespace gfx
     private :
         void clear()
         {
-            drawClear();
-            contextClear();
-            resClear();
             dispClear();
         }
         //@}
@@ -72,7 +63,13 @@ namespace GN { namespace gfx
 
         //@{
 
-    private :
+    public:
+
+        virtual const RendererOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
+        virtual RendererAPI             getApi() const { return mApi; }
+
+    private:
         bool dispInit();
         void dispQuit();
         void dispClear()
@@ -86,24 +83,25 @@ namespace GN { namespace gfx
 
         ///
         /// Called by sub-classes to initialize display descriptor
-        /// based on device settings.
+        /// based on renderer options.
         ///
-        bool processUserOptions( const RendererOptions & );
+        bool setupDispDesc( const RendererOptions & );
 
         ///
         /// Called by sub class to respond to render window resizing/moving
         ///
         void handleRenderWindowSizeMove();
 
-#if GN_MSWIN
-    protected:
-        RenderWindowMsw mWindow;  ///< Render window instance.
     private:
+
+        RendererOptions   mOptions;
+        DispDesc          mDispDesc;
+        const RendererAPI mApi; // there's no way to change API after a renderer is created.
+
+#if GN_MSWIN
+        RenderWindowMsw mWindow;  ///< Render window instance.
         WinProp         mWinProp; ///< Render window properites.
 #elif GN_POSIX
-    public:
-        Display * getDefaultDisplay() const { GN_ASSERT(mDefaultDisplay); return mDefaultDisplay; }
-    private:
         Display *       mDefaultDisplay;
         RenderWindowX11 mWindow;  ///< Render window instance
 #endif
@@ -128,12 +126,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    private:
-
-        bool resInit() { return true; }
-        void resQuit() {}
-        void resClear() {}
-
         //@}
 
         // *****************************************************************************
@@ -144,45 +136,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    private:
-
-        bool contextInit() { return true; }
-        void contextQuit() {}
-        void contextClear() {}
-
-    protected:
-
-        void holdContextResources( const RendererContext & ); ///< hold reference to resources in context state
-        void clearContextResources();
-
-    private:
-
-        template<class T,size_t COUNT>
-        struct AutoRefArray
-        {
-            enum { MAX_COUNT = COUNT };
-            AutoRef<const T> data[COUNT];
-            size_t           count;
-            AutoRefArray() : count(0) {}
-            void clear() { for( size_t i = 0; i < COUNT; ++i ) data[i].clear(); count = 0; }
-        };
-
-        struct ResourceHolder
-        {
-            AutoRefArray<Shader,NUM_SHADER_TYPES>      shaders;
-            AutoRefArray<Texture,MAX_RENDER_TARGETS>   cbuffers;
-            AutoRef<const Texture>                     zbuffer;
-            AutoRefArray<Texture,MAX_TEXTURE_STAGES>   textures;
-            AutoRefArray<VtxBuf,MAX_VERTEX_ATTRIBUTES> vtxbufs;
-            AutoRef<const IdxBuf>                      idxbuf;
-        };
-
-        //
-        // Use to hold references to currently binded resources, in case client user
-        // delete those resources.
-        //
-        ResourceHolder mResourceHolder;
-
         //@}
 
         // *****************************************************************************
@@ -192,11 +145,6 @@ namespace GN { namespace gfx
         // *****************************************************************************
 
         //@{
-
-    private:
-        bool drawInit()     { return true; }
-        void drawQuit()     {}
-        void drawClear()    { mNumPrims = 0; mNumBatches = 0; }
 
         //@}
     };

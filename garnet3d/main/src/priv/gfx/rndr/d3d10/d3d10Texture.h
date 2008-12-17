@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.09.20)
 // *****************************************************************************
 
-#include "../common/basicTexture.h"
+#include "../common/basicSurface.h"
 
 namespace GN { namespace gfx
 {

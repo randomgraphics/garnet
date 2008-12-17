@@ -494,29 +494,14 @@ namespace GN { namespace gfx
         virtual const RendererOptions & getOptions() const = 0;
 
         ///
-        /// Get current API
-        ///
-        virtual RendererAPI GetApi() const = 0;
-
-        //@}
-
-        // ********************************************************************
-        //
-        /// \name Display Manager
-        /// \note
-        ///     We provide two functions to get API specific rendering context:
-        ///     - Sometime, you want to run some API specific codes,
-        ///       for debug, test or any other purpose.
-        ///     - You may use these functions to detect the current API
-        //
-        // ********************************************************************
-
-        //@{
-
-        ///
-        /// 获得当前的渲染窗口句柄
+        /// Get Display Description
         ///
         virtual const DispDesc & getDispDesc() const = 0;
+
+        ///
+        /// Return the rendering API
+        ///
+        virtual RendererAPI getApi() const = 0;
 
         ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.

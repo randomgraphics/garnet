@@ -4,7 +4,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "../rndr.h"
+#include "garnet/GNgfx.h"
 
 #if GN_XENON
 #include <xtl.h>

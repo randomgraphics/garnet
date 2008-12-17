@@ -18,10 +18,7 @@ bool GN::gfx::BasicRenderer::init()
     GN_STDCLASS_INIT( BasicRenderer, () );
 
     // initialize sub-components one by one
-    if( !dispInit()    ) return failure();
-    if( !resInit()     ) return failure();
-    if( !contextInit() ) return failure();
-    if( !drawInit()    ) return failure();
+    if( !dispInit() ) return failure();
 
     // success
     return success();
@@ -37,9 +34,6 @@ void GN::gfx::BasicRenderer::quit()
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
-    drawQuit();
-    contextQuit();
-    resQuit();
     dispQuit();
 
     // standard quit procedure
