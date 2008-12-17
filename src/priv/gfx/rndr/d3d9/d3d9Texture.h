@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.11.5)
 // *****************************************************************************
 
-#include "../common/basicTexture.h"
+#include "../common/basicSurface.h"
 #include "d3d9Resource.h"
 
 namespace GN { namespace gfx

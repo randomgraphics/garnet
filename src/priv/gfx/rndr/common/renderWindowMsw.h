@@ -10,6 +10,8 @@ namespace GN { namespace gfx
 {
 #if GN_XENON
 
+    class Renderer;
+
     ///
     /// Render window class on Xenon platform
     ///
@@ -30,6 +32,11 @@ namespace GN { namespace gfx
         // ********************************
 
     public:
+
+        ///
+        /// set pointer to renderer that is associated with this window
+        ///
+        void setRenderer( Renderer * r ) { mRenderer = r; }
 
         ///
         /// (re)initialize render window to use external window
@@ -92,6 +99,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
         UInt32 mWidth, mHeight;
+        Renderer * mRenderer;
     };
 
     ///
@@ -132,6 +140,11 @@ namespace GN { namespace gfx
         // ********************************
 
     public:
+
+        ///
+        /// set pointer to renderer that is associated with this window
+        ///
+        void setRenderer( Renderer * r ) { mRenderer = r; }
 
         ///
         /// (re)initialize render window to use external window
@@ -199,6 +212,8 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
+
+        Renderer * mRenderer;
 
         HWND mWindow;
         StrW mClassName;

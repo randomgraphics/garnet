@@ -249,7 +249,7 @@ void GN::gfx::BasicRenderer::dispQuit()
 //
 // ----------------------------------------------------------------------------
 bool
-GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
+GN::gfx::BasicRenderer::setupDispDesc( const RendererOptions & ro )
 {
     GN_GUARD;
 
@@ -319,8 +319,8 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
         strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
 
     // success
-    setOptions( ro );
-    setDispDesc( desc );
+    mOptions = ro;
+    mDispDesc = desc;
     return true;
 
     GN_UNGUARD;
@@ -347,7 +347,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
 
         if( dd.width != width || dd.height != height || dd.monitorHandle != monitor )
         {
-            getSigRendererWindowSizeMove()( monitor, width, height );
+            getSigRendererWindowSizeMove()( *this, monitor, width, height );
         }
 
         //RendererOptions newOptions = ro;

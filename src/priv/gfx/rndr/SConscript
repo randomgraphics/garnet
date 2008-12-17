@@ -1,6 +1,6 @@
 Import( 'GN' )
 dirs = Split('common')
-if GN.conf['has_ogl']: dirs += ['ogl']
-if GN.conf['has_d3d9']: dirs += ['d3d9']
-if GN.conf['has_d3d10']: dirs += ['d3d10']
+#if GN.conf['has_ogl']: dirs += ['ogl']
+#if GN.conf['has_d3d9']: dirs += ['d3d9']
+#if GN.conf['has_d3d10']: dirs += ['d3d10']
 SConscript( dirs=dirs )
