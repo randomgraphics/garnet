@@ -342,17 +342,16 @@ namespace GN { namespace gfx
         UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
         UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
         UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
+        UInt32 nouse_0        : 11;
+
+        // DWORD 1
         UInt32 blendSrc       : 4;
         UInt32 blendDst       : 4;
         UInt32 blendOp        : 3;
         UInt32 blendSrcAlpha  : 4;
-
-        // DWORD 1
         UInt32 blendDstAlpha  : 4;
         UInt32 blendOpAlpha   : 3;
-        UInt32 nouse_1        : 25;
-
-        // TODO: depth bias
+        UInt32 nouse_1        : 10;
 
         // DWORD 2
         UInt32 colorWriteMask; ///< 4 bits x 8 render targets.
@@ -366,10 +365,25 @@ namespace GN { namespace gfx
         // DWORD 11-14
         Rect<UInt32> scissorRect; ///< scissor rects
 
-        // textures
+        // TODO: depth bias
+
+        /// vertex buffers
+        WeakRef<VtxBuf> vtxbufs[32];
+
+        /// index buffer
+        WeakRef<IdxBuf> idxbuf;
+
+        /// textures
         WeakRef<Texture> textures[32];
+
+        // TODO: sampler
+
+        // render targets
+        WeakRef<Texture> rendertargets[8];
     };
-    GN_CASSERT( sizeof(RendererContext) == 14*sizeof(UInt32) );
+
+    // make sure bit-wise flags occupy only 2 DWORDs.
+    GN_CASSERT( GN_FIELD_OFFSET(RendererContext,colorWriteMask) == 2*sizeof(UInt32) );
 
     ///
     /// 清屏标志
@@ -480,12 +494,12 @@ namespace GN { namespace gfx
         ///
         /// Get renderer options
         ///
-        const RendererOptions & getOptions() const = 0;
+        virtual const RendererOptions & getOptions() const = 0;
 
         ///
         /// Get current API
         ///
-        RendererAPI GetApi() const = 0;
+        virtual RendererAPI GetApi() const = 0;
 
         //@}
 
@@ -505,7 +519,7 @@ namespace GN { namespace gfx
         ///
         /// 获得当前的渲染窗口句柄
         ///
-        const DispDesc & getDispDesc() const = 0;
+        virtual const DispDesc & getDispDesc() const = 0;
 
         ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.
@@ -574,7 +588,7 @@ namespace GN { namespace gfx
         ///
         /// create shader
         ///
-        Shader *
+        virtual Shader *
         createShader( const CompiledShaderBlob * ) = 0;
 
         //@}
@@ -610,7 +624,7 @@ namespace GN { namespace gfx
             {
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
-                COLOR_FORMAT_UNKNOWN == format ? getDefaultTextureFormat( usage ) : format,
+                COLOR_FORMAT_UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
             };
             return createTexture( desc, usages );
         }
@@ -651,7 +665,7 @@ namespace GN { namespace gfx
                          ColorFormat format = COLOR_FORMAT_UNKNOWN,
                          BitFields   usages = 0 )
         {
-            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usages );
+            return createTexture( sx, sy, sz, 1, levels, format, usages );
         }
 
         ///
@@ -702,14 +716,8 @@ namespace GN { namespace gfx
 
         //@{
 
-        // TODO: sampler
-
         ///
         /// Set rendering context.
-        ///
-        /// This function, with pre-initialized renderer context structure, is
-        /// always prefered over context update helper functions below, for
-        /// better performance.
         ///
         virtual void setContext( const RendererContext & ) = 0;
 
@@ -742,18 +750,9 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// 开始绘图操作.
+        /// 结束一帧的绘图操作
         ///
-        /// 所有的绘图操作都必须在 drawBegin() 和 drawEnd() 之间调用
-        ///
-        virtual bool drawBegin() = 0;
-
-        ///
-        /// 结束绘图操作. Similar as EndScene() followed by Present()
-        ///
-        /// call drawEnd() <b>if and only if</b> drawBegin() returns true.
-        ///
-        virtual void drawEnd() = 0;
+        virtual void present() = 0;
 
         ///
         /// 清屏操作
@@ -855,26 +854,6 @@ namespace GN { namespace gfx
             const Matrix44f & view,
             const Matrix44f & proj ) = 0;
 
-        ///
-        /// 返回上一次 drawEnd() 到现在所绘制的原语的个数
-        ///
-        size_t getNumPrimitives() const = 0;
-
-        ///
-        /// 返回上一次 drawEnd() 到现在 draw() / drawindexed() 的次数
-        ///
-        size_t getNumBatches() const = 0;
-
-        ///
-        /// 返回上一次 drawEnd() 到现在平均每次 draw()/drawIndexed() 的原语数
-        ///
-        size_t getNumPrimsPerBatch() const
-        {
-            size_t numBatches = getNumBatches();
-            size_t numPrims   = getNumPrimitives();
-            return 0 == numBatches ? 0 : numPrims / numBatches;
-        }
-
         //@}
 
         // ********************************************************************
@@ -956,12 +935,7 @@ namespace GN { namespace gfx
         ///
         /// Enabled by default for debug build; disabled by default for release build.
         ///
-        void enableParameterCheck( bool enable ) = 0;
-
-        ///
-        /// Get parameter check flag.
-        ///
-        bool parameterCheckEnabled() const = 0;
+        virtual void enableParameterCheck( bool enable ) = 0;
 
         ///
         /// dump device states of the next frame.
