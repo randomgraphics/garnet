@@ -461,7 +461,6 @@ namespace GN { namespace gfx
     ///
     inline bool operator!=( const ColorFormatAlias & a, const ColorFormat & c ) { return a != c.alias; }
 
-
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
     ///

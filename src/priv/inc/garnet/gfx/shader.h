@@ -57,8 +57,8 @@ namespace GN { namespace gfx
     ///
     struct CompiledShaderBlob : public RefCounter
     {
-        const void * data() const = 0;
-        size_t       size() const = 0;
+        virtual const void * data() const = 0;
+        virtual size_t       size() const = 0;
     };
 
     ///

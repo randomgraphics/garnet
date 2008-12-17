@@ -133,10 +133,10 @@ namespace GN { namespace gfx
             levels = ( 0 == levels ) ? maxLevels : min( maxLevels, levels );
 
             // check format
-            if( format < 0 || format >= NUM_CLRFMTS )
+            if( format.valid() )
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(format) );
+                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().cptr() );
                 return false;
             }
 
@@ -207,7 +207,7 @@ namespace GN { namespace gfx
         virtual void update(
             size_t              face,
             size_t              level,
-            const TexLockArea * area,
+            const Box<UInt32> * area,
             size_t              rowPitch,
             size_t              slicePitch,
             const void        * data ) = 0;
@@ -304,7 +304,6 @@ namespace GN { namespace gfx
         bool         dynamic;  ///< dynamic buffer.
         bool         readback; ///< can read data back from buffer.
     };
-    GN_CASSERT( sizeof(VtxBufDesc) == 8 );
 
     ///
     /// Vertex buffer interface.
