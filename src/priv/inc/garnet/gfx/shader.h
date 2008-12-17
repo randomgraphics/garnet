@@ -37,19 +37,32 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// shader parameter description
+    ///
+    struct ShaderParamDesc
+    {
+    };
+
+    ///
+    /// shader code
+    ///
+    struct ShaderCode
+    {
+        ShadingLanguage lang;
+        const char *    code;
+        const char *    entry;
+    };
+
+    ///
     /// shader description
     ///
     struct ShaderDesc
     {
-        ShadingLanguage vsLang;
-        const char *    vsCode;
-        const char *    vsEntry;
-        ShadingLanguage gsLang;
-        const char *    gsCode;
-        const char *    gsEntry;
-        ShadingLanguage psLang;
-        const char *    psCode;
-        const char *    psEntry;
+        ShaderCode              vscode;
+        ShaderCode              gscode;
+        ShaderCode              pscode;
+        UInt32                  numParameters;
+        const ShaderParamDesc * parameters;
     };
 
     ///

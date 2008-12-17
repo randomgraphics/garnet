@@ -367,19 +367,16 @@ namespace GN { namespace gfx
 
         // TODO: depth bias
 
-        /// vertex buffers
-        WeakRef<VtxBuf> vtxbufs[32];
+        /// shader
+        WeakRef<Shader>  shader;
 
-        /// index buffer
-        WeakRef<IdxBuf> idxbuf;
-
-        /// textures
-        WeakRef<Texture> textures[32];
+        // Resources
+        WeakRef<VtxBuf>  vtxbufs[32];      ///< vertex buffers
+        WeakRef<IdxBuf>  idxbuf;           ///< index buffer
+        WeakRef<Texture> textures[32];     ///< textures
+        WeakRef<Texture> renderTargets[8]; ///< render targets
 
         // TODO: sampler
-
-        // render targets
-        WeakRef<Texture> rendertargets[8];
     };
 
     // make sure bit-wise flags occupy only 2 DWORDs.
