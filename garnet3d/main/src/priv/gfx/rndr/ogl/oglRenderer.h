@@ -32,7 +32,7 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        OGLRenderer()          { clear(); }
+        OGLRenderer() : BasicRenderer(API_OGL) { clear(); }
         virtual ~OGLRenderer() { quit(); }
         //@}
 
@@ -41,10 +41,14 @@ namespace GN { namespace gfx
         // ********************************
 
         //@{
+
     public:
+
         bool init();
         void quit();
+
     private:
+
         void clear()
         {
             deviceClear();
@@ -54,6 +58,7 @@ namespace GN { namespace gfx
             contextClear();
             drawClear();
         }
+
         //@}
 
     // ************************************************************************
@@ -65,22 +70,22 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation );
 
-    private :
-
-        void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate();
-        bool deviceRestore();
-        void deviceDispose();
-        void deviceDestroy();
+        virtual bool reset( const RendererOptions & ro );
 
     private:
 
         ///
-        /// if true, then we are inside function changeOptions().
+        /// if true, then we are in the middle of renderer reset.
         ///
-        bool mDeviceChanging;
+        bool mOnGoingReset;
+
+    private:
+
+
+        void deviceClear() { mOnGoingReset = false; }
+        bool deviceCreate();
+        void deviceDestroy();
 
         //@}
 
@@ -92,9 +97,11 @@ namespace GN { namespace gfx
 
         //@{
 
-    public :
+    public:
+
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
+
 
 #if GN_MSWIN
     private :
@@ -102,7 +109,6 @@ namespace GN { namespace gfx
         void dispQuit() {}
         void dispClear()
         {
-            mDispOK = false;
             mDeviceContext = 0;
             mRenderContext = 0;
             mDisplayModeActivated = false;
@@ -110,8 +116,6 @@ namespace GN { namespace gfx
         }
 
         bool dispDeviceCreate();
-        bool dispDeviceRestore();
-        void dispDeviceDispose();
         void dispDeviceDestroy();
 
         bool activateDisplayMode();
@@ -120,7 +124,6 @@ namespace GN { namespace gfx
 
     private :
 
-        bool    mDispOK; ///< true between dispDeviceRestore() and dispDeviceDispose()
         HDC     mDeviceContext;
         HGLRC   mRenderContext;
         bool    mDisplayModeActivated;
@@ -137,8 +140,6 @@ namespace GN { namespace gfx
         }
 
         bool dispDeviceCreate();
-        bool dispDeviceRestore();
-        void dispDeviceDispose();
         void dispDeviceDestroy();
 
     private :
@@ -157,9 +158,9 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( const StrA & );
-        virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const;
-        virtual ClrFmt getDefaultTextureFormat( TexDim type, BitFields usage ) const;
+        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual bool                 checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const;
+        virtual ColorFormat          getDefaultTextureFormat( TextureUsages usages ) const;
 
     private :
         bool capsInit() { return true; }
@@ -167,27 +168,11 @@ namespace GN { namespace gfx
         void capsClear() {}
 
         bool capsDeviceCreate();
-        bool capsDeviceRestore() { return true; }
-        void capsDeviceDispose() {}
-        void capsDeviceDestroy() { mShaderSupportFlags.u8 = 0; }
+        void capsDeviceDestroy() {}
 
     private:
 
-        union ShaderSupportFlags
-        {
-            struct
-            {
-                unsigned int arbvp1 : 1;
-                unsigned int arbfp1 : 1;
-                unsigned int glslvs : 1;
-                unsigned int glslps : 1;
-                unsigned int cgvs   : 1;
-                unsigned int cgps   : 1;
-            };
-            UInt8            u8;
-        };
-
-        ShaderSupportFlags mShaderSupportFlags;
+        RendererCaps mCaps;
 
         //@}
 
@@ -201,12 +186,11 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
-        virtual Texture * createTexture( const TextureDesc & desc );
-        virtual SamplerHandle createSampler( const SamplerDesc & );
-        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
+        virtual CompiledShaderBlob * compileShader( const ShaderDesc & desc );
+        virtual Shader             * createShader( const CompiledShaderBlob * );
+        virtual Texture            * createTexture( const TextureDesc & desc );
+        virtual VtxBuf             * createVtxBuf( const VtxBufDesc & desc );
+        virtual IdxBuf             * createIdxBuf( const IdxBufDesc & desc );
 
     public:
 
@@ -229,55 +213,20 @@ namespace GN { namespace gfx
         ///
         void removeResource( OGLResource * p ) { mResourceList.remove(p); }
 
-        ///
-        /// Inform OGL renderer that GLSL shader is deleted, to give OGL renderer a chance
-        /// to adjust GLSL program map. Only called by GLSL shader class.
-        ///
-        void removeGLSLShader( ShaderType, Shader * );
-
     private :
 
         bool resourceInit() { return true; }
         void resourceQuit() {}
-        void resourceClear() { mDefaultSampler = 0; }
+        void resourceClear() {}
         bool resourceDeviceCreate();
-        bool resourceDeviceRestore() { return true; }
-        void resourceDeviceDispose() {}
         void resourceDeviceDestroy();
 
     private:
-
-        union GLSLShaders
-        {
-            const Shader * shaders[NUM_SHADER_TYPES];
-            struct
-            {
-                const Shader * vs;
-                const Shader * ps;
-                const Shader * gs;
-            };
-
-            bool operator < ( const GLSLShaders & rhs ) const
-            {
-                if( vs != rhs.vs ) return vs < rhs.vs;
-                else return ps < rhs.ps;
-            }
-        };
-
-        typedef std::map<GLSLShaders,void*> GLSLProgramMap;
-
-        typedef HandleManager<OGLVtxFmt*,VtxFmtHandle> VtxFmtManager;
-
-        typedef HandleManager<OGLSamplerObject*,SamplerHandle> SamplerManager;
 
 #if HAS_CG
         CgContextWrapper mCgContext;
 #endif
         std::list<OGLResource*> mResourceList;
-        GLSLProgramMap          mGLSLProgramMap;
-        VtxFmtManager           mVtxFmts;
-        SamplerManager          mSamplers;
-        SamplerHandle           mDefaultSampler;
 
         //@}
 
@@ -291,9 +240,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContext( const RendererContext & newContext );
-        virtual void rebindContext( RendererContext::FieldFlags );
-        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
+        virtual void bindContext( const RendererContext & context, bool forceRebinding );
 
     public:
 
@@ -307,21 +254,17 @@ namespace GN { namespace gfx
         void contextQuit() {}
         void contextClear();
         bool contextDeviceCreate();
-        bool contextDeviceRestore();
-        void contextDeviceDispose();
         void contextDeviceDestroy();
 
-        inline void bindContext( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        inline void bindContextShaders( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContextShaders( const RendererContext & newContext, bool forceRebind );
         inline void bindContextRenderStates( const RendererContext & newContext, bool forceRebind );
-        inline void bindContextFfp( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        inline void bindContextData( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        inline void bindContextFfp( const RendererContext & newContext, bool forceRebind );
+        inline void bindContextData( const RendererContext & newContext, bool forceRebind );
 
     private:
 
-        RendererContext mContext;
         OGLBasicRTMgr * mRTMgr;
-        UInt32 mNeedRebindVtxBufs; // each bit represent a vertex stream.
+        UInt32          mNeedRebindVtxBufs; // each bit represent a vertex stream.
 
         //@}
 
@@ -335,8 +278,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool drawBegin();
-        virtual void drawEnd();
+        virtual void present();
         virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numprim,
@@ -348,21 +290,21 @@ namespace GN { namespace gfx
                            size_t        numprim,
                            size_t        startvtx );
         virtual void drawIndexedUp(
-                             PrimitiveType    prim,
-                             size_t           numprim,
-                             size_t           numvtx,
-                             const void *     vertexData,
-                             size_t           strideInBytes,
+                             PrimitiveType  prim,
+                             size_t         numprim,
+                             size_t         numvtx,
+                             const void *   vertexData,
+                             size_t         strideInBytes,
                              const UInt16 * indexData );
         virtual void drawUp( PrimitiveType prim,
                              size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields options,
-                                const void * positions,
-                                size_t stride,
-                                size_t count,
-                                UInt32 rgba,
+        virtual void drawLines( BitFields         options,
+                                const void *      positions,
+                                size_t            stride,
+                                size_t            count,
+                                UInt32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
@@ -373,7 +315,6 @@ namespace GN { namespace gfx
         void drawQuit() {}
         void drawClear()
         {
-            mDrawBegan = false;
             mLine = 0;
             mCurrentStartVtx = (size_t)-1;
             mFrameCounter = 0;
@@ -385,14 +326,8 @@ namespace GN { namespace gfx
         void drawDeviceDispose() {}
         void drawDeviceDestroy();
 
-        inline void applyVtxBuf(
-            const GN::gfx::OGLVtxFmt & vtxfmt,
-            const GN::gfx::RendererContext::VtxBufDesc * vtxbufs,
-            size_t startvtx );
-
     private:
 
-        bool mDrawBegan;
         OGLLine * mLine;
         size_t mCurrentStartVtx;
         size_t mFrameCounter;
@@ -414,6 +349,7 @@ namespace GN { namespace gfx
         {
             GN_UNUSED_PARAM( startBatchIndex );
             GN_UNUSED_PARAM( numBatches );
+            GN_TODO( "OpenGL frame dump is not implemented." );
         }
 
         //@}

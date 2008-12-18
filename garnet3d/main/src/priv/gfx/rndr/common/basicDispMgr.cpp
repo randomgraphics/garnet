@@ -249,7 +249,7 @@ void GN::gfx::BasicRenderer::dispQuit()
 //
 // ----------------------------------------------------------------------------
 bool
-GN::gfx::BasicRenderer::setupDispDesc( const RendererOptions & ro )
+GN::gfx::BasicRenderer::setupOptionAndDispDesc( const RendererOptions & ro )
 {
     GN_GUARD;
 

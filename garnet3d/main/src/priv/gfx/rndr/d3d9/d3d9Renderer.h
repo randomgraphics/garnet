@@ -150,7 +150,6 @@ namespace GN { namespace gfx
         void dispQuit();
         void dispClear()
         {
-            mDispOK = false;
             mDeviceRecreation = false;
             mD3D = 0;
             mDevice = 0;
@@ -165,7 +164,6 @@ namespace GN { namespace gfx
 
     private :
 
-        bool                    mDispOK; ///< true between dispDeviceRestore() and dispDeviceDispose()
         bool                    mDeviceRecreation; ///< only true between dispDeviceCreate() and dispDeviceRestore()
         UINT                    mAdapter;
         D3DDEVTYPE              mDeviceType;

@@ -52,6 +52,7 @@ namespace GN { namespace gfx
         void clear()
         {
             dispClear();
+            miscClear();
         }
         //@}
 
@@ -85,12 +86,18 @@ namespace GN { namespace gfx
         /// Called by sub-classes to initialize display descriptor
         /// based on renderer options.
         ///
-        bool setupDispDesc( const RendererOptions & );
+        bool setupOptionAndDispDesc( const RendererOptions & );
 
         ///
         /// Called by sub class to respond to render window resizing/moving
         ///
         void handleRenderWindowSizeMove();
+
+#if GN_MSWIN
+        RenderWindowMsw & getRenderWindow() { return mWindow; }
+#elif GN_POSIX
+        RenderWindowX11 & getRenderWindow() { return mWindow; }
+#endif
 
     private:
 
@@ -136,6 +143,20 @@ namespace GN { namespace gfx
 
         //@{
 
+    public:
+
+        virtual void bindContext( const RendererContext & c ) { bindContext( c, false ); mContext = c; }
+        virtual void rebindContext() { bindContext( mContext, true ); }
+        virtual inline const RendererContext & getContext() const { return mContext; }
+
+    protected:
+
+        virtual void bindContext( const RendererContext & context, bool forceRebinding ) = 0;
+
+    private:
+
+        RendererContext mContext;
+
         //@}
 
         // *****************************************************************************
@@ -145,6 +166,35 @@ namespace GN { namespace gfx
         // *****************************************************************************
 
         //@{
+
+        //@}
+
+        // *****************************************************************************
+        //
+        /// \name                   Misc Manager
+        //
+        // *****************************************************************************
+
+        //@{
+
+    public:
+
+        virtual void enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
+
+    protected:
+
+        bool paramCheckEnabled() const { return mParamCheckEnabled; }
+
+    private:
+
+        void miscClear()
+        {
+            mParamCheckEnabled = GN_BUILD_DEBUG;
+        }
+
+    private:
+
+        bool mParamCheckEnabled;
 
         //@}
     };
