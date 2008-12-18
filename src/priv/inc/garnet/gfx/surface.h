@@ -8,52 +8,24 @@
 
 namespace GN { namespace gfx
 {
-    enum
+    ///
+    /// texture usage flags
+    ///
+    union TextureUsages
     {
-        MAX_TEXTURE_SIZE          = 16384, ///< max texture size (2^14)
-        MAX_TEXTURE_MIPMAP_LEVELS = 15,
-        MAX_VERTEX_ELEMENTS       = 32,    ///< max number of vertex elements per vertex buffer
-    };
+        UInt32 u32;     ///< usage bits as unsigned integer
 
-    ///
-    /// Texture usage.
-    ///
-    enum TextureUsage
-    {
-        TEXUSAGE_DYNAMIC        = 1<<0, ///< dynamic texture
-        TEXUSAGE_READBACK       = 1<<1, ///< Normally, read data from texture is extremly slow.
-                                        ///< Use this flag to increase reading speed, in exchange for rendering speed.
-                                        ///< Use this flag when you really need it.
-        TEXUSAGE_RENDER_TARGET  = 1<<2, ///< render target texture
-        TEXUSAGE_DEPTH          = 1<<3, ///< depth texture
-        TEXUSAGE_CUBE_MAP       = 1<<4, ///< texture will be used as cube map
-    };
+        struct
+        {
+            unsigned int rendertarget :  1; ///< See TEXUSAGE_RENDER_TARGET
+            unsigned int depthstencil :  1; ///< See TEXUSAGE_DEPTH
+            unsigned int dynamic      :  1; ///< See TEXUSAGE_DYNAMIC
+            unsigned int readback     :  1; ///< See TEXUSAGE_READBACK
+            unsigned int nouse        : 27; ///< reserved
+        };
 
-    ///
-    /// cube texture face
-    ///
-    enum CubeFace
-    {
-        CUBEFACE_PX = 0, ///< positive X
-        CUBEFACE_NX,     ///< negative X
-        CUBEFACE_PY,     ///< positive Y
-        CUBEFACE_NY,     ///< negative Y
-        CUBEFACE_PZ,     ///< positive Z
-        CUBEFACE_NZ,     ///< negative Z
-        NUM_CUBEFACES
-    };
-
-    ///
-    /// Ëø¶¨±êÖ¾
-    ///
-    enum LockFlag
-    {
-        LOCK_RW,           ///< read-write lock, the slowest one.
-        LOCK_RO,           ///< read-only lock.
-        LOCK_WO,           ///< write-only lock
-        LOCK_DISCARD,      ///< write-only lock, discard old value.
-        LOCK_NO_OVERWRITE, ///< write-only lock, promise not to modify any section of the buffer being used.
-        NUM_LOCK_FLAGS     ///< number of lock flags.
+        /// default usage
+        static TextureUsages DEFAULT() { TextureUsages u; u.u32 = 0; return u; };
     };
 
     ///
@@ -61,32 +33,20 @@ namespace GN { namespace gfx
     ///
     struct TextureDesc
     {
-        UInt32      width;     ///< basemap width
-        UInt32      height;    ///< basemap height
-        UInt32      depth;     ///< basemap depth
-        UInt32      faces;     ///< face count. When used as parameter of Renderer::createTexture(),
+        UInt32        width;   ///< basemap width
+        UInt32        height;  ///< basemap height
+        UInt32        depth;   ///< basemap depth
+        UInt32        faces;   ///< face count. When used as parameter of Renderer::createTexture(),
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32      levels;    ///< mipmap level count. When used as parameter of Renderer::createTexture(),
+        UInt32        levels;  ///< mipmap level count. When used as parameter of Renderer::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
-        ColorFormat format;    ///< pixel format.
+        ColorFormat   format;  ///< pixel format.
+        TextureUsages usages;  ///< texture usages
 
         ///
         /// get basemap size
         ///
         const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
-
-        union
-        {
-            UInt32 u32;     ///< usage bits as unsigned integer
-            struct
-            {
-                unsigned int rendertarget :  1; ///< See TEXUSAGE_RENDER_TARGET
-                unsigned int depthstencil :  1; ///< See TEXUSAGE_DEPTH
-                unsigned int dynamic      :  1; ///< See TEXUSAGE_DYNAMIC
-                unsigned int readback     :  1; ///< See TEXUSAGE_READBACK
-                unsigned int _            : 27; ///< reserved
-            };
-        } usage; ///< texture usage
 
         ///
         /// compose texture descriptor from image descriptor
@@ -98,13 +58,13 @@ namespace GN { namespace gfx
             UInt32 h = id.mipmaps[0].height;
             UInt32 d = id.mipmaps[0].depth;
 
-            width     = w;
-            height    = h;
-            depth     = d;
-            faces     = id.numFaces;
-            levels    = id.numLevels;
-            format    = id.format;
-            usage.u32 = 0;
+            width      = w;
+            height     = h;
+            depth      = d;
+            faces      = id.numFaces;
+            levels     = id.numLevels;
+            format     = id.format;
+            usages.u32 = 0;
 
             return validate();
         }
@@ -150,6 +110,31 @@ namespace GN { namespace gfx
         size_t             rowPitch;
         size_t             slicePitch;
         std::vector<UInt8> data;
+    };
+
+    ///
+    /// cube texture face
+    ///
+    enum CubeFace
+    {
+        CUBEFACE_PX = 0, ///< positive X
+        CUBEFACE_NX,     ///< negative X
+        CUBEFACE_PY,     ///< positive Y
+        CUBEFACE_NY,     ///< negative Y
+        CUBEFACE_PZ,     ///< positive Z
+        CUBEFACE_NZ,     ///< negative Z
+        NUM_CUBEFACES
+    };
+
+    ///
+    /// Update flags
+    ///
+    enum UpdateFlag
+    {
+        UPDATE_DEFAULT,      ///< default update flag
+        UPDATE_DISCARD,      ///< discard old content of whole surface.
+        UPDATE_NO_OVERWRITE, ///< promise not to modify any section of the surface that is being used by GPU.
+        NUM_UPDATE_FLAGS     ///< number of update flags.
     };
 
     ///
@@ -210,7 +195,8 @@ namespace GN { namespace gfx
             const Box<UInt32> * area,
             size_t              rowPitch,
             size_t              slicePitch,
-            const void        * data ) = 0;
+            const void        * data,
+            UpdateFlag          flag ) = 0;
 
         ///
         /// read texture content. Texture must have TEXUSAGE_READBACK usage.
@@ -284,23 +270,11 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// vertex format descriptor
-    ///
-    struct VertexFormat
-    {
-        ColorFormat elementFormats[MAX_VERTEX_ELEMENTS];
-        UInt16      elementOffsets[MAX_VERTEX_ELEMENTS];
-        UInt16      numElements;
-    };
-
-    ///
     /// vertex buffer descriptor
     ///
     struct VtxBufDesc
     {
-        VertexFormat format;   ///< vertex format
-        UInt32       stride;   ///< vertex stride
-        UInt32       numvtx;   ///< number of vertices in the buffer
+        UInt32       length;   ///< length in bytes of the vertex buffer
         bool         dynamic;  ///< dynamic buffer.
         bool         readback; ///< can read data back from buffer.
     };
@@ -318,7 +292,7 @@ namespace GN { namespace gfx
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t startvtx, size_t numvtx, const void * data ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.
@@ -332,7 +306,7 @@ namespace GN { namespace gfx
         ///
         void setDesc( const VtxBufDesc & desc )
         {
-            GN_ASSERT( desc.numvtx > 0 );
+            GN_ASSERT( desc.length > 0 );
             mDesc = desc;
         }
 
@@ -366,7 +340,7 @@ namespace GN { namespace gfx
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data ) = 0;
+        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.

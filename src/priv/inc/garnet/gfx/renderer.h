@@ -271,6 +271,7 @@ namespace GN { namespace gfx
         UInt32 maxTex1DSize[2];  ///< width, array
         UInt32 maxTex2DSize[3];  ///< width, height, array
         UInt32 maxTex3DSize[4];  ///< width, height, array
+        UInt32 maxTextures;      ///< max number of simutaneous textures
         UInt32 maxRenderTargets; ///< max number of simutaneous render targets
         bool   vsProfiles[NUM_SHADER_PROFILES];
         bool   gsProfiles[NUM_SHADER_PROFILES];
@@ -326,6 +327,26 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// definition of single vertex element
+    ///
+    struct VertexElement
+    {
+        char        name[32];    ///< name of the element (must be unique among vertex format)
+        ColorFormat format;      ///< format of the element
+        UInt16      bufferIndex; ///< vertex buffer index
+        UInt16      offset;      ///< offset of the element
+    };
+
+    ///
+    /// define input vertex format
+    ///
+    struct VertexFormat
+    {
+        VertexElement elements[32]; ///< vertex element array
+        UInt32        numElements;  ///< number of elements
+    };
+
+    ///
     /// renderer context
     ///
     struct RendererContext
@@ -367,11 +388,15 @@ namespace GN { namespace gfx
 
         // TODO: depth bias
 
+        /// vertex format
+        VertexFormat vtxfmt;
+
         /// shader
-        WeakRef<Shader>  shader;
+        WeakRef<Shader> shader;
 
         // Resources
         WeakRef<VtxBuf>  vtxbufs[32];      ///< vertex buffers
+        UInt32           strides[32];      ///< strides for each vertex buffer
         WeakRef<IdxBuf>  idxbuf;           ///< index buffer
         WeakRef<Texture> textures[32];     ///< textures
         WeakRef<Texture> renderTargets[8]; ///< render targets
@@ -471,7 +496,7 @@ namespace GN { namespace gfx
     {
         // ********************************************************************
         //
-        /// \name Device Manager
+        /// \name Display Manager
         //
         // ********************************************************************
 
@@ -534,7 +559,7 @@ namespace GN { namespace gfx
         /// \param format       The texture format.
         /// \param usages       Combination of TextureUsage
         ///
-        virtual bool checkTextureFormatSupport( ColorFormat format, BitFields usages ) const = 0;
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const = 0;
 
         ///
         /// Get default texture format.
@@ -543,35 +568,7 @@ namespace GN { namespace gfx
         ///
         /// \return             Return COLOR_FORMAT_UNKNOWN, if the usage is not supported by current renderer.
         ///
-        virtual ColorFormat getDefaultTextureFormat( BitFields usage ) const = 0;
-
-        //@}
-
-        // ********************************************************************
-        //
-        /// \name Shader Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-        ///
-        /// Compile shader against specific profile
-        ///
-        virtual CompiledShaderBlob *
-        compileShader( const ShaderDesc & desc, ShaderProfile profile ) = 0;
-
-        ///
-        /// Compile shader against the highest possible profile
-        ///
-        virtual CompiledShaderBlob *
-        compileShader( const ShaderDesc & desc ) = 0;
-
-        ///
-        /// create shader
-        ///
-        virtual Shader *
-        createShader( const CompiledShaderBlob * ) = 0;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const = 0;
 
         //@}
 
@@ -584,41 +581,54 @@ namespace GN { namespace gfx
         //@{
 
         ///
+        /// Compile shader into platform dependant format
+        ///
+        virtual CompiledShaderBlob *
+        compileShader( const ShaderDesc & desc ) = 0;
+
+        ///
+        /// create shader
+        ///
+        virtual Shader *
+        createShader( const CompiledShaderBlob * ) = 0;
+
+        ///
         /// Create new texture
         /// See TextureDesc for detail explaination of each fields in descriptor.
         ///
         virtual Texture *
-        createTexture( const TextureDesc & desc, BitFields usages = 0 ) = 0;
+        createTexture( const TextureDesc & desc ) = 0;
 
         ///
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( size_t      sx,
-                       size_t      sy,
-                       size_t      sz,
-                       size_t      faces  = 1,
-                       size_t      levels = 0, // 0 means full mipmap chain
-                       ColorFormat format = COLOR_FORMAT_UNKNOWN,
-                       BitFields   usages = 0 )
+        createTexture( size_t        sx,
+                       size_t        sy,
+                       size_t        sz,
+                       size_t        faces  = 1,
+                       size_t        levels = 0, // 0 means full mipmap chain
+                       ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                       TextureUsages usages = TextureUsages::DEFAULT() )
         {
             TextureDesc desc =
             {
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
                 COLOR_FORMAT_UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
+                usages,
             };
-            return createTexture( desc, usages );
+            return createTexture( desc );
         }
 
         ///
         /// Create 1D texture
         ///
         Texture *
-        create1DTexture( size_t      sx,
-                         size_t      levels = 0,
-                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
-                         BitFields   usages = 0 )
+        create1DTexture( size_t        sx,
+                         size_t        levels = 0,
+                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, 1, 1, 1, levels, format, usages );
         }
@@ -627,11 +637,11 @@ namespace GN { namespace gfx
         /// Create 2D texture
         ///
         Texture *
-        create2DTexture( size_t      sx,
-                         size_t      sy,
-                         size_t      levels = 0,
-                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
-                         BitFields   usages = 0 )
+        create2DTexture( size_t        sx,
+                         size_t        sy,
+                         size_t        levels = 0,
+                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sy, 1, 1, levels, format, usages );
         }
@@ -640,12 +650,12 @@ namespace GN { namespace gfx
         /// Create 3D texture
         ///
         Texture *
-        create3DTexture( size_t      sx,
-                         size_t      sy,
-                         size_t      sz,
-                         size_t      levels = 0,
-                         ColorFormat format = COLOR_FORMAT_UNKNOWN,
-                         BitFields   usages = 0 )
+        create3DTexture( size_t        sx,
+                         size_t        sy,
+                         size_t        sz,
+                         size_t        levels = 0,
+                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sy, sz, 1, levels, format, usages );
         }
@@ -654,10 +664,10 @@ namespace GN { namespace gfx
         /// Create CUBE texture
         ///
         Texture *
-        createCubeTexture( size_t      sx,
-                           size_t      levels = 0,
-                           ColorFormat format = COLOR_FORMAT_UNKNOWN,
-                           BitFields   usages = 0 )
+        createCubeTexture( size_t        sx,
+                           size_t        levels = 0,
+                           ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                           TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sx, 1, 6, levels, format, usages );
         }
@@ -699,14 +709,9 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// Set rendering context.
+        /// Bind rendering context to rendering device.
         ///
-        virtual void setContext( const RendererContext & ) = 0;
-
-        ///
-        /// Get current render context
-        ///
-        virtual void getContext( RendererContext & ) const = 0;
+        virtual void bindContext( const RendererContext & ) = 0;
 
         ///
         /// Rebind current rendering context to rendering device.
@@ -720,6 +725,11 @@ namespace GN { namespace gfx
         /// context, which is much easier and less error prone.
         ///
         virtual void rebindContext() = 0;
+
+        ///
+        /// Get current render context
+        ///
+        virtual const RendererContext & getContext() const = 0;
 
         //@}
 
@@ -826,15 +836,14 @@ namespace GN { namespace gfx
         /// \param model, view, proj
         ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         ///
-        virtual void drawLines(
-            BitFields options,
-            const void * positions,
-            size_t stride,
-            size_t count,
-            UInt32 rgba,
-            const Matrix44f & model,
-            const Matrix44f & view,
-            const Matrix44f & proj ) = 0;
+        virtual void drawLines( BitFields         options,
+                                const void *      positions,
+                                size_t            stride,
+                                size_t            count,
+                                UInt32            rgba,
+                                const Matrix44f & model,
+                                const Matrix44f & view,
+                                const Matrix44f & proj ) = 0;
 
         //@}
 

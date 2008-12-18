@@ -1,26 +1,8 @@
 Import( 'GN' )
 sources = [
-    'oglBasicShaderARB.cpp',
-    'oglBasicShaderCg.cpp',
-    'oglBasicShaderGLSL.cpp',
-    'oglCapsMgr.cpp',
-    'oglContextMgr.cpp',
     'oglDispMgrMsw.cpp',
     'oglDispMgrX11.cpp',
-    'oglDrawMgr.cpp',
-    'oglIdxBuf.cpp',
-    'oglLine.cpp',
-    'oglProgramGLSL.cpp',
     'oglRenderer.cpp',
-    'oglRenderTargetMgrCopyFrame.cpp',
-    'oglRenderTargetMgrFBO.cpp',
-    'oglResource.cpp',
-    'oglResourceMgr.cpp',
-    'oglSampler.cpp',
-    'oglTexture.cpp',
-    'oglVtxBufNormal.cpp',
-    'oglVtxBufVBO.cpp',
-    'oglVtxFmt.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 target = GN.newTarget( 'shlib', 'GNrndrOGL', [cluster], dependencies = ['GNrndrCommon'] )

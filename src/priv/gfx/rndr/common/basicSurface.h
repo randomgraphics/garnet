@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, LockFlag flag, Box<UInt32> & clippedArea )
+        bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, UpdateFlag flag, Box<UInt32> & clippedArea )
         {
             // check face
             if( face >= getDesc().faces )
@@ -47,7 +47,7 @@ namespace GN { namespace gfx
             }
 
             // check flag
-            if( flag >= NUM_LOCK_FLAGS )
+            if( flag >= NUM_UPDATE_FLAGS )
             {
                 GN_ERROR(sLogger)( "invalid lock flag : %d", flag );
                 return false;
@@ -127,20 +127,20 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t startvtx, size_t & numvtx )
+        bool validateUpdateParameters( size_t offset, size_t & length )
         {
             const VtxBufDesc & desc = getDesc();
 
-            if( startvtx >= desc.numvtx )
+            if( offset >= desc.length )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
-                GN_ERROR(sLogger)( "startvtx is beyond the end of vertex buffer!" );
+                GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
             }
 
-            // adjust numvtx
-            if( 0 == numvtx ) numvtx = desc.numvtx;
-            if( startvtx + numvtx > desc.numvtx ) numvtx = desc.numvtx - startvtx;
+            // adjust length
+            if( 0 == length ) length = desc.length;
+            if( offset + length > desc.length ) length = desc.length - offset;
 
             // success
             return true;

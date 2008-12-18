@@ -263,7 +263,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( !mDispOK && mD3D );
+    GN_ASSERT( mD3D );
 
     const RendererOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
@@ -389,7 +389,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( !mDispOK && mD3D && mDevice );
+    GN_ASSERT( mD3D && mDevice );
 
     if( !mDeviceRecreation )
     {
@@ -420,7 +420,6 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
     }
 
     // successful
-    mDispOK = true;
     return true;
 
     GN_UNGUARD;
@@ -433,7 +432,6 @@ void GN::gfx::D3D9Renderer::dispDeviceDispose()
 {
     PIXPERF_FUNCTION_EVENT();
     _GNGFX_DEVICE_TRACE();
-    mDispOK = false;
 }
 
 //
@@ -446,8 +444,6 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
     PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
-
-    GN_ASSERT( !mDispOK );
 
 #if !GN_XENON && defined(D3D_DEBUG_INFO)
     if( mDevice )

@@ -181,7 +181,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( !mDispOK && !mRenderContext && !mDeviceContext );
+    GN_ASSERT( !mRenderContext && !mDeviceContext );
 
     HWND hwnd = (HWND)getDispDesc().windowHandle;
     if( !::IsWindow(hwnd) )
@@ -202,27 +202,6 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
 
     // init GLEW
     glewInit();
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispDeviceRestore()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    GN_ASSERT( !mDispOK && mRenderContext && mDeviceContext );
-
-    GN_ASSERT( mRenderContext && mDeviceContext );
-
-    GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     const RendererOptions & ro = getOptions();
 
@@ -266,7 +245,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     // setup message hook
     if( ro.autoRestore )
     {
-        mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
+        getRenderWindow().sigMessage.connect( this, &OGLRenderer::msgHook );
     }
 
     // set swap interval
@@ -279,25 +258,9 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     }
 
     // successful
-    mDispOK = true;
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispDeviceDispose()
-{
-    _GNGFX_DEVICE_TRACE();
-    mDispOK = false;
-
-    // remove message hook
-    mWindow.sigMessage.disconnect( this );
-
-    // restore display mode
-    restoreDisplayMode();
 }
 
 //
@@ -309,7 +272,11 @@ void GN::gfx::OGLRenderer::dispDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( !mDispOK );
+    // remove message hook
+    getRenderWindow().sigMessage.disconnect( this );
+
+    // restore display mode
+    restoreDisplayMode();
 
     if( mRenderContext )
     {
@@ -428,7 +395,7 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     if( !getOptions().fullscreen ) return;
 
-    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mDeviceChanging )
+    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mOnGoingReset )
     {
         if( wp )
         {
