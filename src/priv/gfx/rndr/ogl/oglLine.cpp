@@ -124,7 +124,7 @@ void GN::gfx::OGLLine::drawLines(
         glEnable( GL_DEPTH_TEST );
     }
 
-    // apply vertex shader 
+    // apply vertex shader
     if( !( DL_USE_CURRENT_VS & options ) )
     {
         // enable color material
