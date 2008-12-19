@@ -1,15 +1,52 @@
 #include "pch.h"
 #include "oglRenderer.h"
-//#include "oglShader.h"
+#include "oglShader.h"
 //#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 #include "oglTexture.h"
 //#include "oglSampler.h"
 
+using namespace GN;
+
 // *****************************************************************************
-// local function
+// Local GPU program compile utilities
 // *****************************************************************************
+
+/// patch all offset in binary to pointers
+static bool patchCompileProgramBinaryPointers( void * binary, size_t length )
+{
+    GN_UNUSED_PARAM( binary );
+    GN_UNUSED_PARAM( length );
+    return false;
+}
+
+/// unpatch all pointers in binary to offset
+static bool unpatchCompileProgramBinaryPointers( void * binary, size_t length )
+{
+    GN_UNUSED_PARAM( binary );
+    GN_UNUSED_PARAM( length );
+    return false;
+}
+
+/// OGL compiled program binary
+class OGLCompiledGpuProgram : public GN::gfx::CompiledGpuProgram
+{
+    DynaArray<UInt8> mBinary;
+
+public:
+
+    /// ctor
+    OGLCompiledGpuProgram( size_t length )
+        : mBinary( length )
+    {
+    }
+
+    virtual const void * data() const { return mBinary.cptr(); }
+    virtual size_t       size() const { return mBinary.size(); }
+
+    void               * data() { return mBinary.cptr(); }
+};
 
 // *****************************************************************************
 // device management
@@ -75,12 +112,20 @@ void GN::gfx::OGLRenderer::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::CompiledShaderBlob *
-GN::gfx::OGLRenderer::compileShader( const ShaderDesc & )
+GN::gfx::CompiledGpuProgram *
+GN::gfx::OGLRenderer::compileGpuProgram( const GpuProgramDesc & )
 {
     GN_GUARD;
 
-    return NULL;
+    size_t length = 1;
+
+    AutoRef<OGLCompiledGpuProgram> cgp( new OGLCompiledGpuProgram(length) );
+
+    // unpatch pointers to offsets
+    if( !unpatchCompileProgramBinaryPointers( cgp->data(), cgp->size() ) ) return NULL;
+
+    // success
+    return cgp.detach();
 
     GN_UNGUARD;
 }
@@ -88,12 +133,19 @@ GN::gfx::OGLRenderer::compileShader( const ShaderDesc & )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Shader *
-GN::gfx::OGLRenderer::createShader( const CompiledShaderBlob & )
+GN::gfx::GpuProgram *
+GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
-    return NULL;
+    OGLCompiledGpuProgram cgp( length );
+    memcpy( cgp.data(), data, length );
+    if( !patchCompileProgramBinaryPointers( cgp.data(), length ) ) return NULL;
+
+    const GpuProgramDesc * desc = (const GpuProgramDesc *)cgp.data();
+    AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
+    if( !prog->init( *desc ) ) return NULL;
+    return prog.detach();
 
     /*
     switch( type )

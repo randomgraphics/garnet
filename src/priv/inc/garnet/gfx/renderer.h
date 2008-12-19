@@ -286,9 +286,9 @@ namespace GN { namespace gfx
         UInt32 maxTex3DSize[4];       ///< width, height, array
         UInt32 maxTextures;           ///< max number of simutaneous textures
         UInt32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        bool   vsProfiles[NUM_SHADER_PROFILES];
-        bool   gsProfiles[NUM_SHADER_PROFILES];
-        bool   psProfiles[NUM_SHADER_PROFILES];
+        bool   vsProfiles[NUM_GPU_PROGRAM_PROFILES];
+        bool   gsProfiles[NUM_GPU_PROGRAM_PROFILES];
+        bool   psProfiles[NUM_GPU_PROGRAM_PROFILES];
     };
 
     ///
@@ -433,7 +433,7 @@ namespace GN { namespace gfx
         VertexFormat vtxfmt;
 
         /// shader
-        WeakRef<Shader> shader;
+        WeakRef<GpuProgram> gpuProgram;
 
         // Resources
         WeakRef<VtxBuf>     vtxbufs[NUM_VTXBUFS];            ///< vertex buffers
@@ -485,7 +485,7 @@ namespace GN { namespace gfx
 
             vtxfmt.numElements = 0;
 
-            shader.clear();
+            gpuProgram.clear();
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
             for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
@@ -646,14 +646,25 @@ namespace GN { namespace gfx
         ///
         /// Compile shader into platform dependant format
         ///
-        virtual CompiledShaderBlob *
-        compileShader( const ShaderDesc & desc ) = 0;
+        virtual CompiledGpuProgram *
+        compileGpuProgram( const GpuProgramDesc & desc ) = 0;
 
         ///
         /// create shader
         ///
-        virtual Shader *
-        createShader( const CompiledShaderBlob & ) = 0;
+        virtual GpuProgram *
+        createGpuProgram( const void * compiledGpuProgramBinary, size_t length ) = 0;
+
+        ///
+        /// create shader directly from description
+        ///
+        GpuProgram *
+        createGpuProgram( const GpuProgramDesc & desc )
+        {
+            AutoRef<CompiledGpuProgram> bin( compileGpuProgram( desc ) );
+            if( !bin ) return NULL;
+            return createGpuProgram( bin->data(), bin->size() );
+        }
 
         ///
         /// Create new texture

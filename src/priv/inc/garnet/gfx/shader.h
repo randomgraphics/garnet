@@ -11,12 +11,13 @@ namespace GN { namespace gfx
     ///
     /// Shading language
     ///
-    enum ShadingLanguage
+    enum GpuProgramLanguage
     {
-        SL_ASM,  ///< assembly
-        SL_HLSL, ///< D3D HLSL
-        SL_GLSL, ///< OpenGL Shading language
-        SL_CG,   ///< Nvidia Cg
+        GPL_ASM,  ///< assembly
+        GPL_HLSL, ///< D3D HLSL
+        GPL_GLSL, ///< OpenGL Shading language
+        GPL_CG,   ///< Nvidia Cg
+        NUM_GPU_PROGRAM_LANGUAGES,
     };
 
     ///
@@ -24,23 +25,27 @@ namespace GN { namespace gfx
     ///
     /// Shader profile defines the minimum requirements that the hardware has to support
     ///
-    enum ShaderProfile
+    enum GpuProgramProfile
     {
-        SP_D3D_1_1,          ///< D3D shader model 1.1
-        SP_D3D_2_0,          ///< D3D shader model 2.0
-        SP_D3D_3_0,          ///< D3D shader model 3.0
-        SP_D3D_4_0,          ///< D3D shader model 4.0
-        SP_OGL_ARB1,         ///< OpenGL ARB program
-        SP_OGL_GLSL,         ///< OpenGL GLSL 1.0
-        SP_CG,               ///< Nvidia Cg
-        NUM_SHADER_PROFILES, ///< number of shader profiles
+        GPP_D3D_1_1,  ///< D3D shader model 1.1
+        GPP_D3D_2_0,  ///< D3D shader model 2.0
+        GPP_D3D_3_0,  ///< D3D shader model 3.0
+        GPP_D3D_4_0,  ///< D3D shader model 4.0
+        GPP_OGL_ARB1, ///< OpenGL ARB program
+        GPP_OGL_GLSL, ///< OpenGL GLSL 1.0
+        GPP_CG,       ///< Nvidia Cg
+        NUM_GPU_PROGRAM_PROFILES,
     };
 
     ///
-    /// shader parameter description
+    /// GPU program parameter description
     ///
-    struct ShaderParamDesc
+    struct GpuProgramParamDesc
     {
+        const char * externalName;   ///< external name that is visible to user
+        const char * internalNameVS; ///< internal name that is visible to vertex shader. Null means VS does not use this parameter.
+        const char * internalNameGS; ///< internal name that is visible to vertex shader. Null means GS does not use this parameter.
+        const char * internalNamePS; ///< internal name that is visible to vertex shader. Null means PS does not use this parameter.
     };
 
     ///
@@ -48,27 +53,27 @@ namespace GN { namespace gfx
     ///
     struct ShaderCode
     {
-        ShadingLanguage lang;
-        const char *    code;
-        const char *    entry;
+        GpuProgramLanguage lang;
+        const char *       code;
+        const char *       entry;
     };
 
     ///
-    /// shader description
+    /// GPU program description
     ///
-    struct ShaderDesc
+    struct GpuProgramDesc
     {
-        ShaderCode              vscode;
-        ShaderCode              gscode;
-        ShaderCode              pscode;
-        UInt32                  numParameters;
-        const ShaderParamDesc * parameters;
+        ShaderCode                  codeVS;
+        ShaderCode                  codeGS;
+        ShaderCode                  codePS;
+        UInt32                      numParameters;
+        const GpuProgramParamDesc * parameters;
     };
 
     ///
-    /// Contains platform dependent shader data, which can be used for fast shader creation
+    /// Contains platform dependent program data, which can be used for fast progra saving, loading and creation
     ///
-    struct CompiledShaderBlob : public RefCounter
+    struct CompiledGpuProgram : public RefCounter
     {
         virtual const void * data() const = 0;
         virtual size_t       size() const = 0;
@@ -77,8 +82,10 @@ namespace GN { namespace gfx
     ///
     /// Graphics shader interface
     ///
-    struct Shader : public RefCounter
+    struct GpuProgram : public RefCounter
     {
+        /// set shader parameter
+        virtual void setParameter( size_t index, const void * data );
     };
 }}
 

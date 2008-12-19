@@ -11,20 +11,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLProgramGLSL::init( const OGLBasicShaderGLSL * vs, const OGLBasicShaderGLSL * ps )
+bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & )
 {
     GN_GUARD;
 
     OGLAutoAttribStack autoAttribStack;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLProgramGLSL, () );
-
-    // Note: vs and ps can't be both NULL.
-    GN_ASSERT( vs || ps );
-
-    if( vs ) mShaders.push_back( vs );
-    if( ps ) mShaders.push_back( ps );
+    GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramGLSL, () );
 
     if( !createProgram() ) return failure();
 
@@ -37,7 +31,7 @@ bool GN::gfx::OGLProgramGLSL::init( const OGLBasicShaderGLSL * vs, const OGLBasi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLProgramGLSL::quit()
+void GN::gfx::OGLGpuProgramGLSL::quit()
 {
     GN_GUARD;
 
@@ -57,7 +51,7 @@ void GN::gfx::OGLProgramGLSL::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLProgramGLSL::createProgram()
+bool GN::gfx::OGLGpuProgramGLSL::createProgram()
 {
     GN_GUARD;
 
@@ -67,7 +61,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
         GN_ERROR(sLogger)( "no GLSL shader support!" );
         return false;
     }
-    
+
     // create GLSL program
     GN_OGL_CHECK( mProgram = glCreateProgramObjectARB() );
     if( 0 == mProgram )
@@ -76,13 +70,13 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
         return false;
     }
 
-    // attach shaders to program
-    for( size_t i = 0; i < mShaders.size(); ++i )
+    // TODO: attach shaders to program
+    /*for( size_t i = 0; i < mShaders.size(); ++i )
     {
         GN_OGL_CHECK_RV(
             glAttachObjectARB( mProgram, mShaders[i]->getHandleARB() ),
             false );
-    }
+    }*/
 
     // link program
     GN_OGL_CHECK( glLinkProgramARB(mProgram) );
@@ -92,27 +86,19 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
         false );
     if( !linkOk )
     {
+        char buf[4096];
+
+        GN_OGL_CHECK( glGetInfoLogARB( mProgram, 4095, NULL, buf ) );
+
         GN_ERROR(sLogger)(
             "\n========== GLSL program link error =========\n"
             "%s\n"
             "==============================================\n",
-            getProgramInfoLog(mProgram).cptr() );
+            buf );
     }
 
     // success
     return true;
 
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::StrA GN::gfx::OGLProgramGLSL::getProgramInfoLog( GLhandleARB program )
-{
-    GN_GUARD;
-    char buf[4096];
-    GN_OGL_CHECK( glGetInfoLogARB( program, 4095, NULL, buf ) );
-    return buf;
     GN_UNGUARD;
 }

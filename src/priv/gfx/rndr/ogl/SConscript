@@ -5,6 +5,7 @@ sources = [
     'oglDispMgrMsw.cpp',
     'oglDispMgrX11.cpp',
     'oglIdxBuf.cpp',
+    'oglProgramGLSL.cpp',
     'oglRenderer.cpp',
     'oglRenderTargetMgrCopyFrame.cpp',
 	'oglResource.cpp',

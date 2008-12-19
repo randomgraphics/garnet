@@ -11,172 +11,46 @@
 
 namespace GN { namespace gfx
 {
+    // *************************************************************************
+    // Basic program object
+    // *************************************************************************
+
     ///
-    /// OGL basic shader class
+    /// Basic OGL GPU program class
     ///
-    struct OGLBasicShader : public Shader
+    struct OGLBasicGpuProgram : public GpuProgram, public OGLResource
     {
         ///
-        /// Disable the shader
-        ///
-        virtual void disable() const = 0;
-
-        ///
-        /// Apply shader as well as shader constants to OpenGL
+        /// Apply shader as well as program constants to OpenGL
         ///
         virtual void apply() const = 0;
 
         ///
-        /// Apply only dirty uniforms to OpenGL
+        /// Disable the program
         ///
-        virtual void applyDirtyUniforms() const = 0;
+        virtual void disable() const = 0;
+
+        ///
+        /// Apply only dirty parameters to OpenGL
+        ///
+        virtual void applyDirtyParameters() const = 0;
 
     protected:
 
         ///
         /// protected ctor
         ///
-        OGLBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
+        OGLBasicGpuProgram( OGLRenderer & r ) : OGLResource(r) {}
     };
 
     // *************************************************************************
-    // ARB shader
+    // GLSL program
     // *************************************************************************
 
-    ///
-    /// OGL Basic ARB shader
-    ///
-    class OGLBasicShaderARB : public OGLBasicShader, public OGLResource, public StdClass
-    {
-         GN_DECLARE_STDCLASS( OGLBasicShaderARB, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLBasicShaderARB( OGLRenderer & r, ShaderType type )
-            : OGLBasicShader( type, LANG_OGL_ARB )
-            , OGLResource( r )
-            , mTarget( sSelectTarget( type ) )
-        { clear(); }
-        virtual ~OGLBasicShaderARB() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const StrA & code );
-        void quit();
-    private:
-        void clear()
-        {
-            mProgram = 0;
-            mMaxEnvUniforms = 0;
-            mMaxLocalUniforms = 0;
-            mMaxMatrixUniforms = 0;
-        }
-        //@}
-
-        // ********************************
-        // from OGLBasicShader
-        // ********************************
-    public:
-
-        virtual void disable() const;
-        virtual void apply() const;
-        virtual void applyDirtyUniforms() const;
-
-        // ********************************
-        // from Shader
-        // ********************************
-    private:
-
-        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        enum ARBParameterType { LOCAL_PARAMETER, ENV_PARAMETER, MATRIX_PARAMETER };
-
-        union UniformDesc
-        {
-            UInt32 u32;
-            struct
-            {
-                unsigned int type  : 2;  //one of ARBParameterType
-                unsigned int index : 30; // ARB uniform index
-            };
-        };
-        GN_CASSERT( 4 == sizeof(UniformDesc) );
-
-        const GLenum mTarget; // ARB program target
-        GLuint mProgram;      // ARB program handle
-
-        GLuint mMaxEnvUniforms;
-        GLuint mMaxLocalUniforms;
-        GLuint mMaxMatrixUniforms;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-
-        bool createShader( const StrA & );
-
-        inline void applyUniform( const Uniform & ) const; // apply single uniform
-
-        static GLenum sSelectTarget( ShaderType type )
-        {
-            switch( type )
-            {
-                case SHADER_VS : return GL_VERTEX_PROGRAM_ARB;
-                case SHADER_PS : return GL_FRAGMENT_PROGRAM_ARB;
-                default:
-                    GN_UNEXPECTED();
-                    return 0;
-            }
-        }
-    };
-
-    ///
-    /// OGL ARB vertex shader.
-    ///
-    class OGLVtxShaderARB : public OGLBasicShaderARB
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLVtxShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_VS ) {}
-    };
-
-    ///
-    /// OGL ARB pixel shader.
-    ///
-    class OGLPxlShaderARB : public OGLBasicShaderARB
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLPxlShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_PS ) {}
-    };
-
-    // *************************************************************************
-    // GLSL shader
-    // *************************************************************************
-
-    ///
+    /*
     /// Basic OGL GLSL shader class
     ///
-    class OGLBasicShaderGLSL : public OGLBasicShader, public OGLResource, public StdClass
+    class OGLBasicShaderGLSL : public OGLShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderGLSL, StdClass );
 
@@ -186,8 +60,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLBasicShaderGLSL( OGLRenderer & r, ShaderType t )
-            : OGLBasicShader( t, LANG_OGL_GLSL )
+        OGLBasicShaderGLSL( OGLRenderer & r, GLenum usage )
+            : OGLShader( t, LANG_OGL_GLSL )
             , OGLResource( r )
             , mUsage( sSelectUsage(t) ) { clear(); }
         virtual ~OGLBasicShaderGLSL() { quit(); }
@@ -209,7 +83,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from OGLBasicShader
+        // from OGLShader
         // ********************************
     public:
 
@@ -253,19 +127,6 @@ namespace GN { namespace gfx
     private:
 
         bool createShader( const StrA & );
-
-        static GLenum sSelectUsage( ShaderType type )
-        {
-            switch( type )
-            {
-                case SHADER_VS : return GL_VERTEX_SHADER_ARB;
-                case SHADER_PS : return GL_FRAGMENT_SHADER_ARB;
-                default:
-                    GN_UNEXPECTED();
-                    return 0;
-            }
-        }
-
     };
 
     ///
@@ -277,7 +138,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_VS ) {}
+        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, GL_VERTEX_SHADER_ARB ) {}
     };
 
     ///
@@ -289,15 +150,15 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_PS ) {}
-    };
+        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, GL_FRAGMENT_SHADER_ARB ) {}
+    };*/
 
     ///
     /// GLSL program class
     ///
-    class OGLProgramGLSL : public StdClass
+    class OGLGpuProgramGLSL : public OGLBasicGpuProgram, public StdClass
     {
-         GN_DECLARE_STDCLASS( OGLProgramGLSL, StdClass );
+         GN_DECLARE_STDCLASS( OGLGpuProgramGLSL, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -305,8 +166,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLProgramGLSL() { clear(); }
-        virtual ~OGLProgramGLSL() { quit(); }
+        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r ) { clear(); }
+        virtual ~OGLGpuProgramGLSL() { quit(); }
         //@}
 
         // ********************************
@@ -315,10 +176,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const OGLBasicShaderGLSL * vs, const OGLBasicShaderGLSL * ps );
+        bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mProgram = 0; mShaders.clear(); }
+        void clear() { mProgram = 0; }
         //@}
 
         // ********************************
@@ -329,20 +190,24 @@ namespace GN { namespace gfx
         ///
         /// apply GLSL program, as well as dirty uniforms, to rendering context.
         ///
-        void apply() const
+        virtual void apply() const
         {
             GN_GUARD_SLOW;
 
             GN_OGL_CHECK( glUseProgramObjectARB( mProgram ) );
 
-            for( size_t i = 0; i < mShaders.size(); ++i )
-            {
-                GN_ASSERT( mShaders[i] );
-                mShaders[i]->applyDirtyUniforms( mProgram );
-            }
-
             GN_UNGUARD_SLOW;
         }
+
+        ///
+        /// Disable the program
+        ///
+        virtual void disable() const { GN_UNIMPL(); }
+
+        ///
+        /// Apply only dirty parameters to OpenGL
+        ///
+        virtual void applyDirtyParameters() const { GN_UNIMPL(); }
 
         // ********************************
         // private variables
@@ -350,7 +215,6 @@ namespace GN { namespace gfx
     private:
 
         GLhandleARB mProgram;
-        std::vector<const OGLBasicShaderGLSL*> mShaders;
 
         // ********************************
         // private functions
@@ -358,19 +222,18 @@ namespace GN { namespace gfx
     private:
 
         bool createProgram();
-        StrA getProgramInfoLog( GLhandleARB program );
     };
 
     // *************************************************************************
     // Cg shader
     // *************************************************************************
 
-#ifdef HAS_CG_OGL
+#if 0 // def HAS_CG_OGL
 
     ///
     /// Basic Cg Shader class
     ///
-    class OGLBasicShaderCg : public OGLBasicShader, public OGLResource, public StdClass
+    class OGLBasicShaderCg : public OGLShader, public OGLResource, public StdClass
     {
         GN_DECLARE_STDCLASS( OGLBasicShaderCg, StdClass );
 
@@ -381,7 +244,7 @@ namespace GN { namespace gfx
         //@{
     public:
         OGLBasicShaderCg( OGLRenderer & r, ShaderType t, CGGLenum profileClass )
-            : OGLBasicShader( t, LANG_CG )
+            : OGLShader( t, LANG_CG )
             , OGLResource( r )
             , mProfileClass( profileClass ) { clear(); }
         virtual ~OGLBasicShaderCg() { quit(); }
@@ -400,7 +263,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from OGLBasicShader
+        // from OGLShader
         // ********************************
     public:
 
