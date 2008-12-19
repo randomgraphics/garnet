@@ -146,8 +146,8 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual CompiledShaderBlob * compileShader( const ShaderDesc & desc );
-        virtual Shader             * createShader( const CompiledShaderBlob & );
+        virtual CompiledGpuProgram * compileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram         * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
         virtual Texture            * createTexture( const TextureDesc & desc );
         virtual VtxBuf             * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf             * createIdxBuf( const IdxBufDesc & desc );

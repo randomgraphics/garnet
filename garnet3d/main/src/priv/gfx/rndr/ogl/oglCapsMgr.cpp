@@ -207,35 +207,35 @@ bool GN::gfx::OGLRenderer::capsInit()
     memset( &mCaps, 0, sizeof(mCaps) );
 
     // vertex shader flags
-    mCaps.vsProfiles[SP_D3D_1_1]  = false;
-    mCaps.vsProfiles[SP_D3D_2_0]  = false;
-    mCaps.vsProfiles[SP_D3D_3_0]  = false;
-    mCaps.vsProfiles[SP_D3D_4_0]  = false;
-    mCaps.vsProfiles[SP_OGL_ARB1] = !!GLEW_ARB_vertex_program;
-    mCaps.vsProfiles[SP_OGL_GLSL] = GLEW_ARB_shader_objects &&
+    mCaps.vsProfiles[GPP_D3D_1_1]  = false;
+    mCaps.vsProfiles[GPP_D3D_2_0]  = false;
+    mCaps.vsProfiles[GPP_D3D_3_0]  = false;
+    mCaps.vsProfiles[GPP_D3D_4_0]  = false;
+    mCaps.vsProfiles[GPP_OGL_ARB1] = !!GLEW_ARB_vertex_program;
+    mCaps.vsProfiles[GPP_OGL_GLSL] = GLEW_ARB_shader_objects &&
                                     GLEW_ARB_vertex_shader &&
                                     GLEW_ARB_shading_language_100;
 #ifdef HAS_CG_OGL
-    mCaps.vsProfiles[SP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
+    mCaps.vsProfiles[GPP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
 #else
-    mCaps.vsProfiles[SP_CG]       = false;
+    mCaps.vsProfiles[GPP_CG]       = false;
 #endif
 
     // note: OGL renderer does not support GS yet.
 
     // pixel shader flags
-    mCaps.psProfiles[SP_D3D_1_1]  = false;
-    mCaps.psProfiles[SP_D3D_2_0]  = false;
-    mCaps.psProfiles[SP_D3D_3_0]  = false;
-    mCaps.psProfiles[SP_D3D_4_0]  = false;
-    mCaps.psProfiles[SP_OGL_ARB1] = !!GLEW_ARB_fragment_program;
-    mCaps.psProfiles[SP_OGL_GLSL] = GLEW_ARB_shader_objects &&
+    mCaps.psProfiles[GPP_D3D_1_1]  = false;
+    mCaps.psProfiles[GPP_D3D_2_0]  = false;
+    mCaps.psProfiles[GPP_D3D_3_0]  = false;
+    mCaps.psProfiles[GPP_D3D_4_0]  = false;
+    mCaps.psProfiles[GPP_OGL_ARB1] = !!GLEW_ARB_fragment_program;
+    mCaps.psProfiles[GPP_OGL_GLSL] = GLEW_ARB_shader_objects &&
                                     GLEW_ARB_fragment_shader &&
                                     GLEW_ARB_shading_language_100;
 #ifdef HAS_CG_OGL
-    mCaps.psProfiles[SP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
+    mCaps.psProfiles[GPP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
 #else
-    mCaps.psProfiles[SP_CG]       = false;
+    mCaps.psProfiles[GPP_CG]       = false;
 #endif
 
     // success;
