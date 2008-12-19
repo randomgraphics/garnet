@@ -32,7 +32,7 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        OGLRenderer() : BasicRenderer(API_OGL) { clear(); }
+        OGLRenderer() { clear(); }
         virtual ~OGLRenderer() { quit(); }
         //@}
 
@@ -44,48 +44,19 @@ namespace GN { namespace gfx
 
     public:
 
-        bool init();
+        bool init( const RendererOptions & );
         void quit();
 
     private:
 
         void clear()
         {
-            deviceClear();
             dispClear();
             capsClear();
             resourceClear();
             contextClear();
             drawClear();
         }
-
-        //@}
-
-    // ************************************************************************
-    //
-    /// \name                     Device Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public:
-
-        virtual bool reset( const RendererOptions & ro );
-
-    private:
-
-        ///
-        /// if true, then we are in the middle of renderer reset.
-        ///
-        bool mOnGoingReset;
-
-    private:
-
-
-        void deviceClear() { mOnGoingReset = false; }
-        bool deviceCreate();
-        void deviceDestroy();
 
         //@}
 
@@ -102,11 +73,10 @@ namespace GN { namespace gfx
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
 
-
 #if GN_MSWIN
     private :
-        bool dispInit() { return true; }
-        void dispQuit() {}
+        bool dispInit();
+        void dispQuit();
         void dispClear()
         {
             mDeviceContext = 0;
@@ -114,9 +84,6 @@ namespace GN { namespace gfx
             mDisplayModeActivated = false;
             mIgnoreMsgHook = false;
         }
-
-        bool dispDeviceCreate();
-        void dispDeviceDestroy();
 
         bool activateDisplayMode();
         void restoreDisplayMode();
@@ -131,16 +98,12 @@ namespace GN { namespace gfx
 
 #elif GN_POSIX
     private :
-        bool dispInit() { return true; }
-        void dispQuit() {}
-        bool dispOK() const { return true; }
+        bool dispInit();
+        void dispQuit();
         void dispClear()
         {
             mRenderContext = 0;
         }
-
-        bool dispDeviceCreate();
-        void dispDeviceDestroy();
 
     private :
         GLXContext mRenderContext;
@@ -163,12 +126,9 @@ namespace GN { namespace gfx
         virtual ColorFormat          getDefaultTextureFormat( TextureUsages usages ) const;
 
     private :
-        bool capsInit() { return true; }
+        bool capsInit();
         void capsQuit() {}
-        void capsClear() {}
-
-        bool capsDeviceCreate();
-        void capsDeviceDestroy() {}
+        void capsClear() { memset( &mCaps, 0, sizeof(mCaps) ); }
 
     private:
 
@@ -187,7 +147,7 @@ namespace GN { namespace gfx
     public :
 
         virtual CompiledShaderBlob * compileShader( const ShaderDesc & desc );
-        virtual Shader             * createShader( const CompiledShaderBlob * );
+        virtual Shader             * createShader( const CompiledShaderBlob & );
         virtual Texture            * createTexture( const TextureDesc & desc );
         virtual VtxBuf             * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf             * createIdxBuf( const IdxBufDesc & desc );
@@ -215,11 +175,9 @@ namespace GN { namespace gfx
 
     private :
 
-        bool resourceInit() { return true; }
-        void resourceQuit() {}
+        bool resourceInit();
+        void resourceQuit();
         void resourceClear() {}
-        bool resourceDeviceCreate();
-        void resourceDeviceDestroy();
 
     private:
 
@@ -240,7 +198,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContext( const RendererContext & context, bool forceRebinding );
+        virtual void bindContext( const RendererContext & context, bool forceBinding );
 
     public:
 
@@ -250,16 +208,13 @@ namespace GN { namespace gfx
 
     private:
 
-        bool contextInit() { return true; }
+        bool contextInit();
         void contextQuit() {}
-        void contextClear();
-        bool contextDeviceCreate();
-        void contextDeviceDestroy();
+        void contextClear() { mContext.resetToDefault(); }
 
-        inline void bindContextShaders( const RendererContext & newContext, bool forceRebind );
-        inline void bindContextRenderStates( const RendererContext & newContext, bool forceRebind );
-        inline void bindContextFfp( const RendererContext & newContext, bool forceRebind );
-        inline void bindContextData( const RendererContext & newContext, bool forceRebind );
+        inline void bindContextShaders( const RendererContext & newContext, bool forceBinding );
+        inline void bindContextRenderStates( const RendererContext & newContext, bool forceBinding );
+        inline void bindContextResources( const RendererContext & newContext, bool forceBinding );
 
     private:
 

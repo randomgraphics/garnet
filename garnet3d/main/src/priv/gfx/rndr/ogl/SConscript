@@ -1,8 +1,17 @@
 Import( 'GN' )
 sources = [
+	'oglCapsMgr.cpp',
+	'oglContextMgr.cpp',
     'oglDispMgrMsw.cpp',
     'oglDispMgrX11.cpp',
+    'oglIdxBuf.cpp',
     'oglRenderer.cpp',
+    'oglRenderTargetMgrCopyFrame.cpp',
+	'oglResource.cpp',
+    'oglResourceMgr.cpp',
+    'oglTexture.cpp',
+    'oglVtxBufNormal.cpp',
+    'oglVtxBufVBO.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 target = GN.newTarget( 'shlib', 'GNrndrOGL', [cluster], dependencies = ['GNrndrCommon'] )

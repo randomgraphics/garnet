@@ -168,50 +168,6 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
 static void GLAPIENTRY sFake_glActiveTexture(GLenum) {}
 static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
 
-// ****************************************************************************
-// local functions that initialize individual capability
-// ****************************************************************************
-
-//
-static UInt32 sCapsInit_MAX_2D_TEXTURE_SIZE()
-{
-    GLint result = 0;
-    GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
-    return result;
-}
-//
-static UInt32 sCapsInit_MAX_CLIP_PLANES()
-{
-    GLint result = 0;
-    GN_OGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
-    return result;
-}
-//
-static UInt32 sCapsInit_MAX_RENDER_TARGETS()
-{
-    // FIXME: this is only suit for glCopyTexImage, not real PBuffer texture
-    return 1;
-}
-//
-static UInt32 sCapsInit_MAX_PRIMITIVES()
-{
-    return 0x10000; // no more than 65536 elements in one DIP
-}
-//
-static UInt32 sCapsInit_MAX_TEXTURE_STAGES()
-{
-    if( GLEW_ARB_multitexture )
-    {
-        GLint result;
-        GN_OGL_CHECK_RV( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &result ), 1 );
-        return result;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -219,7 +175,7 @@ static UInt32 sCapsInit_MAX_TEXTURE_STAGES()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::capsDeviceCreate()
+bool GN::gfx::OGLRenderer::capsInit()
 {
     GN_GUARD;
 
@@ -240,32 +196,46 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
 
-    // 逐一的初始化每一个caps
-    #define GNGFX_CAPS( name ) \
-        mCaps[CAPS_##name] = sCapsInit_##name();
-    #include "garnet/gfx/rendererCapsMeta.h"
-    #undef GNGFX_CAPS
-
-    // special case for multi-texture
+    // handle case where multi-texture extension is not supported
     if( !GLEW_ARB_multitexture )
     {
         glActiveTextureARB = sFake_glActiveTexture;
         glClientActiveTextureARB = sFake_glClientActiveTexture;
     }
 
-    // setup shader support flags
-    mShaderSupportFlags.u8 = 0;
-    mShaderSupportFlags.arbvp1 = !!GLEW_ARB_vertex_program;
-    mShaderSupportFlags.arbfp1 = !!GLEW_ARB_fragment_program;
-    mShaderSupportFlags.glslvs = GLEW_ARB_shader_objects &&
-                                 GLEW_ARB_vertex_shader &&
-                                 GLEW_ARB_shading_language_100;
-    mShaderSupportFlags.glslvs = GLEW_ARB_shader_objects &&
-                                 GLEW_ARB_fragment_shader &&
-                                 GLEW_ARB_shading_language_100;
+    // clear all caps
+    memset( &mCaps, 0, sizeof(mCaps) );
+
+    // vertex shader flags
+    mCaps.vsProfiles[SP_D3D_1_1]  = false;
+    mCaps.vsProfiles[SP_D3D_2_0]  = false;
+    mCaps.vsProfiles[SP_D3D_3_0]  = false;
+    mCaps.vsProfiles[SP_D3D_4_0]  = false;
+    mCaps.vsProfiles[SP_OGL_ARB1] = !!GLEW_ARB_vertex_program;
+    mCaps.vsProfiles[SP_OGL_GLSL] = GLEW_ARB_shader_objects &&
+                                    GLEW_ARB_vertex_shader &&
+                                    GLEW_ARB_shading_language_100;
 #ifdef HAS_CG_OGL
-    mShaderSupportFlags.cgvs = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
-    mShaderSupportFlags.cgps = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
+    mCaps.vsProfiles[SP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
+#else
+    mCaps.vsProfiles[SP_CG]       = false;
+#endif
+
+    // note: OGL renderer does not support GS yet.
+
+    // pixel shader flags
+    mCaps.psProfiles[SP_D3D_1_1]  = false;
+    mCaps.psProfiles[SP_D3D_2_0]  = false;
+    mCaps.psProfiles[SP_D3D_3_0]  = false;
+    mCaps.psProfiles[SP_D3D_4_0]  = false;
+    mCaps.psProfiles[SP_OGL_ARB1] = !!GLEW_ARB_fragment_program;
+    mCaps.psProfiles[SP_OGL_GLSL] = GLEW_ARB_shader_objects &&
+                                    GLEW_ARB_fragment_shader &&
+                                    GLEW_ARB_shading_language_100;
+#ifdef HAS_CG_OGL
+    mCaps.psProfiles[SP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
+#else
+    mCaps.psProfiles[SP_CG]       = false;
 #endif
 
     // success;
@@ -281,25 +251,10 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
-{
-    GN_GUARD;
-
-    if( "arbvp1" == profile ) return mShaderSupportFlags.arbvp1;
-    else if( "arbfp1" == profile ) return mShaderSupportFlags.arbfp1;
-    else if( "glslvs" == profile ) return mShaderSupportFlags.glslvs;
-    else if( "glslps" == profile ) return mShaderSupportFlags.glslps;
-    else if( "cgvs" == profile ) return mShaderSupportFlags.cgvs;
-    else if( "cgps" == profile ) return mShaderSupportFlags.cgps;
-    else return false;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportTextureFormat( TexDim, BitFields, ClrFmt ) const
+bool
+GN::gfx::OGLRenderer::checkTextureFormatSupport(
+    ColorFormat   /*format*/,
+    TextureUsages /*usages*/ ) const
 {
     GN_UNIMPL_WARNING();
     return true;
@@ -308,17 +263,15 @@ bool GN::gfx::OGLRenderer::supportTextureFormat( TexDim, BitFields, ClrFmt ) con
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::OGLRenderer::getDefaultTextureFormat(
-    TexDim type, BitFields usage ) const
+GN::gfx::ColorFormat
+GN::gfx::OGLRenderer::getDefaultTextureFormat( TextureUsages usages ) const
 {
-    GN_UNUSED_PARAM( type );
-
-    if( TEXUSAGE_DEPTH & usage )
+    if( usages.depth )
     {
-        return FMT_D_32;
+        return COLOR_FORMAT_R_32_UINT;
     }
     else
     {
-        return FMT_RGBA_8_8_8_8_UNORM;
+        return COLOR_FORMAT_RGBA_8_8_8_8_UNORM;
     }
 }

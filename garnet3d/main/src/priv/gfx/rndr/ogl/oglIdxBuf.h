@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
-#include "../common/basicBuffer.h"
+#include "../common/basicSurface.h"
 
 namespace GN { namespace gfx
 {
@@ -47,8 +47,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag );
-        virtual void unlock() { basicUnlock(); }
+        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag );
+        virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
         // public functions
@@ -58,14 +58,15 @@ namespace GN { namespace gfx
         ///
         /// Get index data pointer
         ///
-        const UInt16 * getIdxData( size_t startidx ) const { return mBuffer + startidx; }
+        const void * getIdxData( size_t startidx ) const { return mBuffer + startidx * mBytesPerIndex; }
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        UInt16 * mBuffer;
+        UInt8 * mBuffer;
+        size_t  mBytesPerIndex;
 
         // ********************************
         // private functions

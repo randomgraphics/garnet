@@ -31,8 +31,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRenderer( RendererAPI api )
-            : mApi(api)
+        BasicRenderer()
         {
              mWindow.setRenderer( this );
              clear();
@@ -46,7 +45,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
+        bool init( const RendererOptions & );
         void quit();
     private :
         void clear()
@@ -68,10 +67,9 @@ namespace GN { namespace gfx
 
         virtual const RendererOptions & getOptions() const { return mOptions; }
         virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
-        virtual RendererAPI             getApi() const { return mApi; }
 
     private:
-        bool dispInit();
+        bool dispInit( const RendererOptions & );
         void dispQuit();
         void dispClear()
         {
@@ -81,12 +79,6 @@ namespace GN { namespace gfx
         }
 
     protected:
-
-        ///
-        /// Called by sub-classes to initialize display descriptor
-        /// based on renderer options.
-        ///
-        bool setupOptionAndDispDesc( const RendererOptions & );
 
         ///
         /// Called by sub class to respond to render window resizing/moving
@@ -103,7 +95,6 @@ namespace GN { namespace gfx
 
         RendererOptions   mOptions;
         DispDesc          mDispDesc;
-        const RendererAPI mApi; // there's no way to change API after a renderer is created.
 
 #if GN_MSWIN
         RenderWindowMsw mWindow;  ///< Render window instance.
@@ -151,9 +142,9 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual void bindContext( const RendererContext & context, bool forceRebinding ) = 0;
+        virtual void bindContext( const RendererContext & context, bool forceBinding ) = 0;
 
-    private:
+    protected:
 
         RendererContext mContext;
 

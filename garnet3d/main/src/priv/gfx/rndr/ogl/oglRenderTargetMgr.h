@@ -9,7 +9,13 @@
 namespace GN { namespace gfx
 {
     class OGLRenderer;
-    
+
+    struct RenderTargetDesc
+    {
+        RenderTargetTexture * crts;
+        RenderTargetTexture * dsrt;
+    };
+
     ///
     /// Basic render target manager
     ///
@@ -50,8 +56,8 @@ namespace GN { namespace gfx
         virtual void bind(
             const RenderTargetDesc & oldRT,
             const RenderTargetDesc & newRT,
-            bool forceRebind,
-            bool & needRebindViewport ) = 0;
+            bool forceBinding,
+            bool & renderTargetSizeChanged ) = 0;
     };
 
     ///

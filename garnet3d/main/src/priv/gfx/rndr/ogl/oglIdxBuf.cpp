@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglIdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.IdxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -26,7 +26,8 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
 
     setDesc( desc );
 
-    mBuffer = (UInt16*) heapAlloc( desc.numidx * 2 );
+    mBytesPerIndex = desc.bits32 ? 4 : 2;
+    mBuffer = (UInt8*)heapAlloc( desc.numidx * mBytesPerIndex );
 
     // success
     return success();
@@ -56,11 +57,31 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startidx, size_t numidx, LockFlag flag )
+void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, UpdateFlag )
 {
     GN_GUARD_SLOW;
+
     GN_ASSERT( ok() );
-    if( !basicLock( startidx, numidx, flag ) ) return 0;
-    return mBuffer + startidx;
+
+    if( !validateUpdateParameters( startidx, numidx ) ) return;
+
+    if( 0 == numidx ) return;
+
+    memcpy( mBuffer + startidx * mBytesPerIndex, data, numidx * mBytesPerIndex );
+
     GN_UNGUARD_SLOW
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLIdxBuf::readback( std::vector<UInt8> & data )
+{
+    const IdxBufDesc & desc = getDesc();
+
+    size_t lengthInBytes = desc.numidx * mBytesPerIndex;
+
+    data.resize( lengthInBytes );
+
+    memcpy( &data[0], mBuffer, lengthInBytes );
 }

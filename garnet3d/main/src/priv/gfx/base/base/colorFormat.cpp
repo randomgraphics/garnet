@@ -532,3 +532,16 @@ int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
     }
     return DXGI_FORMAT_UNKNOWN;
 }
+
+// *****************************************************************************
+// ColorFormat
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
+{
+    GN_UNIMPL_WARNING();
+    s.clear();
+}

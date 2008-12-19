@@ -10,7 +10,7 @@ GN::Logger * GN::gfx::BasicRenderer::sLogger = GN::getLogger("GN.gfx.rndr.common
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::init()
+bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
 {
     GN_GUARD;
 
@@ -18,7 +18,7 @@ bool GN::gfx::BasicRenderer::init()
     GN_STDCLASS_INIT( BasicRenderer, () );
 
     // initialize sub-components one by one
-    if( !dispInit() ) return failure();
+    if( !dispInit(o) ) return failure();
 
     // success
     return success();
