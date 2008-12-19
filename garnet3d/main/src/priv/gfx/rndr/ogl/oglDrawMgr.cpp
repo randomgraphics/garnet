@@ -63,9 +63,9 @@ static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t f
     sCtxDumper.dump( "</RendererContext>" );
 }
 
-#define DUMP_STATE() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
+#define DUMP_DRAW_STATE() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
 /*/
-#define DUMP_STATE()
+#define DUMP_DRAW_STATE()
 //*/
 
 // *****************************************************************************
@@ -131,7 +131,7 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::drawDeviceCreate()
+bool GN::gfx::OGLRenderer::drawInit()
 {
     GN_GUARD;
 
@@ -151,7 +151,7 @@ bool GN::gfx::OGLRenderer::drawDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawDeviceDestroy()
+void GN::gfx::OGLRenderer::drawQuit()
 {
     GN_GUARD;
 
@@ -169,30 +169,9 @@ void GN::gfx::OGLRenderer::drawDeviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::drawBegin()
+void GN::gfx::OGLRenderer::present()
 {
     GN_GUARD_SLOW;
-
-    GN_ASSERT( !mDrawBegan );
-
-    mDrawBegan = 1;
-    mNumPrims = 0;
-    mNumBatches = 0;
-    return true;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawEnd()
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( mDrawBegan );
-
-    mDrawBegan = 0;
 
 #if GN_MSWIN
     GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
@@ -270,9 +249,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan );
-
-    DUMP_STATE();
+    DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -281,7 +258,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    // bind vertex buffer based on current startvtx
+    /* bind vertex buffer based on current startvtx
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxfmt) &&
         mVtxFmts[mContext.vtxfmt] &&
@@ -329,11 +306,9 @@ void GN::gfx::OGLRenderer::drawIndexed(
     {
         GN_OGL_CHECK( glDrawElements(
             oglPrim, (GLsizei)numidx, GL_UNSIGNED_SHORT, ib->getIdxData( startidx ) ) );
-    }
+    }*/
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
@@ -346,9 +321,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan );
-
-    DUMP_STATE();
+    DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -357,7 +330,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    // bind vertex buffer based on current startvtx
+    /* bind vertex buffer based on current startvtx
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxfmt) &&
         mVtxFmts[mContext.vtxfmt] &&
@@ -382,11 +355,9 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
     {
         // draw primitives
         GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
-    }
+    }*/
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
@@ -407,7 +378,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_STATE();
+    DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -490,7 +461,7 @@ void GN::gfx::OGLRenderer::drawUp(
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_STATE();
+    DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -563,7 +534,7 @@ void GN::gfx::OGLRenderer::drawLines(
     if( !(DL_USE_CURRENT_PS & options) ) ctx.setPS( 0 );
     setContext( ctx );
 
-    DUMP_STATE();
+    DUMP_DRAW_STATE();
 
     mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
 
