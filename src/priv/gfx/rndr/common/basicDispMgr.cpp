@@ -203,7 +203,7 @@ sDetermineWindowSize(
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::dispInit()
+bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
 {
 #if GN_POSIX
 
@@ -217,41 +217,6 @@ bool GN::gfx::BasicRenderer::dispInit()
     }
 
 #endif
-
-    // success
-    return true;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::dispQuit()
-{
-    mWindow.quit();
-
-#if GN_POSIX
-
-    // close default display
-    if( mDefaultDisplay )
-    {
-        XCloseDisplay( mDefaultDisplay );
-        mDefaultDisplay = 0;
-    }
-
-#endif
-}
-
-// ****************************************************************************
-// protected functions
-// ****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool
-GN::gfx::BasicRenderer::setupOptionAndDispDesc( const RendererOptions & ro )
-{
-    GN_GUARD;
 
     DispDesc desc;
 
@@ -322,9 +287,30 @@ GN::gfx::BasicRenderer::setupOptionAndDispDesc( const RendererOptions & ro )
     mOptions = ro;
     mDispDesc = desc;
     return true;
-
-    GN_UNGUARD;
 }
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::dispQuit()
+{
+    mWindow.quit();
+
+#if GN_POSIX
+
+    // close default display
+    if( mDefaultDisplay )
+    {
+        XCloseDisplay( mDefaultDisplay );
+        mDefaultDisplay = 0;
+    }
+
+#endif
+}
+
+// ****************************************************************************
+// protected functions
+// ****************************************************************************
 
 //
 //
@@ -349,15 +335,6 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
         {
             getSigRendererWindowSizeMove()( *this, monitor, width, height );
         }
-
-        //RendererOptions newOptions = ro;
-        //newOptions.monitorHandle = mWindow.getMonitor();
-        //mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
-        //if( !changeOptions( newOptions, false ) )
-        //{
-        //    GN_FATAL(sLogger)( "Fail to respond to render window size and position change!" );
-        //    return false;
-        //}
     }
 
     GN_UNGUARD;

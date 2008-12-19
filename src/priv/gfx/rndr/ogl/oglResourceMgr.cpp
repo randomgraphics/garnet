@@ -1,39 +1,15 @@
 #include "pch.h"
 #include "oglRenderer.h"
-#include "oglShader.h"
-#include "oglVtxFmt.h"
+//#include "oglShader.h"
+//#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 #include "oglTexture.h"
-#include "oglSampler.h"
+//#include "oglSampler.h"
 
 // *****************************************************************************
 // local function
 // *****************************************************************************
-
-struct EqualSampler
-{
-    const GN::gfx::SamplerDesc & desc;
-    EqualSampler( const GN::gfx::SamplerDesc & d ) : desc(d) {}
-    bool operator()( const GN::gfx::OGLSamplerObject * so ) const
-    {
-        GN_ASSERT( so );
-        return desc == so->getDesc();
-    }
-};
-
-struct EqualFormat
-{
-    const GN::gfx::VtxFmtDesc & format;
-
-    EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
-
-    bool operator()( void * p ) const
-    {
-        GN_ASSERT( p );
-        return format == ((GN::gfx::OGLVtxFmt*)p)->getFormat();
-    }
-};
 
 // *****************************************************************************
 // device management
@@ -42,7 +18,7 @@ struct EqualFormat
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::resourceDeviceCreate()
+bool GN::gfx::OGLRenderer::resourceInit()
 {
     GN_GUARD;
 
@@ -53,10 +29,6 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
         GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
         return false;
     }
-
-    // create default sampler
-    mDefaultSampler = createSampler( SamplerDesc::DEFAULT );
-    if( 0 == mDefaultSampler ) return false;
 
 #ifdef HAS_CG_OGL
     if( !mCgContext.init() ) return false;
@@ -71,32 +43,16 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::resourceDeviceDestroy()
+void GN::gfx::OGLRenderer::resourceQuit()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    // release vertex formats
-    for( VtxFmtHandle h = mVtxFmts.first(); h != 0; h = mVtxFmts.next( h ) )
-    {
-        GN_ASSERT( mVtxFmts[h] );
-        delete mVtxFmts[h];
-    }
-    mVtxFmts.clear();
-
-    // release all samplers
-    for( SamplerHandle h = mSamplers.first(); h != 0; h = mSamplers.next( h ) )
-    {
-        GN_ASSERT( mSamplers[h] );
-        delete mSamplers[h];
-    }
-    mSamplers.clear();
-
     // check for non-released resources
     if( !mResourceList.empty() )
     {
-        GN_ERROR(sLogger)( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
+        GN_ERROR(sLogger)( "All graphics resouces have to be released, before renderer is destroied!" );
         GN_UNEXPECTED();
         for( std::list<OGLResource*>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i )
         {
@@ -119,11 +75,27 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Shader *
-GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints )
+GN::gfx::CompiledShaderBlob *
+GN::gfx::OGLRenderer::compileShader( const ShaderDesc & )
 {
     GN_GUARD;
 
+    return NULL;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Shader *
+GN::gfx::OGLRenderer::createShader( const CompiledShaderBlob & )
+{
+    GN_GUARD;
+
+    return NULL;
+
+    /*
     switch( type )
     {
         case SHADER_VS :
@@ -193,6 +165,8 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
             GN_ERROR(sLogger)( "invalid shader type: %d", type );
             return 0;
     }
+    */
+
     GN_UNGUARD;
 }
 
@@ -214,55 +188,6 @@ GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::SamplerHandle  GN::gfx::OGLRenderer::createSampler( const SamplerDesc & desc )
-{
-    GN_GUARD;
-
-    SamplerHandle  h = mSamplers.findIf( EqualSampler(desc) );
-
-    if( 0 == h )
-    {
-        // create new vertex binding object
-        AutoObjPtr<OGLSamplerObject> p( new OGLSamplerObject(*this) );
-        if( !p->init( desc ) ) return 0;
-        h = mSamplers.add( p );
-        p.detach();
-    }
-
-    // success
-    return h;
-
-    GN_UNGUARD;
-}
-
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::VtxFmtHandle  GN::gfx::OGLRenderer::createVtxFmt( const VtxFmtDesc & format )
-{
-    GN_GUARD;
-
-    VtxFmtHandle  h = mVtxFmts.findIf( EqualFormat(format) );
-
-    if( 0 == h )
-    {
-        // create new vertex binding object
-        AutoObjPtr<OGLVtxFmt> p( new OGLVtxFmt(*this) );
-        if( !p->init( format ) ) return 0;
-        h = mVtxFmts.add( p );
-        p.detach();
-    }
-
-    // success
-    return h;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::OGLRenderer::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
@@ -275,7 +200,7 @@ GN::gfx::VtxBuf * GN::gfx::OGLRenderer::createVtxBuf( const VtxBufDesc & desc )
     }
     else
     {
-        AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal );
+        AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal(*this) );
         if( !p->init( desc ) ) return 0;
         return p.detach();
     }
@@ -294,42 +219,6 @@ GN::gfx::IdxBuf * GN::gfx::OGLRenderer::createIdxBuf( const IdxBufDesc & desc )
     if( !p->init( desc ) ) return 0;
 
     return p.detach();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::removeGLSLShader( ShaderType st, Shader * sh )
-{
-    GN_GUARD;
-
-    GN_ASSERT( 0 <= st && st < NUM_SHADER_TYPES );
-
-    GLSLProgramMap::iterator i,t;
-    for( i = mGLSLProgramMap.begin(); i != mGLSLProgramMap.end(); )
-    {
-        if( i->first.shaders[st] == sh )
-        {
-            t = i;
-            ++i;
-
-            // remove the program from program map
-            GN_ASSERT( t->second );
-            OGLProgramGLSL * prog = (OGLProgramGLSL*)t->second;
-            delete prog;
-            mGLSLProgramMap.erase( t );
-        }
-        else
-        {
-            ++i;
-        }
-    }
 
     GN_UNGUARD;
 }

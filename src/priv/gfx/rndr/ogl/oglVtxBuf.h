@@ -7,19 +7,24 @@
 // *****************************************************************************
 
 #include "oglResource.h"
-#include "../common/basicBuffer.h"
+#include "../common/basicSurface.h"
 
 namespace GN { namespace gfx
 {
     ///
     /// Basic OGL vertex buffer class
     ///
-    struct OGLBasicVtxBuf : public BasicVtxBuf
+    struct OGLBasicVtxBuf : public BasicVtxBuf, public OGLResource
     {
         ///
         /// 返回指向顶点数据的指针
         ///
         virtual const UInt8 * getVtxData() const = 0;
+
+    protected :
+
+        /// protected ctor
+        OGLBasicVtxBuf( OGLRenderer & r ) : OGLResource( r ) {}
     };
 
     ///
@@ -35,7 +40,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufNormal()          { clear(); }
+        OGLVtxBufNormal( OGLRenderer & r ) : OGLBasicVtxBuf(r) { clear(); }
         virtual ~OGLVtxBufNormal() { quit(); }
         //@}
 
@@ -56,8 +61,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
-        virtual void unlock();
+        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag );
+        virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
         // public OGLBasicVtxBuf
@@ -84,7 +89,7 @@ namespace GN { namespace gfx
     ///
     /// Vertex buffer that use GL_ARB_vertex_buffer_object.
     ///
-    class OGLVtxBufVBO : public OGLBasicVtxBuf, public OGLResource, public StdClass
+    class OGLVtxBufVBO : public OGLBasicVtxBuf, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLVtxBufVBO, StdClass );
 
@@ -94,7 +99,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufVBO( OGLRenderer & r ) : OGLResource(r) { clear(); }
+        OGLVtxBufVBO( OGLRenderer & r ) : OGLBasicVtxBuf(r) { clear(); }
         virtual ~OGLVtxBufVBO() { quit(); }
         //@}
 
@@ -109,8 +114,8 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mSysCopy = 0;
             mOGLVertexBufferObject = 0;
+            mOGLUsage = 0;
          }
         //@}
 
@@ -119,8 +124,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
-        virtual void unlock();
+        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag );
+        virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
         // public OGLBasicVtxBuf
@@ -138,12 +143,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        UInt8 * mSysCopy;
-        GLuint    mOGLVertexBufferObject;
-        GLenum    mOGLUsage;
-        size_t    mLockOffset; ///< bytes from buffer start to locked start.
-        size_t    mLockBytes;
-        LockFlag  mLockFlag;
+        GLuint mOGLVertexBufferObject;
+        GLenum mOGLUsage;
 
         // ********************************
         // private functions

@@ -368,9 +368,6 @@ namespace GN
                 clear();
             }
 
-            /// is empty reference or not.
-            bool empty() const { return NULL == mPtr; }
-
             /// clear the reference
             void clear()
             {
@@ -378,20 +375,6 @@ namespace GN
                 {
                     mPtr->_removeWeakRef( mIter );
                     mPtr = NULL;
-                }
-            }
-
-            /// set the pointer
-            void set( const RefCounter * ptr )
-            {
-                if( mPtr == ptr ) return;
-
-                clear();
-
-                if( ptr )
-                {
-                    mPtr = ptr;
-                    mIter = mPtr->_addWeakRef( this );
                 }
             }
         };
@@ -420,6 +403,26 @@ namespace GN
 
         // get the pointer
         XPTR get() const { return (X*)mPtr; }
+
+        /// check for empty reference
+        bool empty() const { return NULL == mPtr; }
+
+        /// clear the reference
+        void clear() { return detail::WeakRefBase::clear(); }
+
+        /// set/reset the pointer
+        void set( const RefCounter * ptr )
+        {
+            if( mPtr == ptr ) return;
+
+            clear();
+
+            if( ptr )
+            {
+                mPtr = ptr;
+                mIter = mPtr->_addWeakRef( this );
+            }
+        }
 
         ///
         /// Convert to XPTR

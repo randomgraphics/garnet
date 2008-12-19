@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // local functions
 // *****************************************************************************
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 static inline void
@@ -75,37 +75,37 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
             GN_ERROR(sLogger)( "invalid texture type!" );
             return;
     }
-}
+}*/
 
 // *****************************************************************************
 // public functions
 // *****************************************************************************
 
+#pragma warning( disable : 4100 )
+
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRTMgrCopyFrame::bind(
-    const RenderTargetDesc & oldDesc,
-    const RenderTargetDesc & newDesc,
-    bool forceRebind,
-    bool & needRebindViewport )
+    const RenderTargetDesc & newrt,
+    const RenderTargetDesc & oldrt,
+    bool forceBinding,
+    bool & renderTargetSizeChanged )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( oldDesc.valid() );
-    GN_ASSERT( newDesc.valid() );
+    renderTargetSizeChanged = false;
 
-    needRebindViewport = false;
+    /*
 
     // bind color buffers
-    UInt32 count = min( (UInt32)newDesc.count, mRenderer.getCaps( CAPS_MAX_RENDER_TARGETS ) );
-    if( 0 == count ) count = 1;
+    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mRenderer.getCaps().maxRenderTargets ) );
     for( UInt32 i = 0; i < count; ++i )
     {
-        const RenderTargetTexture * oldc = i < oldDesc.count ? &oldDesc.cbuffers[i] : 0;
-        const RenderTargetTexture * newc = i < newDesc.count ? &newDesc.cbuffers[i] : 0;
+        const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;
+        const RenderTargetTexture * newc = i < newrt.count ? newrt.crts[i] : NULL;
 
-        if( forceRebind || // if "force" rebinding, then do it.
+        if( forceBinding || // if "force" binding, then do it.
             oldc != newc && // if oldc and newc are both NULL, then do nothing.
             // program reaches here, means at least one surface is _NOT_ null. So if one of them is NULL
             // or content of the two surfaces are different, we have to do the binding.
@@ -133,20 +133,22 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
                     mHeight = mRenderer.getDispDesc().height;
                 }
 
-                needRebindViewport = ( oldw != mWidth || oldh != mHeight );
+                renderTargetSizeChanged = ( oldw != mWidth || oldh != mHeight );
             }
         }
     }
 
     // bind depth buffer
-    const RenderTargetTexture & oldz = oldDesc.zbuffer;
-    const RenderTargetTexture & newz = newDesc.zbuffer;
-    if( oldz.texture && ( oldz != newz || forceRebind ) )
+    const RenderTargetTexture & oldz = oldrt.zbuffer;
+    const RenderTargetTexture & newz = newrt.zbuffer;
+    if( oldz.texture && ( oldz != newz || forceBinding ) )
     {
         sCopyFrameBufferTo( oldz );
     }
 
     GN_OGL_CHECK( ; );
+
+    */
 
     GN_UNGUARD_SLOW;
 }

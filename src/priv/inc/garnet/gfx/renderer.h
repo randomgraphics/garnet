@@ -8,8 +8,7 @@
 
 /// \name aliases for global renderer signals
 //@{
-#define gSigRendererCreate         (GN::gfx::getSigRendererCreate())
-#define gSigRendererDestroy        (GN::gfx::getSigRendererDestroy())
+#define gSigRendererDeviceLost     (GN::gfx::getSigRendererDeviceLost())
 #define gSigRendererWindowSizeMove (GN::gfx::getSigRendererWindowSizeMove())
 #define gSigRendererWindowClose    (GN::gfx::getSigRendererWindowClose())
 //@}
@@ -33,14 +32,9 @@ namespace GN { namespace gfx
     //@{
 
     ///
-    /// D3D/OGL device creation signal
+    /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
     ///
-    GN_PUBLIC Signal1<bool,Renderer&> & getSigRendererCreate();
-
-    ///
-    /// D3D/OGL device destroy signal
-    ///
-    GN_PUBLIC Signal1<void,Renderer&> & getSigRendererDestroy();
+    GN_PUBLIC Signal1<void,Renderer&> & getSigRendererDeviceLost();
 
     ///
     /// Happens when render windows is moved or resized.
@@ -105,12 +99,30 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Define rendering API
+    ///
+    enum RendererAPI
+    {
+        API_OGL,          ///< OpenGL
+        API_D3D9,         ///< D3D9
+        API_D3D10,        ///< D3D10
+        API_FAKE,         ///< Fake API
+        NUM_RENDERER_API, ///< Number of avaliable API.
+        API_AUTO,         ///< determine rendering API automatically.
+    };
+
+    ///
     /// Renderer option structure.
     ///
     /// \sa Renderer::getOptions()
     ///
     struct RendererOptions
     {
+        ///
+        /// Rendering API. Default value is API_AUTO.
+        ///
+        RendererAPI api;
+
         ///
         /// Display handle. No use on platform other than X Window. Default is zero.
         ///
@@ -215,7 +227,8 @@ namespace GN { namespace gfx
         /// Construct default render options
         ///
         RendererOptions()
-            : displayHandle(0)
+            : api(API_AUTO)
+            , displayHandle(0)
             , renderWindow(0)
             , parentWindow(0)
             , monitorHandle(0)
@@ -268,11 +281,11 @@ namespace GN { namespace gfx
     ///
     struct RendererCaps
     {
-        UInt32 maxTex1DSize[2];  ///< width, array
-        UInt32 maxTex2DSize[3];  ///< width, height, array
-        UInt32 maxTex3DSize[4];  ///< width, height, array
-        UInt32 maxTextures;      ///< max number of simutaneous textures
-        UInt32 maxRenderTargets; ///< max number of simutaneous render targets
+        UInt32 maxTex1DSize[2];       ///< width, array
+        UInt32 maxTex2DSize[3];       ///< width, height, array
+        UInt32 maxTex3DSize[4];       ///< width, height, array
+        UInt32 maxTextures;           ///< max number of simutaneous textures
+        UInt32 maxColorRenderTargets; ///< max number of simutaneous render targets
         bool   vsProfiles[NUM_SHADER_PROFILES];
         bool   gsProfiles[NUM_SHADER_PROFILES];
         bool   psProfiles[NUM_SHADER_PROFILES];
@@ -290,12 +303,14 @@ namespace GN { namespace gfx
         RC_CULL_FRONT,
         RC_CULL_BACK,
 
-        RC_CMP_LT = 0,
-        RC_CMP_LE,
-        RC_CMP_EQ,
-        RC_CMP_GE,
-        RC_CMP_GT,
-        RC_CMP_NE,
+        RC_CMP_NEVER = 0,
+        RC_CMP_LESS,
+        RC_CMP_LESS_EQUAL,
+        RC_CMP_EQUAL,
+        RC_CMP_GREATER_EQUAL,
+        RC_CMP_GREATER,
+        RC_CMP_NOT_EQUAL,
+        RC_CMP_ALWAYS,
 
         RC_STENCIL_KEEP = 0,
         RC_STENCIL_ZERO,
@@ -347,44 +362,70 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// define a render target texture
+    ///
+    struct RenderTargetTexture
+    {
+        WeakRef<Texture> texture;
+        UInt32           face;
+        UInt32           level;
+        UInt32           slice;
+    };
+
+    ///
     /// renderer context
     ///
     struct RendererContext
     {
-        // DWORD 0
-        UInt32 fillMode       : 2;
-        UInt32 cullMode       : 2;
-        UInt32 scissorEnabled : 1;
-        UInt32 msaaEnabled    : 1;
-        UInt32 depthTest      : 1;
-        UInt32 depthWrite     : 1;
-        UInt32 depthFunc      : 3;
-        UInt32 stencilEnable  : 1;
-        UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
-        UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
-        UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
-        UInt32 nouse_0        : 11;
+        enum
+        {
+            NUM_VTXBUFS              = 32,
+            NUM_TEXTURES             = 32,
+            NUM_COLOR_RENDER_TARGETS = 8,
+        };
 
-        // DWORD 1
-        UInt32 blendSrc       : 4;
-        UInt32 blendDst       : 4;
-        UInt32 blendOp        : 3;
-        UInt32 blendSrcAlpha  : 4;
-        UInt32 blendDstAlpha  : 4;
-        UInt32 blendOpAlpha   : 3;
-        UInt32 nouse_1        : 10;
+        union
+        {
+            UInt32 bitwiseFlags[2]; // all flags in 2 dwords.
 
-        // DWORD 2
-        UInt32 colorWriteMask; ///< 4 bits x 8 render targets.
+            struct
+            {
+                // DWORD 0
+                UInt32 fillMode       : 2;
+                UInt32 cullMode       : 2;
+                UInt32 scissorEnabled : 1;
+                UInt32 msaaEnabled    : 1;
+                UInt32 depthTest      : 1;
+                UInt32 depthWrite     : 1;
+                UInt32 depthFunc      : 3;
+                UInt32 stencilEnabled : 1;
+                UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
+                UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
+                UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
+                UInt32 nouse_0        : 11;
 
-        // DWORD 3-6
+                // DWORD 1
+                UInt32 blendSrc       : 4;
+                UInt32 blendDst       : 4;
+                UInt32 blendOp        : 3;
+                UInt32 blendSrcAlpha  : 4;
+                UInt32 blendDstAlpha  : 4;
+                UInt32 blendOpAlpha   : 3;
+                UInt32 nouse_1        : 10;
+            };
+        };
+
+        /// blend factors for RGBA
         float  blendFactors[4];
 
-        // DWORD 7-10
+        /// 4 bits x 8 render targets.
+        UInt32 colorWriteMask;
+
+        /// viewport. (0,0,0,0) is used to represent current size of render target.
         Rect<UInt32> viewport;
 
-        // DWORD 11-14
-        Rect<UInt32> scissorRect; ///< scissor rects
+        /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
+        Rect<UInt32> scissorRect;
 
         // TODO: depth bias
 
@@ -395,17 +436,68 @@ namespace GN { namespace gfx
         WeakRef<Shader> shader;
 
         // Resources
-        WeakRef<VtxBuf>  vtxbufs[32];      ///< vertex buffers
-        UInt32           strides[32];      ///< strides for each vertex buffer
-        WeakRef<IdxBuf>  idxbuf;           ///< index buffer
-        WeakRef<Texture> textures[32];     ///< textures
-        WeakRef<Texture> renderTargets[8]; ///< render targets
+        WeakRef<VtxBuf>     vtxbufs[NUM_VTXBUFS];            ///< vertex buffers
+        UInt32              strides[NUM_VTXBUFS];            ///< strides for each vertex buffer
+        WeakRef<IdxBuf>     idxbuf;                          ///< index buffer
+        WeakRef<Texture>    textures[NUM_TEXTURES];          ///< textures
+        RenderTargetTexture crts[NUM_COLOR_RENDER_TARGETS];  ///< color render targets
+        RenderTargetTexture dsrt;                            ///< depth stencil render target
 
         // TODO: sampler
+
+        ///
+        /// reset context to default value
+        void resetToDefault()
+        {
+            // clear all flags
+            bitwiseFlags[0] = 0;
+            bitwiseFlags[1] = 0;
+
+            fillMode = RC_FILL_SOLID;
+            cullMode = RC_CULL_BACK;
+            scissorEnabled = false;
+            msaaEnabled = true;
+            depthTest = true;
+            depthWrite = true;
+            depthFunc = RC_CMP_LESS;
+            stencilEnabled = false;
+            stencilPassOp = RC_STENCIL_KEEP;
+            stencilFailOp = RC_STENCIL_KEEP;
+            stencilZFailOp = RC_STENCIL_KEEP;
+
+            blendSrc = RC_BLEND_INV_SRC_ALPHA;
+            blendDst = RC_BLEND_INV_SRC_ALPHA;
+            blendOp  = RC_BLEND_OP_ADD;
+            blendSrcAlpha = RC_BLEND_INV_SRC_ALPHA;
+            blendDstAlpha = RC_BLEND_INV_SRC_ALPHA;
+            blendOpAlpha  = RC_BLEND_OP_ADD;
+
+            blendFactors[0] =
+            blendFactors[1] =
+            blendFactors[2] =
+            blendFactors[3] = 1.0f;
+
+            colorWriteMask = 0xFFFFFFFF;
+
+            viewport.set( 0, 0, 0, 0 );
+
+            scissorRect.set( 0, 0, 0, 0 );
+
+            vtxfmt.numElements = 0;
+
+            shader.clear();
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
+            for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
+            idxbuf.clear();
+            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].clear();
+            for( size_t i = 0; i < GN_ARRAY_COUNT(crts); ++i ) crts[i].texture.clear();
+            dsrt.texture.clear();
+        }
     };
 
     // make sure bit-wise flags occupy only 2 DWORDs.
-    GN_CASSERT( GN_FIELD_OFFSET(RendererContext,colorWriteMask) == 2*sizeof(UInt32) );
+    GN_CASSERT( GN_FIELD_OFFSET(RendererContext,blendFactors) == 2*sizeof(UInt32) );
 
     ///
     /// 清屏标志
@@ -475,19 +567,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Define rendering API
-    ///
-    enum RendererAPI
-    {
-        API_OGL,          ///< OpenGL
-        API_D3D9,         ///< D3D9
-        API_D3D10,        ///< D3D10
-        API_FAKE,         ///< Fake API
-        NUM_RENDERER_API, ///< Number of avaliable API.
-        API_AUTO,         ///< determine rendering API automatically.
-    };
-
-    ///
     /// 渲染器模块的主接口类
     ///
     /// \nosubgrouping
@@ -503,18 +582,7 @@ namespace GN { namespace gfx
         //@{
 
         ///
-        /// Reset renderer with new options.
-        ///
-        /// \param ro
-        ///     new renderer options
-        /// \note
-        ///     - You must call this function at least once, to make renderer usable.
-        ///     - This function may trigger gSigRendererCreate and gSigRendererDestroy.
-        ///
-        virtual bool reset( const RendererOptions & ro ) = 0;
-
-        ///
-        /// Get renderer options
+        /// Get renderer options that are used to create this renderer.
         ///
         virtual const RendererOptions & getOptions() const = 0;
 
@@ -522,11 +590,6 @@ namespace GN { namespace gfx
         /// Get Display Description
         ///
         virtual const DispDesc & getDispDesc() const = 0;
-
-        ///
-        /// Return the rendering API
-        ///
-        virtual RendererAPI getApi() const = 0;
 
         ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.
@@ -590,7 +653,7 @@ namespace GN { namespace gfx
         /// create shader
         ///
         virtual Shader *
-        createShader( const CompiledShaderBlob * ) = 0;
+        createShader( const CompiledShaderBlob & ) = 0;
 
         ///
         /// Create new texture
@@ -946,7 +1009,7 @@ namespace GN { namespace gfx
     ///
     /// Create a new renderer.
     ///
-    Renderer * createRenderer( RendererAPI = API_AUTO );
+    Renderer * createRenderer( const RendererOptions & );
 
     ///
     /// Delete renderer

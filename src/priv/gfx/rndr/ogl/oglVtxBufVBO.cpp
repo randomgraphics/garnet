@@ -20,7 +20,7 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLVtxBufVBO, () );
 
-    if( 0 == desc.bytes )
+    if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         return failure();
@@ -28,9 +28,6 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
 
     // store properties
     setDesc( desc );
-
-    // initialize system copy
-    mSysCopy = (UInt8*)heapAlloc( desc.bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
@@ -52,12 +49,6 @@ void GN::gfx::OGLVtxBufVBO::quit()
 {
     GN_GUARD;
 
-    if( isLocked() )
-    {
-        GN_WARN(sLogger)( "call unlock() before u release the vstream!" );
-        unlock();
-    }
-
     // release opengl vertex array
     if( mOGLVertexBufferObject )
     {
@@ -65,8 +56,6 @@ void GN::gfx::OGLVtxBufVBO::quit()
         GN_OGL_CHECK( glDeleteBuffersARB( 1, &mOGLVertexBufferObject ) );
         mOGLVertexBufferObject = 0;
     }
-
-    safeHeapFree( mSysCopy );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -81,19 +70,35 @@ void GN::gfx::OGLVtxBufVBO::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, LockFlag flag )
+void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * data, UpdateFlag /*flag*/ )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
-    if( !basicLock( offset, bytes, flag ) ) return false;
+    if( !validateUpdateParameters( offset,  length ) ) return;
 
-    // store locking parameters
-    mLockOffset = offset;
-    mLockBytes  = bytes;
-    mLockFlag   = flag;
-    return &mSysCopy[offset];
+    if( 0 == length ) return;
+
+    OGLAutoAttribStack autoAttribStack( 0, GL_CLIENT_VERTEX_ARRAY_BIT );
+
+    const VtxBufDesc & desc = getDesc();
+
+    // sanity check
+    GN_ASSERT(
+        offset < desc.length &&
+        0 < length &&
+        (offset + length) <= desc.length );
+
+    // bind as active buffer
+    GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
+
+    // update VBO
+    GN_OGL_CHECK( glBufferSubDataARB(
+        GL_ARRAY_BUFFER_ARB,
+        offset,
+        length,
+        data ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -101,47 +106,10 @@ void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, LockFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::unlock()
+void GN::gfx::OGLVtxBufVBO::readback( std::vector<UInt8> & data )
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( ok() );
-
-    if( !basicUnlock() ) return;
-
-    if( LOCK_RO != mLockFlag )
-    {
-        OGLAutoAttribStack autoAttribStack( 0, GL_CLIENT_VERTEX_ARRAY_BIT );
-
-        const VtxBufDesc & desc = getDesc();
-
-        GN_ASSERT(
-            mLockOffset < desc.bytes &&
-            0 < mLockBytes &&
-            (mLockOffset + mLockBytes) <= desc.bytes );
-
-        // bind as active buffer
-        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
-
-        // invalidate previous buffer for "discard" lock
-        if( LOCK_DISCARD == mLockFlag )
-        {
-            GN_OGL_CHECK( glBufferDataARB(
-                GL_ARRAY_BUFFER_ARB,
-                desc.bytes,
-                0,
-                mOGLUsage ) );
-        }
-
-        // update VBO
-        GN_OGL_CHECK( glBufferSubDataARB(
-            GL_ARRAY_BUFFER_ARB,
-            mLockOffset,
-            mLockBytes,
-            &mSysCopy[mLockOffset] ) );
-    }
-
-    GN_UNGUARD_SLOW;
+    GN_UNIMPL_WARNING();
+    data.clear();
 }
 
 // *****************************************************************************
@@ -178,8 +146,8 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
     GN_OGL_CHECK_RV(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
-            getDesc().bytes,
-            mSysCopy,
+            getDesc().length,
+            NULL,
             mOGLUsage ),
         false );
 

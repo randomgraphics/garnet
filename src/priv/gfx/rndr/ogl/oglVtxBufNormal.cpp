@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglVtxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.VtxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -17,7 +17,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( OGLVtxBufNormal, () );
 
-    if( 0 == desc.bytes )
+    if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         return failure();
@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     // store descriptor
     setDesc( desc );
 
-    mBuffer = (UInt8*)heapAlloc( desc.bytes );
+    mBuffer = (UInt8*)heapAlloc( desc.length );
 
     // success
     return success();
@@ -56,22 +56,37 @@ void GN::gfx::OGLVtxBufNormal::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t bytes, LockFlag flag )
+void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void * data, UpdateFlag flag )
 {
     GN_GUARD_SLOW;
+
     GN_ASSERT( ok() );
-    if( !basicLock( offset, bytes, flag ) ) return false;
-    return &mBuffer[offset];
+
+    GN_UNUSED_PARAM( flag );
+
+    if( !validateUpdateParameters( offset, length ) ) return;
+
+    if( 0 == length ) return;
+
+    if( NULL == data )
+    {
+        GN_ERROR(sLogger)( "NULL data pointer." );
+        return;
+    }
+
+    memcpy( mBuffer + offset, data, length );
+
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::unlock()
+void GN::gfx::OGLVtxBufNormal::readback( std::vector<UInt8> & data )
 {
-    GN_GUARD_SLOW;
-    GN_ASSERT( ok() );
-    basicUnlock();
-    GN_UNGUARD_SLOW;
+    size_t length = getDesc().length;
+
+    data.resize( length );
+
+    memcpy( &data[0], mBuffer, length );
 }

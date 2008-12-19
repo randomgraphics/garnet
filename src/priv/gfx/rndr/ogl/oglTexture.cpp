@@ -2,8 +2,7 @@
 #include "oglTexture.h"
 #include "oglRenderer.h"
 
-GN::Logger * GN::gfx::OGLTexture::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.Texture");
 
 // *****************************************************************************
 // local var/types/functions
@@ -41,16 +40,19 @@ public:
 /// convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
 static inline bool sColorFormat2OGL(
-    GLint & gl_internalformat,
-    GLuint & gl_format,
-    GLuint & gl_type,
-    bool & gl_compressed,
-    GN::gfx::ClrFmt clrfmt )
+    GLint                & gl_internalformat,
+    GLuint               & gl_format,
+    GLuint               & gl_type,
+    bool                 & gl_compressed,
+    GN::gfx::ColorFormat   clrfmt,
+    GN::gfx::TextureUsages usages )
 {
+    using namespace GN::gfx;
+
     gl_compressed = false;
-    switch( clrfmt )
+    switch( clrfmt.alias )
     {
-        case GN::gfx::FMT_RGBA_32_32_32_32_FLOAT:
+        case COLOR_FORMAT_RGBA_32_32_32_32_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -61,7 +63,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case GN::gfx::FMT_RG_32_32_FLOAT:
+        case COLOR_FORMAT_RG_32_32_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -72,7 +74,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case GN::gfx::FMT_RGBA_16_16_16_16_FLOAT:
+        case COLOR_FORMAT_RGBA_16_16_16_16_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -83,7 +85,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case GN::gfx::FMT_RG_16_16_FLOAT:
+        case COLOR_FORMAT_RG_16_16_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -93,68 +95,68 @@ static inline bool sColorFormat2OGL(
             gl_format         = GL_RGBA;
             gl_type           = GL_FLOAT;
             return true;
-        
-        case GN::gfx::FMT_RGBA_16_16_16_16_UNORM:
+
+        case COLOR_FORMAT_RGBA_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGBA16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_RGBX_16_16_16_16_UNORM:
+        case COLOR_FORMAT_RGBX_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGB16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_RGBA_8_8_8_8_UNORM :
+        case COLOR_FORMAT_RGBA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRA_8_8_8_8_UNORM :
+        case COLOR_FORMAT_BGRA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_RGBX_8_8_8_8_UNORM :
+        case COLOR_FORMAT_RGBX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRX_8_8_8_8_UNORM :
+        case COLOR_FORMAT_BGRX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_RGB_8_8_8_UNORM :
+        case COLOR_FORMAT_RGB_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_RGB;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGR_8_8_8_UNORM :
+        case COLOR_FORMAT_BGR_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRA_5_5_5_1_UNORM :
+        case COLOR_FORMAT_BGRA_5_5_5_1_UNORM :
             gl_internalformat  = GL_RGB5_A1;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_5_5_1;
             return true;
 
-        case GN::gfx::FMT_BGR_5_6_5_UNORM :
+        case COLOR_FORMAT_BGR_5_6_5_UNORM :
             gl_internalformat  = GL_RGB5;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_6_5_REV;
             return true;
 
-        case GN::gfx::FMT_RG_8_8_SNORM :
+        case COLOR_FORMAT_RG_8_8_SNORM :
             if( GLEW_ATI_envmap_bumpmap )
             {
                 gl_internalformat  = GL_DU8DV8_ATI;
@@ -170,70 +172,75 @@ static inline bool sColorFormat2OGL(
             }
             return true;
 
-        case GN::gfx::FMT_LA_16_16_UNORM :
+        case COLOR_FORMAT_LA_16_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16_ALPHA16;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_LA_8_8_UNORM :
+        case COLOR_FORMAT_LA_8_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8_ALPHA8;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_L_16_UNORM :
+        case COLOR_FORMAT_L_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_L_8_UNORM :
+        case COLOR_FORMAT_L_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_A_8_UNORM :
+        case COLOR_FORMAT_A_8_UNORM :
             gl_internalformat  = GL_ALPHA8;
             gl_format          = GL_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_D_16 :
-            if( !GLEW_ARB_depth_texture )
+        case COLOR_FORMAT_R_16_UINT :
+            if( usages.depth )
             {
-                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
+                if( !GLEW_ARB_depth_texture )
+                {
+                    GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
+                    return false;
+                }
+                gl_internalformat  = GL_DEPTH_COMPONENT;
+                gl_format          = GL_DEPTH_COMPONENT;
+                gl_type            = GL_UNSIGNED_SHORT;
+                return true;
+            }
+            else
+            {
+                GN_ERROR(sLogger)( "integer texture is not supported yet." );
                 return false;
             }
-            gl_internalformat  = GL_DEPTH_COMPONENT;
-            gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_UNSIGNED_SHORT;
-            return true;
 
-        case GN::gfx::FMT_D_24 :
-            if( !GLEW_ARB_depth_texture )
+        case COLOR_FORMAT_R_32_UINT :
+            if( usages.depth )
             {
-                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
+                if( !GLEW_ARB_depth_texture )
+                {
+                    GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
+                    return false;
+                }
+                gl_internalformat  = GL_DEPTH_COMPONENT;
+                gl_format          = GL_DEPTH_COMPONENT;
+                gl_type            = GL_UNSIGNED_INT;
+                return true;
+            }
+            else
+            {
+                GN_ERROR(sLogger)( "integer texture is not supported yet." );
                 return false;
             }
-            gl_internalformat  = GL_DEPTH_COMPONENT;
-            gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_UNSIGNED_INT;
-            return true;
 
-        case GN::gfx::FMT_D_32 :
-            if( !GLEW_ARB_depth_texture )
-            {
-                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
-                return false;
-            }
-            gl_internalformat  = GL_DEPTH_COMPONENT;
-            gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_UNSIGNED_INT;
-            return true;
-
-        case GN::gfx::FMT_DXT1 :
+        case COLOR_FORMAT_DXT1_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {
@@ -245,7 +252,7 @@ static inline bool sColorFormat2OGL(
             }
             break;
 
-        case GN::gfx::FMT_DXT3 :
+        case COLOR_FORMAT_DXT3_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {
@@ -257,7 +264,7 @@ static inline bool sColorFormat2OGL(
             }
             break;
 
-        case GN::gfx::FMT_DXT5 :
+        case COLOR_FORMAT_DXT5_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {
@@ -273,7 +280,7 @@ static inline bool sColorFormat2OGL(
     }
 
     // failed
-    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", GN::gfx::clrFmt2Str(clrfmt) );
+    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", clrfmt.toString().cptr() );
     return false;
 }
 
@@ -340,17 +347,17 @@ GLuint sNew2DTexture(
     GN_UNGUARD;
 }
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 static GLuint sNew3DTexture(
-    GLint   /*internalformat*/,
-    GLsizei /*size_x*/,
-    GLsizei /*size_y*/,
-    GLsizei /*size_z*/,
-    GLint   /*levels*/,
-    GLenum  /*format*/,
-    GLenum  /*type*/ )
+    GLint   internalformat,
+    GLsizei size_x,
+    GLsizei size_y,
+    GLsizei size_z,
+    GLint   levels,
+    GLenum  format,
+    GLenum  type )
 {
     GN_GUARD;
 
@@ -399,7 +406,7 @@ static GLuint sNewCubeTexture(
     return result;
 
     GN_UNGUARD;
-}
+}*/
 
 // *****************************************************************************
 // OGLTexture implementation
@@ -408,7 +415,7 @@ static GLuint sNewCubeTexture(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::init( TextureDesc desc )
+bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -420,7 +427,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     // store texture properties
     if( !setDesc( desc ) ) return failure();
 
-    // determine gl texture type
+    /* determine gl texture type
     switch( getDesc().dim )
     {
         case TEXDIM_1D   :
@@ -551,7 +558,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     if( GLEW_EXT_texture3D )
     {
         GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, GL_REPEAT ) );
-    }
+    }*/
 
     // success
     return success();
@@ -565,13 +572,6 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
 void GN::gfx::OGLTexture::quit()
 {
     GN_GUARD;
-
-    // check if locked
-    if( isLocked() )
-    {
-        GN_WARN(sLogger)( "call You are destroying a locked texture!" );
-        unlock();
-    }
 
     // delete opengl texture
     if (mOGLTexture) glDeleteTextures( 1, &mOGLTexture ), mOGLTexture = 0;
@@ -613,7 +613,7 @@ void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
     GLenum gls = sTexWrap2OGL( s );
     GLenum glt = sTexWrap2OGL( t );
     GLenum glr = sTexWrap2OGL( r );
-    
+
     if( mOGLWraps[0] != gls )
     {
         mOGLWraps[0] = gls;
@@ -638,16 +638,19 @@ void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::lock(
-    TexLockedResult & result,
-    size_t face,
-    size_t level,
-    const TexLockArea * area,
-    LockFlag flag )
+void
+GN::gfx::OGLTexture::update(
+    size_t              /*face*/,
+    size_t              /*level*/,
+    const Box<UInt32> * /*area*/,
+    size_t              /*rowPitch*/,
+    size_t              /*slicePitch*/,
+    const void        * /*data*/,
+    UpdateFlag          /*flag*/ )
 {
     GN_GUARD_SLOW;
 
-    // call basic lock
+    /* call basic lock
     if( !basicLock( face, level, area, flag, mLockedArea ) ) return false;
     AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&OGLTexture::basicUnlock) );
 
@@ -706,11 +709,12 @@ bool GN::gfx::OGLTexture::lock(
     result.data    = mLockedBuffer;
     basicUnlocker.dismiss();
     return true;
+    */
 
     GN_UNGUARD_SLOW;
 }
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLTexture::unlock()
@@ -769,4 +773,4 @@ void GN::gfx::OGLTexture::unlock()
     mLockedBuffer = 0;
 
     GN_UNGUARD_SLOW;
-}
+}*/

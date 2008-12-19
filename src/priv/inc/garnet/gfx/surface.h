@@ -17,11 +17,11 @@ namespace GN { namespace gfx
 
         struct
         {
-            unsigned int rendertarget :  1; ///< See TEXUSAGE_RENDER_TARGET
-            unsigned int depthstencil :  1; ///< See TEXUSAGE_DEPTH
-            unsigned int dynamic      :  1; ///< See TEXUSAGE_DYNAMIC
-            unsigned int readback     :  1; ///< See TEXUSAGE_READBACK
-            unsigned int nouse        : 27; ///< reserved
+            unsigned int rendertarget :  1; ///< use as color render target
+            unsigned int depth        :  1; ///< use as depth buffer
+            unsigned int dynamic      :  1; ///< use as dynamic texture
+            unsigned int readback     :  1; ///< need to read data back from GPU
+            unsigned int nouse        : 27; ///< no use. must be zero.
         };
 
         /// default usage

@@ -175,7 +175,7 @@ static bool sSetupPixelFormat( HDC hdc )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispDeviceCreate()
+bool GN::gfx::OGLRenderer::dispInit()
 {
     GN_GUARD;
 
@@ -266,7 +266,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispDeviceDestroy()
+void GN::gfx::OGLRenderer::dispQuit()
 {
     GN_GUARD;
 
@@ -395,7 +395,7 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     if( !getOptions().fullscreen ) return;
 
-    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mOnGoingReset )
+    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
     {
         if( wp )
         {
