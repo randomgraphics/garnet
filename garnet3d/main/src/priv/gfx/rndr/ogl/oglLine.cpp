@@ -104,67 +104,53 @@ void GN::gfx::OGLLine::drawLines(
     }
 
     // determine attributes that need to be restored.
-    GLbitfield attribs = GL_TEXTURE_BIT;
-    if( !(DL_USE_CURRENT_RS & options ) )
-        attribs |= GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT | GL_DEPTH_BITS | GL_ENABLE_BIT;
-    if( !(DL_USE_CURRENT_VS & options ) )
-        attribs |= GL_TRANSFORM_BIT;
-    if( !(DL_USE_CURRENT_PS & options ) )
-        attribs |= GL_CURRENT_BIT | GL_ENABLE_BIT;
+    GLbitfield attribs =
+            GL_TRANSFORM_BIT | GL_TEXTURE_BIT |
+            GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT | GL_DEPTH_BITS | GL_ENABLE_BIT ;
 
     // push OGL attributes
     GN_OGL_CHECK( glPushAttrib( attribs ) );
     GN_OGL_CHECK( glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT ) );
 
     // apply render states
-    if( !( DL_USE_CURRENT_RS & options ) )
+    glDisable( GL_BLEND );
+    glDepthMask( GL_TRUE );
+    glEnable( GL_DEPTH_TEST );
+
+    // enable color material
+    //glEnable( GL_COLOR_MATERIAL );
+
+    // setup OGL matrices
+    if( DL_WINDOW_SPACE & options )
     {
-        glDisable( GL_BLEND );
-        glDepthMask( GL_TRUE );
-        glEnable( GL_DEPTH_TEST );
+        GLdouble vp[4];
+        GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
+
+        // position is in screen space (0,0)->(width,height)
+        GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
+        GN_OGL_CHECK( glPushMatrix() );
+        GN_OGL_CHECK( glLoadIdentity() );
+        GN_OGL_CHECK( glOrtho( 0, vp[2], vp[3], 0, 0, 1 ) );
+
+        GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
+        GN_OGL_CHECK( glPushMatrix() );
+        GN_OGL_CHECK( glLoadIdentity() );
+    }
+    else
+    {
+        // position is in object space
+        GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
+        GN_OGL_CHECK( glPushMatrix() );
+        GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(proj)[0] ) );
+
+        GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
+        GN_OGL_CHECK( glPushMatrix() );
+        GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(view*model)[0] ) );
     }
 
-    // apply vertex shader
-    if( !( DL_USE_CURRENT_VS & options ) )
-    {
-        // enable color material
-        //glEnable( GL_COLOR_MATERIAL );
-
-        // setup OGL matrices
-        if( DL_WINDOW_SPACE & options )
-        {
-            GLdouble vp[4];
-            GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
-
-            // position is in screen space (0,0)->(width,height)
-            GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
-            GN_OGL_CHECK( glOrtho( 0, vp[2], vp[3], 0, 0, 1 ) );
-
-            GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
-        }
-        else
-        {
-            // position is in object space
-            GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(proj)[0] ) );
-
-            GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(view*model)[0] ) );
-        }
-    }
-
-    // disable texture
-    if( !(DL_USE_CURRENT_PS & options ) )
-    {
-        mRenderer.disableTextureStage( 0 );
-        glDisable( GL_LIGHTING );
-    }
+    // disable texturing
+    mRenderer.disableTextureStage( 0 );
+    glDisable( GL_LIGHTING );
 
     // disable VBO
     if( GLEW_ARB_vertex_buffer_object )
@@ -181,14 +167,11 @@ void GN::gfx::OGLLine::drawLines(
         0,
         (GLsizei)vertexCount ) );
 
-    if( !( DL_USE_CURRENT_VS & options ) )
-    {
-        // restore OGL matrices
-        GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
-        GN_OGL_CHECK( glPopMatrix() );
-        GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
-        GN_OGL_CHECK( glPopMatrix() );
-    }
+    // restore OGL matrices
+    GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
+    GN_OGL_CHECK( glPopMatrix() );
+    GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
+    GN_OGL_CHECK( glPopMatrix() );
 
     // restore OGL attributes
     GN_OGL_CHECK( glPopClientAttrib() );
