@@ -198,7 +198,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContext( const RendererContext & context, bool forceBinding );
+        virtual void bindContextImpl( const RendererContext & context, bool forceBinding );
 
     public:
 
@@ -266,8 +266,8 @@ namespace GN { namespace gfx
 
     private:
 
-        bool drawInit() { return true; }
-        void drawQuit() {}
+        bool drawInit();
+        void drawQuit();
         void drawClear()
         {
             mLine = 0;
@@ -275,11 +275,6 @@ namespace GN { namespace gfx
             mFrameCounter = 0;
             mDrawCounter = 0;
         }
-
-        bool drawDeviceCreate();
-        bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() {}
-        void drawDeviceDestroy();
 
     private:
 

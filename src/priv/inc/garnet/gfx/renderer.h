@@ -516,36 +516,6 @@ namespace GN { namespace gfx
     enum DrawLineOptions
     {
         ///
-        /// 使用当前的渲染状态。
-        ///
-        /// By default, Renderer::drawLines() will use a special render state block that
-        /// suites for colored lines
-        ///
-        DL_USE_CURRENT_RS = 1<<0,
-
-        ///
-        /// 使用当前的Vertex Shader。
-        ///
-        /// - 缺省情况下，Renderer::drawLines() 会使用一个内置的vertex shader
-        /// - 自定义的vertex shader应接受一组3D空间坐标
-        ///
-        DL_USE_CURRENT_VS = 1<<1,
-
-        ///
-        /// 使用当前的Pixel Shader。
-        ///
-        /// 缺省情况下，Renderer::drawLines() 会使用一个内置的Pixel Shader
-        ///
-        DL_USE_CURRENT_PS = 1<<2,
-
-        ///
-        /// 使用当前的Texture states.
-        ///
-        /// Effective only when using fixed function pipeline.
-        ///
-        DL_USE_CURRENT_TS = 1<<3,
-
-        ///
         /// position in window (post-transformed) space:
         /// (0,0) for left-up corner, (width,height) for right-bottom corner.
         ///
@@ -559,11 +529,6 @@ namespace GN { namespace gfx
         /// Using line strip. By default input points are treated as line list.
         ///
         DL_LINE_STRIP = 1<<5,
-
-        ///
-        /// 上述 DL_USE_CURRENT_XX 的集合
-        ///
-        DL_USE_CURRENT = DL_USE_CURRENT_RS | DL_USE_CURRENT_VS | DL_USE_CURRENT_PS | DL_USE_CURRENT_TS
     };
 
     ///

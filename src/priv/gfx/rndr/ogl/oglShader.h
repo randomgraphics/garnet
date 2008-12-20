@@ -183,6 +183,14 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
+        // from GpuProgram
+        // ********************************
+
+    public:
+
+        virtual void setParameter( size_t , const void * ) { GN_UNIMPL(); }
+
+        // ********************************
         // public functions
         // ********************************
     public:

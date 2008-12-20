@@ -85,7 +85,7 @@ namespace GN { namespace gfx
     struct GpuProgram : public RefCounter
     {
         /// set shader parameter
-        virtual void setParameter( size_t index, const void * data );
+        virtual void setParameter( size_t index, const void * data ) = 0;
     };
 }}
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglRenderer.h"
 #include "oglLine.h"
-#include "oglVtxFmt.h"
+//#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
@@ -236,6 +236,8 @@ void GN::gfx::OGLRenderer::clearScreen(
     GN_UNGUARD_SLOW;
 }
 
+#pragma warning( disable : 4100 )
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -376,8 +378,6 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan );
-
     DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
@@ -387,7 +387,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    // bind immediate vertex buffer
+    /* bind immediate vertex buffer
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxfmt) &&
         mVtxFmts[mContext.vtxfmt] &&
@@ -438,11 +438,9 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             (GLsizei)numidx,
             GL_UNSIGNED_SHORT,
             indexData ) );
-    }
+    }*/
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
@@ -459,8 +457,6 @@ void GN::gfx::OGLRenderer::drawUp(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan );
-
     DUMP_DRAW_STATE();
 
     // map custom primitive to opengl primitive
@@ -470,7 +466,7 @@ void GN::gfx::OGLRenderer::drawUp(
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    // bind immeidate vertex buffer
+    /* bind immeidate vertex buffer
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxfmt) &&
         mVtxFmts[mContext.vtxfmt] &&
@@ -501,11 +497,9 @@ void GN::gfx::OGLRenderer::drawUp(
     {
         // draw primitives
         GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
-    }
+    }*/
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
@@ -526,15 +520,12 @@ void GN::gfx::OGLRenderer::drawLines(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && mLine );
+    GN_ASSERT( mLine );
 
-    RendererContext ctx;
-    ctx.clearToNull();
-    if( !(DL_USE_CURRENT_VS & options) ) ctx.setVS( 0 );
-    if( !(DL_USE_CURRENT_PS & options) ) ctx.setPS( 0 );
-    setContext( ctx );
-
-    DUMP_DRAW_STATE();
+    // disable GPU program
+    RendererContext ctx = getContext();
+    ctx.gpuProgram.clear();
+    bindContext( ctx );
 
     mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
 
@@ -547,7 +538,7 @@ void GN::gfx::OGLRenderer::drawLines(
 // private functions
 // *****************************************************************************
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::OGLRenderer::applyVtxBuf(
@@ -582,4 +573,4 @@ inline void GN::gfx::OGLRenderer::applyVtxBuf(
     mNeedRebindVtxBufs = 0;
 
     GN_UNGUARD_SLOW;
-}
+}*/

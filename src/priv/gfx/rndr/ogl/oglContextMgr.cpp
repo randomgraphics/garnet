@@ -37,7 +37,7 @@ bool GN::gfx::OGLRenderer::contextInit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::OGLRenderer::bindContext(
+GN::gfx::OGLRenderer::bindContextImpl(
     const RendererContext & newContext,
     bool                    forceBinding )
 {

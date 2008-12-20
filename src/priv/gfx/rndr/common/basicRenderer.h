@@ -136,13 +136,13 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContext( const RendererContext & c ) { bindContext( c, false ); mContext = c; }
-        virtual void rebindContext() { bindContext( mContext, true ); }
+        virtual void bindContext( const RendererContext & c ) { bindContextImpl( c, false ); mContext = c; }
+        virtual void rebindContext() { bindContextImpl( mContext, true ); }
         virtual inline const RendererContext & getContext() const { return mContext; }
 
     protected:
 
-        virtual void bindContext( const RendererContext & context, bool forceBinding ) = 0;
+        virtual void bindContextImpl( const RendererContext & context, bool forceBinding ) = 0;
 
     protected:
 
