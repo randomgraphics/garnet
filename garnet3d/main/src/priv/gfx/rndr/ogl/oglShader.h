@@ -179,7 +179,7 @@ namespace GN { namespace gfx
         bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mProgram = 0; }
+        void clear() { mProgram = 0; mVS = 0; mPS = 0; }
         //@}
 
         // ********************************
@@ -210,7 +210,10 @@ namespace GN { namespace gfx
         ///
         /// Disable the program
         ///
-        virtual void disable() const { GN_UNIMPL(); }
+        virtual void disable() const
+        {
+            GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
+        }
 
         ///
         /// Apply only dirty parameters to OpenGL
@@ -223,13 +226,13 @@ namespace GN { namespace gfx
     private:
 
         GLhandleARB mProgram;
+        GLhandleARB mVS;
+        GLhandleARB mPS;
 
         // ********************************
         // private functions
         // ********************************
     private:
-
-        bool createProgram();
     };
 
     // *************************************************************************
