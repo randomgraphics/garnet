@@ -210,7 +210,7 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mDebug(0)
     , mInfoQueue(0)
 {
-    input::createInputSystem();
+    input::initializeInputSystem();
 }
 
 //
@@ -218,7 +218,7 @@ GN::d3d10::D3D10Application::D3D10Application()
 // -----------------------------------------------------------------------------
 GN::d3d10::D3D10Application::~D3D10Application()
 {
-    if( gInputPtr ) delete gInputPtr;
+    input::shutdownInputSystem();
 }
 
 #include <conio.h>

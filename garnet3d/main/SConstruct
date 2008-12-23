@@ -1071,6 +1071,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		# build additional dependencies:
 		shlibs = [
 		    'GNcore',
+		    'GNrndrOGL',
 		    'GNgfxsysD3D9',
 		    ]
 		tests = [
@@ -1084,6 +1085,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNtestInput',
 		    'GNtestOGL',
 		    'GNtestPcre',
+		    'GNtestRndrOGL',
 		    'GNtestXenonNegativeZRange',
 		    'GNtestXenonStackTexture',
 		    'GNtestXenonVertexEndian',

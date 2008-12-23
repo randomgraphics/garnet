@@ -68,15 +68,4 @@ namespace GN
         GN_PUBLIC Signal1<void,wchar_t>  & getSigCharPress() { static Signal1<void,wchar_t> s; return s; }
         GN_PUBLIC Signal2<void,Axis,int> & getSigAxisMove() { static Signal2<void,Axis,int> s; return s; }
     }
-
-    namespace gfx
-    {
-        struct Renderer;
-
-        typedef Signal4<void, Renderer&, HandleType, UInt32, UInt32> SizeMoveSignal;
-
-        GN_PUBLIC Signal1<void,Renderer&>  & gSigRendererDeviceLost() { static Signal1<void,Renderer&> s; return s; }
-        GN_PUBLIC SizeMoveSignal           & getSigRendererWindowSizeMove() { static SizeMoveSignal s; return s; }
-        GN_PUBLIC Signal1<void,Renderer&>  & getSigRendererWindowClose() { static Signal1<void,Renderer&> s; return s; }
-    };
 }

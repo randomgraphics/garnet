@@ -120,7 +120,7 @@ namespace GN { namespace input
         void removeWindowHooks();
 
         void captureMouse();
-        void releaesMouse();
+        void releaseMouse();
 
         static LRESULT CALLBACK
         sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam );

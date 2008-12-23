@@ -56,7 +56,7 @@ static GN::input::Input * sCreateNativeInputSystem()
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::Input * GN::input::createInputSystem( InputApi api )
+bool GN::input::initializeInputSystem( InputApi api )
 {
     GN_GUARD;
 
@@ -66,27 +66,39 @@ GN::input::Input * GN::input::createInputSystem( InputApi api )
     // then create new one
     switch( api )
     {
-        case API_NATIVE : return sCreateNativeInputSystem();
+        case API_NATIVE : return NULL != sCreateNativeInputSystem();
 
 #ifdef HAS_DINPUT
         case API_DINPUT :
         {
-            AutoObjPtr<InputDInput> p( new InputDInput );
+            InputDInput * p = new InputDInput;
             if( !p->init() ) return 0;
-            return p.detach();
+            return true;
         }
 #endif
 
         case API_FAKE :
         {
-            AutoObjPtr<FakeInput> p( new FakeInput );
-            return p.detach();
+            new FakeInput;
+            return true;
         }
 
         default :
             GN_ERROR(sLogger)( "unknow or unsupport API : %d", api );
             return 0;
     }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::shutdownInputSystem()
+{
+    GN_GUARD;
+
+    if( gInputPtr ) delete gInputPtr;
 
     GN_UNGUARD;
 }

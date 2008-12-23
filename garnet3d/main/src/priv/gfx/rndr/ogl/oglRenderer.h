@@ -214,6 +214,7 @@ namespace GN { namespace gfx
 
         inline void bindContextShaders( const RendererContext & newContext, bool forceBinding );
         inline void bindContextRenderStates( const RendererContext & newContext, bool forceBinding );
+        inline void bindContextRenderTargets( const RendererContext & newContext, bool forceBinding );
         inline void bindContextResources( const RendererContext & newContext, bool forceBinding );
 
     private:

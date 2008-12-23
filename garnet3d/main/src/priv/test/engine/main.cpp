@@ -158,12 +158,12 @@ struct InputInitiator
 {
     InputInitiator()
     {
-        createInputSystem( API_NATIVE );
+        initializeInputSystem( API_NATIVE );
     }
 
     ~InputInitiator()
     {
-        if( gInputPtr ) delete gInputPtr;
+        shutdownInputSystem();
     }
 };
 

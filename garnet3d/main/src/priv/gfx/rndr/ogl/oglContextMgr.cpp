@@ -55,21 +55,7 @@ GN::gfx::OGLRenderer::bindContextImpl(
 
     bindContextRenderStates( newContext, forceBinding );
 
-    // bind render targets
-    bool renderTargetSizeChanged = false;
-    //mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceBinding, renderTargetSizeChanged );
-
-    // bind viewport
-    if( renderTargetSizeChanged || newContext.viewport != mContext.viewport || forceBinding )
-    {
-        UInt32 rtw, rth;
-        mRTMgr->getRTSize( rtw, rth );
-        GLint x = (GLint)( newContext.viewport.x * rtw );
-        GLint y = (GLint)( newContext.viewport.y * rth );
-        GLsizei w = (GLsizei)( newContext.viewport.w * rtw );
-        GLsizei h = (GLsizei)( newContext.viewport.h * rth );
-        GN_OGL_CHECK( glViewport( x, y, w, h ) );
-    }
+    bindContextRenderTargets( newContext, forceBinding );
 
     bindContextResources( newContext, forceBinding );
 
@@ -100,13 +86,16 @@ GN::gfx::OGLRenderer::bindContextShaders(
 
     if( oldProgram == newProgram )
     {
-        if( forceBinding )
+        if( newProgram )
         {
-            newProgram->apply();
-        }
-        else
-        {
-            newProgram->applyDirtyParameters();
+            if( forceBinding )
+            {
+                newProgram->apply();
+            }
+            else
+            {
+                newProgram->applyDirtyParameters();
+            }
         }
     }
     else
@@ -214,6 +203,34 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
     */
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void
+GN::gfx::OGLRenderer::bindContextRenderTargets(
+    const RendererContext & newContext,
+    bool                    forceBinding )
+{
+    GN_UNUSED_PARAM( newContext );
+    GN_UNUSED_PARAM( forceBinding );
+
+    /* bind render targets
+    bool renderTargetSizeChanged = false;
+    //mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceBinding, renderTargetSizeChanged );
+
+    // bind viewport
+    if( renderTargetSizeChanged || newContext.viewport != mContext.viewport || forceBinding )
+    {
+        UInt32 rtw, rth;
+        mRTMgr->getRTSize( rtw, rth );
+        GLint x = (GLint)( newContext.viewport.x * rtw );
+        GLint y = (GLint)( newContext.viewport.y * rth );
+        GLsizei w = (GLsizei)( newContext.viewport.w * rtw );
+        GLsizei h = (GLsizei)( newContext.viewport.h * rth );
+        GN_OGL_CHECK( glViewport( x, y, w, h ) );
+    }*/
 }
 
 //

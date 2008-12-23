@@ -313,9 +313,14 @@ namespace GN
         };
 
         ///
-        /// Create instance of input system.
+        /// initialize of input system (shutdown previous input system automatically)
         ///
-        Input * createInputSystem( InputApi = API_NATIVE );
+        bool initializeInputSystem( InputApi = API_NATIVE );
+
+        ///
+        /// shutdown input system
+        ///
+        void shutdownInputSystem();
 
         ///
         /// convert string to keycode

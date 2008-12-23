@@ -7,6 +7,7 @@ sources = [
 	'file.cpp',
 	'hashmap.cpp',
 	'log.cpp',
+	'memory.cpp',
 	'misc.cpp',
 	'path.cpp',
 	'plugin.cpp',
