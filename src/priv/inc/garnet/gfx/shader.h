@@ -38,17 +38,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// GPU program parameter description
-    ///
-    struct GpuProgramParamDesc
-    {
-        const char * externalName;   ///< external name that is visible to user
-        const char * internalNameVS; ///< internal name that is visible to vertex shader. Null means VS does not use this parameter.
-        const char * internalNameGS; ///< internal name that is visible to vertex shader. Null means GS does not use this parameter.
-        const char * internalNamePS; ///< internal name that is visible to vertex shader. Null means PS does not use this parameter.
-    };
-
-    ///
     /// shader code
     ///
     struct ShaderCode
@@ -63,11 +52,17 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        ShaderCode                  codeVS;
-        ShaderCode                  codeGS;
-        ShaderCode                  codePS;
-        UInt32                      numParameters;
-        const GpuProgramParamDesc * parameters;
+        ShaderCode codeVS;
+        ShaderCode codeGS;
+        ShaderCode codePS;
+    };
+
+    ///
+    /// GPU program parameter descrption
+    ///
+    struct GpuProgramParameterDesc
+    {
+        const char * name;     ///< NULL terminated parameter name
     };
 
     ///
@@ -84,8 +79,24 @@ namespace GN { namespace gfx
     ///
     struct GpuProgram : public RefCounter
     {
+        ///
+        /// get number of parameters
+        ///
+        virtual size_t getNumParameters() const = 0;
+
+        ///
+        /// get parameter array
+        ///
+        virtual const GpuProgramParameterDesc * getParameters() const = 0;
+
+        ///
         /// set shader parameter
-        virtual void setParameter( size_t index, const void * data ) = 0;
+        ///
+        /// \param index        Parameter index in parameter array
+        /// \param value        Parameter value
+        /// \param length       Length in bytes of parameter value. Set to 0 to use inherited length.
+        ///
+        virtual void setParameter( size_t index, const void * value, size_t length = 0 ) = 0;
     };
 }}
 

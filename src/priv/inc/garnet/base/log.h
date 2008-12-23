@@ -45,9 +45,9 @@
 #define GN_INFO( logger )  GN_LOG( logger, GN::Logger::LL_INFO )
 
 ///
-/// output detail message
+/// output verbose message
 ///
-#define GN_DETAIL( logger ) GN_LOG( logger, GN::Logger::LL_DETAIL )
+#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_DETAIL )
 
 ///
 /// output debug message (only effective in debug build)

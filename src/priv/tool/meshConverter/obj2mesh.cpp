@@ -151,7 +151,7 @@ static bool sReadMaterials( File & fp, ObjScene & scene )
                     }
                     else
                     {
-                        GN_DETAIL(sLogger)( "ignore redundent material %s.", mat.name.cptr() );
+                        GN_VERBOSE(sLogger)( "ignore redundent material %s.", mat.name.cptr() );
                     }
                     readmat = false;
                 }
@@ -225,7 +225,7 @@ static bool sReadMaterials( File & fp, ObjScene & scene )
                 }
                 else
                 {
-                    GN_DETAIL(sLogger)( "line %d : ignored.", linecount );
+                    GN_VERBOSE(sLogger)( "line %d : ignored.", linecount );
                 }
             }
         }
@@ -243,7 +243,7 @@ static bool sReadMaterials( File & fp, ObjScene & scene )
         }
         else
         {
-            GN_DETAIL(sLogger)( "ignore redundent material %s.", mat.name.cptr() );
+            GN_VERBOSE(sLogger)( "ignore redundent material %s.", mat.name.cptr() );
         }
     }
 

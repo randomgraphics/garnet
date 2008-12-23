@@ -47,111 +47,18 @@ namespace GN { namespace gfx
     // GLSL program
     // *************************************************************************
 
-    /*
-    /// Basic OGL GLSL shader class
     ///
-    class OGLBasicShaderGLSL : public OGLShader, public OGLResource, public StdClass
+    /// GLSL program uniform description
+    ///
+    struct GLSLUniformDesc
     {
-         GN_DECLARE_STDCLASS( OGLBasicShaderGLSL, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLBasicShaderGLSL( OGLRenderer & r, GLenum usage )
-            : OGLShader( t, LANG_OGL_GLSL )
-            , OGLResource( r )
-            , mUsage( sSelectUsage(t) ) { clear(); }
-        virtual ~OGLBasicShaderGLSL() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const StrA & code, const StrA & hints );
-        void quit();
-    private:
-        void clear()
-        {
-            mHandle = 0;
-        }
-        //@}
-
-        // ********************************
-        // from OGLShader
-        // ********************************
-    public:
-
-        virtual void disable() const;
-        virtual void apply() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
-        virtual void applyDirtyUniforms() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
-
-        // ********************************
-        // from Shader
-        // ********************************
-    private:
-
-        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        ///
-        /// Get OGL shader handle
-        ///
-        GLhandleARB getHandleARB() const { return mHandle; }
-
-        ///
-        /// Apply dirty uniforms to render context
-        ///
-        void applyDirtyUniforms( GLhandleARB program ) const;
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        const GLenum mUsage;
-        GLhandleARB  mHandle;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-
-        bool createShader( const StrA & );
+        GLenum            type;      ///< uniform type
+        GLsizei           count;     ///< uniform count
+        GLint             location;  ///< uniform location
+        StrA              name;      ///< uniform name
+        DynaArray<UInt8>  value;     ///< uniform value
+        GLSLUniformDesc * nextDirty; ///< pointer to next dirty uniform.
     };
-
-    ///
-    /// OGL GLSL vertex shader.
-    ///
-    class OGLVtxShaderGLSL : public OGLBasicShaderGLSL
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, GL_VERTEX_SHADER_ARB ) {}
-    };
-
-    ///
-    /// OGL GLSL pixel shader.
-    ///
-    class OGLPxlShaderGLSL : public OGLBasicShaderGLSL
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, GL_FRAGMENT_SHADER_ARB ) {}
-    };*/
 
     ///
     /// GLSL program class
@@ -179,7 +86,7 @@ namespace GN { namespace gfx
         bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mProgram = 0; mVS = 0; mPS = 0; }
+        void clear() { mProgram = 0; mVS = 0; mPS = 0; mDirtyList = NULL; }
         //@}
 
         // ********************************
@@ -188,10 +95,12 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setParameter( size_t , const void * ) { GN_UNIMPL(); }
+        virtual size_t getNumParameters() const { return mParams.size(); }
+        virtual const GpuProgramParameterDesc * getParameters() const { return mParams.cptr(); }
+        virtual void setParameter( size_t index, const void * value, size_t length );
 
         // ********************************
-        // public functions
+        // from OGLBasicGpuProgram
         // ********************************
     public:
 
@@ -200,11 +109,8 @@ namespace GN { namespace gfx
         ///
         virtual void apply() const
         {
-            GN_GUARD_SLOW;
-
             GN_OGL_CHECK( glUseProgramObjectARB( mProgram ) );
-
-            GN_UNGUARD_SLOW;
+            applyDirtyParameters();
         }
 
         ///
@@ -218,16 +124,19 @@ namespace GN { namespace gfx
         ///
         /// Apply only dirty parameters to OpenGL
         ///
-        virtual void applyDirtyParameters() const { GN_UNIMPL(); }
+        virtual void applyDirtyParameters() const;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        GLhandleARB mProgram;
-        GLhandleARB mVS;
-        GLhandleARB mPS;
+        GLhandleARB                        mProgram;
+        GLhandleARB                        mVS;
+        GLhandleARB                        mPS;
+        DynaArray<GLSLUniformDesc>         mUniforms;
+        DynaArray<GpuProgramParameterDesc> mParams;
+        mutable GLSLUniformDesc          * mDirtyList;
 
         // ********************************
         // private functions

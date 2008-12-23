@@ -67,7 +67,7 @@ namespace GN { namespace app
                 mLastFrameTime = mCurrentTime;
                 mFrameCounter = 0;
                 static Logger * sLogger = getLogger("GN.app.fps");
-                GN_DETAIL(sLogger)( "FPS : %.2f", mFpsValue );
+                GN_VERBOSE(sLogger)( "FPS : %.2f", mFpsValue );
             }
             else if( mBeforeFirstUpdate )
             {
