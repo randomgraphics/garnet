@@ -161,19 +161,19 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
             captureMouse();
             break;
         case WM_LBUTTONUP   :
-            releaesMouse();
+            releaseMouse();
             break;
         case WM_RBUTTONDOWN :
             captureMouse();
             break;
         case WM_RBUTTONUP   :
-            releaesMouse();
+            releaseMouse();
             break;
         case WM_MBUTTONDOWN :
             captureMouse();
             break;
         case WM_MBUTTONUP   :
-            releaesMouse();
+            releaseMouse();
             break;
 
         // mouse move
@@ -194,6 +194,8 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
         case WM_DESTROY :
             // detach from the window
             removeWindowHooks();
+            // release mouse capture
+            releaseMouse();
             break;
     }
 
@@ -379,7 +381,7 @@ void GN::input::BasicInputMsw::captureMouse()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::releaesMouse()
+void GN::input::BasicInputMsw::releaseMouse()
 {
     GN_GUARD;
 

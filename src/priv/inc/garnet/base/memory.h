@@ -35,6 +35,12 @@ namespace GN
     /// Free heap-allocated memory. Can cross DLL boundary.
     ///
     GN_PUBLIC void heapFree( void * );
+
+    ///
+    /// enable CRT memory leak checking. Currently only work for MSVC compiler
+    ///
+    /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
+    void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 }
 
 #if GN_ICL

@@ -73,20 +73,3 @@ void GN::getEnv( StrA & result, const char * name )
     }
 #endif
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-#if GN_MSVC
-#include <crtdbg.h>
-void GN::enableCRTMemoryCheck()
-{
-    int tmpDbgFlag;
-    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
-    _CrtSetDbgFlag(tmpDbgFlag);
-    //_CrtSetBreakAlloc(1104);
-}
-#else
-void GN::enableCRTMemoryCheck() {}
-#endif

@@ -980,17 +980,34 @@ namespace GN { namespace gfx
         virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
 
         //@}
+
+        // ********************************************************************
+        //
+        /// \name Renderer DLL. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+    private:
+
+        SharedLib * mSharedLib;
+        friend GN_PUBLIC Renderer * createRenderer( const RendererOptions & );
+        friend GN_PUBLIC void       deleteRenderer( Renderer * );
+
+        //@}
+
     };
 
     ///
     /// Create a new renderer.
     ///
-    Renderer * createRenderer( const RendererOptions & );
+    GN_PUBLIC Renderer * createRenderer( const RendererOptions & );
 
     ///
     /// Delete renderer
     ///
-    void deleteRenderer( Renderer * );
+    GN_PUBLIC void deleteRenderer( Renderer * );
 }}
 
 #include "renderer.inl"

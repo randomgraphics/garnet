@@ -3,6 +3,7 @@ Import( 'GN' )
 sources = [
     'core.cpp',
     'coreLog.cpp',
+	'coreRenderer.cpp',
 	'filesys.cpp'
 ]
 

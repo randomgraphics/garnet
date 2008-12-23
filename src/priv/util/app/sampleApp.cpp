@@ -441,11 +441,10 @@ bool GN::app::SampleApp::initInput()
     quitInput();
 
     // create INPUT system
-    Input * input = createInputSystem( mInitParam.iapi );
-    if( 0 == input ) return false;
+    if( !initializeInputSystem( mInitParam.iapi ) ) return false;
 
     const GraphicsSystemDesc & gsd = mRenderEngine.getGraphicsSystemDesc();
-    if( !input->attachToWindow( gsd.display, gsd.window ) ) return false;
+    if( !gInput.attachToWindow( gsd.display, gsd.window ) ) return false;
 
     // success
     return true;
@@ -460,7 +459,7 @@ void GN::app::SampleApp::quitInput()
 {
     GN_GUARD;
 
-    if( gInputPtr ) delete gInputPtr;
+    shutdownInputSystem();
 
     GN_UNGUARD;
 }

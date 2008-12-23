@@ -292,11 +292,6 @@ namespace GN
     }
 
     ///
-    /// enable CRT memory leak checking. Currently only work for MSVC compiler
-    ///
-    void enableCRTMemoryCheck();
-
-    ///
     /// FOURCC structure
     ///
     union FOURCC
