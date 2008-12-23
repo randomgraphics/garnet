@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglRenderer.h"
 #include "oglRenderTargetMgr.h"
-//#include "oglShader.h"
+#include "oglShader.h"
 //#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
@@ -95,135 +95,28 @@ GN::gfx::OGLRenderer::bindContextShaders(
 {
     GN_GUARD_SLOW;
 
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( forceBinding );
+    const OGLBasicGpuProgram * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
+    const OGLBasicGpuProgram * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
 
-    /*
-
-    const Shader * glslVs = 0;
-    const Shader * glslPs = 0;
-
-    const Shader * oldVtxShader = mContext.shaders[SHADER_VS];
-    const Shader * oldPxlShader = mContext.shaders[SHADER_PS];
-    const Shader * newVtxShader = newContext.shaders[SHADER_VS];
-    const Shader * newPxlShader = newContext.shaders[SHADER_PS];
-
-    if( newFlags.shaderBit( SHADER_VS ) )
+    if( oldProgram == newProgram )
     {
-        GN_ASSERT(
-            0 == newVtxShader ||
-            SHADER_VS == newVtxShader->getType() );
-
-        if( oldVtxShader != newVtxShader || forceBinding )
+        if( forceBinding )
         {
-            if( oldVtxShader )
-            {
-                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldVtxShader);
-                sh->disable();
-            }
-            if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
-            {
-                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newVtxShader);
-                sh->apply();
-            }
-            else
-            {
-                GN_ASSERT( 0 == newVtxShader || LANG_OGL_GLSL == newVtxShader->getLang() );
-                glslVs = newVtxShader;
-            }
-        }
-        else if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
-        {
-            const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newVtxShader);
-            sh->applyDirtyUniforms();
+            newProgram->apply();
         }
         else
         {
-            GN_ASSERT( 0 == newVtxShader || LANG_OGL_GLSL == newVtxShader->getLang() );
-            glslVs = newVtxShader;
+            newProgram->applyDirtyParameters();
         }
-    }
-    else if( oldVtxShader && LANG_OGL_GLSL != oldVtxShader->getLang() )
-    {
-        const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldVtxShader);
-        sh->applyDirtyUniforms();
     }
     else
     {
-        GN_ASSERT( 0 == oldVtxShader || LANG_OGL_GLSL == oldVtxShader->getLang() );
-        glslVs = oldVtxShader;
-    }
+        // disable old program
+        if( oldProgram ) oldProgram->disable();
 
-    if( newFlags.shaderBit( SHADER_PS ) )
-    {
-        GN_ASSERT(
-            0 == newPxlShader ||
-            SHADER_PS == newPxlShader->getType() );
-
-        if( oldPxlShader != newPxlShader || forceBinding )
-        {
-            if( oldPxlShader )
-            {
-                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldPxlShader);
-                sh->disable();
-            }
-            if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
-            {
-                const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newPxlShader);
-                sh->apply();
-            }
-            else
-            {
-                GN_ASSERT( 0 == newPxlShader || LANG_OGL_GLSL == newPxlShader->getLang() );
-                glslPs = newPxlShader;
-            }
-        }
-        else if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
-        {
-            const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(newPxlShader);
-            sh->applyDirtyUniforms();
-        }
-        else
-        {
-            GN_ASSERT( 0 == newPxlShader || LANG_OGL_GLSL == newPxlShader->getLang() );
-            glslPs = newPxlShader;
-        }
+        // apply new program
+        if( newProgram ) newProgram->apply();
     }
-    else if( oldPxlShader && LANG_OGL_GLSL != oldPxlShader->getLang() )
-    {
-        const OGLBasicShader * sh = safeCastPtr<const OGLBasicShader>(oldPxlShader);
-        sh->applyDirtyUniforms();
-    }
-    else
-    {
-        GN_ASSERT( 0 == oldPxlShader || LANG_OGL_GLSL == oldPxlShader->getLang() );
-        glslPs = oldPxlShader;
-    }
-
-    // handle GLSL shader and program in special way
-    if( glslVs || glslPs )
-    {
-        GLSLShaders key = { { glslVs, glslPs, 0 } };
-        GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
-        if( mGLSLProgramMap.end() != i )
-        {
-            // found!
-            GN_ASSERT( i->second );
-            ((const OGLProgramGLSL*)i->second)->apply();
-        }
-        else
-        {
-            // not found. we have to create a new GLSL program object
-            AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
-            if( !newProg->init(
-            	safeCastPtr<const OGLBasicShaderGLSL>(glslVs),
-            	safeCastPtr<const OGLBasicShaderGLSL>(glslPs) ) ) return ;
-            mGLSLProgramMap[key] = newProg;
-            newProg.detach()->apply();
-        }
-    }
-
-    */
 
     GN_UNGUARD_SLOW;
 }

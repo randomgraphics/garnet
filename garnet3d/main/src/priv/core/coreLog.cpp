@@ -195,7 +195,7 @@ namespace GN
             {
                 ::fprintf( stdout, "%s\n", msg.cptr() );
             }
-            else 
+            else
             {
                 ::fprintf(
                     stderr,
@@ -216,7 +216,7 @@ namespace GN
             {
                 ::fprintf( stdout, "%S\n", msg.cptr() );
             }
-            else 
+            else
             {
                 ::fprintf(
                     stderr,
@@ -527,7 +527,7 @@ namespace GN
             static Logger * sLogger = getLogger("GN.core.LoggerContainer");
             StrA loggerTree;
             printLoggerTree( loggerTree, 0, mRootLogger );
-            GN_DETAIL(sLogger)( "\n%s", loggerTree.cptr() );
+            GN_VERBOSE(sLogger)( "\n%s", loggerTree.cptr() );
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
