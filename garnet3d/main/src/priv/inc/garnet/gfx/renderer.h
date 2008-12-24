@@ -346,10 +346,10 @@ namespace GN { namespace gfx
     ///
     struct VertexElement
     {
-        char        name[32];    ///< name of the element (must be unique among vertex format)
         ColorFormat format;      ///< format of the element
         UInt16      bufferIndex; ///< vertex buffer index
         UInt16      offset;      ///< offset of the element
+        char        binding[64]; ///< binding to GPU program (must be unique across the vertex format structure)
     };
 
     ///
