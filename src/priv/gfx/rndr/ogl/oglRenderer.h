@@ -18,6 +18,14 @@ namespace GN { namespace gfx
     class OGLBasicRTMgr;
 
     ///
+    /// OGL specific caps
+    ///
+    struct OGLRendererCaps : public RendererCaps
+    {
+        UInt32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
+    };
+
+    ///
     /// OGL renderer class
     ///
     class OGLRenderer : public BasicRenderer
@@ -125,6 +133,10 @@ namespace GN { namespace gfx
         virtual bool                 checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const;
         virtual ColorFormat          getDefaultTextureFormat( TextureUsages usages ) const;
 
+    public :
+
+        const OGLRendererCaps & getOGLCaps() const { return mCaps; }
+
     private :
         bool capsInit();
         void capsQuit() {}
@@ -132,7 +144,7 @@ namespace GN { namespace gfx
 
     private:
 
-        RendererCaps mCaps;
+        OGLRendererCaps mCaps;
 
         //@}
 

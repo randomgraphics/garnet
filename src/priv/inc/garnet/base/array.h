@@ -268,7 +268,11 @@ namespace GN
         bool equal( const DynaArray & other ) const
         {
             if( mCount != other.mCount ) return false;
-            return 0 == ::memcmp( mElements, other.mElements, sizeof(T)*mCount );
+            for( size_t i = 0; i < mCount; ++i )
+            {
+                if( mElements[i] != other.mElements[i] ) return false;
+            }
+            return true;
         }
 
     public:

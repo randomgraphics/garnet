@@ -347,9 +347,27 @@ namespace GN { namespace gfx
     struct VertexElement
     {
         ColorFormat format;      ///< format of the element
-        UInt16      bufferIndex; ///< vertex buffer index
+        UInt16      stream;      ///< vertex buffer index
         UInt16      offset;      ///< offset of the element
-        char        binding[64]; ///< binding to GPU program (must be unique across the vertex format structure)
+        char        binding[64]; ///< binding to GPU program (null terminated string)
+        UInt16      bindingIndex;///< binding index. Note that
+                                 ///< Combination of binding name and index must
+                                 ///< be unique across the vertex format structure
+
+        bool operator==( const VertexElement & rhs ) const
+        {
+            return format == rhs.format
+                && stream == rhs.stream
+                && offset == rhs.offset
+                && bindingIndex == rhs.bindingIndex
+                && 0 == strCmp( binding, rhs.binding, 64 );
+            return true;
+        }
+
+        bool operator!=( const VertexElement & rhs ) const
+        {
+            return !operator==( rhs );
+        }
     };
 
     ///
@@ -357,8 +375,28 @@ namespace GN { namespace gfx
     ///
     struct VertexFormat
     {
-        VertexElement elements[32]; ///< vertex element array
-        UInt32        numElements;  ///< number of elements
+        enum
+        {
+            MAX_VERTEX_ELEMENTS = 32,
+        };
+
+        UInt32        numElements;                   ///< number of elements
+        VertexElement elements[MAX_VERTEX_ELEMENTS]; ///< vertex element array
+
+        bool operator==( const VertexFormat & rhs ) const
+        {
+            if( numElements != rhs.numElements ) return false;
+            for( UInt32 i = 0; i < numElements; ++i )
+            {
+                if( elements[i] != rhs.elements[i] ) return false;
+            }
+            return true;
+        }
+
+        bool operator!=( const VertexFormat & rhs ) const
+        {
+            return !operator==( rhs );
+        }
     };
 
     ///
@@ -370,6 +408,19 @@ namespace GN { namespace gfx
         UInt32           face;
         UInt32           level;
         UInt32           slice;
+
+        bool operator==( RenderTargetTexture & rhs ) const
+        {
+            return texture == rhs.texture
+                && face == rhs.face
+                && level == rhs.level
+                && slice == rhs.slice;
+        }
+
+        bool operator!=( RenderTargetTexture & rhs ) const
+        {
+            return !operator==( rhs );
+        }
     };
 
     ///
@@ -379,9 +430,9 @@ namespace GN { namespace gfx
     {
         enum
         {
-            NUM_VTXBUFS              = 32,
-            NUM_TEXTURES             = 32,
-            NUM_COLOR_RENDER_TARGETS = 8,
+            MAX_VERTEX_BUFFERS       = 32,
+            MAX_TEXTURES             = 32,
+            MAX_COLOR_RENDER_TARGETS = 8,
         };
 
         union
@@ -402,7 +453,7 @@ namespace GN { namespace gfx
                 UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
                 UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
                 UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
-                UInt32 nouse_0        : 11;
+                UInt32 nouse_0        : 11;///< no use. must be zero
 
                 // DWORD 1
                 UInt32 blendSrc       : 4;
@@ -411,7 +462,7 @@ namespace GN { namespace gfx
                 UInt32 blendSrcAlpha  : 4;
                 UInt32 blendDstAlpha  : 4;
                 UInt32 blendOpAlpha   : 3;
-                UInt32 nouse_1        : 10;
+                UInt32 nouse_1        : 10;///< no use. must be zero
             };
         };
 
@@ -436,11 +487,11 @@ namespace GN { namespace gfx
         WeakRef<GpuProgram> gpuProgram;
 
         // Resources
-        WeakRef<VtxBuf>     vtxbufs[NUM_VTXBUFS];            ///< vertex buffers
-        UInt32              strides[NUM_VTXBUFS];            ///< strides for each vertex buffer
+        WeakRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
+        UInt32              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
         WeakRef<IdxBuf>     idxbuf;                          ///< index buffer
-        WeakRef<Texture>    textures[NUM_TEXTURES];          ///< textures
-        RenderTargetTexture crts[NUM_COLOR_RENDER_TARGETS];  ///< color render targets
+        WeakRef<Texture>    textures[MAX_TEXTURES];          ///< textures
+        RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
         RenderTargetTexture dsrt;                            ///< depth stencil render target
 
         // TODO: sampler

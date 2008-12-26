@@ -196,15 +196,38 @@ bool GN::gfx::OGLRenderer::capsInit()
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
 
+    // clear all caps
+    memset( &mCaps, 0, sizeof(mCaps) );
+
+    // max texture size
+    GLuint maxTexSize;
+    glGetIntegerv( GL_MAX_TEXTURE_SIZE, (GLint*)&maxTexSize );
+    mCaps.maxTex2DSize[0] = mCaps.maxTex1DSize[1] = maxTexSize; mCaps.maxTex2DSize[2] = 1;
+
     // handle case where multi-texture extension is not supported
-    if( !GLEW_ARB_multitexture )
+    if( GLEW_ARB_multitexture )
+    {
+        GN_OGL_CHECK_RV( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint*)&mCaps.maxTextures ), false );
+    }
+    else
     {
         glActiveTextureARB = sFake_glActiveTexture;
         glClientActiveTextureARB = sFake_glClientActiveTexture;
+        mCaps.maxTextures = 1;
     }
 
-    // clear all caps
-    memset( &mCaps, 0, sizeof(mCaps) );
+    // max render targets
+    mCaps.maxColorRenderTargets = 1;
+
+    // max vertex attributes
+    if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
+    {
+        glGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, (GLint*)&mCaps.maxVertexAttributes );
+    }
+    else
+    {
+        mCaps.maxVertexAttributes = 0;
+    }
 
     // vertex shader flags
     mCaps.vsProfiles[GPP_D3D_1_1]  = false;
