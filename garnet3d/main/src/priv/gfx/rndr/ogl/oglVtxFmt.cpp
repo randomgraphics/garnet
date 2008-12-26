@@ -2,38 +2,26 @@
 #include "oglVtxFmt.h"
 #include "oglRenderer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+using namespace GN::gfx;
+
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.VtxFmt");
 
 // *****************************************************************************
 // Local classes and functions
 // *****************************************************************************
 
-static const GLuint sWGHT_ATTRIB =  1;
-static const GLuint sCLR1_ATTRIB =  4;
-static const GLuint sFOG_ATTRIB  =  5;
-static const GLuint sTANG_ATTRIB = 14;
-static const GLuint sBNML_ATTRIB = 15;
-
 //
-// Compose VTXSEM_TEXn tag based on texture stage.
+//
 // -----------------------------------------------------------------------------
-static inline GN::gfx::VtxSem sGetVtxSemFromTexStage( size_t stage )
+static size_t inline sCalcNumStreams( const VertexFormat & vf )
 {
-    GN::gfx::VtxSem sem = GN::gfx::VTXSEM_TEX0;
-    if( stage < 10 )
+    size_t n = 0;
+    for( size_t i = 0; i < vf.numElements; ++i )
     {
-        sem.u8[3] = (unsigned char)( sem.u8[3] + stage );
+        const VertexElement & e =  vf.elements[i];
+        if( e.stream >= n ) n = e.stream + 1;
     }
-    else if( stage < 16 )
-    {
-        sem.u8[3] = (unsigned char)( 'A' + stage );
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "texture stage is too large!" );
-        sem = GN::gfx::VTXSEM_NULL;
-    }
-    return sem;
+    return n;
 }
 
 // *****************************************************************************
@@ -43,7 +31,7 @@ static inline GN::gfx::VtxSem sGetVtxSemFromTexStage( size_t stage )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::init( const VtxFmtDesc & format )
+bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format )
 {
     GN_GUARD;
 
@@ -52,7 +40,7 @@ bool GN::gfx::OGLVtxFmt::init( const VtxFmtDesc & format )
 
     mFormat = format;
 
-    if( !setupStreamBindings() || !setupStateBindings() ) return failure();
+    if( !setupStateBindings() ) return failure();
 
     // success
     return success();
@@ -121,193 +109,217 @@ void GN::gfx::OGLVtxFmt::bindBuffer(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::setupStreamBindings()
+bool GN::gfx::OGLVtxFmt::setupStateBindings()
 {
     GN_GUARD;
 
-    mStreamBindings.resize( mFormat.calcNumStreams() );
-    for( size_t i = 0; i < mFormat.count; ++i )
-    {
-        const VtxFmtDesc::AttribDesc & a = mFormat.attribs[i];
-        GN_ASSERT( a.stream < mStreamBindings.size() );
+    UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getRenderer().getCaps().maxTextures;
 
-        // setup stream binding
-        StreamBinding & sb = mStreamBindings[a.stream];
+    bool hasPos = false;
+    bool hasNormal = false;
+    bool hasC0 = false;
+    bool hasC1 = false;
+    bool hasFog = false;
+    std::vector<bool> hasvaa( maxAttributes, false );
+    std::vector<bool> hastex( maxTextures, false );
+
+    mStreamBindings.resize( sCalcNumStreams( mFormat ) );
+
+    for( size_t i = 0; i < mFormat.numElements; ++i )
+    {
+        const VertexElement & e = mFormat.elements[i];
+
+        GN_ASSERT( e.stream < mStreamBindings.size() );
+
+        StreamBinding & sb = mStreamBindings[e.stream];
+
         sb.resize( sb.size() + 1 );
-        if( !setupAttribBinding( sb.back(), a ) ) return false;
+
+        AttribBinding & ab = sb.back();
+
+        if( 0 == strCmpI( "position", e.binding ) ||
+            0 == strCmpI( "pos", e.binding ) )
+        {
+            if( 0 != e.bindingIndex )
+            {
+                GN_ERROR(sLogger)( "bindingIndex of \"position\" must be 0." );
+                return false;
+            }
+            ab.func = &sSetVertexPointer;
+            hasPos = true;
+        }
+        else if( 0 == strCmpI( "attribute", e.binding ) ||
+                 0 == strCmpI( "VertexArrribute", e.binding ) )
+        {
+            if( e.bindingIndex >= maxAttributes )
+            {
+                GN_ERROR(sLogger)(
+                    "vertex attribute index (%u) is larger than maximum allowed value (%u).",
+                    e.bindingIndex, maxAttributes );
+                return false;
+            }
+
+            ab.func = &sSetVertexAttributePointer;
+            ab.info.index = e.bindingIndex;
+            hasvaa[e.bindingIndex] = true;
+        }
+        else if( 0 == strCmpI( "normal", e.binding ) )
+        {
+            ab.func = &sSetNormalPointer;
+            hasNormal = true;
+        }
+        else if( 0 == strCmpI( "color", e.binding ) )
+        {
+            if( 0 == e.bindingIndex )
+            {
+                ab.func = &sSetColorPointer;
+                hasC0 = true;
+            }
+            else if( 1 == e.bindingIndex )
+            {
+                if( GLEW_EXT_secondary_color )
+                {
+                    ab.func = &sSetSecondaryColorPointer;
+                    hasC1 = true;
+                }
+                else
+                {
+                    GN_ERROR(sLogger)("current hardware does not support EXT_secondary_color" );
+                    return false;
+                }
+            }
+        }
+        else if( 0 == strCmpI( "fog", e.binding ) )
+        {
+            if( GLEW_EXT_fog_coord )
+            {
+                ab.func = &sSetFogPointer;
+                hasFog = true;
+            }
+            else
+            {
+                GN_ERROR(sLogger)("current hardware does not support EXT_fog_coord" );
+                return false;
+            }
+        }
+        else if( 0 == strCmpI( "texcoord", e.binding ) )
+        {
+            if( e.bindingIndex >= maxTextures )
+            {
+                GN_ERROR(sLogger)(
+                    "texcoordinate index (%u) is larger than maximum allowed value (%u).",
+                    e.bindingIndex, maxTextures );
+                return false;
+            }
+
+            ab.func = &sSetTexCoordPointer;
+            ab.info.self = this;
+            ab.info.index = e.bindingIndex;
+            hastex[e.bindingIndex] = true;
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "unsupport vertex binding : %s(%d)", e.binding, e.bindingIndex );
+            return false;
+        };
+
+        switch ( e.format.alias )
+        {
+            case COLOR_FORMAT_FLOAT1 :
+                ab.info.format = GL_FLOAT;
+                ab.info.components = 1;
+                ab.info.normalization = false;
+                break;
+
+            case COLOR_FORMAT_FLOAT2 :
+                ab.info.format = GL_FLOAT;
+                ab.info.components = 2;
+                ab.info.normalization = false;
+                break;
+
+            case COLOR_FORMAT_FLOAT3 :
+                ab.info.format = GL_FLOAT;
+                ab.info.components = 3;
+                ab.info.normalization = false;
+                break;
+
+            case COLOR_FORMAT_FLOAT4 :
+                ab.info.format = GL_FLOAT;
+                ab.info.components = 4;
+                ab.info.normalization = false;
+                break;
+
+            case COLOR_FORMAT_RGBA32 :
+                ab.info.format = GL_UNSIGNED_BYTE;
+                ab.info.components = 4;
+                ab.info.normalization = true;
+                break;
+
+            default:
+                GN_ERROR(sLogger)( "unsupport color format: %s", e.format.toString().cptr() );
+                return false;
+        }
+
+        GN_ASSERT( ab.func );
+    }
+
+    // ===================
+    // setup state binding
+    // ===================
+
+    StateBinding sb;
+    sb.info.self = this;
+
+    // position
+    sb.func = hasPos ? &sEnableClientState : &sDisableClientState;
+    sb.info.semantic = GL_VERTEX_ARRAY;
+    mStateBindings.append( sb );
+
+    // normal
+    sb.func = hasNormal ? &sEnableClientState : &sDisableClientState;
+    sb.info.semantic = GL_NORMAL_ARRAY;
+
+    // color0
+    sb.func = hasC0 ? &sEnableClientState : &sDisableClientState;
+    sb.info.semantic = GL_COLOR_ARRAY;
+    mStateBindings.append( sb );
+
+    // color1
+    if( GLEW_EXT_secondary_color )
+    {
+        sb.func = hasC1 ? &sEnableClientState : &sDisableClientState;
+        sb.info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
+        mStateBindings.append( sb );
+    }
+
+    // has fog
+    sb.func = hasFog ? &sEnableClientState : &sDisableClientState;
+    sb.info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
+    mStateBindings.append( sb );
+
+    // vertex attributes
+    for( UInt32 i = 0; i < maxAttributes; ++i )
+    {
+        sb.func = hasvaa[i] ? &sEnableVAA : &sDisableVAA;
+        sb.info.attribute = i;
+        mStateBindings.append( sb );
+    }
+
+    // texture coordinates
+    for( UInt32 i = 0; i < maxTextures; ++i )
+    {
+        sb.func          = hastex[i] ? &sEnableTexArray : &sDisableTexArray;
+        sb.info.self     = this;
+        sb.info.texStage = i;
+        sb.info.semantic = GL_TEXTURE_COORD_ARRAY;
+        mStateBindings.append( sb );
     }
 
     // success
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::setupAttribBinding(
-    AttribBinding & ab, const VtxFmtDesc::AttribDesc & desc )
-{
-    ab.func = NULL;
-    ab.info.self = NULL;
-    ab.info.offset = desc.offset;
-    ab.info.texStage = 0;
-    ab.info.attribute = (GLuint)-1;
-
-    switch( desc.semantic.u32 )
-    {
-        case GN_MAKE_FOURCC('P','O','S','0') :
-            ab.func = &sSetVertexPointer;
-            break;
-
-        case GN_MAKE_FOURCC('W','G','H','T') :
-            if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-            {
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.attribute = sWGHT_ATTRIB;
-            }
-            else
-            {
-                ab.func = &sDummyStreamBinding;
-            }
-            break;
-
-        case GN_MAKE_FOURCC('N','M','L','0') :
-            ab.func = &sSetNormalPointer;
-            break;
-
-        case GN_MAKE_FOURCC('C','L','R','0') :
-            ab.func = &sSetColorPointer;
-            break;
-
-        case GN_MAKE_FOURCC('C','L','R','1') :
-            if( GLEW_EXT_secondary_color )
-            {
-                ab.func = &sSetSecondaryColorPointer;
-            }
-            else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-            {
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.attribute = sCLR1_ATTRIB;
-            }
-            else
-            {
-                ab.func = &sDummyStreamBinding;
-            }
-            break;
-
-        case GN_MAKE_FOURCC('F','O','G','0') :
-            if( GLEW_EXT_fog_coord )
-            {
-                ab.func = &sSetFogPointer;
-            }
-            else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-            {
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.attribute = sFOG_ATTRIB;
-            }
-            else
-            {
-                ab.func = &sDummyStreamBinding;
-            }
-            break;
-
-        case GN_MAKE_FOURCC('T','A','N','G') :
-            if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-            {
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.attribute = sTANG_ATTRIB;
-            }
-            else
-            {
-                ab.func = &sDummyStreamBinding;
-            }
-            break;
-
-        case GN_MAKE_FOURCC('B','N','M','L') :
-            if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-            {
-                ab.func = &sSetVertexAttributePointer;
-                ab.info.attribute = sBNML_ATTRIB;
-            }
-            else
-            {
-                ab.func = &sDummyStreamBinding;
-            }
-            break;
-
-        case GN_MAKE_FOURCC('T','E','X','0') :
-        case GN_MAKE_FOURCC('T','E','X','1') :
-        case GN_MAKE_FOURCC('T','E','X','2') :
-        case GN_MAKE_FOURCC('T','E','X','3') :
-        case GN_MAKE_FOURCC('T','E','X','4') :
-        case GN_MAKE_FOURCC('T','E','X','5') :
-        case GN_MAKE_FOURCC('T','E','X','6') :
-        case GN_MAKE_FOURCC('T','E','X','7') :
-        case GN_MAKE_FOURCC('T','E','X','8') :
-        case GN_MAKE_FOURCC('T','E','X','9') :
-            ab.func = &sSetTexCoordPointer;
-            ab.info.self = this;
-            ab.info.texStage = desc.semantic.u8[3] - VTXSEM_TEX0.u8[3];
-            break;
-
-        case GN_MAKE_FOURCC('T','E','X','A') :
-        case GN_MAKE_FOURCC('T','E','X','B') :
-        case GN_MAKE_FOURCC('T','E','X','C') :
-        case GN_MAKE_FOURCC('T','E','X','D') :
-        case GN_MAKE_FOURCC('T','E','X','E') :
-        case GN_MAKE_FOURCC('T','E','X','F') :
-            ab.func = &sSetTexCoordPointer;
-            ab.info.self = this;
-            ab.info.texStage = desc.semantic.u8[3] - VTXSEM_TEXA.u8[3] + 10;
-            break;
-
-        default :
-            GN_ERROR(sLogger)( "unsupport vertex semantics: %s", desc.semantic.toStr() );
-            return false;
-    };
-
-    switch ( desc.format )
-    {
-        case FMT_FLOAT1 :
-            ab.info.format = GL_FLOAT;
-            ab.info.components = 1;
-            ab.info.normalization = false;
-            break;
-
-        case FMT_FLOAT2 :
-            ab.info.format = GL_FLOAT;
-            ab.info.components = 2;
-            ab.info.normalization = false;
-            break;
-
-        case FMT_FLOAT3 :
-            ab.info.format = GL_FLOAT;
-            ab.info.components = 3;
-            ab.info.normalization = false;
-            break;
-
-        case FMT_FLOAT4 :
-            ab.info.format = GL_FLOAT;
-            ab.info.components = 4;
-            ab.info.normalization = false;
-            break;
-
-        case FMT_RGBA32 :
-            ab.info.format = GL_UNSIGNED_BYTE;
-            ab.info.components = 4;
-            ab.info.normalization = true;
-            break;
-
-        default:
-            GN_ERROR(sLogger)( "unsupport color format: %s", clrFmt2Str(desc.format) );
-            return false;
-    }
-
-    // success
-    GN_ASSERT( ab.func );
-    return true;
 }
 
 //
@@ -383,7 +395,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
 {
     GN_ASSERT( info.self );
     OGLRenderer & r = info.self->getRenderer();
-    r.chooseClientTextureStage( info.texStage );
+    r.chooseClientTextureStage( info.index );
     GN_OGL_CHECK( glTexCoordPointer(
         info.components,
         info.format,
@@ -398,137 +410,14 @@ void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
     const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
-    GN_ASSERT( 0 <= info.attribute && info.attribute < 16 );
+    GN_ASSERT( 0 <= info.index && info.index < 16 );
     GN_OGL_CHECK( glVertexAttribPointerARB(
-                    info.attribute,
+                    info.index,
                     info.components,
                     info.format,
                     info.normalization,
                     (GLsizei)stride,
                     buf + info.offset ) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::setupStateBindings()
-{
-    GN_GUARD;
-
-    size_t numStages = getRenderer().getCaps( CAPS_MAX_TEXTURE_STAGES );
-
-    mStateBindings.resize( 8 + numStages );
-
-#if GN_BUILD_DEBUG
-    // fill invalid data
-    for( size_t i = 0; i < mStateBindings.size(); ++i )
-    {
-        mStateBindings[i].func = NULL;
-        mStateBindings[i].info.self = NULL;
-        mStateBindings[i].info.texStage  = (size_t)-1;
-        mStateBindings[i].info.semantic  = (GLenum)-1;
-        mStateBindings[i].info.attribute = (GLuint)-1;
-    }
-#endif
-
-    // VTXSEM_POS0
-    mStateBindings[0].func = mFormat.findAttrib( VTXSEM_POS0 ) ? &sEnableClientState : &sDisableClientState;
-    mStateBindings[0].info.semantic = GL_VERTEX_ARRAY;
-
-    // VTXSEM_WGHT
-    if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-    {
-        mStateBindings[1].func = mFormat.findAttrib( VTXSEM_WGHT ) ? &sEnableVAA : &sDisableVAA;
-        mStateBindings[1].info.attribute = sWGHT_ATTRIB;
-    }
-    else
-    {
-        mStateBindings[1].func = &sDummyStateBinding;
-    }
-
-    // VTXSEM_NML0
-    mStateBindings[2].func = mFormat.findAttrib( VTXSEM_NML0 ) ? &sEnableClientState : &sDisableClientState;
-    mStateBindings[2].info.semantic = GL_NORMAL_ARRAY;
-
-    // VTXSEM_CLR0
-    mStateBindings[3].func = mFormat.findAttrib( VTXSEM_CLR0 ) ? &sEnableClientState : &sDisableClientState;
-    mStateBindings[3].info.semantic = GL_COLOR_ARRAY;
-
-    // VTXSEM_CLR1
-    if( GLEW_EXT_secondary_color )
-    {
-        mStateBindings[4].func = mFormat.findAttrib( VTXSEM_CLR1 ) ? &sEnableClientState : &sDisableClientState;
-        mStateBindings[4].info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
-    }
-    else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-    {
-        mStateBindings[4].func = mFormat.findAttrib( VTXSEM_WGHT ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[4].info.attribute = sCLR1_ATTRIB;
-    }
-    else
-    {
-        mStateBindings[4].func = &sDummyStateBinding;
-    }
-
-    // VTXSEM_FOG
-    if( GLEW_EXT_fog_coord )
-    {
-        mStateBindings[5].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableClientState : &sDisableClientState;
-        mStateBindings[5].info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
-    }
-    else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-    {
-        mStateBindings[5].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[5].info.attribute = sFOG_ATTRIB;
-    }
-    else
-    {
-        mStateBindings[5].func = &sDummyStateBinding;
-    }
-
-    // VTXSEM_TANG
-    if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-    {
-        mStateBindings[6].func = mFormat.findAttrib( VTXSEM_TANG ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[6].info.attribute = sTANG_ATTRIB;
-    }
-    else
-    {
-        mStateBindings[6].func = &sDummyStateBinding;
-    }
-
-    // VTXSEM_BNML
-    if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
-    {
-        mStateBindings[7].func = mFormat.findAttrib( VTXSEM_BNML ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[7].info.attribute = sBNML_ATTRIB;
-    }
-    else
-    {
-        mStateBindings[7].func = &sDummyStateBinding;
-    }
-
-    // VTXSEM_TEXN
-    for( size_t i = 0; i < numStages; ++i )
-    {
-        mStateBindings[8+i].func = mFormat.findAttrib( sGetVtxSemFromTexStage(i) ) ? &sEnableTexArray : &sDisableTexArray;
-        mStateBindings[8+i].info.self     = this;
-        mStateBindings[8+i].info.texStage = i;
-        mStateBindings[8+i].info.semantic = GL_TEXTURE_COORD_ARRAY;
-    }
-
-#if GN_BUILD_DEBUG
-    // fill invalid data
-    for( size_t i = 0; i < mStateBindings.size(); ++i )
-    {
-        GN_ASSERT( mStateBindings[i].func );
-    }
-#endif
-
-    // success
-    return true;
-
-    GN_UNGUARD;
 }
 
 //

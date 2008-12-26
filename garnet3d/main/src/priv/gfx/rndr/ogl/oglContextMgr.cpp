@@ -2,7 +2,7 @@
 #include "oglRenderer.h"
 #include "oglRenderTargetMgr.h"
 #include "oglShader.h"
-//#include "oglVtxFmt.h"
+#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 #include "oglTexture.h"

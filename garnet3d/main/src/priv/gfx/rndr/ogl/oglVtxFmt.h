@@ -33,7 +33,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VtxFmtDesc & );
+        bool init( const VertexFormat & );
         void quit();
     private:
         void clear() { mStreamBindings.clear(); mStateBindings.clear(); }
@@ -47,7 +47,7 @@ namespace GN { namespace gfx
         ///
         /// Get vertex format descriptor
         ///
-        const VtxFmtDesc & getFormat() const { return mFormat; }
+        const VertexFormat & getFormat() const { return mFormat; }
 
         ///
         /// Get vertex format descriptor
@@ -73,8 +73,7 @@ namespace GN { namespace gfx
         {
             const OGLVtxFmt * self;
             size_t            offset;
-            size_t            texStage;
-            GLuint            attribute;
+            size_t            index; ///< texture coordinate stage index or vertex attribute index
             GLuint            format;
             GLuint            components;
             GLboolean         normalization;
@@ -93,7 +92,7 @@ namespace GN { namespace gfx
             }
         };
 
-        typedef StackArray<AttribBinding,MAX_VERTEX_ATTRIBUTES> StreamBinding;
+        typedef StackArray<AttribBinding,VertexFormat::MAX_VERTEX_ELEMENTS> StreamBinding;
 
         struct StateBindingInfo
         {
@@ -111,19 +110,18 @@ namespace GN { namespace gfx
             FP_setOglVertexState func;
         };
 
-        VtxFmtDesc                                       mFormat;
-        StackArray<StreamBinding, MAX_VERTEX_ATTRIBUTES> mStreamBindings;
-        StackArray<StateBinding , MAX_VERTEX_ATTRIBUTES> mStateBindings;
+        VertexFormat                                                   mFormat;
+        StackArray<StreamBinding, RendererContext::MAX_VERTEX_BUFFERS> mStreamBindings;
+        StackArray<StateBinding , VertexFormat::MAX_VERTEX_ELEMENTS>   mStateBindings;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
-        // stream binding utils
-        bool setupStreamBindings();
-        bool setupAttribBinding( AttribBinding &, const VtxFmtDesc::AttribDesc & );
-        static void sDummyStreamBinding( const AttribBindingInfo &, const UInt8 * , size_t ) {};
+        // state binding utils
+        bool setupStateBindings();
+
         static void sSetVertexPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
         static void sSetNormalPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
         static void sSetColorPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
@@ -132,9 +130,6 @@ namespace GN { namespace gfx
         static void sSetTexCoordPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
         static void sSetVertexAttributePointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
 
-        // state binding utils
-        bool setupStateBindings();
-        static void sDummyStateBinding( const StateBindingInfo & ) {}
         static void sEnableClientState( const StateBindingInfo & info );
         static void sDisableClientState( const StateBindingInfo & info );
         static void sEnableVAA( const StateBindingInfo & info );
