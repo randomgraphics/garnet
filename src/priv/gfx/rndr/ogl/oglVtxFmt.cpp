@@ -87,9 +87,9 @@ void GN::gfx::OGLVtxFmt::bindStates() const
 // -----------------------------------------------------------------------------
 bool
 GN::gfx::OGLVtxFmt::bindBuffers(
-     const UInt8 * const * buffers,
-     const UInt16        * strides,
-     size_t                count ) const
+     const void * const * buffers,
+     const UInt16       * strides,
+     size_t               count ) const
 {
     GN_GUARD_SLOW;
 

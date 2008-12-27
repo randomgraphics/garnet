@@ -57,9 +57,9 @@ namespace GN { namespace gfx
         ///
         /// Bind the buffer to device
         ///
-        bool bindBuffers( const UInt8 * const * buffers,
-                          const UInt16        * strides,
-                          size_t                count ) const;
+        bool bindBuffers( const void * const * buffers,
+                          const UInt16       * strides,
+                          size_t               count ) const;
 
         // ********************************
         // private variables
@@ -83,10 +83,10 @@ namespace GN { namespace gfx
         {
             AttribBindingInfo     info;
             FP_setOglVertexBuffer func;
-            void bind( const UInt8 * buf, size_t stride ) const
+            void bind( const void * buf, size_t stride ) const
             {
                 GN_ASSERT( func );
-                func( info, buf, stride );
+                func( info, (const UInt8*)buf, stride );
             }
         };
 

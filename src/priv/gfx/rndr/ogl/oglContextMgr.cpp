@@ -27,6 +27,8 @@ sGetOGLVtxFmt(
     std::auto_ptr<OGLVtxFmt> oglvf( new OGLVtxFmt(r) );
     if( !oglvf->init( vf ) ) return NULL;
 
+    vfmap[vf] = oglvf.get();
+
     return oglvf.release();
 }
 
