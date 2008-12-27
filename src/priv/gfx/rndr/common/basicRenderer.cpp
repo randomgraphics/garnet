@@ -3,6 +3,11 @@
 
 GN::Logger * GN::gfx::BasicRenderer::sLogger = GN::getLogger("GN.gfx.rndr.common");
 
+void GN::gfx::rip( const char * msg, ... )
+{
+    GN_UNUSED_PARAM(msg);
+}
+
 // *****************************************************************************
 //                         BasicRenderer init / quit functions
 // *****************************************************************************
@@ -40,4 +45,32 @@ void GN::gfx::BasicRenderer::quit()
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
+{
+    if( !bindContextImpl( c, false ) )
+    {
+        if( !bindContextImpl( mContext, true ) )
+        {
+            GN_RNDR_RIP( "fail to recover from context binding failure." );
+        }
+        return false;
+    }
+    mContext = c;
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::rebindContext()
+{
+    if( !bindContextImpl( mContext, true ) )
+    {
+        GN_RNDR_RIP( "fail to rebind current context." );
+    }
 }

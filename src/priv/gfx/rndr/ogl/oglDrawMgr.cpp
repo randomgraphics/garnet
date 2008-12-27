@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "oglRenderer.h"
 #include "oglLine.h"
-//#include "oglVtxFmt.h"
+#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
+
+using namespace GN;
+using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
@@ -124,6 +127,33 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
     return true;
 }
 
+static inline void
+sApplyVtxBufs(
+    const OGLVtxFmt       & vtxfmt,
+    const WeakRef<VtxBuf> * vtxbufs,
+    const UInt16          * strides,
+    size_t                  startvtx )
+{
+    const UInt8 * vtxdata[RendererContext::MAX_VERTEX_BUFFERS];
+
+    for( size_t i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+    {
+        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( vtxbufs[i].get() );
+        if( vb )
+        {
+            vtxdata[i] = vb->getVtxData() + startvtx * strides[i];
+        }
+        else
+        {
+            vtxdata[i] = NULL;
+        }
+    }
+
+    vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS );
+}
+
+#pragma warning( disable : 4100 )
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -236,8 +266,6 @@ void GN::gfx::OGLRenderer::clearScreen(
     GN_UNGUARD_SLOW;
 }
 
-#pragma warning( disable : 4100 )
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -260,55 +288,68 @@ void GN::gfx::OGLRenderer::drawIndexed(
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    /* bind vertex buffer based on current startvtx
-    GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxfmt) &&
-        mVtxFmts[mContext.vtxfmt] &&
-        mVtxFmts[mContext.vtxfmt]->getNumStreams() <= mContext.numVtxBufs );
-    applyVtxBuf(
-        *mVtxFmts[mContext.vtxfmt],
-        mContext.vtxbufs,
-        startvtx );
+    // bind vertex buffer based on current startvtx
+    if( mCurrentOGLVtxFmt )
+    {
+        sApplyVtxBufs(
+            *mCurrentOGLVtxFmt,
+            mContext.vtxbufs,
+            mContext.strides,
+            startvtx );
+    }
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf );
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
 
-#if GN_BUILD_DEBUG
     // Verify index buffer
+    if( paramCheckEnabled() )
     {
-        OGLIdxBuf * testIb = const_cast<OGLIdxBuf*>(ib);
-        const UInt16 * idxData = testIb->lock( startidx, numidx, LOCK_RO );
-        for( size_t i = 0; i < numidx; ++i, ++idxData )
+        if( ib->getDesc().bits32 )
         {
-            GN_ASSERT( minvtxidx <= *idxData && *idxData < (minvtxidx+numvtx) );
+            const UInt32 * indices = (const UInt32*)ib->getIdxData( startidx );
+            for( size_t i = 0; i < numidx; ++i, ++indices )
+            {
+                if( minvtxidx <= *indices && *indices < (minvtxidx+numvtx) )
+                {
+                    GN_RNDR_RIP( "Invalid index: %u", *indices );
+                }
+            }
         }
-        testIb->unlock();
+        else
+        {
+            const UInt16 * indices = (const UInt16*)ib->getIdxData( startidx );
+            for( size_t i = 0; i < numidx; ++i, ++indices )
+            {
+                if( minvtxidx <= *indices && *indices < (minvtxidx+numvtx) )
+                {
+                    GN_RNDR_RIP( "Invalid index: %u", *indices );
+                }
+            }
+        }
     }
-#endif
 
-    if( GLEW_EXT_compiled_vertex_array && GLEW_EXT_draw_range_elements )
+    if( GLEW_EXT_draw_range_elements )
     {
-        GN_OGL_CHECK( glLockArraysEXT( (GLint)minvtxidx, (GLsizei)numvtx ) );
-
         // draw indexed primitives
         GN_OGL_CHECK( glDrawRangeElements(
             oglPrim,
             (GLuint)minvtxidx,
             (GLuint)( minvtxidx + numvtx ),
             (GLsizei)numidx,
-            GL_UNSIGNED_SHORT,
+            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
         //GN_OGL_CHECK( glDrawElements( oglPrim, numidx,
         //    GL_UNSIGNED_SHORT, pib->get_dev_buffer( startidx ) ) );
-
-        GN_OGL_CHECK( glUnlockArraysEXT() );
     }
     else
     {
         GN_OGL_CHECK( glDrawElements(
-            oglPrim, (GLsizei)numidx, GL_UNSIGNED_SHORT, ib->getIdxData( startidx ) ) );
-    }*/
+            oglPrim,
+            (GLsizei)numidx,
+            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+            ib->getIdxData( startidx ) ) );
+    }
 
     // success
     ++mDrawCounter;
@@ -332,32 +373,18 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
         sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
         "Fail to map primitive!" );
 
-    /* bind vertex buffer based on current startvtx
-    GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxfmt) &&
-        mVtxFmts[mContext.vtxfmt] &&
-        mVtxFmts[mContext.vtxfmt]->getNumStreams() <= mContext.numVtxBufs );
-    applyVtxBuf(
-        *mVtxFmts[mContext.vtxfmt],
-        mContext.vtxbufs,
-        startvtx );
-
-    if( GLEW_EXT_compiled_vertex_array )
+    // bind vertex buffer based on current startvtx
+    if( mCurrentOGLVtxFmt )
     {
-        // lock array if GL_EXT_compiled_vertex_array is supported
-        GN_OGL_CHECK( glLockArraysEXT( 0, (GLsizei)numidx ) );
-
-        // draw primitives
-        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
-
-        // NOTE : 此处不使用GN_AUTOSCOPEH宏是为了简化代码，提高速度
-        GN_OGL_CHECK( glUnlockArraysEXT() );
+        sApplyVtxBufs(
+            *mCurrentOGLVtxFmt,
+            mContext.vtxbufs,
+            mContext.strides,
+            startvtx );
     }
-    else
-    {
-        // draw primitives
-        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
-    }*/
+
+    // draw primitives
+    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
 
     // success
     ++mDrawCounter;
@@ -414,10 +441,8 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     }
 #endif
 
-    if( GLEW_EXT_compiled_vertex_array && GLEW_EXT_draw_range_elements )
+    if( GLEW_EXT_draw_range_elements )
     {
-        GN_OGL_CHECK( glLockArraysEXT( 0, (GLsizei)numvtx ) );
-
         // draw indexed primitives
         GN_OGL_CHECK( glDrawRangeElements(
             oglPrim,
@@ -428,8 +453,6 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             indexData ) );
         //GN_OGL_CHECK( glDrawElements( oglPrim, numidx,
         //    GL_UNSIGNED_SHORT, pib->get_dev_buffer( startidx ) ) );
-
-        GN_OGL_CHECK( glUnlockArraysEXT() );
     }
     else
     {
@@ -525,52 +548,13 @@ void GN::gfx::OGLRenderer::drawLines(
     // disable GPU program
     RendererContext ctx = getContext();
     ctx.gpuProgram.clear();
-    bindContext( ctx );
 
-    mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
+    if( bindContext( ctx ) )
+    {
+        mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
+    }
 
     ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-
-/*
-//
-// -----------------------------------------------------------------------------
-inline void GN::gfx::OGLRenderer::applyVtxBuf(
-    const GN::gfx::OGLVtxFmt & vtxfmt,
-    const GN::gfx::RendererContext::VtxBufDesc * vtxbufs,
-    size_t startvtx )
-{
-    GN_GUARD_SLOW;
-
-    bool forceRebind = startvtx != mCurrentStartVtx;
-
-    for( size_t i = 0; i < vtxfmt.getNumStreams(); ++i )
-    {
-        if( forceRebind || ( mNeedRebindVtxBufs & (1<<i) ) )
-        {
-            const RendererContext::VtxBufDesc & vbd = vtxbufs[i];
-            if( vbd.buffer )
-            {
-                const UInt8 * data = safeCastPtr<const OGLBasicVtxBuf>(vbd.buffer)->getVtxData();
-                vtxfmt.bindBuffer(
-                    i,
-                    data + vbd.offset + startvtx * vbd.stride,
-                    vbd.stride );
-            }
-        }
-    }
-
-    // update current vertex offset
-    mCurrentStartVtx = startvtx;
-
-    // clear rebind flag
-    mNeedRebindVtxBufs = 0;
-
-    GN_UNGUARD_SLOW;
-}*/

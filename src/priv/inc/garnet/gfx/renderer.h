@@ -347,12 +347,12 @@ namespace GN { namespace gfx
     struct VertexElement
     {
         ColorFormat format;      ///< format of the element
-        UInt16      stream;      ///< vertex buffer index
-        UInt16      offset;      ///< offset of the element
         char        binding[64]; ///< binding to GPU program (null terminated string)
-        UInt16      bindingIndex;///< binding index. Note that
+        UInt8       bindingIndex;///< binding index. Note that
                                  ///< Combination of binding name and index must
                                  ///< be unique across the vertex format structure
+        UInt8       stream;      ///< vertex buffer index
+        UInt16      offset;      ///< offset of the element
 
         bool operator==( const VertexElement & rhs ) const
         {
@@ -361,7 +361,6 @@ namespace GN { namespace gfx
                 && offset == rhs.offset
                 && bindingIndex == rhs.bindingIndex
                 && 0 == strCmp( binding, rhs.binding, 64 );
-            return true;
         }
 
         bool operator!=( const VertexElement & rhs ) const
@@ -396,6 +395,23 @@ namespace GN { namespace gfx
         bool operator!=( const VertexFormat & rhs ) const
         {
             return !operator==( rhs );
+        }
+
+        bool operator<( const VertexFormat & rhs ) const
+        {
+            if( this == &rhs ) return false;
+
+            const UInt32 * a = (const UInt32*)this;
+            const UInt32 * b = (const UInt32*)&rhs;
+            size_t         n = sizeof(*this)/4;
+
+            for( UInt32 i = 0; i < n; ++i )
+            {
+                if( a[i] < b[i] ) return true;
+                if( a[i] > b[i] ) return false;
+            }
+
+            return false;
         }
     };
 
@@ -488,7 +504,7 @@ namespace GN { namespace gfx
 
         // Resources
         WeakRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
-        UInt32              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
+        UInt16              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
         WeakRef<IdxBuf>     idxbuf;                          ///< index buffer
         WeakRef<Texture>    textures[MAX_TEXTURES];          ///< textures
         RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
@@ -801,7 +817,9 @@ namespace GN { namespace gfx
         ///
         /// Bind rendering context to rendering device.
         ///
-        virtual void bindContext( const RendererContext & ) = 0;
+        /// If binding failed, the renderer will try to restore device state to previos context.
+        ///
+        virtual bool bindContext( const RendererContext & ) = 0;
 
         ///
         /// Rebind current rendering context to rendering device.

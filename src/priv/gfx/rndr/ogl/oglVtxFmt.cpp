@@ -68,7 +68,7 @@ void GN::gfx::OGLVtxFmt::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::bind() const
+void GN::gfx::OGLVtxFmt::bindStates() const
 {
     GN_GUARD_SLOW;
 
@@ -85,19 +85,30 @@ void GN::gfx::OGLVtxFmt::bind() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::bindBuffer(
-    size_t index, const UInt8 * buf, size_t stride ) const
+bool
+GN::gfx::OGLVtxFmt::bindBuffers(
+     const UInt8 * const * buffers,
+     const UInt16        * strides,
+     size_t                count ) const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( index < mStreamBindings.size() );
-
-    const StreamBinding & sb = mStreamBindings[index];
-
-    for( size_t i = 0; i < sb.size(); ++i )
+    for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
-        sb[i].bind( buf, stride );
+        const AttribBinding & ab = mAttribBindings[i];
+
+        size_t stream = ab.info.stream;
+
+        if( stream >= count )
+        {
+            GN_ERROR(sLogger)( "not enough vertex buffers are provided" );
+            return false;
+        }
+
+        ab.bind( buffers[stream], strides[stream] );
     }
+
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -124,19 +135,16 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     std::vector<bool> hasvaa( maxAttributes, false );
     std::vector<bool> hastex( maxTextures, false );
 
-    mStreamBindings.resize( sCalcNumStreams( mFormat ) );
+    mAttribBindings.resize( mFormat.numElements );
 
     for( size_t i = 0; i < mFormat.numElements; ++i )
     {
         const VertexElement & e = mFormat.elements[i];
 
-        GN_ASSERT( e.stream < mStreamBindings.size() );
+        AttribBinding & ab = mAttribBindings[i];
 
-        StreamBinding & sb = mStreamBindings[e.stream];
-
-        sb.resize( sb.size() + 1 );
-
-        AttribBinding & ab = sb.back();
+        ab.info.self = this;
+        ab.info.stream = e.stream;
 
         if( 0 == strCmpI( "position", e.binding ) ||
             0 == strCmpI( "pos", e.binding ) )
@@ -428,7 +436,10 @@ void GN::gfx::OGLVtxFmt::sEnableClientState( const StateBindingInfo & info )
     GN_OGL_CHECK( glEnableClientState( info.semantic ) );
 }
 //
-void GN::gfx::OGLVtxFmt::sDisableClientState( const StateBindingInfo & info ) { GN_OGL_CHECK( glDisableClientState( info.semantic ) ); }
+void GN::gfx::OGLVtxFmt::sDisableClientState( const StateBindingInfo & info )
+{
+    GN_OGL_CHECK( glDisableClientState( info.semantic ) );
+}
 //
 void GN::gfx::OGLVtxFmt::sEnableVAA( const StateBindingInfo & info )
 {
