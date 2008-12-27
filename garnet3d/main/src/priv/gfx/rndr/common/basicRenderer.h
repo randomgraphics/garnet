@@ -14,8 +14,18 @@
 ///
 #define _GNGFX_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
 
+///
+/// Rest-in-peace macro
+///
+#define GN_RNDR_RIP GN::gfx::rip
+
 namespace GN { namespace gfx
 {
+    ///
+    /// reset in peace...
+    ///
+    void rip( const char * msg, ... );
+
     ///
     /// basic renderer class
     ///
@@ -136,13 +146,13 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContext( const RendererContext & c ) { bindContextImpl( c, false ); mContext = c; }
-        virtual void rebindContext() { bindContextImpl( mContext, true ); }
+        virtual bool bindContext( const RendererContext & c );
+        virtual void rebindContext();
         virtual inline const RendererContext & getContext() const { return mContext; }
 
     protected:
 
-        virtual void bindContextImpl( const RendererContext & context, bool forceBinding ) = 0;
+        virtual bool bindContextImpl( const RendererContext & context, bool forceBinding ) = 0;
 
     protected:
 

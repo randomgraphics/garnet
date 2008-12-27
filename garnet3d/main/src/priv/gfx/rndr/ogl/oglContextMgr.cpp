@@ -8,9 +8,27 @@
 #include "oglTexture.h"
 //#include "oglSampler.h"
 
+using namespace GN::gfx;
+
 // *****************************************************************************
 // local function
 // *****************************************************************************
+
+static inline OGLVtxFmt *
+sGetOGLVtxFmt(
+    OGLRenderer                       & r,
+    std::map<VertexFormat,OGLVtxFmt*> & vfmap,
+    const VertexFormat                & vf )
+{
+    std::map<VertexFormat,OGLVtxFmt*>::iterator i = vfmap.find( vf );
+
+    if( i != vfmap.end() ) return i->second;
+
+    std::auto_ptr<OGLVtxFmt> oglvf( new OGLVtxFmt(r) );
+    if( !oglvf->init( vf ) ) return NULL;
+
+    return oglvf.release();
+}
 
 // *****************************************************************************
 // init/quit
@@ -29,6 +47,21 @@ bool GN::gfx::OGLRenderer::contextInit()
     return true;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLRenderer::contextQuit()
+{
+    // delete all vertex formats
+    for( std::map<VertexFormat,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
+         i != mVertexFormats.end();
+         ++i )
+    {
+        delete i->second;
+    }
+    mVertexFormats.clear();
+}
+
 // *****************************************************************************
 // from BasicRenderer
 // *****************************************************************************
@@ -36,7 +69,7 @@ bool GN::gfx::OGLRenderer::contextInit()
 //
 //
 // -----------------------------------------------------------------------------
-void
+bool
 GN::gfx::OGLRenderer::bindContextImpl(
     const RendererContext & newContext,
     bool                    forceBinding )
@@ -51,13 +84,15 @@ GN::gfx::OGLRenderer::bindContextImpl(
         GN_TODO( "verify renderer context data" );
     }
 
-    bindContextShaders( newContext, forceBinding );
+    if( !bindContextShaders( newContext, forceBinding ) ) return false;
 
-    bindContextRenderStates( newContext, forceBinding );
+    if( !bindContextRenderStates( newContext, forceBinding ) ) return false;
 
-    bindContextRenderTargets( newContext, forceBinding );
+    if( !bindContextRenderTargets( newContext, forceBinding ) ) return false;
 
-    bindContextResources( newContext, forceBinding );
+    if( !bindContextResources( newContext, forceBinding ) ) return false;
+
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -74,7 +109,7 @@ GN::gfx::OGLRenderer::bindContextImpl(
 //
 //
 // -----------------------------------------------------------------------------
-inline void
+inline bool
 GN::gfx::OGLRenderer::bindContextShaders(
     const RendererContext & newContext,
     bool                    forceBinding )
@@ -107,13 +142,15 @@ GN::gfx::OGLRenderer::bindContextShaders(
         if( newProgram ) newProgram->apply();
     }
 
+    return true;
+
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline void
+inline bool
 GN::gfx::OGLRenderer::bindContextRenderStates(
     const RendererContext & newContext,
     bool                    forceBinding )
@@ -202,13 +239,15 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
 
     */
 
+    return true;
+
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline void
+inline bool
 GN::gfx::OGLRenderer::bindContextRenderTargets(
     const RendererContext & newContext,
     bool                    forceBinding )
@@ -231,50 +270,35 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
         GLsizei h = (GLsizei)( newContext.viewport.h * rth );
         GN_OGL_CHECK( glViewport( x, y, w, h ) );
     }*/
+
+    return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline void
+inline bool
 GN::gfx::OGLRenderer::bindContextResources(
     const RendererContext & newContext,
     bool                    forceBinding )
 {
     GN_GUARD_SLOW;
 
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( forceBinding );
-
-    /*
-
     //
     // bind vertex format
     //
-    if( newContext.vtxfmt != mContext.vtxfmt || forceBinding )
+    if( forceBinding || newContext.vtxfmt != mContext.vtxfmt )
     {
-        GN_ASSERT( mVtxFmts[newContext.vtxfmt] );
-        mVtxFmts[newContext.vtxfmt]->bind();
+        mCurrentOGLVtxFmt = sGetOGLVtxFmt( *this, mVertexFormats, newContext.vtxfmt );
+        if( !mCurrentOGLVtxFmt ) return false;
+        mCurrentOGLVtxFmt->bindStates();
     }
 
     //
-    // check if we need to bind vertex buffers
-    //
-    mNeedRebindVtxBufs = 0;
-    for( UInt32 i = 0; i < newContext.numVtxBufs; ++i )
-    {
-        const RendererContext::VtxBufDesc & vb = newContext.vtxbufs[i];
-        if( vb != mContext.vtxbufs[i] || forceBinding )
-        {
-            mNeedRebindVtxBufs |= 1 << i;
-        }
-    }
-
-    //
-    // Note: index buffer is binded by draw manager
+    // Note: vertex and index buffers are binded by draw manager
     //
 
-    //
+    /*
     // bind textures and samplers
     //
     UInt32 maxStages = getCaps().maxTextures;
@@ -306,6 +330,8 @@ GN::gfx::OGLRenderer::bindContextResources(
     }
 
     */
+
+    return true;
 
     GN_UNGUARD_SLOW;
 }

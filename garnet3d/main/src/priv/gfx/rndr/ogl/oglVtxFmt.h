@@ -36,7 +36,7 @@ namespace GN { namespace gfx
         bool init( const VertexFormat & );
         void quit();
     private:
-        void clear() { mStreamBindings.clear(); mStateBindings.clear(); }
+        void clear() { mAttribBindings.clear(); mStateBindings.clear(); }
         //@}
 
         // ********************************
@@ -50,19 +50,16 @@ namespace GN { namespace gfx
         const VertexFormat & getFormat() const { return mFormat; }
 
         ///
-        /// Get vertex format descriptor
-        ///
-        size_t getNumStreams() const { return mStreamBindings.size(); }
-
-        ///
         /// Bind the format to device
         ///
-        void bind() const;
+        void bindStates() const;
 
         ///
         /// Bind the buffer to device
         ///
-        void bindBuffer( size_t index, const UInt8 * buf, size_t stride ) const;
+        bool bindBuffers( const UInt8 * const * buffers,
+                          const UInt16        * strides,
+                          size_t                count ) const;
 
         // ********************************
         // private variables
@@ -72,8 +69,9 @@ namespace GN { namespace gfx
         struct AttribBindingInfo
         {
             const OGLVtxFmt * self;
-            size_t            offset;
-            size_t            index; ///< texture coordinate stage index or vertex attribute index
+            UInt16            offset;
+            UInt8             stream; ///< vertex stream index
+            UInt8             index;  ///< texture coordinate stage index or vertex attribute index
             GLuint            format;
             GLuint            components;
             GLboolean         normalization;
@@ -92,8 +90,6 @@ namespace GN { namespace gfx
             }
         };
 
-        typedef StackArray<AttribBinding,VertexFormat::MAX_VERTEX_ELEMENTS> StreamBinding;
-
         struct StateBindingInfo
         {
             const OGLVtxFmt * self;
@@ -110,9 +106,9 @@ namespace GN { namespace gfx
             FP_setOglVertexState func;
         };
 
-        VertexFormat                                                   mFormat;
-        StackArray<StreamBinding, RendererContext::MAX_VERTEX_BUFFERS> mStreamBindings;
-        StackArray<StateBinding , VertexFormat::MAX_VERTEX_ELEMENTS>   mStateBindings;
+        VertexFormat             mFormat;
+        DynaArray<AttribBinding> mAttribBindings;
+        DynaArray<StateBinding>  mStateBindings;
 
         // ********************************
         // private functions

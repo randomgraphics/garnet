@@ -210,7 +210,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContextImpl( const RendererContext & context, bool forceBinding );
+        virtual bool bindContextImpl( const RendererContext & context, bool forceBinding );
 
     public:
 
@@ -221,18 +221,19 @@ namespace GN { namespace gfx
     private:
 
         bool contextInit();
-        void contextQuit() {}
-        void contextClear() { mContext.resetToDefault(); }
+        void contextQuit();
+        void contextClear() { mContext.resetToDefault(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
-        inline void bindContextShaders( const RendererContext & newContext, bool forceBinding );
-        inline void bindContextRenderStates( const RendererContext & newContext, bool forceBinding );
-        inline void bindContextRenderTargets( const RendererContext & newContext, bool forceBinding );
-        inline void bindContextResources( const RendererContext & newContext, bool forceBinding );
+        inline bool bindContextShaders( const RendererContext & newContext, bool forceBinding );
+        inline bool bindContextRenderStates( const RendererContext & newContext, bool forceBinding );
+        inline bool bindContextRenderTargets( const RendererContext & newContext, bool forceBinding );
+        inline bool bindContextResources( const RendererContext & newContext, bool forceBinding );
 
     private:
 
-        OGLBasicRTMgr * mRTMgr;
-        UInt32          mNeedRebindVtxBufs; // each bit represent a vertex stream.
+        std::map<VertexFormat,OGLVtxFmt*> mVertexFormats;
+        OGLVtxFmt                       * mCurrentOGLVtxFmt;
+        OGLBasicRTMgr                   * mRTMgr;
 
         //@}
 
@@ -292,9 +293,9 @@ namespace GN { namespace gfx
     private:
 
         OGLLine * mLine;
-        size_t mCurrentStartVtx;
-        size_t mFrameCounter;
-        size_t mDrawCounter;
+        size_t    mCurrentStartVtx;
+        size_t    mFrameCounter;
+        size_t    mDrawCounter;
 
         //@}
 
