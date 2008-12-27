@@ -42,9 +42,12 @@ namespace GN { namespace gfx
     ///
     struct ShaderCode
     {
-        GpuProgramLanguage lang;
-        const char *       code;
-        const char *       entry;
+        GpuProgramLanguage lang;  ///< shading language. Ignored when shader code is NULL.
+        const char *       code;  ///< NULL terminated shader code
+        const char *       entry; ///< NULL terminated shader entry function
+
+        /// default ctor
+        ShaderCode() : code(NULL), entry(NULL) {}
     };
 
     ///
@@ -52,9 +55,9 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        ShaderCode codeVS;
-        ShaderCode codeGS;
-        ShaderCode codePS;
+        ShaderCode vs;
+        ShaderCode gs;
+        ShaderCode ps;
     };
 
     ///

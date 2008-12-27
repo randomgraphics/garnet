@@ -220,11 +220,11 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramGLSL, () );
 
-    mVS = sCreateShader( desc.codeVS.code, GL_VERTEX_SHADER_ARB );
+    mVS = sCreateShader( desc.vs.code, GL_VERTEX_SHADER_ARB );
     if( 0 == mVS ) return failure();
 
 
-    mPS = sCreateShader( desc.codePS.code, GL_FRAGMENT_SHADER_ARB );
+    mPS = sCreateShader( desc.ps.code, GL_FRAGMENT_SHADER_ARB );
     if( 0 == mPS ) return failure();
 
     mProgram = sCreateProgram( mVS, mPS );

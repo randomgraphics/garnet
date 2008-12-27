@@ -5,31 +5,44 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::win;
 
-GpuProgram * gp = 0;
-VtxBuf     * vb = 0;
-IdxBuf     * ib = 0;
+struct Scene
+{
+    AutoRef<GpuProgram> gp;
+    AutoRef<VtxBuf>     vb;
+    AutoRef<IdxBuf>     ib;
+};
+Scene * scene = NULL;
 
 const char * vscode =
+    "attrib float4 position; \n"
     "uniform mat4x4 transform; \n"
     "void main() { \n"
+    "   gl_Vertex = mul( transform, position ); \n"
     "}";
 
 const char * pscode =
     "void main() { \n"
+    "   gl_Color = float4(1,1,1,1); \n"
     "}";
 
-bool init( Renderer & )
+bool init( Renderer & rndr )
 {
+    scene = new Scene;
+
     GpuProgramDesc gpd;
-    gpd.codeVS.lang = GPL_GLSL;
-    gpd.codeVS.code = vscode;
-    gpd.codePS.lang = GPL_GLSL;
-    gpd.codePS.code = pscode;
+    gpd.vs.lang = GPL_GLSL;
+    gpd.vs.code = vscode;
+    gpd.ps.lang = GPL_GLSL;
+    gpd.ps.code = pscode;
+    scene->gp.attach( rndr.createGpuProgram( gpd ) );
+    if( !scene->gp ) return false;
+
     return true;
 }
 
 void quit( Renderer & )
 {
+    safeDelete( scene );
 }
 
 void draw( Renderer & )
@@ -42,9 +55,9 @@ int run( Renderer & rndr )
 
     WindowHandle win = rndr.getDispDesc().windowHandle;
 
-    bool again_again_again = true;
+    bool gogogo = true;
 
-    while( again_again_again )
+    while( gogogo )
     {
         processWindowMessages( win, false );
 
@@ -54,7 +67,7 @@ int run( Renderer & rndr )
 
         if( in.getKeyStatus( KEY_ESCAPE ).down )
         {
-            again_again_again = false;
+            gogogo = false;
         }
 
         rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
