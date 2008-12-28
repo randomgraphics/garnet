@@ -164,6 +164,42 @@ GLhandleARB sCreateProgram( GLhandleARB vs, GLhandleARB ps )
 //
 //
 // -----------------------------------------------------------------------------
+static inline size_t
+sGetUniformSize( GLenum type )
+{
+    switch( type )
+    {
+        case GL_FLOAT                      : return sizeof(float);
+        case GL_FLOAT_VEC2_ARB             : return sizeof(float) * 2;
+        case GL_FLOAT_VEC3_ARB             : return sizeof(float) * 3;
+        case GL_FLOAT_VEC4_ARB             : return sizeof(float) * 4;
+        case GL_INT                        :
+        case GL_BOOL_ARB                   : return sizeof(int);
+        case GL_INT_VEC2_ARB               :
+        case GL_BOOL_VEC2_ARB              : return sizeof(int) * 2;
+        case GL_INT_VEC3_ARB               :
+        case GL_BOOL_VEC3_ARB              : return sizeof(int) * 3;
+        case GL_INT_VEC4_ARB               :
+        case GL_BOOL_VEC4_ARB              : return sizeof(int) * 4;
+        case GL_FLOAT_MAT2_ARB             : return sizeof(float) * 4;
+        case GL_FLOAT_MAT3_ARB             : return sizeof(float) * 9;
+        case GL_FLOAT_MAT4_ARB             : return sizeof(float) * 16;
+        case GL_SAMPLER_1D_ARB             :
+        case GL_SAMPLER_2D_ARB             :
+        case GL_SAMPLER_3D_ARB             :
+        case GL_SAMPLER_CUBE_ARB           :
+        case GL_SAMPLER_1D_SHADOW_ARB      :
+        case GL_SAMPLER_2D_SHADOW_ARB      :
+        case GL_SAMPLER_2D_RECT_ARB        :
+        case GL_SAMPLER_2D_RECT_SHADOW_ARB : return 0;
+
+        default : GN_ERROR(sLogger)( "invalid uniform type: %d", type ); return 0;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool
 sEnumUniforms(
     DynaArray<GLSLUniformDesc> & uniforms,
@@ -192,7 +228,7 @@ sEnumUniforms(
 
         u.name = nameptr;
 
-        u.value.clear();
+        u.value.resize( sGetUniformSize(u.type) * u.count );
 
         u.nextDirty = NULL;
     }
@@ -280,6 +316,7 @@ void GN::gfx::OGLGpuProgramGLSL::setParameter( size_t index, const void * value,
     }
 
     GLSLUniformDesc & u = mUniforms[index];
+    GN_ASSERT( u.value.size() > 0 );
 
     if( length > u.value.size() )
     {
@@ -354,15 +391,15 @@ void GN::gfx::OGLGpuProgramGLSL::applyDirtyParameters() const
                 break;
 
             case GL_FLOAT_MAT2_ARB             :
-                glUniformMatrix2fvARB( u.location, u.count, false, (GLfloat*)u.value.cptr() );
+                glUniformMatrix2fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
                 break;
 
             case GL_FLOAT_MAT3_ARB             :
-                glUniformMatrix3fvARB( u.location, u.count, false, (GLfloat*)u.value.cptr() );
+                glUniformMatrix3fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
                 break;
 
             case GL_FLOAT_MAT4_ARB             :
-                glUniformMatrix4fvARB( u.location, u.count, false, (GLfloat*)u.value.cptr() );
+                glUniformMatrix4fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
                 break;
 
             case GL_SAMPLER_1D_ARB             :

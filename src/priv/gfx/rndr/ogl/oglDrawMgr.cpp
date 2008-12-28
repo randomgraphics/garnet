@@ -130,7 +130,7 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
 static inline void
 sApplyVtxBufs(
     const OGLVtxFmt       & vtxfmt,
-    const WeakRef<VtxBuf> * vtxbufs,
+    const AutoRef<VtxBuf> * vtxbufs,
     const UInt16          * strides,
     size_t                  startvtx )
 {

@@ -100,6 +100,28 @@ namespace GN { namespace gfx
         /// \param length       Length in bytes of parameter value. Set to 0 to use inherited length.
         ///
         virtual void setParameter( size_t index, const void * value, size_t length = 0 ) = 0;
+
+        ///
+        /// set shader parameter by name
+        ///
+        /// \param namex        Parameter name.
+        /// \param value        Parameter value
+        /// \param length       Length in bytes of parameter value. Set to 0 to use inherited length.
+        ///
+        void setParameter( const char * name, const void * value, size_t length = 0 )
+        {
+            const GpuProgramParameterDesc * params = getParameters();
+            size_t n = getNumParameters();
+            for( size_t i = 0; i < n; ++i )
+            {
+                if( 0 == strCmp( name, params[i].name ) )
+                {
+                    setParameter( i, value, length );
+                    return;
+                }
+            }
+            GN_ERROR(getLogger("GN.gfx.rndr.GpuProgram"))( "invalid parameter name: %s", name );
+        }
     };
 }}
 
