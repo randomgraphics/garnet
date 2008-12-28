@@ -5,48 +5,64 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::win;
 
-struct Scene
-{
-    AutoRef<GpuProgram> gp;
-    AutoRef<VtxBuf>     vb;
-    AutoRef<IdxBuf>     ib;
-};
-Scene * scene = NULL;
+RendererContext rc;
 
 const char * vscode =
-    "attrib float4 position; \n"
-    "uniform mat4x4 transform; \n"
+    "uniform mat4 transform; \n"
     "void main() { \n"
-    "   gl_Vertex = mul( transform, position ); \n"
+    "   gl_Position = transform * gl_Vertex; \n"
     "}";
 
 const char * pscode =
     "void main() { \n"
-    "   gl_Color = float4(1,1,1,1); \n"
+    "   gl_FragColor = vec4(1,1,1,1); \n"
     "}";
 
 bool init( Renderer & rndr )
 {
-    scene = new Scene;
+    rc.resetToDefault();
 
+    // create GPU program
     GpuProgramDesc gpd;
     gpd.vs.lang = GPL_GLSL;
     gpd.vs.code = vscode;
     gpd.ps.lang = GPL_GLSL;
     gpd.ps.code = pscode;
-    scene->gp.attach( rndr.createGpuProgram( gpd ) );
-    if( !scene->gp ) return false;
+    rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
+    if( !rc.gpuProgram ) return false;
+
+    // setup vertex format
+    rc.vtxfmt.numElements = 1;
+    strcpy_s( rc.vtxfmt.elements[0].binding, "position" );
+    rc.vtxfmt.elements[0].bindingIndex = 0;
+    rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
+    rc.vtxfmt.elements[0].offset = 0;
+    rc.vtxfmt.elements[0].stream = 0;
 
     return true;
 }
 
 void quit( Renderer & )
 {
-    safeDelete( scene );
+    rc.resetToDefault();
 }
 
-void draw( Renderer & )
+void draw( Renderer & r )
 {
+    Matrix44f m;
+    m.translate( -0.5f, -0.5f, 0 );
+    rc.gpuProgram->setParameter( "transform", m );
+    if( r.bindContext( rc ) )
+    {
+        static float vb[] =
+        {
+            0,0,0,1,
+            1,0,0,1,
+            1,1,0,1,
+        };
+
+        r.drawUp( TRIANGLE_LIST, 1, vb, 4*sizeof(float) );
+    }
 }
 
 int run( Renderer & rndr )

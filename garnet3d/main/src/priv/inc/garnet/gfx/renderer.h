@@ -420,7 +420,7 @@ namespace GN { namespace gfx
     ///
     struct RenderTargetTexture
     {
-        WeakRef<Texture> texture;
+        AutoRef<Texture> texture;
         UInt32           face;
         UInt32           level;
         UInt32           slice;
@@ -500,13 +500,13 @@ namespace GN { namespace gfx
         VertexFormat vtxfmt;
 
         /// shader
-        WeakRef<GpuProgram> gpuProgram;
+        AutoRef<GpuProgram> gpuProgram;
 
         // Resources
-        WeakRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
+        AutoRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
         UInt16              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
-        WeakRef<IdxBuf>     idxbuf;                          ///< index buffer
-        WeakRef<Texture>    textures[MAX_TEXTURES];          ///< textures
+        AutoRef<IdxBuf>     idxbuf;                          ///< index buffer
+        AutoRef<Texture>    textures[MAX_TEXTURES];          ///< textures
         RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
         RenderTargetTexture dsrt;                            ///< depth stencil render target
 

@@ -145,6 +145,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
         ab.info.self = this;
         ab.info.stream = e.stream;
+        ab.info.offset = e.offset;
 
         if( 0 == strCmpI( "position", e.binding ) ||
             0 == strCmpI( "pos", e.binding ) )
