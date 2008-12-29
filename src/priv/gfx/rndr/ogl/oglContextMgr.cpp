@@ -6,7 +6,6 @@
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 #include "oglTexture.h"
-//#include "oglSampler.h"
 
 using namespace GN::gfx;
 

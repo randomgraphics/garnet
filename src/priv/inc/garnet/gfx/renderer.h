@@ -374,13 +374,11 @@ namespace GN { namespace gfx
         {
             FILTER_POINT  = 0,
             FILTER_LINEAR,
-            FILTER_ANISO,
 
             ADDRESS_REPEAT = 0,
             ADDRESS_CLAMP,
             ADDRESS_CLAMP_BORDER,
             ADDRESS_MIRROR,
-            ADDRESS_MIRROR_ONCE,
         };
 
         union
@@ -388,10 +386,13 @@ namespace GN { namespace gfx
             unsigned char filters; ///< all filters in one char.
             struct
             {
-                unsigned char filterMin : 2; ///< minify filter. Default is LINEAR.
-                unsigned char filterMip : 2; ///< mipmap filter. Default is LINEAR.
-                unsigned char filterMag : 2; ///< magnify filter. Default is LINEAR.
-                unsigned char nouse_0   : 2; ///< no use. Must be zero.
+                unsigned char filterMin : 1; ///< Minify filter. Default is LINEAR.
+                unsigned char filterMip : 1; ///< Mipmap filter. Default is LINEAR. Ignored, if the texture has no mipmap.
+                unsigned char filterMag : 1; ///< Magnify filter. Default is LINEAR.
+                unsigned char aniso     : 5; ///< Specify maximum degree of anisotropy filter.
+                                             ///< Set to 0 for standard filtering w/o anisotropy.
+                                             ///< Set to positive values to enable anisotropic filtering.
+                                             ///< Maximum allowed value is hardware dependent.
             };
         };
 
@@ -415,14 +416,29 @@ namespace GN { namespace gfx
 
         void resetToDefault()
         {
-            filters = 0;
             filterMin = filterMip = filterMag = FILTER_LINEAR;
+            aniso = 0;
             addressModes = 0;
             addressU = addressV = addressW = ADDRESS_REPEAT;
             border[0] = border[1] = border[2] = border[3] = 0;
             mipbias = 0.0f;
             minlod = 0.0f;
             maxlod = -1.0f;
+        }
+
+        bool operator==( const TextureSampler & rhs ) const
+        {
+            return filters == rhs.filters
+                && addressModes == rhs.addressModes
+                && *(UInt32*)border == *(UInt32*)rhs.border
+                && mipbias == rhs.mipbias
+                && minlod == rhs.minlod
+                && maxlod == rhs.maxlod;
+        }
+
+        bool operator!=( const TextureSampler & rhs ) const
+        {
+            return !operator==( rhs );
         }
     };
 
