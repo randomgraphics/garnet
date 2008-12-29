@@ -43,9 +43,7 @@ namespace GN { namespace gfx
         void clear()
         {
             mOGLTexture = 0;
-            mFilterAndWrapDirty = true;
-            mOGLFilters[0] = mOGLFilters[1] = GL_LINEAR;
-            mOGLWraps[0] = mOGLWraps[1] = mOGLWraps[2] = GL_REPEAT;
+            mSamplerDirty = true;
         }
         //@}
 
@@ -56,9 +54,9 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void update( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, UpdateFlag flag );
-        virtual void readback( size_t, size_t, MipmapData & ) { GN_UNIMPL_WARNING(); }
-        virtual void generateMipmap() { GN_UNIMPL_WARNING(); }
+        virtual void   update( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, UpdateFlag flag );
+        virtual void   readback( size_t, size_t, MipmapData & ) { GN_UNIMPL_WARNING(); }
+        virtual void   generateMipmap() { GN_UNIMPL_WARNING(); }
         virtual void * getAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
 
         //@}
@@ -73,45 +71,38 @@ namespace GN { namespace gfx
         ///
         void bind() const
         {
-            /*GN_GUARD_SLOW;
-
-            switch( getDesc().dim )
+            switch( mTarget )
             {
-                case TEXDIM_1D   :
-                case TEXDIM_2D   :
-                    if( GLEW_EXT_texture3D )
-                        glDisable( GL_TEXTURE_3D_EXT );
-                case TEXDIM_3D   :
-                    if( GLEW_ARB_texture_cube_map )
-                        glDisable( GL_TEXTURE_CUBE_MAP_ARB );
-                case TEXDIM_CUBE :
-                    break;
-                default :
-                    GN_ASSERT_EX( 0, "invalid texture type!" );
+                case GL_TEXTURE_1D           : glDisable( GL_TEXTURE_2D );
+                case GL_TEXTURE_2D           : if( GLEW_EXT_texture3D ) glDisable( GL_TEXTURE_3D_EXT );
+                case GL_TEXTURE_3D_EXT       : if( GLEW_ARB_texture_cube_map ) glDisable( GL_TEXTURE_CUBE_MAP_ARB );
             }
-            GN_OGL_CHECK( glEnable(mOGLTarget) );
-            GN_OGL_CHECK( glBindTexture(mOGLTarget, mOGLTexture) );
+            GN_OGL_CHECK( glEnable(mTarget) );
+            GN_OGL_CHECK( glBindTexture(mTarget, mOGLTexture) );
 
-            if( mFilterAndWrapDirty )
+            if( mSamplerDirty )
             {
-                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MIN_FILTER, mOGLFilters[0] ) );
-                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MAG_FILTER, mOGLFilters[1] ) );
-                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_S, mOGLWraps[0] ) );
-                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_T, mOGLWraps[1] ) );
-                if( TEXDIM_3D == getDesc().dim )
+                GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_MIN_FILTER, mOGLFilters[0] ) );
+                GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_MAG_FILTER, mOGLFilters[1] ) );
+                GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_WRAP_S, mOGLWraps[0] ) );
+                GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_WRAP_T, mOGLWraps[1] ) );
+                if( GL_TEXTURE_3D_EXT == mTarget )
                 {
-                    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, mOGLWraps[2] ) );
+                    GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_WRAP_R, mOGLWraps[2] ) );
                 }
             }
-
-            GN_UNGUARD_SLOW;*/
         }
+
+        ///
+        /// set texture sampler (not effective until next binding)
+        ///
+        void setSampler( const TextureSampler & sampler, bool forceUpdate = false );
 
         ///
         /// \name get GL texture parameters
         ///
         //@{
-        GLenum getOGLTarget()  const { return mOGLTarget; }
+        GLenum getOGLTarget()  const { return mTarget; }
         GLuint getOGLTexture() const { return mOGLTexture; }
         GLint  getOGLInternalFormat() const { return mOGLInternalFormat; }
         //@}
@@ -142,7 +133,7 @@ namespace GN { namespace gfx
         ///
         /// opengl texture target
         ///
-        GLenum mOGLTarget;
+        GLenum mTarget;
 
         ///
         /// opengl texture handle
@@ -158,9 +149,13 @@ namespace GN { namespace gfx
         bool   mOGLCompressed;
         //@}
 
-        mutable bool   mFilterAndWrapDirty;
-        mutable GLenum mOGLFilters[2]; /// filters (min,mag)
-        mutable GLenum mOGLWraps[3];   /// address modes (s,t,r)
+        /// \name sampler stuff
+        //@{
+        bool           mSamplerDirty;
+        TextureSampler mSampler;
+        GLint          mOGLFilters[2]; /// filters (min,mag)
+        GLint          mOGLWraps[3];   /// address modes (s,t,r)
+        //@}
 
         // ********************************
         //  private functions

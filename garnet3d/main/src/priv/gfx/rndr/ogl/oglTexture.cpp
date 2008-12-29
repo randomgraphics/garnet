@@ -36,6 +36,68 @@ public:
     void dismiss() { mTex = 0; }
 };
 
+static const GLenum INVALID_DIMENSION = 0xFFFFFFFF;
+
+///
+/// determine texture dimension based on texture size, return 0xFFFFFFFF if failed.
+// -----------------------------------------------------------------------------
+static inline GLenum
+sDetermineTextureDimension(
+    UInt32 faces,
+    UInt32 width,
+    UInt32 height,
+    UInt32 depth )
+{
+    if( depth > 1 )
+    {
+        // 3D texture
+        if( faces > 1 )
+        {
+            GN_ERROR(sLogger)( "OpenGL does not support 3D texture array." );
+            return INVALID_DIMENSION;
+        }
+
+        if( !GLEW_EXT_texture3D )
+        {
+            GN_ERROR(sLogger)( "Current hardware does not 3D texture. (EXT_texture3D)" );
+            return INVALID_DIMENSION;
+        }
+
+        return GL_TEXTURE_3D_EXT;
+    }
+    else if( faces > 1 )
+    {
+        // cube or array texture
+        if( 6 == faces && width == height )
+        {
+            if( !GLEW_ARB_texture_cube_map )
+            {
+                GN_ERROR(sLogger)( "Current hardware does not support cube texture. (ARB_texture_cube_map)" );
+                return INVALID_DIMENSION;
+            }
+            else
+            {
+                return GL_TEXTURE_CUBE_MAP_ARB;
+            }
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Array texture is not implemented yet." );
+            return INVALID_DIMENSION;
+        }
+    }
+    else if( height > 1 )
+    {
+        // 2D texture
+        return GL_TEXTURE_2D;
+    }
+    else
+    {
+        // 1D texture
+        return GL_TEXTURE_1D;
+    }
+}
+
 ///
 /// convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
@@ -285,6 +347,53 @@ static inline bool sColorFormat2OGL(
 }
 
 ///
+/// map wrap mode to opengl constant
+// -----------------------------------------------------------------------------
+static inline GLint sTexWrap2OGL( UInt32 wrap )
+{
+    switch( wrap )
+    {
+        case GN::gfx::TextureSampler::ADDRESS_REPEAT :
+            return GL_REPEAT;
+
+        case GN::gfx::TextureSampler::ADDRESS_CLAMP  :
+            return GL_CLAMP;
+
+        case GN::gfx::TextureSampler::ADDRESS_CLAMP_BORDER :
+            if( GLEW_EXT_texture_edge_clamp )
+            {
+                return GL_CLAMP_TO_EDGE_EXT;
+            }
+            else if (GLEW_SGIS_texture_edge_clamp )
+            {
+                return GL_CLAMP_TO_EDGE_SGIS;
+            }
+            else
+            {
+                GN_WARN(sLogger)( "Current hardware does not support clamp to edge feature. (EXT_texture_edge_clamp or SGIS_texture_edge_clamp)" );
+                return GL_CLAMP;
+            }
+
+        case GN::gfx::TextureSampler::ADDRESS_MIRROR:
+            if( GLEW_ARB_texture_mirrored_repeat )
+            {
+                return GL_MIRRORED_REPEAT_ARB;
+            }
+            else
+            {
+                GN_WARN(sLogger)( "Current hardware does not support texture mirror (ARB_texture_mirrored_repeat)!" );
+                return GL_REPEAT;
+            }
+
+        default:
+        {
+            GN_ERROR(sLogger)( "invaid texture address mode : %d!", wrap );
+            return GL_REPEAT;
+        }
+    }
+}
+
+///
 /// generate 2D mipmaps
 // ------------------------------------------------------------------------
 static bool sGen2DMipmap( GLenum target,
@@ -319,7 +428,44 @@ static bool sGen2DMipmap( GLenum target,
 //
 //
 // -----------------------------------------------------------------------------
-GLuint sNew2DTexture(
+static GLuint
+sNew1DTexture(
+    GLint   internalformat,
+    GLsizei size_x,
+    GLint   levels,
+    GLenum  format,
+    GLenum  type )
+{
+    GN_GUARD;
+
+    // generate new texture
+    GLuint result;
+    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    AutoDeleteTexture autoDel( result );
+
+    // generate mipmaps
+    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, result ) );
+    for( GLint i = 0; i < levels; ++i )
+    {
+        GN_ASSERT( size_x > 0 );
+        GN_OGL_CHECK_RV(
+            glTexImage1D( GL_TEXTURE_1D, i, internalformat, size_x, 0, format, type, 0 ),
+            false );
+        size_x >>= 1;
+    }
+
+    // success
+    autoDel.dismiss();
+    return result;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static GLuint
+sNew2DTexture(
     GLint   internalformat,
     GLsizei size_x,
     GLsizei size_y,
@@ -347,30 +493,28 @@ GLuint sNew2DTexture(
     GN_UNGUARD;
 }
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
-static GLuint sNew3DTexture(
-    GLint   internalformat,
-    GLsizei size_x,
-    GLsizei size_y,
-    GLsizei size_z,
-    GLint   levels,
-    GLenum  format,
-    GLenum  type )
+static GLuint
+sNew3DTexture(
+    GLint   /*internalformat*/,
+    GLsizei /*size_x*/,
+    GLsizei /*size_y*/,
+    GLsizei /*size_z*/,
+    GLint   /*levels*/,
+    GLenum  /*format*/,
+    GLenum  /*type*/ )
 {
-    GN_GUARD;
-
-    GN_ERROR(sLogger)( "no implementation" );
+    GN_UNIMPL();
     return 0;
-
-    GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static GLuint sNewCubeTexture(
+static GLuint
+sNewCubeTexture(
     GLint   internalformat,
     GLsizei size_x,
     GLint   levels,
@@ -406,7 +550,7 @@ static GLuint sNewCubeTexture(
     return result;
 
     GN_UNGUARD;
-}*/
+}
 
 // *****************************************************************************
 // OGLTexture implementation
@@ -415,7 +559,7 @@ static GLuint sNewCubeTexture(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
+bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
@@ -425,70 +569,49 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
     // store texture properties
-    if( !setDesc( desc ) ) return failure();
+    if( !setDesc( inputDesc ) ) return failure();
 
-    /* determine gl texture type
-    switch( getDesc().dim )
-    {
-        case TEXDIM_1D   :
-        case TEXDIM_2D   :
-            mOGLTarget = GL_TEXTURE_2D;
-            break;
-        case TEXDIM_3D   :
-            if ( !GLEW_EXT_texture3D )
-            {
-                GN_ERROR(sLogger)( "do not support 3D texture!" );
-                return failure();
-            }
-            mOGLTarget = GL_TEXTURE_3D;
-            break;
-        case TEXDIM_CUBE :
-            if ( !GLEW_ARB_texture_cube_map )
-            {
-                GN_ERROR(sLogger)( "do not support CUBE texture!" );
-                return failure();
-            }
-            mOGLTarget = GL_TEXTURE_CUBE_MAP_ARB;
-            break;
-        default :
-            GN_ERROR(sLogger)( "invalid texture type!" );
-            return failure();
-    }
+    // Note: this descriptor may differ with the input one.
+    const TextureDesc & desc = getDesc();
+
+    // determine texture dimension
+    mTarget = sDetermineTextureDimension( desc.faces, desc.width, desc.height, desc.depth );
+    if( INVALID_DIMENSION == mTarget ) return failure();
 
     // convert format to opengl paramaters
     if( !sColorFormat2OGL( mOGLInternalFormat,
                            mOGLFormat,
                            mOGLType,
                            mOGLCompressed,
-                           getDesc().format ) )
+                           desc.format,
+                           desc.usages ) )
         return failure();
 
     // create new opengl texture object
-    const TextureDesc & desc = getDesc();
-    switch( getDesc().dim )
+    switch( mTarget )
     {
-        case TEXDIM_1D :
-        case TEXDIM_2D :
+        case GL_TEXTURE_1D :
+            mOGLTexture = sNew1DTexture(
+                mOGLInternalFormat, desc.width, desc.levels,
+                mOGLFormat, mOGLType );
+            break;
+
+        case GL_TEXTURE_2D :
             mOGLTexture = sNew2DTexture(
                 mOGLInternalFormat, desc.width, desc.height, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
-        case TEXDIM_3D :
+        case GL_TEXTURE_3D :
             mOGLTexture = sNew3DTexture(
                 mOGLInternalFormat, desc.width, desc.height, desc.depth, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
-        case TEXDIM_CUBE :
+        case GL_TEXTURE_CUBE_MAP_ARB:
             mOGLTexture = sNewCubeTexture(
                 mOGLInternalFormat, desc.width, desc.levels,
                 mOGLFormat, mOGLType );
-            break;
-
-        case TEXDIM_STACK :
-            GN_ERROR(sLogger)( "OpenGL does not support STACK texture." );
-            mOGLTexture = 0;
             break;
 
         default:
@@ -497,27 +620,20 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
     }
     if( 0 == mOGLTexture ) return failure();
 
-    // enable/disable mipmap autogeneration
-    if( TEXDIM_CUBE != getDesc().dim && GLEW_SGIS_generate_mipmap )
-    {
-        if( desc.usage.automip )
-        {
-            GN_OGL_CHECK( glTexParameteri( mOGLTarget,GL_GENERATE_MIPMAP_SGIS, GL_TRUE) );
-        }
-        else
-        {
-            GN_OGL_CHECK( glTexParameteri( mOGLTarget,GL_GENERATE_MIPMAP_SGIS, GL_FALSE) );
-        }
-    }
-
-    // setup mip size array
-    for( size_t i = 0; i < getDesc().levels; ++i )
+    // setup mipmap size array
+    for( size_t i = 0; i < desc.levels; ++i )
     {
         GLint sx, sy, sz;
-        switch( getDesc().dim )
+        switch( mTarget )
         {
-            case TEXDIM_1D :
-            case TEXDIM_2D :
+            case GL_TEXTURE_1D :
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_1D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
+                sy = 1;
+                sz = 1;
+                break;
+
+            case GL_TEXTURE_2D :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -525,7 +641,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
                 sz = 1;
                 break;
 
-            case TEXDIM_3D :
+            case GL_TEXTURE_3D :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -534,7 +650,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
                     GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_DEPTH_EXT, &sz ) );
                 break;
 
-            case TEXDIM_CUBE :
+            case GL_TEXTURE_CUBE_MAP_ARB :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -551,14 +667,8 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & desc )
     }
 
     // setup default filters and wrap modes
-    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
-    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
-    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_S, GL_REPEAT ) );
-    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_T, GL_REPEAT ) );
-    if( GLEW_EXT_texture3D )
-    {
-        GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, GL_REPEAT ) );
-    }*/
+    mSampler.resetToDefault();
+    setSampler( mSampler, true );
 
     // success
     return success();
@@ -576,64 +686,11 @@ void GN::gfx::OGLTexture::quit()
     // delete opengl texture
     if (mOGLTexture) glDeleteTextures( 1, &mOGLTexture ), mOGLTexture = 0;
 
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
-
-/*
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::setFilter( TexFilter min, TexFilter mag ) const
-{
-    GLenum glmin = sTexFilter2OGL( min );
-    GLenum glmag = sTexFilter2OGL( mag );
-    if( mOGLFilters[0] != glmin )
-    {
-        mOGLFilters[0] = glmin;
-        mFilterAndWrapDirty = true;
-    }
-
-    if( mOGLFilters[1] != glmag )
-    {
-        mOGLFilters[1] = glmag;
-        mFilterAndWrapDirty = true;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
-{
-    GN_GUARD_SLOW;
-
-    GLenum gls = sTexWrap2OGL( s );
-    GLenum glt = sTexWrap2OGL( t );
-    GLenum glr = sTexWrap2OGL( r );
-
-    if( mOGLWraps[0] != gls )
-    {
-        mOGLWraps[0] = gls;
-        mFilterAndWrapDirty = true;
-    }
-
-    if( mOGLWraps[1] != glt )
-    {
-        mOGLWraps[1] = glt;
-        mFilterAndWrapDirty = true;
-    }
-
-    if( TEXDIM_3D == getDesc().dim && mOGLWraps[2] != glr )
-    {
-        mOGLWraps[2] = glr;
-        mFilterAndWrapDirty = true;
-    }
-
-    GN_UNGUARD_SLOW;
-}*/
 
 //
 //
@@ -703,7 +760,7 @@ GN::gfx::OGLTexture::update(
     }
 
     // success
-    mLockedTarget  = TEXDIM_CUBE == getDesc().dim ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
+    mLockedTarget  = TEXDIM_CUBE == getDesc().dim ? OGLTexture::sCubeface2OGL(face) : mTarget;
     mLockedLevel   = level;
     mLockedFlag    = flag;
     result.data    = mLockedBuffer;
@@ -774,3 +831,55 @@ void GN::gfx::OGLTexture::unlock()
 
     GN_UNGUARD_SLOW;
 }*/
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLTexture::setSampler( const TextureSampler & samp, bool forceUpdate )
+{
+    if( !forceUpdate && samp == mSampler ) return;
+
+    mSamplerDirty = true;
+
+    // MAG filter
+    mOGLFilters[1] = GL_NEAREST + samp.filterMag;
+
+    // min and mip filter
+    if( 1 == getDesc().levels )
+    {
+        // the texture has no mipmap, ignore mipmap filter
+        mOGLFilters[0] = GL_NEAREST + samp.filterMag;
+    }
+    else
+    {
+        // Filter Combination                          Bilinear Filtering (Near)   Bilinear Filtering (Far)    Mipmapping
+        // (MAG_FILTER/MIN_FILTER)
+        // GL_NEAREST / GL_NEAREST_MIPMAP_NEAREST      Off                         Off                         Standard
+        // GL_NEAREST / GL_LINEAR_MIPMAP_NEAREST       Off                         On                          Standard
+        // GL_NEAREST / GL_NEAREST_MIPMAP_LINEAR       Off                         Off                         Use trilinear filtering
+        // GL_NEAREST / GL_LINEAR_MIPMAP_LINEAR        Off                         On                          Use trilinear filtering
+        // GL_NEAREST / GL_NEAREST                     Off                         Off                         None
+        // GL_NEAREST / GL_LINEAR                      Off                         On                          None
+        // GL_LINEAR  / GL_NEAREST_MIPMAP_NEAREST      On                          Off                         Standard
+        // GL_LINEAR  / GL_LINEAR_MIPMAP_NEAREST       On                          On                          Standard
+        // GL_LINEAR  / GL_NEAREST_MIPMAP_LINEAR       On                          Off                         Use trilinear filtering
+        // GL_LINEAR  / GL_LINEAR_MIPMAP_LINEAR        On                          On                          Use trilinear filtering
+        // GL_LINEAR  / GL_NEAREST                     On                          Off                         None
+        // GL_LINEAR  / GL_LINEAR                      On                          On                          None
+
+        static const GLint sConvertTable[4]=
+        {
+            GL_NEAREST_MIPMAP_NEAREST, // min = POINT , mip = POINT
+            GL_NEAREST_MIPMAP_LINEAR,  // min = POINT , mip = LINEAR
+            GL_LINEAR_MIPMAP_NEAREST,  // min = LINEAR, mip = POINT
+            GL_LINEAR_MIPMAP_LINEAR,   // min = LINEAR, mip = LINEAR
+        };
+
+        mOGLFilters[0] = sConvertTable[samp.filterMin * 2 + samp.filterMag];
+    }
+
+    // wraps
+    mOGLWraps[0] = sTexWrap2OGL( samp.addressU );
+    mOGLWraps[1] = sTexWrap2OGL( samp.addressV );
+    mOGLWraps[2] = sTexWrap2OGL( samp.addressW );
+}

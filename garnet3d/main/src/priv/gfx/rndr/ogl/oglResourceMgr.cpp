@@ -1,11 +1,9 @@
 #include "pch.h"
 #include "oglRenderer.h"
 #include "oglShader.h"
-//#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 #include "oglTexture.h"
-//#include "oglSampler.h"
 
 using namespace GN;
 using namespace GN::gfx;

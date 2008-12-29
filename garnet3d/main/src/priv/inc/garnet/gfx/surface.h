@@ -53,19 +53,13 @@ namespace GN { namespace gfx
         ///
         bool fromImageDesc( const ImageDesc & id )
         {
-            // get image size
-            UInt32 w = id.mipmaps[0].width;
-            UInt32 h = id.mipmaps[0].height;
-            UInt32 d = id.mipmaps[0].depth;
-
-            width      = w;
-            height     = h;
-            depth      = d;
+            width      = id.mipmaps[0].width;
+            height     = id.mipmaps[0].height;
+            depth      = id.mipmaps[0].depth;
             faces      = id.numFaces;
             levels     = id.numLevels;
             format     = id.format;
             usages.u32 = 0;
-
             return validate();
         }
 
