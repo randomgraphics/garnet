@@ -24,7 +24,7 @@
 
 using namespace GN;
 
-static Logger * sLogger = getLogger("GN.core::FileSystem");
+static Logger * sLogger = getLogger("GN.core.FileSystem");
 
 // *****************************************************************************
 // local functions for posix platform
@@ -513,7 +513,7 @@ class MultiRootsFileSystem : public core::FileSystem
         return 0;
     }
 
-public:    
+public:
 
     MultiRootsFileSystem()
     {
@@ -619,7 +619,7 @@ public:
 
 class MediaFileSystem : public MultiRootsFileSystem
 {
-public:    
+public:
 
     MediaFileSystem()
     {
@@ -638,7 +638,7 @@ public:
 
 class FontFileSystem : public MultiRootsFileSystem
 {
-public:    
+public:
 
     FontFileSystem()
     {
