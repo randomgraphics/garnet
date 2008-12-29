@@ -3,7 +3,6 @@
 #include "garnet/GNinput.h"
 
 // implement global singletons
-GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::PluginManager )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 
 namespace GN

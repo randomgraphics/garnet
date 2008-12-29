@@ -19,6 +19,12 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
 {
     GN_GUARD;
 
+    size_t rcsize = sizeof(RendererContext);
+    if( rcsize > 2048 )
+    {
+        GN_WARN(sLogger)( "GN::gfx::RendererContext is huge! (%u bytes)", rcsize );
+    }
+
     // standard init procedure
     GN_STDCLASS_INIT( BasicRenderer, () );
 

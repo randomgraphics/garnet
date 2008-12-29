@@ -292,56 +292,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// enumerations used by renderer context structure
-    ///
-    enum RendererContextEnums
-    {
-        RC_FILL_SOLID = 0,
-        RC_FILL_WIREFRAME,
-
-        RC_CULL_NONE = 0,
-        RC_CULL_FRONT,
-        RC_CULL_BACK,
-
-        RC_CMP_NEVER = 0,
-        RC_CMP_LESS,
-        RC_CMP_LESS_EQUAL,
-        RC_CMP_EQUAL,
-        RC_CMP_GREATER_EQUAL,
-        RC_CMP_GREATER,
-        RC_CMP_NOT_EQUAL,
-        RC_CMP_ALWAYS,
-
-        RC_STENCIL_KEEP = 0,
-        RC_STENCIL_ZERO,
-        RC_STENCIL_REPLACE,
-        RC_STENCIL_INC_SAT,
-        RC_STENCIL_DEC_SAT,
-        RC_STENCIL_INVERT,
-        RC_STENCIL_INC,
-        RC_STENCIL_DEC,
-
-        RC_BLEND_ZERO = 0,
-        RC_BLEND_ONE,
-        RC_BLEND_SRC_COLOR,
-        RC_BLEND_INV_SRC_COLOR,
-        RC_BLEND_SRC_ALPHA,
-        RC_BLEND_INV_SRC_ALPHA,
-        RC_BLEND_DEST_ALPHA,
-        RC_BLEND_INV_DEST_ALPHA,
-        RC_BLEND_DEST_COLOR,
-        RC_BLEND_INV_DEST_COLOR,
-        RC_BLEND_BLEND_FACTOR,
-        RC_BLEND_INV_BLEND_FACTOR,
-
-        RC_BLEND_OP_ADD = 0,
-        RC_BLEND_OP_SUB,
-        RC_BLEND_OP_REV_SUB,
-        RC_BLEND_OP_MIN,
-        RC_BLEND_OP_MAX,
-    };
-
-    ///
     /// definition of single vertex element
     ///
     struct VertexElement
@@ -416,6 +366,49 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// define a texture sampler
+    ///
+    struct TextureSampler
+    {
+        enum SamplerEnum
+        {
+            FILTER_POINT,
+            FILTER_LINEAR,
+            FILTER_ANISO,
+
+            ADDRESS_REPEAT,
+            ADDRESS_CLAMP,
+            ADDRESS_CLAMP_BORDER,
+            ADDRESS_MIRROR,
+            ADDRESS_MIRROR_ONCE,
+        };
+
+        SamplerEnum filterMin; ///< minify filter. Default is LINEAR.
+        SamplerEnum filterMip; ///< mipmap filter. Default is LINEAR.
+        SamplerEnum filterMag; ///< magnify filter. Default is LINEAR.
+
+        SamplerEnum addressU;  ///< address mode at U direction. Default is REPEAT.
+        SamplerEnum addressV;  ///< address mode at V direction. Default is REPEAT.
+        SamplerEnum addressW;  ///< address mode at W direction. Default is REPEAT.
+
+        float       border[4]; ///< border color. Default is (0,0,0,0)
+
+        float       mipbias;   ///< Mip bias. Default is 0.0
+        float       minlod;    ///< Min mipmap level. Default is zero
+        float       maxlod;    ///< Max mipmap level. Default is negative that means no limination
+
+        void resetToDefault()
+        {
+            filterMin = filterMip = filterMag = FILTER_LINEAR;
+            addressU = addressV = addressW = ADDRESS_REPEAT;
+            border[0] = border[1] = border[2] = border[3] = 0.0f;
+            mipbias = 0.0f;
+            minlod = 0.0f;
+            maxlod = -1.0f;
+        }
+    };
+
+    ///
     /// define a render target texture
     ///
     struct RenderTargetTexture
@@ -444,11 +437,58 @@ namespace GN { namespace gfx
     ///
     struct RendererContext
     {
-        enum
+        ///
+        /// enumerations used by renderer context structure
+        ///
+        enum RendererContextEnum
         {
             MAX_VERTEX_BUFFERS       = 32,
             MAX_TEXTURES             = 32,
             MAX_COLOR_RENDER_TARGETS = 8,
+
+            FILL_SOLID = 0,
+            FILL_WIREFRAME,
+
+            CULL_NONE = 0,
+            CULL_FRONT,
+            CULL_BACK,
+
+            CMP_NEVER = 0,
+            CMP_LESS,
+            CMP_LESS_EQUAL,
+            CMP_EQUAL,
+            CMP_GREATER_EQUAL,
+            CMP_GREATER,
+            CMP_NOT_EQUAL,
+            CMP_ALWAYS,
+
+            STENCIL_KEEP = 0,
+            STENCIL_ZERO,
+            STENCIL_REPLACE,
+            STENCIL_INC_SAT,
+            STENCIL_DEC_SAT,
+            STENCIL_INVERT,
+            STENCIL_INC,
+            STENCIL_DEC,
+
+            BLEND_ZERO = 0,
+            BLEND_ONE,
+            BLEND_SRC_COLOR,
+            BLEND_INV_SRC_COLOR,
+            BLEND_SRC_ALPHA,
+            BLEND_INV_SRC_ALPHA,
+            BLEND_DEST_ALPHA,
+            BLEND_INV_DEST_ALPHA,
+            BLEND_DEST_COLOR,
+            BLEND_INV_DEST_COLOR,
+            BLEND_BLEND_FACTOR,
+            BLEND_INV_BLEND_FACTOR,
+
+            BLEND_OP_ADD = 0,
+            BLEND_OP_SUB,
+            BLEND_OP_REV_SUB,
+            BLEND_OP_MIN,
+            BLEND_OP_MAX,
         };
 
         union
@@ -496,21 +536,22 @@ namespace GN { namespace gfx
 
         // TODO: depth bias
 
-        /// vertex format
-        VertexFormat vtxfmt;
-
         /// shader
         AutoRef<GpuProgram> gpuProgram;
 
         // Resources
         AutoRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
         UInt16              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
+        VertexFormat        vtxfmt;                          ///< vertex format (bindings to GPU program)
+
         AutoRef<IdxBuf>     idxbuf;                          ///< index buffer
+
         AutoRef<Texture>    textures[MAX_TEXTURES];          ///< textures
+        char                texbinds[MAX_TEXTURES][64];      ///< texture bindings to GPU Program
+        TextureSampler      samplers[MAX_TEXTURES];          ///< samplers
+
         RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
         RenderTargetTexture dsrt;                            ///< depth stencil render target
-
-        // TODO: sampler
 
         ///
         /// reset context to default value
@@ -520,24 +561,24 @@ namespace GN { namespace gfx
             bitwiseFlags[0] = 0;
             bitwiseFlags[1] = 0;
 
-            fillMode = RC_FILL_SOLID;
-            cullMode = RC_CULL_BACK;
+            fillMode = FILL_SOLID;
+            cullMode = CULL_BACK;
             scissorEnabled = false;
             msaaEnabled = true;
             depthTest = true;
             depthWrite = true;
-            depthFunc = RC_CMP_LESS;
+            depthFunc = CMP_LESS;
             stencilEnabled = false;
-            stencilPassOp = RC_STENCIL_KEEP;
-            stencilFailOp = RC_STENCIL_KEEP;
-            stencilZFailOp = RC_STENCIL_KEEP;
+            stencilPassOp = STENCIL_KEEP;
+            stencilFailOp = STENCIL_KEEP;
+            stencilZFailOp = STENCIL_KEEP;
 
-            blendSrc = RC_BLEND_INV_SRC_ALPHA;
-            blendDst = RC_BLEND_INV_SRC_ALPHA;
-            blendOp  = RC_BLEND_OP_ADD;
-            blendSrcAlpha = RC_BLEND_INV_SRC_ALPHA;
-            blendDstAlpha = RC_BLEND_INV_SRC_ALPHA;
-            blendOpAlpha  = RC_BLEND_OP_ADD;
+            blendSrc = BLEND_INV_SRC_ALPHA;
+            blendDst = BLEND_INV_SRC_ALPHA;
+            blendOp  = BLEND_OP_ADD;
+            blendSrcAlpha = BLEND_INV_SRC_ALPHA;
+            blendDstAlpha = BLEND_INV_SRC_ALPHA;
+            blendOpAlpha  = BLEND_OP_ADD;
 
             blendFactors[0] =
             blendFactors[1] =
@@ -550,14 +591,21 @@ namespace GN { namespace gfx
 
             scissorRect.set( 0, 0, 0, 0 );
 
-            vtxfmt.numElements = 0;
-
             gpuProgram.clear();
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
             for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
+            vtxfmt.numElements = 0;
+
             idxbuf.clear();
-            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].clear();
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
+            {
+                textures[i].clear();
+                texbinds[i][0] = '\0';
+                samplers[i].resetToDefault();
+            }
+
             for( size_t i = 0; i < GN_ARRAY_COUNT(crts); ++i ) crts[i].texture.clear();
             dsrt.texture.clear();
         }
