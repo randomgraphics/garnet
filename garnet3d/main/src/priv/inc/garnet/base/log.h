@@ -47,7 +47,7 @@
 ///
 /// output verbose message
 ///
-#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_DETAIL )
+#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VERBOSE )
 
 ///
 /// output debug message (only effective in debug build)
@@ -78,12 +78,12 @@ namespace GN
         ///
         enum LogLevel
         {
-            LL_FATAL  = 10,  ///< fatal error
-            LL_ERROR  = 20,  ///< error
-            LL_WARN   = 30,  ///< warnning
-            LL_INFO   = 40,  ///< information
-            LL_DETAIL = 50,  ///< detailed log that you want to disabled normally
-            LL_TRACE  = 200, ///< debugging (only available in debug build)
+            LL_FATAL   = 10,  ///< fatal error message
+            LL_ERROR   = 20,  ///< error message
+            LL_WARN    = 30,  ///< warning message
+            LL_INFO    = 40,  ///< informational message
+            LL_VERBOSE = 50,  ///< detail message
+            LL_TRACE   = 200, ///< debugging (only available in debug build)
         };
 
         ///

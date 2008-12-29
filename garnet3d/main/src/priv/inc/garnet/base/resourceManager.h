@@ -37,7 +37,7 @@ namespace GN
     ///
     /// RES must support default constructor and assignment operation.
     ///
-    /// 资源管理器使用4个回调函数来管理资源的创建和删除: 
+    /// 资源管理器使用4个回调函数来管理资源的创建和删除:
     /// - Creator: 创建函数
     ///   - 用来创建资源实例. 管理器有一个全局的创建函数, 供所有的资源使用. 同时, 每个资源
     ///     也可以拥有自己特定的创建函数.
@@ -58,7 +58,7 @@ namespace GN
     ///   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
     ///     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
     /// - NameResolver:
-    ///   - Need detail explaination here.
+    ///   - TODO: detail explaination here.
     /// - NameChecker: 名字检查函数
     ///   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
     ///     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).

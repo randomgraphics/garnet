@@ -10,7 +10,6 @@ sources = [
 	'memory.cpp',
 	'misc.cpp',
 	'path.cpp',
-	'plugin.cpp',
 	'profiler.cpp',
 	'registry.cpp',
 	'sharedLib.cpp',

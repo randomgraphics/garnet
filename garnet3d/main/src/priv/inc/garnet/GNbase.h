@@ -222,9 +222,6 @@ namespace GN
 // registry class
 #include "base/registry.h"
 
-// plugin manager
-#include "base/plugin.h"
-
 // resource manager
 #include "base/resourceManager.h"
 
