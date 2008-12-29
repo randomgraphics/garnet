@@ -297,7 +297,7 @@ namespace GN { namespace gfx
     struct VertexElement
     {
         ColorFormat format;      ///< format of the element
-        char        binding[64]; ///< binding to GPU program (null terminated string)
+        char        binding[16]; ///< binding to GPU program (null terminated string)
         UInt8       bindingIndex;///< binding index. Note that
                                  ///< Combination of binding name and index must
                                  ///< be unique across the vertex format structure
@@ -310,7 +310,7 @@ namespace GN { namespace gfx
                 && stream == rhs.stream
                 && offset == rhs.offset
                 && bindingIndex == rhs.bindingIndex
-                && 0 == strCmp( binding, rhs.binding, 64 );
+                && 0 == strCmp( binding, rhs.binding, sizeof(binding) );
         }
 
         bool operator!=( const VertexElement & rhs ) const
@@ -326,7 +326,7 @@ namespace GN { namespace gfx
     {
         enum
         {
-            MAX_VERTEX_ELEMENTS = 32,
+            MAX_VERTEX_ELEMENTS = 16,
         };
 
         UInt32        numElements;                   ///< number of elements
@@ -372,26 +372,42 @@ namespace GN { namespace gfx
     {
         enum SamplerEnum
         {
-            FILTER_POINT,
+            FILTER_POINT  = 0,
             FILTER_LINEAR,
             FILTER_ANISO,
 
-            ADDRESS_REPEAT,
+            ADDRESS_REPEAT = 0,
             ADDRESS_CLAMP,
             ADDRESS_CLAMP_BORDER,
             ADDRESS_MIRROR,
             ADDRESS_MIRROR_ONCE,
         };
 
-        SamplerEnum filterMin; ///< minify filter. Default is LINEAR.
-        SamplerEnum filterMip; ///< mipmap filter. Default is LINEAR.
-        SamplerEnum filterMag; ///< magnify filter. Default is LINEAR.
+        union
+        {
+            unsigned char filters; ///< all filters in one char.
+            struct
+            {
+                unsigned char filterMin : 2; ///< minify filter. Default is LINEAR.
+                unsigned char filterMip : 2; ///< mipmap filter. Default is LINEAR.
+                unsigned char filterMag : 2; ///< magnify filter. Default is LINEAR.
+                unsigned char nouse_0   : 2; ///< no use. Must be zero.
+            };
+        };
 
-        SamplerEnum addressU;  ///< address mode at U direction. Default is REPEAT.
-        SamplerEnum addressV;  ///< address mode at V direction. Default is REPEAT.
-        SamplerEnum addressW;  ///< address mode at W direction. Default is REPEAT.
+        union
+        {
+            unsigned short addressModes;
+            struct
+            {
+                unsigned short addressU : 3; ///< address mode at U direction. Default is REPEAT.
+                unsigned short addressV : 3; ///< address mode at V direction. Default is REPEAT.
+                unsigned short addressW : 3; ///< address mode at W direction. Default is REPEAT.
+                unsigned short nouse_1  : 7; ///< no use. Must be zero.
+            };
+        };
 
-        float       border[4]; ///< border color. Default is (0,0,0,0)
+        UInt8       border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
 
         float       mipbias;   ///< Mip bias. Default is 0.0
         float       minlod;    ///< Min mipmap level. Default is zero
@@ -399,9 +415,11 @@ namespace GN { namespace gfx
 
         void resetToDefault()
         {
+            filters = 0;
             filterMin = filterMip = filterMag = FILTER_LINEAR;
+            addressModes = 0;
             addressU = addressV = addressW = ADDRESS_REPEAT;
-            border[0] = border[1] = border[2] = border[3] = 0.0f;
+            border[0] = border[1] = border[2] = border[3] = 0;
             mipbias = 0.0f;
             minlod = 0.0f;
             maxlod = -1.0f;
@@ -413,22 +431,27 @@ namespace GN { namespace gfx
     ///
     struct RenderTargetTexture
     {
-        AutoRef<Texture> texture;
-        UInt32           face;
-        UInt32           level;
-        UInt32           slice;
+        AutoRef<Texture>     texture;
+
+        union
+        {
+            UInt32           subsurface;
+            struct
+            {
+                unsigned int face  : 12;
+                unsigned int level : 8;
+                unsigned int slice : 12;
+            };
+        };
 
         bool operator==( RenderTargetTexture & rhs ) const
         {
-            return texture == rhs.texture
-                && face == rhs.face
-                && level == rhs.level
-                && slice == rhs.slice;
+            return texture == rhs.texture && subsurface == rhs.subsurface;
         }
 
         bool operator!=( RenderTargetTexture & rhs ) const
         {
-            return !operator==( rhs );
+            return texture != rhs.texture || subsurface != rhs.subsurface;
         }
     };
 
@@ -442,7 +465,7 @@ namespace GN { namespace gfx
         ///
         enum RendererContextEnum
         {
-            MAX_VERTEX_BUFFERS       = 32,
+            MAX_VERTEX_BUFFERS       = 16,
             MAX_TEXTURES             = 32,
             MAX_COLOR_RENDER_TARGETS = 8,
 
@@ -547,7 +570,7 @@ namespace GN { namespace gfx
         AutoRef<IdxBuf>     idxbuf;                          ///< index buffer
 
         AutoRef<Texture>    textures[MAX_TEXTURES];          ///< textures
-        char                texbinds[MAX_TEXTURES][64];      ///< texture bindings to GPU Program
+        char                texbinds[MAX_TEXTURES][16];      ///< texture bindings to GPU Program
         TextureSampler      samplers[MAX_TEXTURES];          ///< samplers
 
         RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
