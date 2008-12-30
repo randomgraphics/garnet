@@ -35,6 +35,7 @@ namespace GN { namespace gfx
             // check face
             if( face >= getDesc().faces )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock face : %d", face );
                 return false;
             }
@@ -42,6 +43,7 @@ namespace GN { namespace gfx
             // check level
             if( level >= getDesc().levels )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock level : %d", level );
                 return false;
             }
@@ -49,6 +51,7 @@ namespace GN { namespace gfx
             // check flag
             if( flag >= NUM_UPDATE_FLAGS )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock flag : %d", flag );
                 return false;
             }
@@ -84,8 +87,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        static Logger * sLogger;
-
         // ********************************
         //  private functions
         // ********************************
@@ -96,6 +97,7 @@ namespace GN { namespace gfx
         {
             if( offset >= maxLength )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "offset is beyond the end of valid range." );
                 return false;
             }

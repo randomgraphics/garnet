@@ -696,146 +696,145 @@ void GN::gfx::OGLTexture::quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::OGLTexture::update(
-    size_t              /*face*/,
-    size_t              /*level*/,
-    const Box<UInt32> * /*area*/,
-    size_t              /*rowPitch*/,
-    size_t              /*slicePitch*/,
-    const void        * /*data*/,
-    UpdateFlag          /*flag*/ )
+GN::gfx::OGLTexture::updateMipmap(
+    size_t              face,
+    size_t              level,
+    const Box<UInt32> * area,
+    size_t              rowPitch,
+    size_t              slicePitch,
+    const void        * inputData,
+    UpdateFlag          flag )
 {
-    GN_GUARD_SLOW;
-
-    /* call basic lock
-    if( !basicLock( face, level, area, flag, mLockedArea ) ) return false;
-    AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&OGLTexture::basicUnlock) );
-
-    // 计算pitch
-    if( mOGLCompressed )
-    {
-        switch ( getDesc().format )
-        {
-            case FMT_DXT1:
-                result.rowBytes = ((mLockedArea.w + 3) >> 2) * 8;
-                result.sliceBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
-                mLockedBytes = result.sliceBytes * mLockedArea.d;
-                break;
-
-		    case FMT_DXT3:
-		    case FMT_DXT5:
-                result.rowBytes = ((mLockedArea.w + 3) >> 2) * 16;
-                result.sliceBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
-                mLockedBytes = result.sliceBytes * mLockedArea.d;
-                break;
-
-            default:
-                GN_ERROR(sLogger)( "unsupport compress format '%s'!", clrFmt2Str(getDesc().format) );
-                return false;
-        }
-    }
-    else
-    {
-        GLint alignment;
-        GN_OGL_CHECK( glGetIntegerv( GL_PACK_ALIGNMENT, &alignment ) );
-        GN_ASSERT( isPowerOf2(alignment) ); // alignment必定是2^n
-        size_t bpp = getClrFmtDesc(getDesc().format).bits / 8;
-        // 将宽度值按照alignment的大小对齐
-#define _GN_ALIGN(X,A) X = ( (X & -A) + (X & (A - 1) ? A : 0) )
-        _GN_ALIGN(result.rowBytes,alignment);
-#undef _GN_ALIGN
-        result.rowBytes = mLockedArea.w * bpp;
-        result.sliceBytes = result.rowBytes * mLockedArea.h;
-        mLockedBytes = result.sliceBytes * mLockedArea.d;
-    }
-
-    // 分配缓冲区
-    mLockedBuffer = new UInt8[mLockedBytes];
-    GN_ASSERT( mLockedBuffer );
-
-    // 如果不是只写锁定，则读取当前的贴图内容到缓冲区中
-    if( LOCK_RO == flag || LOCK_RW == flag )
-    {
-        GN_WARN(sLogger)( "目前不支持从贴图中读取数据!" );
-    }
-
-    // success
-    mLockedTarget  = TEXDIM_CUBE == getDesc().dim ? OGLTexture::sCubeface2OGL(face) : mTarget;
-    mLockedLevel   = level;
-    mLockedFlag    = flag;
-    result.data    = mLockedBuffer;
-    basicUnlocker.dismiss();
-    return true;
-    */
-
-    GN_UNGUARD_SLOW;
-}
-
-/*
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::unlock()
-{
-    GN_GUARD_SLOW;
-
-    // call basic unlock
-    if( !basicUnlock() ) return;
-
-    // do nothing for read-only lock
-    if( LOCK_RO == mLockedFlag ) return;
+    // check update parameters,
+    Box<UInt32> clippedArea;
+    if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     // Auto-restore texture binding when exiting this function.
     OGLAutoAttribStack autoAttribStack( GL_TEXTURE_BIT  );
 
-    // bind myself as current texture
+    // bind the texture as current texture
     bind();
 
-    GN_ASSERT( mLockedBuffer );
+    // setup pixel store parameters
+    size_t bpp = getDesc().format.getBytesPerBlock();
+    glPixelStorei( GL_PACK_ROW_LENGTH, (GLint)(rowPitch/bpp) );
 
-    if( TEXDIM_3D == getDesc().dim )
+    GLint alignment;
+    if( rowPitch & 1 )      alignment = 1;
+    else if( rowPitch & 2 ) alignment = 2;
+    else if( rowPitch & 4 ) alignment = 4;
+    else                    alignment = 8;
+    glPixelStorei( GL_PACK_ALIGNMENT, alignment );
+
+    if( mOGLCompressed )
     {
-        GN_UNIMPL_WARNING();
-    }
-    else
-    {
-        // 将缓冲区中的内容写入贴图
-        if( mOGLCompressed )
+        if( GLEW_ARB_texture_compression )
         {
-            if( GLEW_ARB_texture_compression )
+            switch( mTarget )
             {
-                GN_OGL_CHECK( glCompressedTexSubImage2DARB(
-                    mLockedTarget, (GLint)mLockedLevel,
-                    (GLsizei)mLockedArea.x, (GLsizei)mLockedArea.y,
-                    (GLsizei)mLockedArea.w, (GLsizei)mLockedArea.h,
-                    mOGLInternalFormat,
-                    (GLsizei)mLockedBytes, mLockedBuffer ) );
-            }
-            else
-            {
-                GN_WARN(sLogger)( "do not support texture compression!" );
-            }
+                case GL_TEXTURE_1D:
+                    GN_OGL_CHECK( glCompressedTexSubImage1DARB(
+                        GL_TEXTURE_1D,
+                        (GLint)level,
+                        (GLsizei)clippedArea.x,
+                        (GLsizei)clippedArea.w,
+                        mOGLInternalFormat,
+                        (GLsizei)slicePitch, inputData ) );
+                    break;
+
+                case GL_TEXTURE_2D:
+                    GN_OGL_CHECK( glCompressedTexSubImage2DARB(
+                        GL_TEXTURE_2D,
+                        (GLint)level,
+                        (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
+                        (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
+                        mOGLInternalFormat,
+                        (GLsizei)slicePitch, inputData ) );
+                    break;
+
+                case GL_TEXTURE_3D_EXT:
+                    GN_OGL_CHECK( glCompressedTexSubImage3DARB(
+                        GL_TEXTURE_3D,
+                        (GLint)level,
+                        (GLsizei)clippedArea.x, (GLsizei)clippedArea.y, (GLsizei)clippedArea.z,
+                        (GLsizei)clippedArea.w, (GLsizei)clippedArea.h, (GLsizei)clippedArea.d,
+                        mOGLInternalFormat,
+                        (GLsizei)(slicePitch * clippedArea.d), inputData ) );
+                    break;
+
+                case GL_TEXTURE_CUBE_MAP_ARB:
+                    GN_OGL_CHECK( glCompressedTexSubImage2DARB(
+                        OGLTexture::sCubeface2OGL(face),
+                        (GLint)level,
+                        (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
+                        (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
+                        mOGLInternalFormat,
+                        (GLsizei)slicePitch, inputData ) );
+                    break;
+
+                default:
+                    GN_ERROR(sLogger)( "Unsupported dimension." );
+            };
         }
         else
         {
-            GN_OGL_CHECK( glTexSubImage2D(
-                mLockedTarget, (GLint)mLockedLevel,
-                (GLsizei)mLockedArea.x, (GLsizei)mLockedArea.y,
-                (GLsizei)mLockedArea.w, (GLsizei)mLockedArea.h,
-                mOGLFormat, mOGLType, mLockedBuffer ) );
+            GN_ERROR(sLogger)( "Current hardware does not support ARB_texture_compression extension." );
         }
     }
+    else
+    {
+        switch( mTarget )
+        {
+            case GL_TEXTURE_1D:
+                GN_OGL_CHECK( glTexSubImage1D(
+                    GL_TEXTURE_1D,
+                    (GLint)level,
+                    (GLsizei)clippedArea.x,
+                    (GLsizei)clippedArea.w,
+                    mOGLInternalFormat,
+                    (GLsizei)slicePitch, inputData ) );
+                break;
 
-    // release mLockedBuffer
-    delete [] mLockedBuffer;
-    mLockedBuffer = 0;
+            case GL_TEXTURE_2D:
+                GN_OGL_CHECK( glTexSubImage2D(
+                    GL_TEXTURE_2D,
+                    (GLint)level,
+                    (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
+                    (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
+                    mOGLInternalFormat,
+                    (GLsizei)slicePitch, inputData ) );
+                break;
 
-    GN_UNGUARD_SLOW;
-}*/
+            case GL_TEXTURE_3D_EXT:
+                GN_OGL_CHECK( glTexSubImage3DEXT(
+                    GL_TEXTURE_3D_EXT,
+                    (GLint)level,
+                    (GLsizei)clippedArea.x, (GLsizei)clippedArea.y, (GLsizei)clippedArea.z,
+                    (GLsizei)clippedArea.w, (GLsizei)clippedArea.h, (GLsizei)clippedArea.d,
+                    mOGLInternalFormat,
+                    (GLsizei)(slicePitch * clippedArea.d), inputData ) );
+                break;
+
+            case GL_TEXTURE_CUBE_MAP_ARB:
+                GN_OGL_CHECK( glTexSubImage2D(
+                    OGLTexture::sCubeface2OGL(face),
+                    (GLint)level,
+                    (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
+                    (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
+                    mOGLInternalFormat,
+                    (GLsizei)slicePitch, inputData ) );
+                break;
+
+            default:
+                GN_ERROR(sLogger)( "Unsupported dimension." );
+        };
+    }
+}
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::setSampler( const TextureSampler & samp, bool forceUpdate )
+void GN::gfx::OGLTexture::setSampler( const TextureSampler & samp, bool forceUpdate ) const
 {
     if( !forceUpdate && samp == mSampler ) return;
 

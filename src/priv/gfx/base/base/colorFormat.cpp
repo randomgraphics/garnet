@@ -543,5 +543,5 @@ int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
 void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
 {
     GN_UNIMPL_WARNING();
-    s.clear();
+    s = "GN::gfx::ColorFormat::toString() is not implemented yet.";
 }

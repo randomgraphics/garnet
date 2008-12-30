@@ -19,8 +19,8 @@ namespace GN { namespace gfx
         {
             unsigned int rendertarget :  1; ///< use as color render target
             unsigned int depth        :  1; ///< use as depth buffer
-            unsigned int dynamic      :  1; ///< use as dynamic texture
-            unsigned int readback     :  1; ///< need to read data back from GPU
+            unsigned int fastcpuwrite :  1; ///< need fast data writing by CPU (dynamic texture)
+            unsigned int fastcpuread  :  1; ///< need fast data reading by CPU.
             unsigned int nouse        : 27; ///< no use. must be zero.
         };
 
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             levels = ( 0 == levels ) ? maxLevels : min( maxLevels, levels );
 
             // check format
-            if( format.valid() )
+            if( !format.valid() )
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().cptr() );
@@ -175,15 +175,16 @@ namespace GN { namespace gfx
         }
 
         ///
-        /// update texture content
+        /// update mipmap content
         ///
         /// \param face, level      Subsurface location
         /// \param area             Subsurface area that is going to be updated. Set to NULL to update whole subsurface.
         /// \param rowPitch         Row pitch in bytes of the data
         /// \param slicePitch       Slice pitch in bytes of the data
         /// \param data             The data buffer that holds data that are going to be copied to texture.
+        ///                         The data must be the same format as the texture.
         ///
-        virtual void update(
+        virtual void updateMipmap(
             size_t              face,
             size_t              level,
             const Box<UInt32> * area,
@@ -193,14 +194,20 @@ namespace GN { namespace gfx
             UpdateFlag          flag ) = 0;
 
         ///
-        /// read texture content. Texture must have TEXUSAGE_READBACK usage.
+        /// read mipmap content.
         ///
-        virtual void readback( size_t face, size_t level, MipmapData & data ) = 0;
+        virtual void readMipmap( size_t face, size_t level, MipmapData & data ) = 0;
+
+        /// read/write the whole texture as a BLOB.
+        //@{
+        virtual void   blobWrite( const void * data, size_t length ) = 0;
+        virtual size_t blobRead( void * data ) = 0;
+        //@}
 
         ///
         /// generate content of all mipmap levels based on content in base level
         ///
-        virtual void generateMipmap() = 0;
+        virtual void generateMipmapPyramid() = 0;
 
         ///
         /// Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for

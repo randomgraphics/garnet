@@ -88,13 +88,13 @@ GN::gfx::OGLRenderer::bindContextImpl(
         GN_TODO( "verify renderer context data" );
     }
 
-    if( !bindContextShaders( newContext, forceBinding ) ) return false;
-
     if( !bindContextRenderStates( newContext, forceBinding ) ) return false;
 
     if( !bindContextRenderTargets( newContext, forceBinding ) ) return false;
 
     if( !bindContextResources( newContext, forceBinding ) ) return false;
+
+    if( !bindContextShaders( newContext, forceBinding ) ) return false;
 
     return true;
 
@@ -302,11 +302,11 @@ GN::gfx::OGLRenderer::bindContextResources(
     // Note: vertex and index buffers are binded by draw manager
     //
 
-    /*
+    //
     // bind textures and samplers
     //
     UInt32 maxStages = getCaps().maxTextures;
-    UInt32 numtex = min( maxStages, newContext.numTextures );
+    UInt32 numtex = min<UInt32>( maxStages, RendererContext::MAX_TEXTURES );
 
     UInt32 i;
     for ( i = 0; i < numtex; ++i )
@@ -316,10 +316,17 @@ GN::gfx::OGLRenderer::bindContextResources(
         {
             chooseTextureStage( i );
 
-            safeCastPtr<const OGLTexture>(newContext.textures[i])->bind();
+            const OGLTexture * t = safeCastPtr<const OGLTexture>(newContext.textures[i].get());
 
-            SamplerHandle samp = ( i < newContext.numSamplers ) ? newContext.samplers[i] : mDefaultSampler;
-            mSamplers[samp]->bind();
+            t->setSampler( newContext.samplers[i] );
+
+            t->bind();
+
+            if( newContext.gpuProgram )
+            {
+                GLuint texhandle = t->getOGLTexture();
+                newContext.gpuProgram->setParameter( newContext.texbinds[i], &texhandle, sizeof(texhandle) );
+            }
         }
         else
         {
@@ -332,8 +339,6 @@ GN::gfx::OGLRenderer::bindContextResources(
     {
         disableTextureStage( i );
     }
-
-    */
 
     return true;
 
