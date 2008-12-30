@@ -54,9 +54,11 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void   update( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, UpdateFlag flag );
-        virtual void   readback( size_t, size_t, MipmapData & ) { GN_UNIMPL_WARNING(); }
-        virtual void   generateMipmap() { GN_UNIMPL_WARNING(); }
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, UpdateFlag flag );
+        virtual void   readMipmap( size_t, size_t, MipmapData & ) { GN_UNIMPL(); }
+        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
         virtual void * getAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
 
         //@}
@@ -90,13 +92,14 @@ namespace GN { namespace gfx
                 {
                     GN_OGL_CHECK( glTexParameteri( mTarget, GL_TEXTURE_WRAP_R, mOGLWraps[2] ) );
                 }
+                mSamplerDirty = false;
             }
         }
 
         ///
         /// set texture sampler (not effective until next binding)
         ///
-        void setSampler( const TextureSampler & sampler, bool forceUpdate = false );
+        void setSampler( const TextureSampler & sampler, bool forceUpdate = false ) const;
 
         ///
         /// \name get GL texture parameters
@@ -151,10 +154,10 @@ namespace GN { namespace gfx
 
         /// \name sampler stuff
         //@{
-        bool           mSamplerDirty;
-        TextureSampler mSampler;
-        GLint          mOGLFilters[2]; /// filters (min,mag)
-        GLint          mOGLWraps[3];   /// address modes (s,t,r)
+        mutable bool           mSamplerDirty;
+        mutable TextureSampler mSampler;
+        mutable GLint          mOGLFilters[2]; /// filters (min,mag)
+        mutable GLint          mOGLWraps[3];   /// address modes (s,t,r)
         //@}
 
         // ********************************

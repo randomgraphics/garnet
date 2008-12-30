@@ -8,15 +8,37 @@ using namespace GN::win;
 RendererContext rc;
 
 const char * vscode =
+    "varying vec2 texcoords; \n"
     "uniform mat4 transform; \n"
     "void main() { \n"
     "   gl_Position = transform * gl_Vertex; \n"
+    "   texcoords.xy = gl_Vertex.xy; \n"
     "}";
 
 const char * pscode =
+    "uniform sampler2D t0; \n"
+    "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_FragColor = vec4(1,1,1,1); \n"
+    "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
+
+/// read image from file
+inline bool
+readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
+{
+    std::auto_ptr<File> fp( core::openFile( "media::texture\\earth.jpg", "rb" ) );
+    if( NULL == fp.get() ) return false;
+
+    ImageReader ir;
+    if( !ir.reset( *fp ) ) return false;
+
+    if( !ir.readHeader( desc ) ) return false;
+
+    data.resize( desc.getTotalBytes() );
+    if( !ir.readImage( &data[0] ) ) return false;
+
+    return true;
+}
 
 bool init( Renderer & rndr )
 {
@@ -38,6 +60,22 @@ bool init( Renderer & rndr )
     rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
     rc.vtxfmt.elements[0].offset = 0;
     rc.vtxfmt.elements[0].stream = 0;
+
+    // load image
+    ImageDesc id;
+    std::vector<UInt8> texels;
+    if( !readImageFromFile( id, texels ) ) return false;
+
+    // create texture
+    TextureDesc td;
+    td.fromImageDesc( id );
+    rc.textures[0].attach( rndr.createTexture( td ) );
+    if( rc.textures[0] )
+    {
+        const MipmapDesc & md = id.getMipmap( 0, 0 );
+        rc.textures[0]->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], UPDATE_DEFAULT );
+    }
+    strcpy_s( rc.texbinds[0], "t0" );
 
     return true;
 }

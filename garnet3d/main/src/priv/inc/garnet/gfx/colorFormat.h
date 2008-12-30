@@ -432,6 +432,11 @@ namespace GN { namespace gfx
         UInt8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
 
         ///
+        /// Get bytes-per-pixel-block
+        ///
+        UInt8 getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
+
+        ///
         /// convert to string
         ///
         void toString( StrA & ) const;

@@ -191,7 +191,7 @@ sGetUniformSize( GLenum type )
         case GL_SAMPLER_1D_SHADOW_ARB      :
         case GL_SAMPLER_2D_SHADOW_ARB      :
         case GL_SAMPLER_2D_RECT_ARB        :
-        case GL_SAMPLER_2D_RECT_SHADOW_ARB : return 0;
+        case GL_SAMPLER_2D_RECT_SHADOW_ARB : return sizeof(GLint);
 
         default : GN_ERROR(sLogger)( "invalid uniform type: %d", type ); return 0;
     }
@@ -410,7 +410,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyDirtyParameters() const
             case GL_SAMPLER_2D_SHADOW_ARB      :
             case GL_SAMPLER_2D_RECT_ARB        :
             case GL_SAMPLER_2D_RECT_SHADOW_ARB :
-                GN_ERROR(sLogger)( "Fail to apply GLSL parameters: sampler parameter is not supported yet." );
+                glUniform1ivARB( u.location, u.count, (GLint*)u.value.cptr() );
                 break;
         }
 
