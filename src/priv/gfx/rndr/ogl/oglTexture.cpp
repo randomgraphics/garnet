@@ -717,14 +717,16 @@ GN::gfx::OGLTexture::updateMipmap(
 
     // setup pixel store parameters
     size_t bpp = getDesc().format.getBytesPerBlock();
-    glPixelStorei( GL_PACK_ROW_LENGTH, (GLint)(rowPitch/bpp) );
+    glPixelStorei( GL_UNPACK_ROW_LENGTH, (GLint)(rowPitch/bpp) );
 
     GLint alignment;
     if( rowPitch & 1 )      alignment = 1;
     else if( rowPitch & 2 ) alignment = 2;
     else if( rowPitch & 4 ) alignment = 4;
     else                    alignment = 8;
-    glPixelStorei( GL_PACK_ALIGNMENT, alignment );
+    glPixelStorei( GL_UNPACK_ALIGNMENT, alignment );
+
+    // TODO: setup slice pitch parameter
 
     if( mOGLCompressed )
     {
@@ -791,19 +793,21 @@ GN::gfx::OGLTexture::updateMipmap(
                     (GLint)level,
                     (GLsizei)clippedArea.x,
                     (GLsizei)clippedArea.w,
-                    mOGLInternalFormat,
-                    (GLsizei)slicePitch, inputData ) );
+                    mOGLFormat, mOGLType,
+                    inputData ) );
                 break;
 
             case GL_TEXTURE_2D:
+            {
                 GN_OGL_CHECK( glTexSubImage2D(
                     GL_TEXTURE_2D,
                     (GLint)level,
                     (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
                     (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
-                    mOGLInternalFormat,
-                    (GLsizei)slicePitch, inputData ) );
+                    mOGLFormat, mOGLType,
+                    inputData ) );
                 break;
+            }
 
             case GL_TEXTURE_3D_EXT:
                 GN_OGL_CHECK( glTexSubImage3DEXT(
@@ -811,8 +815,8 @@ GN::gfx::OGLTexture::updateMipmap(
                     (GLint)level,
                     (GLsizei)clippedArea.x, (GLsizei)clippedArea.y, (GLsizei)clippedArea.z,
                     (GLsizei)clippedArea.w, (GLsizei)clippedArea.h, (GLsizei)clippedArea.d,
-                    mOGLInternalFormat,
-                    (GLsizei)(slicePitch * clippedArea.d), inputData ) );
+                    mOGLFormat, mOGLType,
+                    inputData ) );
                 break;
 
             case GL_TEXTURE_CUBE_MAP_ARB:
@@ -821,8 +825,8 @@ GN::gfx::OGLTexture::updateMipmap(
                     (GLint)level,
                     (GLsizei)clippedArea.x, (GLsizei)clippedArea.y,
                     (GLsizei)clippedArea.w, (GLsizei)clippedArea.h,
-                    mOGLInternalFormat,
-                    (GLsizei)slicePitch, inputData ) );
+                    mOGLFormat, mOGLType,
+                    inputData ) );
                 break;
 
             default:
