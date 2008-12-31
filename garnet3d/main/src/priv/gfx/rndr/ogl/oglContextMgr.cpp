@@ -324,8 +324,8 @@ GN::gfx::OGLRenderer::bindContextResources(
 
             if( newContext.gpuProgram )
             {
-                GLuint texhandle = t->getOGLTexture();
-                newContext.gpuProgram->setParameter( newContext.texbinds[i], &texhandle, sizeof(texhandle) );
+                // we bind texture to specific texture stage, then bind that stage to shader.
+                newContext.gpuProgram->setParameter( newContext.texbinds[i], &i, sizeof(i) );
             }
         }
         else
