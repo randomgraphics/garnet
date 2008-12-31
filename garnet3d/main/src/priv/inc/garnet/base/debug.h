@@ -118,11 +118,11 @@
 //
 #define GN_OGL_CHECK_R_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, return; )
 //
-//#if GN_BUILD_DEBUG
-//#define GN_OGL_CHECK_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, )
-//#else
+#if GN_BUILD_DEBUG
+#define GN_OGL_CHECK_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, )
+#else
 #define GN_OGL_CHECK_DESC( func, errDesc ) func
-//#endif
+#endif
 //
 #define GN_OGL_CHECK_DO( X, S ) GN_OGL_CHECK_DO_DESC( X, "", S )
 #define GN_OGL_CHECK_RV( X, V ) GN_OGL_CHECK_RV_DESC( X, "", V )
