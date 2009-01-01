@@ -487,6 +487,10 @@ namespace GN { namespace gfx
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
+            FILL_POINT,
+
+            FRONT_CCW = 0,
+            FRONT_CW,
 
             CULL_NONE = 0,
             CULL_FRONT,
@@ -532,32 +536,67 @@ namespace GN { namespace gfx
 
         union
         {
-            UInt32 bitwiseFlags[2]; // all flags in 2 dwords.
+            UInt64 renderStates; ///< all render states in single 64bit integer.
 
             struct
             {
-                // DWORD 0
-                UInt32 fillMode       : 2;
-                UInt32 cullMode       : 2;
-                UInt32 scissorEnabled : 1;
-                UInt32 msaaEnabled    : 1;
-                UInt32 depthTest      : 1;
-                UInt32 depthWrite     : 1;
-                UInt32 depthFunc      : 3;
-                UInt32 stencilEnabled : 1;
-                UInt32 stencilPassOp  : 3; ///< pass both stencil and Z
-                UInt32 stencilFailOp  : 3; ///< fail stencil (no z test at all)
-                UInt32 stencilZFailOp : 3; ///< pass stencil but fail Z
-                UInt32 nouse_0        : 11;///< no use. must be zero
+                // BYTE 0
+                union
+                {
+                    UInt8     miscFlags0;
+                    struct
+                    {
+                        UInt8 fillMode       : 2;
+                        UInt8 cullMode       : 2;
+                        UInt8 frontFace      : 1;
+                        UInt8 msaaEnabled    : 1;
+                        UInt8 miscNoUse      : 2; //< no use. Must be zero.
+                    };
+                };
+
+                // BYTE 1
+                union
+                {
+                    UInt8     depthFlags;
+                    struct
+                    {
+                        UInt8 depthTest  : 1;
+                        UInt8 depthWrite : 1;
+                        UInt8 depthFunc  : 3;
+                        UInt8 depthNoUse : 3;
+                    };
+                };
+
+                // BYTE 2-3
+                union
+                {
+                    UInt16     stencilFlags;
+                    struct
+                    {
+                        UInt16 stencilEnabled : 1;
+                        UInt16 stencilPassOp  : 3; ///< pass both stencil and Z
+                        UInt16 stencilFailOp  : 3; ///< fail stencil (no z test at all)
+                        UInt16 stencilZFailOp : 3; ///< pass stencil but fail Z
+                        UInt16 stencilNoUse   : 6; ///< no use. must be zero
+                    };
+                };
 
                 // DWORD 1
-                UInt32 blendSrc       : 4;
-                UInt32 blendDst       : 4;
-                UInt32 blendOp        : 3;
-                UInt32 blendSrcAlpha  : 4;
-                UInt32 blendDstAlpha  : 4;
-                UInt32 blendOpAlpha   : 3;
-                UInt32 nouse_1        : 10;///< no use. must be zero
+                union
+                {
+                    UInt32     blendFlags;
+                    struct
+                    {
+                        UInt32 blendSrc       : 4;
+                        UInt32 blendDst       : 4;
+                        UInt32 blendOp        : 3;
+                        UInt32 blendEnabled   : 1;
+                        UInt32 blendAlphaSrc  : 4;
+                        UInt32 blendAlphaDst  : 4;
+                        UInt32 blendAlphaOp   : 3;
+                        UInt32 nouse_1        : 9;///< no use. must be zero
+                    };
+                };
             };
         };
 
@@ -596,13 +635,12 @@ namespace GN { namespace gfx
         /// reset context to default value
         void resetToDefault()
         {
-            // clear all flags
-            bitwiseFlags[0] = 0;
-            bitwiseFlags[1] = 0;
+            // clear all render states first
+            renderStates = 0;
 
             fillMode = FILL_SOLID;
             cullMode = CULL_BACK;
-            scissorEnabled = false;
+            frontFace = FRONT_CCW;
             msaaEnabled = true;
             depthTest = true;
             depthWrite = true;
@@ -615,9 +653,9 @@ namespace GN { namespace gfx
             blendSrc = BLEND_INV_SRC_ALPHA;
             blendDst = BLEND_INV_SRC_ALPHA;
             blendOp  = BLEND_OP_ADD;
-            blendSrcAlpha = BLEND_INV_SRC_ALPHA;
-            blendDstAlpha = BLEND_INV_SRC_ALPHA;
-            blendOpAlpha  = BLEND_OP_ADD;
+            blendAlphaSrc = BLEND_INV_SRC_ALPHA;
+            blendAlphaDst = BLEND_INV_SRC_ALPHA;
+            blendAlphaOp  = BLEND_OP_ADD;
 
             blendFactors[0] =
             blendFactors[1] =
