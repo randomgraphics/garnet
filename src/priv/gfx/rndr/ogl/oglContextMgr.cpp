@@ -31,6 +31,73 @@ sGetOGLVtxFmt(
     return oglvf.release();
 }
 
+static const GLenum CONVERT_FILL_MODES[] =
+{
+    GL_FILL,   // FILL_SOLID
+    GL_LINE,   // FILL_WIREFRAME
+    GL_POINT,  // FILL_POINT
+};
+
+static const GLenum CONVERT_CULL_MODES[] =
+{
+    GL_FALSE, // CULL_NONE
+    GL_FRONT, // CULL_FRONT
+    GL_BACK,  // CULL_BACK
+};
+
+static const GLenum CONVERT_FRONT_FACE[] =
+{
+    GL_CCW, // FRONT_CCW
+    GL_CW,  // FRONT_CW
+};
+
+static const GLenum CONVERT_CMP[] =
+{
+    GL_NEVER    , // CMP_NEVER
+    GL_LESS     , // CMP_LESS
+    GL_LEQUAL   , // CMP_LESS_EQUAL
+    GL_EQUAL    , // CMP_EQUAL
+    GL_GEQUAL   , // CMP_GREATER_EQUAL
+    GL_GREATER  , // CMP_GREATER
+    GL_NOTEQUAL , // CMP_NOT_EQUAL
+    GL_ALWAYS   , // CMP_ALWAYS
+};
+
+static const GLenum CONVERT_STENCIL_OP[] =
+{
+    GL_KEEP,          // STENCIL_KEEP = 0,
+    GL_ZERO,          // STENCIL_ZERO,
+    GL_REPLACE,       // STENCIL_REPLACE,
+    GL_INCR_WRAP_EXT, // STENCIL_INC_SAT,
+    GL_DECR_WRAP_EXT, // STENCIL_DEC_SAT,
+    GL_INVERT,        // STENCIL_INVERT,
+    GL_INCR,          // STENCIL_INC,
+    GL_DECR           // STENCIL_DEC,
+};
+
+static const GLenum CONVERT_BLEND_ARG[] =
+{
+    GL_ZERO                , // BLEND_ZERO = 0,
+    GL_ONE                 , // BLEND_ONE,
+    GL_SRC_COLOR           , // BLEND_SRC_COLOR,
+    GL_ONE_MINUS_SRC_COLOR , // BLEND_INV_SRC_COLOR,
+    GL_SRC_ALPHA           , // BLEND_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA , // BLEND_INV_SRC_ALPHA,
+    GL_DST_COLOR           , // BLEND_DEST_ALPHA,
+    GL_ONE_MINUS_DST_COLOR , // BLEND_INV_DEST_ALPHA,
+    GL_DST_ALPHA           , // BLEND_DEST_COLOR,
+    GL_ONE_MINUS_DST_ALPHA , // BLEND_INV_DEST_COLOR,
+    GL_SRC_ALPHA_SATURATE  , // BLEND_BLEND_FACTOR,
+};
+
+static const GLenum CONVERT_BLEND_OP[] =
+{
+    GL_FUNC_ADD_EXT              , // BLEND_OP_ADD = 0,
+    GL_FUNC_SUBTRACT_EXT         , // BLEND_OP_SUB,
+    GL_FUNC_REVERSE_SUBTRACT_EXT , // BLEND_OP_REV_SUB,
+    GL_MIN_EXT                   , // BLEND_OP_MIN,
+    GL_MAX_EXT                   , // BLEND_OP_MAX,
+};
 // *****************************************************************************
 // init/quit
 // *****************************************************************************
@@ -101,11 +168,6 @@ GN::gfx::OGLRenderer::bindContextImpl(
     GN_UNGUARD_SLOW;
 }
 
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
 // *****************************************************************************
 // private functions
 // *****************************************************************************
@@ -146,6 +208,7 @@ GN::gfx::OGLRenderer::bindContextShaders(
         if( newProgram ) newProgram->apply();
     }
 
+    GN_OGL_CHECK( (void)0 );
     return true;
 
     GN_UNGUARD_SLOW;
@@ -161,88 +224,113 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
 {
     GN_GUARD_SLOW;
 
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( forceBinding );
+    if( forceBinding || newContext.renderStates != mContext.renderStates )
+    {
+        // misc 0
+        if( forceBinding || newContext.miscFlags0 != mContext.miscFlags0 )
+        {
+            // fill mode
+            glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.fillMode] );
 
-    /*
+            // cull mode
+            glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.fillMode] );
 
-    GN_ASSERT( newContext.rsb.valid() );
+            // front face
+            glFrontFace( CONVERT_FRONT_FACE[newContext.frontFace] );
 
-    const RenderStateBlockDesc & newRsb = newContext.rsb;
-    const RenderStateBlockDesc & oldRsb = mContext.rsb;
-
-    bool updateAlphaFunc = false;
-    int alphaFunc = oldRsb.get( RS_ALPHA_FUNC );
-    int alphaRef  = oldRsb.get( RS_ALPHA_REF );
-
-    bool updateBlend = false;
-    int blendSrc  = oldRsb.get( RS_BLEND_SRC );
-    int blendDst  = oldRsb.get( RS_BLEND_DST );
-
-    // apply all RSs (except blending factors) to API
-    #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-        if( newRsb.isSet( RS_##tag ) &&                          \
-            ( newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) || forceBinding ) ) \
-        {                                                        \
-            if( RS_ALPHA_FUNC == RS_##tag )                      \
-            {                                                    \
-                updateAlphaFunc = true;                          \
-                alphaFunc = newRsb.get( RS_ALPHA_FUNC );         \
-            }                                                    \
-            else if( RS_ALPHA_REF == RS_##tag )                  \
-            {                                                    \
-                updateAlphaFunc = true;                          \
-                alphaRef = newRsb.get( RS_ALPHA_REF );           \
-            }                                                    \
-            else if( RS_BLEND_SRC == RS_##tag )                  \
-            {                                                    \
-                updateBlend = true;                              \
-                blendSrc = newRsb.get( RS_BLEND_SRC );           \
-            }                                                    \
-            else if( RS_BLEND_DST == RS_##tag )                  \
-            {                                                    \
-                updateBlend = true;                              \
-                blendDst = newRsb.get( RS_BLEND_DST );           \
-            }                                                    \
-            else                                                 \
-            {                                                    \
-                sSet_##tag( newRsb.get(RS_##tag) );              \
-            }                                                    \
+            // TODO: msaa flag
+            if( newContext.msaaEnabled != mContext.msaaEnabled )
+            {
+                GN_UNIMPL();
+            }
         }
-    #include "garnet/gfx/renderStateMeta.h"
-    #undef GNGFX_DEFINE_RS
 
-    // apply alpha function
-    if( updateAlphaFunc )
-    {
-        GN_OGL_CHECK( glAlphaFunc( sRsv2OGL[alphaFunc], alphaRef / 255.0f ) );
+        // depth
+        if( forceBinding || newContext.depthFlags != mContext.depthFlags )
+        {
+            if( newContext.depthTest ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
+            glDepthMask( newContext.depthWrite );
+            glDepthFunc( CONVERT_CMP[newContext.depthFunc] );
+        };
+
+        // stencil
+        if( forceBinding || newContext.stencilFlags != mContext.stencilFlags )
+        {
+            if( newContext.stencilEnabled ) glEnable( GL_STENCIL_TEST ); else glDisable( GL_STENCIL_TEST );
+
+            GLenum failop  = newContext.stencilFailOp;
+            GLenum zfailop = newContext.stencilZFailOp;
+            GLenum zpassop = newContext.stencilPassOp;
+            if( !GLEW_EXT_stencil_wrap )
+            {
+#define CHECK_WRAP_STENCIL_OP( op ) \
+                if( RendererContext::STENCIL_INC_SAT == op ) { op = RendererContext::STENCIL_INC; nonSupportedWrapOp = true; } \
+                if( RendererContext::STENCIL_DEC_SAT == op ) { op = RendererContext::STENCIL_DEC; nonSupportedWrapOp = true; }
+
+                bool nonSupportedWrapOp = false;
+                CHECK_WRAP_STENCIL_OP( failop );
+                CHECK_WRAP_STENCIL_OP( zfailop );
+                CHECK_WRAP_STENCIL_OP( zpassop );
+
+                if( nonSupportedWrapOp )
+                {
+                    GN_ERROR(sLogger)( "EXT_stencil_wrap is not supported, which is required to implement STENCIL_INC_SAT and STENCIL_DEC_SAT opertion." );
+                }
+            }
+            glStencilOp(
+                CONVERT_STENCIL_OP[failop],
+                CONVERT_STENCIL_OP[zfailop],
+                CONVERT_STENCIL_OP[zpassop] );
+        }
+
+        // alpha blending
+        if( forceBinding || newContext.blendFlags != mContext.blendFlags )
+        {
+            // blending enable bit
+            if( newContext.blendEnabled ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
+
+            if( GLEW_EXT_blend_minmax &&
+                GLEW_EXT_blend_subtract &&
+                GLEW_EXT_blend_func_separate &&
+                GLEW_EXT_blend_equation_separate )
+            {
+                glBlendFuncSeparateEXT(
+                    CONVERT_BLEND_ARG[newContext.blendSrc],
+                    CONVERT_BLEND_ARG[newContext.blendDst],
+                    CONVERT_BLEND_ARG[newContext.blendAlphaSrc],
+                    CONVERT_BLEND_ARG[newContext.blendAlphaDst] );
+
+                glBlendEquationSeparateEXT(
+                    CONVERT_BLEND_OP[newContext.blendOp],
+                    CONVERT_BLEND_OP[newContext.blendAlphaOp] );
+            }
+            else
+            {
+                glBlendFunc(
+                    CONVERT_BLEND_ARG[newContext.blendSrc],
+                    CONVERT_BLEND_ARG[newContext.blendDst] );
+
+                if( newContext.blendOp != RendererContext::BLEND_OP_ADD )
+                {
+                    GN_ERROR(sLogger)(
+                        "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
+                        "required to implement extended alpha blending operation other than ADD." );
+                }
+
+                if( newContext.blendAlphaOp  != newContext.blendOp ||
+                    newContext.blendAlphaSrc != newContext.blendSrc ||
+                    newContext.blendAlphaDst != newContext.blendDst )
+                {
+                    GN_ERROR(sLogger)(
+                        "EXT_blend_func_separate is missing that is support "
+                        "different blend function for alpha channel." );
+                }
+            }
+        }
     }
 
-    // apply blending factors
-    if( updateBlend )
-    {
-        GN_OGL_CHECK( glBlendFunc( sRsv2OGL[blendSrc], sRsv2OGL[blendDst] ) );
-    }
-
-    // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
-    //        而改变，因而需要用下面的代码来恢复材质信息。如果禁用了
-    //        ColorMaterial属性，则可以注释掉这段代码。
-    //
-    //// restore material parameters
-    //const GLfloat * diff = r.fastget_ambient();
-    //const GLfloat * ambi = r.fastget_ambient();
-    //const GLfloat * spec = r.fastget_specular();
-    //const GLfloat * emis = r.fastget_emission();
-    //UInt32            shin = r.fastget_shininess();
-
-    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE  , diff ) );
-    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT  , ambi ) );
-    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR , spec ) );
-    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION , emis ) );
-    //GN_OGL_CHECK( glMateriali ( GL_FRONT_AND_BACK, GL_SHININESS, shin ) );
-
-    */
-
+    // done
+    GN_OGL_CHECK( (void)0 );
     return true;
 
     GN_UNGUARD_SLOW;
@@ -273,8 +361,31 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
         GLsizei w = (GLsizei)( newContext.viewport.w * rtw );
         GLsizei h = (GLsizei)( newContext.viewport.h * rth );
         GN_OGL_CHECK( glViewport( x, y, w, h ) );
+    }
+
+    // bind scissor rect
+    if( !forceBinding || newContext.scissorRect != mContext.scissorRect )
+    {
+        if( 0 == newContext.scissorRect.x ||
+            0 == newContext.scissorRect.y ||
+            0 == newContext.scissorRect.w ||
+            0 == newContext.scissorRect.h )
+        {
+            glDisable( GL_SCISSOR_TEST );
+        }
+        else
+        {
+            glEnable( GL_SCISSOR_TEST );
+            GLint x = newContext.scissorRect.x * renderTargetSize.x;
+            GLint y = newContext.scissorRect.y * renderTargetSize.y;
+            GLint w = newContext.scissorRect.w * renderTargetSize.x;
+            GLint h = newContext.scissorRect.h * renderTargetSize.y;
+            glScissor( x, y, w, h );
+        }
     }*/
 
+    // done
+    GN_OGL_CHECK( (void)0 );
     return true;
 }
 
@@ -340,6 +451,7 @@ GN::gfx::OGLRenderer::bindContextResources(
         disableTextureStage( i );
     }
 
+    GN_OGL_CHECK( (void)0 );
     return true;
 
     GN_UNGUARD_SLOW;
