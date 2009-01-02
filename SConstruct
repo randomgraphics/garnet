@@ -1085,7 +1085,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNtestInput',
 		    'GNtestOGL',
 		    'GNtestPcre',
-		    'GNtestRndrOGL',
+		    'GNtestRndr',
 		    'GNtestXenonNegativeZRange',
 		    'GNtestXenonStackTexture',
 		    'GNtestXenonVertexEndian',
