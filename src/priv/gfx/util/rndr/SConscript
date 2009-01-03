@@ -1,5 +1,6 @@
 Import( 'GN' )
 sources = [
+	'mtrndr.cpp',
 	'rndrCreator.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
