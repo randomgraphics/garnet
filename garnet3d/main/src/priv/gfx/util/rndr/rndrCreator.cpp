@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "mtrndr.h"
 
 // *************************************************************************
 // local functions
@@ -90,6 +91,20 @@ namespace GN { namespace gfx
         dll.release();
         return r;
 #endif
+        GN_UNGUARD;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    Renderer * createMultiThreadRenderer( const RendererOptions & ro )
+    {
+        GN_GUARD;
+
+        MultiThreadRenderer * r = new MultiThreadRenderer;
+        if( !r->init( ro ) ) delete r, r = NULL;
+        return r;
+
         GN_UNGUARD;
     }
 
