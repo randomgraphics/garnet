@@ -4,6 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::win;
+using namespace GN::util;
 
 RendererContext rc;
 
@@ -156,7 +157,7 @@ int main( int, const char *[] )
     RendererOptions o;
     o.api = API_OGL;
 
-    Renderer * r = createRenderer( o );
+    Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);

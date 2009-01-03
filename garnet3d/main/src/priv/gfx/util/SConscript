@@ -1,6 +1,6 @@
 Import( 'GN' )
-sources = [ SConscript( 'base/SConscript' ) ]
+sources = [ SConscript( 'base/SConscript' ), SConscript( 'rndr/SConscript' ) ]
 if GN.conf['has_d3d9']  : sources.append( SConscript( 'd3d9/SConscript' ) )
 if GN.conf['has_d3d10'] : sources.append( SConscript( 'd3d10/SConscript' ) )
 #if GN.conf['has_ogl']   : sources.append( SConscript( 'ogl/SConscript' ) )
-GN.newTarget( 'stlib', 'GNgfxBase', sources )
+GN.newTarget( 'stlib', 'GNgfxUtil', sources )
