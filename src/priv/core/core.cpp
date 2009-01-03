@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
+#include "garnet/GNgfx.h"
 
 // implement global singletons
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
@@ -66,5 +67,14 @@ namespace GN
         GN_PUBLIC Signal1<void,KeyEvent> & getSigKeyPress() { static Signal1<void,KeyEvent> s; return s; }
         GN_PUBLIC Signal1<void,wchar_t>  & getSigCharPress() { static Signal1<void,wchar_t> s; return s; }
         GN_PUBLIC Signal2<void,Axis,int> & getSigAxisMove() { static Signal2<void,Axis,int> s; return s; }
+    }
+
+    namespace gfx
+    {
+        // global renderer signals
+        typedef Signal4<void, Renderer&, HandleType, UInt32, UInt32> SizeMoveSignal;
+        GN_PUBLIC Signal1<void,Renderer&>  & getSigRendererDeviceLost() { static Signal1<void,Renderer&> s; return s; }
+        GN_PUBLIC SizeMoveSignal           & getSigRendererWindowSizeMove() { static SizeMoveSignal s; return s; }
+        GN_PUBLIC Signal1<void,Renderer&>  & getSigRendererWindowClose() { static Signal1<void,Renderer&> s; return s; }
     }
 }

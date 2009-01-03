@@ -8,7 +8,7 @@ GN::Logger * GN::gfx::OGLRenderer::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // *****************************************************************************
 
 #if GN_BUILD_STATIC
-GN::gfx::Renderer * createOGLRenderer()
+GN::gfx::Renderer * GN::gfx::createOGLRenderer( const GN::gfx::RendererOptions & o )
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer * GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
 #endif

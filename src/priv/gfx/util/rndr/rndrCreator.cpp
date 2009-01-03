@@ -1,48 +1,27 @@
 #include "pch.h"
-#include "garnet/GNgfx.h"
 
 // *************************************************************************
 // local functions
 // *************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.core.Renderer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr");
 
 ///
-/// Function prototype to create instance of renderer.
+/// Function type to create renderer.
 ///
 typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOptions & );
 
-#if GN_BUILD_STATIC
-
-//
-// create D3D9 renderer
-//
-#if GN_MSWIN
-extern GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & );
-#else
-inline GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & )
-{ GN_ERROR(sLogger)( "No D3D9 support on platform other than MS Windows." ); return 0; }
-#endif
-
-//
-// create D3D10 renderer
-//
-#if GN_MSWIN && !GN_XENON && defined(HAS_D3D10)
-extern GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & );
-#else
-inline GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & )
-{ GN_ERROR(sLogger)( "No D3D10 support on platform other than MS Vista." ); return 0; }
-#endif
-
-//
-// create OGL renderer
-//
 #if GN_XENON
-inline GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
-{ GN_ERROR(sLogger)( "No OGL support on Xenon." ); return 0; }
-#else
-extern GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & );
-#endif
+
+///
+/// fake OGL renderer creator for Xenon platform
+///
+inline GN::gfx::Renderer *
+GN::gfx::createOGLRenderer( const GN::gfx::RendererOptions & )
+{
+    GN_ERROR(sLogger)( "No OGL support on Xenon." );
+    return 0;
+}
 
 #endif
 
@@ -60,18 +39,14 @@ static GN::gfx::RendererAPI sDetermineRendererAPI()
 #endif
 }
 
+static const GN::Guid RENDERER_DLL_GUID = { 0xa397a51a, 0xa008, 0x4ffd, { 0xbd, 0x8a, 0x7f, 0xd4, 0xa3, 0xaf, 0x59, 0xd7 } };
+
 namespace GN { namespace gfx
 {
-    // global renderer signals
-    typedef Signal4<void, Renderer&, HandleType, UInt32, UInt32> SizeMoveSignal;
-    GN_PUBLIC Signal1<void,Renderer&>  & getSigRendererDeviceLost() { static Signal1<void,Renderer&> s; return s; }
-    GN_PUBLIC SizeMoveSignal           & getSigRendererWindowSizeMove() { static SizeMoveSignal s; return s; }
-    GN_PUBLIC Signal1<void,Renderer&>  & getSigRendererWindowClose() { static Signal1<void,Renderer&> s; return s; }
-
     //
     //
     // -------------------------------------------------------------------------
-    GN_PUBLIC Renderer * createRenderer( const RendererOptions & ro )
+    Renderer * createSingleThreadRenderer( const RendererOptions & ro )
     {
         GN_GUARD;
 
@@ -110,7 +85,9 @@ namespace GN { namespace gfx
         if( !creator ) return 0;
         Renderer * r = creator( ro );
         if( 0 == r ) return 0;
-        r->mSharedLib = dll.release();
+        SharedLib * dllptr = dll.get();
+        r->setUserData( RENDERER_DLL_GUID, &dllptr, sizeof(dllptr) );
+        dll.release();
         return r;
 #endif
         GN_UNGUARD;
@@ -119,15 +96,17 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    GN_PUBLIC void deleteRenderer( Renderer * r )
+    void deleteRenderer( Renderer * r )
     {
         GN_GUARD;
 
         if( r )
         {
-            SharedLib * dll = r->mSharedLib;
+            bool hasdll = r->hasUserData( RENDERER_DLL_GUID );
+            SharedLib * dll = NULL;
+            if( hasdll ) r->getUserData( RENDERER_DLL_GUID, &dll, sizeof(dll) );
             delete r;
-            delete dll;
+            if( hasdll ) delete dll;
         }
 
         GN_UNGUARD;

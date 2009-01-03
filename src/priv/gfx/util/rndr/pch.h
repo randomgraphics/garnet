@@ -1,15 +1,12 @@
 #ifndef __GN_PCH_H__
 #define __GN_PCH_H__
 // *****************************************************************************
-// \file    pch.h
+// \file    common/pch.h
 // \brief   PCH header
-// \author  chenlee (2005.10.1)
+// \author  chenlee (2006.1.7)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
-#include "garnet/GNinput.h"
-#include "garnet/GNwin.h"
-#include "garnet/GNutil.h"
 
 // *****************************************************************************
 //                                     EOF

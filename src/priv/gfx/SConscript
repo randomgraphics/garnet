@@ -1,1 +1,1 @@
-SConscript( dirs=['base','rndr','sys'] )
+SConscript( dirs=['util','rndr','sys'] )

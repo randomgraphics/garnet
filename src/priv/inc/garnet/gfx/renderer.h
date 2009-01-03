@@ -1173,38 +1173,79 @@ namespace GN { namespace gfx
         ///
         virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
 
+        ///
+        /// Attatch/Deatch user data to/from the renderer.
+        ///
+        /// \param id               User data ID.
+        /// \param data, length     User data buffer.
+        ///
+        /// The rendere will make a copy the input data buffer, and overwriting any existing data with same ID.
+        ///
+        /// Settting both data and length to zero, to delete exsiting user data.
+        ///
+        /// User data buffer will be deleted automatically when the renderer is deleted.
+        ///
+        virtual void setUserData( const Guid & id, const void * data, size_t length ) = 0;
+
+        ///
+        /// Get user data
+        ///
+        /// \param id               User data ID.
+        /// \param length           Optional parameter to return user data length.
+        /// \return                 Return user data pointer. Return NULL if ID is not found.
+        ///
+        virtual const void * getUserData( const Guid & id, size_t * length = NULL ) const = 0;
+
+        ///
+        /// determine if there is the user data with specific ID
+        ///
+        virtual bool hasUserData( const Guid & id ) const = 0;
+
+        ///
+        /// get user data length.
+        ///
+        inline size_t getUserDataLength( const Guid & id ) const
+        {
+            size_t length;
+            if( NULL == getUserData( id, &length ) ) length = 0;
+            return length;
+        }
+
+        ///
+        /// get user data: copy it to specified user specified buffer.
+        ///
+        /// \param id               User data ID.
+        /// \param data, length     Target buffer to store user data.
+        /// \return                 return bytes copied to target buffer. Return 0 for failure.
+        ///
+        inline size_t getUserData( const Guid & id, void * data, size_t length ) const
+        {
+            size_t srcLength;
+            const void * src = getUserData( id, &srcLength );
+            if( NULL == src ) return 0;
+            size_t copyLength = srcLength < length ? srcLength : length;
+            memcpy( data, src, copyLength );
+            return copyLength;
+        }
+
         //@}
-
-        // ********************************************************************
-        //
-        /// \name Renderer DLL. utilities
-        //
-        // ********************************************************************
-
-        //@{
-
-    private:
-
-        SharedLib * mSharedLib;
-        friend GN_PUBLIC Renderer * createRenderer( const RendererOptions & );
-        friend GN_PUBLIC void       deleteRenderer( Renderer * );
-
-        //@}
-
     };
 
     ///
-    /// Create a new renderer.
+    /// Create new single thread renderer.
     ///
-    GN_PUBLIC Renderer * createRenderer( const RendererOptions & );
+    Renderer * createSingleThreadRenderer( const RendererOptions & );
+
+    ///
+    /// Create new multi thread renderer.
+    ///
+    Renderer * createMultiThreadRenderer( const RendererOptions & );
 
     ///
     /// Delete renderer
     ///
-    GN_PUBLIC void deleteRenderer( Renderer * );
+    void deleteRenderer( gfx::Renderer * );
 }}
-
-#include "renderer.inl"
 
 // *****************************************************************************
 //                                     EOF
