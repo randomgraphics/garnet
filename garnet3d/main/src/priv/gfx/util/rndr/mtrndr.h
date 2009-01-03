@@ -44,6 +44,22 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
+        // public methods
+        // ********************************
+    public:
+
+        //@{
+
+        void waitForIdle();
+
+        void postCommand( UInt32 cmd, const void * data, size_t length );
+
+        template<typename T>
+        void postCommand1( UInt32 cmd, const T & param1 ) { postCommand( cmd, (void*)&param1, sizeof(param1) ); }
+
+        //@}
+
+        // ********************************
         // thread and sync objects
         // ********************************
     private:
@@ -58,6 +74,8 @@ namespace GN { namespace gfx
 
         RendererOptions mRendererOptions;
         DispDesc        mDispDesc;
+        void *          mD3DDevice;
+        void *          mOGLRC;
         RendererCaps    mCaps;
 
         // ********************************
@@ -73,25 +91,21 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void threadProc( void * );
-
-        void postCommand( UInt32 cmd, void * data, size_t length );
-
-        void kickOff();
-
-        void waitForIdle();
+        UInt32 threadProc( void * );
 
         // ********************************
         // rendering methods from Renderer
         // ********************************
     public:
 
-        virtual const RendererOptions & getOptions() const;
-        virtual const DispDesc & getDispDesc() const;
-        virtual void * getD3DDevice() const;
-        virtual void * getOGLRC() const;
+        //@{
 
-        virtual const RendererCaps & getCaps() const;
+        virtual const RendererOptions & getOptions() const { return mRendererOptions; }
+        virtual const DispDesc & getDispDesc() const { return mDispDesc; }
+        virtual void * getD3DDevice() const { return mD3DDevice; }
+        virtual void * getOGLRC() const { return mOGLRC; }
+
+        virtual const RendererCaps & getCaps() const { return mCaps; }
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const;
         virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const;
 
@@ -142,8 +156,10 @@ namespace GN { namespace gfx
         virtual void enableParameterCheck( bool enable );
         virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
         virtual void setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length = NULL ) const;
+        virtual const void * getUserData( const Guid & id, size_t * length ) const;
         virtual bool hasUserData( const Guid & id ) const;
+
+        //@}
     };
 }}
 
