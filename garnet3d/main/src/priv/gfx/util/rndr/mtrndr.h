@@ -36,11 +36,53 @@ namespace GN { namespace gfx
         bool init( const RendererOptions & o );
         void quit();
     private:
-        void clear() {}
+        void clear()
+        {
+            mThread   = NULL;
+            mRenderer = NULL;
+        }
         //@}
 
         // ********************************
-        // methods from Renderer
+        // thread and sync objects
+        // ********************************
+    private:
+
+        Thread        * mThread;
+        volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+
+        // ********************************
+        // front end variables
+        // ********************************
+    private:
+
+        RendererOptions mRendererOptions;
+        DispDesc        mDispDesc;
+        RendererCaps    mCaps;
+
+        // ********************************
+        // back-end variables
+        // ********************************
+    private:
+
+        // variables used in backend thread
+        Renderer * mRenderer;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        void threadProc( void * );
+
+        void postCommand( UInt32 cmd, void * data, size_t length );
+
+        void kickOff();
+
+        void waitForIdle();
+
+        // ********************************
+        // rendering methods from Renderer
         // ********************************
     public:
 
@@ -102,18 +144,6 @@ namespace GN { namespace gfx
         virtual void setUserData( const Guid & id, const void * data, size_t length );
         virtual const void * getUserData( const Guid & id, size_t * length = NULL ) const;
         virtual bool hasUserData( const Guid & id ) const;
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        Renderer * mRenderer;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
     };
 }}
 

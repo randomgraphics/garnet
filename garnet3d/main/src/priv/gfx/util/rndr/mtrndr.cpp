@@ -1,8 +1,13 @@
 #include "pch.h"
 #include "mtrndr.h"
+#include "mtrndrCmd.h"
 
 using namespace GN;
 using namespace GN::gfx;
+
+// *****************************************************************************
+// Local classes and data types
+// *****************************************************************************
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,14 +16,25 @@ using namespace GN::gfx;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadRenderer::init( const RendererOptions & )
+bool GN::gfx::MultiThreadRenderer::init( const RendererOptions & ro )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadRenderer, () );
 
-    // Do custom init here
+    // create thread
+    mRendererCreationStatus = 2;
+    Delegate1<UInt32,void*> proc( this, &GN::gfx::MultiThreadRenderer::threadProc );
+    mThread = createThread( proc, &ro, TP_NORMAL );
+    if( NULL == mThread ) return failure();
+
+    // wait for the renderer creation
+    while( 2 == mRendererCreationStatus ) sleepCurrentThread(0);
+    if( 1 != mRendererCreationStatus ) return failure();
+
+    // setup front variables
+    mRendererOptions = ro;
 
     // success
     return success();
@@ -33,10 +49,51 @@ void GN::gfx::MultiThreadRenderer::quit()
 {
     GN_GUARD;
 
+    if( mThread )
+    {
+        postCommand( CMD_DESTROY, 0, 0 );
+        KickOff();
+        waitForIdle();
+    }
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+// *****************************************************************************
+// public methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+
+// *****************************************************************************
+// private methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
+{
+    // create the renderer instance
+    GN_ASSERT( 2 == mRendererCreationStatus );
+    const RendererOptions * ro = (const RendererOptions*)param;
+    mRenderer = createSingleThreadRenderer( ro );
+    if( NULL == mRenderer )
+    {
+        mRendererCreationStatus = 0;
+        return -1U;
+    }
+    mRendererCreationStatus = 1;
+
+    // enter command loop
+
+    // success
+    return 0;
 }
 
 // *****************************************************************************
@@ -51,7 +108,9 @@ void GN::gfx::MultiThreadRenderer::quit()
 // -----------------------------------------------------------------------------
 const RendererOptions & GN::gfx::MultiThreadRenderer::getOptions() const
 {
-    GN_UNIMPL();
+    postCommand( CMD_GET_RENDERER_OPTIONS, &mRendererOptions, sizeof(mRendererOptions) );
+    waitForIdle();
+    return mRendererOptions;
 }
 
 //
@@ -59,7 +118,9 @@ const RendererOptions & GN::gfx::MultiThreadRenderer::getOptions() const
 // -----------------------------------------------------------------------------
 const DispDesc & GN::gfx::MultiThreadRenderer::getDispDesc() const
 {
-    GN_UNIMPL();
+    postCommand( CMD_GET_DISP_DESC, &mDispDecs, sizeof(mDispDesc) );
+    waitForIdle();
+    return mDispDesc;
 }
 
 //
@@ -67,7 +128,10 @@ const DispDesc & GN::gfx::MultiThreadRenderer::getDispDesc() const
 // -----------------------------------------------------------------------------
 void * GN::gfx::MultiThreadRenderer::getD3DDevice() const
 {
-    GN_UNIMPL();
+    void * device;
+    postCommand( CMD_GET_D3D_DEVICE, &device, sizeof(device) );
+    waitForIdle();
+    return device;
 }
 
 //
@@ -75,7 +139,10 @@ void * GN::gfx::MultiThreadRenderer::getD3DDevice() const
 // -----------------------------------------------------------------------------
 void * GN::gfx::MultiThreadRenderer::getOGLRC() const
 {
-    GN_UNIMPL();
+    void * rc;
+    postCommand( CMD_GET_OGL_RC, &rc, sizeof(rc) );
+    waitForIdle();
+    return rc;
 }
 
 
@@ -84,7 +151,9 @@ void * GN::gfx::MultiThreadRenderer::getOGLRC() const
 // -----------------------------------------------------------------------------
 const RendererCaps & GN::gfx::MultiThreadRenderer::getCaps() const
 {
-    GN_UNIMPL();
+    postCommand( CMD_GET_CAPS, &mCaps, sizeof(mCaps) );
+    waitForIdle();
+    return mCaps;
 }
 
 //
@@ -92,7 +161,10 @@ const RendererCaps & GN::gfx::MultiThreadRenderer::getCaps() const
 // -----------------------------------------------------------------------------
 bool GN::gfx::MultiThreadRenderer::checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const
 {
+    postCommand( CMD_CHECK_TEXTURE_FORMAT_SUPPORT, 0, 0 );
+    waitForIdle();
     GN_UNIMPL();
+    return false;
 }
 
 //
