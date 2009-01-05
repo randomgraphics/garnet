@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
+#include "ringbuffer.h"
 
 namespace GN { namespace gfx
 {
@@ -33,13 +34,16 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & o );
+        bool init( const RendererOptions & o, size_t ringBufferSize = 4*1024*1024 );
         void quit();
     private:
         void clear()
         {
-            mThread   = NULL;
-            mRenderer = NULL;
+            mRingBufferBegin = NULL;
+            mRingBufferFull  = NULL;
+            mRingBufferEmpty = NULL;
+            mThread          = NULL;
+            mRenderer        = NULL;
         }
         //@}
 
@@ -66,6 +70,7 @@ namespace GN { namespace gfx
 
         Thread        * mThread;
         volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        RingBuffer      mRingBuffer;
 
         // ********************************
         // front end variables

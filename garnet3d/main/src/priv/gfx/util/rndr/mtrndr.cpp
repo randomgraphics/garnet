@@ -7,6 +7,7 @@
 #pragma warning( disable : 4100 ) // unused parameters
 #pragma warning( disable : 4715 ) // no return value
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mtrndr");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -15,6 +16,12 @@ using namespace GN::gfx;
 // Local classes and data types
 // *****************************************************************************
 
+struct CommandHeader
+{
+    UInt16 cid;    ///< command ID ( 2 bytes )
+    UInt16 sizedw; ///< command size in DWORDS, includes the header itself.
+};
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -22,12 +29,28 @@ using namespace GN::gfx;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadRenderer::init( const RendererOptions & ro )
+bool GN::gfx::MultiThreadRenderer::init(
+    const RendererOptions & ro,
+    size_t                  ringBufferSize )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadRenderer, () );
+
+    // initialize ring buffer
+    ringBufferSize = (ringBufferSize + 3) & ~3; // aligned buffer size to dword boundary.
+    mRingBufferBegin = (UInt32*)heapAlloc( ringBufferSize );
+    if( NULL == mRingBufferBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
+    mRingBufferEnd = mRingBufferBegin + ringBufferSize / sizeof(UInt32);
+    mReadPtr = mWritePtr = mRingBufferBegin;
+    mRingBufferFull = createSyncEvent( false, false, NULL );
+    mRingBufferEmpty = createSyncEventGroup( 2, false, false, NULL );
+    if( NULL == mRingBufferFull || NULL == mRingBufferEmpty )
+    {
+        GN_ERROR(sLogger)( "fail to create ring buffer sync events." );
+        return failure();
+    }
 
     // create thread
     mRendererCreationStatus = 2;
@@ -81,6 +104,10 @@ void GN::gfx::MultiThreadRenderer::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::waitForIdle()
 {
+    while( mReadPtr != mWritePtr )
+    {
+        sleepCurrentThread( 0.0f );
+    }
 }
 
 //
@@ -88,6 +115,20 @@ void GN::gfx::MultiThreadRenderer::waitForIdle()
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::postCommand( UInt32 cmd, const void * data, size_t length )
 {
+    // align data size to dword boundary
+    size_t alignedLength = ( length + 3 ) & ~3;
+
+    // calculate command size
+    size_t cmdsize = alignedLength + 4;
+    size_t cmdsizedw = cmdsize / 4;
+    size_t rbsizedw = mRingBufferEnd - mRingBufferBegin;
+    if( cmdsizedw > rbsizedw )
+    {
+        GN_ERROR(sLogger)( "command parameter is too large to put into ring buffer." );
+        return;
+    }
+
+    GN_UNIMPL();
 }
 
 // *****************************************************************************
@@ -111,6 +152,14 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
     mRendererCreationStatus = 1;
 
     // enter command loop
+    while(true)
+    {
+        while( mWritePtr == mReadPtr )
+        {
+            sleepCurrentThread( 0.0f );
+            continue;
+        }
+    }
 
     // success
     return 0;
