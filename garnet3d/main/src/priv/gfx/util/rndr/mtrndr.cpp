@@ -75,6 +75,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -82,6 +83,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -89,6 +91,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_COMPILE_GPU_PROGRAM( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -96,6 +99,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_GPU_PROGRAM( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -103,6 +107,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_TEXTURE( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -110,6 +115,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_VTXBUF( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -117,6 +123,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_IDXBUF( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -124,6 +131,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -131,6 +139,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_REBIND_CONTEXT( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -138,13 +147,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_GET_CONTEXT( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    void func_PRESENT( Renderer & r, void * p, size_t )
+    void func_PRESENT( Renderer & r, void *, size_t )
     {
+        r.present();
     }
 
     //
@@ -152,6 +163,17 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CLEAR_SCREEN( Renderer & r, void * p, size_t )
     {
+        struct ClearParam
+        {
+            Vector4f  c;
+            float     z;
+            UInt8     s;
+            BitFields flags;
+        };
+
+        ClearParam * cp = (ClearParam*)p;
+
+        r.clearScreen( cp->c, cp->z, cp->s, cp->flags );
     }
 
     //
@@ -159,6 +181,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_INDEXED( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -166,6 +189,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -173,6 +197,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_INDEXED_UP( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -197,6 +222,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_LINES( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -204,6 +230,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_ENABLE_PARAMETER_CHECK( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 
     //
@@ -211,6 +238,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DUMP_NEXT_FRAME( Renderer & r, void * p, size_t )
     {
+        GN_UNIMPL();
     }
 }}
 
@@ -490,7 +518,7 @@ void GN::gfx::MultiThreadRenderer::clearScreen(
     UInt8            s,
     BitFields        flags )
 {
-    GN_UNIMPL();
+    postCommand4( CMD_CLEAR_SCREEN, c, z, s, flags );
 }
 
 //
