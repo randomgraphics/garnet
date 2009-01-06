@@ -79,7 +79,7 @@ GN::gfx::RingBuffer::beginProduce( size_t size )
 
     while( true )
     {
-        int freeSize = mWritePtr - mReadPtr;
+        int freeSize = mReadPtr - mWritePtr;
         if( freeSize <= 0 ) freeSize += mSize;
         GN_ASSERT( freeSize > 0 );
         freeSize -= 1;
@@ -127,7 +127,7 @@ GN::gfx::RingBuffer::beginConsume( size_t size )
 
     while( true )
     {
-        int unconsumedSize = mReadPtr - mWritePtr;
+        int unconsumedSize = mWritePtr - mReadPtr;
         if( unconsumedSize < 0 ) unconsumedSize += mSize;
         GN_ASSERT( unconsumedSize >= 0 );
 

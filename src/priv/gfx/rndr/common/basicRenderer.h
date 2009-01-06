@@ -180,6 +180,7 @@ namespace GN { namespace gfx
 
     public:
 
+        virtual void         processRenderWindowMessages( bool blockWhileMinimized );
         virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
         virtual void         setUserData( const Guid & id, const void * data, size_t length );
         virtual const void * getUserData( const Guid & id, size_t * length ) const;
