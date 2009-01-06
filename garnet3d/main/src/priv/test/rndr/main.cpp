@@ -100,7 +100,7 @@ void draw( Renderer & r )
         1,1,0,1,
     };
 
-    r.drawUp( TRIANGLE_LIST, 1, vb, 4*sizeof(float) );
+    r.drawUp( TRIANGLE_LIST, 3, vb, 4*sizeof(float) );
 }
 
 int run( Renderer & rndr )

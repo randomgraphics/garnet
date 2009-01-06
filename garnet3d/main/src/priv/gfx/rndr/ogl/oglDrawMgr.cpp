@@ -79,52 +79,21 @@ static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t f
 //
 /// \brief translate garnet primitive to OpenGL primitive
 // ------------------------------------------------------------------------
-static inline
-bool sPrimitiveType2OGL( GLenum                 & oglPrim,
-                         size_t                 & numidx,
-                         GN::gfx::PrimitiveType   prim,
-                         size_t                   numprim )
+static inline GLenum
+sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
 {
-    switch(prim)
+    switch( prim )
     {
-        case GN::gfx::POINT_LIST :
-            oglPrim = GL_POINTS;
-            numidx = numprim;
-            break;
-
-        case GN::gfx::LINE_LIST :
-            oglPrim = GL_LINES;
-            numidx = numprim * 2;
-            break;
-
-        case GN::gfx::LINE_STRIP :
-            oglPrim = GL_LINE_STRIP;
-            numidx = numprim > 0 ? numprim + 1 : 0;
-            break;
-
-        case GN::gfx::TRIANGLE_LIST :
-            oglPrim = GL_TRIANGLES;
-            numidx = numprim * 3;
-            break;
-
-        case GN::gfx::TRIANGLE_STRIP :
-            oglPrim = GL_TRIANGLE_STRIP;
-            numidx = numprim > 0 ? numprim + 2 : 0;
-            break;
-
-        case GN::gfx::QUAD_LIST :
-            oglPrim = GL_QUADS;
-            numidx = numprim * 4;
-            break;
-
+        case GN::gfx::POINT_LIST     : return GL_POINTS;
+        case GN::gfx::LINE_LIST      : return GL_LINES;
+        case GN::gfx::LINE_STRIP     : return GL_LINE_STRIP;
+        case GN::gfx::TRIANGLE_LIST  : return GL_TRIANGLES;
+        case GN::gfx::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
+        case GN::gfx::QUAD_LIST      : return GL_QUADS;
         default :
-            oglPrim = GL_TRIANGLES;
-            numidx = numprim * 3;
-            GN_ERROR(sLogger)( "invalid primitve type!" );
-            return false;
+            GN_ERROR(sLogger)( "invalid primitve type %d!", prim );
+            return GL_TRIANGLES;
     }
-
-    return true;
 }
 
 static inline void
@@ -269,7 +238,7 @@ void GN::gfx::OGLRenderer::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawIndexed(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numidx,
     size_t        startvtx,
     size_t        minvtxidx,
     size_t        numvtx,
@@ -278,13 +247,6 @@ void GN::gfx::OGLRenderer::drawIndexed(
     GN_GUARD_SLOW;
 
     DUMP_DRAW_STATE();
-
-    // map custom primitive to opengl primitive
-    GLenum  oglPrim;
-    size_t  numidx;
-    GN_VERIFY_EX(
-        sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
-        "Fail to map primitive!" );
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt )
@@ -327,6 +289,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
         }
     }
 
+    GLenum oglPrim = sPrimitiveType2OGL( prim );
+
     if( GLEW_EXT_draw_range_elements )
     {
         // draw indexed primitives
@@ -356,18 +320,11 @@ void GN::gfx::OGLRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t startvtx )
+void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_GUARD_SLOW;
 
     DUMP_DRAW_STATE();
-
-    // map custom primitive to opengl primitive
-    GLenum  oglPrim;
-    size_t  numidx;
-    GN_VERIFY_EX(
-        sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
-        "Fail to map primitive!" );
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt )
@@ -379,8 +336,10 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
             startvtx );
     }
 
+    GLenum oglPrim = sPrimitiveType2OGL( prim );
+
     // draw primitives
-    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
+    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
 
     // done
     ++mDrawCounter;
@@ -393,7 +352,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawIndexedUp(
     PrimitiveType  prim,
-    size_t         numprim,
+    size_t         numidx,
     size_t         numvtx,
     const void *   vertexData,
     size_t         strideInBytes,
@@ -402,13 +361,6 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     GN_GUARD_SLOW;
 
     DUMP_DRAW_STATE();
-
-    // map custom primitive to opengl primitive
-    GLenum  oglPrim;
-    size_t  numidx;
-    GN_VERIFY_EX(
-        sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
-        "Fail to map primitive!" );
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
@@ -436,6 +388,8 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             }
         }
     }
+
+    GLenum oglPrim = sPrimitiveType2OGL( prim );
 
     if( GLEW_EXT_draw_range_elements )
     {
@@ -475,20 +429,13 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawUp(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numvtx,
     const void *  vertexData,
     size_t        strideInBytes )
 {
     GN_GUARD_SLOW;
 
     DUMP_DRAW_STATE();
-
-    // map custom primitive to opengl primitive
-    GLenum  oglPrim;
-    size_t  numidx;
-    GN_VERIFY_EX(
-        sPrimitiveType2OGL( oglPrim, numidx, prim, numprim ),
-        "Fail to map primitive!" );
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
@@ -505,7 +452,8 @@ void GN::gfx::OGLRenderer::drawUp(
     }
 
     // draw primitives
-    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numidx ) );
+    GLenum oglPrim = sPrimitiveType2OGL( prim );
+    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
 
     // restore VBO
     if( 0 != oldvbo )
@@ -541,10 +489,9 @@ void GN::gfx::OGLRenderer::drawLines(
     RendererContext ctx = getContext();
     ctx.gpuProgram.clear();
 
-    if( bindContext( ctx ) )
-    {
-        mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
-    }
+    bindContext( ctx );
+
+    mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
 
     // done
     ++mDrawCounter;
