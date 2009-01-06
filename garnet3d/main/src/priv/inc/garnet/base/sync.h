@@ -167,7 +167,7 @@ namespace GN
 
     ///
     /// Abstract semaphore interface
-    ///    
+    ///
     struct Semaphore : public NoCopy
     {
         virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.

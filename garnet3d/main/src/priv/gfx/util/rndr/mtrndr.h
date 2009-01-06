@@ -39,11 +39,8 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mRingBufferBegin = NULL;
-            mRingBufferFull  = NULL;
-            mRingBufferEmpty = NULL;
-            mThread          = NULL;
-            mRenderer        = NULL;
+            mThread   = NULL;
+            mRenderer = NULL;
         }
         //@}
 
@@ -56,10 +53,69 @@ namespace GN { namespace gfx
 
         void waitForIdle();
 
-        void postCommand( UInt32 cmd, const void * data, size_t length );
+        UInt8 * beginPostCommand( UInt32 cmd, size_t length );
+        void    endPostCommand() { mRingBuffer.endProduce(); }
 
-        template<typename T>
-        void postCommand1( UInt32 cmd, const T & param1 ) { postCommand( cmd, (void*)&param1, sizeof(param1) ); }
+        void postCommand0( UInt32 cmd )
+        {
+            if( beginPostCommand( cmd, 0 ) ) endPostCommand();
+        }
+
+        template<typename T1>
+        void postCommand1( UInt32 cmd, const T1 & p1 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) );
+            if( NULL == buf ) return;
+            memcpy( buf, &p1, sizeof(T1) );
+            endPostCommand();
+        }
+
+        template<typename T1, typename T2>
+        void postCommand2( UInt32 cmd, const T1 & p1, const T2 & p2 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) );
+            if( NULL == buf ) return;
+            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
+            memcpy( buf, &p2, sizeof(T2) );
+            endPostCommand();
+        }
+
+        template<typename T1, typename T2, typename T3>
+        void postCommand3( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) );
+            if( NULL == buf ) return;
+            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
+            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
+            memcpy( buf, &p3, sizeof(T3) );
+            endPostCommand();
+        }
+
+        template<typename T1, typename T2, typename T3, typename T4>
+        void postCommand4( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) );
+            if( NULL == buf ) return;
+            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
+            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
+            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
+            memcpy( buf, &p4, sizeof(T4) );
+            endPostCommand();
+        }
+
+        template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+        void postCommand6( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) + sizeof(T6) );
+            if( NULL == buf ) return;
+            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
+            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
+            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
+            memcpy( buf, &p4, sizeof(T4) ); buf += sizeof(T4);
+            memcpy( buf, &p5, sizeof(T5) ); buf += sizeof(T5);
+            memcpy( buf, &p6, sizeof(T6) );
+            endPostCommand();
+        }
 
         //@}
 
@@ -68,9 +124,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        Thread        * mThread;
-        volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         RingBuffer      mRingBuffer;
+        volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        volatile UInt32 mFrontEndFence;
+        volatile UInt32 mBackEndFence;
+        Thread        * mThread;
 
         // ********************************
         // front end variables
@@ -120,7 +178,7 @@ namespace GN { namespace gfx
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
 
-        virtual bool bindContext( const RendererContext & );
+        virtual void bindContext( const RendererContext & );
         virtual void rebindContext();
         virtual const RendererContext & getContext() const;
 

@@ -527,7 +527,7 @@ void GN::gfx::OGLRenderer::drawLines(
     BitFields options,
     const void * positions,
     size_t stride,
-    size_t count,
+    size_t numpoints,
     UInt32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
@@ -543,7 +543,7 @@ void GN::gfx::OGLRenderer::drawLines(
 
     if( bindContext( ctx ) )
     {
-        mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
+        mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
     }
 
     // done

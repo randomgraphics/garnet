@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     class OGLRenderer;
-    
+
     ///
     /// OGL line renderer
     ///
@@ -57,7 +57,7 @@ namespace GN { namespace gfx
             BitFields options,
             const float * positions,
             size_t stride,
-            size_t count,
+            size_t numpoints,
             UInt32 rgba,
             const Matrix44f & model,
             const Matrix44f & view,

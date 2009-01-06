@@ -944,7 +944,7 @@ namespace GN { namespace gfx
         ///
         /// If binding failed, the renderer will try to restore device state to previos context.
         ///
-        virtual bool bindContext( const RendererContext & ) = 0;
+        virtual void bindContext( const RendererContext & ) = 0;
 
         ///
         /// Rebind current rendering context to rendering device.
@@ -999,8 +999,8 @@ namespace GN { namespace gfx
         ///
         /// \param prim
         ///     primititive type
-        /// \param numprim
-        ///     number of primitives
+        /// \param numidx
+        ///     number of indices
         /// \param startvtx
         ///     vertex index into vertex buffer that index "0" refers to.
         /// \param minvtxidx, numvtx
@@ -1011,7 +1011,7 @@ namespace GN { namespace gfx
         /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
         ///
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numprim,
+                                  size_t        numidx,
                                   size_t        startvtx,
                                   size_t        minvtxidx,
                                   size_t        numvtx,
@@ -1022,15 +1022,15 @@ namespace GN { namespace gfx
         ///
         /// \param prim
         ///     primititive type
-        /// \param numprim
-        ///     number of primitives
+        /// \param numvtx
+        ///     number of vertices
         /// \param startvtx
         ///     index into vertex buffer of the first vertex.
         ///
         /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
         ///
         virtual void draw( PrimitiveType prim,
-                           size_t        numprim,
+                           size_t        numvtx,
                            size_t        startvtx ) = 0;
 
         ///
@@ -1038,7 +1038,7 @@ namespace GN { namespace gfx
         ///
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             size_t         numprim,
+                             size_t         numidx,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
@@ -1048,7 +1048,7 @@ namespace GN { namespace gfx
         /// draw on-indexed primitives with user-defined data array
         ///
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numprim,
+                             size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes ) = 0;
 
@@ -1062,8 +1062,8 @@ namespace GN { namespace gfx
         ///     选项 DL_WINDOW_SPACE会影响坐标的含义。
         /// \param stride
         ///     stride of one vertex.
-        /// \param count
-        ///     Number of line segments (note: _NOT_ number of points)
+        /// \param numpoints
+        ///     Number of points (note: _NOT_ number of line segments)
         /// \param rgba
         ///     line color, in R-G-B-A format.
         /// \param model, view, proj
@@ -1072,7 +1072,7 @@ namespace GN { namespace gfx
         virtual void drawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
-                                size_t            count,
+                                size_t            numpoints,
                                 UInt32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
@@ -1179,11 +1179,10 @@ namespace GN { namespace gfx
         /// \param id               User data ID.
         /// \param data, length     User data buffer.
         ///
-        /// The rendere will make a copy the input data buffer, and overwriting any existing data with same ID.
-        ///
-        /// Settting both data and length to zero, to delete exsiting user data.
-        ///
-        /// User data buffer will be deleted automatically when the renderer is deleted.
+        /// - Renderer won't touch user data.
+        /// - Renderer will make a copy the input data buffer, and overwriting any existing data with same ID.
+        /// - Settting both data and length to zero, to delete exsiting user data.
+        /// - User data buffer will be deleted automatically when the renderer is deleted.
         ///
         virtual void setUserData( const Guid & id, const void * data, size_t length ) = 0;
 

@@ -31,10 +31,15 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t );
+        bool init( size_t ringBufferSize );
         void quit();
     private:
-        void clear() {}
+        void clear()
+        {
+            mBegin    = NULL;
+            mNotFull  = NULL;
+            mNotEmpty = NULL;
+        }
         //@}
 
         // ********************************
@@ -42,20 +47,27 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        /// get ring buffer size
+        size_t size() const { return mSize; }
+
+        // post quit message to ring buffer, unblock any blocked threads.
+        void   postQuitMessage();
+
         // Block calling thread util ring buffer is not full, or the ring buffer is about to quit.
-        //
         // Return NULL, if the ring buffer is about to quit.
-        void * beginProduce( size_t );
+        // Caller has to make sure that the size is no larger then the buffer size.
+        void * beginProduce( size_t size );
 
         // Call this function to notify the ring buffer that production is competed, and to wake any
         // blocking consumer thread.
         void   endProduce();
 
-        // Block calling thread until there's someting to cosume or the ring buffer
-        // is about to quit.
-        //
-        // Returns NULL, if the ring buffer is going to quit.
-        void * consume( size_t );
+        // Block calling thread until there's not empty or the ring buffer is about to quit.
+        // Return NULL, if the ring buffer is about to quit.
+        // Caller has to make sure that the size is no larger then the buffer size.
+        void * beginConsume( size_t size );
+
+        void   endConsume();
 
         // ********************************
         // private variables
@@ -64,12 +76,15 @@ namespace GN { namespace gfx
 
         // empty: readptr == writeptr
         // full:  readptr == (writeptr+1)%buffersize
-        UInt32                  * mRingBufferBegin; // Points to the first byte of the ring buffer.
-        UInt32                  * mRingBufferEnd;   // Points to the byte that is one byte over the last byte of the ring buffer
-        volatile const UInt32   * mReadPtr; // Points to next unconsumed command
-        volatile UInt32         * mWritePtr; // Points to next empty space.
-        SyncEvent               * mRingBufferFull;
-        SyncEventGroup          * mRingBufferEmpty;
+        size_t           mSize;      // the buffer size
+        UInt8          * mBegin;     // Points to the first byte of the ring buffer.
+        UInt8          * mEnd;       // Points to the byte that is one byte over the last byte of the ring buffer
+        UInt8 * volatile mReadPtr;   // Points to next unconsumed command
+        UInt8 * volatile mWritePtr;  // Points to next empty space.
+        size_t           mPendingReadSize;
+        size_t           mPendingWriteSize; // size of pending write
+        SyncEventGroup * mNotFull;
+        SyncEventGroup * mNotEmpty;
 
         // ********************************
         // private functions
