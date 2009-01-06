@@ -180,6 +180,16 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_UP( Renderer & r, void * p, size_t )
     {
+        struct DrawUpParam
+        {
+            PrimitiveType prim;
+            size_t        numvtx;
+            void *        vertexData;
+            size_t        strideInBytes;
+        };
+        DrawUpParam * dup = (DrawUpParam*)p;
+        r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
+        heapFree( dup->vertexData );
     }
 
     //
