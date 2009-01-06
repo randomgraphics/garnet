@@ -216,6 +216,7 @@ namespace GN { namespace gfx
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
 
+        virtual void processRenderWindowMessages( bool blockWhileMinimized );
         virtual void enableParameterCheck( bool enable );
         virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
         virtual void setUserData( const Guid & id, const void * data, size_t length );

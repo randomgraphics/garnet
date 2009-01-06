@@ -13,7 +13,7 @@ using namespace GN;
 using namespace GN::gfx;
 
 // *****************************************************************************
-// Command handlers
+// Local types and data
 // *****************************************************************************
 
 struct CommandHeader
@@ -22,225 +22,6 @@ struct CommandHeader
     UInt16 size;   ///< command parameter size. command header is not included.
     UInt32 fence;  ///< command fence
 };
-
-namespace GN { namespace gfx
-{
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_RENDERER_OPTIONS( Renderer & r, void * p, size_t )
-    {
-        RendererOptions ** ro = (RendererOptions **)p;
-        memcpy( *ro, &r.getOptions(), sizeof(**ro) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_DISP_DESC( Renderer & r, void * p, size_t )
-    {
-        DispDesc ** dd = (DispDesc**)p;
-        memcpy( *dd, &r.getDispDesc(), sizeof(**dd) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_D3D_DEVICE( Renderer & r, void * p, size_t )
-    {
-        void ** dev = (void**)p;
-        *dev = r.getD3DDevice();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_OGL_RC( Renderer & r, void * p, size_t )
-    {
-        void ** rc = (void**)p;
-        *rc = r.getOGLRC();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_CAPS( Renderer & r, void * p, size_t )
-    {
-        RendererCaps ** caps = (RendererCaps**)p;
-        memcpy( *caps, &r.getCaps(), sizeof(**caps) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_COMPILE_GPU_PROGRAM( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CREATE_GPU_PROGRAM( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CREATE_TEXTURE( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CREATE_VTXBUF( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CREATE_IDXBUF( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_REBIND_CONTEXT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_CONTEXT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_PRESENT( Renderer & r, void *, size_t )
-    {
-        r.present();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_CLEAR_SCREEN( Renderer & r, void * p, size_t )
-    {
-        struct ClearParam
-        {
-            Vector4f  c;
-            float     z;
-            UInt8     s;
-            BitFields flags;
-        };
-
-        ClearParam * cp = (ClearParam*)p;
-
-        r.clearScreen( cp->c, cp->z, cp->s, cp->flags );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DRAW_INDEXED( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DRAW( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DRAW_INDEXED_UP( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DRAW_UP( Renderer & r, void * p, size_t )
-    {
-        struct DrawUpParam
-        {
-            PrimitiveType prim;
-            size_t        numvtx;
-            void *        vertexData;
-            size_t        strideInBytes;
-        };
-        DrawUpParam * dup = (DrawUpParam*)p;
-        r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
-        heapFree( dup->vertexData );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DRAW_LINES( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_ENABLE_PARAMETER_CHECK( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_DUMP_NEXT_FRAME( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
-    }
-}}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -300,6 +81,8 @@ void GN::gfx::MultiThreadRenderer::quit()
     {
         mRingBuffer.postQuitMessage();
         mThread->waitForTermination();
+        delete mThread;
+        mThread = NULL;
     }
 
     mRingBuffer.quit();
@@ -400,7 +183,7 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
     }
 
     // delete the renderer
-    deleteRenderer( mRenderer );
+    delete mRenderer;
     mRenderer = NULL;
 
     // success
@@ -593,6 +376,13 @@ GN::gfx::MultiThreadRenderer::drawLines(
     GN_UNIMPL();
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadRenderer::processRenderWindowMessages( bool blockWhileMinimized )
+{
+    postCommand1( CMD_PROCESS_RENDER_WINDOW_MESSAGES, blockWhileMinimized );
+}
 
 //
 //
@@ -631,5 +421,239 @@ const void * GN::gfx::MultiThreadRenderer::getUserData( const Guid & id, size_t 
 // -----------------------------------------------------------------------------
 bool GN::gfx::MultiThreadRenderer::hasUserData( const Guid & id ) const
 {
-    return hasUserData( id );
+    return mRenderer->hasUserData( id );
 }
+
+// *****************************************************************************
+// Command handlers (called by back end thread)
+// *****************************************************************************
+
+namespace GN { namespace gfx
+{
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_RENDERER_OPTIONS( Renderer & r, void * p, size_t )
+    {
+        RendererOptions ** ro = (RendererOptions **)p;
+        memcpy( *ro, &r.getOptions(), sizeof(**ro) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_DISP_DESC( Renderer & r, void * p, size_t )
+    {
+        DispDesc ** dd = (DispDesc**)p;
+        memcpy( *dd, &r.getDispDesc(), sizeof(**dd) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_D3D_DEVICE( Renderer & r, void * p, size_t )
+    {
+        void *** dev = (void***)p;
+        **dev = r.getD3DDevice();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_OGL_RC( Renderer & r, void * p, size_t )
+    {
+        void *** rc = (void***)p;
+        **rc = r.getOGLRC();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_CAPS( Renderer & r, void * p, size_t )
+    {
+        RendererCaps ** caps = (RendererCaps**)p;
+        memcpy( *caps, &r.getCaps(), sizeof(**caps) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_COMPILE_GPU_PROGRAM( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_GPU_PROGRAM( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_TEXTURE( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_VTXBUF( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_IDXBUF( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_REBIND_CONTEXT( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_CONTEXT( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_PRESENT( Renderer & r, void *, size_t )
+    {
+        r.present();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CLEAR_SCREEN( Renderer & r, void * p, size_t )
+    {
+#pragma pack( push, 1 )
+        struct ClearParam
+        {
+            Vector4f  c;
+            float     z;
+            UInt8     s;
+            BitFields flags;
+        };
+#pragma pack( pop )
+
+        ClearParam * cp = (ClearParam*)p;
+
+        r.clearScreen( cp->c, cp->z, cp->s, cp->flags );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_INDEXED( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_INDEXED_UP( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_UP( Renderer & r, void * p, size_t )
+    {
+        struct DrawUpParam
+        {
+            PrimitiveType prim;
+            size_t        numvtx;
+            void *        vertexData;
+            size_t        strideInBytes;
+        };
+        DrawUpParam * dup = (DrawUpParam*)p;
+        r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
+        heapFree( dup->vertexData );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_LINES( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_PROCESS_RENDER_WINDOW_MESSAGES( Renderer & r, void * p, size_t )
+    {
+        bool * blockWhileMinimized = (bool*)p;
+        r.processRenderWindowMessages( *blockWhileMinimized );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_ENABLE_PARAMETER_CHECK( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DUMP_NEXT_FRAME( Renderer & r, void * p, size_t )
+    {
+        GN_UNIMPL();
+    }
+}}

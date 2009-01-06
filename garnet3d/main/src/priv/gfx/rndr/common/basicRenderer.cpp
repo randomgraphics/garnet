@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "basicRenderer.h"
+#include "garnet/GNwin.h"
 
 GN::Logger * GN::gfx::BasicRenderer::sLogger = GN::getLogger("GN.gfx.rndr.common");
 
@@ -77,6 +78,14 @@ void GN::gfx::BasicRenderer::rebindContext()
     {
         GN_RNDR_RIP( "fail to rebind current context." );
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::processRenderWindowMessages( bool blockWhileMinimized )
+{
+    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 //

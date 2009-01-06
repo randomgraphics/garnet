@@ -202,7 +202,8 @@ bool GN::gfx::OGLRenderer::capsInit()
     // max texture size
     GLuint maxTexSize;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, (GLint*)&maxTexSize );
-    mCaps.maxTex2DSize[0] = mCaps.maxTex1DSize[1] = maxTexSize; mCaps.maxTex2DSize[2] = 1;
+    mCaps.maxTex1DSize[0] = maxTexSize; mCaps.maxTex1DSize[1] = 1;
+    mCaps.maxTex2DSize[0] = mCaps.maxTex2DSize[1] = maxTexSize; mCaps.maxTex2DSize[2] = 1;
 
     // handle case where multi-texture extension is not supported
     if( GLEW_ARB_multitexture )

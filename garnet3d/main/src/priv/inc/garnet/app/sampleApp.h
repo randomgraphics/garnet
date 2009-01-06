@@ -9,84 +9,10 @@
 #include "garnet/GNengine.h"
 #include "garnet/GNscene.h"
 #include "garnet/GNinput.h"
+#include "garnet/GNutil.h"
 
 namespace GN { namespace app
 {
-    ///
-    /// Simple FPS counter
-    ///
-    class FpsCounter
-    {
-        Clock     mClock;
-        float     mFpsValue;
-        StrW      mFormatString;
-        StrW      mFpsString;
-        size_t    mFrameCounter;
-        double    mLastFrameTime;
-        double    mCurrentTime;
-        bool      mBeforeFirstUpdate;
-
-    public:
-
-        ///
-        /// Constructor
-        ///
-        FpsCounter( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { reset(); }
-
-        ///
-        /// Get time
-        ///
-        double getCurrentTime() const { return mCurrentTime; }
-
-        ///
-        /// reset the counter
-        ///
-        void reset()
-        {
-            mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
-            mFpsString.format( mFormatString.cptr(), 0 );
-            mFrameCounter = 0;
-            mCurrentTime = mClock.getTimeD();
-            mLastFrameTime = mCurrentTime - 1.0f/60.0f;
-            mBeforeFirstUpdate = true;
-        }
-
-        ///
-        /// Update the counter
-        ///
-        void onFrame()
-        {
-            mCurrentTime = mClock.getTimeD();
-            ++mFrameCounter;
-            double duration = mCurrentTime - mLastFrameTime;
-            if( duration >= 1.0f )
-            {
-                mBeforeFirstUpdate = false;
-                mFpsValue = (float)( mFrameCounter / duration );
-                mFpsString.format( mFormatString.cptr(), mFpsValue );
-                mLastFrameTime = mCurrentTime;
-                mFrameCounter = 0;
-                static Logger * sLogger = getLogger("GN.app.fps");
-                GN_VERBOSE(sLogger)( "FPS : %.2f", mFpsValue );
-            }
-            else if( mBeforeFirstUpdate )
-            {
-                mFpsValue = (float)( (mCurrentTime - mLastFrameTime) / mFrameCounter );
-                mFpsString.format( mFormatString.cptr(), mFpsValue );
-            }
-        }
-
-        ///
-        /// Get FPS value
-        ///
-        float getFps() const { return mFpsValue; }
-
-        ///
-        /// Get FPS string
-        ///
-        const StrW & getFpsString() const { return mFpsString; }
-    };
-
     ///
     /// Sample application framework
     ///
@@ -192,11 +118,11 @@ namespace GN { namespace app
 
         InitParam             mInitParam;
 
-        engine::RenderEngine mRenderEngine;
+        engine::RenderEngine  mRenderEngine;
         scene::BitmapFont     mFont;
 
         // time stuff
-        FpsCounter            mFps;
+        util::FpsCalculator   mFps;
         double                mLastFrameTime;
         double                mTimeSinceLastUpdate;
 

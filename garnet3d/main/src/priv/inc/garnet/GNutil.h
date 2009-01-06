@@ -17,6 +17,7 @@ namespace GN
 }
 
 #include "util/camera.h"
+#include "util/fps.h"
 
 // *****************************************************************************
 //                                     EOF

@@ -105,15 +105,16 @@ void draw( Renderer & r )
 
 int run( Renderer & rndr )
 {
-    if( !init( rndr ) ) { quit( rndr ); return -1; }
-
-    WindowHandle win = rndr.getDispDesc().windowHandle;
+    //if( !init( rndr ) ) { quit( rndr ); return -1; }
 
     bool gogogo = true;
 
+    FpsCalculator fps;
+    getLogger("GN.util.fps")->setLevel( Logger::LL_VERBOSE ); // enable FPS logger
+
     while( gogogo )
     {
-        processWindowMessages( win, false );
+        rndr.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -125,8 +126,10 @@ int run( Renderer & rndr )
         }
 
         rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( rndr );
+        //draw( rndr );
         rndr.present();
+
+        fps.onFrame();
     }
 
     quit( rndr );
@@ -156,8 +159,8 @@ int main( int, const char *[] )
     RendererOptions o;
     o.api = API_OGL;
 
-    //Renderer * r = createMultiThreadRenderer( o );
-    Renderer * r = createSingleThreadRenderer( o );
+    Renderer * r = createMultiThreadRenderer( o );
+    //Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);

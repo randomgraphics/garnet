@@ -1155,6 +1155,11 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// Process render window messages, to keep render window responding to user inputs.
+        ///
+        virtual void processRenderWindowMessages( bool blockWhileMinimized ) = 0;
+
+        ///
         /// Enable/Disable parameter check for performance critical functions.
         ///
         /// Enabled by default for debug build; disabled by default for release build.

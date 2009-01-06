@@ -30,6 +30,7 @@ void func_DRAW( Renderer &, void *, size_t );
 void func_DRAW_INDEXED_UP( Renderer &, void *, size_t );
 void func_DRAW_UP( Renderer &, void *, size_t );
 void func_DRAW_LINES( Renderer &, void *, size_t );
+void func_PROCESS_RENDER_WINDOW_MESSAGES( Renderer &, void *, size_t );
 void func_ENABLE_PARAMETER_CHECK( Renderer &, void *, size_t );
 void func_DUMP_NEXT_FRAME( Renderer &, void *, size_t );
 
@@ -56,6 +57,7 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_DRAW_INDEXED_UP,
 &func_DRAW_UP,
 &func_DRAW_LINES,
+&func_PROCESS_RENDER_WINDOW_MESSAGES,
 &func_ENABLE_PARAMETER_CHECK,
 &func_DUMP_NEXT_FRAME,
 };
