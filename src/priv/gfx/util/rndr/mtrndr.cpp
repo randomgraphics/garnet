@@ -13,14 +13,196 @@ using namespace GN;
 using namespace GN::gfx;
 
 // *****************************************************************************
-// Local classes and data types
+// Command handlers
 // *****************************************************************************
 
 struct CommandHeader
 {
     UInt16 cid;    ///< command ID ( 2 bytes )
-    UInt16 sizedw; ///< command size in DWORDS, includes the header itself.
+    UInt16 size;   ///< command parameter size. command header is not included.
+    UInt32 fence;  ///< command fence
 };
+
+namespace GN { namespace gfx
+{
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_RENDERER_OPTIONS( Renderer & r, void * p, size_t )
+    {
+        RendererOptions ** ro = (RendererOptions **)p;
+        memcpy( *ro, &r.getOptions(), sizeof(**ro) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_DISP_DESC( Renderer & r, void * p, size_t )
+    {
+        DispDesc ** dd = (DispDesc**)p;
+        memcpy( *dd, &r.getDispDesc(), sizeof(**dd) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_D3D_DEVICE( Renderer & r, void * p, size_t )
+    {
+        void ** dev = (void**)p;
+        *dev = r.getD3DDevice();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_OGL_RC( Renderer & r, void * p, size_t )
+    {
+        void ** rc = (void**)p;
+        *rc = r.getOGLRC();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_CAPS( Renderer & r, void * p, size_t )
+    {
+        RendererCaps ** caps = (RendererCaps**)p;
+        memcpy( *caps, &r.getCaps(), sizeof(**caps) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_COMPILE_GPU_PROGRAM( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_GPU_PROGRAM( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_TEXTURE( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_VTXBUF( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_IDXBUF( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_REBIND_CONTEXT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_CONTEXT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_PRESENT( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CLEAR_SCREEN( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_INDEXED( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_INDEXED_UP( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_UP( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DRAW_LINES( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_ENABLE_PARAMEER_CHECK( Renderer & r, void * p, size_t )
+    {
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_DUMP_NEXT_FRAME( Renderer & r, void * p, size_t )
+    {
+    }
+}}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -39,21 +221,14 @@ bool GN::gfx::MultiThreadRenderer::init(
     GN_STDCLASS_INIT( GN::gfx::MultiThreadRenderer, () );
 
     // initialize ring buffer
-    ringBufferSize = (ringBufferSize + 3) & ~3; // aligned buffer size to dword boundary.
-    mRingBufferBegin = (UInt32*)heapAlloc( ringBufferSize );
-    if( NULL == mRingBufferBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
-    mRingBufferEnd = mRingBufferBegin + ringBufferSize / sizeof(UInt32);
-    mReadPtr = mWritePtr = mRingBufferBegin;
-    mRingBufferFull = createSyncEvent( false, false, NULL );
-    mRingBufferEmpty = createSyncEventGroup( 2, false, false, NULL );
-    if( NULL == mRingBufferFull || NULL == mRingBufferEmpty )
-    {
-        GN_ERROR(sLogger)( "fail to create ring buffer sync events." );
-        return failure();
-    }
+    if( !mRingBuffer.init( ringBufferSize ) ) return failure();
+
+    // initialize cross-thread variables
+    mRendererCreationStatus = 2;
+    mFrontEndFence = 0;
+    mBackEndFence = 0;
 
     // create thread
-    mRendererCreationStatus = 2;
     ThreadProcedure proc = makeDelegate( this, &GN::gfx::MultiThreadRenderer::threadProc );
     mThread = createThread( proc, (void*)&ro, TP_NORMAL );
     if( NULL == mThread ) return failure();
@@ -85,9 +260,11 @@ void GN::gfx::MultiThreadRenderer::quit()
 
     if( mThread )
     {
-        postCommand( CMD_DESTROY, 0, 0 );
-        waitForIdle();
+        mRingBuffer.postQuitMessage();
+        mThread->waitForTermination();
     }
+
+    mRingBuffer.quit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -104,31 +281,38 @@ void GN::gfx::MultiThreadRenderer::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::waitForIdle()
 {
-    while( mReadPtr != mWritePtr )
+    while( (mFrontEndFence - mBackEndFence) > 0 )
     {
-        sleepCurrentThread( 0.0f );
+        sleepCurrentThread( 0 );
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::postCommand( UInt32 cmd, const void * data, size_t length )
+UInt8 * GN::gfx::MultiThreadRenderer::beginPostCommand( UInt32 cmd, size_t length )
 {
-    // align data size to dword boundary
-    size_t alignedLength = ( length + 3 ) & ~3;
+    // align data size to command header size
+    GN_ASSERT( isPowerOf2( sizeof(CommandHeader) ) );
+    size_t paramsize = ( length + sizeof(CommandHeader) - 1 ) & ~(sizeof(CommandHeader) - 1);
+    size_t cmdsize = paramsize + sizeof(CommandHeader);
 
     // calculate command size
-    size_t cmdsize = alignedLength + 4;
-    size_t cmdsizedw = cmdsize / 4;
-    size_t rbsizedw = mRingBufferEnd - mRingBufferBegin;
-    if( cmdsizedw > rbsizedw )
+    if( cmdsize > mRingBuffer.size() )
     {
         GN_ERROR(sLogger)( "command parameter is too large to put into ring buffer." );
-        return;
+        return NULL;
     }
 
-    GN_UNIMPL();
+    // push command header into ring buffer
+    CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( cmdsize );
+    if( NULL == header ) return NULL;
+    header->cid   = (UInt16)cmd;
+    header->size  = (UInt16)paramsize;
+    header->fence = ++mFrontEndFence;
+
+    // return pointer to parameter buffer
+    return (UInt8*)( header + 1 );
 }
 
 // *****************************************************************************
@@ -154,19 +338,39 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
     // enter command loop
     while(true)
     {
-        while( mWritePtr == mReadPtr )
-        {
-            sleepCurrentThread( 0.0f );
-            continue;
-        }
+        // get command header
+        const void * headerptr = (const CommandHeader*)mRingBuffer.beginConsume( sizeof(CommandHeader) );
+        if( NULL == headerptr ) break; // receives quit message
+        CommandHeader header;
+        memcpy( &header, headerptr, sizeof(header) );
+        mRingBuffer.endConsume();
+
+        // Note: after calling of endConsume(), pointer headerptr is not valid any more. Since front end
+        //       thread may overwrite its content.
+
+        // get command parameter
+        void * param = mRingBuffer.beginConsume( header.size );
+        if( NULL == param ) break; // receives quit message
+
+        // execute the command
+        g_rndrCommandHandlers[header.cid]( *mRenderer, param, header.size );
+
+        // update fence
+        mBackEndFence = header.fence;
+
+        mRingBuffer.endConsume();
     }
+
+    // delete the renderer
+    deleteRenderer( mRenderer );
+    mRenderer = NULL;
 
     // success
     return 0;
 }
 
 // *****************************************************************************
-// Rendering function wrappers
+// Rendering function wrappers (called by front end thread)
 // *****************************************************************************
 
 //
@@ -176,7 +380,7 @@ bool GN::gfx::MultiThreadRenderer::checkTextureFormatSupport( ColorFormat format
 {
     MultiThreadRenderer * nonConstPtr = const_cast<GN::gfx::MultiThreadRenderer*>(this);
     bool result;
-    nonConstPtr->postCommand( CMD_CHECK_TEXTURE_FORMAT_SUPPORT, &result, sizeof(result) );
+    nonConstPtr->postCommand3( CMD_CHECK_TEXTURE_FORMAT_SUPPORT, &result, format, usages );
     nonConstPtr->waitForIdle();
     return result;
 }
@@ -188,7 +392,7 @@ ColorFormat GN::gfx::MultiThreadRenderer::getDefaultTextureFormat( TextureUsages
 {
     MultiThreadRenderer * nonConstPtr = const_cast<GN::gfx::MultiThreadRenderer*>(this);
     ColorFormat result;
-    nonConstPtr->postCommand( CMD_GET_DEFAULT_TEXTURE_FORMAT, &result, sizeof(result) );
+    nonConstPtr->postCommand2( CMD_GET_DEFAULT_TEXTURE_FORMAT, &result, usages );
     nonConstPtr->waitForIdle();
     return result;
 }
@@ -237,9 +441,9 @@ IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & )
+void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & rc )
 {
-    GN_UNIMPL();
+    postCommand1( CMD_BIND_CONTEXT, rc );
 }
 
 //
@@ -247,7 +451,7 @@ bool GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::rebindContext()
 {
-    GN_UNIMPL();
+    postCommand0( CMD_BIND_CONTEXT );
 }
 
 //
@@ -264,16 +468,17 @@ const RendererContext & GN::gfx::MultiThreadRenderer::getContext() const
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::present()
 {
-    GN_UNIMPL();
+    postCommand0( CMD_PRESENT );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::clearScreen( const Vector4f & c,
-                          float            z,
-                          UInt8            s,
-                          BitFields        flags )
+void GN::gfx::MultiThreadRenderer::clearScreen(
+    const Vector4f & c,
+    float            z,
+    UInt8            s,
+    BitFields        flags )
 {
     GN_UNIMPL();
 }
@@ -281,38 +486,41 @@ void GN::gfx::MultiThreadRenderer::clearScreen( const Vector4f & c,
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::drawIndexed( PrimitiveType prim,
-                          size_t        numprim,
-                          size_t        startvtx,
-                          size_t        minvtxidx,
-                          size_t        numvtx,
-                          size_t        startidx )
+void GN::gfx::MultiThreadRenderer::drawIndexed(
+    PrimitiveType prim,
+    size_t        numprim,
+    size_t        startvtx,
+    size_t        minvtxidx,
+    size_t        numvtx,
+    size_t        startidx )
 {
-    GN_UNIMPL();
+    postCommand6( CMD_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::draw( PrimitiveType prim,
-                   size_t        numprim,
-                   size_t        startvtx )
+void GN::gfx::MultiThreadRenderer::draw(
+    PrimitiveType prim,
+    size_t        numvtx,
+    size_t        startvtx )
 {
-    GN_UNIMPL();
+    postCommand3( CMD_DRAW, prim, numvtx, startvtx );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::drawIndexedUp(
-                     PrimitiveType  prim,
-                     size_t         numprim,
-                     size_t         numvtx,
-                     const void *   vertexData,
-                     size_t         strideInBytes,
-                     const UInt16 * indexData )
+    PrimitiveType  prim,
+    size_t         numidx,
+    size_t         numvtx,
+    const void *   vertexData,
+    size_t         strideInBytes,
+    const UInt16 * indexData )
 {
     GN_UNIMPL();
+    //postCommand6( CMD_DRAW_INDEXED_UP, prim, numprim, vertexData, strideInBytes, numvtx, indexData );
 }
 
 //
@@ -320,11 +528,14 @@ void GN::gfx::MultiThreadRenderer::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::drawUp(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numvtx,
     const void *  vertexData,
     size_t        strideInBytes )
 {
-    GN_UNIMPL();
+    size_t sz = strideInBytes * numvtx;
+    void * vb = heapAlloc( sz );
+    memcpy( vb, vertexData, sz );
+    postCommand4( prim, numvtx, vb, strideInBytes );
 }
 
 //
@@ -350,6 +561,7 @@ GN::gfx::MultiThreadRenderer::drawLines(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::enableParameterCheck( bool enable )
 {
+    postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
     GN_UNIMPL();
 }
 
@@ -358,6 +570,7 @@ void GN::gfx::MultiThreadRenderer::enableParameterCheck( bool enable )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
+    postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
     GN_UNIMPL();
 }
 
@@ -366,7 +579,7 @@ void GN::gfx::MultiThreadRenderer::dumpNextFrame( size_t startBatchIndex, size_t
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::setUserData( const Guid & id, const void * data, size_t length )
 {
-    GN_UNIMPL();
+    mRenderer->setUserData( id, data, length );
 }
 
 //
@@ -374,7 +587,7 @@ void GN::gfx::MultiThreadRenderer::setUserData( const Guid & id, const void * da
 // -----------------------------------------------------------------------------
 const void * GN::gfx::MultiThreadRenderer::getUserData( const Guid & id, size_t * length ) const
 {
-    GN_UNIMPL();
+    return mRenderer->getUserData( id, length );
 }
 
 //
@@ -382,5 +595,5 @@ const void * GN::gfx::MultiThreadRenderer::getUserData( const Guid & id, size_t 
 // -----------------------------------------------------------------------------
 bool GN::gfx::MultiThreadRenderer::hasUserData( const Guid & id ) const
 {
-    GN_UNIMPL();
+    return hasUserData( id );
 }

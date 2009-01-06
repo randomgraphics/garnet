@@ -59,7 +59,7 @@ void GN::gfx::OGLLine::drawLines(
     BitFields options,
     const float * positions,
     size_t stride,
-    size_t count,
+    size_t numpoints,
     UInt32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
@@ -83,6 +83,8 @@ void GN::gfx::OGLLine::drawLines(
 
     GN_ASSERT( mNextLine < MAX_LINES );
 
+    size_t count = (DL_LINE_STRIP & options) ? ( numpoints - 1 ) : numpoints / 2;
+
     // handle large amount of array
     while( count + mNextLine > MAX_LINES )
     {
@@ -95,8 +97,7 @@ void GN::gfx::OGLLine::drawLines(
 
     // fill vertex data
     GN_ASSERT( mVtxBuf );
-    size_t vertexCount = ( DL_LINE_STRIP & options ) ? count + 1 : count * 2;
-    for( size_t i = 0; i < vertexCount; ++i )
+    for( size_t i = 0; i < numpoints; ++i )
     {
         mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
         mVtxBuf[i].c = rgba;
@@ -165,7 +166,7 @@ void GN::gfx::OGLLine::drawLines(
     GN_OGL_CHECK( glDrawArrays(
         ( DL_LINE_STRIP & options ) ? GL_LINE_STRIP : GL_LINES,
         0,
-        (GLsizei)vertexCount ) );
+        (GLsizei)numpoints ) );
 
     // restore OGL matrices
     GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );

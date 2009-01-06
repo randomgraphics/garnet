@@ -250,29 +250,29 @@ namespace GN { namespace gfx
         virtual void present();
         virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numprim,
+                                  size_t        numidx,
                                   size_t        startvtx,
                                   size_t        minvtxidx,
                                   size_t        numvtx,
                                   size_t        startidx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numprim,
+                           size_t        numvtx,
                            size_t        startvtx );
         virtual void drawIndexedUp(
                              PrimitiveType  prim,
-                             size_t         numprim,
+                             size_t         numidx,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
                              const UInt16 * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numprim,
+                             size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
         virtual void drawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
-                                size_t            count,
+                                size_t            numpoints,
                                 UInt32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,

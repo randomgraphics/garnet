@@ -146,7 +146,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContext( const RendererContext & c );
+        virtual void bindContext( const RendererContext & c );
         virtual void rebindContext();
         virtual inline const RendererContext & getContext() const { return mContext; }
 

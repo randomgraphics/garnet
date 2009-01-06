@@ -91,17 +91,16 @@ void draw( Renderer & r )
     Matrix44f m;
     m.translate( -0.5f, -0.5f, 0 );
     rc.gpuProgram->setParameter( "transform", m );
-    if( r.bindContext( rc ) )
-    {
-        static float vb[] =
-        {
-            0,0,0,1,
-            1,0,0,1,
-            1,1,0,1,
-        };
+    r.bindContext( rc );
 
-        r.drawUp( TRIANGLE_LIST, 1, vb, 4*sizeof(float) );
-    }
+    static float vb[] =
+    {
+        0,0,0,1,
+        1,0,0,1,
+        1,1,0,1,
+    };
+
+    r.drawUp( TRIANGLE_LIST, 1, vb, 4*sizeof(float) );
 }
 
 int run( Renderer & rndr )

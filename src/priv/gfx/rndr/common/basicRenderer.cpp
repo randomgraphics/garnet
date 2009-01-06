@@ -56,18 +56,16 @@ void GN::gfx::BasicRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
+void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 {
-    if( !bindContextImpl( c, false ) )
+    if( bindContextImpl( c, false ) )
     {
-        if( !bindContextImpl( mContext, true ) )
-        {
-            GN_RNDR_RIP( "fail to recover from context binding failure." );
-        }
-        return false;
+        mContext = c;
     }
-    mContext = c;
-    return true;
+    else if( !bindContextImpl( mContext, true ) )
+    {
+        GN_RNDR_RIP( "fail to recover from context binding failure." );
+    }
 }
 
 //
