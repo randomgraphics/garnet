@@ -192,7 +192,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_ENABLE_PARAMEER_CHECK( Renderer & r, void * p, size_t )
+    void func_ENABLE_PARAMETER_CHECK( Renderer & r, void * p, size_t )
     {
     }
 
@@ -535,7 +535,7 @@ void GN::gfx::MultiThreadRenderer::drawUp(
     size_t sz = strideInBytes * numvtx;
     void * vb = heapAlloc( sz );
     memcpy( vb, vertexData, sz );
-    postCommand4( prim, numvtx, vb, strideInBytes );
+    postCommand4( CMD_DRAW_UP, prim, numvtx, vb, strideInBytes );
 }
 
 //
@@ -562,7 +562,6 @@ GN::gfx::MultiThreadRenderer::drawLines(
 void GN::gfx::MultiThreadRenderer::enableParameterCheck( bool enable )
 {
     postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
-    GN_UNIMPL();
 }
 
 //
@@ -571,7 +570,6 @@ void GN::gfx::MultiThreadRenderer::enableParameterCheck( bool enable )
 void GN::gfx::MultiThreadRenderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
     postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
-    GN_UNIMPL();
 }
 
 //
