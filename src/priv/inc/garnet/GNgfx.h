@@ -6,7 +6,7 @@
 /// \author  chenlee(2005.9.30)
 // *****************************************************************************
 
-#include "GNcore.h"
+#include "GNbase.h"
 
 namespace GN
 {
@@ -29,9 +29,6 @@ namespace GN
 #include "gfx/surface.h"  // graphics resources (texture, vertex/index buffer)
 #include "gfx/shader.h"   // graphics shader
 #include "gfx/renderer.h" // main renderer interface
-
-// basic graphics system interface
-#include "gfx/graphicsSystem.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h

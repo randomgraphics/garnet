@@ -8,7 +8,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 class InputTest
 {
     GN::AutoObjPtr<GN::win::Window> mWin;
-    GN::AutoObjPtr<GN::input::Input> mInput;
 
     bool mDone;
 
@@ -24,9 +23,10 @@ class InputTest
 
     bool createInput( const char * api )
     {
-        mInput.attach( GN::input::createInputSystem(
-            0 == GN::strCmp("DI",api) ? GN::input::API_DINPUT : GN::input::API_NATIVE ) );
-        if( !mInput || !mInput->attachToWindow( 0, mWin->getWindowHandle() ) ) return false;
+        if( !GN::input::initializeInputSystem( 0 == GN::strCmp("DI",api) ? GN::input::API_DINPUT : GN::input::API_NATIVE ) )
+            return false;
+        if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
+            return false;
 
         // connect to input signals
         gSigKeyPress.connect( this, &InputTest::onKeyPress );
@@ -55,10 +55,10 @@ class InputTest
                         mLastKeyEvent.status.down?"DOWN":"UP" );
                     TextOutA( dc, 0, 0, txt.cptr(), (INT)txt.size() );
 
-                    if( mInput )
+                    if( gInputPtr )
                     {
                         int x, y;
-                        mInput->getMousePosition( x, y );
+                        gInputPtr->getMousePosition( x, y );
                         txt.format( "Mouse: %d, %d", x, y );
                         TextOutA( dc, 0, 20, txt.cptr(), (INT)txt.size() );
                     }
@@ -123,7 +123,7 @@ public:
     ///
     void quit()
     {
-        mInput.clear();
+        GN::input::shutdownInputSystem();
         mWin.clear();
     }
 
@@ -132,7 +132,7 @@ public:
     ///
     int run()
     {
-        if( !mInput )
+        if( !gInputPtr )
         {
             GN_ERROR(sLogger)( "InputTest is not initialized!" );
             return -1;
@@ -141,7 +141,7 @@ public:
         while(!mDone)
         {
             mWin->runWhileEvents();
-            mInput->processInputEvents();
+            gInputPtr->processInputEvents();
         }
 
         return 0;

@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
-#include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNscene.h"
 #include "garnet/GNinput.h"

@@ -27,7 +27,7 @@ const char * pscode =
 inline bool
 readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 {
-    std::auto_ptr<File> fp( core::openFile( "media::texture\\earth.jpg", "rb" ) );
+    std::auto_ptr<File> fp( openFile( "media::texture\\earth.jpg", "rb" ) );
     if( NULL == fp.get() ) return false;
 
     ImageReader ir;

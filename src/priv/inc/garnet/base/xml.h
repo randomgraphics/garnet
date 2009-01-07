@@ -18,7 +18,7 @@ namespace GN
     ///
     struct XmlAttrib
     {
-        XmlElement * node;  ///< pointer to the element that this attribute belongs to. 
+        XmlElement * node;  ///< pointer to the element that this attribute belongs to.
         XmlAttrib  * next;  ///< pointer to next attribute
         StrA         name;  ///< attribute name
         StrA         value; ///< attribute value
@@ -265,7 +265,7 @@ namespace GN
 
         ///
         /// Create new attribute. Attributes are created in pooled memory also,
-        /// just like XmlNode. 
+        /// just like XmlNode.
         ///
         XmlAttrib * createAttrib();
 
@@ -278,6 +278,57 @@ namespace GN
         ///
         void releaseAllNodesAndAttribs();
     };
+
+    ///
+    /// load something from XML file
+    ///
+    template<class T>
+    inline bool loadFromXmlFile( T & t, File & fp, const StrA & basedir )
+    {
+        GN_GUARD;
+
+        XmlDocument doc;
+        XmlParseResult xpr;
+        if( !doc.parse( xpr, fp ) )
+        {
+            static Logger * sLogger = getLogger( "GN.base.xml" );
+            GN_ERROR(sLogger)(
+                "Fail to parse XML file (%s):\n"
+                "    line   : %d\n"
+                "    column : %d\n"
+                "    error  : %s",
+                fp.name().cptr(),
+                xpr.errLine,
+                xpr.errColumn,
+                xpr.errInfo.cptr() );
+            return false;
+        }
+        GN_ASSERT( xpr.root );
+        return t.loadFromXmlNode( *xpr.root, basedir );
+
+        GN_UNGUARD;
+    }
+
+    ///
+    /// load something from XML file
+    ///
+    template<class T>
+    inline bool loadFromXmlFile( T & t, const StrA & filename )
+    {
+        GN_GUARD;
+
+        static Logger * sLogger = getLogger( "GN.base.xml" );
+        GN_INFO(sLogger)( "Load '%s'", filename.cptr() );
+
+        AutoObjPtr<File> fp( openFile( filename, "rt" ) );
+        if( !fp ) return false;
+
+        StrA basedir = dirName( filename );
+
+        return loadFromXmlFile( t, *fp, basedir );
+
+        GN_UNGUARD;
+    }
 }
 
 // *****************************************************************************

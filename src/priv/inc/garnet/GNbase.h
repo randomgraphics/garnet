@@ -211,6 +211,7 @@ namespace GN
 // file system
 #include "base/file.h"
 #include "base/path.h"
+#include "base/filesys.h"
 
 // math library
 #include "base/math.h"

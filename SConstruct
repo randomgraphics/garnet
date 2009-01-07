@@ -1012,7 +1012,7 @@ def BUILD_program( name, target ):
 	if target.ignoreDefaultDependencies:
 		stdlibs = []
 	else:
-		stdlibs = Split('GNcore GNutil GNgfxsysD3D9 GNgfxUtil GNcore GNbase GNextern')
+		stdlibs = Split('GNcore GNutil GNgfxUtil GNcore GNbase GNextern')
 
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -1072,7 +1072,6 @@ for compiler, variants in ALL_targets.iteritems() :
 		shlibs = [
 		    'GNcore',
 		    'GNrndrOGL',
-		    'GNgfxsysD3D9',
 		    ]
 		tests = [
 		    'GNtestCegui',

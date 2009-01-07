@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
 
-#include "GNcore.h"
+#include "GNbase.h"
 
 namespace GN
 {

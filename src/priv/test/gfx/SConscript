@@ -1,3 +1,0 @@
-Import( 'GN' )
-cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
-GN.newTarget( 'prog', 'GNtestGfx', [cluster] )

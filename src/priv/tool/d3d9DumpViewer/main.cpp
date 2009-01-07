@@ -199,7 +199,7 @@ struct D3D9StateDump
 
             if( vbd.ref.empty() ) continue;
 
-            AutoObjPtr<File> fp( core::openFile( vbd.ref, "rb" ) );
+            AutoObjPtr<File> fp( openFile( vbd.ref, "rb" ) );
             if( !fp ) return false;
 
             size_t bytes = fp->size();
@@ -219,7 +219,7 @@ struct D3D9StateDump
         // ib
         if( !idxbuf.ref.empty() )
         {
-            AutoObjPtr<File> fp( core::openFile( idxbuf.ref, "rb" ) );
+            AutoObjPtr<File> fp( openFile( idxbuf.ref, "rb" ) );
             if( !fp ) return false;
 
             size_t bytes = fp->size();
@@ -243,7 +243,7 @@ struct D3D9StateDump
 
             if( td.ref.empty() ) continue;
 
-            StrA filename = core::toNative( td.ref );
+            StrA filename = toNativePath( td.ref );
 
             D3DXIMAGE_INFO info;
 
@@ -595,9 +595,9 @@ private:
             return false;
         }
 
-        result = core::resolvePath( basedir, a->value );
+        result = resolvePath( basedir, a->value );
 
-        if( !core::isFile( result ) )
+        if( !isFile( result ) )
         {
             GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.cptr() );
         }
@@ -898,7 +898,7 @@ protected:
     bool onInit( D3D9AppOption & o )
     {
         mState.clear();
-        if( !scene::loadFromXmlFile( mState, sDumpFileName ) ) return false;
+        if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if RENDER_TO_BACKBUF
         o.windowedWidth  = mState.rendertargets[0].width;

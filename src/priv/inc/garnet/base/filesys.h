@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.1.29)
 // *****************************************************************************
 
-namespace GN { namespace core
+namespace GN
 {
     ///
     /// Abstract file system class
@@ -121,7 +121,7 @@ namespace GN { namespace core
     /// \name FileSystem method wrappers. See FileSystem methods for details.
     //@{
 
-    inline bool exist( const StrA & path )
+    inline bool pathExist( const StrA & path )
     {
         StrA sys, child;
         splitPath( path, sys, child );
@@ -142,14 +142,14 @@ namespace GN { namespace core
         return getFileSystem(sys)->isFile( child );
     }
 
-    inline void toNative( StrA & result, const StrA & path )
+    inline void toNativePath( StrA & result, const StrA & path )
     {
         StrA sys, child;
         splitPath( path, sys, child );
         getFileSystem(sys)->toNative( result, child );
     }
 
-    inline StrA toNative( const StrA & path )
+    inline StrA toNativePath( const StrA & path )
     {
         StrA sys, child;
         splitPath( path, sys, child );
@@ -188,7 +188,7 @@ namespace GN { namespace core
     }
 
     //@}
-}}
+}
 
 // *****************************************************************************
 //                                     EOF

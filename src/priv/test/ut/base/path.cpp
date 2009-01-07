@@ -22,31 +22,30 @@ public:
     void testToNative()
     {
         using namespace GN;
-        using namespace GN::core;
 
-        StrA pwd = toNative( getCurrentDir() );
+        StrA pwd = toNativePath( getCurrentDir() );
         StrA d = getCurrentDrive();
 
-        TS_ASSERT_EQUALS( d+PSS, toNative("/") );
-        TS_ASSERT_EQUALS( d+PSS, toNative("\\") );
+        TS_ASSERT_EQUALS( d+PSS, toNativePath("/") );
+        TS_ASSERT_EQUALS( d+PSS, toNativePath("\\") );
 
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNative("/a//b/") );
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNative("\\a\\\\b\\") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativePath("/a//b/") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativePath("\\a\\\\b\\") );
 
 #if GN_MSWIN
-        TS_ASSERT_EQUALS( "A:"PSS"b", toNative("a:b") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNative("a:") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNative("a:/") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNative("a:\\") );
+        TS_ASSERT_EQUALS( "A:"PSS"b", toNativePath("a:b") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:/") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:\\") );
 #elif GN_POSIX
-        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNative("a:b") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNative("a:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNative("a:/") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNative("a:\\") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNativePath("a:b") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:/") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:\\") );
 #endif
 
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNative("a/:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNative("a\\:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativePath("a/:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativePath("a\\:") );
     }
 
     void testJoin()
@@ -65,11 +64,10 @@ public:
     void testPrefix()
     {
         using namespace GN;
-        using namespace GN::core;
 
         StrA s[2] ={
-            toNative("app::"),
-            toNative("startup::"),
+            toNativePath("app::"),
+            toNativePath("startup::"),
         };
 
         GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );
@@ -89,25 +87,25 @@ public:
         }
     }
 
-    void testExist()
+    void testPathExist()
     {
-        using namespace GN::core;
-        TS_ASSERT( exist("/") );
-        TS_ASSERT( !exist("haha,heihei,hoho,huhu,mama,papa") );
-        TS_ASSERT( exist("SConstruct") );
+        using namespace GN;
+        TS_ASSERT( pathExist("/") );
+        TS_ASSERT( !pathExist("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( pathExist("SConstruct") );
 
-        TS_ASSERT( exist("startup::\\SConstruct") );
-        TS_ASSERT( exist("startup::/SConstruct") );
-        TS_ASSERT( exist("startup::SConstruct") );
+        TS_ASSERT( pathExist("startup::\\SConstruct") );
+        TS_ASSERT( pathExist("startup::/SConstruct") );
+        TS_ASSERT( pathExist("startup::SConstruct") );
 
-        TS_ASSERT( exist("app::GNut"APPEXT) );
-        TS_ASSERT( exist("app::/GNut"APPEXT) );
-        TS_ASSERT( exist("app::\\GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::/GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::\\GNut"APPEXT) );
     }
 
     void testIsDir()
     {
-        using namespace GN::core;
+        using namespace GN;
         TS_ASSERT( isDir("/") );
 
         TS_ASSERT( isDir("startup::") );
@@ -123,7 +121,7 @@ public:
 
     void testIsFile()
     {
-        using namespace GN::core;
+        using namespace GN;
         TS_ASSERT( isFile("startup::\\SConstruct") );
         TS_ASSERT( isFile("app::GNut"APPEXT) );
         TS_ASSERT( !isFile("startup::") );
