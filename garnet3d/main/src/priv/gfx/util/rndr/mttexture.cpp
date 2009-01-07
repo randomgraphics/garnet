@@ -111,8 +111,6 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     memcpy( tmpbuf, data, dataSize );
 
     UpdateMipmapParam * ump = (UpdateMipmapParam*)mRenderer.beginPostCommand( CMD_TEXTURE_UPDATE_MIPMAP, sizeof(*ump) );
-    if( NULL == ump ) return;
-
     ump->tex        = mTexture;
     ump->face       = face;
     ump->level      = level;

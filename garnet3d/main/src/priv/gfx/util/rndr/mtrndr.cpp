@@ -2,10 +2,9 @@
 #include "mtrndr.h"
 #include "mtshader.h"
 #include "mttexture.h"
+#include "mtvtxbuf.h"
+#include "mtidxbuf.h"
 #include "mtrndrCmd.h"
-
-#pragma warning( disable : 4100 ) // unused parameters
-#pragma warning( disable : 4715 ) // no return value
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mtrndr");
 
@@ -21,6 +20,18 @@ struct CommandHeader
     UInt16 cid;    ///< command ID ( 2 bytes )
     UInt16 size;   ///< command parameter size. command header is not included.
     UInt32 fence;  ///< command fence
+};
+
+struct DrawLineParams
+{
+    BitFields options;
+    void    * positions;
+    size_t    stride;
+    size_t    numpoints;
+    UInt32    rgba;
+    Matrix44f model;
+    Matrix44f view;
+    Matrix44f proj;
 };
 
 // replace an auto-ref pointer without changing its reference counter.
@@ -128,13 +139,6 @@ UInt8 * GN::gfx::MultiThreadRenderer::beginPostCommand( UInt32 cmd, size_t lengt
     GN_ASSERT( isPowerOf2( sizeof(CommandHeader) ) );
     size_t paramsize = ( length + sizeof(CommandHeader) - 1 ) & ~(sizeof(CommandHeader) - 1);
 
-    // check parameter size
-    if( paramsize > mRingBuffer.size() )
-    {
-        GN_ERROR(sLogger)( "command parameter is too large to put into ring buffer." );
-        return NULL;
-    }
-
     // push command header
     CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( sizeof(CommandHeader) );
     if( NULL == header ) return NULL;
@@ -144,7 +148,13 @@ UInt8 * GN::gfx::MultiThreadRenderer::beginPostCommand( UInt32 cmd, size_t lengt
     endPostCommand();
 
     // return pointer to parameter buffer
-    return (UInt8*)mRingBuffer.beginProduce( paramsize );
+    UInt8 * result = (UInt8*)mRingBuffer.beginProduce( paramsize );
+    if( NULL == result )
+    {
+        GN_THROW( "Fail to push command parameters into command ring buffer." );
+    }
+
+    return result;
 }
 
 // *****************************************************************************
@@ -273,9 +283,16 @@ Texture * GN::gfx::MultiThreadRenderer::createTexture( const TextureDesc & desc 
 //
 //
 // -----------------------------------------------------------------------------
-VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & )
+VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & desc )
 {
-    GN_UNIMPL();
+    VtxBuf * vb;
+    postCommand2( CMD_CREATE_TEXTURE, &vb, &desc );
+    waitForIdle();
+
+    AutoRef<MultiThreadVtxBuf> mtvb( new MultiThreadVtxBuf(*this) );
+    if( !mtvb->init( vb ) ) return NULL;
+
+    return mtvb.detach();
 }
 
 //
@@ -283,7 +300,14 @@ VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & )
 // -----------------------------------------------------------------------------
 IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 {
-    GN_UNIMPL();
+    IdxBuf * ib;
+    postCommand2( CMD_CREATE_TEXTURE, &ib, &desc );
+    waitForIdle();
+
+    AutoRef<MultiThreadIdxBuf> mtib( new MultiThreadIdxBuf(*this) );
+    if( !mtib->init( ib ) ) return NULL;
+
+    return mtib.detach();
 }
 
 
@@ -293,7 +317,6 @@ IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc )
 {
     RendererContext * rc = (RendererContext*)beginPostCommand( CMD_BIND_CONTEXT, sizeof(inputrc) );
-    if( NULL == rc ) return;
 
     // copy renderer context to command buffer
     memcpy( rc, &inputrc, sizeof(inputrc) );
@@ -312,8 +335,15 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     }
 
     // vertex buffers
+    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->vtxbufs); ++i )
+    {
+        MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].get();
+        sReplaceAutoRefPtr( rc->vtxbufs[i], mtvb ? mtvb->getRealVtxBuf() : NULL );
+    }
 
     // index buffer
+    MultiThreadIdxBuf * mtib = (MultiThreadIdxBuf *)rc->idxbuf.get();
+    sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->crts); ++i )
@@ -373,13 +403,13 @@ void GN::gfx::MultiThreadRenderer::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::drawIndexed(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numidx,
     size_t        startvtx,
     size_t        minvtxidx,
     size_t        numvtx,
     size_t        startidx )
 {
-    postCommand6( CMD_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
+    postCommand6( CMD_DRAW_INDEXED, prim, numidx, startvtx, minvtxidx, numvtx, startidx );
 }
 
 //
@@ -400,12 +430,31 @@ void GN::gfx::MultiThreadRenderer::drawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
-    const void *   vertexData,
+    const void   * vertexData,
     size_t         strideInBytes,
     const UInt16 * indexData )
 {
-    GN_UNIMPL();
-    //postCommand6( CMD_DRAW_INDEXED_UP, prim, numprim, vertexData, strideInBytes, numvtx, indexData );
+    size_t vbsize = numvtx * strideInBytes;
+    size_t ibsize = numidx * 2;
+
+    void * tmpvb = heapAlloc( vbsize );
+    if( NULL == tmpvb )
+    {
+        GN_ERROR(sLogger)( "Fail to allocate temporary vertex buffer." );
+        return;
+    }
+    memcpy( tmpvb, vertexData, vbsize );
+
+    void * tmpib = heapAlloc( ibsize );
+    if( NULL == tmpib )
+    {
+        GN_ERROR(sLogger)( "Fail to allocate temporary index buffer." );
+        heapFree( tmpvb );
+        return;
+    }
+    memcpy( tmpib, indexData, ibsize );
+
+    postCommand6( CMD_DRAW_INDEXED_UP, prim, numidx, tmpvb, strideInBytes, numvtx, tmpib );
 }
 
 //
@@ -419,6 +468,11 @@ void GN::gfx::MultiThreadRenderer::drawUp(
 {
     size_t sz = strideInBytes * numvtx;
     void * vb = heapAlloc( sz );
+    if( NULL == vb )
+    {
+        GN_ERROR(sLogger)( "fail to allocate temporary vertex buffer." );
+        return;
+    }
     memcpy( vb, vertexData, sz );
     postCommand4( CMD_DRAW_UP, prim, numvtx, vb, strideInBytes );
 }
@@ -431,13 +485,33 @@ GN::gfx::MultiThreadRenderer::drawLines(
     BitFields         options,
     const void *      positions,
     size_t            stride,
-    size_t            count,
+    size_t            numpoints,
     UInt32            rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
 {
-    GN_UNIMPL();
+    size_t length = stride * numpoints;
+
+    void * tmpbuf = heapAlloc( length );
+    if( NULL == tmpbuf )
+    {
+        GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
+        return;
+    }
+    memcpy( tmpbuf, positions, length );
+
+    DrawLineParams * dlp = (DrawLineParams*)beginPostCommand( CMD_DRAW_LINES, sizeof(*dlp) );
+    dlp->options   = options;
+    dlp->positions = tmpbuf;
+    dlp->stride    = stride;
+    dlp->numpoints = numpoints;
+    dlp->rgba      = rgba;
+    dlp->model     = model;
+    dlp->view      = view;
+    dlp->proj      = proj;
+
+    endPostCommand();
 }
 
 //
@@ -544,7 +618,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CheckTextureFormatSupportParam
+        {
+            bool        * result;
+            ColorFormat   format;
+            TextureUsages usages;
+        };
+        CheckTextureFormatSupportParam * param = (CheckTextureFormatSupportParam*)p;
+
+        *param->result = r.checkTextureFormatSupport( param->format, param->usages );
     }
 
     //
@@ -552,7 +634,14 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct GetDefaultTextureFormatParam
+        {
+            ColorFormat * result;
+            TextureUsages usages;
+        };
+        GetDefaultTextureFormatParam * param = (GetDefaultTextureFormatParam*)p;
+
+        *param->result = r.getDefaultTextureFormat( param->usages );
     }
 
     //
@@ -593,13 +682,13 @@ namespace GN { namespace gfx
     {
         struct CreateTextureParam
         {
-            Texture          ** tex;
+            Texture          ** result;
             const TextureDesc * desc;
         };
 
         CreateTextureParam * ctp = (CreateTextureParam*)p;
 
-        *ctp->tex = r.createTexture( *ctp->desc );
+        *ctp->result = r.createTexture( *ctp->desc );
     }
 
     //
@@ -607,7 +696,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_VTXBUF( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CreateVtxBufParam
+        {
+            VtxBuf          ** result;
+            const VtxBufDesc * desc;
+        };
+
+        CreateVtxBufParam * param = (CreateVtxBufParam*)p;
+
+        *param->result = r.createVtxBuf( *param->desc );
     }
 
     //
@@ -615,7 +712,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_IDXBUF( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CreateIdxBufParam
+        {
+            IdxBuf          ** result;
+            const IdxBufDesc * desc;
+        };
+
+        CreateIdxBufParam * param = (CreateIdxBufParam*)p;
+
+        *param->result = r.createIdxBuf( *param->desc );
     }
 
     //
@@ -668,7 +773,21 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_INDEXED( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+#pragma pack( push, 1 )
+        struct DrawIndexedParam
+        {
+            PrimitiveType prim;
+            size_t        numidx;
+            size_t        startvtx;
+            size_t        minvtxidx;
+            size_t        numvtx;
+            size_t        startidx;
+        };
+#pragma pack( pop )
+
+        DrawIndexedParam * dip = (DrawIndexedParam*)p;
+
+        r.drawIndexed( dip->prim, dip->numidx, dip->startvtx, dip->minvtxidx, dip->numvtx, dip->startidx );
     }
 
     //
@@ -676,7 +795,18 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+#pragma pack( push, 1 )
+        struct DrawParam
+        {
+            PrimitiveType prim;
+            size_t        numvtx;
+            size_t        startvtx;
+        };
+#pragma pack( pop )
+
+        DrawParam * dp = (DrawParam*)p;
+
+        r.draw( dp->prim, dp->numvtx, dp->startvtx );
     }
 
     //
@@ -684,7 +814,24 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_INDEXED_UP( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+#pragma pack( push, 1 )
+        struct DrawIndexedUpParam
+        {
+            PrimitiveType  prim;
+            size_t         numidx;
+            size_t         startvtx;
+            void         * vertexData;
+            size_t         strideInBytes;
+            UInt16       * indexData;
+        };
+#pragma pack( pop )
+
+        DrawIndexedUpParam * diup = (DrawIndexedUpParam*)p;
+
+        r.drawIndexedUp( diup->prim, diup->numidx, diup->startvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
+
+        heapFree( diup->vertexData );
+        heapFree( diup->indexData );
     }
 
     //
@@ -709,7 +856,19 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DRAW_LINES( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        DrawLineParams * dlp = (DrawLineParams*)p;
+
+        r.drawLines(
+            dlp->options,
+            dlp->positions,
+            dlp->stride,
+            dlp->numpoints,
+            dlp->rgba,
+            dlp->model,
+            dlp->view,
+            dlp->proj );
+
+        heapFree( dlp->positions );
     }
 
     //
@@ -726,7 +885,8 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_ENABLE_PARAMETER_CHECK( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        bool * enable = (bool*)p;
+        r.enableParameterCheck( *enable );
     }
 
     //
@@ -734,6 +894,13 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_DUMP_NEXT_FRAME( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct DumpNextFrameParam
+        {
+            size_t startBatchIndex;
+            size_t numBatches;
+        };
+
+        DumpNextFrameParam * param = (DumpNextFrameParam*)p;
+        r.dumpNextFrame( param->startBatchIndex, param->numBatches );
     }
 }}
