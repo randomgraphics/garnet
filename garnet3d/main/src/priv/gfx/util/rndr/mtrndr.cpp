@@ -286,7 +286,7 @@ Texture * GN::gfx::MultiThreadRenderer::createTexture( const TextureDesc & desc 
 VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & desc )
 {
     VtxBuf * vb;
-    postCommand2( CMD_CREATE_TEXTURE, &vb, &desc );
+    postCommand2( CMD_CREATE_VTXBUF, &vb, &desc );
     waitForIdle();
 
     AutoRef<MultiThreadVtxBuf> mtvb( new MultiThreadVtxBuf(*this) );
@@ -301,7 +301,7 @@ VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & desc )
 IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 {
     IdxBuf * ib;
-    postCommand2( CMD_CREATE_TEXTURE, &ib, &desc );
+    postCommand2( CMD_CREATE_IDXBUF, &ib, &desc );
     waitForIdle();
 
     AutoRef<MultiThreadIdxBuf> mtib( new MultiThreadIdxBuf(*this) );
@@ -454,7 +454,7 @@ void GN::gfx::MultiThreadRenderer::drawIndexedUp(
     }
     memcpy( tmpib, indexData, ibsize );
 
-    postCommand6( CMD_DRAW_INDEXED_UP, prim, numidx, tmpvb, strideInBytes, numvtx, tmpib );
+    postCommand6( CMD_DRAW_INDEXED_UP, prim, numidx, numvtx, tmpvb, strideInBytes, tmpib );
 }
 
 //
@@ -819,7 +819,7 @@ namespace GN { namespace gfx
         {
             PrimitiveType  prim;
             size_t         numidx;
-            size_t         startvtx;
+            size_t         numvtx;
             void         * vertexData;
             size_t         strideInBytes;
             UInt16       * indexData;
@@ -828,7 +828,7 @@ namespace GN { namespace gfx
 
         DrawIndexedUpParam * diup = (DrawIndexedUpParam*)p;
 
-        r.drawIndexedUp( diup->prim, diup->numidx, diup->startvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
+        r.drawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
 
         heapFree( diup->vertexData );
         heapFree( diup->indexData );
