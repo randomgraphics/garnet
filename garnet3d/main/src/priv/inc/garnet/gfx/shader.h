@@ -66,6 +66,7 @@ namespace GN { namespace gfx
     struct GpuProgramParameterDesc
     {
         const char * name;     ///< NULL terminated parameter name
+        size_t       length;   ///< default parameter size
     };
 
     ///

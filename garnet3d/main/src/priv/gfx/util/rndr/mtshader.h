@@ -6,10 +6,12 @@
 /// \author  chenli@@REDMOND (2009.1.3)
 // *****************************************************************************
 
+#include "mtrndr.h"
+
 namespace GN { namespace gfx
 {
     ///
-    ///
+    /// multithread GPU program wrapper
     ///
     class MultiThreadGpuProgram : public GpuProgram, public StdClass
     {
@@ -21,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadGpuProgram()          { clear(); }
+        MultiThreadGpuProgram( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
         virtual ~MultiThreadGpuProgram() { quit(); }
         //@}
 
@@ -31,25 +33,37 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
+        bool init( GpuProgram * );
         void quit();
     private:
-        void clear() {}
+        void clear() { mGpuProgram = NULL; }
         //@}
+
+        // ********************************
+        // public method
+        // ********************************
+    public:
+
+        GpuProgram * getRealGpuProgram() const { return mGpuProgram; }
 
         // ********************************
         // from GpuProgram
         // ********************************
     public:
 
-        virtual size_t getNumParameters() const;
-        virtual const GpuProgramParameterDesc * getParameters() const;
+        virtual size_t getNumParameters() const { return mNumParams; }
+        virtual const GpuProgramParameterDesc * getParameters() const { return mParams; }
         virtual void setParameter( size_t index, const void * value, size_t length );
 
         // ********************************
         // private variables
         // ********************************
     private:
+
+        MultiThreadRenderer           & mRenderer;
+        GpuProgram                    * mGpuProgram;
+        size_t                          mNumParams;
+        const GpuProgramParameterDesc * mParams;
 
         // ********************************
         // private functions

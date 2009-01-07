@@ -23,6 +23,14 @@ struct CommandHeader
     UInt32 fence;  ///< command fence
 };
 
+// replace an auto-ref pointer without changing its reference counter.
+template<typename T>
+static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
+{
+    ref.detach();
+    ref.attach( newptr );
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -77,6 +85,9 @@ void GN::gfx::MultiThreadRenderer::quit()
 {
     GN_GUARD;
 
+    // clear context
+    mRendererContext.resetToDefault();
+
     if( mThread )
     {
         mRingBuffer.postQuitMessage();
@@ -116,24 +127,24 @@ UInt8 * GN::gfx::MultiThreadRenderer::beginPostCommand( UInt32 cmd, size_t lengt
     // align data size to command header size
     GN_ASSERT( isPowerOf2( sizeof(CommandHeader) ) );
     size_t paramsize = ( length + sizeof(CommandHeader) - 1 ) & ~(sizeof(CommandHeader) - 1);
-    size_t cmdsize = paramsize + sizeof(CommandHeader);
 
-    // calculate command size
-    if( cmdsize > mRingBuffer.size() )
+    // check parameter size
+    if( paramsize > mRingBuffer.size() )
     {
         GN_ERROR(sLogger)( "command parameter is too large to put into ring buffer." );
         return NULL;
     }
 
-    // push command header into ring buffer
-    CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( cmdsize );
+    // push command header
+    CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( sizeof(CommandHeader) );
     if( NULL == header ) return NULL;
     header->cid   = (UInt16)cmd;
     header->size  = (UInt16)paramsize;
     header->fence = ++mFrontEndFence;
+    endPostCommand();
 
     // return pointer to parameter buffer
-    return (UInt8*)( header + 1 );
+    return (UInt8*)mRingBuffer.beginProduce( paramsize );
 }
 
 // *****************************************************************************
@@ -223,7 +234,10 @@ ColorFormat GN::gfx::MultiThreadRenderer::getDefaultTextureFormat( TextureUsages
 // -----------------------------------------------------------------------------
 CompiledGpuProgram * GN::gfx::MultiThreadRenderer::compileGpuProgram( const GpuProgramDesc & desc )
 {
-    GN_UNIMPL();
+    CompiledGpuProgram * cgp;
+    postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
+    waitForIdle();
+    return cgp;
 }
 
 //
@@ -231,7 +245,14 @@ CompiledGpuProgram * GN::gfx::MultiThreadRenderer::compileGpuProgram( const GpuP
 // -----------------------------------------------------------------------------
 GpuProgram * GN::gfx::MultiThreadRenderer::createGpuProgram( const void * compiledGpuProgramBinary, size_t length )
 {
-    GN_UNIMPL();
+    GpuProgram * gp;
+    postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
+    waitForIdle();
+
+    AutoRef<MultiThreadGpuProgram> mtgp( new MultiThreadGpuProgram(*this) );
+    if( !mtgp->init( gp ) ) return NULL;
+
+    return mtgp.detach();
 }
 
 //
@@ -239,7 +260,14 @@ GpuProgram * GN::gfx::MultiThreadRenderer::createGpuProgram( const void * compil
 // -----------------------------------------------------------------------------
 Texture * GN::gfx::MultiThreadRenderer::createTexture( const TextureDesc & desc )
 {
-    GN_UNIMPL();
+    Texture * tex;
+    postCommand2( CMD_CREATE_TEXTURE, &tex, &desc );
+    waitForIdle();
+
+    AutoRef<MultiThreadTexture> mtt( new MultiThreadTexture(*this) );
+    if( !mtt->init( tex ) ) return NULL;
+
+    return mtt.detach();
 }
 
 //
@@ -262,9 +290,45 @@ IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & rc )
+void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc )
 {
-    postCommand1( CMD_BIND_CONTEXT, rc );
+    RendererContext * rc = (RendererContext*)beginPostCommand( CMD_BIND_CONTEXT, sizeof(inputrc) );
+    if( NULL == rc ) return;
+
+    // copy renderer context to command buffer
+    memcpy( rc, &inputrc, sizeof(inputrc) );
+
+    // Replace wrapper resource pointers with real resource pointers.
+
+    // GPU program
+    MultiThreadGpuProgram * mtgp = (MultiThreadGpuProgram *)rc->gpuProgram.get();
+    sReplaceAutoRefPtr( rc->gpuProgram, mtgp ? mtgp->getRealGpuProgram() : NULL );
+
+    // textures
+    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
+    {
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].get();
+        sReplaceAutoRefPtr( rc->textures[i], mtt ? mtt->getRealTexture() : NULL );
+    }
+
+    // vertex buffers
+
+    // index buffer
+
+    // color render targets
+    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->crts); ++i )
+    {
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->crts[i].texture.get();
+        sReplaceAutoRefPtr( rc->crts[i].texture, mtt ? mtt->getRealTexture() : NULL );
+    }
+
+    // depth-stencil render target
+    MultiThreadTexture * ds = (MultiThreadTexture*)rc->dsrt.texture.get();
+    sReplaceAutoRefPtr( rc->dsrt.texture, ds ? ds->getRealTexture() : NULL );
+
+    // done
+    endPostCommand();
+    mRendererContext = inputrc;
 }
 
 //
@@ -280,7 +344,7 @@ void GN::gfx::MultiThreadRenderer::rebindContext()
 // -----------------------------------------------------------------------------
 const RendererContext & GN::gfx::MultiThreadRenderer::getContext() const
 {
-    GN_UNIMPL();
+    return mRendererContext;
 }
 
 
@@ -496,7 +560,14 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_COMPILE_GPU_PROGRAM( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CompileGpuProgramParam
+        {
+            CompiledGpuProgram  ** cgp;
+            const GpuProgramDesc * desc;
+        };
+        CompileGpuProgramParam * cgpp = (CompileGpuProgramParam*)p;
+
+        *cgpp->cgp = r.compileGpuProgram( *cgpp->desc );
     }
 
     //
@@ -504,7 +575,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_GPU_PROGRAM( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CreateGpuProgramParam
+        {
+            GpuProgram ** gp;
+            const void  * bin;
+            size_t        length;
+        };
+        CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
+
+        *cgpp->gp = r.createGpuProgram( cgpp->bin, cgpp->length );
     }
 
     //
@@ -512,7 +591,15 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_CREATE_TEXTURE( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        struct CreateTextureParam
+        {
+            Texture          ** tex;
+            const TextureDesc * desc;
+        };
+
+        CreateTextureParam * ctp = (CreateTextureParam*)p;
+
+        *ctp->tex = r.createTexture( *ctp->desc );
     }
 
     //
@@ -536,23 +623,16 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
     {
-        GN_UNIMPL();
+        RendererContext * rc = (RendererContext*)p;
+        r.bindContext( *rc );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    void func_REBIND_CONTEXT( Renderer & r, void * p, size_t )
+    void func_REBIND_CONTEXT( Renderer & r, void *, size_t )
     {
-        GN_UNIMPL();
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void func_GET_CONTEXT( Renderer & r, void * p, size_t )
-    {
-        GN_UNIMPL();
+        r.rebindContext();
     }
 
     //
