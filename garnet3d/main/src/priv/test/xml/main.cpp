@@ -3,13 +3,13 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.test.gfx.xml");
+static GN::Logger * sLogger = GN::getLogger("GN.test.xml");
 
 bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
     DiskFile fp;
 
-    if( !fp.open( core::toNative(filename), "rt" ) ) return false;
+    if( !fp.open( toNativePath(filename), "rt" ) ) return false;
 
     if( !doc.parse( xpr, fp ) )
     {

@@ -13,46 +13,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D10DumpViewer");
 
 static StrA sDumpFileName;
 
-///
-/// load something from XML file
-///
-template<class T>
-inline bool loadFromXmlFile( T & t, const StrA & filename )
-{
-    GN_GUARD;
-
-    GN_INFO(getLogger( "GN.scene.util" ))( "Load '%s'", filename.cptr() );
-
-    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
-    if( !fp ) return false;
-
-    StrA basedir = dirName( filename );
-
-    XmlDocument doc;
-    XmlParseResult xpr;
-
-    if( !doc.parse( xpr, *fp ) )
-    {
-        static Logger * sLogger = getLogger( "GN.scene.util" );
-        GN_ERROR(sLogger)(
-            "Fail to parse XML file (%s):\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            fp->name().cptr(),
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.cptr() );
-        return false;
-    }
-
-    GN_ASSERT( xpr.root );
-
-    return t.loadFromXmlNode( *xpr.root, basedir );
-
-    GN_UNGUARD;
-}
-
 /* *****************************************************************************
 // shader function templates
 // *****************************************************************************
@@ -133,14 +93,14 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
         return false;
     }
 
-    StrA fullname = core::resolvePath( basedir, a->value );
+    StrA fullname = resolvePath( basedir, a->value );
 
-    if( !core::isFile( fullname ) )
+    if( !isFile( fullname ) )
     {
         GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.cptr() );
     }
 
-    AutoObjPtr<File> fp( core::openFile( fullname, "rb" ) );
+    AutoObjPtr<File> fp( openFile( fullname, "rb" ) );
     if( !fp ) return false;
 
     result.resize( fp->size() / sizeof(T) );

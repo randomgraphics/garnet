@@ -124,7 +124,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
     }
 
     GN_INFO(sLogger)( "save shader code to file '%s'", fname );
-    return core::toNative(fname);
+    return toNativePath(fname);
 }
 #endif
 
@@ -186,7 +186,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileVSFromFile( LPDIRECT3DDEVICE9 dev, cons
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            core::toNative(file).cptr(),
+            toNativePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
@@ -276,7 +276,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleVSFromFile( LPDIRECT3DDEVICE9 dev, con
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            core::toNative(file).cptr(),
+            toNativePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
@@ -358,7 +358,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compilePSFromFile( LPDIRECT3DDEVICE9 dev, const
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            core::toNative(file).cptr(),
+            toNativePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
@@ -448,7 +448,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assemblePSFromFile( LPDIRECT3DDEVICE9 dev, cons
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            core::toNative(file).cptr(),
+            toNativePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,

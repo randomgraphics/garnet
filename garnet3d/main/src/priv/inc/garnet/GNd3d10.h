@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
 
-#include "garnet/GNcore.h"
+#include "garnet/GNbase.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX

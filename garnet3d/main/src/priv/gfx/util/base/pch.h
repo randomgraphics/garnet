@@ -4,7 +4,7 @@
 // \author  chenlee (2005.11.11)
 // *****************************************************************************
 
-#include "garnet/GNcore.h"
+#include "garnet/GNbase.h"
 
 namespace GN
 {

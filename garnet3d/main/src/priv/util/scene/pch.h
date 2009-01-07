@@ -5,7 +5,6 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
-#include "garnet/GNcore.h"
 #include "garnet/GNengine.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNwin.h"

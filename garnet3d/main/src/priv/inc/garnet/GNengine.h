@@ -6,7 +6,6 @@
 /// \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
-#include "GNcore.h"
 #include "GNgfx.h"
 
 namespace GN

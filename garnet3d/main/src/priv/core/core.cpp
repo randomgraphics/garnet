@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNgfx.h"
 
