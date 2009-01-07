@@ -1,9 +1,11 @@
 Import( 'GN' )
 sources = [
+	'mtidxbuf.cpp',
 	'mtrndr.cpp',
 	'mtrndrCmd.cpp',
 	'mtshader.cpp',
 	'mttexture.cpp',
+	'mtvtxbuf.cpp',
 	'ringbuffer.cpp',
 	'rndrCreator.cpp',
 ]

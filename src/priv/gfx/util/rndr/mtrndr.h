@@ -53,19 +53,19 @@ namespace GN { namespace gfx
 
         void waitForIdle();
 
-        UInt8 * beginPostCommand( UInt32 cmd, size_t length );
+        UInt8 * beginPostCommand( UInt32 cmd, size_t length ); ///< always return non-NULL valid pointer.
         void    endPostCommand() { mRingBuffer.endProduce(); }
 
         void postCommand0( UInt32 cmd )
         {
-            if( beginPostCommand( cmd, 0 ) ) endPostCommand();
+            beginPostCommand( cmd, 0 );
+            endPostCommand();
         }
 
         template<typename T1>
         void postCommand1( UInt32 cmd, const T1 & p1 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) );
             endPostCommand();
         }
@@ -74,7 +74,6 @@ namespace GN { namespace gfx
         void postCommand2( UInt32 cmd, const T1 & p1, const T2 & p2 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
             memcpy( buf, &p2, sizeof(T2) );
             endPostCommand();
@@ -84,7 +83,6 @@ namespace GN { namespace gfx
         void postCommand3( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
             memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
             memcpy( buf, &p3, sizeof(T3) );
@@ -95,7 +93,6 @@ namespace GN { namespace gfx
         void postCommand4( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
             memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
             memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
@@ -103,11 +100,22 @@ namespace GN { namespace gfx
             endPostCommand();
         }
 
+        template<typename T1, typename T2, typename T3, typename T4, typename T5>
+        void postCommand5( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5 )
+        {
+            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) );
+            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
+            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
+            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
+            memcpy( buf, &p4, sizeof(T4) ); buf += sizeof(T4);
+            memcpy( buf, &p5, sizeof(T5) );
+            endPostCommand();
+        }
+
         template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
         void postCommand6( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) + sizeof(T6) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
             memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
             memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
@@ -121,7 +129,6 @@ namespace GN { namespace gfx
         void postCommand7( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7 )
         {
             UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) + sizeof(T6) + sizeof(T7) );
-            if( NULL == buf ) return;
             memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
             memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
             memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
