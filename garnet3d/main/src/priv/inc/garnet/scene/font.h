@@ -57,7 +57,7 @@ namespace GN { namespace scene
         engine::GraphicsResource * mKernelParam;
         engine::GraphicsResource * mKernelPortBinding;
         engine::GraphicsResource * mTexture;
-        UIntPtr                     mContext;
+        UIntPtr                    mContext;
 
         // ********************************
         // private functions
