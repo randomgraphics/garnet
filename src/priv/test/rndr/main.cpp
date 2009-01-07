@@ -78,6 +78,30 @@ bool init( Renderer & rndr )
     }
     strcpy_s( rc.texbinds[0], "t0" );
 
+    // create vertex buffer
+    static float vertices[] =
+    {
+        0,0,0,1,
+        1,0,0,1,
+        1,1,0,1,
+        0,1,0,1,
+    };
+    VtxBufDesc vbd = {
+        sizeof(vertices),
+        false,
+        false
+    };
+    rc.vtxbufs[0].attach( rndr.createVtxBuf( vbd ) );
+    if( NULL == rc.vtxbufs[0] ) return false;
+    rc.vtxbufs[0]->update( 0, 0, vertices );
+
+    // create index buffer
+    UInt16 indices[] = { 0, 1, 3, 2 };
+    IdxBufDesc ibd = { 4, false, false, false };
+    rc.idxbuf.attach( rndr.createIdxBuf( ibd ) );
+    if( !rc.idxbuf ) return false;
+    rc.idxbuf->update( 0, 0, indices );
+
     return true;
 }
 
@@ -89,18 +113,38 @@ void quit( Renderer & )
 void draw( Renderer & r )
 {
     Matrix44f m;
-    m.translate( -0.5f, -0.5f, 0 );
-    rc.gpuProgram->setParameter( "transform", m );
-    r.bindContext( rc );
 
-    static float vb[] =
+    // DRAW_UP: triangle at left top corner
+    static float vertices[] =
     {
         0,0,0,1,
         1,0,0,1,
         1,1,0,1,
+        0,1,0,1,
     };
+    m.translate( -1.0f, -0.0f, 0 );
+    rc.gpuProgram->setParameter( "transform", m );
+    r.bindContext( rc );
+    r.drawUp( TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
-    r.drawUp( TRIANGLE_LIST, 3, vb, 4*sizeof(float) );
+    // DRAW_INDEXED_UP : triangle at left bottom
+    static UInt16 indices[] = { 0, 1, 3 };
+    m.translate( -1.0f, -1.0f, 0 );
+    rc.gpuProgram->setParameter( "transform", m );
+    r.bindContext( rc );
+    r.drawIndexedUp( TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
+
+    // DRAW: triangle at right top corner
+    m.identity();
+    rc.gpuProgram->setParameter( "transform", m );
+    r.bindContext( rc );
+    r.draw( TRIANGLE_LIST, 3, 0 );
+
+    // DRAW_INDEXED : quad at right bottom corner
+    m.translate( 0.5f, -1.5f, 0 );
+    rc.gpuProgram->setParameter( "transform", m );
+    r.bindContext( rc );
+    r.drawIndexed( TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
 int run( Renderer & rndr )

@@ -293,7 +293,7 @@ namespace GN { namespace gfx
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag = UPDATE_DEFAULT ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.
@@ -341,7 +341,7 @@ namespace GN { namespace gfx
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag ) = 0;
+        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag = UPDATE_DEFAULT ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.
