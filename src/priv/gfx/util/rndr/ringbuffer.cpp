@@ -18,7 +18,7 @@ bool GN::gfx::RingBuffer::init( size_t ringBufferSize )
     GN_STDCLASS_INIT( GN::gfx::RingBuffer, () );
 
     mSize  = ringBufferSize;
-    mBegin = (UInt8*)heapAlloc( mSize );
+    mBegin = (UInt8*)heapAlloc( mSize * 2 ); // Note: allocate doulbe sized buffer, to handle rewind issue
     if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
     mEnd = mBegin + mSize;
     mReadPtr = mWritePtr = mBegin;
@@ -96,6 +96,7 @@ GN::gfx::RingBuffer::beginProduce( size_t size )
         }
         else
         {
+            GN_ASSERT( mBegin <= mWritePtr && (mWritePtr+size) <= mEnd+mSize );
             mPendingWriteSize = size;
             return mWritePtr;
         }
@@ -111,6 +112,7 @@ GN::gfx::RingBuffer::endProduce()
     UInt8 * newWrite = mWritePtr + mPendingWriteSize;
     if( newWrite >= mEnd ) newWrite -= mSize;
     mWritePtr = newWrite;
+    GN_ASSERT( mBegin <= mWritePtr && mWritePtr < mEnd );
     mNotEmpty->signal( 0 );
 }
 
@@ -143,6 +145,7 @@ GN::gfx::RingBuffer::beginConsume( size_t size )
         }
         else
         {
+            GN_ASSERT( mBegin <= mReadPtr && (mReadPtr+size) <= mEnd+mSize );
             mPendingReadSize = size;
             return mReadPtr;
         }
@@ -158,5 +161,6 @@ GN::gfx::RingBuffer::endConsume()
     UInt8 * newRead = mReadPtr + mPendingReadSize;
     if( newRead >= mEnd ) newRead -= mSize;
     mReadPtr = newRead;
+    GN_ASSERT( mBegin <= mReadPtr && mReadPtr < mEnd );
     mNotFull->signal( 0 );
 }

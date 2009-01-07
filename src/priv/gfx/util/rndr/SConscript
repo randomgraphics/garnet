@@ -1,10 +1,10 @@
 Import( 'GN' )
 sources = [
 	'mtrndr.cpp',
-    'mtrndrCmd.cpp',
+	'mtrndrCmd.cpp',
 	'mtshader.cpp',
 	'mttexture.cpp',
-    'ringbuffer.cpp',
+	'ringbuffer.cpp',
 	'rndrCreator.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

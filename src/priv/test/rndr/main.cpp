@@ -105,7 +105,7 @@ void draw( Renderer & r )
 
 int run( Renderer & rndr )
 {
-    //if( !init( rndr ) ) { quit( rndr ); return -1; }
+    if( !init( rndr ) ) { quit( rndr ); return -1; }
 
     bool gogogo = true;
 
@@ -126,7 +126,7 @@ int run( Renderer & rndr )
         }
 
         rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        //draw( rndr );
+        draw( rndr );
         rndr.present();
 
         fps.onFrame();

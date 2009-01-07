@@ -275,6 +275,7 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
         GpuProgramParameterDesc & p = mParams[i];
         GLSLUniformDesc & u = mUniforms[i];
         p.name = u.name.cptr();
+        p.length = u.value.size();
     }
 
     // success

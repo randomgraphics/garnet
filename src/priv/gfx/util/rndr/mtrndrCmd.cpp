@@ -22,7 +22,6 @@ void func_CREATE_VTXBUF( Renderer &, void *, size_t );
 void func_CREATE_IDXBUF( Renderer &, void *, size_t );
 void func_BIND_CONTEXT( Renderer &, void *, size_t );
 void func_REBIND_CONTEXT( Renderer &, void *, size_t );
-void func_GET_CONTEXT( Renderer &, void *, size_t );
 void func_PRESENT( Renderer &, void *, size_t );
 void func_CLEAR_SCREEN( Renderer &, void *, size_t );
 void func_DRAW_INDEXED( Renderer &, void *, size_t );
@@ -33,6 +32,14 @@ void func_DRAW_LINES( Renderer &, void *, size_t );
 void func_PROCESS_RENDER_WINDOW_MESSAGES( Renderer &, void *, size_t );
 void func_ENABLE_PARAMETER_CHECK( Renderer &, void *, size_t );
 void func_DUMP_NEXT_FRAME( Renderer &, void *, size_t );
+void func_TEXTURE_DESTROY( Renderer &, void *, size_t );
+void func_TEXTURE_UPDATE_MIPMAP( Renderer &, void *, size_t );
+void func_TEXTURE_READ_MIPMAP( Renderer &, void *, size_t );
+void func_TEXTURE_BLOB_WRITE( Renderer &, void *, size_t );
+void func_TEXTURE_BLOB_READ( Renderer &, void *, size_t );
+void func_GPU_PROGRAM_DESTROY( Renderer &, void *, size_t );
+void func_GPU_PROGRAM_INIT( Renderer &, void *, size_t );
+void func_GPU_PROGRAM_SET_PARAMETER( Renderer &, void *, size_t );
 
 const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_GET_RENDERER_OPTIONS,
@@ -49,7 +56,6 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_CREATE_IDXBUF,
 &func_BIND_CONTEXT,
 &func_REBIND_CONTEXT,
-&func_GET_CONTEXT,
 &func_PRESENT,
 &func_CLEAR_SCREEN,
 &func_DRAW_INDEXED,
@@ -60,6 +66,14 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_PROCESS_RENDER_WINDOW_MESSAGES,
 &func_ENABLE_PARAMETER_CHECK,
 &func_DUMP_NEXT_FRAME,
+&func_TEXTURE_DESTROY,
+&func_TEXTURE_UPDATE_MIPMAP,
+&func_TEXTURE_READ_MIPMAP,
+&func_TEXTURE_BLOB_WRITE,
+&func_TEXTURE_BLOB_READ,
+&func_GPU_PROGRAM_DESTROY,
+&func_GPU_PROGRAM_INIT,
+&func_GPU_PROGRAM_SET_PARAMETER,
 };
 
 }} // end of file

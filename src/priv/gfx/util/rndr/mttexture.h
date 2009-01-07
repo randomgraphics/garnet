@@ -6,10 +6,12 @@
 /// \author  chenli@@REDMOND (2009.1.3)
 // *****************************************************************************
 
+#include "mtrndr.h"
+
 namespace GN { namespace gfx
 {
     ///
-    ///
+    /// multi thread texture wrapper
     ///
     class MultiThreadTexture : public Texture, public StdClass
     {
@@ -21,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadTexture()          { clear(); }
+        MultiThreadTexture( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
         virtual ~MultiThreadTexture() { quit(); }
         //@}
 
@@ -31,11 +33,18 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
+        bool init( Texture * );
         void quit();
     private:
-        void clear() {}
+        void clear() { mTexture = NULL; }
         //@}
+
+        // ********************************
+        // public methods
+        // ********************************
+    public:
+
+        Texture * getRealTexture() const { return mTexture; }
 
         // ********************************
         // from Texture
@@ -59,6 +68,9 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
+
+        MultiThreadRenderer & mRenderer;
+        Texture             * mTexture;
 
         // ********************************
         // private functions
