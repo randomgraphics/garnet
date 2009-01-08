@@ -507,7 +507,7 @@ class MultiRootsFileSystem : public FileSystem
     {
         for( size_t i = 0; i < mRoots.size(); ++i )
         {
-            if( exist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+            if( GN::pathExist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
         }
         return 0;
     }
@@ -529,14 +529,14 @@ public:
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return isDir( joinPath( *root, path ) );
+        return GN::isDir( joinPath( *root, path ) );
     }
 
     bool isFile( const StrA & path )
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return isFile( joinPath( *root, path ) );
+        return GN::isFile( joinPath( *root, path ) );
     }
 
     bool isAbsPath( const StrA & path )
@@ -549,7 +549,7 @@ public:
         result.clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
-        toNative( result, joinPath( *root, path ) );
+        GN::toNativePath( result, joinPath( *root, path ) );
     }
 
     std::vector<StrA> &
@@ -568,7 +568,7 @@ public:
 
                 std::vector<StrA> tmp;
 
-                glob(
+                GN::glob(
                     tmp,
                     joinPath( root, dirName ),
                     pattern,
@@ -589,7 +589,7 @@ public:
             const StrA * root = findRoot( dirName );
             if( !root ) return result;
 
-            glob(
+            GN::glob(
                 result,
                 joinPath( *root, dirName ),
                 pattern,
@@ -608,7 +608,7 @@ public:
             GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
             return 0;
         }
-        return openFile( joinPath( *root, path ), mode );
+        return GN::openFile( joinPath( *root, path ), mode );
      }
 };
 
