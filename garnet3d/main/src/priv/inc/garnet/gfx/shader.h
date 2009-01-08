@@ -83,6 +83,8 @@ namespace GN { namespace gfx
     ///
     struct GpuProgram : public RefCounter
     {
+        static const size_t PARAMETER_NOT_FOUND = (size_t)-1;
+
         ///
         /// get number of parameters
         ///
@@ -103,6 +105,23 @@ namespace GN { namespace gfx
         virtual void setParameter( size_t index, const void * value, size_t length = 0 ) = 0;
 
         ///
+        /// get parameter index by name. Return -1 if the name is not found.
+        ///
+        size_t getParameterIndex( const char * name ) const
+        {
+            const GpuProgramParameterDesc * params = getParameters();
+            size_t n = getNumParameters();
+            for( size_t i = 0; i < n; ++i )
+            {
+                if( 0 == strCmp( name, params[i].name ) )
+                {
+                    return i;
+                }
+            }
+            return PARAMETER_NOT_FOUND;
+        }
+
+        ///
         /// set shader parameter by name
         ///
         /// \param namex        Parameter name.
@@ -111,17 +130,15 @@ namespace GN { namespace gfx
         ///
         void setParameter( const char * name, const void * value, size_t length = 0 )
         {
-            const GpuProgramParameterDesc * params = getParameters();
-            size_t n = getNumParameters();
-            for( size_t i = 0; i < n; ++i )
+            size_t idx = getParameterIndex( name );
+
+            if( PARAMETER_NOT_FOUND == idx )
             {
-                if( 0 == strCmp( name, params[i].name ) )
-                {
-                    setParameter( i, value, length );
-                    return;
-                }
+                GN_ERROR(getLogger("GN.gfx.rndr.GpuProgram"))( "invalid parameter name: %s", name );
+                return;
             }
-            GN_ERROR(getLogger("GN.gfx.rndr.GpuProgram"))( "invalid parameter name: %s", name );
+
+            setParameter( idx, value, length );
         }
     };
 }}
