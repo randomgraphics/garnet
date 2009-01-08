@@ -1075,8 +1075,8 @@ for compiler, variants in ALL_targets.iteritems() :
 		    ]
 		tests = [
 		    'GNtestCegui',
-		    'GNtestD3D9',
 		    'GNtestD3D10',
+		    'GNtestDrawable',
 		    'GNtestEngine',
 		    'GNtestFt2',
 		    'GNtestGfx',

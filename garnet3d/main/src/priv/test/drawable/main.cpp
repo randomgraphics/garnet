@@ -124,7 +124,7 @@ bool init( Renderer & rndr )
     // make a clone of the whole drawable
     d2 = d1;
 
-    // modify d2's transformation (should only affect d1's shared gpps)
+    // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );
     d2.gpps[gppidx]->set( m, sizeof(m) );
 

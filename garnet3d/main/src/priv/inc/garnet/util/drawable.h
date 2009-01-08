@@ -85,14 +85,14 @@ namespace GN { namespace util
         {
             GN_ASSERT( rndr );
 
-            // apply dirty parameters
+            // apply parameters
             if( rc.gpuProgram )
             {
                 for( size_t i = 0; i < gpps.size(); ++i )
                 {
                     GpuProgramParam * gpp = gpps[i].get();
 
-                    if( gpp && gpp->dirty() )
+                    if( gpp )
                     {
                         rc.gpuProgram->setParameter( i, gpp->get(), gpp->size() );
                     }
@@ -131,15 +131,18 @@ namespace GN { namespace util
                 AutoRef<GpuProgramParam> & d = gpps[i];
                 const AutoRef<GpuProgramParam> & s = rhs.gpps[i];
 
-                if( s->shared() )
+                if( NULL != s )
                 {
-                    d = s;
-                }
-                else if( s )
-                {
-                    // make a clone for private parameter
-                    d.attach( createPrivateGpuProgramParam( s->size() ) );
-                    d->set( s->get(), s->size() );
+                    if( s->shared() )
+                    {
+                        d = s;
+                    }
+                    else
+                    {
+                        // make a clone for private parameter
+                        d.attach( createPrivateGpuProgramParam( s->size() ) );
+                        d->set( s->get(), s->size() );
+                    }
                 }
             }
 
