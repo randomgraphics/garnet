@@ -1,1 +1,1 @@
-SConscript( dirs=Split('d3d10 input pcre rndr ut xml xenon') )
+SConscript( dirs=Split('d3d10 drawable input pcre rndr ut xml xenon') )

@@ -1,26 +1,17 @@
-#ifndef __GN_UTIL_GNUTIL_H__
-#define __GN_UTIL_GNUTIL_H__
+#ifndef __GN_PCH_H__
+#define __GN_PCH_H__
 // *****************************************************************************
-/// \file
-/// \brief   Public interface of utility module
-/// \author  chenlee (2006.3.8)
+// \file    pch.h
+// \brief   PCH header
+// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "GNbase.h"
-
-namespace GN
-{
-    ///
-    /// Namespace for utility module
-    ///
-    namespace util {}
-}
-
-#include "util/camera.h"
-#include "util/fps.h"
-#include "util/drawable.h"
+#include "garnet/GNgfx.h"
+#include "garnet/GNinput.h"
+#include "garnet/GNwin.h"
+#include "garnet/GNutil.h"
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_UTIL_GNUTIL_H__
+#endif // __GN_PCH_H__
