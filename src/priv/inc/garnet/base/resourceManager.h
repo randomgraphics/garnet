@@ -58,7 +58,10 @@ namespace GN
     ///   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
     ///     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
     /// - NameResolver:
-    ///   - TODO: detail explaination here.
+    ///   - A single resource may have several different names (a.k.a aliases). Name resolver is responsible
+    ///     for converting aliase to real resource name.
+    ///   - A example of name resolver is resolving relative resource path into absolute resource path.
+    ///   - By default, name resolver does nothing.
     /// - NameChecker: 名字检查函数
     ///   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
     ///     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).
