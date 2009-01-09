@@ -140,6 +140,16 @@ def UTIL_error( msg ):
 #
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
+# get sub directory of a specific compiler and build variant
+def UTIL_variantRoot( compiler, variant ):
+	if not compiler:
+		if not variant :
+			return ''
+		else :
+			return '' + variant
+	else:
+		return os.path.join( compiler.os, compiler.cpu, compiler.name, variant )
+
 #
 def UTIL_buildRoot( compiler = None ) :
 	if not compiler:
@@ -792,6 +802,61 @@ BUILD_bldDir = None
 BUILD_libDir = None
 BUILD_binDir = None
 
+#define all targets
+
+TARGET_stlibs = [
+	'GNextern',
+	'GNbase',
+	'GNgfxUtil',
+	'GNutil',
+	]
+
+TARGET_shlibs = [
+    'GNcore',
+    'GNrndrOGL',
+    ]
+
+TARGET_tests = [
+    'GNtestCegui',
+    'GNtestD3D10',
+    'GNtestDrawable',
+    'GNtestEngine',
+    'GNtestFt2',
+    'GNtestGfx',
+    'GNtestGfx2',
+    'GNtestInput',
+    'GNtestOGL',
+    'GNtestPcre',
+    'GNtestRndr',
+    'GNtestXenonNegativeZRange',
+    'GNtestXenonStackTexture',
+    'GNtestXenonVertexEndian',
+    'GNtestXml',
+    'GNut',
+    ]
+
+TARGET_samples = [
+    'GNsampleDepthTexture',
+    'GNsampleDolphin',
+    'GNsampleRenderToCube',
+    'GNsampleRenderToTexture',
+    'GNsampleShadowMap',
+    ]
+
+TARGET_tools = [
+    'GNtoolD3D10DumpViewer',
+    'GNtoolD3D9DumpViewer',
+    'GNtoolD3D9Wrapper',
+    'GNtoolGPUBenchmark',
+    'GNtoolMeshConverter',
+    'GNtoolMeshViewer',
+    'GNtoolOGLInfo',
+    ]
+
+TARGET_misc = [
+	'GNmedia',
+	]
+
 #
 # Get libarary suffix. Currently, none.
 #
@@ -972,9 +1037,8 @@ def BUILD_dynamicLib( name, target ):
 
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
-		if 'GNcore' != name :
-			stdlibs += ['GNgfxUtil','GNcore']
-		stdlibs += ['GNbase','GNextern']
+		if 'GNcore' != name : stdlibs += ['GNcore']
+		stdlibs += TARGET_stlibs
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
@@ -1012,7 +1076,7 @@ def BUILD_program( name, target ):
 	if target.ignoreDefaultDependencies:
 		stdlibs = []
 	else:
-		stdlibs = Split('GNcore GNutil GNgfxUtil GNcore GNbase GNextern')
+		stdlibs = ['GNcore'] + TARGET_stlibs + ['GNcore'] # Need 2 GNcore instances to workaround gcc link ordering issue.
 
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -1069,67 +1133,52 @@ for compiler, variants in ALL_targets.iteritems() :
 				name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
 		# build additional dependencies:
-		shlibs = [
-		    'GNcore',
-		    'GNrndrOGL',
-		    ]
-		tests = [
-		    'GNtestCegui',
-		    'GNtestD3D10',
-		    'GNtestDrawable',
-		    'GNtestEngine',
-		    'GNtestFt2',
-		    'GNtestGfx',
-		    'GNtestGfx2',
-		    'GNtestInput',
-		    'GNtestOGL',
-		    'GNtestPcre',
-		    'GNtestRndr',
-		    'GNtestXenonNegativeZRange',
-		    'GNtestXenonStackTexture',
-		    'GNtestXenonVertexEndian',
-		    'GNtestXml',
-		    'GNut',
-		    ]
-		samples = [
-		    'GNsampleDepthTexture',
-		    'GNsampleDolphin',
-		    'GNsampleRenderToCube',
-		    'GNsampleRenderToTexture',
-		    'GNsampleShadowMap',
-		    ]
-		tools = [
-		    'GNtoolD3D10DumpViewer',
-		    'GNtoolD3D9DumpViewer',
-		    'GNtoolD3D9Wrapper',
-		    'GNtoolGPUBenchmark',
-		    'GNtoolMeshConverter',
-		    'GNtoolMeshViewer',
-		    'GNtoolOGLInfo',
-		    ]
-		progs = tests + samples + tools
 		def getTargets( n ):
 			if n in targets : return targets[n].targets
 			else : return []
+
 		# - Make binaries depend on their by-products, such as manifest and PDB, to make sure
 		#   those files are copied to binary directory, before execution of the binaries.
-		for n in ( shlibs + progs ):
+		progs = TARGET_tests + TARGET_samples + TARGET_tools
+		for n in ( TARGET_shlibs + progs ):
 			t = getTargets(n)
 			for x in t[1:] :
 				Depends( t[0], x )
+
 		# - Make executables depend on shared libraries and media files.
 		for pn in progs:
 			for pt in getTargets(pn):
 				Depends( pt, 'GNmedia' )
-				for sn in shlibs:
+				for sn in TARGET_shlibs:
 					for st in getTargets(sn):
 						Depends( pt, st )
 
-################################################################################
-#
-# TODO: Éú³Ébin/distÄ¿Â¼
-#
-################################################################################
+		################################################################################
+		#
+		# INSTALL
+		#
+		################################################################################
+
+		#define installation root directory
+		INSTALL_root = os.path.join( '#bin', 'sdk', UTIL_variantRoot( compiler, variant ) )
+
+		def installTargets( dir, files ):
+			for f in files:
+				Install( os.path.join( INSTALL_root, dir ), getTargets(f) )
+
+		def installHeaders( dstroot, srcroot ):
+			headers = GN.glob( srcroot, True )
+			for src in headers:
+				relpath = GN.relpath( src, srcroot )
+				dst     = os.path.join( INSTALL_root, dstroot, relpath )
+				InstallAs( dst, src )
+
+		installTargets( 'bin',        TARGET_shlibs + TARGET_tools )
+		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
+		installTargets( 'media',      ['GNmedia'] )
+		installTargets( 'doc',        ['GNdoc'] )
+		installHeaders( 'inc',        '#src/priv/inc' )
+		installHeaders( 'inc/extern', '#src/extern/inc' )
 
 ################################################################################
 #

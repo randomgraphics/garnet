@@ -1,6 +1,6 @@
 root      "cd /d %GARNET_ROOT%\$*"
-bin       "cd /d %GARNET_ROOT%\bin\$*"
 bld       "cd /d %GARNET_ROOT%\build.tmp\scons\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
+sdk       "cd /d %GARNET_ROOT%\bin\sdk\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\$*"
 env       "cd /d %GARNET_ROOT%\env\$*"
 msvc      "cd /d %GARNET_ROOT%\msvc\$*"
 src       "cd /d %GARNET_ROOT%\src\$*"
