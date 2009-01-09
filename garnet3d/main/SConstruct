@@ -90,6 +90,7 @@ CONF_defaultCmdArgs = {
 	'cg'        : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
 	'xedeploy'  : getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
 	'locale'    : getenv('GN_BUILD_LOCALE', 'CHS'),
+	'sdkroot'   : getenv('GN_BUILD_SDK_ROOT', '<svnroot>\\bin\\sdk') # root directory of SDK installation
 	}
 
 # ÊÇ·ñ´ò¿ªtrace
@@ -108,6 +109,9 @@ CONF_enableCg  = float( ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] ) )
 
 # copy to devkit
 CONF_xedeploy = float( ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] ) )
+
+# installation directory
+CONF_sdkroot = ARGUMENTS.get( 'sdkroot', os.path.join( '#bin', 'sdk' ) )
 
 ################################################################################
 #
@@ -803,7 +807,6 @@ BUILD_libDir = None
 BUILD_binDir = None
 
 #define all targets
-
 TARGET_stlibs = [
 	'GNextern',
 	'GNbase',
@@ -856,6 +859,23 @@ TARGET_tools = [
 TARGET_misc = [
 	'GNmedia',
 	]
+
+ALL_aliases = {} # empty map
+
+#
+# define new build alias
+#
+def ALIAS_add_default( alias, targets ):
+	Alias( alias, targets )
+	Default( alias )
+	ALL_aliases[alias] = 1
+
+#
+# define non-default build alias
+#
+def ALIAS_add_non_default( alias, targets ):
+	Alias( alias, targets )
+	ALL_aliases[alias] = 0
 
 #
 # Get libarary suffix. Currently, none.
@@ -971,8 +991,7 @@ def BUILD_staticLib( name, target ):
 	env = BUILD_newLinkEnv( target )
 	libName = '%s%s%s%s'%( env['LIBPREFIX'], name, BUILD_getSuffix(), env['LIBSUFFIX'] )
 	target.targets = env.Library( os.path.join(BUILD_libDir,libName), objs )
-	Alias( name, target.targets )
-	Default( target.targets )
+	ALIAS_add_default( name, target.targets )
 
 #
 # handle dependencies
@@ -1061,8 +1080,7 @@ def BUILD_dynamicLib( name, target ):
 			d = BUILD_binDir
 		target.targets.append( env.Install( d, x )[0] )
 
-	Alias( name, target.targets )
-	Default( target.targets )
+	ALIAS_add_default( name, target.targets )
 
 #
 # build executable
@@ -1091,8 +1109,7 @@ def BUILD_program( name, target ):
 	if 'xenon' == BUILD_compiler.name and CONF_xedeploy:
 		env.AddPostAction( target.targets[0], UTIL_copy_to_devkit('xe:\\garnet3d\\%s'%BUILD_variant) )
 
-	Alias( name, target.targets )
-	Default( target.targets )
+	ALIAS_add_default( name, target.targets )
 
 #
 # build custom target
@@ -1103,8 +1120,7 @@ def BUILD_custom( name, target ):
 	target.targets = []
 	for s in target.sources:
 		target.targets += s.action( env, s.sources, BUILD_bldDir )
-	Alias( name, target.targets )
-	Default( target.targets )
+	ALIAS_add_default( name, target.targets )
 
 #
 # build all targets
@@ -1160,7 +1176,10 @@ for compiler, variants in ALL_targets.iteritems() :
 		################################################################################
 
 		#define installation root directory
-		INSTALL_root = os.path.join( '#bin', 'sdk', UTIL_variantRoot( compiler, variant ) )
+		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_variantRoot( compiler, variant ) )
+
+		#define installation alias
+		ALIAS_add_default( "install", INSTALL_root )
 
 		def installTargets( dir, files ):
 			for f in files:
@@ -1204,6 +1223,7 @@ for compiler, variants in ALL_targets.iteritems():
 							},
 						build_dir=os.path.join( UTIL_buildDir( compiler, variant ), "msvc" )
 						)
+ALIAS_add_non_default( 'msvc', '#msvc' )
 
 ################################################################################
 #
@@ -1211,21 +1231,12 @@ for compiler, variants in ALL_targets.iteritems():
 #
 ################################################################################
 
-def HELP_generateTargetList():
-	import sets
-	names = sets.Set()
-	maxlen = 0;
-	for v in ALL_targets.itervalues():
-		for t in v.itervalues():
-			for n in t.keys():
-				names.add( n )
-				l = len( n )
-				if l > maxlen: maxlen = l
-	names = [x for x in names]
-	names.sort()
+def HELP_generateAliasList():
 	s = ''
-	#for n in names: s += ('\n%' + str(maxlen+4) + 's')%n
-	for n in names: s += '\n    %s'%n
+	for a in ALL_aliases.iteritems():
+		if a[1]: d = '(default)'
+		else   : d = '(non defualt)'
+ 		s += '\n    ' + a[0] + ('%' + str(24-len(a[0])) +'s')%' ' + d
 	return s
 
 HELP_opts = Options()
@@ -1260,6 +1271,10 @@ HELP_opts.Add(
 	'xedeploy',
 	'Copy to Xenon devkit. Only effective when building Xenon binaries. (GN_BUILD_XEDEPLOY)',
 	CONF_defaultCmdArgs['xedeploy'] )
+HELP_opts.Add(
+	'sdkroot',
+	'Specify SDK installation directory. (GN_BUILD_SDK_ROOT)',
+	CONF_defaultCmdArgs['sdkroot'] )
 
 HELP_text = """
 Usage:
@@ -1270,6 +1285,7 @@ Options:%s
 Targets:%s
 """ % (
 	HELP_opts.GenerateHelpText( Environment( options = HELP_opts, tools=[] ) ),
-	HELP_generateTargetList()
+	#HELP_generateTargetList()
+	HELP_generateAliasList()
 	)
 Help( HELP_text )
