@@ -1,0 +1,42 @@
+Import( 'GN' )
+
+import os.path
+
+def GenVariantHeader( target, source, env ):
+	# determine variant value.
+	if   'retail'  == GN.variant: variant = 0
+	elif 'profile' == GN.variant: variant = 1
+	elif 'debug'   == GN.variant: variant = 2
+	elif 'stret'   == GN.variant: variant = 3
+	elif 'stprof'  == GN.variant: variant = 4
+	elif 'stdbg'   == GN.variant: variant = 5
+	else                         :
+		return -1;
+
+	# create header file
+	FILE = open( target[0].path, 'w' )
+	FILE.writelines(
+		'// AUTO GENERATED FILE. DO NOT EDIT!\n'
+		'\n'
+		'// This file defines main switch of build flavor. Acceptable values are:\n'
+		'//\n'
+		'//   0 - retail build (default)\n'
+		'//   1 - profile build\n'
+		'//   2 - debug build\n'
+		'//   3 - static retail build\n'
+		'//   4 - static profile build\n'
+		'//   5 - static debug build\n'
+		'//\n'
+		'#define GN_BUILD_VARIANT %d\n'%variant
+		)
+	FILE.close();
+	return 0
+
+def BuildVariantHeaderBuilder( env, sources, blddir ):
+	targets = [os.path.join(blddir, 'src/priv/inc/garnet/base/define_build_variant.h')]
+	env.Command( targets[0], None, GenVariantHeader )
+	return targets
+
+cluster = GN.newCustomSourceCluster( [], BuildVariantHeaderBuilder )
+
+GN.newCustomTarget( 'GNinc', [cluster] )

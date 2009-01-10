@@ -37,18 +37,8 @@
     GN_BUILD_ENABLE_PIX         Enable PIX tag (on Windows and Xbox platform)
 */
 
-/// Main switch of build flavor. Possible values are:
-///
-///   0 - retail build (default)
-///   1 - profile build
-///   2 - debug build
-///   3 - static retail build
-///   4 - static profile build
-///   5 - static debug build
-///
-#ifndef GN_BUILD_VARIANT
-#define GN_BUILD_VARIANT 0
-#endif
+// Define main build switch
+#include "base/define_build_variant.h"
 
 // define switches for retail build
 #if 0 == GN_BUILD_VARIANT

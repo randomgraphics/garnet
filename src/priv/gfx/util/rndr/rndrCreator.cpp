@@ -18,11 +18,16 @@ typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOption
 /// fake OGL renderer creator for Xenon platform
 ///
 inline GN::gfx::Renderer *
-GN::gfx::createOGLRenderer( const GN::gfx::RendererOptions & )
+GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & )
 {
     GN_ERROR(sLogger)( "No OGL support on Xenon." );
     return 0;
 }
+#else
+
+/// OGL renderer creator
+extern GN::gfx::Renderer *
+GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & );
 
 #endif
 
@@ -65,9 +70,10 @@ namespace GN { namespace gfx
 #if GN_BUILD_STATIC
         switch( api )
         {
-            case API_D3D9  : return createD3D9Renderer( ro );
-            case API_D3D10 : return createD3D10Renderer( ro );
-            case API_OGL   : return createOGLRenderer( ro );
+            case API_OGL   : return GNgfxCreateOGLRenderer( ro );
+            case API_D3D9  :
+            case API_D3D10 :
+            case API_FAKE  : GN_UNIMPL(); return 0;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
         }
 #else
