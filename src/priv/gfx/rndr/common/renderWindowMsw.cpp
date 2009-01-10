@@ -115,12 +115,15 @@ void GN::gfx::RenderWindowMsw::quit()
         mWindow = 0;
     }
 
-    // unregister window class
+    // tru unregister window class
     if( !mClassName.empty() )
     {
         GN_TRACE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
+        if( 0 == ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) )
+        {
+            GN_WARN(sLogger)( "Fail to unregister windows class : %s", GN::getOSErrorInfo() );
+        }
         mClassName.clear();
     }
 
