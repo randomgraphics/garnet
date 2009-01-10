@@ -144,16 +144,6 @@ def UTIL_error( msg ):
 #
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
-# get sub directory of a specific compiler and build variant
-def UTIL_variantRoot( compiler, variant ):
-	if not compiler:
-		if not variant :
-			return ''
-		else :
-			return '' + variant
-	else:
-		return os.path.join( compiler.os, compiler.cpu, compiler.name, variant )
-
 #
 def UTIL_buildRoot( compiler = None ) :
 	if not compiler:
@@ -791,7 +781,7 @@ for c in ALL_conf:
 	GN.compiler = c[0]
 	GN.variant = c[1]
 	GN.conf = c[2]
-	SConscript( 'SConscript', exports=['GN'], build_dir=UTIL_buildDir( GN.compiler, GN.variant ), duplicate=0 )
+	SConscript( 'SConscript', exports=['GN'], variant_dir=UTIL_buildDir( GN.compiler, GN.variant ), duplicate=1 )
 
 ################################################################################
 #
@@ -807,10 +797,16 @@ BUILD_libDir = None
 BUILD_binDir = None
 
 #define all targets
+
+TARGET_headers= [
+	'GNinc',
+	]
+
 TARGET_stlibs = [
 	'GNextern',
 	'GNbase',
 	'GNgfxUtil',
+	'GNrndrCommon',
 	'GNutil',
 	]
 
@@ -888,7 +884,11 @@ def BUILD_getSuffix(): return ""
 def BUILD_newCompileEnv( cluster ):
 	env = BUILD_env.Clone()
 
-	env.Prepend( CPPPATH = ['#src/extern/inc', 'src/priv/inc'] )
+	env.Prepend( CPPPATH = [
+		'#src/extern/inc',
+	    BUILD_bldDir + '/src/priv/inc',
+		'src/priv/inc',
+		])
 
 	if 'icl' == env['CC']: env.Append( CCFLAGS = ['/Zi', '/debug:full'] )
 	elif 'cl' == env['CC']: env.Append( CCFLAGS = ['/Z7', '/Yd'] )
@@ -1091,10 +1091,9 @@ def BUILD_program( name, target ):
 
 	env = BUILD_newLinkEnv( target )
 
-	if target.ignoreDefaultDependencies:
-		stdlibs = []
-	else:
-		stdlibs = ['GNcore'] + TARGET_stlibs + ['GNcore'] # Need 2 GNcore instances to workaround gcc link ordering issue.
+	stdlibs = []
+	if not target.ignoreDefaultDependencies:
+		stdlibs = TARGET_shlibs + TARGET_stlibs + ['GNcore'] # Need 2 GNcore instances to workaround gcc link ordering issue.
 
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -1153,15 +1152,22 @@ for compiler, variants in ALL_targets.iteritems() :
 			if n in targets : return targets[n].targets
 			else : return []
 
-		# - Make binaries depend on their by-products, such as manifest and PDB, to make sure
-		#   those files are copied to binary directory, before execution of the binaries.
 		progs = TARGET_tests + TARGET_samples + TARGET_tools
+
+		# Everything should depend on the header target
+		for n in ( TARGET_stlibs + TARGET_shlibs + progs ):
+			if 'GNinc' != n:
+				for t in getTargets(n):
+					Depends( t, 'GNinc' )
+
+		# Make binaries depend on their by-products, such as manifest and PDB, to make sure
+		# those files are copied to binary directory, before execution of the binaries.
 		for n in ( TARGET_shlibs + progs ):
 			t = getTargets(n)
 			for x in t[1:] :
 				Depends( t[0], x )
 
-		# - Make executables depend on shared libraries and media files.
+		# Make executables depend on shared libraries and media files.
 		for pn in progs:
 			for pt in getTargets(pn):
 				Depends( pt, 'GNmedia' )
@@ -1175,29 +1181,44 @@ for compiler, variants in ALL_targets.iteritems() :
 		#
 		################################################################################
 
+		# get sub directory of a specific compiler and build variant
+		def UTIL_sdksubdir( compiler, variant ):
+			if not compiler:
+				if not variant :
+					return ''
+				else :
+					return '' + variant
+			else:
+				return compiler.os + '.' + compiler.cpu + '.' + compiler.name + '.' + variant
+
+
 		#define installation root directory
-		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_variantRoot( compiler, variant ) )
+		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_sdksubdir( compiler, variant ) )
 
 		#define installation alias
 		ALIAS_add_default( "install", INSTALL_root )
 
 		def installTargets( dir, files ):
+			dstdir = os.path.join( INSTALL_root, dir )
 			for f in files:
-				Install( os.path.join( INSTALL_root, dir ), getTargets(f) )
+				Install( dstdir, getTargets(f) )
 
 		def installHeaders( dstroot, srcroot ):
-			headers = GN.glob( srcroot, True )
-			for src in headers:
-				relpath = GN.relpath( src, srcroot )
-				dst     = os.path.join( INSTALL_root, dstroot, relpath )
-				InstallAs( dst, src )
+			if compiler and variant:
+				headers = GN.glob( srcroot, True )
+				for src in headers:
+					relpath = GN.relpath( src, srcroot )
+					dst     = os.path.join( INSTALL_root, dstroot, relpath )
+					InstallAs( dst, src )
 
 		installTargets( 'bin',        TARGET_shlibs + TARGET_tools )
 		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
 		installTargets( 'media',      ['GNmedia'] )
 		installTargets( 'doc',        ['GNdoc'] )
-		installHeaders( 'inc',        '#src/priv/inc' )
-		installHeaders( 'inc/extern', '#src/extern/inc' )
+
+		installTargets( 'inc/garnet/base', ['GNinc'] )
+		installHeaders( 'inc/garnet',      '#src/priv/inc/garnet' )
+		installHeaders( 'inc/extern',      '#src/extern/inc' )
 
 ################################################################################
 #
