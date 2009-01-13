@@ -21,30 +21,12 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Shader profile.
-    ///
-    /// Shader profile defines the minimum requirements that the hardware has to support
-    ///
-    enum GpuProgramProfile
-    {
-        GPP_D3D_1_1,  ///< D3D shader model 1.1
-        GPP_D3D_2_0,  ///< D3D shader model 2.0
-        GPP_D3D_3_0,  ///< D3D shader model 3.0
-        GPP_D3D_4_0,  ///< D3D shader model 4.0
-        GPP_OGL_ARB1, ///< OpenGL ARB program
-        GPP_OGL_GLSL, ///< OpenGL GLSL 1.0
-        GPP_CG,       ///< Nvidia Cg
-        NUM_GPU_PROGRAM_PROFILES,
-    };
-
-    ///
     /// shader code
     ///
     struct ShaderCode
     {
-        GpuProgramLanguage lang;  ///< shading language. Ignored when shader code is NULL.
-        const char *       code;  ///< NULL terminated shader code
-        const char *       entry; ///< NULL terminated shader entry function
+        const char * code;  ///< NULL terminated shader code
+        const char * entry; ///< NULL terminated shader entry function
 
         /// default ctor
         ShaderCode() : code(NULL), entry(NULL) {}
@@ -55,9 +37,10 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        ShaderCode vs;
-        ShaderCode gs;
-        ShaderCode ps;
+        GpuProgramLanguage lang;  ///< shading language. Ignored when shader code is NULL.
+        ShaderCode         vs;
+        ShaderCode         gs;
+        ShaderCode         ps;
     };
 
     ///

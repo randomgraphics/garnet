@@ -48,9 +48,8 @@ bool init( Renderer & rndr )
 
     // create GPU program
     GpuProgramDesc gpd;
-    gpd.vs.lang = GPL_GLSL;
+    gpd.lang = GPL_GLSL;
     gpd.vs.code = vscode;
-    gpd.ps.lang = GPL_GLSL;
     gpd.ps.code = pscode;
     d1.rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
     if( !d1.rc.gpuProgram ) return false;

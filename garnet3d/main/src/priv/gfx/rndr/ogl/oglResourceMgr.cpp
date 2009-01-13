@@ -26,21 +26,15 @@ class OGLCompiledGpuProgram : public GN::gfx::CompiledGpuProgram
         const char *       begin,
         const char *       end )
     {
-        if( sc.code != NULL && sc.lang >= NUM_GPU_PROGRAM_LANGUAGES )
-        {
-            GN_ERROR(sLogger)( "invalid %s shader language: %d", type, sc.lang );
-            return false;
-        }
-
         if( 0 != sc.code && ( sc.code < begin || sc.code >= end ) )
         {
-            GN_ERROR(sLogger)( "invalid %s shader code pointer." );
+            GN_ERROR(sLogger)( "invalid %s shader code pointer.", type );
             return false;
         }
 
         if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
         {
-            GN_ERROR(sLogger)( "invalid %s shader entry pointer." );
+            GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
             return false;
         }
 
@@ -115,6 +109,13 @@ public:
 
         if( 0 != desc.ps.code ) desc.ps.code = start + (size_t)desc.ps.code;
         if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
+
+        // check GPU program language
+        if( desc.lang >= NUM_GPU_PROGRAM_LANGUAGES )
+        {
+            GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang );
+            return false;
+        }
 
         // check data integrity
         if( !sCheckShaderCode( "vertex", desc.vs, start, end ) ||
@@ -222,9 +223,20 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
     if( !cgp->init( data, length ) ) return NULL;
 
     const GpuProgramDesc * desc = (const GpuProgramDesc *)cgp->data();
-    AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
-    if( !prog->init( *desc ) ) return NULL;
-    return prog.detach();
+
+    switch( desc->lang )
+    {
+        case GPL_GLSL:
+        {
+            AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
+            if( !prog->init( *desc ) ) return NULL;
+            return prog.detach();
+        }
+
+        default:
+            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc->lang );
+            return NULL;
+    }
 
     GN_UNGUARD;
 }
