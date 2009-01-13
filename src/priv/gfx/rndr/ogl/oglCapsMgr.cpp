@@ -231,35 +231,25 @@ bool GN::gfx::OGLRenderer::capsInit()
     }
 
     // vertex shader flags
-    mCaps.vsProfiles[RendererCaps::GPP_D3D_1_1]  = false;
-    mCaps.vsProfiles[RendererCaps::GPP_D3D_2_0]  = false;
-    mCaps.vsProfiles[RendererCaps::GPP_D3D_3_0]  = false;
-    mCaps.vsProfiles[RendererCaps::GPP_D3D_4_0]  = false;
-    mCaps.vsProfiles[RendererCaps::GPP_OGL_ARB1] = !!GLEW_ARB_vertex_program;
-    mCaps.vsProfiles[RendererCaps::GPP_OGL_GLSL] = GLEW_ARB_shader_objects &&
-                                                   GLEW_ARB_vertex_shader &&
-                                                   GLEW_ARB_shading_language_100;
+    mCaps.vsProfiles |= RendererCaps::GPP_D3D_1_1;
+    mCaps.vsProfiles |= RendererCaps::GPP_D3D_2_0;
+    mCaps.vsProfiles |= RendererCaps::GPP_D3D_3_0;
+    mCaps.vsProfiles |= RendererCaps::GPP_D3D_4_0;
+    mCaps.vsProfiles |= (!!GLEW_ARB_vertex_program) ? RendererCaps::GPP_OGL_ARB1 : 0;
+    mCaps.vsProfiles |= ( GLEW_ARB_shader_objects && GLEW_ARB_vertex_shader && GLEW_ARB_shading_language_100 )
+                        ? RendererCaps::GPP_OGL_GLSL : 0;
 #ifdef HAS_CG_OGL
-    mCaps.vsProfiles[RendererCaps::GPP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
-#else
-    mCaps.vsProfiles[RendererCaps::GPP_CG]       = false;
+    mCaps.vsProfiles |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) ? RendererCaps::GPP_CG : 0;
 #endif
 
     // note: OGL renderer does not support GS yet.
 
     // pixel shader flags
-    mCaps.psProfiles[RendererCaps::GPP_D3D_1_1]  = false;
-    mCaps.psProfiles[RendererCaps::GPP_D3D_2_0]  = false;
-    mCaps.psProfiles[RendererCaps::GPP_D3D_3_0]  = false;
-    mCaps.psProfiles[RendererCaps::GPP_D3D_4_0]  = false;
-    mCaps.psProfiles[RendererCaps::GPP_OGL_ARB1] = !!GLEW_ARB_fragment_program;
-    mCaps.psProfiles[RendererCaps::GPP_OGL_GLSL] = GLEW_ARB_shader_objects &&
-                                                   GLEW_ARB_fragment_shader &&
-                                                   GLEW_ARB_shading_language_100;
+    mCaps.psProfiles |= (!!GLEW_ARB_fragment_program) ? RendererCaps::GPP_OGL_ARB1 : 0;
+    mCaps.psProfiles |= (GLEW_ARB_shader_objects && GLEW_ARB_fragment_shader && GLEW_ARB_shading_language_100)
+                        ? RendererCaps::GPP_OGL_GLSL : 0;
 #ifdef HAS_CG_OGL
-    mCaps.psProfiles[RendererCaps::GPP_CG]       = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
-#else
-    mCaps.psProfiles[RendererCaps::GPP_CG]       = false;
+    mCaps.psProfiles |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT )) ? RendererCaps::GPP_CG : 0;
 #endif
 
     // success;
