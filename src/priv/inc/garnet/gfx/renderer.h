@@ -281,6 +281,23 @@ namespace GN { namespace gfx
     ///
     struct RendererCaps
     {
+        ///
+        /// Shader profile.
+        ///
+        /// Shader profile defines the minimum requirements that the hardware has to support
+        ///
+        enum GpuProgramProfile
+        {
+            GPP_D3D_1_1,  ///< D3D shader model 1.1
+            GPP_D3D_2_0,  ///< D3D shader model 2.0
+            GPP_D3D_3_0,  ///< D3D shader model 3.0
+            GPP_D3D_4_0,  ///< D3D shader model 4.0
+            GPP_OGL_ARB1, ///< OpenGL ARB program
+            GPP_OGL_GLSL, ///< OpenGL GLSL 1.0
+            GPP_CG,       ///< Nvidia Cg
+            NUM_GPU_PROGRAM_PROFILES,
+        };
+
         UInt32 maxTex1DSize[2];       ///< width, array
         UInt32 maxTex2DSize[3];       ///< width, height, array
         UInt32 maxTex3DSize[4];       ///< width, height, array

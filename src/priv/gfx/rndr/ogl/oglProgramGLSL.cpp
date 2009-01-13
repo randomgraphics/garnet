@@ -256,6 +256,8 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramGLSL, () );
 
+    GN_ASSERT( GPL_GLSL == desc.lang );
+
     mVS = sCreateShader( desc.vs.code, GL_VERTEX_SHADER_ARB );
     if( 0 == mVS ) return failure();
 
