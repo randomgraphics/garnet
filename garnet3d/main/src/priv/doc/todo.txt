@@ -4,6 +4,14 @@
   - cross platform renderer, again...
     - why: ease to use.
     - rule #1: portability has priority then performance.
+  - PS2 model beautifier(add bump map and tessellation to PS2 model)
+    - ASE or FBX mesh loader
+    - some standard light effects:
+      - effect class
+      - flat( no light, one diffuse texture, XYZ_UV0 )
+      - gouraud(single light, one diffuse texture, XYZ_NORMAL_UV0)
+      - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
+      - skin
 
 - p1
   - big-endian DDS loader

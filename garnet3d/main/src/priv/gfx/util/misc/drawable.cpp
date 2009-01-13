@@ -1,8 +1,7 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 
 using namespace GN;
-using namespace GN::util;
+using namespace GN::gfx;
 
 // *****************************************************************************
 // local var/types/functions
@@ -21,7 +20,7 @@ static std::map<StrA,SharedGpp*> sSharedGppMap;
 
 class SharedGpp : public GpuProgramParam
 {
-    std::map<StrA,SharedGpp*>::const_iterator mIter;
+    std::map<StrA,SharedGpp*>::iterator mIter;
 
 public:
 
@@ -46,7 +45,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-GpuProgramParam * GN::util::createPrivateGpuProgramParam( size_t size )
+GpuProgramParam * GN::gfx::createPrivateGpuProgramParam( size_t size )
 {
     return new PrivateGpp( size );
 }
@@ -54,7 +53,7 @@ GpuProgramParam * GN::util::createPrivateGpuProgramParam( size_t size )
 //
 //
 // -----------------------------------------------------------------------------
-GpuProgramParam * GN::util::createSharedGpuProgramParam( const StrA & name, size_t size )
+GpuProgramParam * GN::gfx::createSharedGpuProgramParam( const StrA & name, size_t size )
 {
     std::map<StrA,SharedGpp*>::const_iterator iter = sSharedGppMap.find( name );
 
@@ -73,7 +72,7 @@ GpuProgramParam * GN::util::createSharedGpuProgramParam( const StrA & name, size
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::Drawable::draw() const
+void GN::gfx::Drawable::draw() const
 {
     GN_ASSERT( rndr );
 
@@ -108,8 +107,8 @@ void GN::util::Drawable::draw() const
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::Drawable &
-GN::util::Drawable::operator=( const Drawable & rhs )
+GN::gfx::Drawable &
+GN::gfx::Drawable::operator=( const Drawable & rhs )
 {
     rndr = rhs.rndr;
     rc = rhs.rc;
@@ -143,4 +142,3 @@ GN::util::Drawable::operator=( const Drawable & rhs )
 
     return *this;
 }
-

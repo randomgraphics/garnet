@@ -22,7 +22,6 @@ namespace GN
 #include "scene/font.h"
 #include "scene/scene.h"
 #include "scene/actor.h"
-#include "scene/util.h"
 
 // *****************************************************************************
 //                                     EOF

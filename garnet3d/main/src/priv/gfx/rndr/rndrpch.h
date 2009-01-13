@@ -1,29 +1,17 @@
 // *****************************************************************************
-// \file    pch.h
-// \brief   PCH header
-// \author  chenlee (2005.10.1)
+/// \file
+/// \brief   common PCH header for Renderer modules
+/// \author  chen@@CHENLI-HOMEPC (2009.1.12)
 // *****************************************************************************
 
-#include "../rndrpch.h"
-
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#elif GN_POSIX
-#include <X11/Xlib.h>
-#endif
-
-#ifdef HAS_CG
-#include <Cg/cg.h>
-#endif
-
-#include <exception>
-#include <malloc.h>
-#include <stdlib.h>
+#include "garnet/GNbase.h"
+#include "garnet/gfx/colorFormat.h"
+#include "garnet/gfx/image.h"
+#include "garnet/gfx/shape.h"
+#include "garnet/gfx/misc.h"
+#include "garnet/gfx/surface.h"
+#include "garnet/gfx/shader.h"
+#include "garnet/gfx/renderer.h"
 
 // *****************************************************************************
 //                                     EOF
