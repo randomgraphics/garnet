@@ -82,13 +82,11 @@ void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * d
 
     OGLAutoAttribStack autoAttribStack( 0, GL_CLIENT_VERTEX_ARRAY_BIT );
 
-    const VtxBufDesc & desc = getDesc();
-
     // sanity check
     GN_ASSERT(
-        offset < desc.length &&
+        offset < getDesc().length &&
         0 < length &&
-        (offset + length) <= desc.length );
+        (offset + length) <= getDesc().length );
 
     // bind as active buffer
     GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );

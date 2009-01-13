@@ -288,13 +288,13 @@ namespace GN { namespace gfx
         ///
         enum GpuProgramProfile
         {
-            GPP_D3D_1_1,  ///< D3D shader model 1.1
-            GPP_D3D_2_0,  ///< D3D shader model 2.0
-            GPP_D3D_3_0,  ///< D3D shader model 3.0
-            GPP_D3D_4_0,  ///< D3D shader model 4.0
-            GPP_OGL_ARB1, ///< OpenGL ARB program
-            GPP_OGL_GLSL, ///< OpenGL GLSL 1.0
-            GPP_CG,       ///< Nvidia Cg
+            GPP_D3D_1_1  = 1<<0, ///< D3D shader model 1.1
+            GPP_D3D_2_0  = 1<<1, ///< D3D shader model 2.0
+            GPP_D3D_3_0  = 1<<2, ///< D3D shader model 3.0
+            GPP_D3D_4_0  = 1<<3, ///< D3D shader model 4.0
+            GPP_OGL_ARB1 = 1<<4, ///< OpenGL ARB program
+            GPP_OGL_GLSL = 1<<5, ///< OpenGL GLSL 1.0
+            GPP_CG       = 1<<6, ///< Nvidia Cg
             NUM_GPU_PROGRAM_PROFILES,
         };
 
@@ -303,9 +303,9 @@ namespace GN { namespace gfx
         UInt32 maxTex3DSize[4];       ///< width, height, array
         UInt32 maxTextures;           ///< max number of simutaneous textures
         UInt32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        bool   vsProfiles[NUM_GPU_PROGRAM_PROFILES];
-        bool   gsProfiles[NUM_GPU_PROGRAM_PROFILES];
-        bool   psProfiles[NUM_GPU_PROGRAM_PROFILES];
+        UInt32 vsProfiles;            ///< renderer supported vertex program profiles.
+        UInt32 gsProfiles;            ///< renderer supported geometry program profiles.
+        UInt32 psProfiles;            ///< renderer supported pixel program profiles.
     };
 
     ///
@@ -551,9 +551,12 @@ namespace GN { namespace gfx
             BLEND_OP_MAX,
         };
 
+        ///
+        /// Bitwise packed render states
+        ///
         union
         {
-            UInt64 renderStates; ///< all render states in single 64bit integer.
+            UInt64 renderStates; ///< bunch of render states packed in single 64bit integer.
 
             struct
             {
@@ -611,7 +614,7 @@ namespace GN { namespace gfx
                         UInt32 blendAlphaSrc  : 4;
                         UInt32 blendAlphaDst  : 4;
                         UInt32 blendAlphaOp   : 3;
-                        UInt32 nouse_1        : 9;///< no use. must be zero
+                        UInt32 blendNoUse     : 9;///< no use. must be zero
                     };
                 };
             };
