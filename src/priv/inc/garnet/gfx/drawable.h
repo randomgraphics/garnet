@@ -1,14 +1,12 @@
-#ifndef __GN_UTIL_DRAWABLE_H__
-#define __GN_UTIL_DRAWABLE_H__
+#ifndef __GN_GFX_DRAWABLE_H__
+#define __GN_GFX_DRAWABLE_H__
 // *****************************************************************************
 /// \file
 /// \brief  Drawable class
 /// \author  chenli@@REDMOND (2009.1.7)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
-
-namespace GN { namespace util
+namespace GN { namespace gfx
 {
     class GpuProgramParam : public RefCounter
     {
@@ -51,19 +49,19 @@ namespace GN { namespace util
     ///
     struct Drawable
     {
-        gfx::Renderer                      * rndr;
-        gfx::RendererContext                 rc;
+        Renderer                           * rndr;
+        RendererContext                      rc;
         DynaArray<AutoRef<GpuProgramParam> > gpps; ///< GPU program parameters
 
         // parameters for DRAW_PRIMITIVE
-        gfx::PrimitiveType prim;
-        size_t             numvtx;
-        size_t             startvtx;
+        PrimitiveType prim;
+        size_t        numvtx;
+        size_t        startvtx;
 
         // additional parameters for DRAW_INDEXED_PRIMITIVE
-        size_t             numidx;
-        size_t             minvtxidx;
-        size_t             startidx;
+        size_t        numidx;
+        size_t        minvtxidx;
+        size_t        startidx;
 
         ///
         /// clear to empty drawable
@@ -88,4 +86,4 @@ namespace GN { namespace util
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_UTIL_DRAWABLE_H__
+#endif // __GN_GFX_DRAWABLE_H__

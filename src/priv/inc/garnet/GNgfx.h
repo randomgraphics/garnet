@@ -30,6 +30,10 @@ namespace GN
 #include "gfx/shader.h"   // graphics shader
 #include "gfx/renderer.h" // main renderer interface
 
+// utils
+#include "gfx/drawable.h"
+//#include "gfx/effect.h"
+
 // *****************************************************************************
 //                         END of GNgfx.h
 // *****************************************************************************
