@@ -141,7 +141,6 @@
         {                                                                    \
             static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
             GN_ERROR(sLogger)( ::GN::getOSErrorInfo() );                     \
-            GN_UNEXPECTED();                                                 \
             something                                                        \
         }                                                                    \
     } else void(0)
