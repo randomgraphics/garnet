@@ -32,7 +32,7 @@ namespace GN
 
 // utils
 #include "gfx/drawable.h"
-//#include "gfx/effect.h"
+#include "gfx/effect.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h

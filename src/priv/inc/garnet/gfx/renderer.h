@@ -551,12 +551,9 @@ namespace GN { namespace gfx
             BLEND_OP_MAX,
         };
 
-        ///
-        /// Bitwise packed render states
-        ///
         union
         {
-            UInt64 renderStates; ///< bunch of render states packed in single 64bit integer.
+            UInt64 renderStates; ///< all render states in single 64bit integer.
 
             struct
             {
@@ -614,7 +611,7 @@ namespace GN { namespace gfx
                         UInt32 blendAlphaSrc  : 4;
                         UInt32 blendAlphaDst  : 4;
                         UInt32 blendAlphaOp   : 3;
-                        UInt32 blendNoUse     : 9;///< no use. must be zero
+                        UInt32 nouse_1        : 9;///< no use. must be zero
                     };
                 };
             };
