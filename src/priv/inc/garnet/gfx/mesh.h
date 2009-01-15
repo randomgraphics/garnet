@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         size_t        numidx; ///< number of indices
         size_t        strides[RendererContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using minimal stride defined by vertex format.
         const void *  vertices[RendererContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data undefined
-        const void *  indices; // null means index data undefined.
+        const void *  indices; // Null means index data undefined.
 
         /// default ctor
         MeshDesc()
@@ -65,14 +65,15 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        /// release CPU mesh data, keep GPU mesh data unchanged.
-        void releaseCpuData();
+        ///
+        /// apply whole mesh to drawable
+        ///
+        void applyToDrawable( Drawable & );
 
-        /// calculate vertex normal
-        void calculateNormal( const StrA & positionSemantic = "position" );
-
-        /// calculate tagent and binormal vectors
-        void calculateTengentSpaceVector( const StrA & positionSemantic = "position", const StrA & texcoordSemantic = "tex0" );
+        ///
+        /// apply subset of the mesh to drawable
+        ///
+        void applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices );
 
         // ********************************
         // private variables
@@ -81,13 +82,11 @@ namespace GN { namespace gfx
 
         struct VertexBuffer
         {
-            DynaArray<UInt8> cpudata;
             AutoRef<VtxBuf>  gpudata;
         };
 
         struct IndexBuffer
         {
-            DynaArray<UInt8> cpudata;
             AutoRef<IdxBuf>  gpudata;
         };
 
