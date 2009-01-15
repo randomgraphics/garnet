@@ -15,7 +15,7 @@ namespace GN
     /// Handle Manager
     ///
     template<typename T, typename HANDLE_TYPE = size_t >
-    class HandleManager
+    class HandleManager : public NoCopy
     {
         ///
         /// Handle item used internally by manager
@@ -283,7 +283,7 @@ namespace GN
             NamedItem( NamedHandleManager & m, H h, const StrA & n, const T & d )
                 : mgr(m), handle(h), name(n), data(d) {}
 
-            NamedItem( NamedHandleManager & m, H h, const StrA & n ) 
+            NamedItem( NamedHandleManager & m, H h, const StrA & n )
                 : mgr(m), handle(h), name(n) {}
         };
 

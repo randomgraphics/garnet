@@ -56,18 +56,6 @@ bool init( Renderer & rndr )
     Effect e( rndr );
     if( !e.init( ed ) ) return false;
 
-    // create drawable 1
-    d1.rc.resetToDefault();
-    if( !e.setupDrawable( d1, NULL, 0 ) ) return false;
-
-    // setup vertex format
-    d1.rc.vtxfmt.numElements = 1;
-    strcpy_s( d1.rc.vtxfmt.elements[0].binding, "position" );
-    d1.rc.vtxfmt.elements[0].bindingIndex = 0;
-    d1.rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
-    d1.rc.vtxfmt.elements[0].offset = 0;
-    d1.rc.vtxfmt.elements[0].stream = 0;
-
     // load image
     ImageDesc id;
     std::vector<UInt8> texels;
@@ -76,13 +64,25 @@ bool init( Renderer & rndr )
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
-    d1.rc.textures[0].attach( rndr.createTexture( td ) );
-    if( d1.rc.textures[0] )
+    Texture * tex = rndr.createTexture( td );
+    if( tex )
     {
         const MipmapDesc & md = id.getMipmap( 0, 0 );
-        d1.rc.textures[0]->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], UPDATE_DEFAULT );
+        tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], UPDATE_DEFAULT );
     }
-    strcpy_s( d1.rc.texbinds[0], "t0" );
+    e.getTextureParam( "diffuse" )->setTexture( tex );
+
+    // create drawable 1
+    d1.rc.resetToDefault();
+    if( !e.applyToDrawable( d1, 0 ) ) return false;
+
+    // setup vertex format
+    d1.rc.vtxfmt.numElements = 1;
+    strcpy_s( d1.rc.vtxfmt.elements[0].binding, "position" );
+    d1.rc.vtxfmt.elements[0].bindingIndex = 0;
+    d1.rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
+    d1.rc.vtxfmt.elements[0].offset = 0;
+    d1.rc.vtxfmt.elements[0].stream = 0;
 
     // create vertex buffer
     static float vertices[] =

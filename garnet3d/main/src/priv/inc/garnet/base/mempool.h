@@ -16,7 +16,7 @@ namespace GN
         size_t ALIGNMENT = 8,
         size_t ITEMS_PER_BLOCK = 4096,
         size_t MAX_ITEMS = 0 >
-    class FixSizedRawMemoryPool
+    class FixSizedRawMemoryPool : public NoCopy
     {
         // alignment must be 2^N
         GN_CASSERT( 0 == ( ( ALIGNMENT - 1 ) ^ ~((size_t)0) ) );

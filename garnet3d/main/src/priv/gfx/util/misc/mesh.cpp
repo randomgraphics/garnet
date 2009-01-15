@@ -41,11 +41,17 @@ void GN::gfx::Mesh::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Mesh::applyToDrawable( Drawable & );
+void GN::gfx::Mesh::applyToDrawable( Drawable & ) const
+{
+}
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Mesh::applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices )
+void
+GN::gfx::Mesh::applySubsetToDrawable(
+    Drawable & /*drawable*/,
+    size_t     /*fistIdx*/,
+    size_t     /*numIndices*/ ) const
 {
 }
