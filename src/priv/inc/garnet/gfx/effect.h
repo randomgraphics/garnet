@@ -130,8 +130,14 @@ namespace GN { namespace gfx
         ///
         struct TechniqueDesc
         {
-            DynaArray<PassDesc>      passes; ///< pass list.
-            RenderStateDesc          rsd;    ///< Technique specific render states
+            int                      quality; ///< user defined rendering quality. Effect class uses
+                                              ///< the technique, among available/valid techniques,
+                                              ///< with the hightest quality as default active technique.
+            DynaArray<PassDesc>      passes;  ///< pass list.
+            RenderStateDesc          rsd;     ///< Technique specific render states
+
+            /// default ctor
+            TechniqueDesc() : quality(100) {}
         };
 
         std::map<StrA,TextureDesc>   textures;   ///< Texture list
@@ -169,9 +175,36 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// texture parameter wrapper for effect class
+    ///
+    class EffectTextureParameter
+    {
+        AutoRef<Texture> mTexture;
+
+    public:
+
+        /// get texture pointer
+        Texture * getTexture() const { return mTexture.get(); }
+
+        /// set texture pointer
+        void setTexture( Texture * tex ) { mTexture.set( tex ); }
+
+    protected:
+
+        /// protected ctor
+        EffectTextureParameter() {}
+
+        /// protected copy ctor
+        EffectTextureParameter( const EffectTextureParameter & t ) : mTexture(t.mTexture) {}
+
+        /// protected dtor
+        virtual ~EffectTextureParameter() {}
+    };
+
+    ///
     /// Graphics effect
     ///
-    class Effect : public StdClass
+    class Effect : public StdClass, public NoCopy
     {
         GN_DECLARE_STDCLASS( Effect, StdClass );
 
@@ -181,8 +214,17 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Effect( Renderer & r ) : mRenderer(r) { clear(); }
-        virtual ~Effect() { quit(); }
+        Effect( Renderer & r )
+            : mRenderer(r)
+            , mDummyUniform( createPrivateGpuProgramParam(1) )
+        {
+            clear();
+        }
+        virtual ~Effect()
+        {
+            quit();
+            mDummyUniform->decref();
+        }
         //@}
 
         // ********************************
@@ -194,7 +236,7 @@ namespace GN { namespace gfx
         bool init( const EffectDesc & );
         void quit();
     private:
-        void clear() {}
+        void clear() { mActiveTech = NULL; }
         //@}
 
         // ********************************
@@ -202,22 +244,75 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        /// setup drawable class that represent specific rendering pass of the effect.
-        bool setupDrawable( Drawable & drawable, const StrA & tech, size_t pass ) const;
+        /// copy current effect to another one.
+        void copyTo( Effect & target ) const;
+
+        /// Get pointer to specific GPU program. Return dummy pointer for invalid name.
+        GpuProgramParam * getGpuProgramParam( const StrA & name );
+
+        /// Get pointer to specific texture parameter. Return dummy pointer for invalid name.
+        EffectTextureParameter * getTextureParam( const StrA & name );
+
+        /// set active technique. Null name means default active
+        void setActiveTechnique( const StrA & name );
+
+        /// Apply specific render pass to drawable. Set technique name to empty to use default technique.
+        bool applyToDrawable( Drawable & drawable, size_t pass ) const;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
+        class EffectTextureParameterImpl : public EffectTextureParameter
+        {
+        public:
+            EffectTextureParameterImpl() {}
+            virtual ~EffectTextureParameterImpl() {}
+        };
+
+        struct PerShaderTextureParam
+        {
+            /// texture parameter wrapper
+            EffectTextureParameterImpl * param;
+
+            /// texture binding string
+            char binding[RendererContext::TEXBINDING_SIZE];
+
+            /// pointer to sampler
+            const TextureSampler * sampler;
+
+            /// default ctor
+            PerShaderTextureParam()
+            {
+            }
+
+            /// copy ctor
+            PerShaderTextureParam( const PerShaderTextureParam & p )
+                : param(p.param)
+                , sampler(p.sampler)
+            {
+                memcpy( binding, p.binding, sizeof(binding) );
+            }
+
+            /// assign operator
+            PerShaderTextureParam & operator=( const PerShaderTextureParam & rhs )
+            {
+                param = rhs.param;
+                memcpy( binding, rhs.binding, sizeof(binding) );
+                sampler = rhs.sampler;
+                return *this;
+            }
+        };
+
         struct Pass
         {
-            GpuProgram                * gpuProgram; ///< Pointer to the GPU program
-            DynaArray<StrA>             textures;   ///< name of textures used in the pass.
-            DynaArray<StrA>             uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
-                                                    ///< in this array is exactly same as the binding index to
-                                                    ///< the GPU program in this pass. Name could be empty.
-            EffectDesc::RenderStateDesc rsd;        ///< render states
+            GpuProgram                     * gpuProgram; ///< Pointer to the GPU program
+            DynaArray<PerShaderTextureParam> textures;   ///< name of textures used in the pass.
+            DynaArray<GpuProgramParam*>      uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
+                                                         ///< in this array is exactly same as the binding index to
+                                                         ///< the GPU program in this pass. Name could be empty.
+            EffectDesc::RenderStateDesc rsd;             ///< render states
         };
 
         struct Technique
@@ -228,13 +323,24 @@ namespace GN { namespace gfx
         Renderer & mRenderer;
         EffectDesc mDesc;
 
-        std::map<StrA,AutoRef<GpuProgram> > mGpuPrograms;
-        std::map<StrA,Technique>            mTechniques;
+        std::map<StrA,AutoRef<GpuProgramParam> >  mUniforms;
+        std::map<StrA,EffectTextureParameterImpl> mTextures;
+        std::map<StrA,AutoRef<GpuProgram> >       mGpuPrograms;
+        std::map<StrA,Technique>                  mTechniques;
+        Technique *                               mDefaultActiveTech;
+        Technique *                               mActiveTech;
+
+        /// dummy parameters for invalid name
+        GpuProgramParam          * mDummyUniform;
+        EffectTextureParameterImpl mDummyTexture;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        /// initialize technique
+        bool initTech( Technique & tech, const StrA & name, const EffectDesc::TechniqueDesc & desc );
     };
 }}
 

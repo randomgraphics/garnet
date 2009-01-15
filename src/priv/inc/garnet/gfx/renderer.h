@@ -501,6 +501,7 @@ namespace GN { namespace gfx
             MAX_VERTEX_BUFFERS       = 16,
             MAX_TEXTURES             = 32,
             MAX_COLOR_RENDER_TARGETS = 8,
+            TEXBINDING_SIZE          = 16,
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
@@ -635,18 +636,18 @@ namespace GN { namespace gfx
         AutoRef<GpuProgram> gpuProgram;
 
         // Resources
-        AutoRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];     ///< vertex buffers
-        UInt16              strides[MAX_VERTEX_BUFFERS];     ///< strides for each vertex buffer. Set to 0 to use default stride.
-        VertexFormat        vtxfmt;                          ///< vertex format (bindings to GPU program)
+        AutoRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
+        UInt16              strides[MAX_VERTEX_BUFFERS];             ///< strides for each vertex buffer. Set to 0 to use default stride.
+        VertexFormat        vtxfmt;                                  ///< vertex format (bindings to GPU program)
 
-        AutoRef<IdxBuf>     idxbuf;                          ///< index buffer
+        AutoRef<IdxBuf>     idxbuf;                                  ///< index buffer
 
-        AutoRef<Texture>    textures[MAX_TEXTURES];          ///< textures
-        char                texbinds[MAX_TEXTURES][16];      ///< texture bindings to GPU Program
-        TextureSampler      samplers[MAX_TEXTURES];          ///< samplers
+        AutoRef<Texture>    textures[MAX_TEXTURES];                  ///< textures
+        char                texbinds[MAX_TEXTURES][TEXBINDING_SIZE]; ///< texture bindings to GPU Program
+        TextureSampler      samplers[MAX_TEXTURES];                  ///< samplers
 
-        RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];  ///< color render targets
-        RenderTargetTexture dsrt;                            ///< depth stencil render target
+        RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];          ///< color render targets
+        RenderTargetTexture dsrt;                                    ///< depth stencil render target
 
         ///
         /// reset context to default value

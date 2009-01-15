@@ -68,12 +68,12 @@ namespace GN { namespace gfx
         ///
         /// apply whole mesh to drawable
         ///
-        void applyToDrawable( Drawable & );
+        void applyToDrawable( Drawable & ) const;
 
         ///
         /// apply subset of the mesh to drawable
         ///
-        void applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices );
+        void applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices ) const;
 
         // ********************************
         // private variables
