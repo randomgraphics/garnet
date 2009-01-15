@@ -43,16 +43,22 @@ readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 
 bool init( Renderer & rndr )
 {
-    d1.rndr = &rndr;
-    d1.rc.resetToDefault();
+    // create effect
+    EffectDesc ed;
+    ed.uniforms["pvw"].size = sizeof(Matrix44f);
+    ed.textures["diffuse"]; // create a texture parameter named "diffuse"
+    ed.shaders["glsl"].gpd.lang = GPL_GLSL;
+    ed.shaders["glsl"].gpd.vs.code = vscode;
+    ed.shaders["glsl"].gpd.ps.code = pscode;
+    ed.shaders["glsl"].uniforms["transform"] = "pvw";
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].shader = "glsl";
+    Effect e( rndr );
+    if( !e.init( ed ) ) return false;
 
-    // create GPU program
-    GpuProgramDesc gpd;
-    gpd.lang = GPL_GLSL;
-    gpd.vs.code = vscode;
-    gpd.ps.code = pscode;
-    d1.rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
-    if( !d1.rc.gpuProgram ) return false;
+    // create drawable 1
+    d1.rc.resetToDefault();
+    if( !e.setupDrawable( d1, NULL, 0 ) ) return false;
 
     // setup vertex format
     d1.rc.vtxfmt.numElements = 1;
