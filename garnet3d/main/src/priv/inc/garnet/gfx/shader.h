@@ -88,6 +88,15 @@ namespace GN { namespace gfx
         virtual void setParameter( size_t index, const void * value, size_t length = 0 ) = 0;
 
         ///
+        /// get parameter descriptor by index.
+        ///
+        const GpuProgramParameterDesc & getParameterDesc( size_t index ) const
+        {
+            GN_ASSERT( index < getNumParameters() );
+            return getParameters()[index];
+        }
+
+        ///
         /// get parameter index by name. Return -1 if the name is not found.
         ///
         size_t getParameterIndex( const char * name ) const

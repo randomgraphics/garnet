@@ -252,14 +252,9 @@ namespace GN
         bool writeToFile( File & file, const XmlNode & root, bool compact );
 
         ///
-        /// These 2 methhods are for internal use only. Do _NOT_ use it in your own code.
-        ///
-        //@{
-
-        ///
         /// Create new node. Nodes are created in pooled memory. No need
         /// to release them. They will be release automatically, when the
-        /// XML processer is destroied or releaseNodesAndAttribs() is called.
+        /// XML document is deleted.
         ///
         XmlNode * createNode( XmlNodeType );
 
@@ -268,8 +263,6 @@ namespace GN
         /// just like XmlNode.
         ///
         XmlAttrib * createAttrib();
-
-        //@}
 
     private:
 

@@ -19,6 +19,9 @@ namespace GN { namespace gfx
             RendererCaps::GpuProgramProfile gsprofiles;  ///< required GS profiles.
             RendererCaps::GpuProgramProfile psprofiles;  ///< required PS profiles.
             UInt8                           numtextures; ///< minimal number of textures.
+
+            /// check if the renderer meets all requirements.
+            bool check( Renderer & r ) const;
         };
 
         ///
@@ -26,8 +29,14 @@ namespace GN { namespace gfx
         ///
         struct TextureDesc
         {
+            /// sampler descriptor
             TextureSampler sampler;
-            StrA           filename; ///< texture filename. Could be empty.
+
+            /// default ctor
+            TextureDesc()
+            {
+                sampler.resetToDefault();
+            }
         };
 
         ///
@@ -35,8 +44,12 @@ namespace GN { namespace gfx
         ///
         struct UniformDesc
         {
-            DynaArray<UInt8> defval; ///< default uniform value. Could be empty if there's no default value.
+            size_t           size;   ///< uniform size
             bool             shared; ///< shared uniform across effects.
+            DynaArray<UInt8> defval; ///< default uniform value. Could be empty if there's no default value.
+
+            /// default ctor
+            UniformDesc() : size(0), shared(false) {}
         };
 
         ///
@@ -66,6 +79,7 @@ namespace GN { namespace gfx
             {
                 value = rhs;
                 inherited = false;
+                return *this;
             }
 
             /// set render state value
@@ -73,6 +87,7 @@ namespace GN { namespace gfx
             {
                 value = rhs.value;
                 inherited = rhs.inherited;
+                return *this;
             }
         };
 
@@ -106,8 +121,8 @@ namespace GN { namespace gfx
         ///
         struct PassDesc
         {
-            StrA            gpuProgram; ///< Name of GPU program used in this pass. Can't be empty
-            RenderStateDesc rsd;        ///< pass specific render states
+            StrA            shader; ///< Name of shader used in this pass. Can't be empty
+            RenderStateDesc rsd;    ///< pass specific render states
         };
 
         ///
@@ -115,16 +130,15 @@ namespace GN { namespace gfx
         ///
         struct TechniqueDesc
         {
-            StrA                     name;   ///< technique name
             DynaArray<PassDesc>      passes; ///< pass list.
             RenderStateDesc          rsd;    ///< Technique specific render states
         };
 
-        std::map<StrA,TextureDesc> textures;   ///< Texture list
-        std::map<StrA,UniformDesc> uniforms;   ///< Uniform list
-        std::map<StrA,ShaderDesc>  shaders;    ///< Shader list
-        DynaArray<TechniqueDesc>   techniques; ///< Technique list. Technique name must be unique.
-        RenderStateDesc            rsd;        ///< effect specific render states
+        std::map<StrA,TextureDesc>   textures;   ///< Texture list
+        std::map<StrA,UniformDesc>   uniforms;   ///< Uniform list
+        std::map<StrA,ShaderDesc>    shaders;    ///< Shader list
+        std::map<StrA,TechniqueDesc> techniques; ///< Technique list. Technique name must be unique.
+        RenderStateDesc              rsd;        ///< effect specific render states
 
         ///
         /// Make sure the effect descriptor is valid.
@@ -144,78 +158,14 @@ namespace GN { namespace gfx
         }
 
         ///
-        /// setup the descriptor from XML string
+        /// setup the descriptor from XML
         ///
         bool loadFromXmlNode( const XmlNode & root, const StrA & basedir );
 
         ///
-        /// write the descriptor to file
+        /// write the descriptor to XML
         ///
-        void saveToXmlFile( File & );
-
-        ///
-        /// Find uniform by name. Return NULL if not found.
-        ///
-        const UniformDesc * findUniform( const StrA & name ) const
-        {
-            std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
-            return ( uniforms.end() != i ) ? &i->second : NULL;
-        }
-
-        ///
-        /// Get uniform by name.
-        ///
-        /// \param name
-        ///     MUST be a valid uniform name.
-        ///
-        const UniformDesc & getUniform( const StrA & name ) const
-        {
-            std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
-            GN_ASSERT( uniforms.end() != i );
-            return i->second;
-        }
-
-        ///
-        /// Find texture by name. Return NULL if not found.
-        ///
-        const TextureDesc * findTexture( const StrA & name ) const
-        {
-            std::map<StrA,TextureDesc>::const_iterator i = textures.find( name );
-            return ( textures.end() != i ) ? &i->second : NULL;
-        }
-
-        ///
-        /// Get texture by name.
-        /// \param name
-        ///     MUST be a valid texture name.
-        ///
-        const TextureDesc & getTexture( const StrA & name ) const
-        {
-            std::map<StrA,TextureDesc>::const_iterator i = textures.find( name );
-            GN_ASSERT( textures.end() != i );
-            return i->second;
-        }
-
-        ///
-        /// Find shader by name. Return NULL if not found.
-        ///
-        const ShaderDesc * findShader( const StrA & name ) const
-        {
-            std::map<StrA,ShaderDesc>::const_iterator i = shaders.find( name );
-            return ( shaders.end() != i ) ? &i->second : NULL;
-        }
-
-        ///
-        /// Get shader by name.
-        /// \param name
-        ///     MUST be a valid shader name.
-        ///
-        const ShaderDesc & getShader( const StrA & name ) const
-        {
-            std::map<StrA,ShaderDesc>::const_iterator i = shaders.find( name );
-            GN_ASSERT( shaders.end() != i );
-            return i->second;
-        }
+        void saveToXmlNode( const XmlNode & root );
     };
 
     ///
@@ -252,8 +202,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        /// apply effect to renderer context
-        void applyToRendererContext( RendererContext & rc ) const;
+        /// setup drawable class that represent specific rendering pass of the effect.
+        bool setupDrawable( Drawable & drawable, const StrA & tech, size_t pass ) const;
 
         // ********************************
         // private variables
@@ -262,9 +212,12 @@ namespace GN { namespace gfx
 
         struct Pass
         {
-            UInt16            gpuProgram;                              ///< index into GPU program array
-            size_t            textures[RendererContext::MAX_TEXTURES]; ///< indices into texture array
-            DynaArray<UInt16> uniforms;                                ///< indices into uniform array. Array length is the GPU program uniform number.
+            GpuProgram                * gpuProgram; ///< Pointer to the GPU program
+            DynaArray<StrA>             textures;   ///< name of textures used in the pass.
+            DynaArray<StrA>             uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
+                                                    ///< in this array is exactly same as the binding index to
+                                                    ///< the GPU program in this pass. Name could be empty.
+            EffectDesc::RenderStateDesc rsd;        ///< render states
         };
 
         struct Technique
@@ -275,10 +228,8 @@ namespace GN { namespace gfx
         Renderer & mRenderer;
         EffectDesc mDesc;
 
-        DynaArray<AutoRef<Texture> >         mTextures;
-        DynaArray<AutoRef<GpuProgramParam> > mUniforms;
-        DynaArray<AutoRef<GpuProgram> >      mGpuPrograms;
-        DynaArray<Technique>                 mTechniques;
+        std::map<StrA,AutoRef<GpuProgram> > mGpuPrograms;
+        std::map<StrA,Technique>            mTechniques;
 
         // ********************************
         // private functions

@@ -8,6 +8,7 @@
     - ASE or FBX mesh loader
     - some standard light effects:
       - effect class
+        - default texture property: need a texture file manager
       - flat( no light, one diffuse texture, XYZ_UV0 )
       - gouraud(single light, one diffuse texture, XYZ_NORMAL_UV0)
       - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )

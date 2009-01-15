@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
     'drawable.cpp',
+    'effect.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'cluster' )
