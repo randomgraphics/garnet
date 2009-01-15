@@ -5,7 +5,7 @@ using namespace GN;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.Mesh");
 
 // *****************************************************************************
-// Initialize and shutdown
+// Mesh class
 // *****************************************************************************
 
 //
@@ -36,4 +36,16 @@ void GN::gfx::Mesh::quit()
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::Mesh::applyToDrawable( Drawable & );
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::Mesh::applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices )
+{
 }
