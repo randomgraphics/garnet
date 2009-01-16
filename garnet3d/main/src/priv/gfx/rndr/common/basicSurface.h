@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, UpdateFlag flag, Box<UInt32> & clippedArea )
+        bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, SurfaceUpdateFlag flag, Box<UInt32> & clippedArea )
         {
             // check face
             if( face >= getDesc().faces )
@@ -49,7 +49,7 @@ namespace GN { namespace gfx
             }
 
             // check flag
-            if( flag >= NUM_UPDATE_FLAGS )
+            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock flag : %d", flag );

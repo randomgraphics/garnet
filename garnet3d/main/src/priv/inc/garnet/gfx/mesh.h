@@ -19,7 +19,7 @@ namespace GN { namespace gfx
         bool          dynavb; ///< true for dynamic vertex buffer
         bool          dynaib; ///< trur for dynamic index buffer
         size_t        numvtx; ///< number of vertices
-        size_t        numidx; ///< number of indices
+        size_t        numidx; ///< number of indices. 0 means non-indexed mesh
         size_t        strides[RendererContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using minimal stride defined by vertex format.
         const void *  vertices[RendererContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data undefined
         const void *  indices; // Null means index data undefined.
@@ -65,15 +65,26 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        /// get mesh descriptor
+        const MeshDesc & getDesc() const { return mDesc; }
+
         ///
         /// apply whole mesh to drawable
         ///
-        void applyToDrawable( Drawable & ) const;
+        void applyToDrawable( Drawable & drawable ) const
+        {
+            applySubsetToDrawable(
+                drawable,
+                0,
+                (0==mDesc.numidx) ? mDesc.numvtx : mDesc.numidx );
+        }
 
         ///
         /// apply subset of the mesh to drawable
         ///
-        void applySubsetToDrawable( Drawable & drawable, size_t fistIdx, size_t numIndices ) const;
+        /// \param numidx   Number of indices (or vertices, for non-indexed mesh)
+        ///
+        void applySubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
 
         // ********************************
         // private variables

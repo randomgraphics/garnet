@@ -61,7 +61,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag );
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag );
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( std::vector<UInt8> & data );
 
         // ********************************

@@ -13,14 +13,14 @@ using namespace GN::gfx;
 
 struct UpdateMipmapParam
 {
-    Texture   * tex;
-    size_t      face;
-    size_t      level;
-    Box<UInt32> area;
-    size_t      rowPitch;
-    size_t      slicePitch;
-    void      * data;
-    UpdateFlag  flag;
+    Texture         * tex;
+    size_t            face;
+    size_t            level;
+    Box<UInt32>       area;
+    size_t            rowPitch;
+    size_t            slicePitch;
+    void            * data;
+    SurfaceUpdateFlag flag;
 };
 
 // *****************************************************************************
@@ -90,7 +90,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * data,
-    UpdateFlag          flag )
+    SurfaceUpdateFlag   flag )
 {
     if( level >= getDesc().levels )
     {

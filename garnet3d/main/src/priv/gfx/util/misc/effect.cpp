@@ -384,7 +384,7 @@ GN::gfx::Effect::initTech(
         }
         if( p.textures.size() > RendererContext::MAX_TEXTURES )
         {
-            GN_WARN(sLogger)( "technique %s pass %u has too many textures.", name.cptr(), i );
+            GN_ERROR(sLogger)( "technique %s pass %u has too many textures.", name.cptr(), i );
         }
 
         // look up uniforms

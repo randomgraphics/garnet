@@ -57,7 +57,7 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, UpdateFlag )
+void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag )
 {
     GN_GUARD_SLOW;
 

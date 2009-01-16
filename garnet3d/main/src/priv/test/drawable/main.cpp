@@ -51,10 +51,16 @@ bool init( Renderer & rndr )
     ed.shaders["glsl"].gpd.vs.code = vscode;
     ed.shaders["glsl"].gpd.ps.code = pscode;
     ed.shaders["glsl"].uniforms["transform"] = "pvw";
+    ed.shaders["glsl"].textures["t0"] = "diffuse";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
     Effect e( rndr );
     if( !e.init( ed ) ) return false;
+
+    // set transformation to identity
+    Matrix44f m;
+    m.identity();
+    e.getGpuProgramParam( "pvw" )->set( m, sizeof(m) );
 
     // load image
     ImageDesc id;
@@ -64,74 +70,49 @@ bool init( Renderer & rndr )
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
-    Texture * tex = rndr.createTexture( td );
+    AutoRef<Texture> tex( rndr.createTexture( td ) );
     if( tex )
     {
         const MipmapDesc & md = id.getMipmap( 0, 0 );
-        tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], UPDATE_DEFAULT );
+        tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
+        e.getTextureParam( "diffuse" )->setTexture( tex );
     }
-    e.getTextureParam( "diffuse" )->setTexture( tex );
 
-    // create drawable 1
-    d1.rc.resetToDefault();
-    if( !e.applyToDrawable( d1, 0 ) ) return false;
-
-    // setup vertex format
-    d1.rc.vtxfmt.numElements = 1;
-    strcpy_s( d1.rc.vtxfmt.elements[0].binding, "position" );
-    d1.rc.vtxfmt.elements[0].bindingIndex = 0;
-    d1.rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
-    d1.rc.vtxfmt.elements[0].offset = 0;
-    d1.rc.vtxfmt.elements[0].stream = 0;
-
-    // create vertex buffer
-    static float vertices[] =
+    // create mesh
+    float vertices[] =
     {
         0,0,0,1,
         1,0,0,1,
         1,1,0,1,
         0,1,0,1,
     };
-    VtxBufDesc vbd = {
-        sizeof(vertices),
-        false,
-        false
-    };
-    d1.rc.vtxbufs[0].attach( rndr.createVtxBuf( vbd ) );
-    if( NULL == d1.rc.vtxbufs[0] ) return false;
-    d1.rc.vtxbufs[0]->update( 0, 0, vertices );
-
-    // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
-    IdxBufDesc ibd = { 4, false, false, false };
-    d1.rc.idxbuf.attach( rndr.createIdxBuf( ibd ) );
-    if( !d1.rc.idxbuf ) return false;
-    d1.rc.idxbuf->update( 0, 0, indices );
+    MeshDesc md;
+    md.vtxfmt.numElements = 1;
+    strcpy_s( md.vtxfmt.elements[0].binding, "position" );
+    md.vtxfmt.elements[0].bindingIndex = 0;
+    md.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
+    md.vtxfmt.elements[0].offset = 0;
+    md.vtxfmt.elements[0].stream = 0;
+    md.prim = TRIANGLE_LIST;
+    md.numvtx = 4;
+    md.numidx = 3;
+    md.vertices[0] = vertices;
+    md.indices = indices;
+    Mesh mesh(rndr);
+    if( !mesh.init( md ) ) return false;
 
-    size_t gppidx = d1.rc.gpuProgram->getParameterIndex( "transform" );
-    if( GpuProgram::PARAMETER_NOT_FOUND == gppidx ) return false;
-
-    // create transformation matrix, set to identity
-    Matrix44f m;
-    d1.gpps.resize( d1.rc.gpuProgram->getNumParameters() );
-    d1.gpps[gppidx].attach( createPrivateGpuProgramParam( sizeof(m) ) );
-    m.identity();
-    d1.gpps[gppidx]->set( m, sizeof(m) );
-
-    // setup draw parameters
-    d1.prim = TRIANGLE_LIST;
-    d1.numvtx = 4;
-    d1.minvtxidx = 0;
-    d1.startvtx = 0;
-    d1.numidx = 3;
-    d1.startidx = 0;
+    // create drawable 1
+    d1.rc.resetToDefault();
+    if( !e.applyToDrawable( d1, 0 ) ) return false;
+    mesh.applyToDrawable( d1 );
 
     // make a clone of the whole drawable
     d2 = d1;
 
     // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );
-    d2.gpps[gppidx]->set( m, sizeof(m) );
+    d2.gpps[0]->set( m, sizeof(m) );
 
     // success
     return true;

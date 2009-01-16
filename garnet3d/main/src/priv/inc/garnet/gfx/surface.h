@@ -123,12 +123,12 @@ namespace GN { namespace gfx
     ///
     /// Update flags
     ///
-    enum UpdateFlag
+    enum SurfaceUpdateFlag
     {
-        UPDATE_DEFAULT,      ///< default update flag
-        UPDATE_DISCARD,      ///< discard old content of whole surface.
-        UPDATE_NO_OVERWRITE, ///< promise not to modify any section of the surface that is being used by GPU.
-        NUM_UPDATE_FLAGS     ///< number of update flags.
+        SURFACE_UPDATE_DEFAULT,      ///< default update flag
+        SURFACE_UPDATE_DISCARD,      ///< discard old content of whole surface.
+        SURFACE_UPDATE_NO_OVERWRITE, ///< promise not to modify any section of the surface that is being used by GPU.
+        NUM_SURFACE_UPDATE_FLAGS     ///< number of update flags.
     };
 
     ///
@@ -191,7 +191,7 @@ namespace GN { namespace gfx
             size_t              rowPitch,
             size_t              slicePitch,
             const void        * data,
-            UpdateFlag          flag ) = 0;
+            SurfaceUpdateFlag   flag ) = 0;
 
         ///
         /// read mipmap content.
@@ -293,7 +293,7 @@ namespace GN { namespace gfx
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t offset, size_t length, const void * data, UpdateFlag flag = UPDATE_DEFAULT ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.
@@ -341,7 +341,7 @@ namespace GN { namespace gfx
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag = UPDATE_DEFAULT ) = 0;
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
 
         ///
         /// Read buffer content. The buffer must have readback flag.

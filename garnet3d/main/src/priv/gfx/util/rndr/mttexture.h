@@ -57,7 +57,7 @@ namespace GN { namespace gfx
                              size_t              rowPitch,
                              size_t              slicePitch,
                              const void        * data,
-                             UpdateFlag          flag );
+                             SurfaceUpdateFlag   flag );
         void   readMipmap( size_t face, size_t level, MipmapData & data );
         void   blobWrite( const void * data, size_t length );
         size_t blobRead( void * data );
