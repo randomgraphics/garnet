@@ -73,7 +73,7 @@ bool init( Renderer & rndr )
     if( rc.textures[0] )
     {
         const MipmapDesc & md = id.getMipmap( 0, 0 );
-        rc.textures[0]->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], UPDATE_DEFAULT );
+        rc.textures[0]->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
     }
     strcpy_s( rc.texbinds[0], "t0" );
 

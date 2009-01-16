@@ -58,7 +58,7 @@ void GN::gfx::MultiThreadIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const void * data, UpdateFlag flag )
+void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
@@ -108,11 +108,11 @@ namespace GN { namespace gfx
     {
         struct IdxBufUpdateParam
         {
-            IdxBuf   * idxbuf;
-            size_t     offset;
-            size_t     length;
-            void *     data;
-            UpdateFlag flag;
+            IdxBuf          * idxbuf;
+            size_t            offset;
+            size_t            length;
+            void            * data;
+            SurfaceUpdateFlag flag;
         };
 
         IdxBufUpdateParam * vbup = (IdxBufUpdateParam*)p;

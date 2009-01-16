@@ -47,7 +47,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t startidx, size_t numidx, const void * data, UpdateFlag flag );
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
         virtual void readback( std::vector<UInt8> & data );
 
         // ********************************

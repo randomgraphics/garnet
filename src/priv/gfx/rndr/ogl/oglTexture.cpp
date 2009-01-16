@@ -703,7 +703,7 @@ GN::gfx::OGLTexture::updateMipmap(
     size_t              rowPitch,
     size_t              slicePitch,
     const void        * inputData,
-    UpdateFlag          flag )
+    SurfaceUpdateFlag   flag )
 {
     // check update parameters,
     Box<UInt32> clippedArea;

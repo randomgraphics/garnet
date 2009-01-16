@@ -56,7 +56,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void * data, UpdateFlag flag )
+void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 

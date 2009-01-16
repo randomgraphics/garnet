@@ -54,7 +54,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, UpdateFlag flag );
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
         virtual void   readMipmap( size_t, size_t, MipmapData & ) { GN_UNIMPL(); }
         virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
         virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
