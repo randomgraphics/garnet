@@ -207,6 +207,9 @@ namespace GN
 #include "base/math.h"
 #include "base/geometry.h"
 
+// a general tree structure
+#include "base/tree.h"
+
 // variant class
 #include "base/variant.h"
 

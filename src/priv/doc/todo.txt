@@ -6,6 +6,10 @@
     - rule #1: portability has priority then performance.
   - PS2 model beautifier(add bump map and tessellation to PS2 model)
     - ASE or FBX mesh loader
+      - mesh hierachy
+      - optional features
+        - XML mesh file with embeded binary data
+        - XML effect file.
     - some standard light effects:
       - effect class
         - default texture property: need a texture file manager
@@ -13,6 +17,7 @@
       - gouraud(single light, one diffuse texture, XYZ_NORMAL_UV0)
       - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
       - skin
+    - a fast mesh smooth implementation.
 
 - p1
   - big-endian DDS loader
