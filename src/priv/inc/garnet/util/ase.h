@@ -170,34 +170,6 @@ namespace GN { namespace util
         DynaArray<AseMaterial>  materials;
         DynaArray<AseGeoObject> objects;
         AseGeoObject            root; ///< root object
-
-        AseGeoObject * findObj( const StrA & name )
-        {
-            if( name.empty() ) return &root;
-            for( AseGeoObject * o = objects.begin(); o != objects.end(); ++o )
-            {
-                if( name == o->node.name ) return o;
-            }
-            return 0;
-        }
-
-        const AseMaterial & getChunkMaterial( const AseGeoObject & o, UInt32 cid ) const
-        {
-            GN_ASSERT( cid < o.mesh.chunks.size() );
-
-            if( "Multi/Sub-Object" == materials[o.matid].class_ )
-            {
-                const AseFaceChunk & c = o.mesh.chunks[cid];
-
-                return materials[o.matid].submaterials[c.submat];
-            }
-            else
-            {
-                GN_ASSERT( 0 == cid );
-                GN_ASSERT( 1 == o.mesh.chunks.size() );
-                return materials[o.matid];
-            }
-        }
     };
 
     ///
