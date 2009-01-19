@@ -111,7 +111,7 @@ namespace GN
     ///
     /// type cast function
     ///
-    /// perform dynamic cast in debug build, and static cast in release build.
+    /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
     GN_FORCE_INLINE TO & safeCastRef( FROM & from )
@@ -119,14 +119,14 @@ namespace GN
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO&>(from);
     #else
-        return static_cast<TO&>(from);
+        return reinterpret_cast<TO&>(from);
     #endif
     }
 
     ///
     /// type cast function
     ///
-    /// perform dynamic cast in debug build, and static cast in release build.
+    /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
     GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
@@ -134,7 +134,7 @@ namespace GN
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         TO * to = dynamic_cast<TO*>(from);
     #else
-        TO * to = static_cast<TO*>(from);
+        TO * to = reinterpret_cast<TO*>(from);
     #endif
 
         GN_ASSERT( 0 == from || 0 != to );
