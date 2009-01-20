@@ -1,6 +1,7 @@
 #include "pch.h"
 
 using namespace GN;
+using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.Effect");
 
@@ -46,6 +47,59 @@ sMergeRenderStates(
 }
 
 // *****************************************************************************
+// GPU program parameter management
+// *****************************************************************************
+
+class SharedGpp;
+
+static std::map<StrA,SharedGpp*> sSharedGppMap;
+
+class SharedGpp : public GpuProgramParam
+{
+    std::map<StrA,SharedGpp*>::iterator mIter;
+
+public:
+
+    /// ctor
+    SharedGpp( const StrA & name, size_t size )
+        : GpuProgramParam( size )
+    {
+        mIter = sSharedGppMap.insert( std::make_pair(name, this) ).first;
+    }
+
+    /// dtor
+    ~SharedGpp()
+    {
+        sSharedGppMap.erase( mIter );
+    }
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static GpuProgramParam *
+sCreatePrivateGpuProgramParam( size_t size )
+{
+    return new GpuProgramParam( size );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static GpuProgramParam *
+sCreateSharedGpuProgramParam( const StrA & name, size_t size )
+{
+    std::map<StrA,SharedGpp*>::const_iterator iter = sSharedGppMap.find( name );
+
+    if( iter != sSharedGppMap.end() )
+        // found!
+        return iter->second;
+    else
+        // not found!
+        return new SharedGpp( name, size );
+}
+
+// *****************************************************************************
 // EffectDesc class
 // *****************************************************************************
 
@@ -65,7 +119,26 @@ bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::Effect::init( const EffectDesc & desc )
+GN::gfx::Effect::Effect( Renderer & r )
+    : mRenderer(r)
+    , mDummyUniform( sCreatePrivateGpuProgramParam(1) )
+{
+    clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Effect::~Effect()
+{
+    quit();
+    mDummyUniform->decref();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName )
 {
     GN_GUARD;
 
@@ -87,11 +160,11 @@ bool GN::gfx::Effect::init( const EffectDesc & desc )
         GpuProgramParam * gpp;
         if( udesc.shared )
         {
-            gpp = createSharedGpuProgramParam( uname, udesc.size );
+            gpp = sCreateSharedGpuProgramParam( uname, udesc.size );
         }
         else
         {
-            gpp = createPrivateGpuProgramParam( udesc.size );
+            gpp = sCreatePrivateGpuProgramParam( udesc.size );
         }
         if( NULL == gpp ) return false;
 
@@ -141,7 +214,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc )
         return failure();
     }
     int highestQuality = INT_MIN;
-    mDefaultActiveTech = NULL;
+    Technique * defaultActiveTech = NULL;
     for( std::map<StrA,EffectDesc::TechniqueDesc>::const_iterator iter = desc.techniques.begin();
          iter != desc.techniques.end();
          ++iter )
@@ -159,7 +232,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc )
         if( desc.quality > highestQuality )
         {
             highestQuality = desc.quality;
-            mDefaultActiveTech = &tech;
+            defaultActiveTech = &tech;
         }
     }
     if( mTechniques.empty() )
@@ -167,8 +240,25 @@ bool GN::gfx::Effect::init( const EffectDesc & desc )
         GN_ERROR(sLogger)( "No valid technique found." );
         return failure();
     }
-    GN_ASSERT( mDefaultActiveTech );
-    mActiveTech = mDefaultActiveTech;
+    GN_ASSERT( defaultActiveTech );
+    if( activeTechName.empty() )
+    {
+        GN_ASSERT( defaultActiveTech );
+        mActiveTech = defaultActiveTech;
+    }
+    else
+    {
+        std::map<StrA,Technique>::iterator it = mTechniques.find( activeTechName );
+        if( mTechniques.end() == it )
+        {
+            GN_ERROR(sLogger)( "invalid deafult technique name: %s, using default one instead.", activeTechName.cptr() );
+            mActiveTech = defaultActiveTech;
+        }
+        else
+        {
+            mActiveTech = &it->second;
+        }
+    }
 
     // success
     return success();
@@ -215,6 +305,30 @@ GN::gfx::Effect::getGpuProgramParam( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::Effect::setGpuProgramParam( const StrA & name, GpuProgramParam * param )
+{
+    if( NULL == param )
+    {
+        GN_ERROR(sLogger)( "NULL parameter pointer." );
+        return;
+    }
+
+    std::map<StrA,AutoRef<GpuProgramParam> >::iterator it = mUniforms.find( name );
+
+    if( mUniforms.end() == it )
+    {
+        return mDummyUniform;
+    }
+    else
+    {
+        return it->second;
+    }
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::EffectTextureParameter *
 GN::gfx::Effect::getTextureParam( const StrA & name )
 {
@@ -227,30 +341,6 @@ GN::gfx::Effect::getTextureParam( const StrA & name )
     else
     {
         return &it->second;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::Effect::setActiveTechnique( const StrA & name )
-{
-    if( name.empty() )
-    {
-        GN_ASSERT( mDefaultActiveTech );
-        mActiveTech = mDefaultActiveTech;
-    }
-    else
-    {
-        std::map<StrA,Technique>::iterator it = mTechniques.find( name );
-        if( mTechniques.end() == it )
-        {
-            GN_ERROR(sLogger)( "invalid technique name: %s", name.cptr() );
-        }
-        else
-        {
-            mActiveTech = &it->second;
-        }
     }
 }
 

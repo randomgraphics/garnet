@@ -214,17 +214,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Effect( Renderer & r )
-            : mRenderer(r)
-            , mDummyUniform( createPrivateGpuProgramParam(1) )
-        {
-            clear();
-        }
-        virtual ~Effect()
-        {
-            quit();
-            mDummyUniform->decref();
-        }
+        Effect( Renderer & r );
+        virtual ~Effect();
         //@}
 
         // ********************************
@@ -233,7 +224,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const EffectDesc & );
+        bool init( const EffectDesc & desc, const StrA & activeTechName = "" );
         void quit();
     private:
         void clear() { mActiveTech = NULL; }
@@ -244,19 +235,25 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        /// get descriptor
+        const EffectDesc & getDesc() const { return mDesc; }
+
+        /// get number of passes
+        size_t getNumPasses() const { return mActiveTech->passes.size(); }
+
         /// copy current effect to another one.
         void copyTo( Effect & target ) const;
 
         /// Get pointer to specific GPU program. Return dummy pointer for invalid name.
         GpuProgramParam * getGpuProgramParam( const StrA & name );
 
+        /// Assign GPU program parameter to effect
+        void setGpuProgramParam( const StrA & name, GpuProgramParam * );
+
         /// Get pointer to specific texture parameter. Return dummy pointer for invalid name.
         EffectTextureParameter * getTextureParam( const StrA & name );
 
-        /// set active technique. Null name means default active
-        void setActiveTechnique( const StrA & name );
-
-        /// Apply specific render pass to drawable. Set technique name to empty to use default technique.
+        /// Apply the effect to drawable.
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
 
         // ********************************
@@ -327,7 +324,6 @@ namespace GN { namespace gfx
         std::map<StrA,EffectTextureParameterImpl> mTextures;
         std::map<StrA,AutoRef<GpuProgram> >       mGpuPrograms;
         std::map<StrA,Technique>                  mTechniques;
-        Technique *                               mDefaultActiveTech;
         Technique *                               mActiveTech;
 
         /// dummy parameters for invalid name

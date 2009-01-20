@@ -69,22 +69,24 @@ namespace GN { namespace gfx
         const MeshDesc & getDesc() const { return mDesc; }
 
         ///
-        /// apply whole mesh to drawable
+        /// Link mesh subse to the drawable. So further changes to that part of mesh will be applied
+        /// to the drawable automatically, until the mesh is reinitialized or the drawable is linked
+        /// to another mesh class.
+        ///
+        /// \param numidx   Number of indices (or vertices, for non-indexed mesh)
+        ///
+        void linkSubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
+
+        ///
+        /// link whole mesh to drawable
         ///
         void applyToDrawable( Drawable & drawable ) const
         {
-            applySubsetToDrawable(
+            linkSubsetToDrawable(
                 drawable,
                 0,
                 (0==mDesc.numidx) ? mDesc.numvtx : mDesc.numidx );
         }
-
-        ///
-        /// apply subset of the mesh to drawable
-        ///
-        /// \param numidx   Number of indices (or vertices, for non-indexed mesh)
-        ///
-        void applySubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
 
         // ********************************
         // private variables

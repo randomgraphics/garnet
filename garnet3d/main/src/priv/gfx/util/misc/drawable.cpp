@@ -4,68 +4,6 @@ using namespace GN;
 using namespace GN::gfx;
 
 // *****************************************************************************
-// local var/types/functions
-// *****************************************************************************
-
-class PrivateGpp : public GpuProgramParam
-{
-public:
-
-    /// constructor
-    PrivateGpp( size_t size ) : GpuProgramParam( false, size ) {}
-};
-
-class SharedGpp;
-static std::map<StrA,SharedGpp*> sSharedGppMap;
-
-class SharedGpp : public GpuProgramParam
-{
-    std::map<StrA,SharedGpp*>::iterator mIter;
-
-public:
-
-    /// constructor
-    SharedGpp( const StrA & name, size_t size )
-        : GpuProgramParam( false, size )
-    {
-        mIter = sSharedGppMap.insert( std::make_pair(name, this) ).first;
-    }
-
-    /// dtor
-    ~SharedGpp()
-    {
-        sSharedGppMap.erase( mIter );
-    }
-};
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GpuProgramParam * GN::gfx::createPrivateGpuProgramParam( size_t size )
-{
-    return new PrivateGpp( size );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GpuProgramParam * GN::gfx::createSharedGpuProgramParam( const StrA & name, size_t size )
-{
-    std::map<StrA,SharedGpp*>::const_iterator iter = sSharedGppMap.find( name );
-
-    if( iter != sSharedGppMap.end() )
-        // found!
-        return iter->second;
-    else
-        // not found!
-        return new SharedGpp( name, size );
-}
-
-// *****************************************************************************
 // drawable class
 // *****************************************************************************
 
@@ -122,22 +60,7 @@ GN::gfx::Drawable::operator=( const Drawable & rhs )
     gpps.resize( rhs.gpps.size() );
     for( size_t i = 0; i < gpps.size(); ++i )
     {
-        AutoRef<GpuProgramParam> & d = gpps[i];
-        const AutoRef<GpuProgramParam> & s = rhs.gpps[i];
-
-        if( NULL != s )
-        {
-            if( s->shared() )
-            {
-                d = s;
-            }
-            else
-            {
-                // make a clone for private parameter
-                d.attach( createPrivateGpuProgramParam( s->size() ) );
-                d->set( s->get(), s->size() );
-            }
-        }
+        gpps[i] = rhs.gpps[i];
     }
 
     return *this;

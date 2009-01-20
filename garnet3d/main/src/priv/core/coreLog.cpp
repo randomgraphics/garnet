@@ -76,7 +76,7 @@ static inline GN::StrA sLevel2Str( int level )
 }
 
 template<class T>
-class TreeNode
+class LoggerTreeNode
 {
     T * mParent;
     T * mFirstChild;
@@ -85,7 +85,7 @@ class TreeNode
 
 public:
 
-    TreeNode() : mParent(0), mFirstChild(0), mPrevBrother(0), mNextBrother(0) {}
+    LoggerTreeNode() : mParent(0), mFirstChild(0), mPrevBrother(0), mNextBrother(0) {}
 
     T * parent() const { return mParent; }
     T * firstChild() const { return mFirstChild; }
@@ -345,7 +345,7 @@ namespace GN
     ///
     /// Logger implementation class
     ///
-    class LoggerImpl : public Logger, public TreeNode<LoggerImpl>
+    class LoggerImpl : public Logger, public LoggerTreeNode<LoggerImpl>
     {
     public:
 

@@ -1,178 +1,252 @@
 #include "pch.h"
+#include "sceneGeom.h"
+
+using namespace GN;
+using namespace GN::gfx;
+using namespace GN::scene;
 
 static GN::Logger * sLogger = GN::getLogger("GN.scene.Scene");
 
 // *****************************************************************************
-// ctor / dtor
+// Global data Node class
+// *****************************************************************************
+
+const GN::scene::EffectParameterDesc GN::scene::STANDARD_EFFECT_PARAMETER_DESCRIPTIONS[] =
+{
+    { "pvw", sizeof(Matrix44f) },
+};
+
+// *****************************************************************************
+// Node class
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Scene::Scene( engine::RenderEngine & re )
-    : mRenderEngine(re)
+void GN::scene::Node::setParent( Node * parent, Node * prevSibling )
 {
-    clear();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::Scene::~Scene()
-{
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::Scene::clear()
-{
-    mLight0.position.set( 0, 10000.0f, 0 );
-}
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::Actor *
-GN::scene::Scene::loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir )
-{
-    GN_GUARD;
-
-    AutoObjPtr<Actor> root( new Actor(*this) );
-
-    if( !root->loadFromXmlNode( node, basedir ) ) return false;
-
-    // Try load children. Note that invalid child node is ignored.
-    const XmlNode * c = node.child;
-    while( c )
+    if( parent != getParent() || prevSibling != getPrevSibling() )
     {
-        if( c->toElement() && "actor" == c->toElement()->name )
+        TreeNode<Node>::setParent( parent, prevSibling );
+        mTransformDirty = true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Node::setPosition( const Vector3f & p )
+{
+    if( p != mPosition )
+    {
+        mPosition = p;
+        mTransformDirty = true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Node::setPivot( const Vector3f & p )
+{
+    if( p != mPivot )
+    {
+        mPivot = p;
+        mTransformDirty = true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Node::setRotation( const Quaternionf & q )
+{
+    if( q != mRotation )
+    {
+        mRotation = q;
+        mTransformDirty = true;
+    }
+}
+
+// *****************************************************************************
+// Light class implementation
+// *****************************************************************************
+
+class PointLightImpl : public LightNode
+{
+public:
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    PointLightImpl( Scene & s ) : LightNode( s, LightNode::POINT_LIGHT )
+    {
+    }
+};
+
+// *****************************************************************************
+// Geometry class implementation
+// *****************************************************************************
+
+class GeometryNodeImpl : public GeometryNode
+{
+public:
+    ///
+    /// ctor
+    /// ------------------------------------------------------------------------
+    GeometryNodeImpl( Scene & s ) : GeometryNode( s )
+    {
+    }
+};
+
+///
+///
+/// ----------------------------------------------------------------------------
+GN::scene::GeometryNode::~GeometryNode()
+{
+    mBlocks.clear();
+}
+
+///
+///
+/// -----------------------------------------------------------------------------
+void
+GN::scene::GeometryNode::addGeometry( gfx::Effect * effect, gfx::Mesh * mesh, size_t firstidx, size_t numidx )
+{
+    if( NULL == effect || NULL == mesh )
+    {
+        GN_ERROR(sLogger)( "NULL parameter." );
+        return;
+    }
+
+    mBlocks.resize( mBlocks.size() + 1 );
+
+    GeomBlock & g = mBlocks.back();
+
+    g.effect.set( effect );
+
+    g.drawables.resize( effect->getNumPasses() );
+
+    for( size_t i = 0; i < g.drawables.size(); ++i )
+    {
+        Drawable & d = g.drawables[i];
+        effect->applyToDrawable( d, i );
+        mesh->applyToDrawable( d, firstidx, numidx );
+    }
+}
+
+// *****************************************************************************
+// Scene class implementation
+// *****************************************************************************
+
+class SceneImpl : public Scene
+{
+public:
+
+    /// ctor
+    SceneImpl( Renderer & r )
+        : mRenderer( r )
+    {
+    }
+
+    /// dtor
+    ~SceneImpl()
+    {
+        clear();
+    }
+
+public:
+
+    /// methods inherited from Scene class
+    //@{
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual void clear()
+    {
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual GeometryNode * createGeometry()
+    {
+        return new GeometryNodeImpl(*this);
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual LightNode * createLight( LightNode::LightType type )
+    {
+        switch( type )
         {
-            Actor * node = loadActorHiearachyFromXmlNode( *c, basedir );
-            if( node ) node->setParent( root, 0 );
+            case LightNode::POINT_LIGHT:
+                return  new PointLightImpl( *this, type );
+
+            default :
+                GN_ERROR(sLogger)( "invalid light type: %d", type );
+                return NULL;
+        }
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual void setProj( const Matrix44f & )
+    {
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual void setView( const Matrix44f & )
+    {
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
+    virtual void setViewport( const Rect<UInt32> & )
+    {
+    }
+
+    //@}
+
+private:
+
+    struct GpuParamData
+    {
+    };
+
+    DynaArray< DynaArray<UInt
+
+    Renderer & mRenderer;
+};
+
+///
+///
+/// ------------------------------------------------------------------------
+void GN::scene::GeometryNode::draw()
+{
+    for( size_t i = 0; i < mBlocks.size(); ++i )
+    {
+        const GeomBlock & g = mBlocks[i];
+
+        /// apply effect parameters
+        size_t n = GN_ARRAY_COUNT(STANDARD_EFFECT_PARAMETER_DESCRIPTIONS);
+        for( size_t i = 0; i < n; ++i )
+        {
+            const EffectParameterDesc & d = STANDARD_EFFECT_PARAMETER_DESCRIPTIONS[i];
+
+            g.effect->getGpuProgramParam( d.name )->set( ... );
         }
 
-        c = c->sibling;
-    }
-
-    // success
-    return root.detach();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::Actor *
-GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname )
-{
-    GN_GUARD;
-
-    GN_INFO(sLogger)( "Load actor '%s' from file '%s'", objname.cptr(), filename.cptr() );
-
-    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
-    if( !fp ) return false;
-
-    StrA basedir = dirName( filename );
-
-    XmlDocument doc;
-    XmlParseResult xpr;
-    if( !doc.parse( xpr, *fp ) )
-    {
-        static Logger * sLogger = getLogger( "GN.scene.util" );
-        GN_ERROR(sLogger)(
-            "Fail to parse XML file (%s):\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            fp->name().cptr(),
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.cptr() );
-        return false;
-    }
-    GN_ASSERT( xpr.root );
-
-    // search a actor element with name equals "objname"
-    TreeTraversePreOrder<XmlNode> tt(xpr.root);
-    XmlNode * n = tt.first();
-    while( n )
-    {
-        XmlElement * e = n->toElement();
-        if( e &&  "actor" == e->name )
+        for( size_t i = 0; i < g.drawables.size(); ++i )
         {
-            XmlAttrib  * a = e->findAttrib("name");
-
-            if( a && objname == a->value )
-            {
-                // found!
-                return loadActorHiearachyFromXmlNode( *n, basedir );
-            }
+            const Drawable & d = g.drawables[i];
+            d.draw();
         }
-        n = tt.next( n );
     }
-
-    GN_ERROR(sLogger)( "object named '%s' not found in file %s", objname.cptr(), filename.cptr() );
-    return false;
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// global functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::releaseActorHiearacy( Actor * root )
-{
-    if( !root ) return;
-
-    TreeTraversePostOrder<Actor> tt( root );
-
-    Actor * a1 = tt.first(), * a2;
-
-    while( a1 )
-    {
-        a2 = tt.next( a1 );
-        delete a1;
-        a1 = a2;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::Actor * GN::scene::cloneActorHiearacy( const Actor * root )
-{
-    if( !root )
-    {
-        GN_ERROR(sLogger)( "NULL root!" );
-        return 0;
-    }
-
-    Actor * r = new Actor( root->getScene() );
-    root->copyto( *r );
-
-    for( const Actor * a = root->getLastChild(); a; a = a->getPrevSibling() )
-    {
-        Actor * c = cloneActorHiearacy( a );
-        if( 0 == c )
-        {
-            releaseActorHiearacy(r);
-            return 0;
-        }
-
-        GN_ASSERT( 0 == c->getParent() );
-
-        c->setParent( r );
-    }
-
-    return r;
 }

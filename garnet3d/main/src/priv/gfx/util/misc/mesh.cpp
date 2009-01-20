@@ -139,7 +139,7 @@ void GN::gfx::Mesh::quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::Mesh::applySubsetToDrawable(
+GN::gfx::Mesh::linkSubsetToDrawable(
     Drawable & drawable,
     size_t     firstidx,
     size_t     numidx ) const
