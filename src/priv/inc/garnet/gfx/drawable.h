@@ -12,19 +12,15 @@ namespace GN { namespace gfx
     {
         void * const mData;
         size_t const mSize;
-        bool   const mShared;
-
-    protected:
-
-        /// constructor
-        GpuProgramParam( bool shared, size_t size )
-            : mData( heapAlloc( size ) )
-            , mSize( size )
-            , mShared( shared )
-        {
-        }
 
     public:
+
+        /// constructor
+        GpuProgramParam( size_t size )
+            : mData( heapAlloc( size ) )
+            , mSize( size )
+        {
+        }
 
         /// dtor
         virtual ~GpuProgramParam()
@@ -34,15 +30,8 @@ namespace GN { namespace gfx
 
         const void * get() const { return mData; }
         void         set( const void * data, size_t length ) { memcpy( mData, data, std::min(length,mSize) ); }
-        bool         shared() const { return mShared; }
         size_t       size() const { return mSize; }
     };
-
-    /// must call these 2 functions to create new GPU program parameter instance
-    //@{
-    GpuProgramParam * createPrivateGpuProgramParam( size_t size );
-    GpuProgramParam * createSharedGpuProgramParam( const StrA & name, size_t size );
-    //@}
 
     ///
     /// Drawable object, which is the building block of all visible objects.

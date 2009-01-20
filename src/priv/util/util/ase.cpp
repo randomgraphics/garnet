@@ -1107,6 +1107,19 @@ static bool sReadAse( AseScene & scene, File & file )
 //
 //
 // -----------------------------------------------------------------------------
+static AseGeoObject * sFindGeoObject( AseScene & scene, const StrA & name )
+{
+    if( name.empty() ) return &scene.root;
+    for( AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o )
+    {
+        if( name == o->node.name ) return o;
+    }
+    return 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sBuildNodeTree( AseScene & scene )
 {
     GN_INFO(sLogger)( "\nBuild node tree..." );
@@ -1125,7 +1138,7 @@ static bool sBuildNodeTree( AseScene & scene )
     {
         AseGeoObject & o = scene.objects[i];
 
-        AseGeoObject * p = scene.findObj( o.node.parent );
+        AseGeoObject * p = sFindGeoObject( scene, o.node.parent );
 
         if( 0 == p )
         {
