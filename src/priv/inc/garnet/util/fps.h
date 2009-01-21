@@ -18,6 +18,8 @@ namespace GN { namespace util
         StrW      mFormatString;
         StrW      mFpsString;
         size_t    mFrameCounter;
+        double    mLastCheckPoint;
+        double    mLastFrameElapsed;
         double    mLastFrameTime;
         double    mCurrentTime;
         bool      mBeforeFirstUpdate;
@@ -43,7 +45,7 @@ namespace GN { namespace util
             mFpsString.format( mFormatString.cptr(), 0 );
             mFrameCounter = 0;
             mCurrentTime = mClock.getTimeD();
-            mLastFrameTime = mCurrentTime - 1.0f/60.0f;
+            mLastCheckPoint = mCurrentTime - 1.0f/60.0f;
             mBeforeFirstUpdate = true;
         }
 
@@ -53,27 +55,37 @@ namespace GN { namespace util
         void onFrame()
         {
             mCurrentTime = mClock.getTimeD();
+
             ++mFrameCounter;
-            double duration = mCurrentTime - mLastFrameTime;
-            if( duration >= 1.0f )
+
+            mLastFrameElapsed = mCurrentTime - mLastFrameTime;
+            mLastFrameTime = mCurrentTime;
+
+            double timeSinceLastCheckPoint = mCurrentTime - mLastCheckPoint;
+            if( timeSinceLastCheckPoint >= 1.0f )
             {
                 mBeforeFirstUpdate = false;
-                mFpsValue = (float)( mFrameCounter / duration );
+                mFpsValue = (float)( mFrameCounter / timeSinceLastCheckPoint );
                 mFpsString.format( mFormatString.cptr(), mFpsValue );
-                mLastFrameTime = mCurrentTime;
+                mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
                 static Logger * sLogger = getLogger("GN.util.fps");
                 GN_VERBOSE(sLogger)( mFpsString.cptr() );
             }
             else if( mBeforeFirstUpdate )
             {
-                mFpsValue = (float)( (mCurrentTime - mLastFrameTime) / mFrameCounter );
+                mFpsValue = (float)( (mCurrentTime - mLastCheckPoint) / mFrameCounter );
                 mFpsString.format( mFormatString.cptr(), mFpsValue );
             }
         }
 
         ///
-        /// Get FPS value
+        /// Get elapsed time of last frame
+        ///
+        double getLastFrameElasped() const { return mLastFrameElapsed; }
+
+        ///
+        /// Get average FPS value
         ///
         float getFps() const { return mFpsValue; }
 

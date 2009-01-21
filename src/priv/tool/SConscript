@@ -1,7 +1,7 @@
 Import( 'GN' )
 #SConscript( dirs=['GPUBenchmark'] )
 #SConscript( dirs=['meshConverter'] )
-#SConscript( dirs=['meshViewer'] )
+SConscript( dirs=['meshViewer'] )
 if GN.conf['has_ogl']: SConscript( dirs=['oglInfo'] )
 if GN.conf['has_d3d9'] and 'xenon' != GN.compiler.name: SConscript( dirs=['d3d9DumpViewer','d3d9Wrapper'] )
 if GN.conf['has_d3d10']: SConscript( dirs=['d3d10DumpViewer'] )
