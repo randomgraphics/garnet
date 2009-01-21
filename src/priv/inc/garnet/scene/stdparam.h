@@ -33,7 +33,7 @@ namespace GN { namespace scene
         SCENE_PARAM_MATRIX_WORLD      , ///< TBD
         SCENE_PARAM_MATRIX_WORLD_INV  , ///< TBD
         SCENE_PARAM_MATRIX_WORLD_IT   , ///< TBD
-        SCENE_PARAM_LIGHT0_POS        , ///< Position in world space of light 0
+        SCENE_PARAM_LIGHT0_POSITION   , ///< Position in world space of light 0
         SCENE_PARAM_LIGHT0_DIRECTION  , ///< Direction in world space of light 0 (undefined for point light)
         SCENE_PARAM_LIGHT0_DIFFUSE    , ///< Diffuse color of light 0
         SCENE_PARAM_LIGHT0_AMBIENT    , ///< Ambient color of light 0
@@ -73,7 +73,7 @@ namespace GN { namespace scene
             { "MATRIX_WORLD"      , sizeof(GN::Matrix44f) , false, "TBD" },
             { "MATRIX_WORLD_INV"  , sizeof(GN::Matrix44f) , false, "TBD" },
             { "MATRIX_WORLD_IT"   , sizeof(GN::Matrix44f) , false, "TBD" },
-            { "LIGHT0_POS"        , sizeof(GN::Vector4f)  , true , "Position in world space of light 0" },
+            { "LIGHT0_POSITION"   , sizeof(GN::Vector4f)  , true , "Position in world space of light 0" },
             { "LIGHT0_DIRECTION"  , sizeof(GN::Vector4f)  , true , "Direction in world space of light 0 (undefined for point light)" },
             { "LIGHT0_DIFFUSE"    , sizeof(GN::Vector4f)  , true , "Diffuse color of light 0" },
             { "LIGHT0_AMBIENT"    , sizeof(GN::Vector4f)  , true , "Ambient color of light 0" },

@@ -45,11 +45,10 @@ namespace GN { namespace gfx
         struct UniformDesc
         {
             size_t           size;   ///< uniform size
-            bool             shared; ///< shared uniform across effects.
             DynaArray<UInt8> defval; ///< default uniform value. Could be empty if there's no default value.
 
             /// default ctor
-            UniformDesc() : size(0), shared(false) {}
+            UniformDesc() : size(0) {}
         };
 
         ///
@@ -241,9 +240,6 @@ namespace GN { namespace gfx
         /// get number of passes
         size_t getNumPasses() const { return mActiveTech->passes.size(); }
 
-        /// copy current effect to another one.
-        void copyTo( Effect & target ) const;
-
         /// Check if effect has a parameter with specific name.
         bool hasGpuProgramParam( const StrA & name ) const;
 
@@ -258,6 +254,9 @@ namespace GN { namespace gfx
 
         /// Apply the effect to drawable.
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
+
+        /// assignment operator
+        Effect & operator=( const Effect & rhs );
 
         // ********************************
         // private variables

@@ -21,7 +21,7 @@ MATRIX_WORLD_INV,  ,GN::Matrix44f, ,false,TBD
 MATRIX_WORLD_IT,   ,GN::Matrix44f, ,false,TBD
 
 ; Light parameter
-LIGHT0_POS,        ,GN::Vector4f,  ,true ,Position in world space of light 0
+LIGHT0_POSITION,   ,GN::Vector4f,  ,true ,Position in world space of light 0
 LIGHT0_DIRECTION,  ,GN::Vector4f,  ,true ,Direction in world space of light 0 (undefined for point light)
 LIGHT0_DIFFUSE,    ,GN::Vector4f,  ,true ,Diffuse color of light 0
 LIGHT0_AMBIENT,    ,GN::Vector4f,  ,true ,Ambient color of light 0
