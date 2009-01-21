@@ -34,7 +34,7 @@ namespace GN { namespace gfx
     ///
     /// Graphics mesh class
     ///
-    class Mesh : public StdClass
+    class Mesh : public StdClass, public NoCopy
     {
         GN_DECLARE_STDCLASS( Mesh, StdClass );
 
@@ -69,20 +69,19 @@ namespace GN { namespace gfx
         const MeshDesc & getDesc() const { return mDesc; }
 
         ///
-        /// Link mesh subse to the drawable. So further changes to that part of mesh will be applied
-        /// to the drawable automatically, until the mesh is reinitialized or the drawable is linked
-        /// to another mesh class.
+        ///
+        /// apply subset of the mesh to drawable
         ///
         /// \param numidx   Number of indices (or vertices, for non-indexed mesh)
         ///
-        void linkSubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
+        void applySubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
 
         ///
         /// link whole mesh to drawable
         ///
         void applyToDrawable( Drawable & drawable ) const
         {
-            linkSubsetToDrawable(
+            applySubsetToDrawable(
                 drawable,
                 0,
                 (0==mDesc.numidx) ? mDesc.numvtx : mDesc.numidx );

@@ -1314,10 +1314,10 @@ namespace GN
         operator * ( const Matrix44 & m, const Vector4<T> & v )
         {
             Vector4<T> ret;
-            ret.x = Vector4<T>::dot( m[0], v );
-            ret.y = Vector4<T>::dot( m[1], v );
-            ret.z = Vector4<T>::dot( m[2], v );
-            ret.w = Vector4<T>::dot( m[3], v );
+            ret.x = Vector4<T>::sDot( m[0], v );
+            ret.y = Vector4<T>::sDot( m[1], v );
+            ret.z = Vector4<T>::sDot( m[2], v );
+            ret.w = Vector4<T>::sDot( m[3], v );
             return ret;
         }
         friend Matrix44 operator * ( const Matrix44 & m, T f )

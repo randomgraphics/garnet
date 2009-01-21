@@ -107,8 +107,9 @@ bool init( Renderer & rndr )
     if( !e.applyToDrawable( d1, 0 ) ) return false;
     mesh.applyToDrawable( d1 );
 
-    // make a clone of the whole drawable
+    // make a clone of the whole drawable, with its own transformation parameter
     d2 = d1;
+    d2.gpps[0].attach( new GpuProgramParam( sizeof(Matrix44f) ) );
 
     // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );

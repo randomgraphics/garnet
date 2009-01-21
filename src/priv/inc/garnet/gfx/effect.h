@@ -244,6 +244,9 @@ namespace GN { namespace gfx
         /// copy current effect to another one.
         void copyTo( Effect & target ) const;
 
+        /// Check if effect has a parameter with specific name.
+        bool hasGpuProgramParam( const StrA & name ) const;
+
         /// Get pointer to specific GPU program. Return dummy pointer for invalid name.
         GpuProgramParam * getGpuProgramParam( const StrA & name );
 
