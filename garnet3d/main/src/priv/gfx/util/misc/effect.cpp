@@ -317,11 +317,11 @@ void GN::gfx::Effect::setGpuProgramParam( const StrA & name, GpuProgramParam * p
 
     if( mUniforms.end() == it )
     {
-        return mDummyUniform;
+        GN_ERROR(sLogger)( "Invalid parameter name: %s", name.cptr() );
     }
     else
     {
-        return it->second;
+        it->second.set( param );
     }
 }
 

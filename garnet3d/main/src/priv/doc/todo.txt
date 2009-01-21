@@ -37,13 +37,9 @@
 - p2
   - XML: pointer from parent to last child, for constant time child appending.
   - runtime configuable profilers, like loggers
-  - memory pool class is not looking good
-    - when call dtor and when not?
-    - see others pool implementation on net
   - sigslot class:
     - allow any type of functor
     - check behavior of redundant slot functors.
-  - smart enum class
   - skin mesh test case: porting DXSDK sample.
   - memory-mapped IO.
 
@@ -57,7 +53,6 @@
     - change window size
     - ...
   - runtime call-stack dump
-  - hash map/table
   - in game GUI:
   - debug variable registry
     - debug variable viewer and modifier

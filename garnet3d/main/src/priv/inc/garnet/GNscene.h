@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "GNgfx.h"
+#include "scene/stdparam.h"
 
 namespace GN
 {
@@ -15,19 +16,7 @@ namespace GN
     ///
     namespace scene
     {
-        ///
-        /// standard effect parameters
-        ///
-        struct EffectParameterDesc
-        {
-            const char * name;
-            size_t       size;
-        };
-
-        ///
-        /// global parameter table
-        ///
-        extern const EffectParameterDesc STANDARD_EFFECT_PARAMETER_DESCRIPTIONS[];
+        struct Scene;
 
         ///
         /// basic object that can be put in to 3D scene. Position is its only property.
@@ -36,12 +25,12 @@ namespace GN
         {
             enum NodeType
             {
-                DUMMY,    ///< dummy node, invisible, no extra properties.
-                LIGHT,    ///< light node,
-                GEOMETRY, ///< geometry node (visible on screen)
+                DUMMY,    ///< dummy node
+                LIGHT,    ///< light node
+                GEOMETRY, ///< geometry node
             };
 
-            virtual void        setParent( Node * parent, Node * prevSibling = NULL ) { TreeNode<Node>::setParent( parent, prevSibling ); mTransformDirty = true; }
+            virtual void        setParent( Node * parent, Node * prevSibling = NULL );
             virtual void        setPosition( const Vector3f & );      ///< set position in parent space.
             virtual void        setPivot( const Vector3f & );         ///< set pivot position, in parent space, for scaling and rotation.
             virtual void        setRotation( const Quaternionf & );   ///< set node orientation, parent space.
@@ -85,6 +74,10 @@ namespace GN
 
         private:
 
+            void calcTransform();
+
+        private:
+
             /// basic node information
             Scene        & mScene;
             const NodeType mType;
@@ -104,7 +97,18 @@ namespace GN
         };
 
         ///
-        /// light
+        /// Dummy Node
+        ///
+        class DummyNode : public Node
+        {
+        public:
+
+            /// ctor
+            DummyNode( Scene & s ) : Node( s, Node::DUMMY ) {}
+        };
+
+        ///
+        /// light node
         ///
         class LightNode : public Node
         {
@@ -115,8 +119,6 @@ namespace GN
             {
                 POINT_LIGHT, ///< point light
             };
-
-        protected:
 
             /// ctor
             LightNode( Scene & s, const LightType t ) : Node( s, Node::LIGHT ), mType(t) {}
@@ -131,22 +133,26 @@ namespace GN
         ///
         class GeometryNode : public Node
         {
-            struct GeomBlock
+            struct StdParam
             {
-                AutoRef<gfx::Effect>     effect;
-                DynaArray<gfx::Drawable> drawables;
+                StandardSceneParameterType    type;
+                AutoRef<gfx::GpuProgramParam> param;
             };
 
-            DynaArray<GeomBlock> mBlocks;
-            Spheref              mBoundingSphere;
+            DynaArray<StdParam>      mStdPerObjParams; ///< standard per-object parameters
+            DynaArray<gfx::Drawable> mDrawables;
+            Spheref                  mBoundingSphere;
 
         public:
+
+            /// ctor
+            GeometryNode( Scene & s ) : Node( s, Node::GEOMETRY ) {}
 
             /// dtor
             virtual ~GeometryNode();
 
-            /// add new geometry to the node
-            virtual void addGeometry( gfx::Effect * effect, gfx::Mesh * mesh, size_t firstidx, size_t numidx );
+            /// add new drawawable to the node
+            virtual void addDrawable( const gfx::Effect * effect, const gfx::Mesh * mesh, size_t firstidx, size_t numidx );
 
             /// draw the geometry
             virtual void draw();
@@ -156,33 +162,25 @@ namespace GN
 
             /// get bounding sphere. sphere center is in parent space
             const Spheref & getBoundingSphere() const { return mBoundingSphere; }
-
-        protected:
-
-            /// ctor
-            GeometryNode( Scene & s ) : Node( s, Node::GEOMETRY ) {}
         };
 
         ///
-        /// pure scene interface
+        /// public scene interface
         ///
         struct Scene : public NoCopy
         {
-            /// clear the scene, release all resources.
-            virtual void clear() = 0;
+            /// get renderer
+            virtual gfx::Renderer & getRenderer() const = 0;
 
-            /// \name resource factory
+            /// \name global parameter management
             //@{
-            virtual GeometryNode * createGeometry() = 0;
-            virtual LightNode    * createLight( LightNode::LightType type ) = 0;
-            //@}
-
-            /// \name set camera properties
-            //@{
+            virtual gfx::GpuProgramParam * const * getGlobalParam() const = 0;
             virtual void setProj( const Matrix44f & ) = 0;
             virtual void setView( const Matrix44f & ) = 0;
-            virtual void setViewport( const Rect<UInt32> & ) = 0; ///< viewport (0,0,0,0) represents current render target size.
             //@}
+
+            /// draw node hierarchy
+            virtual void renderNodeHierarchy( Node * root ) = 0;
         };
 
         ///
