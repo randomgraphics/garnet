@@ -2,168 +2,170 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::scene;
 using namespace GN::input;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 
-class MeshViewerApp : public app::SampleApp
+const char * meshFileName;
+Renderer * rndr;
+ArcBall    arcball; // arcball camera
+float      radius;  // distance from camera to object
+Matrix44f  proj, view;
+
+void updateRadius()
 {
-    StrA      mFileName;
-    StrA      mObjName;
-    Scene     mScene;
-    Actor *   mActor;
-    ArcBall   mArcBall;
+    const DispDesc & dd = rndr->getDispDesc();
 
-    float     mRadius; // distance from camera to object
+    view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+    rndr->composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
 
-    Matrix44f mProj, mView;
+    float h = tan( 0.5f ) * radius * 2.0f;
+    arcball.setViewMatrix( view );
+    arcball.setTranslationSpeed( h / dd.height );
 
-    void updateRadius()
+    // TODO: update light position
+    // mScene.light(0).position.set( 0, 0, radius ); // head light: same location as camera.
+
+    // calculate move speed
+}
+
+bool init()
+{
+    // update camera stuff
+    radius = 2.0f; // initial radius should be 2.0 * mesh-bounding-sphere-radius
+    updateRadius();
+
+    // initialize arcball
+    arcball.setHandness( util::RIGHT_HAND );
+    arcball.setViewMatrix( view );
+    arcball.setTranslation( Vector3f(0,0,0) ); // TODO: initial translation should be mesh center.
+    arcball.connectToInput();
+
+    return true;
+}
+
+void quit()
+{
+}
+
+void onAxisMove( Axis a, int d )
+{
+    if( AXIS_MOUSE_WHEEL_0 == a )
     {
-        const DispDesc & dd = getRenderEngine().getDispDesc();
+        float speed = radius / 100.0f;
+        radius -= speed * d;
+        if( radius < 0.1f ) radius = 0.1f;
+        updateRadius();
+    }
+}
 
-        mView.lookAtRh( Vector3f(0,0,mRadius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        getRenderEngine().composePerspectiveMatrixRh( mProj, GN_PI/4.0f, (float)dd.width/dd.height, mRadius / 100.0f, mRadius * 2.0f );
-        mScene.setView( mView );
-        mScene.setProj( mProj );
-        mScene.light(0).position.set( 0, 0, mRadius ); // head light: same location as camera.
-        mArcBall.setViewMatrix( mView );
+void update( double )
+{
+}
 
-        // calculate move speed
-        float h = tan( 0.5f ) * mRadius * 2.0f;
-        mArcBall.setTranslationSpeed( h / dd.height );
+void draw()
+{
+}
+
+void drawCoords()
+{
+    static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
+    static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
+    static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
+
+    const Matrix44f & world = arcball.getRotationMatrix44();
+    rndr->drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
+    rndr->drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
+    rndr->drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
+}
+
+int run()
+{
+    if( !init() ) { quit(); return -1; }
+
+    bool gogogo = true;
+
+    FpsCalculator fps;
+
+    printf( "Press ESC to exit...\n" );
+    while( gogogo )
+    {
+        // handle inputs
+        rndr->processRenderWindowMessages( false );
+        Input & in = gInput;
+        in.processInputEvents();
+        if( in.getKeyStatus( KEY_ESCAPE ).down )
+        {
+            gogogo = false;
+        }
+
+        // render
+        rndr->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        update( fps.getLastFrameElasped() );
+        draw();
+        drawCoords();
+        rndr->present();
+
+        fps.onFrame();
     }
 
-public:
+    quit();
 
-    MeshViewerApp()
-        : mScene( getEntityManager(), getRenderEngine() )
-        , mActor(0)
-    {}
+    return 0;
+}
 
-    bool onCheckCmdLine( int argc, const char * const argv[] )
+void printHelp( const char * exepath )
+{
+    StrA exefilename = baseName( exepath ) + extName( exepath );
+
+    printf( "\nUsage: %s <meshfile>\n", exefilename.cptr() );
+}
+
+struct InputInitiator
+{
+    InputInitiator( Renderer & r )
     {
-        bool isFileName = true;
-        for( int i = 1; i < argc; ++i )
-        {
-            const char * a = argv[i];
-            if( '-' != *a )
-            {
-                if( isFileName ) mFileName = a, isFileName = false;
-                else mObjName = a;
-            }
-            else GN_WARN(sLogger)( "unknown command line argument: %s", a );
-        }
-        if( mFileName.empty() )
-        {
-            mFileName = "media::/cube/cube.actor.xml";
-            GN_INFO(sLogger)( "no object specified in comment line. Using default one: %s", mFileName.cptr() );
-        }
-        if( mObjName.empty() ) mObjName = "root";
-        return true;
+        initializeInputSystem( API_NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
-    bool onInit()
+    ~InputInitiator()
     {
-        if( !mActor && !mFileName.empty() )
-        {
-            // (re)load actor
-            releaseActorHiearacy( mActor );
-            mActor = mScene.loadActorHiearachyFromXmlFile( mFileName, mObjName );
-            if( 0 == mActor ) return false;
-
-            // update camera stuff
-            mRadius = mActor->getBoundingSphere().radius * 2.0f;
-            updateRadius();
-
-            // initialize mArcBall
-            mArcBall.setHandness( util::RIGHT_HAND );
-            mArcBall.setViewMatrix( mView );
-            mArcBall.connectToInput();
-            mArcBall.setTranslation( -mActor->getBoundingSphere().center );
-        }
-
-        // update arcball window
-        const DispDesc & dd = gRenderer.getDispDesc();
-        mArcBall.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
-
-        return true;
-    }
-
-    void onQuit()
-    {
-        releaseActorHiearacy( mActor );
-        mActor = 0;
-    }
-
-    void onAxisMove( Axis a, int d )
-    {
-        app::SampleApp::onAxisMove( a, d );
-
-        if( AXIS_MOUSE_WHEEL_0 == a )
-        {
-            float speed = mRadius / 100.0f;
-            mRadius -= speed * d;
-            if( mRadius < 0.1f ) mRadius = 0.1f;
-            updateRadius();
-        }
-    }
-
-    void onUpdate()
-    {
-        const int * axises = gInput.getAxisStatus();
-        mArcBall.rotate(
-            (float)axises[input::AXIS_XB360_THUMB_LX] /  2000.0f,
-            (float)axises[input::AXIS_XB360_THUMB_LY] / -2000.0f );
-
-        if( mActor )
-        {
-            Vector3f pos = mArcBall.getTranslation();
-            mActor->setPosition( pos );
-            mActor->setPivot( -pos );
-            mActor->setRotation( mArcBall.getRotation() );
-        }
-    }
-
-    void onRender()
-    {
-        RenderEngine & e = getRenderEngine();
-
-        e.clearScreen();
-
-        static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
-        static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
-        static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-
-        const Matrix44f & world = mArcBall.getRotationMatrix44();
-        e.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), world, mView, mProj );
-        e.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
-        e.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
-
-        if( mActor ) mActor->draw();
-
-#if 0
-        // draw matrices onto screen
-        {
-            StrW text;
-            text.format(
-                L"world :\n%S\n"
-                L"view  :\n%S\n"
-                L"proj  :\n%S\n",
-                mWorld.print().cptr(),
-                mView.print().cptr(),
-                mProj.print().cptr() );
-            getFont().drawText( text.cptr(), 0, 100 );
-        }
-#endif
+        shutdownInputSystem();
     }
 };
 
-int main( int argc, const char * argv[] )
+int main( int, const char *[] )
 {
-    MeshViewerApp app;
-    return app.run( argc, argv );
+    printf( "\nGarnet mesh viewer V0.1.\n" );
+
+    enableCRTMemoryCheck();
+
+    /* parse command line
+    if( argc < 2 )
+    {
+        printHelp( argv[0] );
+        return -1;
+    }
+    meshFileName = argv[1];*/
+
+    // create renderer
+    RendererOptions o;
+    o.api = API_OGL;
+    rndr = createMultiThreadRenderer( o );
+    //rndr = createSingleThreadRenderer( o );
+    if( NULL == rndr ) return -1;
+
+    // initialize input device
+    InputInitiator ii(*rndr);
+
+    // enter main loop
+    int result = run();
+
+    // done
+    deleteRenderer( rndr );
+    return result;
 }
+
