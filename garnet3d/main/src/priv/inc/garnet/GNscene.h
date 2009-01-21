@@ -133,6 +133,14 @@ namespace GN
         ///
         class GeometryNode : public Node
         {
+            struct GeometryBlock
+            {
+                gfx::Effect              effect;
+                DynaArray<gfx::Drawable> drawables;
+
+                GeometryBlock( gfx::Renderer & r ) : effect(r) {}
+            };
+
             struct StdParam
             {
                 StandardSceneParameterType    type;
@@ -140,7 +148,7 @@ namespace GN
             };
 
             DynaArray<StdParam>      mStdPerObjParams; ///< standard per-object parameters
-            DynaArray<gfx::Drawable> mDrawables;
+            DynaArray<GeometryBlock> mBlocks;
             Spheref                  mBoundingSphere;
 
         public:
@@ -151,8 +159,17 @@ namespace GN
             /// dtor
             virtual ~GeometryNode();
 
-            /// add new drawawable to the node
-            virtual void addDrawable( const gfx::Effect * effect, const gfx::Mesh * mesh, size_t firstidx, size_t numidx );
+            /// add new geometry block to the node
+            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::Mesh * mesh, size_t firstidx, size_t numidx );
+
+            /// get number of geometry blocks
+            virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }
+
+            /// get specific geometry block
+            virtual const GeometryBlock & getGeometryBlock( size_t i ) const { return mBlocks[i]; }
+
+            /// get specific geometry block
+            virtual GeometryBlock & getGeometryBlock( size_t i ) { return mBlocks[i]; }
 
             /// draw the geometry
             virtual void draw();

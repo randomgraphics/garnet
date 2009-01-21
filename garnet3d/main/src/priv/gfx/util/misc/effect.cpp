@@ -47,59 +47,6 @@ sMergeRenderStates(
 }
 
 // *****************************************************************************
-// GPU program parameter management
-// *****************************************************************************
-
-class SharedGpp;
-
-static std::map<StrA,SharedGpp*> sSharedGppMap;
-
-class SharedGpp : public GpuProgramParam
-{
-    std::map<StrA,SharedGpp*>::iterator mIter;
-
-public:
-
-    /// ctor
-    SharedGpp( const StrA & name, size_t size )
-        : GpuProgramParam( size )
-    {
-        mIter = sSharedGppMap.insert( std::make_pair(name, this) ).first;
-    }
-
-    /// dtor
-    ~SharedGpp()
-    {
-        sSharedGppMap.erase( mIter );
-    }
-};
-
-//
-//
-// -----------------------------------------------------------------------------
-static GpuProgramParam *
-sCreatePrivateGpuProgramParam( size_t size )
-{
-    return new GpuProgramParam( size );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static GpuProgramParam *
-sCreateSharedGpuProgramParam( const StrA & name, size_t size )
-{
-    std::map<StrA,SharedGpp*>::const_iterator iter = sSharedGppMap.find( name );
-
-    if( iter != sSharedGppMap.end() )
-        // found!
-        return iter->second;
-    else
-        // not found!
-        return new SharedGpp( name, size );
-}
-
-// *****************************************************************************
 // EffectDesc class
 // *****************************************************************************
 
@@ -121,7 +68,7 @@ bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
 // -----------------------------------------------------------------------------
 GN::gfx::Effect::Effect( Renderer & r )
     : mRenderer(r)
-    , mDummyUniform( sCreatePrivateGpuProgramParam(1) )
+    , mDummyUniform( new GpuProgramParam( 1 ) )
 {
     clear();
 }
@@ -157,15 +104,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::UniformDesc & udesc = iter->second;
 
         // create GPU program
-        GpuProgramParam * gpp;
-        if( udesc.shared )
-        {
-            gpp = sCreateSharedGpuProgramParam( uname, udesc.size );
-        }
-        else
-        {
-            gpp = sCreatePrivateGpuProgramParam( udesc.size );
-        }
+        GpuProgramParam * gpp = new GpuProgramParam( udesc.size );
         if( NULL == gpp ) return false;
 
         // add to uniform array

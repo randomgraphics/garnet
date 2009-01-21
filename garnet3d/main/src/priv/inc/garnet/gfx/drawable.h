@@ -30,6 +30,8 @@ namespace GN { namespace gfx
 
         const void * get() const { return mData; }
         void         set( const void * data, size_t length ) { memcpy( mData, data, std::min(length,mSize) ); }
+        template<typename T>
+        void         set( const T & t ) { set( &t, sizeof(t) ); }
         size_t       size() const { return mSize; }
     };
 

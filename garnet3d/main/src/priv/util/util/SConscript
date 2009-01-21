@@ -2,6 +2,7 @@ Import( 'GN' )
 sources = [
 	'arcball.cpp',
 	'ase.cpp',
+	'diffuseEffect.cpp',
 	'fpcamera.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
