@@ -3,6 +3,9 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
 
+// use to output very detailed debug information specific to arcball class
+#define ARCBALL_TRACE GN_LOG( sLogger, 0x1000 )
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -41,10 +44,10 @@ static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y,
 // -----------------------------------------------------------------------------
 GN::util::ArcBall::ArcBall( Handness h )
     : mTranslation( 0, 0, 0 )
-    , mQuat( Quaternionf::IDENTITY )
-    , mRotation3x3( Matrix33f::IDENTITY )
-    , mRotation4x4( Matrix44f::IDENTITY )
-    , mTransView( Matrix44f::IDENTITY )
+    , mQuat( Quaternionf::sIdentity() )
+    , mRotation3x3( Matrix33f::sIdentity() )
+    , mRotation4x4( Matrix44f::sIdentity() )
+    , mTransView( Matrix44f::sIdentity() )
     , mWindowCenter( 0, 0 )
     , mWindowHalfSize( 1, 1 )
     , mHandness( LEFT_HAND == h ? -1.0f : 1.0f )
@@ -101,7 +104,7 @@ void GN::util::ArcBall::disconnectFromInput()
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::beginRotation( int x, int y )
 {
-    GN_TRACE(sLogger)( "ArcBall::beginRotation()" );
+    ARCBALL_TRACE( "ArcBall::beginRotation()" );
 
     mRolling = true;
 
@@ -120,7 +123,7 @@ void GN::util::ArcBall::beginRotation( int x, int y )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::endRotation()
 {
-    GN_TRACE(sLogger)( "ArcBall::endRotation()" );
+    ARCBALL_TRACE( "ArcBall::endRotation()" );
     mRolling = false;
 }
 
@@ -131,7 +134,7 @@ void GN::util::ArcBall::onRotation( int x, int y )
 {
     if( !mRolling ) return;
 
-    GN_TRACE(sLogger)( "ArcBall::onRotation()" );
+    ARCBALL_TRACE( "ArcBall::onRotation()" );
 
     float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
@@ -147,7 +150,7 @@ void GN::util::ArcBall::onRotation( int x, int y )
     mQuat.toMatrix33( mRotation3x3 );
     mRotation4x4.set( mRotation3x3 );
 
-    GN_TRACE(sLogger)( "\n%s", mRotation3x3.print().cptr() );
+    ARCBALL_TRACE( "\n%s", mRotation3x3.print().cptr() );
 }
 
 //
@@ -155,7 +158,7 @@ void GN::util::ArcBall::onRotation( int x, int y )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::beginTranslation( int x, int y )
 {
-    GN_TRACE(sLogger)( "ArcBall::beginTranslation()" );
+    ARCBALL_TRACE( "ArcBall::beginTranslation()" );
     mMoving = true;
     mTranslationBase = mTranslation;
     mMoveBase.set( x, y );
@@ -166,7 +169,7 @@ void GN::util::ArcBall::beginTranslation( int x, int y )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::endTranslation()
 {
-    GN_TRACE(sLogger)( "ArcBall::endTranslation()" );
+    ARCBALL_TRACE( "ArcBall::endTranslation()" );
     mMoving = false;
 }
 
@@ -177,7 +180,7 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 {
     if( !mMoving ) return;
 
-    GN_TRACE(sLogger)( "ArcBall::onTranslation()" );
+    ARCBALL_TRACE( "ArcBall::onTranslation()" );
 
     Vector3f v( (float)( x - mMoveBase.x ), (float)( mMoveBase.y - y ), 0 );
 

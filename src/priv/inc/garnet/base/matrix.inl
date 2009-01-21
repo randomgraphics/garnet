@@ -64,8 +64,9 @@ namespace GN
 
         if( ::fabs(fDet) == 0.0f )
         {
-            // Invertable matrix is very rare, and normally means error,
-            // so we write output a warning here.
+            // Uninvertable matrix is rare used in 3D graphics, and usually
+            // means error. So we output a warning message here.
+            static Logger * sLogger = getLogger("GN.base.Matrix33");
             GN_WARN(sLogger)( "Matrix is un-invertable!" );
             return identity();
         }
@@ -347,8 +348,9 @@ namespace GN
             // can't inverse.  Return identity.
             if (a[rowMax][c] == 0.0F)
             {
-                // Invertible matrix is very rare, and normally means error,
-                // so we write output a warning here.
+                // Uninvertible matrix is rare used in 3D graphics, and usually
+                // means error. So we output a warning message here.
+                static Logger * sLogger = getLogger("GN.base.Matrix44");
                 GN_WARN(sLogger)( "Matrix is un-invertable!" );
                 return identity();
             }
