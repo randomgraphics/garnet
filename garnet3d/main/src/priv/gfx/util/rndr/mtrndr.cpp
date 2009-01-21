@@ -65,6 +65,7 @@ bool GN::gfx::MultiThreadRenderer::init(
     mRendererCreationStatus = 2;
     mFrontEndFence = 0;
     mBackEndFence = 0;
+    mBackEndLoopFlag = true;
 
     // create thread
     ThreadProcedure proc = makeDelegate( this, &GN::gfx::MultiThreadRenderer::threadProc );
@@ -101,6 +102,7 @@ void GN::gfx::MultiThreadRenderer::quit()
 
     if( mThread )
     {
+        mBackEndLoopFlag = false;
         mRingBuffer.postQuitMessage();
         mThread->waitForTermination();
         delete mThread;
@@ -178,7 +180,7 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
     mRendererCreationStatus = 1;
 
     // enter command loop
-    while(true)
+    while( mBackEndLoopFlag )
     {
         // get command header
         const void * headerptr = (const CommandHeader*)mRingBuffer.beginConsume( sizeof(CommandHeader) );

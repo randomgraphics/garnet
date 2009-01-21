@@ -150,6 +150,7 @@ namespace GN { namespace gfx
         volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         volatile UInt32 mFrontEndFence;
         volatile UInt32 mBackEndFence;
+        volatile bool   mBackEndLoopFlag;
         Thread        * mThread;
 
         // ********************************
