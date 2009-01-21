@@ -885,8 +885,6 @@ namespace GN
     template< typename T >
     class Matrix33
     {
-        static Logger * sLogger;
-
         // ********************************
         //    public data members
         // ********************************
@@ -906,11 +904,6 @@ namespace GN
         //    static data members
         // ********************************
     public:
-
-        ///
-        /// identity matrix
-        ///
-        static Matrix33 IDENTITY;
 
         // ********************************
         /// \name constructors
@@ -1061,6 +1054,13 @@ namespace GN
             rows[2].set(0,0,1);
             return *this;
         }
+        static Matrix33 sIdentity()
+        {
+            return Matrix33(
+                (T)1, (T)0, (T)0,
+                (T)0, (T)1, (T)0,
+                (T)0, (T)0, (T)1 );
+        }
         Matrix33 & transpose()
         {
             detail::swap( rows[0][1], rows[1][0] );
@@ -1130,22 +1130,12 @@ namespace GN
         //@}
     };
 
-    // static member
-    template< typename T >
-    Matrix33<T> Matrix33<T>::IDENTITY( 1,0,0,
-                                       0,1,0,
-                                       0,0,1 );
-    template < typename T >
-    Logger * Matrix33<T>::sLogger = getLogger("GN.base.Matrix44");
-
     ///
     /// 4x4 matrix ( row major )
     ///
     template < typename T >
     class Matrix44
     {
-        static Logger * sLogger;
-
         // ********************************
         //  public data members
         // ********************************
@@ -1160,16 +1150,6 @@ namespace GN
         /// matrix rows
         ///
         Vector4<T> rows[4];
-
-        // ********************************
-        //   static data members
-        // ********************************
-    public:
-
-        ///
-        /// identity matrix
-        ///
-        static Matrix44 IDENTITY;
 
         // ********************************
         /// \name constructors
@@ -1379,6 +1359,14 @@ namespace GN
             rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
+        static Matrix44 sIdentity()
+        {
+            return Matrix44(
+                (T)1,(T)0,(T)0,(T)0,
+                (T)0,(T)1,(T)0,(T)0,
+                (T)0,(T)0,(T)1,(T)0,
+                (T)0,(T)0,(T)0,(T)1 );
+        }
         Matrix44 & transpose()
         {
             detail::swap( rows[0][1], rows[1][0] );
@@ -1574,8 +1562,15 @@ namespace GN
 
                 T k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
 
-                if( ((T)0) != k ) dst /= k;
-                else GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
+                if( ((T)0) != k )
+                {
+                    dst /= k;
+                }
+                else
+                {
+                    static Logger * sLogger = getLogger("GN.base.Matrix44");
+                    GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
+                }
             }
         }
         Vector3<T> transformPoint( const Vector3<T> & src ) const
@@ -1617,15 +1612,6 @@ namespace GN
         //@}
     };
 
-    // static member
-    template < typename T >
-    Matrix44<T> Matrix44<T>::IDENTITY( 1,0,0,0,
-                                       0,1,0,0,
-                                       0,0,1,0,
-                                       0,0,0,1 );
-    template < typename T >
-    Logger * Matrix44<T>::sLogger = getLogger("GN.base.Matrix44");
-
     ///
     /// ËÄÔªÊý
     ///
@@ -1643,9 +1629,7 @@ namespace GN
         typedef T ElementType;
 
         Vector3<T>  v; ///< axis
-        T w; ///< W-value
-
-        static Quaternion IDENTITY; ///< identity quaternion
+        T           w; ///< W-value
 
         // ********************************
         /// \name    constructors
@@ -1744,6 +1728,12 @@ namespace GN
         {
             w = ((T)1.0); v.set(0, 0, 0); return *this;
         }
+        /// identity quaternion
+        static Quaternion sIdentity()
+        {
+            return Quaternion( (T)0, (T)0, (T)0, (T)1 );
+        }
+
         ///
         /// get norm
         ///
@@ -1915,10 +1905,6 @@ namespace GN
 			return out;
         }
     };
-
-    // static member
-    template < typename T >
-    Quaternion<T> Quaternion<T>::IDENTITY( 0, 0, 0, 1 );
 
     ///
     /// 3D plane class

@@ -21,6 +21,7 @@ void updateRadius()
     rndr->composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
 
     float h = tan( 0.5f ) * radius * 2.0f;
+    arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
     arcball.setViewMatrix( view );
     arcball.setTranslationSpeed( h / dd.height );
 
@@ -154,8 +155,8 @@ int main( int, const char *[] )
     // create renderer
     RendererOptions o;
     o.api = API_OGL;
-    rndr = createMultiThreadRenderer( o );
-    //rndr = createSingleThreadRenderer( o );
+    //rndr = createMultiThreadRenderer( o );
+    rndr = createSingleThreadRenderer( o );
     if( NULL == rndr ) return -1;
 
     // initialize input device
