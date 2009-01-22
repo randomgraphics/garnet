@@ -227,9 +227,9 @@ void GN::gfx::Effect::quit()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgramParam *
-GN::gfx::Effect::getGpuProgramParam( const StrA & name )
+GN::gfx::Effect::getGpuProgramParam( const StrA & name ) const
 {
-    std::map<StrA,AutoRef<GpuProgramParam> >::iterator it = mUniforms.find( name );
+    std::map<StrA,AutoRef<GpuProgramParam> >::const_iterator it = mUniforms.find( name );
 
     if( mUniforms.end() == it )
     {

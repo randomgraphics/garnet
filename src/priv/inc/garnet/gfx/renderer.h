@@ -321,6 +321,32 @@ namespace GN { namespace gfx
         UInt8       stream;      ///< vertex buffer index
         UInt16      offset;      ///< offset of the element
 
+        /// set binding string and index
+        void setBinding( const StrA & name, size_t index )
+        {
+            if( name.size() >= GN_ARRAY_COUNT(binding) )
+            {
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                    "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
+                    name.cptr() );
+            }
+            size_t len = min<size_t>( GN_ARRAY_COUNT(binding), name.size()+1 );
+            memcpy( binding, name.cptr(), len );
+
+            if( index > 255 )
+            {
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                    "Binding index (%d) is too large. Maxinum value is 255.",
+                    index );
+                bindingIndex = 0;
+            }
+            else
+            {
+                bindingIndex = (UInt8)index;
+            }
+        }
+
+        /// equality check
         bool operator==( const VertexElement & rhs ) const
         {
             return format == rhs.format
@@ -330,6 +356,7 @@ namespace GN { namespace gfx
                 && 0 == strCmp( binding, rhs.binding, sizeof(binding) );
         }
 
+        /// equality check
         bool operator!=( const VertexElement & rhs ) const
         {
             return !operator==( rhs );

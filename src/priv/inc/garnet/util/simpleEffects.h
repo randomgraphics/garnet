@@ -43,6 +43,7 @@ namespace GN { namespace util
             mMatrixWorldIT = NULL;
             mLightPos = NULL;
             mLightColor = NULL;
+            mDiffuseColor = NULL;
         }
         //@}
 
@@ -55,6 +56,7 @@ namespace GN { namespace util
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world );
         void setLightPos( const Vector4f & ); ///< set light position in world space
         void setLightColor( const Vector4f & ); ///< set light color
+        void setDiffuseColor( const Vector4f & ); ///< set diffuse color
         void setDiffuseTexture( gfx::Texture * ); ///< set to NULL to use pure white texture.
         void setMesh( gfx::Mesh & mesh, size_t firstidx, size_t numidx );
         void draw();
@@ -72,6 +74,7 @@ namespace GN { namespace util
         gfx::GpuProgramParam        * mMatrixWorldIT;
         gfx::GpuProgramParam        * mLightPos;
         gfx::GpuProgramParam        * mLightColor;
+        gfx::GpuProgramParam        * mDiffuseColor;
         gfx::EffectTextureParameter * mTexture;
         gfx::Drawable                 mDrawable;
 

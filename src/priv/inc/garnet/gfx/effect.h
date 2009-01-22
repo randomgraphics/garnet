@@ -241,10 +241,10 @@ namespace GN { namespace gfx
         size_t getNumPasses() const { return mActiveTech->passes.size(); }
 
         /// Check if effect has a parameter with specific name.
-        bool hasGpuProgramParam( const StrA & name ) const;
+        bool hasGpuProgramParam( const StrA & name ) const { return mUniforms.end() != mUniforms.find( name ); }
 
         /// Get pointer to specific GPU program. Return dummy pointer for invalid name.
-        GpuProgramParam * getGpuProgramParam( const StrA & name );
+        GpuProgramParam * getGpuProgramParam( const StrA & name ) const;
 
         /// Assign GPU program parameter to effect
         void setGpuProgramParam( const StrA & name, GpuProgramParam * );
