@@ -110,12 +110,6 @@ void GN::util::SimpleDiffuseEffect::quit()
 
     safeDecref( mDefaultTexture );
     safeDelete( mEffect );
-    safeDecref( mMatrixPvw );
-    safeDecref( mMatrixWorld );
-    safeDecref( mMatrixWorldIT );
-    safeDecref( mLightPos );
-    safeDecref( mLightColor );
-    safeDecref( mDiffuseColor );
     mDrawable.clear();
 
     // standard quit procedure

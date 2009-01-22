@@ -37,6 +37,7 @@ namespace GN
         ///
         void decref() const
         {
+            GN_ASSERT( mRef > 0 );
             if( 0 == atomDec32( &mRef ) )
             {
                 // delete itself
@@ -81,11 +82,9 @@ namespace GN
         ///
         virtual ~RefCounter()
         {
-            if( mRef > 0 )
+            if( 0 != mRef )
             {
-                GN_ERROR(getLogger("GN.base.RefCounter"))(
-                    "destructing a refcounter with its reference counter "
-                    "greater then zero!" );
+                GN_UNEXPECTED_EX( "Destructing reference counted object with non-zero reference counter usually means memory corruption, thus is not allowed!" );
             }
 
             // NULL all weak references
@@ -113,7 +112,7 @@ namespace GN
         ///
         /// reference counter
         ///
-        mutable SInt32 mRef;
+        mutable volatile SInt32 mRef;
 
         mutable std::list<void*> mWeakRefList;
     };

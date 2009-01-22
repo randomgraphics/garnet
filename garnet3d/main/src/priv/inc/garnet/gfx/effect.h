@@ -243,7 +243,10 @@ namespace GN { namespace gfx
         /// Check if effect has a parameter with specific name.
         bool hasGpuProgramParam( const StrA & name ) const { return mUniforms.end() != mUniforms.find( name ); }
 
-        /// Get pointer to specific GPU program. Return dummy pointer for invalid name.
+        /// Get pointer to specific GPU program parameter. Return dummy pointer for invalid name.
+        ///
+        /// Note that the reference counter of the returned parameter is not increaed by calling this function,
+        /// which means you don't have to call decref() for the returned pointer after it is being used.
         GpuProgramParam * getGpuProgramParam( const StrA & name ) const;
 
         /// Assign GPU program parameter to effect

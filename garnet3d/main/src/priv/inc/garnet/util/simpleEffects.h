@@ -38,12 +38,6 @@ namespace GN { namespace util
         {
             mDefaultTexture = NULL;
             mEffect = NULL;
-            mMatrixPvw = NULL;
-            mMatrixWorld = NULL;
-            mMatrixWorldIT = NULL;
-            mLightPos = NULL;
-            mLightColor = NULL;
-            mDiffuseColor = NULL;
         }
         //@}
 
