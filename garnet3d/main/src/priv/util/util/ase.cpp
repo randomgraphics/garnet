@@ -8,6 +8,120 @@ using namespace GN::util;
 static GN::Logger * sLogger = GN::getLogger("GN.util.ase");
 
 ///
+/// raw ASE material (has sub material information)
+///
+struct AseMaterialInternal : public AseMaterial
+{
+    DynaArray<AseMaterialInternal> submaterials; ///< sub material array. could be empty.
+};
+
+///
+/// ASE vertex
+///
+struct AseVertex
+{
+    Vector3f            p; ///< position
+    DynaArray<Vector3f> t; ///< texcoord
+    DynaArray<Vector3f> n; ///< normal
+
+    UInt32 addTexcoord( const Vector3f & v )
+    {
+        for( UInt32 i = 0; i < t.size(); ++i )
+        {
+            if( t[i] == v ) return i;
+        }
+        t.append( v );
+        return (UInt32)( t.size() - 1 );
+    }
+
+    UInt32 addNormal( const Vector3f & v )
+    {
+        for( UInt32 i = 0; i < n.size(); ++i )
+        {
+            if( n[i] == v ) return i;
+        }
+        n.append( v );
+        return (UInt32)( n.size() - 1 );
+    }
+};
+
+///
+/// ASE triangle face
+///
+struct AseFace
+{
+    UInt32   v[3];   ///< vertices (index into AseMesh.vertices)
+    UInt32   t[3];   ///< texcoords (index into AseVertex.t)
+    UInt32   vn[3];  ///< normal (index into AseVertex.n)
+    Vector3f fn;     ///< face normal
+    UInt32   smooth; ///< smooth group ID
+    UInt32   submat; ///< sub material ID
+};
+
+///
+/// ASE face chunks (faces with same sub-material)
+///
+struct AseFaceChunk
+{
+    UInt32            submat; ///< submaterial ID
+    DynaArray<UInt32> faces;  ///< indices into AseMesh.faces
+};
+
+///
+/// ASE mesh object
+///
+struct AseMesh
+{
+    ///
+    /// this group is loaded directly from ASE file.
+    //@{
+    UInt32                  timevalue;
+    DynaArray<AseVertex>    vertices;  ///< vertex array
+    DynaArray<AseFace>      faces;     ///< face array
+    //@}
+
+    //@{
+    DynaArray<AseFaceChunk> chunks; ///< faces sorted by material
+    Boxf                    bbox;   ///< bounding box of the mesh itself
+    //@}
+};
+
+///
+/// ASE node (elemnet for mesh hierachy)
+///
+struct AseNode
+{
+    StrA      parent;
+    StrA      name;
+    Matrix44f transform;
+    Vector3f  pos;
+    Vector3f  rotaxis;
+    float     rotangle; // rotation angle in radian
+    Vector3f  scale;
+    Boxf      bbox;   ///< bounding box of the node itself and its descendants.
+};
+
+///
+/// An complete ASE geometry object that includes a mesh, a node and a meterial
+///
+struct AseGeoObject : public GN::TreeNode<AseGeoObject>
+{
+    AseNode node;
+    AseMesh mesh;
+    UInt32  matid; ///< material ID into global material array
+};
+
+///
+/// Internal ASE scene structure, stores raw ASE information.
+///
+struct AseSceneInternal
+{
+    DynaArray<AseMaterialInternal> materials;
+    DynaArray<AseGeoObject>        objects;
+    AseGeoObject                   root; ///< root object
+};
+
+///
 /// ASE file structure
 ///
 struct AseFile
@@ -21,7 +135,6 @@ struct AseFile
         // read ASE file
         buf.resize( file.size() + 1 );
         size_t readen;
-        buf.resize( file.size() );
         if( !file.read( buf.cptr(), file.size(), &readen ) )
         {
             return false;
@@ -470,7 +583,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadMaterial( AseMaterial & m, AseFile & ase )
+static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
 {
     GN_GUARD;
 
@@ -559,7 +672,7 @@ static bool sReadMaterial( AseMaterial & m, AseFile & ase )
         {
             UInt32 count;
             if( !ase.readInt( count ) ) return false;
-            m.allocSubMaterials( count );
+            m.submaterials.resize( count );
 
             // read sub-materials one by one
             for( UInt32 i = 0; i < count; ++i )
@@ -594,7 +707,7 @@ static bool sReadMaterial( AseMaterial & m, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadMaterials( AseScene & scene, AseFile & ase )
+static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
 {
     GN_GUARD;
 
@@ -878,7 +991,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadGeomObject( AseScene & scene, AseFile & ase )
+static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 {
     GN_GUARD;
 
@@ -941,12 +1054,12 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
                 o.matid = 0;
             }
 
-            AseMaterial & mtl = scene.materials[o.matid];
+            AseMaterialInternal & mtl = scene.materials[o.matid];
 
             // build face chunk array
             if( "Multi/Sub-Object" == mtl.class_ )
             {
-                m.chunks.reserve( mtl.numsub );
+                m.chunks.reserve( mtl.submaterials.size() );
 
                 for( UInt32 i = 0; i < m.faces.size(); ++i )
                 {
@@ -1003,7 +1116,7 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadGroup( AseScene & scene, AseFile & ase )
+static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
 {
     GN_GUARD;
 
@@ -1049,7 +1162,7 @@ static bool sReadGroup( AseScene & scene, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadAse( AseScene & scene, File & file )
+static bool sReadAse( AseSceneInternal & scene, File & file )
 {
     GN_GUARD;
 
@@ -1107,7 +1220,7 @@ static bool sReadAse( AseScene & scene, File & file )
 //
 //
 // -----------------------------------------------------------------------------
-static AseGeoObject * sFindGeoObject( AseScene & scene, const StrA & name )
+static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & name )
 {
     if( name.empty() ) return &scene.root;
     for( AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o )
@@ -1120,7 +1233,7 @@ static AseGeoObject * sFindGeoObject( AseScene & scene, const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sBuildNodeTree( AseScene & scene )
+static bool sBuildNodeTree( AseSceneInternal & scene )
 {
     GN_INFO(sLogger)( "\nBuild node tree..." );
 
@@ -1211,6 +1324,268 @@ static bool sBuildNodeTree( AseScene & scene )
     return true;
 }
 
+/// unique vertex selector
+struct VertexSelector
+{
+    UInt32 p; ///< position (index into AseMesh.vertices)
+    UInt32 t; ///< texcoord (index into AseVertex.t)
+    UInt32 n; ///< normal   (index into AseVertex.n)
+
+    bool operator < ( const VertexSelector & rhs ) const
+    {
+        if( p != rhs.p ) return p < rhs.p;
+        if( t != rhs.t ) return t < rhs.t;
+        return n < rhs.n;
+    }
+};
+
+/// collection of unique items
+template<typename T>
+class ElementCollection
+{
+    typedef std::map<T,UInt32> TypeMap;
+
+    TypeMap      mMap;
+    DynaArray<T> mBuffer;
+
+public:
+
+    ///
+    /// add element into buffer, ignore redundant element.
+    ///
+    UInt32 add( const T & element )
+    {
+        std::pair<TypeMap::iterator,bool> i = mMap.insert( TypeMap::value_type(element,0xbad) );
+
+        if( i.second )
+        {
+            // this is a new element
+            GN_ASSERT( 0xbad == i.first->second );
+            GN_ASSERT( mBuffer.size() + 1 == mMap.size() );
+
+            i.first->second = (UInt32)( mBuffer.size() );
+
+            mBuffer.append( element );
+        }
+
+        return i.first->second;
+    }
+
+    ///
+    /// get number of vertices in buffer
+    ///
+    size_t size() const { GN_ASSERT( mMap.size() == mBuffer.size() ); return mBuffer.size(); }
+
+    ///
+    /// return specific element
+    ///
+    const T & operator[]( size_t idx ) const
+    {
+        GN_ASSERT( idx < mBuffer.size() );
+        return mBuffer[idx];
+    }
+
+    ///
+    /// return specific element
+    ///
+    T & operator[]( size_t idx )
+    {
+        GN_ASSERT( idx < mBuffer.size() );
+        return mBuffer[idx];
+    }
+};
+typedef ElementCollection<VertexSelector> VertexCollection;
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool operator==( const AseMaterial & a, const AseMaterial & b )
+{
+    // TODO: check all fields.
+    return a.name == b.name;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static UInt32
+sGetFaceChunkMatID(
+    AseScene               & dst,
+    const AseSceneInternal & src,
+    UInt32                   matid,
+    UInt32                   submat )
+{
+    const AseMaterial * mat;
+
+    if( "Multi/Sub-Object" == src.materials[matid].class_ )
+    {
+        mat = &src.materials[matid].submaterials[submat];
+    }
+    else
+    {
+        mat = &src.materials[matid];
+    }
+
+    for( UInt32 i = 0; i < dst.materials.size(); ++i )
+    {
+        if( dst.materials[i] == *mat )
+        {
+            // this is a existing material
+            return i;
+        }
+    }
+
+    // this is a new material
+    UInt32 newidx = dst.materials.size();
+    dst.materials.resize( dst.materials.size() + 1 );
+    dst.materials.back() == *mat;
+    return newidx;
+}
+
+struct OutputVertex
+{
+    Vector3f position;
+    Vector3f normal;
+    Vector2f texcoord;
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const AseGeoObject & obj )
+{
+    GN_GUARD;
+
+    dst.meshes.resize( dst.meshes.size() + 1 );
+
+    gfx::MeshDesc & dstmesh = dst.meshes.back();
+
+    // setup constant mesh properties
+    dstmesh.vtxfmt.numElements = 3;
+    dstmesh.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
+    dstmesh.vtxfmt.elements[0].offset = 0;
+    dstmesh.vtxfmt.elements[0].setBinding( "position", 0 );
+    dstmesh.vtxfmt.elements[1].format = COLOR_FORMAT_FLOAT3;
+    dstmesh.vtxfmt.elements[1].offset = 12;
+    dstmesh.vtxfmt.elements[1].setBinding( "normal", 0 );
+    dstmesh.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT2;
+    dstmesh.vtxfmt.elements[2].offset = 24;
+    dstmesh.vtxfmt.elements[2].setBinding( "texcoord", 0 );
+    dstmesh.prim = TRIANGLE_LIST;
+    dstmesh.strides[0] = sizeof(OutputVertex);
+
+    // generate mesh
+    VertexCollection  vc;
+    VertexSelector    vs;
+    DynaArray<UInt32> ib; // index into vertex collection
+    for( size_t i = 0; i < obj.mesh.chunks.size(); ++i )
+    {
+        const AseFaceChunk & c = obj.mesh.chunks[i];
+
+        dst.subsets.resize( dst.subsets.size() + 1 );
+        AseMeshSubset & subset = dst.subsets.back();
+
+        subset.matid    = sGetFaceChunkMatID( dst, src, obj.matid, c.submat );
+        subset.meshid   = dst.meshes.size() - 1;
+        subset.startidx = ib.size();
+        subset.numidx   = c.faces.size() * 3;
+
+        UInt32 minidx = 0xFFFFFFFF;
+        UInt32 maxidx = 0;
+
+        for( size_t i = 0; i < c.faces.size(); ++i )
+        {
+            const AseFace & f = obj.mesh.faces[c.faces[i]];
+
+            for( size_t i = 0; i < 3; ++i )
+            {
+                vs.p = f.v[i];
+                vs.t = f.t[i];
+                vs.n = f.vn[i];
+
+                UInt32 idx = vc.add( vs );
+                ib.append( idx );
+
+                if( idx < minidx ) minidx = idx;
+                if( idx > maxidx ) maxidx = idx;
+            }
+        }
+
+        subset.startvtx = minidx;
+        subset.numvtx   = maxidx - minidx;
+    }
+
+    // copy vertices into destination scene
+    OutputVertex * vertices = (OutputVertex*)heapAlloc( sizeof(OutputVertex) * vc.size() );
+    if( NULL == vertices ) return false;
+    for( size_t i = 0; i < vc.size(); ++i )
+    {
+        const VertexSelector & vs = vc[i];
+
+        const AseVertex & srcvert = obj.mesh.vertices[vs.p];
+
+        const Vector3f & srctexcoord = srcvert.t[vs.t];
+
+        vertices[i].position = srcvert.p;
+        vertices[i].normal   = srcvert.n[vs.n];
+        vertices[i].texcoord = Vector2f( srctexcoord.x, srctexcoord.y );
+    }
+    dstmesh.numvtx = vc.size();
+    dstmesh.vertices[0] = vertices;
+    dst.meshdata.append( vertices );
+
+    // copy index data into destination scene
+    dstmesh.numidx = ib.size();
+    if( vc.size() > 0x10000 )
+    {
+        // 32bit index buffer
+        void * indices = heapAlloc( sizeof(UInt32) * ib.size() );
+        if( NULL == indices ) return false;
+        memcpy( indices, ib.cptr(), sizeof(UInt32) * ib.size() );
+        dstmesh.idx32 = true;
+        dstmesh.indices = indices;
+        dst.meshdata.append( indices );
+    }
+    else
+    {
+        // 16bit index buffer
+        UInt16 * indices = (UInt16*)heapAlloc( sizeof(UInt16) * ib.size() );
+        for( size_t i = 0; i < ib.size(); ++i )
+        {
+            GN_ASSERT( ib[i] < 0x10000 );
+            indices[i] = (UInt16)ib[i];
+        }
+        dstmesh.idx32 = false;
+        dstmesh.indices = indices;
+        dst.meshdata.append( indices );
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
+{
+    GN_GUARD;
+
+    for( size_t i = 0; i < src.objects.size(); ++i )
+    {
+        sWriteGeoObject( dst, src, src.objects[i] );
+    }
+
+    dst.bbox = src.root.node.bbox;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // public function
 // *****************************************************************************
@@ -1218,9 +1593,27 @@ static bool sBuildNodeTree( AseScene & scene )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::util::AseScene::clear()
+{
+    materials.clear();
+    meshes.clear();
+    subsets.clear();
+
+    for( size_t i = 0; i < meshdata.size(); ++i )
+    {
+        heapFree( meshdata[i] );
+    }
+    meshdata.clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::util::loadAseSceneFromFile( AseScene & scene, File & file )
 {
-    if( !sReadAse( scene, file ) ) return false;
-    if( !sBuildNodeTree( scene ) ) return false;
+    AseSceneInternal internal;
+    if( !sReadAse( internal, file ) ) return false;
+    if( !sBuildNodeTree( internal ) ) return false;
+    if( !sWriteScene( scene, internal ) ) return false;
     return true;
 }

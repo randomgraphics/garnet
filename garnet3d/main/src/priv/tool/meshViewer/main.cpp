@@ -7,11 +7,14 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 
-const char * meshFileName;
-Renderer * rndr;
-ArcBall    arcball; // arcball camera
-float      radius;  // distance from camera to object
-Matrix44f  proj, view;
+const char        * filename;
+Renderer          * rndr;
+ArcBall             arcball; // arcball camera
+float               radius;  // distance from camera to object
+Matrix44f           proj, view;
+AseScene            ase;
+DynaArray<Mesh*>    meshes;
+SimpleDiffuseEffect effect;
 
 void updateRadius()
 {
@@ -33,8 +36,23 @@ void updateRadius()
 
 bool init()
 {
+    // load meshes
+    DiskFile file;
+    if( !file.open( filename, "rb" ) ) return false;
+    if( !loadAseSceneFromFile(ase, file) ) return false;
+    for( size_t i = 0; i < ase.meshes.size(); ++i )
+    {
+        AutoObjPtr<Mesh> m( new Mesh(*rndr) );
+        if( !m || !m->init(ase.meshes[i]) ) return false;
+        meshes.append( m );
+        m.detach();
+    }
+
+    // initialize effect
+    if( !effect.init( *rndr ) ) return false;
+
     // update camera stuff
-    radius = 2.0f; // initial radius should be 2.0 * mesh-bounding-sphere-radius
+    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 2.0f;
     updateRadius();
 
     // initialize arcball
@@ -48,6 +66,14 @@ bool init()
 
 void quit()
 {
+    ase.clear();
+
+    for( size_t i = 0; i < meshes.size(); ++i )
+    {
+        delete meshes[i];
+    }
+
+    effect.quit();
 }
 
 void onAxisMove( Axis a, int d )
@@ -59,10 +85,6 @@ void onAxisMove( Axis a, int d )
         if( radius < 0.1f ) radius = 0.1f;
         updateRadius();
     }
-}
-
-void update( double )
-{
 }
 
 void draw()
@@ -103,7 +125,6 @@ int run()
 
         // render
         rndr->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        update( fps.getLastFrameElasped() );
         draw();
         drawCoords();
         rndr->present();
@@ -138,19 +159,19 @@ struct InputInitiator
     }
 };
 
-int main( int, const char *[] )
+int main( int argc, const char * argv[] )
 {
     printf( "\nGarnet mesh viewer V0.1.\n" );
 
     enableCRTMemoryCheck();
 
-    /* parse command line
+    // parse command line
     if( argc < 2 )
     {
         printHelp( argv[0] );
         return -1;
     }
-    meshFileName = argv[1];*/
+    filename = argv[1];
 
     // create renderer
     RendererOptions o;

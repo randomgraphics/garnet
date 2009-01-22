@@ -7,10 +7,10 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 const char * glslvscode =
-    "uniform vec4 lightpos; \n"
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
     "uniform mat4 wit; \n"
+    "uniform vec4 lightpos; \n"
     "varying vec3 lightdir; // light direction in world space \n"
     "varying vec3 normal; // normal in world space \n"
     "varying vec2 texcoords; \n"
@@ -24,6 +24,7 @@ const char * glslvscode =
 
 const char * glslpscode =
     "uniform vec4 lightColor; \n"
+    "uniform vec4 diffuseColor; \n"
     "uniform sampler2D t0; \n"
     "varying vec3 lightdir; // light direction in world space \n"
     "varying vec3 normal; // normal in world space \n"
@@ -59,14 +60,19 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
     ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
-    ed.textures["TEX_DIFFUSE"]; // create a texture parameter named "diffuse"
+    ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
+    ed.uniforms["DIFFUSE_COLOR"].size = sizeof(Vector4f);
+    ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
     ed.shaders["glsl"].gpd.lang = GPL_GLSL;
     ed.shaders["glsl"].gpd.vs.code = glslvscode;
     ed.shaders["glsl"].gpd.ps.code = glslpscode;
     ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["glsl"].uniforms["world"] = "MATRIX_WORLD";
     ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
-    ed.shaders["glsl"].textures["t0"] = "TEXTURE_DIFFUSE";
+    ed.shaders["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.shaders["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
+    ed.shaders["glsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
+    ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
     mEffect = new Effect( r );
@@ -81,7 +87,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     INIT_GPP( mMatrixWorld   , "MATRIX_WORLD" );
     INIT_GPP( mMatrixWorldIT , "MATRIX_WORLD_IT" );
     INIT_GPP( mLightPos      , "LIGHT0_POSITION" );
-    INIT_GPP( mLightColor    , "LIGHT0_DIRECTION" );
+    INIT_GPP( mLightColor    , "LIGHT0_COLOR" );
+    INIT_GPP( mDiffuseColor  , "DIFFUSE_COLOR" );
 
     mTexture = mEffect->getTextureParam( "TEXTURE_DIFFUSE" );
     GN_ASSERT( mTexture );
@@ -107,6 +114,7 @@ void GN::util::SimpleDiffuseEffect::quit()
     safeDecref( mMatrixWorldIT );
     safeDecref( mLightPos );
     safeDecref( mLightColor );
+    safeDecref( mDiffuseColor );
     mDrawable.clear();
 
     // standard quit procedure
@@ -144,6 +152,14 @@ void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 {
     mLightColor->set( clr );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
+{
+    mDiffuseColor->set( clr );
 }
 
 //
