@@ -514,11 +514,7 @@ namespace GN
         LoggerContainer() : mRootLogger("ROOT",mMutex)
         {
             // config root logger
-#if GN_BUILD_DEBUG
             mRootLogger.setLevel( Logger::LL_TRACE );
-#else
-            mRootLogger.setLevel( Logger::LL_INFO );
-#endif
             mRootLogger.setEnabled( true );
             mRootLogger.addReceiver( &mCr );
             mRootLogger.addReceiver( &mFr );

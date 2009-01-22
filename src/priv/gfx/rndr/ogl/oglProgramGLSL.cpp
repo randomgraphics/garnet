@@ -30,6 +30,31 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
+static GN::StrA sAddLineCount( const GN::StrA & in )
+{
+    using namespace GN;
+
+    GN::StrA out( "(  1) : " );
+
+    int line = 1;
+    for( const char * s = in.cptr(); *s; ++s )
+    {
+        if( '\n' == *s )
+        {
+            out.append( strFormat( "\n(%3d) : ", ++line ) );
+        }
+        else
+        {
+            out.append( *s );
+        }
+    }
+
+    return out;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GLhandleARB
 sCreateShader( const StrA & code, GLenum usage )
 {
@@ -95,7 +120,7 @@ sCreateShader( const StrA & code, GLenum usage )
             "\n========= compile error ========\n"
             "%s\n"
             "==================================\n",
-            code_str, buf );
+            sAddLineCount(code_str).cptr(), buf );
         return false;
     }
 

@@ -89,6 +89,16 @@ void onAxisMove( Axis a, int d )
 
 void draw()
 {
+    Vector3f   position = arcball.getTranslation();
+    Matrix44f  rotation = arcball.getRotationMatrix44();
+    Matrix44f  world    = rotation * Matrix44f::sTranslate( position );
+    effect.setTransformation( proj, view, world );
+
+    for( size_t i = 0; i < meshes.size(); ++i )
+    {
+        effect.setMesh( *meshes[i], &ase.subsets[i] );
+        effect.draw();
+    }
 }
 
 void drawCoords()

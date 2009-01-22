@@ -160,7 +160,7 @@ namespace GN
             virtual ~GeometryNode();
 
             /// add new geometry block to the node
-            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::Mesh * mesh, size_t firstidx, size_t numidx );
+            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::Mesh * mesh, const gfx::MeshSubset * subset = NULL );
 
             /// get number of geometry blocks
             virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }

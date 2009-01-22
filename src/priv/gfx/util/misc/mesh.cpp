@@ -139,10 +139,7 @@ void GN::gfx::Mesh::quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::Mesh::applySubsetToDrawable(
-    Drawable & drawable,
-    size_t     firstidx,
-    size_t     numidx ) const
+GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset ) const
 {
     // vertex format
     drawable.rc.vtxfmt = mDesc.vtxfmt;
@@ -157,34 +154,26 @@ GN::gfx::Mesh::applySubsetToDrawable(
     // index buffers
     drawable.rc.idxbuf = mIdxBuf.gpudata;
 
+    MeshSubset fullmesh;
+    if( NULL == subset )
+    {
+        fullmesh.startvtx = 0;
+        fullmesh.numvtx = mDesc.numvtx;
+        fullmesh.startidx = 0;
+        fullmesh.numidx = mDesc.numidx;
+        subset = &fullmesh;
+    }
+    else if( subset->startvtx >= mDesc.numvtx || (subset->startvtx+subset->numvtx) > mDesc.numvtx ||
+             subset->startidx >= mDesc.numidx || (subset->startidx+subset->numidx) > mDesc.numidx )
+    {
+        GN_ERROR(sLogger)( "invalid mesh subset : out of range" );
+    }
+
     // draw parameters
-    if( 0 == mDesc.numidx )
-    {
-        // non-indexed mesh
-
-        if( firstidx >= mDesc.numvtx || (firstidx+numidx) > mDesc.numvtx )
-        {
-            GN_ERROR(sLogger)( "out of vertex buffer range" );
-        }
-
-        drawable.prim      = mDesc.prim;
-        drawable.numvtx    = numidx;
-        drawable.startvtx  = firstidx;
-    }
-    else
-    {
-        // indexed mesh
-
-        if( firstidx >= mDesc.numidx || (firstidx+numidx) > mDesc.numidx )
-        {
-            GN_ERROR(sLogger)( "out of index buffer range" );
-        }
-
-        drawable.prim      = mDesc.prim;
-        drawable.numvtx    = mDesc.numvtx;
-        drawable.startvtx  = 0;
-        drawable.numidx    = numidx;
-        drawable.minvtxidx = 0;
-        drawable.startidx  = firstidx;
-    }
+    drawable.prim      = mDesc.prim;
+    drawable.numvtx    = subset->numvtx;
+    drawable.startvtx  = subset->startvtx;
+    drawable.numidx    = subset->numidx;
+    drawable.minvtxidx = 0;
+    drawable.startidx  = subset->startidx;
 }

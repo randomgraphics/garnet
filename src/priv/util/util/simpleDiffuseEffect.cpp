@@ -16,9 +16,8 @@ const char * glslvscode =
     "varying vec2 texcoords; \n"
     "void main() { \n"
     "   gl_Position = pvw * gl_Vertex; \n"
-    "   posworld    = world * gl_Vertex; \n"
-    "   lightdir    = normalize( lightpos - posworld ); \n"
-    "   normal      = (wit * gl_Normal).xyz; \n"
+    "   lightdir    = normalize( (lightpos - world * gl_Vertex).xyz ); \n"
+    "   normal      = (wit * vec4(gl_Normal,0)).xyz; \n"
     "   texcoords   = gl_Vertex.xy; \n"
     "}";
 
@@ -30,11 +29,11 @@ const char * glslpscode =
     "varying vec3 normal; // normal in world space \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   float3 L    = normalize( lightdir ); \n"
-    "   float3 N    = normalize( normal ); \n"
-    "   float  diff = clamp( dot( L, N ), 0, 1 ); \n"
-    "   float4 tex  = texture2D( t0, texcoords ); \n"
-    "   gl_FragColor = diff * lightColor * tex; \n"
+    "   vec3  L    = normalize( lightdir ); \n"
+    "   vec3  N    = normalize( normal ); \n"
+    "   float diff = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   vec4  tex  = texture2D( t0, texcoords ); \n"
+    "   gl_FragColor = (diff * lightColor + diffuseColor * tex) / 2.0; \n"
     "}";
 
 // *****************************************************************************
@@ -58,6 +57,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
 
     EffectDesc ed;
     ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
+    ed.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
     ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
     ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
@@ -78,17 +78,18 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     mEffect = new Effect( r );
     if( !mEffect->init( ed ) ) return failure();
 
-#define INIT_GPP( x, name ) \
+#define INIT_GPP( x, name, defval ) \
     GN_ASSERT( mEffect->hasGpuProgramParam( name ) ); \
     x = mEffect->getGpuProgramParam( name ); \
-    GN_ASSERT( x );
+    GN_ASSERT( x ); \
+    x->set( defval );
 
-    INIT_GPP( mMatrixPvw     , "MATRIX_PVW" );
-    INIT_GPP( mMatrixWorld   , "MATRIX_WORLD" );
-    INIT_GPP( mMatrixWorldIT , "MATRIX_WORLD_IT" );
-    INIT_GPP( mLightPos      , "LIGHT0_POSITION" );
-    INIT_GPP( mLightColor    , "LIGHT0_COLOR" );
-    INIT_GPP( mDiffuseColor  , "DIFFUSE_COLOR" );
+    INIT_GPP( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
+    INIT_GPP( mMatrixWorld   , "MATRIX_WORLD"    , Matrix44f::sIdentity() );
+    INIT_GPP( mMatrixWorldIT , "MATRIX_WORLD_IT" , Matrix44f::sIdentity() );
+    INIT_GPP( mLightPos      , "LIGHT0_POSITION" , Vector4f(0,0,0,0) );
+    INIT_GPP( mLightColor    , "LIGHT0_COLOR"    , Vector4f(1,1,1,1) );
+    INIT_GPP( mDiffuseColor  , "DIFFUSE_COLOR"   , Vector4f(1,1,1,1) );
 
     mTexture = mEffect->getTextureParam( "TEXTURE_DIFFUSE" );
     GN_ASSERT( mTexture );
@@ -173,9 +174,9 @@ void GN::util::SimpleDiffuseEffect::setDiffuseTexture( gfx::Texture * tex )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setMesh( gfx::Mesh & mesh, size_t firstidx, size_t numidx )
+void GN::util::SimpleDiffuseEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
 {
-    mesh.applySubsetToDrawable( mDrawable, firstidx, numidx );
+    mesh.applyToDrawable( mDrawable, subset );
 }
 
 //

@@ -58,7 +58,7 @@ namespace GN { namespace util
         void setLightColor( const Vector4f & ); ///< set light color
         void setDiffuseColor( const Vector4f & ); ///< set diffuse color
         void setDiffuseTexture( gfx::Texture * ); ///< set to NULL to use pure white texture.
-        void setMesh( gfx::Mesh & mesh, size_t firstidx, size_t numidx );
+        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL );
         void draw();
         //@}
 

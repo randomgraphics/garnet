@@ -677,7 +677,13 @@ namespace GN { namespace gfx
         RenderTargetTexture dsrt;                                    ///< depth stencil render target
 
         ///
+        /// ctor
+        ///
+        RendererContext() { resetToDefault(); }
+
+        ///
         /// reset context to default value
+        ///
         void resetToDefault()
         {
             // clear all render states first

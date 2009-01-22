@@ -108,7 +108,7 @@ GN::scene::GeometryNode::~GeometryNode()
 ///
 /// -----------------------------------------------------------------------------
 void
-GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, const gfx::Mesh * mesh, size_t firstidx, size_t numidx )
+GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, const gfx::Mesh * mesh, const gfx::MeshSubset * subset )
 {
     if( NULL == inputEffect || NULL == mesh )
     {
@@ -159,7 +159,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     {
         Drawable & d = b.drawables[i];
         b.effect.applyToDrawable( d, i );
-        mesh->applySubsetToDrawable( d, firstidx, numidx );
+        mesh->applyToDrawable( d, subset );
     }
 }
 

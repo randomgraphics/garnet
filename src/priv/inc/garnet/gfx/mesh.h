@@ -31,6 +31,15 @@ namespace GN { namespace gfx
         };
     };
 
+    /// define a subset of the mesh
+    struct MeshSubset
+    {
+        size_t startvtx;
+        size_t numvtx;
+        size_t startidx;
+        size_t numidx;
+    };
+
     ///
     /// Graphics mesh class
     ///
@@ -69,23 +78,9 @@ namespace GN { namespace gfx
         const MeshDesc & getDesc() const { return mDesc; }
 
         ///
+        /// apply mesh to drawable
         ///
-        /// apply subset of the mesh to drawable
-        ///
-        /// \param numidx   Number of indices (or vertices, for non-indexed mesh)
-        ///
-        void applySubsetToDrawable( Drawable & drawable, size_t firstidx, size_t numidx ) const;
-
-        ///
-        /// link whole mesh to drawable
-        ///
-        void applyToDrawable( Drawable & drawable ) const
-        {
-            applySubsetToDrawable(
-                drawable,
-                0,
-                (0==mDesc.numidx) ? mDesc.numvtx : mDesc.numidx );
-        }
+        void applyToDrawable( Drawable & drawable, const MeshSubset * subset = NULL ) const;
 
         // ********************************
         // private variables

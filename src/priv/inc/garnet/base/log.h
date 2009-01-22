@@ -45,11 +45,6 @@
 #define GN_INFO( logger )  GN_LOG( logger, GN::Logger::LL_INFO )
 
 ///
-/// output verbose message
-///
-#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VERBOSE )
-
-///
 /// output debug message (only effective in debug build)
 ///
 #if GN_BUILD_DEBUG
@@ -63,6 +58,16 @@
 #define GN_TRACE_BEGIN( logger ) GN_LOG_BEGIN( logger, GN::Logger::LL_TRACE )
 #define GN_TRACE_END()           GN_LOG_END()
 //@}
+
+///
+/// output verbose message
+///
+#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VERBOSE )
+
+///
+/// output very-verbose message
+///
+#define GN_VVERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VVERBOSE )
 
 namespace GN
 {
@@ -78,12 +83,13 @@ namespace GN
         ///
         enum LogLevel
         {
-            LL_FATAL   = 10,  ///< fatal error message
-            LL_ERROR   = 20,  ///< error message
-            LL_WARN    = 30,  ///< warning message
-            LL_INFO    = 40,  ///< informational message
-            LL_VERBOSE = 50,  ///< detail message
-            LL_TRACE   = 200, ///< debugging (only available in debug build)
+            LL_FATAL    = 10,  ///< fatal error message
+            LL_ERROR    = 20,  ///< error message
+            LL_WARN     = 30,  ///< warning message
+            LL_INFO     = 40,  ///< informational message
+            LL_TRACE    = 50,  ///< debug only information (only available in debug build)
+            LL_VERBOSE  = 60,  ///< verbose message
+            LL_VVERBOSE = 70,  ///< very verbose message
         };
 
         ///
