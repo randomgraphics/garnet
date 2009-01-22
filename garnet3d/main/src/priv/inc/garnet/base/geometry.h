@@ -1440,6 +1440,12 @@ namespace GN
         {
             return translate( v.x, v.y, (T)0 );
         }
+        static Matrix44 sTranslate( const Vector3<T> & v )
+        {
+            Matrix44 m;
+            m.translate( v );
+            return m;
+        }
         Matrix44 & lookAtLh( const Vector3<T> & eye,
                              const Vector3<T> & to,
                              const Vector3<T> & up );

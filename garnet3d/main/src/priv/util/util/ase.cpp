@@ -149,9 +149,9 @@ struct AseFile
         return true;
     }
 
-    void err( const StrA & msg ) { GN_ERROR(sLogger)( "line %d : %s", line, msg.cptr() ); }
-    void warn( const StrA & msg ) { GN_WARN(sLogger)( "line %d : %s", line, msg.cptr() ); }
-    void info( const StrA & msg ) { GN_INFO(sLogger)( "line %d : %s", line, msg.cptr() ); }
+    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
+    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
+    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.cptr() ); }
 
     enum ScanOptionEnum
     {
@@ -175,13 +175,18 @@ struct AseFile
         ScanOption( BitFields bits ) : u32(bits) {}
     };
 
+    static inline bool isWhiteSpace( char ch )
+    {
+        return ' ' == ch || '\t' == ch || '\n' == ch || '\r' == ch;
+    }
+
     ///
     /// skip white spaces
     ///
     void skipWhiteSpaces()
     {
         GN_ASSERT( str );
-        while( ' ' == *str || '\t' == *str || '\n' == *str )
+        while( isWhiteSpace( *str ) )
         {
             if( '\n' == *str ) ++line;
             ++str;
@@ -195,13 +200,13 @@ struct AseFile
     {
         GN_ASSERT( str );
 
+        skipWhiteSpaces();
+
         if( 0 == str || 0 == *str )
         {
-            if( !option.silence ) info( "EOF" );
+            if( !option.silence ) verbose( "EOF" );
             return 0;
         }
-
-        skipWhiteSpaces();
 
         if ( '"' == *str )
         {
@@ -242,7 +247,7 @@ struct AseFile
         {
             const char * r = str;
 
-            while( ' ' != *str && '\t' != *str && '\n' != *str && 0 != *str )
+            while( !isWhiteSpace( *str ) )
             {
                 ++str;
             }
@@ -559,7 +564,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else if( 0 == strCmp( token, "}" ) )
@@ -664,7 +669,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             }
             else
             {
-                ase.info( strFormat( "skip unsupport map %s", token ) );
+                ase.verbose( strFormat( "skip unsupport map %s", token ) );
                 if( !ase.skipNode() ) return false;
             }
         }
@@ -684,7 +689,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else if( 0 == strCmp( token, "}" ) )
@@ -711,7 +716,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
 {
     GN_GUARD;
 
-    ase.info( "Read materials ..." );
+    ase.verbose( "Read materials ..." );
 
     if( !ase.readBlockStart() ) return false;
 
@@ -971,7 +976,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else if( 0 == strCmp( token, "}" ) )
@@ -1013,7 +1018,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.info( strFormat( "read geometry object '%s' ...", o.node.name ) );
+            ase.verbose( strFormat( "read geometry object '%s' ...", o.node.name ) );
         }
         else if( 0 == strCmp( token, "*NODE_PARENT" ) )
         {
@@ -1039,7 +1044,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else if( 0 == strCmp( token, "}" ) )
@@ -1137,7 +1142,7 @@ static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else if( 0 == strCmp( token, "}" ) )
@@ -1201,7 +1206,7 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
         }
         else if( '*' == *token )
         {
-            ase.info( strFormat( "skip node %s", token ) );
+            ase.verbose( strFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else
@@ -1235,7 +1240,7 @@ static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & nam
 // -----------------------------------------------------------------------------
 static bool sBuildNodeTree( AseSceneInternal & scene )
 {
-    GN_INFO(sLogger)( "\nBuild node tree..." );
+    GN_INFO(sLogger)( "\nASE: Build node tree:" );
 
     // setup root node
     scene.root.node.name = "root";
@@ -1299,9 +1304,9 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     int level = 0;
     while( n )
     {
-        StrA s;
+        StrA s( "    " );
 
-        for( int i = 0; i < level; ++i ) s += '-';
+        for( int i = 0; i < level; ++i ) s += "- ";
         s += strFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
             n->node.name.cptr(),

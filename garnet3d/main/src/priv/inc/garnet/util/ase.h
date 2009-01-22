@@ -55,14 +55,10 @@ namespace GN { namespace util
     ///
     /// ase mesh subset
     ///
-    struct AseMeshSubset
+    struct AseMeshSubset : public gfx::MeshSubset
     {
-        size_t matid;      ///< index into AseScene::materials array
-        size_t meshid;     ///< index into AseScene::meshes array
-        size_t startvtx;
-        size_t numvtx;
-        size_t startidx;
-        size_t numidx;
+        size_t matid;  ///< index into AseScene::materials array
+        size_t meshid; ///< index into AseScene::meshes array
     };
 
     ///

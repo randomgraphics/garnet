@@ -4,7 +4,7 @@
 static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
 
 // use to output very detailed debug information specific to arcball class
-#define ARCBALL_TRACE GN_LOG( sLogger, 0x1000 )
+#define ARCBALL_TRACE GN_LOG( sLogger, GN::Logger::LL_VVERBOSE )
 
 // *****************************************************************************
 // local functions
