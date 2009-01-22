@@ -55,7 +55,7 @@ namespace GN
             return &x;
         }
 
-        pointer allocate( size_type count, const void * = 0 )
+        pointer allocate( size_type count )
         {
             return (pointer)heapAlloc( count * sizeof(T) );
         }
@@ -65,7 +65,7 @@ namespace GN
             heapFree( ptr );
         }
 
-        void construct( pointer ptr, const T & x )
+        void construct( pointer ptr, const_reference x )
         {
             new (ptr) T(x);
         }
@@ -81,46 +81,6 @@ namespace GN
             return ( 0 < count ? count : 1 );
         }
         /// \endcond
-    };
-
-    ///
-    /// Standard allocator using global new and delete operator.
-    ///
-    /// Follow interface of this class, when defining customized allocator.
-    ///
-    template<class T>
-    class StandardAllocator
-    {
-    public:
-
-        ///
-        /// Rebind to other type
-        ///
-        template<class T2>
-        struct Rebind
-        {
-            ///
-            /// allocator class suitable for class T2.
-            ///
-            typedef StlAllocator<T2> Other;
-        };
-
-        ///
-        /// do allocation, call constructor(s) as well.
-        ///
-        static T * sAlloc( size_t count )
-        {
-            return new T[count];
-        }
-
-        ///
-        /// do deallocation, call destructor(s) as well.
-        ///
-        static void sDealloc( T * p, size_t count )
-        {
-            ((void)(count)); // unused parameter
-            delete [] p;
-        }
     };
 }
 
