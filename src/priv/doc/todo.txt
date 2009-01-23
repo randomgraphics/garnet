@@ -1,6 +1,8 @@
 - 程序中标注TODO的地方
 
 - p0
+  - fix mtrndr memory leak,
+  - remove static signals in renderer and input class.
   - cross platform renderer, again...
     - why: ease to use.
     - rule #1: portability has priority then performance.
