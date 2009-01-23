@@ -46,13 +46,13 @@ namespace GN { namespace gfx
 
         // parameters for DRAW_PRIMITIVE
         PrimitiveType prim;
-        size_t        numvtx;
         size_t        startvtx;
+        size_t        numvtx;
 
         // additional parameters for DRAW_INDEXED_PRIMITIVE
-        size_t        numidx;
-        size_t        minvtxidx;
         size_t        startidx;
+        size_t        numidx;
+        size_t        basevtx;
 
         ///
         /// clear to empty drawable

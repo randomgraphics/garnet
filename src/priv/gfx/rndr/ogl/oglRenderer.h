@@ -251,8 +251,8 @@ namespace GN { namespace gfx
         virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
+                                  size_t        basevtx,
                                   size_t        startvtx,
-                                  size_t        minvtxidx,
                                   size_t        numvtx,
                                   size_t        startidx );
         virtual void draw( PrimitiveType prim,

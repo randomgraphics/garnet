@@ -202,8 +202,8 @@ int main( int, const char *[] )
     RendererOptions o;
     o.api = API_OGL;
 
-    Renderer * r = createMultiThreadRenderer( o );
-    //Renderer * r = createSingleThreadRenderer( o );
+    //Renderer * r = createMultiThreadRenderer( o );
+    Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
