@@ -48,54 +48,166 @@ namespace GN
     /// Fixed size array with supporting to common array operations
     /// like push, pop, insert, remove and etc.
     ///
+    /// \todo Fix issues using with class with non-trival constructor and destructor
+    ///
     template<class T, size_t N>
     class StackArray
     {
-        T mElements[N];
+        UInt8  mBuffer[sizeof(T)*N];
         size_t mCount;
 
-        void copyElements( T * dst, const T * src, size_t count )
+        /// default constructor
+        static inline void ctor( T * ptr, size_t count )
         {
-            GN_ASSERT( 0 == count || dst && src );
-            for( size_t i = 0; i < count; ++i )
+
+            for( size_t i = 0; i < count; ++i, ++ptr )
             {
-                dst[i] = src[i];
+                new (ptr) T;
             }
+        }
+
+        /// copy constructor
+        static inline void cctor( T * ptr, const T & src )
+        {
+            new (ptr) T(src);
+        }
+
+        /// destructor
+        static inline void dtor( T * ptr )
+        {
+            ptr->T::~T();
+        }
+
+        void doClear()
+        {
+            T * p = cptr();
+            for( size_t i = 0; i < mCount; ++i, ++p )
+            {
+                dtor( p );
+            }
+            mCount = 0;
         }
 
         void doClone( const StackArray & other )
         {
-            copyElements( mElements, other.mElements, other.mCount );
+            T       * dst = cptr();
+            const T * src = other.cptr();
+
+            size_t mincount = min<size_t>( mCount, other.mCount );
+            for( size_t i = 0; i < mincount; ++i )
+            {
+                dst[i] = src[i];
+            }
+
+            // destruct extra objects, only when other.mCount < mCount
+            for( size_t i = other.mCount; i < mCount; ++i )
+            {
+                dtor( dst + i );
+            }
+
+            // copy-construct new objects, only when mCount < other.mCount
+            for( size_t i = mCount; i < other.mCount; ++i )
+            {
+                cctor( dst + i, src[i] );
+            }
+
             mCount = other.mCount;
         }
 
         void doInsert( size_t position, const T & t )
         {
             GN_ASSERT( mCount <= N );
-            if( N == mCount ) { GN_WARN(getLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" ); return; }
-            if( position > mCount ) { GN_WARN(getLogger("GN.base.StackArray"))( "invalid insert position." ); return; }
+
+            if( N == mCount )
+            {
+                GN_ERROR(getLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
+                return;
+            }
+
+            if( position > mCount )
+            {
+                GN_ERROR(getLogger("GN.base.StackArray"))( "invalid insert position." );
+                return;
+            }
+
+            T * p = cptr();
+
+            // construct last element
+            ctor( p + mCount, 1 );
+
+            // move elements
             for( size_t i = mCount; i > position; --i )
             {
-                mElements[i] = mElements[i-1];
+                p[i] = p[i-1];
             }
-            mElements[position] = t;
+
+            // insert new elements
+            p[position] = t;
+
             ++mCount;
         }
 
         void doErase( size_t position )
         {
-            if( position >= mCount ) { GN_WARN(getLogger("GN.base.StackArray"))( "Invalid erase position" ); return; }
+            if( position >= mCount )
+            {
+                GN_ERROR(getLogger("GN.base.StackArray"))( "Invalid erase position" );
+                return;
+            }
+
             --mCount;
+
+            T * p = cptr();
+
+            // move elements
             for( size_t i = position; i < mCount; ++i )
             {
-                mElements[i] = mElements[i+1];
+                p[i] = p[i+1];
             }
+
+            // destruct last element
+            dtor( p + mCount );
+        }
+
+        void doResize( size_t count )
+        {
+            if( count == mCount ) return; // shortcut for redundant call.
+
+            if( count > N )
+            {
+                GN_ERROR(getLogger("GN.base.StackArray"))("count is too large!");
+                return;
+            }
+
+            T * p = cptr();
+
+            // destruct extra objects, only when count < mCount
+            for( size_t i = count; i < mCount; ++i )
+            {
+                dtor( p + i );
+            }
+
+            // construct new objects, only when mCount < count
+            for( size_t i = mCount; i < count; ++i )
+            {
+                ctor( p + i, 1 );
+            }
+
+            mCount = count;
         }
 
         bool equal( const StackArray & other ) const
         {
             if( mCount != other.mCount ) return false;
-            return 0 == ::memcmp( mElements, other.mElements, sizeof(T)*mCount );
+
+            const T * p1 = cptr();
+            const T * p2 = other.cptr();
+
+            for( size_t i = 0; i < mCount; ++i )
+            {
+                if( p1[i] != p2[i] ) return false;
+            }
+            return true;
         }
 
     public:
@@ -112,7 +224,7 @@ namespace GN
         ///
         /// constructor with user-defined count.
         ///
-        explicit StackArray( size_t count ) : mCount(count) {}
+        explicit StackArray( size_t count ) : mCount(count) { ctor( cptr(), count ); }
 
         ///
         /// copy constructor
@@ -123,25 +235,25 @@ namespace GN
         ///
         //@{
         void      append( const T & t ) { doInsert( mCount, t ); }
-        const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
-        T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
-        const T * begin() const { return mElements; }
-        T       * begin() { return mElements; }
-        void      clear() { mCount = 0; }
-        const T * cptr() const { return mElements; }
-        T       * cptr() { return mElements; }
+        const T & back() const { GN_ASSERT( mCount > 0 ); return cptr()[mCount-1]; }
+        T       & back() { GN_ASSERT( mCount > 0 ); return cptr()[mCount-1]; }
+        const T * begin() const { return cptr(); }
+        T       * begin() { return cptr(); }
+        void      clear() { doClear(); }
+        const T * cptr() const { return (const T*)mBuffer; }
+        T       * cptr() { return (T*)mBuffer; }
         bool      empty() const { return 0 == mCount; }
-        const T * end() const { return mElements + mCount; }
-        T       * end() { return mElements + mCount; }
+        const T * end() const { return cptr() + mCount; }
+        T       * end() { return cptr() + mCount; }
         /** do nothing if position is invalid or array is empty */
         void      erase( size_t position ) { doErase( position ); }
-        const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
-        T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        const T & front() const { GN_ASSERT( mCount > 0 ); return cptr()[0]; }
+        T       & front() { GN_ASSERT( mCount > 0 ); return cptr()[0]; }
         /** do nothing if position is invalid or array is full */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
-        void      resize( size_t count ) { if( count > N ) { GN_WARN(getLogger("GN.base.StackArray"))("count is too large!"); count = N; } mCount = count; }
+        void      resize( size_t count ) { doResize( count ); }
         void      pushBack( const T & t ) { doInsert( size(), t ); }
-        void      popBack() { if( mCount > 0 ) --mCount; }
+        void      popBack() { doErase( mCount - 1 ); }
         size_t    size() const { return mCount; }
         //@}
 
@@ -151,8 +263,8 @@ namespace GN
         StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
         bool         operator==( const StackArray & other ) const { return equal(other); }
         bool         operator!=( const StackArray & other ) const { return !equal(other); }
-        T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
-        const T    & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
+        T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return cptr()[i]; }
+        const T    & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return cptr()[i]; }
         //@}
     };
 
@@ -240,7 +352,7 @@ namespace GN
                 return;
             }
 
-            resize( mCount + 1 );
+            doResize( mCount + 1 );
 
             for( size_t i = mCount-1; i > position; --i )
             {
@@ -260,12 +372,14 @@ namespace GN
 
             --mCount;
 
-            mAlloc.destroy( mElements + i );
-
+            // move elements forward
             for( size_t i = position; i < mCount; ++i )
             {
                 mElements[i] = mElements[i+1];
             }
+
+            // then destroy the last element
+            mAlloc.destroy( mElements + mCount );
         }
 
         void doReserve( size_t count )
@@ -274,7 +388,8 @@ namespace GN
 
             GN_ASSERT( count > mCount );
 
-            size_t newCap = count;
+            // align caps to next power of 2
+            size_t newCap = count - 1;
             #if GN_X64
             newCap |= newCap >> 32;
             #endif
@@ -283,6 +398,7 @@ namespace GN
             newCap |= newCap >> 4;
             newCap |= newCap >> 2;
             newCap |= newCap >> 1;
+            newCap += 1;
 
             // allocate new buffer (unconstructed raw memory)
             T * newBuf = mAlloc.allocate( newCap );
@@ -316,7 +432,7 @@ namespace GN
             // construct new objects, only when mCount < count
             for( size_t i = mCount; i < count; ++i )
             {
-                mAlloc.construct( mElements + i, T() );
+                mAlloc.construct( mElements + i );
             }
 
             mCount = count;
@@ -404,7 +520,7 @@ namespace GN
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
         void      reserve( size_t count ) { doReserve( count ); }
         void      resize( size_t count ) { doResize( count ); }
-        void      popBack() { if( mCount > 0 ) --mCount; }
+        void      popBack() { doErase( mCount - 1 ); }
         /** clear array as well as release memory */
         void      purge() { dealloc( mElements, mCount, mCapacity ); mCount = 0; mCapacity = 0; mElements = 0; }
         size_t    size() const { return mCount; }

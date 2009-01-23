@@ -70,6 +70,11 @@ namespace GN
             new (ptr) T(x);
         }
 
+        void construct( pointer ptr )
+        {
+            new (ptr) T;
+        }
+
         void destroy( pointer ptr )
         {
             ptr->T::~T();
