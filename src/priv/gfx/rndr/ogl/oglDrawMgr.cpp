@@ -110,7 +110,7 @@ sApplyVtxBufs(
         const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( vtxbufs[i].get() );
         if( vb )
         {
-            vtxdata[i] = vb->getVtxData() + startvtx * strides[i];
+            vtxdata[i] = vb->getVtxData();
         }
         else
         {
@@ -118,7 +118,7 @@ sApplyVtxBufs(
         }
     }
 
-    vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS );
+    vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS, startvtx );
 }
 
 // *****************************************************************************
@@ -373,7 +373,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
         UInt16 stride = (UInt16)strideInBytes;
-        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1 );
+        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
     }
 
     // Verify index buffer
@@ -448,7 +448,7 @@ void GN::gfx::OGLRenderer::drawUp(
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
         UInt16 stride = (UInt16)strideInBytes;
-        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1 );
+        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
     }
 
     // draw primitives

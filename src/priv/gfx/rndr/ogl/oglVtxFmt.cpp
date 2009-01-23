@@ -40,6 +40,21 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format )
 
     mFormat = format;
 
+    // calculate default strides
+    memset( mDefaultStrides, 0, sizeof(mDefaultStrides) );
+    for( size_t i = 0; i < format.numElements; ++i )
+    {
+        const VertexElement & e = format.elements[i];
+
+        GN_ASSERT( e.format.getBytesPerBlock() > 0 );
+        size_t elementsize = e.offset + e.format.getBytesPerBlock();
+
+        if( mDefaultStrides[e.stream] < elementsize )
+        {
+            mDefaultStrides[e.stream] = elementsize;
+        }
+    }
+
     if( !setupStateBindings() ) return failure();
 
     // success
@@ -89,7 +104,8 @@ bool
 GN::gfx::OGLVtxFmt::bindBuffers(
      const void * const * buffers,
      const UInt16       * strides,
-     size_t               count ) const
+     size_t               numbufs,
+     size_t               startvtx ) const
 {
     GN_GUARD_SLOW;
 
@@ -99,13 +115,20 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 
         size_t stream = ab.info.stream;
 
-        if( stream >= count )
+        if( stream >= numbufs )
         {
-            GN_ERROR(sLogger)( "not enough vertex buffers are provided" );
+            GN_ERROR(sLogger)(
+                "Current vertex format requires %u vertex buffers. But only %u are provided.",
+                stream, numbufs );
             return false;
         }
 
-        ab.bind( buffers[stream], strides[stream] );
+        size_t stride = strides[stream];
+        if( 0 == stride ) stride = mDefaultStrides[stream];
+
+        const UInt8 * ptr = (const UInt8*)buffers[stream];
+
+        ab.bind( ptr + startvtx * stride, stride );
     }
 
     return true;
@@ -288,6 +311,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     // normal
     sb.func = hasNormal ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_NORMAL_ARRAY;
+    mStateBindings.append( sb );
 
     // color0
     sb.func = hasC0 ? &sEnableClientState : &sDisableClientState;

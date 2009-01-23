@@ -19,7 +19,7 @@ namespace GN { namespace gfx
         ///
         /// 返回指向顶点数据的指针
         ///
-        virtual const UInt8 * getVtxData() const = 0;
+        virtual const void * getVtxData() const = 0;
 
     protected :
 
@@ -69,7 +69,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const UInt8 * getVtxData() const
+        const void * getVtxData() const
         {
             if( GLEW_ARB_vertex_buffer_object )
             {
@@ -132,7 +132,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const UInt8 * getVtxData() const
+        const void * getVtxData() const
         {
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
             return 0;
