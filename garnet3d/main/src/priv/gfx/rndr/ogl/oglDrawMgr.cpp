@@ -239,8 +239,8 @@ void GN::gfx::OGLRenderer::clearScreen(
 void GN::gfx::OGLRenderer::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
+    size_t        basevtx,
     size_t        startvtx,
-    size_t        minvtxidx,
     size_t        numvtx,
     size_t        startidx )
 {
@@ -255,7 +255,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
             *mCurrentOGLVtxFmt,
             mContext.vtxbufs,
             mContext.strides,
-            startvtx );
+            basevtx );
     }
 
     // get current index buffer
@@ -270,7 +270,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
             const UInt32 * indices = (const UInt32*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
             {
-                if( minvtxidx <= *indices && *indices < (minvtxidx+numvtx) )
+                if( startvtx <= *indices && *indices < (startvtx+numvtx) )
                 {
                     GN_RNDR_RIP( "Invalid index: %u", *indices );
                 }
@@ -281,7 +281,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
             const UInt16 * indices = (const UInt16*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
             {
-                if( minvtxidx <= *indices && *indices < (minvtxidx+numvtx) )
+                if( startvtx <= *indices && *indices < (startvtx+numvtx) )
                 {
                     GN_RNDR_RIP( "Invalid index: %u", *indices );
                 }
@@ -296,8 +296,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
         // draw indexed primitives
         GN_OGL_CHECK( glDrawRangeElements(
             oglPrim,
-            (GLuint)minvtxidx,
-            (GLuint)( minvtxidx + numvtx ),
+            (GLuint)startvtx,
+            (GLuint)( startvtx + numvtx - 1 ),
             (GLsizei)numidx,
             ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
@@ -396,8 +396,8 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         // draw indexed primitives
         GN_OGL_CHECK( glDrawRangeElements(
             oglPrim,
-            0, // minvtxidx,
-            (GLuint)numvtx,
+            0, // startvtx,
+            (GLuint)(numvtx-1),
             (GLsizei)numidx,
             GL_UNSIGNED_SHORT,
             indexData ) );

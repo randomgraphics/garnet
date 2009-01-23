@@ -1052,10 +1052,10 @@ namespace GN { namespace gfx
         ///     primititive type
         /// \param numidx
         ///     number of indices
-        /// \param startvtx
+        /// \param basevtx
         ///     vertex index into vertex buffer that index "0" refers to.
-        /// \param minvtxidx, numvtx
-        ///     define effective range in vertex buffer, starting from startvtx.
+        /// \param startvtx, numvtx
+        ///     define effective range in vertex buffer, starting from basevtx.
         /// \param startidx
         ///     index into index buffer of the first index
         ///
@@ -1063,8 +1063,8 @@ namespace GN { namespace gfx
         ///
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
+                                  size_t        basevtx,
                                   size_t        startvtx,
-                                  size_t        minvtxidx,
                                   size_t        numvtx,
                                   size_t        startidx ) = 0;
 

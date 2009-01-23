@@ -213,8 +213,8 @@ namespace GN { namespace gfx
                                   BitFields        flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numprim,
+                                  size_t        basevtx,
                                   size_t        startvtx,
-                                  size_t        minvtxidx,
                                   size_t        numvtx,
                                   size_t        startidx );
         virtual void draw( PrimitiveType prim,

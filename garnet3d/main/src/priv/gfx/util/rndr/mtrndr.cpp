@@ -406,12 +406,12 @@ void GN::gfx::MultiThreadRenderer::clearScreen(
 void GN::gfx::MultiThreadRenderer::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
+    size_t        basevtx,
     size_t        startvtx,
-    size_t        minvtxidx,
     size_t        numvtx,
     size_t        startidx )
 {
-    postCommand6( CMD_DRAW_INDEXED, prim, numidx, startvtx, minvtxidx, numvtx, startidx );
+    postCommand6( CMD_DRAW_INDEXED, prim, numidx, basevtx, startvtx, numvtx, startidx );
 }
 
 //
@@ -780,8 +780,8 @@ namespace GN { namespace gfx
         {
             PrimitiveType prim;
             size_t        numidx;
+            size_t        basevtx;
             size_t        startvtx;
-            size_t        minvtxidx;
             size_t        numvtx;
             size_t        startidx;
         };
@@ -789,7 +789,7 @@ namespace GN { namespace gfx
 
         DrawIndexedParam * dip = (DrawIndexedParam*)p;
 
-        r.drawIndexed( dip->prim, dip->numidx, dip->startvtx, dip->minvtxidx, dip->numvtx, dip->startidx );
+        r.drawIndexed( dip->prim, dip->numidx, dip->basevtx, dip->startvtx, dip->numvtx, dip->startidx );
     }
 
     //

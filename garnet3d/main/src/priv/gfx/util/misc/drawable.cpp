@@ -34,7 +34,7 @@ void GN::gfx::Drawable::draw() const
     // do rendering
     if( rc.idxbuf )
     {
-        rndr->drawIndexed( prim, numidx, startvtx, minvtxidx, numvtx, startidx );
+        rndr->drawIndexed( prim, numidx, basevtx, startvtx, numvtx, startidx );
     }
     else
     {
@@ -51,10 +51,11 @@ GN::gfx::Drawable::operator=( const Drawable & rhs )
     rndr = rhs.rndr;
     rc = rhs.rc;
     prim = rhs.prim;
+    startvtx = rhs.startvtx;
     numvtx = rhs.numvtx;
-    numidx = rhs.numidx;
-    minvtxidx = rhs.minvtxidx;
     startidx = rhs.startidx;
+    numidx = rhs.numidx;
+    basevtx = rhs.basevtx;
 
     // copy parameters
     gpps.resize( rhs.gpps.size() );
