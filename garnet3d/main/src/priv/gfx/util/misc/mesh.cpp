@@ -172,8 +172,8 @@ GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset )
     // draw parameters
     drawable.prim      = mDesc.prim;
     drawable.numvtx    = subset->numvtx;
-    drawable.startvtx  = subset->startvtx;
+    drawable.startvtx  = 0;
     drawable.numidx    = subset->numidx;
-    drawable.minvtxidx = 0;
+    drawable.minvtxidx = subset->startvtx;
     drawable.startidx  = subset->startidx;
 }

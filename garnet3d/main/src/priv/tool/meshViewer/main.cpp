@@ -28,10 +28,20 @@ void updateRadius()
     arcball.setViewMatrix( view );
     arcball.setTranslationSpeed( h / dd.height );
 
-    // TODO: update light position
-    // mScene.light(0).position.set( 0, 0, radius ); // head light: same location as camera.
+    effect.setLightPos( Vector4f(0, 0, radius,1) ); // head light: same location as camera.
 
     // calculate move speed
+}
+
+void onAxisMove( Axis a, int d )
+{
+    if( AXIS_MOUSE_WHEEL_0 == a )
+    {
+        float speed = radius / 100.0f;
+        radius -= speed * d;
+        if( radius < 0.1f ) radius = 0.1f;
+        updateRadius();
+    }
 }
 
 bool init()
@@ -61,6 +71,10 @@ bool init()
     arcball.setTranslation( Vector3f(0,0,0) ); // TODO: initial translation should be mesh center.
     arcball.connectToInput();
 
+    // connect to input device
+    getSigAxisMove().connect( onAxisMove );
+
+    // success
     return true;
 }
 
@@ -76,17 +90,6 @@ void quit()
     effect.quit();
 }
 
-void onAxisMove( Axis a, int d )
-{
-    if( AXIS_MOUSE_WHEEL_0 == a )
-    {
-        float speed = radius / 100.0f;
-        radius -= speed * d;
-        if( radius < 0.1f ) radius = 0.1f;
-        updateRadius();
-    }
-}
-
 void draw()
 {
     Vector3f   position = arcball.getTranslation();
@@ -94,9 +97,14 @@ void draw()
     Matrix44f  world    = rotation * Matrix44f::sTranslate( position );
     effect.setTransformation( proj, view, world );
 
-    for( size_t i = 0; i < meshes.size(); ++i )
+    for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
-        effect.setMesh( *meshes[i], &ase.subsets[i] );
+        const AseMeshSubset & s = ase.subsets[i];
+
+        Mesh * m = meshes[s.meshid];
+
+        effect.setMesh( *m, &s );
+
         effect.draw();
     }
 }

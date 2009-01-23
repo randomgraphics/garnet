@@ -59,7 +59,8 @@ namespace GN { namespace gfx
         ///
         bool bindBuffers( const void * const * buffers,
                           const UInt16       * strides,
-                          size_t               count ) const;
+                          size_t               numbufs,
+                          size_t               startvtx ) const;
 
         // ********************************
         // private variables
@@ -107,6 +108,7 @@ namespace GN { namespace gfx
         };
 
         VertexFormat             mFormat;
+        size_t                   mDefaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
         DynaArray<AttribBinding> mAttribBindings;
         DynaArray<StateBinding>  mStateBindings;
 

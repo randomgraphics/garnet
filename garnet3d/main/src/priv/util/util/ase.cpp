@@ -1517,7 +1517,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         }
 
         subset.startvtx = minidx;
-        subset.numvtx   = maxidx - minidx;
+        subset.numvtx   = maxidx - minidx + 1;
     }
 
     // copy vertices into destination scene
@@ -1531,9 +1531,11 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
         const Vector3f & srctexcoord = srcvert.t[vs.t];
 
-        vertices[i].position = srcvert.p;
-        vertices[i].normal   = srcvert.n[vs.n];
-        vertices[i].texcoord = Vector2f( srctexcoord.x, srctexcoord.y );
+        OutputVertex & o = vertices[i];
+
+        o.position = srcvert.p;
+        o.normal   = srcvert.n[vs.n];
+        o.texcoord = Vector2f( srctexcoord.x, srctexcoord.y );
     }
     dstmesh.numvtx = vc.size();
     dstmesh.vertices[0] = vertices;
