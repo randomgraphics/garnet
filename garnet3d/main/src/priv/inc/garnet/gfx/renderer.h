@@ -1292,7 +1292,9 @@ namespace GN { namespace gfx
     Renderer * createSingleThreadRenderer( const RendererOptions & );
 
     ///
-    /// Create new multi thread renderer.
+    /// Create new renderer with a simple multithread wrapper. So
+    /// the renderer will run in another thread, and communite with
+    /// user through an internal command buffer.
     ///
     Renderer * createMultiThreadRenderer( const RendererOptions & );
 

@@ -108,7 +108,8 @@ namespace GN { namespace gfx
         GN_GUARD;
 
         MultiThreadRenderer * r = new MultiThreadRenderer;
-        if( !r->init( ro ) ) delete r, r = NULL;
+        MultiThreadRendererOptions mo; // use default multithread options
+        if( !r->init( ro, mo ) ) delete r, r = NULL;
         return r;
 
         GN_UNGUARD;

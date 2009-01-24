@@ -108,12 +108,13 @@ bool init( Renderer & rndr )
     mesh.applyToDrawable( d1 );
 
     // make a clone of the whole drawable, with its own transformation parameter
+    UInt32 gppidx = d1.rc.gpuProgram->getParameterIndex( "transform" );
     d2 = d1;
-    d2.gpps[1].attach( new GpuProgramParam( sizeof(Matrix44f) ) );
+    d2.gpps[gppidx].attach( new GpuProgramParam( sizeof(Matrix44f) ) );
 
     // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );
-    d2.gpps[1]->set( m, sizeof(m) );
+    d2.gpps[gppidx]->set( m, sizeof(m) );
 
     // success
     return true;
@@ -187,8 +188,8 @@ int main( int, const char *[] )
     RendererOptions o;
     o.api = API_OGL;
 
-    //Renderer * r = createMultiThreadRenderer( o );
-    Renderer * r = createSingleThreadRenderer( o );
+    Renderer * r = createMultiThreadRenderer( o );
+    //Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);

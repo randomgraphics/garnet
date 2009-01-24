@@ -50,8 +50,8 @@ static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::MultiThreadRenderer::init(
-    const RendererOptions & ro,
-    size_t                  ringBufferSize )
+    const RendererOptions            & ro,
+    const MultiThreadRendererOptions & mo )
 {
     GN_GUARD;
 
@@ -59,13 +59,13 @@ bool GN::gfx::MultiThreadRenderer::init(
     GN_STDCLASS_INIT( GN::gfx::MultiThreadRenderer, () );
 
     // initialize ring buffer
-    if( !mRingBuffer.init( ringBufferSize ) ) return failure();
+    if( !mRingBuffer.init( mo.commandBufferSize ) ) return failure();
 
-    // initialize cross-thread variables
+    // initialize local variables
     mRendererCreationStatus = 2;
     mFrontEndFence = 0;
     mBackEndFence = 0;
-    mBackEndLoopFlag = true;
+    mLastPresentFence = 0;
 
     // create thread
     ThreadProcedure proc = makeDelegate( this, &GN::gfx::MultiThreadRenderer::threadProc );
@@ -77,6 +77,7 @@ bool GN::gfx::MultiThreadRenderer::init(
     if( 1 != mRendererCreationStatus ) return failure();
 
     // initialize front end variables
+    mMultithreadOptions = mo;
     postCommand1( CMD_GET_RENDERER_OPTIONS, &mRendererOptions );
     postCommand1( CMD_GET_DISP_DESC, &mDispDesc );
     postCommand1( CMD_GET_D3D_DEVICE, &mD3DDevice );
@@ -102,7 +103,6 @@ void GN::gfx::MultiThreadRenderer::quit()
 
     if( mThread )
     {
-        mBackEndLoopFlag = false;
         mRingBuffer.postQuitMessage();
         mThread->waitForTermination();
         delete mThread;
@@ -124,9 +124,9 @@ void GN::gfx::MultiThreadRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadRenderer::waitForIdle()
+void GN::gfx::MultiThreadRenderer::waitForFence( UInt32 fence )
 {
-    while( (mFrontEndFence - mBackEndFence) > 0 )
+    while( (SInt32)(fence - mBackEndFence) > 0 )
     {
         sleepCurrentThread( 0 );
     }
@@ -180,7 +180,7 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
     mRendererCreationStatus = 1;
 
     // enter command loop
-    while( mBackEndLoopFlag )
+    for(;;)
     {
         // get command header
         const void * headerptr = (const CommandHeader*)mRingBuffer.beginConsume( sizeof(CommandHeader) );
@@ -385,7 +385,15 @@ const RendererContext & GN::gfx::MultiThreadRenderer::getContext() const
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::present()
 {
+    // we cache only one frame, at most, in command buffer.
+    if( mMultithreadOptions.cacheOneFrameAtMost && 0 != mLastPresentFence )
+    {
+        waitForFence( mLastPresentFence );
+    }
+
     postCommand0( CMD_PRESENT );
+
+    mLastPresentFence = mFrontEndFence;
 }
 
 //
