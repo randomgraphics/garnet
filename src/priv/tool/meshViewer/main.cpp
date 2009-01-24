@@ -68,7 +68,7 @@ bool init()
     // initialize arcball
     arcball.setHandness( util::RIGHT_HAND );
     arcball.setViewMatrix( view );
-    arcball.setTranslation( Vector3f(0,0,0) ); // TODO: initial translation should be mesh center.
+    arcball.setTranslation( ase.bbox.center() );
     arcball.connectToInput();
 
     // connect to input device
@@ -194,8 +194,8 @@ int main( int argc, const char * argv[] )
     // create renderer
     RendererOptions o;
     o.api = API_OGL;
-    //rndr = createMultiThreadRenderer( o );
-    rndr = createSingleThreadRenderer( o );
+    rndr = createMultiThreadRenderer( o );
+    //rndr = createSingleThreadRenderer( o );
     if( NULL == rndr ) return -1;
 
     // initialize input device

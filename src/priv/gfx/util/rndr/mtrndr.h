@@ -12,6 +12,28 @@
 namespace GN { namespace gfx
 {
     ///
+    /// options specific to multi-thread renderer
+    struct MultiThreadRendererOptions
+    {
+        ///
+        /// internal command buffer size. Default is 4MB.
+        ///
+        size_t commandBufferSize;
+
+        ///
+        /// Set it to true to limit number of commands cached in command buffer to at most one frame. Default is false.
+        ///
+        bool cacheOneFrameAtMost;
+
+        /// ctor
+        MultiThreadRendererOptions()
+            : commandBufferSize( 4 * 1024 * 1024 )
+            , cacheOneFrameAtMost( false )
+        {
+        }
+    };
+
+    ///
     /// Multi thread renderer wrapper
     ///
     class MultiThreadRenderer : public Renderer, public StdClass
@@ -34,7 +56,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & o, size_t ringBufferSize = 4*1024*1024 );
+        bool init( const RendererOptions & o, const MultiThreadRendererOptions & mo );
         void quit();
     private:
         void clear()
@@ -45,13 +67,15 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // public methods
+        // public methods, can only be called in front end thread
         // ********************************
     public:
 
         //@{
 
-        void waitForIdle();
+        void waitForIdle() { return waitForFence( mFrontEndFence ); }
+        void waitForFence( UInt32 fence );
+        UInt32 getCurrentFence() const { return mFrontEndFence; }
 
         UInt8 * beginPostCommand( UInt32 cmd, size_t length ); ///< always return non-NULL valid pointer.
         void    endPostCommand() { mRingBuffer.endProduce(); }
@@ -150,7 +174,6 @@ namespace GN { namespace gfx
         volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         volatile UInt32 mFrontEndFence;
         volatile UInt32 mBackEndFence;
-        volatile bool   mBackEndLoopFlag;
         Thread        * mThread;
 
         // ********************************
@@ -158,12 +181,14 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        RendererOptions mRendererOptions;
-        DispDesc        mDispDesc;
-        void *          mD3DDevice;
-        void *          mOGLRC;
-        RendererCaps    mCaps;
-        RendererContext mRendererContext;
+        MultiThreadRendererOptions mMultithreadOptions;
+        RendererOptions            mRendererOptions;
+        DispDesc                   mDispDesc;
+        void *                     mD3DDevice;
+        void *                     mOGLRC;
+        RendererCaps               mCaps;
+        RendererContext            mRendererContext;
+        UInt32                     mLastPresentFence;
 
         // ********************************
         // back-end variables
