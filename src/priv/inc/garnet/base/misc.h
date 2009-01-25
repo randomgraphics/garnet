@@ -175,7 +175,7 @@ namespace GN
     template< typename T >
     inline T align( const T & value, const T & alignment )
     {
-        GN_ASSERT( isPowerOf2( alignment ) );
+        GN_ASSERT( math::isPowerOf2( alignment ) );
         return ( value + (alignment-1) ) & ~(alignment-1);
     }
 
