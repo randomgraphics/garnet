@@ -138,7 +138,7 @@ void GN::gfx::MultiThreadRenderer::waitForFence( UInt32 fence )
 UInt8 * GN::gfx::MultiThreadRenderer::beginPostCommand( UInt32 cmd, size_t length )
 {
     // align data size to command header size
-    GN_ASSERT( isPowerOf2( sizeof(CommandHeader) ) );
+    GN_ASSERT( math::isPowerOf2( sizeof(CommandHeader) ) );
     size_t paramsize = ( length + sizeof(CommandHeader) - 1 ) & ~(sizeof(CommandHeader) - 1);
 
     // push command header

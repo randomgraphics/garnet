@@ -26,13 +26,18 @@
 namespace GN
 {
     ///
-    /// floating equality check
+    /// namespace for math helpers
+    ///
+    namespace math
+    {
+
+    ///
+    /// floating equality check with epsilon
     // ------------------------------------------------------------------------
     template<typename T>
     GN_FORCE_INLINE bool
-    floatEqual( const T & a, const T & b )
+    floatEqual( const T & a, const T & b, const T & epsilon = (T)0.0000001 )
     {
-        const T epsilon = (T)0.0000001;
         T diff = a - b;
         return -epsilon < diff && diff < epsilon;
     }
@@ -86,6 +91,44 @@ namespace GN
         n |= n >> 1;
 
         return (n + 1) >> 1;
+    }
+
+#if GN_X64
+
+    ///
+    /// 返回不小于n的最小的2的整幂
+    // ------------------------------------------------------------------------
+    GN_FORCE_INLINE size_t ceilPowerOf2( size_t n )
+    {
+        n -= 1;
+
+        n |= n >> 32;
+        n |= n >> 16;
+        n |= n >> 8;
+        n |= n >> 4;
+        n |= n >> 2;
+        n |= n >> 1;
+
+        return n + 1;
+    }
+
+    ///
+    /// 返回不大于n的最大的2的整幂
+    // ------------------------------------------------------------------------
+    GN_FORCE_INLINE size_t floorPowerOf2( size_t n )
+    {
+        n |= n >> 32;
+        n |= n >> 16;
+        n |= n >> 8;
+        n |= n >> 4;
+        n |= n >> 2;
+        n |= n >> 1;
+
+        return (n + 1) >> 1;
+    }
+
+#endif
+
     }
 }
 
