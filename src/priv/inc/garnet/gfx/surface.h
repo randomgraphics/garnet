@@ -19,8 +19,8 @@ namespace GN { namespace gfx
         {
             unsigned int rendertarget :  1; ///< use as color render target
             unsigned int depth        :  1; ///< use as depth buffer
-            unsigned int fastcpuwrite :  1; ///< need fast data writing by CPU (dynamic texture)
-            unsigned int fastcpuread  :  1; ///< need fast data reading by CPU.
+            unsigned int fastCpuWrite :  1; ///< need fast data writing by CPU (dynamic texture)
+            unsigned int fastCpuRead  :  1; ///< need fast data reading by CPU.
             unsigned int nouse        : 27; ///< no use. must be zero.
         };
 
@@ -275,9 +275,9 @@ namespace GN { namespace gfx
     ///
     struct VtxBufDesc
     {
-        UInt32       length;   ///< length in bytes of the vertex buffer
-        bool         dynamic;  ///< dynamic buffer.
-        bool         readback; ///< can read data back from buffer.
+        UInt32 length;        ///< length in bytes of the vertex buffer
+        bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
+        bool   fastCpuRead;   ///< support fast CPU read (rendering speed compromised)
     };
 
     ///
@@ -296,7 +296,7 @@ namespace GN { namespace gfx
         virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
 
         ///
-        /// Read buffer content. The buffer must have readback flag.
+        /// Read buffer content.
         ///
         virtual void readback( std::vector<UInt8> & data ) = 0;
 
@@ -321,10 +321,10 @@ namespace GN { namespace gfx
     ///
     struct IdxBufDesc
     {
-        UInt32 numidx;   ///< number of indices in index buffer
-        bool   bits32;   ///< is 32-bit index buffer or not.
-        bool   dynamic;  ///< dynamic buffer.
-        bool   readback; ///< can read data back from buffer.
+        UInt32 numidx;        ///< number of indices in index buffer
+        bool   bits32;        ///< is 32-bit index buffer or not.
+        bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
+        bool   fastCpuRead;   ///< support fast CPU read (rendering speed compromised)
     };
     GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 
@@ -344,7 +344,7 @@ namespace GN { namespace gfx
         virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
 
         ///
-        /// Read buffer content. The buffer must have readback flag.
+        /// Read buffer content.
         ///
         virtual void readback( std::vector<UInt8> & data ) = 0;
 
