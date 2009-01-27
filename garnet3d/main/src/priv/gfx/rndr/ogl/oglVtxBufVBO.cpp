@@ -31,7 +31,7 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
-    mOGLUsage = desc.dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
+    mOGLUsage = desc.fastCpuWrite ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
     if( !createVBO() ) return failure();

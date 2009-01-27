@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         bool init();
         void quit();
     private:
-        void clear() { mDrawBegun = false; }
+        void clear() { mPendingVertices = NULL; }
         //@}
 
         // ********************************
@@ -71,36 +71,7 @@ namespace GN { namespace gfx
             float u1 = 0.0f,
             float v1 = 0.0f,
             float u2 = 1.0f,
-            float v2 = 1.0f )
-        {
-            GN_ASSERT( mDrawBegun && mNextVtx );
-
-            if( mNumPendingSprites == MAX_SPRITES_PER_BATCH )
-            {
-                drawEnd();
-                drawBegin( mContext.textures[0].get(), mOptions );
-            }
-
-            GN_ASSERT( mNumPendingSprites < MAX_SPRITES_PER_BATCH && mNextVtx );
-
-            // fill vertex buffer
-
-            mNextVtx[0].pos.set( x1, y1, z );
-            mNextVtx[0].tex.set( u1, v1 );
-
-            mNextVtx[1].pos.set( x1, y2, z );
-            mNextVtx[1].tex.set( u1, v2 );
-
-            mNextVtx[2].pos.set( x2, y2, z );
-            mNextVtx[2].tex.set( u2, v2 );
-
-            mNextVtx[3].pos.set( x2, y1, z );
-            mNextVtx[3].tex.set( u2, v1 );
-
-            // prepare for next sprite
-            mNextVtx += 4;
-            ++mNumPendingSprites;
-        }
+            float v2 = 1.0f );
 
         ///
         /// Note that [0,0] is upper left corner of the screen.
@@ -111,36 +82,7 @@ namespace GN { namespace gfx
             float x1    = 0.0f,
             float y1    = 0.0f,
             float x2    = 1.0f,
-            float y2    = 1.0f )
-        {
-            GN_ASSERT( mDrawBegun && mNextVtx );
-
-            if( mNumPendingSprites == MAX_SPRITES_PER_BATCH )
-            {
-                drawEnd();
-                drawBegin( mContext.textures[0].get(), mOptions );
-            }
-
-            GN_ASSERT( mNumPendingSprites < MAX_SPRITES_PER_BATCH && mNextVtx );
-
-            // fill vertex buffer
-
-            mNextVtx[0].pos.set( x1, y1, z );
-            mNextVtx[0].clr = rgba;
-
-            mNextVtx[1].pos.set( x1, y2, z );
-            mNextVtx[1].clr = rgba;
-
-            mNextVtx[2].pos.set( x2, y2, z );
-            mNextVtx[2].clr = rgba;
-
-            mNextVtx[3].pos.set( x2, y1, z );
-            mNextVtx[3].clr = rgba;
-
-            // prepare for next Sprite
-            mNextVtx += 4;
-            ++mNumPendingSprites;
-        }
+            float y2    = 1.0f );
 
         //@}
 
@@ -195,14 +137,23 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( sizeof(SpriteVertex) == 32 );
 
-        enum { MAX_SPRITES_PER_BATCH = 256 };
+        enum {
+            MAX_SPRITES_PER_BATCH = 256,
+            MAX_VERTICES          = MAX_SPRITES_PER_BATCH * 4,
+            MAX_INDICES           = MAX_SPRITES_PER_BATCH * 6,
+            VTXBUF_SIZE           = MAX_VERTICES * sizeof(SpriteVertex)
+        };
 
         Renderer                 & mRenderer;
-        RendererContext            mContext;
+        AutoRef<VtxBuf>            mVtxBuf;
+        AutoRef<IdxBuf>            mIdxBuf;
+        RendererContext            mPrivateContext;
+        RendererContext            mEnvironmentContext;
+        RendererContext          * mEffectiveContext;
         BitFields                  mOptions;
         bool                       mDrawBegun;
         size_t                     mNumPendingSprites;
-        SpriteVertex             * mNextVtx;
+        SpriteVertex             * mPendingVertices;
 
         // ********************************
         // private functions

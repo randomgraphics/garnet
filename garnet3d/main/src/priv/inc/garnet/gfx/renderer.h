@@ -961,22 +961,49 @@ namespace GN { namespace gfx
         createVtxBuf( const VtxBufDesc & ) = 0;
 
         ///
+        /// Create new vertex buffer
+        ///
+        VtxBuf *
+        createVtxBuf( size_t length, bool fastCpuWrite = false, bool fastCpuRead = false )
+        {
+            VtxBufDesc desc;
+            desc.length       = length;
+            desc.fastCpuWrite = fastCpuWrite;
+            desc.fastCpuRead  = fastCpuRead;
+            return createVtxBuf( desc );
+        }
+
+        ///
         /// Create new index buffer
         ///
         virtual IdxBuf *
         createIdxBuf( const IdxBufDesc & desc ) = 0;
 
         ///
-        /// Create new index buffer
+        /// Create new 16 bit index buffer
         ///
         IdxBuf *
-        createIdxBuf( size_t numidx, bool dynamic = false, bool readback = false )
+        createIdxBuf16( size_t numidx, bool fastCpuWrite = false, bool fastCpuRead = false )
         {
             IdxBufDesc desc;
-            desc.numidx   = (UInt32)numidx;
-            desc.bits32   = false;
-            desc.dynamic  = dynamic;
-            desc.readback = readback;
+            desc.numidx       = (UInt32)numidx;
+            desc.bits32       = false;
+            desc.fastCpuWrite = fastCpuWrite;
+            desc.fastCpuRead  = fastCpuRead;
+            return createIdxBuf( desc );
+        }
+
+        ///
+        /// Create new 32 bit index buffer
+        ///
+        IdxBuf *
+        createIdxBuf32( size_t numidx, bool fastCpuWrite = false, bool fastCpuRead = false )
+        {
+            IdxBufDesc desc;
+            desc.numidx       = (UInt32)numidx;
+            desc.bits32       = true;
+            desc.fastCpuWrite = fastCpuWrite;
+            desc.fastCpuRead  = fastCpuRead;
             return createIdxBuf( desc );
         }
 
