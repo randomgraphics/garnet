@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         bool init();
         void quit();
     private:
-        void clear() { mPendingVertices = NULL; }
+        void clear() { mSprites = NULL; }
         //@}
 
         // ********************************
@@ -137,11 +137,14 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( sizeof(SpriteVertex) == 32 );
 
-        enum {
-            MAX_SPRITES_PER_BATCH = 256,
-            MAX_VERTICES          = MAX_SPRITES_PER_BATCH * 4,
-            MAX_INDICES           = MAX_SPRITES_PER_BATCH * 6,
-            VTXBUF_SIZE           = MAX_VERTICES * sizeof(SpriteVertex)
+        struct Sprite
+        {
+            SpriteVertex v[4];
+        };
+
+        enum
+        {
+            MAX_SPRITES  = 256,
         };
 
         Renderer                 & mRenderer;
@@ -152,8 +155,9 @@ namespace GN { namespace gfx
         RendererContext          * mEffectiveContext;
         BitFields                  mOptions;
         bool                       mDrawBegun;
-        size_t                     mNumPendingSprites;
-        SpriteVertex             * mPendingVertices;
+        Sprite                   * mSprites;
+        Sprite                   * mNextPendingSprite;
+        Sprite                   * mNextFreeSprite;
 
         // ********************************
         // private functions

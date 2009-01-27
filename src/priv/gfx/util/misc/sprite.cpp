@@ -1,5 +1,7 @@
 #include "pch.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -14,6 +16,13 @@ bool GN::gfx::SpriteRenderer::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::SpriteRenderer, () );
 
+    enum
+    {
+        MAX_VERTICES = MAX_SPRITES * 4,
+        MAX_INDICES  = MAX_SPRITES * 6,
+        VTXBUF_SIZE  = MAX_VERTICES * sizeof(SpriteVertex)
+    };
+
     // create vertex buffer
     mVtxBuf.attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true, false ) );
     if( !mVtxBuf ) return failure();
@@ -22,7 +31,7 @@ bool GN::gfx::SpriteRenderer::init()
     mIdxBuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false, false ) );
     if( !mIdxBuf ) return failure();
     DynaArray<UInt16> indices( MAX_INDICES );
-    for( size_t i = 0; i < MAX_SPRITES_PER_BATCH; ++i )
+    for( UInt16 i = 0; i < MAX_SPRITES; ++i )
     {
         indices[i*6+0] = i * 4 + 0;
         indices[i*6+1] = i * 4 + 1;
@@ -34,14 +43,15 @@ bool GN::gfx::SpriteRenderer::init()
     mIdxBuf->update( 0, MAX_INDICES, indices.cptr() );
 
     // create pending vertex buffer
-    mPendingVertices = (SpriteVertex)heapAlloc( VTXBUF_SIZE );
-    if( NULL == mPendingVertices ) return failure();
+    mSprites = (Sprite*)heapAlloc( VTXBUF_SIZE );
+    if( NULL == mSprites ) return failure();
 
     // initialize other member variables
     mPrivateContext.vtxbufs[0] = mVtxBuf;
     mPrivateContext.idxbuf = mIdxBuf;
     mDrawBegun = false;
-    mNumPendingSprites = 0;
+    mNextPendingSprite = mSprites;
+    mNextFreeSprite = mSprites;
 
     // success
     return success();
@@ -56,7 +66,7 @@ void GN::gfx::SpriteRenderer::quit()
 {
     GN_GUARD;
 
-    heapFree( mPendingVertices );
+    heapFree( mSprites );
     mVtxBuf.clear();
     mIdxBuf.clear();
     mPrivateContext.resetToDefault();
@@ -101,6 +111,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     }
 
     mDrawBegun = true;
+    mOptions   = options;
 }
 
 //
@@ -110,12 +121,35 @@ void GN::gfx::SpriteRenderer::drawEnd()
 {
     if( !mDrawBegun )
     {
-        GN_ERROR(sLogger)( "SpriteRenderer::drawEnd\() can not be called consequtively w/o drawBegin() in between" );
+        GN_ERROR(sLogger)( "SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between" );
         return;
     }
 
+    size_t numPendingSprites = mNextFreeSprite - mNextPendingSprite;
+    if( numPendingSprites > 0 )
+    {
+        size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
+
+        mVtxBuf->update(
+            firstPendingSpriteOffset * sizeof(Sprite),
+            numPendingSprites * sizeof(Sprite),
+            mNextPendingSprite,
+            mSprites == mNextPendingSprite ? SURFACE_UPDATE_DISCARD : SURFACE_UPDATE_NO_OVERWRITE );
+
+        mRenderer.bindContext( *mEffectiveContext );
+
+        mRenderer.drawIndexed(
+            TRIANGLE_LIST,
+            numPendingSprites * 6,        // numidx
+            firstPendingSpriteOffset * 4, // basevtx,
+            0,                            // startvtx
+            numPendingSprites * 4,        // numvtx
+            0 );                          // startidx
+    }
+
     mDrawBegun = false;
-    mNumPendingSprites = 0;
+    if( mNextFreeSprite == mSprites + MAX_SPRITES ) mNextFreeSprite = mSprites; // rewind next-free pointer if needed.
+    mNextPendingSprite = mNextFreeSprite;
 }
 
 //
@@ -139,31 +173,29 @@ GN::gfx::SpriteRenderer::drawTextured(
         return;
     }
 
-    if( mNumPendingSprites == MAX_SPRITES_PER_BATCH )
+    if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].get(), mOptions );
+        drawBegin( mEffectiveContext->textures[0].get(), mOptions );
     }
 
-    GN_ASSERT( mNumPendingSprites < MAX_SPRITES_PER_BATCH );
+    GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
     // fill vertex buffer
-    SpriteVertex * p = &mPendingVertices[mNumPendingSprites*4];
+    mNextFreeSprite->v[0].pos.set( x1, y1, z );
+    mNextFreeSprite->v[0].tex.set( u1, v1 );
 
-    p[0].pos.set( x1, y1, z );
-    p[0].tex.set( u1, v1 );
+    mNextFreeSprite->v[1].pos.set( x1, y2, z );
+    mNextFreeSprite->v[1].tex.set( u1, v2 );
 
-    p[1].pos.set( x1, y2, z );
-    p[1].tex.set( u1, v2 );
+    mNextFreeSprite->v[2].pos.set( x2, y2, z );
+    mNextFreeSprite->v[2].tex.set( u2, v2 );
 
-    p[2].pos.set( x2, y2, z );
-    p[2].tex.set( u2, v2 );
-
-    p[3].pos.set( x2, y1, z );
-    p[3].tex.set( u2, v1 );
+    mNextFreeSprite->v[3].pos.set( x2, y1, z );
+    mNextFreeSprite->v[3].tex.set( u2, v1 );
 
     // prepare for next sprite
-    ++mNumPendingSprites;
+    ++mNextFreeSprite;
 }
 
 //
@@ -184,29 +216,26 @@ GN::gfx::SpriteRenderer::drawSolid(
         return;
     }
 
-    if( mNumPendingSprites == MAX_SPRITES_PER_BATCH )
+    if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].get(), mOptions );
+        drawBegin( mEffectiveContext->textures[0].get(), mOptions );
     }
 
-    GN_ASSERT( mNumPendingSprites < MAX_SPRITES_PER_BATCH );
+    GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
-    // fill vertex buffer
-    SpriteVertex * p = &mPendingVertices[mNumPendingSprites*4];
+    mNextFreeSprite->v[0].pos.set( x1, y1, z );
+    mNextFreeSprite->v[0].clr = rgba;
 
-    p[0].pos.set( x1, y1, z );
-    p[0].clr = rgba;
+    mNextFreeSprite->v[1].pos.set( x1, y2, z );
+    mNextFreeSprite->v[1].clr = rgba;
 
-    p[1].pos.set( x1, y2, z );
-    p[1].clr = rgba;
+    mNextFreeSprite->v[2].pos.set( x2, y2, z );
+    mNextFreeSprite->v[2].clr = rgba;
 
-    p[2].pos.set( x2, y2, z );
-    p[2].clr = rgba;
-
-    p[3].pos.set( x2, y1, z );
-    p[3].clr = rgba;
+    mNextFreeSprite->v[3].pos.set( x2, y1, z );
+    mNextFreeSprite->v[3].clr = rgba;
 
     // prepare for next Sprite
-    ++mNumPendingSprites;
+    ++mNextFreeSprite;
 }
