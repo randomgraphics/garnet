@@ -35,7 +35,7 @@ namespace GN { namespace gfx
             /// default ctor
             TextureDesc()
             {
-                sampler.resetToDefault();
+                sampler.clear();
             }
         };
 

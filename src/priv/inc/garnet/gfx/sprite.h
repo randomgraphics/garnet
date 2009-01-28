@@ -59,30 +59,27 @@ namespace GN { namespace gfx
         void drawBegin( Texture * texture, BitFields options = 0 );
         void drawEnd();
 
-        ///
-        /// Note that [0,0] is upper left corner of the screen.
-        ///
         void drawTextured(
-            float z  = 0.0f,
-            float x1 = 0.0f,
-            float y1 = 0.0f,
-            float x2 = 1.0f,
-            float y2 = 1.0f,
-            float u1 = 0.0f,
-            float v1 = 0.0f,
-            float u2 = 1.0f,
-            float v2 = 1.0f );
+            float x,
+            float y,
+            float w,
+            float h,
+            float u  = 0.0f,
+            float v  = 0.0f,
+            float tw = 1.0f,
+            float th = 1.0f,
+            float z  = 0.0f );
 
         ///
         /// Note that [0,0] is upper left corner of the screen.
         ///
         void drawSolid(
-            UInt32 rgba = 0xFFFFFFFF,
-            float z     = 0.0f,
-            float x1    = 0.0f,
-            float y1    = 0.0f,
-            float x2    = 1.0f,
-            float y2    = 1.0f );
+            UInt32 rgba,
+            float  x,
+            float  y,
+            float  w,
+            float  h,
+            float  z );
 
         //@}
 
@@ -92,32 +89,32 @@ namespace GN { namespace gfx
         void drawSingleTexturedSprite(
             Texture * tex,
             BitFields options,
-            float     z  = 0.0f,
-            float     x1 = 0.0f,
-            float     y1 = 0.0f,
-            float     x2 = 1.0f,
-            float     y2 = 1.0f,
-            float     u1 = 0.0f,
-            float     v1 = 0.0f,
-            float     u2 = 1.0f,
-            float     v2 = 1.0f )
+            float     x,
+            float     y,
+            float     w,
+            float     h,
+            float     u  = 0.0f,
+            float     v  = 0.0f,
+            float     tw = 1.0f,
+            float     th = 1.0f,
+            float     z  = 0.0f )
         {
             drawBegin( tex, options );
-            drawTextured( z, x1, y1, x2, y2, u1, v1, u2, v2 );
+            drawTextured( x, y, w, h, u, v, tw, th, z );
             drawEnd();
         }
 
         void drawSingleSolidSprite(
             UInt32    rgba, // color in R-G-B-A format
             BitFields options,
-            float     z  = 0.0f,
-            float     x1 = 0.0f,
-            float     y1 = 0.0f,
-            float     x2 = 1.0f,
-            float     y2 = 1.0f )
+            float     x,
+            float     y,
+            float     w,
+            float     h,
+            float     z )
         {
             drawBegin( 0, options );
-            drawSolid( rgba, z, x1, y1, x2, y2 );
+            drawSolid( rgba, x, y, w, h, z );
             drawEnd();
         }
 
@@ -148,8 +145,6 @@ namespace GN { namespace gfx
         };
 
         Renderer                 & mRenderer;
-        AutoRef<VtxBuf>            mVtxBuf;
-        AutoRef<IdxBuf>            mIdxBuf;
         RendererContext            mPrivateContext;
         RendererContext            mEnvironmentContext;
         RendererContext          * mEffectiveContext;

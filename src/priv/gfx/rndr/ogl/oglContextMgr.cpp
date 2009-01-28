@@ -121,7 +121,7 @@ bool GN::gfx::OGLRenderer::contextInit()
 void GN::gfx::OGLRenderer::contextQuit()
 {
     // reset context
-    mContext.resetToDefault();
+    mContext.clear();
 
     // delete all vertex formats
     for( std::map<VertexFormat,OGLVtxFmt*>::iterator i = mVertexFormats.begin();

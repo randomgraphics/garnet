@@ -103,7 +103,7 @@ bool init( Renderer & rndr )
     if( !mesh.init( md ) ) return false;
 
     // create drawable 1
-    d1.rc.resetToDefault();
+    d1.rc.clear();
     if( !e.applyToDrawable( d1, 0 ) ) return false;
     mesh.applyToDrawable( d1 );
 

@@ -43,7 +43,7 @@ readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 
 bool init( Renderer & rndr )
 {
-    rc.resetToDefault();
+    rc.clear();
 
     // create GPU program
     GpuProgramDesc gpd;
@@ -106,7 +106,7 @@ bool init( Renderer & rndr )
 
 void quit( Renderer & )
 {
-    rc.resetToDefault();
+    rc.clear();
 }
 
 void draw( Renderer & r )

@@ -11,67 +11,6 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
 // *****************************************************************************
-// context dumper
-// *****************************************************************************
-
-/*
-struct CtxDumper
-{
-    bool         enabled;
-    GN::DiskFile fp;
-
-    CtxDumper() : enabled(true)
-    {
-        if( enabled )
-        {
-            fp.open( "GNcontext.xml", "wt" );
-        }
-
-        dump( "<?xml version=\"1.0\" standalone=\"yes\"?>" );
-    }
-
-    void dump( const char * fmt, ... )
-    {
-        using namespace GN;
-
-        if( fp )
-        {
-            StrA s;
-
-            va_list arglist;
-            va_start( arglist, fmt );
-            s.formatv( fmt, arglist );
-            va_end( arglist );
-
-            fprintf( fp, "%s\n", s.cptr() );
-        }
-    }
-};
-static CtxDumper sCtxDumper;
-
-//
-//
-// -----------------------------------------------------------------------------
-static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t frame )
-{
-    using namespace GN;
-    using namespace GN::gfx;
-
-    sCtxDumper.dump( "<RendererContext frame=\"%d\">", frame );
-    sCtxDumper.dump(
-        "    <flags\n"
-        "        u32 = \"0x%X\"\n"
-        "    />",
-        ctx.flags.u32 );
-    sCtxDumper.dump( "</RendererContext>" );
-}
-
-#define DUMP_DRAW_STATE() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
-/*/
-#define DUMP_DRAW_STATE()
-//*/
-
-// *****************************************************************************
 // local functions
 // *****************************************************************************
 
@@ -246,7 +185,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
-    DUMP_DRAW_STATE();
+    if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt )
@@ -324,7 +263,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t start
 {
     GN_GUARD_SLOW;
 
-    DUMP_DRAW_STATE();
+    if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt )
@@ -360,7 +299,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 {
     GN_GUARD_SLOW;
 
-    DUMP_DRAW_STATE();
+    if( !mContextOk ) return;
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
@@ -435,7 +374,7 @@ void GN::gfx::OGLRenderer::drawUp(
 {
     GN_GUARD_SLOW;
 
-    DUMP_DRAW_STATE();
+    if( !mContextOk ) return;
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
@@ -490,6 +429,7 @@ void GN::gfx::OGLRenderer::drawLines(
     ctx.gpuProgram.clear();
 
     bindContext( ctx );
+    if( !mContextOk ) return;
 
     mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
 

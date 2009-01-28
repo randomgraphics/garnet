@@ -322,16 +322,23 @@ namespace GN { namespace gfx
         UInt16      offset;      ///< offset of the element
 
         /// set binding string and index
-        void setBinding( const StrA & name, size_t index )
+        void setBinding( const char * name, size_t index )
         {
-            if( name.size() >= GN_ARRAY_COUNT(binding) )
+            size_t len = strLen( name );
+            if( 0 == len )
+            {
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
+                return;
+            }
+
+            if( len >= GN_ARRAY_COUNT(binding) )
             {
                 GN_ERROR(getLogger("GN.gfx.VertexElement"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
-                    name.cptr() );
+                    name );
             }
-            size_t len = min<size_t>( GN_ARRAY_COUNT(binding), name.size()+1 );
-            memcpy( binding, name.cptr(), len );
+            len = min<size_t>( GN_ARRAY_COUNT(binding), len+1 );
+            memcpy( binding, name, len );
 
             if( index > 255 )
             {
@@ -458,7 +465,7 @@ namespace GN { namespace gfx
         float       minlod;    ///< Min mipmap level. Default is zero
         float       maxlod;    ///< Max mipmap level. Default is negative that means no limination
 
-        void resetToDefault()
+        void clear()
         {
             filterMin = filterMip = filterMag = FILTER_LINEAR;
             aniso = 0;
@@ -679,12 +686,12 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        RendererContext() { resetToDefault(); }
+        RendererContext() { clear(); }
 
         ///
         /// reset context to default value
         ///
-        void resetToDefault()
+        void clear()
         {
             // clear all render states first
             renderStates = 0;
@@ -701,10 +708,10 @@ namespace GN { namespace gfx
             stencilFailOp = STENCIL_KEEP;
             stencilZFailOp = STENCIL_KEEP;
 
-            blendSrc = BLEND_INV_SRC_ALPHA;
+            blendSrc = BLEND_SRC_ALPHA;
             blendDst = BLEND_INV_SRC_ALPHA;
             blendOp  = BLEND_OP_ADD;
-            blendAlphaSrc = BLEND_INV_SRC_ALPHA;
+            blendAlphaSrc = BLEND_SRC_ALPHA;
             blendAlphaDst = BLEND_INV_SRC_ALPHA;
             blendAlphaOp  = BLEND_OP_ADD;
 
@@ -731,11 +738,37 @@ namespace GN { namespace gfx
             {
                 textures[i].clear();
                 texbinds[i][0] = '\0';
-                samplers[i].resetToDefault();
+                samplers[i].clear();
             }
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(crts); ++i ) crts[i].texture.clear();
             dsrt.texture.clear();
+        }
+
+        /// set texture binding string
+        void bindTexture( size_t stage, const char * name )
+        {
+            if( stage >= MAX_TEXTURES )
+            {
+                GN_ERROR(getLogger("GN.gfx.RendererContext"))( "Invalid texture stage : %u.", stage );
+                return;
+            }
+
+            size_t len = strLen( name );
+            if( 0 == len )
+            {
+                GN_ERROR(getLogger("GN.gfx.RendererContext"))( "Empty binding string is not allowed." );
+                return;
+            }
+
+            if( len >= GN_ARRAY_COUNT(texbinds[0]) )
+            {
+                GN_ERROR(getLogger("GN.gfx.RendererContext"))(
+                    "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
+                    name );
+            }
+            len = min<size_t>( GN_ARRAY_COUNT(texbinds[0]), len+1 );
+            memcpy( texbinds[stage], name, len );
         }
     };
 

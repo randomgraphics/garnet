@@ -157,6 +157,7 @@ namespace GN { namespace gfx
     protected:
 
         RendererContext mContext;
+        bool            mContextOk;
 
         //@}
 

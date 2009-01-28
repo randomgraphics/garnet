@@ -99,7 +99,7 @@ void GN::gfx::MultiThreadRenderer::quit()
     GN_GUARD;
 
     // clear context
-    mRendererContext.resetToDefault();
+    mRendererContext.clear();
 
     if( mThread )
     {

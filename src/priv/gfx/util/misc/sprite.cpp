@@ -2,6 +2,25 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
+static const char * glslvscode=
+    "varying vec4 color; \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   gl_Position.x = gl_Vertex.x * 2.0 - 1.0; \n"
+    "   gl_Position.y = gl_Vertex.y * -2.0 + 1.0; \n"
+    "   gl_Position.zw = gl_Vertex.zw; \n"
+    "   color = vec4(1,1,1,1); \n"
+    "   texcoords.xy = gl_MultiTexCoord0.xy; \n"
+    "}";
+
+static const char * glslpscode=
+    "uniform sampler2D s0; \n"
+    "varying vec4 color; \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   gl_FragColor = color * texture2D( s0, texcoords ); \n"
+    "}";
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -23,13 +42,37 @@ bool GN::gfx::SpriteRenderer::init()
         VTXBUF_SIZE  = MAX_VERTICES * sizeof(SpriteVertex)
     };
 
+    // create GPU program
+    GpuProgramDesc gpd;
+    gpd.lang = GPL_GLSL;
+    gpd.vs.code = glslvscode;
+    gpd.ps.code = glslpscode;
+    mPrivateContext.gpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
+    if( !mPrivateContext.gpuProgram ) return failure();
+
+    // create vertex format
+    mPrivateContext.vtxfmt.numElements = 3;
+    mPrivateContext.vtxfmt.elements[0].stream = 0;
+    mPrivateContext.vtxfmt.elements[0].offset = 0;
+    mPrivateContext.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
+    mPrivateContext.vtxfmt.elements[0].setBinding( "position", 0 );
+    mPrivateContext.vtxfmt.elements[1].stream = 0;
+    mPrivateContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
+    mPrivateContext.vtxfmt.elements[1].format = COLOR_FORMAT_RGBA32;
+    mPrivateContext.vtxfmt.elements[1].setBinding( "color", 0 );
+    mPrivateContext.vtxfmt.elements[2].stream = 0;
+    mPrivateContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
+    mPrivateContext.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT2;
+    mPrivateContext.vtxfmt.elements[2].setBinding( "texcoord", 0 );
+
     // create vertex buffer
-    mVtxBuf.attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true, false ) );
-    if( !mVtxBuf ) return failure();
+    mPrivateContext.vtxbufs[0].attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true, false ) );
+    if( !mPrivateContext.vtxbufs[0] ) return failure();
+    mPrivateContext.strides[0] = sizeof(SpriteVertex);
 
     // create index buffer
-    mIdxBuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false, false ) );
-    if( !mIdxBuf ) return failure();
+    mPrivateContext.idxbuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false, false ) );
+    if( !mPrivateContext.idxbuf ) return failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
     {
@@ -40,15 +83,16 @@ bool GN::gfx::SpriteRenderer::init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mIdxBuf->update( 0, MAX_INDICES, indices.cptr() );
+    mPrivateContext.idxbuf->update( 0, MAX_INDICES, indices.cptr() );
+
+    // setup texture binding
+    mPrivateContext.bindTexture( 0, "s0" );
 
     // create pending vertex buffer
     mSprites = (Sprite*)heapAlloc( VTXBUF_SIZE );
     if( NULL == mSprites ) return failure();
 
     // initialize other member variables
-    mPrivateContext.vtxbufs[0] = mVtxBuf;
-    mPrivateContext.idxbuf = mIdxBuf;
     mDrawBegun = false;
     mNextPendingSprite = mSprites;
     mNextFreeSprite = mSprites;
@@ -67,10 +111,8 @@ void GN::gfx::SpriteRenderer::quit()
     GN_GUARD;
 
     heapFree( mSprites );
-    mVtxBuf.clear();
-    mIdxBuf.clear();
-    mPrivateContext.resetToDefault();
-    mEnvironmentContext.resetToDefault();
+    mPrivateContext.clear();
+    mEnvironmentContext.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -79,7 +121,7 @@ void GN::gfx::SpriteRenderer::quit()
 }
 
 // *****************************************************************************
-// Initialize and shutdown
+// public methods
 // *****************************************************************************
 
 //
@@ -96,15 +138,16 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     if( options & USE_COSTOM_CONTEXT )
     {
         mEnvironmentContext = mRenderer.getContext();
-        mEnvironmentContext.vtxbufs[0] = mVtxBuf;
-        mEnvironmentContext.idxbuf = mIdxBuf;
+        mEnvironmentContext.vtxfmt = mPrivateContext.vtxfmt;
+        mEnvironmentContext.vtxbufs[0] = mPrivateContext.vtxbufs[0];
+        mEnvironmentContext.idxbuf = mPrivateContext.idxbuf;
         mEnvironmentContext.textures[0].set( texture );
         mEffectiveContext = &mEnvironmentContext;
     }
     else
     {
         mPrivateContext.textures[0].set( texture );
-        mPrivateContext.blendEnabled = options & OPAQUE_SPRITE;
+        mPrivateContext.blendEnabled = !(options & OPAQUE_SPRITE);
         mPrivateContext.depthTest = options & ENABLE_DEPTH_TEST;
         mPrivateContext.depthWrite = options & ENABLE_DEPTH_WRITE;
         mEffectiveContext = &mPrivateContext;
@@ -130,7 +173,7 @@ void GN::gfx::SpriteRenderer::drawEnd()
     {
         size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
 
-        mVtxBuf->update(
+        mPrivateContext.vtxbufs[0]->update(
             firstPendingSpriteOffset * sizeof(Sprite),
             numPendingSprites * sizeof(Sprite),
             mNextPendingSprite,
@@ -157,15 +200,15 @@ void GN::gfx::SpriteRenderer::drawEnd()
 // -----------------------------------------------------------------------------
 void
 GN::gfx::SpriteRenderer::drawTextured(
-    float z,
-    float x1,
-    float y1,
-    float x2,
-    float y2,
-    float u1,
-    float v1,
-    float u2,
-    float v2 )
+    float x,
+    float y,
+    float w,
+    float h,
+    float u,
+    float v,
+    float tw,
+    float th,
+    float z )
 {
     if( !mDrawBegun )
     {
@@ -181,18 +224,27 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
+    const DispDesc & dd = mRenderer.getDispDesc();
+
+    float x1 = x / dd.width;
+    float y1 = y / dd.height;
+    float x2 = (x + w) / dd.width;
+    float y2 = (y + h) / dd.height;
+    float u2 = u + tw;
+    float v2 = v + th;
+
     // fill vertex buffer
     mNextFreeSprite->v[0].pos.set( x1, y1, z );
-    mNextFreeSprite->v[0].tex.set( u1, v1 );
+    mNextFreeSprite->v[0].tex.set( u, v );
 
     mNextFreeSprite->v[1].pos.set( x1, y2, z );
-    mNextFreeSprite->v[1].tex.set( u1, v2 );
+    mNextFreeSprite->v[1].tex.set( u, v2 );
 
     mNextFreeSprite->v[2].pos.set( x2, y2, z );
     mNextFreeSprite->v[2].tex.set( u2, v2 );
 
     mNextFreeSprite->v[3].pos.set( x2, y1, z );
-    mNextFreeSprite->v[3].tex.set( u2, v1 );
+    mNextFreeSprite->v[3].tex.set( u2, v );
 
     // prepare for next sprite
     ++mNextFreeSprite;
@@ -204,11 +256,11 @@ GN::gfx::SpriteRenderer::drawTextured(
 void
 GN::gfx::SpriteRenderer::drawSolid(
     UInt32 rgba,
-    float  z,
-    float  x1,
-    float  y1,
-    float  x2,
-    float  y2 )
+    float  x,
+    float  y,
+    float  w,
+    float  h,
+    float  z )
 {
     if( !mDrawBegun )
     {
@@ -223,6 +275,13 @@ GN::gfx::SpriteRenderer::drawSolid(
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
+
+    const DispDesc & dd = mRenderer.getDispDesc();
+
+    float x1 = x / dd.width;
+    float y1 = y / dd.height;
+    float x2 = (x + w) / dd.width;
+    float y2 = (y + h) / dd.height;
 
     mNextFreeSprite->v[0].pos.set( x1, y1, z );
     mNextFreeSprite->v[0].clr = rgba;
