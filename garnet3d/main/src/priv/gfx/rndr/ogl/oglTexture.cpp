@@ -667,7 +667,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
     }
 
     // setup default filters and wrap modes
-    mSampler.resetToDefault();
+    mSampler.clear();
     setSampler( mSampler, true );
 
     // success

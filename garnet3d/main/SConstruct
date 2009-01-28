@@ -144,21 +144,22 @@ def UTIL_error( msg ):
 #
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
-#
-def UTIL_buildRoot( compiler = None ) :
-	if not compiler:
-		return os.path.join( '#build.tmp', 'scons' )
-	else:
-		return os.path.join( '#build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
-
-#
-def UTIL_buildDir( compiler, variant ) :
+# get sub directory of a specific compiler and build variant
+def UTIL_bldsubdir( compiler, variant ):
 	if not isinstance( compiler, Compiler ):
 		assert( isinstance(compiler,int) )
 		assert( isinstance(variant,int) )
-		return os.path.join( '#build.tmp', 'scons' )
+		return ''
 	else:
-		return os.path.join( UTIL_buildRoot(compiler), variant )
+		return compiler.os + '.' + compiler.cpu + '.' + compiler.name + '.' + variant
+
+# get root directory of build directory
+def UTIL_buildRoot() :
+	return os.path.join( '#build.tmp' )
+
+# get build directory of specific compiler and build variant
+def UTIL_buildDir( compiler, variant ) :
+	return os.path.join( UTIL_buildRoot(), UTIL_bldsubdir( compiler, variant ) )
 
 #
 # Create new build environment
@@ -826,6 +827,7 @@ TARGET_tests = [
     'GNtestInput',
     'GNtestOGL',
     'GNtestPcre',
+    'GNtestSprite',
     'GNtestRndr',
     'GNtestXenonNegativeZRange',
     'GNtestXenonStackTexture',
@@ -1181,19 +1183,8 @@ for compiler, variants in ALL_targets.iteritems() :
 		#
 		################################################################################
 
-		# get sub directory of a specific compiler and build variant
-		def UTIL_sdksubdir( compiler, variant ):
-			if not compiler:
-				if not variant :
-					return ''
-				else :
-					return '' + variant
-			else:
-				return compiler.os + '.' + compiler.cpu + '.' + compiler.name + '.' + variant
-
-
 		#define installation root directory
-		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_sdksubdir( compiler, variant ) )
+		INSTALL_root = os.path.join( CONF_sdkroot, UTIL_bldsubdir( compiler, variant ) )
 
 		#define installation alias
 		ALIAS_add_default( "install", INSTALL_root )
@@ -1202,6 +1193,14 @@ for compiler, variants in ALL_targets.iteritems() :
 			dstdir = os.path.join( INSTALL_root, dir )
 			for f in files:
 				Install( dstdir, getTargets(f) )
+
+		def installMedia( dstroot, srcroot ):
+			srcroot = Dir(srcroot).path
+			files = getTargets('GNmedia')
+			for src in files:
+				relpath = GN.relpath( src[0].path, srcroot )
+				dst     = os.path.join( INSTALL_root, dstroot, relpath )
+				InstallAs( dst, src )
 
 		def installHeaders( dstroot, srcroot ):
 			if compiler and variant:
@@ -1213,8 +1212,8 @@ for compiler, variants in ALL_targets.iteritems() :
 
 		installTargets( 'bin',        TARGET_shlibs + TARGET_tools )
 		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
-		installTargets( 'media',      ['GNmedia'] )
 		installTargets( 'doc',        ['GNdoc'] )
+		installMedia  ( 'media',      os.path.join( UTIL_buildDir( compiler, variant ), 'media' ) )
 
 		installTargets( 'inc/garnet/base', ['GNinc'] )
 		installHeaders( 'inc/garnet',      '#src/priv/inc/garnet' )

@@ -174,8 +174,7 @@ void GN::gfx::OGLRenderer::resourceQuit()
     // check for non-released resources
     if( !mResourceList.empty() )
     {
-        GN_ERROR(sLogger)( "All graphics resouces have to be released, before renderer is destroied!" );
-        GN_UNEXPECTED();
+        GN_UNEXPECTED_EX( "All graphics resouces have to be released, before renderer is destroied!" );
         for( std::list<OGLResource*>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i )
         {
             const OGLResource * r = *i;

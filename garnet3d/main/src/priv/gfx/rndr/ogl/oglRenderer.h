@@ -222,7 +222,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.resetToDefault(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
+        void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
         inline bool bindContextShaders( const RendererContext & newContext, bool forceBinding );
         inline bool bindContextRenderStates( const RendererContext & newContext, bool forceBinding );

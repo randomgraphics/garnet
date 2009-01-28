@@ -59,13 +59,11 @@ void GN::gfx::BasicRenderer::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 {
-    if( bindContextImpl( c, false ) )
+    mContextOk = bindContextImpl( c, false );
+
+    if( mContextOk )
     {
         mContext = c;
-    }
-    else if( !bindContextImpl( mContext, true ) )
-    {
-        GN_RNDR_RIP( "fail to recover from context binding failure." );
     }
 }
 
@@ -74,10 +72,7 @@ void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::rebindContext()
 {
-    if( !bindContextImpl( mContext, true ) )
-    {
-        GN_RNDR_RIP( "fail to rebind current context." );
-    }
+    mContextOk = bindContextImpl( mContext, true );
 }
 
 //

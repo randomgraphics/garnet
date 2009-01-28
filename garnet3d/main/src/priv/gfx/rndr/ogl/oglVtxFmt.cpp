@@ -289,7 +289,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport color format: %s", e.format.toString().cptr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().cptr() );
                 return false;
         }
 

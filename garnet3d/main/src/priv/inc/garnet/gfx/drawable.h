@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         void clear()
         {
             rndr = NULL;
-            rc.resetToDefault();
+            rc.clear();
             gpps.clear();
         }
 
