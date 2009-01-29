@@ -1,236 +1,82 @@
 #include "pch.h"
+#include "garnet/GNutil.h"
 #include "charBitmap.h"
 
 using namespace GN;
-using namespace GN::engine;
+using namespace GN::util;
+
+static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
 
 // *****************************************************************************
-// local functions
+// ascii font face class
 // *****************************************************************************
 
-/*
-// calculate bounding box of text paragraph
-// ------------------------------------------------------------------------
-static void sCalcBoundingRect( Recti & rc, const char * text, int x, int y )
+class AsciiFontFace : public FontFace
 {
-    rc.x = x;
-    rc.y = y;
-    rc.w = 0;
-    rc.h = 15;
-    
-    int w = 0;
+    FontFaceDesc mDesc;
+    UInt8        mImage[8*16];
 
-    while( *text )
-    {
-        if( '\n' == *text )
-        {
-            rc.h += 14;
-            if( w > rc.w ) rc.w = w;
-            w = 0;
-        }
-        else if( '\t' == *text )
-        {
-            w += 9 * 4;
-        }
-        else
-        {
-            w += 9;
-        }
-
-        // next char
-        ++text;
-    }
-
-    if( w > rc.w ) rc.w = w;
-}*/
-
-class AsciiFontTextureLoader : public GraphicsResourceLoader
-{
 public:
 
-    AsciiFontTextureLoader() {}
-
-    virtual bool load( const GraphicsResourceDesc &, DynaArray<UInt8> & )
+    /// ctor
+    AsciiFontFace()
     {
-        return true;
+        mDesc.fontname = "ascii_8x16";
+        mDesc.quality  = FFQ_MONOCHROM;
+        mDesc.width    = 8;
+        mDesc.height   = 16;
     }
 
-    virtual bool decompress( const GraphicsResourceDesc &, DynaArray<UInt8> &, DynaArray<UInt8> & )
+    virtual const FontFaceDesc & getDesc() const { return mDesc; }
+
+    virtual bool loadFontImage( FontImage & result, wchar_t ch )
     {
-        return true;
-    }
-
-    virtual bool copy( GraphicsResource &, DynaArray<UInt8> & )
-    {
-        /*
-        gfx::Texture * tex = res.texture;
-        GN_ASSERT( tex );
-
-        // lock texture
-        gfx::TexLockedResult tlr;
-        if( !tex->lock( tlr, 0, 0, 0, gfx::LOCK_DISCARD ) ) return false;
-
-        // fill data
-        memset( tlr.data, 0, tlr.sliceBytes );
-        for( UInt32 ch = 0; ch < 256; ++ch )
+        if( ch > 255 )
         {
-            const BitmapCharDesc * desc = gBitmapChars8x13[ch];
-            GN_ASSERT( desc && desc->width <= 8 && desc->height <= 16 );
+            GN_ERROR(sLogger)( "this function supports ASCII characters only." );
+            return false;
+        }
 
-            UInt8 * offset = ((UInt8*)tlr.data) + (ch / 16) * tlr.rowBytes * 16 + (ch % 16) * 8 * 2;
+        const BitmapCharDesc * bcd = gBitmapChars8x13[ch];
 
-            Vector2<UInt8> * ptr;
+        std::fill( mImage, mImage+sizeof(mImage), 0 );
 
-            for( UInt32 y = 0; y < desc->height; ++y )
+        for( size_t y = 0; y < bcd->height; ++y )
+        {
+            for( size_t x = 0; x < 8; ++x )
             {
-                ptr = (Vector2<UInt8>*)( offset + (desc->height-y) * tlr.rowBytes );
-
-                GN_ASSERT( (UInt8*)tlr.data <= (UInt8*)ptr );
-                GN_ASSERT( (UInt8*)(ptr+8) <= ((UInt8*)tlr.data + tlr.sliceBytes) );
-
-                for( UInt32 x = 0; x < 8; ++x, ++ptr )
-                {
-                    UInt8 c = 255 * !!( desc->bitmap[y] & (1L<<(7-x)) );
-                    ptr->x = c;
-                    ptr->y = c;
-                }
+                mImage[y*8+x] = 255 * !!( bcd->bitmap[bcd->height-y-1] & (1L<<(7-x)) );
             }
         }
 
-        tex->unlock();
+        result.width  = 8;
+        result.height = bcd->height;
+        result.buffer = mImage;
+        result.offx   = -bcd->xorig;
+        result.offy   = bcd->yorig;
+        result.advx   = bcd->advance;
+        result.advy   = 16;
 
-        //tex->setFilter( gfx::TEXFILTER_NEAREST, gfx::TEXFILTER_NEAREST );
-        GN_TODO( "setup sampler" );*/
-
-        // success
         return true;
+    }
+
+    virtual void getKerning( int & dx, int & dy, wchar_t, wchar_t )
+    {
+        // this is a fixed size font, no kerning.
+        dx = 0;
+        dy = 0;
     }
 };
 
 // *****************************************************************************
-// Initialize and shutdown
+// public functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::AsciiFont::init()
+GN::util::FontFace *
+GN::util::createSimpleAsciiFont()
 {
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( GN::scene::AsciiFont, () );
-
-    /* create texture
-    mTexture = eng.create2DTexture( "Ascii font texture", 128, 256, 1, gfx::FMT_LA_8_8_UNORM );
-    if( 0 == mTexture ) return failure();
-
-    AutoRef<AsciiFontTextureLoader> loader( new AsciiFontTextureLoader );
-    eng.updateResource( mTexture, 0, loader );*/
-    GN_UNIMPL();
-
-    // success
-    return success();
-
-    GN_UNGUARD;
+    return new AsciiFontFace;
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::AsciiFont::quit()
-{
-    GN_GUARD;
-
-    safeDeleteGraphicsResource( mTexture );
-    GN_UNIMPL();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// Public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::AsciiFont::drawText( const char * text, int x, int y, UInt32 )
-{
-    GN_GUARD_SLOW;
-
-    GN_UNUSED_PARAM( text );
-    GN_UNUSED_PARAM( x );
-    GN_UNUSED_PARAM( y );
-    GN_UNIMPL_WARNING();
-
-    /* get current screen size
-    const gfx::DispDesc & dd = mQuadRenderer.getRenderEngine().getDispDesc();
-
-    float sx = 1.0f / dd.width;
-    float sy = 1.0f / dd.height;
-
-    // draw bounding rect of the text
-    Recti rc;
-    sCalcBoundingRect( rc, text, x, y );
-    mQuadRenderer.drawSingleSolidQuad(
-        GN_RGBA32( 0, 0, 0, 128 ),
-        0, // option
-        0, // z
-        (float)( rc.x ) * sx,
-        (float)( rc.y ) * sy,
-        (float)( rc.x+rc.w ) * sx,
-        (float)( rc.y+rc.h ) * sy );
-
-    int xx = x, yy = y;
-
-    float x1, y1, x2, y2, u1, v1, u2, v2;
-
-    mQuadRenderer.drawBegin( mTexture );
-    while( *text )
-    {
-        if( '\n' == *text )
-        {
-            xx = x;
-            yy += 14;
-        }
-        else if( '\t' == *text )
-        {
-            xx += 9 * 4;
-        }
-        else
-        {
-            const BitmapCharDesc * desc = gBitmapChars8x13[(UInt8)*text];
-
-            x1 = (float)xx;
-            y1 = (float)yy + (13 - desc->height) + desc->yorig;
-            x2 = x1 + 8;
-            y2 = y1 + 16;
-            u1 = (float)(*text % 16) / 16.0f;
-            v1 = (float)(*text / 16) / 16.0f;
-            u2 = u1 + 1.0f / 16.0f;
-            v2 = v1 + 1.0f / 16.0f;
-
-            mQuadRenderer.drawTextured( 0, x1*sx, y1*sy, x2*sx, y2*sy, u1, v1, u2, v2 );
-
-            xx += 9;
-        }
-
-        // next char
-        ++text;
-    }
-    mQuadRenderer.drawEnd();*/
-
-    GN_UNGUARD_SLOW;
-}
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------

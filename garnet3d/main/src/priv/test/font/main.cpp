@@ -7,17 +7,17 @@ using namespace GN::util;
 
 SpriteRenderer * sr = NULL;
 FontFaceDesc     ffd = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
-BitmapFont       font;
+BitmapFont       ascii, ttf;
 
-bool initFont()
+bool initTTF()
 {
     // create font
     AutoRef<FontFace> ff( createFont(ffd) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
-    font.quit();
-    return font.init( sr, ff );
+    ttf.quit();
+    return ttf.init( sr, ff );
 }
 
 bool init( Renderer & rndr )
@@ -26,7 +26,13 @@ bool init( Renderer & rndr )
     sr = new SpriteRenderer( rndr );
     if( !sr->init() ) return false;
 
-    if( !initFont() ) return false;
+    // initialize ascii font
+    AutoRef<FontFace> ff( createSimpleAsciiFont() );
+    if( !ff ) return false;
+    if( !ascii.init( sr, ff ) ) return false;
+
+    // initialize TTF font
+    if( !initTTF() ) return false;
 
     // success
     return true;
@@ -34,8 +40,9 @@ bool init( Renderer & rndr )
 
 void quit( Renderer & )
 {
+    ascii.quit();
+    ttf.quit();
     safeDelete( sr );
-    font.quit();
 }
 
 void onKeyPress( KeyEvent ke )
@@ -46,34 +53,34 @@ void onKeyPress( KeyEvent ke )
     {
         case KEY_UP :
             ffd.height *= 2;
-            initFont();
+            initTTF();
             break;
 
         case KEY_DOWN:
             ffd.height /= 2;
             if( 0 == ffd.height ) ffd.height = 1;
-            initFont();
+            initTTF();
             break;
 
         case KEY_LEFT :
             ffd.width /= 2;
             if( 0 == ffd.width ) ffd.width = 1;
-            initFont();
+            initTTF();
             break;
 
         case KEY_RIGHT :
             ffd.width *= 2;
-            initFont();
+            initTTF();
             break;
 
         case KEY_A :
             ffd.quality = FFQ_ANTIALIASED;
-            initFont();
+            initTTF();
             break;
 
         case KEY_M :
             ffd.quality = FFQ_MONOCHROM;
-            initFont();
+            initTTF();
             break;
 
         default:
@@ -83,11 +90,12 @@ void onKeyPress( KeyEvent ke )
 
 void draw( Renderer &, const wchar_t * fps )
 {
-    if( font.ok() )
+    ascii.drawText( fps, 0, 0 );
+
+    if( ttf.ok() )
     {
-        font.drawText( fps, 0, 0 );
-        font.drawText( L"ÄãºÃ!¹þ¹þ", 100, 100 );
-        font.drawText( L"Hello!", 200, 200 );
+        ttf.drawText( L"ÄãºÃ!¹þ¹þ", 100, 100 );
+        ttf.drawText( L"Hello!", 200, 200 );
     }
 }
 
@@ -148,8 +156,8 @@ int main( int, const char *[] )
     RendererOptions o;
     o.api = API_OGL;
 
-    //Renderer * r = createMultiThreadRenderer( o );
-    Renderer * r = createSingleThreadRenderer( o );
+    Renderer * r = createMultiThreadRenderer( o );
+    //Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
