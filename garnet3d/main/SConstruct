@@ -824,6 +824,7 @@ TARGET_tests = [
     'GNtestFt2',
     'GNtestGfx',
     'GNtestGfx2',
+    'GNtestFont',
     'GNtestInput',
     'GNtestOGL',
     'GNtestPcre',

@@ -1,7 +1,7 @@
 #include "pch.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
 #if GN_MSVC
 #pragma warning(disable:4309)
@@ -73,7 +73,7 @@ public:
 			return g_TexID[ch].m_texID;
 
         xCharTexture& charTex = g_TexID[ch];
-		
+
 		//取道位图数据
 		FontImage fbm;
         if( !mFace->loadFontImage( fbm, ch ) ) exit(-1);
@@ -125,18 +125,18 @@ xCharTexture* getTextChar(wchar_t ch)
 }
 
 
-GN::StrW g_text( GN::mbs2wcs(
-    "文件格式：\n"
-    "若不明确就标为未知\n"
-    "表演者：	若不明确就标为未知\n"
-    "专辑：		若不明确就标为未知\n"
-    "持续时间：01:01:00超过1小时；\n"
-    "09:09不足小时；00:09不足1分钟\n"
-    "   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
-    "   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
-    "   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
-    "   glEnable(GL_BLEND);\n"
-    "   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" ) ) ;
+GN::StrW g_text(
+    L"文件格式：\n"
+    L"若不明确就标为未知\n"
+    L"表演者：	若不明确就标为未知\n"
+    L"专辑：		若不明确就标为未知\n"
+    L"持续时间：01:01:00超过1小时；\n"
+    L"09:09不足小时；00:09不足1分钟\n"
+    L"   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
+    L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
+    L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
+    L"   glEnable(GL_BLEND);\n"
+    L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" );
 const wchar_t * g_UnicodeString = g_text.cptr();
 
 void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
@@ -146,7 +146,7 @@ void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 	int maxH = h;
 	for(int i = 0 ; i < (int)wcslen(_strText) ; i ++)
 	{
-		
+
 		if(_strText[i] =='\n')
 		{
 			sx = x ; sy += maxH + 12;
@@ -195,7 +195,7 @@ void init(void)
 
    printf( "load font %s %dx%d\n", font_face, font_width, font_height );
    g_FreeTypeLib.load( font_face, font_width, font_height );
-   
+
    glDisable ( GL_CULL_FACE );
 
    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -212,7 +212,7 @@ void reshape( int w, int h )
 	// Reset the coordinate system before modifying
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	
+
 	// Set the viewport to be the entire window
     glViewport(0, 0, w, h);
     glOrtho(0,w,h,0,-100,200);
@@ -273,7 +273,7 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     glutInit            ( &argc, argv ); // Erm Just Write It =)
     glutInitDisplayMode ( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA ); // Display Mode
     glutInitWindowPosition (0,0);
-    glutInitWindowSize  ( 500, 500 ); // If glutFullScreen wasn't called this is the window size
+    glutInitWindowSize  ( 640, 480 ); // If glutFullScreen wasn't called this is the window size
     glutCreateWindow    ( "NeHe Lesson 6- Ported by Rustad" ); // Window Title (argv[0] for current directory as title)
     init();
     //glutFullScreen      ( );          // Put Into Full Screen
@@ -281,7 +281,7 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     glutReshapeFunc     ( reshape );
     glutKeyboardFunc    ( keyboard );
     glutSpecialFunc     ( arrow_keys );
-    glutIdleFunc			 ( display );
+    glutIdleFunc        ( display );
     glutMainLoop        ( );          // Initialize The Main Loop
     return 1;
 }

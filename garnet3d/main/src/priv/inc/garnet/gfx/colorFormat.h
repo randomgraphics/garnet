@@ -44,7 +44,7 @@
 #define GN_MAKE_COLOR_FORMAT( layout, sign, sw0123 ) \
     GN_MAKE_COLOR_FORMAT_EX( \
         layout, sign, sign, \
-        (sw0123&3), ((sw0123>>3)&3), ((sw0123>>6)&3), ((sw0123>>9)&3) )
+        (sw0123&7), ((sw0123>>3)&7), ((sw0123>>6)&7), ((sw0123>>9)&7) )
 
 ///
 /// compose color format from simplified swizzles
@@ -52,7 +52,7 @@
 #define GN_MAKE_COLOR_FORMAT2( layout, sign012, sign3, sw0123 ) \
     GN_MAKE_COLOR_FORMAT_EX( \
         layout, sign012, sign3, \
-        (sw0123&3), ((sw0123>>3)&3), ((sw0123>>6)&3), ((sw0123>>9)&3) )
+        (sw0123&7), ((sw0123>>3)&7), ((sw0123>>6)&7), ((sw0123>>9)&7) )
 
 //@}
 

@@ -53,6 +53,9 @@ namespace GN { namespace gfx
             ENABLE_DEPTH_WRITE = 8, ///< enable depth write. ignored when USE_COSTOM_CONTEXT is set.
         };
 
+        /// get underline renderer
+        Renderer & getRenderer() const { return mRenderer; }
+
         ///
         /// \note set texture to NULL, to draw solid sprite
         ///

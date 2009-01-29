@@ -191,7 +191,7 @@ namespace GN { namespace gfx
             size_t              rowPitch,
             size_t              slicePitch,
             const void        * data,
-            SurfaceUpdateFlag   flag ) = 0;
+            SurfaceUpdateFlag   flag = SURFACE_UPDATE_DEFAULT ) = 0;
 
         ///
         /// read mipmap content.

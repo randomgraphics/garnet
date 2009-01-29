@@ -85,6 +85,11 @@ bool GN::gfx::SpriteRenderer::init()
     }
     mPrivateContext.idxbuf->update( 0, MAX_INDICES, indices.cptr() );
 
+    // setup sampler (point sampling)
+    mPrivateContext.samplers[0].filterMin = TextureSampler::FILTER_POINT;
+    mPrivateContext.samplers[0].filterMip = TextureSampler::FILTER_POINT;
+    mPrivateContext.samplers[0].filterMag = TextureSampler::FILTER_POINT;
+
     // setup texture binding
     mPrivateContext.bindTexture( 0, "s0" );
 
