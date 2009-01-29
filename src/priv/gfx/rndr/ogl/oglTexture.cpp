@@ -870,6 +870,14 @@ GN::gfx::OGLTexture::updateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::OGLTexture::readMipmap( size_t, size_t, MipmapData & )
+{
+    GN_UNIMPL();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLTexture::setSampler( const TextureSampler & samp, bool forceUpdate ) const
 {
     if( !forceUpdate && samp == mSampler ) return;

@@ -1,13 +1,52 @@
 #include "pch.h"
 #include "garnet/GNutil.h"
-//#include "imdebug.h"
-//#pragma comment( lib, "imdebug.lib" )
+
+#define ENABLE_IMDEBUG 0
+
+#if ENABLE_IMDEBUG
+#include "imdebug.h"
+#pragma comment( lib, "imdebug.lib" )
+#endif
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util.BitmapFont");
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sDetermineTextureSizeAndCount(
+    size_t   & texwidth,
+    size_t   & texheight,
+    size_t   & texcount,
+    Renderer & rndr,
+    size_t     rectw,
+    size_t     recth,
+    size_t     maxchars )
+{
+    // determine texture size
+    size_t maxw = rndr.getCaps().maxTex2DSize[0];
+    size_t maxh = rndr.getCaps().maxTex2DSize[1];
+    size_t maxc = rndr.getCaps().maxTextures;
+
+    for( texcount = 1; texcount <= maxc; ++texcount )
+    {
+        for( texwidth = texheight = 1; (texwidth<=maxw) && (texheight<=maxh); texwidth<<=1, texheight<<=1 )
+        {
+            size_t numcols = texwidth / rectw;
+            size_t numrows = texheight / recth;
+            if( texcount * numcols * numrows >= maxchars )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -244,12 +283,14 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
         return false;
     }
 
-    //imdebug( "lum w=%d h=%d %p", fbm.width, fbm.height, fbm.buffer );
+#if ENABLE_IMDEBUG
+    imdebug( "lum w=%d h=%d %p", fbm.width, fbm.height, fbm.buffer );
+#endif
 
     // update slot fields
     slot.ch   = ch;
     slot.offx = fbm.offx;
-    slot.offy = fbm.offy;
+    slot.offy = fbm.offy + slot.h - fbm.height;
     slot.advx = fbm.advx;
     slot.advy = fbm.advy;
 
@@ -257,13 +298,11 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     GN_ASSERT( fbm.width <= slot.w && fbm.height <= slot.h );
     DynaArray<UInt8> tmpbuf( slot.w * slot.h * 4 );
     std::fill( tmpbuf.begin(), tmpbuf.end(), 0 );
-    size_t margin_x = slot.w - fbm.width;
-    size_t margin_y = slot.h - fbm.height;
-    for( size_t y = margin_y; y < slot.h; ++y )
+    for( size_t y = 0; y < fbm.height; ++y )
     {
-        for( size_t x = margin_x; x < slot.w; ++x )
+        for( size_t x = 0; x < fbm.width; ++x )
         {
-            size_t s = ( y - margin_y ) * fbm.width + x - margin_x;
+            size_t s = y * fbm.width + x;
             size_t d = ( y * slot.w + x ) * 4;
             tmpbuf[d+0] = 0xFF;
             tmpbuf[d+1] = 0xFF;
@@ -299,61 +338,37 @@ GN::util::BitmapFont::slotInit(
     UInt16 recth = fonth + 0;
 
     // determine texture size
-    UInt32 texw = rndr.getCaps().maxTex2DSize[0];
-    UInt32 texh = rndr.getCaps().maxTex2DSize[1];
-    UInt32 numcols = texw / rectw;
-    UInt32 numrows = texh / recth;
-    UInt32 numSlotsPerTex = numcols * numrows;
-    UInt32 numTextures;
-    if( numSlotsPerTex > maxchars )
-    {
-        // single texture
-        numTextures = 1;
-        numrows = ( maxchars + numcols - 1 ) / numcols;
-        numSlotsPerTex = numrows * numcols;
-        GN_ASSERT( numrows <= texh / recth );
-        GN_ASSERT( numcols <= texw / rectw );
-        texw = math::ceilPowerOf2( numcols * rectw );
-        texh = math::ceilPowerOf2( numrows * recth );
-    }
-    else
-    {
-        // multiple textures
-        numTextures = (maxchars+numSlotsPerTex-1) / numSlotsPerTex;
-        if( numTextures > rndr.getCaps().maxTextures )
-        {
-            GN_ERROR(sLogger)( "Out of renderer capabilities. Please either decrease font size or maxchars." );
-            return 0;
-        }
-    }
-    GN_ASSERT( numSlotsPerTex * numTextures >= maxchars );
+    size_t texwidth, texheight, texcount;
+    sDetermineTextureSizeAndCount( texwidth, texheight, texcount, rndr, rectw, recth, maxchars );
 
     // create slot map array
-    mMaxSlots = numSlotsPerTex * numTextures;
+    size_t numcols = texwidth / rectw;
+    size_t numrows = texheight / recth;
+    mMaxSlots = numcols * numrows * texcount;
     GN_ASSERT( mMaxSlots >= maxchars );
     mFontSlots = new FontSlot[mMaxSlots];
 
     // initialize font slots
-    float stepu = float(rectw) / texw;
-    float stepv = float(recth) / texh;
+    float stepu = float(rectw) / texwidth;
+    float stepv = float(recth) / texheight;
     UInt16 x, y;
     float  u, v;
     SafeArrayAccessor<FontSlot> slot( mFontSlots, mMaxSlots );
-    for( UInt32 itex = 0; itex < numTextures; ++itex )
+    for( size_t itex = 0; itex < texcount; ++itex )
     {
-        u = 0.5f / texw; x = 0;
-        for( UInt32 icol = 0; icol < numcols; ++icol )
+        u = 0; x = 0;
+        for( size_t icol = 0; icol < numcols; ++icol )
         {
-            v = 0.5f / texh; y = 0;
-            for( UInt32 irow = 0; irow < numrows; ++irow )
+            v = 0; y = 0;
+            for( size_t irow = 0; irow < numrows; ++irow )
             {
                 // setup slot
                 GN_ASSERT( itex < 256 );
                 slot->texidx = (UInt8)itex;
                 slot->u = u;
                 slot->v = v;
-                slot->tw = float(fontw)/texw;
-                slot->th = float(fonth)/texh;
+                slot->tw = float(fontw)/texwidth;
+                slot->th = float(fonth)/texheight;
                 slot->x = x;
                 slot->y = y;
                 slot->w = fontw;
@@ -377,14 +392,14 @@ GN::util::BitmapFont::slotInit(
     // and slot map is also empty
     mSlotMap.clear();
 
-    //DynaArray<UInt8> texels( texw * texh * 4 );
+    //DynaArray<UInt8> texels( texwidth * texheight * 4 );
     //std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
-    TextureDesc td = { texw, texh, 1, 1, 1, COLOR_FORMAT_RGBA_8_8_8_8_UNORM, 0 };
-    GN_ASSERT( numTextures <= rndr.getCaps().maxTextures );
-    mTextures.resize( numTextures );
-    for( size_t i = 0; i < numTextures; ++i )
+    TextureDesc td = { texwidth, texheight, 1, 1, 1, COLOR_FORMAT_RGBA_8_8_8_8_UNORM, 0 };
+    GN_ASSERT( texcount <= rndr.getCaps().maxTextures );
+    mTextures.resize( texcount );
+    for( size_t i = 0; i < texcount; ++i )
     {
         mTextures[i].attach( rndr.createTexture( td ) );
 
@@ -395,7 +410,7 @@ GN::util::BitmapFont::slotInit(
         }
 
         // clear texture to pure black
-        //mTextures[i]->updateMipmap( 0, 0, 0, texw * 4, texels.size(), texels.cptr() );
+        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.cptr() );
     }
 
     // success
