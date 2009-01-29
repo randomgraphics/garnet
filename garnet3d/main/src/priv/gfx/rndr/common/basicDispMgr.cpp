@@ -333,7 +333,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
 
         if( dd.width != width || dd.height != height || dd.monitorHandle != monitor )
         {
-            getSigRendererWindowSizeMove()( *this, monitor, width, height );
+            sigRendererWindowSizeMove( monitor, width, height );
         }
     }
 

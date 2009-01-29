@@ -29,9 +29,9 @@ class InputTest
             return false;
 
         // connect to input signals
-        gSigKeyPress.connect( this, &InputTest::onKeyPress );
-        gSigCharPress.connect( this, &InputTest::onCharPress );
-        gSigAxisMove.connect( this, &InputTest::onAxisMove );
+        gInput.sigKeyPress.connect( this, &InputTest::onKeyPress );
+        gInput.sigCharPress.connect( this, &InputTest::onCharPress );
+        gInput.sigAxisMove.connect( this, &InputTest::onAxisMove );
 
         return true;
     }

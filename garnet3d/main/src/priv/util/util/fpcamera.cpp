@@ -186,7 +186,14 @@ void FirstPersonCamera::update( float timeslice )
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::connectToInput()
 {
-    gSigAxisMove.connect( this, &FirstPersonCamera::onAxisMove );
+    if( gInputPtr )
+    {
+        gInput.sigAxisMove.connect( this, &FirstPersonCamera::onAxisMove );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Input module is not initialized." );
+    }
 }
 
 //
@@ -194,7 +201,10 @@ void FirstPersonCamera::connectToInput()
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::disconnectFromInput()
 {
-    gSigAxisMove.disconnect( this );
+    if( gInputPtr )
+    {
+        gInput.sigAxisMove.disconnect( this );
+    }
 }
 
 // *****************************************************************************
