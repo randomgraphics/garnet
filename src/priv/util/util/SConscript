@@ -1,8 +1,10 @@
 Import( 'GN' )
 sources = [
 	'arcball.cpp',
+	'asciifont.cpp',
 	'ase.cpp',
 	'bitmapFont.cpp',
+	'charBitmap8x13.cpp',
 	'fontft2.cpp',
 	'fpcamera.cpp',
 	'simpleDiffuseEffect.cpp',
