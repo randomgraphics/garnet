@@ -29,6 +29,15 @@ namespace GN { namespace util
     };
 
     ///
+    /// font quality
+    ///
+    enum FontFaceQuality
+    {
+        FFQ_MONOCHROM,   // default quality, suitable for small size font.
+        FFQ_ANTIALIASED, // suitable for larger size font.
+    };
+
+    ///
     /// Font face descriptor
     ///
     struct FontFaceDesc
@@ -49,15 +58,11 @@ namespace GN { namespace util
         /// get character height (minimal line step) in pixel
         ///
         UInt16 height;
-    };
 
-    ///
-    /// font quality
-    ///
-    enum FontFaceQuality
-    {
-        FFQ_MONOCHROM,   // default quality, suitable for small size font.
-        FFQ_ANTIALIASED, // suitable for larger size font.
+        ///
+        /// font quality
+        ///
+        FontFaceQuality quality;
     };
 
     ///
@@ -75,10 +80,7 @@ namespace GN { namespace util
         ///
         /// \note This function will erase previously loaded character (invalidate previous FontImage::buffer)
         ///
-        virtual bool loadFontImage(
-            FontImage & result,
-            wchar_t ch,
-            FontFaceQuality quality = FFQ_MONOCHROM ) = 0;
+        virtual bool loadFontImage( FontImage & result, wchar_t ch ) = 0;
 
         ///
         /// get font kerning data in pixel
