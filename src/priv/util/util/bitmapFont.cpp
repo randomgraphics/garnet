@@ -339,7 +339,11 @@ GN::util::BitmapFont::slotInit(
 
     // determine texture size
     size_t texwidth, texheight, texcount;
-    sDetermineTextureSizeAndCount( texwidth, texheight, texcount, rndr, rectw, recth, maxchars );
+    if( !sDetermineTextureSizeAndCount( texwidth, texheight, texcount, rndr, rectw, recth, maxchars ) )
+    {
+        GN_ERROR(sLogger)( "Fail to determine font texture size, please decrease font size or maxchars." );
+        return false;
+    }
 
     // create slot map array
     size_t numcols = texwidth / rectw;

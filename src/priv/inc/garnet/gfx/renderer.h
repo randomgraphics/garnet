@@ -6,66 +6,8 @@
 /// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
-/// \name aliases for global renderer signals
-//@{
-#define gSigRendererDeviceLost     (GN::gfx::getSigRendererDeviceLost())
-#define gSigRendererWindowSizeMove (GN::gfx::getSigRendererWindowSizeMove())
-#define gSigRendererWindowClose    (GN::gfx::getSigRendererWindowClose())
-//@}
-
 namespace GN { namespace gfx
 {
-    struct Renderer;
-
-    // ********************************************************************
-    ///
-    /// \name Renderer Signals
-    ///
-    /// - Renderer class may recreate itself when some system event happens,
-    ///   like restoring from lock screen, which will trigger renderer create
-    ///   and destroy signals.
-    /// - Explicty (re)creation of renderer, will also trigger renderer signals.
-    /// - 收到destroy信号后，应该删除所有的图形资源
-    ///
-    // ********************************************************************
-
-    //@{
-
-    ///
-    /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
-    ///
-    GN_PUBLIC Signal1<void,Renderer&> & getSigRendererDeviceLost();
-
-    ///
-    /// Happens when render windows is moved or resized.
-    ///
-    /// The 3 parameters are:
-    ///  - HandleType monior   : monitor handle that render window stays in
-    ///  - UInt32 clientWidth  : width of client area of render window
-    ///  - UInt32 clientHeight : height of client area of render window
-    ///
-    GN_PUBLIC Signal4<void, Renderer&, HandleType, UInt32, UInt32> & getSigRendererWindowSizeMove();
-
-    ///
-    /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
-    ///
-    /// This signal is useful when you want your application to quit when
-    /// user click close button or press ALT-F4, while using internal
-    /// render window.
-    /// \par
-    /// Note that if you igore this sigal, _NOTHING_ will happen. Internal
-    /// render window will _NOT_ be closed. You can only close the internal
-    /// render window by delete the renderer.
-    /// \par
-    /// When using external render window, this signall will be triggered
-    /// as well, to make renderer behavior consistent. But normally, you
-    /// should have external window messages handled already somewhere else
-    /// in your code. So you may safely ignore this signal.
-    ///
-    GN_PUBLIC Signal1<void,Renderer&> & getSigRendererWindowClose();
-
-    //@}
-
     ///
     /// Display mode structure
     ///
@@ -814,6 +756,55 @@ namespace GN { namespace gfx
     ///
     struct Renderer : public NoCopy
     {
+        // ********************************************************************
+        ///
+        /// \name Renderer Signals
+        ///
+        /// - Renderer class may recreate itself when some system event happens,
+        ///   like restoring from lock screen, which will trigger renderer create
+        ///   and destroy signals.
+        /// - Explicty (re)creation of renderer, will also trigger renderer signals.
+        /// - 收到destroy信号后，应该删除所有的图形资源
+        ///
+        // ********************************************************************
+
+        //@{
+
+        ///
+        /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
+        ///
+        Signal0<void> sigRendererDeviceLost;
+
+        ///
+        /// Happens when render windows is moved or resized.
+        ///
+        /// The 3 parameters are:
+        ///  - HandleType monior   : monitor handle that render window stays in
+        ///  - UInt32 clientWidth  : width of client area of render window
+        ///  - UInt32 clientHeight : height of client area of render window
+        ///
+        Signal3<void, HandleType, UInt32, UInt32> sigRendererWindowSizeMove;
+
+        ///
+        /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
+        ///
+        /// This signal is useful when you want your application to quit when
+        /// user click close button or press ALT-F4, while using internal
+        /// render window.
+        /// \par
+        /// Note that if you igore this sigal, _NOTHING_ will happen. Internal
+        /// render window will _NOT_ be closed. You can only close the internal
+        /// render window by delete the renderer.
+        /// \par
+        /// When using external render window, this signall will be triggered
+        /// as well, to make renderer behavior consistent. But normally, you
+        /// should have external window messages handled already somewhere else
+        /// in your code. So you may safely ignore this signal.
+        ///
+        Signal0<void> sigRendererWindowClose;
+
+        //@}
+
         // ********************************************************************
         //
         /// \name Display Manager

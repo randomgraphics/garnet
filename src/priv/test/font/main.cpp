@@ -6,12 +6,12 @@ using namespace GN::input;
 using namespace GN::util;
 
 SpriteRenderer * sr = NULL;
+FontFaceDesc     ffd = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
 BitmapFont       font;
 
-bool initFont( UInt32 w, UInt32 h )
+bool initFont()
 {
     // create font
-    FontFaceDesc ffd = { "font::simsun.ttc", (UInt16)w, (UInt16)h, FFQ_ANTIALIASED };
     AutoRef<FontFace> ff( createFont(ffd) );
     if( !ff ) return false;
 
@@ -26,7 +26,7 @@ bool init( Renderer & rndr )
     sr = new SpriteRenderer( rndr );
     if( !sr->init() ) return false;
 
-    if( !initFont( 64, 64 ) ) return false;
+    if( !initFont() ) return false;
 
     // success
     return true;
@@ -40,6 +40,45 @@ void quit( Renderer & )
 
 void onKeyPress( KeyEvent ke )
 {
+    if( !ke.status.down ) return;
+
+    switch( ke.code )
+    {
+        case KEY_UP :
+            ffd.height *= 2;
+            initFont();
+            break;
+
+        case KEY_DOWN:
+            ffd.height /= 2;
+            if( 0 == ffd.height ) ffd.height = 1;
+            initFont();
+            break;
+
+        case KEY_LEFT :
+            ffd.width /= 2;
+            if( 0 == ffd.width ) ffd.width = 1;
+            initFont();
+            break;
+
+        case KEY_RIGHT :
+            ffd.width *= 2;
+            initFont();
+            break;
+
+        case KEY_A :
+            ffd.quality = FFQ_ANTIALIASED;
+            initFont();
+            break;
+
+        case KEY_M :
+            ffd.quality = FFQ_MONOCHROM;
+            initFont();
+            break;
+
+        default:
+            break;
+    }
 }
 
 void draw( Renderer &, const wchar_t * fps )
@@ -93,6 +132,7 @@ struct InputInitiator
         initializeInputSystem( API_NATIVE );
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.sigKeyPress.connect( onKeyPress );
     }
 
     ~InputInitiator()

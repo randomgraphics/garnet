@@ -139,7 +139,7 @@ private:
     static void sQuitLib()
     {
         GN_ASSERT( sLib );
-        sLib->decref();
+        if( 0 == sLib->decref() ) sLib = 0;
     }
 };
 Ft2Library * FontFaceFt2::sLib = 0;

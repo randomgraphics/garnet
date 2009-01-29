@@ -86,8 +86,16 @@ void GN::util::ArcBall::rotate( float dx, float dy )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput()
 {
-    gSigKeyPress.connect( this, &ArcBall::onKeyPress );
-    gSigAxisMove.connect( this, &ArcBall::onAxisMove );
+    if( gInputPtr )
+    {
+        gInput.sigKeyPress.connect( this, &ArcBall::onKeyPress );
+        gInput.sigAxisMove.connect( this, &ArcBall::onAxisMove );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Input module is not initialized." );
+    }
+
 }
 
 //
@@ -95,8 +103,11 @@ void GN::util::ArcBall::connectToInput()
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::disconnectFromInput()
 {
-    gSigKeyPress.disconnect( this );
-    gSigAxisMove.disconnect( this );
+    if( gInputPtr )
+    {
+        gInput.sigKeyPress.disconnect( this );
+        gInput.sigAxisMove.disconnect( this );
+    }
 }
 
 //

@@ -148,7 +148,7 @@
     if ( b < 0 ) { b = -b; s = -s; }
     if ( c < 0 ) { c = -c; s = -s; }
 
-    d = (FT_Long)( c > 0 ? ( (FT_Int64)a * b + ( c >> 1 ) ) / c
+    d = (FT_Long)( c > 0 ? ( ( ( (FT_Int64)a * b + ( c >> 1 ) ) / c ) & 0xFFFFFFFF )
                          : 0x7FFFFFFFL );
 
     return ( s > 0 ) ? d : -d;
