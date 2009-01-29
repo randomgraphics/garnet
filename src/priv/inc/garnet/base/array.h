@@ -292,7 +292,13 @@ namespace GN
 
         void doAppend( const T * p, size_t count )
         {
-            if( 0 == p || 0 == count ) return;
+            if( 0 == count ) return;
+
+            if( 0 == p )
+            {
+                GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+                return;
+            }
 
             // reserve memory
             doReserve( mCount + count );

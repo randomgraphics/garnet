@@ -713,14 +713,14 @@ namespace GN
         }
 
         ///
-        /// indexing operator
+        /// type cast to C string
         ///
-        CharType & operator [] ( size_t i ) { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
+        operator const CharType *() const { return mPtr; }
 
         ///
-        /// constant indexing operator
+        /// type cast to C string
         ///
-        const CharType & operator [] ( size_t i ) const { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
+        operator CharType *() { return mPtr; }
 
         ///
         /// assign operator

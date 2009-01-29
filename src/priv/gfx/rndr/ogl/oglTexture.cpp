@@ -252,6 +252,12 @@ static inline bool sColorFormat2OGL(
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
+        case COLOR_FORMAT_R_8_UNORM :
+            gl_internalformat  = 1;
+            gl_format          = GL_RED;
+            gl_type            = GL_UNSIGNED_BYTE;
+            return true;
+
         case COLOR_FORMAT_L_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8;
             gl_format          = GL_LUMINANCE;
@@ -716,6 +722,7 @@ GN::gfx::OGLTexture::updateMipmap(
     bind();
 
     // setup pixel store parameters
+#if 1
     size_t bpp = getDesc().format.getBytesPerBlock();
     glPixelStorei( GL_UNPACK_ROW_LENGTH, (GLint)(rowPitch/bpp) );
 
@@ -725,6 +732,31 @@ GN::gfx::OGLTexture::updateMipmap(
     else if( rowPitch & 4 ) alignment = 4;
     else                    alignment = 8;
     glPixelStorei( GL_UNPACK_ALIGNMENT, alignment );
+#else
+    size_t bpp = getDesc().format.getBytesPerBlock();
+    GLint alignment;
+    glGetIntegerv( GL_PACK_ALIGNMENT, &alignment );
+    size_t destrowpitch = align<size_t>( clippedArea.w, alignment ) * bpp;
+    size_t destslicepitch = destrowpitch * align<size_t>( clippedArea.h, alignment );
+    DynaArray<UInt8> tmpbuf;
+    if( destslicepitch != slicePitch )
+    {
+        tmpbuf.resize( destslicepitch );
+        std::fill( tmpbuf.begin(), tmpbuf.end(), 0 );
+        const UInt8 * src = (const UInt8*)inputData;
+        UInt8 *       dst = tmpbuf.cptr();
+        for( size_t y = 0; y < clippedArea.h; ++y )
+        {
+            memcpy( dst, src, min(rowPitch,destrowpitch) );
+            src += rowPitch;
+            dst += destrowpitch;
+        }
+        rowPitch   = destrowpitch;
+        slicePitch = tmpbuf.size();
+        inputData  = tmpbuf.cptr();
+    }
+
+#endif
 
     // TODO: setup slice pitch parameter
 

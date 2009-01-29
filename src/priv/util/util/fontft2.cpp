@@ -1,11 +1,12 @@
 #include "pch.h"
+#include "garnet/GNutil.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene.FontFt2");
+static GN::Logger * sLogger = GN::getLogger("GN.util.FontFt2");
 
 // *****************************************************************************
 // local functions
@@ -160,7 +161,7 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
     GN_ASSERT( sLib && sLib->lib );
 
     // open font file
-    File * fp = core::openFile( desc.fontname, "rb" );
+    File * fp = openFile( desc.fontname, "rb" );
     if( !fp ) return failure();
 
     // initialize FT2 stream
@@ -331,8 +332,8 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::FontFace *
-GN::scene::createFont( const FontFaceDesc & desc )
+GN::util::FontFace *
+GN::util::createFont( const FontFaceDesc & desc )
 {
     GN_GUARD;
 
