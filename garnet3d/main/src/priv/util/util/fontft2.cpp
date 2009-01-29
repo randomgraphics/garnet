@@ -75,7 +75,7 @@ private:
 public:
 
     virtual const FontFaceDesc & getDesc() const { return mDesc; }
-    virtual bool loadFontImage( FontImage &, wchar_t, FontFaceQuality );
+    virtual bool loadFontImage( FontImage &, wchar_t );
     virtual void getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 );
 
     // ********************************
@@ -226,7 +226,7 @@ void FontFaceFt2::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch, FontFaceQuality quality )
+bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 {
     GN_GUARD;
 
@@ -235,7 +235,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch, FontFaceQuality
     // load glyph image.
     // Note this function will erase previous slot
     FT_UInt flag = FT_LOAD_RENDER;
-    switch( quality )
+    switch( mDesc.quality )
     {
         case FFQ_MONOCHROM   : flag |= FT_LOAD_MONOCHROME; break;
         case FFQ_ANTIALIASED : flag |= FT_LOAD_DEFAULT; break;

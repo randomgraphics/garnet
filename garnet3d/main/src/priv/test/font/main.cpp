@@ -11,7 +11,7 @@ BitmapFont       font;
 bool initFont( UInt32 w, UInt32 h )
 {
     // create font
-    FontFaceDesc ffd = { "font::simsun.ttc", (UInt16)w, (UInt16)h };
+    FontFaceDesc ffd = { "font::simsun.ttc", (UInt16)w, (UInt16)h, FFQ_ANTIALIASED };
     AutoRef<FontFace> ff( createFont(ffd) );
     if( !ff ) return false;
 
@@ -26,7 +26,7 @@ bool init( Renderer & rndr )
     sr = new SpriteRenderer( rndr );
     if( !sr->init() ) return false;
 
-    if( !initFont( 16, 16 ) ) return false;
+    if( !initFont( 64, 64 ) ) return false;
 
     // success
     return true;
@@ -36,6 +36,10 @@ void quit( Renderer & )
 {
     safeDelete( sr );
     font.quit();
+}
+
+void onKeyPress( KeyEvent ke )
+{
 }
 
 void draw( Renderer &, const wchar_t * fps )
