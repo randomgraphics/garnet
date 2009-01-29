@@ -158,6 +158,17 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         mEffectiveContext = &mPrivateContext;
     }
 
+    if( API_D3D9 == mRenderer.getOptions().api )
+    {
+        // Shift vertex a little bit on D3D9 platform
+        mVertexShift = -0.5f;
+    }
+    else
+    {
+        // no need to shift pixel on platform other than D3D9
+        mVertexShift = 0.0f;
+    }
+
     mDrawBegun = true;
     mOptions   = options;
 }
@@ -231,10 +242,10 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     const DispDesc & dd = mRenderer.getDispDesc();
 
-    float x1 = x / dd.width;
-    float y1 = y / dd.height;
-    float x2 = (x + w) / dd.width;
-    float y2 = (y + h) / dd.height;
+    float x1 = ( x + mVertexShift ) / dd.width;
+    float y1 = ( y + mVertexShift ) / dd.height;
+    float x2 = x1 + w / dd.width;
+    float y2 = y1 + h / dd.height;
     float u2 = u + tw;
     float v2 = v + th;
 

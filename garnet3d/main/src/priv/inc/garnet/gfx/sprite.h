@@ -152,6 +152,7 @@ namespace GN { namespace gfx
         RendererContext            mEnvironmentContext;
         RendererContext          * mEffectiveContext;
         BitFields                  mOptions;
+        float                      mVertexShift;
         bool                       mDrawBegun;
         Sprite                   * mSprites;
         Sprite                   * mNextPendingSprite;
