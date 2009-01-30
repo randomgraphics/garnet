@@ -465,6 +465,25 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// interface of GPU uniform
+    ///
+    struct Uniform : public RefCounter
+    {
+        /// get parameter size
+        virtual size_t size() const = 0;
+
+        /// get current parameter value
+        virtual const void * getval() const = 0;
+
+        /// update parameter value
+        virtual void update( size_t offset, size_t length, const void * data ) = 0;
+
+        /// update parameter value
+        template<typename T>
+        void update( const T & t ) { update( 0, sizeof(t), &t ); }
+    };
+
+    ///
     /// renderer context
     ///
     struct RendererContext
@@ -612,16 +631,19 @@ namespace GN { namespace gfx
         AutoRef<GpuProgram> gpuProgram;
 
         // Resources
-        AutoRef<VtxBuf>     vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
-        UInt16              strides[MAX_VERTEX_BUFFERS];             ///< strides for each vertex buffer. Set to 0 to use default stride.
-        VertexFormat        vtxfmt;                                  ///< vertex format (bindings to GPU program)
+        StackArray<AutoRef<Uniform>,32> uniforms;                                ///< uniforms
 
-        AutoRef<IdxBuf>     idxbuf;                                  ///< index buffer
+        AutoRef<VtxBuf>                 vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
+        UInt16                          strides[MAX_VERTEX_BUFFERS];             ///< strides for each vertex buffer. Set to 0 to use default stride.
+        VertexFormat                    vtxfmt;                                  ///< vertex format (bindings to GPU program)
 
-        AutoRef<Texture>    textures[MAX_TEXTURES];                  ///< textures
-        char                texbinds[MAX_TEXTURES][TEXBINDING_SIZE]; ///< texture bindings to GPU Program
-        TextureSampler      samplers[MAX_TEXTURES];                  ///< samplers
+        AutoRef<IdxBuf>                 idxbuf;                                  ///< index buffer
 
+        AutoRef<Texture>                textures[MAX_TEXTURES];                  ///< textures
+        char                            texbinds[MAX_TEXTURES][TEXBINDING_SIZE]; ///< texture bindings to GPU Program
+        TextureSampler                  samplers[MAX_TEXTURES];                  ///< samplers
+
+        // render targets
         RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];          ///< color render targets
         RenderTargetTexture dsrt;                                    ///< depth stencil render target
 
@@ -669,6 +691,8 @@ namespace GN { namespace gfx
             scissorRect.set( 0, 0, 0, 0 );
 
             gpuProgram.clear();
+
+            uniforms.clear();
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
             for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
@@ -897,6 +921,12 @@ namespace GN { namespace gfx
             if( !bin ) return NULL;
             return createGpuProgram( bin->data(), bin->size() );
         }
+
+        ///
+        /// create GPU uniform
+        ///
+        virtual Uniform *
+        createUniform( size_t size ) = 0;
 
         ///
         /// Create new texture

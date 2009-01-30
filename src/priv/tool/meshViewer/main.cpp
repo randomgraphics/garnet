@@ -5,16 +5,18 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
-
-const char        * filename;
-Renderer          * rndr;
-ArcBall             arcball; // arcball camera
-float               radius;  // distance from camera to object
-Matrix44f           proj, view;
-AseScene            ase;
-DynaArray<Mesh*>    meshes;
-SimpleDiffuseEffect effect;
+static GN::Logger          * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
+const char                 * filename;
+Renderer                   * rndr;
+ArcBall                      arcball; // arcball camera
+float                        radius;  // distance from camera to object
+Matrix44f                    proj, view;
+AseScene                     ase;
+DynaArray<Mesh*>             meshes;
+DynaArray<AutoRef<Texture> > textures;
+SimpleDiffuseEffect          effect;
+SpriteRenderer             * sr = NULL;
+BitmapFont                   font;
 
 void updateRadius()
 {
@@ -58,6 +60,8 @@ bool init()
         m.detach();
     }
 
+    // load textures
+
     // initialize effect
     if( !effect.init( *rndr ) ) return false;
 
@@ -71,8 +75,15 @@ bool init()
     arcball.setTranslation( ase.bbox.center() );
     arcball.connectToInput();
 
+    // load font
+    sr = new SpriteRenderer( *rndr );
+    if( !sr->init() ) return false;
+    AutoRef<FontFace> ff( createSimpleAsciiFont() );
+    if( !ff ) return false;
+    if( !font.init( sr, ff ) ) return false;
+
     // connect to input device
-    getSigAxisMove().connect( onAxisMove );
+    gInput.sigAxisMove.connect( onAxisMove );
 
     // success
     return true;
@@ -88,9 +99,12 @@ void quit()
     }
 
     effect.quit();
+
+    font.quit();
+    safeDelete( sr );
 }
 
-void draw()
+void draw( const wchar_t * fps )
 {
     Vector3f   position = arcball.getTranslation();
     Matrix44f  rotation = arcball.getRotationMatrix44();
@@ -107,6 +121,8 @@ void draw()
 
         effect.draw();
     }
+
+    font.drawText( fps, 0, 0 );
 }
 
 void drawCoords()
@@ -143,7 +159,7 @@ int run()
 
         // render
         rndr->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw();
+        draw( fps.getFpsString() );
         drawCoords();
         rndr->present();
 
@@ -208,4 +224,3 @@ int main( int argc, const char * argv[] )
     deleteRenderer( rndr );
     return result;
 }
-

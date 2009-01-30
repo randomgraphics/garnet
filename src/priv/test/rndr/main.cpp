@@ -53,6 +53,15 @@ bool init( Renderer & rndr )
     rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
+    // create uniform
+    const GpuProgramParameterDesc & gppd = rc.gpuProgram->getParameterDesc();
+    rc.uniforms.resize( gppd.numUniforms );
+    for( size_t i = 0; i < gppd.numUniforms; ++i )
+    {
+        rc.uniforms[i].attach( rndr.createUniform( gppd.uniformSizes[i] ) );
+        if( !rc.uniforms[i] ) return false;
+    }
+
     // setup vertex format
     rc.vtxfmt.numElements = 1;
     strcpy_s( rc.vtxfmt.elements[0].binding, "position" );
@@ -111,6 +120,9 @@ void quit( Renderer & )
 
 void draw( Renderer & r )
 {
+    size_t ui = rc.gpuProgram->getUniformIndex( "transform" );
+    if( GpuProgram::PARAMETER_NOT_FOUND == ui ) return;
+
     Matrix44f m;
 
     // DRAW_UP: triangle at left top corner
@@ -122,26 +134,26 @@ void draw( Renderer & r )
         0,1,0,1,
     };
     m.translate( -1.0f, -0.0f, 0 );
-    rc.gpuProgram->setParameter( "transform", m );
+    rc.uniforms[ui]->update( m );
     r.bindContext( rc );
     r.drawUp( TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
     m.translate( -1.0f, -1.0f, 0 );
-    rc.gpuProgram->setParameter( "transform", m );
+    rc.uniforms[ui]->update( m );
     r.bindContext( rc );
     r.drawIndexedUp( TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
     m.identity();
-    rc.gpuProgram->setParameter( "transform", m );
+    rc.uniforms[ui]->update( m );
     r.bindContext( rc );
     r.draw( TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
     m.translate( 0.5f, -1.5f, 0 );
-    rc.gpuProgram->setParameter( "transform", m );
+    rc.uniforms[ui]->update( m );
     r.bindContext( rc );
     r.drawIndexed( TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }

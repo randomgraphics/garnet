@@ -8,41 +8,13 @@
 
 namespace GN { namespace gfx
 {
-    class GpuProgramParam : public RefCounter
-    {
-        void * const mData;
-        size_t const mSize;
-
-    public:
-
-        /// constructor
-        GpuProgramParam( size_t size )
-            : mData( heapAlloc( size ) )
-            , mSize( size )
-        {
-        }
-
-        /// dtor
-        virtual ~GpuProgramParam()
-        {
-            heapFree( mData );
-        }
-
-        const void * get() const { return mData; }
-        void         set( const void * data, size_t length ) { memcpy( mData, data, std::min(length,mSize) ); }
-        template<typename T>
-        void         set( const T & t ) { set( &t, sizeof(t) ); }
-        size_t       size() const { return mSize; }
-    };
-
     ///
     /// Drawable object, which is the building block of all visible objects.
     ///
     struct Drawable
     {
-        Renderer                           * rndr;
-        RendererContext                      rc;
-        DynaArray<AutoRef<GpuProgramParam> > gpps; ///< GPU program parameters
+        Renderer      * rndr;
+        RendererContext rc;
 
         // parameters for DRAW_PRIMITIVE
         PrimitiveType prim;
@@ -61,7 +33,6 @@ namespace GN { namespace gfx
         {
             rndr = NULL;
             rc.clear();
-            gpps.clear();
         }
 
         ///

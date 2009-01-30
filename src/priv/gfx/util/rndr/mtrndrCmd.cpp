@@ -17,6 +17,7 @@ void func_CHECK_TEXTURE_FORMAT_SUPPORT( Renderer &, void *, size_t );
 void func_GET_DEFAULT_TEXTURE_FORMAT( Renderer &, void *, size_t );
 void func_COMPILE_GPU_PROGRAM( Renderer &, void *, size_t );
 void func_CREATE_GPU_PROGRAM( Renderer &, void *, size_t );
+void func_CREATE_UNIFORM( Renderer &, void *, size_t );
 void func_CREATE_TEXTURE( Renderer &, void *, size_t );
 void func_CREATE_VTXBUF( Renderer &, void *, size_t );
 void func_CREATE_IDXBUF( Renderer &, void *, size_t );
@@ -34,7 +35,8 @@ void func_ENABLE_PARAMETER_CHECK( Renderer &, void *, size_t );
 void func_DUMP_NEXT_FRAME( Renderer &, void *, size_t );
 void func_GPU_PROGRAM_DESTROY( Renderer &, void *, size_t );
 void func_GPU_PROGRAM_INIT( Renderer &, void *, size_t );
-void func_GPU_PROGRAM_SET_PARAMETER( Renderer &, void *, size_t );
+void func_UNIFORM_DESTROY( Renderer &, void *, size_t );
+void func_UNIFORM_UPDATE( Renderer &, void *, size_t );
 void func_TEXTURE_DESTROY( Renderer &, void *, size_t );
 void func_TEXTURE_UPDATE_MIPMAP( Renderer &, void *, size_t );
 void func_TEXTURE_READ_MIPMAP( Renderer &, void *, size_t );
@@ -57,6 +59,7 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_GET_DEFAULT_TEXTURE_FORMAT,
 &func_COMPILE_GPU_PROGRAM,
 &func_CREATE_GPU_PROGRAM,
+&func_CREATE_UNIFORM,
 &func_CREATE_TEXTURE,
 &func_CREATE_VTXBUF,
 &func_CREATE_IDXBUF,
@@ -74,7 +77,8 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_DUMP_NEXT_FRAME,
 &func_GPU_PROGRAM_DESTROY,
 &func_GPU_PROGRAM_INIT,
-&func_GPU_PROGRAM_SET_PARAMETER,
+&func_UNIFORM_DESTROY,
+&func_UNIFORM_UPDATE,
 &func_TEXTURE_DESTROY,
 &func_TEXTURE_UPDATE_MIPMAP,
 &func_TEXTURE_READ_MIPMAP,

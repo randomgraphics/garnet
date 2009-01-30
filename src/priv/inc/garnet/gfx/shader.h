@@ -44,12 +44,30 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// GPU program parameter type
+    ///
+    enum GpuProgramParameterType
+    {
+        GPPT_UNIFORM, ///< uniform type
+        GPPT_TEXTURE, ///< texture type
+        GPPT_VERTEX,  ///< vertex type
+    };
+
+    ///
     /// GPU program parameter descrption
     ///
     struct GpuProgramParameterDesc
     {
-        const char * name;     ///< NULL terminated parameter name
-        size_t       length;   ///< default parameter size
+        //@{
+        size_t               numUniforms;
+        const char * const * uniformNames;
+        const size_t       * uniformSizes;
+        //@}
+
+        //@{
+        size_t               numTextures;
+        const char * const * textureNames;
+        //@}
     };
 
     ///
@@ -69,68 +87,52 @@ namespace GN { namespace gfx
         static const size_t PARAMETER_NOT_FOUND = (size_t)-1;
 
         ///
-        /// get number of parameters
+        /// get number of uniform parameters
         ///
-        virtual size_t getNumParameters() const = 0;
+        virtual const GpuProgramParameterDesc & getParameterDesc() const = 0;
 
         ///
-        /// get parameter array
+        /// get number of uniforms
         ///
-        virtual const GpuProgramParameterDesc * getParameters() const = 0;
+        size_t getNumUniforms() const { return getParameterDesc().numUniforms; }
 
         ///
-        /// set shader parameter
+        /// get index of uniform with specific name. Return PARAMETER_NOT_FOUND if the name is invalid.
         ///
-        /// \param index        Parameter index in parameter array
-        /// \param value        Parameter value
-        /// \param length       Length in bytes of parameter value. Set to 0 to use inherited length.
-        ///
-        virtual void setParameter( size_t index, const void * value, size_t length = 0 ) = 0;
-
-        ///
-        /// get parameter descriptor by index.
-        ///
-        const GpuProgramParameterDesc & getParameterDesc( size_t index ) const
+        size_t getUniformIndex( const char * name ) const
         {
-            GN_ASSERT( index < getNumParameters() );
-            return getParameters()[index];
-        }
-
-        ///
-        /// get parameter index by name. Return -1 if the name is not found.
-        ///
-        size_t getParameterIndex( const char * name ) const
-        {
-            const GpuProgramParameterDesc * params = getParameters();
-            size_t n = getNumParameters();
-            for( size_t i = 0; i < n; ++i )
+            const GpuProgramParameterDesc  & pd = getParameterDesc();
+            for( size_t i = 0; i < pd.numUniforms; ++i )
             {
-                if( 0 == strCmp( name, params[i].name ) )
+                if( 0 == strCmp( name, pd.uniformNames[i] ) )
                 {
                     return i;
                 }
             }
+            GN_ERROR(getLogger("GN.gfx.GpuProgram"))( "Invalid uniform name: %s", name?name:"<NULLPTR>" );
             return PARAMETER_NOT_FOUND;
         }
 
         ///
-        /// set shader parameter by name
+        /// get number of textures
         ///
-        /// \param namex        Parameter name.
-        /// \param value        Parameter value
-        /// \param length       Length in bytes of parameter value. Set to 0 to use inherited length.
+        size_t getNumTextures() const { return getParameterDesc().numTextures; }
+
         ///
-        void setParameter( const char * name, const void * value, size_t length = 0 )
+        /// get index of texture with specific name. Return PARAMETER_NOT_FOUND if the name is invalid.
+        ///
+        size_t getTextureIndex( const char * name ) const
         {
-            size_t idx = getParameterIndex( name );
-
-            if( PARAMETER_NOT_FOUND == idx )
+            const GpuProgramParameterDesc  & pd = getParameterDesc();
+            for( size_t i = 0; i < pd.numTextures; ++i )
             {
-                GN_ERROR(getLogger("GN.gfx.rndr.GpuProgram"))( "invalid parameter name: %s", name );
-                return;
+                if( 0 == strCmp( name, pd.textureNames[i] ) )
+                {
+                    return i;
+                }
             }
-
-            setParameter( idx, value, length );
+            GN_ERROR(getLogger("GN.gfx.GpuProgram"))( "Invalid texture name: %s", name?name:"<NULLPTR>" );
+            return PARAMETER_NOT_FOUND;
         }
     };
 }}

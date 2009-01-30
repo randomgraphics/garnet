@@ -144,7 +144,7 @@ namespace GN
             struct StdParam
             {
                 StandardSceneParameterType    type;
-                AutoRef<gfx::GpuProgramParam> param;
+                AutoRef<gfx::Uniform> param;
             };
 
             DynaArray<StdParam>      mStdPerObjParams; ///< standard per-object parameters
@@ -191,7 +191,7 @@ namespace GN
 
             /// \name global parameter management
             //@{
-            virtual gfx::GpuProgramParam * const * getGlobalParam() const = 0;
+            virtual gfx::Uniform * const * getGlobalParam() const = 0;
             virtual void setProj( const Matrix44f & ) = 0;
             virtual void setView( const Matrix44f & ) = 0;
             //@}

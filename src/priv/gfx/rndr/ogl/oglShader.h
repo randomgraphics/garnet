@@ -12,6 +12,58 @@
 namespace GN { namespace gfx
 {
     // *************************************************************************
+    // OGL GPU program parameter object
+    // *************************************************************************
+
+    ///
+    /// interface of GPU proram parameter
+    ///
+    class OGLUniform : public Uniform, public OGLResource
+    {
+        const size_t mSize;
+        void       * mData;
+        SInt32       mTimeStamp;
+
+    public:
+
+        /// ctor
+        OGLUniform( OGLRenderer & r, size_t sz ) : OGLResource(r), mSize(0==sz?1:sz), mData( heapAlloc(mSize) ) {}
+
+        /// dtor
+        ~OGLUniform() { heapFree(mData); }
+
+        /// get parameter size
+        virtual size_t size() const { return mSize; }
+
+        /// get current parameter value
+        virtual const void * getval() const { return mData; }
+
+        /// update parameter value
+        virtual void update( size_t offset, size_t length, const void * data )
+        {
+            if( offset >= mSize || (offset+length) > mSize )
+            {
+                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
+                return;
+            }
+            if( NULL == data )
+            {
+                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
+                return;
+            }
+            memcpy( (UInt8*)mData + offset, data, length );
+            ++mTimeStamp;
+        }
+
+        /// update parameter value
+        template<typename T>
+        void update( const T & t ) { set( 0, sizeof(t), &t ); }
+
+        /// get current update time stamp
+        SInt32 getTimeStamp() const { return mTimeStamp; }
+    };
+
+    // *************************************************************************
     // Basic program object
     // *************************************************************************
 
@@ -21,9 +73,9 @@ namespace GN { namespace gfx
     struct OGLBasicGpuProgram : public GpuProgram, public OGLResource
     {
         ///
-        /// Apply shader as well as program constants to OpenGL
+        /// Enable shader
         ///
-        virtual void apply() const = 0;
+        virtual void enable() const = 0;
 
         ///
         /// Disable the program
@@ -31,9 +83,14 @@ namespace GN { namespace gfx
         virtual void disable() const = 0;
 
         ///
-        /// Apply only dirty parameters to OpenGL
+        /// Apply uniforms to OpenGL
         ///
-        virtual void applyDirtyParameters() const = 0;
+        virtual void applyUniforms( const OGLUniform * const * gpps, size_t count ) const = 0;
+
+        ///
+        /// Apply texture to OpenGL
+        ///
+        virtual void applyTexture( const char * name, size_t stage ) const = 0;
 
     protected:
 
@@ -46,19 +103,6 @@ namespace GN { namespace gfx
     // *************************************************************************
     // GLSL program
     // *************************************************************************
-
-    ///
-    /// GLSL program uniform description
-    ///
-    struct GLSLUniformDesc
-    {
-        GLenum            type;      ///< uniform type
-        GLsizei           count;     ///< uniform count
-        GLint             location;  ///< uniform location
-        StrA              name;      ///< uniform name
-        DynaArray<UInt8>  value;     ///< uniform value
-        GLSLUniformDesc * nextDirty; ///< pointer to next dirty uniform.
-    };
 
     ///
     /// GLSL program class
@@ -86,7 +130,7 @@ namespace GN { namespace gfx
         bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mProgram = 0; mVS = 0; mPS = 0; mDirtyList = NULL; }
+        void clear() { mProgram = 0; mVS = 0; mPS = 0; }
         //@}
 
         // ********************************
@@ -95,53 +139,71 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual size_t getNumParameters() const { return mParams.size(); }
-        virtual const GpuProgramParameterDesc * getParameters() const { return mParams.cptr(); }
-        virtual void setParameter( size_t index, const void * value, size_t length );
+        virtual const GpuProgramParameterDesc & getParameterDesc() const { return mParamDesc; }
 
         // ********************************
         // from OGLBasicGpuProgram
         // ********************************
     public:
 
-        ///
-        /// apply GLSL program, as well as dirty uniforms, to rendering context.
-        ///
-        virtual void apply() const
+        virtual void enable() const
         {
             GN_OGL_CHECK( glUseProgramObjectARB( mProgram ) );
-            applyDirtyParameters();
         }
 
-        ///
-        /// Disable the program
-        ///
         virtual void disable() const
         {
             GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
         }
 
-        ///
-        /// Apply only dirty parameters to OpenGL
-        ///
-        virtual void applyDirtyParameters() const;
+        virtual void applyUniforms( const OGLUniform * const * gpps, size_t count ) const;
+
+        virtual void applyTexture( const char * name, size_t stage ) const;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        GLhandleARB                        mProgram;
-        GLhandleARB                        mVS;
-        GLhandleARB                        mPS;
-        DynaArray<GLSLUniformDesc>         mUniforms;
-        DynaArray<GpuProgramParameterDesc> mParams;
-        mutable GLSLUniformDesc          * mDirtyList;
+        ///
+        /// GLSL program uniform description
+        ///
+        struct GLSLParameterDesc
+        {
+            GLenum                         type;         ///< uniform type
+            GLsizei                        count;        ///< uniform count
+            GLint                          location;     ///< uniform location
+            StrA                           name;         ///< uniform name
+            size_t                         size;         ///< uniform size
+            mutable WeakRef<const Uniform> lastUniform;  ///< pointer to last uniform parameter
+            mutable SInt32                 lastStamp;    ///< update time stamp of the last uniform parameter
+            mutable AutoInit<size_t,-1>    lastTexStage; ///< last texture stage associated to this parameter
+        };
+
+
+        // GLSL program and shader object handles
+        GLhandleARB mProgram;
+        GLhandleARB mVS;
+        GLhandleARB mPS;
+
+        // uniforms
+        DynaArray<GLSLParameterDesc>       mUniforms;
+        DynaArray<const char *>            mUniformNames;
+        DynaArray<size_t>                  mUniformSizes;
+
+        // textures
+        DynaArray<GLSLParameterDesc>       mTextures;
+        DynaArray<const char *>            mTextureNames;
+
+        // parameter descriptor
+        GpuProgramParameterDesc            mParamDesc;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        bool enumParameters();
     };
 
     // *************************************************************************

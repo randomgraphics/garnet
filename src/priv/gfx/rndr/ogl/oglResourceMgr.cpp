@@ -243,6 +243,15 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::Uniform *
+GN::gfx::OGLRenderer::createUniform( size_t size )
+{
+    return new OGLUniform( *this, size );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::Texture *
 GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
 {

@@ -60,7 +60,7 @@ bool init( Renderer & rndr )
     // set transformation to identity
     Matrix44f m;
     m.identity();
-    e.getGpuProgramParam( "pvw" )->set( m, sizeof(m) );
+    e.getGpuProgramParam( "pvw" )->update( m );
 
     // load image
     ImageDesc id;
@@ -108,13 +108,13 @@ bool init( Renderer & rndr )
     mesh.applyToDrawable( d1 );
 
     // make a clone of the whole drawable, with its own transformation parameter
-    UInt32 gppidx = d1.rc.gpuProgram->getParameterIndex( "transform" );
+    UInt32 ui = d1.rc.gpuProgram->getUniformIndex( "transform" );
     d2 = d1;
-    d2.gpps[gppidx].attach( new GpuProgramParam( sizeof(Matrix44f) ) );
+    d2.rc.uniforms[ui].attach( rndr.createUniform( sizeof(Matrix44f) ) );
 
     // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );
-    d2.gpps[gppidx]->set( m, sizeof(m) );
+    d2.rc.uniforms[ui]->update( m );
 
     // success
     return true;

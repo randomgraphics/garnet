@@ -82,7 +82,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     GN_ASSERT( mEffect->hasGpuProgramParam( name ) ); \
     x = mEffect->getGpuProgramParam( name ); \
     GN_ASSERT( x ); \
-    x->set( defval );
+    x->update( defval );
 
     INIT_GPP( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
     INIT_GPP( mMatrixWorld   , "MATRIX_WORLD"    , Matrix44f::sIdentity() );
@@ -128,9 +128,9 @@ void GN::util::SimpleDiffuseEffect::setTransformation(
 {
     Matrix44f pvw = proj * view * world;
     Matrix44f wit = Matrix44f::sInverse( Matrix44f::sTranspose( world ) );
-    mMatrixPvw->set( pvw );
-    mMatrixWorld->set( world );
-    mMatrixWorldIT->set( wit );
+    mMatrixPvw->update( pvw );
+    mMatrixWorld->update( world );
+    mMatrixWorldIT->update( wit );
 }
 
 //
@@ -138,7 +138,7 @@ void GN::util::SimpleDiffuseEffect::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 {
-    mLightPos->set( pos );
+    mLightPos->update( pos );
 }
 
 //
@@ -146,7 +146,7 @@ void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 {
-    mLightColor->set( clr );
+    mLightColor->update( clr );
 }
 
 //
@@ -154,7 +154,7 @@ void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
 {
-    mDiffuseColor->set( clr );
+    mDiffuseColor->update( clr );
 }
 
 //

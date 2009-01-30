@@ -257,9 +257,10 @@ CompiledGpuProgram * GN::gfx::MultiThreadRenderer::compileGpuProgram( const GpuP
 // -----------------------------------------------------------------------------
 GpuProgram * GN::gfx::MultiThreadRenderer::createGpuProgram( const void * compiledGpuProgramBinary, size_t length )
 {
-    GpuProgram * gp;
+    GpuProgram * gp = NULL;
     postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
     waitForIdle();
+    if( NULL == gp ) return NULL;
 
     AutoRef<MultiThreadGpuProgram> mtgp( new MultiThreadGpuProgram(*this) );
     if( !mtgp->init( gp ) ) return NULL;
@@ -270,11 +271,28 @@ GpuProgram * GN::gfx::MultiThreadRenderer::createGpuProgram( const void * compil
 //
 //
 // -----------------------------------------------------------------------------
+Uniform * GN::gfx::MultiThreadRenderer::createUniform( size_t size )
+{
+    Uniform * uni = NULL;
+    postCommand2( CMD_CREATE_UNIFORM, &uni, size );
+    waitForIdle();
+    if( NULL == uni ) return NULL;
+
+    AutoRef<MultiThreadUniform> mu( new MultiThreadUniform(*this) );
+    if( !mu->init( uni ) ) return NULL;
+
+    return mu.detach();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 Texture * GN::gfx::MultiThreadRenderer::createTexture( const TextureDesc & desc )
 {
-    Texture * tex;
+    Texture * tex = NULL;
     postCommand2( CMD_CREATE_TEXTURE, &tex, &desc );
     waitForIdle();
+    if( NULL == tex ) return NULL;
 
     AutoRef<MultiThreadTexture> mtt( new MultiThreadTexture(*this) );
     if( !mtt->init( tex ) ) return NULL;
@@ -287,9 +305,10 @@ Texture * GN::gfx::MultiThreadRenderer::createTexture( const TextureDesc & desc 
 // -----------------------------------------------------------------------------
 VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & desc )
 {
-    VtxBuf * vb;
+    VtxBuf * vb = NULL;
     postCommand2( CMD_CREATE_VTXBUF, &vb, &desc );
     waitForIdle();
+    if( NULL == vb ) return NULL;
 
     AutoRef<MultiThreadVtxBuf> mtvb( new MultiThreadVtxBuf(*this) );
     if( !mtvb->init( vb ) ) return NULL;
@@ -302,9 +321,10 @@ VtxBuf * GN::gfx::MultiThreadRenderer::createVtxBuf( const VtxBufDesc & desc )
 // -----------------------------------------------------------------------------
 IdxBuf * GN::gfx::MultiThreadRenderer::createIdxBuf( const IdxBufDesc & desc )
 {
-    IdxBuf * ib;
+    IdxBuf * ib = NULL;
     postCommand2( CMD_CREATE_IDXBUF, &ib, &desc );
     waitForIdle();
+    if( NULL == ib ) return NULL;
 
     AutoRef<MultiThreadIdxBuf> mtib( new MultiThreadIdxBuf(*this) );
     if( !mtib->init( ib ) ) return NULL;
@@ -328,6 +348,13 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     // GPU program
     MultiThreadGpuProgram * mtgp = (MultiThreadGpuProgram *)rc->gpuProgram.get();
     sReplaceAutoRefPtr( rc->gpuProgram, mtgp ? mtgp->getRealGpuProgram() : NULL );
+
+    // uniforms
+    for( size_t i = 0; i < rc->uniforms.size(); ++i )
+    {
+        MultiThreadUniform * mtu = (MultiThreadUniform*)rc->uniforms[i].get();
+        sReplaceAutoRefPtr( rc->uniforms[i], mtu ? mtu->getRealUniform() : NULL );
+    }
 
     // textures
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
@@ -683,6 +710,22 @@ namespace GN { namespace gfx
         CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
 
         *cgpp->gp = r.createGpuProgram( cgpp->bin, cgpp->length );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_CREATE_UNIFORM( Renderer & r, void * p, size_t )
+    {
+        struct CreateUniformParam
+        {
+            Uniform ** result;
+            size_t     length;
+        };
+
+        CreateUniformParam * cup = (CreateUniformParam*)p;
+
+        *cup->result = r.createUniform( cup->length );
     }
 
     //
