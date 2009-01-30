@@ -14,20 +14,6 @@ void GN::gfx::Drawable::draw() const
 {
     GN_ASSERT( rndr );
 
-    // apply parameters
-    if( rc.gpuProgram )
-    {
-        for( size_t i = 0; i < gpps.size(); ++i )
-        {
-            GpuProgramParam * gpp = gpps[i].get();
-
-            if( gpp )
-            {
-                rc.gpuProgram->setParameter( i, gpp->get(), gpp->size() );
-            }
-        }
-    }
-
     // bind context
     rndr->bindContext( rc );
 
@@ -56,13 +42,6 @@ GN::gfx::Drawable::operator=( const Drawable & rhs )
     startidx = rhs.startidx;
     numidx = rhs.numidx;
     basevtx = rhs.basevtx;
-
-    // copy parameters
-    gpps.resize( rhs.gpps.size() );
-    for( size_t i = 0; i < gpps.size(); ++i )
-    {
-        gpps[i] = rhs.gpps[i];
-    }
 
     return *this;
 }

@@ -66,6 +66,7 @@ void GN::gfx::MultiThreadTexture::quit()
     if( mTexture )
     {
         mRenderer.postCommand1( CMD_TEXTURE_DESTROY, mTexture );
+        mTexture = NULL;
     }
 
     // standard quit procedure

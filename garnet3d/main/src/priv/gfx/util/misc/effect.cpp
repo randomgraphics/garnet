@@ -68,7 +68,7 @@ bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
 // -----------------------------------------------------------------------------
 GN::gfx::Effect::Effect( Renderer & r )
     : mRenderer(r)
-    , mDummyUniform( new GpuProgramParam( 1 ) )
+    , mDummyUniform( r.createUniform( 1 ) )
 {
     clear();
 }
@@ -104,7 +104,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::UniformDesc & udesc = iter->second;
 
         // create GPU program
-        GpuProgramParam * gpp = new GpuProgramParam( udesc.size );
+        Uniform * gpp = mRenderer.createUniform( udesc.size );
         if( NULL == gpp ) return false;
 
         // add to uniform array
@@ -226,10 +226,10 @@ void GN::gfx::Effect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::GpuProgramParam *
+GN::gfx::Uniform *
 GN::gfx::Effect::getGpuProgramParam( const StrA & name ) const
 {
-    std::map<StrA,AutoRef<GpuProgramParam> >::const_iterator it = mUniforms.find( name );
+    std::map<StrA,AutoRef<Uniform> >::const_iterator it = mUniforms.find( name );
 
     if( mUniforms.end() == it )
     {
@@ -244,7 +244,7 @@ GN::gfx::Effect::getGpuProgramParam( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Effect::setGpuProgramParam( const StrA & name, GpuProgramParam * param )
+void GN::gfx::Effect::setGpuProgramParam( const StrA & name, Uniform * param )
 {
     if( NULL == param )
     {
@@ -252,7 +252,7 @@ void GN::gfx::Effect::setGpuProgramParam( const StrA & name, GpuProgramParam * p
         return;
     }
 
-    std::map<StrA,AutoRef<GpuProgramParam> >::iterator it = mUniforms.find( name );
+    std::map<StrA,AutoRef<Uniform> >::iterator it = mUniforms.find( name );
 
     if( mUniforms.end() == it )
     {
@@ -299,11 +299,11 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     const Pass & p = mActiveTech->passes[pass];
 
     // setup uniforms
-    GN_ASSERT( p.uniforms.size() == p.gpuProgram->getNumParameters() );
-    drawable.gpps.resize( p.uniforms.size() );
+    GN_ASSERT( p.uniforms.size() == p.gpuProgram->getNumUniforms() );
+    drawable.rc.uniforms.resize( p.uniforms.size() );
     for( size_t i = 0; i < p.uniforms.size(); ++i )
     {
-        drawable.gpps[i].set( p.uniforms[i] );
+        drawable.rc.uniforms[i].set( p.uniforms[i] );
     }
 
     // setup textures
@@ -387,7 +387,7 @@ GN::gfx::Effect::initTech(
                     "shader '%s' referencs non-exisit texture '%s'.",
                     sname.cptr(), tname.cptr() );
             }
-            else if( GpuProgram::PARAMETER_NOT_FOUND == p.gpuProgram->getParameterIndex( tbind.cptr() ) )
+            else if( GpuProgram::PARAMETER_NOT_FOUND == p.gpuProgram->getTextureIndex( tbind.cptr() ) )
             {
                 GN_ERROR(sLogger)(
                     "texture '%s' is binded to invalid parameter '%s' of shader '%s'.",
@@ -417,8 +417,8 @@ GN::gfx::Effect::initTech(
         }
 
         // look up uniforms
-        p.uniforms.resize( p.gpuProgram->getNumParameters() );
-        std::fill( p.uniforms.begin(), p.uniforms.end(), (GpuProgramParam*)NULL );
+        p.uniforms.resize( p.gpuProgram->getNumUniforms() );
+        std::fill( p.uniforms.begin(), p.uniforms.end(), (Uniform*)NULL );
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.uniforms.begin(); iter != sdesc.uniforms.end(); ++iter )
         {
             const StrA & ubind = iter->first;
@@ -433,7 +433,7 @@ GN::gfx::Effect::initTech(
             }
             else
             {
-                size_t uidx = p.gpuProgram->getParameterIndex( ubind.cptr() );
+                size_t uidx = p.gpuProgram->getUniformIndex( ubind.cptr() );
 
                 if( GpuProgram::PARAMETER_NOT_FOUND == uidx )
                 {

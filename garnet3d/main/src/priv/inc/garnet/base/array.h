@@ -229,7 +229,12 @@ namespace GN
         ///
         /// copy constructor
         ///
-        StackArray( const StackArray & other ) { doClone( other ); }
+        StackArray( const StackArray & other ) : mCount(0) { doClone( other ); }
+
+        ///
+        /// dtor
+        ///
+        virtual ~StackArray() { doClear(); }
 
         /// \name Common array operations.
         ///

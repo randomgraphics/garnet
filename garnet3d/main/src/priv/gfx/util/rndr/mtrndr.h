@@ -21,14 +21,14 @@ namespace GN { namespace gfx
         size_t commandBufferSize;
 
         ///
-        /// Set it to true to limit number of commands cached in command buffer to at most one frame. Default is false.
+        /// Set it to true to limit number of commands cached in command buffer to at most one frame. Default is true.
         ///
         bool cacheOneFrameAtMost;
 
         /// ctor
         MultiThreadRendererOptions()
             : commandBufferSize( 4 * 1024 * 1024 )
-            , cacheOneFrameAtMost( false )
+            , cacheOneFrameAtMost( true )
         {
         }
     };
@@ -76,6 +76,8 @@ namespace GN { namespace gfx
         void waitForIdle() { return waitForFence( mFrontEndFence ); }
         void waitForFence( UInt32 fence );
         UInt32 getCurrentFence() const { return mFrontEndFence; }
+
+        size_t getRingBufferSize() const { return mRingBuffer.size(); }
 
         UInt8 * beginPostCommand( UInt32 cmd, size_t length ); ///< always return non-NULL valid pointer.
         void    endPostCommand() { mRingBuffer.endProduce(); }
@@ -223,6 +225,7 @@ namespace GN { namespace gfx
 
         virtual CompiledGpuProgram * compileGpuProgram( const GpuProgramDesc & desc );
         virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform * createUniform( size_t size );
         virtual Texture * createTexture( const TextureDesc & desc );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );

@@ -247,10 +247,10 @@ namespace GN { namespace gfx
         ///
         /// Note that the reference counter of the returned parameter is not increaed by calling this function,
         /// which means you don't have to call decref() for the returned pointer after it is being used.
-        GpuProgramParam * getGpuProgramParam( const StrA & name ) const;
+        Uniform * getGpuProgramParam( const StrA & name ) const;
 
         /// Assign GPU program parameter to effect
-        void setGpuProgramParam( const StrA & name, GpuProgramParam * );
+        void setGpuProgramParam( const StrA & name, Uniform * );
 
         /// Get pointer to specific texture parameter. Return dummy pointer for invalid name.
         EffectTextureParameter * getTextureParam( const StrA & name );
@@ -311,7 +311,7 @@ namespace GN { namespace gfx
         {
             GpuProgram                     * gpuProgram; ///< Pointer to the GPU program
             DynaArray<PerShaderTextureParam> textures;   ///< name of textures used in the pass.
-            DynaArray<GpuProgramParam*>      uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
+            DynaArray<Uniform*>              uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
                                                          ///< in this array is exactly same as the binding index to
                                                          ///< the GPU program in this pass. Name could be empty.
             EffectDesc::RenderStateDesc rsd;             ///< render states
@@ -325,14 +325,14 @@ namespace GN { namespace gfx
         Renderer & mRenderer;
         EffectDesc mDesc;
 
-        std::map<StrA,AutoRef<GpuProgramParam> >  mUniforms;
+        std::map<StrA,AutoRef<Uniform> >          mUniforms;
         std::map<StrA,EffectTextureParameterImpl> mTextures;
         std::map<StrA,AutoRef<GpuProgram> >       mGpuPrograms;
         std::map<StrA,Technique>                  mTechniques;
         Technique *                               mActiveTech;
 
         /// dummy parameters for invalid name
-        GpuProgramParam          * mDummyUniform;
+        Uniform                  * mDummyUniform;
         EffectTextureParameterImpl mDummyTexture;
 
         // ********************************

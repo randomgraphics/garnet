@@ -124,7 +124,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     b.effect = *inputEffect;
 
     // get list of standard parameters
-    GpuProgramParam * const * globalParams = s.getGlobalParam();
+    Uniform * const * globalParams = s.getGlobalParam();
 
     // handle standard parameters
     for( size_t i = 0; i < NUM_STANDARD_SCENE_PARAMETERS; ++i )
@@ -133,12 +133,12 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
 
         if( b.effect.hasGpuProgramParam( d.name ) )
         {
-            GpuProgramParam * p;
+            Uniform * p;
             if( !d.global )
             {
                 StdParam sp;
                 sp.type  = (StandardSceneParameterType)i;
-                sp.param.attach( new GpuProgramParam(d.size) );
+                sp.param.attach( s.getRenderer().createUniform(d.size) );
                 mStdPerObjParams.append( sp );
                 p = sp.param.get();
             }
@@ -173,7 +173,7 @@ void GN::scene::GeometryNode::draw()
     for( size_t i = 0; i < mStdPerObjParams.size(); ++i )
     {
         const StdParam & sp = mStdPerObjParams[i];
-        gfx::GpuProgramParam * p = sp.param.get();
+        gfx::Uniform * p = sp.param.get();
 
         // should be per-object parameter
         GN_ASSERT( !getStandardSceneParameterName( sp.type ).global );
@@ -182,9 +182,9 @@ void GN::scene::GeometryNode::draw()
         {
             case SCENE_PARAM_MATRIX_PVW :
             {
-                const Matrix44f * pv = (const Matrix44f *)s.getGlobalParam()[SCENE_PARAM_MATRIX_PV]->get();
+                const Matrix44f * pv = (const Matrix44f *)s.getGlobalParam()[SCENE_PARAM_MATRIX_PV]->getval();
                 Matrix44f pvw = *pv * getLocal2Root();
-                p->set( pvw, sizeof(pvw) );
+                p->update( pvw );
                 break;
             }
 
@@ -226,7 +226,7 @@ class SceneImpl : public Scene
     };
 
     DirtyFlags        mDirtyFlags;
-    GpuProgramParam * mGlobalParams[NUM_STANDARD_SCENE_PARAMETERS];
+    Uniform * mGlobalParams[NUM_STANDARD_SCENE_PARAMETERS];
     Matrix44f         mProj;
     Matrix44f         mView;
 
@@ -246,17 +246,17 @@ class SceneImpl : public Scene
             Matrix44f iv  = Matrix44f::sInverse( mView );
             Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( mView ) );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_PV]->set( pv );
-            mGlobalParams[SCENE_PARAM_MATRIX_PV_INV]->set( ipv );
-            mGlobalParams[SCENE_PARAM_MATRIX_PV_IT]->set( itpv );
+            mGlobalParams[SCENE_PARAM_MATRIX_PV]->update( pv );
+            mGlobalParams[SCENE_PARAM_MATRIX_PV_INV]->update( ipv );
+            mGlobalParams[SCENE_PARAM_MATRIX_PV_IT]->update( itpv );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ]->set( mProj );
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_INV]->set( ip );
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_IT]->set( itp );
+            mGlobalParams[SCENE_PARAM_MATRIX_PROJ]->update( mProj );
+            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_INV]->update( ip );
+            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_IT]->update( itp );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW]->set( mView );
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_INV]->set( iv );
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_IT]->set( itv );
+            mGlobalParams[SCENE_PARAM_MATRIX_VIEW]->update( mView );
+            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_INV]->update( iv );
+            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_IT]->update( itv );
         }
     }
 
@@ -275,10 +275,10 @@ class SceneImpl : public Scene
                 Vector4f ambient(0.2f,0.2f,0.2f,0.2f);
                 Vector4f specular(0.6f,0.6f,0.6f,0.6f);
 
-                mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->set( worldpos );
-                mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->set( diffuse );
-                mGlobalParams[SCENE_PARAM_LIGHT0_AMBIENT]->set( ambient );
-                mGlobalParams[SCENE_PARAM_LIGHT0_SPECULAR]->set( specular );
+                mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->update( worldpos );
+                mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->update( diffuse );
+                mGlobalParams[SCENE_PARAM_LIGHT0_AMBIENT]->update( ambient );
+                mGlobalParams[SCENE_PARAM_LIGHT0_SPECULAR]->update( specular );
 
                 break;
             }
@@ -299,7 +299,7 @@ public:
             const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
             if( d.global )
             {
-                mGlobalParams[i] = new GpuProgramParam( d.size );
+                mGlobalParams[i] = r.createUniform( d.size );
             }
         }
 
@@ -324,7 +324,7 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
-    virtual GpuProgramParam * const * getGlobalParam() const
+    virtual Uniform * const * getGlobalParam() const
     {
         return mGlobalParams;
     }
@@ -335,7 +335,7 @@ public:
 
         if( d.global )
         {
-            mGlobalParams[type]->set( value, d.size );
+            mGlobalParams[type]->update( 0, d.size, value );
         }
         else
         {

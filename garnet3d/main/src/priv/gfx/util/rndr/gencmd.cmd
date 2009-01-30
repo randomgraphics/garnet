@@ -21,7 +21,7 @@ echo ///>>%TARGET%
 echo /// Renderer command enumerations.>>%TARGET%
 echo ///>>%TARGET%
 echo enum RndrCommand {>>%TARGET%
-for /F "tokens=1*" %%a in ( mtrndrCommandMeta.txt ) do echo CMD_%%a,%%b>>%TARGET%
+for /F "tokens=1*" %%a in ( mtrndrCommandMeta.txt ) do echo.    CMD_%%a,%%b>>%TARGET%
 echo };>>%TARGET%
 echo.>>%TARGET%
 

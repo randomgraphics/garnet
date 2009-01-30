@@ -11,6 +11,67 @@
 namespace GN { namespace gfx
 {
     ///
+    /// multithread GPU uniform
+    ///
+    class MultiThreadUniform : public Uniform, public StdClass
+    {
+        GN_DECLARE_STDCLASS( MultiThreadUniform, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        MultiThreadUniform( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
+        virtual ~MultiThreadUniform() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( Uniform * );
+        void quit();
+    private:
+        void clear() { mUniform = NULL; mFrontEndData = NULL; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        Uniform * getRealUniform() const { return mUniform; }
+
+        // ********************************
+        // from GpuProgram
+        // ********************************
+    public:
+
+        virtual size_t size() const { return mSize; }
+        virtual const void * getval() const { return mFrontEndData; }
+        virtual void update( size_t offset, size_t length, const void * data );
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        MultiThreadRenderer & mRenderer;
+        Uniform             * mUniform;
+        size_t                mSize;
+        UInt8               * mFrontEndData;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+    ///
     /// multithread GPU program wrapper
     ///
     class MultiThreadGpuProgram : public GpuProgram, public StdClass
@@ -51,9 +112,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual size_t getNumParameters() const { return mNumParams; }
-        virtual const GpuProgramParameterDesc * getParameters() const { return mParams; }
-        virtual void setParameter( size_t index, const void * value, size_t length );
+        virtual const GpuProgramParameterDesc & getParameterDesc() const { return *mParamDesc; }
 
         // ********************************
         // private variables
@@ -63,7 +122,7 @@ namespace GN { namespace gfx
         MultiThreadRenderer           & mRenderer;
         GpuProgram                    * mGpuProgram;
         size_t                          mNumParams;
-        const GpuProgramParameterDesc * mParams;
+        const GpuProgramParameterDesc * mParamDesc;
 
         // ********************************
         // private functions

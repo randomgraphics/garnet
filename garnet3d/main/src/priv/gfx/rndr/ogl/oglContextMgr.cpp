@@ -155,13 +155,13 @@ GN::gfx::OGLRenderer::bindContextImpl(
         GN_TODO( "verify renderer context data" );
     }
 
+    if( !bindContextShaders( newContext, forceBinding ) ) return false;
+
     if( !bindContextRenderStates( newContext, forceBinding ) ) return false;
 
     if( !bindContextRenderTargets( newContext, forceBinding ) ) return false;
 
     if( !bindContextResources( newContext, forceBinding ) ) return false;
-
-    if( !bindContextShaders( newContext, forceBinding ) ) return false;
 
     return true;
 
@@ -184,6 +184,7 @@ GN::gfx::OGLRenderer::bindContextShaders(
 
     const OGLBasicGpuProgram * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
     const OGLBasicGpuProgram * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
+    const OGLUniform * const * uniforms   = (const OGLUniform * const *)newContext.uniforms.cptr();
 
     if( oldProgram == newProgram )
     {
@@ -191,12 +192,10 @@ GN::gfx::OGLRenderer::bindContextShaders(
         {
             if( forceBinding )
             {
-                newProgram->apply();
+                newProgram->enable();
             }
-            else
-            {
-                newProgram->applyDirtyParameters();
-            }
+
+            newProgram->applyUniforms( uniforms, newContext.uniforms.size() );
         }
     }
     else
@@ -205,7 +204,11 @@ GN::gfx::OGLRenderer::bindContextShaders(
         if( oldProgram ) oldProgram->disable();
 
         // apply new program
-        if( newProgram ) newProgram->apply();
+        if( newProgram )
+        {
+            newProgram->enable();
+            newProgram->applyUniforms( uniforms, newContext.uniforms.size() );
+        }
     }
 
     GN_OGL_CHECK( (void)0 );
@@ -416,10 +419,10 @@ GN::gfx::OGLRenderer::bindContextResources(
     //
     // bind textures and samplers
     //
-    UInt32 maxStages = getCaps().maxTextures;
-    UInt32 numtex = min<UInt32>( maxStages, RendererContext::MAX_TEXTURES );
+    size_t maxStages = getCaps().maxTextures;
+    size_t numtex = min<size_t>( maxStages, RendererContext::MAX_TEXTURES );
 
-    UInt32 i;
+    size_t i;
     for ( i = 0; i < numtex; ++i )
     {
         // if null handle, then disable this texture stage
@@ -436,7 +439,7 @@ GN::gfx::OGLRenderer::bindContextResources(
             if( newContext.gpuProgram )
             {
                 // we bind texture to specific texture stage, then bind that stage to shader.
-                newContext.gpuProgram->setParameter( newContext.texbinds[i], &i, sizeof(i) );
+                ((const OGLBasicGpuProgram*)newContext.gpuProgram.get())->applyTexture( newContext.texbinds[i], i );
             }
         }
         else

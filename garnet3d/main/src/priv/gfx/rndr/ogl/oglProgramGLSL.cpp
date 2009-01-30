@@ -216,9 +216,13 @@ sGetUniformSize( GLenum type )
         case GL_SAMPLER_1D_SHADOW_ARB      :
         case GL_SAMPLER_2D_SHADOW_ARB      :
         case GL_SAMPLER_2D_RECT_ARB        :
-        case GL_SAMPLER_2D_RECT_SHADOW_ARB : return sizeof(GLint);
+        case GL_SAMPLER_2D_RECT_SHADOW_ARB :
+            GN_UNEXPECTED_EX( "Texture parameter is not supposed to be handled by this function." )
+            return sizeof(GLint);
 
-        default : GN_ERROR(sLogger)( "invalid uniform type: %d", type ); return 0;
+        default :
+            GN_UNEXPECTED_EX( "invalid uniform type" );
+            return 0;
     }
 }
 
@@ -226,44 +230,10 @@ sGetUniformSize( GLenum type )
 //
 // -----------------------------------------------------------------------------
 static bool
-sEnumUniforms(
-    DynaArray<GLSLUniformDesc> & uniforms,
-    GLhandleARB                  program )
+sIsTextureUniform( GLenum type )
 {
-    GN_GUARD;
-
-    // get uniform count
-    GLint numUniforms;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( program, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &numUniforms ), false );
-
-    // get maxinum length of uniform name;
-    GLint maxLength;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB( program, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &maxLength ), false );
-
-    // enumerate all uniforms
-    char * nameptr = (char*)alloca( maxLength+1 );
-    uniforms.resize( numUniforms );
-    for( GLuint i = 0; i < uniforms.size(); ++i )
-    {
-        GLSLUniformDesc & u = uniforms[i];
-
-        GN_OGL_CHECK_RV( glGetActiveUniformARB( program, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
-
-        GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( program, nameptr ), false );
-
-        u.name = nameptr;
-
-        u.value.resize( sGetUniformSize(u.type) * u.count );
-
-        u.nextDirty = NULL;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
+    return GL_SAMPLER_1D_ARB <= type && type <= GL_SAMPLER_2D_RECT_SHADOW_ARB;
 }
-
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -286,24 +256,20 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     mVS = sCreateShader( desc.vs.code, GL_VERTEX_SHADER_ARB );
     if( 0 == mVS ) return failure();
 
-
     mPS = sCreateShader( desc.ps.code, GL_FRAGMENT_SHADER_ARB );
     if( 0 == mPS ) return failure();
 
     mProgram = sCreateProgram( mVS, mPS );
     if( 0 == mProgram ) return failure();
 
-    if( !sEnumUniforms( mUniforms, mProgram ) ) return failure();
+    if( !enumParameters() ) return failure();
 
-    // setup parameter array
-    mParams.resize( mUniforms.size() );
-    for( size_t i = 0; i < mParams.size(); ++i )
-    {
-        GpuProgramParameterDesc & p = mParams[i];
-        GLSLUniformDesc & u = mUniforms[i];
-        p.name = u.name.cptr();
-        p.length = u.value.size();
-    }
+    // initialize parameter descriptor
+    mParamDesc.numUniforms  = mUniforms.size();
+    mParamDesc.uniformNames = mUniformNames.cptr();
+    mParamDesc.uniformSizes = mUniformSizes.cptr();
+    mParamDesc.numTextures  = mTextures.size();
+    mParamDesc.textureNames = mTextureNames.cptr();
 
     // success
     return success();
@@ -317,6 +283,12 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
 void GN::gfx::OGLGpuProgramGLSL::quit()
 {
     GN_GUARD;
+
+    mUniforms.clear();
+    mUniformNames.clear();
+    mUniformSizes.clear();
+    mTextures.clear();
+    mTextureNames.clear();
 
     if( mProgram ) glDeleteObjectARB( mProgram ), mProgram = 0;
     if( mPS ) glDeleteObjectARB( mPS ), mPS = 0;
@@ -335,99 +307,97 @@ void GN::gfx::OGLGpuProgramGLSL::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::setParameter( size_t index, const void * value, size_t length )
+void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const OGLUniform * const * uniforms, size_t count ) const
 {
-    if( index >= mUniforms.size() )
+    for( size_t i = 0; i < count; ++i )
     {
-        GN_ERROR(sLogger)( "Invalid parameter index : %d", index );
-        return;
-    }
+        if( i >= mUniforms.size() )
+        {
+            GN_WARN(sLogger)( "there are more GPU parameters than the shader needs." );
+            return;
+        }
 
-    GLSLUniformDesc & u = mUniforms[index];
-    GN_ASSERT( u.value.size() > 0 );
+        const OGLUniform * u = uniforms[i];
 
-    if( length > u.value.size() )
-    {
-        GN_WARN(sLogger)(
-            "update parameter %s: value length(%d) exceeds maxinum allowed value(%d) defined in shader code.",
-            u.name.cptr(),
-            length,
-            u.value.size() );
-        length = u.value.size();
-    }
-    else if( 0 == length )
-    {
-        length = u.value.size();
-    }
-    else if( length < u.value.size() )
-    {
-        GN_VERBOSE(sLogger)( "Partial update to shader parameter %s", u.name.cptr() );
-    }
+        if( NULL == u )
+        {
+            GN_ERROR(sLogger)( "Null uniform pointer." );
+            continue;
+        }
 
-    memcpy( u.value.cptr(), value, length );
+        const GLSLParameterDesc & d = mUniforms[i];
 
-    // attach to dirty uniform list
-    u.nextDirty = mDirtyList;
-    mDirtyList = &u;
-}
+        if( u == d.lastUniform && u->getTimeStamp() == d.lastStamp )
+        {
+            // ignore redundant parameters
+            continue;
+        }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::applyDirtyParameters() const
-{
-    while( mDirtyList )
-    {
-        const GLSLUniformDesc & u = *mDirtyList;
+        // update time stamp
+        d.lastUniform.set( u );
+        d.lastStamp = u->getTimeStamp();
 
-        switch( u.type )
+        // check parameter size
+        if( getRenderer().paramCheckEnabled() )
+        {
+            if( u->size() != d.size )
+            {
+                GN_WARN(sLogger)(
+                    "parameter %s: value size(%d) differs from size defined in shader code(%d).",
+                    d.name.cptr(),
+                    u->size(),
+                    d.size );
+            }
+        }
+
+        switch( d.type )
         {
             case GL_FLOAT                      :
-                glUniform1fvARB( u.location, u.count, (GLfloat*)u.value.cptr() );
+                glUniform1fvARB( d.location, d.count, (GLfloat*)u->getval() );
                 break;
 
             case GL_FLOAT_VEC2_ARB             :
-                glUniform2fvARB( u.location, u.count, (GLfloat*)u.value.cptr() );
+                glUniform2fvARB( d.location, d.count, (GLfloat*)u->getval() );
                 break;
 
             case GL_FLOAT_VEC3_ARB             :
-                glUniform3fvARB( u.location, u.count, (GLfloat*)u.value.cptr() );
+                glUniform3fvARB( d.location, d.count, (GLfloat*)u->getval() );
                 break;
 
             case GL_FLOAT_VEC4_ARB             :
-                glUniform4fvARB( u.location, u.count, (GLfloat*)u.value.cptr() );
+                glUniform4fvARB( d.location, d.count, (GLfloat*)u->getval() );
                 break;
 
             case GL_INT                        :
             case GL_BOOL_ARB                   :
-                glUniform1ivARB( u.location, u.count, (GLint*)u.value.cptr() );
+                glUniform1ivARB( d.location, d.count, (GLint*)u->getval() );
                 break;
 
             case GL_INT_VEC2_ARB               :
             case GL_BOOL_VEC2_ARB              :
-                glUniform2ivARB( u.location, u.count, (GLint*)u.value.cptr() );
+                glUniform2ivARB( d.location, d.count, (GLint*)u->getval() );
                 break;
 
             case GL_INT_VEC3_ARB               :
             case GL_BOOL_VEC3_ARB              :
-                glUniform3ivARB( u.location, u.count, (GLint*)u.value.cptr() );
+                glUniform3ivARB( d.location, d.count, (GLint*)u->getval() );
                 break;
 
             case GL_INT_VEC4_ARB               :
             case GL_BOOL_VEC4_ARB              :
-                glUniform4ivARB( u.location, u.count, (GLint*)u.value.cptr() );
+                glUniform4ivARB( d.location, d.count, (GLint*)u->getval() );
                 break;
 
             case GL_FLOAT_MAT2_ARB             :
-                glUniformMatrix2fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
+                glUniformMatrix2fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
                 break;
 
             case GL_FLOAT_MAT3_ARB             :
-                glUniformMatrix3fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
+                glUniformMatrix3fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
                 break;
 
             case GL_FLOAT_MAT4_ARB             :
-                glUniformMatrix4fvARB( u.location, u.count, true, (GLfloat*)u.value.cptr() );
+                glUniformMatrix4fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
                 break;
 
             case GL_SAMPLER_1D_ARB             :
@@ -438,11 +408,103 @@ void GN::gfx::OGLGpuProgramGLSL::applyDirtyParameters() const
             case GL_SAMPLER_2D_SHADOW_ARB      :
             case GL_SAMPLER_2D_RECT_ARB        :
             case GL_SAMPLER_2D_RECT_SHADOW_ARB :
-                glUniform1ivARB( u.location, u.count, (GLint*)u.value.cptr() );
+                GN_UNEXPECTED_EX( "sampler/texture is not handled by this function." );
                 break;
         }
-
-        // next dirty uniform
-        mDirtyList = mDirtyList->nextDirty;
     }
+
+    GN_OGL_CHECK( (void)0 );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLGpuProgramGLSL::applyTexture( const char * name, size_t stage ) const
+{
+    GN_ASSERT( name );
+
+    size_t idx = getTextureIndex( name );
+
+    if( PARAMETER_NOT_FOUND != idx )
+    {
+        GN_ASSERT( idx < mTextures.size() );
+
+        const GLSLParameterDesc & t = mTextures[idx];
+
+        if( t.lastTexStage != stage )
+        {
+            GLint s = (GLint)stage;
+            GN_OGL_CHECK( glUniform1ivARB( t.location, t.count, &s ) );
+            t.lastTexStage = stage;
+        }
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "texture name '%s' is not found in current GPU program." );
+    }
+}
+
+// *****************************************************************************
+// private methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::OGLGpuProgramGLSL::enumParameters()
+{
+    GN_GUARD;
+
+    // get parameter count
+    GLint numParameters;
+    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &numParameters ), false );
+
+    // get maxinum length of parameter name;
+    GLint maxLength;
+    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &maxLength ), false );
+
+    // enumerate all parameters
+    char * nameptr = (char*)alloca( maxLength+1 );
+    mUniforms.clear();
+    for( GLint i = 0; i < numParameters; ++i )
+    {
+        GLSLParameterDesc u;
+
+        GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
+
+        GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
+
+        u.name = nameptr;
+
+        if( sIsTextureUniform( u.type ) )
+        {
+            mTextures.append( u );
+        }
+        else
+        {
+            u.size = sGetUniformSize(u.type) * u.count;
+            mUniforms.append( u );
+        }
+    }
+
+    // initialize name and size arrays
+    mUniformNames.resize( mUniforms.size() );
+    mUniformSizes.resize( mUniforms.size() );
+    for( size_t i = 0; i < mUniforms.size(); ++i )
+    {
+        mUniformNames[i] = mUniforms[i].name.cptr();
+        mUniformSizes[i] = mUniforms[i].size;
+    }
+
+    mTextureNames.resize( mTextures.size() );
+    for( size_t i = 0; i < mTextures.size(); ++i )
+    {
+        mTextureNames[i] = mTextures[i].name.cptr();
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
 }

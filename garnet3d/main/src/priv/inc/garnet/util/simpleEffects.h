@@ -63,12 +63,12 @@ namespace GN { namespace util
 
         gfx::Texture                * mDefaultTexture;
         gfx::Effect                 * mEffect;
-        gfx::GpuProgramParam        * mMatrixPvw;
-        gfx::GpuProgramParam        * mMatrixWorld;
-        gfx::GpuProgramParam        * mMatrixWorldIT;
-        gfx::GpuProgramParam        * mLightPos;
-        gfx::GpuProgramParam        * mLightColor;
-        gfx::GpuProgramParam        * mDiffuseColor;
+        gfx::Uniform                * mMatrixPvw;
+        gfx::Uniform                * mMatrixWorld;
+        gfx::Uniform                * mMatrixWorldIT;
+        gfx::Uniform                * mLightPos;
+        gfx::Uniform                * mLightColor;
+        gfx::Uniform                * mDiffuseColor;
         gfx::EffectTextureParameter * mTexture;
         gfx::Drawable                 mDrawable;
 

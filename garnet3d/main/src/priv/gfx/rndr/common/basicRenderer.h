@@ -187,9 +187,7 @@ namespace GN { namespace gfx
         virtual const void * getUserData( const Guid & id, size_t * length ) const;
         virtual bool         hasUserData( const Guid & id ) const;
 
-    protected:
-
-        bool paramCheckEnabled() const { return mParamCheckEnabled; }
+        bool                 paramCheckEnabled() const { return mParamCheckEnabled; }
 
     private:
 
