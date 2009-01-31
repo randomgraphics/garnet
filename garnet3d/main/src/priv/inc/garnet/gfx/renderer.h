@@ -631,7 +631,7 @@ namespace GN { namespace gfx
         AutoRef<GpuProgram> gpuProgram;
 
         // Resources
-        StackArray<AutoRef<Uniform>,32> uniforms;                                ///< uniforms
+        DynaArray<AutoRef<Uniform> >    uniforms;                                ///< uniforms
 
         AutoRef<VtxBuf>                 vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
         UInt16                          strides[MAX_VERTEX_BUFFERS];             ///< strides for each vertex buffer. Set to 0 to use default stride.

@@ -34,12 +34,10 @@ struct DrawLineParams
     Matrix44f proj;
 };
 
-// replace an auto-ref pointer without changing its reference counter.
 template<typename T>
 static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
 {
-    ref.detach();
-    ref.attach( newptr );
+    ref.set( newptr );
 }
 
 // *****************************************************************************
@@ -340,8 +338,8 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
 {
     RendererContext * rc = (RendererContext*)beginPostCommand( CMD_BIND_CONTEXT, sizeof(inputrc) );
 
-    // copy renderer context to command buffer
-    memcpy( rc, &inputrc, sizeof(inputrc) );
+    // copy renderer context to command buffer by inplace new operator
+    new (rc) RendererContext(inputrc);
 
     // Replace wrapper resource pointers with real resource pointers.
 
@@ -782,7 +780,11 @@ namespace GN { namespace gfx
     void func_BIND_CONTEXT( Renderer & r, void * p, size_t )
     {
         RendererContext * rc = (RendererContext*)p;
+
         r.bindContext( *rc );
+
+        // destruct the renderer context (release all ref counted resources)
+        rc->RendererContext::~RendererContext();
     }
 
     //
