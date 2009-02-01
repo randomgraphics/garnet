@@ -66,13 +66,13 @@ bool init()
     if( !effect.init( *rndr ) ) return false;
 
     // update camera stuff
-    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 2.0f;
+    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 3.0f;
     updateRadius();
 
     // initialize arcball
     arcball.setHandness( util::RIGHT_HAND );
     arcball.setViewMatrix( view );
-    arcball.setTranslation( ase.bbox.center() );
+    arcball.setTranslation( -ase.bbox.center() );
     arcball.connectToInput();
 
     // load font
