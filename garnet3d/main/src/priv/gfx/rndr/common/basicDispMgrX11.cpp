@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "basicRenderer.h"
-#include "renderWindowMsw.h"
 #include "renderWindowX11.h"
 #include <limits.h>
+
+#if GN_POSIX
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.BasicRenderer");
 
@@ -14,34 +15,11 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, UInt32 * width, UInt32 
 {
     GN_GUARD;
 
-#if GN_XENON
-
-    GN_UNEXPECTED(); // program should not reach heare
-    GN_UNUSED_PARAM(disp);
-    GN_UNUSED_PARAM(win);
-    GN_UNUSED_PARAM(width);
-    GN_UNUSED_PARAM(height);
-    GN_ERROR(sLogger)( "Xenon platform does not support this function" );
-    return false;
-
-#elif GN_MSWIN && !GN_XENON
-
-    GN_UNUSED_PARAM( disp );
-    RECT rc;
-    GN_MSW_CHECK_RV( ::GetClientRect( (HWND)win, &rc ), false );
-    if( width ) *width = (UInt32)(rc.right - rc.left);
-    if( height ) *height = (UInt32)(rc.bottom - rc.top);
-    return true;
-
-#elif GN_POSIX
-
     XWindowAttributes attr;
     GN_X_CHECK_RV( XGetWindowAttributes( (Display*)disp, (Window)win, &attr ), false );
     if( width ) *width = (UInt32)attr.width;
     if( height ) *height = (UInt32)attr.height;
     return true;
-
-#endif
 
     GN_UNGUARD;
 }
@@ -58,35 +36,16 @@ sDetermineMonitorHandle( Display * defaultDisplay, const GN::gfx::RendererOption
 {
     if( 0 == ro.monitorHandle )
     {
-#if GN_XENON
-        return (GN::HandleType)1;
-#elif GN_MSWIN
-        HMONITOR monitor;
-        if( !::IsWindow( (HWND)ro.parentWindow ) )
-        {
-            POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
-            monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
-            if( 0 == monitor )
-            {
-                GN_ERROR(sLogger)( "Fail to get primary monitor handle." );
-                return 0;
-            }
-        }
-        else
-        {
-            monitor = ::MonitorFromWindow( (HWND)ro.renderWindow, MONITOR_DEFAULTTONEAREST );
-        }
-        GN_ASSERT( monitor );
-        return monitor;
-#else
         Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : defaultDisplay;
         GN_ASSERT( disp );
         Screen * scr = DefaultScreenOfDisplay( disp );
         GN_ASSERT( scr );
         return (GN::HandleType)scr;
-#endif
     }
-    else return ro.monitorHandle;
+    else
+    {
+        return ro.monitorHandle;
+    }
 }
 
 ///
@@ -104,37 +63,6 @@ sGetCurrentDisplayMode(
     GN::HandleType monitor = sDetermineMonitorHandle( defaultDisplay, ro );
     if( 0 == monitor ) return false;
 
-#if GN_XENON
-
-    XVIDEO_MODE xvm;
-    XGetVideoMode( &xvm );
-    dm.width = xvm.dwDisplayWidth;
-    dm.height = xvm.dwDisplayHeight;
-    dm.depth = 32;
-    dm.refrate = 0;
-
-#elif GN_MSWIN
-
-    MONITORINFOEXA mi;
-    DEVMODEA windm;
-
-    mi.cbSize = sizeof(mi);
-    windm.dmSize = sizeof(windm);
-    windm.dmDriverExtra = 0;
-
-    GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
-    GN_MSW_CHECK_RV( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
-
-    GN_ASSERT( (UInt32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
-    GN_ASSERT( (UInt32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
-
-    dm.width = windm.dmPelsWidth;
-    dm.height = windm.dmPelsHeight;
-    dm.depth = windm.dmBitsPerPel;
-    dm.refrate = windm.dmDisplayFrequency;
-
-#elif GN_POSIX
-
     if( (void*)1 == monitor )
     {
         GN_WARN(sLogger)( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
@@ -151,8 +79,6 @@ sGetCurrentDisplayMode(
         dm.depth = DefaultDepthOfScreen( scr );
         dm.refrate = 0;
     }
-
-#endif
 
     // success
     return true;
@@ -208,8 +134,6 @@ sDetermineWindowSize(
 // ----------------------------------------------------------------------------
 bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
 {
-#if GN_POSIX
-
     // open default display
     StrA dispStr = getEnv("DISPLAY");
     mDefaultDisplay = XOpenDisplay( dispStr.cptr() );
@@ -218,8 +142,6 @@ bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
         GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
         return false;
     }
-
-#endif
 
     DispDesc desc;
 
@@ -248,23 +170,6 @@ bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
     }
     GN_ASSERT( desc.width && desc.height && desc.depth );
 
-#if GN_MSWIN
-
-    if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
-    if( ro.useExternalWindow )
-    {
-        if( !mWindow.initExternalRenderWindow( ro.displayHandle, ro.renderWindow ) ) return false;
-    }
-    else
-    {
-        if( !mWindow.initInternalRenderWindow( ro.displayHandle, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
-    }
-    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
-    desc.displayHandle = mWindow.getDisplay();
-    desc.windowHandle = mWindow.getWindow();
-
-#elif GN_POSIX
-
     HandleType disp = ( 0 == ro.displayHandle ) ? mDefaultDisplay : ro.displayHandle;
     GN_ASSERT( disp );
 
@@ -279,8 +184,6 @@ bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
     desc.displayHandle = disp;
     desc.windowHandle = mWindow.getWindow();
     GN_ASSERT( desc.displayHandle );
-
-#endif
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
@@ -299,16 +202,12 @@ void GN::gfx::BasicRenderer::dispQuit()
 {
     mWindow.quit();
 
-#if GN_POSIX
-
     // close default display
     if( mDefaultDisplay )
     {
         XCloseDisplay( mDefaultDisplay );
         mDefaultDisplay = 0;
     }
-
-#endif
 }
 
 // ****************************************************************************
@@ -342,3 +241,5 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
 
     GN_UNGUARD;
 }
+
+#endif

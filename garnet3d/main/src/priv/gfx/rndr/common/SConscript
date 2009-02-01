@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
-    'basicDispMgr.cpp',
+    'basicDispMgrMsw.cpp',
+    'basicDispMgrX11.cpp',
     'basicRenderer.cpp',
     'basicSurface.cpp',
     'cgShader.cpp',
