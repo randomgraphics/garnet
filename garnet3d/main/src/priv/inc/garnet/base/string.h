@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <string>
 #include <ostream>
-
+#include <string.h>
 namespace GN
 {
     ///

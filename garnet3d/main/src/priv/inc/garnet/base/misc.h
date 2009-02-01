@@ -904,7 +904,7 @@ namespace GN
         //@{
 
         SafeArrayAccessor( T * data, size_t count )
-            : mBegin(data), mPtr(data), mEnd( data + count )
+            : mBegin(data), mEnd( data + count ), mPtr(data)
         {
         }
 

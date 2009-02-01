@@ -79,8 +79,6 @@ void GN::gfx::MultiThreadTexture::quit()
 // from Texture
 // *****************************************************************************
 
-#pragma warning( disable : 4100 )
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -129,6 +127,9 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapData & data )
 {
+    GN_UNUSED_PARAM( face );
+    GN_UNUSED_PARAM( level );
+    GN_UNUSED_PARAM( data );
     GN_UNIMPL();
 }
 
@@ -138,6 +139,8 @@ void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapD
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
 {
+    GN_UNUSED_PARAM( data );
+    GN_UNUSED_PARAM( length );
     GN_UNIMPL();
 }
 
@@ -146,6 +149,7 @@ void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
 // -----------------------------------------------------------------------------
 size_t GN::gfx::MultiThreadTexture::blobRead( void * data )
 {
+    GN_UNUSED_PARAM( data );
     GN_UNIMPL();
     return 0;
 }
@@ -205,7 +209,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_READ_MIPMAP( Renderer & r, void * p, size_t )
+    void func_TEXTURE_READ_MIPMAP( Renderer &, void *, size_t )
     {
         GN_UNIMPL();
     }
@@ -213,7 +217,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_WRITE( Renderer & r, void * p, size_t )
+    void func_TEXTURE_BLOB_WRITE( Renderer &, void *, size_t )
     {
         GN_UNIMPL();
     }
@@ -221,7 +225,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_READ( Renderer & r, void * p, size_t )
+    void func_TEXTURE_BLOB_READ( Renderer &, void *, size_t )
     {
         GN_UNIMPL();
     }

@@ -15,13 +15,14 @@ namespace GN { namespace gfx
     ///
     class RenderWindowX11
     {
+        Renderer      * mRenderer;
         bool            mUseExternalWindow;
         Display       * mDisplay;
         Window          mWindow;
 
         //@{
     public:
-        RenderWindowX11() : mDisplay(0), mWindow(0) {}
+        RenderWindowX11() : mRenderer(0), mDisplay(0), mWindow(0) {}
         ~RenderWindowX11() {}
         //@}
 
@@ -29,6 +30,11 @@ namespace GN { namespace gfx
         // public interface
         // ********************************
     public:
+
+        ///
+        /// associate the window with a renderer
+        ///
+        void setRenderer( Renderer * r ) { GN_ASSERT(r); mRenderer = r; }
 
         ///
         /// (re)initialize render window to use external window

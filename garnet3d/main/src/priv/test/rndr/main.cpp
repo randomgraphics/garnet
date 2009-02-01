@@ -27,8 +27,8 @@ const char * pscode =
 inline bool
 readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 {
-    std::auto_ptr<File> fp( openFile( "media::texture\\earth.jpg", "rb" ) );
-    if( NULL == fp.get() ) return false;
+    AutoObjPtr<File> fp( openFile( "media::texture\\earth.jpg", "rb" ) );
+    if( NULL == fp ) return false;
 
     ImageReader ir;
     if( !ir.reset( *fp ) ) return false;
@@ -64,8 +64,7 @@ bool init( Renderer & rndr )
 
     // setup vertex format
     rc.vtxfmt.numElements = 1;
-    strcpy_s( rc.vtxfmt.elements[0].binding, "position" );
-    rc.vtxfmt.elements[0].bindingIndex = 0;
+    rc.vtxfmt.elements[0].setBinding( "position", 0 );
     rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
     rc.vtxfmt.elements[0].offset = 0;
     rc.vtxfmt.elements[0].stream = 0;
@@ -84,7 +83,7 @@ bool init( Renderer & rndr )
         const MipmapDesc & md = id.getMipmap( 0, 0 );
         rc.textures[0]->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
     }
-    strcpy_s( rc.texbinds[0], "t0" );
+    rc.bindTexture( 0, "t0" );
 
     // create vertex buffer
     static float vertices[] =

@@ -410,7 +410,7 @@ bool TGAReader::readImage( void * o_data )
     }
 
     // TODO: handle interleaved image
-    if( id.interleaved ) GN_WARN(sLogger)( "TGA image is interleaved!" );
+    if( id.interleaved ) { GN_WARN(sLogger)( "TGA image is interleaved!" ); }
 
     // flip the image
     if( 0 == id.flip )

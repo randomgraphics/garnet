@@ -3,7 +3,7 @@
 #include "oglTexture.h"
 #include "oglRenderer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
 // *****************************************************************************
 // local functions
@@ -81,18 +81,20 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 // public functions
 // *****************************************************************************
 
-#pragma warning( disable : 4100 )
-
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRTMgrCopyFrame::bind(
     const RenderTargetDesc & newrt,
     const RenderTargetDesc & oldrt,
-    bool forceBinding,
-    bool & renderTargetSizeChanged )
+    bool                     forceBinding,
+    bool                   & renderTargetSizeChanged )
 {
     GN_GUARD_SLOW;
+
+    GN_UNUSED_PARAM( newrt );
+    GN_UNUSED_PARAM( oldrt );
+    GN_UNUSED_PARAM( forceBinding );
 
     renderTargetSizeChanged = false;
 

@@ -18,5 +18,5 @@ void GN::enableCRTMemoryCheck( long breakOnAllocID )
     }
 }
 #else
-void GN::enableCRTMemoryCheck() {}
+void GN::enableCRTMemoryCheck( long ) {}
 #endif

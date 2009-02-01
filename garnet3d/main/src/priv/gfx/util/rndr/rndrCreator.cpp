@@ -86,7 +86,7 @@ namespace GN { namespace gfx
             case API_OGL   : dllName = "GNrndrOGL"; break;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
         }
-        std::auto_ptr<SharedLib> dll( new SharedLib );
+        AutoObjPtr<SharedLib> dll( new SharedLib );
         if( !dll->load( dllName ) ) return 0;
         creator = (CreateRendererFunc)dll->getSymbol( "GNgfxCreateRenderer" );
         if( !creator ) return 0;
@@ -94,7 +94,7 @@ namespace GN { namespace gfx
         if( 0 == r ) return 0;
         SharedLib * dllptr = dll.get();
         r->setUserData( RENDERER_DLL_GUID, &dllptr, sizeof(dllptr) );
-        dll.release();
+        dll.detach();
         return r;
 #endif
         GN_UNGUARD;

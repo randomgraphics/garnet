@@ -56,9 +56,9 @@ bool BMPReader::readHeader(
 
     // What can we handle
     if( 0 != mHeader.infoHeader.compression ||
-        16 != mHeader.infoHeader.bitCount &&
-        24 != mHeader.infoHeader.bitCount &&
-        32 != mHeader.infoHeader.bitCount )
+        ( 16 != mHeader.infoHeader.bitCount &&
+          24 != mHeader.infoHeader.bitCount &&
+          32 != mHeader.infoHeader.bitCount ) )
     {
         GN_ERROR(sLogger)( "We can only handle uncompressed high-color and/or true-color BMP image.");
         return false;

@@ -279,7 +279,7 @@ namespace GN { namespace gfx
             EffectTextureParameterImpl * param;
 
             /// texture binding string
-            char binding[RendererContext::TEXBINDING_SIZE];
+            StrA binding;
 
             /// pointer to sampler
             const TextureSampler * sampler;
@@ -292,16 +292,16 @@ namespace GN { namespace gfx
             /// copy ctor
             PerShaderTextureParam( const PerShaderTextureParam & p )
                 : param(p.param)
+                , binding(p.binding)
                 , sampler(p.sampler)
             {
-                memcpy( binding, p.binding, sizeof(binding) );
             }
 
             /// assign operator
             PerShaderTextureParam & operator=( const PerShaderTextureParam & rhs )
             {
                 param = rhs.param;
-                memcpy( binding, rhs.binding, sizeof(binding) );
+                binding = rhs.binding;
                 sampler = rhs.sampler;
                 return *this;
             }

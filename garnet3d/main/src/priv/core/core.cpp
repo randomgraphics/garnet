@@ -30,7 +30,7 @@ namespace GN
         //#else
         void * ptr = ::malloc( sz );
         //#endif
-        if ( 0 == ptr ) GN_ERROR(sHeapLogger)( "out of memory!" );
+        if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
         return ptr;
     }
 
@@ -44,7 +44,7 @@ namespace GN
         //#else
         ptr = ::realloc( ptr, sz );
         //#endif
-        if ( 0 == ptr ) GN_ERROR(sHeapLogger)( "out of memory!" );
+        if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
         return ptr;
     }
 

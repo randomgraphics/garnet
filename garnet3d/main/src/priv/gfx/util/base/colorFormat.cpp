@@ -488,7 +488,7 @@ GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
-        if( xefmt == s_ColorFormatConvertTable[i].xefmt )
+        if( xefmt == (int)s_ColorFormatConvertTable[i].xefmt )
             return s_ColorFormatConvertTable[i].gnfmt;
     }
     return COLOR_FORMAT_UNKNOWN;
@@ -514,7 +514,7 @@ GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
-        if( dxgifmt == s_ColorFormatConvertTable[i].dxgifmt )
+        if( dxgifmt == (int)s_ColorFormatConvertTable[i].dxgifmt )
             return s_ColorFormatConvertTable[i].gnfmt;
     }
     return COLOR_FORMAT_UNKNOWN;

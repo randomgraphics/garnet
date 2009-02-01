@@ -158,14 +158,18 @@ namespace GN
 // string types
 #include "base/string.h"
 
+// log functions and macros
+#include "base/log.h"
+
+// math library
+#include "base/math.h"
+#include "base/geometry.h"
+
 // misc.
 #include "base/misc.h"
 
 // basic sync. primitives
 #include "base/sync.h"
-
-// log functions and macros
-#include "base/log.h"
 
 // exceptions
 #include "base/exception.h"
@@ -202,10 +206,6 @@ namespace GN
 #include "base/file.h"
 #include "base/path.h"
 #include "base/filesys.h"
-
-// math library
-#include "base/math.h"
-#include "base/geometry.h"
 
 // a general tree structure
 #include "base/tree.h"

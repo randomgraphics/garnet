@@ -245,23 +245,23 @@ namespace GN { namespace gfx
         ///
         /// setup mip size
         ///
-        void setMipSize( size_t level, const Vector3<UInt32> & s )
-        {
-            setMipSize( level, s.x, s.y, s.z );
-        }
-
-        ///
-        /// setup mip size
-        ///
         template<typename T>
         void setMipSize( size_t level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
             GN_ASSERT( level > 0 ||
-                sx == (T)mDesc.width &&
-                sy == (T)mDesc.height &&
-                sz == (T)mDesc.depth );
+                ( sx == (T)mDesc.width &&
+                  sy == (T)mDesc.height &&
+                  sz == (T)mDesc.depth ) );
             mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
+        }
+
+        ///
+        /// setup mip size
+        ///
+        void setMipSize( size_t level, const Vector3<UInt32> & s )
+        {
+            setMipSize( level, s.x, s.y, s.z );
         }
 
     private :
