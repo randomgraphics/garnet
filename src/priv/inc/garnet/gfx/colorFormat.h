@@ -30,13 +30,13 @@
 /// compose color format from various properties
 ///
 #define GN_MAKE_COLOR_FORMAT_EX( layout, sign012, sign3, sw0, sw1, sw2, sw3 )         \
-    ( (layout)                                      & GN_COLOR_FORMAT_MASK_LAYOUT   | \
-    ( (sign012) << GN_COLOR_FORMAT_SHIFT_SIGN012  ) & GN_COLOR_FORMAT_MASK_SIGN012  | \
-    ( (sign3)   << GN_COLOR_FORMAT_SHIFT_SIGN3    ) & GN_COLOR_FORMAT_MASK_SIGN3    | \
-    ( (sw0)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE0 ) & GN_COLOR_FORMAT_MASK_SWIZZLE0 | \
-    ( (sw1)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE1 ) & GN_COLOR_FORMAT_MASK_SWIZZLE1 | \
-    ( (sw2)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE2 ) & GN_COLOR_FORMAT_MASK_SWIZZLE2 | \
-    ( (sw3)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE3 ) & GN_COLOR_FORMAT_MASK_SWIZZLE3 )
+    ( ( (layout)                                      & GN_COLOR_FORMAT_MASK_LAYOUT   ) | \
+    ( ( (sign012) << GN_COLOR_FORMAT_SHIFT_SIGN012  ) & GN_COLOR_FORMAT_MASK_SIGN012  ) | \
+    ( ( (sign3)   << GN_COLOR_FORMAT_SHIFT_SIGN3    ) & GN_COLOR_FORMAT_MASK_SIGN3    ) | \
+    ( ( (sw0)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE0 ) & GN_COLOR_FORMAT_MASK_SWIZZLE0 ) | \
+    ( ( (sw1)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE1 ) & GN_COLOR_FORMAT_MASK_SWIZZLE1 ) | \
+    ( ( (sw2)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE2 ) & GN_COLOR_FORMAT_MASK_SWIZZLE2 ) | \
+    ( ( (sw3)     << GN_COLOR_FORMAT_SHIFT_SWIZZLE3 ) & GN_COLOR_FORMAT_MASK_SWIZZLE3 ) )
 
 ///
 /// compose color format from simplified sign and swizzles

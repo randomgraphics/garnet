@@ -1,7 +1,6 @@
 Import( 'GN' )
 if GN.conf['has_d3d10']:
 
-    import os
     import string
 
     def Fx2Cpp( target, source, env ):
@@ -14,7 +13,7 @@ if GN.conf['has_d3d10']:
     fxo = Command(
         'effect.fxo',
         'effect.fx',
-        '"%sUtilities\\Bin\\x86\\fxc.exe" /T fx_4_0 /Fo $TARGET $SOURCE'%( os.environ["DXSDK_DIR"] )
+        '"%sUtilities\\Bin\\x86\\fxc.exe" /T fx_4_0 /Fo $TARGET $SOURCE'%( GN.getenv("DXSDK_DIR") )
         )
 
     fxh = Command( 'effect.h', 'effect.fx', Fx2Cpp );

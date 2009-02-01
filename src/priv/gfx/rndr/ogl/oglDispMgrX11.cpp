@@ -14,7 +14,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispDeviceCreate()
+bool GN::gfx::OGLRenderer::dispInit()
 {
     GN_GUARD;
 
@@ -64,23 +64,6 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     // init GLEW
     glewInit();
 
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispDeviceRestore()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    GN_ASSERT( mRenderContext );
-
     // setup swap control
     if( GLX_SGI_swap_control )
     {
@@ -90,7 +73,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
         }
     }
 
-    // successful
+    // success
     return true;
 
     GN_UNGUARD;
@@ -99,15 +82,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispDeviceDispose()
-{
-    _GNGFX_DEVICE_TRACE();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispDeviceDestroy()
+void GN::gfx::OGLRenderer::dispQuit()
 {
     GN_GUARD;
 

@@ -16,7 +16,7 @@ template<typename T>
 static inline T *
 sFindNamedPtr( const std::map<StrA,AutoRef<T> > & container, const StrA & name )
 {
-    std::map<StrA,AutoRef<T> >::const_iterator iter = container.find( name );
+    typename std::map<StrA,AutoRef<T> >::const_iterator iter = container.find( name );
     return ( container.end() == iter ) ? NULL : iter->second.get();
 }
 
@@ -27,7 +27,7 @@ template<typename T>
 static inline const T *
 sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
 {
-    std::map<StrA,T>::const_iterator iter = container.find( name );
+    typename std::map<StrA,T>::const_iterator iter = container.find( name );
     return ( container.end() == iter ) ? NULL : &iter->second;
 }
 
@@ -152,7 +152,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         GN_ERROR(sLogger)( "Effect descriptor must define at least one techniuqe." );
         return failure();
     }
-    int highestQuality = INT_MIN;
+    int highestQuality = (int)0x80000000; // minimal signed integer
     Technique * defaultActiveTech = NULL;
     for( std::map<StrA,EffectDesc::TechniqueDesc>::const_iterator iter = desc.techniques.begin();
          iter != desc.techniques.end();
@@ -313,7 +313,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
         const PerShaderTextureParam & t = p.textures[i];
 
         drawable.rc.textures[i].set( t.param->getTexture() );
-        memcpy( drawable.rc.texbinds[i], t.binding, sizeof(drawable.rc.texbinds[i]) );
+        drawable.rc.bindTexture( i, t.binding.cptr() );
     }
 
     // clear unused texture stages
@@ -402,10 +402,7 @@ GN::gfx::Effect::initTech(
                 PerShaderTextureParam tex;
 
                 tex.param = &mTextures.find(tname)->second;
-
-                memset( tex.binding, 0, sizeof(tex.binding) );
-                strcpy_s( tex.binding, tbind.cptr() );
-
+                tex.binding = tbind;
                 tex.sampler = &tdesc->sampler;
 
                 p.textures.append( tex );

@@ -739,7 +739,7 @@ namespace GN { namespace gfx
     };
 
     // make sure bit-wise flags occupy only 2 DWORDs.
-    GN_CASSERT( GN_FIELD_OFFSET(RendererContext,blendFactors) == 2*sizeof(UInt32) );
+    //GN_CASSERT( GN_FIELD_OFFSET(RendererContext,blendFactors) == 2*sizeof(UInt32) );
 
     ///
     /// «Â∆¡±Í÷æ

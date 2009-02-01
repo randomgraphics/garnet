@@ -246,7 +246,7 @@ namespace GN
             return
                 !mEnabled ||
                 0 == mLevel ||
-                level > mLevel && level != -mLevel;
+                ( level > mLevel && level != -mLevel );
         }
 
         ///

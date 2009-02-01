@@ -397,7 +397,7 @@ struct AseFile
     {
         const char * s = next( 0, option );
         if( 0 == s ) return false;
-        if( 'a' <= *s && *s <= 'z' || 'A' <= *s && *s <= 'Z' || '_' == *s )
+        if( ( 'a' <= *s && *s <= 'z' ) || ( 'A' <= *s && *s <= 'Z' ) || '_' == *s )
         {
             result = s;
             return true;
@@ -1018,7 +1018,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.verbose( strFormat( "read geometry object '%s' ...", o.node.name ) );
+            ase.verbose( strFormat( "read geometry object '%s' ...", o.node.name.cptr() ) );
         }
         else if( 0 == strCmp( token, "*NODE_PARENT" ) )
         {
@@ -1360,7 +1360,7 @@ public:
     ///
     UInt32 add( const T & element )
     {
-        std::pair<TypeMap::iterator,bool> i = mMap.insert( TypeMap::value_type(element,0xbad) );
+        std::pair<typename TypeMap::iterator,bool> i = mMap.insert( typename TypeMap::value_type(element,0xbad) );
 
         if( i.second )
         {

@@ -20,7 +20,7 @@ LOCAL_env = Environment( tools=[] )
 ################################################################################
 
 # 读取环境变量
-def getenv( name, defval = None ):
+def UTIL_getenv( name, defval = None ):
 	if name in os.environ: return os.environ[name]
 	else: return defval
 
@@ -29,7 +29,7 @@ CONF_os = None
 CONF_cpu = None
 if 'win32' == LOCAL_env['PLATFORM']:
 	CONF_os = 'mswin'
-	if 'AMD64' == getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == getenv('PROCESSOR_ARCHITEW6432'):
+	if 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == UTIL_getenv('PROCESSOR_ARCHITEW6432'):
 		CONF_cpu = 'x64'
 	else:
 		CONF_cpu = 'x86'
@@ -82,15 +82,15 @@ CONF_allVariants = 'debug profile retail stdbg stprof stret'
 
 # 定义缺省的命令行选项
 CONF_defaultCmdArgs = {
-	'trace'     : getenv('GN_BUILD_TRACE',  '0'),
-	'variant'   : getenv('GN_BUILD_VARIANT', 'debug'),
-	'compiler'  : getenv('GN_BUILD_COMPILER', CONF_getCompiler(CONF_os,CONF_cpu).name ),
-	'os'        : getenv('GN_BUILD_TARGET_OS', CONF_os ),
-	'cpu'       : getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
-	'cg'        : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
-	'xedeploy'  : getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
-	'locale'    : getenv('GN_BUILD_LOCALE', 'CHS'),
-	'sdkroot'   : getenv('GN_BUILD_SDK_ROOT', '<svnroot>\\bin\\sdk') # root directory of SDK installation
+	'trace'     : UTIL_getenv('GN_BUILD_TRACE',  '0'),
+	'variant'   : UTIL_getenv('GN_BUILD_VARIANT', 'debug'),
+	'compiler'  : UTIL_getenv('GN_BUILD_COMPILER', CONF_getCompiler(CONF_os,CONF_cpu).name ),
+	'os'        : UTIL_getenv('GN_BUILD_TARGET_OS', CONF_os ),
+	'cpu'       : UTIL_getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
+	'cg'        : UTIL_getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
+	'xedeploy'  : UTIL_getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
+	'locale'    : UTIL_getenv('GN_BUILD_LOCALE', 'CHS'),
+	'sdkroot'   : UTIL_getenv('GN_BUILD_SDK_ROOT', '<svnroot>\\bin\\sdk') # root directory of SDK installation
 	}
 
 # 是否打开trace
@@ -197,11 +197,11 @@ def UTIL_newEnv( compiler, variant ):
 		ICL_VERSION    = icl_version,
 		ICL_ABI        = icl_abi,
 		ENV            = {
-		                 	'PATH'     : getenv('PATH'),
-		                 	'LANG'     : getenv('LANG'),
-		                 	'LANGUAGE' : getenv('LANGUAGE'),
-		                 	'INCLUDE'  : getenv('INCLUDE'),
-		                 	'LIB'      : getenv('LIB'),
+		                 	'PATH'     : UTIL_getenv('PATH'),
+		                 	'LANG'     : UTIL_getenv('LANG'),
+		                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
+		                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
+		                 	'LIB'      : UTIL_getenv('LIB'),
 		                 }
 		)
 	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
@@ -515,6 +515,7 @@ class GarnetEnv :
 	def warn( self, msg ): UTIL_warn( msg )
 	def error( self, msg ): UTIL_error( msg )
 	def copy_to_devkit( self, targetDir ) : return UTIL_copy_to_devkit( targetDir )
+	def getenv( self, name, defval=None ) : return UTIL_getenv( name, defval )
 
 	# 生成从target到base的相对路径
 	def relpath( self, target, base ):

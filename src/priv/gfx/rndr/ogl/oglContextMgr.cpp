@@ -7,6 +7,7 @@
 #include "oglIdxBuf.h"
 #include "oglTexture.h"
 
+using namespace GN;
 using namespace GN::gfx;
 
 // *****************************************************************************
@@ -23,12 +24,12 @@ sGetOGLVtxFmt(
 
     if( i != vfmap.end() ) return i->second;
 
-    std::auto_ptr<OGLVtxFmt> oglvf( new OGLVtxFmt(r) );
+    AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(r) );
     if( !oglvf->init( vf ) ) return NULL;
 
     vfmap[vf] = oglvf.get();
 
-    return oglvf.release();
+    return oglvf.detach();
 }
 
 static const GLenum CONVERT_FILL_MODES[] =

@@ -9,8 +9,8 @@ GN_BUILD_COMPILER=gcc
 # setup scons
 # ===========
 echo SCons Directory : ${GARNET_ROOT}/env/scons
-PATH=${GARNET_ROOT}/env/scons/Scripts:${PATH}
-SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/Lib
+PATH=${GARNET_ROOT}/env/scons/1.2.0/scripts:${PATH}
+SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/1.2.0/lib
 export PATH SCONS_LIB_DIR
 
 # ===========
@@ -18,7 +18,7 @@ export PATH SCONS_LIB_DIR
 # ===========
 
 alias gnroot="cd ${GARNET_ROOT}/"
-alias gnbld="cd ${GARNET_ROOT}/build.tmp/scons/${GN_BUILD_TARGET_OS}/${GN_BUILD_TARGET_CPU}/${GN_BUILD_COMPILER}/${GN_BUILD_VARIANT}/bin/"
+alias gnbld="cd ${GARNET_ROOT}/build.tmp/${GN_BUILD_TARGET_OS}.${GN_BUILD_TARGET_CPU}.${GN_BUILD_COMPILER}.${GN_BUILD_VARIANT}/bin/"
 alias gnsrc="cd ${GARNET_ROOT}/src/"
 alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
 alias gnbase="cd ${GARNET_ROOT}/src/priv/base/"

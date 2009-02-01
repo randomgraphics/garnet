@@ -54,7 +54,7 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, UInt32 * width, UInt32 
 /// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
 static GN::HandleType
-sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
+sDetermineMonitorHandle( Display * defaultDisplay, const GN::gfx::RendererOptions & ro )
 {
     if( 0 == ro.monitorHandle )
     {
@@ -79,7 +79,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : ((GN::gfx::BasicRenderer&)gRenderer).getDefaultDisplay();
+        Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : defaultDisplay;
         GN_ASSERT( disp );
         Screen * scr = DefaultScreenOfDisplay( disp );
         GN_ASSERT( scr );
@@ -93,12 +93,15 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 /// get current display mode
 // ----------------------------------------------------------------------------
 static bool
-sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMode & dm )
+sGetCurrentDisplayMode(
+    Display * defaultDisplay,
+    const GN::gfx::RendererOptions & ro,
+    GN::gfx::DisplayMode & dm )
 {
     GN_GUARD;
 
     // determine the monitor
-    GN::HandleType monitor = sDetermineMonitorHandle( ro );
+    GN::HandleType monitor = sDetermineMonitorHandle( defaultDisplay, ro );
     if( 0 == monitor ) return false;
 
 #if GN_XENON
@@ -221,12 +224,12 @@ bool GN::gfx::BasicRenderer::dispInit( const RendererOptions & ro )
     DispDesc desc;
 
     // determine monitor handle
-    desc.monitorHandle = sDetermineMonitorHandle( ro );
+    desc.monitorHandle = sDetermineMonitorHandle( mDefaultDisplay, ro );
     if( 0 == desc.monitorHandle ) return false;
 
     // setup display mode
     DisplayMode dm;
-    if( !sGetCurrentDisplayMode( ro, dm ) ) return false;
+    if( !sGetCurrentDisplayMode( mDefaultDisplay, ro, dm ) ) return false;
     if( ro.fullscreen )
     {
         desc.width = (0==ro.displayMode.width) ? dm.width : ro.displayMode.width;
