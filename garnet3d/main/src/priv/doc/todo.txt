@@ -1,8 +1,6 @@
 - 程序中标注TODO的地方
 
 - p0
-  - fix mtrndr memory leak,
-  - remove static signals in renderer and input class.
   - cross platform renderer, again...
     - why: ease to use.
     - rule #1: portability has priority then performance.
@@ -13,28 +11,12 @@
         - XML mesh file with embeded binary data
         - XML effect file.
     - some standard light effects:
-      - effect class
-        - default texture property: need a texture file manager
       - flat( no light, one diffuse texture, XYZ_UV0 )
-      - gouraud(single light, one diffuse texture, XYZ_NORMAL_UV0)
       - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
       - skin
     - a fast mesh smooth implementation.
 
 - p1
-  - big-endian DDS loader
-  - big-endina mesh binary loader
-  - render engine:
-    - shared parameters
-    - query graphics system caps
-    - runtime configuable draw command buffer count
-    - read resource content
-  - graphics system:
-    - using special surface class to replace stream in quad kernel.
-    - consider delete stream source class.
-    - delete surface dimension enum
-    - API independant graphics system.
-  - drawable and actore classes based on new render engine system.
 
 - p2
   - XML: pointer from parent to last child, for constant time child appending.
@@ -48,7 +30,6 @@
 - p3
   - code page convertor and test application
     - may support convertion from/to utf8 be enough?
-  - blender exporter/importer
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
@@ -58,20 +39,12 @@
   - in game GUI:
   - debug variable registry
     - debug variable viewer and modifier
-  - opengl renderer state dumper
   - COLLADA loader
-  - ASE loader
-    - save texture to target directory
-    - convert height map to normal map
   - make sure OGL resource creation/deletion do not affect renderer states
     - depends on renderer state dumper
 
 - more
-  - new build system:
-    - two steps:
-      - compiler configuration script, called by setupEnv.cmd/setupEnv.sh
-      - build script
-  - support to multiple joysticks.
+  - new build system
   - image format conversion
   - try implementing a ray tracer
 
