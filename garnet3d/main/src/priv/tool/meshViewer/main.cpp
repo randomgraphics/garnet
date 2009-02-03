@@ -66,7 +66,7 @@ bool init()
     if( !effect.init( *rndr ) ) return false;
 
     // update camera stuff
-    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 3.0f;
+    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 1.5f;
     updateRadius();
 
     // initialize arcball
@@ -123,6 +123,13 @@ void draw( const wchar_t * fps )
     }
 
     font.drawText( fps, 0, 0 );
+    font.drawText(
+        strFormat(
+            L"position : %f, %f, %f\n"
+            L"radius   : %f",
+            position.x, position.y, position.z,
+            radius ).cptr(),
+        0, 20 );
 }
 
 void drawCoords()

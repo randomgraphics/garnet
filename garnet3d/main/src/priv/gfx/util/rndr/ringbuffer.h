@@ -83,8 +83,9 @@ namespace GN { namespace gfx
         UInt8 * volatile mWritePtr;  // Points to next empty space.
         size_t           mPendingReadSize;
         size_t           mPendingWriteSize; // size of pending write
-        SyncEventGroup * mNotFull;
-        SyncEventGroup * mNotEmpty;
+        SyncEvent      * mNotFull;
+        SyncEvent      * mNotEmpty;
+        volatile bool    mQuit;
 
         // ********************************
         // private functions
