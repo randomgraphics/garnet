@@ -22,13 +22,14 @@ bool GN::gfx::RingBuffer::init( size_t ringBufferSize )
     if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
     mEnd = mBegin + mSize;
     mReadPtr = mWritePtr = mBegin;
-    mNotFull = createSyncEventGroup( 2, false, true, NULL );  // initial unsignaled, auto-reset
-    mNotEmpty = createSyncEventGroup( 2, false, true, NULL ); // initial unsignaled, auto-reset
+    mNotFull = createSyncEvent( false, true, NULL );  // initial unsignaled, auto-reset
+    mNotEmpty = createSyncEvent( false, true, NULL ); // initial unsignaled, auto-reset
     if( NULL == mNotFull || NULL == mNotEmpty )
     {
         GN_ERROR(sLogger)( "fail to create ring buffer sync events." );
         return failure();
     }
+    mQuit = false;
 
     // success
     return success();
@@ -62,8 +63,9 @@ void GN::gfx::RingBuffer::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::RingBuffer::postQuitMessage()
 {
-    if( mNotFull ) mNotFull->signal( 1 );
-    if( mNotEmpty ) mNotEmpty->signal( 1 );
+    mQuit = true;
+    if( mNotFull ) mNotFull->signal();
+    if( mNotEmpty ) mNotEmpty->signal();
 }
 
 //
@@ -86,13 +88,12 @@ GN::gfx::RingBuffer::beginProduce( size_t size )
 
         if( (size_t)freeSize < size )
         {
-            int idx = mNotFull->waitAny();
-            if( 1 == idx )
+            mNotFull->wait();
+            if( mQuit )
             {
                 // received quit message
                 return NULL;
             }
-            GN_ASSERT( 0 == idx );
         }
         else
         {
@@ -113,7 +114,7 @@ GN::gfx::RingBuffer::endProduce()
     if( newWrite >= mEnd ) newWrite -= mSize;
     mWritePtr = newWrite;
     GN_ASSERT( mBegin <= mWritePtr && mWritePtr < mEnd );
-    mNotEmpty->signal( 0 );
+    mNotEmpty->signal();
 }
 
 //
@@ -135,13 +136,12 @@ GN::gfx::RingBuffer::beginConsume( size_t size )
 
         if( (size_t)unconsumedSize < size )
         {
-            int idx = mNotEmpty->waitAny();
-            if( 1 == idx )
+            mNotEmpty->wait();
+            if( mQuit )
             {
                 // received quit message
                 return NULL;
             }
-            GN_ASSERT( 0 == idx );
         }
         else
         {
@@ -162,5 +162,5 @@ GN::gfx::RingBuffer::endConsume()
     if( newRead >= mEnd ) newRead -= mSize;
     mReadPtr = newRead;
     GN_ASSERT( mBegin <= mReadPtr && mReadPtr < mEnd );
-    mNotFull->signal( 0 );
+    mNotFull->signal();
 }

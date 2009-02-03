@@ -2378,11 +2378,11 @@ namespace GN
         {
             if( w < h )
             {
-                return h < d ? 3 : 2;
+                return h < d ? 2 : 1;
             }
             else
             {
-                return w < d ? 3 : 1;
+                return w < d ? 2 : 0;
             }
         }
 
