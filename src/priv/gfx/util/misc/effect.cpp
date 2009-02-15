@@ -227,7 +227,7 @@ void GN::gfx::Effect::quit()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::Effect::getGpuProgramParam( const StrA & name ) const
+GN::gfx::Effect::getUniform( const StrA & name ) const
 {
     std::map<StrA,AutoRef<Uniform> >::const_iterator it = mUniforms.find( name );
 
@@ -244,7 +244,7 @@ GN::gfx::Effect::getGpuProgramParam( const StrA & name ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Effect::setGpuProgramParam( const StrA & name, Uniform * param )
+void GN::gfx::Effect::setUniform( const StrA & name, Uniform * param )
 {
     if( NULL == param )
     {

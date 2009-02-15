@@ -60,7 +60,7 @@ bool init( Renderer & rndr )
     // set transformation to identity
     Matrix44f m;
     m.identity();
-    e.getGpuProgramParam( "pvw" )->update( m );
+    e.getUniform( "pvw" )->update( m );
 
     // load image
     ImageDesc id;
