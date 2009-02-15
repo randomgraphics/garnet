@@ -124,31 +124,31 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     b.effect = *inputEffect;
 
     // get list of standard parameters
-    Uniform * const * globalParams = s.getGlobalParam();
+    Uniform * const * globalUniforms = s.getGlobalUniforms();
 
     // handle standard parameters
     for( size_t i = 0; i < NUM_STANDARD_SCENE_PARAMETERS; ++i )
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        if( b.effect.hasGpuProgramParam( d.name ) )
+        if( b.effect.hasUniform( d.name ) )
         {
-            Uniform * p;
+            Uniform * u;
             if( !d.global )
             {
-                StdParam sp;
-                sp.type  = (StandardSceneParameterType)i;
-                sp.param.attach( s.getRenderer().createUniform(d.size) );
-                mStdPerObjParams.append( sp );
-                p = sp.param.get();
+                StandardUniform su;
+                su.type  = (StandardSceneParameterType)i;
+                su.uniform.attach( s.getRenderer().createUniform(d.size) );
+                mStandardPerObjectUniforms.append( su );
+                u = su.uniform.get();
             }
             else
             {
-                p = globalParams[i];
+                u = globalUniforms[i];
             }
-            GN_ASSERT( p );
+            GN_ASSERT( u );
 
-            b.effect.setGpuProgramParam( d.name, p );
+            b.effect.setUniform( d.name, u );
         }
     }
 
@@ -170,21 +170,21 @@ void GN::scene::GeometryNode::draw()
 {
     Scene & s = getScene();
 
-    for( size_t i = 0; i < mStdPerObjParams.size(); ++i )
+    for( size_t i = 0; i < mStandardPerObjectUniforms.size(); ++i )
     {
-        const StdParam & sp = mStdPerObjParams[i];
-        gfx::Uniform * p = sp.param.get();
+        const StandardUniform & su = mStandardPerObjectUniforms[i];
+        gfx::Uniform * u = su.uniform.get();
 
         // should be per-object parameter
-        GN_ASSERT( !getStandardSceneParameterName( sp.type ).global );
+        GN_ASSERT( !getStandardSceneParameterName( su.type ).global );
 
-        switch( sp.type )
+        switch( su.type )
         {
             case SCENE_PARAM_MATRIX_PVW :
             {
-                const Matrix44f * pv = (const Matrix44f *)s.getGlobalParam()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f * pv = (const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
                 Matrix44f pvw = *pv * getLocal2Root();
-                p->update( pvw );
+                u->update( pvw );
                 break;
             }
 
@@ -324,7 +324,7 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
-    virtual Uniform * const * getGlobalParam() const
+    virtual Uniform * const * getGlobalUniforms() const
     {
         return mGlobalParams;
     }

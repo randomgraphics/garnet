@@ -19,7 +19,7 @@ namespace GN
         struct Scene;
 
         ///
-        /// basic object that can be put in to 3D scene. Position is its only property.
+        /// basic object that can be put in to 3D scene.
         ///
         struct Node : private TreeNode<Node>, public NoCopy
         {
@@ -44,16 +44,16 @@ namespace GN
             Node              * getFirstChild() const { return (Node*)TreeNode<Node>::getFirstChild(); }
             Node              * getLastChild() const;
 
-            const Vector3f    & getPosition() const { return mPosition; }
-            const Vector3f    & getPivot() const { return mPivot; }
-            const Quaternionf & getRotation() const { return mRotation; }
+            const Vector3f    & getPosition() const { return mPosition; } ///< get position in parent space
+            const Vector3f    & getPivot() const { return mPivot; }       ///< get pivor position, in parent space.
+            const Quaternionf & getRotation() const { return mRotation; } ///< get orientation, in parent space
             const Matrix44f   & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Node*>(this)->calcTransform(); } return mLocal2Parent; }
             const Matrix44f   & getLocal2Root() const { if( mTransformDirty ) { const_cast<Node*>(this)->calcTransform(); } return mLocal2Root; }
 
             // signals
             //@{
-            Signal1<void,Node*> sigCtor; ///< called after node is constructed
-            Signal1<void,Node*> sigDtor; ///< called before node is about to destructed.
+            Signal1<void,Node*> sigCtor; ///< called after node is constructed.
+            Signal1<void,Node*> sigDtor; ///< called before node is destructed.
             //@}
 
             /// dtor
@@ -141,15 +141,15 @@ namespace GN
                 GeometryBlock( gfx::Renderer & r ) : effect(r) {}
             };
 
-            struct StdParam
+            struct StandardUniform
             {
-                StandardSceneParameterType    type;
-                AutoRef<gfx::Uniform> param;
+                StandardSceneParameterType type;
+                AutoRef<gfx::Uniform>      uniform;
             };
 
-            DynaArray<StdParam>      mStdPerObjParams; ///< standard per-object parameters
-            DynaArray<GeometryBlock> mBlocks;
-            Spheref                  mBoundingSphere;
+            DynaArray<StandardUniform> mStandardPerObjectUniforms; ///< standard per-object parameters
+            DynaArray<GeometryBlock>   mBlocks;
+            Spheref                    mBoundingSphere;
 
         public:
 
@@ -191,7 +191,7 @@ namespace GN
 
             /// \name global parameter management
             //@{
-            virtual gfx::Uniform * const * getGlobalParam() const = 0;
+            virtual gfx::Uniform * const * getGlobalUniforms() const = 0;
             virtual void setProj( const Matrix44f & ) = 0;
             virtual void setView( const Matrix44f & ) = 0;
             //@}

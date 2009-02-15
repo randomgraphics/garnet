@@ -79,8 +79,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     if( !mEffect->init( ed ) ) return failure();
 
 #define INIT_GPP( x, name, defval ) \
-    GN_ASSERT( mEffect->hasGpuProgramParam( name ) ); \
-    x = mEffect->getGpuProgramParam( name ); \
+    GN_ASSERT( mEffect->hasUniform( name ) ); \
+    x = mEffect->getUniform( name ); \
     GN_ASSERT( x ); \
     x->update( defval );
 
