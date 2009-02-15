@@ -211,7 +211,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool forceBinding );
+        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -225,10 +225,10 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
-        inline bool bindContextShaders( const RendererContext & newContext, bool forceBinding );
-        inline bool bindContextRenderStates( const RendererContext & newContext, bool forceBinding );
-        inline bool bindContextRenderTargets( const RendererContext & newContext, bool forceBinding );
-        inline bool bindContextResources( const RendererContext & newContext, bool forceBinding );
+        inline bool bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTargets( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
 
     private:
 

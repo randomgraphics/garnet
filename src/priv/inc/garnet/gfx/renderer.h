@@ -694,6 +694,14 @@ namespace GN { namespace gfx
 
             uniforms.clear();
 
+            clearResources();
+        }
+
+        //
+        // clear all resources binded to the context
+        //
+        void clearResources()
+        {
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
             for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
             vtxfmt.numElements = 0;

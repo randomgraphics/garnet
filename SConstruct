@@ -839,6 +839,7 @@ TARGET_tests = [
     ]
 
 TARGET_samples = [
+    'GNsampleBezier',
     'GNsampleDepthTexture',
     'GNsampleDolphin',
     'GNsampleRenderToCube',

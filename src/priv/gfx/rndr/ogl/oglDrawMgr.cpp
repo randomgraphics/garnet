@@ -424,9 +424,11 @@ void GN::gfx::OGLRenderer::drawLines(
 
     GN_ASSERT( mLine );
 
-    // disable GPU program
+    // disable GPU program and resources
     RendererContext ctx = getContext();
     ctx.gpuProgram.clear();
+    ctx.uniforms.clear();
+    ctx.clearResources();
 
     bindContext( ctx );
     if( !mContextOk ) return;

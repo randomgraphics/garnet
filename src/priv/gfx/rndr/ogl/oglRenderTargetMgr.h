@@ -56,7 +56,7 @@ namespace GN { namespace gfx
         virtual void bind(
             const RenderTargetDesc & oldRT,
             const RenderTargetDesc & newRT,
-            bool forceBinding,
+            bool skipDirtyCheck,
             bool & renderTargetSizeChanged ) = 0;
     };
 

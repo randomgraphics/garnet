@@ -87,14 +87,14 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 void GN::gfx::OGLRTMgrCopyFrame::bind(
     const RenderTargetDesc & newrt,
     const RenderTargetDesc & oldrt,
-    bool                     forceBinding,
+    bool                     skipDirtyCheck,
     bool                   & renderTargetSizeChanged )
 {
     GN_GUARD_SLOW;
 
     GN_UNUSED_PARAM( newrt );
     GN_UNUSED_PARAM( oldrt );
-    GN_UNUSED_PARAM( forceBinding );
+    GN_UNUSED_PARAM( skipDirtyCheck );
 
     renderTargetSizeChanged = false;
 
@@ -107,7 +107,7 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
         const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;
         const RenderTargetTexture * newc = i < newrt.count ? newrt.crts[i] : NULL;
 
-        if( forceBinding || // if "force" binding, then do it.
+        if( skipDirtyCheck || // if no dirty check, then do it.
             oldc != newc && // if oldc and newc are both NULL, then do nothing.
             // program reaches here, means at least one surface is _NOT_ null. So if one of them is NULL
             // or content of the two surfaces are different, we have to do the binding.
@@ -143,7 +143,7 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
     // bind depth buffer
     const RenderTargetTexture & oldz = oldrt.zbuffer;
     const RenderTargetTexture & newz = newrt.zbuffer;
-    if( oldz.texture && ( oldz != newz || forceBinding ) )
+    if( oldz.texture && ( oldz != newz || skipDirtyCheck ) )
     {
         sCopyFrameBufferTo( oldz );
     }
