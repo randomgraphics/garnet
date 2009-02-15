@@ -61,6 +61,7 @@ namespace GN { namespace gfx
         void clear()
         {
             dispClear();
+            contextClear();
             miscClear();
         }
         //@}
@@ -152,7 +153,11 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool forceBinding ) = 0;
+        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck ) = 0;
+
+    private:
+
+        void contextClear() { mContextOk = false; }
 
     protected:
 

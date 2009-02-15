@@ -59,7 +59,10 @@ void GN::gfx::BasicRenderer::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 {
-    mContextOk = bindContextImpl( c, false );
+    // skip dirty check, if last context binding failed.
+    bool skipDirtyCheck = !mContextOk;
+
+    mContextOk = bindContextImpl( c, skipDirtyCheck );
 
     if( mContextOk )
     {

@@ -144,7 +144,7 @@ void GN::gfx::OGLRenderer::contextQuit()
 bool
 GN::gfx::OGLRenderer::bindContextImpl(
     const RendererContext & newContext,
-    bool                    forceBinding )
+    bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
@@ -156,13 +156,13 @@ GN::gfx::OGLRenderer::bindContextImpl(
         GN_TODO( "verify renderer context data" );
     }
 
-    if( !bindContextShaders( newContext, forceBinding ) ) return false;
+    if( !bindContextShaders( newContext, skipDirtyCheck ) ) return false;
 
-    if( !bindContextRenderStates( newContext, forceBinding ) ) return false;
+    if( !bindContextRenderStates( newContext, skipDirtyCheck ) ) return false;
 
-    if( !bindContextRenderTargets( newContext, forceBinding ) ) return false;
+    if( !bindContextRenderTargets( newContext, skipDirtyCheck ) ) return false;
 
-    if( !bindContextResources( newContext, forceBinding ) ) return false;
+    if( !bindContextResources( newContext, skipDirtyCheck ) ) return false;
 
     return true;
 
@@ -179,7 +179,7 @@ GN::gfx::OGLRenderer::bindContextImpl(
 inline bool
 GN::gfx::OGLRenderer::bindContextShaders(
     const RendererContext & newContext,
-    bool                    forceBinding )
+    bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
@@ -191,7 +191,7 @@ GN::gfx::OGLRenderer::bindContextShaders(
     {
         if( newProgram )
         {
-            if( forceBinding )
+            if( skipDirtyCheck )
             {
                 newProgram->enable();
             }
@@ -224,14 +224,14 @@ GN::gfx::OGLRenderer::bindContextShaders(
 inline bool
 GN::gfx::OGLRenderer::bindContextRenderStates(
     const RendererContext & newContext,
-    bool                    forceBinding )
+    bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
-    if( forceBinding || newContext.renderStates != mContext.renderStates )
+    if( skipDirtyCheck || newContext.renderStates != mContext.renderStates )
     {
         // misc 0
-        if( forceBinding || newContext.miscFlags0 != mContext.miscFlags0 )
+        if( skipDirtyCheck || newContext.miscFlags0 != mContext.miscFlags0 )
         {
             // fill mode
             glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.fillMode] );
@@ -250,7 +250,7 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
         }
 
         // depth
-        if( forceBinding || newContext.depthFlags != mContext.depthFlags )
+        if( skipDirtyCheck || newContext.depthFlags != mContext.depthFlags )
         {
             if( newContext.depthTest ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
             glDepthMask( newContext.depthWrite );
@@ -258,7 +258,7 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
         };
 
         // stencil
-        if( forceBinding || newContext.stencilFlags != mContext.stencilFlags )
+        if( skipDirtyCheck || newContext.stencilFlags != mContext.stencilFlags )
         {
             if( newContext.stencilEnabled ) glEnable( GL_STENCIL_TEST ); else glDisable( GL_STENCIL_TEST );
 
@@ -288,7 +288,7 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
         }
 
         // alpha blending
-        if( forceBinding || newContext.blendFlags != mContext.blendFlags )
+        if( skipDirtyCheck || newContext.blendFlags != mContext.blendFlags )
         {
             // blending enable bit
             if( newContext.blendEnabled ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
@@ -346,17 +346,17 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
 inline bool
 GN::gfx::OGLRenderer::bindContextRenderTargets(
     const RendererContext & newContext,
-    bool                    forceBinding )
+    bool                    skipDirtyCheck )
 {
     GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( forceBinding );
+    GN_UNUSED_PARAM( skipDirtyCheck );
 
     /* bind render targets
     bool renderTargetSizeChanged = false;
-    //mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceBinding, renderTargetSizeChanged );
+    //mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, skipDirtyCheck, renderTargetSizeChanged );
 
     // bind viewport
-    if( renderTargetSizeChanged || newContext.viewport != mContext.viewport || forceBinding )
+    if( renderTargetSizeChanged || newContext.viewport != mContext.viewport || skipDirtyCheck )
     {
         UInt32 rtw, rth;
         mRTMgr->getRTSize( rtw, rth );
@@ -368,7 +368,7 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
     }
 
     // bind scissor rect
-    if( !forceBinding || newContext.scissorRect != mContext.scissorRect )
+    if( !skipDirtyCheck || newContext.scissorRect != mContext.scissorRect )
     {
         if( 0 == newContext.scissorRect.x ||
             0 == newContext.scissorRect.y ||
@@ -399,14 +399,14 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
 inline bool
 GN::gfx::OGLRenderer::bindContextResources(
     const RendererContext & newContext,
-    bool                    forceBinding )
+    bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
     //
     // bind vertex format
     //
-    if( forceBinding || newContext.vtxfmt != mContext.vtxfmt )
+    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
     {
         mCurrentOGLVtxFmt = sGetOGLVtxFmt( *this, mVertexFormats, newContext.vtxfmt );
         if( !mCurrentOGLVtxFmt ) return false;

@@ -198,6 +198,11 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         }
         else if( 0 == strCmpI( "normal", e.binding ) )
         {
+            if( 0 != e.bindingIndex )
+            {
+                GN_ERROR(sLogger)( "bindingIndex of \"normal\" must be 0." );
+                return false;
+            }
             ab.func = &sSetNormalPointer;
             hasNormal = true;
         }
@@ -220,6 +225,11 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                     GN_ERROR(sLogger)("current hardware does not support EXT_secondary_color" );
                     return false;
                 }
+            }
+            else
+            {
+                GN_ERROR(sLogger)( "bindingIndex of \"color\" must be 0 or 1." );
+                return false;
             }
         }
         else if( 0 == strCmpI( "fog", e.binding ) )
