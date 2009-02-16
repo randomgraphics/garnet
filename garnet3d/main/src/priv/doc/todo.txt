@@ -1,9 +1,6 @@
 - 程序中标注TODO的地方
 
 - p0
-  - cross platform renderer, again...
-    - why: ease to use.
-    - rule #1: portability has priority then performance.
   - PS2 model beautifier(add bump map and tessellation to PS2 model)
     - ASE or FBX mesh loader
       - mesh hierachy
@@ -17,6 +14,7 @@
     - a fast mesh smooth implementation.
 
 - p1
+  - D3D10 rendererer
 
 - p2
   - XML: pointer from parent to last child, for constant time child appending.

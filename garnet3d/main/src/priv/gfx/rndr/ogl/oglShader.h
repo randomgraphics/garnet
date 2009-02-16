@@ -27,7 +27,13 @@ namespace GN { namespace gfx
     public:
 
         /// ctor
-        OGLUniform( OGLRenderer & r, size_t sz ) : OGLResource(r), mSize(0==sz?1:sz), mData( heapAlloc(mSize) ) {}
+        OGLUniform( OGLRenderer & r, size_t sz )
+            : OGLResource(r)
+            , mSize(0==sz?1:sz)
+            , mData( heapAlloc(mSize) )
+            , mTimeStamp(0)
+        {
+        }
 
         /// dtor
         ~OGLUniform() { heapFree(mData); }

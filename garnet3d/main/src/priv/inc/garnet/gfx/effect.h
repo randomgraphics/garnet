@@ -203,7 +203,7 @@ namespace GN { namespace gfx
     ///
     /// Graphics effect
     ///
-    class Effect : public StdClass, public NoCopy
+    class Effect : public StdClass
     {
         GN_DECLARE_STDCLASS( Effect, StdClass );
 
@@ -214,6 +214,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Effect( Renderer & r );
+        Effect( const Effect & ); // copy ctor
         virtual ~Effect();
         //@}
 
@@ -258,8 +259,8 @@ namespace GN { namespace gfx
         /// Apply the effect to drawable.
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
 
-        /// assignment operator
-        Effect & operator=( const Effect & rhs );
+        /// copy operator (make clone)
+        Effect & operator=( const Effect & rhs ) { if( this != &rhs ) { clone( rhs ); } return *this; }
 
         // ********************************
         // private variables
@@ -275,13 +276,19 @@ namespace GN { namespace gfx
 
         struct PerShaderTextureParam
         {
-            /// texture parameter wrapper
+            /// texture parameter wrapper, pointer to textures in Effect::mTextures
             EffectTextureParameterImpl * param;
+
+            /// texture name (used to lookup the texture in Effect::mTextures)
+            ///
+            /// \note Effect::mTextures[name] == param
+            ///
+            StrA name;
 
             /// texture binding string
             StrA binding;
 
-            /// pointer to sampler
+            /// pointer to sampler, pointer to Effec
             const TextureSampler * sampler;
 
             /// default ctor
@@ -292,6 +299,7 @@ namespace GN { namespace gfx
             /// copy ctor
             PerShaderTextureParam( const PerShaderTextureParam & p )
                 : param(p.param)
+                , name(p.name)
                 , binding(p.binding)
                 , sampler(p.sampler)
             {
@@ -300,20 +308,23 @@ namespace GN { namespace gfx
             /// assign operator
             PerShaderTextureParam & operator=( const PerShaderTextureParam & rhs )
             {
-                param = rhs.param;
+                param   = rhs.param;
+                name    = rhs.name;
                 binding = rhs.binding;
                 sampler = rhs.sampler;
                 return *this;
             }
         };
 
+        typedef std::map<StrA,AutoRef<Uniform> >::iterator UniformIter;
+
         struct Pass
         {
             GpuProgram                     * gpuProgram; ///< Pointer to the GPU program
-            DynaArray<PerShaderTextureParam> textures;   ///< name of textures used in the pass.
-            DynaArray<Uniform*>              uniforms;   ///< uniform names used in the pass. Note that offset of the uniform
+            DynaArray<PerShaderTextureParam> textures;   ///< Textures used in the pass.
+            DynaArray<UniformIter>           uniforms;   ///< uniforms used in the pass. Note that offset of the uniform
                                                          ///< in this array is exactly same as the binding index to
-                                                         ///< the GPU program in this pass. Name could be empty.
+                                                         ///< the GPU program in this pass.
             EffectDesc::RenderStateDesc rsd;             ///< render states
         };
 
@@ -342,6 +353,9 @@ namespace GN { namespace gfx
 
         /// initialize technique
         bool initTech( Technique & tech, const StrA & name, const EffectDesc::TechniqueDesc & desc );
+
+        /// make clone
+        void clone( const Effect & );
     };
 }}
 

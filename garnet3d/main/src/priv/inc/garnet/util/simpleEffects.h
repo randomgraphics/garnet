@@ -47,6 +47,7 @@ namespace GN { namespace util
     public:
 
         //@{
+        gfx::Effect * getEffect() const { return mEffect; }
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world );
         void setLightPos( const Vector4f & ); ///< set light position in world space
         void setLightColor( const Vector4f & ); ///< set light color

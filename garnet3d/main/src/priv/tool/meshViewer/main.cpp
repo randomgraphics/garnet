@@ -4,6 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
+using namespace GN::scene;
 
 static GN::Logger          * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 const char                 * filename;
@@ -11,6 +12,8 @@ Renderer                   * rndr;
 ArcBall                      arcball; // arcball camera
 float                        radius;  // distance from camera to object
 Matrix44f                    proj, view;
+AutoObjPtr<Scene>            rootScene;
+AutoObjPtr<GeometryNode>     model;
 AseScene                     ase;
 DynaArray<Mesh*>             meshes;
 DynaArray<AutoRef<Texture> > textures;
@@ -30,7 +33,7 @@ void updateRadius()
     arcball.setViewMatrix( view );
     arcball.setTranslationSpeed( h / dd.height );
 
-    effect.setLightPos( Vector4f(0, 0, radius,1) ); // head light: same location as camera.
+    rootScene->setDefaultLight0Position( Vector3f(0,0,radius) ); // head light: same location as camera.
 
     // calculate move speed
 }
@@ -48,6 +51,10 @@ void onAxisMove( Axis a, int d )
 
 bool init()
 {
+    // create scene
+    rootScene.attach( createScene( *rndr ) );
+    if( !rootScene ) return false;
+
     // load meshes
     DiskFile file;
     if( !file.open( filename, "rb" ) ) return false;
@@ -60,10 +67,20 @@ bool init()
         m.detach();
     }
 
-    // load textures
-
     // initialize effect
     if( !effect.init( *rndr ) ) return false;
+
+    // create model
+    model.attach( new GeometryNode(*rootScene) );
+    for( size_t i = 0; i < ase.subsets.size(); ++i )
+    {
+        const AseMeshSubset & s = ase.subsets[i];
+
+        Mesh * m = meshes[s.meshid];
+
+        model->addGeometryBlock( effect.getEffect(), m, &s );
+    }
+    model->setPivot( Vector3f(0,0,0) );
 
     // update camera stuff
     radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 1.5f;
@@ -91,6 +108,9 @@ bool init()
 
 void quit()
 {
+    model.clear();
+    rootScene.clear();
+
     ase.clear();
 
     for( size_t i = 0; i < meshes.size(); ++i )
@@ -109,8 +129,9 @@ void draw( const wchar_t * fps )
     Vector3f   position = arcball.getTranslation();
     Matrix44f  rotation = arcball.getRotationMatrix44();
     Matrix44f  world    = rotation * Matrix44f::sTranslate( position );
-    effect.setTransformation( proj, view, world );
 
+
+    /*effect.setTransformation( proj, view, world );
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & s = ase.subsets[i];
@@ -120,7 +141,12 @@ void draw( const wchar_t * fps )
         effect.setMesh( *m, &s );
 
         effect.draw();
-    }
+    }*/
+    rootScene->setProj( proj );
+    rootScene->setView( view );
+    model->setPosition( position );
+    model->setRotation( arcball.getRotation() );
+    rootScene->renderNodeHierarchy( model );
 
     font.drawText( fps, 0, 0 );
     font.drawText(
@@ -217,8 +243,8 @@ int main( int argc, const char * argv[] )
     // create renderer
     RendererOptions o;
     o.api = API_OGL;
-    rndr = createMultiThreadRenderer( o );
-    //rndr = createSingleThreadRenderer( o );
+    //rndr = createMultiThreadRenderer( o );
+    rndr = createSingleThreadRenderer( o );
     if( NULL == rndr ) return -1;
 
     // initialize input device
