@@ -94,6 +94,10 @@ namespace GN
         ///
         StdClass() { clear(); }
         ///
+        /// copy ctor
+        ///
+        StdClass( const StdClass & o ) : mOK( o.mOK ) {}
+        ///
         /// dtor
         ///
         virtual ~StdClass() { quit(); }
@@ -123,6 +127,11 @@ namespace GN
         /// 是否初始化过？
         ///
         bool ok() const { return IS_SUCCESS == mOK; }
+
+        ///
+        /// assignment
+        ///
+        StdClass & operator=( const StdClass & rhs ) { mOK = rhs.mOK; return *this; }
 
     protected:
 

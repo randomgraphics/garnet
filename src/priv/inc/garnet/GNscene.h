@@ -148,7 +148,7 @@ namespace GN
             };
 
             DynaArray<StandardUniform> mStandardPerObjectUniforms; ///< standard per-object parameters
-            DynaArray<GeometryBlock>   mBlocks;
+            DynaArray<GeometryBlock*>  mBlocks;
             Spheref                    mBoundingSphere;
 
         public:
@@ -166,10 +166,10 @@ namespace GN
             virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }
 
             /// get specific geometry block
-            virtual const GeometryBlock & getGeometryBlock( size_t i ) const { return mBlocks[i]; }
+            virtual const GeometryBlock & getGeometryBlock( size_t i ) const { return *mBlocks[i]; }
 
             /// get specific geometry block
-            virtual GeometryBlock & getGeometryBlock( size_t i ) { return mBlocks[i]; }
+            virtual GeometryBlock & getGeometryBlock( size_t i ) { return *mBlocks[i]; }
 
             /// draw the geometry
             virtual void draw();
@@ -194,6 +194,7 @@ namespace GN
             virtual gfx::Uniform * const * getGlobalUniforms() const = 0;
             virtual void setProj( const Matrix44f & ) = 0;
             virtual void setView( const Matrix44f & ) = 0;
+            virtual void setDefaultLight0Position( const Vector3f & ) = 0;
             //@}
 
             /// draw node hierarchy

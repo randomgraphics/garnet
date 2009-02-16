@@ -71,8 +71,8 @@ void GN::scene::Node::calcTransform()
     mRotation.toMatrix33( r3 );
     r4.set( r3 );
 
-    t1.translate( mPosition + mPivot );
-    t2.translate( -mPivot );
+    t1.translate( mPivot ); // Note: pivor is in parent space
+    t2.translate( mPosition );
 
     mLocal2Parent =  t1 * r4 * t2;
     mParent2Local = Matrix44f::sInverse( mLocal2Parent );
@@ -101,6 +101,10 @@ void GN::scene::Node::calcTransform()
 /// ----------------------------------------------------------------------------
 GN::scene::GeometryNode::~GeometryNode()
 {
+    for( size_t i = 0; i < mBlocks.size(); ++i )
+    {
+        delete mBlocks[i];
+    }
     mBlocks.clear();
 }
 
@@ -116,12 +120,18 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
         return;
     }
 
+    if( !inputEffect->ok() )
+    {
+        GN_ERROR(sLogger)( "Unintialized effect class is not allowed." );
+        return;
+    }
+
     Scene & s = getScene();
 
-    GeometryBlock b( s.getRenderer() );
+    AutoObjPtr<GeometryBlock> b( new GeometryBlock( s.getRenderer() ) );
 
     // make a copy of the input effect
-    b.effect = *inputEffect;
+    b->effect = *inputEffect;
 
     // get list of standard parameters
     Uniform * const * globalUniforms = s.getGlobalUniforms();
@@ -131,7 +141,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        if( b.effect.hasUniform( d.name ) )
+        if( b->effect.hasUniform( d.name ) )
         {
             Uniform * u;
             if( !d.global )
@@ -148,19 +158,23 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
             }
             GN_ASSERT( u );
 
-            b.effect.setUniform( d.name, u );
+            b->effect.setUniform( d.name, u );
         }
     }
 
     // create drawables
-    size_t n = b.effect.getNumPasses();
-    b.drawables.resize( n );
+    size_t n = b->effect.getNumPasses();
+    b->drawables.resize( n );
     for( size_t i = 0; i < n; ++i )
     {
-        Drawable & d = b.drawables[i];
-        b.effect.applyToDrawable( d, i );
+        Drawable & d = b->drawables[i];
+        b->effect.applyToDrawable( d, i );
         mesh->applyToDrawable( d, subset );
     }
+
+    // insert b into block array
+    mBlocks.append( b );
+    b.detach();
 }
 
 ///
@@ -182,9 +196,49 @@ void GN::scene::GeometryNode::draw()
         {
             case SCENE_PARAM_MATRIX_PVW :
             {
-                const Matrix44f * pv = (const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
-                Matrix44f pvw = *pv * getLocal2Root();
+                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & world = getLocal2Root();
+                Matrix44f pvw = pv * world;
                 u->update( pvw );
+                break;
+            }
+
+            case SCENE_PARAM_MATRIX_PVW_INV:
+            {
+                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & world = getLocal2Root();
+                Matrix44f pvw = pv * world;
+                u->update( Matrix44f::sInverse( pvw ) );
+                break;
+            }
+
+            case SCENE_PARAM_MATRIX_PVW_IT:
+            {
+                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & world = getLocal2Root();
+                Matrix44f pvw = pv * world;
+                u->update( Matrix44f::sInvtrans( pvw ) );
+                break;
+            }
+
+            case SCENE_PARAM_MATRIX_WORLD :
+            {
+                const Matrix44f & world = getLocal2Root();
+                u->update( world );
+                break;
+            }
+
+            case SCENE_PARAM_MATRIX_WORLD_INV:
+            {
+                const Matrix44f & world = getLocal2Root();
+                u->update( Matrix44f::sInverse(world) );
+                break;
+            }
+
+            case SCENE_PARAM_MATRIX_WORLD_IT:
+            {
+                const Matrix44f & world = getLocal2Root();
+                u->update( Matrix44f::sInvtrans(world) );
                 break;
             }
 
@@ -196,11 +250,11 @@ void GN::scene::GeometryNode::draw()
 
     for( size_t i = 0; i < mBlocks.size(); ++i )
     {
-        const GeometryBlock & b = mBlocks[i];
+        const GeometryBlock * b = mBlocks[i];
 
-        for( size_t i = 0; i < b.drawables.size(); ++i )
+        for( size_t i = 0; i < b->drawables.size(); ++i )
         {
-            const Drawable & d = b.drawables[i];
+            const Drawable & d = b->drawables[i];
             d.draw();
         }
     }
@@ -225,10 +279,29 @@ class SceneImpl : public Scene
         };
     };
 
-    DirtyFlags        mDirtyFlags;
-    Uniform * mGlobalParams[NUM_STANDARD_SCENE_PARAMETERS];
-    Matrix44f         mProj;
-    Matrix44f         mView;
+    struct LightDesc
+    {
+        Vector4f  position;
+        Vector4f  direction;
+        Vector4f  diffuse;
+        Vector4f  ambient;
+        Vector4f  specular;
+
+        LightDesc()
+            : position(0,0,0,1)
+            , direction(0,0,1,0)
+            , diffuse(1.0f,1.0f,1.0f,1.0f)
+            , ambient(0.2f,0.2f,0.2f,0.2f)
+            , specular(0.6f,0.6f,0.6f,0.6f)
+        {
+        }
+    };
+
+    DirtyFlags mDirtyFlags;
+    Uniform  * mGlobalParams[NUM_STANDARD_SCENE_PARAMETERS];
+    Matrix44f  mProj;
+    Matrix44f  mView;
+    LightDesc  mDefaultLight0;
 
     void updateTransformation()
     {
@@ -260,8 +333,22 @@ class SceneImpl : public Scene
         }
     }
 
+    void updateLight( size_t index, const LightDesc & desc )
+    {
+        GN_ASSERT( 0 == index );
+        mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->update( desc.position );
+        mGlobalParams[SCENE_PARAM_LIGHT0_DIRECTION]->update( desc.direction );
+        mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->update( desc.diffuse );
+        mGlobalParams[SCENE_PARAM_LIGHT0_AMBIENT]->update( desc.ambient );
+        mGlobalParams[SCENE_PARAM_LIGHT0_SPECULAR]->update( desc.specular );
+    }
+
     void updateLights( Node * root )
     {
+        // setup default light parameters
+        updateLight( 0, mDefaultLight0 );
+
+        LightDesc light0;
         TreeTraversePreOrder<Node> tt( root );
         for( Node * n = tt.first(); NULL != n; n = tt.next( n ) )
         {
@@ -270,15 +357,8 @@ class SceneImpl : public Scene
                 LightNode * l = (LightNode*)n;
 
                 Vector4f localpos( l->getPosition(), 1.0f );
-                Vector4f worldpos( l->getLocal2Root() * localpos );
-                Vector4f diffuse(1,1,1,1);
-                Vector4f ambient(0.2f,0.2f,0.2f,0.2f);
-                Vector4f specular(0.6f,0.6f,0.6f,0.6f);
-
-                mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->update( worldpos );
-                mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->update( diffuse );
-                mGlobalParams[SCENE_PARAM_LIGHT0_AMBIENT]->update( ambient );
-                mGlobalParams[SCENE_PARAM_LIGHT0_SPECULAR]->update( specular );
+                light0.position = l->getLocal2Root() * localpos; // world position
+                updateLight( 0, light0 );
 
                 break;
             }
@@ -324,6 +404,11 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
+    virtual gfx::Renderer & getRenderer() const { return mRenderer; }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
     virtual Uniform * const * getGlobalUniforms() const
     {
         return mGlobalParams;
@@ -364,6 +449,14 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
+    virtual void setDefaultLight0Position( const Vector3f & position )
+    {
+        mDefaultLight0.position.set( position, 1 );
+    }
+
+    ///
+    ///
+    /// ------------------------------------------------------------------------
     virtual void renderNodeHierarchy( Node * root )
     {
         if( NULL == root ) return;
@@ -389,3 +482,13 @@ private:
 
     Renderer & mRenderer;
 };
+
+///
+///
+/// ----------------------------------------------------------------------------
+GN::scene::Scene *
+GN::scene::createScene( gfx::Renderer & r )
+{
+    SceneImpl * s = new SceneImpl(r);
+    return s;
+}

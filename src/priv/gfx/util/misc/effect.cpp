@@ -76,6 +76,19 @@ GN::gfx::Effect::Effect( Renderer & r )
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::Effect::Effect( const Effect & e )
+    : mRenderer( e.mRenderer )
+    , mDummyUniform( e.mDummyUniform )
+{
+    GN_ASSERT( this != &e ); // can't copy construct from itself.
+    mDummyUniform->incref();
+    clear();
+    clone( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::Effect::~Effect()
 {
     quit();
@@ -303,7 +316,11 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     drawable.rc.uniforms.resize( p.uniforms.size() );
     for( size_t i = 0; i < p.uniforms.size(); ++i )
     {
-        drawable.rc.uniforms[i].set( p.uniforms[i] );
+        const UniformIter & ui = p.uniforms[i];
+        if( ui != mUniforms.end() )
+        {
+            drawable.rc.uniforms[i] = ui->second;
+        }
     }
 
     // setup textures
@@ -401,7 +418,8 @@ GN::gfx::Effect::initTech(
 
                 PerShaderTextureParam tex;
 
-                tex.param = &mTextures.find(tname)->second;
+                tex.param   = &mTextures.find(tname)->second;
+                tex.name    = tname;
                 tex.binding = tbind;
                 tex.sampler = &tdesc->sampler;
 
@@ -415,7 +433,7 @@ GN::gfx::Effect::initTech(
 
         // look up uniforms
         p.uniforms.resize( p.gpuProgram->getNumUniforms() );
-        std::fill( p.uniforms.begin(), p.uniforms.end(), (Uniform*)NULL );
+        std::fill( p.uniforms.begin(), p.uniforms.end(), mUniforms.end() );
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.uniforms.begin(); iter != sdesc.uniforms.end(); ++iter )
         {
             const StrA & ubind = iter->first;
@@ -441,11 +459,11 @@ GN::gfx::Effect::initTech(
                 // TODO: check parameter type.
                 else
                 {
-                    // this is a valid uniform parameter
                     GN_ASSERT( uidx < p.uniforms.size() );
-                    GN_ASSERT( mUniforms.end() != mUniforms.find( uname ) );
 
-                    p.uniforms[uidx] = mUniforms.find( uname )->second.get();
+                    p.uniforms[uidx] = mUniforms.find( uname );
+
+                    GN_ASSERT( mUniforms.end() != p.uniforms[uidx] );
                 }
             }
         }
@@ -458,4 +476,83 @@ GN::gfx::Effect::initTech(
 
     // success
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::Effect::clone( const Effect & e )
+{
+    GN_ASSERT( this != &e ); // can't clone from itself
+
+    // delete previous effect
+    quit();
+
+    // there's nothing to do, if the source is uninitialized.
+    if( !e.ok() ) return;
+
+    // copy StdClass members
+    *(StdClass*)this = (const StdClass&)e;
+
+    // copy misc. members
+    mDesc        = e.mDesc;
+    mUniforms    = e.mUniforms;
+    mTextures    = e.mTextures;
+    mGpuPrograms = e.mGpuPrograms;
+    mTechniques  = e.mTechniques;
+
+    // for each technique
+    for( std::map<StrA,Technique>::const_iterator i = e.mTechniques.begin(); i != e.mTechniques.end(); ++i )
+    {
+        const StrA & tname = i->first;
+        const Technique & tsrc = i->second;
+        Technique & tdst = mTechniques[tname];
+
+        // for each pass
+        GN_ASSERT( tdst.passes.size() == tsrc.passes.size() );
+        for( size_t i = 0; i < tdst.passes.size(); ++i )
+        {
+            const Pass & psrc = tsrc.passes[i];
+            Pass       & pdst = tdst.passes[i];
+
+            GN_ASSERT( pdst.gpuProgram == mGpuPrograms[mDesc.techniques[tname].passes[i].shader].get() );
+
+            // for each textures
+            GN_ASSERT( pdst.textures.size() == tsrc.passes[i].textures.size() );
+            for( size_t i = 0; i < pdst.textures.size(); ++i )
+            {
+                PerShaderTextureParam & tex = pdst.textures[i];
+
+                // fix param pointer
+                tex.param = &mTextures.find(tex.name)->second;
+
+                // fix sampler pointer
+                const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, tex.name );
+                tex.sampler = &tdesc->sampler;
+            }
+
+            // for each uniforms, fix uniform iterator pointers
+            for( size_t i = 0; i < pdst.uniforms.size(); ++i )
+            {
+                const UniformIter & uisrc = psrc.uniforms[i];
+
+                if( uisrc != e.mUniforms.end() )
+                {
+                    const StrA & uniformName = uisrc->first;
+                    pdst.uniforms[i] = mUniforms.find( uniformName );
+                    GN_ASSERT( mUniforms.end() != pdst.uniforms[i] );
+                }
+                else
+                {
+                    pdst.uniforms[i] = mUniforms.end();
+                }
+            }
+        }
+
+        // fix active technique pointer
+        if( &tsrc == e.mActiveTech )
+        {
+            mActiveTech = &tdst;
+        }
+    }
 }
