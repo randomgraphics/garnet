@@ -14,10 +14,6 @@ float                        radius;  // distance from camera to object
 Matrix44f                    proj, view;
 AutoObjPtr<Scene>            rootScene;
 AutoObjPtr<GeometryNode>     model;
-AseScene                     ase;
-DynaArray<Mesh*>             meshes;
-DynaArray<AutoRef<Texture> > textures;
-SimpleDiffuseEffect          effect;
 SpriteRenderer             * sr = NULL;
 BitmapFont                   font;
 
@@ -49,11 +45,31 @@ void onAxisMove( Axis a, int d )
     }
 }
 
+struct MeshContainer
+{
+    DynaArray<Mesh*> meshes;
+
+    ~MeshContainer()
+    {
+        for( size_t i = 0; i < meshes.size(); ++i )
+        {
+            delete meshes[i];
+        }
+    }
+};
+
 bool init()
 {
+    AseScene            ase;
+    MeshContainer       meshes;
+    SimpleDiffuseEffect effect;
+
     // create scene
     rootScene.attach( createScene( *rndr ) );
     if( !rootScene ) return false;
+
+    // initialize effect
+    if( !effect.init( *rndr ) ) return false;
 
     // load meshes
     DiskFile file;
@@ -63,12 +79,9 @@ bool init()
     {
         AutoObjPtr<Mesh> m( new Mesh(*rndr) );
         if( !m || !m->init(ase.meshes[i]) ) return false;
-        meshes.append( m );
+        meshes.meshes.append( m );
         m.detach();
     }
-
-    // initialize effect
-    if( !effect.init( *rndr ) ) return false;
 
     // create model
     model.attach( new GeometryNode(*rootScene) );
@@ -76,7 +89,7 @@ bool init()
     {
         const AseMeshSubset & s = ase.subsets[i];
 
-        Mesh * m = meshes[s.meshid];
+        Mesh * m = meshes.meshes[s.meshid];
 
         model->addGeometryBlock( effect.getEffect(), m, &s );
     }
@@ -110,38 +123,14 @@ void quit()
 {
     model.clear();
     rootScene.clear();
-
-    ase.clear();
-
-    for( size_t i = 0; i < meshes.size(); ++i )
-    {
-        delete meshes[i];
-    }
-
-    effect.quit();
-
     font.quit();
     safeDelete( sr );
 }
 
 void draw( const wchar_t * fps )
 {
-    Vector3f   position = arcball.getTranslation();
-    Matrix44f  rotation = arcball.getRotationMatrix44();
-    Matrix44f  world    = rotation * Matrix44f::sTranslate( position );
+    const Vector3f & position = arcball.getTranslation();
 
-
-    /*effect.setTransformation( proj, view, world );
-    for( size_t i = 0; i < ase.subsets.size(); ++i )
-    {
-        const AseMeshSubset & s = ase.subsets[i];
-
-        Mesh * m = meshes[s.meshid];
-
-        effect.setMesh( *m, &s );
-
-        effect.draw();
-    }*/
     rootScene->setProj( proj );
     rootScene->setView( view );
     model->setPosition( position );
