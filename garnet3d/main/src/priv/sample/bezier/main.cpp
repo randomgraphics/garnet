@@ -4,6 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
+using namespace GN::scene;
 
 struct BezierVertex
 {
@@ -13,11 +14,11 @@ struct BezierVertex
 
     BezierVertex( float u, float v )
     {
-        p0.set( -1, -1, -1 );
-        p1.set(  1, -1, -1 );
-        p2.set(  1,  1, -1 );
-        n0.set(  0,  0, -1 );
-        n1.set(  0,  0, -1 );
+        p0.set( -1, -1, 0 );
+        p1.set(  1, -1, 0 );
+        p2.set(  1,  1, 0 );
+        n0.set(  0,  0, 1 );
+        n1.set(  0,  0, 1 );
         bc.set(  u,  v );
     }
 };
@@ -27,8 +28,8 @@ Renderer                   * rndr;
 ArcBall                      arcball; // arcball camera
 float                        radius;  // distance from camera to object
 Matrix44f                    proj, view;
-AutoObjPtr<Mesh>             mesh;
-SimpleDiffuseEffect          effect;
+AutoObjPtr<Scene>            rootScene;
+AutoObjPtr<GeometryNode>     model;
 SpriteRenderer             * sr = NULL;
 BitmapFont                   font;
 
@@ -44,7 +45,7 @@ void updateRadius()
     arcball.setViewMatrix( view );
     arcball.setTranslationSpeed( h / dd.height );
 
-    effect.setLightPos( Vector4f( 0, 0, radius, 1 ) ); // head light: same location as camera.
+    rootScene->setDefaultLight0Position( Vector3f(0,0,radius) ); // head light: same location as camera.
 
     // calculate move speed
 }
@@ -60,7 +61,7 @@ void onAxisMove( Axis a, int d )
     }
 }
 
-bool createMesh()
+Mesh * createMesh()
 {
     MeshDesc md;
 
@@ -76,7 +77,7 @@ bool createMesh()
     md.vtxfmt.elements[2].stream = 0;
     md.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT3;
     md.vtxfmt.elements[2].offset = 24;
-    md.vtxfmt.elements[2].setBinding( "attribute", 2 );
+    md.vtxfmt.elements[2].setBinding( "attribute", 1 );
     md.vtxfmt.elements[3].stream = 0;
     md.vtxfmt.elements[3].format = COLOR_FORMAT_FLOAT3;
     md.vtxfmt.elements[3].offset = 36;
@@ -107,26 +108,104 @@ bool createMesh()
     md.vertices[0] = vertices;
     md.strides[0] = sizeof(BezierVertex);
 
-    mesh.attach( new Mesh(*rndr) );
+    AutoObjPtr<Mesh> mesh( new Mesh(*rndr) );
     if( !mesh || !mesh->init(md) ) return false;
 
-    return true;
+    return mesh.detach();
 }
 
-bool createEffect()
+Effect *
+createEffect()
 {
-   if( !effect.init( *rndr ) ) return false;
+    const char * glslvscode =
+        "uniform   mat4 pvw; \n"
+        "uniform   mat4 world; \n"
+        "uniform   mat4 wit; \n"
+        "attribute vec3 pos1; \n"
+        "attribute vec3 pos2; \n"
+        "attribute vec3 nml1; \n"
+        "attribute vec3 nml2; \n"
+        "attribute vec2 bc; \n"
+        "varying   vec4 pos_world; // vertex position in world space \n"
+        "varying   vec3 nml_world; // vertex normal in world space \n"
+        "varying   vec2 texcoords; \n"
+        "void main() { \n"
+        "   vec3 pos0 = gl_Vertex.xyz; \n"
+        "   vec3 nml0 = gl_Normal.xyz; \n"
+        "   float u   = bc.x; \n"
+        "   float v   = bc.y; \n"
+        "   vec3 pos  = pos0 * (1-u-v) + pos1 * u + pos2 * v; \n"
+        "   vec3 nml  = nml0 * (1-u-v) + nml1 * u + nml2 * v; \n"
+        "   gl_Position = pvw * vec4(pos,1); \n"
+        "   pos_world   = world * vec4(pos,1); \n"
+        "   nml_world   = (wit * vec4(nml,0)).xyz; \n"
+        "   texcoords   = bc; \n"
+        "}";
 
-   return true;
+    const char * glslpscode =
+        "uniform vec4 lightpos; // light positin in world space \n"
+        "uniform vec4 lightColor; \n"
+        "uniform vec4 diffuseColor; \n"
+        "uniform sampler2D t0; \n"
+        "varying vec4 pos_world; // position in world space \n"
+        "varying vec3 nml_world; // normal in world space \n"
+        "varying vec2 texcoords; \n"
+        "void main() { \n"
+        "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
+        "   vec3  N      = normalize( nml_world ); \n"
+        "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+        "   vec4  tex    = texture2D( t0, texcoords ); \n"
+        "   gl_FragColor = (diff * lightColor + diffuseColor * tex) / 2.0; \n"
+        "}";
+
+    EffectDesc ed;
+    ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
+    ed.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
+    ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
+    ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
+    ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
+    ed.uniforms["DIFFUSE_COLOR"].size = sizeof(Vector4f);
+    ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
+    ed.shaders["glsl"].gpd.lang = GPL_GLSL;
+    ed.shaders["glsl"].gpd.vs.code = glslvscode;
+    ed.shaders["glsl"].gpd.ps.code = glslpscode;
+    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["glsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.shaders["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.shaders["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
+    ed.shaders["glsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
+    ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].shader = "glsl";
+
+    Effect * e = new Effect( *rndr );
+    if( !e->init( ed ) ) { delete e; return NULL; }
+
+    return e;
 }
 
 bool init()
 {
-    // create meshes
-    if( !createMesh() ) return false;
+    AutoObjPtr<Mesh>   mesh;
+    AutoObjPtr<Effect> effect;
+
+    // create scene
+    rootScene.attach( createScene( *rndr ) );
+    if( !rootScene ) return false;
 
     // initialize effect
-    if( !createEffect() ) return false;
+    effect.attach( createEffect() );
+    if( !effect ) return false;
+
+    // load meshes
+    mesh.attach( createMesh() );
+    if( !mesh ) return false;
+
+    // create model
+    model.attach( new GeometryNode(*rootScene) );
+    model->addGeometryBlock( effect, mesh );
+    model->setPivot( Vector3f(0,0,0) );
 
     // update camera stuff
     radius = 3.0f;
@@ -135,7 +214,6 @@ bool init()
     // initialize arcball
     arcball.setHandness( util::RIGHT_HAND );
     arcball.setViewMatrix( view );
-    arcball.setTranslation( Vector3f(0,0,0) );
     arcball.connectToInput();
 
     // load font
@@ -154,24 +232,21 @@ bool init()
 
 void quit()
 {
-    mesh.clear();
-
-    effect.quit();
-
+    model.clear();
+    rootScene.clear();
     font.quit();
     safeDelete( sr );
 }
 
 void draw( const wchar_t * fps )
 {
-    Vector3f   position = arcball.getTranslation();
-    Matrix44f  rotation = arcball.getRotationMatrix44();
-    Matrix44f  world    = rotation * Matrix44f::sTranslate( position );
-    effect.setTransformation( proj, view, world );
+    const Vector3f & position = arcball.getTranslation();
 
-    effect.setMesh( *mesh, NULL );
-
-    effect.draw();
+    rootScene->setProj( proj );
+    rootScene->setView( view );
+    model->setPosition( position );
+    model->setRotation( arcball.getRotation() );
+    rootScene->renderNodeHierarchy( model );
 
     font.drawText( fps, 0, 0 );
     font.drawText(
@@ -274,3 +349,4 @@ int main()
     deleteRenderer( rndr );
     return result;
 }
+
