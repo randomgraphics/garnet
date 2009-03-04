@@ -1469,13 +1469,13 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     dstmesh.vtxfmt.numElements = 3;
     dstmesh.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
     dstmesh.vtxfmt.elements[0].offset = 0;
-    dstmesh.vtxfmt.elements[0].setBinding( "position", 0 );
+    dstmesh.vtxfmt.elements[0].bindTo( "position", 0 );
     dstmesh.vtxfmt.elements[1].format = COLOR_FORMAT_FLOAT3;
     dstmesh.vtxfmt.elements[1].offset = 12;
-    dstmesh.vtxfmt.elements[1].setBinding( "normal", 0 );
+    dstmesh.vtxfmt.elements[1].bindTo( "normal", 0 );
     dstmesh.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT2;
     dstmesh.vtxfmt.elements[2].offset = 24;
-    dstmesh.vtxfmt.elements[2].setBinding( "texcoord", 0 );
+    dstmesh.vtxfmt.elements[2].bindTo( "texcoord", 0 );
     dstmesh.prim = TRIANGLE_LIST;
     dstmesh.strides[0] = sizeof(OutputVertex);
 

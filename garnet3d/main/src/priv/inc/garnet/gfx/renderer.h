@@ -255,18 +255,23 @@ namespace GN { namespace gfx
     ///
     struct VertexElement
     {
-        ColorFormat format;      ///< format of the element
-        char        binding[16]; ///< binding to GPU program (null terminated string)
-        UInt8       bindingIndex;///< binding index. Note that
-                                 ///< Combination of binding name and index must
-                                 ///< be unique across the vertex format structure
-        UInt8       stream;      ///< vertex buffer index
-        UInt16      offset;      ///< offset of the element
+        ColorFormat format;       ///< format of the element
+        char        binding[16];  ///< binding to GPU program (null terminated string).
+                                  ///< Checking of invalidate binding is not performed here, but when the whole
+                                  ///< render context is being applied to renderer.
+        UInt8       bindingIndex; ///< Binding index.
+                                  ///< The binding name and index combination has to be unique across whole vertex format strcture.
+        UInt8       stream;       ///< vertex buffer index
+        UInt16      offset;       ///< offset of the element
 
-        /// set binding string and index
-        void setBinding( const char * name, size_t index )
+        ///
+        /// Bind vertex element to specific GL program attribute variable.
+        ///
+        /// Note that name and index are shader specific (thus, API specific).
+        ///
+        void bindTo( const char * variableName, size_t index = 0 )
         {
-            size_t len = strLen( name );
+            size_t len = strLen( variableName );
             if( 0 == len )
             {
                 GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
@@ -277,10 +282,10 @@ namespace GN { namespace gfx
             {
                 GN_ERROR(getLogger("GN.gfx.VertexElement"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
-                    name );
+                    variableName );
             }
             len = min<size_t>( GN_ARRAY_COUNT(binding), len+1 );
-            memcpy( binding, name, len );
+            memcpy( binding, variableName, len );
 
             if( index > 255 )
             {
@@ -719,8 +724,15 @@ namespace GN { namespace gfx
             dsrt.texture.clear();
         }
 
-        /// set texture binding string
-        void bindTexture( size_t stage, const char * name )
+        ///
+        /// Bind texture stage to specific GPU program texture variable.
+        ///
+        /// The binding has to be unique across all texture stages.
+        ///
+        /// Checking of invalidate binding is not performed here, but when the whole
+        /// render context is being applied to renderer.
+        ///
+        void bindTexture( size_t stage, const char * variableName )
         {
             if( stage >= MAX_TEXTURES )
             {
@@ -728,7 +740,7 @@ namespace GN { namespace gfx
                 return;
             }
 
-            size_t len = strLen( name );
+            size_t len = strLen( variableName );
             if( 0 == len )
             {
                 GN_ERROR(getLogger("GN.gfx.RendererContext"))( "Empty binding string is not allowed." );
@@ -739,10 +751,10 @@ namespace GN { namespace gfx
             {
                 GN_ERROR(getLogger("GN.gfx.RendererContext"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
-                    name );
+                    variableName );
             }
             len = min<size_t>( GN_ARRAY_COUNT(texbinds[0]), len+1 );
-            memcpy( texbinds[stage], name, len );
+            memcpy( texbinds[stage], variableName, len );
         }
     };
 

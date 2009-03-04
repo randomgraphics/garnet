@@ -174,7 +174,7 @@ namespace GN { namespace gfx
         ///
         /// GLSL program uniform description
         ///
-        struct GLSLParameterDesc
+        struct GLSLUniformAndTextureDesc
         {
             GLenum                         type;         ///< uniform type
             GLsizei                        count;        ///< uniform count
@@ -186,6 +186,16 @@ namespace GN { namespace gfx
             mutable AutoInit<size_t,-1>    lastTexStage; ///< last texture stage associated to this parameter
         };
 
+        ///
+        /// vertex attribute description
+        ///
+        struct GLSLAttributeDesc
+        {
+            GLenum      type;     ///< attribute type, like GL_FLOAT, GL_FLOAT_VEC3_ARB and etc.
+            GLsizei     count;    ///< attribyte count, in unit of type.
+            GLint       location; ///< attribute location
+            StrA        name;     ///< attribute variable name.
+        };
 
         // GLSL program and shader object handles
         GLhandleARB mProgram;
@@ -193,16 +203,20 @@ namespace GN { namespace gfx
         GLhandleARB mPS;
 
         // uniforms
-        DynaArray<GLSLParameterDesc>       mUniforms;
-        DynaArray<const char *>            mUniformNames;
-        DynaArray<size_t>                  mUniformSizes;
+        DynaArray<GLSLUniformAndTextureDesc> mUniforms;
+        DynaArray<const char *>              mUniformNames;
+        DynaArray<size_t>                    mUniformSizes;
 
         // textures
-        DynaArray<GLSLParameterDesc>       mTextures;
-        DynaArray<const char *>            mTextureNames;
+        DynaArray<GLSLUniformAndTextureDesc> mTextures;
+        DynaArray<const char *>              mTextureNames;
 
+        // attributes
+        DynaArray<GLSLAttributeDesc>         mAttributes;
+        DynaArray<const char *>              mAttributeNames;
+ 
         // parameter descriptor
-        GpuProgramParameterDesc            mParamDesc;
+        GpuProgramParameterDesc              mParamDesc;
 
         // ********************************
         // private functions
@@ -210,6 +224,7 @@ namespace GN { namespace gfx
     private:
 
         bool enumParameters();
+        bool enumAttributes();
     };
 
     // *************************************************************************

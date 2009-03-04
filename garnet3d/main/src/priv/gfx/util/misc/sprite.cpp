@@ -55,15 +55,15 @@ bool GN::gfx::SpriteRenderer::init()
     mPrivateContext.vtxfmt.elements[0].stream = 0;
     mPrivateContext.vtxfmt.elements[0].offset = 0;
     mPrivateContext.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
-    mPrivateContext.vtxfmt.elements[0].setBinding( "position", 0 );
+    mPrivateContext.vtxfmt.elements[0].bindTo( "position", 0 );
     mPrivateContext.vtxfmt.elements[1].stream = 0;
     mPrivateContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
     mPrivateContext.vtxfmt.elements[1].format = COLOR_FORMAT_RGBA32;
-    mPrivateContext.vtxfmt.elements[1].setBinding( "color", 0 );
+    mPrivateContext.vtxfmt.elements[1].bindTo( "color", 0 );
     mPrivateContext.vtxfmt.elements[2].stream = 0;
     mPrivateContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
     mPrivateContext.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT2;
-    mPrivateContext.vtxfmt.elements[2].setBinding( "texcoord", 0 );
+    mPrivateContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
     mPrivateContext.vtxbufs[0].attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true, false ) );

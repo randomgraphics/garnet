@@ -14,7 +14,8 @@ struct BezierVertex
 
     BezierVertex( float u, float v )
     {
-        p0.set( -1, -1, 0 );
+        p0.set( u, v, 0 );
+        //p0.set( -1, -1, 0 );
         p1.set(  1, -1, 0 );
         p2.set(  1,  1, 0 );
         n0.set(  0,  0, 1 );
@@ -68,35 +69,32 @@ Mesh * createMesh()
     md.vtxfmt.numElements = 7;
     md.vtxfmt.elements[0].stream = 0;
     md.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[0].offset = 0;
-    md.vtxfmt.elements[0].setBinding( "position", 0 );
+    md.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( BezierVertex, p0 );
+    md.vtxfmt.elements[0].bindTo( "position", 0 );
     md.vtxfmt.elements[1].stream = 0;
     md.vtxfmt.elements[1].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[1].offset = 12;
-    md.vtxfmt.elements[1].setBinding( "attribute", 0 );
+    md.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( BezierVertex, p1 );
+    md.vtxfmt.elements[1].bindTo( "attribute", 1 );
     md.vtxfmt.elements[2].stream = 0;
     md.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[2].offset = 24;
-    md.vtxfmt.elements[2].setBinding( "attribute", 1 );
+    md.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( BezierVertex, p2 );
+    md.vtxfmt.elements[2].bindTo( "attribute", 6 );
     md.vtxfmt.elements[3].stream = 0;
     md.vtxfmt.elements[3].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[3].offset = 36;
-    md.vtxfmt.elements[3].setBinding( "normal", 0 );
+    md.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( BezierVertex, n0 );
+    md.vtxfmt.elements[3].bindTo( "normal", 0 );
     md.vtxfmt.elements[4].stream = 0;
     md.vtxfmt.elements[4].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[4].offset = 48;
-    md.vtxfmt.elements[4].setBinding( "attribute", 2 );
+    md.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( BezierVertex, n1 );
+    md.vtxfmt.elements[4].bindTo( "attribute", 3 );
     md.vtxfmt.elements[5].stream = 0;
     md.vtxfmt.elements[5].format = COLOR_FORMAT_FLOAT3;
-    md.vtxfmt.elements[5].offset = 60;
-    md.vtxfmt.elements[5].setBinding( "attribute", 3 );
+    md.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( BezierVertex, n2 );
+    md.vtxfmt.elements[5].bindTo( "attribute", 4 );
     md.vtxfmt.elements[6].stream = 0;
     md.vtxfmt.elements[6].format = COLOR_FORMAT_FLOAT2;
-    md.vtxfmt.elements[6].offset = 72;
-    md.vtxfmt.elements[6].setBinding( "attribute", 4 );
-    GN_CASSERT( sizeof(BezierVertex) == 80 );
-
-    md.prim = TRIANGLE_LIST;
+    md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET( BezierVertex, bc );
+    md.vtxfmt.elements[6].bindTo( "attribute", 5 );
 
     BezierVertex vertices[] =
     {
@@ -107,6 +105,7 @@ Mesh * createMesh()
     md.numvtx = GN_ARRAY_COUNT( vertices );
     md.vertices[0] = vertices;
     md.strides[0] = sizeof(BezierVertex);
+    md.prim = TRIANGLE_LIST;
 
     AutoObjPtr<Mesh> mesh( new Mesh(*rndr) );
     if( !mesh || !mesh->init(md) ) return false;
@@ -117,6 +116,7 @@ Mesh * createMesh()
 Effect *
 createEffect()
 {
+#if 0
     const char * glslvscode =
         "uniform   mat4 pvw; \n"
         "uniform   mat4 world; \n"
@@ -141,6 +141,23 @@ createEffect()
         "   nml_world   = (wit * vec4(nml,0)).xyz; \n"
         "   texcoords   = bc; \n"
         "}";
+#else
+    const char * glslvscode =
+        "uniform   mat4 pvw; \n"
+        "uniform   mat4 world; \n"
+        "uniform   mat4 wit; \n"
+        "varying   vec4 pos_world; // vertex position in world space \n"
+        "varying   vec3 nml_world; // vertex normal in world space \n"
+        "varying   vec2 texcoords; \n"
+        "void main() { \n"
+        "   vec3 pos    = gl_Vertex.xyz; \n"
+        "   vec3 nml    = gl_Normal.xyz; \n"
+        "   gl_Position = pvw * vec4(pos,1); \n"
+        "   pos_world   = world * vec4(pos,1); \n"
+        "   nml_world   = (wit * vec4(nml,0)).xyz; \n"
+        "   texcoords   = vec2(0,0); \n"
+        "}";
+#endif
 
     const char * glslpscode =
         "uniform vec4 lightpos; // light positin in world space \n"
@@ -156,6 +173,7 @@ createEffect()
         "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
         "   vec4  tex    = texture2D( t0, texcoords ); \n"
         "   gl_FragColor = (diff * lightColor + diffuseColor * tex) / 2.0; \n"
+        "   gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ); \n"
         "}";
 
     EffectDesc ed;
