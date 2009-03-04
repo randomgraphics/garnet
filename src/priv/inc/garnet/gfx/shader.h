@@ -65,6 +65,11 @@ namespace GN { namespace gfx
         //@}
 
         //@{
+        size_t               numAttributes;
+        const char * const * attributeNames;
+         //@}
+
+        //@{
         size_t               numTextures;
         const char * const * textureNames;
         //@}

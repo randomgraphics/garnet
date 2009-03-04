@@ -262,15 +262,21 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     mProgram = sCreateProgram( mVS, mPS );
     if( 0 == mProgram ) return failure();
 
+    // enumerate parameters (textures and uniforms)
     if( !enumParameters() ) return failure();
 
-    // initialize parameter descriptor
-    mParamDesc.numUniforms  = mUniforms.size();
-    mParamDesc.uniformNames = mUniformNames.cptr();
-    mParamDesc.uniformSizes = mUniformSizes.cptr();
-    mParamDesc.numTextures  = mTextures.size();
-    mParamDesc.textureNames = mTextureNames.cptr();
+    // enumerate attributes
+    if( !enumAttributes() ) return failure();
 
+    // initialize parameter descriptor
+    mParamDesc.numUniforms      = mUniforms.size();
+    mParamDesc.uniformNames     = mUniformNames.cptr();
+    mParamDesc.uniformSizes     = mUniformSizes.cptr();
+    mParamDesc.numTextures      = mTextures.size();
+    mParamDesc.textureNames     = mTextureNames.cptr();
+    mParamDesc.numAttributes    = mAttributes.size();
+    mParamDesc.attributeNames   = mAttributeNames.cptr();
+ 
     // success
     return success();
 
@@ -325,7 +331,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const OGLUniform * const * unifo
             continue;
         }
 
-        const GLSLParameterDesc & d = mUniforms[i];
+        const GLSLUniformAndTextureDesc & d = mUniforms[i];
 
         if( u == d.lastUniform && u->getTimeStamp() == d.lastStamp )
         {
@@ -429,7 +435,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTexture( const char * name, size_t stage )
     {
         GN_ASSERT( idx < mTextures.size() );
 
-        const GLSLParameterDesc & t = mTextures[idx];
+        const GLSLUniformAndTextureDesc & t = mTextures[idx];
 
         if( t.lastTexStage != stage )
         {
@@ -469,9 +475,10 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     mUniforms.clear();
     for( GLint i = 0; i < numParameters; ++i )
     {
-        GLSLParameterDesc u;
+        GLSLUniformAndTextureDesc u;
 
         GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
+        nameptr[maxLength] = 0;
 
         GN_OGL_CHECK_RV( u.location = glGetUniformLocationARB( mProgram, nameptr ), false );
 
@@ -507,4 +514,45 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::OGLGpuProgramGLSL::enumAttributes()
+{
+    // get attribute count
+    GLint numAttributes;
+    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &numAttributes ), false );
+
+    // get maxinum length of attribute name;
+    GLint maxLength;
+    GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
+
+    // enumerate all attributes
+    char * nameptr = (char*)alloca( maxLength+1 );
+    mAttributes.clear();
+    for( GLint i = 0; i < numAttributes; ++i )
+    {
+        GLSLAttributeDesc a;
+
+        GN_OGL_CHECK_RV( glGetActiveAttribARB( mProgram, i, maxLength, NULL, &a.count, &a.type, nameptr ), false );
+        nameptr[maxLength] = 0;
+
+        GN_OGL_CHECK_RV( a.location = glGetAttribLocationARB( mProgram, nameptr ), false );
+
+        a.name = nameptr;
+
+        mAttributes.append( a );
+    }
+
+    // initialize name and format arrays
+    mAttributeNames.resize( mAttributes.size() );
+    for( size_t i = 0; i < mAttributes.size(); ++i )
+    {
+        mAttributeNames[i]   = mAttributes[i].name.cptr();
+    }
+
+    return true;
 }
