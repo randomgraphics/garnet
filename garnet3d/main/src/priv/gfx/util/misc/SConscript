@@ -3,6 +3,7 @@ sources = [
 	'drawable.cpp',
 	'effect.cpp',
 	'mesh.cpp',
+	'misc.cpp',
 	'sprite.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

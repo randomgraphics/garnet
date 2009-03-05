@@ -8,4 +8,4 @@
 #include "garnet/gfx/colorFormat.h"
 #include "garnet/gfx/image.h"
 #include "garnet/gfx/shape.h"
-#include "garnet/gfx/misc.h"
+#include "garnet/gfx/primitive.h"

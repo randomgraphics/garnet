@@ -129,22 +129,29 @@ createEffect()
         "varying   vec3 nml_world; // vertex normal in world space \n"
         "varying   vec2 texcoords; \n"
         "void main() { \n"
-        "   vec3 pos0 = gl_Vertex.xyz; \n"
-        "   vec3 nml0 = gl_Normal.xyz; \n"
         "   float u   = bc.x; \n"
         "   float v   = bc.y; \n"
-        "   vec3 pos  = pos0 * (1-u-v) + pos1 * u + pos2 * v; \n"
-        "   vec3 nml  = nml0 * (1-u-v) + nml1 * u + nml2 * v; \n"
+
+        // position
+        "   vec3 pos0   = gl_Vertex.xyz; \n"
+        "   vec3 pos    = pos0 * (1.0-u-v) + pos1 * u + pos2 * v; \n"
         "   gl_Position = pvw * vec4(pos,1); \n"
         "   pos_world   = world * vec4(pos,1); \n"
-        "   nml_world   = (wit * vec4(nml,0)).xyz; \n"
-        "   texcoords   = bc; \n"
+
+        // normal
+        "   vec3 nml0 = gl_Normal.xyz; \n"
+        "   vec3 nml  = nml0 * (1.0-u-v) + nml1 * u + nml2 * v; \n"
+        "   nml_world = (wit * vec4(nml,0)).xyz; \n"
+
+        // texcoord
+        "   vec2 tc0 = vec2(0.0, 0.0); \n"
+        "   vec2 tc1 = vec2(1.0, 0.0); \n"
+        "   vec2 tc2 = vec2(1.0, 1.0); \n"
+        "   texcoords = tc0 * (1-u-v) + tc1 * u + tc2 * v; \n"
         "}";
 
     const char * glslpscode =
         "uniform vec4 lightpos; // light positin in world space \n"
-        "uniform vec4 lightColor; \n"
-        "uniform vec4 diffuseColor; \n"
         "uniform sampler2D t0; \n"
         "varying vec4 pos_world; // position in world space \n"
         "varying vec3 nml_world; // normal in world space \n"
@@ -154,14 +161,7 @@ createEffect()
         "   vec3  N      = normalize( nml_world ); \n"
         "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
         "   vec4  tex    = texture2D( t0, texcoords ); \n"
-        "   gl_FragColor = (diff * lightColor + diffuseColor * tex) / 2.0; \n"
-
-        // Debug shader code:
-        //
-        // Without this line, the triangle would be black. It looks that lightColor is ZERO.
-        //
-        "   gl_FragColor = diff; \n"
-
+        "   gl_FragColor = diff * tex; \n"
         "}";
 
     EffectDesc ed;
@@ -169,8 +169,6 @@ createEffect()
     ed.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
     ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
-    ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
-    ed.uniforms["DIFFUSE_COLOR"].size = sizeof(Vector4f);
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
     ed.shaders["glsl"].gpd.lang = GPL_GLSL;
     ed.shaders["glsl"].gpd.vs.code = glslvscode;
@@ -179,14 +177,14 @@ createEffect()
     ed.shaders["glsl"].uniforms["world"] = "MATRIX_WORLD";
     ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.shaders["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
-    ed.shaders["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
-    ed.shaders["glsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
     ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
     Effect * e = new Effect( *rndr );
     if( !e->init( ed ) ) { delete e; return NULL; }
+
+    e->getTextureParam("DIFFUSE_TEXTURE")->setTexture( AutoRef<Texture>(loadTextureFromFile( *rndr, "media::texture/earth.jpg" )).get() );
 
     return e;
 }
