@@ -207,6 +207,25 @@ namespace GN { namespace gfx
         class Impl;
         Impl * mImpl;
     };
+
+    ///
+    /// load image from file
+    ///
+    inline bool
+    loadImageFromFile( ImageDesc & desc, std::vector<UInt8> & data, const char * filename )
+    {
+        AutoObjPtr<File> fp( openFile( filename, "rb" ) );
+        if( NULL == fp ) return false;
+
+        ImageReader ir;
+        if( !ir.reset( *fp ) ) return false;
+
+        if( !ir.readHeader( desc ) ) return false;
+
+        data.resize( desc.getTotalBytes() );
+
+        return ir.readImage( &data[0] );
+    }
 }}
 
 #include "image.inl"

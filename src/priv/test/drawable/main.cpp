@@ -23,24 +23,6 @@ const char * pscode =
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
 
-/// read image from file
-inline bool
-readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
-{
-    std::auto_ptr<File> fp( openFile( "media::texture\\earth.jpg", "rb" ) );
-    if( NULL == fp.get() ) return false;
-
-    ImageReader ir;
-    if( !ir.reset( *fp ) ) return false;
-
-    if( !ir.readHeader( desc ) ) return false;
-
-    data.resize( desc.getTotalBytes() );
-    if( !ir.readImage( &data[0] ) ) return false;
-
-    return true;
-}
-
 bool init( Renderer & rndr )
 {
     // create effect
@@ -62,21 +44,8 @@ bool init( Renderer & rndr )
     m.identity();
     e.getUniform( "pvw" )->update( m );
 
-    // load image
-    ImageDesc id;
-    std::vector<UInt8> texels;
-    if( !readImageFromFile( id, texels ) ) return false;
-
     // create texture
-    TextureDesc td;
-    td.fromImageDesc( id );
-    AutoRef<Texture> tex( rndr.createTexture( td ) );
-    if( tex )
-    {
-        const MipmapDesc & md = id.getMipmap( 0, 0 );
-        tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
-        e.getTextureParam( "diffuse" )->setTexture( tex );
-    }
+    e.getTextureParam( "diffuse" )->setTexture( AutoRef<Texture>(loadTextureFromFile( rndr, "media::texture\\earth.jpg" )).get() );
 
     // create mesh
     float vertices[] =

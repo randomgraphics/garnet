@@ -23,7 +23,7 @@ namespace GN
 #include "gfx/colorFormat.h"
 #include "gfx/image.h"
 #include "gfx/shape.h"
-#include "gfx/misc.h"
+#include "gfx/primitive.h"
 
 // cross API rendering interface
 #include "gfx/surface.h"  // graphics resources (texture, vertex/index buffer)
@@ -35,6 +35,7 @@ namespace GN
 #include "gfx/effect.h"
 #include "gfx/mesh.h"
 #include "gfx/sprite.h"
+#include "gfx/misc.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h

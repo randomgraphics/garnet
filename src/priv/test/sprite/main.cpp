@@ -33,15 +33,8 @@ bool init( Renderer & rndr )
     if( !sr->init() ) return false;
 
     // create texture
-    ImageDesc id;
-    std::vector<UInt8> texels;
-    if( !readImageFromFile( id, texels ) ) return false;
-    TextureDesc td;
-    td.fromImageDesc( id );
-    tex.attach( rndr.createTexture( td ) );
+    tex.attach( loadTextureFromFile( rndr, "media::texture\\rabit.png" ) );
     if( !tex ) return false;
-    const MipmapDesc & md = id.getMipmap( 0, 0 );
-    tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
 
     // success
     return true;
