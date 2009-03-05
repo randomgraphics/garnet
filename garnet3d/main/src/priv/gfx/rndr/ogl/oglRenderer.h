@@ -11,9 +11,9 @@
 
 namespace GN { namespace gfx
 {
-    struct OGLResource;
+    class OGLResource;
+    class OGLBasicGpuProgram;
     class OGLVtxFmt;
-    class OGLSamplerObject;
     class OGLLine;
     class OGLBasicRTMgr;
 
@@ -225,6 +225,7 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
+        inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexFormat & vf, const OGLBasicGpuProgram * gpuProgram );
         inline bool bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderTargets( const RendererContext & newContext, bool skipDirtyCheck );
@@ -232,9 +233,22 @@ namespace GN { namespace gfx
 
     private:
 
-        std::map<VertexFormat,OGLVtxFmt*> mVertexFormats;
-        OGLVtxFmt                       * mCurrentOGLVtxFmt;
-        OGLBasicRTMgr                   * mRTMgr;
+        struct VertexFormatKey
+        {
+            VertexFormat vtxfmt;
+            UInt64       shaderID;
+
+            bool operator<( const VertexFormatKey & rhs ) const
+            {
+                if( shaderID < rhs.shaderID ) return true;
+                if( shaderID > rhs.shaderID ) return false;
+                return vtxfmt < rhs.vtxfmt;
+            }
+        };
+
+        std::map<VertexFormatKey,OGLVtxFmt*> mVertexFormats;
+        OGLVtxFmt                          * mCurrentOGLVtxFmt;
+        OGLBasicRTMgr                      * mRTMgr;
 
         //@}
 
