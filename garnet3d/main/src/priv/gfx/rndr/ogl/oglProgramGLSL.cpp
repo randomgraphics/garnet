@@ -276,7 +276,7 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     mParamDesc.textureNames     = mTextureNames.cptr();
     mParamDesc.numAttributes    = mAttributes.size();
     mParamDesc.attributeNames   = mAttributeNames.cptr();
- 
+
     // success
     return success();
 
@@ -318,22 +318,141 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     const char           * bindingName,
     UInt8                  bindingIndex ) const
 {
-    size_t len = strLen( bindingName );
-    if( 0 == len )
+    if( strEmpty(bindingName) )
     {
-        GN_ERROR(sLogger)( "bindingName must not be null or empty." );
+        GN_ERROR(sLogger)( "bindingName must not be empty." );
         return false;
     }
 
-    char * nameptr = (char*)alloca( len+4 );
-    memcpy( nameptr, bindingName, len+1 );
+    // fill result with invalid data
+    result.index = 255;
+    result.semantic = (OGLVertexSemantic)-1;
 
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( result );
-    GN_UNUSED_PARAM( bindingName );
-    GN_UNUSED_PARAM( bindingIndex );
+    const GLSLAttributeDesc * desc = NULL;
 
-    return false;
+    if( 0 == bindingIndex )
+    {
+        // if bindingIndex is zero, then looking for attribute without suffix first.
+        // So, for "position" and 0, look for attribute "position"
+        desc = lookupAttribute( bindingName );
+    }
+
+    if( NULL == desc )
+    {
+        // compose bindingName and bindingIndex into a single name, then look up again.
+        // So for "position" and 12 become "position12"
+        size_t len = strLen( bindingName );
+        char * nameWithSuffix = (char*)alloca( len+4 );
+        memcpy( nameWithSuffix, bindingName, len+1 );
+        if( bindingIndex >= 100 )
+        {
+            nameWithSuffix[len++] = '0' + bindingIndex / 100;
+            bindingIndex %= 100;
+        }
+        if( bindingIndex >= 10 )
+        {
+            nameWithSuffix[len++] = '0' + bindingIndex / 10;
+            bindingIndex %= 10;
+        }
+        nameWithSuffix[len++] = '0' + bindingIndex;
+        nameWithSuffix[len] = 0;
+
+        desc = lookupAttribute( nameWithSuffix );
+    }
+
+    if( NULL == desc )
+    {
+        // this could be an expected failure. So no error messages.
+        return false;
+    }
+
+    if( -1 == desc->location )
+    {
+        // this is conventional attribute
+
+        const char * conventionalAttribName = desc->name.cptr();
+
+        // the index is 0 in most cases.
+        result.index = 0;
+
+        if( 0 == strCmp( "gl_Vertex", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_VERTEX;
+        }
+        else if( 0 == strCmp( "gl_Normal", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_NORMAL;
+        }
+        else if( 0 == strCmp( "gl_Color", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+        }
+        else if( 0 == strCmp( "gl_SecondaryColor", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 1;
+        }
+        else if( 0 == strCmp( "gl_FogCoord", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_FOG;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord0", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord1", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 1;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord2", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 2;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord3", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 3;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord4", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 4;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord5", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 5;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord6", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 6;
+        }
+        else if( 0 == strCmp( "gl_MultiTexCoord7", conventionalAttribName ) )
+        {
+            result.semantic = VERTEX_SEMANTIC_COLOR;
+            result.index    = 7;
+        }
+        else
+        {
+            // never reach here
+            GN_UNEXPECTED();
+            return false;
+        }
+    }
+    else
+    {
+        // this is general vertex attribute
+        result.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
+        result.index    = (UInt8)desc->location;
+    }
+
+    // success
+    GN_ASSERT( VERTEX_SEMANTIC_VERTEX <= result.semantic && result.semantic <= VERTEX_SEMANTIC_ATTRIBUTE );
+    GN_ASSERT( 255 != result.index );
+    return true;
 }
 
 //
@@ -581,4 +700,24 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     }
 
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx::OGLGpuProgramGLSL::GLSLAttributeDesc *
+GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
+{
+
+    const GLSLAttributeDesc * attrib = mAttributes.cptr();
+
+    for( size_t i = 0; i < mAttributes.size(); ++i, ++attrib )
+    {
+        if( name == attrib->name )
+        {
+            return attrib;
+        }
+    }
+
+    return NULL;
 }

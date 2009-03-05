@@ -35,7 +35,7 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
     }
 }
 
-static inline void
+static inline bool
 sApplyVtxBufs(
     const OGLVtxFmt       & vtxfmt,
     const AutoRef<VtxBuf> * vtxbufs,
@@ -57,7 +57,7 @@ sApplyVtxBufs(
         }
     }
 
-    vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS, startvtx );
+    return vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS, startvtx );
 }
 
 // *****************************************************************************
@@ -188,13 +188,13 @@ void GN::gfx::OGLRenderer::drawIndexed(
     if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt )
-    {
-        sApplyVtxBufs(
+    if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
             *mCurrentOGLVtxFmt,
             mContext.vtxbufs,
             mContext.strides,
-            basevtx );
+            basevtx ) )
+    {
+        return;
     }
 
     // get current index buffer
@@ -266,13 +266,13 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t start
     if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt )
-    {
-        sApplyVtxBufs(
+    if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
             *mCurrentOGLVtxFmt,
             mContext.vtxbufs,
             mContext.strides,
-            startvtx );
+            startvtx ) )
+    {
+        return;
     }
 
     GLenum oglPrim = sPrimitiveType2OGL( prim );
@@ -303,6 +303,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
+    bool bindSuccess = false;
     if( mCurrentOGLVtxFmt )
     {
         // disable VBO
@@ -312,42 +313,46 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
         UInt16 stride = (UInt16)strideInBytes;
-        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
+
+        bindSuccess = mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
     }
 
-    // Verify index buffer
-    if( paramCheckEnabled() )
+    if( bindSuccess )
     {
-        const UInt16 * indices = indexData;
-        for( size_t i = 0; i < numidx; ++i, ++indices )
+        // Verify index buffer
+        if( paramCheckEnabled() )
         {
-            if( *indices >= numvtx )
+            const UInt16 * indices = indexData;
+            for( size_t i = 0; i < numidx; ++i, ++indices )
             {
-                GN_RNDR_RIP( "Invalid index (%u) in index buffer.", *indices );
+                if( *indices >= numvtx )
+                {
+                    GN_RNDR_RIP( "Invalid index (%u) in index buffer.", *indices );
+                }
             }
         }
-    }
 
-    GLenum oglPrim = sPrimitiveType2OGL( prim );
+        GLenum oglPrim = sPrimitiveType2OGL( prim );
 
-    if( GLEW_EXT_draw_range_elements )
-    {
-        // draw indexed primitives
-        GN_OGL_CHECK( glDrawRangeElements(
-            oglPrim,
-            0, // startvtx,
-            (GLuint)(numvtx-1),
-            (GLsizei)numidx,
-            GL_UNSIGNED_SHORT,
-            indexData ) );
-    }
-    else
-    {
-        GN_OGL_CHECK( glDrawElements(
-            oglPrim,
-            (GLsizei)numidx,
-            GL_UNSIGNED_SHORT,
-            indexData ) );
+        if( GLEW_EXT_draw_range_elements )
+        {
+            // draw indexed primitives
+            GN_OGL_CHECK( glDrawRangeElements(
+                oglPrim,
+                0, // startvtx,
+                (GLuint)(numvtx-1),
+                (GLsizei)numidx,
+                GL_UNSIGNED_SHORT,
+                indexData ) );
+        }
+        else
+        {
+            GN_OGL_CHECK( glDrawElements(
+                oglPrim,
+                (GLsizei)numidx,
+                GL_UNSIGNED_SHORT,
+                indexData ) );
+        }
     }
 
     // restore VBO
@@ -378,6 +383,7 @@ void GN::gfx::OGLRenderer::drawUp(
 
     // bind immediate vertex buffer
     GLuint oldvbo = 0;
+    bool bindSuccess = false;
     if( mCurrentOGLVtxFmt )
     {
         // disable VBO
@@ -387,12 +393,16 @@ void GN::gfx::OGLRenderer::drawUp(
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
         UInt16 stride = (UInt16)strideInBytes;
-        mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
+
+        bindSuccess = mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
     }
 
     // draw primitives
-    GLenum oglPrim = sPrimitiveType2OGL( prim );
-    GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
+    if( bindSuccess )
+    {
+        GLenum oglPrim = sPrimitiveType2OGL( prim );
+        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numvtx ) );
+    }
 
     // restore VBO
     if( 0 != oldvbo )

@@ -426,7 +426,7 @@ GN::gfx::OGLRenderer::bindContextResources(
     {
         mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
         if( !mCurrentOGLVtxFmt ) return false;
-        mCurrentOGLVtxFmt->bindStates();
+        if( !mCurrentOGLVtxFmt->bindStates() ) return false;
     }
 
     //

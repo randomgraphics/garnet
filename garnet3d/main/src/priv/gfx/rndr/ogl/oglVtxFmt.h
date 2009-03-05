@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         bool init( const VertexFormat &, const OGLBasicGpuProgram * program );
         void quit();
     private:
-        void clear() { mAttribBindings.clear(); mStateBindings.clear(); }
+        void clear() { mAttribBindings.clear(); mStateBindings.clear(); mValid = false; }
         //@}
 
         // ********************************
@@ -53,7 +53,7 @@ namespace GN { namespace gfx
         ///
         /// Bind the format to device
         ///
-        void bindStates() const;
+        bool bindStates() const;
 
         ///
         /// Bind the buffer to device
@@ -111,6 +111,7 @@ namespace GN { namespace gfx
         VertexFormat               mFormat;
         const OGLBasicGpuProgram * mProgram;
         size_t                     mDefaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
+        bool                       mValid;
         DynaArray<AttribBinding>   mAttribBindings;
         DynaArray<StateBinding>    mStateBindings;
 
