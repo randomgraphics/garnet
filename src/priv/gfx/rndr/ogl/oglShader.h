@@ -73,11 +73,45 @@ namespace GN { namespace gfx
     // Basic program object
     // *************************************************************************
 
+    enum OGLVertexSemantic
+    {
+        VERTEX_SEMANTIC_VERTEX,
+        VERTEX_SEMANTIC_NORMAL,
+        VERTEX_SEMANTIC_COLOR,
+        VERTEX_SEMANTIC_FOG,
+        VERTEX_SEMANTIC_TEXCOORD,
+        VERTEX_SEMANTIC_ATTRIBUTE,
+    };
+
+    struct OGLVertexBindingDesc
+    {
+        OGLVertexSemantic semantic;
+        UInt8             index;
+    };
+
     ///
     /// Basic OGL GPU program class
     ///
-    struct OGLBasicGpuProgram : public GpuProgram, public OGLResource
+    class OGLBasicGpuProgram : public GpuProgram, public OGLResource
     {
+    public:
+
+        ///
+        /// return non-zero unique shader ID.
+        ///
+        UInt64 uniqueID() const { return mID; }
+
+        ///
+        /// return program language used by this shader
+        ///
+        GpuProgramLanguage language() const { return mLanguage; }
+
+        ///
+        /// Get vertex buffer binding description of specific attribute.
+        /// Return false, if the binding name and index is not used byt the program.
+        ///
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const = 0;
+
         ///
         /// Enable shader
         ///
@@ -103,7 +137,16 @@ namespace GN { namespace gfx
         ///
         /// protected ctor
         ///
-        OGLBasicGpuProgram( OGLRenderer & r ) : OGLResource(r) {}
+        OGLBasicGpuProgram( OGLRenderer & r, GpuProgramLanguage lang ) : OGLResource(r), mLanguage(lang)
+        {
+            static UInt64 counter = 1;
+            mID = counter++;
+        }
+
+    private:
+
+        const GpuProgramLanguage mLanguage;
+        UInt64                   mID;
     };
 
     // *************************************************************************
@@ -123,7 +166,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r ) { clear(); }
+        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r, GPL_GLSL ) { clear(); }
         virtual ~OGLGpuProgramGLSL() { quit(); }
         //@}
 
@@ -151,6 +194,8 @@ namespace GN { namespace gfx
         // from OGLBasicGpuProgram
         // ********************************
     public:
+
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const;
 
         virtual void enable() const
         {

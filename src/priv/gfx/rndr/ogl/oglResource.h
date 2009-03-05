@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     ///
     /// General OGL resource class
     ///
-    struct OGLResource
+    class OGLResource
     {
     protected :
 

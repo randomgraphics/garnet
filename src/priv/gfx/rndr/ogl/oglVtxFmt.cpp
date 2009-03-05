@@ -31,7 +31,7 @@ static size_t inline sCalcNumStreams( const VertexFormat & vf )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format )
+bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuProgram * program )
 {
     GN_GUARD;
 
@@ -39,6 +39,7 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format )
     GN_STDCLASS_INIT( GN::gfx::OGLVtxFmt, () );
 
     mFormat = format;
+    mProgram = program;
 
     // calculate default strides
     memset( mDefaultStrides, 0, sizeof(mDefaultStrides) );
@@ -150,13 +151,15 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
     UInt32 maxTextures = getRenderer().getCaps().maxTextures;
 
-    bool hasPos = false;
+    bool hasVertex = false;
     bool hasNormal = false;
-    bool hasC0 = false;
-    bool hasC1 = false;
+    bool hasColor0 = false;
+    bool hasColor1 = false;
     bool hasFog = false;
-    std::vector<bool> hasvaa( maxAttributes, false );
-    std::vector<bool> hastex( maxTextures, false );
+    std::vector<bool> hasAttrib( maxAttributes, false );
+    std::vector<bool> hasTexCoord( maxTextures, false );
+
+    OGLVertexBindingDesc vbd;
 
     mAttribBindings.resize( mFormat.numElements );
 
@@ -170,101 +173,56 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         ab.info.stream = e.stream;
         ab.info.offset = e.offset;
 
-        if( 0 == strCmpI( "position", e.binding ) ||
-            0 == strCmpI( "pos", e.binding ) )
-        {
-            if( 0 != e.bindingIndex )
-            {
-                GN_ERROR(sLogger)( "bindingIndex of \"position\" must be 0." );
-                return false;
-            }
-            ab.func = &sSetVertexPointer;
-            hasPos = true;
-        }
-        else if( 0 == strCmpI( "attribute", e.binding ) ||
-                 0 == strCmpI( "VertexArrribute", e.binding ) )
-        {
-            if( e.bindingIndex >= maxAttributes )
-            {
-                GN_ERROR(sLogger)(
-                    "vertex attribute index (%u) is larger than maximum allowed value (%u).",
-                    e.bindingIndex, maxAttributes );
-                return false;
-            }
+        // get binding information
+        if( !getVertexBindingDesc( vbd, e.binding, e.bindingIndex ) ) return false;
 
-            ab.func = &sSetVertexAttributePointer;
-            ab.info.index = e.bindingIndex;
-            hasvaa[e.bindingIndex] = true;
-        }
-        else if( 0 == strCmpI( "normal", e.binding ) )
+        switch( vbd.semantic )
         {
-            if( 0 != e.bindingIndex )
-            {
-                GN_ERROR(sLogger)( "bindingIndex of \"normal\" must be 0." );
-                return false;
-            }
-            ab.func = &sSetNormalPointer;
-            hasNormal = true;
-        }
-        else if( 0 == strCmpI( "color", e.binding ) )
-        {
-            if( 0 == e.bindingIndex )
-            {
-                ab.func = &sSetColorPointer;
-                hasC0 = true;
-            }
-            else if( 1 == e.bindingIndex )
-            {
-                if( GLEW_EXT_secondary_color )
+            case VERTEX_SEMANTIC_VERTEX:
+                ab.func = &sSetVertexPointer;
+                hasVertex = true;
+                break;
+
+            case VERTEX_SEMANTIC_ATTRIBUTE:
+                ab.func = &sSetVertexAttributePointer;
+                ab.info.index = vbd.index;
+                hasAttrib[vbd.index] = true;
+                break;
+
+            case VERTEX_SEMANTIC_NORMAL:
+                ab.func = &sSetNormalPointer;
+                hasNormal = true;
+                break;
+
+            case VERTEX_SEMANTIC_TEXCOORD:
+                ab.func = &sSetTexCoordPointer;
+                ab.info.index = vbd.index;
+                hasTexCoord[vbd.index] = true;
+                break;
+
+            case VERTEX_SEMANTIC_COLOR:
+                if( 0 == vbd.index )
                 {
-                    ab.func = &sSetSecondaryColorPointer;
-                    hasC1 = true;
+                    ab.func = &sSetColorPointer;
+                    hasColor0 = true;
                 }
                 else
                 {
-                    GN_ERROR(sLogger)("current hardware does not support EXT_secondary_color" );
-                    return false;
+                    GN_ASSERT( 1 == vbd.index );
+                    ab.func = &sSetSecondaryColorPointer;
+                    hasColor1 = true;
                 }
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "bindingIndex of \"color\" must be 0 or 1." );
-                return false;
-            }
-        }
-        else if( 0 == strCmpI( "fog", e.binding ) )
-        {
-            if( GLEW_EXT_fog_coord )
-            {
+                break;
+
+            case VERTEX_SEMANTIC_FOG:
                 ab.func = &sSetFogPointer;
                 hasFog = true;
-            }
-            else
-            {
-                GN_ERROR(sLogger)("current hardware does not support EXT_fog_coord" );
-                return false;
-            }
-        }
-        else if( 0 == strCmpI( "texcoord", e.binding ) )
-        {
-            if( e.bindingIndex >= maxTextures )
-            {
-                GN_ERROR(sLogger)(
-                    "texcoordinate index (%u) is larger than maximum allowed value (%u).",
-                    e.bindingIndex, maxTextures );
-                return false;
-            }
+                break;
 
-            ab.func = &sSetTexCoordPointer;
-            ab.info.self = this;
-            ab.info.index = e.bindingIndex;
-            hastex[e.bindingIndex] = true;
+            default:
+                GN_UNEXPECTED();
+                return false;
         }
-        else
-        {
-            GN_ERROR(sLogger)( "unsupport vertex binding : %s(%d)", e.binding, e.bindingIndex );
-            return false;
-        };
 
         switch ( e.format.alias )
         {
@@ -314,7 +272,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     sb.info.self = this;
 
     // position
-    sb.func = hasPos ? &sEnableClientState : &sDisableClientState;
+    sb.func = hasVertex ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_VERTEX_ARRAY;
     mStateBindings.append( sb );
 
@@ -324,14 +282,14 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     mStateBindings.append( sb );
 
     // color0
-    sb.func = hasC0 ? &sEnableClientState : &sDisableClientState;
+    sb.func = hasColor0 ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_COLOR_ARRAY;
     mStateBindings.append( sb );
 
     // color1
     if( GLEW_EXT_secondary_color )
     {
-        sb.func = hasC1 ? &sEnableClientState : &sDisableClientState;
+        sb.func = hasColor1 ? &sEnableClientState : &sDisableClientState;
         sb.info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
         mStateBindings.append( sb );
     }
@@ -344,7 +302,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     // vertex attributes
     for( UInt32 i = 0; i < maxAttributes; ++i )
     {
-        sb.func = hasvaa[i] ? &sEnableVAA : &sDisableVAA;
+        sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
         sb.info.attribute = i;
         mStateBindings.append( sb );
     }
@@ -352,7 +310,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     // texture coordinates
     for( UInt32 i = 0; i < maxTextures; ++i )
     {
-        sb.func          = hastex[i] ? &sEnableTexArray : &sDisableTexArray;
+        sb.func          = hasTexCoord[i] ? &sEnableTexArray : &sDisableTexArray;
         sb.info.self     = this;
         sb.info.texStage = i;
         sb.info.semantic = GL_TEXTURE_COORD_ARRAY;
@@ -363,6 +321,140 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
+    OGLVertexBindingDesc & vbd,
+    const char           * bindingName,
+    UInt8                  bindingIndex )
+{
+#if GN_BUILD_ENABLE_ASSERT
+    vbd.semantic = (OGLVertexSemantic)-1;
+    vbd.index = (UInt8)-1;
+#endif
+
+    //
+    // try get binding information from GPU program
+    //
+    if( mProgram && mProgram->getBindingDesc( vbd, bindingName, bindingIndex ) )
+    {
+        return true;
+    }
+
+    //
+    // If failed, then try some stanadard bindings
+    //
+
+    UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getRenderer().getCaps().maxTextures;
+
+    if( 0 == strCmpI( "position", bindingName ) ||
+        0 == strCmpI( "pos", bindingName ) ||
+        0 == strCmpI( "gl_vertex", bindingName ) )
+    {
+        if( 0 != bindingIndex )
+        {
+            GN_ERROR(sLogger)( "bindingIndex of \"position\" must be 0." );
+            return false;
+        }
+
+        vbd.semantic = VERTEX_SEMANTIC_VERTEX;
+        vbd.index = 0;
+    }
+    else if( 0 == strCmpI( "attribute", bindingName ) ||
+             0 == strCmpI( "VertexArrribute", bindingName ) )
+    {
+        if( bindingIndex >= maxAttributes )
+        {
+            GN_ERROR(sLogger)(
+                "vertex attribute index (%u) is larger than maximum allowed value (%u).",
+                bindingIndex, maxAttributes );
+            return false;
+        }
+
+        vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
+        vbd.index = bindingIndex;
+    }
+    else if( 0 == strCmpI( "normal", bindingName ) )
+    {
+        if( 0 != bindingIndex )
+        {
+            GN_ERROR(sLogger)( "bindingIndex of \"normal\" must be 0." );
+            return false;
+        }
+
+        vbd.semantic = VERTEX_SEMANTIC_NORMAL;
+        vbd.index = 0;
+    }
+    else if( 0 == strCmpI( "color", bindingName ) )
+    {
+        if( 0 == bindingIndex )
+        {
+            vbd.semantic = VERTEX_SEMANTIC_COLOR;
+            vbd.index = 0;
+        }
+        else if( 1 == bindingIndex )
+        {
+            if( GLEW_EXT_secondary_color )
+            {
+                vbd.semantic = VERTEX_SEMANTIC_COLOR;
+                vbd.index = 1;
+            }
+            else
+            {
+                GN_ERROR(sLogger)("current hardware does not support EXT_secondary_color" );
+                return false;
+            }
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "bindingIndex of \"color\" must be 0 or 1." );
+            return false;
+        }
+    }
+    else if( 0 == strCmpI( "fog", bindingName ) )
+    {
+        if( GLEW_EXT_fog_coord )
+        {
+            vbd.semantic = VERTEX_SEMANTIC_FOG;
+            vbd.index = 0;
+        }
+        else
+        {
+            GN_ERROR(sLogger)("current hardware does not support EXT_fog_coord" );
+            return false;
+        }
+    }
+    else if( 0 == strCmpI( "texcoord", bindingName ) )
+    {
+        if( bindingIndex >= maxTextures )
+        {
+            GN_ERROR(sLogger)(
+                "texcoordinate index (%u) is larger than maximum allowed value (%u).",
+                bindingIndex, maxTextures );
+            return false;
+        }
+
+        vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
+        vbd.index = bindingIndex;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "unsupport vertex binding : %s(%d)", bindingName, bindingIndex );
+        return false;
+    }
+
+    // make sure vbd has valid value.
+#if GN_BUILD_ENABLE_ASSERT
+    GN_ASSERT( (OGLVertexSemantic)-1 != vbd.semantic );
+    GN_ASSERT( (UInt8)-1 != vbd.index );
+#endif
+
+    // success
+    return true;
 }
 
 //

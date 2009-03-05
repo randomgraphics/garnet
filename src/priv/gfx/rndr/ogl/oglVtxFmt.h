@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "oglResource.h"
+#include "OGLShader.h"
 
 namespace GN { namespace gfx
 {
@@ -33,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VertexFormat & );
+        bool init( const VertexFormat &, const OGLBasicGpuProgram * program );
         void quit();
     private:
         void clear() { mAttribBindings.clear(); mStateBindings.clear(); }
@@ -107,18 +108,20 @@ namespace GN { namespace gfx
             FP_setOglVertexState func;
         };
 
-        VertexFormat             mFormat;
-        size_t                   mDefaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
-        DynaArray<AttribBinding> mAttribBindings;
-        DynaArray<StateBinding>  mStateBindings;
+        VertexFormat               mFormat;
+        const OGLBasicGpuProgram * mProgram;
+        size_t                     mDefaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
+        DynaArray<AttribBinding>   mAttribBindings;
+        DynaArray<StateBinding>    mStateBindings;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
-        // state binding utils
+        // setup state binding
         bool setupStateBindings();
+        bool getVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex );
 
         static void sSetVertexPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
         static void sSetNormalPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );

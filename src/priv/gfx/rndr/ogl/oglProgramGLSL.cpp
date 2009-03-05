@@ -313,6 +313,32 @@ void GN::gfx::OGLGpuProgramGLSL::quit()
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
+    OGLVertexBindingDesc & result,
+    const char           * bindingName,
+    UInt8                  bindingIndex ) const
+{
+    size_t len = strLen( bindingName );
+    if( 0 == len )
+    {
+        GN_ERROR(sLogger)( "bindingName must not be null or empty." );
+        return false;
+    }
+
+    char * nameptr = (char*)alloca( len+4 );
+    memcpy( nameptr, bindingName, len+1 );
+
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( result );
+    GN_UNUSED_PARAM( bindingName );
+    GN_UNUSED_PARAM( bindingIndex );
+
+    return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const OGLUniform * const * uniforms, size_t count ) const
 {
     for( size_t i = 0; i < count; ++i )

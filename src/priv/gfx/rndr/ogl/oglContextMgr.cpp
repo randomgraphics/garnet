@@ -14,24 +14,6 @@ using namespace GN::gfx;
 // local function
 // *****************************************************************************
 
-static inline OGLVtxFmt *
-sGetOGLVtxFmt(
-    OGLRenderer                       & r,
-    std::map<VertexFormat,OGLVtxFmt*> & vfmap,
-    const VertexFormat                & vf )
-{
-    std::map<VertexFormat,OGLVtxFmt*>::iterator i = vfmap.find( vf );
-
-    if( i != vfmap.end() ) return i->second;
-
-    AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(r) );
-    if( !oglvf->init( vf ) ) return NULL;
-
-    vfmap[vf] = oglvf.get();
-
-    return oglvf.detach();
-}
-
 static const GLenum CONVERT_FILL_MODES[] =
 {
     GL_FILL,   // FILL_SOLID
@@ -125,7 +107,7 @@ void GN::gfx::OGLRenderer::contextQuit()
     mContext.clear();
 
     // delete all vertex formats
-    for( std::map<VertexFormat,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
+    for( std::map<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
          i != mVertexFormats.end();
          ++i )
     {
@@ -172,6 +154,40 @@ GN::gfx::OGLRenderer::bindContextImpl(
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+inline OGLVtxFmt *
+GN::gfx::OGLRenderer::findOrCreateOGLVtxFmt(
+    const VertexFormat       & vf,
+    const OGLBasicGpuProgram * program )
+{
+    // get shader ID
+    UInt64 shaderID;
+    if( program )
+    {
+        shaderID = program->uniqueID();
+        GN_ASSERT( 0 != shaderID );
+    }
+    else
+    {
+        shaderID = 0;
+    }
+
+    VertexFormatKey key = { vf, shaderID };
+
+    std::map<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.find( key );
+
+    if( i != mVertexFormats.end() ) return i->second;
+
+    AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
+    if( !oglvf->init( vf, program ) ) return NULL;
+
+    mVertexFormats[key] = oglvf.get();
+
+    return oglvf.detach();
+}
 
 //
 //
@@ -406,9 +422,9 @@ GN::gfx::OGLRenderer::bindContextResources(
     //
     // bind vertex format
     //
-    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
+    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt || newContext.gpuProgram != mContext.gpuProgram )
     {
-        mCurrentOGLVtxFmt = sGetOGLVtxFmt( *this, mVertexFormats, newContext.vtxfmt );
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
         if( !mCurrentOGLVtxFmt ) return false;
         mCurrentOGLVtxFmt->bindStates();
     }
