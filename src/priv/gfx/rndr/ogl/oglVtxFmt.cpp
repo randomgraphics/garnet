@@ -56,7 +56,7 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuPro
         }
     }
 
-    if( !setupStateBindings() ) return failure();
+    mValid = setupStateBindings();
 
     // success
     return success();
@@ -84,9 +84,11 @@ void GN::gfx::OGLVtxFmt::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::bindStates() const
+bool GN::gfx::OGLVtxFmt::bindStates() const
 {
     GN_GUARD_SLOW;
+
+    if( !mValid ) return false;
 
     for( size_t i = 0; i < mStateBindings.size(); ++i )
     {
@@ -94,6 +96,8 @@ void GN::gfx::OGLVtxFmt::bindStates() const
         GN_ASSERT( sb.func );
         sb.func( sb.info );
     }
+
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -109,6 +113,8 @@ GN::gfx::OGLVtxFmt::bindBuffers(
      size_t               startvtx ) const
 {
     GN_GUARD_SLOW;
+
+    if( !mValid ) return false;
 
     for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
@@ -161,20 +167,27 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
     OGLVertexBindingDesc vbd;
 
-    mAttribBindings.resize( mFormat.numElements );
+    mAttribBindings.reserve( mFormat.numElements );
 
     for( size_t i = 0; i < mFormat.numElements; ++i )
     {
         const VertexElement & e = mFormat.elements[i];
 
-        AttribBinding & ab = mAttribBindings[i];
-
+        AttribBinding ab;
         ab.info.self = this;
         ab.info.stream = e.stream;
         ab.info.offset = e.offset;
 
         // get binding information
-        if( !getVertexBindingDesc( vbd, e.binding, e.bindingIndex ) ) return false;
+        if( !getVertexBindingDesc( vbd, e.binding, e.bindingIndex ) )
+        {
+            GN_WARN(sLogger)(
+                "Vertex element (name=%s index=%d) is ignored, since it is neither used by "
+                "current active GPU program nor binding to any of conventional OpenGL attributes.",
+                e.binding,
+                e.bindingIndex );
+            continue;
+        }
 
         switch( vbd.semantic )
         {
@@ -262,6 +275,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         }
 
         GN_ASSERT( ab.func );
+
+        mAttribBindings.append( ab );
     }
 
     // ===================
@@ -345,47 +360,31 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     }
 
     //
-    // If failed, then try some stanadard bindings
+    // then try stanadard/predefined bindings
     //
 
     UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
     UInt32 maxTextures = getRenderer().getCaps().maxTextures;
 
-    if( 0 == strCmpI( "position", bindingName ) ||
-        0 == strCmpI( "pos", bindingName ) ||
-        0 == strCmpI( "gl_vertex", bindingName ) )
+    if( ( 0 == strCmpI( "position", bindingName ) ||
+          0 == strCmpI( "pos", bindingName ) ||
+          0 == strCmpI( "gl_vertex", bindingName ) )
+        &&
+        0 == bindingIndex )
     {
-        if( 0 != bindingIndex )
-        {
-            GN_ERROR(sLogger)( "bindingIndex of \"position\" must be 0." );
-            return false;
-        }
-
         vbd.semantic = VERTEX_SEMANTIC_VERTEX;
         vbd.index = 0;
     }
-    else if( 0 == strCmpI( "attribute", bindingName ) ||
-             0 == strCmpI( "VertexArrribute", bindingName ) )
+    else if( ( 0 == strCmpI( "attribute", bindingName ) ||
+               0 == strCmpI( "VertexArrribute", bindingName ) )
+             &&
+             bindingIndex < maxAttributes )
     {
-        if( bindingIndex >= maxAttributes )
-        {
-            GN_ERROR(sLogger)(
-                "vertex attribute index (%u) is larger than maximum allowed value (%u).",
-                bindingIndex, maxAttributes );
-            return false;
-        }
-
         vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
         vbd.index = bindingIndex;
     }
-    else if( 0 == strCmpI( "normal", bindingName ) )
+    else if( 0 == strCmpI( "normal", bindingName ) && 0 == bindingIndex )
     {
-        if( 0 != bindingIndex )
-        {
-            GN_ERROR(sLogger)( "bindingIndex of \"normal\" must be 0." );
-            return false;
-        }
-
         vbd.semantic = VERTEX_SEMANTIC_NORMAL;
         vbd.index = 0;
     }
@@ -396,54 +395,28 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
             vbd.semantic = VERTEX_SEMANTIC_COLOR;
             vbd.index = 0;
         }
-        else if( 1 == bindingIndex )
+        else if( 1 == bindingIndex && GLEW_EXT_secondary_color )
         {
-            if( GLEW_EXT_secondary_color )
-            {
-                vbd.semantic = VERTEX_SEMANTIC_COLOR;
-                vbd.index = 1;
-            }
-            else
-            {
-                GN_ERROR(sLogger)("current hardware does not support EXT_secondary_color" );
-                return false;
-            }
+            vbd.semantic = VERTEX_SEMANTIC_COLOR;
+            vbd.index = 1;
         }
         else
         {
-            GN_ERROR(sLogger)( "bindingIndex of \"color\" must be 0 or 1." );
             return false;
         }
     }
-    else if( 0 == strCmpI( "fog", bindingName ) )
+    else if( 0 == strCmpI( "fog", bindingName ) && GLEW_EXT_fog_coord )
     {
-        if( GLEW_EXT_fog_coord )
-        {
-            vbd.semantic = VERTEX_SEMANTIC_FOG;
-            vbd.index = 0;
-        }
-        else
-        {
-            GN_ERROR(sLogger)("current hardware does not support EXT_fog_coord" );
-            return false;
-        }
+        vbd.semantic = VERTEX_SEMANTIC_FOG;
+        vbd.index = 0;
     }
-    else if( 0 == strCmpI( "texcoord", bindingName ) )
+    else if( 0 == strCmpI( "texcoord", bindingName ) && bindingIndex < maxTextures )
     {
-        if( bindingIndex >= maxTextures )
-        {
-            GN_ERROR(sLogger)(
-                "texcoordinate index (%u) is larger than maximum allowed value (%u).",
-                bindingIndex, maxTextures );
-            return false;
-        }
-
         vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
         vbd.index = bindingIndex;
     }
     else
     {
-        GN_ERROR(sLogger)( "unsupport vertex binding : %s(%d)", bindingName, bindingIndex );
         return false;
     }
 

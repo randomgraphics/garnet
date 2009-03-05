@@ -259,7 +259,7 @@ namespace GN { namespace gfx
         // attributes
         DynaArray<GLSLAttributeDesc>         mAttributes;
         DynaArray<const char *>              mAttributeNames;
- 
+
         // parameter descriptor
         GpuProgramParameterDesc              mParamDesc;
 
@@ -270,6 +270,8 @@ namespace GN { namespace gfx
 
         bool enumParameters();
         bool enumAttributes();
+
+        const GLSLAttributeDesc * lookupAttribute( const char * name ) const;
     };
 
     // *************************************************************************
