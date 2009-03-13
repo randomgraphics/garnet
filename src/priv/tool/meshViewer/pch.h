@@ -11,15 +11,6 @@
 #include "garnet/GNutil.h"
 #include "garnet/GNscene.h"
 
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
-
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************

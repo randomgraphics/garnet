@@ -8,6 +8,12 @@
 
 namespace GN
 {
+    //
+    // Note:
+    //  1. in and out could be same for in-place endian swap
+    //  2. count is in unit of elements, not bytes.
+    //
+    
     ///
     /// endian swap 8 in 16.
     ///

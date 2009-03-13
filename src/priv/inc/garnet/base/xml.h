@@ -313,10 +313,10 @@ namespace GN
         static Logger * sLogger = getLogger( "GN.base.xml" );
         GN_INFO(sLogger)( "Load '%s'", filename.cptr() );
 
-        AutoObjPtr<File> fp( openFile( filename, "rt" ) );
+        AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;
 
-        StrA basedir = dirName( filename );
+        StrA basedir = fs::dirName( filename );
 
         return loadFromXmlFile( t, *fp, basedir );
 

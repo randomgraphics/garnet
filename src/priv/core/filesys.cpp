@@ -22,8 +22,9 @@
 #endif
 
 using namespace GN;
+using namespace GN::fs;
 
-static Logger * sLogger = getLogger("GN.core.FileSystem");
+static Logger * sLogger = getLogger("GN.base.filesys");
 
 // *****************************************************************************
 // local functions for posix platform
@@ -507,7 +508,7 @@ class MultiRootsFileSystem : public FileSystem
     {
         for( size_t i = 0; i < mRoots.size(); ++i )
         {
-            if( GN::pathExist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+            if( GN::fs::pathExist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
         }
         return 0;
     }
@@ -529,14 +530,14 @@ public:
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return GN::isDir( joinPath( *root, path ) );
+        return GN::fs::isDir( joinPath( *root, path ) );
     }
 
     bool isFile( const StrA & path )
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return GN::isFile( joinPath( *root, path ) );
+        return GN::fs::isFile( joinPath( *root, path ) );
     }
 
     bool isAbsPath( const StrA & path )
@@ -549,7 +550,7 @@ public:
         result.clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
-        GN::toNativePath( result, joinPath( *root, path ) );
+        GN::fs::toNativePath( result, joinPath( *root, path ) );
     }
 
     std::vector<StrA> &
@@ -568,7 +569,7 @@ public:
 
                 std::vector<StrA> tmp;
 
-                GN::glob(
+                GN::fs::glob(
                     tmp,
                     joinPath( root, dirName ),
                     pattern,
@@ -589,7 +590,7 @@ public:
             const StrA * root = findRoot( dirName );
             if( !root ) return result;
 
-            GN::glob(
+            GN::fs::glob(
                 result,
                 joinPath( *root, dirName ),
                 pattern,
@@ -608,7 +609,7 @@ public:
             GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
             return 0;
         }
-        return GN::openFile( joinPath( *root, path ), mode );
+        return GN::fs::openFile( joinPath( *root, path ), mode );
      }
 };
 
@@ -769,7 +770,7 @@ FileSystemContainer & sGetFileSystemContainer()
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT bool GN::registerFileSystem( const StrA & name, FileSystem * root )
+GN_EXPORT bool GN::fs::registerFileSystem( const StrA & name, FileSystem * root )
 {
     return sGetFileSystemContainer().registerFs( name, root );
 }
@@ -777,7 +778,7 @@ GN_EXPORT bool GN::registerFileSystem( const StrA & name, FileSystem * root )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void GN::UnregisterFileSystem( const StrA & name )
+GN_EXPORT void GN::fs::UnregisterFileSystem( const StrA & name )
 {
     sGetFileSystemContainer().UnregisterFs( name );
 }
@@ -785,7 +786,7 @@ GN_EXPORT void GN::UnregisterFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT FileSystem * GN::getFileSystem( const StrA & name )
+GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
 {
     return sGetFileSystemContainer().getFs( name );
 }
@@ -793,7 +794,7 @@ GN_EXPORT FileSystem * GN::getFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void GN::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
     if( base.empty() || relpath.empty() )

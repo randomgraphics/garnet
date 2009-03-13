@@ -93,14 +93,14 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
         return false;
     }
 
-    StrA fullname = resolvePath( basedir, a->value );
+    StrA fullname = fs::resolvePath( basedir, a->value );
 
-    if( !isFile( fullname ) )
+    if( !fs::isFile( fullname ) )
     {
         GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.cptr() );
     }
 
-    AutoObjPtr<File> fp( openFile( fullname, "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( fullname, "rb" ) );
     if( !fp ) return false;
 
     result.resize( fp->size() / sizeof(T) );
@@ -608,7 +608,7 @@ struct D3D10OperationDump
 			}
 			else
 			{
-	            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+	            //setDumpFilePrefix( fs::joinPath( "a", fs::baseName(sDumpFileName) ) );
 	            //dumpDrawIndexed( dev, numidx, startidx, startvtx );
 
 	            dev.DrawIndexed( numidx, startidx, startvtx );
@@ -623,7 +623,7 @@ struct D3D10OperationDump
 			}
 			else
 			{
-	            //setDumpFilePrefix( joinPath( "a", baseName(sDumpFileName) ) );
+	            //setDumpFilePrefix( fs::joinPath( "a", fs::baseName(sDumpFileName) ) );
 	            //dumpDraw( dev, numvtx, startvtx );
 
 	            dev.Draw( numvtx, startvtx );
@@ -1205,7 +1205,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (baseName(appname) + extName(appname)).cptr() );
+    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).cptr() );
 }
 
 int main( int argc, const char * argv [] )
