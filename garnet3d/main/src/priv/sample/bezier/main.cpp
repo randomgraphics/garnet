@@ -445,7 +445,7 @@ int run()
 
 void printHelp( const char * exepath )
 {
-    StrA exefilename = baseName( exepath ) + extName( exepath );
+    StrA exefilename = fs::baseName( exepath ) + fs::extName( exepath );
 
     printf( "\nUsage: %s <meshfile>\n", exefilename.cptr() );
 }

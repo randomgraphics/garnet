@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "loader.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -6,7 +7,7 @@ using namespace GN::input;
 using namespace GN::util;
 using namespace GN::scene;
 
-static GN::Logger          * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
+static GN::Logger          * sLogger = GN::getLogger("GN.tool.meshViewer");
 const char                 * filename;
 Renderer                   * rndr;
 ArcBall                      arcball; // arcball camera
@@ -45,23 +46,8 @@ void onAxisMove( Axis a, int d )
     }
 }
 
-struct MeshContainer
-{
-    DynaArray<Mesh*> meshes;
-
-    ~MeshContainer()
-    {
-        for( size_t i = 0; i < meshes.size(); ++i )
-        {
-            delete meshes[i];
-        }
-    }
-};
-
 bool init()
 {
-    AseScene            ase;
-    MeshContainer       meshes;
     SimpleDiffuseEffect effect;
 
     // create scene
@@ -71,38 +57,19 @@ bool init()
     // initialize effect
     if( !effect.init( *rndr ) ) return false;
 
-    // load meshes
-    DiskFile file;
-    if( !file.open( filename, "rb" ) ) return false;
-    if( !loadAseSceneFromFile(ase, file) ) return false;
-    for( size_t i = 0; i < ase.meshes.size(); ++i )
-    {
-        AutoObjPtr<Mesh> m( new Mesh(*rndr) );
-        if( !m || !m->init(ase.meshes[i]) ) return false;
-        meshes.meshes.append( m );
-        m.detach();
-    }
-
-    // create model
-    model.attach( new GeometryNode(*rootScene) );
-    for( size_t i = 0; i < ase.subsets.size(); ++i )
-    {
-        const AseMeshSubset & s = ase.subsets[i];
-
-        Mesh * m = meshes.meshes[s.meshid];
-
-        model->addGeometryBlock( effect.getEffect(), m, &s );
-    }
-    model->setPivot( Vector3f(0,0,0) );
+    // load model
+    model.attach( loadGeometryFromFile( *rootScene, effect.getEffect(), filename ) );
+    if( !model ) return false;
 
     // update camera stuff
-    radius = ase.bbox.size()[ase.bbox.theLongestAxis()] * 1.5f;
+    const Spheref & bs = model->getBoundingSphere();
+    radius = bs.radius * 1.5f;
     updateRadius();
 
     // initialize arcball
     arcball.setHandness( util::RIGHT_HAND );
     arcball.setViewMatrix( view );
-    arcball.setTranslation( -ase.bbox.center() );
+    arcball.setTranslation( -bs.center );
     arcball.connectToInput();
 
     // load font
@@ -195,7 +162,7 @@ int run()
 
 void printHelp( const char * exepath )
 {
-    StrA exefilename = baseName( exepath ) + extName( exepath );
+    StrA exefilename = fs::baseName( exepath ) + fs::extName( exepath );
 
     printf( "\nUsage: %s <meshfile>\n", exefilename.cptr() );
 }

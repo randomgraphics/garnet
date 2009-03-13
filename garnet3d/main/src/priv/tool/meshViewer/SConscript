@@ -1,7 +1,8 @@
 Import( 'GN' )
 
 sources = [
-    'main.cpp'
+	'loader.cpp',
+	'main.cpp'
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

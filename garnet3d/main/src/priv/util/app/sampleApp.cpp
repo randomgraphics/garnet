@@ -284,7 +284,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "                               INFO   = 40\n"
                     "                               DETAIL = 50\n"
                     "                               TRACE  = 200\n"
-                    , baseName(argv[0]).cptr() );
+                    , fs::baseName(argv[0]).cptr() );
                 return false;
             }
             else if( 0 == strCmpI( a, "-d3d9"  ) ) mInitParam.gscp.api = FOURCC::sMake( "DX9" );

@@ -161,7 +161,7 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
     GN_ASSERT( sLib && sLib->lib );
 
     // open font file
-    File * fp = openFile( desc.fontname, "rb" );
+    File * fp = fs::openFile( desc.fontname, "rb" );
     if( !fp ) return failure();
 
     // initialize FT2 stream

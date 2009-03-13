@@ -22,6 +22,7 @@ public:
     void testToNative()
     {
         using namespace GN;
+        using namespace GN::fs;
 
         StrA pwd = toNativePath( getCurrentDir() );
         StrA d = getCurrentDrive();
@@ -51,6 +52,8 @@ public:
     void testJoin()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT_EQUALS( "", joinPath( "", "" ) );
         TS_ASSERT_EQUALS( "a", joinPath( "", "a" ) );
         TS_ASSERT_EQUALS( "a", joinPath( "a", "" ) );
@@ -64,6 +67,7 @@ public:
     void testPrefix()
     {
         using namespace GN;
+        using namespace GN::fs;
 
         StrA s[2] ={
             toNativePath("app::"),
@@ -90,6 +94,8 @@ public:
     void testPathExist()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT( pathExist("/") );
         TS_ASSERT( !pathExist("haha,heihei,hoho,huhu,mama,papa") );
         TS_ASSERT( pathExist("SConstruct") );
@@ -106,6 +112,8 @@ public:
     void testIsDir()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT( isDir("/") );
 
         TS_ASSERT( isDir("startup::") );
@@ -122,6 +130,8 @@ public:
     void testIsFile()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT( isFile("startup::\\SConstruct") );
         TS_ASSERT( isFile("app::GNut"APPEXT) );
         TS_ASSERT( !isFile("startup::") );
@@ -132,6 +142,8 @@ public:
     void testGetParent()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT_EQUALS( "a", parentPath("a/b") );
         TS_ASSERT_EQUALS( "a", parentPath("a/b/") );
         TS_ASSERT_EQUALS( "/", parentPath("/a") );
@@ -150,6 +162,8 @@ public:
     void testGetExt()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT_EQUALS( ".c", extName("a.b.c") );
         TS_ASSERT_EQUALS( ".c", extName("a.c") );
         TS_ASSERT_EQUALS( ".c", extName(".c") );
@@ -160,6 +174,8 @@ public:
     void testToRelative()
     {
         using namespace GN;
+        using namespace GN::fs;
+
         TS_ASSERT_EQUALS( "..", relPath( "a/b/c", "a\\b\\c\\d" ) );
         TS_ASSERT_EQUALS( "", relPath( "a/b/c", "a\\b\\c" ) );
         TS_ASSERT_EQUALS( "c", relPath( "a/b/c", "a\\b" ) );

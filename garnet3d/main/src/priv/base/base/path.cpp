@@ -4,7 +4,7 @@
 // Local types, functions and variables
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.path");
+static GN::Logger * sLogger = GN::getLogger("GN.base.filesys");
 
 // *****************************************************************************
 // Public functions
@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.path");
 //
 //
 // -----------------------------------------------------------------------------
-void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
+void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
     StrA tmp;
 
@@ -51,7 +51,7 @@ void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::parentPath( StrA & result, const StrA & path )
+void GN::fs::parentPath( StrA & result, const StrA & path )
 {
     struct Local
     {
@@ -67,7 +67,7 @@ void GN::parentPath( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::extName( StrA & result, const StrA & path )
+void GN::fs::extName( StrA & result, const StrA & path )
 {
     StrA tmp;
 
@@ -92,7 +92,7 @@ void GN::extName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::baseName( StrA & result, const StrA & path )
+void GN::fs::baseName( StrA & result, const StrA & path )
 {
     StrA dir, ext;
 
@@ -108,7 +108,7 @@ void GN::baseName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::relPath( StrA & result, const StrA & path, const StrA & base )
+void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 {
     GN_GUARD;
 
@@ -183,7 +183,7 @@ void GN::relPath( StrA & result, const StrA & path, const StrA & base )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::joinPath2(
+void GN::fs::joinPath2(
     StrA & result,
     const StrA & path1,
     const StrA & path2,
@@ -218,7 +218,7 @@ void GN::joinPath2(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::splitPath( const StrA & path, StrA & root, StrA & child )
+void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 {
     root.clear();
     child.clear();
@@ -265,7 +265,7 @@ void GN::splitPath( const StrA & path, StrA & root, StrA & child )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::getCurrentDir( StrA & result )
+void GN::fs::getCurrentDir( StrA & result )
 {
 #if GN_XENON
     result = "game:";
@@ -290,7 +290,7 @@ void GN::getCurrentDir( StrA & result )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::getCurrentDrive( StrA & result )
+void GN::fs::getCurrentDrive( StrA & result )
 {
 #if GN_XENON
     result.clear();
