@@ -1138,7 +1138,12 @@ for compiler, variants in ALL_targets.iteritems() :
 		BUILD_libDir = os.path.join( BUILD_bldDir, 'lib' )
 		BUILD_binDir = os.path.join( BUILD_bldDir, 'bin' )
 
-		# do build
+		################################################################################
+		#
+		# Build all targets
+		#
+		################################################################################
+
 		for name, x in targets.iteritems():
 			if 'stlib' == x.type :
 				BUILD_staticLib( name, x )
@@ -1152,7 +1157,12 @@ for compiler, variants in ALL_targets.iteritems() :
 			GN.trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
 				name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
-		# build additional dependencies:
+		################################################################################
+		#
+		# Setup additional dependencies:
+		#
+		################################################################################
+
 		def getTargets( n ):
 			if n in targets : return targets[n].targets
 			else : return []
