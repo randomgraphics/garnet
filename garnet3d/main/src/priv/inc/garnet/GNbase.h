@@ -17,7 +17,7 @@
 
     GN_BUILD_PROFILE            Enable profile code
 
-    GN_BUILD_RETAIL             Enable retail code
+    GN_BUILD_RETAIL             Enable retail code (which means, debug and prifle code should both be disabled)
 
     GN_BUILD_STATIC             Enable static (non-dll) build.
 
@@ -38,6 +38,9 @@
 */
 
 // Define main build switch
+//
+// Note: this header file is generated during build process
+//
 #include "base/define_build_variant.h"
 
 // define switches for retail build
