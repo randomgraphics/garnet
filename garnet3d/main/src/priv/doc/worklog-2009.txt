@@ -1,0 +1,26 @@
+- 2009.03.15
+  - No worklog update for a long long time, since Aug 2007.
+  - Rendering system is written, again.
+    - Kernel based system is gone, and the old style cross platform renderer
+      is back again, since it is much more intuitive to use.
+      - It has priority on cross-platform than ultimate performance. Although
+        performance remains still an important goal.
+      - Currently, only OpenGL version is implmented.
+      - A simple multithread prototype is implemented to offset all rendering
+        tasks to another thread.
+  - New mesh and effect classes
+    - They are based on new rendering system.
+    - They are in gfx namespace
+    - They don't rely on anything other than the renderer itself.
+  - New scene module on top of new rendering system and new mesh/effect class
+  - New ASE mesh loader
+  - Implment D3D10 state dumper and viewer.
+  - RenderEngine model is removed.
+  - Refind build environment and script.
+    - Upgrade SCons to 1.2.0.
+    - Add support to VS2008.
+    - Remove support to VS2003.
+    - Implement SDK installer
+  - Other misc updates.
+    - Memory pool class is refined to support iteration.
+    - New WeakRef class, based on RefCounter class
