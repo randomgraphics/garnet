@@ -6,28 +6,37 @@
 
 namespace GN
 {
-    template<class CHAR, class T, class ALLOCATOR=StlAllocator<std::pair<CHAR,T> > >
+    //
+    // Implmement algorithm described in paper "Fast Algorithms for Sorting and Searching Strings"
+    //
+    //      http://www.cs.princeton.edu/~rs/strings/)
+    //
+    // Here are some reference implementations:
+    //
+    //      http://www.codeproject.com/KB/recipes/tst.aspx
+    //      http://meshula.net/wordpress/?p=183
+    //
+    template<class CHAR, class T>
     class StringMap
     {
-        struct LeafItem
+        struct Leaf
         {
-            const CHAR * text;
+            const CHAR * key;
             T            value;
-            LeafItem   * prev;
-            LeafItem   * next;
+
+            Leaf( const CHAR * k, const T & v )
+                : key(k), value(v)
+            {
+            }
         };
 
         struct Node
         {
-            Node     * parent;
-            Node     * left;
-            Node     * right;
-            LeafItem * leaf;
-            UInt32     bit : 1;
-            bool isLeafNode() const
-            {
-                return NULL != leaf;
-            }
+            CHAR   splitchar;
+            Node * lokid;
+            Node * eqkid;
+            Node * hikid;
+            Leaf * leaf;  // valid only when splitchar == 0 (leaf node)
         };
 
         // *****************************
@@ -48,24 +57,26 @@ namespace GN
         ///
         class Iterator
         {
-            LeafItem * mLeaf;
+            Node * mNode;
+
+            friend typename class StringMap<CHAR,T>;
 
         public:
 
-            Iterator() : mLeaf(NULL) {}
+            Iterator() : mNode(NULL) {}
 
-            Iterator( const Iterator & iter ) : mLeaf( iter.mLeaf ) {}
+            Iterator( const Iterator & iter ) : mNode( iter.mNode ) {}
 
             PairType & operator*() const
             {
-                GN_ASSERT( mLeaf );
-                return *(PairType*)&mLeaf;
+                GN_ASSERT( mNode && mNode->leaf );
+                return *(PairType*)mNode->leaf;
             }
 
             PairType * operator->() const
             {
-                GN_ASSERT( mLeaf );
-                return (PairType*)&mLeaf;
+                GN_ASSERT( mNode && mNode->leaf );
+                return (PairType*)mNode->leaf;
             }
 
             ///
@@ -73,8 +84,8 @@ namespace GN
             ///
             Iterator & operator++()
             {
-                GN_ASSERT( mLeaf );
-                mLeaf = mLeaf->next;
+                GN_ASSERT( mNode && mNode->leaf );
+                GN_UNIMPL();
                 return *this;
             }
 
@@ -95,38 +106,46 @@ namespace GN
 
     public:
 
-        /// constructor
-        StringMap()
+        /// default constructor
+        StringMap() : mRoot(NULL), mCount(0)
         {
         }
 
         /// copy constructor
-        StringMap( const StringMap & )
+        StringMap( const StringMap & sm ) : mRoot(NULL), mCount(0)
         {
+            doCopy( sm );
         }
 
         /// destructor
         ~StringMap()
         {
+            clear();
         }
 
         /// begin
         Iterator begin();
 
+        /// clear whole map
+        void clear() { return doClear(); }
+
+        /// empty
+        bool empty() const { return 0 == mCount; }
+
         /// end
         Iterator end();
+
+        /// erase by key
+        void erase( const CHAR * text );
+
+        /// find
+        Iterator find( const CHAR * text ) const { return doFind( text ); }
 
         /// insert
         void insert( const CHAR * text, const T & value, Iterator * iter, bool * insertSuccess ) { doInsert( text, value, iter, insertSuccess ); }
 
-        /// find
-        Iterator find( const CHAR * text ) const;
-
-        /// empty
-        bool empty() const;
-
         /// return number of items in map
-        size_t size() const;
+        size_t size() const { return mCount; }
 
         // *****************************
         // public operators
@@ -135,13 +154,13 @@ namespace GN
     public:
 
         /// assignment
-        StringMap & operator=( const StringMap & );
+        StringMap & operator=( const StringMap & rhs ) { doClone( rhs ); return *this; }
 
         /// indexing operator
-        Iterator operator[]( const CHAR * );
+        Iterator operator[]( const CHAR * text ) { Iterator iter; doInsert( text, T(), &iter, NULL ); return iter; }
 
-        /// less operator
-        bool operator<( const StringMap & );
+        /// less operator (NOT IMPLEMENTED)
+        bool operator<( const StringMap & ) { GN_UNIMPL(); return false; }
 
         // *****************************
         // private data
@@ -150,88 +169,150 @@ namespace GN
     private:
 
         Node * mRoot;
+        size_t mCount; // number of items in map
+        FixSizedRawMemoryPool<sizeof(Node)> mNodePool;
+        ObjectPool<Leaf>                    mLeafPool;
 
         // *****************************
         // private methods
         // *****************************
 
-    public:
+    private:
 
-        struct NodeSearchResult
+        Node * allocNode()
         {
-            Node * node;
-            size_t bits;
-            bool   found;
-        };
+            return (Node*)mNodePool.alloc();
+        }
 
-        void findNode( NodeSearchResult & result, const CHAR * text )
+        Leaf * allocLeaf( const CHAR * text, const T & value )
         {
-            result.node = NULL;
-            result.bits = 0;
-            result.found = false;
-
-            if( 0 == text )
+            Leaf * p = mLeafPool.allocUnconstructed();
+            if( p )
             {
-                // not found
-                return;
+                // call in-place new to construct the leaf
+                new (p) ( text, value );
             }
+            return p;
+        }
 
-            const size_t NUM_BITS_PER_CHAR = sizeof(CHAR)*8;
+        /// clear the whole map container
+        void doClear()
+        {
+            mRoot = NULL;
+            mCount = 0;
+            mNodePool.freeAll();
+            mLeafPool.freeAll();
+        }
 
-            Node * n = mRoot;
-            while( 0 != *text )
+        /// make itself a clone of another map
+        void doClone( const StringMap & anotherMap )
+        {
+            // shortcut for cloning itself.
+            if( this == &anotherMap ) return;
+
+            GN_UNIMPL();
+        }
+
+        Iterator doFind( const CHAR * text ) const
+        {
+            Iterator iter;
+
+            Node * p = mRoot;
+            while( p )
             {
-                for( size_t i = 0; i < NUM_BITS_PER_CHAR; ++i )
+                int d = *text - p->splitchar;
+
+                if( 0 == d )
                 {
-                    if( NULL == n )
+                    if( 0 == *text )
                     {
-                        // not found
-                        return;
+                        // found!
+                        iter->mNode = p;
+                        return iter;
+                    }
+                    else
+                    {
+                        p = p->eqkid;
                     }
 
-                    UInt32 bit = (*text)>>i;
-
-                    if( n->bit != bit )
-                    {
-                        // not found
-                        return;
-                    }
-
-                    // we found a matching bit
-                    result.node = n;
-                    ++result.bits;
-
-                    // continue with next node
-                    if( 0 == bit ) n = n->left;
-                    else           n = n->right;
+                    ++text;
                 }
-
-                // here means that we found a matching charactor.
-
-                // continue with next charactor
-                ++text;
+                else if( d < 0 )
+                {
+                    p = p->lokid;
+                }
+                else
+                {
+                    p = p->hikid;
+                }
             }
 
-            // Here means that the whole text matches.
-
-            if( result.node->isLeafNode() )
-            {
-                // found it!
-                result.found = true;
-            }
+            // not found
+            return iter;
         }
 
         void doInsert( const CHAR * text, const T & value, Iterator * iter, bool * insertSuccess )
         {
-            NodeSearchResult nsr;
+            // store input text pointer
+            const char * inputText = text;
 
-            findNode( nsr, text );
-
-            if( nsr.found )
+            // search in existing nodes
+            Node * p = mRoot;
+            while( p )
             {
-                GN_ASSERT( nsr.node && nsr.node->isLeafNode() );
-                if( iter ) iter->mNode = nsr.node->leaf;
-                if( insertSuccess ) *insertSuccess = false;
+                int d = *text - p->splitchar;
+
+                if( 0 == d )
+                {
+                    if( 0 == *text )
+                    {
+                        // the text does exist. insertion failed.
+                        if( *iter ) iter->mNode = p;
+                        if( insertSuccess ) *insertSuccess = false;
+                        return;
+                    }
+                    else
+                    {
+                        p = p->eqkid;
+                    }
+
+                    ++text;
+                }
+                else if( d < 0 )
+                {
+                    p = p->lokid;
+                }
+                else
+                {
+                    p = p->hikid;
+                }
+            }
+
+            // No existing text found. Now insert new nodes for
+            // each unmatched characters in input text.
+            for(;;)
+            {
+                // create new node
+                p = allocNode();
+                p->splitchar = *text;
+                p->lokid = p->hikid = p->eqkid = 0;
+
+                if( 0 == *text )
+                {
+                    // we reach the end of the node, insertion done.
+                    p->leaf = allocLeaf( inputText, value );
+                    ++mCount;
+                    if( *iter ) iter->mNode = p;
+                    if( insertSuccess ) *insertSuccess = true;
+                    return;
+                }
+                else
+                {
+                    p->leaf = 0;
+                }
+
+                // continue with next character
+                ++text;
             }
         }
     };
