@@ -14,7 +14,7 @@ namespace GN
     template<
         size_t ITEM_SIZE,
         size_t ALIGNMENT = 8,
-        size_t ITEMS_PER_BLOCK = 4096,
+        size_t INITIAL_ITEMS_PER_BLOCK = 32,
         size_t MAX_ITEMS = 0 >
     class FixSizedRawMemoryPool : public NoCopy
     {
@@ -44,14 +44,16 @@ namespace GN
 
         struct Block
         {
-            Item items[ITEMS_PER_BLOCK];
-            Block * next; ///< points to next block
+            size_t  count; ///< number of items in item array
+            Item  * items; ///< item array
+            Block * next;  ///< points to next block
         };
 
         Block * mBlocks;
         Item  * mItems;
         Item  * mFreeItems;
         size_t  mItemCount;
+        size_t  mNewBlockSize;
 
     public:
 
@@ -63,6 +65,7 @@ namespace GN
             , mItems(0)
             , mFreeItems(0)
             , mItemCount(0)
+            , mNewBlockSize(INITIAL_ITEMS_PER_BLOCK)
         {
         }
 
@@ -106,9 +109,18 @@ namespace GN
                     GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
+                b->items = (Item*)heapAlloc( sizeof(Item) * mNewBlockSize );
+                if( 0 == b )
+                {
+                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    heapFree( b );
+                    return 0;
+                }
+                b->count = mNewBlockSize;
+                mNewBlockSize *= 2; // size of next block is doubled.
 
                 // build free list
-                for( size_t i = 0; i < ITEMS_PER_BLOCK; ++i )
+                for( size_t i = 0; i < b->count; ++i )
                 {
                     b->items[i].pool = this;
                     b->items[i].next = mFreeItems;
@@ -177,6 +189,7 @@ namespace GN
             {
                 p = mBlocks;
                 mBlocks = mBlocks->next;
+                heapFree( p->items );
                 heapFree( p );
             }
             mBlocks = 0;
