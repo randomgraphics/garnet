@@ -336,6 +336,7 @@ class SceneImpl : public Scene
     void updateLight( size_t index, const LightDesc & desc )
     {
         GN_ASSERT( 0 == index );
+        GN_UNUSED_PARAM( index );
         mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->update( desc.position );
         mGlobalParams[SCENE_PARAM_LIGHT0_DIRECTION]->update( desc.direction );
         mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->update( desc.diffuse );
