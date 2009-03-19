@@ -263,15 +263,15 @@ namespace GN
 
         ObjectPool() {}
 
-        ~ObjectPool() { freeAll(); }
+        ~ObjectPool() { deconstructAndFreeAll(); }
 
         //@}
 
         //@{
-        T  * alloc() { return doAlloc(); }
+        T  * allocConstructed() { return doAlloc(); }
         T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
-        void dealloc( void * p ) { doDealloc( (T*)p ); }
-        void freeAll() { doFreeAll(); }
+        void deconstructAndFree( void * p ) { doDealloc( (T*)p ); }
+        void deconstructAndFreeAll() { doFreeAll(); }
         bool check( const T * p ) const { return mRawMem.check( p ); }
         T  * getFirst() const { return (T*)mRawMem.getFirst(); }
         T  * getNext( const T * p ) const { return (T*)mRawMem.getNext(p); }
