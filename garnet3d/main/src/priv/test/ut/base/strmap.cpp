@@ -434,6 +434,159 @@ namespace GN
             mRoot = doRecursiveErase( mRoot, text );
         }
     }; // End of StringMap class
+
+
+    ///
+    /// string hash map prototype
+    ///
+    template<class CHAR, class T>
+    class StringHashMap
+    {
+        struct KeyValuePair
+        {
+            Str<CHAR> key;
+            T         value;
+
+            KeyValuePair( const CHAR * k, const T & v )
+                : key(k)
+                , value(v)
+            {
+            }
+        };
+
+        struct HashItem
+        {
+            std::vector<KeyValuePair*> pairs;
+
+            ~HashItem()
+            {
+                for( size_t i = 0; i < pairs.size(); ++i )
+                {
+                    delete pairs[i];
+                }
+            }
+        };
+
+        HashItem * mItems;
+        size_t     mMaxSize;
+        size_t     mSize;
+
+        size_t calcHash( const CHAR * text ) const
+        {
+            GN_ASSERT( text );
+
+            size_t hash = 0;
+            while( *text )
+            {
+                hash = 31 * hash + (*text++);
+            }
+
+            return hash % mMaxSize;
+        }
+
+        KeyValuePair * doFind( const CHAR * text, size_t * position = NULL, size_t * index = NULL ) const
+        {
+            GN_ASSERT( text );
+            
+            size_t hash = calcHash( text );
+            GN_ASSERT( hash < mMaxSize );
+
+            if( position ) *position = hash;
+
+            HashItem & item = mItems[hash];
+
+            for( size_t i = 0; i < item.pairs.size(); ++i )
+            {
+                KeyValuePair * p = item.pairs[i];
+                if( text == p->key )
+                {
+                    // found!
+                    if( index ) *index = i;
+                    return p;
+                }
+            }
+
+            // not found
+            return NULL;
+        }
+
+    public:
+
+        /// default constructor
+        StringHashMap( size_t hashTableSize )
+            : mMaxSize( hashTableSize )
+            , mSize( 0 )
+        {
+            mItems = new HashItem[hashTableSize];
+        }
+
+        /// destructor
+        ~StringHashMap()
+        {
+            delete [] mItems;
+        }
+
+        /// clear the map
+        void clear() { delete [] mItems; mSize = 0; }
+
+        bool empty() const { return 0 == mSize; }
+
+        /// erase item from map
+        void erase( const CHAR * text )
+        {
+            if( NULL == text )
+            {
+                return;
+            }
+
+            size_t pos, idx;
+            KeyValuePair * p = doFind( text, &pos, &idx );
+
+            if( p )
+            {
+                GN_ASSERT( pos < mMaxSize );
+                GN_ASSERT( idx < mItems[pos].pairs.size() );
+                mItems[pos].pairs.erase( mItems[pos].pairs.begin() + idx );
+                delete p;
+
+                --mSize;
+            }
+        }
+
+        // find item in map
+        T * find( const CHAR * text ) const
+        {
+            if(NULL == text) return NULL;
+
+            KeyValuePair * p = doFind( text );
+
+            return p ? &p->value : NULL;
+        }
+
+        /// insert new item into map
+        bool insert( const CHAR * text, const T & value )
+        {
+            if( NULL == text )
+            {
+                return false;
+            }
+
+            size_t pos;
+            KeyValuePair * p = doFind( text, &pos );
+
+            if( p ) return false;
+
+            p = new KeyValuePair( text, value );
+
+            mItems[pos].pairs.push_back( p );
+
+            ++mSize;
+
+            return true;
+        }
+
+        size_t size() const { return mSize; }
+    };
 }
 
 class StringMapTest : public CxxTest::TestSuite
@@ -445,6 +598,130 @@ class StringMapTest : public CxxTest::TestSuite
     };
 
     static Dictionary dict();
+
+    void doPerfTest( const Dictionary & d )
+    {
+        using namespace GN;
+
+        Clock c;
+        Clock::CycleType t;
+
+        // std::map insertion
+        std::map<std::string,size_t> stlmap;
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            stlmap.insert( std::make_pair(d.table[i], i) );
+        }
+        t = c.getCycleCount() - t;
+        printf( "std::map  - insert : %d\n", t );
+
+        // StringMap insertion
+        StringMap<char,size_t> mymap;
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            mymap.insert( d.table[i], i );
+        }
+        t = c.getCycleCount() - t;
+        printf( "StringMap - insert : %d\n", t );
+
+        // HashMap insertion
+        StringHashMap<char,size_t> hmap(d.count);
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            hmap.insert( d.table[i], i );
+        }
+        t = c.getCycleCount() - t;
+        printf( "HashMap   - insert : %d\n", t );
+
+        // generate random searching set
+        std::vector<std::string> strings( 10000 );
+        for( size_t i = 0; i < strings.size(); ++i )
+        {
+            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
+            if( n >= d.count ) n = d.count - 1;
+            strings[i] = d.table[n];
+        }
+
+        // std::map find
+        t = c.getCycleCount();
+        for( size_t i = 0; i < strings.size(); ++i )
+        {
+            stlmap.find( strings[i] );
+        }
+        t = c.getCycleCount() - t;
+        printf( "std::map  - find   : %d\n", t );
+
+        // StringMap find
+        t = c.getCycleCount();
+        for( size_t i = 0; i < strings.size(); ++i )
+        {
+            mymap.find( strings[i].c_str() );
+        }
+        t = c.getCycleCount() - t;
+        printf( "StringMap - find   : %d\n", t );
+
+        // StringHashMap find
+        t = c.getCycleCount();
+        for( size_t i = 0; i < strings.size(); ++i )
+        {
+            hmap.find( strings[i].c_str() );
+        }
+        t = c.getCycleCount() - t;
+        printf( "HashMap   - find   : %d\n", t );
+
+        // std::map erasing
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            stlmap.erase( d.table[i] );
+        }
+        t = c.getCycleCount() - t;
+        TS_ASSERT( stlmap.empty() );
+        printf( "std::map  - erase  : %d\n", t );
+
+        // StringMap erasing
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            mymap.erase( d.table[i] );
+        }
+        t = c.getCycleCount() - t;
+        TS_ASSERT( mymap.empty() );
+        printf( "StringMap - erase  : %d\n", t );
+
+        // StringHashMap erasing
+        t = c.getCycleCount();
+        for( size_t i = 0; i < d.count; ++i )
+        {
+            hmap.erase( d.table[i] );
+        }
+        t = c.getCycleCount() - t;
+        TS_ASSERT( mymap.empty() );
+        printf( "HashMap   - erase  : %d\n", t );
+    }
+
+    void doPerfTestWithFixedNumberOfItems( size_t count )
+    {
+        printf( "num words = %d\n", count );
+
+        Dictionary d = dict();
+
+        std::vector<const char *> strings( count );
+        for( size_t i = 0; i < strings.size(); ++i )
+        {
+            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
+            if( n >= count ) n = count - 1;
+            strings[i] = d.table[n];
+        }
+
+        d.table = &strings[0];
+        d.count = strings.size();
+
+        doPerfTest( d );
+    }
 
 public:
 
@@ -466,6 +743,38 @@ public:
         TS_ASSERT_EQUALS( i->second, 1 );
         i = m.find( "abcd" );
         TS_ASSERT_EQUALS( i, m.end() );
+    }
+
+    void testHashMapSmoke()
+    {
+        using namespace GN;
+
+        StringHashMap<char,int> m(13);
+
+        m.insert( "abc", 1 );
+        m.insert( "abd", 2 );
+
+        // find
+        int * i;
+        i = m.find( "abc" );
+        TS_ASSERT_DIFFERS( i, (int*)NULL );
+        TS_ASSERT_EQUALS( *i, 1 );
+        i = m.find( "abcd" );
+        TS_ASSERT_EQUALS( i, (int*)NULL );
+
+        // erase
+        m.erase( "abe" );
+        TS_ASSERT_EQUALS( m.size(), 2 ); // erase non-existing item should have no effect.
+        i = m.find( "abc" );
+        m.erase( "abd" );
+        TS_ASSERT_EQUALS( m.size(), 1 ); // verify the one item is removed.
+        TS_ASSERT_EQUALS( m.find( "abd" ), (int*)NULL ); // verify correct item is erased.
+        TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
+
+        // erase the very last item in string map, would leave the map empty.
+        m.erase( "abc" );
+        TS_ASSERT( m.empty() );
+        TS_ASSERT_EQUALS( m.find( "abc" ), (int*)NULL );
     }
 
     void testErase()
@@ -518,101 +827,30 @@ public:
         TS_ASSERT_EQUALS( i->second, 123 );
     }
 
-    void doPerfTest( const Dictionary & d )
+    void testPerfWith_25000_Items()
     {
-        using namespace GN;
-
-        Clock c;
-        Clock::CycleType t;
-
-        // std::map insertion
-        std::map<std::string,size_t> stlmap;
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            stlmap.insert( std::make_pair(d.table[i], i) );
-        }
-        t = c.getCycleCount() - t;
-        printf( "std::map  - insert : %d\n", t );
-
-        // StringMap insertion
-        StringMap<char,size_t> mymap;
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            mymap.insert( d.table[i], i );
-        }
-        t = c.getCycleCount() - t;
-        printf( "StringMap - insert : %d\n", t );
-
-        // generate random searching set
-        std::vector<std::string> strings( 10000 );
-        for( size_t i = 0; i < strings.size(); ++i )
-        {
-            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
-            strings[i] = d.table[n];
-        }
-
-        // std::map find
-        t = c.getCycleCount();
-        for( size_t i = 0; i < strings.size(); ++i )
-        {
-            stlmap.find( strings[i] );
-        }
-        t = c.getCycleCount() - t;
-        printf( "std::map  - find   : %d\n", t );
-
-        // std::map find
-        t = c.getCycleCount();
-        for( size_t i = 0; i < strings.size(); ++i )
-        {
-            mymap.find( strings[i].c_str() );
-        }
-        t = c.getCycleCount() - t;
-        printf( "StringMap - find   : %d\n", t );
-
-        // std::map erasing
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            stlmap.erase( d.table[i] );
-        }
-        t = c.getCycleCount() - t;
-        TS_ASSERT( stlmap.empty() );
-        printf( "std::map  - erase  : %d\n", t );
-
-        // StringMap erasing
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            mymap.erase( d.table[i] );
-        }
-        t = c.getCycleCount() - t;
-        TS_ASSERT( mymap.empty() );
-        printf( "StringMap - erase  : %d\n", t );
-    }
-
-    void testPerfWithLargeDictionary()
-    {
+        srand( (int)GN::Clock::sGetSystemCycleCount() );
         Dictionary d = dict();
+        printf( "num words = %d\n", d.count );
         doPerfTest( d );
     }
 
-    void testPerfWithSmallDictionary()
+    void testPerfWith_1000_Items()
     {
-        Dictionary d = dict();
+        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        doPerfTestWithFixedNumberOfItems( 1000 );
+    }
 
-        std::vector<const char *> strings( 10 );
-        for( size_t i = 0; i < strings.size(); ++i )
-        {
-            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
-            strings[i] = d.table[n];
-        }
+    void testPerfWith_100_Items()
+    {
+        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        doPerfTestWithFixedNumberOfItems( 100 );
+    }
 
-        d.table = &strings[0];
-        d.count = strings.size();
-
-        doPerfTest( d );
+    void testPerfWith_10_Items()
+    {
+        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        doPerfTestWithFixedNumberOfItems( 10 );
     }
 };
 

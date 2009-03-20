@@ -34,6 +34,14 @@ namespace GN
         typedef SInt64 CycleType;
 
         ///
+        /// 一个高精度的计时函数
+        ///
+        /// 返回从开机到现在计时器经过的cycle数，
+        /// 用返回值除以计时器的主频，就可以换算成秒。
+        ///
+        static CycleType sGetSystemCycleCount();
+
+        ///
         /// 获得当前时间计数
         ///
         CycleType getCycleCount() const
@@ -105,16 +113,8 @@ namespace GN
             if (mPaused)
                 return mPauseTime;
             else
-                return getSystemCycleCount() - mResetTime - mPauseElapsed;
+                return sGetSystemCycleCount() - mResetTime - mPauseElapsed;
         }
-
-        ///
-        /// 一个高精度的计时函数
-        ///
-        /// 返回从开机到现在计时器经过的cycle数，
-        /// 用返回值除以计时器的主频，就可以换算成秒。
-        ///
-        CycleType getSystemCycleCount() const;
     };
 }
 
