@@ -45,51 +45,9 @@ GN::Clock::CycleType
 GN::Clock::mSystemCycleFrequency = sGetSystemCycleFrequency();
 
 //
-// 计时器复位
-// -----------------------------------------------------------------------------
-void GN::Clock::reset()
-{
-    // reset timer variables
-    mResetTime = getSystemCycleCount();
-    mPaused = 0;
-    mPauseTime = 0;
-    mPauseElapsed = 0;
-}
-
-//
-// 计时器暂停
-// -----------------------------------------------------------------------------
-void GN::Clock::pause()
-{
-    if (!mPaused)
-    {
-        GN_TRACE(sLogger)( "Timer pause!" );
-        mPauseTime = getSystemCycleCount();
-        mPaused = true;
-    }
-}
-
-//
-// 计时器恢复
-// -----------------------------------------------------------------------------
-void GN::Clock::resume()
-{
-    if (mPaused)
-    {
-        GN_TRACE(sLogger)( "Timer resume!" );
-        mPauseElapsed += getSystemCycleCount() - mPauseTime;
-        mPaused = false;
-    }
-}
-
-// *****************************************************************************
-//                      Private Functions
-// *****************************************************************************
-
-//
 //
 // -----------------------------------------------------------------------------
-GN::Clock::CycleType GN::Clock::getSystemCycleCount() const
+GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 {
     GN_GUARD_SLOW;
 
@@ -113,4 +71,42 @@ GN::Clock::CycleType GN::Clock::getSystemCycleCount() const
 #endif
 
     GN_UNGUARD_SLOW;
+}
+
+//
+// 计时器复位
+// -----------------------------------------------------------------------------
+void GN::Clock::reset()
+{
+    // reset timer variables
+    mResetTime = sGetSystemCycleCount();
+    mPaused = 0;
+    mPauseTime = 0;
+    mPauseElapsed = 0;
+}
+
+//
+// 计时器暂停
+// -----------------------------------------------------------------------------
+void GN::Clock::pause()
+{
+    if (!mPaused)
+    {
+        GN_TRACE(sLogger)( "Timer pause!" );
+        mPauseTime = sGetSystemCycleCount();
+        mPaused = true;
+    }
+}
+
+//
+// 计时器恢复
+// -----------------------------------------------------------------------------
+void GN::Clock::resume()
+{
+    if (mPaused)
+    {
+        GN_TRACE(sLogger)( "Timer resume!" );
+        mPauseElapsed += sGetSystemCycleCount() - mPauseTime;
+        mPaused = false;
+    }
 }
