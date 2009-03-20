@@ -8,22 +8,22 @@ public:
     {
         {
             GN::Variant var(true);
-            bool v;
+            bool v = false;
             TS_ASSERT( var.getb(v) ); TS_ASSERT_EQUALS( true, v );
         }
         {
             GN::Variant var(1);
-            int v;
+            int v = 0;
             TS_ASSERT( var.geti(v) ); TS_ASSERT_EQUALS( 1, v );
         }
         {
             GN::Variant var(1.0f);
-            float v;
+            float v = 0.0f;
             TS_ASSERT( var.getf(v) ); TS_ASSERT_EQUALS( 1.0f, v );
         }
         {
             GN::Variant var((void*)NULL);
-            void * v;
+            void * v = &var; // initialize to any non-NULL value.
             TS_ASSERT( var.getp(v) ); TS_ASSERT_EQUALS( (void*)NULL, v );
         }
         {
@@ -64,10 +64,10 @@ public:
     {
         GN::Variant var;
         GN::StrA      s;
-        bool          b;
-        int           i;
-        float         f;
-        void *        p;
+        bool          b = false;
+        int           i = 0;
+        float         f = 0.0f;
+        void *        p = NULL;
         GN::Vector4f  v;
         GN::Matrix44f m;
 
@@ -96,10 +96,10 @@ public:
     {
         GN::Variant var;
         GN::StrA      s;
-        bool          b;
-        int           i;
-        float         f;
-        void *        p;
+        bool          b = false;
+        int           i = 0;
+        float         f = 0.0f;
+        void *        p = NULL;
         GN::Vector4f  v;
         GN::Matrix44f m;
 
@@ -128,10 +128,10 @@ public:
     {
         GN::Variant var;
         GN::StrA      s;
-        bool          b;
-        int           i;
-        float         f;
-        void *        p;
+        bool          b = false;
+        int           i = 0;
+        float         f = 0.0f;
+        void *        p = NULL;
         GN::Vector4f  v;
         GN::Matrix44f m;
 
@@ -160,10 +160,10 @@ public:
     {
         GN::Variant var;
         GN::StrA      s;
-        bool          b;
-        int           i;
-        float         f;
-        void *        p;
+        bool          b = false;
+        int           i = 0;
+        float         f = 0.0f;
+        void *        p = NULL;
         GN::Vector4f  v;
         GN::Matrix44f m;
 

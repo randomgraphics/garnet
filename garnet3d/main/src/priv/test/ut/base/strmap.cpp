@@ -838,19 +838,19 @@ public:
     void testPerfWith_1000_Items()
     {
         srand( (int)GN::Clock::sGetSystemCycleCount() );
-        doPerfTestWithFixedNumberOfItems( 1000 );
+        doPerfTestWithFixedNumberOfItems( 1009 );
     }
 
     void testPerfWith_100_Items()
     {
         srand( (int)GN::Clock::sGetSystemCycleCount() );
-        doPerfTestWithFixedNumberOfItems( 100 );
+        doPerfTestWithFixedNumberOfItems( 103 );
     }
 
     void testPerfWith_10_Items()
     {
         srand( (int)GN::Clock::sGetSystemCycleCount() );
-        doPerfTestWithFixedNumberOfItems( 10 );
+        doPerfTestWithFixedNumberOfItems( 11 );
     }
 };
 

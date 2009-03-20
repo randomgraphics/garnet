@@ -271,6 +271,7 @@ namespace GN
         T  * allocConstructed() { return doAlloc(); }
         T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
         void deconstructAndFree( void * p ) { doDealloc( (T*)p ); }
+        void freeWithoutDeconstruct( void * p ) { mRawMem.dealloc( p ); }
         void deconstructAndFreeAll() { doFreeAll(); }
         bool check( const T * p ) const { return mRawMem.check( p ); }
         T  * getFirst() const { return (T*)mRawMem.getFirst(); }

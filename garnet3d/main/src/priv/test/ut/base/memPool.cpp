@@ -38,7 +38,7 @@ public:
     void testObjectPoolWithPOD()
     {
         GN::ObjectPool<char> a;
-        a.alloc();
+        a.allocConstructed();
     }
 
     void testClassAllocator()
@@ -95,6 +95,6 @@ public:
     }
 };
 
-inline void * MemPoolTest::Test::operator new( size_t ) { return MemPoolTest::sPool.alloc(); }
-inline void   MemPoolTest::Test::operator delete( void * p ) { MemPoolTest::sPool.dealloc(p); }
+inline void * MemPoolTest::Test::operator new( size_t ) { return MemPoolTest::sPool.allocUnconstructed(); }
+inline void   MemPoolTest::Test::operator delete( void * p ) { MemPoolTest::sPool.freeWithoutDeconstruct(p); }
 GN::ObjectPool<MemPoolTest::Test> MemPoolTest::sPool;
