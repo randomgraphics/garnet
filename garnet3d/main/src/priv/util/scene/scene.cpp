@@ -141,7 +141,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        if( b->effect.hasUniform( d.name ) )
+        if( b->effect.uniforms.contains( d.name ) )
         {
             Uniform * u;
             if( !d.global )
@@ -158,7 +158,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
             }
             GN_ASSERT( u );
 
-            b->effect.setUniform( d.name, u );
+            b->effect.uniforms[d.name].set( u );
         }
     }
 

@@ -319,7 +319,7 @@ createEffect()
     Effect * e = new Effect( *rndr );
     if( !e->init( ed ) ) { delete e; return NULL; }
 
-    e->getTextureParam("DIFFUSE_TEXTURE")->setTexture( AutoRef<Texture>(loadTextureFromFile( *rndr, "media::texture/earth.jpg" )).get() );
+    e->textures["DIFFUSE_TEXTURE"].attach( loadTextureFromFile( *rndr, "media::texture/earth.jpg" ) );
 
     return e;
 }

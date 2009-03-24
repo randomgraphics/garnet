@@ -204,6 +204,85 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
+        // public data type
+        // ********************************
+    public:
+
+        ///
+        /// Effect parameter collection template
+        ///
+        template<typename T>
+        class EffectParamCollection
+        {
+            typedef std::map<StrA,AutoRef<T> >                          MapType;
+            typedef typename std::map<StrA,AutoRef<T> >::iterator       Iterator;
+            typedef typename std::map<StrA,AutoRef<T> >::const_iterator ConstIter;
+
+            MapType    & mMap;
+            AutoRef<T> & mDummy;
+
+        public:
+
+            /// ctor
+            EffectParamCollection( MapType & m, AutoRef<T> & d )
+                : mMap(m)
+                , mDummy(d)
+            {
+            }
+
+            /// check if the collection has item with specific name
+            bool contains( const StrA & name ) const
+            {
+                return mMap.end() != mMap.find( name );
+            }
+
+            /// constant bracket operator
+            const AutoRef<T> & operator[]( const StrA & name ) const
+            {
+                ConstIter it = mMap.find( name );
+
+                if( mMap.end() == it )
+                {
+                    return mDummy;
+                }
+                else
+                {
+                    return it->second;
+                }
+            }
+
+            /// non-const bracket operator
+            AutoRef<T> & operator[]( const StrA & name )
+            {
+                Iterator it = mMap.find( name );
+
+                if( mMap.end() == it )
+                {
+                    return mDummy;
+                }
+                else
+                {
+                    return it->second;
+                }
+            }
+        };
+        
+        // ********************************
+        // public property
+        // ********************************
+    public:
+
+        ///
+        /// uniform collection
+        ///
+        EffectParamCollection<Uniform> uniforms;
+
+        ///
+        /// texture collection
+        ///
+        EffectParamCollection<Texture> textures;
+
+        // ********************************
         // public functions
         // ********************************
     public:
@@ -213,27 +292,6 @@ namespace GN { namespace gfx
 
         /// get number of passes
         size_t getNumPasses() const { return mActiveTech->passes.size(); }
-
-        /// Check if effect has a uniform with specific name.
-        bool hasUniform( const StrA & name ) const { return mUniforms.end() != mUniforms.find( name ); }
-
-        /// Get pointer to specific GPU uniform. Return dummy pointer for invalid name.
-        ///
-        /// Note that the reference counter of the returned parameter is not increaed by calling this function,
-        /// which means you don't have to call decref() for the returned pointer after it is being used.
-        Uniform * getUniform( const StrA & name ) const;
-
-        /// Assign GPU uniform to effect
-        void setUniform( const StrA & name, Uniform * );
-
-        /// Get pointer to specific texture. Return NULL if the name is invalid or there's no texture assigned to that name.
-        ///
-        /// Note that the reference counter of the returned parameter is not increaed by calling this function,
-        /// which means you don't have to call decref() for the returned pointer after it is being used.
-        Texture * getTexture( const StrA & name ) const;
-
-        /// Assign texture to effect
-        void setTexture( const StrA & name, Texture * );
 
         /// Apply the effect to drawable.
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
@@ -249,10 +307,9 @@ namespace GN { namespace gfx
         typedef std::map<StrA,AutoRef<Uniform> >::iterator UniformIter;
         typedef std::map<StrA,AutoRef<Texture> >::iterator TextureIter;
 
-
         struct PerShaderTextureParam
         {
-            /// texture iterator into global texture map (Effect::mTextures)
+            /// texture parameter iterator into global texture map (Effect::mTextures)
             TextureIter iter;
 
             /// texture binding string
@@ -302,14 +359,17 @@ namespace GN { namespace gfx
         Renderer & mRenderer;
         EffectDesc mDesc;
 
-        std::map<StrA,AutoRef<Uniform> >          mUniforms;
-        std::map<StrA,AutoRef<Texture> >          mTextures;
-        std::map<StrA,AutoRef<GpuProgram> >       mGpuPrograms;
-        std::map<StrA,Technique>                  mTechniques;
-        Technique *                               mActiveTech;
+        std::map<StrA,AutoRef<Uniform> >      mUniforms;
+        std::map<StrA,AutoRef<Texture> >      mTextures;
+        std::map<StrA,AutoRef<GpuProgram> >   mGpuPrograms;
+        std::map<StrA,Technique>              mTechniques;
+        Technique *                           mActiveTech;
 
-        /// dummy uniform for invalid name
-        Uniform * mDummyUniform;
+        /// dummy uniform
+        AutoRef<Uniform> mDummyUniform;
+
+        /// dummy texture
+        AutoRef<Texture> mDummyTexture;
 
         // ********************************
         // private functions
