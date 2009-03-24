@@ -42,10 +42,10 @@ bool init( Renderer & rndr )
     // set transformation to identity
     Matrix44f m;
     m.identity();
-    e.getUniform( "pvw" )->update( m );
+    e.uniforms["pvw"]->update( m );
 
     // create texture
-    e.setTexture( "diffuse", AutoRef<Texture>(loadTextureFromFile( rndr, "media::texture\\earth.jpg" )).get() );
+    e.textures["diffuse"].attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
 
     // create mesh
     float vertices[] =

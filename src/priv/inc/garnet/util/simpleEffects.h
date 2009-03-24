@@ -62,15 +62,16 @@ namespace GN { namespace util
         // ********************************
     private:
 
-        gfx::Texture                * mDefaultTexture;
-        gfx::Effect                 * mEffect;
-        gfx::Uniform                * mMatrixPvw;
-        gfx::Uniform                * mMatrixWorld;
-        gfx::Uniform                * mMatrixWorldIT;
-        gfx::Uniform                * mLightPos;
-        gfx::Uniform                * mLightColor;
-        gfx::Uniform                * mDiffuseColor;
-        gfx::Drawable                 mDrawable;
+        gfx::Texture            * mDefaultTexture;
+        gfx::Effect             * mEffect;
+        AutoRef<gfx::Uniform>   * mMatrixPvw;
+        AutoRef<gfx::Uniform>   * mMatrixWorld;
+        AutoRef<gfx::Uniform>   * mMatrixWorldIT;
+        AutoRef<gfx::Uniform>   * mLightPos;
+        AutoRef<gfx::Uniform>   * mLightColor;
+        AutoRef<gfx::Uniform>   * mDiffuseColor;
+        AutoRef<gfx::Texture>   * mDiffuseTexture;
+        gfx::Drawable             mDrawable;
 
         // ********************************
         // private functions

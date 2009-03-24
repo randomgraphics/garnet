@@ -69,6 +69,8 @@ bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
 GN::gfx::Effect::Effect( Renderer & r )
     : mRenderer(r)
     , mDummyUniform( r.createUniform( 1 ) )
+    , uniforms( mUniforms, mDummyUniform )
+    , textures( mTextures, mDummyTexture )
 {
     clear();
 }
@@ -79,9 +81,11 @@ GN::gfx::Effect::Effect( Renderer & r )
 GN::gfx::Effect::Effect( const Effect & e )
     : mRenderer( e.mRenderer )
     , mDummyUniform( e.mDummyUniform )
+    , mDummyTexture( e.mDummyTexture )
+    , uniforms( mUniforms, mDummyUniform )
+    , textures( mTextures, mDummyTexture )
 {
     GN_ASSERT( this != &e ); // can't copy construct from itself.
-    mDummyUniform->incref();
     clear();
     clone( e );
 }
@@ -92,7 +96,6 @@ GN::gfx::Effect::Effect( const Effect & e )
 GN::gfx::Effect::~Effect()
 {
     quit();
-    mDummyUniform->decref();
 }
 
 //
@@ -117,11 +120,11 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::UniformDesc & udesc = iter->second;
 
         // create GPU program
-        Uniform * gpp = mRenderer.createUniform( udesc.size );
-        if( NULL == gpp ) return false;
+        Uniform * u = mRenderer.createUniform( udesc.size );
+        if( NULL == u ) return false;
 
         // add to uniform array
-        mUniforms[uname].attach( gpp );
+        mUniforms[uname].attach( u );
     }
 
     // create texture array
@@ -130,7 +133,9 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
          ++iter )
     {
         const StrA & tname = iter->first;
-        mTextures[tname]; // add new item in texture array.
+
+        // add new item, with NULL texture pointer, in texture array.
+        mTextures[tname];
     }
 
     // create GPU program array
@@ -239,82 +244,6 @@ void GN::gfx::Effect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Uniform *
-GN::gfx::Effect::getUniform( const StrA & name ) const
-{
-    std::map<StrA,AutoRef<Uniform> >::const_iterator it = mUniforms.find( name );
-
-    if( mUniforms.end() == it )
-    {
-        return mDummyUniform;
-    }
-    else
-    {
-        return it->second;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::Effect::setUniform( const StrA & name, Uniform * param )
-{
-    if( NULL == param )
-    {
-        GN_ERROR(sLogger)( "NULL parameter pointer." );
-        return;
-    }
-
-    std::map<StrA,AutoRef<Uniform> >::iterator it = mUniforms.find( name );
-
-    if( mUniforms.end() == it )
-    {
-        GN_ERROR(sLogger)( "Invalid uniform parameter name: %s", name.cptr() );
-    }
-    else
-    {
-        it->second.set( param );
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::Texture *
-GN::gfx::Effect::getTexture( const StrA & name ) const
-{
-    std::map<StrA,AutoRef<Texture> >::const_iterator it = mTextures.find( name );
-
-    if( mTextures.end() == it )
-    {
-        return NULL;
-    }
-    else
-    {
-        return it->second;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::Effect::setTexture( const StrA & name, Texture * param )
-{
-    std::map<StrA,AutoRef<Texture> >::iterator it = mTextures.find( name );
-
-    if( mTextures.end() == it )
-    {
-        GN_ERROR(sLogger)( "Invalid texture parameter name: %s", name.cptr() );
-    }
-    else
-    {
-        it->second.set( param );
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
 {
     GN_ASSERT( mActiveTech );
@@ -335,7 +264,8 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
         const UniformIter & ui = p.uniforms[i];
         if( ui != mUniforms.end() )
         {
-            drawable.rc.uniforms[i] = ui->second;
+            AutoRef<Uniform> & u = ui->second;
+            drawable.rc.uniforms[i] = u;
         }
     }
 
@@ -345,7 +275,9 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     {
         const PerShaderTextureParam & t = p.textures[i];
 
-        drawable.rc.textures[i] = t.iter->second;
+        AutoRef<Texture> & tp = t.iter->second;
+
+        drawable.rc.textures[i] = tp;
         drawable.rc.bindTexture( i, t.binding.cptr() );
     }
 
@@ -516,7 +448,7 @@ void GN::gfx::Effect::clone( const Effect & e )
     mGpuPrograms = e.mGpuPrograms;
     mTechniques  = e.mTechniques;
 
-    // for each technique
+    // Fix up iterators and pointers for each technique
     for( std::map<StrA,Technique>::const_iterator i = e.mTechniques.begin(); i != e.mTechniques.end(); ++i )
     {
         const StrA & tname = i->first;
@@ -527,8 +459,7 @@ void GN::gfx::Effect::clone( const Effect & e )
         GN_ASSERT( tdst.passes.size() == tsrc.passes.size() );
         for( size_t i = 0; i < tdst.passes.size(); ++i )
         {
-            const Pass & psrc = tsrc.passes[i];
-            Pass       & pdst = tdst.passes[i];
+            Pass & pdst = tdst.passes[i];
 
             GN_ASSERT( pdst.gpuProgram == mGpuPrograms[mDesc.techniques[tname].passes[i].shader].get() );
 
@@ -543,26 +474,24 @@ void GN::gfx::Effect::clone( const Effect & e )
                 // fix texture iterator
                 tex.iter = mTextures.find(texname);
 
+                GN_ASSERT( tex.iter != mTextures.end() );
+
                 // fix sampler pointer
                 const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, texname );
                 tex.sampler = &tdesc->sampler;
             }
 
-            // for each uniforms, fix uniform iterator pointers
+            // for each uniforms
             for( size_t i = 0; i < pdst.uniforms.size(); ++i )
             {
-                const UniformIter & uisrc = psrc.uniforms[i];
+                UniformIter & ui = pdst.uniforms[i];
 
-                if( uisrc != e.mUniforms.end() )
-                {
-                    const StrA & uniformName = uisrc->first;
-                    pdst.uniforms[i] = mUniforms.find( uniformName );
-                    GN_ASSERT( mUniforms.end() != pdst.uniforms[i] );
-                }
-                else
-                {
-                    pdst.uniforms[i] = mUniforms.end();
-                }
+                const StrA & uniformName = ui->first;
+
+                // fix uniform iterator pointers
+                ui = mUniforms.find( uniformName );
+
+                GN_ASSERT( mUniforms.end() != pdst.uniforms[i] );
             }
         }
 

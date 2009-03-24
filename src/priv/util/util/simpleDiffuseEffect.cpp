@@ -79,10 +79,10 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     if( !mEffect->init( ed ) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    GN_ASSERT( mEffect->hasUniform( name ) ); \
-    x = mEffect->getUniform( name ); \
+    GN_ASSERT( mEffect->uniforms.contains( name ) ); \
+    x = &mEffect->uniforms[name]; \
     GN_ASSERT( x ); \
-    x->update( defval );
+    (*x)->update( defval );
 
     // initialize uniforms
     INIT_UNIFORM( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
@@ -93,7 +93,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     INIT_UNIFORM( mDiffuseColor  , "DIFFUSE_COLOR"   , Vector4f(1,1,1,1) );
 
     // setup default texture
-    mEffect->setTexture( "DIFFUSE_TEXTURE", mDefaultTexture );
+    mDiffuseTexture = &mEffect->textures["DIFFUSE_TEXTURE"];
+    mDiffuseTexture->set( mDefaultTexture );
 
     // success
     return success();
@@ -128,9 +129,9 @@ void GN::util::SimpleDiffuseEffect::setTransformation(
 {
     Matrix44f pvw = proj * view * world;
     Matrix44f wit = Matrix44f::sInverse( Matrix44f::sTranspose( world ) );
-    mMatrixPvw->update( pvw );
-    mMatrixWorld->update( world );
-    mMatrixWorldIT->update( wit );
+    (*mMatrixPvw)->update( pvw );
+    (*mMatrixWorld)->update( world );
+    (*mMatrixWorldIT)->update( wit );
 }
 
 //
@@ -138,7 +139,7 @@ void GN::util::SimpleDiffuseEffect::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 {
-    mLightPos->update( pos );
+    (*mLightPos)->update( pos );
 }
 
 //
@@ -146,7 +147,7 @@ void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 {
-    mLightColor->update( clr );
+    (*mLightColor)->update( clr );
 }
 
 //
@@ -154,7 +155,7 @@ void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
 {
-    mDiffuseColor->update( clr );
+    (*mDiffuseColor)->update( clr );
 }
 
 //
@@ -162,7 +163,7 @@ void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setDiffuseTexture( gfx::Texture * tex )
 {
-    mEffect->setTexture( "DIFFUSE_TEXTURE", tex ? tex : mDefaultTexture );
+    mDiffuseTexture->set( tex ? tex : mDefaultTexture );
 }
 
 //
