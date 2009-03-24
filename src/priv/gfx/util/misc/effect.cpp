@@ -269,7 +269,7 @@ void GN::gfx::Effect::setUniform( const StrA & name, Uniform * param )
 
     if( mUniforms.end() == it )
     {
-        GN_ERROR(sLogger)( "Invalid parameter name: %s", name.cptr() );
+        GN_ERROR(sLogger)( "Invalid uniform parameter name: %s", name.cptr() );
     }
     else
     {
@@ -277,22 +277,38 @@ void GN::gfx::Effect::setUniform( const StrA & name, Uniform * param )
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Texture *
+GN::gfx::Effect::getTexture( const StrA & name ) const
+{
+    std::map<StrA,AutoRef<Texture> >::const_iterator it = mTextures.find( name );
+
+    if( mTextures.end() == it )
+    {
+        return NULL;
+    }
+    else
+    {
+        return it->second;
+    }
+}
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::EffectTextureParameter *
-GN::gfx::Effect::getTextureParam( const StrA & name )
+void GN::gfx::Effect::setTexture( const StrA & name, Texture * param )
 {
-    std::map<StrA,EffectTextureParameterImpl>::iterator it = mTextures.find( name );
+    std::map<StrA,AutoRef<Texture> >::iterator it = mTextures.find( name );
 
     if( mTextures.end() == it )
     {
-        return &mDummyTexture;
+        GN_ERROR(sLogger)( "Invalid texture parameter name: %s", name.cptr() );
     }
     else
     {
-        return &it->second;
+        it->second.set( param );
     }
 }
 
@@ -329,7 +345,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     {
         const PerShaderTextureParam & t = p.textures[i];
 
-        drawable.rc.textures[i].set( t.param->getTexture() );
+        drawable.rc.textures[i] = t.iter->second;
         drawable.rc.bindTexture( i, t.binding.cptr() );
     }
 
@@ -413,17 +429,16 @@ GN::gfx::Effect::initTech(
             // TODO: check GPU parameter type. Make sure it is a texture parameter.
             else
             {
-                // this is a valid texture parameter
-                GN_ASSERT( mTextures.end() != mTextures.find(tname) );
-
                 PerShaderTextureParam tex;
 
-                tex.param   = &mTextures.find(tname)->second;
-                tex.name    = tname;
+                tex.iter    = mTextures.find(tname);
                 tex.binding = tbind;
                 tex.sampler = &tdesc->sampler;
 
                 p.textures.append( tex );
+
+                // this must be a valid texture parameter
+                GN_ASSERT( mTextures.end() != tex.iter );
             }
         }
         if( p.textures.size() > RendererContext::MAX_TEXTURES )
@@ -523,11 +538,13 @@ void GN::gfx::Effect::clone( const Effect & e )
             {
                 PerShaderTextureParam & tex = pdst.textures[i];
 
-                // fix param pointer
-                tex.param = &mTextures.find(tex.name)->second;
+                const StrA & texname = tex.iter->first;
+
+                // fix texture iterator
+                tex.iter = mTextures.find(texname);
 
                 // fix sampler pointer
-                const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, tex.name );
+                const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, texname );
                 tex.sampler = &tdesc->sampler;
             }
 

@@ -174,33 +174,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// texture parameter wrapper for effect class
-    ///
-    class EffectTextureParameter
-    {
-        AutoRef<Texture> mTexture;
-
-    public:
-
-        /// get texture pointer
-        Texture * getTexture() const { return mTexture.get(); }
-
-        /// set texture pointer
-        void setTexture( Texture * tex ) { mTexture.set( tex ); }
-
-    protected:
-
-        /// protected ctor
-        EffectTextureParameter() {}
-
-        /// protected copy ctor
-        EffectTextureParameter( const EffectTextureParameter & t ) : mTexture(t.mTexture) {}
-
-        /// protected dtor
-        virtual ~EffectTextureParameter() {}
-    };
-
-    ///
     /// Graphics effect
     ///
     class Effect : public StdClass
@@ -253,8 +226,14 @@ namespace GN { namespace gfx
         /// Assign GPU uniform to effect
         void setUniform( const StrA & name, Uniform * );
 
-        /// Get pointer to specific texture parameter. Return dummy pointer for invalid name.
-        EffectTextureParameter * getTextureParam( const StrA & name );
+        /// Get pointer to specific texture. Return NULL if the name is invalid or there's no texture assigned to that name.
+        ///
+        /// Note that the reference counter of the returned parameter is not increaed by calling this function,
+        /// which means you don't have to call decref() for the returned pointer after it is being used.
+        Texture * getTexture( const StrA & name ) const;
+
+        /// Assign texture to effect
+        void setTexture( const StrA & name, Texture * );
 
         /// Apply the effect to drawable.
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
@@ -267,23 +246,14 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        class EffectTextureParameterImpl : public EffectTextureParameter
-        {
-        public:
-            EffectTextureParameterImpl() {}
-            virtual ~EffectTextureParameterImpl() {}
-        };
+        typedef std::map<StrA,AutoRef<Uniform> >::iterator UniformIter;
+        typedef std::map<StrA,AutoRef<Texture> >::iterator TextureIter;
+
 
         struct PerShaderTextureParam
         {
-            /// texture parameter wrapper, pointer to textures in Effect::mTextures
-            EffectTextureParameterImpl * param;
-
-            /// texture name (used to lookup the texture in Effect::mTextures)
-            ///
-            /// \note Effect::mTextures[name] == param
-            ///
-            StrA name;
+            /// texture iterator into global texture map (Effect::mTextures)
+            TextureIter iter;
 
             /// texture binding string
             StrA binding;
@@ -298,8 +268,7 @@ namespace GN { namespace gfx
 
             /// copy ctor
             PerShaderTextureParam( const PerShaderTextureParam & p )
-                : param(p.param)
-                , name(p.name)
+                : iter(p.iter)
                 , binding(p.binding)
                 , sampler(p.sampler)
             {
@@ -308,15 +277,12 @@ namespace GN { namespace gfx
             /// assign operator
             PerShaderTextureParam & operator=( const PerShaderTextureParam & rhs )
             {
-                param   = rhs.param;
-                name    = rhs.name;
+                iter    = rhs.iter;
                 binding = rhs.binding;
                 sampler = rhs.sampler;
                 return *this;
             }
         };
-
-        typedef std::map<StrA,AutoRef<Uniform> >::iterator UniformIter;
 
         struct Pass
         {
@@ -337,14 +303,13 @@ namespace GN { namespace gfx
         EffectDesc mDesc;
 
         std::map<StrA,AutoRef<Uniform> >          mUniforms;
-        std::map<StrA,EffectTextureParameterImpl> mTextures;
+        std::map<StrA,AutoRef<Texture> >          mTextures;
         std::map<StrA,AutoRef<GpuProgram> >       mGpuPrograms;
         std::map<StrA,Technique>                  mTechniques;
         Technique *                               mActiveTech;
 
-        /// dummy parameters for invalid name
-        Uniform                  * mDummyUniform;
-        EffectTextureParameterImpl mDummyTexture;
+        /// dummy uniform for invalid name
+        Uniform * mDummyUniform;
 
         // ********************************
         // private functions
