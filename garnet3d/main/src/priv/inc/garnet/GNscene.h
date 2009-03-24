@@ -186,12 +186,63 @@ namespace GN
         ///
         struct Scene : public NoCopy
         {
+            ///
+            /// Uniform collection
+            ///
+            class UniformCollection
+            {
+            public:
+
+                /// bracket operator
+                gfx::Uniform & operator[]( size_t type ) const
+                {
+                    if( type >= NUM_STANDARD_SCENE_PARAMETERS )
+                    {
+                        static Logger * sLogger = getLogger("GN.scene");
+                        GN_ERROR(sLogger)( "Invalid scene parameter type: %d", type );
+                        GN_ASSERT( mDummy );
+                        return *mDummy;
+                    }
+
+                    const StandardSceneParameterDesc & desc = getStandardSceneParameterName( type );
+
+                    if( !desc.global )
+                    {
+                        static Logger * sLogger = getLogger("GN.scene");
+                        GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through global uniform collection.", desc.name );
+                        GN_ASSERT( mDummy );
+                        return *mDummy;
+                    }
+
+                    GN_ASSERT( mUniforms[type] );
+                    return *mUniforms[type];
+                }
+
+            protected:
+
+                /// protected ctor
+                UniformCollection() : mUniforms(NULL), mDummy(NULL) {}
+
+                /// protected dtor
+                virtual ~UniformCollection() {}
+
+            protected:
+
+                // Note: sub-class should initialize those pointers.
+
+                /// global uniform array
+                gfx::Uniform * const * mUniforms;
+
+                /// dummy uniform pointer
+                gfx::Uniform *         mDummy;
+            };
+
             /// get renderer
             virtual gfx::Renderer & getRenderer() const = 0;
 
             /// \name global parameter management
             //@{
-            virtual gfx::Uniform * const * getGlobalUniforms() const = 0;
+            UniformCollection & globalUniforms;
             virtual void setProj( const Matrix44f & ) = 0;
             virtual void setView( const Matrix44f & ) = 0;
             virtual void setDefaultLight0Position( const Vector3f & ) = 0;
@@ -199,6 +250,10 @@ namespace GN
 
             /// draw node hierarchy
             virtual void renderNodeHierarchy( Node * root ) = 0;
+
+        protected:
+
+            Scene( UniformCollection & uc ) : globalUniforms(uc) {}
         };
 
         ///

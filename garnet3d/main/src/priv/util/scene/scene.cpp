@@ -134,7 +134,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     b->effect = *inputEffect;
 
     // get list of standard parameters
-    Uniform * const * globalUniforms = s.getGlobalUniforms();
+    Scene::UniformCollection & globalUniforms = s.globalUniforms;
 
     // handle standard parameters
     for( size_t i = 0; i < NUM_STANDARD_SCENE_PARAMETERS; ++i )
@@ -154,7 +154,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
             }
             else
             {
-                u = globalUniforms[i];
+                u = &globalUniforms[i];
             }
             GN_ASSERT( u );
 
@@ -196,7 +196,7 @@ void GN::scene::GeometryNode::draw()
         {
             case SCENE_PARAM_MATRIX_PVW :
             {
-                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & pv = *(const Matrix44f *)s.globalUniforms[SCENE_PARAM_MATRIX_PV].getval();
                 const Matrix44f & world = getLocal2Root();
                 Matrix44f pvw = pv * world;
                 u->update( pvw );
@@ -205,7 +205,7 @@ void GN::scene::GeometryNode::draw()
 
             case SCENE_PARAM_MATRIX_PVW_INV:
             {
-                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & pv = *(const Matrix44f *)s.globalUniforms[SCENE_PARAM_MATRIX_PV].getval();
                 const Matrix44f & world = getLocal2Root();
                 Matrix44f pvw = pv * world;
                 u->update( Matrix44f::sInverse( pvw ) );
@@ -214,7 +214,7 @@ void GN::scene::GeometryNode::draw()
 
             case SCENE_PARAM_MATRIX_PVW_IT:
             {
-                const Matrix44f & pv = *(const Matrix44f *)s.getGlobalUniforms()[SCENE_PARAM_MATRIX_PV]->getval();
+                const Matrix44f & pv = *(const Matrix44f *)s.globalUniforms[SCENE_PARAM_MATRIX_PV].getval();
                 const Matrix44f & world = getLocal2Root();
                 Matrix44f pvw = pv * world;
                 u->update( Matrix44f::sInvtrans( pvw ) );
@@ -297,11 +297,30 @@ class SceneImpl : public Scene
         }
     };
 
-    DirtyFlags mDirtyFlags;
-    Uniform  * mGlobalParams[NUM_STANDARD_SCENE_PARAMETERS];
-    Matrix44f  mProj;
-    Matrix44f  mView;
-    LightDesc  mDefaultLight0;
+    struct UniformCollectionImpl : public UniformCollection
+    {
+        /// ctor
+        UniformCollectionImpl() {}
+
+        /// dtor
+        virtual ~UniformCollectionImpl() {}
+
+        /// update uniform pointers
+        void updateUniformPointers( AutoRef<Uniform> * uniforms, Uniform * dummy )
+        {
+            mUniforms = uniforms[0].addr();
+            mDummy    = dummy;
+        }
+    };
+
+    Renderer            & mRenderer;
+    DirtyFlags            mDirtyFlags;
+    UniformCollectionImpl mUniformCollection;
+    AutoRef<Uniform>      mGlobalUniforms[NUM_STANDARD_SCENE_PARAMETERS];
+    AutoRef<Uniform>      mDummyUniform;
+    Matrix44f             mProj;
+    Matrix44f             mView;
+    LightDesc             mDefaultLight0;
 
     void updateTransformation()
     {
@@ -319,17 +338,17 @@ class SceneImpl : public Scene
             Matrix44f iv  = Matrix44f::sInverse( mView );
             Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( mView ) );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_PV]->update( pv );
-            mGlobalParams[SCENE_PARAM_MATRIX_PV_INV]->update( ipv );
-            mGlobalParams[SCENE_PARAM_MATRIX_PV_IT]->update( itpv );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PV]->update( pv );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PV_INV]->update( ipv );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PV_IT]->update( itpv );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ]->update( mProj );
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_INV]->update( ip );
-            mGlobalParams[SCENE_PARAM_MATRIX_PROJ_IT]->update( itp );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PROJ]->update( mProj );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PROJ_INV]->update( ip );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_PROJ_IT]->update( itp );
 
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW]->update( mView );
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_INV]->update( iv );
-            mGlobalParams[SCENE_PARAM_MATRIX_VIEW_IT]->update( itv );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_VIEW]->update( mView );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_VIEW_INV]->update( iv );
+            mGlobalUniforms[SCENE_PARAM_MATRIX_VIEW_IT]->update( itv );
         }
     }
 
@@ -337,11 +356,11 @@ class SceneImpl : public Scene
     {
         GN_ASSERT( 0 == index );
         GN_UNUSED_PARAM( index );
-        mGlobalParams[SCENE_PARAM_LIGHT0_POSITION]->update( desc.position );
-        mGlobalParams[SCENE_PARAM_LIGHT0_DIRECTION]->update( desc.direction );
-        mGlobalParams[SCENE_PARAM_LIGHT0_DIFFUSE]->update( desc.diffuse );
-        mGlobalParams[SCENE_PARAM_LIGHT0_AMBIENT]->update( desc.ambient );
-        mGlobalParams[SCENE_PARAM_LIGHT0_SPECULAR]->update( desc.specular );
+        mGlobalUniforms[SCENE_PARAM_LIGHT0_POSITION]->update( desc.position );
+        mGlobalUniforms[SCENE_PARAM_LIGHT0_DIRECTION]->update( desc.direction );
+        mGlobalUniforms[SCENE_PARAM_LIGHT0_DIFFUSE]->update( desc.diffuse );
+        mGlobalUniforms[SCENE_PARAM_LIGHT0_AMBIENT]->update( desc.ambient );
+        mGlobalUniforms[SCENE_PARAM_LIGHT0_SPECULAR]->update( desc.specular );
     }
 
     void updateLights( Node * root )
@@ -370,34 +389,46 @@ public:
 
     /// ctor
     SceneImpl( Renderer & r )
-        : mRenderer( r )
+        : Scene( mUniformCollection )
+        , mRenderer( r )
     {
-        mDirtyFlags.u64 = (UInt64)-1; // all dirty
-
-        memset( mGlobalParams, 0, sizeof(mGlobalParams) );
-        for( size_t i = 0; i < GN_ARRAY_COUNT(mGlobalParams); ++i )
-        {
-            const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
-            if( d.global )
-            {
-                mGlobalParams[i] = r.createUniform( d.size );
-            }
-        }
-
-        mProj.identity();
-        mView.identity();
     }
 
     /// dtor
     ~SceneImpl()
     {
-        for( size_t i = 0; i < GN_ARRAY_COUNT(mGlobalParams); ++i )
-        {
-            safeDecref( mGlobalParams[i] );
-        }
     }
 
 public:
+
+    ///
+    /// Initialization
+    /// ------------------------------------------------------------------------
+    bool init()
+    {
+        // initialize uniforms
+        for( size_t i = 0; i < GN_ARRAY_COUNT(mGlobalUniforms); ++i )
+        {
+            const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
+            if( d.global )
+            {
+                mGlobalUniforms[i].attach( mRenderer.createUniform( d.size ) );
+
+                if( NULL == mGlobalUniforms[i] ) return false;
+            }
+        }
+        mDummyUniform.attach( mRenderer.createUniform( 1 ) );
+        if( NULL == mDummyUniform ) return false;
+        mUniformCollection.updateUniformPointers( mGlobalUniforms, mDummyUniform );
+
+        mProj.identity();
+        mView.identity();
+
+        // mark all fields dirty
+        mDirtyFlags.u64 = (UInt64)-1;
+
+        return true;
+    }
 
     /// methods inherited from Scene class
     //@{
@@ -406,28 +437,6 @@ public:
     ///
     /// ------------------------------------------------------------------------
     virtual gfx::Renderer & getRenderer() const { return mRenderer; }
-
-    ///
-    ///
-    /// ------------------------------------------------------------------------
-    virtual Uniform * const * getGlobalUniforms() const
-    {
-        return mGlobalParams;
-    }
-
-    virtual void setGlobalParam( StandardSceneParameterType type, const void * value )
-    {
-        const StandardSceneParameterDesc & d = getStandardSceneParameterName( type );
-
-        if( d.global )
-        {
-            mGlobalParams[type]->update( 0, d.size, value );
-        }
-        else
-        {
-            GN_ERROR(sLogger)( "Updating per-object parameter through Scene::setGlobalParam() is effectless." );
-        }
-    }
 
     ///
     ///
@@ -478,10 +487,6 @@ public:
     }
 
     //@}
-
-private:
-
-    Renderer & mRenderer;
 };
 
 ///
@@ -490,6 +495,7 @@ private:
 GN::scene::Scene *
 GN::scene::createScene( gfx::Renderer & r )
 {
-    SceneImpl * s = new SceneImpl(r);
-    return s;
+    AutoObjPtr<SceneImpl> s( new SceneImpl(r) );
+    if( !s->init() ) return NULL;
+    return s.detach();
 }

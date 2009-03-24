@@ -69,9 +69,12 @@ bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
 GN::gfx::Effect::Effect( Renderer & r )
     : mRenderer(r)
     , mDummyUniform( r.createUniform( 1 ) )
-    , uniforms( mUniforms, mDummyUniform )
-    , textures( mTextures, mDummyTexture )
 {
+    uniforms.mMap = &mUniforms;
+    uniforms.mGetDummyFunc = makeDelegate(this,&Effect::getDummyUniform);
+
+    textures.mMap = &mTextures;
+    textures.mGetDummyFunc = makeDelegate(this,&Effect::getDummyTexture);
     clear();
 }
 
@@ -82,10 +85,15 @@ GN::gfx::Effect::Effect( const Effect & e )
     : mRenderer( e.mRenderer )
     , mDummyUniform( e.mDummyUniform )
     , mDummyTexture( e.mDummyTexture )
-    , uniforms( mUniforms, mDummyUniform )
-    , textures( mTextures, mDummyTexture )
 {
     GN_ASSERT( this != &e ); // can't copy construct from itself.
+
+    uniforms.mMap = &mUniforms;
+    uniforms.mGetDummyFunc = makeDelegate(this,&Effect::getDummyUniform);
+
+    textures.mMap = &mTextures;
+    textures.mGetDummyFunc = makeDelegate(this,&Effect::getDummyTexture);
+
     clear();
     clone( e );
 }
@@ -442,11 +450,13 @@ void GN::gfx::Effect::clone( const Effect & e )
     *(StdClass*)this = (const StdClass&)e;
 
     // copy misc. members
-    mDesc        = e.mDesc;
-    mUniforms    = e.mUniforms;
-    mTextures    = e.mTextures;
-    mGpuPrograms = e.mGpuPrograms;
-    mTechniques  = e.mTechniques;
+    mDesc         = e.mDesc;
+    mUniforms     = e.mUniforms;
+    mTextures     = e.mTextures;
+    mGpuPrograms  = e.mGpuPrograms;
+    mTechniques   = e.mTechniques;
+    mDummyUniform = e.mDummyUniform;
+    mDummyTexture = e.mDummyTexture;
 
     // Fix up iterators and pointers for each technique
     for( std::map<StrA,Technique>::const_iterator i = e.mTechniques.begin(); i != e.mTechniques.end(); ++i )
@@ -501,4 +511,32 @@ void GN::gfx::Effect::clone( const Effect & e )
             mActiveTech = &tdst;
         }
     }
+}
+
+//
+// dummy uniform is lazy created
+// -----------------------------------------------------------------------------
+AutoRef<Uniform> & GN::gfx::Effect::getDummyUniform()
+{
+    if( !mDummyUniform )
+    {
+        mDummyUniform.attach( mRenderer.createUniform( 1 ) );
+        GN_ASSERT( mDummyUniform );
+    }
+
+    return mDummyUniform;
+}
+
+//
+// dummy texture is lazy created
+// -----------------------------------------------------------------------------
+AutoRef<Texture> & GN::gfx::Effect::getDummyTexture()
+{
+    if( !mDummyTexture )
+    {
+        mDummyTexture.attach( mRenderer.create1DTexture( 1 ) );
+        GN_ASSERT( mDummyTexture );
+    }
+
+    return mDummyTexture;
 }

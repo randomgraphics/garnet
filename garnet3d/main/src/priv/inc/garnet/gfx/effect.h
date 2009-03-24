@@ -212,38 +212,37 @@ namespace GN { namespace gfx
         /// Effect parameter collection template
         ///
         template<typename T>
-        class EffectParamCollection
+        class EffectParamCollection : public NoCopy
         {
             typedef std::map<StrA,AutoRef<T> >                          MapType;
             typedef typename std::map<StrA,AutoRef<T> >::iterator       Iterator;
             typedef typename std::map<StrA,AutoRef<T> >::const_iterator ConstIter;
+            typedef Delegate0<AutoRef<T>&>                              GetDummyFunc;
 
-            MapType    & mMap;
-            AutoRef<T> & mDummy;
+            MapType     * mMap;
+            GetDummyFunc  mGetDummyFunc;
+
+            friend class Effect; // effect class need to update the data members.
 
         public:
-
-            /// ctor
-            EffectParamCollection( MapType & m, AutoRef<T> & d )
-                : mMap(m)
-                , mDummy(d)
-            {
-            }
 
             /// check if the collection has item with specific name
             bool contains( const StrA & name ) const
             {
-                return mMap.end() != mMap.find( name );
+                GN_ASSERT( mMap );
+                return mMap->end() != mMap->find( name );
             }
 
             /// constant bracket operator
             const AutoRef<T> & operator[]( const StrA & name ) const
             {
-                ConstIter it = mMap.find( name );
+                GN_ASSERT( mMap );
 
-                if( mMap.end() == it )
+                ConstIter it = mMap->find( name );
+
+                if( mMap->end() == it )
                 {
-                    return mDummy;
+                    return mGetDummyFunc();
                 }
                 else
                 {
@@ -254,11 +253,13 @@ namespace GN { namespace gfx
             /// non-const bracket operator
             AutoRef<T> & operator[]( const StrA & name )
             {
-                Iterator it = mMap.find( name );
+                GN_ASSERT( mMap );
 
-                if( mMap.end() == it )
+                Iterator it = mMap->find( name );
+
+                if( mMap->end() == it )
                 {
-                    return mDummy;
+                    return mGetDummyFunc();
                 }
                 else
                 {
@@ -266,7 +267,7 @@ namespace GN { namespace gfx
                 }
             }
         };
-        
+
         // ********************************
         // public property
         // ********************************
@@ -294,6 +295,12 @@ namespace GN { namespace gfx
         size_t getNumPasses() const { return mActiveTech->passes.size(); }
 
         /// Apply the effect to drawable.
+        ///
+        /// After this function call, the drawable will share same uniforms and
+        /// textures with the effect. Which means that any changings to the
+        /// value of the current uniforms and/or content of the textuers will
+        /// affect the drawable as well, until new uniforms and/or textures are
+        /// assigned to the effect (though EffectParamCollection interface).
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
 
         /// copy operator (make clone)
@@ -381,6 +388,12 @@ namespace GN { namespace gfx
 
         /// make clone
         void clone( const Effect & );
+
+        /// get dummy uniform
+        AutoRef<Uniform> & getDummyUniform();
+
+        /// get dummy texture
+        AutoRef<Texture> & getDummyTexture();
     };
 }}
 
