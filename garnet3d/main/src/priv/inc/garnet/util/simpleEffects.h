@@ -70,7 +70,6 @@ namespace GN { namespace util
         gfx::Uniform                * mLightPos;
         gfx::Uniform                * mLightColor;
         gfx::Uniform                * mDiffuseColor;
-        gfx::EffectTextureParameter * mTexture;
         gfx::Drawable                 mDrawable;
 
         // ********************************

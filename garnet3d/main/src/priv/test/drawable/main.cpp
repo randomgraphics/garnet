@@ -45,7 +45,7 @@ bool init( Renderer & rndr )
     e.getUniform( "pvw" )->update( m );
 
     // create texture
-    e.getTextureParam( "diffuse" )->setTexture( AutoRef<Texture>(loadTextureFromFile( rndr, "media::texture\\earth.jpg" )).get() );
+    e.setTexture( "diffuse", AutoRef<Texture>(loadTextureFromFile( rndr, "media::texture\\earth.jpg" )).get() );
 
     // create mesh
     float vertices[] =

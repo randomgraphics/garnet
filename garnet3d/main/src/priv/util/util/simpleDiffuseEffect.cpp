@@ -78,22 +78,22 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     mEffect = new Effect( r );
     if( !mEffect->init( ed ) ) return failure();
 
-#define INIT_GPP( x, name, defval ) \
+#define INIT_UNIFORM( x, name, defval ) \
     GN_ASSERT( mEffect->hasUniform( name ) ); \
     x = mEffect->getUniform( name ); \
     GN_ASSERT( x ); \
     x->update( defval );
 
-    INIT_GPP( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
-    INIT_GPP( mMatrixWorld   , "MATRIX_WORLD"    , Matrix44f::sIdentity() );
-    INIT_GPP( mMatrixWorldIT , "MATRIX_WORLD_IT" , Matrix44f::sIdentity() );
-    INIT_GPP( mLightPos      , "LIGHT0_POSITION" , Vector4f(0,0,0,0) );
-    INIT_GPP( mLightColor    , "LIGHT0_COLOR"    , Vector4f(1,1,1,1) );
-    INIT_GPP( mDiffuseColor  , "DIFFUSE_COLOR"   , Vector4f(1,1,1,1) );
+    // initialize uniforms
+    INIT_UNIFORM( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
+    INIT_UNIFORM( mMatrixWorld   , "MATRIX_WORLD"    , Matrix44f::sIdentity() );
+    INIT_UNIFORM( mMatrixWorldIT , "MATRIX_WORLD_IT" , Matrix44f::sIdentity() );
+    INIT_UNIFORM( mLightPos      , "LIGHT0_POSITION" , Vector4f(0,0,0,0) );
+    INIT_UNIFORM( mLightColor    , "LIGHT0_COLOR"    , Vector4f(1,1,1,1) );
+    INIT_UNIFORM( mDiffuseColor  , "DIFFUSE_COLOR"   , Vector4f(1,1,1,1) );
 
-    mTexture = mEffect->getTextureParam( "TEXTURE_DIFFUSE" );
-    GN_ASSERT( mTexture );
-    mTexture->setTexture( mDefaultTexture );
+    // setup default texture
+    mEffect->setTexture( "DIFFUSE_TEXTURE", mDefaultTexture );
 
     // success
     return success();
@@ -162,7 +162,7 @@ void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleDiffuseEffect::setDiffuseTexture( gfx::Texture * tex )
 {
-    mTexture->setTexture( tex ? tex : mDefaultTexture );
+    mEffect->setTexture( "DIFFUSE_TEXTURE", tex ? tex : mDefaultTexture );
 }
 
 //
