@@ -215,7 +215,7 @@ if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
 ) else (
 	set "mypath=%GARNET_ROOT%\env\bin\mswin\x86"
 )
-set "PATH=%mypath%;%PATH%"
+set "PATH=%GARNET_ROOT%\env\bin\mswin\cmd;%mypath%;%PATH%"
 set mypath=
 
 REM ===========
@@ -248,7 +248,6 @@ REM ====================
 REM MISC.
 REM ====================
 set SCONSFLAGS=-U
-title garnet3d ( %GARNET_ROOT% %GN_BUILD_COMPILER%-%GN_BUILD_TARGET_OS%-%GN_BUILD_TARGET_CPU% %GN_BUILD_VARIANT% )
 
 
 REM ===================
