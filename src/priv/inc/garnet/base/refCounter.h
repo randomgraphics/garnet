@@ -151,7 +151,12 @@ namespace GN
         ///
         /// construct from a normal pointer
         ///
-        explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p) {}
+        explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p)
+        {
+            // make sure sizeof(AutoRef) == sizeof(XPTR), which ensures that an array of autoref
+            // can always be used as array of native pointer.
+            GN_CASSERT( sizeof(AutoRef) == sizeof(XPTR) );
+        }
 
         ///
         /// copy constructor
