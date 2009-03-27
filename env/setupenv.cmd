@@ -1,0 +1,1 @@
+@powershell -nologo -noexit %~dp0setupenv.ps1 %*
