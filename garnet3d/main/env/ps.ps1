@@ -8,8 +8,6 @@
 # Define local functions
 # ======================
 
-function ccc { cmd.exe /c $args } # run cmd.exe
-
 function warn { "WARN : $args" }
 
 function error { "ERROR : $args" }
@@ -36,11 +34,18 @@ function catch_batch_env( $batch, $arg )
     }
 }
 
+# =======================
+# Define global functions
+# =======================
+
+function global:ccc {cmd.exe /c $args} # run cmd.exe
+
 # =============================
 # TODO: detect current platform
 # =============================
 $current_cpu="x86"
-$GARNET_ROOT=split-path -parent $MyInvocation.InvocationName|split-path -parent
+
+$global:GARNET_ROOT=split-path -parent $MyInvocation.InvocationName|split-path -parent
 
 # ===================
 # setup build variant
@@ -186,16 +191,29 @@ SCons Directory : $GARNET_ROOT\env\scons\1.2.0
 $env:Path = "$GARNET_ROOT\env\scons\1.2.0\Scripts;$env:Path"
 $env:SCONS_LIB_DIR = "$GARNET_ROOT\env\scons\1.2.0\Lib"
 
-# ===========
-# setup alias
-# ===========
+# =============
+# setup aliases
+# =============
 
 if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
 {
-    get-content "$GARNET_ROOT\env\alias.txt"|foreach {
+    # create script block for all aliases
+    $aliases = ""
+    get-content "C:\Users\chenli\gamedev\garnet3d\main\env\alias.txt"|foreach {
         $name, $value = $_.split(' ')
-        "$name = $(([System.String]$value).Trim())"
+        
+        $body = ([System.String]$value).Trim( ' "' ).Replace( "cd /d", "cd" ).Replace( '$*', '$args' )
+        $body = $body.Replace( "%GARNET_ROOT%", '$GARNET_ROOT' ).Replace( "%GN_BUILD", '$env:GN_BUILD' ).Replace( "%", "" ) 
+        
+        $aliases = $aliases +
+        "
+        function global:$name {$body}
+        "
     }
+    $aliases = [System.Management.Automation.ScriptBlock]::Create( $aliases )
+
+    # run the script
+    &$aliases
 }
 else
 {
