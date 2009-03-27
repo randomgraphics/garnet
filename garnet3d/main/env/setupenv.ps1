@@ -8,9 +8,9 @@
 # Define local functions
 # ==============================================================================
 
-function warn { "WARN : $args" }
+function warn { write-host -ForegroundColor yellow "WARN : $args" }
 
-function error { "ERROR : $args"; "GARNET build environment setup failed."; exit }
+function error { write-host -ForegroundColor red "ERROR : $args"; "GARNET build environment setup failed."; exit }
 
 function catch_batch_env( $batch, $arg )
 {
@@ -324,7 +324,8 @@ if( Test-Path $GARNET_ROOT\env\user\$env:USERNAME.ps1 )
 # ==============================================================================
 # DONE
 # ==============================================================================
-"
+
+write-host -ForegroundColor green "
 ================================================
 Garnet build environment setup done successfully
 ================================================
