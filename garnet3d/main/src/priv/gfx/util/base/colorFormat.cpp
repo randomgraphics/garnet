@@ -202,7 +202,7 @@ static const ColorFormatConvert s_ColorFormatConvertTable[] =
             GN::gfx::COLOR_FORMAT_##gn, \
             D3D9_FORMAT_##dx9, \
             DXGI_FORMAT_##dxgi, \
-            XENON_FORMAT_UNKNOWN \
+            XENON_FORMAT_##dx9 \
         },
     #include "colorFormatConvertMeta.h"
     #undef GN_DEFINE_COLOR_FORMAT_CONVERTION
