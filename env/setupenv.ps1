@@ -273,7 +273,7 @@ if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
 {
     # create script block for all aliases
     $aliases = ""
-    get-content "C:\Users\chenli\gamedev\garnet3d\main\env\alias.txt"|foreach {
+    get-content "$GARNET_ROOT\env\alias.txt"|foreach {
         $name, $value = $_.split(' ')
         
         $body = ([System.String]$value).Trim( ' "' ).Replace( "cd /d", "cd" ).Replace( '$*', '$args' )
@@ -284,7 +284,7 @@ if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
         function global:$name {$body}
         "
     }
-    $aliases = [System.Management.Automation.ScriptBlock]::Create( $aliases )
+    $aliases = $executioncontext.InvokeCommand.NewScriptBlock( $aliases )
 
     # run the script
     &$aliases
