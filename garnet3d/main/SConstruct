@@ -1,14 +1,15 @@
 # -*- coding: GB18030 -*-
 
-import os, os.path, re, fnmatch
+import sys, os, os.path, re, fnmatch
 
-# try import xenon module
+# try import xenon extension for SCons
 try:
-	import SCons.Tool.xenon
+	sys.path.append( "env/scons/xenon" )
+	import xenon
 	CONF_has_xenon_extension = True
 except ImportError:
 	CONF_has_xenon_extension = False
-
+	print "no xeon extension for scons found."
 
 # enviroment use by local functions
 LOCAL_env = Environment( tools=[] )
@@ -63,7 +64,7 @@ if 'mswin' == CONF_os:
 	CONF_allCompilers.append( Compiler('icl','mswin','ia64') )
 	CONF_allCompilers.append( Compiler('mingw','mswin','x86') )
 	if CONF_has_xenon_extension:
-		if SCons.Tool.xenon.exists( LOCAL_env ):
+		if xenon.exists( LOCAL_env ):
 			CONF_allCompilers.append( Compiler('xenon','xenon','ppc') )
 elif 'cygwin' == CONF_os:
 	CONF_allCompilers.append( Compiler('gcc','cygwin','x86') )
@@ -171,39 +172,63 @@ def UTIL_newEnv( compiler, variant ):
 		assert( isinstance(variant,int) )
 		return Environment( tools=[] )
 
-	if 'mswin' == CONF_os: tools = ['msvc','mslink','mslib','msvs']
-	else: tools = ['default']
-
-	msvs_version = '8.0'
-	msvs_platform = 'x86'
-	icl_version = None
-	icl_abi = 'ia32'
 	if 'xenon' == compiler.name:
-		tools = ['xenon']
-		msvs_platform = 'Xbox 360'
-	elif 'icl' == compiler.name :
-		tools += ['intelc']
-		if 'x64' == compiler.cpu :
-			icl_abi = 'em64t'
+
+		# construct empty environment for xenon platform
+		env = Environment(
+			tools          = [],
+			MSVS_VERSION   = "8.0",
+			MSVS8_PLATFORM = 'Xbox 360',
+			ENV            = {
+			                 	'PATH'     : UTIL_getenv('PATH'),
+			                 	'LANG'     : UTIL_getenv('LANG'),
+			                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
+			                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
+			                 	'LIB'      : UTIL_getenv('LIB'),
+			                 }
+			)
+
+		# attach xenon builds to the environment
+		xenon.generate( env )
+
+	else:
+
+		# construct build environment for other platforms
+
+		if 'mswin' == CONF_os:
+			tools = ['msvc','mslink','mslib','msvs']
+		else:
+			tools = ['default']
+
+		msvs_version = '8.0'
+		msvs_platform = 'x86'
+		icl_version = None
+		icl_abi = 'ia32'
+		if 'icl' == compiler.name :
+			tools += ['intelc']
+			if 'x64' == compiler.cpu :
+				icl_abi = 'em64t'
+				msvs_platform = 'x64'
+		elif 'x64' == compiler.cpu :
 			msvs_platform = 'x64'
-	elif 'x64' == compiler.cpu :
-		msvs_platform = 'x64'
-	elif 'mingw' == compiler.name :
-		tools = ['mingw']
-	env = Environment(
-		tools          = tools,
-		MSVS_VERSION   = msvs_version,
-		MSVS8_PLATFORM = msvs_platform,
-		ICL_VERSION    = icl_version,
-		ICL_ABI        = icl_abi,
-		ENV            = {
-		                 	'PATH'     : UTIL_getenv('PATH'),
-		                 	'LANG'     : UTIL_getenv('LANG'),
-		                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
-		                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
-		                 	'LIB'      : UTIL_getenv('LIB'),
-		                 }
-		)
+		elif 'mingw' == compiler.name :
+			tools = ['mingw']
+		env = Environment(
+			tools          = tools,
+			MSVS_VERSION   = msvs_version,
+			MSVS8_PLATFORM = msvs_platform,
+			ICL_VERSION    = icl_version,
+			ICL_ABI        = icl_abi,
+			ENV            = {
+			                 	'PATH'     : UTIL_getenv('PATH'),
+			                 	'LANG'     : UTIL_getenv('LANG'),
+			                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
+			                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
+			                 	'LIB'      : UTIL_getenv('LIB'),
+			                 }
+			)
+
+
 	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
 
 	# setup builder for gcc precompiled header
@@ -433,7 +458,8 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ==============
 	# 是否支持XInput
 	# ==============
-	conf['has_xinput'] = c.CheckCHeader( ['windows.h', 'XInput.h'] )
+	conf['has_xinput'] = c.CheckCHeader( ['windows.h', 'xinput.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput.h'] )
+	conf['has_xinput2'] = c.CheckCHeader( ['windows.h', 'xinput2.h'] ) or c.CheckCHeader( ['xtl.h', 'xinput2.h'] )
 
 	# =========================
 	# 检查是否存在boost library

@@ -9,7 +9,9 @@
 #include "basicInput.h"
 
 #if defined(HAS_XINPUT)
-#include <XInput.h>
+#include <xinput.h>
+#else if defined(HAS_XINPUT2)
+#include <xinput2.h>
 #endif
 
 namespace GN { namespace input
