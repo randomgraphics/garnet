@@ -820,7 +820,7 @@ namespace GN { namespace gfx
         Signal0<void> sigRendererDeviceLost;
 
         ///
-        /// Happens when render windows is moved or resized.
+        /// Happens when render windows is resized or moved to another monitor.
         ///
         /// The 3 parameters are:
         ///  - HandleType monior   : monitor handle that render window stays in

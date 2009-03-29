@@ -14,8 +14,8 @@
     - a fast mesh smooth implementation.
 
 - p1
+  - refactor render window classes, using abstract interfaces
   - D3D10 rendererer
-
 - p2
   - XML: pointer from parent to last child, for constant time child appending.
   - runtime configuable profilers, like loggers

@@ -404,6 +404,28 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
         }
     }*/
 
+    // bind viewport (NOTE: this is temporary code that works only when rendering to back buffer directly)
+    UInt32 width, height;
+    getRenderWindow().getClientSize( width, height );
+    const Rect<UInt32> & newvp = newContext.viewport;
+    GLint x, y;
+    GLsizei w, h;
+    if( 0 == newvp.x && 0 == newvp.y && 0 == newvp.w && 0 == newvp.h )
+    {
+        x = 0;
+        y = 0;
+        w = (GLsizei)width;
+        h = (GLsizei)height;
+    }
+    else
+    {
+        x = (GLint)newvp.x;
+        y = (GLint)( height - (newvp.y + newvp.h) );
+        w = (GLint)newvp.w;
+        h = (GLint)newvp.h;
+    }
+    GN_OGL_CHECK( glViewport( x, y, w, h ) );
+
     // done
     GN_OGL_CHECK( (void)0 );
     return true;

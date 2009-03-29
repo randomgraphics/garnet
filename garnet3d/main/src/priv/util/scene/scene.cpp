@@ -61,20 +61,37 @@ void GN::scene::Node::setRotation( const Quaternionf & q )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::scene::Node::setBoundingSphere( const Spheref & s )
+{
+    mBoundingSphere = s;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::scene::Node::calcTransform()
 {
     GN_ASSERT( mTransformDirty );
 
-    Matrix33f r3;
-    Matrix44f r4, t1, t2;
+    Matrix33f r33;
+    Matrix44f r44, t1, t2;
 
-    mRotation.toMatrix33( r3 );
-    r4.set( r3 );
+    // object will be:
+    //
+    //  1. moved to "position", in parent space
+    //  2. rotated around "pivot" point in parent space, which includes 3 sub steps:
+    //     a) moved -"pivot" points, in parent space
+    //     b) rotated, in parent space
+    //     c) moved +"pivot" points, in parent space
 
-    t1.translate( mPivot ); // Note: pivor is in parent space
-    t2.translate( mPosition );
+    mRotation.toMatrix33( r33 );
+    r44.set( r33 );
 
-    mLocal2Parent =  t1 * r4 * t2;
+    t1.translate( mPosition - mPivot );
+    t2.translate( mPivot );
+
+    mLocal2Parent = t2 * r44 * t1;
     mParent2Local = Matrix44f::sInverse( mLocal2Parent );
 
     Node * p = getParent();
