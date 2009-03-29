@@ -53,6 +53,11 @@ void updateRadius()
     // calculate move speed
 }
 
+void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+{
+    arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
+}
+
 void onAxisMove( Axis a, int d )
 {
     if( AXIS_MOUSE_WHEEL_0 == a )
@@ -326,6 +331,8 @@ createEffect()
 
 bool init()
 {
+    rndr->sigRendererWindowSizeMove.connect( &onRenderWindowResize );
+
     AutoObjPtr<Mesh>   mesh;
     AutoObjPtr<Effect> effect;
 
