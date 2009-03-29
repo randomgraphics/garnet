@@ -30,10 +30,11 @@ namespace GN
                 GEOMETRY, ///< geometry node
             };
 
-            virtual void        setParent( Node * parent, Node * prevSibling = NULL );
-            virtual void        setPosition( const Vector3f & );      ///< set position in parent space.
-            virtual void        setPivot( const Vector3f & );         ///< set pivot position, in parent space, for scaling and rotation.
-            virtual void        setRotation( const Quaternionf & );   ///< set node orientation, parent space.
+            void                setParent( Node * parent, Node * prevSibling = NULL );
+            void                setPosition( const Vector3f & );        ///< set position in parent space.
+            void                setPivot( const Vector3f  & );          ///< set pivot in parent space
+            void                setRotation( const Quaternionf & );     ///< set node orientation, parent space.
+            void                setBoundingSphere( const Spheref & s ); /// set bounding sphere, in local space
 
             Scene             & getScene() const { return mScene; }
             NodeType            getType() const { return mType; }
@@ -45,8 +46,9 @@ namespace GN
             Node              * getLastChild() const;
 
             const Vector3f    & getPosition() const { return mPosition; } ///< get position in parent space
-            const Vector3f    & getPivot() const { return mPivot; }       ///< get pivor position, in parent space.
+            const Vector3f    & getPivot() const { return mPivot; } ///< get pivot in parent space
             const Quaternionf & getRotation() const { return mRotation; } ///< get orientation, in parent space
+            const Spheref     & getBoundingSphere() const { return mBoundingSphere; } // get bounding sphere, in local space
             const Matrix44f   & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Node*>(this)->calcTransform(); } return mLocal2Parent; }
             const Matrix44f   & getLocal2Root() const { if( mTransformDirty ) { const_cast<Node*>(this)->calcTransform(); } return mLocal2Root; }
 
@@ -87,8 +89,9 @@ namespace GN
 
             /// transformation
             Vector3f    mPosition;       ///< position in parent space
-            Vector3f    mPivot;          ///< origin of rotation, in local space.
+            Vector3f    mPivot;          ///< pivot (origin of the rotation) in parent space
             Quaternionf mRotation;       ///< rotation in parent space
+            Spheref     mBoundingSphere; ///< bounding sphere, in local space
             Matrix44f   mLocal2Parent;   ///< local->parent space transformation
             Matrix44f   mParent2Local;   ///< parent->local space transformation
             Matrix44f   mLocal2Root;     ///< local->root space transformation
@@ -149,7 +152,6 @@ namespace GN
 
             DynaArray<StandardUniform> mStandardPerObjectUniforms; ///< standard per-object parameters
             DynaArray<GeometryBlock*>  mBlocks;
-            Spheref                    mBoundingSphere;
 
         public:
 
@@ -173,12 +175,6 @@ namespace GN
 
             /// draw the geometry
             virtual void draw();
-
-            /// set bounding sphere. sphere center is in parent space
-            virtual void setBoundingSphere( const Spheref & s ) { mBoundingSphere = s; }
-
-            /// get bounding sphere. sphere center is in parent space
-            const Spheref & getBoundingSphere() const { return mBoundingSphere; }
         };
 
         ///
