@@ -19,6 +19,10 @@
 #endif
 //@}
 
+// *****************************************************************************
+// Basic memory allocation/deallocation routines
+// *****************************************************************************
+
 namespace GN
 {
     ///
@@ -35,13 +39,11 @@ namespace GN
     /// Free heap-allocated memory. Can cross DLL boundary.
     ///
     GN_PUBLIC void heapFree( void * );
-
-    ///
-    /// enable CRT memory leak checking. Currently only work for MSVC compiler
-    ///
-    /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
-    void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 }
+
+// *****************************************************************************
+// Global new/delete operators
+// *****************************************************************************
 
 #if GN_ICL
 #pragma warning(push)
@@ -60,6 +62,97 @@ inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
 #if GN_ICL
 #pragma warning(pop)
 #endif
+
+// *****************************************************************************
+// Other common memory management utilities
+// *****************************************************************************
+
+namespace GN
+{
+    ///
+    /// enable CRT memory leak checking. Currently only work for MSVC compiler
+    ///
+    /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
+    void enableCRTMemoryCheck( long breakOnAllocID = 0 );
+
+    ///
+    /// general safe deallocation routine
+    // ------------------------------------------------------------------------
+    template < typename T, typename DEALLOC_FUNC >
+    GN_FORCE_INLINE void safeDealloc( T * & ptr )
+    {
+        if( ptr )
+        {
+            DEALLOC_FUNC( ptr );
+            ptr = 0;
+        }
+    }
+
+    ///
+    /// free a C-style heap pointer
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeHeapFree( T * & ptr )
+    {
+        if( ptr )
+        {
+            heapFree( ptr );
+            ptr = 0;
+        }
+    }
+
+    ///
+    /// delete one object
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeDelete( T * & ptr )
+    {
+        if( ptr )
+        {
+            delete ptr;
+            ptr = 0;
+        }
+    }
+
+    ///
+    /// delete object array
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
+    {
+        if( ptr )
+        {
+            delete [] ptr;
+            ptr = 0;
+        }
+    }
+
+    ///
+    /// Safe release COM interface
+    ///
+    template < typename T >
+    GN_FORCE_INLINE void safeRelease( T * & ptr )
+    {
+        if( ptr )
+        {
+            ptr->Release();
+            ptr = 0;
+        }
+    }
+
+    ///
+    /// Safe release RefCounter class
+    ///
+    template < typename T >
+    GN_FORCE_INLINE void safeDecref( T * & ptr )
+    {
+        if( ptr )
+        {
+            ptr->decref();
+            ptr = 0;
+        }
+    }
+}
 
 // *****************************************************************************
 //                                     EOF

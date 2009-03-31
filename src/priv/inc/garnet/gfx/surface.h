@@ -82,9 +82,9 @@ namespace GN { namespace gfx
             maxLevels = depth;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
 
-            maxLevels = max( max(nx, ny), nz );
+            maxLevels = math::getmax( nx, ny, nz );
 
-            levels = ( 0 == levels ) ? maxLevels : min( maxLevels, levels );
+            levels = ( 0 == levels ) ? maxLevels : math::getmin( maxLevels, levels );
 
             // check format
             if( !format.valid() )

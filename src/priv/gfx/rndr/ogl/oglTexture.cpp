@@ -747,7 +747,7 @@ GN::gfx::OGLTexture::updateMipmap(
         UInt8 *       dst = tmpbuf.cptr();
         for( size_t y = 0; y < clippedArea.h; ++y )
         {
-            memcpy( dst, src, min(rowPitch,destrowpitch) );
+            memcpy( dst, src, math::getmin(rowPitch,destrowpitch) );
             src += rowPitch;
             dst += destrowpitch;
         }

@@ -284,7 +284,7 @@ namespace GN { namespace gfx
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
                     variableName );
             }
-            len = min<size_t>( GN_ARRAY_COUNT(binding), len+1 );
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
             memcpy( binding, variableName, len );
 
             if( index > 255 )
@@ -753,7 +753,7 @@ namespace GN { namespace gfx
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
                     variableName );
             }
-            len = min<size_t>( GN_ARRAY_COUNT(texbinds[0]), len+1 );
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(texbinds[0]), len+1 );
             memcpy( texbinds[stage], variableName, len );
         }
     };

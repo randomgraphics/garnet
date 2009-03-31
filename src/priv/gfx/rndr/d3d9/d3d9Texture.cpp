@@ -372,7 +372,7 @@ bool GN::gfx::D3D9Texture::lock(
     // call basic lock
     TexLockArea clippedArea;
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
-    AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
+    AutoFinalizer< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
 	// Note: On Xenon, always lock target texture directly
     LPDIRECT3DBASETEXTURE9 lockedtex;

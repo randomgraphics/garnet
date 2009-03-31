@@ -459,7 +459,7 @@ GN::gfx::OGLRenderer::bindContextResources(
     // bind textures and samplers
     //
     size_t maxStages = getCaps().maxTextures;
-    size_t numtex = min<size_t>( maxStages, RendererContext::MAX_TEXTURES );
+    size_t numtex = math::getmin<size_t>( maxStages, RendererContext::MAX_TEXTURES );
 
     size_t i;
     for ( i = 0; i < numtex; ++i )

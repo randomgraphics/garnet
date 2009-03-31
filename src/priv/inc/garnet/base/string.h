@@ -15,7 +15,7 @@ namespace GN
     ///
     /// Get string length.
     ///
-    /// if maxLen > 0, then return min(maxLen,realLength).
+    /// if maxLen > 0, then return math::getmin(maxLen,realLength).
     ///
     template<typename CHAR>
     inline size_t strLen( const CHAR * s, size_t maxLen = 0 )

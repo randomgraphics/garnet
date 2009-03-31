@@ -41,7 +41,7 @@ GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
 
-    size = min<size_t>( size, mStart + mSize - mPtr );
+    size = math::getmin<size_t>( size, mStart + mSize - mPtr );
 
     memcpy( buf, mPtr, size );
 
@@ -92,7 +92,7 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
 
-    size = min<size_t>( size, mStart + mSize - mPtr );
+    size = math::getmin<size_t>( size, mStart + mSize - mPtr );
 
     memcpy( mPtr, buf, size );
 

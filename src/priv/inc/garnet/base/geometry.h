@@ -2452,12 +2452,12 @@ namespace GN
                 Box a(b1), b(b2);
                 a.normalize();
                 b.normalize();
-                result.x = min( a.x, b.x );
-                result.y = min( a.y, b.y );
-                result.z = min( a.z, b.z );
-                result.w = max( a.x+a.w, b.x+b.w ) - result.x;
-                result.h = max( a.y+a.h, b.y+b.h ) - result.y;
-                result.d = max( a.z+a.d, b.z+b.d ) - result.z;
+                result.x = math::getmin( a.x, b.x );
+                result.y = math::getmin( a.y, b.y );
+                result.z = math::getmin( a.z, b.z );
+                result.w = math::getmax( a.x+a.w, b.x+b.w ) - result.x;
+                result.h = math::getmax( a.y+a.h, b.y+b.h ) - result.y;
+                result.d = math::getmax( a.z+a.d, b.z+b.d ) - result.z;
             }
         }
     };

@@ -228,7 +228,7 @@ namespace GN { namespace gfx
             size_t                         size;         ///< uniform size
             mutable WeakRef<const Uniform> lastUniform;  ///< pointer to last uniform parameter
             mutable SInt32                 lastStamp;    ///< update time stamp of the last uniform parameter
-            mutable AutoInit<size_t,-1>    lastTexStage; ///< last texture stage associated to this parameter
+            mutable AutoInitializer<size_t,-1>    lastTexStage; ///< last texture stage associated to this parameter
         };
 
         ///

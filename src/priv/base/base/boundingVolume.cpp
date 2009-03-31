@@ -46,13 +46,13 @@ void GN::calcBoundingBox( Boxf & result, const Vector3f * positions, size_t coun
     {
         const Vector3f & v = ((const Vector3f*)ptr)[0];
 
-        vMin.x = min( vMin.x, v.x );
-        vMin.y = min( vMin.y, v.y );
-        vMin.z = min( vMin.z, v.z );
+        vMin.x = math::getmin( vMin.x, v.x );
+        vMin.y = math::getmin( vMin.y, v.y );
+        vMin.z = math::getmin( vMin.z, v.z );
 
-        vMax.x = max( vMax.x, v.x );
-        vMax.y = max( vMax.y, v.y );
-        vMax.z = max( vMax.z, v.z );
+        vMax.x = math::getmax( vMax.x, v.x );
+        vMax.y = math::getmax( vMax.y, v.y );
+        vMax.z = math::getmax( vMax.z, v.z );
     }
 
     result.pos() = vMin;

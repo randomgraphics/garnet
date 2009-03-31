@@ -191,7 +191,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
             sx += fs->advx;
 
             // adjust bounding box
-            bbox.w = max( sx - td.x, bbox.w );
+            bbox.w = math::getmax( sx - td.x, bbox.w );
         }
     }
 
