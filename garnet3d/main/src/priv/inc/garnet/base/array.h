@@ -93,7 +93,7 @@ namespace GN
             T       * dst = cptr();
             const T * src = other.cptr();
 
-            size_t mincount = min<size_t>( mCount, other.mCount );
+            size_t mincount = math::getmin<size_t>( mCount, other.mCount );
             for( size_t i = 0; i < mincount; ++i )
             {
                 dst[i] = src[i];
@@ -333,7 +333,7 @@ namespace GN
         {
             doReserve( other.mCount );
 
-            size_t mincount = min<size_t>( mCount, other.mCount );
+            size_t mincount = math::getmin<size_t>( mCount, other.mCount );
 
             for( size_t i = 0; i < mincount; ++i )
             {
@@ -546,6 +546,73 @@ namespace GN
         bool        operator!=( const DynaArray & other ) const { return !equal(other); }
         T         & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T   & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
+        //@}
+    };
+
+    ///
+    /// array accessor with out-of-boundary check in debug build.
+    ///
+    template<typename T>
+    class SafeArrayAccessor
+    {
+        T    * mBegin;
+        T    * mEnd;
+        T    * mPtr;
+
+    public:
+
+        //@{
+
+        SafeArrayAccessor( T * data, size_t count )
+            : mBegin(data), mEnd( data + count ), mPtr(data)
+        {
+        }
+
+        T * subrange( size_t index, size_t length ) const
+        {
+            GN_ASSERT( mBegin <= (mPtr+index) );
+            GN_ASSERT( (mPtr+index) < mEnd );
+            GN_ASSERT( (mPtr+index+length) <= mEnd );
+            GN_UNUSED_PARAM( length );
+            return mPtr + index;
+        }
+
+        template<typename T2>
+        void copyTo( size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes )
+        {
+            GN_CASSERT( sizeof(T) == sizeof(T2) );
+            memcpy( dest.subrange( dstOffset, bytes ), subrange( srcOffset, bytes ), bytes );
+        }
+
+        T * operator->() const
+        {
+            GN_ASSERT( mBegin <= mPtr && mPtr < mEnd );
+            return mPtr;
+        }
+
+        T & operator[]( size_t index ) const
+        {
+            GN_ASSERT( mBegin <= (mPtr+index) );
+            GN_ASSERT( (mPtr+index) < mEnd );
+            return mPtr[index];
+        }
+
+        SafeArrayAccessor & operator++() { ++mPtr; return *this; }
+
+        SafeArrayAccessor & operator--() { --mPtr; return *this; }
+
+        SafeArrayAccessor & operator+=( size_t offset )
+        {
+            mPtr += offset;
+            return *this;
+        }
+
+        SafeArrayAccessor & operator-=( size_t offset )
+        {
+            mPtr -= offset;
+            return *this;
+        }
+
         //@}
     };
 }

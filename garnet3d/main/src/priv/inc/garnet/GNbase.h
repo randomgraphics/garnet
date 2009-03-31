@@ -171,6 +171,9 @@ namespace GN
 // misc.
 #include "base/misc.h"
 
+// various auto pointers
+#include "base/autoptr.h"
+
 // basic sync. primitives
 #include "base/sync.h"
 

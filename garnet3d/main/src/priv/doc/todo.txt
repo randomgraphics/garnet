@@ -14,8 +14,13 @@
     - a fast mesh smooth implementation.
 
 - p1
-  - refactor render window classes, using abstract interfaces
+  - refine display manager in basic renderer
+    - isolate platform dependant code into separate files.
+  	- refactor render window classes. Maybe use abstract interfaces?
   - D3D10 rendererer
+
+=======
+>>>>>>> .r1669
 - p2
   - XML: pointer from parent to last child, for constant time child appending.
   - runtime configuable profilers, like loggers

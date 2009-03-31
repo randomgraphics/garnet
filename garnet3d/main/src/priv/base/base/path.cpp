@@ -149,7 +149,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
     b.split( base );
 
     // find the commen prefix between path and base.
-    size_t n = min( p.parts.size(), b.parts.size() );
+    size_t n = math::getmin( p.parts.size(), b.parts.size() );
     size_t i;
     for( i = 0; i < n; ++i )
     {

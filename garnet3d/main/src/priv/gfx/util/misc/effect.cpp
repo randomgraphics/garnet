@@ -278,7 +278,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     }
 
     // setup textures
-    size_t numtex = std::min<size_t>( p.textures.size(), RendererContext::MAX_TEXTURES );
+    size_t numtex = math::getmin<size_t>( p.textures.size(), RendererContext::MAX_TEXTURES );
     for( size_t i = 0; i < numtex; ++i )
     {
         const PerShaderTextureParam & t = p.textures[i];
