@@ -102,3 +102,64 @@ void GN::Quaternion<T>::toMatrix33( Matrix33<T> & out ) const
     out[1][2] = yz - wx;
     out[2][2] = 1.0f - (xx + yy);
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+template < typename T >
+void GN::Quaternion<T>::toMatrix44( Matrix44<T> & out ) const
+{
+    /*
+    If q is guaranteed to be a unit quaternion, s will always
+    be 1.  In that case, this calculation can be optimized out.
+    */
+    ElementType norm = v.x*v.x + v.y*v.y + v.z*v.z + w*w,
+                       s = (norm > 0) ? 2/norm : 0,
+
+    /*
+    Precalculate coordinate products
+    */
+    xx = v.x * v.x * s,
+    yy = v.y * v.y * s,
+    zz = v.z * v.z * s,
+    xy = v.x * v.y * s,
+    xz = v.x * v.z * s,
+    yz = v.y * v.z * s,
+    wx = w * v.x * s,
+    wy = w * v.y * s,
+    wz = w * v.z * s;
+
+    /*
+    Calculate 4x4 matrix from orthonormal basis
+    */
+
+    /*
+    x axis
+    */
+    out[0][0] = 1.0f - (yy + zz);
+    out[1][0] = xy + wz;
+    out[2][0] = xz - wy;
+    out[3][0] = 0.0f;
+
+    /*
+    y axis
+    */
+    out[0][1] = xy - wz;
+    out[1][1] = 1.0f - (xx + zz);
+    out[2][1] = yz + wx;
+    out[3][1] = 0.0f;
+
+    /*
+    z axis
+    */
+    out[0][2] = xz + wy;
+    out[1][2] = yz - wx;
+    out[2][2] = 1.0f - (xx + yy);
+    out[3][2] = 0.0f;
+
+    out[0][3] = 0.0f;
+    out[1][3] = 0.0f;
+    out[2][3] = 0.0f;
+    out[3][3] = 1.0f;
+}
+

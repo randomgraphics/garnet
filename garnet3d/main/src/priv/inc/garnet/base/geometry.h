@@ -1910,6 +1910,19 @@ namespace GN
 			toMatrix33( out );
 			return out;
         }
+        ///
+        /// convert to matrix44
+        ///
+        void toMatrix44( Matrix44<T> & out ) const;
+        ///
+        /// convert to matrix33
+        ///
+        Matrix44<T> toMatrix44() const
+        {
+			Matrix44<T> out;
+			toMatrix44( out );
+			return out;
+        }
     };
 
     ///
