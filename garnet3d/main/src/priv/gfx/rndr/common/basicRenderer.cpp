@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "basicRenderer.h"
-#include "garnet/GNwin.h"
 
-GN::Logger * GN::gfx::BasicRenderer::sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
 
 void GN::gfx::rip( const char * msg, ... )
 {
@@ -16,7 +15,7 @@ void GN::gfx::rip( const char * msg, ... )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
+bool GN::gfx::BasicRenderer::init( const RendererOptions & )
 {
     GN_GUARD;
 
@@ -28,9 +27,6 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
     {
         GN_WARN(sLogger)( "GN::gfx::RendererContext is huge! (%u bytes)", rcsize );
     }
-
-    // initialize sub-components one by one
-    if( !dispInit(o) ) return failure();
 
     // success
     return success();
@@ -44,9 +40,6 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
 void GN::gfx::BasicRenderer::quit()
 {
     GN_GUARD;
-
-    // shutdown sub-components in reverse sequence
-    dispQuit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -76,14 +69,6 @@ void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 void GN::gfx::BasicRenderer::rebindContext()
 {
     mContextOk = bindContextImpl( mContext, true );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::processRenderWindowMessages( bool blockWhileMinimized )
-{
-    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 //

@@ -1,37 +1,23 @@
-#ifndef __GN_GFXCOMMON_BASICRENDERER_H__
-#define __GN_GFXCOMMON_BASICRENDERER_H__
+#ifndef __GN_GFXCOMMON_BASICRENDERERXENON_H__
+#define __GN_GFXCOMMON_BASICRENDERERXENON_H__
 // *****************************************************************************
 /// \file
 /// \brief   Basic renderer class
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "renderWindowMsw.h"
-#include "renderWindowX11.h"
+#ifdef GN_XENON
 
-///
-/// trace the call sequence of device reset/recreate
-///
-#define _GNGFX_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
-
-///
-/// Rest-in-peace macro
-///
-#define GN_RNDR_RIP GN::gfx::rip
+#include "basicRenderer.h"
 
 namespace GN { namespace gfx
 {
     ///
-    /// reset in peace...
+    /// basic renderer class on Xenon platform
     ///
-    void rip( const char * msg, ... );
-
-    ///
-    /// basic renderer class
-    ///
-    class BasicRenderer : public Renderer, public StdClass
+    class BasicRendererXenon : public BasicRenderer
     {
-        GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
+        GN_DECLARE_STDCLASS( BasicRendererXenon, BasicRenderer );
 
         // ********************************
         // constructor/destructor
@@ -39,8 +25,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRenderer() { clear(); }
-        virtual ~BasicRenderer() {}
+        BasicRendererXenon() { clear(); }
+        virtual ~BasicRendererXenon() {}
         //@}
 
         // ********************************
@@ -54,8 +40,7 @@ namespace GN { namespace gfx
     private :
         void clear()
         {
-            contextClear();
-            miscClear();
+            dispClear();
         }
         //@}
 
@@ -67,12 +52,24 @@ namespace GN { namespace gfx
 
         //@{
 
-     protected:
+    public:
 
-        ///
-        /// Called by sub class to respond to render window resizing/moving
-        ///
-        virtual void handleRenderWindowSizeMove() = 0;
+        virtual const RendererOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
+
+    private:
+        bool dispInit( const RendererOptions & );
+        void dispQuit();
+        void dispClear() {}
+
+    protected:
+
+        virtual void handleRenderWindowSizeMove() { /* do nothing */ }
+
+    private:
+
+        RendererOptions   mOptions;
+        DispDesc          mDispDesc;
 
         //@}
 
@@ -145,6 +142,7 @@ namespace GN { namespace gfx
 
     public:
 
+        virtual void         processRenderWindowMessages( bool blockWhileMinimized );
         virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
         virtual void         setUserData( const Guid & id, const void * data, size_t length );
         virtual const void * getUserData( const Guid & id, size_t * length ) const;
@@ -172,7 +170,9 @@ namespace GN { namespace gfx
     };
 }}
 
+#endif
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_BASICRENDERER_H__
+#endif // __GN_GFXCOMMON_BASICRENDERERXENON_H__

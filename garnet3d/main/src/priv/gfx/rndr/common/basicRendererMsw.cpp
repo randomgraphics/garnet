@@ -1,58 +1,40 @@
 #include "pch.h"
-#include "basicRenderer.h"
-#include "renderWindowMsw.h"
+#include "basicRendererMsw.h"
+#include "garnet/GNwin.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.BasicRendererMsw");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
 
 //
 //
 // -----------------------------------------------------------------------------
 static bool
-sGetClientSize( GN::HandleType disp, GN::HandleType win, UInt32 * width, UInt32 * height )
+sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
 {
     GN_GUARD;
 
-#if GN_XENON
-
-    GN_UNEXPECTED(); // program should not reach heare
-    GN_UNUSED_PARAM(disp);
-    GN_UNUSED_PARAM(win);
-    GN_UNUSED_PARAM(width);
-    GN_UNUSED_PARAM(height);
-    GN_ERROR(sLogger)( "Xenon platform does not support this function" );
-    return false;
-
-#elif GN_MSWIN
-
-    GN_UNUSED_PARAM( disp );
     RECT rc;
-    GN_MSW_CHECK_RV( ::GetClientRect( (HWND)win, &rc ), false );
-    if( width ) *width = (UInt32)(rc.right - rc.left);
-    if( height ) *height = (UInt32)(rc.bottom - rc.top);
-    return true;
 
-#endif
+    GN_MSW_CHECK_RV( ::GetClientRect( win, &rc ), false );
+
+    if( width ) *width = (UInt32)(rc.right - rc.left);
+
+    if( height ) *height = (UInt32)(rc.bottom - rc.top);
+
+    return true;
 
     GN_UNGUARD;
 }
 
-// ****************************************************************************
-// local function
-// ****************************************************************************
-
 ///
 /// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
-static GN::HandleType
+static HMONITOR
 sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 {
     if( 0 == ro.monitorHandle )
     {
-#if GN_XENON
-        return (GN::HandleType)1;
-#else
         HMONITOR monitor;
         if( !::IsWindow( (HWND)ro.parentWindow ) )
         {
@@ -70,9 +52,11 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
         }
         GN_ASSERT( monitor );
         return monitor;
-#endif
     }
-    else return ro.monitorHandle;
+    else
+    {
+        return (HMONITOR)ro.monitorHandle;
+    }
 }
 
 ///
@@ -81,24 +65,13 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 static bool
 sGetCurrentDisplayMode(
     const GN::gfx::RendererOptions & ro,
-    GN::gfx::DisplayMode & dm )
+    GN::gfx::DisplayMode           & dm )
 {
     GN_GUARD;
 
     // determine the monitor
     GN::HandleType monitor = sDetermineMonitorHandle( ro );
     if( 0 == monitor ) return false;
-
-#if GN_XENON
-
-    XVIDEO_MODE xvm;
-    XGetVideoMode( &xvm );
-    dm.width = xvm.dwDisplayWidth;
-    dm.height = xvm.dwDisplayHeight;
-    dm.depth = 32;
-    dm.refrate = 0;
-
-#else
 
     MONITORINFOEXA mi;
     DEVMODEA windm;
@@ -117,8 +90,6 @@ sGetCurrentDisplayMode(
     dm.height = windm.dmPelsHeight;
     dm.depth = windm.dmBitsPerPel;
     dm.refrate = windm.dmDisplayFrequency;
-
-#endif
 
     // success
     return true;
@@ -140,7 +111,7 @@ sDetermineWindowSize(
 
     if( ro.useExternalWindow )
     {
-        return sGetClientSize( ro.displayHandle, ro.renderWindow, &width, &height );
+        return sGetClientSize( (HWND)ro.renderWindow, &width, &height );
     }
     else
     {
@@ -165,9 +136,73 @@ sDetermineWindowSize(
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+//                         BasicRendererMsw init / quit functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicRendererMsw::init( const RendererOptions & o )
+{
+    GN_GUARD;
+
+    // standard init procedure
+    GN_STDCLASS_INIT( BasicRendererMsw, (o) );
+
+    // initialize sub-components one by one
+    if( !dispInit(o) ) return failure();
+
+    // success
+    return success();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRendererMsw::quit()
+{
+    GN_GUARD;
+
+    // shutdown sub-components in reverse sequence
+    dispQuit();
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRendererMsw::processRenderWindowMessages( bool blockWhileMinimized )
+{
+    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
+}
+
 // ****************************************************************************
-// init / quit
+// from BasicRenderer
 // ****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+void
+GN::gfx::BasicRendererMsw::handleRenderWindowSizeMove()
+{
+    mWindow.handleSizeMove();
+}
+
+// *****************************************************************************
+// private function
+// *****************************************************************************
 
 //
 //
@@ -204,15 +239,15 @@ bool GN::gfx::BasicRendererMsw::dispInit( const RendererOptions & ro )
     if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
     if( ro.useExternalWindow )
     {
-        if( !mWindow.initExternalRenderWindow( ro.displayHandle, ro.renderWindow ) ) return false;
+        if( !mWindow.initExternalWindow( this, ro.renderWindow ) ) return false;
     }
     else
     {
-        if( !mWindow.initInternalRenderWindow( ro.displayHandle, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
+        if( !mWindow.initInternalWindow( this, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
-    desc.displayHandle = mWindow.getDisplay();
-    desc.windowHandle = mWindow.getWindow();
+    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindowHandle() ) ) return false;
+    desc.displayHandle = 0;
+    desc.windowHandle  = mWindow.getWindowHandle();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
@@ -230,35 +265,6 @@ bool GN::gfx::BasicRendererMsw::dispInit( const RendererOptions & ro )
 void GN::gfx::BasicRendererMsw::dispQuit()
 {
     mWindow.quit();
-}
-
-// ****************************************************************************
-// protected functions
-// ****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-void
-GN::gfx::BasicRendererMsw::handleRenderWindowSizeMove()
-{
-    GN_GUARD;
-
-    // handle render window size move
-    const RendererOptions & ro = getOptions();
-    if( !ro.fullscreen && // only when we're in windowed mode
-        ( mWindow.isWindowResized( ro.windowedWidth, ro.windowedHeight ) ||
-          ro.monitorHandle != mWindow.getMonitorHandle() ) )
-    {
-        HandleType monitor = mWindow.getMonitor();
-
-        UInt32 width, height;
-        mWindow.getClientSize( width, height );
-
-        sigRendererWindowSizeMove( monitor, width, height );
-    }
-
-    GN_UNGUARD;
 }
 
 #endif

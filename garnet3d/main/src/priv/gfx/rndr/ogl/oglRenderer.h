@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicRenderer.h"
+#include "../common/basicRendererMsw.h"
 #include "../common/cgShader.h"
 
 namespace GN { namespace gfx
@@ -25,12 +25,18 @@ namespace GN { namespace gfx
         UInt32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
     };
 
+#if GN_MSWIN
+    typedef BasicRendererMsw ParentRenderer;
+#else
+    typedef BasicRendererX11 ParentRenderer;
+#endif
+
     ///
     /// OGL renderer class
     ///
-    class OGLRenderer : public BasicRenderer
+    class OGLRenderer : public ParentRenderer
     {
-        GN_DECLARE_STDCLASS(OGLRenderer, BasicRenderer);
+        GN_DECLARE_STDCLASS(OGLRenderer, ParentRenderer);
 
         static Logger * sLogger;
 
