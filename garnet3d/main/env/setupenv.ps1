@@ -39,6 +39,7 @@ function catch_batch_env( $batch, $arg )
 # ==============================================================================
 
 # Define your function like this: function global:<name> (...) { .... }
+function global:ccc { cmd.exe /c $args }
 
 # ==============================================================================
 # detect current platform
