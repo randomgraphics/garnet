@@ -75,7 +75,7 @@ foreach( $a in $args )
 
         "Usage: $name [/h|/?] [vc80|icl|mingw] [x86|x64|xenon] [debug|profile|retail|stdbg|stret|stprof]"
     }
-    
+
     elseif( ("vc80" -eq $a) -or ("icl" -eq $a) )
     {
         $env:GN_BUILD_COMPILER = $a
@@ -95,7 +95,7 @@ foreach( $a in $args )
     {
         $env:GN_BUILD_VARIANT = $a
     }
-    
+
     elseif( "xenon" -eq $a )
     {
         $env:GN_BUILD_COMPILER = "xenon"
@@ -166,6 +166,51 @@ if( "vc80" -eq $env:GN_BUILD_COMPILER )
 }
 
 # ==============================================================================
+# setup Intel C++ Compiler environment
+# ==============================================================================
+if( "icl" -eq $env:GN_BUILD_COMPILER )
+{
+    ""
+    "=========================================="
+    "Setup Intel C++ Compiler build environment"
+    "=========================================="
+    ""
+
+    # TODO: Determine real ICL setup batch file path
+    $batch = "C:\Program Files\Intel\Compiler\11.0\072\cpp\Bin\iclvars.bat"
+
+    # call ICL setup batch file
+    if( test-path -path $batch )
+    {
+        "Run ICL setup script: $batch"
+        ""
+        if( "x86" -eq $current_cpu )
+        {
+            if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                catch_batch_env $batch ia32
+            }
+            elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                catch_batch_env $batch ia32_intel64
+            }
+            else
+            {
+                error "Unsupport GN_BUILD_TARGET_CPU: $env:GN_BUILD_TARGET_CPU"
+            }
+        }
+        else
+        {
+            error "Unsupport current_cpu: $current_cpu"
+        }
+    }
+    else
+    {
+        error "File $batch not found."
+    }
+}
+
+# ==============================================================================
 # setup DirectX environment
 # ==============================================================================
 
@@ -180,12 +225,12 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
     if( $env:DXSDK_DIR )
     {
         $batch = "${env:DXSDK_DIR}Utilities\Bin\dx_setenv.cmd"
-     
+
         if( test-path -path $batch )
         {
         	¡°Run DirectX SDK setup script: $batch¡±
             ""
-        
+
             if( "x64" -eq $env:GN_BUILD_TARGET_CPU )
             {
                 catch_batch_env $batch "amd64"
@@ -233,14 +278,14 @@ if( "xenon" -eq $env:GN_BUILD_COMPILER )
 	"Setup Xenon build environment"
 	"============================="
     ""
-    
+
     if( !$env:XEDK )
     {
         error "Environment XEDK not found. Please install XDK"
     }
-    
+
     $batch = "$env:XEDK\bin\win32\xdkvars.bat"
-    
+
     if( test-path $batch )
     {
         catch_batch_env $batch
@@ -275,10 +320,10 @@ if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
     $aliases = ""
     get-content "$GARNET_ROOT\env\alias.txt"|foreach {
         $name, $value = $_.split(' ')
-        
+
         $body = ([System.String]$value).Trim( ' "' ).Replace( "cd /d", "cd" ).Replace( '$*', '$args' )
-        $body = $body.Replace( "%GARNET_ROOT%", '$GARNET_ROOT' ).Replace( "%GN_BUILD", '$env:GN_BUILD' ).Replace( "%", "" ) 
-        
+        $body = $body.Replace( "%GARNET_ROOT%", '$GARNET_ROOT' ).Replace( "%GN_BUILD", '$env:GN_BUILD' ).Replace( "%", "" )
+
         $aliases = $aliases +
         "
         function global:$name {$body}
