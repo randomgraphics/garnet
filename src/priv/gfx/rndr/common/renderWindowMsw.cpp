@@ -8,28 +8,36 @@ std::map<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMa
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.MSW");
 
 // *****************************************************************************
-// public functions
+// Initialize and shutdown
 // *****************************************************************************
+
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType externalWindow )
+bool GN::gfx::RenderWindowMsw::initExternalWindow( Renderer * rndr, HandleType externalWindow )
 {
     GN_GUARD;
 
-    quit();
+    // standard init procedure
+    GN_STDCLASS_INIT( GN::gfx::RenderWindowMsw, () );
+
+    if( !rndr )
+    {
+        GN_ERROR(sLogger)( "Null renderer pointer." );
+        return failure();
+    }
 
     if( !::IsWindow( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "External render window handle must be valid." );
-        return false;
+        return failure();
     }
 
     if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
-        return false;
+        return failure();
     }
 
     // register a message hook to render window.
@@ -37,14 +45,18 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
     if( 0 == mHook )
     {
         GN_ERROR(sLogger)( "Fail to setup message hook : %s", getOSErrorInfo() );
-        return false;
+        return failure();
     }
 
-    mWindow = (HWND)externalWindow;
+    mRenderer          = rndr;
+    mWindow            = (HWND)externalWindow;
     mUseExternalWindow = true;
 
+    // do post initialize tasks
+    if( !postInit() ) return failure();
+
     // success
-    return postInit();
+    return success();
 
     GN_UNGUARD;
 }
@@ -52,44 +64,30 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::initInternalRenderWindow(
-    HandleType, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height )
+bool GN::gfx::RenderWindowMsw::initInternalWindow(
+    Renderer * rndr,
+    HandleType parentWindow,
+    HandleType monitor,
+    UInt32     width,
+    UInt32     height )
 {
     GN_GUARD;
 
+    // standard init procedure
+    GN_STDCLASS_INIT( GN::gfx::RenderWindowMsw, () );
+
     GN_ASSERT( 0 != monitor && width > 0 && height > 0 );
 
-    if( !mUseExternalWindow && mWindow && parentWindow == ::GetParent(mWindow) )
-    {
-        // calculate boundary size
-        RECT rc = { 0, 0, width, height };
-        GN_MSW_CHECK_RV(
-            ::AdjustWindowRectEx(
-                &rc,
-                ::GetWindowLongA( mWindow, GWL_STYLE ),
-                0,
-                ::GetWindowLongA( mWindow, GWL_EXSTYLE ) ),
-            false );
+    if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return failure();
 
-        // resize the window
-        GN_MSW_CHECK_RV(
-            ::SetWindowPos(
-                mWindow, HWND_TOP,
-                0, 0, // position, ignored.
-                rc.right-rc.left, rc.bottom-rc.top, // size
-                SWP_NOMOVE ),
-            false );
-    }
-    else
-    {
-        quit();
-        if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return false;
-    }
-
+    mRenderer = rndr;
     mUseExternalWindow = false;
 
     // success
-    return postInit();
+    if( !postInit() ) return failure();
+
+    // success
+    return success();
 
     GN_UNGUARD;
 }
@@ -124,27 +122,58 @@ void GN::gfx::RenderWindowMsw::quit()
         mClassName.clear();
     }
 
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
+
     GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
+void GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
 {
-    if( !::IsWindow(mWindow) )
-    {
-        GN_ERROR(sLogger)( "RenderWindowMsw class is yet to initialized!" );
-        return false;
-    }
+    GN_ASSERT( ::IsWindow(mWindow) );
+
+    width = height = 0;
 
     RECT rc;
-    GN_MSW_CHECK_RV( ::GetClientRect( mWindow, &rc ), false );
+    GN_MSW_CHECK_R( ::GetClientRect( mWindow, &rc ) );
 
     width = (UINT)(rc.right - rc.left);
     height = (UINT)(rc.bottom - rc.top);
+}
 
-    return true;
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::RenderWindowMsw::handleSizeMove()
+{
+    GN_GUARD;
+
+    const RendererOptions & ro = mRenderer->getOptions();
+
+    // do nothing if in full screen mode
+    if( ro.fullscreen ) return;
+
+    // get client window size
+    UInt32 currentWidth, currentHeight;
+    getClientSize( currentWidth, currentHeight );
+
+    // compare with old window properties
+    if( currentWidth  != mOldWidth ||
+        currentHeight != mOldHeight ||
+        mMonitor      != mOldMonitor )
+    {
+        mOldWidth   = currentWidth;
+        mOldHeight  = currentHeight;
+        mOldMonitor = mMonitor;
+
+        // trigger renderer signal when window size is changed or window is moved to another monitor
+        mRenderer->sigRendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
+    }
+
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
@@ -182,7 +211,6 @@ bool GN::gfx::RenderWindowMsw::postInit()
 
     // clear all state flags
     mInsideSizeMove = false;
-    mSizeChanged = false;
 
     // success
     return true;
@@ -281,6 +309,8 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
 {
     GN_GUARD;
 
+    bool resizedOrMoved = false;
+
     switch(msg)
     {
         case WM_CLOSE:
@@ -295,23 +325,29 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
 
         case WM_EXITSIZEMOVE :
             mInsideSizeMove = false;
-            mSizeChanged = true;
             break;
 
         case WM_SIZE :
             {
                 //GN_TRACE( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
                 bool minimized = ( SIZE_MINIMIZED == wp );
-                if( !minimized && !mInsideSizeMove ) mSizeChanged = true;
+                if( !minimized && !mInsideSizeMove ) resizedOrMoved = true;
             }
             break;
+
+        case WM_MOVE :
+            {
+                if( !mInsideSizeMove ) resizedOrMoved = true;
+            }
+            break;
+
         default: ; // do nothing
     }
 
     //
     // Update monitor handle
     //
-    if( mSizeChanged )
+    if( resizedOrMoved )
     {
         // Update monitor handle
         mMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
@@ -488,5 +524,4 @@ void GN::gfx::WinProp::restore()
     GN_UNGUARD;
 }
 
-
-#endif // GN_MSWIN
+#endif // GN_MSWIN && !GN_XENON
