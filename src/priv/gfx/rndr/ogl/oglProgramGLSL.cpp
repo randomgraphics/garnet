@@ -458,7 +458,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const OGLUniform * const * uniforms, size_t count ) const
+void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const
 {
     for( size_t i = 0; i < count; ++i )
     {
@@ -468,7 +468,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const OGLUniform * const * unifo
             return;
         }
 
-        const OGLUniform * u = uniforms[i];
+        const SysMemUniform * u = uniforms[i];
 
         if( NULL == u )
         {
