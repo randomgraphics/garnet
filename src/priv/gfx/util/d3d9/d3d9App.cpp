@@ -235,7 +235,7 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 
     if( !changeOption(mOption) ) { quit(); return -1; }
 
-    // message loop 
+    // message loop
     MSG msg;
     while( true )
     {
@@ -337,7 +337,7 @@ void GN::d3d9::D3D9Application::quit()
 // -----------------------------------------------------------------------------
 bool GN::d3d9::D3D9Application::createDevice()
 {
-    PixPerfScopeEvent pixevent( 0, L"Create" );
+    PixPerfScopeEvent pixevent( 0, "Create" );
 
     GN_ASSERT( IsWindow(mWindow) );
     GN_ASSERT( 0 == mDevice );
@@ -403,7 +403,7 @@ bool GN::d3d9::D3D9Application::createDevice()
 // -----------------------------------------------------------------------------
 bool GN::d3d9::D3D9Application::restoreDevice()
 {
-    PixPerfScopeEvent pixevent( 0, L"Restore" );
+    PixPerfScopeEvent pixevent( 0, "Restore" );
 
     GN_ASSERT( mWindow );
     GN_ASSERT( mDevice );

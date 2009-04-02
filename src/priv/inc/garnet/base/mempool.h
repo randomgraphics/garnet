@@ -18,8 +18,8 @@ namespace GN
         size_t MAX_ITEMS = 0 >
     class FixSizedRawMemoryPool : public NoCopy
     {
-        // alignment must be 2^N
-        GN_CASSERT( 0 == ( ( ALIGNMENT - 1 ) ^ ~((size_t)0) ) );
+        // alignment must be 2^N and can not be zero
+        GN_CASSERT( ( 0 == ( (ALIGNMENT-1) & ALIGNMENT ) ) && ( ALIGNMENT > 0 ) );
 
         template<size_t N,size_t A>
         struct Alignment

@@ -22,7 +22,6 @@ MACRO_EXPANSION        = YES
 PREDEFINED             = GN_MSWIN \
                          GN_POSIX \
                          GN_CASSERT(X)="" \
-                         GN_CASSERT_EX(X,Y)="" \
                          THIS THIS_ \
                          STDMETHODCALLTYPE \
                          STDMETHOD(X)="virtual HRESULT X" \

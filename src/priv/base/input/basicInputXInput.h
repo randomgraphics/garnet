@@ -10,7 +10,7 @@
 
 #if defined(HAS_XINPUT)
 #include <xinput.h>
-#else if defined(HAS_XINPUT2)
+#elif defined(HAS_XINPUT2)
 #include <xinput2.h>
 #endif
 

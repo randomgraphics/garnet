@@ -518,7 +518,7 @@ void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
     const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
-    GN_ASSERT( 0 <= info.index && info.index < 16 );
+    GN_ASSERT( info.index < 16 );
     GN_OGL_CHECK( glVertexAttribPointerARB(
                     info.index,
                     info.components,

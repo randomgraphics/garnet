@@ -277,15 +277,19 @@
     ((UInt32)(UInt8)(ch2) << 16) | ((UInt32)(UInt8)(ch3) << 24 ))
 #endif
 
-///
-/// Compile-time assert
-///
-#define GN_CASSERT_EX( exp, msg ) struct GN_JOIN3(__GN_cassert_,msg,__LINE__){ int data[(exp)?1:-1]; }
+/// Compile time assert helper templates
+//@{
+template<bool>  struct COMPILE_TIME_ASSERT_FAILURE;
+template<>      struct COMPILE_TIME_ASSERT_FAILURE<true>{ enum { value = 1 }; };
+template<int x> struct COMPILE_TIME_ASSERT_TEST {};
+//@}
 
 ///
-/// Compile-time assert
+/// Compile time assert
 ///
-#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
+#define GN_CASSERT( exp ) \
+    typedef COMPILE_TIME_ASSERT_TEST<sizeof(COMPILE_TIME_ASSERT_FAILURE<exp>::value)> \
+    GN_JOIN(__GN_cassert_,__LINE__)
 
 ///
 /// define handle type
