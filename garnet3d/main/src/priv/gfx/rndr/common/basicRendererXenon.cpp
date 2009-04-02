@@ -3,7 +3,7 @@
 
 #if GN_XENON
 
-static GN::Logger * GN::sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
 
 // *****************************************************************************
 //                         BasicRendererXenon init / quit functions
@@ -17,7 +17,7 @@ bool GN::gfx::BasicRendererXenon::init( const RendererOptions & o )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicRendererXenon, () );
+    GN_STDCLASS_INIT( BasicRendererXenon, (o) );
 
     // initialize sub-components one by one
     if( !dispInit(o) ) return failure();
@@ -58,7 +58,6 @@ bool GN::gfx::BasicRendererXenon::dispInit( const RendererOptions & ro )
     XGetVideoMode( &xvm );
 
     // fill DispDesc structure
-    DispDesc desc;
     mDispDesc.width         = (0==ro.displayMode.width)  ? xvm.dwDisplayWidth  : ro.displayMode.width;
     mDispDesc.height        = (0==ro.displayMode.height) ? xvm.dwDisplayHeight : ro.displayMode.height;
     mDispDesc.depth         = (0==ro.displayMode.depth)  ? 32                  : ro.displayMode.depth;

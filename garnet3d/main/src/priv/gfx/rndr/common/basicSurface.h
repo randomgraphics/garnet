@@ -127,11 +127,25 @@ namespace GN { namespace gfx
     protected:
 
         ///
-        /// Validate update parameters.
+        /// Validate update parameters. Note that this function may modify "length" parameter
         ///
-        bool validateUpdateParameters( size_t offset, size_t & length )
+        bool validateUpdateParameters( size_t offset, size_t * length, const void * data, SurfaceUpdateFlag flag )
         {
             const VtxBufDesc & desc = getDesc();
+
+            if( NULL == data )
+            {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
+                GN_ERROR(sLogger)( "NULL data pointer!" );
+                return false;
+            }
+
+            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
+            {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );
+                return false;
+            }
 
             if( offset >= desc.length )
             {
@@ -141,8 +155,8 @@ namespace GN { namespace gfx
             }
 
             // adjust length
-            if( 0 == length ) length = desc.length;
-            if( offset + length > desc.length ) length = desc.length - offset;
+            if( 0 == *length ) *length = desc.length;
+            if( offset + *length > desc.length ) *length = desc.length - offset;
 
             // success
             return true;
@@ -181,9 +195,25 @@ namespace GN { namespace gfx
         ///
         /// Validate update parameters.
         ///
-        bool validateUpdateParameters( size_t startidx, size_t & numidx )
+        bool validateUpdateParameters( size_t startidx, size_t * numidx, const void * data, SurfaceUpdateFlag flag )
         {
+            GN_ASSERT( numidx );
+
             const IdxBufDesc & desc = getDesc();
+
+            if( NULL == data )
+            {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
+                GN_ERROR(sLogger)( "NULL data pointer!" );
+                return false;
+            }
+
+            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
+            {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );
+                return false;
+            }
 
             if( startidx >= desc.numidx )
             {
@@ -193,8 +223,8 @@ namespace GN { namespace gfx
             }
 
             // adjust startidx and numidx
-            if( 0 == numidx ) numidx = desc.numidx;
-            if( startidx + numidx > desc.numidx ) numidx = desc.numidx - startidx;
+            if( 0 == *numidx ) *numidx = desc.numidx;
+            if( startidx + *numidx > desc.numidx ) *numidx = desc.numidx - startidx;
 
             // success
             return true;
