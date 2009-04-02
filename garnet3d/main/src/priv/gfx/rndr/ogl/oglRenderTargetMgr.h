@@ -10,10 +10,10 @@ namespace GN { namespace gfx
 {
     class OGLRenderer;
 
-    struct RenderTargetDesc
+    struct OGLRenderTargetDesc
     {
-        RenderTargetTexture * crts;
-        RenderTargetTexture * dsrt;
+        RenderTargetTexture * crts; ///< color render targets.
+        RenderTargetTexture * dsrt; ///< depth stencil render targets.
     };
 
     ///
@@ -54,8 +54,8 @@ namespace GN { namespace gfx
         /// bind render target to device.
         ///
         virtual void bind(
-            const RenderTargetDesc & oldRT,
-            const RenderTargetDesc & newRT,
+            const OGLRenderTargetDesc & oldRT,
+            const OGLRenderTargetDesc & newRT,
             bool skipDirtyCheck,
             bool & renderTargetSizeChanged ) = 0;
     };
@@ -82,7 +82,7 @@ namespace GN { namespace gfx
     public:
 
         virtual bool init() { return true; }
-        virtual void bind( const RenderTargetDesc &, const RenderTargetDesc &, bool, bool &);
+        virtual void bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
 
         // ********************************
         // private variables
@@ -127,7 +127,7 @@ namespace GN { namespace gfx
         };
 
         virtual bool init();
-        virtual void bind( const RenderTargetDesc &, const RenderTargetDesc &, bool, bool &);
+        virtual void bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
 
         // ********************************
         // private variables

@@ -7,68 +7,11 @@
 // *****************************************************************************
 
 #include "oglResource.h"
+#include "../common/basicShader.h"
 #include "../common/cgShader.h"
 
 namespace GN { namespace gfx
 {
-    // *************************************************************************
-    // OGL GPU program parameter object
-    // *************************************************************************
-
-    ///
-    /// interface of GPU proram parameter
-    ///
-    class OGLUniform : public Uniform, public OGLResource
-    {
-        const size_t mSize;
-        void       * mData;
-        SInt32       mTimeStamp;
-
-    public:
-
-        /// ctor
-        OGLUniform( OGLRenderer & r, size_t sz )
-            : OGLResource(r)
-            , mSize(0==sz?1:sz)
-            , mData( heapAlloc(mSize) )
-            , mTimeStamp(0)
-        {
-        }
-
-        /// dtor
-        ~OGLUniform() { heapFree(mData); }
-
-        /// get parameter size
-        virtual size_t size() const { return mSize; }
-
-        /// get current parameter value
-        virtual const void * getval() const { return mData; }
-
-        /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data )
-        {
-            if( offset >= mSize || (offset+length) > mSize )
-            {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
-                return;
-            }
-            if( NULL == data )
-            {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
-                return;
-            }
-            memcpy( (UInt8*)mData + offset, data, length );
-            ++mTimeStamp;
-        }
-
-        /// update parameter value
-        template<typename T>
-        void update( const T & t ) { set( 0, sizeof(t), &t ); }
-
-        /// get current update time stamp
-        SInt32 getTimeStamp() const { return mTimeStamp; }
-    };
-
     // *************************************************************************
     // Basic program object
     // *************************************************************************
@@ -125,7 +68,7 @@ namespace GN { namespace gfx
         ///
         /// Apply uniforms to OpenGL
         ///
-        virtual void applyUniforms( const OGLUniform * const * gpps, size_t count ) const = 0;
+        virtual void applyUniforms( const SysMemUniform * const * gpps, size_t count ) const = 0;
 
         ///
         /// Apply texture to OpenGL
@@ -207,7 +150,7 @@ namespace GN { namespace gfx
             GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
         }
 
-        virtual void applyUniforms( const OGLUniform * const * gpps, size_t count ) const;
+        virtual void applyUniforms( const SysMemUniform * const * gpps, size_t count ) const;
 
         virtual void applyTexture( const char * name, size_t stage ) const;
 

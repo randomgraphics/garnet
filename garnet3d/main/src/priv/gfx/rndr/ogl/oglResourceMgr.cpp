@@ -11,129 +11,6 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.ResourceMgr");
 
 // *****************************************************************************
-// Local GPU program compile utilities
-// *****************************************************************************
-
-/// OGL compiled program binary
-class OGLCompiledGpuProgram : public GN::gfx::CompiledGpuProgram
-{
-    DynaArray<UInt8> mBinary;
-
-    static inline bool
-    sCheckShaderCode(
-        const char *       type, ///< shader type
-        const ShaderCode & sc,
-        const char *       begin,
-        const char *       end )
-    {
-        if( 0 != sc.code && ( sc.code < begin || sc.code >= end ) )
-        {
-            GN_ERROR(sLogger)( "invalid %s shader code pointer.", type );
-            return false;
-        }
-
-        if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
-        {
-            GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
-            return false;
-        }
-
-        return true;
-    }
-
-public:
-
-    /// initialize from shader description
-    bool init( const GpuProgramDesc & desc )
-    {
-        // calculate buffer size
-        size_t headerLen  = sizeof(desc);
-        size_t vsCodeLen  = desc.vs.code ? ( strlen(desc.vs.code) + 1 ) : 0;
-        size_t vsEntryLen = desc.vs.entry ? ( strlen(desc.vs.entry) + 1 ) : 0;
-        size_t gsCodeLen  = desc.gs.code ? ( strlen(desc.gs.code) + 1 ) : 0;
-        size_t gsEntryLen = desc.gs.entry ? ( strlen(desc.gs.entry) + 1 ) : 0;
-        size_t psCodeLen  = desc.ps.code ? ( strlen(desc.ps.code) + 1 ) : 0;
-        size_t psEntryLen = desc.ps.entry ? ( strlen(desc.ps.entry) + 1 ) : 0;
-        size_t length     = headerLen +
-                            vsCodeLen + vsEntryLen +
-                            gsCodeLen + gsEntryLen +
-                            psCodeLen + psEntryLen;
-
-        // allocate buffer
-        mBinary.resize( length );
-        GpuProgramDesc & copy = *(GpuProgramDesc*)mBinary.cptr();
-        UInt8 * start = mBinary.cptr();
-        UInt8 * ptr = start;
-
-        // copy header
-        memcpy( ptr, &desc, sizeof(desc) );
-        ptr += sizeof(desc);
-
-#define COPY_CODE( X ) \
-    memcpy( ptr, desc.X.code, X##CodeLen ); \
-    copy.X.code = ( X##CodeLen > 0 ) ? (const char*)( ptr - start ) : 0; \
-    ptr += X##CodeLen;
-
-#define COPY_ENTRY( X ) \
-    memcpy( ptr, desc.X.entry, X##EntryLen ); \
-    copy.X.entry = ( X##EntryLen > 0 ) ? (const char*)( ptr - start ) : 0; \
-    ptr += X##EntryLen;
-
-        // copy codes and entries
-        COPY_CODE( vs ); COPY_ENTRY( vs );
-        COPY_CODE( gs ); COPY_ENTRY( gs );
-        COPY_CODE( ps ); COPY_ENTRY( ps );
-
-        // done
-        GN_ASSERT( ((size_t)( ptr - start )) == length );
-        return true;
-    }
-
-    /// initialize from raw data buffer
-    bool init( const void * data, size_t length )
-    {
-        // copy input buffer
-        mBinary.resize( length );
-        memcpy( mBinary.cptr(), data, length );
-
-        const char     * start = (const char *)mBinary.cptr();
-        const char     * end   = start + length;
-        GpuProgramDesc & desc  = *(GpuProgramDesc*)start;
-
-        // patch all offsets to pointers
-        if( 0 != desc.vs.code ) desc.vs.code = start + (size_t)desc.vs.code;
-        if( 0 != desc.vs.entry ) desc.vs.entry = start + (size_t)desc.vs.entry;
-
-        if( 0 != desc.gs.code ) desc.gs.code = start + (size_t)desc.gs.code;
-        if( 0 != desc.gs.entry ) desc.gs.entry = start + (size_t)desc.gs.entry;
-
-        if( 0 != desc.ps.code ) desc.ps.code = start + (size_t)desc.ps.code;
-        if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
-
-        // check GPU program language
-        if( desc.lang >= NUM_GPU_PROGRAM_LANGUAGES )
-        {
-            GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang );
-            return false;
-        }
-
-        // check data integrity
-        if( !sCheckShaderCode( "vertex", desc.vs, start, end ) ||
-            !sCheckShaderCode( "geometry", desc.gs, start, end ) ||
-            !sCheckShaderCode( "pixel", desc.ps, start, end ) )
-        {
-            GN_ERROR(sLogger)( "Invalid shader binary." );
-            return false;
-        }
-
-        return true;
-    }
-
-    virtual const void * data() const { return mBinary.cptr(); }
-    virtual size_t       size() const { return mBinary.size(); }
-};
-
-// *****************************************************************************
 // device management
 // *****************************************************************************
 
@@ -201,11 +78,11 @@ GN::gfx::OGLRenderer::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
-    AutoRef<OGLCompiledGpuProgram> cgp( new OGLCompiledGpuProgram );
-    if( !cgp->init( gpd ) ) return NULL;
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    if( !s->init( gpd ) ) return NULL;
 
     // success
-    return cgp.detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -218,22 +95,22 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
-    AutoRef<OGLCompiledGpuProgram> cgp( new OGLCompiledGpuProgram );
-    if( !cgp->init( data, length ) ) return NULL;
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    if( !s->init( data, length ) ) return NULL;
 
-    const GpuProgramDesc * desc = (const GpuProgramDesc *)cgp->data();
+    const GpuProgramDesc & desc = s->desc();
 
-    switch( desc->lang )
+    switch( desc.lang )
     {
         case GPL_GLSL:
         {
             AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
-            if( !prog->init( *desc ) ) return NULL;
+            if( !prog->init( desc ) ) return NULL;
             return prog.detach();
         }
 
         default:
-            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc->lang );
+            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc.lang );
             return NULL;
     }
 
@@ -246,7 +123,7 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 GN::gfx::Uniform *
 GN::gfx::OGLRenderer::createUniform( size_t size )
 {
-    return new OGLUniform( *this, size );
+    return new SysMemUniform( size );
 }
 
 //

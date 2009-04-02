@@ -115,10 +115,10 @@ void GN::gfx::OGLRTMgrFBO::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRTMgrFBO::bind(
-    const RenderTargetDesc & oldDesc,
-    const RenderTargetDesc & newDesc,
-    bool forceRebind,
-    bool & needRebindViewport )
+    const OGLRenderTargetDesc & oldDesc,
+    const OGLRenderTargetDesc & newDesc,
+    bool                        forceRebind,
+    bool                      & needRebindViewport )
 {
     GN_GUARD_SLOW;
 

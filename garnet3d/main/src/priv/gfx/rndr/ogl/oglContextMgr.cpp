@@ -199,9 +199,9 @@ GN::gfx::OGLRenderer::bindContextShaders(
 {
     GN_GUARD_SLOW;
 
-    const OGLBasicGpuProgram * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
-    const OGLBasicGpuProgram * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
-    const OGLUniform * const * uniforms   = (const OGLUniform * const *)newContext.uniforms.cptr();
+    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
+    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
+    const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
 
     if( oldProgram == newProgram )
     {
