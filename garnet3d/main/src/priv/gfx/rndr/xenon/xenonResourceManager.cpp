@@ -5,31 +5,12 @@
 #include "xenonVertexDecl.h"
 #include "xenonVtxBuf.h"
 #include "xenonIdxBuf.h"
-#include "xenonLine.h"
+
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
-
-//
-// Functor to compare sampler descriptor
-//
-struct EqualSampler
-{
-    const GN::gfx::SamplerDesc & desc;
-    EqualSampler( const GN::gfx::SamplerDesc & d ) : desc(d) {}
-    bool operator()( const GN::gfx::XenonSamplerObject & so ) const { return desc == so.getDesc(); }
-};
-
-//
-// Functor to compare vertex format
-//
-struct EqualFormat
-{
-    const GN::gfx::VtxFmtDesc & format;
-    EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
-    bool operator()( const GN::gfx::XenonVtxDeclDesc & vbd ) const { return format == vbd.format; }
-};
 
 // *****************************************************************************
 // init/shutdown
@@ -53,8 +34,6 @@ bool GN::gfx::XenonRenderer::resourceInit()
 void GN::gfx::XenonRenderer::resourceQuit()
 {
     GN_GUARD;
-
-    safeDelete( mLine );
 
     // release vertex formats
     mVertexFormats.clear();
@@ -85,10 +64,15 @@ void GN::gfx::XenonRenderer::resourceQuit()
 GN::gfx::CompiledGpuProgram *
 GN::gfx::XenonRenderer::compileGpuProgram( const GpuProgramDesc & desc )
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-    GN_UNUSED_PARAM(desc);
-    GN_UNIMPL();
-    return NULL;
+    GN_GUARD;
+
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    if( !s->init( desc ) ) return NULL;
+
+    // success
+    return s.detach();
+
+    GN_UNGUARD;
 }
 
 //
@@ -101,10 +85,32 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
 
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    GN_UNUSED_PARAM( compiledGpuProgramBinary );
-    GN_UNUSED_PARAM( length );
-    GN_UNIMPL();
-    return NULL;
+    /// get shader description about of compiled binary
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    if( !s->init( compiledGpuProgramBinary, length ) ) return NULL;
+    const GpuProgramDesc & desc = s->desc();
+
+    switch( desc.lang )
+    {
+        case GPL_ASM:
+        {
+            AutoRef<XenonGpuProgramASM> prog( new XenonGpuProgramASM(*this) );
+            if( !prog->init( desc ) ) return NULL;
+            return prog.detach();
+        }
+            
+        case GPL_HLSL:
+        {
+            AutoRef<XenonGpuProgramHLSL> prog( new XenonGpuProgramHLSL(*this) );
+            if( !prog->init( desc ) ) return NULL;
+            return prog.detach();
+            break;
+        }
+
+        default:
+            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc.lang );
+            return NULL;
+    }
 
     GN_UNGUARD;
 }
@@ -115,9 +121,7 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
 GN::gfx::Uniform *
 GN::gfx::XenonRenderer::createUniform( size_t size )
 {
-    GN_UNUSED_PARAM( size );
-    GN_UNIMPL();
-    return NULL;
+    return new SysMemUniform( size );
 }
 
 //
@@ -136,60 +140,6 @@ GN::gfx::XenonRenderer::createTexture( const TextureDesc & desc )
 
     GN_UNGUARD;
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::SamplerHandle GN::gfx::XenonRenderer::createSampler( const SamplerDesc & desc )
-{
-    GN_GUARD;
-
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    SamplerHandle  h = mSamplers.findIf( EqualSampler(desc) );
-
-    if( 0 == h )
-    {
-        // create new vertex decl
-        XenonSamplerObject s;
-        if( !s.init(desc) ) return false;
-        h = mSamplers.add( s );
-    }
-
-    // success
-    return h;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::VtxFmtHandle GN::gfx::XenonRenderer::createVtxFmt( const VtxFmtDesc & format )
-{
-    GN_GUARD;
-
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    VtxFmtHandle  h = mVertexFormats.findIf( EqualFormat(format) );
-
-    if( 0 == h )
-    {
-        // create new vertex decl
-        XenonVtxDeclDesc vbd;
-        vbd.format = format;
-        vbd.decl.attach( createXenonVertexDecl( mDevice, format ) );
-        if( !vbd.decl ) return 0;
-
-        h = mVertexFormats.add( vbd );
-    }
-
-    // success
-    return h;
-
-    GN_UNGUARD;
-}
-
 
 //
 //
@@ -226,8 +176,3 @@ GN::gfx::IdxBuf * GN::gfx::XenonRenderer::createIdxBuf( const IdxBufDesc & desc 
 
     GN_UNGUARD;
 }
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-

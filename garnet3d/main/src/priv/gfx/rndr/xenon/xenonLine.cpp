@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "xenonLine.h"
 #include "xenonRenderer.h"
+#include "garnet/GNd3d9.h"
 
 struct XenonLineVertex
 {
@@ -21,7 +22,7 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     D3DDECL_END()
 };
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.Xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
  
 // *****************************************************************************
 // Initialize and shutdown
@@ -37,7 +38,43 @@ bool GN::gfx::XenonLine::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonLine, () );
 
-    if( !createDeclAndShaders() ) return failure();
+    GN_ASSERT( !mVtxShader && !mPxlShader );
+
+    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+
+    // create vertex decl
+    GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
+
+    // create vertex shader
+    static const char * vscode =
+        "vs.1.1 \n"
+        "dcl_position0 v0 \n"
+        "dcl_color0 v1 \n"
+        "m4x4 oPos, v0, c0 \n"
+        "mov oD0, v1 \n";
+    mVtxShader = d3d9::assembleVS( &dev, vscode );
+    if( 0 == mVtxShader ) return failure();
+
+
+    // create pixel shader
+    static const char * pscode =
+        "ps.1.1 \n"
+        "mov r0, v0 \n";
+    mPxlShader = d3d9::assemblePS( &dev, pscode );
+    if( 0 == mPxlShader ) return failure();
+
+    // create vertex buffer
+    GN_DX9_CHECK_RV(
+        dev.CreateVertexBuffer(
+            (UINT)( LINE_STRIDE * MAX_LINES ),
+            D3DUSAGE_CPU_CACHED_MEMORY,
+            0, // fvf
+            0, // pool
+            &mVtxBuf, 0 ),
+        failure() );
+
+    // reset next line indicator
+    mNextLine = 0;
 
     // success
     return success();
@@ -52,60 +89,13 @@ void GN::gfx::XenonLine::quit()
 {
     GN_GUARD;
 
-    deviceDispose();
-
+    safeRelease( mVtxBuf );
     safeRelease( mDecl );
     safeRelease( mVtxShader );
     safeRelease( mPxlShader );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from XenonResource
-// *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::XenonLine::deviceRestore()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mVtxBuf );
-
-    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
-
-    // create vertex buffer
-    GN_DX9_CHECK_RV(
-        dev->CreateVertexBuffer(
-            (UINT)( LINE_STRIDE * MAX_LINES ),
-            D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-            0, // non-FVF
-            D3DPOOL_DEFAULT,
-            &mVtxBuf, 0 ),
-        false );
-
-    // reset next line indicator
-    mNextLine = 0;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::XenonLine::deviceDispose()
-{
-    GN_GUARD;
-
-    safeRelease( mVtxBuf );
 
     GN_UNGUARD;
 }
@@ -118,16 +108,18 @@ void GN::gfx::XenonLine::deviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::XenonLine::drawLines(
-    BitFields options,
-    const float * positions, size_t stride,
-    size_t count, UInt32 rgba,
-    const Matrix44f & model,
-    const Matrix44f & view,
-    const Matrix44f & proj )
+    BitFields         /*options*/,
+    const float     * /*positions*/,
+    size_t            /*stride*/,
+    size_t            /*numpoints*/,
+    UInt32            /*rgba*/,
+    const Matrix44f & /*model*/,
+    const Matrix44f & /*view*/,
+    const Matrix44f & /*proj*/ )
 {
-    GN_GUARD_SLOW;
-
-    if( 0 == positions )
+    GN_UNIMPL_WARNING();
+    
+    /*if( 0 == positions )
     {
         GN_ERROR(sLogger)( "Line positions can't be NULL!" );
         return;
@@ -151,7 +143,7 @@ void GN::gfx::XenonLine::drawLines(
     }
 
     XenonRenderer & r = getRenderer();
-    LPDIRECT3DDEVICE9 dev = r.getDevice();
+    IDirect3DDevice9 & dev = r.getDeviceInlined();
 
     D3DPRIMITIVETYPE d3dpt;
     size_t vertexCount;
@@ -168,8 +160,8 @@ void GN::gfx::XenonLine::drawLines(
 
     // lock vertex buffer
     XenonLineVertex * vbData;
-    dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
-    GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
+    dev.SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
+    GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, 0 ) );
     vbData += mNextLine * ( LINE_STRIDE / sizeof(XenonLineVertex) );
 
     UInt32 bgra =
@@ -178,14 +170,13 @@ void GN::gfx::XenonLine::drawLines(
           ( (rgba)&0x0000FF00) |
           (((rgba)&0x000000FF)<<16);
 
-    if( (DL_WINDOW_SPACE & options) &&
-       !(DL_USE_CURRENT_VS & options) )
+    if( DL_WINDOW_SPACE & options )
     {
         // calculate vertex scale and offset
         float scaleX, offsetX;
         float scaleY, offsetY;
         D3DVIEWPORT9 vp;
-        GN_DX9_CHECK( dev->GetViewport( &vp ) );
+        GN_DX9_CHECK( dev.GetViewport( &vp ) );
         scaleX = 2.0f/(float)vp.Width;
         scaleY = -2.0f/(float)vp.Height;
         offsetX = -1.0f;
@@ -218,50 +209,41 @@ void GN::gfx::XenonLine::drawLines(
     cf.u32 = 0;
 
     // setup render states
-    if( !( DL_USE_CURRENT_RS & options ) )
-    {
-        cf.rsb = 1;
-        r.setD3DRenderState( D3DRS_ALPHATESTENABLE, FALSE );
-        r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
-        r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
-        r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
-        r.setD3DRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
-    }
+    cf.rsb = 1;
+    r.setD3DRenderState( D3DRS_ALPHATESTENABLE, FALSE );
+    r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
+    r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
+    r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
+    r.setD3DRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 
     // bind shaders
-    if( !( DL_USE_CURRENT_VS & options ) )
+    cf.setShaderBit( SHADER_VS );
+
+    GN_DX9_CHECK( dev.SetVertexShader( mVtxShader ) );
+
+    if( mVtxShader )
     {
-        cf.setShaderBit( SHADER_VS );
-
-        GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
-
-        if( mVtxShader )
-        {
-            Matrix44f mat = proj * view * model;
-            GN_DX9_CHECK( dev->SetVertexShaderConstantF( 0, mat[0], 4 ) );
-        }
-        else
-        {
-             GN_UNEXPECTED(); // Should always use shader on Xenon
-        }
+        Matrix44f mat = proj * view * model;
+        GN_DX9_CHECK( dev.SetVertexShaderConstantF( 0, mat[0], 4 ) );
+    }
+    else
+    {
+         GN_UNEXPECTED(); // Should always use shader on Xenon
     }
 
-    if( !( DL_USE_CURRENT_PS & options ) )
-    {
-        cf.setShaderBit( SHADER_PS );
-        GN_DX9_CHECK( dev->SetPixelShader( mPxlShader ) );
-    }
+    cf.setShaderBit( SHADER_PS );
+    GN_DX9_CHECK( dev.SetPixelShader( mPxlShader ) );
 
     // bind buffers
     cf.vtxfmt = 1;
     cf.vtxbufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(XenonLineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
-    GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(XenonLineVertex) ) );
-    GN_DX9_CHECK( dev->SetVertexDeclaration( mDecl ) );
+    GN_DX9_CHECK( dev.SetStreamSource( 0, mVtxBuf, 0, sizeof(XenonLineVertex) ) );
+    GN_DX9_CHECK( dev.SetVertexDeclaration( mDecl ) );
 
     // draw
-    GN_DX9_CHECK( dev->DrawPrimitive(
+    GN_DX9_CHECK( dev.DrawPrimitive(
         d3dpt,
         (UINT)( mNextLine * 2 ), 
         (UINT)count ) );
@@ -273,59 +255,9 @@ void GN::gfx::XenonLine::drawLines(
     mNextLine += count;
     GN_ASSERT( mNextLine <= MAX_LINES );
     if( MAX_LINES == mNextLine ) mNextLine = 0;
-
-    // TODO: update statistics information in XenonRenderer ( draw count, primitive count )
-
-    GN_UNGUARD_SLOW;
+    */
 }
 
 // *****************************************************************************
 // private functions
 // *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::XenonLine::createDeclAndShaders()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mVtxShader && !mPxlShader );
-
-    XenonRenderer & r = getRenderer();
-    IDirect3DDevice9 & dev = r.getDeviceInlined();
-
-    // create vertex decl
-    GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( sDecl, &mDecl ), false );
-
-    // create vertex shader
-    if( r.supportShader( "vs_1_1" ) )
-    {
-        static const char * code =
-            "vs.1.1 \n"
-            "dcl_position0 v0 \n"
-            "dcl_color0 v1 \n"
-            "m4x4 oPos, v0, c0 \n"
-            "mov oD0, v1 \n";
-        mVtxShader = d3d9::assembleVS( dev, code );
-        if( 0 == mVtxShader ) return false;
-    }
-#if GN_XENON
-    else GN_UNEXPECTED();
-#endif
-
-    // create pixel shader
-    if( r.supportShader( "ps_1_1" ) )
-    {
-        static const char * code =
-            "ps.1.1 \n"
-            "mov r0, v0 \n";
-        mPxlShader = d3d9::assemblePS( dev, code );
-        if( 0 == mPxlShader ) return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "xenonResource.h"
+#include "../common/basicShader.h"
 
 namespace GN { namespace gfx
 {
@@ -69,6 +70,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
+        const GpuProgramParameterDesc & getParameterDesc() const { return mParamDesc; }
+
         // ********************************
         // private variables
         // ********************************
@@ -76,6 +79,7 @@ namespace GN { namespace gfx
 
         IDirect3DVertexShader9 * mVs;
         IDirect3DPixelShader9  * mPs;
+        GpuProgramParameterDesc  mParamDesc;
 
         // ********************************
         // private functions
@@ -131,6 +135,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
+        const GpuProgramParameterDesc & getParameterDesc() const { return mParamDesc; }
+
         // ********************************
         // private variables
         // ********************************
@@ -138,6 +144,7 @@ namespace GN { namespace gfx
 
         IDirect3DVertexShader9 * mVs;
         IDirect3DPixelShader9  * mPs;
+        GpuProgramParameterDesc  mParamDesc;
 
         // ********************************
         // private functions

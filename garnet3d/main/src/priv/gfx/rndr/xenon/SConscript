@@ -1,20 +1,20 @@
 Import( 'GN' )
 sources = [
     'xenonCapsMgr.cpp',
-    #'xenonContextMgr.cpp',
+    'xenonContextMgr.cpp',
     'xenonDispMgr.cpp',
-    #'xenonDrawMgr.cpp',
+    'xenonDrawMgr.cpp',
     'xenonGpuProgramASM.cpp',
     'xenonGpuProgramHLSL.cpp',
     'xenonIdxBuf.cpp',
-    #xenonLine.cpp',
+    'xenonLine.cpp',
     'xenonRenderer.cpp',
-    #'xenonRenderTargetMgr.cpp',
+    'xenonRenderTargetMgr.cpp',
     'xenonResource.cpp',
-    #xenonResourceManager.cpp',
+    'xenonResourceManager.cpp',
     #'xenonSampler.cpp',
     'xenonTexture.cpp',
-    #'xenonVertexDecl.cpp',
+    'xenonVertexDecl.cpp',
     'xenonVtxBuf.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

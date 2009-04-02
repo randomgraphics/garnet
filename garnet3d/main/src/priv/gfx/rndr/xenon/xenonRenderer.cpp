@@ -16,7 +16,7 @@
 
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.Xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 // *****************************************************************************
 // Global functions

@@ -1,11 +1,9 @@
 #include "pch.h"
-#include "d3d9Renderer.h"
-#include "d3d9RenderTargetMgr.h"
-#include "d3d9Texture.h"
+#include "xenonRenderer.h"
+#include "xenonRenderTargetMgr.h"
+#include "xenonTexture.h"
 
-#if GN_XENON
-
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -14,12 +12,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9RTMgrXenon::init()
+bool GN::gfx::XenonRenderTargetManager::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D9RTMgrXenon, () );
+    GN_STDCLASS_INIT( GN::gfx::XenonRenderTargetManager, () );
 
     // success
     return success();
@@ -30,7 +28,7 @@ bool GN::gfx::D3D9RTMgrXenon::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9RTMgrXenon::quit()
+void GN::gfx::XenonRenderTargetManager::quit()
 {
     GN_GUARD;
 
@@ -47,21 +45,18 @@ void GN::gfx::D3D9RTMgrXenon::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9RTMgrXenon::bind(
-    const RenderTargetDesc & oldDesc,
-    const RenderTargetDesc & newDesc,
-    bool forceRebind,
-    bool & needRebindViewport )
+void GN::gfx::XenonRenderTargetManager::bind(
+    const XenonRenderTargetDesc & oldDesc,
+    const XenonRenderTargetDesc & newDesc,
+    bool                          skipDirtyCheck,
+    bool                        & needRebindViewport )
 {
-    //GN_GUARD_SLOW;
-
     GN_UNUSED_PARAM( oldDesc );
     GN_UNUSED_PARAM( newDesc );
-    GN_UNUSED_PARAM( forceRebind );
+    GN_UNUSED_PARAM( skipDirtyCheck );
+    GN_UNIMPL_WARNING();
 
     needRebindViewport = true;
-
-    //GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************
@@ -71,5 +66,3 @@ void GN::gfx::D3D9RTMgrXenon::bind(
 //
 //
 // -----------------------------------------------------------------------------
-
-#endif

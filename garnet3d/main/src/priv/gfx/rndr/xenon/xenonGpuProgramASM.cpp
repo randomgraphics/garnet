@@ -3,7 +3,7 @@
 #include "xenonRenderer.h"
 #include "garnet/GNd3d9.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.Xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown

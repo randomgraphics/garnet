@@ -11,7 +11,7 @@
 namespace GN { namespace gfx
 {
     class XenonResource; // Forward declaration of XenonResource.
-    class XenonRenderTargetMgr;
+    class XenonRenderTargetManager;
     class XenonLine;
 
     ///
@@ -104,7 +104,6 @@ namespace GN { namespace gfx
         D3DPRESENT_PARAMETERS   mD3DPresentParameters;
         IDirect3D9            * mD3D;
         IDirect3DDevice9      * mDevice;
-        D3DCAPS9                mDeviceCaps;
 
         //@}
 
@@ -179,9 +178,7 @@ namespace GN { namespace gfx
 
     private :
 
-        std::list<XenonResource*>                                       mResourceList;
-        std::map<VertexFormat,AutoComPtr<IDirect3DVertexDeclaration9> > mVertexFormats;
-        XenonLine * mLine; // line renderer
+        std::list<XenonResource*> mResourceList;
 
         //@}
 
@@ -209,14 +206,15 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mRTMgr = 0; }
 
-        inline void bindContextRenderTargets( const RendererContext & newContext, bool skipDirtyCheck );
-        inline void bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck  );
-        inline void bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
-        inline void bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTargetsAndViewport( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck  );
+        inline bool bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
 
     private:
 
-        XenonRenderTargetMgr * mRTMgr;
+        XenonRenderTargetManager                                      * mRTMgr;
+        std::map<VertexFormat,AutoComPtr<IDirect3DVertexDeclaration9> > mVertexFormats;
 
         //@}
 
@@ -267,16 +265,18 @@ namespace GN { namespace gfx
         void drawQuit();
         void drawClear()
         {
+            mLine = NULL;
             mFrameCounter = 0;
             mDrawCounter = 0;
+            mSceneBegun = false;
         }
-
-        bool handleDeviceLost();
 
     private:
 
-        size_t      mFrameCounter;
-        size_t      mDrawCounter;
+        XenonLine * mLine; // line renderer
+        size_t mFrameCounter;
+        size_t mDrawCounter;
+        bool mSceneBegun;
 
         //@}
 
