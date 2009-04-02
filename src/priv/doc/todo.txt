@@ -1,7 +1,11 @@
+TODO
+====
+
 - 程序中标注TODO的地方
 
 - p0
   - PS2 model beautifier(add bump map and tessellation to PS2 model)
+    - implement a CPU based prototype first.
     - ASE or FBX mesh loader
       - mesh hierachy
       - optional features
@@ -17,13 +21,13 @@
   - refine display manager in basic renderer
     - isolate platform dependant code into separate files.
   	- refactor render window classes. Maybe use abstract interfaces?
-  - D3D10 rendererer
+  - D3D10 renderer
+  - Xenon renderer
 
-=======
->>>>>>> .r1669
 - p2
-  - XML: pointer from parent to last child, for constant time child appending.
-  - runtime configuable profilers, like loggers
+  - DDS viewer plugin
+  	- don't write full viewer from scratch.
+  	- just provide a plugin for existing picture viewers like acdsee or something.
   - sigslot class:
     - allow any type of functor
     - check behavior of redundant slot functors.
@@ -31,6 +35,7 @@
   - memory-mapped IO.
 
 - p3
+  - XML: pointer from parent to last child, for constant time child appending.
   - code page convertor and test application
     - may support convertion from/to utf8 be enough?
   - Custom sscanf(...)
@@ -70,3 +75,9 @@ ISSUES
   - RESOLVED: expat.
     - expat is faster.
     - custom DOM wrapper fits our requirement better, and is pretty easy to implement.
+
+DROPPED TASKS
+=============
+- runtime configuable profilers, like loggers
+  - WHY: rofiler has to be light-weight and fast. Logger style configuration 
+         is too heavy.
