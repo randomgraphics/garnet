@@ -64,7 +64,7 @@ void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void 
 
     GN_UNUSED_PARAM( flag );
 
-    if( !validateUpdateParameters( offset, length ) ) return;
+    if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
     if( 0 == length ) return;
 

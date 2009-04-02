@@ -40,13 +40,21 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     struct PixPerfScopeEvent
     {
         //@{
-        PixPerfScopeEvent( D3DCOLOR color, const wchar_t * name )
+        PixPerfScopeEvent( D3DCOLOR color, const char * name )
         {
-            D3DPERF_BeginEvent( color, name );
+#if GN_XENON
+            PIXBeginNamedEvent( color, name );
+#else
+            D3DPERF_BeginEvent( color, mbs2wcs(name).cptr() );
+#endif
         }
         ~PixPerfScopeEvent()
         {
+#if GN_XENON
+            PIXEndNamedEvent();
+#else
             D3DPERF_EndEvent();
+#endif
         }
         //@}
     };
@@ -91,10 +99,73 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0 );
 
+    //@{
+
+    ///
+    /// D3D9 shader compiler template
+    ///
+    template<class SHADER_CLASS>
+    struct ShaderCompiler
+    {
+    };
+
+    ///
+    /// D3D9 vertex shader compiler
+    ///
+    template<>
+    struct ShaderCompiler<IDirect3DVertexShader9>
+    {
+        //@{
+
+        static inline IDirect3DVertexShader9 *
+        assemble( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0 )
+        {
+            return assembleVS( &dev, code, len, flags );
+        }
+
+        static inline IDirect3DVertexShader9 *
+        compile( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
+        {
+            return compileVS( &dev, code, len, flags, entryFunc, profile, constTable );
+        }
+
+        static inline IDirect3DVertexShader9 *
+        compileFromFile( IDirect3DDevice9 & dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
+        {
+            return compileVSFromFile( &dev, file, flags, entryFunc, profile, constTable );
+        }
+
+        //@}
+    };
+
+    ///
+    /// D3D9 pixel shader compiler
+    ///
+    template<>
+    struct ShaderCompiler<IDirect3DPixelShader9>
+    {
+        //@{
+
+        static inline IDirect3DPixelShader9 *
+        assemble( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0 )
+        {
+            return assemblePS( &dev, code, len, flags );
+        }
+        
+        static inline IDirect3DPixelShader9 *
+        compile( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
+        {
+            return compilePS( &dev, code, len, flags, entryFunc, profile, constTable );
+        }
+
+        //@}
+    };
+
     ///
     /// Compile effect from string
     ///
     LPD3DXEFFECT compileEffect( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, LPD3DXEFFECTPOOL pool = 0 );
+
 
     ///
     /// Get backbuffer descriptor

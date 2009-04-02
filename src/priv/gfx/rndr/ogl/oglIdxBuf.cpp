@@ -57,13 +57,13 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag )
+void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
-    if( !validateUpdateParameters( startidx, numidx ) ) return;
+    if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
     if( 0 == numidx ) return;
 

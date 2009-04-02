@@ -841,6 +841,7 @@ TARGET_stlibs = [
 TARGET_shlibs = [
     'GNcore',
     'GNrndrOGL',
+	'GNrndrXenon',
     ]
 
 TARGET_tests = [

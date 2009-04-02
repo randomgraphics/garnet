@@ -26,7 +26,7 @@ namespace GN { namespace gfx
     struct ShaderCode
     {
         const char * code;  ///< NULL terminated shader code
-        const char * entry; ///< NULL terminated shader entry function
+        const char * entry; ///< NULL terminated shader entry function (ignored for ASM shader code)
 
         /// default ctor
         ShaderCode() : code(NULL), entry(NULL) {}
@@ -37,7 +37,7 @@ namespace GN { namespace gfx
     ///
     struct GpuProgramDesc
     {
-        GpuProgramLanguage lang;  ///< shading language. Ignored when shader code is NULL.
+        GpuProgramLanguage lang;  ///< shading language.
         ShaderCode         vs;
         ShaderCode         gs;
         ShaderCode         ps;
@@ -139,6 +139,11 @@ namespace GN { namespace gfx
             GN_ERROR(getLogger("GN.gfx.GpuProgram"))( "Invalid texture name: %s", name?name:"<NULLPTR>" );
             return PARAMETER_NOT_FOUND;
         }
+
+    protected:
+
+        /// protected ctor
+        GpuProgram() {}
     };
 }}
 

@@ -48,6 +48,7 @@ namespace GN { namespace gfx
         API_OGL,          ///< OpenGL
         API_D3D9,         ///< D3D9
         API_D3D10,        ///< D3D10
+        API_XENON,        ///< Xenon
         API_FAKE,         ///< Fake API
         NUM_RENDERER_API, ///< Number of avaliable API.
         API_AUTO,         ///< determine rendering API automatically.
@@ -128,6 +129,11 @@ namespace GN { namespace gfx
         UInt32 windowedHeight;
 
         ///
+        /// Backbuffer MSAA type. Default value is MSAA_NONE
+        ///
+        MsaaType msaa;
+
+        ///
         /// Use external render window or not.
         /// ȱʡΪfalse.
         ///
@@ -155,11 +161,10 @@ namespace GN { namespace gfx
         ///
         /// Restore display mode while render window is deactivated.
         ///
-        /// Note that this is a OGL only parameter. For D3D, you may use
-        /// "Enable Multi-mon Debugging" option in DirectX control panel,
-        /// and startup your application through a debugger to make that
-        /// option effective.
         /// ȱʡΪtrue.
+        ///
+        /// Note that this is a OGL only parameter. For D3D, you may use
+        /// "Enable Multi-mon Debugging" option in DirectX control panel.
         ///
         bool autoRestore;
 
@@ -176,6 +181,7 @@ namespace GN { namespace gfx
             , monitorHandle(0)
             , windowedWidth(0)
             , windowedHeight(0)
+            , msaa(MSAA_NONE)
             , useExternalWindow(false)
             , fullscreen(false)
             , vsync(false)
@@ -234,9 +240,11 @@ namespace GN { namespace gfx
             GPP_D3D_2_0  = 1<<1, ///< D3D shader model 2.0
             GPP_D3D_3_0  = 1<<2, ///< D3D shader model 3.0
             GPP_D3D_4_0  = 1<<3, ///< D3D shader model 4.0
-            GPP_OGL_ARB1 = 1<<4, ///< OpenGL ARB program
-            GPP_OGL_GLSL = 1<<5, ///< OpenGL GLSL 1.0
-            GPP_CG       = 1<<6, ///< Nvidia Cg
+            GPP_XVS_3_0  = 1<<4, ///< Xenon XVS 3.0 (vertex shader only profile) 
+            GPP_XPS_3_0  = 1<<5, ///< Xenon XPS 3.0 (pixel shader only profile) 
+            GPP_OGL_ARB1 = 1<<6, ///< OpenGL ARB program
+            GPP_OGL_GLSL = 1<<7, ///< OpenGL GLSL 1.0
+            GPP_CG       = 1<<8, ///< Nvidia Cg
             NUM_GPU_PROGRAM_PROFILES,
         };
 
