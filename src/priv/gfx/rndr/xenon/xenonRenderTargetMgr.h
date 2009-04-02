@@ -1,23 +1,30 @@
-#ifndef __GN_GFX_D3D9RENDERTARGETMGR_H__
-#define __GN_GFX_D3D9RENDERTARGETMGR_H__
+#ifndef __GN_GFX_XENONRENDERTARGETMGR_H__
+#define __GN_GFX_XENONRENDERTARGETMGR_H__
 // *****************************************************************************
 /// \file
-/// \brief   D3D9 render target manager
+/// \brief   Xenon render target manager
 /// \author  chen@@CHENLI-HOMEPC (2007.1.11)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    class D3D9Renderer;
-
-#if GN_XENON
+    class XenonRenderer;
 
     ///
-    /// D3D9 render target manager for PC
+    /// Xenon render target description
     ///
-    class D3D9RTMgrXenon : public StdClass
+    struct XenonRenderTargetDesc
     {
-        GN_DECLARE_STDCLASS( D3D9RTMgrPC, StdClass );
+        RenderTargetTexture * crts; ///< color render targets.
+        RenderTargetTexture * dsrt; ///< depth stencil render targets.
+    };
+
+    ///
+    /// Xenon render target manager
+    ///
+    class XenonRenderTargetManager : public StdClass
+    {
+        GN_DECLARE_STDCLASS( XenonRenderTargetManager, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -25,8 +32,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D9RTMgrXenon( D3D9Renderer & r ) : mRenderer(r) { clear(); }
-        virtual ~D3D9RTMgrXenon() { quit(); }
+        XenonRenderTargetManager( XenonRenderer & r ) : mRenderer(r) { clear(); }
+        virtual ~XenonRenderTargetManager() { quit(); }
         //@}
 
         // ********************************
@@ -50,89 +57,26 @@ namespace GN { namespace gfx
         /// bind render target to device
         ///
         void bind(
-            const RenderTargetDesc & oldDesc,
-            const RenderTargetDesc & newDesc,
-            bool forceRebind,
-            bool & needRebindViewport );
+            const XenonRenderTargetDesc & oldDesc,
+            const XenonRenderTargetDesc & newDesc,
+            bool                          skipDirtyCheck,
+            bool                        & needRebindViewport );
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        D3D9Renderer & mRenderer;
+        XenonRenderer & mRenderer;
 
         // ********************************
         // private functions
         // ********************************
     private:
     };
-
-#else
-
-    ///
-    /// D3D9 render target manager for PC
-    ///
-    class D3D9RTMgrPC : public StdClass
-    {
-        GN_DECLARE_STDCLASS( D3D9RTMgrPC, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        D3D9RTMgrPC( D3D9Renderer & r ) : mRenderer(r) { clear(); }
-        virtual ~D3D9RTMgrPC() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-    private:
-        void clear() {}
-        //@}
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        ///
-        /// bind render target to device
-        ///
-        void bind(
-            const RenderTargetDesc & oldDesc,
-            const RenderTargetDesc & newDesc,
-            bool forceRebind,
-            bool & needRebindViewport );
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        D3D9Renderer & mRenderer;
-
-        AutoComPtr<IDirect3DSurface9> mAutoColor0, mAutoDepth;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-
-    };
-
-#endif
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_D3D9RENDERTARGETMGR_H__
+#endif // __GN_GFX_XENONRENDERTARGETMGR_H__

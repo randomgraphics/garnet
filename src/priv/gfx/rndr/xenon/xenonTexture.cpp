@@ -2,7 +2,7 @@
 #include "xenonRenderer.h"
 #include "xenonTexture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.Xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 // *****************************************************************************
 // local functions

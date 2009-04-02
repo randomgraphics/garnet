@@ -11,8 +11,8 @@ namespace GN { namespace gfx
     ///
     /// create D3D9 decl from vertex format structure
     ///
-    LPDIRECT3DVERTEXDECLARATION9
-    createD3D9VertexDecl( LPDIRECT3DDEVICE9 dev, const GN::gfx::VtxFmtDesc & format );
+    IDirect3DVertexDeclaration9 *
+    createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFormat & format );
 }}
 
 // *****************************************************************************

@@ -1,25 +1,19 @@
 #include "pch.h"
-#include "d3d9Renderer.h"
-#include "d3d9Line.h"
-#include "d3d9IdxBuf.h"
+#include "xenonRenderer.h"
+#include "xenonLine.h"
 
 ///
 /// static primitive map
 ///
-static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
+static const D3DPRIMITIVETYPE PRIMITIVE_TO_XENON[GN::gfx::NUM_PRIMITIVES] =
 {
     D3DPT_POINTLIST,
     D3DPT_LINELIST,
     D3DPT_LINESTRIP,
     D3DPT_TRIANGLELIST,
     D3DPT_TRIANGLESTRIP,
-#if GN_XENON
     D3DPT_QUADLIST,
     D3DPT_RECTLIST,
-#else
-    D3DPT_FORCE_DWORD,
-    D3DPT_FORCE_DWORD,
-#endif
 };
 
 ///
@@ -31,241 +25,145 @@ static inline D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
     return dc;
 }
 
-#if GN_BUILD_RETAIL
-#define DUMP_STATE(X)   // disable dump in retail build
-#else
-#define DUMP_STATE(X) \
-    if( mDumpThisFrame && \
-        ( mDumpStart <= mDrawCounter && mDrawCounter < mDumpEnd || \
-          0 == mDumpStart && 0 == mDumpEnd ) ) \
-    { X; } \
-    else void(0)
-#endif
-
 // *****************************************************************************
-// interface functions
+// init/quit
 // *****************************************************************************
-
-static const bool mFakeDraw = false;
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::drawBegin()
+bool GN::gfx::XenonRenderer::drawInit()
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    if( mFakeDraw ) return true;
-
-    PIXPERF_FUNCTION_EVENT();
-
-    GN_ASSERT( !mDrawBegan );
-
-#if !GN_XENON
-    // check for device lost
-    if( !handleDeviceLost() ) return false;
-#endif
+    // create line renderer
+    mLine = new XenonLine( *this );
+    if( !mLine->init() ) return false;
 
     // begin scene
-    GN_DX9_CHECK_RV( mDevice->BeginScene(), 0 );
+    mDevice->BeginScene();
+    mSceneBegun = true;
 
-    // update per-frame data
-    mDrawBegan = true;
-    mNumPrims = 0;
-    mNumBatches = 0;
-    mDrawCounter = 0;
-
-#if !GN_BUILD_RETAIL
-    if( mDumpNextFrame )
-    {
-        mDumpNextFrame = false;
-        mDumpThisFrame = true;
-    }
-#endif
-
-    // success
     return true;
-
-    GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawEnd()
+void GN::gfx::XenonRenderer::drawQuit()
 {
-    GN_GUARD_SLOW;
+    // endScene
+    if( mSceneBegun )
+    {
+        mDevice->EndScene();
+        mSceneBegun = false;
+    }
+    
+    safeDelete( mLine );
+}
 
+// *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::XenonRenderer::present()
+{
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    if( mFakeDraw ) return;
+    GN_ASSERT( mSceneBegun );
 
-    PIXPERF_FUNCTION_EVENT();
+    // end current scene
+    {
+        PIXPERF_SCOPE_EVENT( "EndScene" );
+        mDevice->EndScene();
+        mSceneBegun = false;
+    }
 
-    GN_ASSERT( mDrawBegan );
-    mDrawBegan = false;
-    GN_DX9_CHECK( mDevice->EndScene() );
-    GN_DX9_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+    // do present
+    mDevice->Present( 0, 0, 0, 0 );
+
+    // begin next scene
+    {
+        PIXPERF_SCOPE_EVENT( "BeginScene" );
+        mDevice->BeginScene();
+        mSceneBegun = true;
+    }
 
     ++mFrameCounter;
-
-#if !GN_BUILD_RETAIL
-    mDumpThisFrame = false;
-#endif
-
-    // handle render window size move
-#if !GN_XENON
-    handleRenderWindowSizeMove();
-#endif
-
-    GN_UNGUARD_SLOW;
+    mDrawCounter = 0;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::clearScreen(
-    const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
+void GN::gfx::XenonRenderer::clearScreen(
+    const Vector4f & c, float z, UInt8 s, BitFields flags )
 {
-    GN_GUARD_SLOW;
-
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    if( mFakeDraw ) return;
-
     // build d3d clear flag
-    int d3dflag = (flags & CLEAR_C ? D3DCLEAR_TARGET : 0)
-        | (flags & CLEAR_Z ? D3DCLEAR_ZBUFFER : 0)
-        | (flags & CLEAR_S ? D3DCLEAR_STENCIL : 0);
+    int d3dflag =
+        (flags & CLEAR_C ? D3DCLEAR_TARGET : 0) |
+        (flags & CLEAR_Z ? D3DCLEAR_ZBUFFER : 0) |
+        (flags & CLEAR_S ? D3DCLEAR_STENCIL : 0);
 
     // do clear
-    GN_DX9_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
-
-    GN_UNGUARD_SLOW;
+    mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawIndexed(
+void GN::gfx::XenonRenderer::drawIndexed(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numidx,
+    size_t        basevtx,
     size_t        startvtx,
-    size_t        minvtxidx,
     size_t        numvtx,
     size_t        startidx )
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    DUMP_STATE( dumpD3D9DrawIndexed(
-        sPrimMap[prim],
-        (UINT)startvtx,
-        (UINT)minvtxidx,
-        (UINT)numvtx,
-        (UINT)startidx,
-        (UINT)numprim ) );
-
-    ++mDrawCounter;
-
-    if( mFakeDraw ) return;
-
-    GN_ASSERT( mDrawBegan );
-
-    //
-    // make sure numprim is not too large
-    //
-    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
-
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
-    GN_DX9_CHECK(
-        mDevice->DrawIndexedPrimitive(
-            sPrimMap[prim],    // primitive type
-            (UINT)startvtx,    // start vertex
-            (UINT)minvtxidx,   // min vertex index
-            (UINT)numvtx,      // num of vertices
-            (UINT)startidx,    // base index
-            (UINT)numprim ) ); // primitive count
+    mDevice->DrawIndexedVertices(
+        PRIMITIVE_TO_XENON[prim],  // primitive type
+        (UINT)basevtx,             // base vertex
+        (UINT)startidx,            // base index
+        (UINT)numidx );            // primitive count
 
-    // success
-    mNumPrims += numprim;
-    ++mNumBatches;
-
-    GN_UNGUARD_SLOW;
+    ++mDrawCounter;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::draw(
-    PrimitiveType prim, size_t numprim, size_t startvtx )
+void GN::gfx::XenonRenderer::draw(
+    PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
-    GN_GUARD_SLOW;
-
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    DUMP_STATE( dumpD3D9Draw(
-        sPrimMap[prim],
-        (UINT)startvtx,
-        (UINT)numprim ) );
+    mDevice->DrawVertices(
+        PRIMITIVE_TO_XENON[prim],    // primitive type
+        (UINT)startvtx,            // start vertex
+        (UINT)numvtx );            // primitive count
 
     ++mDrawCounter;
-
-    if( mFakeDraw ) return;
-
-    GN_ASSERT( mDrawBegan );
-
-    //
-    // make sure numprim is not too large
-    //
-    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
-
-    // draw indexed primitives
-    GN_ASSERT( prim < NUM_PRIMITIVES );
-    GN_DX9_CHECK(
-        mDevice->DrawPrimitive(
-            sPrimMap[prim],    // primitive type
-            (UINT)startvtx,    // start vertex
-            (UINT)numprim ) ); // primitive count
-
-    // success
-    mNumPrims += numprim;
-    ++mNumBatches;
-
-    GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawIndexedUp(
-    PrimitiveType    prim,
-    size_t           numprim,
-    size_t           numvtx,
-    const void *     vertexData,
-    size_t           strideInBytes,
+void GN::gfx::XenonRenderer::drawIndexedUp(
+    PrimitiveType  prim,
+    size_t         numidx,
+    size_t         numvtx,
+    const void *   vertexData,
+    size_t         strideInBytes,
     const UInt16 * indexData )
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    // TODO: dump state
-
-    ++mDrawCounter;
-
-    if( mFakeDraw ) return;
-
     PIXPERF_FUNCTION_EVENT();
 
-    //
-    // make sure numprim is not too large
-    //
-    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -275,10 +173,10 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
 
     GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitiveUP(
-            sPrimMap[prim],
+            PRIMITIVE_TO_XENON[prim],
             0, // MinVertexIndex
             (UINT)numvtx,
-            (UINT)numprim,
+            (UINT)numidx,
             indexData,
             D3DFMT_INDEX16,
             vertexData,
@@ -289,35 +187,21 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     GN_DX9_CHECK( mDevice->SetIndices( ib ) );
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
-
-    GN_UNGUARD_SLOW;
+    ++mDrawCounter;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawUp(
+void GN::gfx::XenonRenderer::drawUp(
     PrimitiveType prim,
-    size_t        numprim,
+    size_t        numvtx,
     const void *  vertexData,
     size_t        strideInBytes )
 {
-    GN_GUARD_SLOW;
+    PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( getCurrentThreadId() == mThreadId );
-
-    // TODO: dump state
-
-    ++mDrawCounter;
-
-    if( mFakeDraw ) return;
-
-    //
-    // make sure numprim is not too large
-    //
-    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -325,8 +209,8 @@ void GN::gfx::D3D9Renderer::drawUp(
 
     // do draw
     GN_DX9_CHECK( mDevice->DrawPrimitiveUP(
-        sPrimMap[prim],
-        (UINT)numprim,
+        PRIMITIVE_TO_XENON[prim],
+        (UINT)numvtx,
         vertexData,
         (UINT)strideInBytes ) );
 
@@ -334,109 +218,33 @@ void GN::gfx::D3D9Renderer::drawUp(
     GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
 
     // success
-    mNumPrims += numprim;
-    ++mNumBatches;
-
-    GN_UNGUARD_SLOW;
+    ++mDrawCounter;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawLines(
-    BitFields options,
-    const void * positions,
-    size_t stride,
-    size_t count,
-    UInt32 rgba,
+void GN::gfx::XenonRenderer::drawLines(
+    BitFields         options,
+    const void      * positions,
+    size_t            stride,
+    size_t            numpoints,
+    UInt32            rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
 {
-    GN_GUARD_SLOW;
+    PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    // TODO: dump state
-
-    ++mDrawCounter;
-
-    if( mFakeDraw ) return;
-
-    PIXPERF_FUNCTION_EVENT();
-    GN_ASSERT( mDrawBegan && mLine );
     mLine->drawLines(
         options,
-        (const float*)positions, stride,
-        count, rgba,
+        (const float*)positions,
+        stride,
+        numpoints,
+        rgba,
         model, view, proj );
-    PIXPERF_END_EVENT();
 
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
-{
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
-    mDumpNextFrame = true;
-    mDumpStart = startBatchIndex;
-    mDumpEnd   = startBatchIndex + numBatches;
-}
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::handleDeviceLost()
-{
-#if GN_XENON
-    // There's no device lost on Xenon.
-    return true;
-#else
-    GN_GUARD;
-
-    PIXPERF_FUNCTION_EVENT();
-
-    GN_ASSERT( mDevice );
-
-    HRESULT hr = mDevice->TestCooperativeLevel();
-    if( D3DERR_DEVICENOTRESET == hr )
-    {
-        GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
-
-        // dispose
-        deviceDispose();
-
-        // reset d3ddevice
-        GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
-
-        // try restore
-        if( !deviceRestore() ) return false;
-
-        GN_INFO(sLogger)( "=================================================\n" );
-    }
-    else if( D3DERR_DEVICELOST == hr )
-    {
-        GN_INFO(sLogger)( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
-        ::Sleep( 2000 );
-        return false;
-    }
-    else if (D3D_OK != hr)
-    {
-        // fatal error
-        GN_ERROR(sLogger)( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
-        return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-#endif
+    ++mDrawCounter;
 }
