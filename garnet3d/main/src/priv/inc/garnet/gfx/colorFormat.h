@@ -510,7 +510,7 @@ namespace GN { namespace gfx
     ///
     /// \note this function always return tiled format.
     ///
-    int colorFormat2XenonFormat( ColorFormat );
+    UInt32 colorFormat2XenonFormat( ColorFormat );
 
     ///
     /// Convert DXGI_FORMAT to ColorFormat. Return DXGI_FORMAT_UNKNOWN if failed.

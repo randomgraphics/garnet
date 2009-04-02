@@ -341,7 +341,7 @@ struct D3D9StateDump
 
     void bind( IDirect3DDevice9 & dev ) const
     {
-        PixPerfScopeEvent pixevent( 0, L"Bind" );
+        PixPerfScopeEvent pixevent( 0, "Bind" );
 
         // vs
         dev.SetVertexShader( vs.vs );
@@ -419,7 +419,7 @@ struct D3D9StateDump
     {
         // load RT data
         {
-            PixPerfScopeEvent pixevent( 0, L"Load RT data" );
+            PixPerfScopeEvent pixevent( 0, "Load RT data" );
             for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
             {
                 D3D9RtDump & rtd = rendertargets[i];

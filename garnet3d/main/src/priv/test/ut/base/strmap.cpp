@@ -487,7 +487,7 @@ namespace GN
         KeyValuePair * doFind( const CHAR * text, size_t * position = NULL, size_t * index = NULL ) const
         {
             GN_ASSERT( text );
-            
+
             size_t hash = calcHash( text );
             GN_ASSERT( hash < mMaxSize );
 
@@ -614,7 +614,7 @@ class StringMapTest : public CxxTest::TestSuite
             stlmap.insert( std::make_pair(d.table[i], i) );
         }
         t = c.getCycleCount() - t;
-        printf( "std::map  - insert : %d\n", t );
+        printf( "std::map  - insert : %llu\n", t );
 
         // StringMap insertion
         StringMap<char,size_t> mymap;
@@ -624,7 +624,7 @@ class StringMapTest : public CxxTest::TestSuite
             mymap.insert( d.table[i], i );
         }
         t = c.getCycleCount() - t;
-        printf( "StringMap - insert : %d\n", t );
+        printf( "StringMap - insert : %llu\n", t );
 
         // HashMap insertion
         StringHashMap<char,size_t> hmap(d.count);
@@ -634,7 +634,7 @@ class StringMapTest : public CxxTest::TestSuite
             hmap.insert( d.table[i], i );
         }
         t = c.getCycleCount() - t;
-        printf( "HashMap   - insert : %d\n", t );
+        printf( "HashMap   - insert : %llu\n", t );
 
         // generate random searching set
         std::vector<std::string> strings( 10000 );
@@ -652,7 +652,7 @@ class StringMapTest : public CxxTest::TestSuite
             stlmap.find( strings[i] );
         }
         t = c.getCycleCount() - t;
-        printf( "std::map  - find   : %d\n", t );
+        printf( "std::map  - find   : %llu\n", t );
 
         // StringMap find
         t = c.getCycleCount();
@@ -661,7 +661,7 @@ class StringMapTest : public CxxTest::TestSuite
             mymap.find( strings[i].c_str() );
         }
         t = c.getCycleCount() - t;
-        printf( "StringMap - find   : %d\n", t );
+        printf( "StringMap - find   : %llu\n", t );
 
         // StringHashMap find
         t = c.getCycleCount();
@@ -670,7 +670,7 @@ class StringMapTest : public CxxTest::TestSuite
             hmap.find( strings[i].c_str() );
         }
         t = c.getCycleCount() - t;
-        printf( "HashMap   - find   : %d\n", t );
+        printf( "HashMap   - find   : %llu\n", t );
 
         // std::map erasing
         t = c.getCycleCount();
@@ -680,7 +680,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
         t = c.getCycleCount() - t;
         TS_ASSERT( stlmap.empty() );
-        printf( "std::map  - erase  : %d\n", t );
+        printf( "std::map  - erase  : %llu\n", t );
 
         // StringMap erasing
         t = c.getCycleCount();
@@ -690,7 +690,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
         t = c.getCycleCount() - t;
         TS_ASSERT( mymap.empty() );
-        printf( "StringMap - erase  : %d\n", t );
+        printf( "StringMap - erase  : %llu\n", t );
 
         // StringHashMap erasing
         t = c.getCycleCount();
@@ -700,7 +700,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
         t = c.getCycleCount() - t;
         TS_ASSERT( mymap.empty() );
-        printf( "HashMap   - erase  : %d\n", t );
+        printf( "HashMap   - erase  : %llu\n", t );
     }
 
     void doPerfTestWithFixedNumberOfItems( size_t count )

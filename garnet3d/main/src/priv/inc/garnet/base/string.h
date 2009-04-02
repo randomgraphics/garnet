@@ -1014,11 +1014,8 @@ namespace GN
 
     template<typename T> bool str2Int( T & i, const char * s )
     {
-#if GN_GCC
-        GN_ASSERT_EX( 0, "Program should never reach here!" );
-#else
-        GN_CASSERT_EX( 0, "Compiler should never reach here!" );
-#endif
+        // Compiler should never reach here!
+        GN_CASSERT( sizeof(T) == 0 );
         return false;
     }
 
