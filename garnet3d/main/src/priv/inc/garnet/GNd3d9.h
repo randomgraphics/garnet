@@ -221,6 +221,9 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         GN_UNGUARD_SLOW;
     }
 
+// Note: D3DApplication is not available on Xenon platform yet.
+#if !GN_XENON
+
     ///
     /// D3D9 application framework
     ///
@@ -353,6 +356,9 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         IDirect3DDevice9    * mDevice;
         bool                  mRunning;
     };
+
+#endif // !GN_XENON
+
 }}
 
 // *****************************************************************************

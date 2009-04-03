@@ -7,10 +7,13 @@
 #pragma comment( lib, "dxerr9.lib" )
 
 #if GN_BUILD_DEBUG
-#pragma comment(lib, "xenond.lib")
+#pragma comment(lib, "d3d9d.lib")
 #pragma comment(lib, "d3dx9d.lib")
+#elif GN_BUILD_PROFILE
+#pragma comment(lib, "d3d9i.lib")
+#pragma comment(lib, "d3dx9i.lib")
 #else
-#pragma comment(lib, "xenon.lib")
+#pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 #endif
 
@@ -61,8 +64,8 @@ bool GN::gfx::XenonRenderer::init( const GN::gfx::RendererOptions & o )
     if( !dispInit()         ) return failure();
     if( !capsInit()         ) return failure();
     if( !resourceInit()     ) return failure();
-    //if( !contextInit()      ) return failure();
-    //if( !drawInit()         ) return failure();
+    if( !contextInit()      ) return failure();
+    if( !drawInit()         ) return failure();
 
     // successful
     return success();
@@ -81,8 +84,8 @@ void GN::gfx::XenonRenderer::quit()
 
     PIXPERF_FUNCTION_EVENT();
 
-    //drawQuit();
-    //contextQuit();
+    drawQuit();
+    contextQuit();
     resourceQuit();
     capsQuit();
     dispQuit();

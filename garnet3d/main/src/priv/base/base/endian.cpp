@@ -9,7 +9,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-void GN::swap8in16( UInt16 * out, const UInt16 * in, size_t count )
+void GN::swap8in16( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -21,6 +21,9 @@ void GN::swap8in16( UInt16 * out, const UInt16 * in, size_t count )
     };
 
     Local tmp;
+
+    UInt16 * out = (UInt16*)outvoid;
+    const UInt16 * in = (const UInt16*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -36,7 +39,7 @@ void GN::swap8in16( UInt16 * out, const UInt16 * in, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::swap8in32( UInt32 * out, const UInt32 * in, size_t count )
+void GN::swap8in32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -48,6 +51,9 @@ void GN::swap8in32( UInt32 * out, const UInt32 * in, size_t count )
     };
 
     Local tmp;
+
+    UInt32 * out = (UInt32*)outvoid;
+    const UInt32 * in = (const UInt32*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -65,7 +71,7 @@ void GN::swap8in32( UInt32 * out, const UInt32 * in, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::swap8in64( UInt64 * out, const UInt64 * in, size_t count )
+void GN::swap8in64( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -74,6 +80,9 @@ void GN::swap8in64( UInt64 * out, const UInt64 * in, size_t count )
     };
 
     Local tmp;
+
+    UInt64 * out = (UInt64*)outvoid;
+    const UInt64 * in = (const UInt64*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {
@@ -95,7 +104,7 @@ void GN::swap8in64( UInt64 * out, const UInt64 * in, size_t count )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::swap16in32( UInt32 * out, const UInt32 * in, size_t count )
+void GN::swap16in32( void * outvoid, const void * invoid, size_t count )
 {
     union Local
     {
@@ -107,6 +116,9 @@ void GN::swap16in32( UInt32 * out, const UInt32 * in, size_t count )
     };
 
     Local tmp;
+
+    UInt32 * out = (UInt32*)outvoid;
+    const UInt32 * in = (const UInt32*)invoid;
 
     for( size_t n = 0; n < count; ++n, ++in, ++out )
     {

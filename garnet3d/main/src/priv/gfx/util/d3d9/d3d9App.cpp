@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if !GN_XENON
+
 using namespace GN;
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
@@ -442,3 +444,5 @@ void GN::d3d9::D3D9Application::destroyDevice()
         mDevice = 0;
     }
 }
+
+#endif

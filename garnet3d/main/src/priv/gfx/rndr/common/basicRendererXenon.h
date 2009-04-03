@@ -101,25 +101,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
-
-        virtual void bindContext( const RendererContext & c );
-        virtual void rebindContext();
-        virtual inline const RendererContext & getContext() const { return mContext; }
-
-    protected:
-
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck ) = 0;
-
-    private:
-
-        void contextClear() { mContextOk = false; }
-
-    protected:
-
-        RendererContext mContext;
-        bool            mContextOk;
-
         //@}
 
         // *****************************************************************************
@@ -142,29 +123,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void         processRenderWindowMessages( bool blockWhileMinimized );
-        virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
-        virtual void         setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
-        virtual bool         hasUserData( const Guid & id ) const;
-
-        bool                 paramCheckEnabled() const { return mParamCheckEnabled; }
-
-    private:
-
-        void miscClear()
-        {
-            mParamCheckEnabled = GN_BUILD_DEBUG;
-            mUserData.clear();
-        }
-
-    private:
-
-        typedef std::map<Guid,DynaArray<UInt8> > UserDataMap;
-
-        bool mParamCheckEnabled;
-
-        UserDataMap mUserData;
+        virtual void processRenderWindowMessages( bool ) {} // do nothing on Xenon platform
 
         //@}
     };

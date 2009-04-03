@@ -200,7 +200,7 @@ bool PNGReader::readImage( void * o_data )
     for( UInt32 y = 0; y < mInfo->height; ++y )
     {
         UInt32 * p = (UInt32*)rows[y];
-        GN::swapEndian8In32( p, p, mRowPitch / 4 );
+        GN::swap8in32( p, p, mRowPitch / 4 );
     }
 
 #endif

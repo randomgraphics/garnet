@@ -14,18 +14,31 @@ typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOption
 
 #if GN_XENON
 
+/// extern Xenon renderer creator
+extern GN::gfx::Renderer *
+GNgfxCreateXenonRenderer( const GN::gfx::RendererOptions & );
+
 ///
 /// fake OGL renderer creator for Xenon platform
 ///
 inline GN::gfx::Renderer *
 GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & )
 {
-    GN_ERROR(sLogger)( "No OGL support on Xenon." );
+    GN_ERROR(sLogger)( "OpenGL renderer is not available on Xbox360." );
     return 0;
 }
+
 #else
 
-/// OGL renderer creator
+/// Fake Xenon renderer creator
+inline GN::gfx::Renderer *
+GNgfxCreateXenonRenderer( const GN::gfx::RendererOptions & )
+{
+    GN_ERROR(sLogger)( "Xenon renderer is not available on platform other than Xbox360." );
+    return 0;
+}
+
+/// extern OGL renderer creator
 extern GN::gfx::Renderer *
 GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & );
 
