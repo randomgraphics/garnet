@@ -8,6 +8,19 @@ using namespace GN::util;
 
 RendererContext rc;
 
+#if GN_XENON
+const char * vscode =
+    "uniform float4x4 transform; \n"
+    "float4 main( in float4 pos ) : POSITION { \n"
+    "   return mul( transform, pos ); \n"
+    "}";
+
+const char * pscode =
+    "float4 main() : COLOR0 { \n"
+    "   return 1; \n"
+    "}";
+const GpuProgramLanguage lang = GPL_HLSL;
+#else
 const char * vscode =
     "varying vec2 texcoords; \n"
     "uniform mat4 transform; \n"
@@ -22,6 +35,8 @@ const char * pscode =
     "void main() { \n"
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
+const GpuProgramLanguage lang = GPL_GLSL;
+#endif
 
 bool init( Renderer & rndr )
 {
@@ -29,7 +44,7 @@ bool init( Renderer & rndr )
 
     // create GPU program
     GpuProgramDesc gpd;
-    gpd.lang = GPL_GLSL;
+    gpd.lang = lang;
     gpd.vs.code = vscode;
     gpd.ps.code = pscode;
     rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
