@@ -21,7 +21,7 @@ LOCAL_env = Environment( tools=[] )
 ################################################################################
 
 # 读取环境变量
-def UTIL_getenv( name, defval = None ):
+def UTIL_getenv( name, defval = '' ):
 	if name in os.environ: return os.environ[name]
 	else: return defval
 
@@ -202,8 +202,6 @@ def UTIL_newEnv( compiler, variant ):
 
 		msvs_version = '8.0'
 		msvs_platform = 'x86'
-		icl_version = None
-		icl_abi = 'ia32'
 		if 'icl' == compiler.name :
 			tools += ['intelc']
 			if 'x64' == compiler.cpu :
@@ -217,8 +215,6 @@ def UTIL_newEnv( compiler, variant ):
 			tools          = tools,
 			MSVS_VERSION   = msvs_version,
 			MSVS8_PLATFORM = msvs_platform,
-			ICL_VERSION    = icl_version,
-			ICL_ABI        = icl_abi,
 			ENV            = {
 			                 	'PATH'     : UTIL_getenv('PATH'),
 			                 	'LANG'     : UTIL_getenv('LANG'),
