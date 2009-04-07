@@ -45,8 +45,8 @@ bool GN::gfx::SpriteRenderer::init()
     // create GPU program
     GpuProgramDesc gpd;
     gpd.lang = GPL_GLSL;
-    gpd.vs.code = glslvscode;
-    gpd.ps.code = glslpscode;
+    gpd.vs.source = glslvscode;
+    gpd.ps.source = glslpscode;
     mPrivateContext.gpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
     if( !mPrivateContext.gpuProgram ) return failure();
 
@@ -66,12 +66,12 @@ bool GN::gfx::SpriteRenderer::init()
     mPrivateContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
-    mPrivateContext.vtxbufs[0].attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true, false ) );
+    mPrivateContext.vtxbufs[0].attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true ) );
     if( !mPrivateContext.vtxbufs[0] ) return failure();
     mPrivateContext.strides[0] = sizeof(SpriteVertex);
 
     // create index buffer
-    mPrivateContext.idxbuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false, false ) );
+    mPrivateContext.idxbuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false ) );
     if( !mPrivateContext.idxbuf ) return failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )

@@ -56,10 +56,12 @@ namespace GN { namespace gfx
         /// bind render target to device
         ///
         void bind(
-            const RenderTargetDesc & oldDesc,
-            const RenderTargetDesc & newDesc,
-            bool forceRebind,
-            bool & needRebindViewport );
+            const RenderTargetTexture   newColorRenderTargets[],
+            const RenderTargetTexture & newDepthStencilRenderTarget,
+            const RenderTargetTexture   oldColorRenderTargets[],
+            const RenderTargetTexture & oldDepthStencilRenderTarget,
+            bool                        skipDirtyCheck,
+            bool                      & needRebindViewport );
 
         ///
         /// get render target count

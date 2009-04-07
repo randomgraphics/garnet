@@ -179,8 +179,6 @@ bool GN::gfx::OGLRenderer::dispInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     GN_ASSERT( !mRenderContext && !mDeviceContext );
 
     HWND hwnd = (HWND)getDispDesc().windowHandle;
@@ -269,8 +267,6 @@ bool GN::gfx::OGLRenderer::dispInit()
 void GN::gfx::OGLRenderer::dispQuit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     // remove message hook
     getRenderWindow().sigMessage.disconnect( this );

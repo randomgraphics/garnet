@@ -19,14 +19,15 @@ namespace GN { namespace gfx
         {
             unsigned int rendertarget :  1; ///< use as color render target
             unsigned int depth        :  1; ///< use as depth buffer
-            unsigned int fastCpuWrite :  1; ///< need fast data writing by CPU (dynamic texture)
-            unsigned int fastCpuRead  :  1; ///< need fast data reading by CPU.
-            unsigned int nouse        : 27; ///< no use. must be zero.
+            unsigned int fastCpuWrite :  1; ///< Allow fast CPU write, in exchange of GPU rendering speed.
+                                            ///< Note that only textures with this usage off, can be used as render target or depth buffer.
+            unsigned int nouse        : 29; ///< no use. must be zero.
         };
 
         /// default usage
         static TextureUsages DEFAULT() { TextureUsages u; u.u32 = 0; return u; };
     };
+    GN_CASSERT( sizeof(TextureUsages) == sizeof(UInt32) );
 
     ///
     /// Texture descriptor
@@ -277,7 +278,6 @@ namespace GN { namespace gfx
     {
         UInt32 length;        ///< length in bytes of the vertex buffer
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
-        bool   fastCpuRead;   ///< support fast CPU read (rendering speed compromised)
     };
 
     ///
@@ -324,7 +324,6 @@ namespace GN { namespace gfx
         UInt32 numidx;        ///< number of indices in index buffer
         bool   bits32;        ///< is 32-bit index buffer or not.
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
-        bool   fastCpuRead;   ///< support fast CPU read (rendering speed compromised)
     };
     GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 

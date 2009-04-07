@@ -2,12 +2,6 @@
 #include "d3d10Buffer.h"
 #include "d3d10Renderer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxBuf");
-
-// *****************************************************************************
-// Local functions
-// *****************************************************************************
-
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -20,7 +14,7 @@ bool GN::gfx::D3D10VtxBuf::init( const VtxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3D10VtxBuf, (desc.bytes,desc.dynamic,desc.readback,D3D10_BIND_VERTEX_BUFFER) );
+    GN_STDCLASS_INIT( D3D10VtxBuf, (desc.length, desc.fastCpuWrite, D3D10_BIND_VERTEX_BUFFER) );
 
     setDesc( desc );
 
@@ -37,12 +31,6 @@ void GN::gfx::D3D10VtxBuf::quit()
 {
     GN_GUARD;
 
-    if( isLocked() )
-    {
-        unlock();
-        GN_ERROR(sLogger)( "call unlock() before u dispose the index buffer!" );
-    }
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -56,33 +44,21 @@ void GN::gfx::D3D10VtxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::D3D10VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
+void GN::gfx::D3D10VtxBuf::update(
+    size_t            offset,
+    size_t            length,
+    const void      * data,
+    SurfaceUpdateFlag flag )
 {
-    GN_GUARD_SLOW;
+    if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
-    GN_ASSERT( ok() );
-
-    if( !basicLock( offset, bytes, flag ) ) return false;
-
-    GN_ASSERT( ok() );
-
-    return d3dlock( offset, bytes, flag );
-
-    GN_UNGUARD_SLOW;
+    D3D10Buffer::update( offset, length, data, flag );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::unlock()
+void GN::gfx::D3D10VtxBuf::readback( std::vector<UInt8> & data )
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( ok() );
-
-    if( !basicUnlock() ) return;
-
-    d3dunlock();
-
-    GN_UNGUARD_SLOW;
+    D3D10Buffer::readback( data );
 }

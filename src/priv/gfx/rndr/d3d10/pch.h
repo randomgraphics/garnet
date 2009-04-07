@@ -4,7 +4,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "../rndr.h"
+#include "../rndrpch.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -15,12 +15,13 @@
 
 extern bool gD3D10EnablePixPerf; // global variable to switch on/off PIX perf calls.
 
-#if 1//GN_BUILD_RETAIL // disable PIX tag in retail build.
+#if GN_BUILD_RETAIL // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )
 #define PIXPERF_END_EVENT()
 #define PIXPERF_SET_MARKER_EX( color, name )
 #define PIXPERF_SCOPE_EVENT_EX( color, name )
 #else
+#include <d3d9.h> // Include D3D9 header for PIX routines.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )   if( !gD3D10EnablePixPerf ) {} else D3DPERF_BeginEvent( color, GN_JOIN_DIRECT( L, name ) )
 #define PIXPERF_END_EVENT()                     if( !gD3D10EnablePixPerf ) {} else D3DPERF_EndEvent()
 #define PIXPERF_SET_MARKER_EX( color, name )    if( !gD3D10EnablePixPerf ) {} else D3DPERF_SetMarker( color, GN_JOIN_DIRECT( L, name ) )

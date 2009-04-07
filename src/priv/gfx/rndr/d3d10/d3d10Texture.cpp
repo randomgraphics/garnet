@@ -3,15 +3,10 @@
 #include "d3d10Texture.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
-GN::Logger * GN::gfx::D3D10Texture::sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
-
-// ****************************************************************************
-//  public utils
-// ****************************************************************************
 
 // ****************************************************************************
 //  init / quit functions
@@ -43,16 +38,9 @@ void GN::gfx::D3D10Texture::quit()
 {
     GN_GUARD;
 
-    // check if locked
-    if( isLocked() )
-    {
-        GN_WARN(sLogger)( "You are destroying a locked texture!" );
-        unlock();
-    }
-
-    safeRelease( mSRView );
     mRTViews.clear();
-    safeRelease( mD3DTexture.res );
+    safeRelease( mSRView );
+    safeRelease( mTexture );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -71,48 +59,27 @@ void GN::gfx::D3D10Texture::quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D10Texture::lock(
-    TexLockedResult & result,
-    size_t face,
-    size_t level,
-    const TexLockArea * area,
-    LockFlag flag )
+void GN::gfx::D3D10Texture::updateMipmap(
+    size_t              /*face*/,
+    size_t              /*level*/,
+    const Box<UInt32> * /*area*/,
+    size_t              /*rowPitch*/,
+    size_t              /*slicePitch*/,
+    const void        * /*data*/,
+    SurfaceUpdateFlag   /*flag*/ )
 {
-    GN_ASSERT( ok() );
-
-    TexLockArea clippedArea;
-    if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
-
-    const TextureDesc & desc = getDesc();
-
-    // create temporary buffer
-    size_t rowbytes = getMipSize(level).x * getClrFmtDesc(desc.format).bits / 8;
-    size_t slicebytes = rowbytes * getMipSize(level).y;
-    mLockedBuffer.resize( slicebytes * getMipSize(level).z );
-    result.data = mLockedBuffer.cptr();
-    result.rowBytes = rowbytes;
-    result.sliceBytes = slicebytes;
-
-    return true;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::unlock()
-{
-    GN_ASSERT( ok() );
-    basicUnlock();
-    //GN_UNIMPL_WARNING();
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::updateMipmap()
-{
-    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::D3D10Texture:: readMipmap(
+    size_t       /*face*/,
+    size_t       /*level*/,
+    MipmapData & /*data*/ )
+{
+    GN_UNIMPL();
 }
 
 // ****************************************************************************
@@ -126,45 +93,49 @@ bool GN::gfx::D3D10Texture::createTexture()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mD3DTexture.res );
+    GN_ASSERT( !mTexture );
 
     const TextureDesc & desc = getDesc();
 
     // determine texture format
-    DXGI_FORMAT format = d3d10::clrFmt2DxgiFormat( desc.format );
+    DXGI_FORMAT format = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
     if( DXGI_FORMAT_UNKNOWN == format )
     {
-        GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", clrFmt2Str(desc.format) );
+        GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", desc.format.toString().cptr() );
         return false;
     }
 
-    // determine usage
+    // determine usage and CPU access flag
     D3D10_USAGE usage;
-    if( desc.usage.dynamic ) usage = D3D10_USAGE_DYNAMIC;
-    else usage = D3D10_USAGE_DEFAULT;
+    UINT        caf;
+    if( desc.usages.fastCpuWrite )
+    {
+        usage = D3D10_USAGE_DYNAMIC;
+        caf   = D3D10_CPU_ACCESS_WRITE;
+    }
+    else
+    {
+        usage = D3D10_USAGE_DEFAULT;
+        caf   = 0;
+    }
 
-    // determin bind flags
+    // determine bind flags
     UINT bf = D3D10_BIND_SHADER_RESOURCE;
-    if( desc.usage.depthstencil )
+    if( desc.usages.depth )
     {
         bf |= D3D10_BIND_DEPTH_STENCIL;
     }
-    else if( desc.usage.rendertarget )
+    else if( desc.usages.rendertarget )
     {
         bf |= D3D10_BIND_RENDER_TARGET;
     }
 
-    // determine CPU access flags
-    UINT caf = 0;
-    if( D3D10_USAGE_DEFAULT != usage )
-    {
-        if( !desc.usage.rendertarget && !desc.usage.depthstencil ) caf |= D3D10_CPU_ACCESS_WRITE;
-        if( desc.usage.readback ) caf |= D3D10_CPU_ACCESS_READ;
-    }
+    GN_UNIMPL_WARNING();
 
-    // determine misc flags
+    // TODO: determine texture dimension
+
+    /* determine misc flags
     UINT mf = 0;
-    if( desc.usage.automip ) mf |= D3D10_RESOURCE_MISC_GENERATE_MIPS;
     if( TEXDIM_CUBE == desc.dim ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
 
     // create texture instance
@@ -227,7 +198,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         if( mipSize.x > 1 ) mipSize.x >>= 1;
         if( mipSize.y > 1 ) mipSize.y >>= 1;
         if( mipSize.z > 1 ) mipSize.z >>= 1;
-    }
+    }*/
 
     // success
     return true;
@@ -240,7 +211,6 @@ bool GN::gfx::D3D10Texture::createTexture()
 // ----------------------------------------------------------------------------
 bool GN::gfx::D3D10Texture::createDefaultViews()
 {
-    GN_ASSERT( mD3DTexture.res );
     GN_UNIMPL_WARNING();
     return true;
 }

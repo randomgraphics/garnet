@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 
@@ -93,6 +94,7 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
 
     GN_UNGUARD;
 }
+
 // *****************************************************************************
 // public function
 // *****************************************************************************
@@ -100,9 +102,49 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10VertexShader * GN::d3d10::compileVS(
+ID3D10Blob * GN::d3d10::compileShader(
+    const char   * profile,
+    const char   * source,
+    size_t         len,
+    UInt32         flags,
+    const char   * entry )
+{
+    AutoComPtr<ID3D10Blob> bin, err;
+
+    // Note: D3DXCompileFromMemory() is a more up to date compiler than
+    //       D3D10CompileShader(), since D3D10CompileShader() ships
+    //       with runtime only, but D3DXCompileFromMemory() ships with
+    //       each DXSDK update.
+    if( FAILED( D3DX10CompileFromMemory(
+        source,
+        (0==len) ? strLen(source) : len,
+        0, // filename
+        0, // defines
+        0, // includes
+        entry,
+        profile,
+        sRefineFlags(flags),
+        0, // effect compile flags
+        0, // thread pump
+        &bin,
+        &err,
+        0 ) ) )
+    {
+        sPrintShaderCompileError( source, err );
+        return NULL;
+    }
+
+    sPrintShaderCompileInfo( source, bin );
+
+    return bin.detach();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+ID3D10VertexShader * GN::d3d10::compileAndCreateVS(
     ID3D10Device & dev,
-    const char   * code,
+    const char   * source,
     size_t         len,
     UInt32         flags,
     const char   * entry,
@@ -111,28 +153,11 @@ ID3D10VertexShader * GN::d3d10::compileVS(
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin, err;
-    if( FAILED( D3DX10CompileFromMemory(
-            code,
-            (0==len) ? strLen(code) : len,
-            0, 0, 0,
-            entry,
-            profile,
-            sRefineFlags(flags),
-            0,
-            0,
-            &bin,
-            &err,
-            0 ) ) )
-    {
-        sPrintShaderCompileError( code, err );
-        return 0;
-    }
-
-    sPrintShaderCompileInfo( code, bin );
+    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    if( !bin ) return NULL;
 
     ID3D10VertexShader * vs = createDumpableVS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
-    if( 0 == vs ) return 0;
+    if( 0 == vs ) return NULL;
 
     // success
     if( signature ) *signature = bin.detach();
@@ -144,9 +169,9 @@ ID3D10VertexShader * GN::d3d10::compileVS(
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10PixelShader * GN::d3d10::compilePS(
+ID3D10PixelShader * GN::d3d10::compileAndCreatePS(
     ID3D10Device & dev,
-    const char   * code,
+    const char   * source,
     size_t         len,
     UInt32         flags,
     const char   * entry,
@@ -155,25 +180,8 @@ ID3D10PixelShader * GN::d3d10::compilePS(
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin, err;
-    if( FAILED( D3DX10CompileFromMemory(
-            code,
-            (0==len) ? strLen(code) : len,
-            0, 0, 0,
-            entry,
-            profile,
-            sRefineFlags(flags),
-            0,
-            0,
-            &bin,
-            &err,
-            0 ) ) )
-    {
-        sPrintShaderCompileError( code, err );
-        return 0;
-    }
-
-    sPrintShaderCompileInfo( code, bin );
+    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    if( !bin ) return NULL;
 
     ID3D10PixelShader * ps = createDumpablePS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
     if( 0 == ps ) return 0;

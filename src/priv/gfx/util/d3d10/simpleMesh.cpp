@@ -28,7 +28,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
         "float4 main( VSInput i ) : SV_Position0 { return 0; }";
     AutoComPtr<ID3D10VertexShader> vs;
     AutoComPtr<ID3D10Blob>  signature;
-    vs.attach( compileVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
+    vs.attach( compileAndCreateVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
     if( vs.empty() ) return failure();
 
     // create input layout

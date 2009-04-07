@@ -253,10 +253,10 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GPL_GLSL == desc.lang );
 
-    mVS = sCreateShader( desc.vs.code, GL_VERTEX_SHADER_ARB );
+    mVS = sCreateShader( desc.vs.source, GL_VERTEX_SHADER_ARB );
     if( 0 == mVS ) return failure();
 
-    mPS = sCreateShader( desc.ps.code, GL_FRAGMENT_SHADER_ARB );
+    mPS = sCreateShader( desc.ps.source, GL_FRAGMENT_SHADER_ARB );
     if( 0 == mPS ) return failure();
 
     mProgram = sCreateProgram( mVS, mPS );

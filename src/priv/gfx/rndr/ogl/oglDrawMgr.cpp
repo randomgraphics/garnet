@@ -71,8 +71,6 @@ bool GN::gfx::OGLRenderer::drawInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     // create line renderer
     GN_ASSERT( !mLine );
     mLine = new OGLLine(*this);
@@ -90,8 +88,6 @@ bool GN::gfx::OGLRenderer::drawInit()
 void GN::gfx::OGLRenderer::drawQuit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     safeDelete( mLine );
 

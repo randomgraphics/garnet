@@ -40,7 +40,7 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mD3DTexture.res = 0;
+            mTexture = 0;
             mSRView = 0;
         }
         //@}
@@ -50,10 +50,12 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
-        virtual void unlock();
-        virtual void updateMipmap();
-        virtual void * getAPIDependentData() const { return mD3DTexture.res; }
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
+        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * getAPIDependentData() const { return mTexture; }
 
         // ********************************
         // public functions
@@ -70,41 +72,13 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        struct SubResource
-        {
-            unsigned int face;
-            unsigned int level;
-            unsigned int slice;
-        };
+        // mapping subresource index to render target view
+        typedef std::map<UInt32,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
 
-        union D3D10Tex
-        {
-            ID3D10Resource  * res;
-            ID3D10Texture1D * tex1d;
-            ID3D10Texture2D * tex2d;
-            ID3D10Texture3D * tex3d;
-        };
-
-        D3D10Renderer & mRenderer;
-
-        D3D10Tex mD3DTexture; ///< resource instance
-
+        D3D10Renderer            & mRenderer;
+        ID3D10Resource           * mTexture; ///< resource instance
         ID3D10ShaderResourceView * mSRView; ///< view as shader resource
-
-        std::map<SubResource,AutoComPtr<ID3D10RenderTargetView> > mRTViews; ///< render target views
-
-        ///
-        /// \name locking related variables
-        ///
-        //@{
-        D3D10Tex mLockedTexture;
-        LockFlag mLockedFlag;
-        size_t   mLockedFace;
-        size_t   mLockedLevel;
-        DynaArray<UInt8> mLockedBuffer;
-        //@}
-
-        static Logger * sLogger;
+        RTViewMap                  mRTViews; ///< render target views
 
         // ********************************
         // private functions

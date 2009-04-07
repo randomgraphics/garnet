@@ -10,11 +10,6 @@
 #include "renderWindowX11.h"
 
 ///
-/// trace the call sequence of device reset/recreate
-///
-#define _GNGFX_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
-
-///
 /// Rest-in-peace macro
 ///
 #define GN_RNDR_RIP GN::gfx::rip

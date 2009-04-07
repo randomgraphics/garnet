@@ -18,8 +18,6 @@ bool GN::gfx::OGLRenderer::dispInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     GN_ASSERT( !mRenderContext );
 
     Display * disp = (Display*)getDispDesc().displayHandle;
@@ -85,8 +83,6 @@ bool GN::gfx::OGLRenderer::dispInit()
 void GN::gfx::OGLRenderer::dispQuit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     if( mRenderContext )
     {

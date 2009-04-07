@@ -90,8 +90,6 @@ static const GLenum CONVERT_BLEND_OP[] =
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLRenderer::contextInit()
 {
-    _GNGFX_DEVICE_TRACE();
-
     // bind default context to device
     rebindContext();
 

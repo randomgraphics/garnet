@@ -30,8 +30,8 @@ bool init( Renderer & rndr )
     ed.uniforms["pvw"].size = sizeof(Matrix44f);
     ed.textures["diffuse"]; // create a texture parameter named "diffuse"
     ed.shaders["glsl"].gpd.lang = GPL_GLSL;
-    ed.shaders["glsl"].gpd.vs.code = vscode;
-    ed.shaders["glsl"].gpd.ps.code = pscode;
+    ed.shaders["glsl"].gpd.vs.source = vscode;
+    ed.shaders["glsl"].gpd.ps.source = pscode;
     ed.shaders["glsl"].uniforms["transform"] = "pvw";
     ed.shaders["glsl"].textures["t0"] = "diffuse";
     ed.techniques["glsl"].passes.resize( 1 );

@@ -25,11 +25,11 @@ namespace GN { namespace gfx
     ///
     struct ShaderCode
     {
-        const char * code;  ///< NULL terminated shader code
-        const char * entry; ///< NULL terminated shader entry function (ignored for ASM shader code)
+        const char * source; ///< NULL terminated shader source
+        const char * entry;  ///< NULL terminated shader entry function (ignored for ASM shader code)
 
         /// default ctor
-        ShaderCode() : code(NULL), entry(NULL) {}
+        ShaderCode() : source(NULL), entry(NULL) {}
     };
 
     ///
@@ -38,9 +38,25 @@ namespace GN { namespace gfx
     struct GpuProgramDesc
     {
         GpuProgramLanguage lang;  ///< shading language.
-        ShaderCode         vs;
-        ShaderCode         gs;
-        ShaderCode         ps;
+        ShaderCode         vs;    ///< vertex shader code
+        ShaderCode         gs;    ///< geometry shader code
+        ShaderCode         ps;    ///< pixel shader code
+
+        /// compile options
+        //@{
+        bool optimize; ///< generate optimized shader. Default is on.
+        bool debug;    ///< generate debug symbol. Default is off.
+        //@}
+
+        ///
+        /// default constructor
+        ///
+        GpuProgramDesc()
+            : lang( NUM_GPU_PROGRAM_LANGUAGES ) // lang is initialized to invalid value.
+            , optimize(false)
+            , debug(false)
+        {
+        }
     };
 
     ///

@@ -2,7 +2,7 @@
 #define __GN_GFXD3D10_D3D10RESOURCE_H__
 // *****************************************************************************
 /// \file
-/// \brief   
+/// \brief
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
@@ -25,9 +25,9 @@ namespace GN { namespace gfx
         D3D10Renderer & getRenderer() const { return mRenderer; }
 
         ///
-        /// Get D3D10Device pointer
+        /// Get reference to D3D10Device
         ///
-        ID3D10Device * getDevice() const { return mRenderer.getDevice(); }
+        ID3D10Device & getDeviceRef() const { return mRenderer.getDeviceRefInlined(); }
 
     protected :
 

@@ -5,17 +5,13 @@
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.Buffer");
 
 // *****************************************************************************
-// Local functions
-// *****************************************************************************
-
-// *****************************************************************************
 // init / quit functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool dynamic, bool readback, UInt32 bindFlags )
+bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -25,20 +21,25 @@ bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool dynamic, bool readback, UInt
     // check parameter
     if( 0 == bytes )
     {
-        GN_ERROR(sLogger)( "invalid buffer length!" );
+        GN_ERROR(sLogger)( "Buffer length can not be zero!" );
         return failure();
     }
 
-    mBytes = bytes;
-    mDynamic = dynamic;
-    mReadback = readback;
+    ID3D10Device & dev = getDeviceRef();
 
-    // create D3D buffer
-    if( !createBuffer( bindFlags ) ) return failure();
+    D3D10_BUFFER_DESC d3ddesc;
+    d3ddesc.ByteWidth      = bytes;
+    d3ddesc.Usage          = fastCpuWrite ? D3D10_USAGE_DYNAMIC : D3D10_USAGE_DEFAULT ;
+    d3ddesc.BindFlags      = bindFlags;
+    d3ddesc.CPUAccessFlags = fastCpuWrite ? D3D10_CPU_ACCESS_WRITE : 0;
+    d3ddesc.MiscFlags      = 0;
 
-    // create system copy
-    mSysCopy = !dynamic && readback;
-    if( mSysCopy ) mLockBuffer.resize( bytes );
+    // create d3d ibuffer
+    GN_DX10_CHECK_RV( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), failure() );
+
+    // store buffer parameters
+    mBytes        = bytes;
+    mFastCpuWrite = fastCpuWrite;
 
     // success
     return success();
@@ -65,123 +66,53 @@ void GN::gfx::D3D10Buffer::quit()
 // interface functions
 // *****************************************************************************
 
+static const D3D10_MAP SURFACE_UPDATE_FLAG_TO_D3D10_MAP[] =
+{
+    D3D10_MAP_WRITE,              // SURFACE_UPDATE_DEFAULT
+    D3D10_MAP_WRITE_DISCARD,      // SURFACE_UPDATE_DISCARD
+    D3D10_MAP_WRITE_NO_OVERWRITE  // SURFACE_UPDATE_NO_OVERWRITE
+};
+
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::D3D10Buffer::d3dlock( size_t offset, size_t bytes, LockFlag flag )
+void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
 {
-    GN_GUARD_SLOW;
+    // parameters should've already been verified by caller.
+    GN_ASSERT( ( offset + bytes ) <= mBytes );
+    GN_ASSERT( data );
+    GN_ASSERT( 0 <= flag && flag < NUM_SURFACE_UPDATE_FLAGS );
 
-    GN_ASSERT( ok() );
+    ID3D10Device & dev = getDeviceRef();
 
-    UInt8 * buf;
-    if( mSysCopy )
+    if( mFastCpuWrite )
     {
-        GN_ASSERT( mLockBuffer.size() >= (offset+bytes) );
-        buf = mLockBuffer.cptr() + offset;
-
-        // TODO: copy data from d3d buffer
-    }
-    else if( mDynamic )
-    {
-        GN_DX10_CHECK_RV( mD3DBuffer->Map( lockFlags2D3D10( flag ), 0, (void**)&buf ), 0 );
-
-        buf += offset;
+        // update dynamic d3d buffer
+        void * dst;
+        GN_DX10_CHECK_R( mD3DBuffer->Map( SURFACE_UPDATE_FLAG_TO_D3D10_MAP[flag], 0, &dst ) );
+        memcpy( dst, data, bytes );
+        mD3DBuffer->Unmap();
     }
     else
     {
-        // create temporary lock ibuffer
-        mLockBuffer.resize( bytes );
-        buf = mLockBuffer.cptr();
-    }
-
-    // success
-    mLockOffset = (UInt32)offset;
-    mLockBytes  = (UInt32)bytes;
-    mLockFlag   = flag;
-    return buf;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::d3dunlock()
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( ok() );
-
-    if( mSysCopy )
-    {
-        if( LOCK_RO != mLockFlag )
-        {
-            D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 1, 1 };
-
-            // update d3d index buffer
-            getDevice()->UpdateSubresource(
-                mD3DBuffer,
-                0,
-                &box,
-                mLockBuffer.cptr() + mLockOffset,
-                0,   // row pitch
-                0 ); // slice pitch
-        }
-    }
-    else if( mDynamic )
-    {
-        mD3DBuffer->Unmap();
-    }
-    else if( LOCK_RO != mLockFlag )
-    {
-        GN_ASSERT(
-            mLockOffset < mBytes &&
-            0 < mLockBytes &&
-            (mLockOffset + mLockBytes) <= mBytes );
-
-        D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 1, 1 };
-
-        // update d3d index buffer
-        getDevice()->UpdateSubresource(
+        // update non-dynamic d3d buffer
+        D3D10_BOX box = { offset, 0, 0, offset+bytes, 1, 1 };
+        dev.UpdateSubresource(
             mD3DBuffer,
-            0,
+            0,   // subresource
             &box,
-            mLockBuffer.cptr(),
+            data,
             0,   // row pitch
             0 ); // slice pitch
     }
-
-    GN_UNGUARD_SLOW;
 }
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::createBuffer( UInt32 bindFlags )
+void GN::gfx::D3D10Buffer::readback( std::vector<UInt8> & data )
 {
-    GN_GUARD;
+    data.clear();
 
-    GN_ASSERT( !mD3DBuffer );
-
-    ID3D10Device * dev = getDevice();
-
-    D3D10_BUFFER_DESC d3ddesc;
-    d3ddesc.ByteWidth = mBytes;
-    d3ddesc.Usage = mDynamic ? D3D10_USAGE_DYNAMIC : D3D10_USAGE_DEFAULT ;
-    d3ddesc.BindFlags = bindFlags;
-    d3ddesc.CPUAccessFlags = mDynamic ? D3D10_CPU_ACCESS_WRITE : 0;
-    d3ddesc.MiscFlags = 0;
-
-    // create d3d ibuffer
-    GN_DX10_CHECK_RV( dev->CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), false );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
+    GN_UNIMPL();
 }

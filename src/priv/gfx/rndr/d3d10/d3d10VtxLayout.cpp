@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d10VtxLayout.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxLayout");
 
@@ -8,100 +9,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxLayout");
 // *****************************************************************************
 
 ///
-/// d3d vertex semantic structure
-///
-struct D3D10VtxSemDesc
-{
-    const char * name;  ///< semantic name
-    UINT         index; ///< semantic index
-};
-
-///
-/// convert vertex format to D3D10 semantic
-// -----------------------------------------------------------------------------
-static inline const D3D10VtxSemDesc * sVtxSem2D3D10( GN::gfx::VtxSem sem )
-{
-    using namespace GN;
-    using namespace GN::gfx;
-
-    static D3D10VtxSemDesc sDesc;
-    sDesc.index = 0;
-
-    switch( sem.u32 )
-    {
-        case GN_MAKE_FOURCC('P','O','S','0') :
-            sDesc.name = "POSITION";
-            break;
-
-        case GN_MAKE_FOURCC('W','G','H','T') :
-            sDesc.name = "BLENDWEIGHT";
-            break;
-
-        case GN_MAKE_FOURCC('N','M','L','0') :
-            sDesc.name = "NORMAL";
-            break;
-
-        case GN_MAKE_FOURCC('C','L','R','0') :
-            sDesc.name = "COLOR";
-            break;
-
-        case GN_MAKE_FOURCC('C','L','R','1') :
-            sDesc.name = "COLOR";
-            sDesc.index = 1;
-            break;
-
-        case GN_MAKE_FOURCC('F','O','G','0') :
-            sDesc.name = "FOG";
-            break;
-
-        case GN_MAKE_FOURCC('T','A','N','G') :
-            sDesc.name = "TANGENT";
-            break;
-
-        case GN_MAKE_FOURCC('B','N','M','L') :
-            sDesc.name = "BINORMAL";
-            break;
-
-        case GN_MAKE_FOURCC('T','E','X','0') :
-        case GN_MAKE_FOURCC('T','E','X','1') :
-        case GN_MAKE_FOURCC('T','E','X','2') :
-        case GN_MAKE_FOURCC('T','E','X','3') :
-        case GN_MAKE_FOURCC('T','E','X','4') :
-        case GN_MAKE_FOURCC('T','E','X','5') :
-        case GN_MAKE_FOURCC('T','E','X','6') :
-        case GN_MAKE_FOURCC('T','E','X','7') :
-        case GN_MAKE_FOURCC('T','E','X','8') :
-        case GN_MAKE_FOURCC('T','E','X','9') :
-            sDesc.name = "TEXCOORD";
-            sDesc.index = sem.u8[3] - VTXSEM_TEX0.u8[3];
-            break;
-
-        case GN_MAKE_FOURCC('T','E','X','A') :
-        case GN_MAKE_FOURCC('T','E','X','B') :
-        case GN_MAKE_FOURCC('T','E','X','C') :
-        case GN_MAKE_FOURCC('T','E','X','D') :
-        case GN_MAKE_FOURCC('T','E','X','E') :
-        case GN_MAKE_FOURCC('T','E','X','F') :
-            sDesc.name = "TEXCOORD";
-            sDesc.index = sem.u8[3] - VTXSEM_TEXA.u8[3] + 10;
-            break;
-
-        default :
-            GN_ERROR(sLogger)( "unsupport vertex semantic: %s", sem.toStr() );
-            return NULL;
-    };
-
-    // success
-    return &sDesc;
-}   
-
-///
 /// convert vertdecl structure to a D3D vertex declaration array
 // -----------------------------------------------------------------------------
 static bool
 sVtxFmt2InputLayout(
     std::vector<D3D10_INPUT_ELEMENT_DESC> & elements,
-    const GN::gfx::VtxFmtDesc & vtxfmt )
+    const GN::gfx::VertexFormat           & vtxfmt )
 {
     GN_GUARD;
 
@@ -110,31 +23,29 @@ sVtxFmt2InputLayout(
 
     elements.clear();
 
-    for( size_t i = 0; i < vtxfmt.count; ++i )
+    for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
-        const VtxFmtDesc::AttribDesc & va = vtxfmt.attribs[i];
+        const VertexElement & ve = vtxfmt.elements[i];
 
         D3D10_INPUT_ELEMENT_DESC elem;
 
         // set attrib semantic
-        const D3D10VtxSemDesc * desc = sVtxSem2D3D10( va.semantic );
-        if( !desc ) return false;
-        elem.SemanticName  = desc->name;
-        elem.SemanticIndex = desc->index;
+        elem.SemanticName  = ve.binding;
+        elem.SemanticIndex = ve.bindingIndex;
 
         // set attrib format
-        elem.Format = d3d10::clrFmt2DxgiFormat( va.format );
+        elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
-            GN_ERROR(sLogger)( "Unknown element format: %s", clrFmt2Str(va.format) );
+            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().cptr() );
             return false;
         }
 
         // set stream index
-        elem.InputSlot = va.stream;
+        elem.InputSlot = ve.stream;
 
         // set attrib offset
-        elem.AlignedByteOffset = va.offset;
+        elem.AlignedByteOffset = ve.offset;
 
         // instancing attributes
         elem.InputSlotClass = D3D10_INPUT_PER_VERTEX_DATA;
@@ -154,7 +65,7 @@ sVtxFmt2InputLayout(
 /// Build a fake shader that can accept the input vertex format
 // -----------------------------------------------------------------------------
 static ID3D10Blob *
-sVtxFmt2ShaderBinary( const GN::gfx::VtxFmtDesc & vtxfmt )
+sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
 {
     GN_GUARD;
 
@@ -163,45 +74,17 @@ sVtxFmt2ShaderBinary( const GN::gfx::VtxFmtDesc & vtxfmt )
 
     StrA code= "struct VS_INPUT {\n";
 
-    for( size_t i = 0; i < vtxfmt.count; ++i )
+    for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
-        const GN::gfx::VtxFmtDesc::AttribDesc & va = vtxfmt.attribs[i];
+        const GN::gfx::VertexElement & ve = vtxfmt.elements[i];
 
-        // get attrib semantic
-        const D3D10VtxSemDesc * desc = sVtxSem2D3D10( va.semantic );
-        if( !desc ) return false;
-
-        code += strFormat( "    float4 attr%d : %s%d;\n", i, desc->name, desc->index );
+        code += strFormat( "    float4 attr%d : %s%d;\n", i, ve.binding, ve.bindingIndex );
     }
 
     code += "}; float4 main( VS_INPUT nouse ) : POSITION { return float4(0,0,0,1); }";
 
-    // compile shader
-    AutoComPtr<ID3D10Blob> bin, err;
-    if( FAILED( D3D10CompileShader(
-        code.cptr(), (UINT)code.size(),
-        "", // filename
-        0,  // defines
-        0,  // includes
-        "main",
-        "vs_4_0",
-        0, // flag
-        &bin,
-        &err ) ) )
-    {
-        GN_ERROR(sLogger)(
-            "\n================== Shader compile failure ===============\n"
-            "%s\n"
-            "\n---------------------------------------------------------\n"
-            "%s\n"
-            "\n=========================================================\n",
-            code.cptr(),
-            err ? (const char*)err->GetBufferPointer() : "Unknown error." );
-        return false;
-    }
-
-    // success
-    return bin.detach();
+    // return compiled shader binary
+    return d3d10::compileShader( "vs_4_0", code.cptr(), code.size() );
 
     GN_UNGUARD;
 }
@@ -211,14 +94,12 @@ sVtxFmt2ShaderBinary( const GN::gfx::VtxFmtDesc & vtxfmt )
 // *****************************************************************************
 
 //
-// create D3D vtxfmt from vertex format structure
+// create D3D input layout object from vertex format structure
 // -----------------------------------------------------------------------------
 ID3D10InputLayout *
-GN::gfx::createD3D10VtxLayout( ID3D10Device * dev, const VtxFmtDesc & format )
+GN::gfx::createD3D10InputLayout( ID3D10Device & dev, const VertexFormat & format )
 {
     GN_GUARD;
-
-    GN_ASSERT( dev );
 
     std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
@@ -229,7 +110,7 @@ GN::gfx::createD3D10VtxLayout( ID3D10Device * dev, const VtxFmtDesc & format )
 
     ID3D10InputLayout * layout;
     GN_DX10_CHECK_RV(
-        dev->CreateInputLayout(
+        dev.CreateInputLayout(
             &elements[0],
             (UINT)elements.size(),
             bin->GetBufferPointer(),

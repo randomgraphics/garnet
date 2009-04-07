@@ -12,11 +12,9 @@ bool GN::gfx::XenonRenderer::capsInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     mCaps.maxTex1DSize[0] = 16777216;
     mCaps.maxTex1DSize[1] = 1;
-    
+
     mCaps.maxTex2DSize[0] = 8192;
     mCaps.maxTex2DSize[1] = 8192;
     mCaps.maxTex2DSize[2] = 64;

@@ -311,8 +311,8 @@ createEffect()
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
     ed.shaders["glsl"].gpd.lang = GPL_GLSL;
-    ed.shaders["glsl"].gpd.vs.code = glslvscode;
-    ed.shaders["glsl"].gpd.ps.code = glslpscode;
+    ed.shaders["glsl"].gpd.vs.source = glslvscode;
+    ed.shaders["glsl"].gpd.ps.source = glslpscode;
     ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["glsl"].uniforms["world"] = "MATRIX_WORLD";
     ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";

@@ -3,6 +3,7 @@
 
 #if GN_MSVC
 
+#pragma comment(lib, "d3d9.lib") // for PIX routines.
 #pragma comment(lib, "d3d10.lib")
 #if GN_BUILD_DEBUG
 #pragma comment(lib, "d3dx10d.lib")
@@ -12,7 +13,7 @@
 
 #endif // GN_MSVC
 
-GN::Logger * GN::gfx::D3D10Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
 // *****************************************************************************
 // Global functions
@@ -22,16 +23,16 @@ bool gD3D10EnablePixPerf = true; // default is enabled
 
 #if GN_BUILD_STATIC
 GN::gfx::Renderer *
-createD3D10Renderer()
+GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & o )
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer()
+GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
 #endif
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::D3D10Renderer> p( new GN::gfx::D3D10Renderer );
-    if( !p->init() ) return 0;
+    if( !p->init( o ) ) return 0;
     return p.detach();
 
     GN_UNGUARD;
@@ -44,15 +45,15 @@ GNgfxCreateRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::init()
+bool GN::gfx::D3D10Renderer::init( const GN::gfx::RendererOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D10Renderer, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D10Renderer, ( o ) );
 
     // init sub-components
-    if( !dispInit()         ) return failure();
+    if( !dispInit()        ) return failure();
     if( !capsInit()         ) return failure();
     if( !resourceInit()     ) return failure();
     if( !contextInit()      ) return failure();
@@ -71,8 +72,6 @@ void GN::gfx::D3D10Renderer::quit()
 {
     GN_GUARD;
 
-    deviceDestroy();
-
     drawQuit();
     contextQuit();
     resourceQuit();
@@ -80,141 +79,6 @@ void GN::gfx::D3D10Renderer::quit()
     dispQuit();
 
     GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from Renderer
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
-{
-    GN_GUARD;
-
-    // prepare for function re-entrance.
-    if( mDeviceChanging )
-    {
-        GN_WARN(sLogger)( "This call to changeOptions() is ignored to avoid function re-entance!" );
-        return true;
-    }
-    ScopeBool __dummy__(mDeviceChanging);
-
-    RendererOptions newro = ro;
-
-#if GN_XENON
-    if( !newro.fullscreen )
-    {
-        GN_WARN(sLogger)( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
-        newro.fullscreen = true;
-        newro.displayMode.set(0,0,0,0);
-    }
-    if( newro.useExternalWindow )
-    {
-        GN_WARN(sLogger)( "External render windowe is not supported on Xenon platform. Force internal render window." );
-        newro.useExternalWindow = false;
-    }
-#endif
-
-    // store old settings
-    const RendererOptions oldro = getOptions();
-    const DispDesc oldDesc = getDispDesc();
-
-    // setup new settings
-    if( !processUserOptions( newro ) ) return false;
-
-    const DispDesc & newDesc = getDispDesc();
-
-    if( 0 == mDevice ||
-        forceRecreation ||
-        oldDesc.windowHandle != newDesc.windowHandle ||
-        oldDesc.monitorHandle != newDesc.monitorHandle ||
-        oldro.reference != newro.reference ||
-        oldro.software != newro.software ||
-        oldro.pure != newro.pure ||
-        oldro.multithread != newro.multithread ||
-        oldro.msaa != newro.msaa )
-    {
-        // we have to recreate the whole device.
-        deviceDestroy();
-        return deviceCreate();
-    }
-    else if(
-        oldDesc != newDesc ||
-        oldro.fullscreen != newro.fullscreen )
-    {
-        GN_UNIMPL_WARNING();
-        return false;
-    }
-    else
-    {
-        // do nothing, if new setting is equal to current setting
-        return true;
-    }
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// device management
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::deviceCreate()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    GN_ASSERT( mDeviceChanging );
-
-    if( !dispDeviceCreate()     ) return false;
-    if( !capsDeviceCreate()     ) return false;
-    if( !resourceDeviceCreate() ) return false;
-    if( !contextDeviceCreate()  ) return false;
-    if( !drawDeviceCreate()     ) return false;
-
-    // trigger signals
-    GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device create." );
-    if( !gSigRendererCreate() ) return false;
-
-    GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device restore." );
-    if( !gSigRendererRestore() ) return false;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::deviceDestroy()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    if( mDevice )
-    {
-        GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device dispose." );
-        gSigRendererDispose();
-
-        GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device destroy." );
-        gSigRendererDestroy();
-    }
-
-    drawDeviceDestroy();
-    contextDeviceDestroy();
-    resourceDeviceDestroy();
-    capsDeviceDestroy();
-    dispDeviceDestroy();
 
     GN_UNGUARD;
 }

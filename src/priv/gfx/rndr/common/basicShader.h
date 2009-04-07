@@ -22,10 +22,10 @@ namespace GN { namespace gfx
             const char *       begin,
             const char *       end )
         {
-            if( 0 != sc.code && ( sc.code < begin || sc.code >= end ) )
+            if( 0 != sc.source && ( sc.source < begin || sc.source >= end ) )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common");
-                GN_ERROR(sLogger)( "invalid %s shader code pointer.", type );
+                GN_ERROR(sLogger)( "invalid %s shader source pointer.", type );
                 return false;
             }
 
@@ -46,11 +46,11 @@ namespace GN { namespace gfx
         {
             // calculate buffer size
             size_t headerLen  = sizeof(desc);
-            size_t vsCodeLen  = desc.vs.code ? ( strlen(desc.vs.code) + 1 ) : 0;
+            size_t vsCodeLen  = desc.vs.source ? ( strlen(desc.vs.source) + 1 ) : 0;
             size_t vsEntryLen = desc.vs.entry ? ( strlen(desc.vs.entry) + 1 ) : 0;
-            size_t gsCodeLen  = desc.gs.code ? ( strlen(desc.gs.code) + 1 ) : 0;
+            size_t gsCodeLen  = desc.gs.source ? ( strlen(desc.gs.source) + 1 ) : 0;
             size_t gsEntryLen = desc.gs.entry ? ( strlen(desc.gs.entry) + 1 ) : 0;
-            size_t psCodeLen  = desc.ps.code ? ( strlen(desc.ps.code) + 1 ) : 0;
+            size_t psCodeLen  = desc.ps.source ? ( strlen(desc.ps.source) + 1 ) : 0;
             size_t psEntryLen = desc.ps.entry ? ( strlen(desc.ps.entry) + 1 ) : 0;
             size_t length     = headerLen +
                                 vsCodeLen + vsEntryLen +
@@ -67,9 +67,9 @@ namespace GN { namespace gfx
             memcpy( ptr, &desc, sizeof(desc) );
             ptr += sizeof(desc);
 
-#define COPY_CODE( X ) \
-        memcpy( ptr, desc.X.code, X##CodeLen ); \
-        copy.X.code = ( X##CodeLen > 0 ) ? (const char*)( ptr - start ) : 0; \
+#define COPY_SOURCE( X ) \
+        memcpy( ptr, desc.X.source, X##CodeLen ); \
+        copy.X.source = ( X##CodeLen > 0 ) ? (const char*)( ptr - start ) : 0; \
         ptr += X##CodeLen;
 
 #define COPY_ENTRY( X ) \
@@ -78,9 +78,9 @@ namespace GN { namespace gfx
         ptr += X##EntryLen;
 
             // copy codes and entries
-            COPY_CODE( vs ); COPY_ENTRY( vs );
-            COPY_CODE( gs ); COPY_ENTRY( gs );
-            COPY_CODE( ps ); COPY_ENTRY( ps );
+            COPY_SOURCE( vs ); COPY_ENTRY( vs );
+            COPY_SOURCE( gs ); COPY_ENTRY( gs );
+            COPY_SOURCE( ps ); COPY_ENTRY( ps );
 
             // done
             GN_ASSERT( ((size_t)( ptr - start )) == length );
@@ -99,13 +99,13 @@ namespace GN { namespace gfx
             GpuProgramDesc & desc  = *(GpuProgramDesc*)start;
 
             // patch all offsets to pointers
-            if( 0 != desc.vs.code ) desc.vs.code = start + (size_t)desc.vs.code;
+            if( 0 != desc.vs.source ) desc.vs.source = start + (size_t)desc.vs.source;
             if( 0 != desc.vs.entry ) desc.vs.entry = start + (size_t)desc.vs.entry;
 
-            if( 0 != desc.gs.code ) desc.gs.code = start + (size_t)desc.gs.code;
+            if( 0 != desc.gs.source ) desc.gs.source = start + (size_t)desc.gs.source;
             if( 0 != desc.gs.entry ) desc.gs.entry = start + (size_t)desc.gs.entry;
 
-            if( 0 != desc.ps.code ) desc.ps.code = start + (size_t)desc.ps.code;
+            if( 0 != desc.ps.source ) desc.ps.source = start + (size_t)desc.ps.source;
             if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
 
             // check GPU program language
