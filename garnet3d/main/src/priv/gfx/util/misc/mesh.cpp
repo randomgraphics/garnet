@@ -88,7 +88,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
         size_t vbsize = stride * desc.numvtx;
 
         // create GPU vertex buffer
-        VtxBufDesc vbd = { vbsize, desc.dynavb, false };
+        VtxBufDesc vbd = { vbsize, desc.dynavb };
         AutoRef<VtxBuf> & vb = mVtxBufs[i].gpudata;
         vb.attach( mRenderer.createVtxBuf( vbd ) );
         if( NULL == vb ) return failure();
@@ -101,7 +101,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
     // initialize index buffer
     if( desc.numidx > 0 )
     {
-        IdxBufDesc ibd = { desc.numidx, desc.idx32, desc.dynaib, false };
+        IdxBufDesc ibd = { desc.numidx, desc.idx32, desc.dynaib };
         mIdxBuf.gpudata.attach( mRenderer.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return failure();
 

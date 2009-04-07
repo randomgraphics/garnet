@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicRenderer.h"
+#include "../common/basicRendererMsw.h"
 
 #pragma warning(disable:4100)
 
@@ -22,18 +22,16 @@ namespace GN { namespace gfx
     ///
     struct D3D10VtxLayoutDesc
     {
-        VtxFmtDesc                    format; ///< vertex format
+        VertexFormat                  format; ///< vertex format
         AutoComPtr<ID3D10InputLayout> layout; ///< D3D layout
     };
 
     ///
     /// D3D10 renderer class
     ///
-    class D3D10Renderer : public BasicRenderer
+    class D3D10Renderer : public BasicRendererMsw
     {
-        GN_DECLARE_STDCLASS(D3D10Renderer, BasicRenderer);
-
-        static Logger * sLogger;
+        GN_DECLARE_STDCLASS(D3D10Renderer, BasicRendererMsw);
 
         // ********************************
         // ctor/dtor
@@ -51,42 +49,17 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
+        bool init( const RendererOptions & );
         void quit();
     private:
         void clear()
         {
-            deviceClear();
             dispClear();
             capsClear();
             resourceClear();
             contextClear();
             drawClear();
         }
-        //@}
-
-    // ************************************************************************
-    //
-    /// \name                     Device Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public:
-        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation );
-
-    private :
-
-        void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate();
-        void deviceDestroy();
-
-        ///
-        /// if true, then we are inside function changeOptions().
-        ///
-        bool mDeviceChanging;
-
         //@}
 
     // ************************************************************************
@@ -104,23 +77,19 @@ namespace GN { namespace gfx
 
     public :
 
-        ID3D10Device   * getDevice() const { return mDevice; }
-        IDXGISwapChain * getSwapChain() const { return mSwapChain; }
+        ID3D10Device   & getDeviceRefInlined() const { GN_ASSERT(mDevice); return *mDevice; }
+        IDXGISwapChain & getSwapChainRef() const { GN_ASSERT(mSwapChain); return *mSwapChain; }
 
     private :
 
-        bool dispInit() { return true; }
-        void dispQuit() {}
-        bool dispOK() const { return true; }
+        bool dispInit();
+        void dispQuit();
         void dispClear()
         {
             mAdapter = 0;
             mDevice = 0;
             mSwapChain = 0;
         }
-
-        bool dispDeviceCreate();
-        void dispDeviceDestroy();
 
     private :
 
@@ -140,21 +109,19 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( const StrA & );
-        virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const;
-        virtual ClrFmt getDefaultTextureFormat( TexDim type, BitFields usage ) const;
+        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const;
 
     private :
 
-        bool capsInit() { return true; }
+        bool capsInit();
         void capsQuit() {}
-        bool capsOK() const { return true; }
         void capsClear() {}
 
-        bool capsDeviceCreate();
-        void capsDeviceDestroy() {}
-
     private :
+
+        RendererCaps mCaps;
 
         //@}
 
@@ -168,12 +135,12 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
-        virtual Texture * createTexture( const TextureDesc & desc );
-        virtual SamplerHandle createSampler( const SamplerDesc & );
-        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
+        virtual CompiledGpuProgram * compileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram         * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform            * createUniform( size_t size );
+        virtual Texture            * createTexture( const TextureDesc & desc );
+        virtual VtxBuf             * createVtxBuf( const VtxBufDesc & desc );
+        virtual IdxBuf             * createIdxBuf( const IdxBufDesc & desc );
 
     public :
 
@@ -197,17 +164,13 @@ namespace GN { namespace gfx
 
     private:
 
-        bool resourceInit() { return true; }
-        void resourceQuit() {}
-        bool resourceOK() const { return true; }
+        bool resourceInit();
+        void resourceQuit();
         void resourceClear() {}
-        bool resourceDeviceCreate();
-        void resourceDeviceDestroy();
 
     private :
 
         std::list<D3D10Resource*> mResourceList;
-        HandleManager<D3D10VtxLayoutDesc,VtxFmtHandle> mVtxFmts;
 
         //@}
 
@@ -222,35 +185,31 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContext( const RendererContext & newContext );
-        virtual void rebindContext( RendererContext::FieldFlags );
-        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
+        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck );
 
     private :
 
-        bool contextInit() { return true; }
-        void contextQuit() {}
-        bool contextOK() const { return true; }
-        void contextClear() { mContext.resetToDefault(); mSOMgr = 0; mRTMgr = 0; }
-        bool contextDeviceCreate();
-        void contextDeviceDestroy();
+        bool contextInit();
+        void contextQuit();
+        void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
 
-        inline void bindContext(
-            const RendererContext & newContext,
-            RendererContext::FieldFlags newFlag,
-            bool forceRebind );
-
-        inline void bindContextState(
-            const RendererContext & newContext,
-            RendererContext::FieldFlags newFlag,
-            bool forceRebind );
-
-        inline void bindContextData(
-            const RendererContext & newContext,
-            RendererContext::FieldFlags newFlag,
-            bool forceRebind );
+        inline bool bindContextStates( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
 
     private:
+
+        struct VertexFormatKey
+        {
+            VertexFormat vtxfmt;
+            UInt64       shaderID;
+
+            bool operator<( const VertexFormatKey & rhs ) const
+            {
+                if( shaderID < rhs.shaderID ) return true;
+                if( shaderID > rhs.shaderID ) return false;
+                return vtxfmt < rhs.vtxfmt;
+            }
+        };
 
         RendererContext           mContext;
         D3D10StateObjectManager * mSOMgr;
@@ -267,34 +226,34 @@ namespace GN { namespace gfx
         //@{
 
     public: // from Renderer
-        virtual bool drawBegin();
-        virtual void drawEnd();
+
+        virtual void present();
         virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numprim,
+                                  size_t        numidx,
+                                  size_t        basevtx,
                                   size_t        startvtx,
-                                  size_t        minvtxidx,
                                   size_t        numvtx,
                                   size_t        startidx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numprim,
+                           size_t        numvtx,
                            size_t        startvtx );
         virtual void drawIndexedUp(
-                             PrimitiveType    prim,
-                             size_t           numprim,
-                             size_t           numvtx,
-                             const void *     vertexData,
-                             size_t           strideInBytes,
+                             PrimitiveType  prim,
+                             size_t         numidx,
+                             size_t         numvtx,
+                             const void *   vertexData,
+                             size_t         strideInBytes,
                              const UInt16 * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numprim,
+                             size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields options,
-                                const void * positions,
-                                size_t stride,
-                                size_t count,
-                                UInt32 rgba,
+        virtual void drawLines( BitFields         options,
+                                const void *      positions,
+                                size_t            stride,
+                                size_t            numpoints,
+                                UInt32            rgba,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
@@ -303,13 +262,12 @@ namespace GN { namespace gfx
 
         bool drawInit() { return true; }
         void drawQuit() {}
-        bool drawOK() const { return true; }
-        void drawClear() {}
-
-        bool drawDeviceCreate() { return true; }
-        void drawDeviceDestroy() {}
+        void drawClear() { mFrameCounter = 0; mDrawCounter = 0; }
 
     private:
+
+        size_t mFrameCounter;
+        size_t mDrawCounter;
 
         //@}
 
@@ -327,6 +285,7 @@ namespace GN { namespace gfx
         {
             GN_UNUSED_PARAM( startBatchIndex );
             GN_UNUSED_PARAM( numBatches );
+            GN_TODO( "D3D10 frame dump is not implemented." );
         }
 
         //@}

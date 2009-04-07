@@ -150,9 +150,21 @@ namespace GN { namespace gfx
         ///
         bool vsync;
 
+        ///
+        /// create renderer with debug facilities enabled.
+        ///
+        /// Default value is true for debug build; false for profile and retail build.
+        ///
+        bool debug;
+
         /// \name D3D only parameters
         //@{
-        bool reference;   ///< use reference device. ȱʡΪfalse.
+
+        ///
+        /// use reference device. ȱʡΪfalse.
+        ///
+        bool reference;
+
         //@}
 
         /// \name OGL only parameters
@@ -185,6 +197,7 @@ namespace GN { namespace gfx
             , useExternalWindow(false)
             , fullscreen(false)
             , vsync(false)
+            , debug( GN_BUILD_DEBUG )
             , reference(false)
             , autoRestore(true)
         {
@@ -240,8 +253,8 @@ namespace GN { namespace gfx
             GPP_D3D_2_0  = 1<<1, ///< D3D shader model 2.0
             GPP_D3D_3_0  = 1<<2, ///< D3D shader model 3.0
             GPP_D3D_4_0  = 1<<3, ///< D3D shader model 4.0
-            GPP_XVS_3_0  = 1<<4, ///< Xenon XVS 3.0 (vertex shader only profile) 
-            GPP_XPS_3_0  = 1<<5, ///< Xenon XPS 3.0 (pixel shader only profile) 
+            GPP_XVS_3_0  = 1<<4, ///< Xenon XVS 3.0 (vertex shader only profile)
+            GPP_XPS_3_0  = 1<<5, ///< Xenon XPS 3.0 (pixel shader only profile)
             GPP_OGL_ARB1 = 1<<6, ///< OpenGL ARB program
             GPP_OGL_GLSL = 1<<7, ///< OpenGL GLSL 1.0
             GPP_CG       = 1<<8, ///< Nvidia Cg
@@ -1046,12 +1059,11 @@ namespace GN { namespace gfx
         /// Create new vertex buffer
         ///
         VtxBuf *
-        createVtxBuf( size_t length, bool fastCpuWrite = false, bool fastCpuRead = false )
+        createVtxBuf( size_t length, bool fastCpuWrite = false )
         {
             VtxBufDesc desc;
             desc.length       = length;
             desc.fastCpuWrite = fastCpuWrite;
-            desc.fastCpuRead  = fastCpuRead;
             return createVtxBuf( desc );
         }
 
@@ -1065,13 +1077,12 @@ namespace GN { namespace gfx
         /// Create new 16 bit index buffer
         ///
         IdxBuf *
-        createIdxBuf16( size_t numidx, bool fastCpuWrite = false, bool fastCpuRead = false )
+        createIdxBuf16( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (UInt32)numidx;
             desc.bits32       = false;
             desc.fastCpuWrite = fastCpuWrite;
-            desc.fastCpuRead  = fastCpuRead;
             return createIdxBuf( desc );
         }
 
@@ -1079,13 +1090,12 @@ namespace GN { namespace gfx
         /// Create new 32 bit index buffer
         ///
         IdxBuf *
-        createIdxBuf32( size_t numidx, bool fastCpuWrite = false, bool fastCpuRead = false )
+        createIdxBuf32( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (UInt32)numidx;
             desc.bits32       = true;
             desc.fastCpuWrite = fastCpuWrite;
-            desc.fastCpuRead  = fastCpuRead;
             return createIdxBuf( desc );
         }
 

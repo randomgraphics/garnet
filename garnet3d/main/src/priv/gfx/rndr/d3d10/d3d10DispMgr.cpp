@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "d3d10Renderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -8,20 +10,15 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::dispDeviceCreate()
+bool GN::gfx::D3D10Renderer::dispInit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     const RendererOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
-    UINT flags = 0;
-#if GN_BUILD_DEBUG
-    flags |= D3D10_CREATE_DEVICE_DEBUG;
-#endif
-    if( !ro.multithread ) flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
+    UINT flags = D3D10_CREATE_DEVICE_SINGLETHREADED;
+    if( ro.debug ) flags |= D3D10_CREATE_DEVICE_DEBUG;
 
     // setup swap chain descriptor
     GN_CASSERT( D3D10_SDK_VERSION >= 28 );
@@ -61,11 +58,9 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::dispDeviceDestroy()
+void GN::gfx::D3D10Renderer::dispQuit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     safeRelease( mSwapChain );
     safeRelease( mDevice );

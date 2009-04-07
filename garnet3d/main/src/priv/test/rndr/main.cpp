@@ -45,8 +45,8 @@ bool init( Renderer & rndr )
     // create GPU program
     GpuProgramDesc gpd;
     gpd.lang = lang;
-    gpd.vs.code = vscode;
-    gpd.ps.code = pscode;
+    gpd.vs.source = vscode;
+    gpd.ps.source = pscode;
     rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
@@ -81,7 +81,6 @@ bool init( Renderer & rndr )
     VtxBufDesc vbd = {
         sizeof(vertices),
         false,
-        false
     };
     rc.vtxbufs[0].attach( rndr.createVtxBuf( vbd ) );
     if( NULL == rc.vtxbufs[0] ) return false;
@@ -89,7 +88,7 @@ bool init( Renderer & rndr )
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
-    IdxBufDesc ibd = { 4, false, false, false };
+    IdxBufDesc ibd = { 4, false, false };
     rc.idxbuf.attach( rndr.createIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
     rc.idxbuf->update( 0, 0, indices );

@@ -21,24 +21,9 @@ static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::NUM_PRIMITIVES] =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::drawBegin()
+void GN::gfx::D3D10Renderer::present()
 {
-    // TODO: handle render window size move
-    mNumPrims = 0;
-    mNumBatches = 0;
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::drawEnd()
-{
-    GN_GUARD_SLOW;
-
     GN_DX10_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
-
-    GN_UNGUARD_SLOW;
 }
 
 //
@@ -103,37 +88,40 @@ void GN::gfx::D3D10Renderer::draw(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::drawIndexedUp(
-    PrimitiveType    prim,
-    size_t           numprim,
-    size_t           numvtx,
-    const void *     vertexData,
-    size_t           strideInBytes,
-    const UInt16 * indexData )
+    PrimitiveType  /*prim*/,
+    size_t         /*numprim*/,
+    size_t         /*numvtx*/,
+    const void   * /*vertexData*/,
+    size_t         /*strideInBytes*/,
+    const UInt16 * /*indexData*/ )
 {
+    GN_UNIMPL_WARNING();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::drawUp(
-    PrimitiveType prim,
-    size_t        numprim,
-    const void *  vertexData,
-    size_t        strideInBytes )
+    PrimitiveType /*prim*/,
+    size_t        /*numprim*/,
+    const void *  /*vertexData*/,
+    size_t        /*strideInBytes*/ )
 {
+    GN_UNIMPL_WARNING();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::drawLines(
-    BitFields options,
-    const void * positions,
-    size_t stride,
-    size_t count,
-    UInt32 rgba,
-    const Matrix44f & model,
-    const Matrix44f & view,
-    const Matrix44f & proj )
+    BitFields         /*options*/,
+    const void      * /*positions*/,
+    size_t            /*stride*/,
+    size_t            /*numPoints*/,
+    UInt32            /*rgba*/,
+    const Matrix44f & /*model*/,
+    const Matrix44f & /*view*/,
+    const Matrix44f & /*proj*/ )
 {
+    GN_UNIMPL_WARNING();
 }

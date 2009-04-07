@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 static DWORD
 sBufUsage2Xenon( const GN::gfx::VtxBufDesc & desc )
 {
-    if( desc.fastCpuRead || desc.fastCpuWrite )
+    if( desc.fastCpuWrite )
     {
         return D3DUSAGE_CPU_CACHED_MEMORY;
     }

@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #include "d3d10Resource.h"
-#include "../common/basicBuffer.h"
+#include "../common/basicSurface.h"
 
 namespace GN { namespace gfx
 {
@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( UInt32 bytes, bool dynamic, bool readback, UInt32 bindFlags );
+        bool init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFlags );
         void quit();
     private:
         void clear()
@@ -51,9 +51,8 @@ namespace GN { namespace gfx
         //@{
 
         ID3D10Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
-
-        void * d3dlock( size_t offset, size_t bytes, LockFlag flag );
-        void d3dunlock();
+        void           update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        void           readback( std::vector<UInt8> & data );
 
         //@}
 
@@ -64,21 +63,12 @@ namespace GN { namespace gfx
 
         ID3D10Buffer * mD3DBuffer;
         UInt32         mBytes;
-        bool           mDynamic;
-        bool           mReadback;
-
-        DynaArray<UInt8>  mLockBuffer;
-        UInt32            mLockOffset;
-        UInt32            mLockBytes;
-        LockFlag          mLockFlag;
-        bool              mSysCopy;
+        bool           mFastCpuWrite;
 
         // ********************************
         // private function
         // ********************************
     private:
-
-        bool createBuffer( UInt32 bindFlags );
     };
 
     ///
@@ -115,8 +105,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
-        virtual void unlock();
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
         // public functions
@@ -168,8 +158,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag );
-        virtual void unlock();
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( std::vector<UInt8> & data );
 
         // ********************************
         // public functions
@@ -186,28 +176,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
     };
-
-    ///
-    /// convert garnet buffer lock flags to D3D10 mapping flag
-    // ----------------------------------------------------------------------------
-    inline D3D10_MAP lockFlags2D3D10( LockFlag lock )
-    {
-        static D3D10_MAP d3dFlags[] =
-        {
-            D3D10_MAP_READ_WRITE,
-            D3D10_MAP_READ,
-            D3D10_MAP_WRITE,
-            D3D10_MAP_WRITE_DISCARD,
-            D3D10_MAP_WRITE_NO_OVERWRITE
-        };
-        GN_CASSERT( sizeof(d3dFlags)/sizeof(d3dFlags[0]) == NUM_LOCK_FLAGS );
-
-        GN_ASSERT( 0 <= lock && lock < NUM_LOCK_FLAGS );
-
-        return d3dFlags[lock];
-    }
-
-
 }}
 
 // *****************************************************************************

@@ -21,8 +21,6 @@ bool GN::gfx::OGLRenderer::resourceInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     if( !mResourceList.empty() )
     {
         GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
@@ -45,8 +43,6 @@ bool GN::gfx::OGLRenderer::resourceInit()
 void GN::gfx::OGLRenderer::resourceQuit()
 {
     GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
 
     // check for non-released resources
     if( !mResourceList.empty() )

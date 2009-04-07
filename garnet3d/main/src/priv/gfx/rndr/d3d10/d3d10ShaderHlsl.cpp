@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d10Shader.h"
 #include "d3d10Renderer.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
@@ -11,14 +12,98 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10ShaderHlsl::init( const StrA & code, const StrA & hints )
+GN::gfx::D3D10ShaderHlsl::D3D10ShaderHlsl( D3D10Renderer & r, const char * profile )
+    : D3D10Resource( r )
+    , mProfile( profile )
+{
+    clear();
+
+    if( 0 == strCmp( mProfile, "vs_4_0" ) )
+    {
+        mSetConstantBuffers = &ID3D10Device::VSSetConstantBuffers;
+    }
+    else if( 0 == strCmp( mProfile, "ps_4_0" ) )
+    {
+        mSetConstantBuffers = &ID3D10Device::PSSetConstantBuffers;
+    }
+    else if( 0 == strCmp( mProfile, "gs_4_0" ) )
+    {
+        mSetConstantBuffers = &ID3D10Device::GSSetConstantBuffers;
+    }
+    else
+    {
+        // you should never reach here
+        GN_UNEXPECTED();
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10ShaderHlsl::init( const ShaderCode & code, const D3D10ShaderCompileOptions & options )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( D3D10ShaderHlsl, () );
 
-    if( !compileShader( code, hints ) ) return failure();
+    if( code.source )
+    {
+        // determine compile flags
+        DWORD flags =
+            D3D10_SHADER_PACK_MATRIX_ROW_MAJOR |
+            D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY |
+            options.compileFlags;
+
+        // compile shader
+        mBinary = d3d10::compileShader( "vs_4_0", code.source, 0, flags, code.entry );
+        if( NULL == mBinary ) return failure();
+
+        // get shader reflection interface
+        if( FAILED( D3D10ReflectShader(
+            mBinary->GetBufferPointer(),
+            mBinary->GetBufferSize(),
+            &mReflection ) ) )
+        {
+            GN_ERROR(sLogger)( "fail to get shader refelection interface" );
+            return failure();
+        }
+
+        // get shader description
+        D3D10_SHADER_DESC desc;
+        if( FAILED( mReflection->GetDesc( &desc ) ) )
+        {
+            GN_ERROR(sLogger)( "fail to get shader descriptor" );
+            return failure();
+        }
+
+        ID3D10Device & dev = getDeviceRef();
+
+        // create constant buffers
+        GN_ASSERT( desc.ConstantBuffers <= 16 );
+        for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
+        {
+            ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
+            GN_ASSERT( cb );
+
+            D3D10_SHADER_BUFFER_DESC cbdesc;
+            cb->GetDesc( &cbdesc );
+            GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
+
+            ID3D10Buffer * buf;
+            D3D10_BUFFER_DESC bufdesc;
+            bufdesc.ByteWidth = cbdesc.Size;
+            bufdesc.Usage = D3D10_USAGE_DYNAMIC;
+            bufdesc.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
+            bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+            bufdesc.MiscFlags = 0;
+            GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), failure() );
+            mConstBufs.append( buf );
+
+            mConstCopies.resize( mConstCopies.size() + 1 );
+            mConstCopies.back().resize( cbdesc.Size );
+        }
+    }
 
     // success
     return success();
@@ -54,7 +139,7 @@ void GN::gfx::D3D10ShaderHlsl::quit()
 // from D3D10BasicShader
 // *****************************************************************************
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10ShaderHlsl::applyDirtyUniforms() const
@@ -124,13 +209,13 @@ bool GN::gfx::D3D10ShaderHlsl::queryDeviceUniform( const char * name, HandleType
     return false;
 
     GN_UNGUARD;
-}
+}*/
 
 // *****************************************************************************
 // private functions
 // *****************************************************************************
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
@@ -200,7 +285,8 @@ void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
     // copy data to system copy
     memcpy( &syscopy[uud.offsetdw*4], src, uud.sizedw * 4 );
 
-    /* then copy to D3D constant buffer
+    // then copy to D3D constant buffer
+#if 0
     getDevice()->UpdateSubresource(
         cb,
         0, // sub resource
@@ -209,7 +295,7 @@ void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
         0,   // row pitch
         0 ); // slice pitch
 
-    /*/
+#else
     UInt32 * data;
     if( FAILED( cb->Map( D3D10_MAP_WRITE_DISCARD, 0, (void**)&data ) ) )
     {
@@ -218,108 +304,7 @@ void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
     }
     memcpy( data, syscopy.cptr(), syscopy.size() );
     cb->Unmap();
-    //*/
+#endif
 
     GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D10ShaderHlsl::compileShader( const StrA & code, const StrA & hints )
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    GN_ASSERT( !mReflection && !mBinary );
-
-    D3D10ShaderCreationHints ch;
-    ch.fromStr( hints );
-
-    // determine compile flags
-    DWORD flags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR | D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
-    if( !ch.optimize ) flags |= D3D10_SHADER_SKIP_OPTIMIZATION;
-
-    // compile shader
-    AutoComPtr<ID3D10Blob> err;
-    if( FAILED( D3D10CompileShader(
-        code.cptr(), code.size(),
-        ch.filename.cptr(),
-        0, 0, // no defines, no includes
-        ch.entry.cptr(),
-        mProfile,
-        flags,
-        &mBinary,
-        &err ) ) )
-    {
-        GN_ERROR(sLogger)(
-            "\n================== Shader compile failure ===============\n"
-            "%s\n"
-            "\n---------------------------------------------------------\n"
-            "%s\n"
-            "\n=========================================================\n",
-            code.cptr(),
-            err ? (const char*)err->GetBufferPointer() : "Unknown error." );
-        
-        return false;
-    }
-
-    // get shader reflection interface
-    if( FAILED( D3D10ReflectShader(
-        mBinary->GetBufferPointer(),
-        mBinary->GetBufferSize(),
-        &mReflection ) ) )
-    {
-        GN_ERROR(sLogger)( "fail to get shader refelection interface" );
-        return false;
-    }
-
-    // get shader description
-    D3D10_SHADER_DESC desc;
-    if( FAILED( mReflection->GetDesc( &desc ) ) )
-    {
-        GN_ERROR(sLogger)( "fail to get shader descriptor" );
-        return false;
-    }
-
-    // create constant buffers
-    ID3D10Device * dev = getRenderer().getDevice();
-    GN_ASSERT( desc.ConstantBuffers <= 16 );
-    for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
-    {
-        ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
-        GN_ASSERT( cb );
-
-        D3D10_SHADER_BUFFER_DESC cbdesc;
-        cb->GetDesc( &cbdesc );
-        GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
-
-        ID3D10Buffer * buf;
-        D3D10_BUFFER_DESC bufdesc;
-        bufdesc.ByteWidth = cbdesc.Size;
-        bufdesc.Usage = D3D10_USAGE_DYNAMIC;
-        bufdesc.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
-        bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-        bufdesc.MiscFlags = 0;
-        GN_DX10_CHECK_RV( dev->CreateBuffer( &bufdesc, NULL, &buf ), false );
-        mConstBufs.append( buf );
-
-        mConstCopies.resize( mConstCopies.size() + 1 );
-        mConstCopies.back().resize( cbdesc.Size );
-    }
-
-    /* update userdata of all uniforms
-    UInt32 handle = getFirstUniform();
-    while( handle )
-    {
-        Uniform & u = getUniform( handle );
-        if( !queryDeviceUniform( u.name.cptr(), u.userData ) ) return false;
-        handle = getNextUniform( handle );
-    }*/
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
+}*/

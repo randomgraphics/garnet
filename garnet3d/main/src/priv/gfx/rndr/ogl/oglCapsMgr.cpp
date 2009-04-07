@@ -179,8 +179,6 @@ bool GN::gfx::OGLRenderer::capsInit()
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
-
     // output opengl implementation info.
     std::vector<StrA> glexts;
 #if GN_MSWIN
@@ -231,10 +229,6 @@ bool GN::gfx::OGLRenderer::capsInit()
     }
 
     // vertex shader flags
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_1_1;
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_2_0;
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_3_0;
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_4_0;
     mCaps.vsProfiles |= (!!GLEW_ARB_vertex_program) ? RendererCaps::GPP_OGL_ARB1 : 0;
     mCaps.vsProfiles |= ( GLEW_ARB_shader_objects && GLEW_ARB_vertex_shader && GLEW_ARB_shading_language_100 )
                         ? RendererCaps::GPP_OGL_GLSL : 0;

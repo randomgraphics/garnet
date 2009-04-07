@@ -23,15 +23,15 @@ bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
 
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
 
-    if( desc.vs.code )
+    if( desc.vs.source )
     {
-        mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::assemble( dev, desc.vs.code );
+        mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::assemble( dev, desc.vs.source );
         if( NULL == mVs ) return failure();
     }
 
-    if( desc.ps.code )
+    if( desc.ps.source )
     {
-        mPs = d3d9::ShaderCompiler<IDirect3DPixelShader9>::assemble( dev, desc.ps.code );
+        mPs = d3d9::ShaderCompiler<IDirect3DPixelShader9>::assemble( dev, desc.ps.source );
         if( NULL == mPs ) return failure();
     }
 

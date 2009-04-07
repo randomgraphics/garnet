@@ -2,12 +2,6 @@
 #include "d3d10Buffer.h"
 #include "d3d10Renderer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.IdxBuf");
-
-// *****************************************************************************
-// Local functions
-// *****************************************************************************
-
 // *****************************************************************************
 // init / quit functions
 // *****************************************************************************
@@ -19,8 +13,10 @@ bool GN::gfx::D3D10IdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
+    UInt32 bytesPerIndex = 2 << (UInt32)desc.bits32;
+
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D10IdxBuf, (desc.numidx*2, desc.dynamic, desc.readback, D3D10_BIND_INDEX_BUFFER) );
+    GN_STDCLASS_INIT( GN::gfx::D3D10IdxBuf, (desc.numidx*bytesPerIndex, desc.fastCpuWrite, D3D10_BIND_INDEX_BUFFER) );
 
     // store buffer parameters
     setDesc( desc );
@@ -38,12 +34,6 @@ void GN::gfx::D3D10IdxBuf::quit()
 {
     GN_GUARD;
 
-    if( isLocked() )
-    {
-        unlock();
-        GN_ERROR(sLogger)( "call unlock() before u dispose the index buffer!" );
-    }
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -57,35 +47,23 @@ void GN::gfx::D3D10IdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::D3D10IdxBuf::lock( size_t startidx, size_t numidx, LockFlag flag )
+void GN::gfx::D3D10IdxBuf::update(
+    size_t            startidx,
+    size_t            numidx,
+    const void      * data,
+    SurfaceUpdateFlag flag )
 {
-    GN_GUARD_SLOW;
+    if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
-    GN_ASSERT( ok() );
+    UInt32 bytesPerIndex = 2 << (UInt32)getDesc().bits32;
 
-    if( !basicLock( startidx, numidx, flag ) ) return 0;
-
-    return (UInt16*)d3dlock( startidx*2, numidx*2, flag );
-
-    GN_UNGUARD_SLOW;
+    D3D10Buffer::update( startidx*bytesPerIndex, numidx*bytesPerIndex, data, flag );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10IdxBuf::unlock()
+void GN::gfx::D3D10IdxBuf::readback( std::vector<UInt8> & data )
 {
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( ok() );
-
-    if( !basicUnlock() ) return;
-
-    d3dunlock();
-
-    GN_UNGUARD_SLOW;
+    D3D10Buffer::readback( data );
 }
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************

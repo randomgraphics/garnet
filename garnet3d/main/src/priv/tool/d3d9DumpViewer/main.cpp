@@ -15,13 +15,13 @@ static StrA sDumpFileName;
 
 struct D3D9VsDump
 {
-    StrA                               code;
+    StrA                               source;
     AutoComPtr<IDirect3DVertexShader9> vs;
 };
 
 struct D3D9PsDump
 {
-    StrA                              code;
+    StrA                              source;
     AutoComPtr<IDirect3DPixelShader9> ps;
 };
 
@@ -152,12 +152,12 @@ struct D3D9StateDump
     {
         onDispose();
 
-        vs.code.clear();
+        vs.source.clear();
         memset( &vsconstf, 0, sizeof(vsconstf) );
         memset( &vsconsti, 0, sizeof(vsconsti) );
         memset( &vsconstb, 0, sizeof(vsconstb) );
 
-        ps.code.clear();
+        ps.source.clear();
         memset( &psconstf, 0, sizeof(psconstf) );
         memset( &psconsti, 0, sizeof(psconsti) );
         memset( &psconstb, 0, sizeof(psconstb) );
@@ -176,16 +176,16 @@ struct D3D9StateDump
     bool onRestore( IDirect3DDevice9 & dev )
     {
         // vs
-        if( !vs.code.empty() )
+        if( !vs.source.empty() )
         {
-            vs.vs.attach( assembleVS( &dev, vs.code.cptr(), 0 ) );
+            vs.vs.attach( assembleVS( &dev, vs.source.cptr(), 0 ) );
             if( vs.vs.empty() ) return false;
         }
 
         // ps
-        if( !ps.code.empty() )
+        if( !ps.source.empty() )
         {
-            ps.ps.attach( assemblePS( &dev, ps.code.cptr(), 0 ) );
+            ps.ps.attach( assemblePS( &dev, ps.source.cptr(), 0 ) );
             if( ps.ps.empty() ) return false;
         }
 
@@ -449,11 +449,11 @@ struct D3D9StateDump
 
             if( "vs" == e->name )
             {
-                if( !sGetCdata( vs.code, *e ) ) return false;
+                if( !sGetCdata( vs.source, *e ) ) return false;
             }
             else if( "ps" == e->name )
             {
-                if( !sGetCdata( ps.code, *e ) ) return false;
+                if( !sGetCdata( ps.source, *e ) ) return false;
             }
             else if( "vsc" == e->name )
             {

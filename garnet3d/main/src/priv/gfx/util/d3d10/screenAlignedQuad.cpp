@@ -79,9 +79,9 @@ bool GN::d3d10::ScreenAlignedQuad::init(
 		"{                                         \n"
 		"    return 1;                             \n"
 		"}                                         \n";
-    mVs      = compileVS( *device, vscode );
-    mPsTexed = compilePS( *device, texedcode );
-    mPsSolid = compilePS( *device, solidcode );
+    mVs      = compileAndCreateVS( *device, vscode );
+    mPsTexed = compileAndCreatePS( *device, texedcode );
+    mPsSolid = compileAndCreatePS( *device, solidcode );
     if( 0 == mVs || 0 == mPsTexed || 0 == mPsSolid ) return failure();
 
     // success
