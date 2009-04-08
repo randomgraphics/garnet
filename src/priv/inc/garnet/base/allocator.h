@@ -6,6 +6,8 @@
 /// \author  chenlee (2006.5.31)
 // *****************************************************************************
 
+#include <new> // for std::bad_alloc
+
 namespace GN
 {
     ///
@@ -57,7 +59,12 @@ namespace GN
 
         pointer allocate( size_type count )
         {
-            return (pointer)heapAlloc( count * sizeof(T) );
+            void * p = heapAlloc( count * sizeof(T) );
+            if( NULL == p )
+            {
+                throw std::bad_alloc();
+            }
+            return static_cast<pointer>(p);
         }
 
         void deallocate( pointer ptr, size_type )

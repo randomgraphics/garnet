@@ -512,7 +512,9 @@ class UTIL_copy_to_devkit:
 	def __call__( self, target, source, env ):
 		for x in target:
 			self.mkdir( self.targetDir, env )
-			env.Execute( 'xbcp /Q /D /Y %s %s'%(x.abspath,self.targetDir) )
+			# Note: xbcp.exe requires environment variable "SystemRoot".
+			cmdline = 'set SystemRoot=%s&xbcp /Q /D /Y %s %s'%(UTIL_getenv("SystemRoot"),x.abspath,self.targetDir)
+			env.Execute( cmdline )
 			t = '%s\\%s'%(self.targetDir,os.path.basename(x.path))
 		return 0
 

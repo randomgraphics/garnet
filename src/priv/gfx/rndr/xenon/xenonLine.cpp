@@ -52,7 +52,7 @@ bool GN::gfx::XenonLine::init()
         "dcl_color0 v1 \n"
         "m4x4 oPos, v0, c0 \n"
         "mov oD0, v1 \n";
-    mVtxShader = d3d9::assembleVS( &dev, vscode );
+    mVtxShader = d3d9::assembleAndCreateVS( &dev, vscode );
     if( 0 == mVtxShader ) return failure();
 
 
@@ -60,7 +60,7 @@ bool GN::gfx::XenonLine::init()
     static const char * pscode =
         "ps.1.1 \n"
         "mov r0, v0 \n";
-    mPxlShader = d3d9::assemblePS( &dev, pscode );
+    mPxlShader = d3d9::assembleAndCreatePS( &dev, pscode );
     if( 0 == mPxlShader ) return failure();
 
     // create vertex buffer

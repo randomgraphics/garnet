@@ -56,6 +56,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        /// return pointer to D3D buffer
+        IDirect3DIndexBuffer9 * getD3DBuffer() const { return mIb; }
+
         // ********************************
         // private variables
         // ********************************

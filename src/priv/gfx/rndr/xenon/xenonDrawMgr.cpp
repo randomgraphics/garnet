@@ -172,7 +172,7 @@ void GN::gfx::XenonRenderer::drawIndexedUp(
     GN_DX9_CHECK( mDevice->GetIndices( &ib ) );
 
     GN_DX9_CHECK(
-        mDevice->DrawIndexedPrimitiveUP(
+        mDevice->DrawIndexedVerticesUP(
             PRIMITIVE_TO_XENON[prim],
             0, // MinVertexIndex
             (UINT)numvtx,
@@ -208,7 +208,7 @@ void GN::gfx::XenonRenderer::drawUp(
     GN_DX9_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
 
     // do draw
-    GN_DX9_CHECK( mDevice->DrawPrimitiveUP(
+    GN_DX9_CHECK( mDevice->DrawVerticesUP(
         PRIMITIVE_TO_XENON[prim],
         (UINT)numvtx,
         vertexData,

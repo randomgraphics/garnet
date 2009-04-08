@@ -516,7 +516,9 @@ namespace GN
             // config root logger
             mRootLogger.setLevel( Logger::LL_TRACE );
             mRootLogger.setEnabled( true );
+#if !GN_XENON
             mRootLogger.addReceiver( &mCr );
+#endif
             mRootLogger.addReceiver( &mFr );
             mRootLogger.addReceiver( &mDr );
         }

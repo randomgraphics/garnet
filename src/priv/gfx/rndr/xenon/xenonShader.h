@@ -17,14 +17,14 @@ namespace GN { namespace gfx
     struct XenonBasicGpuProgram : public GpuProgram
     {
         ///
-        /// Apply program as well as all uniforms to D3D device
+        /// Apply program to D3D device
         ///
-        //virtual void apply() const = 0;
+        virtual void apply() const = 0;
 
         ///
-        /// Apply only dirty uniforms to D3D device
+        /// Apply uniforms to D3D device
         ///
-        //virtual void applyDirtyUniforms() const = 0;
+        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const = 0;
     };
 
     // *************************************************************************
@@ -64,6 +64,9 @@ namespace GN { namespace gfx
         // from XenonBasicGpuProgram
         // ********************************
     public:
+
+        virtual void apply() const;
+        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
 
         // ********************************
         // from Shader
@@ -117,18 +120,16 @@ namespace GN { namespace gfx
         bool init( const GpuProgramDesc & desc );
         void quit();
     private:
-        void clear() { mVs = 0; mPs = 0; }
+        void clear() { mVs = 0; mVsConsts = 0; mPs = 0; mPsConsts = 0; }
         //@}
-
-        // ********************************
-        // from XenonResource
-        // ********************************
-    public:
 
         // ********************************
         // from XenonBasicGpuProgram
         // ********************************
     public:
+
+        virtual void apply() const;
+        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
 
         // ********************************
         // from Shader
@@ -142,14 +143,34 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        IDirect3DVertexShader9 * mVs;
-        IDirect3DPixelShader9  * mPs;
-        GpuProgramParameterDesc  mParamDesc;
+        struct UniformParamDesc
+        {
+            StrA                 name;      ///< uniform name
+            D3DXHANDLE           vshandle;  ///< VS constant handle. 0 means unused.
+            D3DXHANDLE           pshandle;  ///< PS constant handle. 0 means unused.
+            size_t               size;      ///< uniform size in bytes
+
+            UniformParamDesc() : vshandle(0), pshandle(0) {}
+        };
+
+        IDirect3DVertexShader9    * mVs;
+        ID3DXConstantTable        * mVsConsts;
+        IDirect3DPixelShader9     * mPs;
+        ID3DXConstantTable        * mPsConsts;
+
+        DynaArray<UniformParamDesc> mUniforms;
+        DynaArray<const char*>      mUniformNames;
+        DynaArray<size_t>           mUniformSizes;
+
+        GpuProgramParameterDesc     mParamDesc;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        bool enumerateConsts( ID3DXConstantTable * constBuffer, bool vs );
+        void buildUnformNameAndSizeArray();
     };
 }}
 

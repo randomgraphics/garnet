@@ -298,11 +298,11 @@ namespace GN { namespace gfx
 
     private:
 
-        void miscClear() { mThreadId = 0; }
+        void miscClear() {}
 
     private:
 
-        SInt32 mThreadId;
+        const SInt32 mThreadId; // initialized by constructor
 
         //@}
     };

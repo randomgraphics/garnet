@@ -35,9 +35,6 @@ void GN::gfx::XenonRenderer::resourceQuit()
 {
     GN_GUARD;
 
-    // release vertex formats
-    mVertexFormats.clear();
-
     if( !mResourceList.empty() )
     {
         GN_ERROR(sLogger)( "All graphics resouces MUST be released, after receiving 'destroy' signal!" );

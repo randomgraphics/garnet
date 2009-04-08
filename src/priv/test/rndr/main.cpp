@@ -11,7 +11,7 @@ RendererContext rc;
 #if GN_XENON
 const char * vscode =
     "uniform float4x4 transform; \n"
-    "float4 main( in float4 pos ) : POSITION { \n"
+    "float4 main( in float4 pos : POSITION ) : POSITION { \n"
     "   return mul( transform, pos ); \n"
     "}";
 
@@ -46,7 +46,9 @@ bool init( Renderer & rndr )
     GpuProgramDesc gpd;
     gpd.lang = lang;
     gpd.vs.source = vscode;
+    gpd.vs.entry  = "main";
     gpd.ps.source = pscode;
+    gpd.ps.entry  = "main";
     rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
@@ -195,10 +197,9 @@ int main( int, const char *[] )
     enableCRTMemoryCheck();
 
     RendererOptions o;
-    o.api = API_OGL;
 
-    Renderer * r = createMultiThreadRenderer( o );
-    //Renderer * r = createSingleThreadRenderer( o );
+    //Renderer * r = createMultiThreadRenderer( o );
+    Renderer * r = createSingleThreadRenderer( o );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);

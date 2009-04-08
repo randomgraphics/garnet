@@ -68,13 +68,9 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// Bind myself to specific stage
+        /// return D3D texture
         ///
-        void bind( UINT stage ) const
-        {
-            XenonRenderer & r = getRenderer();
-            r.getDeviceInlined().SetTexture( stage, mD3DTexture );
-        }
+        IDirect3DBaseTexture9 * getD3DTexture() const { return mD3DTexture; }
 
         // ********************************
         // private variables
