@@ -24,7 +24,7 @@ bool GN::gfx::XenonRenderer::capsInit()
     mCaps.maxTex3DSize[2] = 1024;
     mCaps.maxTex3DSize[3] = 1;
 
-    mCaps.maxTextures = 26;
+    mCaps.maxTextures = GPU_D3D_PIXEL_TEXTURE_FETCH_CONSTANT_COUNT;
     mCaps.maxColorRenderTargets = 4;
     mCaps.vsProfiles = RendererCaps::GPP_XVS_3_0 | RendererCaps::GPP_D3D_3_0;
     mCaps.gsProfiles = 0;

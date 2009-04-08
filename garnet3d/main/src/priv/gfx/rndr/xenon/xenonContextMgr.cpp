@@ -101,15 +101,15 @@ bool GN::gfx::XenonRenderer::bindContextImpl(
 inline bool
 GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
     const RendererContext & newContext,
-    bool                    dirtyCheck )
+    bool                    skipDirtyCheck )
 {
     GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( dirtyCheck );
+    GN_UNUSED_PARAM( skipDirtyCheck );
     GN_UNIMPL_WARNING();
     return true;
 
     //bool needRebindViewport;
-    //mRTMgr->bind( mContext, newContext, dirtyCheck, needRebindViewport );
+    //mRTMgr->bind( mContext, newContext, skipDirtyCheck, needRebindViewport );
     
 /*
 
@@ -224,18 +224,32 @@ GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
 */
 }
 
+static const D3DCULL CULL_TO_D3D[]=
+{
+    D3DCULL_NONE, // FRONT_CCW, CULL_NONE
+    D3DCULL_CCW,  // FRONT_CCW, CULL_FRONT,
+    D3DCULL_CW,   // FRONT_CCW, CULL_BACK,
+    D3DCULL_NONE, // FRONT_CW,  CULL_NONE,
+    D3DCULL_CW,   // FRONT_CW,  CULL_FRONT,
+    D3DCULL_CCW,  // FRONT_CW,  CULL_BACK,
+};
+GN_CASSERT( GN_ARRAY_COUNT(CULL_TO_D3D) == GN::gfx::RendererContext::NUM_FRONT_FACE_MODES * GN::gfx::RendererContext::NUM_CULL_MODES );
+
 //
 //
 // -----------------------------------------------------------------------------
 inline bool
 GN::gfx::XenonRenderer::bindContextRenderStates(
     const RendererContext & newContext,
-    bool                    dirtyCheck )
+    bool                    skipDirtyCheck )
 {
     GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( dirtyCheck );
+    GN_UNUSED_PARAM( skipDirtyCheck );
     GN_UNIMPL_WARNING();
-    return true;
+
+    // cull state
+    D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*RendererContext::NUM_CULL_MODES + newContext.cullMode];
+    mDevice->SetRenderState( D3DRS_CULLMODE, cullMode );
 
     /*
     // bind shaders
@@ -334,6 +348,8 @@ GN::gfx::XenonRenderer::bindContextRenderStates(
         float b = t + mContext.viewport.h;
         sSetupXenonViewport( mDevice, l, t, r, b );
     }*/
+
+    return true;
 }
 
 //
@@ -342,11 +358,31 @@ GN::gfx::XenonRenderer::bindContextRenderStates(
 inline bool
 GN::gfx::XenonRenderer::bindContextShaders(
     const RendererContext & newContext,
-    bool                    dirtyCheck )
+    bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( dirtyCheck );
-    GN_UNIMPL_WARNING();
+    if( newContext.gpuProgram )
+    {
+        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.get();
+    
+        if( skipDirtyCheck || mContext.gpuProgram != newContext.gpuProgram )
+        {
+            prog->apply();
+        }
+
+        const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
+        prog->applyUniforms( uniforms, newContext.uniforms.size() );
+    }
+    else
+    {
+        if( skipDirtyCheck || mContext.gpuProgram )
+        {
+            // re-apply shader pointer to NULL, only when dirty check is disabled,
+            // or last GPU program is not NULL.
+            mDevice->SetVertexShader( NULL );
+            mDevice->SetPixelShader( NULL );
+        }
+    }
+
     return true;
 }
 
@@ -356,95 +392,68 @@ GN::gfx::XenonRenderer::bindContextShaders(
 inline bool
 GN::gfx::XenonRenderer::bindContextResources(
     const RendererContext & newContext,
-    bool                    dirtyCheck )
+    bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( dirtyCheck );
-    GN_UNIMPL_WARNING();
-    return true;
-
-    /*
+    //
     // bind vertex format
     //
-    if( newFlags.vtxfmt )
+    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
     {
-        if( newContext.vtxfmt )
+        AutoComPtr<IDirect3DVertexDeclaration9> & decl = mVertexFormats[newContext.vtxfmt];
+        if( !decl )
         {
-            const XenonVtxDeclDesc * decl;
-            decl = &mVtxFmts[newContext.vtxfmt];
-            GN_ASSERT( decl->decl );
-            if( newContext.vtxfmt != mContext.vtxfmt || forceRebind )
-            {
-                GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
-            }
+            decl.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
+            if( !decl ) return false;
         }
+
+        // apply to D3D device
+        GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl ) );
     }
 
     ///
     /// bind vertex buffers
     ///
-    if( newFlags.vtxbufs )
+    for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
     {
-        for( UINT i = 0; i < newContext.numVtxBufs; ++i )
+        const AutoRef<VtxBuf> & vb     = newContext.vtxbufs[i];
+        UINT                    stride = newContext.strides[i];
+
+        if( skipDirtyCheck || vb != mContext.vtxbufs[i] || stride != mContext.strides[i] )
         {
-            const RendererContext::VtxBufDesc & vb = newContext.vtxbufs[i];
-            if( vb != mContext.vtxbufs[i] || forceRebind )
-            {
-                GN_ASSERT( vb.buffer );
-                GN_DX9_CHECK( mDevice->SetStreamSource(
-                    i,
-                    safeCastPtr<const XenonVtxBuf>(vb.buffer)->getD3DVb(),
-                    (UINT)vb.offset,
-                    (UINT)vb.stride ) );
-            }
+            GN_DX9_CHECK( mDevice->SetStreamSource(
+                i,
+                vb ? safeCastPtr<const XenonVtxBuf>(vb.get())->getD3DBuffer() : NULL,
+                0, // offset
+                stride ) );
         }
     }
 
     //
     // bind index buffer
     //
-    if( newFlags.idxbuf &&
-      ( newContext.idxbuf != mContext.idxbuf || forceRebind ) )
+    if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX9_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf)->getD3DIb()
-            : 0 ) );
+            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
+            : NULL ) );
     }
 
-    //
+    GN_TODO( "apply textures and samplers" );
+
+    /*
     // bind textures
     //
-    if( newFlags.textures )
+    for( UINT i = 0; i < RendererContext::MAX_TEXTURES; ++i )
     {
-        UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        UINT numTex = min<UINT>( (UINT)newContext.numTextures, maxStages );
-        UINT stage;
-        for( stage = 0; stage < numTex; ++stage )
+        const Texture * tex = newContext.textures[i].get();
+        if( skipDirtyCheck || tex != mContext.textures[i].get() )
         {
-            const Texture * tex = newContext.textures[stage];
-            if( tex != mContext.textures[stage] ||
-                stage > mContext.numTextures ||
-                !forceRebind )
-            {
-                if( tex )
-                {
-                    safeCastPtr<const XenonTexture>(tex)->bind( stage );
-                }
-                else
-                {
-                    mDevice->SetTexture( stage, NULL );
-                }
-            }
+            GN_TODO( "Should use stage index retrieved from GPU program" );
+            mDevice->SetTexture( i, tex ? safeCastPtr<const XenonTexture>(tex)->getD3DTexture() : NULL );
         }
-        // clear unused stages
-        numTex = min<UINT>( (UINT)mContext.numTextures, maxStages );
-        for( ; stage < numTex; ++stage )
-        {
-            mDevice->SetTexture( stage, 0 );
-        }
-    }
+    }*/
 
-    //
+    /*
     // bind samplers
     //
     if( newFlags.samplers )
@@ -464,4 +473,6 @@ GN::gfx::XenonRenderer::bindContextResources(
             }
         }
     }*/
+
+    return true;
 }

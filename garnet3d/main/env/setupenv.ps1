@@ -370,9 +370,9 @@ cd $GARNET_ROOT
 # call user specific setup script
 # ==============================================================================
 
-if( Test-Path $GARNET_ROOT\env\user\$env:USERNAME.ps1 )
+if( Test-Path $GARNET_ROOT\user\$env:USERNAME.ps1 )
 {
-    .$GARNET_ROOT\env\user\$env:USERNAME.ps1
+    .$GARNET_ROOT\user\$env:USERNAME.ps1
 }
 
 # ==============================================================================

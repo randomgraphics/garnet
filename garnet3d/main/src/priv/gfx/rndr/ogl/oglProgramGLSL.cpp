@@ -342,7 +342,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
         // compose bindingName and bindingIndex into a single name, then look up again.
         // So for "position" and 12 become "position12"
         size_t len = strLen( bindingName );
-        char * nameWithSuffix = (char*)alloca( len+4 );
+        char * nameWithSuffix = (char*)stackAlloc( len+4 );
         memcpy( nameWithSuffix, bindingName, len+1 );
         if( bindingIndex >= 100 )
         {
@@ -616,7 +616,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &maxLength ), false );
 
     // enumerate all parameters
-    char * nameptr = (char*)alloca( maxLength+1 );
+    char * nameptr = (char*)stackAlloc( maxLength+1 );
     mUniforms.clear();
     for( GLint i = 0; i < numParameters; ++i )
     {
@@ -676,7 +676,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     GN_OGL_CHECK_RV( glGetObjectParameterivARB( mProgram, GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB, &maxLength ), false );
 
     // enumerate all attributes
-    char * nameptr = (char*)alloca( maxLength+1 );
+    char * nameptr = (char*)stackAlloc( maxLength+1 );
     mAttributes.clear();
     for( GLint i = 0; i < numAttributes; ++i )
     {

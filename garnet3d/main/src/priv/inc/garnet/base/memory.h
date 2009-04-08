@@ -39,6 +39,11 @@ namespace GN
     /// Free heap-allocated memory. Can cross DLL boundary.
     ///
     GN_PUBLIC void heapFree( void * );
+
+    ///
+    /// allocate memory from stack.
+    ///
+    GN_PUBLIC void * stackAlloc( size_t sizeInBytes );
 }
 
 // *****************************************************************************

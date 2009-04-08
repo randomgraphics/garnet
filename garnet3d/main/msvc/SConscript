@@ -4,9 +4,15 @@ Import('GN env compiler variant name target')
 def toRelativePath( files ):
     return [ GN.relpath( File(x).srcnode().path, Dir(target_dir).srcnode().path ) for x in files ]
 def getMsvsPlatform( env ) :
-    p = env['MSVS8_PLATFORM']
-    if 'x86' == p : return 'Win32'
-    else: return p
+	if 'ppc' == compiler.cpu:
+		return 'Xbox 360'
+	elif 'x64' == compiler.cpu:
+		return 'x64'
+	elif 'x86' == compiler.cpu:
+		return 'Win32'
+	else:
+		GN.error( "Unknown target CPU: %s"%(compiler.cpu) )
+		Exit(-1);
 
 import os.path
 

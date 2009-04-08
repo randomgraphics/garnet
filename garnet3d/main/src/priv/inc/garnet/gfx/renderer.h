@@ -527,13 +527,16 @@ namespace GN { namespace gfx
             FILL_SOLID = 0,
             FILL_WIREFRAME,
             FILL_POINT,
+            NUM_FILL_MODES,
 
             FRONT_CCW = 0,
             FRONT_CW,
+            NUM_FRONT_FACE_MODES,
 
             CULL_NONE = 0,
             CULL_FRONT,
             CULL_BACK,
+            NUM_CULL_MODES,
 
             CMP_NEVER = 0,
             CMP_LESS,
@@ -543,6 +546,7 @@ namespace GN { namespace gfx
             CMP_GREATER,
             CMP_NOT_EQUAL,
             CMP_ALWAYS,
+            NUM_CMP_FUNCTIONS,
 
             STENCIL_KEEP = 0,
             STENCIL_ZERO,
@@ -552,6 +556,7 @@ namespace GN { namespace gfx
             STENCIL_INVERT,
             STENCIL_INC,
             STENCIL_DEC,
+            NUM_STENCIL_OPERATIONS,
 
             BLEND_ZERO = 0,
             BLEND_ONE,
@@ -565,12 +570,14 @@ namespace GN { namespace gfx
             BLEND_INV_DEST_COLOR,
             BLEND_BLEND_FACTOR,
             BLEND_INV_BLEND_FACTOR,
+            NUM_BLEND_FACTORS,
 
             BLEND_OP_ADD = 0,
             BLEND_OP_SUB,
             BLEND_OP_REV_SUB,
             BLEND_OP_MIN,
             BLEND_OP_MAX,
+            NUM_BLEND_OPERATIONS,
         };
 
         union
