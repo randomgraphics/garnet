@@ -142,10 +142,19 @@ inline bool GN::gfx::D3D10Renderer::bindContextStates(
     // bind render targets
     //
     bool needRebindViewport = false;
-    mRTMgr->bind( newContext.crts, newContext.dsrt, mContext.crts, newContext.dsrt, skipDirtyCheck, needRebindViewport );
+    if( !mRTMgr->bind(
+            newContext.crts,
+            newContext.dsrt,
+            mContext.crts,
+            newContext.dsrt,
+            skipDirtyCheck,
+            needRebindViewport ) )
+    {
+        return false;
+    }
 
     // bind viewport
-    const Vector2<UInt32> rtsize = mRTMgr->getRenderTargetSize();
+    const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
     const Rect<UInt32> & newvp = newContext.viewport;
     D3D10_VIEWPORT d3dvp;
     d3dvp.MinDepth = 0.0f;

@@ -840,6 +840,7 @@ TARGET_shlibs = [
     'GNcore',
     'GNrndrOGL',
 	'GNrndrXenon',
+	'GNrndrD3D10',
     ]
 
 TARGET_tests = [

@@ -12,51 +12,71 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr");
 ///
 typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOptions & );
 
+
+/// Xenon renderer creator
 #if GN_XENON
-
-/// extern Xenon renderer creator
-extern GN::gfx::Renderer *
-GNgfxCreateXenonRenderer( const GN::gfx::RendererOptions & );
-
-///
-/// fake OGL renderer creator for Xenon platform
-///
-inline GN::gfx::Renderer *
-GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & )
-{
-    GN_ERROR(sLogger)( "OpenGL renderer is not available on Xbox360." );
-    return 0;
-}
-
+extern
 #else
-
-/// Fake Xenon renderer creator
-inline GN::gfx::Renderer *
+inline
+#endif
+GN::gfx::Renderer *
 GNgfxCreateXenonRenderer( const GN::gfx::RendererOptions & )
+#if GN_XENON
+;
+#else
 {
     GN_ERROR(sLogger)( "Xenon renderer is not available on platform other than Xbox360." );
     return 0;
 }
+#endif
 
-/// extern OGL renderer creator
-extern GN::gfx::Renderer *
-GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & );
+///
+/// OGL renderer creator
+///
+#if GN_XENON
+inline
+#else
+extern
+#endif
+GN::gfx::Renderer *
+GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & )
+#if GN_XENON
+{
+    GN_ERROR(sLogger)( "OpenGL renderer is not available on Xbox360." );
+    return 0;
+}
+#else
+;
+#endif
 
+///
+/// D3D10 renderer creator
+///
+#if GN_XENON
+inline
+#else
+extern
+#endif
+GN::gfx::Renderer *
+GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
+#if GN_XENON
+{
+    GN_ERROR(sLogger)( "D3D10 renderer is not available on Xbox360." );
+    return 0;
+}
+#else
+;
 #endif
 
 //
 // determine renderer API
 // -----------------------------------------------------------------------------
-static GN::gfx::RendererAPI sDetermineRendererAPI()
+static GN::gfx::RendererAPI sDetermineDefaultRendererAPI()
 {
 #if GN_XENON
     return GN::gfx::API_XENON;
-#elif defined(HAS_D3D9)
-    return GN::gfx::API_D3D9;
-#elif defined(HAS_OGL)
-    return GN::gfx::API_OGL;
 #else
-    return GN::gfx::API_FAKE;
+    return GN::gfx::API_OGL;
 #endif
 }
 
@@ -67,41 +87,41 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    Renderer * createSingleThreadRenderer( const RendererOptions & ro )
+    Renderer * createSingleThreadRenderer( const RendererOptions & inputOptions )
     {
         GN_GUARD;
 
-        RendererAPI api = ro.api;
+        RendererOptions ro = inputOptions;
 
-        if( API_AUTO == api ) api = sDetermineRendererAPI();
+        if( API_AUTO == ro.api ) ro.api = sDetermineDefaultRendererAPI();
 
         // then create new one.
-        if( API_FAKE == api )
+        if( API_FAKE == ro.api )
         {
             GN_UNIMPL();
             return NULL;
         }
 
 #if GN_BUILD_STATIC
-        switch( api )
+        switch( ro.api )
         {
             case API_OGL   : return GNgfxCreateOGLRenderer( ro );
-            case API_D3D9  :
-            case API_D3D10 : GN_UNIMPL(); return 0;
+            case API_D3D9  : GN_UNIMPL(); return 0;
+            case API_D3D10 : return GNgfxCreateD3D10Renderer( ro );
             case API_XENON : return GNgfxCreateXenonRenderer( ro );
             case API_FAKE  : GN_UNIMPL(); return 0;
-            default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
+            default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api ); return 0;
         }
 #else
         const char * dllName;
         CreateRendererFunc creator;
-        switch( api )
+        switch( ro.api )
         {
             case API_D3D9  : dllName = "GNrndrD3D9"; break;
             case API_D3D10 : dllName = "GNrndrD3D10"; break;
             case API_OGL   : dllName = "GNrndrOGL"; break;
             case API_XENON : dllName = "GNrndrXenon"; break;
-            default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
+            default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api ); return 0;
         }
         AutoObjPtr<SharedLib> dll( new SharedLib );
         if( !dll->load( dllName ) ) return 0;

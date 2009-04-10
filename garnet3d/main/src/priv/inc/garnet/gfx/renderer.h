@@ -479,12 +479,12 @@ namespace GN { namespace gfx
             };
         };
 
-        bool operator==( RenderTargetTexture & rhs ) const
+        bool operator==( const RenderTargetTexture & rhs ) const
         {
             return texture == rhs.texture && subsurface == rhs.subsurface;
         }
 
-        bool operator!=( RenderTargetTexture & rhs ) const
+        bool operator!=( const RenderTargetTexture & rhs ) const
         {
             return texture != rhs.texture || subsurface != rhs.subsurface;
         }
