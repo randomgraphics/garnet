@@ -3,6 +3,9 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
 
+//
+// RIP for renderer modules
+// -----------------------------------------------------------------------------
 void GN::gfx::rip( const char * msg, ... )
 {
     GN_UNUSED_PARAM(msg);
@@ -15,17 +18,32 @@ void GN::gfx::rip( const char * msg, ... )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::init( const RendererOptions & )
+bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( BasicRenderer, () );
 
-    size_t rcsize = sizeof(RendererContext);
-    if( rcsize > 2048 )
+    // check renderer options
+    if( o.api < 0 || o.api >= NUM_RENDERER_API )
     {
-        GN_WARN(sLogger)( "GN::gfx::RendererContext is huge! (%u bytes)", rcsize );
+        if( API_AUTO == o.api )
+        {
+            GN_ERROR(sLogger)( "API_AUTO must be changed to actual API value before initializing renderer." );
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Invalid API: %d", o.api );
+        }
+
+        return failure();
+    }
+
+    // sanity check: warning when render context size is larger than 2K bytes
+    if( sizeof(RendererContext) > 2048 )
+    {
+        GN_WARN(sLogger)( "GN::gfx::RendererContext is huge! (%u bytes)", sizeof(RendererContext) );
     }
 
     // success

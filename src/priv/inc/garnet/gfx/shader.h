@@ -70,24 +70,155 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// GPU program uniform description
+    ///
+    struct GpuProgramUniformParameterDesc
+    {
+        const char * name; ///< uniform name
+        size_t       size; ///< uniform size in bytes
+    };
+
+    ///
+    /// GPU program attribute (input vertex) description
+    ///
+    struct GpuProgramAttributeParameterDesc
+    {
+        const char * name; ///< attribute name.
+    };
+
+    ///
+    /// GPU program texture parameter desc
+    struct GpuProgramTextureParameterDesc
+    {
+        const char * name; ///< texture name
+    };
+
+    enum
+    {
+        /// indicate a invalid parameter index
+        GPU_PROGRAM_PARAMETER_NOT_FOUND = (size_t)-1
+    };
+
+    ///
+    /// GPU program parameter accessor template
+    ///
+    template<class PARAMETER_DESC_CLASS>
+    class GpuProgramParameterAccessor
+    {
+        const UInt8 * & mData;
+        const size_t  & mCount;
+        const size_t  & mStride;
+
+    public:
+
+        ///
+        /// constructor
+        ///
+        GpuProgramParameterAccessor(
+            const PARAMETER_DESC_CLASS * & data,
+            const size_t & count,
+            const size_t & stride )
+            : mData((const UInt8*&)data), mCount(count), mStride(stride)
+        {
+        }
+
+        ///
+        /// return number of parameters
+        ///
+        size_t count() const { return mCount; }
+
+        ///
+        /// bracket operator. index must be valid
+        ///
+        const PARAMETER_DESC_CLASS & operator[]( size_t index ) const
+        {
+            // must be a valid index
+            GN_ASSERT( index < mCount );
+
+            // Note: stride must be larger than size of parameter class
+            GN_ASSERT( mStride >= sizeof(PARAMETER_DESC_CLASS) );
+
+            const PARAMETER_DESC_CLASS * p = (const PARAMETER_DESC_CLASS *)(mData + mStride * index);
+
+            return *p;
+        }
+
+        ///
+        /// Look up parameter with specific name, return GPU_PROGRAM_PARAMETER_NOT_FOUND for invalid name
+        ///
+        size_t operator[]( const char * name ) const
+        {
+            // Note: stride must be larger than size of parameter class
+            GN_ASSERT( mStride >= sizeof(PARAMETER_DESC_CLASS) );
+
+            const UInt8 * p = mData;
+            for( size_t i = 0; i < mCount; ++i, p+=mStride )
+            {
+                /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
+                const char * paramName = *(const char * const *)p;
+
+                if( 0 == strCmp( name, paramName ) )
+                {
+                    // got you!
+                    return i;
+                }
+            }
+            GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
+                "Invalid uniform name: %s", name?name:"<NULLPTR>" );
+            return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
+        }
+    };
+
+    ///
     /// GPU program parameter descrption
     ///
-    struct GpuProgramParameterDesc
+    class GpuProgramParameterDesc
     {
+    public:
+
+        /// parameter accessors
+        ///@{
+        GpuProgramParameterAccessor<GpuProgramUniformParameterDesc>   uniforms;
+        GpuProgramParameterAccessor<GpuProgramAttributeParameterDesc> attributes;
+        GpuProgramParameterAccessor<GpuProgramTextureParameterDesc>   textures;
+        ///@}
+
+        ///
+        /// constructor
+        ///
+        GpuProgramParameterDesc()
+            : uniforms( mUniformArray, mUniformCount, mUniformArrayStride )
+            , attributes( mAttributeArray, mAttributeCount, mAttributeArrayStride )
+            , textures( mTextureArray, mTextureCount, mTextureArrayStride )
+            , mUniformCount(0)
+            , mAttributeCount(0)
+            , mTextureCount(0)
+        {
+        }
+
+    protected:
+
+        // Note: it is subclass's responsibility to initialize these data members.
+
+        /// uniform parameters
         //@{
-        size_t               numUniforms;
-        const char * const * uniformNames;
-        const size_t       * uniformSizes;
+        const GpuProgramUniformParameterDesc *   mUniformArray;
+        size_t                                   mUniformCount;
+        size_t                                   mUniformArrayStride;
         //@}
 
+        /// attribute parameters
         //@{
-        size_t               numAttributes;
-        const char * const * attributeNames;
-         //@}
+        const GpuProgramAttributeParameterDesc * mAttributeArray;
+        size_t                                   mAttributeCount;
+        size_t                                   mAttributeArrayStride;
+        //@}
 
+        /// texture parameters
         //@{
-        size_t               numTextures;
-        const char * const * textureNames;
+        const GpuProgramTextureParameterDesc   * mTextureArray;
+        size_t                                   mTextureCount;
+        size_t                                   mTextureArrayStride;
         //@}
     };
 
@@ -105,56 +236,10 @@ namespace GN { namespace gfx
     ///
     struct GpuProgram : public RefCounter
     {
-        static const size_t PARAMETER_NOT_FOUND = (size_t)-1;
-
         ///
-        /// get number of uniform parameters
+        /// get GPU program parameters
         ///
         virtual const GpuProgramParameterDesc & getParameterDesc() const = 0;
-
-        ///
-        /// get number of uniforms
-        ///
-        size_t getNumUniforms() const { return getParameterDesc().numUniforms; }
-
-        ///
-        /// get index of uniform with specific name. Return PARAMETER_NOT_FOUND if the name is invalid.
-        ///
-        size_t getUniformIndex( const char * name ) const
-        {
-            const GpuProgramParameterDesc  & pd = getParameterDesc();
-            for( size_t i = 0; i < pd.numUniforms; ++i )
-            {
-                if( 0 == strCmp( name, pd.uniformNames[i] ) )
-                {
-                    return i;
-                }
-            }
-            GN_ERROR(getLogger("GN.gfx.GpuProgram"))( "Invalid uniform name: %s", name?name:"<NULLPTR>" );
-            return PARAMETER_NOT_FOUND;
-        }
-
-        ///
-        /// get number of textures
-        ///
-        size_t getNumTextures() const { return getParameterDesc().numTextures; }
-
-        ///
-        /// get index of texture with specific name. Return PARAMETER_NOT_FOUND if the name is invalid.
-        ///
-        size_t getTextureIndex( const char * name ) const
-        {
-            const GpuProgramParameterDesc  & pd = getParameterDesc();
-            for( size_t i = 0; i < pd.numTextures; ++i )
-            {
-                if( 0 == strCmp( name, pd.textureNames[i] ) )
-                {
-                    return i;
-                }
-            }
-            GN_ERROR(getLogger("GN.gfx.GpuProgram"))( "Invalid texture name: %s", name?name:"<NULLPTR>" );
-            return PARAMETER_NOT_FOUND;
-        }
 
     protected:
 
