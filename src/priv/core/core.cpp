@@ -59,12 +59,4 @@ namespace GN
         ::free( ptr );
         //#endif
     }
-
-    //
-    //
-    // -----------------------------------------------------------------------------
-    GN_PUBLIC void * stackAlloc( size_t sizeInBytes )
-    {
-        return alloca( sizeInBytes );
-    }
 }
