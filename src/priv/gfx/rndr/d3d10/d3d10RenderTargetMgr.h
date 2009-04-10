@@ -55,7 +55,7 @@ namespace GN { namespace gfx
         ///
         /// bind render target to device
         ///
-        void bind(
+        bool bind(
             const RenderTargetTexture   newColorRenderTargets[],
             const RenderTargetTexture & newDepthStencilRenderTarget,
             const RenderTargetTexture   oldColorRenderTargets[],
@@ -85,7 +85,7 @@ namespace GN { namespace gfx
         ///
         /// get render target size in pixels
         ///
-        const Vector2<UInt32> getRenderTargetSize() const { return mRenderTargetSize; }
+        const Vector2<UInt32> & getRenderTargetSize() const { return mRenderTargetSize; }
 
         // ********************************
         // private variables
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         ID3D10Texture2D *        mAutoDepthTexture;
         ID3D10DepthStencilView * mAutoDepth;
 
-        ID3D10RenderTargetView * mColors[8];
+        ID3D10RenderTargetView * mColors[RendererContext::MAX_COLOR_RENDER_TARGETS];
         ID3D10DepthStencilView * mDepth;
         UInt32                   mNumColors;
 

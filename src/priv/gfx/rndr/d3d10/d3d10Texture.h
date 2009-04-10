@@ -63,9 +63,14 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// get render target view of specific surface
+        /// get render target view of specific subresource
         ///
         ID3D10RenderTargetView * getRTView( UInt32 face, UInt32 level, UInt32 slice );
+
+        ///
+        /// get render target view of specific subresource
+        ///
+        ID3D10DepthStencilView * getDSView( UInt32 face, UInt32 level, UInt32 slice );
 
         // ********************************
         // private variables
@@ -77,7 +82,7 @@ namespace GN { namespace gfx
 
         D3D10Renderer            & mRenderer;
         ID3D10Resource           * mTexture; ///< resource instance
-        ID3D10ShaderResourceView * mSRView; ///< view as shader resource
+        ID3D10ShaderResourceView * mSRView;  ///< view as shader resource
         RTViewMap                  mRTViews; ///< render target views
 
         // ********************************
@@ -85,7 +90,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
         bool createTexture();
-        bool createDefaultViews();
     };
 }}
 

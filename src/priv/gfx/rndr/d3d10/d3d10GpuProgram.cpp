@@ -29,8 +29,8 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 
     // compile all shaders
     if( !mVs.init( desc.vs, options ) ) return failure();
-    if( !mVs.init( desc.gs, options ) ) return failure();
-    if( !mVs.init( desc.ps, options ) ) return failure();
+    if( !mGs.init( desc.gs, options ) ) return failure();
+    if( !mPs.init( desc.ps, options ) ) return failure();
 
     GN_TODO( "initialize parameter descriptor" );
     memset( &mParamDesc, 0, sizeof(mParamDesc) );

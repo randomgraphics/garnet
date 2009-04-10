@@ -83,16 +83,125 @@ void GN::gfx::D3D10RTMgr::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10RTMgr::bind(
-    const RenderTargetTexture   /*newColorRenderTargets*/[],
-    const RenderTargetTexture & /*newDepthStencilRenderTarget*/,
-    const RenderTargetTexture   /*oldColorRenderTargets*/[],
-    const RenderTargetTexture & /*oldDepthStencilRenderTarget*/,
-    bool                        /*skipDirtyCheck*/,
+bool GN::gfx::D3D10RTMgr::bind(
+    const RenderTargetTexture   newColorRenderTargets[],
+    const RenderTargetTexture & newDepthStencilRenderTarget,
+    const RenderTargetTexture   oldColorRenderTargets[],
+    const RenderTargetTexture & oldDepthStencilRenderTarget,
+    bool                        skipDirtyCheck,
     bool                      & needRebindViewport )
 {
-    GN_UNIMPL_WARNING();
-    needRebindViewport = true;
+    // check for redundant render target settings.
+    if( !skipDirtyCheck )
+    {
+        bool differ = false;
+
+        // compare color render targets
+        for( size_t i = 0; i < RendererContext::MAX_COLOR_RENDER_TARGETS; ++i )
+        {
+            if( newColorRenderTargets[i] != oldColorRenderTargets[i] )
+            {
+                differ = true;
+                break;
+            }
+        }
+
+        // compare depth render target
+        differ |= newDepthStencilRenderTarget != oldDepthStencilRenderTarget;
+
+        // return if old and new render target settings are identical
+        if( !differ )
+        {
+            needRebindViewport = false;
+            return true;
+        }
+    }
+
+    // compose RTV array
+    mNumColors = 0;
+    for( size_t i = 0; i < RendererContext::MAX_COLOR_RENDER_TARGETS; ++i )
+    {
+        const RenderTargetTexture & rtt = newColorRenderTargets[i];
+
+        D3D10Texture * tex = (D3D10Texture*)rtt.texture.get();
+
+        if( tex )
+        {
+            mColors[i] = tex->getRTView( rtt.face, rtt.level, rtt.slice );
+            if( NULL == mColors[i] )
+            {
+                return false;
+            }
+
+            ++mNumColors;
+        }
+        else if( 0 == i )
+        {
+            GN_ASSERT( mAutoColor0 );
+            mColors[i] = mAutoColor0;
+
+            ++mNumColors;
+        }
+        else
+        {
+            // stop after meeting the first NULL render target (except render target 0)
+            break;
+        }
+    }
+    // pad RTV array with NULLs
+    for( size_t i = mNumColors; i < RendererContext::MAX_COLOR_RENDER_TARGETS; ++i )
+    {
+        mColors[i] = NULL;
+    }
+
+    // Get RSV pointer
+    D3D10Texture * dstex = (D3D10Texture*)newDepthStencilRenderTarget.texture.get();
+    if( dstex )
+    {
+        mDepth = dstex->getDSView(
+            newDepthStencilRenderTarget.face,
+            newDepthStencilRenderTarget.level,
+            newDepthStencilRenderTarget.slice );
+        if( NULL == mDepth )
+        {
+            return false;
+        }
+    }
+    else
+    {
+        GN_ASSERT( mAutoDepth );
+        mDepth = mAutoDepth;
+    }
+
+    // bind to D3D device
+    mRenderer.getDeviceRefInlined().OMSetRenderTargets(
+        (UINT)RendererContext::MAX_COLOR_RENDER_TARGETS,
+        mColors,
+        mDepth );
+
+    // update mRenderTargetSize, according to render target 0 size
+    Vector2<UInt32> newRtSize;
+    if( newColorRenderTargets[0].texture )
+    {
+        const Vector3<UInt32> size = newColorRenderTargets[0].texture->getBaseSize();
+        newRtSize.x = size.x;
+        newRtSize.y = size.y;
+    }
+    else
+    {
+        const DispDesc & dd = mRenderer.getDispDesc();
+        newRtSize.x = dd.width;
+        newRtSize.y = dd.height;
+    }
+
+    // need to rebind viewport when render target size is changed.
+    needRebindViewport = ( newRtSize != mRenderTargetSize );
+
+    // store new render target size
+    mRenderTargetSize = newRtSize;
+
+    // done
+    return true;
 }
 
 // *****************************************************************************

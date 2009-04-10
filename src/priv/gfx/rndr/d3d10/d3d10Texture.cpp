@@ -23,7 +23,7 @@ bool GN::gfx::D3D10Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D10Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !createTexture() || !createDefaultViews() ) return failure();
+    if( !setDesc( desc ) || !createTexture() ) return failure();
 
     // success
     return success();
@@ -49,11 +49,7 @@ void GN::gfx::D3D10Texture::quit()
 }
 
 // ****************************************************************************
-//      interface functions
-// ****************************************************************************
-
-// ****************************************************************************
-//      interface functions
+// from Texture
 // ****************************************************************************
 
 //
@@ -74,13 +70,44 @@ void GN::gfx::D3D10Texture::updateMipmap(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture:: readMipmap(
+void GN::gfx::D3D10Texture::readMipmap(
     size_t       /*face*/,
     size_t       /*level*/,
     MipmapData & /*data*/ )
 {
     GN_UNIMPL();
 }
+
+// ****************************************************************************
+// public methods
+// ****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+ID3D10RenderTargetView *
+GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
+{
+    GN_UNUSED_PARAM( face );
+    GN_UNUSED_PARAM( level );
+    GN_UNUSED_PARAM( slice );
+    GN_UNIMPL();
+    return NULL;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+ID3D10DepthStencilView *
+GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
+{
+    GN_UNUSED_PARAM( face );
+    GN_UNUSED_PARAM( level );
+    GN_UNUSED_PARAM( slice );
+    GN_UNIMPL();
+    return NULL;
+}
+
 
 // ****************************************************************************
 //      private functions
@@ -204,13 +231,4 @@ bool GN::gfx::D3D10Texture::createTexture()
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3D10Texture::createDefaultViews()
-{
-    GN_UNIMPL_WARNING();
-    return true;
 }
