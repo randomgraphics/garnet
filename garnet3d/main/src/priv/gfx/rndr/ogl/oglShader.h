@@ -160,29 +160,67 @@ namespace GN { namespace gfx
     private:
 
         ///
-        /// GLSL program uniform description
+        /// GLSL uniform parameter description
         ///
-        struct GLSLUniformAndTextureDesc
+        struct GLSLUniformOrTextureDesc
         {
-            GLenum                         type;         ///< uniform type
-            GLsizei                        count;        ///< uniform count
-            GLint                          location;     ///< uniform location
-            StrA                           name;         ///< uniform name
-            size_t                         size;         ///< uniform size
-            mutable WeakRef<const Uniform> lastUniform;  ///< pointer to last uniform parameter
-            mutable SInt32                 lastStamp;    ///< update time stamp of the last uniform parameter
-            mutable AutoInitializer<size_t,-1>    lastTexStage; ///< last texture stage associated to this parameter
+            GpuProgramUniformParameterDesc     uniformDesc;  ///< uniform parameter description
+            GpuProgramTextureParameterDesc     textureDesc;  ///< textureparameter description
+            GLenum                             type;         ///< uniform type
+            GLsizei                            count;        ///< uniform count
+            GLint                              location;     ///< uniform location
+            size_t                             size;         ///< uniform size in bytes
+            StrA                               name;         ///< uniform name
+            mutable WeakRef<const Uniform>     lastUniform;  ///< pointer to last uniform parameter
+            mutable SInt32                     lastStamp;    ///< update time stamp of the last uniform parameter
+            mutable AutoInitializer<size_t,-1> lastTexStage; ///< last texture stage associated to this parameter
         };
 
         ///
-        /// vertex attribute description
+        /// GLSL vertex attribute description
         ///
         struct GLSLAttributeDesc
         {
-            GLenum      type;     ///< attribute type, like GL_FLOAT, GL_FLOAT_VEC3_ARB and etc.
-            GLsizei     count;    ///< attribyte count, in unit of type.
-            GLint       location; ///< attribute location
-            StrA        name;     ///< attribute variable name.
+            GpuProgramAttributeParameterDesc desc;     ///< attribute parameter description
+            GLenum                           type;     ///< attribute type, like GL_FLOAT, GL_FLOAT_VEC3_ARB and etc.
+            GLsizei                          count;    ///< attribyte count, in unit of type.
+            GLint                            location; ///< attribute location
+            StrA                             name;     ///< attribyte name
+        };
+
+        class GLSLParameterDesc : public GpuProgramParameterDesc
+        {
+        public:
+
+            void setUniformArray(
+                const GpuProgramUniformParameterDesc * array,
+                size_t                                 count,
+                size_t                                 stride )
+            {
+                mUniformArray       = array;
+                mUniformCount       = count;
+                mUniformArrayStride = stride;
+            }
+
+            void setTextureArray(
+                const GpuProgramTextureParameterDesc * array,
+                size_t                                 count,
+                size_t                                 stride )
+            {
+                mTextureArray       = array;
+                mTextureCount       = count;
+                mTextureArrayStride = stride;
+            }
+
+            void setAttributeArray(
+                const GpuProgramAttributeParameterDesc * array,
+                size_t                                   count,
+                size_t                                   stride )
+            {
+                mAttributeArray       = array;
+                mAttributeCount       = count;
+                mAttributeArrayStride = stride;
+            }
         };
 
         // GLSL program and shader object handles
@@ -191,20 +229,16 @@ namespace GN { namespace gfx
         GLhandleARB mPS;
 
         // uniforms
-        DynaArray<GLSLUniformAndTextureDesc> mUniforms;
-        DynaArray<const char *>              mUniformNames;
-        DynaArray<size_t>                    mUniformSizes;
+        DynaArray<GLSLUniformOrTextureDesc>  mUniforms;
 
         // textures
-        DynaArray<GLSLUniformAndTextureDesc> mTextures;
-        DynaArray<const char *>              mTextureNames;
+        DynaArray<GLSLUniformOrTextureDesc>  mTextures;
 
         // attributes
         DynaArray<GLSLAttributeDesc>         mAttributes;
-        DynaArray<const char *>              mAttributeNames;
 
         // parameter descriptor
-        GpuProgramParameterDesc              mParamDesc;
+        GLSLParameterDesc                    mParamDesc;
 
         // ********************************
         // private functions

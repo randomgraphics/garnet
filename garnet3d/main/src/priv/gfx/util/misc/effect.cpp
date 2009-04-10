@@ -265,7 +265,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     const Pass & p = mActiveTech->passes[pass];
 
     // setup uniforms
-    GN_ASSERT( p.uniforms.size() == p.gpuProgram->getNumUniforms() );
+    GN_ASSERT( p.uniforms.size() == p.gpuProgram->getParameterDesc().uniforms.count() );
     drawable.rc.uniforms.resize( p.uniforms.size() );
     for( size_t i = 0; i < p.uniforms.size(); ++i )
     {
@@ -344,6 +344,8 @@ GN::gfx::Effect::initTech(
             return false;
         }
 
+        const GpuProgramParameterDesc & gpuparam = p.gpuProgram->getParameterDesc();
+
         GN_ASSERT( mDesc.shaders.find(sname) != mDesc.shaders.end() );
         const EffectDesc::ShaderDesc & sdesc = mDesc.shaders.find(sname)->second;
 
@@ -360,7 +362,7 @@ GN::gfx::Effect::initTech(
                     "shader '%s' referencs non-exisit texture '%s'.",
                     sname.cptr(), tname.cptr() );
             }
-            else if( GpuProgram::PARAMETER_NOT_FOUND == p.gpuProgram->getTextureIndex( tbind.cptr() ) )
+            else if( GPU_PROGRAM_PARAMETER_NOT_FOUND == gpuparam.textures[tbind.cptr()] )
             {
                 GN_ERROR(sLogger)(
                     "texture '%s' is binded to invalid parameter '%s' of shader '%s'.",
@@ -387,7 +389,7 @@ GN::gfx::Effect::initTech(
         }
 
         // look up uniforms
-        p.uniforms.resize( p.gpuProgram->getNumUniforms() );
+        p.uniforms.resize( gpuparam.uniforms.count() );
         std::fill( p.uniforms.begin(), p.uniforms.end(), mUniforms.end() );
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.uniforms.begin(); iter != sdesc.uniforms.end(); ++iter )
         {
@@ -403,9 +405,9 @@ GN::gfx::Effect::initTech(
             }
             else
             {
-                size_t uidx = p.gpuProgram->getUniformIndex( ubind.cptr() );
+                size_t uidx = gpuparam.uniforms[ubind.cptr()];
 
-                if( GpuProgram::PARAMETER_NOT_FOUND == uidx )
+                if( GPU_PROGRAM_PARAMETER_NOT_FOUND == uidx )
                 {
                     GN_ERROR(sLogger)(
                         "uniform '%s' is binded to invalid parameter '%s' of shader '%s'.",

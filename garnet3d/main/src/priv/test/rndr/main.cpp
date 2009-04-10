@@ -59,10 +59,10 @@ bool init( Renderer & rndr )
 
     // create uniform
     const GpuProgramParameterDesc & gppd = rc.gpuProgram->getParameterDesc();
-    rc.uniforms.resize( gppd.numUniforms );
-    for( size_t i = 0; i < gppd.numUniforms; ++i )
+    rc.uniforms.resize( gppd.uniforms.count() );
+    for( size_t i = 0; i < gppd.uniforms.count(); ++i )
     {
-        rc.uniforms[i].attach( rndr.createUniform( gppd.uniformSizes[i] ) );
+        rc.uniforms[i].attach( rndr.createUniform( gppd.uniforms[i].size ) );
         if( !rc.uniforms[i] ) return false;
     }
 
@@ -110,8 +110,8 @@ void quit( Renderer & )
 
 void draw( Renderer & r )
 {
-    size_t ui = rc.gpuProgram->getUniformIndex( "transform" );
-    if( GpuProgram::PARAMETER_NOT_FOUND == ui ) return;
+    size_t ui = rc.gpuProgram->getParameterDesc().uniforms["transform"];
+    if( GPU_PROGRAM_PARAMETER_NOT_FOUND == ui ) return;
 
     Matrix44f m;
 
@@ -202,6 +202,7 @@ int main( int, const char *[] )
     enableCRTMemoryCheck();
 
     RendererOptions o;
+    //o.api = API_D3D10;
 
     //Renderer * r = createMultiThreadRenderer( o );
     Renderer * r = createSingleThreadRenderer( o );

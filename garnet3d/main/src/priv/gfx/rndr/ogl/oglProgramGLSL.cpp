@@ -268,15 +268,6 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     // enumerate attributes
     if( !enumAttributes() ) return failure();
 
-    // initialize parameter descriptor
-    mParamDesc.numUniforms      = mUniforms.size();
-    mParamDesc.uniformNames     = mUniformNames.cptr();
-    mParamDesc.uniformSizes     = mUniformSizes.cptr();
-    mParamDesc.numTextures      = mTextures.size();
-    mParamDesc.textureNames     = mTextureNames.cptr();
-    mParamDesc.numAttributes    = mAttributes.size();
-    mParamDesc.attributeNames   = mAttributeNames.cptr();
-
     // success
     return success();
 
@@ -291,10 +282,8 @@ void GN::gfx::OGLGpuProgramGLSL::quit()
     GN_GUARD;
 
     mUniforms.clear();
-    mUniformNames.clear();
-    mUniformSizes.clear();
     mTextures.clear();
-    mTextureNames.clear();
+    mAttributes.clear();
 
     if( mProgram ) glDeleteObjectARB( mProgram ), mProgram = 0;
     if( mPS ) glDeleteObjectARB( mPS ), mPS = 0;
@@ -476,7 +465,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const SysMemUniform * const * un
             continue;
         }
 
-        const GLSLUniformAndTextureDesc & d = mUniforms[i];
+        const GLSLUniformOrTextureDesc & d = mUniforms[i];
 
         if( u == d.lastUniform && u->getTimeStamp() == d.lastStamp )
         {
@@ -574,13 +563,13 @@ void GN::gfx::OGLGpuProgramGLSL::applyTexture( const char * name, size_t stage )
 {
     GN_ASSERT( name );
 
-    size_t idx = getTextureIndex( name );
+    size_t idx = mParamDesc.textures[name];
 
-    if( PARAMETER_NOT_FOUND != idx )
+    if( GPU_PROGRAM_PARAMETER_NOT_FOUND != idx )
     {
         GN_ASSERT( idx < mTextures.size() );
 
-        const GLSLUniformAndTextureDesc & t = mTextures[idx];
+        const GLSLUniformOrTextureDesc & t = mTextures[idx];
 
         if( t.lastTexStage != stage )
         {
@@ -620,7 +609,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     mUniforms.clear();
     for( GLint i = 0; i < numParameters; ++i )
     {
-        GLSLUniformAndTextureDesc u;
+        GLSLUniformOrTextureDesc u;
 
         GN_OGL_CHECK_RV( glGetActiveUniformARB( mProgram, i, maxLength, NULL, &u.count, &u.type, nameptr ), false );
         nameptr[maxLength] = 0;
@@ -641,19 +630,27 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     }
 
     // initialize name and size arrays
-    mUniformNames.resize( mUniforms.size() );
-    mUniformSizes.resize( mUniforms.size() );
     for( size_t i = 0; i < mUniforms.size(); ++i )
     {
-        mUniformNames[i] = mUniforms[i].name.cptr();
-        mUniformSizes[i] = mUniforms[i].size;
+        GLSLUniformOrTextureDesc & u = mUniforms[i];
+        u.uniformDesc.name = u.name.cptr();
+        u.uniformDesc.size = u.size;
     }
-
-    mTextureNames.resize( mTextures.size() );
     for( size_t i = 0; i < mTextures.size(); ++i )
     {
-        mTextureNames[i] = mTextures[i].name.cptr();
+        GLSLUniformOrTextureDesc & t = mTextures[i];
+        t.textureDesc.name = t.name.cptr();
     }
+
+    // update parameter descriptor
+    mParamDesc.setUniformArray(
+        &mUniforms[0].uniformDesc,
+        mUniforms.size(),
+        sizeof(GLSLUniformOrTextureDesc) );
+    mParamDesc.setTextureArray(
+        &mTextures[0].textureDesc,
+        mTextures.size(),
+        sizeof(GLSLUniformOrTextureDesc) );
 
     // success
     return true;
@@ -693,11 +690,17 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     }
 
     // initialize name and format arrays
-    mAttributeNames.resize( mAttributes.size() );
     for( size_t i = 0; i < mAttributes.size(); ++i )
     {
-        mAttributeNames[i]   = mAttributes[i].name.cptr();
+        GLSLAttributeDesc & a = mAttributes[i];
+        a.desc.name = a.name.cptr();
     }
+
+    // update parameter descriptor
+    mParamDesc.setAttributeArray(
+        &mAttributes[0].desc,
+        mAttributes.size(),
+        sizeof(GLSLAttributeDesc) );
 
     return true;
 }
