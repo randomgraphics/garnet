@@ -163,10 +163,10 @@ static const char * sCloneString( const char * str )
 // -----------------------------------------------------------------------------
 static bool
 sInitConstBuffers(
-    ID3D10Device                    & dev,
-    ID3D10ShaderReflection          & reflection,
-    StackArray<ID3D10Buffer*,16>    & constBufs,
-    StackArray<DynaArray<UInt8>,16> & constData )
+    ID3D10Device           & dev,
+    ID3D10ShaderReflection & reflection,
+    D3D10ConstBufferArray  & constBufs,
+    SysMemConstBufferArray & constData )
 {
     // get shader description
     D3D10_SHADER_DESC desc;
@@ -176,8 +176,17 @@ sInitConstBuffers(
         return false;
     }
 
+    // check for number of constant buffers
+    if( desc.ConstantBuffers > constBufs.MAX_SIZE )
+    {
+        GN_ERROR(sLogger)(
+            "Too many constant buffers. "
+            "Currently D3D10 renderer support %d constant buffers.",
+            constBufs.MAX_SIZE );
+        return false;
+    }
+
     // create constant buffers
-    GN_ASSERT( desc.ConstantBuffers <= 16 );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
@@ -282,8 +291,8 @@ sInitShader(
     const D3D10ShaderCompileOptions                                        & options,
     D3D10GpuProgramParameterDesc                                           & paramDesc,
     AutoComPtr<typename D3D10ShaderTypeTemplate<SHADER_TYPE>::ShaderClass> & shader,
-    StackArray<ID3D10Buffer*,16>                                           & constBufs,
-    StackArray<DynaArray<UInt8>,16>                                        & constData )
+    D3D10ConstBufferArray                                                  & constBufs,
+    SysMemConstBufferArray                                                 & constData )
 {
     GN_GUARD;
 
