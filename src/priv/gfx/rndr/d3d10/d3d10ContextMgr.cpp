@@ -45,6 +45,8 @@ void GN::gfx::D3D10Renderer::contextQuit()
 {
     GN_GUARD;
 
+    mDevice->ClearState();
+
     mContext.clear();
 
     safeDelete( mRTMgr );
@@ -177,7 +179,7 @@ inline bool GN::gfx::D3D10Renderer::bindContextShader(
 
         // apply uniforms
         const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
-        newProg->applyUniforms( uniforms, newContext.uniforms.size() );
+        newProg->applyUniforms( uniforms, newContext.uniforms.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {

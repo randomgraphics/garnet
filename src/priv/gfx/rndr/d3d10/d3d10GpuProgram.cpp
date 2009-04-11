@@ -4,6 +4,9 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
+using namespace GN;
+using namespace GN::gfx;
+
 // *****************************************************************************
 // D3D10GpuProgramParameterDesc
 // *****************************************************************************
@@ -11,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 template<class T>
 static void sFreeNameString( T & t )
 {
-    GN::heapFree( (void*)t.name );
+    heapFree( (void*)t.name );
 }
 
 template<class T>
@@ -27,7 +30,7 @@ public:
 
     bool operator()( const T & t ) const
     {
-        return 0 == GN::strCmp( t.name, mName );
+        return 0 == strCmp( t.name, mName );
     }
 };
 
@@ -116,6 +119,65 @@ GN::gfx::D3D10GpuProgramParameterDesc::findAttribute( const char * name )
 //
 //
 // -----------------------------------------------------------------------------
+static inline void
+sUpdateConstBuffer(
+    ID3D10Device & dev,
+    ID3D10Buffer & buf,
+    const void   * data,
+    size_t         size )
+{
+#if 0
+        dev.UpdateSubresource(
+            &buf,   // destination buffer
+            0,      // sub resource
+            0,      // box
+            data,   // source data
+            size,   // row pitch
+            size ); // slice pitch
+#else
+        GN_UNUSED_PARAM( dev );
+        void * dst;
+        GN_DX10_CHECK_R( buf.Map( D3D10_MAP_WRITE_DISCARD, 0, &dst ) );
+        memcpy( dst, data, size );
+        buf.Unmap();
+#endif
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void
+sUpdateConstData(
+    const D3D10UniformParameterDesc & desc,
+    const SysMemUniform             & uniform,
+    SysMemConstBufferArray          & cbarray,
+    size_t                            shaderType, // 0: VS, 1: GS, 2: PS
+    bool                            * dirtyFlags )
+{
+    const D3D10UniformParameterDesc::ShaderSpecificProperties & ssp = desc.ssp[shaderType];
+
+    // do nothing, if the uniform is not used by the shader
+    if( !ssp.used ) return;
+
+    DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
+    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
+    SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
+
+    // copy uniform data to system const buffer
+    src.copyTo(
+        0,          // src offset
+        dst,        // dst buffer
+        ssp.offset, // dst offset
+        desc.size   // size in bytes
+        );
+
+    // update dirty flag
+    dirtyFlags[ssp.cbidx] = true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
@@ -164,9 +226,66 @@ void GN::gfx::D3D10GpuProgram::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10GpuProgram::applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const
+void GN::gfx::D3D10GpuProgram::applyUniforms(
+    const SysMemUniform * const * uniforms,
+    size_t                        count,
+    bool                          skipDirtyCheck ) const
 {
-    GN_UNUSED_PARAM( uniforms );
-    GN_UNUSED_PARAM( count );
-    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( skipDirtyCheck );
+
+    count = math::getmin( count, mParamDesc.uniforms.count() );
+
+    // dirty flags
+    bool vscDirty[mVs.constBufs.MAX_SIZE];
+    bool gscDirty[mGs.constBufs.MAX_SIZE];
+    bool pscDirty[mPs.constBufs.MAX_SIZE];
+    ::memset( vscDirty, 0, sizeof(vscDirty) );
+    ::memset( gscDirty, 0, sizeof(gscDirty) );
+    ::memset( pscDirty, 0, sizeof(pscDirty) );
+
+    // copy uniform data into constant data array
+    for( size_t i = 0; i < count; ++i )
+    {
+        const D3D10UniformParameterDesc & ud = (const D3D10UniformParameterDesc &)mParamDesc.uniforms[i];
+        const SysMemUniform             & u  = *uniforms[i];
+
+        sUpdateConstData( ud, u, mVs.constData, 0, vscDirty );
+        sUpdateConstData( ud, u, mGs.constData, 1, gscDirty );
+        sUpdateConstData( ud, u, mPs.constData, 2, pscDirty );
+    }
+
+    ID3D10Device & dev = getDeviceRef();
+
+    // update vertex shader constant buffers
+    for( size_t i = 0; i < mVs.constBufs.size(); ++i )
+    {
+        if( skipDirtyCheck || vscDirty[i] )
+        {
+            ID3D10Buffer           & buf = *mVs.constBufs[i];
+            const DynaArray<UInt8> & data = mVs.constData[i];
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+        }
+    }
+
+    // update geometry shader constant buffers
+    for( size_t i = 0; i < mGs.constBufs.size(); ++i )
+    {
+        if( skipDirtyCheck || gscDirty[i] )
+        {
+            ID3D10Buffer           & buf = *mGs.constBufs[i];
+            const DynaArray<UInt8> & data = mGs.constData[i];
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+        }
+    }
+
+    // update pixel shader constant buffers
+    for( size_t i = 0; i < mPs.constBufs.size(); ++i )
+    {
+        if( skipDirtyCheck || pscDirty[i] )
+        {
+            ID3D10Buffer           & buf = *mPs.constBufs[i];
+            const DynaArray<UInt8> & data = mPs.constData[i];
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+        }
+    }
 }

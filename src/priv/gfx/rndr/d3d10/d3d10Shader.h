@@ -38,7 +38,14 @@ namespace GN { namespace gfx
             UInt32                      offset; ///< uniform offset in bytes in the const buffer.
         };
 
-        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
+        ///
+        /// shader specific properites for each shader type
+        ///
+        /// 0: VS
+        /// 1: GS
+        /// 2: PS
+        ///
+        ShaderSpecificProperties ssp[3];
 
         /// ctor
         D3D10UniformParameterDesc()
@@ -120,13 +127,23 @@ namespace GN { namespace gfx
     //@}
 
     ///
+    /// array of D3D10 constant buffer
+    ///
+    typedef StackArray<ID3D10Buffer*,16> D3D10ConstBufferArray;
+
+    ///
+    /// array of constant buffer in system memory
+    ///
+    typedef StackArray<DynaArray<UInt8>,16> SysMemConstBufferArray;
+
+    ///
     /// D3D10 vertex shader
     ///
     struct D3D10VertexShaderHLSL
     {
-        AutoComPtr<ID3D10VertexShader>          shader;    ///< shader pointer
-        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
-        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
+        AutoComPtr<ID3D10VertexShader> shader;    ///< shader pointer
+        D3D10ConstBufferArray          constBufs; ///< constant buffers
+        mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
         bool init(
@@ -144,9 +161,9 @@ namespace GN { namespace gfx
     ///
     struct D3D10GeometryShaderHLSL
     {
-        AutoComPtr<ID3D10GeometryShader>        shader;    ///< shader pointer
-        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
-        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
+        AutoComPtr<ID3D10GeometryShader> shader;    ///< shader pointer
+        D3D10ConstBufferArray            constBufs; ///< constant buffers
+        mutable SysMemConstBufferArray   constData; ///< constant data
 
         /// initialize shader
         bool init(
@@ -164,9 +181,9 @@ namespace GN { namespace gfx
     ///
     struct D3D10PixelShaderHLSL
     {
-        AutoComPtr<ID3D10PixelShader>           shader;    ///< shader pointer
-        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
-        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
+        AutoComPtr<ID3D10PixelShader>  shader;    ///< shader pointer
+        D3D10ConstBufferArray          constBufs; ///< constant buffers
+        mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
         bool init(
@@ -230,15 +247,45 @@ namespace GN { namespace gfx
         void apply() const
         {
             ID3D10Device & dev = getDeviceRef();
+
+            // bind shader
             dev.VSSetShader( mVs.shader );
             dev.GSSetShader( mGs.shader );
             dev.PSSetShader( mPs.shader );
+
+            // bind constant buffers
+            if( mVs.constBufs.size() )
+            {
+                dev.VSSetConstantBuffers(
+                    0,
+                    (UInt32)mVs.constBufs.size(),
+                    mVs.constBufs.cptr() );
+            }
+
+            if( mGs.constBufs.size() )
+            {
+                dev.GSSetConstantBuffers(
+                    0,
+                    (UInt32)mGs.constBufs.size(),
+                    mGs.constBufs.cptr() );
+            }
+
+            if( mPs.constBufs.size() )
+            {
+                dev.PSSetConstantBuffers(
+                    0,
+                    (UInt32)mPs.constBufs.size(),
+                    mPs.constBufs.cptr() );
+            }
         }
 
         ///
         /// Apply uniforms to D3D device
         ///
-        void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
+        void applyUniforms(
+            const SysMemUniform * const * uniforms,
+            size_t                        count,
+            bool                          skipDirtyCheck ) const;
 
         // ********************************
         // private variables
