@@ -8,10 +8,12 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( D3D10Renderer & r )
-    : mRenderer( r )
+GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( ID3D10Device & dev )
+    : rasterStates( dev )
+    , blendStates( dev )
+    , depthStates( dev )
 {
-    // setup default rasterization states
+    /* setup default rasterization states
     mRasterDirty = false;
 
     mRasterDesc.FillMode              = D3D10_FILL_SOLID;
@@ -98,12 +100,6 @@ GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( D3D10Renderer & r )
     mDepthKey.backpass         = mDepthDesc.BackFace.StencilPassOp;
     mDepthKey.backfunc         = mDepthDesc.BackFace.StencilFunc;
     mDepthKey.stencilreadmask  = mDepthDesc.StencilReadMask;
-    mDepthKey.stencilwritemask = mDepthDesc.StencilWriteMask;}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::D3D10StateObjectManager::~D3D10StateObjectManager()
-{
-    GN_TODO( "setup default key and descriptor" );
+    mDepthKey.stencilwritemask = mDepthDesc.StencilWriteMask;
+    */
 }

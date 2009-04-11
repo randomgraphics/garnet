@@ -136,7 +136,7 @@ void GN::gfx::D3D10Renderer::present()
 void GN::gfx::D3D10Renderer::clearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
-    GN_GUARD_SLOW;
+    PIXPERF_FUNCTION_EVENT();
 
     if( CLEAR_C & flags )
     {
@@ -154,8 +154,6 @@ void GN::gfx::D3D10Renderer::clearScreen(
     {
         mDevice->ClearDepthStencilView( dsview, d3dflag, z, s );
     }
-
-    GN_UNGUARD_SLOW;
 }
 
 //
@@ -169,6 +167,8 @@ void GN::gfx::D3D10Renderer::drawIndexed(
     size_t        ,//numvtx,
     size_t        startidx )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
     mDevice->DrawIndexed(
         (UINT)numidx,
@@ -184,6 +184,8 @@ void GN::gfx::D3D10Renderer::draw(
     size_t        numvtx,
     size_t        startvtx )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
     mDevice->Draw( (UINT)numvtx, (UINT)startvtx );
 }
@@ -199,6 +201,8 @@ void GN::gfx::D3D10Renderer::drawIndexedUp(
     size_t         strideInBytes,
     const UInt16 * indexData )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     if( !sSetupUserD3DBuffer(
         *mDevice,
         &mUserVB,
@@ -242,6 +246,8 @@ void GN::gfx::D3D10Renderer::drawUp(
     const void *  vertexData,
     size_t        strideInBytes )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     if( !sSetupUserD3DBuffer(
         *mDevice,
         &mUserVB,
@@ -278,5 +284,7 @@ void GN::gfx::D3D10Renderer::drawLines(
     const Matrix44f & /*view*/,
     const Matrix44f & /*proj*/ )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     GN_UNIMPL_WARNING();
 }

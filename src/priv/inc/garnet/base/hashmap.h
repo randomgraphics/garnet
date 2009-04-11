@@ -15,6 +15,7 @@ namespace GN
         class  KEY,
         class  VALUE,
         size_t(*HASH_FUNC)( const KEY & ),
+        bool  (*EQUAL_FUNC)( const KEY &, const KEY & ),
         size_t LOAD_FACTOR = 2 >
     class HashMap
     {
@@ -192,13 +193,13 @@ namespace GN
             return Iterator( 0, 0, 0 );
         }
 
-        const VALUE * find( const KEY & key ) const
+        VALUE * find( const KEY & key ) const
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = compress( HASH_FUNC(key), N );
+            size_t k = mod( HASH_FUNC(key), N );
 
             const HashItem & hi = mValues[k];
 
@@ -207,11 +208,11 @@ namespace GN
                 i != hi.values.end();
                 ++i )
             {
-                if( i->first == key )
+                if( EQUAL_FUNC( i->first, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
-                    return &i->second;
+                    return const_cast<VALUE*>(&i->second);
                 }
             }
 
@@ -225,7 +226,7 @@ namespace GN
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = compress( HASH_FUNC(key), N );
+            size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -234,7 +235,7 @@ namespace GN
                 i != hi.values.end();
                 ++i )
             {
-                if( i->first == key )
+                if( EQUAL_FUNC( i->first, key ) )
                 {
                     // redundent key
                     return false;
@@ -259,7 +260,7 @@ namespace GN
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = compress( HASH_FUNC(key), N );
+            size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -268,11 +269,11 @@ namespace GN
                 i != hi.values.end();
                 ++i )
             {
-                if( i->first == key )
+                if( EQUAL_FUNC( i->first, key ) )
                 {
                     // remove exisiting value
                     GN_ASSERT( mCount > 0 );
-                    hi.values.remove( hi.values.begin() + i );
+                    hi.values.erase( i );
                     --mCount;
                     return;
                 }
@@ -297,7 +298,7 @@ namespace GN
 
             GN_ASSERT( N == mValues.size() );
 
-            size_t k = compress( HASH_FUNC(key), N );
+            size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
@@ -306,7 +307,7 @@ namespace GN
                 i != hi.values.end();
                 ++i )
             {
-                if( i->first == key )
+                if( EQUAL_FUNC( i->first, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
@@ -342,8 +343,8 @@ namespace GN
 
     private:
 
-        /// compress arbitrary interger into range [0..N)
-        static inline size_t compress( size_t i, size_t N )
+        /// mod interger into range [0..N)
+        static inline size_t mod( size_t i, size_t N )
         {
             return i % N;
         }

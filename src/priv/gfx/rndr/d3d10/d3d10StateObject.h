@@ -11,47 +11,126 @@
 namespace GN { namespace gfx
 {
     ///
+    /// general state template (should never be compiled)
+    template<class DESC>
+    struct D3D10StateObjectCreator
+    {
+        GN_CASSERT( 0 == sizeof(DESC) );
+    };
+
+    ///
+    /// rasterize state template
+    ///
+    template<>
+    struct D3D10StateObjectCreator<D3D10_RASTERIZER_DESC>
+    {
+        static ID3D10RasterizerState *
+        create( ID3D10Device & dev, const D3D10_RASTERIZER_DESC & desc )
+        {
+            ID3D10RasterizerState  * obj;
+            GN_DX10_CHECK_RV( dev.CreateRasterizerState( &desc, &obj ), NULL );
+            return obj;
+        }
+
+        static inline size_t
+        hash( const D3D10_RASTERIZER_DESC & )
+        {
+            GN_UNIMPL_WARNING();
+            return 0;
+        }
+
+        ///
+        /// rasterize state equality check
+        ///
+        static inline bool equal(
+            const D3D10_RASTERIZER_DESC & a,
+            const D3D10_RASTERIZER_DESC & b )
+        {
+            return 0 == ::memcmp( &a, &b, sizeof(a) );
+        }
+    };
+
+    ///
+    /// blend state template
+    ///
+    template<>
+    struct D3D10StateObjectCreator<D3D10_BLEND_DESC>
+    {
+        static ID3D10BlendState *
+        create( ID3D10Device & dev, const D3D10_BLEND_DESC & desc )
+        {
+            ID3D10BlendState * obj;
+            GN_DX10_CHECK_RV( dev.CreateBlendState( &desc, &obj ), NULL );
+            return obj;
+        }
+
+        static inline size_t
+        hash( const D3D10_BLEND_DESC & )
+        {
+            GN_UNIMPL_WARNING();
+            return 0;
+        }
+
+        ///
+        /// blend state equality check
+        ///
+        static inline bool equal(
+            const D3D10_BLEND_DESC & a,
+            const D3D10_BLEND_DESC & b )
+        {
+            return 0 == memcmp( &a, &b, sizeof(a) );
+        }
+    };
+
+    ///
+    /// depth stencil state template
+    ///
+    template<>
+    struct D3D10StateObjectCreator<D3D10_DEPTH_STENCIL_DESC>
+    {
+        static ID3D10DepthStencilState *
+        create( ID3D10Device & dev, const D3D10_DEPTH_STENCIL_DESC & desc )
+        {
+            ID3D10DepthStencilState * obj;
+            GN_DX10_CHECK_RV( dev.CreateDepthStencilState( &desc, &obj ), NULL );
+            return obj;
+        }
+
+        static inline size_t
+        hash( const D3D10_DEPTH_STENCIL_DESC & )
+        {
+            GN_UNIMPL_WARNING();
+            return 0;
+        }
+
+        ///
+        /// depth stencil state equality check
+        ///
+        static inline bool equal(
+            const D3D10_DEPTH_STENCIL_DESC & a,
+            const D3D10_DEPTH_STENCIL_DESC & b )
+        {
+            return 0 == memcmp( &a, &b, sizeof(a) );
+        }
+    };
+
+    ///
     /// generic state object cache.
     ///
     template<
-        typename OBJECT_TYPE,     ///< must be a state object type.
-        typename OBJECT_DESC,     ///< state object descriptor type
-        typename KEY_TYPE,        ///< key structure that can uniquely identify a state object item, which must has hash() method
-        UInt32 HASH_COUNT = 4093, ///< range of hash key
-        UInt32 CACHE_SIZE = 4096, ///< cache size
-        bool CHECK_PARAM  = true  ///< debug flag
-        >
-    class StateObjectCache
+
+        ///< must be a D3D10 state object class.
+        typename OBJECT_CLASS,
+
+        ///< state object descriptor type
+        typename OBJECT_DESC,
+
+        /// cache size (maxinum items that the cache can hold)
+        size_t   CACHE_SIZE = 4096
+
+    >
+    class D3D10StateObjectCache
     {
-        // *************************************************
-        // public types
-        // *************************************************
-    public:
-
-        ///
-        /// state object item
-        ///
-        struct StateObjectItem
-        {
-            OBJECT_TYPE         * _object; ///< state object instance
-            OBJECT_DESC           _desc;   ///< state object descriptor
-
-            union
-            {
-                StateObjectItem * _prev; ///< point to previous item in LRU list
-                StateObjectItem * _free; ///< point next free item. valid only when the item is not used.
-            };
-            StateObjectItem     * _next; ///< point to next item in LRU list
-
-            KEY_TYPE              _key;   ///< unique item key
-            UInt32                _hash;  ///< hash value
-
-            ///
-            /// ctor
-            ///
-            StateObjectItem() : _object(0), _prev(0), _next(0) {}
-        };
-
         // *************************************************
         // public methods
         // *************************************************
@@ -59,188 +138,136 @@ namespace GN { namespace gfx
 
         //@{
 
-        StateObjectCache()
+        D3D10StateObjectCache( ID3D10Device & dev )
+            : mDevice( dev )
         {
-            _head = &_tail;
-            _tail._prev = NULL;
-            _tail._next = NULL;
-            _tail._object = 0;
-            _count = 0;
-            _logger = getLogger( "GN.gfx.rndr.D3D10.StateObjectCache" );
+            mHead = &mTail;
+            mTail.prev = NULL;
+            mTail.next = NULL;
+            mTail.object = 0;
+            mCount = 0;
+            mLogger = getLogger( "GN.gfx.rndr.D3D10.D3D10StateObjectCache" );
 
             // initialize free item list
-            _nextFreeItem = &_pool[0];
+            mNextFreeItem = &mPool[0];
             for( UInt32 i = 0; i < CACHE_SIZE - 1; ++i )
             {
-                _pool[i]._free = &_pool[i+1];
+                mPool[i].nextFree = &mPool[i+1];
             }
-            _pool[CACHE_SIZE-1]._free = NULL;
+            mPool[CACHE_SIZE-1].nextFree = NULL;
         }
 
-        ~StateObjectCache()
+        ~D3D10StateObjectCache()
         {
             clear();
         }
 
-        size_t size() const { return _count; }
+        size_t size() const { return mCount; }
 
         ///
-        /// clear cache. Call draw engine to delete all state object items as well.
+        /// clear cache. Delete all state objects.
         ///
         void clear()
         {
             // delete all state objects
-            StateObjectItem * item = _head;
-            while( item != &_tail )
+            StateObjectItem * item = mHead;
+            while( item != &mTail )
             {
-                safeRelease( item->_object );
+                safeRelease( item->object );
+                item = item->next;
             }
 
             // clear LRU list
-            _head = &_tail;
-            _tail._prev = NULL;
-            _tail._next = NULL;
+            mHead = &mTail;
+            mTail.prev = NULL;
+            mTail.next = NULL;
 
             // rebuild free list
-            _nextFreeItem = &_pool[0];
+            mNextFreeItem = &mPool[0];
             for( UInt32 i = 0; i < CACHE_SIZE - 1; ++i )
             {
-                _pool[i]._free = &_pool[i+1];
+                mPool[i].nextFree = &mPool[i+1];
             }
-            _pool[CACHE_SIZE-1]._free = NULL;
+            mPool[CACHE_SIZE-1].nextFree = NULL;
 
-            _count = 0;
+            mCount = 0;
         }
 
         ///
-        /// check if specific key is in cache. This function does not modify cache states.
+        /// get existing item, if there is one; or create new item
         ///
-        bool exist( const KEY_TYPE & key ) const
+        OBJECT_CLASS * operator[]( const OBJECT_DESC & desc )
         {
-             UInt32 h = key.hash<HASH_COUNT>();
-
-            GN_ASSERT( h < HASH_COUNT );
-            const Bucket & b = _buckets[h];
-
-            for( size_t i = 0; i < b.size(); ++i )
+            // look up existing item first
+            StateObjectItem * * hashitem = mHashTable.find( desc );
+            if( hashitem )
             {
-                StateObjectItem * item = b[i];
+                StateObjectItem * item = *hashitem;
 
-                if( item->_key == key )
-                {
-                    // found
-                    return true;
-                }
+                GN_ASSERT( item );
+
+                // update LRU
+                MoveToHead( item );
+
+                // found
+                return item->object;
             }
 
-            // not found
-             return false;
-        }
-
-        ///
-        /// get block instance of the key. Return NULL, if not found. Also update LRU list, if found.
-        ///
-        StateObjectItem * get( const KEY_TYPE & key )
-        {
-             UInt32 h = key.hash<HASH_COUNT>();
-
-            GN_ASSERT( h < HASH_COUNT );
-            const Bucket & b = _buckets[h];
-
-            for( size_t i = 0; i < b.size(); ++i )
-            {
-                StateObjectItem * item = b[i];
-
-                if( item->_key == key )
-                {
-                    // update LRU
-                    MoveToHead( item );
-
-                    // found
-                    return item;
-                }
-            }
-
-            // not found
-             return NULL;
-        }
-
-        ///
-        /// create new item ( key must be unique)
-        ///
-        StateObjectItem * create( const KEY_TYPE & key, const OBJECT_DESC & desc )
-        {
-            if( CHECK_PARAM )
-            {
-                if( exist(key) )
-                {
-                    GN_ERROR(_logger)( "insert failure: key must be unique!" );
-                }
-            }
-            else
-            {
-                GN_ASSERT( !exist(key) );
-            }
-
-            if( _count >= CACHE_SIZE )
+            // if cache is full, remove old items.
+            if( mCount >= CACHE_SIZE )
             {
                 // remove half items from cache
                 size_t numToRemove = CACHE_SIZE / 2;
                 for( size_t i = 0; i < numToRemove; ++i )
                 {
                     // get last one in LRU list
-                    StateObjectItem * item = _tail._prev;
-                    GN_ASSERT( item && item != _head );
+                    StateObjectItem * item = mTail.prev;
+                    GN_ASSERT( item && item != mHead );
 
                     // delete the state object object
-                    safeRelease( item->_object );
+                    safeRelease( item->object );
 
-                    // remove from bucket
-                    GN_ASSERT( item->_hash < HASH_COUNT );
-                    Bucket & b = _buckets[item->_hash];
-                    GN_ASSERT( b._items.end() != std::find( b._items.begin(), b._items.end(), item ) );
-                    b._items.erase(
-                        std::remove( b._items.begin(), b._items.end(), item ),
-                        b._items.end() );
+                    // remove from hash
+                    mHashTable.remove( item->desc );
 
                     // remove from LRU list
-                    StateObjectItem * prev = item->_prev;
-                    StateObjectItem * next = item->_next;
-                    prev->_next = next;
-                    next->_prev = prev;
+                    StateObjectItem * prev = item->prev;
+                    StateObjectItem * next = item->next;
+                    prev->next = next;
+                    next->prev = prev;
 
                     // add to free list
-                    item->_free = _nextFreeItem;
-                    _nextFreeItem = item;
+                    item->nextFree = mNextFreeItem;
+                    mNextFreeItem = item;
 
                     // adjust item count
-                    --_count;
+                    --mCount;
                 }
             }
 
-            // get a new item from free list
-            GN_ASSERT( _nextFreeItem );
-            StateObjectItem * item = _nextFreeItem;
-            _nextFreeItem = item->_free;
-            item->_key  = key;
-            item->_desc = desc;
+            // create new state object
+            OBJECT_CLASS * newobj = D3D10StateObjectCreator<OBJECT_DESC>::create( mDevice, desc );
+            if( NULL == newobj ) return NULL;
 
-            // add to bucket
-            UInt32 h = key.hash<HASH_COUNT>();
-            GN_ASSERT( h < HASH_COUNT );
-            Bucket & b = _buckets[h];
-            b._items.push_back( item );
-            item->_hash = h;
+            // get a new item out of free list
+            GN_ASSERT( mNextFreeItem );
+            StateObjectItem * item = mNextFreeItem;
+            mNextFreeItem = item->nextFree;
+            item->object = newobj;
+            item->desc   = desc;
+
+            // add to hash
+            mHashTable.insert( desc, item );
 
             // update LRU
             InsertToHead( item );
 
             // update item count
-            ++_count;
-            GN_ASSERT( _count <= HASH_COUNT );
+            ++mCount;
+            GN_ASSERT( mCount <= CACHE_SIZE );
 
             // success
-            return item;
+            return newobj;
         }
 
         //@}
@@ -250,39 +277,58 @@ namespace GN { namespace gfx
         // *************************************************
     private:
 
-        struct Bucket
+        ///
+        /// state object item
+        ///
+        struct StateObjectItem
         {
-            DynaArray<StateObjectItem*> _items;
+            OBJECT_CLASS        * object; ///< state object instance
+            OBJECT_DESC           desc;   ///< state object descriptor
 
-            size_t size() const { return _items.size(); }
-
-            StateObjectItem * operator[]( size_t index ) const
+            union
             {
-                GN_ASSERT( index < _items.size() );
-                GN_ASSERT( _items[index] );
-                return _items[index];
-            }
+                StateObjectItem * prev; ///< point to previous item in LRU list
+                StateObjectItem * nextFree; ///< point next free item. valid only when the item is not used.
+            };
+            StateObjectItem     * next; ///< point to next item in LRU list
+
+            ///
+            /// ctor
+            ///
+            StateObjectItem() : object(0), prev(0), next(0) {}
         };
+
+        ///
+        /// Hash map type
+        ///
+        typedef HashMap<
+            OBJECT_DESC,
+            StateObjectItem*,
+            &D3D10StateObjectCreator<OBJECT_DESC>::hash,
+            &D3D10StateObjectCreator<OBJECT_DESC>::equal
+            > ObjectHashMap;
 
         // *************************************************
         // private members
         // *************************************************
     private:
 
+        ID3D10Device    & mDevice;
+
         // pool
-        StateObjectItem   _pool[CACHE_SIZE]; ///< pre-allocated item pool, to avoid runtime memory allocation
-        StateObjectItem * _nextFreeItem;
+        StateObjectItem   mPool[CACHE_SIZE]; ///< pre-allocated item pool, to avoid runtime memory allocation
+        StateObjectItem * mNextFreeItem;
 
         // hash
-        Bucket           _buckets[HASH_COUNT];
+        ObjectHashMap     mHashTable;
 
         // LRU
-        StateObjectItem   _tail; ///< the end of LRU list.
-        StateObjectItem * _head; ///< point to the most recently used item
-        size_t            _count;
+        StateObjectItem   mTail; ///< the end of LRU list.
+        StateObjectItem * mHead; ///< point to the most recently used item
+        size_t            mCount;
 
         // misc.
-        Logger          * _logger;
+        Logger          * mLogger;
 
         // *************************************************
         // private functions
@@ -292,225 +338,64 @@ namespace GN { namespace gfx
         void InsertToHead( StateObjectItem * p )
         {
             GN_ASSERT( p );
-            GN_ASSERT( p != &_tail );
-            p->_next = _head;
-            p->_prev = NULL;
-            _head   = p;
+            GN_ASSERT( p != &mTail );
+            p->next = mHead;
+            p->prev = NULL;
+            mHead   = p;
         }
 
         void MoveToHead( StateObjectItem * p )
         {
             GN_ASSERT( p );
-            GN_ASSERT( p != &_tail );
+            GN_ASSERT( p != &mTail );
 
-            if( p == _head ) return;
+            if( p == mHead ) return;
 
             // p is not head, so there's at least 2 items in LRU list.
-            GN_ASSERT( p->_prev && p->_next );
+            GN_ASSERT( p->prev && p->next );
 
             // remove from list
-            StateObjectItem * prev = p->_prev;
-            StateObjectItem * next = p->_next;
-            prev->_next = next;
-            next->_prev = prev;
+            StateObjectItem * prev = p->prev;
+            StateObjectItem * next = p->next;
+            prev->next = next;
+            next->prev = prev;
 
             // insert to head
-            p->_next = _head;
-            p->_prev = NULL;
-            _head = p;
+            p->next = mHead;
+            p->prev = NULL;
+            mHead = p;
         }
 
         void RemoveFromList( StateObjectItem * p )
         {
             GN_ASSERT( p );
-            GN_ASSERT( p != &_tail );
+            GN_ASSERT( p != &mTail );
 
-            if( _head == p )
+            if( mHead == p )
             {
-                _head        = p->_next;
-                _head->_prev = NULL;
-                p->_prev     = NULL;
-                p->_next     = NULL;
+                mHead        = p->next;
+                mHead->prev = NULL;
+                p->prev     = NULL;
+                p->next     = NULL;
             }
             else
             {
-                StateObjectItem * prev = p->_prev;
-                StateObjectItem * next = p->_next;
+                StateObjectItem * prev = p->prev;
+                StateObjectItem * next = p->next;
 
-                prev->_next = next;
-                next->_prev = prev;
+                prev->next = next;
+                next->prev = prev;
 
-                p->_prev = NULL;
-                p->_next = NULL;
+                p->prev = NULL;
+                p->next = NULL;
             }
-        }
-    };
-
-    ///
-    /// raster state object key
-    ///
-    union RasterStateKey
-    {
-        struct
-        {
-            /// \name the whole key as (64+8) bits integer
-            //@{
-            UInt64 u64;
-            UInt8  u8;
-            //@}
-        };
-        struct
-        {
-            UInt32  bias;  ///< depth bias value
-
-            float   slop;  ///< slope bias value
-
-            // byte 8
-            unsigned int fill    : 2; ///< fill mode. D3D10_FILL_MODE.
-            unsigned int cull    : 2; ///< cull mode. D3D10_CULL_MODE.
-            unsigned int msaa    : 1; ///< MSAA enabled or not
-            unsigned int aaline  : 1; ///< anti-aliased line enabled or not.
-            unsigned int scissor : 1; ///< scissor test enabled or not
-            unsigned int _       : 1; ///< reserved.
-        };
-
-        ///
-        /// equality operator
-        ///
-        bool operator == ( const RasterStateKey & rhs ) const
-        {
-            return u64 == rhs.u64 && u8 == rhs.u8;
-        }
-
-        ///
-        /// return hash key in range of [0,range)
-        ///
-        template<UInt32 RANGE>
-        UInt32 hash() const
-        {
-            // We add the last byte (byte 8) to the higher 8 bits of depth bias value, because we
-            // estimate that depth bias will be small integers at most of time.
-            return (UInt32)( ( u64 + ( ((UInt64)u8) << 24 ) ) % RANGE );
-        }
-    };
-
-    ///
-    /// blend state object key
-    ///
-    union BlendStateKey
-    {
-        UInt64 u64; ///< the whole key as 64-bit integer
-        struct
-        {
-            // byte 0
-            unsigned int blendsrc  : 5; ///< blend src
-            unsigned int blendop   : 3; ///< blend op
-
-            // byte 1
-            unsigned int alphasrc  : 5; ///< blend src for alpha channel
-            unsigned int alphaop   : 3; ///< blend op for alpha channel
-
-            // byte 2-3
-            unsigned int alphamask : 1; ///< Alpha-To-Coverage enable or not
-            unsigned int blend     : 1; ///< blend enable flag
-            unsigned int blenddst  : 5; ///< blend dest
-            unsigned int alphadst  : 5; ///< blend dest for alpha channel
-            unsigned int _         : 4; ///< reserved
-
-            // byte 4-7
-            union
-            {
-                unsigned int rtmask      : 32; ///< write masks for all render targets.
-                struct
-                {
-                    unsigned int rtmask0 : 4; ///< render target write mask 0 (R,G,B,A)
-                    unsigned int rtmask1 : 4; ///< render target write mask 1 (R,G,B,A)
-                    unsigned int rtmask2 : 4; ///< render target write mask 2 (R,G,B,A)
-                    unsigned int rtmask3 : 4; ///< render target write mask 3 (R,G,B,A)
-                    unsigned int rtmask4 : 4; ///< render target write mask 4 (R,G,B,A)
-                    unsigned int rtmask5 : 4; ///< render target write mask 5 (R,G,B,A)
-                    unsigned int rtmask6 : 4; ///< render target write mask 6 (R,G,B,A)
-                    unsigned int rtmask7 : 4; ///< render target write mask 7 (R,G,B,A)
-                };
-            };
-        };
-
-        ///
-        /// equality operator
-        ///
-        bool operator == ( const BlendStateKey & rhs ) const
-        {
-            return u64 == rhs.u64;
-        }
-
-        ///
-        /// return hash key in range of [0,range)
-        ///
-        template<UInt32 RANGE>
-        UInt32 hash() const
-        {
-            return (UInt32)( u64 % RANGE );
-        }
-    };
-    GN_CASSERT( sizeof(BlendStateKey) == 8 );
-
-    ///
-    /// depth stencil state key
-    ///
-    union DepthStencilStateKey
-    {
-        UInt64 u64; ///< the whole key as 64-bit integrater
-        struct
-        {
-            // byte 0
-            unsigned int stencil : 1; ///< stencil enabled
-            unsigned int zenable : 1; ///< z enable
-            unsigned int zwrite  : 1; ///< z write enable
-            unsigned int zfunc   : 4; ///< z compare function ( D3D10_COMPARISON_FUNC )
-            unsigned int _       : 1; ///< reserved
-
-            // byte 1-2
-            unsigned int frontfail  : 4; ///< front face operation, if stencil fails ( D3D10_STENCIL_OP )
-            unsigned int frontzfail : 4; ///< front face operation, if stencil passes and depth failed. ( D3D10_STENCIL_OP )
-            unsigned int frontpass  : 4; ///< front face operation, if both stencil and depth pass ( D3D10_STENCIL_OP )
-            unsigned int frontfunc  : 4; ///< front face stencil function ( D3D10_COMPARISON_FUNC )
-
-            // byte 3-4
-            unsigned int backfail   : 4; ///< back face operation, if stencil fails ( D3D10_STENCIL_OP )
-            unsigned int backzfail  : 4; ///< back face operation, if stencil passes and depth failed. ( D3D10_STENCIL_OP )
-            unsigned int backpass   : 4; ///< back face operation, if both stencil and depth pass ( D3D10_STENCIL_OP )
-            unsigned int backfunc   : 4; ///< back face stencil function ( D3D10_COMPARISON_FUNC )
-
-            // byte 5-6
-            unsigned int stencilreadmask  : 8; ///< stencil read mask
-            unsigned int stencilwritemask : 8; ///< stencil write mask
-
-            // byte 7
-            unsigned int : 8; ///< reserved
-        };
-
-        ///
-        /// equality operator
-        ///
-        bool operator == ( const DepthStencilStateKey & rhs ) const
-        {
-            return u64 == rhs.u64;
-        }
-
-        ///
-        /// return hash key in range of [0,range)
-        ///
-        template<UInt32 RANGE>
-        UInt32 hash() const
-        {
-            return (UInt32)( u64 % RANGE );
         }
     };
 
     //@{
-    typedef StateObjectCache<ID3D10RasterizerState,D3D10_RASTERIZER_DESC,RasterStateKey> RasterStateCache;
-    typedef StateObjectCache<ID3D10BlendState,D3D10_BLEND_DESC,BlendStateKey> BlendStateCache;
-    typedef StateObjectCache<ID3D10DepthStencilState,D3D10_DEPTH_STENCIL_DESC,DepthStencilStateKey> DepthStencilStateCache;
+    typedef D3D10StateObjectCache<ID3D10RasterizerState,D3D10_RASTERIZER_DESC>      RasterStateCache;
+    typedef D3D10StateObjectCache<ID3D10BlendState,D3D10_BLEND_DESC>                BlendStateCache;
+    typedef D3D10StateObjectCache<ID3D10DepthStencilState,D3D10_DEPTH_STENCIL_DESC> DepthStencilStateCache;
     //@}
 
     ///
@@ -520,50 +405,21 @@ namespace GN { namespace gfx
     {
     public:
 
-        //@{
-        D3D10StateObjectManager( D3D10Renderer & r );
-        ~D3D10StateObjectManager();
-        //@}
+		// state caches
+		RasterStateCache       rasterStates;
+		BlendStateCache        blendStates;
+		DepthStencilStateCache depthStates;
 
-        ///
-        /// clear to empty
-        ///
-        void clear();
+        /// constructor
+        D3D10StateObjectManager( ID3D10Device & dev );
 
-        /// \name setup individual states
-        //@{
-
-        //@}
-
-        ///
-        /// apply state to device
-        ///
-        void apply();
-
-    private:
-
-        D3D10Renderer & mRenderer;
-
-		// rasterization state cache
-		bool                  mRasterDirty;
-		RasterStateKey        mRasterKey;
-		D3D10_RASTERIZER_DESC mRasterDesc;
-		RasterStateCache      mRasterStates;
-
-		// blend state cache
-		bool                  mBlendDirty;
-		BlendStateKey         mBlendKey;
-		D3D10_BLEND_DESC      mBlendDesc;
-		BlendStateCache       mBlendStates;
-		UInt32                mBlendAaMask;
-		float                 mBlendFactors[4]; // one for each RGBA channel.
-
-		// depth stencil state cache
-		bool                     mDepthDirty;
-		DepthStencilStateKey     mDepthKey;
-		D3D10_DEPTH_STENCIL_DESC mDepthDesc;
-		DepthStencilStateCache   mDepthStates;
-		UInt32                   mstencilRef;
+        /// clear all
+        void clear()
+        {
+            rasterStates.clear();
+            blendStates.clear();
+            depthStates.clear();
+        }
     };
 }}
 
