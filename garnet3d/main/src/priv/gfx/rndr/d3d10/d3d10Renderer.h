@@ -18,15 +18,6 @@ namespace GN { namespace gfx
     class D3D10StateObjectManager;
 
     ///
-    /// D3D9 vertex buffer layout descriptor
-    ///
-    struct D3D10VtxLayoutDesc
-    {
-        VertexFormat                  format; ///< vertex format
-        AutoComPtr<ID3D10InputLayout> layout; ///< D3D layout
-    };
-
-    ///
     /// D3D10 renderer class
     ///
     class D3D10Renderer : public BasicRendererMsw
@@ -213,7 +204,7 @@ namespace GN { namespace gfx
             }
         };
 
-        RendererContext           mContext;
+        std::map<VertexFormat, AutoComPtr<ID3D10InputLayout> > mInputLayouts;
         D3D10StateObjectManager * mSOMgr;
         D3D10RTMgr              * mRTMgr;
 
@@ -262,14 +253,17 @@ namespace GN { namespace gfx
 
     private:
 
-        bool drawInit() { return true; }
-        void drawQuit() {}
-        void drawClear() { mFrameCounter = 0; mDrawCounter = 0; }
+        bool drawInit();
+        void drawQuit();
+        void drawClear() { mFrameCounter = 0; mDrawCounter = 0; mUserVB = mUserIB = 0; }
 
     private:
 
         size_t mFrameCounter;
         size_t mDrawCounter;
+
+        ID3D10Buffer * mUserVB;
+        ID3D10Buffer * mUserIB;
 
         //@}
 

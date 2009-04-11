@@ -51,6 +51,8 @@ void GN::gfx::D3D10Renderer::contextQuit()
 
     safeDelete( mSOMgr );
 
+    mInputLayouts.clear();
+
     GN_UNGUARD;
 }
 
@@ -211,19 +213,28 @@ inline bool GN::gfx::D3D10Renderer::bindContextResource(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    /*
+    //
     // bind vertex format
     //
-    if( newContext.vtxfmt )
+    if( skipDirtyCheck || mContext.vtxfmt != newContext.vtxfmt )
     {
-        const D3D10VtxLayoutDesc * layout;
-        layout = &mVtxFmts[newContext.vtxfmt];
-        GN_ASSERT( layout->layout );
-        if( newContext.vtxfmt != mContext.vtxfmt || skipDirtyCheck )
+        if( 0 == newContext.vtxfmt.numElements )
         {
-            mDevice->IASetInputLayout( layout->layout );
+            mDevice->IASetInputLayout( NULL );
         }
-    }*/
+        else
+        {
+            AutoComPtr<ID3D10InputLayout> & layout = mInputLayouts[newContext.vtxfmt];
+
+            if( NULL == layout )
+            {
+                layout.attach( createD3D10InputLayout( *mDevice, newContext.vtxfmt ) );
+                if( NULL == layout ) return false;
+            }
+
+            mDevice->IASetInputLayout( layout );
+        }
+    }
 
     ///
     /// bind vertex buffers
