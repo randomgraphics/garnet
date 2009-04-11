@@ -55,6 +55,12 @@ sVtxFmt2InputLayout(
         elements.push_back( elem );
     }
 
+    if( elements.empty() )
+    {
+        GN_ERROR(sLogger)( "Empty input layout is not allowed." );
+        return false;
+    }
+
     // success
     return true;
 
