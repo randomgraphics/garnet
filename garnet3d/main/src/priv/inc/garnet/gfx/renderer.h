@@ -664,6 +664,8 @@ namespace GN { namespace gfx
         AutoRef<GpuProgram> gpuProgram;
 
         // Resources
+
+        /// Uniform array, in the order described in GPU program uniform descriptor.
         DynaArray<AutoRef<Uniform> >    uniforms;                                ///< uniforms
 
         AutoRef<VtxBuf>                 vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
