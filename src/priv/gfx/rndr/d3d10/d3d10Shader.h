@@ -23,74 +23,166 @@ namespace GN { namespace gfx
         UInt32 compileFlags; ///< combination of D3D10_SHADER flags.
     };
 
-    ///
-    /// D3D10 HLSL shader class
-    ///
-    class D3D10ShaderHlsl : public D3D10Resource, public StdClass
+    /// shader parameter classes
+    //@{
+
+    struct D3D10UniformParameterDesc : public GpuProgramUniformParameterDesc
     {
-        GN_DECLARE_STDCLASS( D3D10ShaderHlsl, StdClass );
+        ///
+        /// shader specific properties
+        ///
+        struct ShaderSpecificProperties
+        {
+            AutoInitializer<bool,false> used;   ///< are these properties used
+            UInt32                      cbidx;  ///< const buffer index
+            UInt32                      offset; ///< uniform offset in bytes in the const buffer.
+        };
 
-        // ********************************
-        // ctor/dtor
-        // ********************************
+        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
 
-        //@{
+        /// ctor
+        D3D10UniformParameterDesc()
+        {
+            name = NULL;
+        }
+    };
+
+    struct D3D10TextureParameterDesc : public GpuProgramTextureParameterDesc
+    {
+        ///
+        /// shader specific properties
+        ///
+        struct ShaderSpecificProperties
+        {
+            AutoInitializer<bool,false> used;  ///< are these properties used
+        };
+
+        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
+
+        /// ctor
+        D3D10TextureParameterDesc()
+        {
+            name = NULL;
+        }
+    };
+
+    struct D3D10AttributeParameterDesc : public GpuProgramAttributeParameterDesc
+    {
+        ///
+        /// shader specific properties
+        ///
+        struct ShaderSpecificProperties
+        {
+            AutoInitializer<bool,false> used;  ///< are these properties used
+        };
+
+        ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
+
+        /// ctor
+        D3D10AttributeParameterDesc()
+        {
+            name = NULL;
+        }
+    };
+
+    class D3D10GpuProgramParameterDesc : public GpuProgramParameterDesc, public NoCopy
+    {
+        DynaArray<D3D10UniformParameterDesc>   mUniforms;
+        DynaArray<D3D10TextureParameterDesc>   mTextures;
+        DynaArray<D3D10AttributeParameterDesc> mAttributes;
+
     public:
-        D3D10ShaderHlsl( D3D10Renderer & r, const char * profile );
-        virtual ~D3D10ShaderHlsl() { quit(); }
+
+        /// ctor
+        D3D10GpuProgramParameterDesc();
+
+        /// dtor
+        ~D3D10GpuProgramParameterDesc();
+
+        /// build parameter arrays
+        void buildParameterArrays();
+
+        /// find parameter with specific name
+        //@{
+        D3D10UniformParameterDesc   * findUniform( const char * name );
+        D3D10TextureParameterDesc   * findTexture( const char * name );
+        D3D10AttributeParameterDesc * findAttribute( const char * name );
         //@}
 
-        // ********************************
-        // from StdClass
-        // ********************************
-
+        /// add new parameters
         //@{
-    public:
-        bool init( const ShaderCode & code, const D3D10ShaderCompileOptions & options );
-        void quit();
-    private:
-        void clear() { mBinary = 0; mReflection = 0; }
+        void addUniform( const D3D10UniformParameterDesc & u ) { mUniforms.append( u ); }
+        void addTexture( const D3D10TextureParameterDesc & );
+        void addAttribute( const D3D10AttributeParameterDesc & );
         //@}
+    };
 
-        // ********************************
-        // protected functions
-        // ********************************
-    protected:
+    //@}
 
-        ///
-        /// get shader binary
-        ///
-        ID3D10Blob * getBinary() const { return mBinary; }
+    ///
+    /// D3D10 vertex shader
+    ///
+    struct D3D10VertexShaderHLSL
+    {
+        AutoComPtr<ID3D10VertexShader>          shader;    ///< shader pointer
+        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
+        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
 
-        // ********************************
-        // private variables
-        // ********************************
-    private:
+        /// initialize shader
+        bool init(
+            ID3D10Device                    & dev,
+            const ShaderCode                & code,
+            const D3D10ShaderCompileOptions & options,
+            D3D10GpuProgramParameterDesc    & paramDesc );
 
-        // shader type dependent function pointers
-        typedef void (__stdcall ID3D10Device::*SetConstantBuffers)(
-                UINT StartSlot,
-                UINT NumBuffers,
-                ID3D10Buffer *const * ppConstantBuffers );
+        /// clear shader
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+    };
 
-        const char *                            mProfile;
-        ID3D10Blob *                            mBinary;      ///< shader binary
-        ID3D10ShaderReflection *                mReflection;  ///< shader reflection
-        StackArray<ID3D10Buffer*,16>            mConstBufs;   ///< constant buffers
-        mutable StackArray<DynaArray<UInt8>,16> mConstCopies; ///< constant buffers
+    ///
+    /// D3D10 geometry shader
+    ///
+    struct D3D10GeometryShaderHLSL
+    {
+        AutoComPtr<ID3D10GeometryShader>        shader;    ///< shader pointer
+        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
+        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
 
-        SetConstantBuffers                      mSetConstantBuffers;
+        /// initialize shader
+        bool init(
+            ID3D10Device                    & dev,
+            const ShaderCode                & code,
+            const D3D10ShaderCompileOptions & options,
+            D3D10GpuProgramParameterDesc    & paramDesc );
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
+        /// clear shader
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+    };
+
+    ///
+    /// D3D10 pixel shader
+    ///
+    struct D3D10PixelShaderHLSL
+    {
+        AutoComPtr<ID3D10PixelShader>           shader;    ///< shader pointer
+        StackArray<ID3D10Buffer*,16>            constBufs; ///< constant buffers
+        mutable StackArray<DynaArray<UInt8>,16> constData; ///< constant data
+
+        /// initialize shader
+        bool init(
+            ID3D10Device                    & dev,
+            const ShaderCode                & code,
+            const D3D10ShaderCompileOptions & options,
+            D3D10GpuProgramParameterDesc    & paramDesc );
+
+        /// clear shader
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
     };
 
     ///
     /// D3D10 HLSL GPU program
     ///
-    class D3D10GpuProgram : public GpuProgram, public StdClass
+    class D3D10GpuProgram : public GpuProgram, public D3D10Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D10GpuProgram, StdClass );
 
@@ -100,7 +192,11 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10GpuProgram( D3D10Renderer & r ) : mVs(r, "vs_4_0"), mGs(r, "gs_4_0"), mPs(r, "ps_4_0") { clear(); }
+        D3D10GpuProgram( D3D10Renderer & r )
+            : D3D10Resource(r)
+        {
+            clear();
+        }
         virtual ~D3D10GpuProgram() { quit(); }
         //@}
 
@@ -128,17 +224,32 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        void apply() const;
+        ///
+        /// apply shader to D3D device
+        ///
+        void apply() const
+        {
+            ID3D10Device & dev = getDeviceRef();
+            dev.VSSetShader( mVs.shader );
+            dev.GSSetShader( mGs.shader );
+            dev.PSSetShader( mPs.shader );
+        }
+
+        ///
+        /// Apply uniforms to D3D device
+        ///
+        void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        D3D10ShaderHlsl         mVs;
-        D3D10ShaderHlsl         mGs;
-        D3D10ShaderHlsl         mPs;
-        GpuProgramParameterDesc mParamDesc;
+        D3D10GpuProgramParameterDesc mParamDesc;
+
+        D3D10VertexShaderHLSL   mVs;
+        D3D10GeometryShaderHLSL mGs;
+        D3D10PixelShaderHLSL    mPs;
 
         // ********************************
         // private functions

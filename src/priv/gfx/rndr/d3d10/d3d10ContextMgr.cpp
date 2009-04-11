@@ -74,9 +74,10 @@ bool GN::gfx::D3D10Renderer::bindContextImpl( const RendererContext & newContext
         // TODO: make sure all fields in current context are valid.
     }
 
-    if( !bindContextStates( newContext, skipDirtyCheck ) ) return false;
-
-    if( !bindContextResources( newContext, skipDirtyCheck ) ) return false;
+    if( !bindContextRenderTarget( newContext, skipDirtyCheck ) ) return false;
+    if( !bindContextShader( newContext, skipDirtyCheck ) ) return false;
+    if( !bindContextState( newContext, skipDirtyCheck ) ) return false;
+    if( !bindContextResource( newContext, skipDirtyCheck ) ) return false;
 
     return true;
 }
@@ -85,59 +86,13 @@ bool GN::gfx::D3D10Renderer::bindContextImpl( const RendererContext & newContext
 // private functions
 // *****************************************************************************
 
-
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D10Renderer::bindContextStates(
+inline bool GN::gfx::D3D10Renderer::bindContextRenderTarget(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    //
-    // bind shaders
-    //
-    if( newContext.gpuProgram )
-    {
-        D3D10GpuProgram * p = (D3D10GpuProgram*)newContext.gpuProgram.get();
-        p->apply();
-    }
-    else
-    {
-        mDevice->VSSetShader( NULL );
-        mDevice->GSSetShader( NULL );
-        mDevice->PSSetShader( NULL );
-    }
-
-    /*
-    // bind render states
-    //
-    if( newFlags.rsb )
-    {
-        const RenderStateBlockDesc & newrsb = newContext.rsb;
-        GN_ASSERT( newrsb.valid() );
-
-        if( skipDirtyCheck )
-        {
-            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-                if( newrsb.isSet(RS_##tag) ) mSOMgr->Set_##tag( newrsb.get(RS_##tag) );
-            #include "garnet/gfx/renderStateMeta.h"
-            #undef GNGFX_DEFINE_RS
-        }
-        else
-        {
-            const RenderStateBlockDesc & oldrsb = mContext.rsb;
-
-            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-                GN_ASSERT( oldrsb.isSet( RS_##tag ) ); \
-                if( newrsb.isSet(RS_##tag) && newrsb.get(RS_##tag) != oldrsb.get(RS_##tag) ) \
-                    mSOMgr->Set_##tag( newrsb.get(RS_##tag) );
-            #include "garnet/gfx/renderStateMeta.h"
-            #undef GNGFX_DEFINE_RS
-        }
-
-        mSOMgr->apply();
-    }*/
-
     //
     // bind render targets
     //
@@ -200,12 +155,62 @@ inline bool GN::gfx::D3D10Renderer::bindContextStates(
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D10Renderer::bindContextResources(
+inline bool GN::gfx::D3D10Renderer::bindContextShader(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( skipDirtyCheck );
+    //
+    // bind shaders
+    //
+    if( newContext.gpuProgram )
+    {
+        D3D10GpuProgram * newProg = (D3D10GpuProgram*)newContext.gpuProgram.get();
+        D3D10GpuProgram * oldProg = (D3D10GpuProgram*)mContext.gpuProgram.get();
 
+        // apply shader
+        if( skipDirtyCheck || newProg != oldProg )
+        {
+            newProg->apply();
+        }
+
+        // apply uniforms
+        const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
+        newProg->applyUniforms( uniforms, newContext.uniforms.size() );
+    }
+    else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
+    {
+        mDevice->VSSetShader( NULL );
+        mDevice->GSSetShader( NULL );
+        mDevice->PSSetShader( NULL );
+    }
+    else
+    {
+        // Both old and new program are NULL. Do nothing
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline bool GN::gfx::D3D10Renderer::bindContextState(
+    const RendererContext & newContext,
+    bool                    skipDirtyCheck )
+{
+    GN_UNUSED_PARAM( newContext );
+    GN_UNUSED_PARAM( skipDirtyCheck );
+    GN_UNIMPL_WARNING();
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline bool GN::gfx::D3D10Renderer::bindContextResource(
+    const RendererContext & newContext,
+    bool                    skipDirtyCheck )
+{
     /*
     // bind vertex format
     //
@@ -238,7 +243,7 @@ inline bool GN::gfx::D3D10Renderer::bindContextResources(
     //
     // bind index buffer
     //
-    if( newContext.idxbuf != mContext.idxbuf || skipDirtyCheck )
+    if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         if( newContext.idxbuf )
         {

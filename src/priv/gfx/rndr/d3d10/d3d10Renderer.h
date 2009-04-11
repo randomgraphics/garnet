@@ -193,8 +193,10 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
 
-        inline bool bindContextStates( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTarget( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextShader( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextState( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResource( const RendererContext & newContext, bool skipDirtyCheck );
 
     private:
 

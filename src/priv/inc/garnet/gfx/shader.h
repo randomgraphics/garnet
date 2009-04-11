@@ -196,6 +196,11 @@ namespace GN { namespace gfx
         {
         }
 
+        ///
+        /// destructor
+        ///
+        virtual ~GpuProgramParameterDesc() {}
+
     protected:
 
         // Note: it is subclass's responsibility to initialize these data members.
