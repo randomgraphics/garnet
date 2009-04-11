@@ -18,6 +18,30 @@ namespace GN { namespace gfx
     class D3D10StateObjectManager;
 
     ///
+    /// D3D10 vertex format structure
+    ///
+    class D3D10VertexLayout
+    {
+    public:
+
+        AutoComPtr<ID3D10InputLayout> il; ///< D3D10 input layout
+        UInt32                        defaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
+
+    public:
+
+        /// initialize the layout
+        bool init( ID3D10Device & dev, const GN::gfx::VertexFormat & format );
+
+        /// less operator
+        bool operator<( const D3D10VertexLayout & rhs ) const
+        {
+            if( il < rhs.il ) return true;
+            if( rhs.il < il ) return false;
+            return memcmp( defaultStrides, rhs.defaultStrides, sizeof(defaultStrides) ) < 0;
+        }
+    };
+
+    ///
     /// D3D10 renderer class
     ///
     class D3D10Renderer : public BasicRendererMsw
@@ -191,20 +215,7 @@ namespace GN { namespace gfx
 
     private:
 
-        struct VertexFormatKey
-        {
-            VertexFormat vtxfmt;
-            UInt64       shaderID;
-
-            bool operator<( const VertexFormatKey & rhs ) const
-            {
-                if( shaderID < rhs.shaderID ) return true;
-                if( shaderID > rhs.shaderID ) return false;
-                return vtxfmt < rhs.vtxfmt;
-            }
-        };
-
-        std::map<VertexFormat, AutoComPtr<ID3D10InputLayout> > mInputLayouts;
+        std::map<VertexFormat,D3D10VertexLayout> mVertexLayouts;
         D3D10StateObjectManager * mSOMgr;
         D3D10RTMgr              * mRTMgr;
 

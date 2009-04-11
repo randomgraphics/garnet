@@ -8,11 +8,6 @@
 
 namespace GN { namespace gfx
 {
-    ///
-    /// create D3D10 decl from vertex format structure
-    ///
-    ID3D10InputLayout *
-    createD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & format );
 }}
 
 // *****************************************************************************

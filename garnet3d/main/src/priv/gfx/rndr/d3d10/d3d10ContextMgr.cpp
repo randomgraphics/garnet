@@ -22,7 +22,7 @@ bool GN::gfx::D3D10Renderer::contextInit()
 {
     GN_GUARD;
 
-    mSOMgr = new D3D10StateObjectManager( *this );
+    mSOMgr = new D3D10StateObjectManager( *mDevice );
     if( 0 == mSOMgr ) return false;
 
     // create render target manager
@@ -53,7 +53,7 @@ void GN::gfx::D3D10Renderer::contextQuit()
 
     safeDelete( mSOMgr );
 
-    mInputLayouts.clear();
+    mVertexLayouts.clear();
 
     GN_UNGUARD;
 }
@@ -205,6 +205,29 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     GN_UNUSED_PARAM( newContext );
     GN_UNUSED_PARAM( skipDirtyCheck );
     GN_UNIMPL_WARNING();
+
+    // rasterization states
+    D3D10_RASTERIZER_DESC rsdesc;
+    rsdesc.FillMode              = D3D10_FILL_SOLID;
+    rsdesc.CullMode              = D3D10_CULL_BACK;
+    rsdesc.FrontCounterClockwise = true;
+    rsdesc.DepthBias             = 0;
+    rsdesc.DepthBiasClamp        = 0.0f;
+    rsdesc.SlopeScaledDepthBias  = 0.0f;
+    rsdesc.DepthClipEnable       = false;
+    rsdesc.ScissorEnable         = true;
+    rsdesc.MultisampleEnable     = true;
+    rsdesc.AntialiasedLineEnable = false;
+    ID3D10RasterizerState * rs = mSOMgr->rasterStates[rsdesc];
+    if( NULL == rs ) return false;
+    mDevice->RSSetState( rs );
+
+    // depth stencil states
+
+    // blend states
+
+    // Note: input and sampler states are handled in bindContextResource()
+
     return true;
 }
 
@@ -218,40 +241,48 @@ inline bool GN::gfx::D3D10Renderer::bindContextResource(
     //
     // bind vertex format
     //
+    D3D10VertexLayout * layout;
     if( skipDirtyCheck || mContext.vtxfmt != newContext.vtxfmt )
     {
         if( 0 == newContext.vtxfmt.numElements )
         {
             mDevice->IASetInputLayout( NULL );
+            layout = NULL;
         }
         else
         {
-            AutoComPtr<ID3D10InputLayout> & layout = mInputLayouts[newContext.vtxfmt];
+            layout = &mVertexLayouts[newContext.vtxfmt];
 
-            if( NULL == layout )
+            if( NULL == layout->il )
             {
-                layout.attach( createD3D10InputLayout( *mDevice, newContext.vtxfmt ) );
-                if( NULL == layout ) return false;
+                if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
             }
 
-            mDevice->IASetInputLayout( layout );
+            mDevice->IASetInputLayout( layout->il );
         }
+    }
+    else
+    {
+        layout = &mVertexLayouts[mContext.vtxfmt];
     }
 
     ///
-    /// bind vertex buffers
+    /// bind vertex buffers, only when input layout is valid.
     ///
-    ID3D10Buffer * buf[RendererContext::MAX_VERTEX_BUFFERS];
-    UINT           strides[RendererContext::MAX_VERTEX_BUFFERS];
-    UINT           offsets[RendererContext::MAX_VERTEX_BUFFERS];
-    for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+    if( layout )
     {
-        const AutoRef<VtxBuf> & vb = newContext.vtxbufs[i];
-        buf[i]     = vb ? safeCastPtr<const D3D10VtxBuf>(vb.get())->getD3DBuffer() : NULL;
-        strides[i] = newContext.strides[i];
-        offsets[i] = 0;
+        ID3D10Buffer * buf[RendererContext::MAX_VERTEX_BUFFERS];
+        UINT           strides[RendererContext::MAX_VERTEX_BUFFERS];
+        UINT           offsets[RendererContext::MAX_VERTEX_BUFFERS];
+        for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+        {
+            const AutoRef<VtxBuf> & vb = newContext.vtxbufs[i];
+            buf[i]     = vb ? safeCastPtr<const D3D10VtxBuf>(vb.get())->getD3DBuffer() : NULL;
+            strides[i] = 0 == newContext.strides[i] ? layout->defaultStrides[i] : newContext.strides[i];
+            offsets[i] = 0;
+        }
+        mDevice->IASetVertexBuffers( 0, RendererContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
     }
-    mDevice->IASetVertexBuffers( 0, RendererContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
 
     //
     // bind index buffer

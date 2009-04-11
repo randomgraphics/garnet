@@ -202,7 +202,7 @@ int main( int, const char *[] )
     enableCRTMemoryCheck();
 
     RendererOptions o;
-    //o.api = API_D3D10;
+    o.api = API_D3D10;
 
     //Renderer * r = createMultiThreadRenderer( o );
     Renderer * r = createSingleThreadRenderer( o );

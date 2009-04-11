@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "d3d10Renderer.h"
 #include "d3d10VtxLayout.h"
 #include "garnet/GNd3d10.h"
 
@@ -102,10 +103,13 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
 //
 // create D3D input layout object from vertex format structure
 // -----------------------------------------------------------------------------
-ID3D10InputLayout *
-GN::gfx::createD3D10InputLayout( ID3D10Device & dev, const VertexFormat & format )
+static ID3D10InputLayout *
+sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & format )
 {
     GN_GUARD;
+
+    using namespace GN;
+    using namespace GN::gfx;
 
     std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
@@ -130,3 +134,35 @@ GN::gfx::createD3D10InputLayout( ID3D10Device & dev, const VertexFormat & format
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10VertexLayout::init(
+    ID3D10Device                & dev,
+    const GN::gfx::VertexFormat & format )
+{
+    // create D3D10 input layout object
+    il.attach( sCreateD3D10InputLayout( dev, format ) );
+    if( !il ) return false;
+
+    // calculate default strides
+    memset( defaultStrides, 0, sizeof(defaultStrides) );
+    for( size_t i = 0; i < format.numElements; ++i )
+    {
+        const VertexElement & e = format.elements[i];
+
+        GN_ASSERT( e.format.getBytesPerBlock() > 0 );
+        size_t elementsize = e.offset + e.format.getBytesPerBlock();
+
+        if( defaultStrides[e.stream] < elementsize )
+        {
+            defaultStrides[e.stream] = elementsize;
+        }
+    }
+
+    return true;
+}

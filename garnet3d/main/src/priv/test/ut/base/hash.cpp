@@ -2,7 +2,12 @@
 
 class StrHashTest : public CxxTest::TestSuite
 {
-    typedef GN::HashMap< GN::StrA, int, GN::strHash<char> > StrHashMap;
+    static bool strEqual( const GN::StrA & a, const GN::StrA & b )
+    {
+        return a == b;
+    }
+
+    typedef GN::HashMap< GN::StrA, int, GN::strHash<char>, strEqual > StrHashMap;
 
 public:
 
