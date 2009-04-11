@@ -20,11 +20,7 @@ bool GN::gfx::D3D10Renderer::resourceInit()
 {
     GN_GUARD;
 
-    if( !mResourceList.empty() )
-    {
-        GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
-        return false;
-    }
+    GN_ASSERT( mResourceList.empty() );
 
 #ifdef HAS_CG_D3D10
     GN_DX10_CHECK_RV( cgD3D10SetDevice( &getDeviceRefInlined() ), false );
@@ -45,7 +41,7 @@ void GN::gfx::D3D10Renderer::resourceQuit()
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR(sLogger)( "All graphics resouces MUST be released, when receiving 'destroy' signal!" );
+        GN_ERROR(sLogger)( "All graphics resouces MUST be released, before destroying renderer!" );
 
         std::list<D3D10Resource*>::iterator i = mResourceList.begin();
         while( i != mResourceList.end() )

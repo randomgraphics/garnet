@@ -85,6 +85,15 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** binary = 0 );
 
+    ID3D10GeometryShader * compileAndCreateGS(
+        ID3D10Device & dev,
+        const char   * source,
+        size_t         len = 0,
+        UInt32         flags = 0,
+        const char   * entry = "main",
+        const char   * profile = "gs_4_0",
+        ID3D10Blob  ** binary = 0 );
+
     ID3D10PixelShader * compileAndCreatePS(
         ID3D10Device & dev,
         const char   * source,

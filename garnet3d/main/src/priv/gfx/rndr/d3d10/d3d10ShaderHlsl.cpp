@@ -3,222 +3,391 @@
 #include "d3d10Renderer.h"
 #include "garnet/GNd3d10.h"
 
+using namespace GN;
+using namespace GN::gfx;
+
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
-// *****************************************************************************
-// Initialize and shutdown
-// *****************************************************************************
+///
+/// D3D10 shader type
+///
+enum D3D10ShaderType
+{
+    VERTEX_SHADER,          ///< VS
+    GEOMETRY_SHADER,        ///< GS
+    PIXEL_SHADER,           ///< PS
+    NUM_D3D10_SHADER_TYPES, ///< there are 3 shader types.
+};
+
+template<D3D10ShaderType SHADER_TYPE>
+struct D3D10ShaderTypeTemplate
+{
+    // compiler should never reach here.
+    GN_CASSERT( 0 == sizeof(SHADER_TYPE) );
+};
+
+template<>
+struct D3D10ShaderTypeTemplate<VERTEX_SHADER>
+{
+    //@{
+    typedef ID3D10VertexShader ShaderClass;
+
+    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
+            ID3D10Device & dev,
+            const char   * source,
+            size_t         len,
+            UInt32         flags,
+            const char   * entry,
+            const char   * profile,
+            ID3D10Blob  ** binary );
+
+    typedef void (__stdcall ID3D10Device::*SetConstantBuffersFuncPtr)(
+            UINT StartSlot,
+            UINT NumBuffers,
+            ID3D10Buffer *const * ppConstantBuffers );
+    ///@}
+
+    /// member data
+    //@{
+    CompileAndCreateShaderFuncPtr compileAndCreateShader;
+    SetConstantBuffersFuncPtr     setConstantBuffers;
+    const char                  * profile;
+    //@}
+
+    /// ctor
+    D3D10ShaderTypeTemplate()
+    {
+        compileAndCreateShader = &GN::d3d10::compileAndCreateVS;
+        setConstantBuffers     = &ID3D10Device::VSSetConstantBuffers;
+        profile                = "vs_4_0";
+    }
+};
+
+template<>
+struct D3D10ShaderTypeTemplate<GEOMETRY_SHADER>
+{
+    //@{
+    typedef ID3D10GeometryShader ShaderClass;
+
+    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
+            ID3D10Device & dev,
+            const char   * source,
+            size_t         len,
+            UInt32         flags,
+            const char   * entry,
+            const char   * profile,
+            ID3D10Blob  ** binary );
+
+    typedef void (__stdcall ID3D10Device::*SetConstantBuffersFuncPtr)(
+            UINT StartSlot,
+            UINT NumBuffers,
+            ID3D10Buffer *const * ppConstantBuffers );
+    ///@}
+
+    /// member data
+    //@{
+    CompileAndCreateShaderFuncPtr compileAndCreateShader;
+    SetConstantBuffersFuncPtr     setConstantBuffers;
+    const char                  * profile;
+    //@}
+
+    /// ctor
+    D3D10ShaderTypeTemplate()
+    {
+        compileAndCreateShader = &GN::d3d10::compileAndCreateGS;
+        setConstantBuffers     = &ID3D10Device::GSSetConstantBuffers;
+        profile                = "gs_4_0";
+    }
+};
+
+template<>
+struct D3D10ShaderTypeTemplate<PIXEL_SHADER>
+{
+    //@{
+    typedef ID3D10PixelShader ShaderClass;
+
+    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
+            ID3D10Device & dev,
+            const char   * source,
+            size_t         len,
+            UInt32         flags,
+            const char   * entry,
+            const char   * profile,
+            ID3D10Blob  ** binary );
+
+    typedef void (__stdcall ID3D10Device::*SetConstantBuffersFuncPtr)(
+            UINT StartSlot,
+            UINT NumBuffers,
+            ID3D10Buffer *const * ppConstantBuffers );
+    ///@}
+
+    /// member data
+    //@{
+    CompileAndCreateShaderFuncPtr compileAndCreateShader;
+    SetConstantBuffersFuncPtr     setConstantBuffers;
+    const char                  * profile;
+    //@}
+
+    /// ctor
+    D3D10ShaderTypeTemplate()
+    {
+        compileAndCreateShader = &GN::d3d10::compileAndCreatePS;
+        setConstantBuffers     = &ID3D10Device::PSSetConstantBuffers;
+        profile                = "ps_4_0";
+    }
+};
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D10ShaderHlsl::D3D10ShaderHlsl( D3D10Renderer & r, const char * profile )
-    : D3D10Resource( r )
-    , mProfile( profile )
+static const char * sCloneString( const char * str )
 {
-    clear();
+    if( NULL == str ) return NULL;
 
-    if( 0 == strCmp( mProfile, "vs_4_0" ) )
+    size_t n = GN::strLen( str ) + 1;
+
+    char * clone = (char*)GN::heapAlloc( n );
+    if( NULL == clone )
     {
-        mSetConstantBuffers = &ID3D10Device::VSSetConstantBuffers;
+        GN_RNDR_RIP( "Out of memory!" );
+        return NULL;
     }
-    else if( 0 == strCmp( mProfile, "ps_4_0" ) )
-    {
-        mSetConstantBuffers = &ID3D10Device::PSSetConstantBuffers;
-    }
-    else if( 0 == strCmp( mProfile, "gs_4_0" ) )
-    {
-        mSetConstantBuffers = &ID3D10Device::GSSetConstantBuffers;
-    }
-    else
-    {
-        // you should never reach here
-        GN_UNEXPECTED();
-    }
+
+    memcpy( clone, str, n );
+
+    return clone;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10ShaderHlsl::init( const ShaderCode & code, const D3D10ShaderCompileOptions & options )
+static bool
+sInitConstBuffers(
+    ID3D10Device                    & dev,
+    ID3D10ShaderReflection          & reflection,
+    StackArray<ID3D10Buffer*,16>    & constBufs,
+    StackArray<DynaArray<UInt8>,16> & constData )
 {
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( D3D10ShaderHlsl, () );
-
-    if( code.source )
-    {
-        // determine compile flags
-        DWORD flags =
-            D3D10_SHADER_PACK_MATRIX_ROW_MAJOR |
-            D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY |
-            options.compileFlags;
-
-        // compile shader
-        mBinary = d3d10::compileShader( "vs_4_0", code.source, 0, flags, code.entry );
-        if( NULL == mBinary ) return failure();
-
-        // get shader reflection interface
-        if( FAILED( D3D10ReflectShader(
-            mBinary->GetBufferPointer(),
-            mBinary->GetBufferSize(),
-            &mReflection ) ) )
-        {
-            GN_ERROR(sLogger)( "fail to get shader refelection interface" );
-            return failure();
-        }
-
-        // get shader description
-        D3D10_SHADER_DESC desc;
-        if( FAILED( mReflection->GetDesc( &desc ) ) )
-        {
-            GN_ERROR(sLogger)( "fail to get shader descriptor" );
-            return failure();
-        }
-
-        ID3D10Device & dev = getDeviceRef();
-
-        // create constant buffers
-        GN_ASSERT( desc.ConstantBuffers <= 16 );
-        for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
-        {
-            ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
-            GN_ASSERT( cb );
-
-            D3D10_SHADER_BUFFER_DESC cbdesc;
-            cb->GetDesc( &cbdesc );
-            GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
-
-            ID3D10Buffer * buf;
-            D3D10_BUFFER_DESC bufdesc;
-            bufdesc.ByteWidth = cbdesc.Size;
-            bufdesc.Usage = D3D10_USAGE_DYNAMIC;
-            bufdesc.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
-            bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-            bufdesc.MiscFlags = 0;
-            GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), failure() );
-            mConstBufs.append( buf );
-
-            mConstCopies.resize( mConstCopies.size() + 1 );
-            mConstCopies.back().resize( cbdesc.Size );
-        }
-    }
-
-    // success
-    return success();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10ShaderHlsl::quit()
-{
-    GN_GUARD;
-
-    safeRelease( mBinary );
-    safeRelease( mReflection );
-
-    for( size_t i = 0; i < mConstBufs.size(); ++i )
-    {
-        GN_ASSERT( mConstBufs[i] );
-        mConstBufs[i]->Release();
-    }
-    mConstBufs.clear();
-    mConstCopies.clear();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from D3D10BasicShader
-// *****************************************************************************
-
-/*
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10ShaderHlsl::applyDirtyUniforms() const
-{
-    GN_GUARD_SLOW;
-
-    const std::set<UInt32> dirtySet = getDirtyUniforms();
-
-    std::set<UInt32>::const_iterator i, e = dirtySet.end();
-    for( i = dirtySet.begin(); i != e; ++i )
-    {
-        applyUniform( getUniform(*i) );
-    }
-    clearDirtySet();
-
-    GN_UNGUARD_SLOW;
-}
-
-// *****************************************************************************
-// from Shader
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D10ShaderHlsl::queryDeviceUniform( const char * name, HandleType & userData ) const
-{
-    GN_GUARD;
-
-    GN_ASSERT( !strEmpty(name) );
-    GN_ASSERT( mReflection );
-
-    // get user descriptor
+    // get shader description
     D3D10_SHADER_DESC desc;
-    if( FAILED( mReflection->GetDesc( &desc ) ) )
+    if( FAILED( reflection.GetDesc( &desc ) ) )
     {
         GN_ERROR(sLogger)( "fail to get shader descriptor" );
         return false;
     }
 
-    // search the uniform name in every constant buffers.
-    for( UINT i = 0; i < desc.ConstantBuffers; ++i )
+    // create constant buffers
+    GN_ASSERT( desc.ConstantBuffers <= 16 );
+    for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
-        ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
+        ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
         GN_ASSERT( cb );
 
-        ID3D10ShaderReflectionVariable * var = cb->GetVariableByName( name );
-        D3D10_SHADER_VARIABLE_DESC vardesc;
+        D3D10_SHADER_BUFFER_DESC cbdesc;
+        cb->GetDesc( &cbdesc );
+        GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
 
-        if( !var || FAILED( var->GetDesc( &vardesc ) ) ) continue;
+        ID3D10Buffer * buf;
+        D3D10_BUFFER_DESC bufdesc;
+        bufdesc.ByteWidth      = cbdesc.Size;
+        bufdesc.Usage          = D3D10_USAGE_DYNAMIC;
+        bufdesc.BindFlags      = D3D10_BIND_CONSTANT_BUFFER;
+        bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+        bufdesc.MiscFlags      = 0;
+        GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
+        constBufs.append( buf );
 
-        // variable found!
-        GN_ASSERT( 0 == (vardesc.StartOffset % 4) );
-        GN_ASSERT( 0 == (vardesc.Size % 4) );
-        UniformUserData uud;
-        uud.bufidx   = i;
-        uud.offsetdw = vardesc.StartOffset / 4;
-        uud.sizedw   = vardesc.Size / 4;
-        userData = (HandleType)uud.u32;
-
-        // success
-        return true;
+        constData.resize( constData.size() + 1 );
+        constData.back().resize( cbdesc.Size );
     }
 
-    // variable not found
-    GN_ERROR(sLogger)( "Uniform '%s' is invalid.", name );
-    return false;
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<D3D10ShaderType SHADER_TYPE>
+static bool
+sInitUniforms(
+    ID3D10ShaderReflection       & reflection,
+    D3D10GpuProgramParameterDesc & paramDesc )
+{
+    GN_CASSERT( SHADER_TYPE < NUM_D3D10_SHADER_TYPES );
+
+    D3D10_SHADER_DESC desc;
+    if( FAILED( reflection.GetDesc( &desc ) ) )
+    {
+        GN_ERROR(sLogger)( "fail to get shader descriptor" );
+        return false;
+    }
+
+    // iterate const buffers
+    for( UINT i = 0; i < desc.ConstantBuffers; ++i )
+    {
+        ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
+        D3D10_SHADER_BUFFER_DESC cbdesc;
+        cb->GetDesc( &cbdesc );
+
+        // iterate shader variables
+        for( UINT i = 0; i < cbdesc.Variables; ++i )
+        {
+            ID3D10ShaderReflectionVariable * var = cb->GetVariableByIndex( i );
+            D3D10_SHADER_VARIABLE_DESC vardesc;
+            var->GetDesc( &vardesc );
+
+            // find uniform with same name
+            D3D10UniformParameterDesc * existingUniform = paramDesc.findUniform( vardesc.Name );
+            if( existingUniform )
+            {
+                if( existingUniform->size != vardesc.Size )
+                {
+                    GN_ERROR(sLogger)( "If an uniform name is used by more than one shaders, its type and size must be same in all shaders." );
+                    return false;
+                }
+
+                // update shader specific properties
+                GN_ASSERT( !existingUniform->ssp[SHADER_TYPE].used );
+                existingUniform->ssp[SHADER_TYPE].used   = true;
+                existingUniform->ssp[SHADER_TYPE].cbidx  = i;
+                existingUniform->ssp[SHADER_TYPE].offset = vardesc.StartOffset;
+            }
+            else
+            {
+                // this is a new uniform
+                D3D10UniformParameterDesc u;
+                u.name                    = sCloneString( vardesc.Name );
+                u.size                    = vardesc.Size;
+                u.ssp[SHADER_TYPE].used   = true;
+                u.ssp[SHADER_TYPE].cbidx  = i;
+                u.ssp[SHADER_TYPE].offset = vardesc.StartOffset;
+
+                // append u to uniform array
+                paramDesc.addUniform( u );
+            }
+        }
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<D3D10ShaderType SHADER_TYPE>
+static bool
+sInitShader(
+    ID3D10Device                                                           & dev,
+    const ShaderCode                                                       & code,
+    const D3D10ShaderCompileOptions                                        & options,
+    D3D10GpuProgramParameterDesc                                           & paramDesc,
+    AutoComPtr<typename D3D10ShaderTypeTemplate<SHADER_TYPE>::ShaderClass> & shader,
+    StackArray<ID3D10Buffer*,16>                                           & constBufs,
+    StackArray<DynaArray<UInt8>,16>                                        & constData )
+{
+    GN_GUARD;
+
+    // do nothing for empty shader code
+    if( strEmpty( code.source ) ) return true;
+
+    // determine compile flags
+    DWORD flags =
+        D3D10_SHADER_PACK_MATRIX_ROW_MAJOR |
+        D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY |
+        options.compileFlags;
+
+    // initialize shader type template
+    D3D10ShaderTypeTemplate<SHADER_TYPE> templ;
+
+    // compile shader
+    AutoComPtr<ID3D10Blob> binary;
+    shader.attach( templ.compileAndCreateShader(
+        dev,
+        code.source,
+        0,
+        flags,
+        code.entry,
+        templ.profile,
+        &binary ) );
+    if( NULL == shader ) return false;
+
+    // get shader reflection interface
+    AutoComPtr<ID3D10ShaderReflection> reflection;
+    if( FAILED( D3D10ReflectShader(
+        binary->GetBufferPointer(),
+        binary->GetBufferSize(),
+        &reflection ) ) )
+    {
+        GN_ERROR(sLogger)( "fail to get shader refelection interface" );
+        return false;
+    }
+
+    // initialize constant buffers
+    if( !sInitConstBuffers( dev, *reflection, constBufs, constData ) ) return false;
+
+    // initialize uniforms
+    if( !sInitUniforms<SHADER_TYPE>( *reflection, paramDesc ) ) return false;
+
+    GN_TODO( "initialize texture and attribute parameters." );
+
+    // success
+    return true;
 
     GN_UNGUARD;
-}*/
+}
 
 // *****************************************************************************
-// private functions
+// D3D10VertexShaderHLSL
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10VertexShaderHLSL::init(
+    ID3D10Device                    & dev,
+    const ShaderCode                & code,
+    const D3D10ShaderCompileOptions & options,
+    D3D10GpuProgramParameterDesc    & paramDesc )
+{
+    return sInitShader<VERTEX_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+}
+
+// *****************************************************************************
+// D3D10GeometryShaderHLSL
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10GeometryShaderHLSL::init(
+    ID3D10Device                    & dev,
+    const ShaderCode                & code,
+    const D3D10ShaderCompileOptions & options,
+    D3D10GpuProgramParameterDesc    & paramDesc )
+{
+    return sInitShader<GEOMETRY_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+}
+
+// *****************************************************************************
+// D3D10PixelShaderHLSL
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10PixelShaderHLSL::init(
+    ID3D10Device                    & dev,
+    const ShaderCode                & code,
+    const D3D10ShaderCompileOptions & options,
+    D3D10GpuProgramParameterDesc    & paramDesc )
+{
+    return sInitShader<PIXEL_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
+}
 
 /*
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
+void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
 {
     GN_GUARD_SLOW;
 
@@ -278,9 +447,9 @@ void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
 
     if( 0 == src ) return;
 
-    GN_ASSERT( uud.bufidx < mConstBufs.size() );
-    ID3D10Buffer * cb = mConstBufs[uud.bufidx];
-    DynaArray<UInt8> & syscopy = mConstCopies[uud.bufidx];
+    GN_ASSERT( uud.bufidx < constBufs.size() );
+    ID3D10Buffer * cb = constBufs[uud.bufidx];
+    DynaArray<UInt8> & syscopy = constData[uud.bufidx];
 
     // copy data to system copy
     memcpy( &syscopy[uud.offsetdw*4], src, uud.sizedw * 4 );

@@ -169,6 +169,33 @@ ID3D10VertexShader * GN::d3d10::compileAndCreateVS(
 //
 //
 // -----------------------------------------------------------------------------
+ID3D10GeometryShader * GN::d3d10::compileAndCreateGS(
+    ID3D10Device & dev,
+    const char   * source,
+    size_t         len,
+    UInt32         flags,
+    const char   * entry,
+    const char   * profile,
+    ID3D10Blob  ** signature )
+{
+    GN_GUARD;
+
+    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    if( !bin ) return NULL;
+
+    ID3D10GeometryShader * gs = createDumpableGS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
+    if( 0 == gs ) return NULL;
+
+    // success
+    if( signature ) *signature = bin.detach();
+    return gs;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 ID3D10PixelShader * GN::d3d10::compileAndCreatePS(
     ID3D10Device & dev,
     const char   * source,
