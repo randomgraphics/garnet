@@ -226,41 +226,9 @@ size_t GN::StdFile::size() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::DiskFile::open(  const StrA & filename, SInt32 openmode )
-{
-    GN_GUARD;
-
-    // NOTE : these tables must always be syncronized with
-    //        defintion of fopen_t ( see types/file.h )
-    static const char * rw_table[] = {
-        "",
-        "r",
-        "w",
-        "r+",
-    };
-    static const char * fmt_table[] = {
-        "",
-        "b",
-        "t",
-    };
-
-    // build open mode string
-    StrA mode;
-    mode  = rw_table[openmode&0xF];
-    mode += fmt_table[openmode>>4];
-
-    // do open
-    return open( filename, mode );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
 {
-    GN_GUARD;
+    GN_GUARD_ALWAYS;
 
     // close previous file
     close();
@@ -291,7 +259,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
     setName( filename );
     return true;
 
-    GN_UNGUARD;
+    GN_UNGUARD_ALWAYS_DO( return false; );
 }
 
 //
@@ -310,4 +278,25 @@ void GN::DiskFile::close() throw()
     setName( "" );
 
     GN_UNGUARD_ALWAYS_NO_THROW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::File *
+GN::createTemporaryFile( const StrA & mode )
+{
+    GN_GUARD_ALWAYS;
+
+    AutoObjPtr<DiskFile> fp( new DiskFile );
+
+    char * tmpname = _tempnam( NULL, "GN_" );
+
+    bool ok = fp->open( tmpname, mode );
+
+    ::free( tmpname );
+
+    return ok ? fp.detach() : NULL;
+
+    GN_UNGUARD_ALWAYS_DO( return NULL; );
 }

@@ -12,25 +12,6 @@
 namespace GN
 {
     ///
-    /// 文件打开模式
-    ///
-    /// 有效的模式必须是一个读写标志加上一个格式标志
-    ///
-    enum FileOpenMode
-    {
-        FILE_OPEN_NONE  = 0x00, ///< indicate a invalid value
-
-        // 读写标志
-        FILE_OPEN_READ  = 0x01, ///< 只读模式（文件必须存在），same as "r"
-        FILE_OPEN_WRITE = 0x02, ///< 只写模式，same as "w"
-        FILE_OPEN_RW    = 0x03, ///< 读写模式（文件必须存在），same as "r+"
-
-        // 格式标志
-        FILE_OPEN_BIN   = 0x10, ///< 二进制模式
-        FILE_OPEN_TXT   = 0x20, ///< 文本模式
-    };
-
-    ///
     /// 文件定位模式
     ///
     enum FileSeekMode
@@ -71,7 +52,7 @@ namespace GN
         /// Get file operation caps
         ///
         const FileOperationCaps & getCaps() const { return mCaps; }
-        
+
         ///
         /// 读取size个字节到buffer中
         ///
@@ -288,14 +269,6 @@ namespace GN
         /// open a file
         ///
         /// \param fname File name
-        /// \param flags File open flags
-        ///
-        bool open( const StrA & fname, SInt32 flags );
-
-        ///
-        /// open a file
-        ///
-        /// \param fname File name
         /// \param mode  ANSI compatible open mode, such as "r", "w+".
         ///
         bool open( const StrA & fname, const StrA & mode );
@@ -409,6 +382,14 @@ namespace GN
         void unmap() {}
         //@}
     };
+
+    ///
+    /// Create temporary file with user specified mode
+    ///
+    /// \param mode     Same as mode parameter of standard fopen().
+    /// \return         Temporary file object.
+    ///
+    File * createTemporaryFile( const StrA & mode );
 }
 
 #include "file.inl"

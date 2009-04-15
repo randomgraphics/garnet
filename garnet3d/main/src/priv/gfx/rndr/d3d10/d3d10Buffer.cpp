@@ -78,6 +78,8 @@ static const D3D10_MAP SURFACE_UPDATE_FLAG_TO_D3D10_MAP[] =
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     // parameters should've already been verified by caller.
     GN_ASSERT( ( offset + bytes ) <= mBytes );
     GN_ASSERT( data );
@@ -88,9 +90,9 @@ void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * dat
     if( mFastCpuWrite )
     {
         // update dynamic d3d buffer
-        void * dst;
-        GN_DX10_CHECK_R( mD3DBuffer->Map( SURFACE_UPDATE_FLAG_TO_D3D10_MAP[flag], 0, &dst ) );
-        memcpy( dst, data, bytes );
+        UInt8 * dst;
+        GN_DX10_CHECK_R( mD3DBuffer->Map( SURFACE_UPDATE_FLAG_TO_D3D10_MAP[flag], 0, (void**)&dst ) );
+        memcpy( dst+offset, data, bytes );
         mD3DBuffer->Unmap();
     }
     else
@@ -112,6 +114,8 @@ void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * dat
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Buffer::readback( std::vector<UInt8> & data )
 {
+    PIXPERF_FUNCTION_EVENT();
+
     data.clear();
 
     GN_UNIMPL();

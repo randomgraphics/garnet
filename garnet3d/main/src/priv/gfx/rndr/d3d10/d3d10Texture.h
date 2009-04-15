@@ -13,6 +13,16 @@ namespace GN { namespace gfx
     class D3D10Renderer;
 
     ///
+    /// D3D10 texture dimension enumeration
+    ///
+    enum D3D10TextureDimension
+    {
+        TEXDIM_1D, ///< 1D texture and 1D texture array
+        TEXDIM_2D, ///< 2D texture and 2D texture array (including CUBE texture)
+        TEXDIM_3D, ///< 3D texture
+    };
+
+    ///
     /// D3D texture
     ///
     class D3D10Texture : public BasicTexture, public StdClass
