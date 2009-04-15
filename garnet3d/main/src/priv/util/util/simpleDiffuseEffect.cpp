@@ -6,6 +6,52 @@ using namespace GN::gfx;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util");
 
+const char * hlslvscode =
+    "uniform float4x4 pvw; \n"
+    "uniform float4x4 world; \n"
+    "uniform float4x4 wit; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : HPOSITION;    // vertex position in projection space \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "struct VSINPUT \n"
+    "{ \n"
+    "   float4 position  : POSITION; \n"
+    "   float3 normal    : NORMAL; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "VSOUTPUT main( in VSINPUT i ) { \n"
+    "   VSOUTPUT o; \n"
+    "   o.hpos      = mul( pvw, i.position ); \n"
+    "   o.pos_world = mul( world, i.position ); \n"
+    "   o.nml_world = mul( wit, float4(i.normal,0) ).xyz; \n"
+    "   o.texcoords = i.texcoords; \n"
+    "   return o; \n"
+    "}";
+
+const char * hlslpscode =
+    "uniform float4 lightpos; // light positin in world space \n"
+    "uniform float4 lightColor; \n"
+    "uniform float4 diffuseColor; \n"
+    "sampler s0; \n"
+    "Texture2D<float4> t0; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
+    "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
+    "   float3  N    = normalize( i.nml_world ); \n"
+    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   return (diff * lightColor + diffuseColor * tex) / 2.0; \n"
+    "}";
+
 const char * glslvscode =
     "uniform mat4 pvw; \n"
     "uniform mat4 world; \n"
@@ -17,7 +63,7 @@ const char * glslvscode =
     "   gl_Position = pvw * gl_Vertex; \n"
     "   pos_world   = world * gl_Vertex; \n"
     "   nml_world   = (wit * vec4(gl_Normal,0)).xyz; \n"
-    "   texcoords   = gl_Vertex.xy; \n"
+    "   texcoords   = gl_MultiTexCoord0.xy; \n"
     "}";
 
 const char * glslpscode =
@@ -63,6 +109,9 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
     ed.uniforms["DIFFUSE_COLOR"].size = sizeof(Vector4f);
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
+
+    ed.shaders["glsl"].prerequisites.vsProfile = RendererCaps::GPP_OGL_GLSL;
+    ed.shaders["glsl"].prerequisites.psProfile = RendererCaps::GPP_OGL_GLSL;
     ed.shaders["glsl"].gpd.lang = GPL_GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
@@ -75,6 +124,24 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
+
+    ed.shaders["hlsl"].prerequisites.vsProfile = RendererCaps::GPP_D3D_2_0;
+    ed.shaders["hlsl"].prerequisites.psProfile = RendererCaps::GPP_D3D_2_0;
+    ed.shaders["hlsl"].gpd.lang = GPL_HLSL;
+    ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
+    ed.shaders["hlsl"].gpd.vs.entry  = "main";
+    ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
+    ed.shaders["hlsl"].gpd.ps.entry  = "main";
+    ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["hlsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.shaders["hlsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.shaders["hlsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.shaders["hlsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
+    ed.shaders["hlsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
+    ed.shaders["hlsl"].textures["t0"] = "DIFFUSE_TEXTURE";
+    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes[0].shader = "hlsl";
+
     mEffect = new Effect( r );
     if( !mEffect->init( ed ) ) return failure();
 

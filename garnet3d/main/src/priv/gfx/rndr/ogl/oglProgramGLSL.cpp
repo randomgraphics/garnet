@@ -643,14 +643,20 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     }
 
     // update parameter descriptor
-    mParamDesc.setUniformArray(
-        &mUniforms[0].uniformDesc,
-        mUniforms.size(),
-        sizeof(GLSLUniformOrTextureDesc) );
-    mParamDesc.setTextureArray(
-        &mTextures[0].textureDesc,
-        mTextures.size(),
-        sizeof(GLSLUniformOrTextureDesc) );
+    if( mUniforms.size() > 0 )
+    {
+        mParamDesc.setUniformArray(
+            &mUniforms[0].uniformDesc,
+            mUniforms.size(),
+            sizeof(GLSLUniformOrTextureDesc) );
+    }
+    if( mTextures.size() > 0 )
+    {
+        mParamDesc.setTextureArray(
+            &mTextures[0].textureDesc,
+            mTextures.size(),
+            sizeof(GLSLUniformOrTextureDesc) );
+    }
 
     // success
     return true;

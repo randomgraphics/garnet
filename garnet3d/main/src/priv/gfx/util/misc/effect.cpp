@@ -53,9 +53,30 @@ sMergeRenderStates(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & ) const
+bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & r ) const
 {
-    GN_UNIMPL_WARNING();
+    const RendererCaps & caps = r.getCaps();
+
+    if( (UInt32)vsProfile != (caps.vsProfiles & vsProfile) )
+    {
+        return false;
+    }
+
+    if( (UInt32)gsProfile != (caps.gsProfiles & gsProfile) )
+    {
+        return false;
+    }
+
+    if( (UInt32)psProfile != (caps.psProfiles & psProfile) )
+    {
+        return false;
+    }
+
+    if( caps.maxTextures < numTextures )
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -124,7 +145,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
          iter != desc.uniforms.end();
          ++iter )
     {
-        const StrA                    & uname = iter->first;
+        const StrA                    & uniformName = iter->first;
         const EffectDesc::UniformDesc & udesc = iter->second;
 
         // create GPU program
@@ -132,7 +153,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         if( NULL == u ) return false;
 
         // add to uniform array
-        mUniforms[uname].attach( u );
+        mUniforms[uniformName].attach( u );
     }
 
     // create texture array
@@ -140,10 +161,10 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
          iter != desc.textures.end();
          ++iter )
     {
-        const StrA & tname = iter->first;
+        const StrA & texName = iter->first;
 
         // add new item, with NULL texture pointer, in texture array.
-        mTextures[tname];
+        mTextures[texName];
     }
 
     // create GPU program array
@@ -151,25 +172,25 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
          iter != desc.shaders.end();
          ++iter )
     {
-        const StrA                   & sname = iter->first;
-        const EffectDesc::ShaderDesc & sdesc = iter->second;
+        const StrA                   & shaderName = iter->first;
+        const EffectDesc::ShaderDesc & shaderDesc = iter->second;
 
         // check shader requirements.
-        if( !sdesc.prerequisites.check( mRenderer ) )
+        if( !shaderDesc.prerequisites.check( mRenderer ) )
         {
             GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing renderer caps." );
             continue;
         }
 
         // create GPU program
-        GpuProgram * gp = mRenderer.createGpuProgram( sdesc.gpd );
+        GpuProgram * gp = mRenderer.createGpuProgram( shaderDesc.gpd );
         if( NULL == gp )
         {
             // ignore problematic shader.
             continue;
         }
 
-        mGpuPrograms[sname].attach( gp );
+        mGpuPrograms[shaderName].attach( gp );
     }
 
     // create techniques
@@ -184,19 +205,19 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
          iter != desc.techniques.end();
          ++iter )
     {
-        const StrA                      & name = iter->first;
-        const EffectDesc::TechniqueDesc & desc = iter->second;
+        const StrA                      & techName = iter->first;
+        const EffectDesc::TechniqueDesc & techDesc = iter->second;
 
-        Technique & tech = mTechniques[name];
-        if( !initTech( tech, name, desc ) )
+        Technique & tech = mTechniques[techName];
+        if( !initTech( tech, techName, techDesc ) )
         {
-            mTechniques.erase( name );
+            mTechniques.erase( techName );
             continue; // skip problematic technique
         }
 
-        if( desc.quality > highestQuality )
+        if( techDesc.quality > highestQuality )
         {
-            highestQuality = desc.quality;
+            highestQuality = techDesc.quality;
             defaultActiveTech = &tech;
         }
     }
@@ -314,67 +335,93 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
 bool
 GN::gfx::Effect::initTech(
     Technique                       & tech,
-    const StrA                      & name,
-    const EffectDesc::TechniqueDesc & desc )
+    const StrA                      & techName,
+    const EffectDesc::TechniqueDesc & techDesc )
 {
-    tech.passes.resize( desc.passes.size() );
+    tech.passes.resize( techDesc.passes.size() );
 
     // get common render state for the technique
     EffectDesc::RenderStateDesc commonRenderStates;
-    sMergeRenderStates( commonRenderStates, desc.rsd, mDesc.rsd );
+    sMergeRenderStates( commonRenderStates, techDesc.rsd, mDesc.rsd );
 
     // initialize each pass
     for( size_t i = 0; i < tech.passes.size(); ++i )
     {
-        const EffectDesc::PassDesc & pdesc = desc.passes[i];
+        const EffectDesc::PassDesc & passDesc = techDesc.passes[i];
 
-        const StrA & sname = pdesc.shader; // shader name alias for easy referencing
+        const StrA & shaderName = passDesc.shader; // shader techName alias for easy referencing
 
         Pass & p = tech.passes[i];
 
+        // Look up GPU program description
+        const EffectDesc::ShaderDesc * shaderDesc = sFindNamedPtr( mDesc.shaders, shaderName );
+        if( NULL == shaderDesc )
+        {
+            GN_ERROR(sLogger)(
+                "Technique '%s' referencs non-exist shader name '%s' in pass %u",
+                techName.cptr(),
+                shaderName.cptr(),
+                i );
+            return false;
+        }
+
+        // check renderer caps against shader requirments
+        if( !shaderDesc->prerequisites.check( mRenderer ) )
+        {
+            // Note: it is expected scenario that some shaders are not supported by current hardware.
+            //       So here we just issue a verbose log, instead of error.
+            GN_VERBOSE(sLogger)(
+                "Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
+                "is not supported by current graphics hardware.",
+                techName.cptr(),
+                shaderName.cptr(),
+                i );
+            return false;
+        }
+
         // look up GPU program
-        p.gpuProgram = sFindNamedPtr( mGpuPrograms, sname );
+        p.gpuProgram = sFindNamedPtr( mGpuPrograms, shaderName );
         if( NULL == p.gpuProgram )
         {
             GN_ERROR(sLogger)(
-                "Technique '%s' referencs non-exist or invalid shader '%s' in pass %u",
-                name.cptr(),
-                sname.cptr(),
+                "Shader '%s' referenced by technique '%s' in pass %u is not initialized",
+                shaderName.cptr(),
+                techName.cptr(),
                 i );
             return false;
         }
 
         const GpuProgramParameterDesc & gpuparam = p.gpuProgram->getParameterDesc();
 
-        GN_ASSERT( mDesc.shaders.find(sname) != mDesc.shaders.end() );
-        const EffectDesc::ShaderDesc & sdesc = mDesc.shaders.find(sname)->second;
+        GN_ASSERT( mDesc.shaders.find(shaderName) != mDesc.shaders.end() );
+        const EffectDesc::ShaderDesc & sdesc = mDesc.shaders.find(shaderName)->second;
 
         // look up textures
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.textures.begin(); iter != sdesc.textures.end(); ++iter )
         {
-            const StrA & tbind = iter->first;
-            const StrA & tname = iter->second;
+            const StrA & texBind = iter->first;
+            const StrA & texName = iter->second;
 
-            const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, tname );
+            const EffectDesc::TextureDesc * tdesc = sFindNamedPtr( mDesc.textures, texName );
             if( NULL == tdesc )
             {
                 GN_ERROR(sLogger)(
                     "shader '%s' referencs non-exisit texture '%s'.",
-                    sname.cptr(), tname.cptr() );
+                    shaderName.cptr(), texName.cptr() );
             }
-            else if( GPU_PROGRAM_PARAMETER_NOT_FOUND == gpuparam.textures[tbind.cptr()] )
+            else if( GPU_PROGRAM_PARAMETER_NOT_FOUND == gpuparam.textures[texBind.cptr()] )
             {
                 GN_ERROR(sLogger)(
                     "texture '%s' is binded to invalid parameter '%s' of shader '%s'.",
-                    tname.cptr(), tbind.cptr(), sname.cptr() );
+                    texName.cptr(), texBind.cptr(), shaderName.cptr() );
             }
             // TODO: check GPU parameter type. Make sure it is a texture parameter.
             else
             {
                 PerShaderTextureParam tex;
 
-                tex.iter    = mTextures.find(tname);
-                tex.binding = tbind;
+                tex.iter    = mTextures.find(texName);
+                tex.binding = texBind;
                 tex.sampler = &tdesc->sampler;
 
                 p.textures.append( tex );
@@ -385,7 +432,7 @@ GN::gfx::Effect::initTech(
         }
         if( p.textures.size() > RendererContext::MAX_TEXTURES )
         {
-            GN_ERROR(sLogger)( "technique %s pass %u has too many textures.", name.cptr(), i );
+            GN_ERROR(sLogger)( "technique %s pass %u has too many textures.", techName.cptr(), i );
         }
 
         // look up uniforms
@@ -393,32 +440,32 @@ GN::gfx::Effect::initTech(
         std::fill( p.uniforms.begin(), p.uniforms.end(), mUniforms.end() );
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.uniforms.begin(); iter != sdesc.uniforms.end(); ++iter )
         {
-            const StrA & ubind = iter->first;
-            const StrA & uname = iter->second;
+            const StrA & uniformBind = iter->first;
+            const StrA & uniformName = iter->second;
 
-            const EffectDesc::UniformDesc * udesc = sFindNamedPtr( mDesc.uniforms, uname );
+            const EffectDesc::UniformDesc * udesc = sFindNamedPtr( mDesc.uniforms, uniformName );
             if( NULL == udesc )
             {
                 GN_ERROR(sLogger)(
                     "shader '%s' is referencing non-exisit uniform '%s'.",
-                    sname.cptr(), uname.cptr() );
+                    shaderName.cptr(), uniformName.cptr() );
             }
             else
             {
-                size_t uidx = gpuparam.uniforms[ubind.cptr()];
+                size_t uidx = gpuparam.uniforms[uniformBind.cptr()];
 
                 if( GPU_PROGRAM_PARAMETER_NOT_FOUND == uidx )
                 {
                     GN_ERROR(sLogger)(
                         "uniform '%s' is binded to invalid parameter '%s' of shader '%s'.",
-                        uname.cptr(), ubind.cptr(), sname.cptr() );
+                        uniformName.cptr(), uniformBind.cptr(), shaderName.cptr() );
                 }
                 // TODO: check parameter type.
                 else
                 {
                     GN_ASSERT( uidx < p.uniforms.size() );
 
-                    p.uniforms[uidx] = mUniforms.find( uname );
+                    p.uniforms[uidx] = mUniforms.find( uniformName );
 
                     GN_ASSERT( mUniforms.end() != p.uniforms[uidx] );
                 }
@@ -426,7 +473,7 @@ GN::gfx::Effect::initTech(
         }
 
         // get pass specific render states
-        sMergeRenderStates( p.rsd, commonRenderStates, pdesc.rsd );
+        sMergeRenderStates( p.rsd, commonRenderStates, passDesc.rsd );
     }
 
     GN_TODO( "build vertex format structure" );
@@ -463,9 +510,9 @@ void GN::gfx::Effect::clone( const Effect & e )
     // Fix up iterators and pointers for each technique
     for( std::map<StrA,Technique>::const_iterator i = e.mTechniques.begin(); i != e.mTechniques.end(); ++i )
     {
-        const StrA & tname = i->first;
+        const StrA & texName = i->first;
         const Technique & tsrc = i->second;
-        Technique & tdst = mTechniques[tname];
+        Technique & tdst = mTechniques[texName];
 
         // for each pass
         GN_ASSERT( tdst.passes.size() == tsrc.passes.size() );
@@ -473,7 +520,7 @@ void GN::gfx::Effect::clone( const Effect & e )
         {
             Pass & pdst = tdst.passes[i];
 
-            GN_ASSERT( pdst.gpuProgram == mGpuPrograms[mDesc.techniques[tname].passes[i].shader].get() );
+            GN_ASSERT( pdst.gpuProgram == mGpuPrograms[mDesc.techniques[texName].passes[i].shader].get() );
 
             // for each textures
             GN_ASSERT( pdst.textures.size() == tsrc.passes[i].textures.size() );

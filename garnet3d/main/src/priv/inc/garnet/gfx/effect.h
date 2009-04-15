@@ -15,13 +15,22 @@ namespace GN { namespace gfx
         ///
         struct ShaderPrerequisites
         {
-            RendererCaps::GpuProgramProfile vsprofiles;  ///< required VS profiles.
-            RendererCaps::GpuProgramProfile gsprofiles;  ///< required GS profiles.
-            RendererCaps::GpuProgramProfile psprofiles;  ///< required PS profiles.
-            UInt8                           numtextures; ///< minimal number of textures.
+            RendererCaps::GpuProgramProfile vsProfile;   ///< required VS profile.
+            RendererCaps::GpuProgramProfile gsProfile;   ///< required GS profile.
+            RendererCaps::GpuProgramProfile psProfile;   ///< required PS profile.
+            UInt8                           numTextures; ///< minimal number of textures.
 
             /// check if the renderer meets all requirements.
             bool check( Renderer & r ) const;
+
+            /// default constructor
+            ShaderPrerequisites()
+                : vsProfile((RendererCaps::GpuProgramProfile)0)
+                , gsProfile((RendererCaps::GpuProgramProfile)0)
+                , psProfile((RendererCaps::GpuProgramProfile)0)
+                , numTextures(0)
+            {
+            }
         };
 
         ///
