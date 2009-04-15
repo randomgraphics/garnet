@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.util.SpriteRenderer");
 
 static const char * glslvscode=
     "varying vec4 color; \n"
@@ -19,6 +19,35 @@ static const char * glslpscode=
     "varying vec2 texcoords; \n"
     "void main() { \n"
     "   gl_FragColor = color * texture2D( s0, texcoords ); \n"
+    "}";
+
+static const char * hlslvscode=
+    "struct VSOUT { \n"
+    "   float4 position  : POSITION; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "struct VSIN { \n"
+    "   float4 position  : POSITION; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "VSOUT main( VSIN i ) { \n"
+    "   VSOUT o; \n"
+    "   o.position.x  = i.position.x * 2.0 - 1.0; \n"
+    "   o.position.y  = i.position.y * -2.0 + 1.0; \n"
+    "   o.position.zw = i.position.zw; \n"
+    "   o.texcoords   = i.texcoords; \n"
+    "   return o; \n"
+    "}";
+
+static const char * hlslpscode=
+    "sampler s0; \n"
+    "Texture2D<float4> t0; \n"
+    "struct VSOUT { \n"
+    "   float4 position  : POSITION; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "float4 main( VSOUT i ) : COLOR0 { \n"
+    "   return t0.Sample( s0, i.texcoords ); \n"
     "}";
 
 // *****************************************************************************
@@ -43,10 +72,29 @@ bool GN::gfx::SpriteRenderer::init()
     };
 
     // create GPU program
+    const RendererCaps & caps = mRenderer.getCaps();
     GpuProgramDesc gpd;
-    gpd.lang = GPL_GLSL;
-    gpd.vs.source = glslvscode;
-    gpd.ps.source = glslpscode;
+    if( caps.vsProfiles & RendererCaps::GPP_OGL_GLSL &&
+        caps.psProfiles & RendererCaps::GPP_OGL_GLSL )
+    {
+        gpd.lang = GPL_GLSL;
+        gpd.vs.source = glslvscode;
+        gpd.ps.source = glslpscode;
+    }
+    else if( caps.vsProfiles & RendererCaps::GPP_D3D_2_0 &&
+             caps.psProfiles & RendererCaps::GPP_D3D_2_0 )
+    {
+        gpd.lang = GPL_HLSL;
+        gpd.vs.source = hlslvscode;
+        gpd.vs.entry = "main";
+        gpd.ps.source = hlslpscode;
+        gpd.ps.entry = "main";
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
+        return failure();
+    }
     mPrivateContext.gpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
     if( !mPrivateContext.gpuProgram ) return failure();
 

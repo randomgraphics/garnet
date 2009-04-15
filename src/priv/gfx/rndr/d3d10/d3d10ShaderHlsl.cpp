@@ -187,6 +187,8 @@ sInitConstBuffers(
     }
 
     // create constant buffers
+    constBufs.resize( desc.ConstantBuffers );
+    constData.resize( desc.ConstantBuffers );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
@@ -204,10 +206,8 @@ sInitConstBuffers(
         bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
         bufdesc.MiscFlags      = 0;
         GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
-        constBufs.append( buf );
-
-        constData.resize( constData.size() + 1 );
-        constData.back().resize( cbdesc.Size );
+        constBufs[i] = buf;
+        constData[i].resize( cbdesc.Size );
     }
 
     return true;
@@ -232,9 +232,9 @@ sInitUniforms(
     }
 
     // iterate const buffers
-    for( UINT i = 0; i < desc.ConstantBuffers; ++i )
+    for( UINT cbidx = 0; cbidx < desc.ConstantBuffers; ++cbidx )
     {
-        ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
+        ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( cbidx );
         D3D10_SHADER_BUFFER_DESC cbdesc;
         cb->GetDesc( &cbdesc );
 
@@ -258,7 +258,7 @@ sInitUniforms(
                 // update shader specific properties
                 GN_ASSERT( !existingUniform->ssp[SHADER_TYPE].used );
                 existingUniform->ssp[SHADER_TYPE].used   = true;
-                existingUniform->ssp[SHADER_TYPE].cbidx  = i;
+                existingUniform->ssp[SHADER_TYPE].cbidx  = cbidx;
                 existingUniform->ssp[SHADER_TYPE].offset = vardesc.StartOffset;
             }
             else
@@ -268,7 +268,7 @@ sInitUniforms(
                 u.name                    = sCloneString( vardesc.Name );
                 u.size                    = vardesc.Size;
                 u.ssp[SHADER_TYPE].used   = true;
-                u.ssp[SHADER_TYPE].cbidx  = i;
+                u.ssp[SHADER_TYPE].cbidx  = cbidx;
                 u.ssp[SHADER_TYPE].offset = vardesc.StartOffset;
 
                 // append u to uniform array
