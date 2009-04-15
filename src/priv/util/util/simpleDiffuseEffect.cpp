@@ -12,7 +12,7 @@ const char * hlslvscode =
     "uniform float4x4 wit; \n"
     "struct VSOUTPUT \n"
     "{ \n"
-    "   float4 hpos      : HPOSITION;    // vertex position in projection space \n"
+    "   float4 hpos      : SV_POSITION;  // vertex position in projection space \n"
     "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
     "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
     "   float2 texcoords : TEXCOORD; \n"

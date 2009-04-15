@@ -111,14 +111,35 @@ ID3D10Blob * GN::d3d10::compileShader(
 {
     AutoComPtr<ID3D10Blob> bin, err;
 
+    if( NULL == source )
+    {
+        GN_ERROR(sLogger)( "NULL source pointer." );
+        return NULL;
+    }
+
+    // determine source length
+    if( 0 == len ) len = strLen(source);
+
+    // generate temporary file to store shader source
+    StrA filename;
+#if GN_BUILD_DEBUG
+    AutoObjPtr<File> fp( createTemporaryFile( "wt" ) );
+    if( fp )
+    {
+        filename = fp->name();
+        fp->write( source, len, NULL );
+        fp.clear(); // delete file insance, which will close the file on disk
+    }
+#endif
+
     // Note: D3DXCompileFromMemory() is a more up to date compiler than
     //       D3D10CompileShader(), since D3D10CompileShader() ships
     //       with runtime only, but D3DXCompileFromMemory() ships with
     //       each DXSDK update.
     if( FAILED( D3DX10CompileFromMemory(
         source,
-        (0==len) ? strLen(source) : len,
-        0, // filename
+        len,
+        filename.cptr(),
         0, // defines
         0, // includes
         entry,
