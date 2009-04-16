@@ -306,15 +306,14 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
 
         AutoRef<Texture> & tp = t.iter->second;
 
-        drawable.rc.textures[i] = tp;
-        drawable.rc.bindTexture( i, t.binding.cptr() );
+        drawable.rc.textures[i].texture = tp;
+        drawable.rc.textures[i].bindTo( t.binding.cptr() );
     }
 
     // clear unused texture stages
     for( size_t i = numtex; i < RendererContext::MAX_TEXTURES; ++i )
     {
         drawable.rc.textures[i].clear();
-        memset( drawable.rc.texbinds[i], 0, sizeof(drawable.rc.texbinds[i]) );
     }
 
     GN_TODO( "setup render states, vertex format." );

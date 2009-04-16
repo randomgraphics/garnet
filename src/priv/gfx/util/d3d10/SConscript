@@ -4,6 +4,7 @@ sources = [
     'd3d10ResourcePool.cpp',
     'd3d10ShaderUtils.cpp',
     'd3d10StateDumper.cpp',
+    'd3d10TextureFormat.cpp',
     'd3d10Utils.cpp',
     'renderToTexture.cpp',
     'screenAlignedQuad.cpp',

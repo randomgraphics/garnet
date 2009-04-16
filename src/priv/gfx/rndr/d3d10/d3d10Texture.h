@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "../common/basicSurface.h"
+#include "d3d10Resource.h"
 
 namespace GN { namespace gfx
 {
@@ -25,9 +26,9 @@ namespace GN { namespace gfx
     ///
     /// D3D texture
     ///
-    class D3D10Texture : public BasicTexture, public StdClass
+    class D3D10Texture : public BasicTexture, public D3D10Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3D10Texture, StdClass );
+        GN_DECLARE_STDCLASS( D3D10Texture, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -35,7 +36,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10Texture( D3D10Renderer & r ) : mRenderer(r) { clear(); }
+        D3D10Texture( D3D10Renderer & r ) : D3D10Resource(r) { clear(); }
         virtual ~D3D10Texture() { quit(); }
         //@}
 
@@ -51,7 +52,6 @@ namespace GN { namespace gfx
         void clear()
         {
             mTexture = 0;
-            mSRView = 0;
         }
         //@}
 
@@ -73,6 +73,32 @@ namespace GN { namespace gfx
     public:
 
         ///
+        /// get shader resource view
+        ///
+        ID3D10ShaderResourceView * getSRView()
+        {
+            const TextureDesc & desc = getDesc();
+
+            return getSRView(
+                mDefaultSRVFormat,
+                0, desc.faces,
+                0, desc.levels,
+                0, desc.depth );
+        }
+
+        ///
+        /// get shader resource view
+        ///
+        ID3D10ShaderResourceView * getSRView(
+            DXGI_FORMAT format,
+            UInt32      firstFace,
+            UInt32      numFaces,
+            UInt32      firstMipLevel,
+            UInt32      numLevels,
+            UInt32      firstSlice,
+            UInt32      numSlices );
+
+        ///
         /// get render target view of specific subresource
         ///
         ID3D10RenderTargetView * getRTView( UInt32 face, UInt32 level, UInt32 slice );
@@ -89,11 +115,15 @@ namespace GN { namespace gfx
 
         // mapping subresource index to render target view
         typedef std::map<UInt32,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
+        typedef std::map<D3D10_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D10ShaderResourceView> > SRViewMap;
 
-        D3D10Renderer            & mRenderer;
-        ID3D10Resource           * mTexture; ///< resource instance
-        ID3D10ShaderResourceView * mSRView;  ///< view as shader resource
-        RTViewMap                  mRTViews; ///< render target views
+        D3D10TextureDimension      mTextureDimension;    ///< texture dimension
+        DXGI_FORMAT                mTextureFormat;       ///< D3D10 texture format
+        DXGI_FORMAT                mDefaultSRVFormat;    ///< default SRV format;
+        D3D10_SRV_DIMENSION        mDefaultSrvDimension; ///< default SRV dimension
+        ID3D10Resource           * mTexture;             ///< resource instance
+        SRViewMap                  mSRViews;             ///< shader resource views
+        RTViewMap                  mRTViews;             ///< render target views
 
         // ********************************
         // private functions

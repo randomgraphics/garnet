@@ -6,6 +6,7 @@
 #include "d3d10Texture.h"
 #include "d3d10VtxLayout.h"
 #include "d3d10Buffer.h"
+#include "garnet/GNd3d10.h"
 
 // *****************************************************************************
 // local functions
@@ -22,6 +23,20 @@ bool GN::gfx::D3D10Renderer::contextInit()
 {
     GN_GUARD;
 
+    // create default sampler, then bind to D3D device
+    D3D10_SAMPLER_DESC sd;
+    GN::d3d10::constructDefaultSamplerDesc( sd );
+    GN_DX10_CHECK_RV( mDevice->CreateSamplerState( &sd, &mDefaultSampler ), false );
+    ID3D10SamplerState * samplers[D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT];
+    for( size_t i = 0; i < D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT; ++i )
+    {
+        samplers[i] = mDefaultSampler;
+    }
+    mDevice->VSSetSamplers( 0, D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
+    mDevice->GSSetSamplers( 0, D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
+    mDevice->PSSetSamplers( 0, D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
+
+    // create state object manager
     mSOMgr = new D3D10StateObjectManager( *mDevice );
     if( 0 == mSOMgr ) return false;
 
@@ -52,6 +67,8 @@ void GN::gfx::D3D10Renderer::contextQuit()
     safeDelete( mRTMgr );
 
     safeDelete( mSOMgr );
+
+    mDefaultSampler.clear();
 
     mVertexLayouts.clear();
 
@@ -102,9 +119,9 @@ inline bool GN::gfx::D3D10Renderer::bindContextRenderTarget(
     //
     bool needRebindViewport = false;
     if( !mRTMgr->bind(
-            newContext.crts,
+            newContext.crts.cptr(),
             newContext.dsrt,
-            mContext.crts,
+            mContext.crts.cptr(),
             newContext.dsrt,
             skipDirtyCheck,
             needRebindViewport ) )
@@ -180,6 +197,9 @@ inline bool GN::gfx::D3D10Renderer::bindContextShader(
         // apply uniforms
         const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
         newProg->applyUniforms( uniforms, newContext.uniforms.size(), skipDirtyCheck );
+
+        // apply textures
+        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
@@ -195,6 +215,33 @@ inline bool GN::gfx::D3D10Renderer::bindContextShader(
     return true;
 }
 
+static const D3D10_BLEND_OP BLEND_OP_TO_D3D10[] =
+{
+    D3D10_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
+    D3D10_BLEND_OP_SUBTRACT,     // BLEND_OP_SUB,
+    D3D10_BLEND_OP_REV_SUBTRACT, // BLEND_OP_REV_SUB,
+    D3D10_BLEND_OP_MIN,          // BLEND_OP_MIN,
+    D3D10_BLEND_OP_MAX,          // BLEND_OP_MAX,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
+
+static const D3D10_BLEND BLEND_TO_D3D10[] =
+{
+    D3D10_BLEND_ZERO,             // BLEND_ZERO = 0,
+    D3D10_BLEND_ONE,              // BLEND_ONE,
+    D3D10_BLEND_SRC_COLOR,        // BLEND_SRC_COLOR,
+    D3D10_BLEND_INV_SRC_COLOR,    // BLEND_INV_SRC_COLOR,
+    D3D10_BLEND_SRC_ALPHA,        // BLEND_SRC_ALPHA,
+    D3D10_BLEND_INV_SRC_ALPHA,    // BLEND_INV_SRC_ALPHA,
+    D3D10_BLEND_DEST_ALPHA,       // BLEND_DEST_ALPHA,
+    D3D10_BLEND_INV_DEST_ALPHA,   // BLEND_INV_DEST_ALPHA,
+    D3D10_BLEND_DEST_COLOR,       // BLEND_DEST_COLOR,
+    D3D10_BLEND_INV_DEST_COLOR,   // BLEND_INV_DEST_COLOR,
+    D3D10_BLEND_BLEND_FACTOR,     // BLEND_BLEND_FACTOR,
+    D3D10_BLEND_INV_BLEND_FACTOR, // BLEND_INV_BLEND_FACTOR,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -208,6 +255,7 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
 
     // rasterization states
     D3D10_RASTERIZER_DESC rsdesc;
+    memset( &rsdesc, 0, sizeof(rsdesc) );
     rsdesc.FillMode              = D3D10_FILL_SOLID;
     rsdesc.CullMode              = D3D10_CULL_BACK;
     rsdesc.FrontCounterClockwise = true;
@@ -223,8 +271,52 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     mDevice->RSSetState( rs );
 
     // depth stencil states
+    D3D10_DEPTH_STENCIL_DESC dsdesc;
+    memset( &dsdesc, 0, sizeof(dsdesc) );
+    dsdesc.DepthEnable = newContext.depthTest;
+    dsdesc.DepthWriteMask = newContext.depthWrite ? D3D10_DEPTH_WRITE_MASK_ALL : D3D10_DEPTH_WRITE_MASK_ZERO;
+    dsdesc.DepthFunc = D3D10_COMPARISON_LESS_EQUAL;
+    dsdesc.StencilEnable = newContext.stencilEnabled;
+    dsdesc.StencilReadMask = 0xFF;
+    dsdesc.StencilWriteMask = 0xFF;
+    dsdesc.FrontFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
+    dsdesc.FrontFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
+    dsdesc.FrontFace.StencilFailOp = D3D10_STENCIL_OP_KEEP;
+    dsdesc.FrontFace.StencilDepthFailOp = D3D10_STENCIL_OP_KEEP;
+    dsdesc.BackFace = dsdesc.FrontFace;
+    ID3D10DepthStencilState * ds = mSOMgr->depthStates[dsdesc];
+    if( NULL == ds ) return false;
+    mDevice->OMSetDepthStencilState( ds, 0 );
 
     // blend states
+    D3D10_BLEND_DESC bsdesc;
+    memset( &bsdesc, 0, sizeof(bsdesc) );
+    bsdesc.AlphaToCoverageEnable    = false;
+    bsdesc.BlendEnable[0]           =
+    bsdesc.BlendEnable[1]           =
+    bsdesc.BlendEnable[2]           =
+    bsdesc.BlendEnable[3]           =
+    bsdesc.BlendEnable[4]           =
+    bsdesc.BlendEnable[5]           =
+    bsdesc.BlendEnable[6]           =
+    bsdesc.BlendEnable[7]           = newContext.blendEnabled;
+    bsdesc.SrcBlend                 = BLEND_TO_D3D10[newContext.blendSrc];
+    bsdesc.DestBlend                = BLEND_TO_D3D10[newContext.blendDst];
+    bsdesc.BlendOp                  = BLEND_OP_TO_D3D10[newContext.blendOp];
+    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D10[newContext.blendAlphaSrc];
+    bsdesc.DestBlendAlpha           = BLEND_TO_D3D10[newContext.blendAlphaDst];
+    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D10[newContext.blendAlphaOp];
+    bsdesc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[1] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[2] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[3] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[4] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[5] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[6] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTargetWriteMask[7] = D3D10_COLOR_WRITE_ENABLE_ALL;
+    ID3D10BlendState * bs = mSOMgr->blendStates[bsdesc];
+    if( NULL == bs ) return NULL;
+    mDevice->OMSetBlendState( bs, newContext.blendFactors, 0xFFFFFFFF );
 
     // Note: input and sampler states are handled in bindContextResource()
 
@@ -305,38 +397,6 @@ inline bool GN::gfx::D3D10Renderer::bindContextResource(
             mDevice->IASetIndexBuffer( NULL, DXGI_FORMAT_R16_UINT, 0 );
         }
     }
-
-    //
-    // bind textures
-    //
-    /*
-    UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-    UINT numTex = min<UINT>( (UINT)newContext.numTextures, maxStages );
-    UINT stage;
-    for( stage = 0; stage < numTex; ++stage )
-    {
-        const Texture * tex = newContext.textures[stage];
-        if( tex != mContext.textures[stage] ||
-            stage > mContext.numTextures ||
-            !skipDirtyCheck )
-        {
-            if( tex )
-            {
-                safeCastPtr<const D3D10Texture>(tex)->bind( stage );
-            }
-            else
-            {
-                mDevice->SetTexture( stage, NULL );
-            }
-        }
-    }
-    // clear unused stages
-    numTex = min<UINT>( (UINT)mContext.numTextures, maxStages );
-    for( ; stage < numTex; ++stage )
-    {
-        mDevice->SetTexture( stage, 0 );
-    }
-    */
 
     return true;
 }

@@ -148,6 +148,7 @@ namespace GN { namespace gfx
         };
 
         Renderer                 & mRenderer;
+        AutoRef<Texture>           mPureWhiteTexture;
         RendererContext            mPrivateContext;
         RendererContext            mEnvironmentContext;
         RendererContext          * mEffectiveContext;

@@ -143,26 +143,27 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        struct UniformParamDesc
+        class XenonGpuProgramParameterDesc : public GpuProgramParameterDesc
+        {
+            friend class XenonGpuProgramHLSL; // so that XenonGpuProgramHLSL can access private members of parameter descriptor
+        };
+
+        struct XenonUniformParamDesc : public GpuProgramUniformParameterDesc
         {
             StrA                 name;      ///< uniform name
             D3DXHANDLE           vshandle;  ///< VS constant handle. 0 means unused.
             D3DXHANDLE           pshandle;  ///< PS constant handle. 0 means unused.
-            size_t               size;      ///< uniform size in bytes
-
-            UniformParamDesc() : vshandle(0), pshandle(0) {}
+            XenonUniformParamDesc() : vshandle(0), pshandle(0) {}
         };
 
-        IDirect3DVertexShader9    * mVs;
-        ID3DXConstantTable        * mVsConsts;
-        IDirect3DPixelShader9     * mPs;
-        ID3DXConstantTable        * mPsConsts;
+        IDirect3DVertexShader9          * mVs;
+        ID3DXConstantTable              * mVsConsts;
+        IDirect3DPixelShader9           * mPs;
+        ID3DXConstantTable              * mPsConsts;
 
-        DynaArray<UniformParamDesc> mUniforms;
-        DynaArray<const char*>      mUniformNames;
-        DynaArray<size_t>           mUniformSizes;
+        DynaArray<XenonUniformParamDesc>  mUniforms;
 
-        GpuProgramParameterDesc     mParamDesc;
+        XenonGpuProgramParameterDesc      mParamDesc;
 
         // ********************************
         // private functions

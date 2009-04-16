@@ -121,7 +121,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms( const SysMemUniform * const * 
             continue;
         }
 
-        const UniformParamDesc & d = mUniforms[i];
+        const XenonUniformParamDesc & d = mUniforms[i];
 
         GN_ASSERT( !d.name.empty() && (d.vshandle || d.pshandle) && d.size );
 
@@ -190,7 +190,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                 case D3DXPT_INT   :
                 case D3DXPT_FLOAT :
                 {
-                    UniformParamDesc u;
+                    XenonUniformParamDesc u;
                     u.name = cd.Name;
                     if( vs )
                     {
@@ -237,17 +237,16 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 {
     size_t count = mUniforms.size();
     if( 0 == count ) return;
-    
-    mUniformNames.resize( count );
-    mUniformSizes.resize( count );
-    mParamDesc.numUniforms = count;
-    mParamDesc.uniformNames = mUniformNames.cptr();
-    mParamDesc.uniformSizes = mUniformSizes.cptr();
+
+    mParamDesc.mUniformArray       = mUniforms.cptr();
+    mParamDesc.mUniformCount       = mUniforms.size();
+    mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
     for( size_t i = 0; i < count; ++i )
     {
-        const UniformParamDesc & u = mUniforms[i];
-        mUniformNames[i] = u.name.cptr();
-        mUniformSizes[i] = u.size;
+        // UGLY!!! UGLY!!!
+        XenonUniformParamDesc          & u1 = mUniforms[i];
+        GpuProgramUniformParameterDesc & u2 = mUniforms[i];
+        u2.name = u1.name.cptr();
     }
 }

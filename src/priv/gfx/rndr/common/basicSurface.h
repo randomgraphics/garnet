@@ -63,9 +63,9 @@ namespace GN { namespace gfx
             if( area )
             {
                 clippedArea = *area;
-                if( !sAdjustOffsetAndRange( clippedArea.x, clippedArea.w, (int)sz.x ) ||
-                    !sAdjustOffsetAndRange( clippedArea.y, clippedArea.h, (int)sz.y ) ||
-                    !sAdjustOffsetAndRange( clippedArea.z, clippedArea.d, (int)sz.z ) )
+                if( !sAdjustOffsetAndRange( clippedArea.x, clippedArea.w, sz.x ) ||
+                    !sAdjustOffsetAndRange( clippedArea.y, clippedArea.h, sz.y ) ||
+                    !sAdjustOffsetAndRange( clippedArea.z, clippedArea.d, sz.z ) )
                     return false;
             }
             else
@@ -73,9 +73,9 @@ namespace GN { namespace gfx
                 clippedArea.x = 0;
                 clippedArea.y = 0;
                 clippedArea.z = 0;
-                clippedArea.w = (int)sz.x;
-                clippedArea.h = (int)sz.y;
-                clippedArea.d = (int)sz.z;
+                clippedArea.w = sz.x;
+                clippedArea.h = sz.y;
+                clippedArea.d = sz.z;
             }
 
             // success
@@ -92,8 +92,9 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
+        template<typename T>
         static inline bool
-        sAdjustOffsetAndRange( size_t & offset, size_t & length, size_t maxLength )
+        sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
         {
             if( offset >= maxLength )
             {

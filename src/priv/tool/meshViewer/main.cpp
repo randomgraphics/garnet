@@ -205,7 +205,7 @@ int main( int argc, const char * argv[] )
 
     // create renderer
     RendererOptions o;
-    o.api = API_OGL;
+    o.api = API_D3D10;
     //rndr = createMultiThreadRenderer( o );
     rndr = createSingleThreadRenderer( o );
     if( NULL == rndr ) return -1;

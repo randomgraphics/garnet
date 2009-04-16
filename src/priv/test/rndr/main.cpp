@@ -74,8 +74,8 @@ bool init( Renderer & rndr )
     rc.vtxfmt.elements[0].stream = 0;
 
     // create texture
-    rc.textures[0].attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
-    rc.bindTexture( 0, "t0" );
+    rc.textures[0].texture.attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
+    rc.textures[0].bindTo( "t0" );
 
     // create vertex buffer
     static float vertices[] =

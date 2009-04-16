@@ -385,6 +385,47 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// texture binding descriptor
+    ///
+    struct TextureBinding
+    {
+        AutoRef<Texture> texture;     ///< texture pointer
+        char             binding[16]; ///< binding to specific GPU program parameter
+
+        ///
+        /// clear to empty
+        ///
+        void clear()
+        {
+            texture.clear();
+            binding[0] = '\0';
+        }
+
+        ///
+        /// Bind to specific GPU program parameter.
+        ///
+        void bindTo( const char * gpuTextureParameterName )
+        {
+            size_t len = strLen( gpuTextureParameterName );
+            if( 0 == len )
+            {
+                GN_ERROR(getLogger("GN.gfx.TextureBinding"))( "Empty binding string is not allowed." );
+                return;
+            }
+
+            if( len >= GN_ARRAY_COUNT(binding) )
+            {
+                GN_ERROR(getLogger("GN.gfx.binding"))(
+                    "GPU program parameter name (%s) is too long. Maxinum length is %d characters including ending zero.",
+                    gpuTextureParameterName,
+                    GN_ARRAY_COUNT(binding) );
+            }
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
+            memcpy( binding, gpuTextureParameterName, len );
+        }
+    };
+
+    ///
     /// define a texture sampler
     ///
     struct TextureSampler
@@ -522,7 +563,6 @@ namespace GN { namespace gfx
             MAX_VERTEX_BUFFERS       = 16,
             MAX_TEXTURES             = 32,
             MAX_COLOR_RENDER_TARGETS = 8,
-            TEXBINDING_SIZE          = 16,
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
@@ -570,7 +610,7 @@ namespace GN { namespace gfx
             BLEND_INV_DEST_COLOR,
             BLEND_BLEND_FACTOR,
             BLEND_INV_BLEND_FACTOR,
-            NUM_BLEND_FACTORS,
+            NUM_BLEND_ARGUMENTS,
 
             BLEND_OP_ADD = 0,
             BLEND_OP_SUB,
@@ -666,21 +706,21 @@ namespace GN { namespace gfx
         // Resources
 
         /// Uniform array, in the order described in GPU program uniform descriptor.
-        DynaArray<AutoRef<Uniform> >    uniforms;                                ///< uniforms
+        DynaArray<AutoRef<Uniform> >                              uniforms; ///< uniforms
 
-        AutoRef<VtxBuf>                 vtxbufs[MAX_VERTEX_BUFFERS];             ///< vertex buffers
-        UInt16                          strides[MAX_VERTEX_BUFFERS];             ///< strides for each vertex buffer. Set to 0 to use default stride.
-        VertexFormat                    vtxfmt;                                  ///< vertex format (bindings to GPU program)
+        FixedArray<AutoRef<VtxBuf>, MAX_VERTEX_BUFFERS>           vtxbufs;  ///< vertex buffers
+        FixedArray<UInt16,          MAX_VERTEX_BUFFERS>           strides;  ///< stride for each vertex buffer, in bytes. Set to 0 to use default stride.
+        FixedArray<UInt32,          MAX_VERTEX_BUFFERS>           offsets;  ///< offset for each vertex buffer, in bytes.
+        VertexFormat                                              vtxfmt;   ///< vertex format (bindings to GPU program)
 
-        AutoRef<IdxBuf>                 idxbuf;                                  ///< index buffer
+        AutoRef<IdxBuf>                                           idxbuf;   ///< index buffer
 
-        AutoRef<Texture>                textures[MAX_TEXTURES];                  ///< textures
-        char                            texbinds[MAX_TEXTURES][TEXBINDING_SIZE]; ///< texture bindings to GPU Program
-        TextureSampler                  samplers[MAX_TEXTURES];                  ///< samplers
+        FixedArray<TextureBinding, MAX_TEXTURES>                  textures; ///< textures
+        FixedArray<TextureSampler, MAX_TEXTURES>                  samplers; ///< samplers
 
         // render targets
-        RenderTargetTexture crts[MAX_COLOR_RENDER_TARGETS];          ///< color render targets
-        RenderTargetTexture dsrt;                                    ///< depth stencil render target
+        FixedArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> crts;     ///< color render targets
+        RenderTargetTexture                                       dsrt;     ///< depth stencil render target
 
         ///
         /// ctor
@@ -737,54 +777,27 @@ namespace GN { namespace gfx
         //
         void clearResources()
         {
-            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
-            for( size_t i = 0; i < GN_ARRAY_COUNT(strides); ++i ) strides[i] = 0;
+            GN_CASSERT( GN_ARRAY_COUNT(vtxbufs) == GN_ARRAY_COUNT(strides) );
+            GN_CASSERT( GN_ARRAY_COUNT(vtxbufs) == GN_ARRAY_COUNT(offsets) );
+            for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
+            {
+                vtxbufs[i].clear();
+                strides[i] = 0;
+                offsets[i] = 0;
+            }
             vtxfmt.numElements = 0;
 
             idxbuf.clear();
 
+            GN_CASSERT( GN_ARRAY_COUNT(textures) == GN_ARRAY_COUNT(samplers) );
             for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
             {
                 textures[i].clear();
-                texbinds[i][0] = '\0';
                 samplers[i].clear();
             }
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(crts); ++i ) crts[i].texture.clear();
             dsrt.texture.clear();
-        }
-
-        ///
-        /// Bind texture stage to specific GPU program texture variable.
-        ///
-        /// The binding has to be unique across all texture stages.
-        ///
-        /// Checking of invalidate binding is not performed here, but when the whole
-        /// render context is being applied to renderer.
-        ///
-        void bindTexture( size_t stage, const char * variableName )
-        {
-            if( stage >= MAX_TEXTURES )
-            {
-                GN_ERROR(getLogger("GN.gfx.RendererContext"))( "Invalid texture stage : %u.", stage );
-                return;
-            }
-
-            size_t len = strLen( variableName );
-            if( 0 == len )
-            {
-                GN_ERROR(getLogger("GN.gfx.RendererContext"))( "Empty binding string is not allowed." );
-                return;
-            }
-
-            if( len >= GN_ARRAY_COUNT(texbinds[0]) )
-            {
-                GN_ERROR(getLogger("GN.gfx.RendererContext"))(
-                    "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
-                    variableName );
-            }
-            len = math::getmin<size_t>( GN_ARRAY_COUNT(texbinds[0]), len+1 );
-            memcpy( texbinds[stage], variableName, len );
         }
     };
 

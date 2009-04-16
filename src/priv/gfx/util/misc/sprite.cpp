@@ -14,20 +14,22 @@ static const char * glslvscode=
     "}";
 
 static const char * glslpscode=
-    "uniform sampler2D s0; \n"
+    "uniform sampler2D t0; \n"
     "varying vec4 color; \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_FragColor = color * texture2D( s0, texcoords ); \n"
+    "   gl_FragColor = color * texture2D( t0, texcoords ); \n"
     "}";
 
 static const char * hlslvscode=
     "struct VSOUT { \n"
-    "   float4 position  : POSITION; \n"
+    "   float4 position  : SV_POSITION; \n"
+    "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "struct VSIN { \n"
     "   float4 position  : POSITION; \n"
+    "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "VSOUT main( VSIN i ) { \n"
@@ -35,6 +37,7 @@ static const char * hlslvscode=
     "   o.position.x  = i.position.x * 2.0 - 1.0; \n"
     "   o.position.y  = i.position.y * -2.0 + 1.0; \n"
     "   o.position.zw = i.position.zw; \n"
+    "   o.color       = i.color; \n"
     "   o.texcoords   = i.texcoords; \n"
     "   return o; \n"
     "}";
@@ -43,11 +46,12 @@ static const char * hlslpscode=
     "sampler s0; \n"
     "Texture2D<float4> t0; \n"
     "struct VSOUT { \n"
-    "   float4 position  : POSITION; \n"
+    "   float4 position  : SV_POSITION; \n"
+    "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
-    "float4 main( VSOUT i ) : COLOR0 { \n"
-    "   return t0.Sample( s0, i.texcoords ); \n"
+    "float4 main( VSOUT i ) : SV_TARGET0 { \n"
+    "   return i.color * t0.Sample( s0, i.texcoords ); \n"
     "}";
 
 // *****************************************************************************
@@ -70,6 +74,12 @@ bool GN::gfx::SpriteRenderer::init()
         MAX_INDICES  = MAX_SPRITES * 6,
         VTXBUF_SIZE  = MAX_VERTICES * sizeof(SpriteVertex)
     };
+
+    // create a 2x2 pure white texture
+    mPureWhiteTexture.attach( mRenderer.create2DTexture( 2, 2, 0, COLOR_FORMAT_RGBA32 ) );
+    if( !mPureWhiteTexture ) return failure();
+    const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
+    mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
 
     // create GPU program
     const RendererCaps & caps = mRenderer.getCaps();
@@ -139,7 +149,7 @@ bool GN::gfx::SpriteRenderer::init()
     mPrivateContext.samplers[0].filterMag = TextureSampler::FILTER_POINT;
 
     // setup texture binding
-    mPrivateContext.bindTexture( 0, "s0" );
+    mPrivateContext.textures[0].bindTo( "t0" );
 
     // create pending vertex buffer
     mSprites = (Sprite*)heapAlloc( VTXBUF_SIZE );
@@ -166,6 +176,7 @@ void GN::gfx::SpriteRenderer::quit()
     heapFree( mSprites );
     mPrivateContext.clear();
     mEnvironmentContext.clear();
+    mPureWhiteTexture.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -188,18 +199,21 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         return;
     }
 
+    // use pure white texture, if input texture is NULL
+    if( NULL == texture ) texture = mPureWhiteTexture;
+
     if( options & USE_COSTOM_CONTEXT )
     {
         mEnvironmentContext = mRenderer.getContext();
         mEnvironmentContext.vtxfmt = mPrivateContext.vtxfmt;
         mEnvironmentContext.vtxbufs[0] = mPrivateContext.vtxbufs[0];
         mEnvironmentContext.idxbuf = mPrivateContext.idxbuf;
-        mEnvironmentContext.textures[0].set( texture );
+        mEnvironmentContext.textures[0].texture.set( texture );
         mEffectiveContext = &mEnvironmentContext;
     }
     else
     {
-        mPrivateContext.textures[0].set( texture );
+        mPrivateContext.textures[0].texture.set( texture );
         mPrivateContext.blendEnabled = !(options & OPAQUE_SPRITE);
         mPrivateContext.depthTest = options & ENABLE_DEPTH_TEST;
         mPrivateContext.depthWrite = options & ENABLE_DEPTH_WRITE;
@@ -283,7 +297,7 @@ GN::gfx::SpriteRenderer::drawTextured(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mEffectiveContext->textures[0].get(), mOptions );
+        drawBegin( mEffectiveContext->textures[0].texture.get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -299,15 +313,19 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     // fill vertex buffer
     mNextFreeSprite->v[0].pos.set( x1, y1, z );
+    mNextFreeSprite->v[0].clr = 0xFFFFFFFF;
     mNextFreeSprite->v[0].tex.set( u, v );
 
     mNextFreeSprite->v[1].pos.set( x1, y2, z );
+    mNextFreeSprite->v[1].clr = 0xFFFFFFFF;
     mNextFreeSprite->v[1].tex.set( u, v2 );
 
     mNextFreeSprite->v[2].pos.set( x2, y2, z );
+    mNextFreeSprite->v[2].clr = 0xFFFFFFFF;
     mNextFreeSprite->v[2].tex.set( u2, v2 );
 
     mNextFreeSprite->v[3].pos.set( x2, y1, z );
+    mNextFreeSprite->v[3].clr = 0xFFFFFFFF;
     mNextFreeSprite->v[3].tex.set( u2, v );
 
     // prepare for next sprite
@@ -335,7 +353,7 @@ GN::gfx::SpriteRenderer::drawSolid(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mEffectiveContext->textures[0].get(), mOptions );
+        drawBegin( mEffectiveContext->textures[0].texture.get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -349,15 +367,19 @@ GN::gfx::SpriteRenderer::drawSolid(
 
     mNextFreeSprite->v[0].pos.set( x1, y1, z );
     mNextFreeSprite->v[0].clr = rgba;
+    mNextFreeSprite->v[0].tex.set( 0, 0 );
 
     mNextFreeSprite->v[1].pos.set( x1, y2, z );
     mNextFreeSprite->v[1].clr = rgba;
+    mNextFreeSprite->v[1].tex.set( 0, 0 );
 
     mNextFreeSprite->v[2].pos.set( x2, y2, z );
     mNextFreeSprite->v[2].clr = rgba;
+    mNextFreeSprite->v[2].tex.set( 0, 0 );
 
     mNextFreeSprite->v[3].pos.set( x2, y1, z );
     mNextFreeSprite->v[3].clr = rgba;
+    mNextFreeSprite->v[3].tex.set( 0, 0 );
 
     // prepare for next Sprite
     ++mNextFreeSprite;

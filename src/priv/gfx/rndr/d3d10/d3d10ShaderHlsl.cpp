@@ -285,6 +285,58 @@ sInitUniforms(
 // -----------------------------------------------------------------------------
 template<D3D10ShaderType SHADER_TYPE>
 static bool
+sInitTextures(
+    ID3D10ShaderReflection       & reflection,
+    D3D10GpuProgramParameterDesc & paramDesc )
+{
+    GN_CASSERT( SHADER_TYPE < NUM_D3D10_SHADER_TYPES );
+
+    D3D10_SHADER_DESC desc;
+    if( FAILED( reflection.GetDesc( &desc ) ) )
+    {
+        GN_ERROR(sLogger)( "fail to get shader descriptor" );
+        return false;
+    }
+
+    // iterate resources
+    for( UINT i = 0; i < desc.BoundResources; ++i )
+    {
+        D3D10_SHADER_INPUT_BIND_DESC sibdesc;
+        reflection.GetResourceBindingDesc( i, &sibdesc );
+
+        // ignore non-texture inputs
+        if( D3D10_SIT_TEXTURE != sibdesc.Type ) continue;
+
+        // find uniform with same name
+        D3D10TextureParameterDesc * existingTexture = paramDesc.findTexture( sibdesc.Name );
+        if( existingTexture )
+        {
+            // update shader specific properties
+            GN_ASSERT( !existingTexture->ssp[SHADER_TYPE].used );
+            existingTexture->ssp[SHADER_TYPE].used  = true;
+            existingTexture->ssp[SHADER_TYPE].stage = sibdesc.BindPoint;
+        }
+        else
+        {
+            // this is a new texture
+            D3D10TextureParameterDesc t;
+            t.name                    = sCloneString( sibdesc.Name );
+            t.ssp[SHADER_TYPE].used   = true;
+            t.ssp[SHADER_TYPE].stage  = sibdesc.BindPoint;
+
+            // append t to texture array
+            paramDesc.addTexture( t );
+        }
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<D3D10ShaderType SHADER_TYPE>
+static bool
 sInitShader(
     ID3D10Device                                                           & dev,
     const ShaderCode                                                       & code,
@@ -334,10 +386,13 @@ sInitShader(
     // initialize constant buffers
     if( !sInitConstBuffers( dev, *reflection, constBufs, constData ) ) return false;
 
-    // initialize uniforms
+    // initialize uniform parameters
     if( !sInitUniforms<SHADER_TYPE>( *reflection, paramDesc ) ) return false;
 
-    GN_TODO( "initialize texture and attribute parameters." );
+    // initialize texture parameters
+    if( !sInitTextures<SHADER_TYPE>( *reflection, paramDesc ) ) return false;
+
+    GN_TODO( "initialize attribute parameters." );
 
     // success
     return true;

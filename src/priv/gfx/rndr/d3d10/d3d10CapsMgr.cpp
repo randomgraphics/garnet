@@ -28,10 +28,10 @@ bool GN::gfx::D3D10Renderer::capsInit()
     mCaps.maxTex3DSize[2] = 1;
 
     // max simultaneous textures
-    mCaps.maxTextures     = D3D10_PS_INPUT_REGISTER_COUNT;
+    mCaps.maxTextures     = math::getmin<size_t>( D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, RendererContext::MAX_TEXTURES );
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT;
+    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RendererContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
     mCaps.vsProfiles |= RendererCaps::GPP_D3D_2_0;
