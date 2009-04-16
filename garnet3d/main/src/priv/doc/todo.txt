@@ -18,9 +18,7 @@ TODO
     - a fast mesh smooth implementation.
 
 - p1
-  - refine display manager in basic renderer
-    - isolate platform dependant code into separate files.
-  	- refactor render window classes. Maybe use abstract interfaces?
+  - GFX resouce aliasing
   - D3D10 renderer
   - Xenon renderer
 
@@ -79,5 +77,5 @@ ISSUES
 DROPPED TASKS
 =============
 - runtime configuable profilers, like loggers
-  - WHY: rofiler has to be light-weight and fast. Logger style configuration 
+  - WHY: rofiler has to be light-weight and fast. Logger style configuration
          is too heavy.

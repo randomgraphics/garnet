@@ -186,8 +186,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
             *mCurrentOGLVtxFmt,
-            mContext.vtxbufs,
-            mContext.strides,
+            mContext.vtxbufs.cptr(),
+            mContext.strides.cptr(),
             basevtx ) )
     {
         return;
@@ -264,8 +264,8 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t start
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
             *mCurrentOGLVtxFmt,
-            mContext.vtxbufs,
-            mContext.strides,
+            mContext.vtxbufs.cptr(),
+            mContext.strides.cptr(),
             startvtx ) )
     {
         return;

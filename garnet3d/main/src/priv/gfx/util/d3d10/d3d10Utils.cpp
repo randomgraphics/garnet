@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.utils");
 //
 // -----------------------------------------------------------------------------
 DXGI_SAMPLE_DESC GN::d3d10::constructSampleDesc(
-    ID3D10Device       * device,
+    ID3D10Device       & device,
     MultiSampleAntiAlias msaa,
     DXGI_FORMAT          format )
 {
@@ -24,7 +24,7 @@ DXGI_SAMPLE_DESC GN::d3d10::constructSampleDesc(
 
         for( size_t i = 0; i < GN_ARRAY_COUNT(counts); ++i )
         {
-            if( S_OK == device->CheckMultisampleQualityLevels( format, counts[i], &quality ) && quality > 0 )
+            if( S_OK == device.CheckMultisampleQualityLevels( format, counts[i], &quality ) && quality > 0 )
             {
                 sd.Count = counts[i];
                 sd.Quality = quality - 1;

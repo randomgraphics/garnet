@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d10Shader.h"
 #include "d3d10Renderer.h"
+#include "d3d10Texture.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
@@ -73,6 +74,20 @@ void GN::gfx::D3D10GpuProgramParameterDesc::buildParameterArrays()
 //
 //
 // -----------------------------------------------------------------------------
+const GN::gfx::D3D10UniformParameterDesc *
+GN::gfx::D3D10GpuProgramParameterDesc::findUniform( const char * name ) const
+{
+    const GN::gfx::D3D10UniformParameterDesc * p = std::find_if(
+        mUniforms.begin(),
+        mUniforms.end(),
+        FindByName<D3D10UniformParameterDesc>(name) );
+
+    return ( p == mUniforms.end() ) ? NULL : p;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::D3D10UniformParameterDesc *
 GN::gfx::D3D10GpuProgramParameterDesc::findUniform( const char * name )
 {
@@ -87,6 +102,20 @@ GN::gfx::D3D10GpuProgramParameterDesc::findUniform( const char * name )
 //
 //
 // -----------------------------------------------------------------------------
+const GN::gfx::D3D10TextureParameterDesc *
+GN::gfx::D3D10GpuProgramParameterDesc::findTexture( const char * name ) const
+{
+    const GN::gfx::D3D10TextureParameterDesc * p = std::find_if(
+        mTextures.begin(),
+        mTextures.end(),
+        FindByName<D3D10TextureParameterDesc>(name) );
+
+    return ( p == mTextures.end() ) ? NULL : p;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::D3D10TextureParameterDesc *
 GN::gfx::D3D10GpuProgramParameterDesc::findTexture( const char * name )
 {
@@ -96,6 +125,20 @@ GN::gfx::D3D10GpuProgramParameterDesc::findTexture( const char * name )
         FindByName<D3D10TextureParameterDesc>(name) );
 
     return ( p == mTextures.end() ) ? NULL : p;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx::D3D10AttributeParameterDesc *
+GN::gfx::D3D10GpuProgramParameterDesc::findAttribute( const char * name ) const
+{
+    const GN::gfx::D3D10AttributeParameterDesc * p = std::find_if(
+        mAttributes.begin(),
+        mAttributes.end(),
+        FindByName<D3D10AttributeParameterDesc>(name) );
+
+    return ( p == mAttributes.end() ) ? NULL : p;
 }
 
 //
@@ -288,4 +331,55 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
             sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D10GpuProgram::applyTextures(
+    const TextureBinding * bindings,
+    size_t                 count,
+    bool                   /*skipDirtyCheck*/ ) const
+{
+    const size_t NUM_STAGES = getRenderer().getCaps().maxTextures;
+
+    // allocate SRV array on stack, clear to zero.
+    const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;
+    ID3D10ShaderResourceView ** srvArray = (ID3D10ShaderResourceView **)alloca( SRV_ARRAY_SIZE );
+    memset( srvArray, 0, SRV_ARRAY_SIZE );
+
+    // iterate textures
+    for( size_t i = 0; i < count; ++i )
+    {
+        const TextureBinding & tb = bindings[i];
+
+        D3D10Texture * tex = (D3D10Texture*)tb.texture.get();
+
+        if( tex )
+        {
+            const D3D10TextureParameterDesc * texParam = mParamDesc.findTexture( tb.binding );
+            if( texParam )
+            {
+                for( int i = 0; i < 3; ++i )
+                {
+                    if( texParam->ssp[i].used )
+                    {
+                        size_t srvidx = NUM_STAGES * i + texParam->ssp[i].stage;
+
+                        srvArray[srvidx] = tex->getSRView();
+                    }
+                }
+            }
+            else
+            {
+                GN_ERROR(sLogger)( "texture %d is binding to invalid GPU parameter named \"%s\".", i, tb.binding );
+            }
+        }
+    }
+
+    ID3D10Device & dev = getDeviceRef();
+
+    dev.VSSetShaderResources( 0, NUM_STAGES, srvArray );
+    dev.GSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES );
+    dev.PSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES * 2 );
 }

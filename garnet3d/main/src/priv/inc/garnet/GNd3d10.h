@@ -28,7 +28,27 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// construct sample descriptor based on MSAA flags
     ///
-    DXGI_SAMPLE_DESC constructSampleDesc( ID3D10Device * device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+    DXGI_SAMPLE_DESC constructSampleDesc( ID3D10Device & device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+
+    ///
+    /// construct default sampler descriptor
+    inline void constructDefaultSamplerDesc( D3D10_SAMPLER_DESC & desc )
+    {
+        memset( &desc, 0, sizeof(desc) );
+        desc.Filter = D3D10_FILTER_MIN_MAG_MIP_POINT;
+        desc.AddressU = D3D10_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressV = D3D10_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressW = D3D10_TEXTURE_ADDRESS_CLAMP;
+        desc.MipLODBias = 0.0f;
+        desc.MaxAnisotropy = D3D10_MAX_MAXANISOTROPY;
+        desc.ComparisonFunc = D3D10_COMPARISON_NEVER;
+        desc.BorderColor[0] = 0.0f;
+        desc.BorderColor[1] = 0.0f;
+        desc.BorderColor[2] = 0.0f;
+        desc.BorderColor[3] = 0.0f;
+        desc.MinLOD = 0.0f;
+        desc.MaxLOD = 3.402823466e+38F; // FLT_MAX
+    }
 
     ///
     /// scoped PIX event
@@ -102,6 +122,62 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * entry = "main",
         const char   * profile = "ps_4_0",
         ID3D10Blob  ** binary = 0 );
+
+    //@}
+
+    /// DXGI_FORMAT utilities
+    //@{
+
+    /// Enumerates all DXGI numer formats
+    enum DXGINumberFormat
+    {
+        // Unsigned int DXGI format.
+        DXGINF_UINT,
+
+        // Signed int DXGI format.
+        DXGINF_SINT,
+
+        // Float DXGI format.
+        DXGINF_FLOAT,
+    };
+
+    struct DXGI_FORMAT_DESCRIPTION
+    {
+        /// The format name.
+        const char *     m_name;
+
+        /// The block width.
+        UInt32           m_blockWidth;
+
+        /// The block height.
+        UInt32           m_blockHeight;
+
+        /// Block size in bytes
+        UInt32           m_blockBytes;
+
+        /// Bits of a single texel
+        UInt32           m_texelBits;
+
+        /// Number of color channels.
+        UInt32           m_numChannels;
+
+        /// The number format.
+        DXGINumberFormat m_numfmt;
+
+        /// Correspondance typeless format.
+        DXGI_FORMAT      m_typelessFormat;
+
+        /// Correspondance uint format.
+        DXGI_FORMAT      m_uintFormat;
+
+        /// Combination of D3D10_FORMAT_SUPPORT flags
+        UInt32           m_formatSupportFlags;
+
+        /// Is the format can be used as
+    };
+
+    /// Get the DXGI format description for a specific format.
+    const DXGI_FORMAT_DESCRIPTION & getDXGIFormatDesc( DXGI_FORMAT );
 
     //@}
 

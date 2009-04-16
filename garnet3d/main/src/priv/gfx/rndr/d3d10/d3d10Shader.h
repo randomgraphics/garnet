@@ -62,6 +62,7 @@ namespace GN { namespace gfx
         struct ShaderSpecificProperties
         {
             AutoInitializer<bool,false> used;  ///< are these properties used
+            UINT                        stage; ///< texture stage that the parameter is binding to
         };
 
         ShaderSpecificProperties ssp[3]; ///< shader specific properites for each shader type
@@ -111,15 +112,18 @@ namespace GN { namespace gfx
 
         /// find parameter with specific name
         //@{
-        D3D10UniformParameterDesc   * findUniform( const char * name );
-        D3D10TextureParameterDesc   * findTexture( const char * name );
-        D3D10AttributeParameterDesc * findAttribute( const char * name );
+        const D3D10UniformParameterDesc   * findUniform( const char * name ) const;
+        D3D10UniformParameterDesc         * findUniform( const char * name );
+        const D3D10TextureParameterDesc   * findTexture( const char * name ) const;
+        D3D10TextureParameterDesc         * findTexture( const char * name );
+        const D3D10AttributeParameterDesc * findAttribute( const char * name ) const;
+        D3D10AttributeParameterDesc       * findAttribute( const char * name );
         //@}
 
         /// add new parameters
         //@{
         void addUniform( const D3D10UniformParameterDesc & u ) { mUniforms.append( u ); }
-        void addTexture( const D3D10TextureParameterDesc & );
+        void addTexture( const D3D10TextureParameterDesc & t ) { mTextures.append( t ); }
         void addAttribute( const D3D10AttributeParameterDesc & );
         //@}
     };
@@ -286,6 +290,14 @@ namespace GN { namespace gfx
             const SysMemUniform * const * uniforms,
             size_t                        count,
             bool                          skipDirtyCheck ) const;
+
+        ///
+        /// apply textures to D3D device
+        ///
+        void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const;
 
         // ********************************
         // private variables

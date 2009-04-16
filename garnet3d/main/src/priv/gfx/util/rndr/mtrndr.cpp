@@ -356,8 +356,8 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     // textures
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
     {
-        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].get();
-        sReplaceAutoRefPtr( rc->textures[i], mtt ? mtt->getRealTexture() : NULL );
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].texture.get();
+        sReplaceAutoRefPtr( rc->textures[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // vertex buffers

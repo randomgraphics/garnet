@@ -462,12 +462,14 @@ GN::gfx::OGLRenderer::bindContextResources(
     size_t i;
     for ( i = 0; i < numtex; ++i )
     {
+        const TextureBinding & tb = newContext.textures[i];
+
         // if null handle, then disable this texture stage
-        if( newContext.textures[i] )
+        if( tb.texture )
         {
             chooseTextureStage( i );
 
-            const OGLTexture * t = safeCastPtr<const OGLTexture>(newContext.textures[i].get());
+            const OGLTexture * t = safeCastPtr<const OGLTexture>(tb.texture.get());
 
             t->setSampler( newContext.samplers[i] );
 
@@ -476,7 +478,7 @@ GN::gfx::OGLRenderer::bindContextResources(
             if( newContext.gpuProgram )
             {
                 // we bind texture to specific texture stage, then bind that stage to shader.
-                ((const OGLBasicGpuProgram*)newContext.gpuProgram.get())->applyTexture( newContext.texbinds[i], i );
+                ((const OGLBasicGpuProgram*)newContext.gpuProgram.get())->applyTexture( tb.binding, i );
             }
         }
         else

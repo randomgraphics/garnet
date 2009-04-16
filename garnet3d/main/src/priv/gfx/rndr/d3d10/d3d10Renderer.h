@@ -216,6 +216,7 @@ namespace GN { namespace gfx
     private:
 
         std::map<VertexFormat,D3D10VertexLayout> mVertexLayouts;
+        AutoComPtr<ID3D10SamplerState>           mDefaultSampler;
         D3D10StateObjectManager * mSOMgr;
         D3D10RTMgr              * mRTMgr;
 

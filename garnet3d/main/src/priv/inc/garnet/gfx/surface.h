@@ -180,7 +180,7 @@ namespace GN { namespace gfx
         ///
         /// \param face, level      Subsurface location
         /// \param area             Subsurface area that is going to be updated. Set to NULL to update whole subsurface.
-        /// \param rowPitch         Row pitch in bytes of the data
+        /// \param rowPitch         Row pitch in bytes of the data (single texel row, not single texel block row)
         /// \param slicePitch       Slice pitch in bytes of the data
         /// \param data             The data buffer that holds data that are going to be copied to texture.
         ///                         The data must be the same format as the texture.

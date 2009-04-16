@@ -77,7 +77,7 @@ bool init( Renderer & rndr )
     mesh.applyToDrawable( d1 );
 
     // make a clone of the whole drawable, with its own transformation parameter
-    UInt32 ui = d1.rc.gpuProgram->getUniformIndex( "transform" );
+    UInt32 ui = d1.rc.gpuProgram->getParameterDesc().uniforms["transform"];
     d2 = d1;
     d2.rc.uniforms[ui].attach( rndr.createUniform( sizeof(Matrix44f) ) );
 

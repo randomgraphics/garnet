@@ -339,6 +339,8 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( p );
             GN_ASSERT( p != &mTail );
+            GN_ASSERT( mHead );
+            mHead->prev = p;
             p->next = mHead;
             p->prev = NULL;
             mHead   = p;
@@ -361,9 +363,7 @@ namespace GN { namespace gfx
             next->prev = prev;
 
             // insert to head
-            p->next = mHead;
-            p->prev = NULL;
-            mHead = p;
+            InsertToHead( p );
         }
 
         void RemoveFromList( StateObjectItem * p )
