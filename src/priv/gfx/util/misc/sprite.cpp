@@ -9,7 +9,7 @@ static const char * glslvscode=
     "   gl_Position.x = gl_Vertex.x * 2.0 - 1.0; \n"
     "   gl_Position.y = gl_Vertex.y * -2.0 + 1.0; \n"
     "   gl_Position.zw = gl_Vertex.zw; \n"
-    "   color = vec4(1,1,1,1); \n"
+    "   color = gl_Color; \n"
     "   texcoords.xy = gl_MultiTexCoord0.xy; \n"
     "}";
 

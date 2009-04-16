@@ -436,15 +436,17 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# 是否支持D3D10
 	# =============
 
-	# Detect Windows Vista
-	def isVista( env ):
+	# Detect Windows Vista and Windows 7
+	def isVistaOrWin7( env ):
 		if 'win32' != env['PLATFORM']: return False
 		stdout = os.popen( "ver" )
 		str = stdout.read()
 		stdout.close()
 		import string
-		return string.find( str, "6.0" ) >= 0
-	conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVista(env) or not UTIL_staticBuild( variant ) )
+		vista = string.find( str, "6.0" ) >= 0
+		win7  = string.find( str, "6.1" ) >= 0
+		return  vista or win7
+	conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
 
 	# ===================
 	# 是否支持DirectInput

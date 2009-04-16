@@ -31,6 +31,9 @@ inline void GN::gfx::OGLRenderer::disableTextureStage( size_t stage ) const
 
     chooseTextureStage( stage );
 
+    GN_OGL_CHECK( glDisable(GL_TEXTURE_1D) );
+    GN_OGL_CHECK( glBindTexture(GL_TEXTURE_1D, 0) );
+
     GN_OGL_CHECK( glDisable(GL_TEXTURE_2D) );
     GN_OGL_CHECK( glBindTexture(GL_TEXTURE_2D, 0) );
 
