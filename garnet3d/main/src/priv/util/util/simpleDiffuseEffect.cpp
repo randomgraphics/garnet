@@ -35,7 +35,7 @@ const char * hlslvscode =
 const char * hlslpscode =
     "uniform float4 lightpos; // light positin in world space \n"
     "uniform float4 lightColor; \n"
-    "uniform float4 diffuseColor; \n"
+    "uniform float4 albedoColor; \n"
     "sampler s0; \n"
     "Texture2D<float4> t0; \n"
     "struct VSOUTPUT \n"
@@ -50,7 +50,7 @@ const char * hlslpscode =
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
     "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
-    "   return (diff * lightColor + diffuseColor * tex) / 2.0; \n"
+    "   return diff * lightColor * albedoColor * tex; \n"
     "}";
 
 const char * glslvscode =
@@ -70,7 +70,7 @@ const char * glslvscode =
 const char * glslpscode =
     "uniform vec4 lightpos; // light positin in world space \n"
     "uniform vec4 lightColor; \n"
-    "uniform vec4 diffuseColor; \n"
+    "uniform vec4 albedoColor; \n"
     "uniform sampler2D t0; \n"
     "varying vec4 pos_world; // position in world space \n"
     "varying vec3 nml_world; // normal in world space \n"
@@ -80,7 +80,7 @@ const char * glslpscode =
     "   vec3  N      = normalize( nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
     "   vec4  tex    = texture2D( t0, texcoords ); \n"
-    "   gl_FragColor = (diff * lightColor + diffuseColor * tex) / 2.0; \n"
+    "   gl_FragColor = diff * lightColor * albedoColor * tex / 2.0; \n"
     "}";
 
 // *****************************************************************************
@@ -108,8 +108,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
     ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
-    ed.uniforms["DIFFUSE_COLOR"].size = sizeof(Vector4f);
-    ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
+    ed.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
+    ed.textures["ALBEDO_TEXTURE"]; // create a texture parameter named "ALBEDO_TEXTURE"
 
     ed.shaders["glsl"].prerequisites.vsProfile = RendererCaps::GPP_OGL_GLSL;
     ed.shaders["glsl"].prerequisites.psProfile = RendererCaps::GPP_OGL_GLSL;
@@ -121,8 +121,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.shaders["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
     ed.shaders["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
-    ed.shaders["glsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
-    ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
+    ed.shaders["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
@@ -138,8 +138,8 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.shaders["hlsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.shaders["hlsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
     ed.shaders["hlsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
-    ed.shaders["hlsl"].uniforms["diffuseColor"] = "DIFFUSE_COLOR";
-    ed.shaders["hlsl"].textures["t0"] = "DIFFUSE_TEXTURE";
+    ed.shaders["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.shaders["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].shader = "hlsl";
 
@@ -158,11 +158,11 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     INIT_UNIFORM( mMatrixWorldIT , "MATRIX_WORLD_IT" , Matrix44f::sIdentity() );
     INIT_UNIFORM( mLightPos      , "LIGHT0_POSITION" , Vector4f(0,0,0,0) );
     INIT_UNIFORM( mLightColor    , "LIGHT0_COLOR"    , Vector4f(1,1,1,1) );
-    INIT_UNIFORM( mDiffuseColor  , "DIFFUSE_COLOR"   , Vector4f(1,1,1,1) );
+    INIT_UNIFORM( mAlbedoColor   , "ALBEDO_COLOR"    , Vector4f(1,1,1,1) );
 
     // setup default texture
-    mDiffuseTexture = &mEffect->textures["DIFFUSE_TEXTURE"];
-    mDiffuseTexture->set( mDefaultTexture );
+    mAlbedoTexture = &mEffect->textures["ALBEDO_TEXTURE"];
+    mAlbedoTexture->set( mDefaultTexture );
 
     // success
     return success();
@@ -221,17 +221,17 @@ void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setDiffuseColor( const Vector4f & clr )
+void GN::util::SimpleDiffuseEffect::setAlbedoColor( const Vector4f & clr )
 {
-    (*mDiffuseColor)->update( clr );
+    (*mAlbedoColor)->update( clr );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setDiffuseTexture( gfx::Texture * tex )
+void GN::util::SimpleDiffuseEffect::setAlbedoTexture( gfx::Texture * tex )
 {
-    mDiffuseTexture->set( tex ? tex : mDefaultTexture );
+    mAlbedoTexture->set( tex ? tex : mDefaultTexture );
 }
 
 //

@@ -51,8 +51,8 @@ namespace GN { namespace util
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world );
         void setLightPos( const Vector4f & ); ///< set light position in world space
         void setLightColor( const Vector4f & ); ///< set light color
-        void setDiffuseColor( const Vector4f & ); ///< set diffuse color
-        void setDiffuseTexture( gfx::Texture * ); ///< set to NULL to use pure white texture.
+        void setAlbedoColor( const Vector4f & ); ///< set albedo color
+        void setAlbedoTexture( gfx::Texture * ); ///< set to NULL to use pure white texture.
         void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL );
         void draw();
         //@}
@@ -69,8 +69,8 @@ namespace GN { namespace util
         AutoRef<gfx::Uniform>   * mMatrixWorldIT;
         AutoRef<gfx::Uniform>   * mLightPos;
         AutoRef<gfx::Uniform>   * mLightColor;
-        AutoRef<gfx::Uniform>   * mDiffuseColor;
-        AutoRef<gfx::Texture>   * mDiffuseTexture;
+        AutoRef<gfx::Uniform>   * mAlbedoColor;
+        AutoRef<gfx::Texture>   * mAlbedoTexture;
         gfx::Drawable             mDrawable;
 
         // ********************************
