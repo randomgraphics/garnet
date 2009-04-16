@@ -10,13 +10,15 @@ RendererContext rc;
 
 const char * hlsl_vscode =
     "uniform float4x4 transform; \n"
-    "float4 main( in float4 pos : POSITION ) : POSITION { \n"
+    "float4 main( in float4 pos : POSITION ) : SV_POSITION { \n"
     "   return mul( transform, pos ); \n"
     "}";
 
 const char * hlsl_pscode =
-    "float4 main() : COLOR0 { \n"
-    "   return 1; \n"
+    "sampler s0; \n"
+    "Texture2D<float4> t0; \n"
+    "float4 main( in float4 pos : SV_POSITION ) : COLOR0 { \n"
+    "   return t0.Sample( s0, pos.xy ); \n"
     "}";
 
 const char * glsl_vscode =

@@ -79,7 +79,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
     using namespace GN;
     using namespace GN::gfx;
 
-    StrA code= "struct VS_INPUT {\n";
+    StrA code= "struct VS_INPUT_OUTPUT {\n";
 
     for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
@@ -88,7 +88,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
         code += strFormat( "    float4 attr%d : %s%d;\n", i, ve.binding, ve.bindingIndex );
     }
 
-    code += "}; float4 main( VS_INPUT nouse ) : POSITION { return float4(0,0,0,1); }";
+    code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
 
     // return compiled shader binary
     return d3d10::compileShader( "vs_4_0", code.cptr(), code.size() );
