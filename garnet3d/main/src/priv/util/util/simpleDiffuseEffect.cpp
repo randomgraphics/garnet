@@ -80,7 +80,7 @@ const char * glslpscode =
     "   vec3  N      = normalize( nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
     "   vec4  tex    = texture2D( t0, texcoords ); \n"
-    "   gl_FragColor = diff * lightColor * albedoColor * tex / 2.0; \n"
+    "   gl_FragColor = diff * lightColor * albedoColor * tex; \n"
     "}";
 
 // *****************************************************************************
@@ -97,10 +97,11 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     // standard init procedure
     GN_STDCLASS_INIT( GN::util::SimpleDiffuseEffect, () );
 
-    mDefaultTexture = r.create2DTexture( 1, 1, 0, COLOR_FORMAT_RGBA32 );
+    // create a pure white 2x2 texture
+    mDefaultTexture = r.create2DTexture( 2, 2, 0, COLOR_FORMAT_RGBA32 );
     if( NULL == mDefaultTexture ) return failure();
-    UInt8 white[4] = { 255, 255, 255, 255 };
-    mDefaultTexture->updateMipmap( 0, 0, NULL, 4, 4, white, SURFACE_UPDATE_DEFAULT );
+    UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+    mDefaultTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SURFACE_UPDATE_DEFAULT );
 
     EffectDesc ed;
     ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
