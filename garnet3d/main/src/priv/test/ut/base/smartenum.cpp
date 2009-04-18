@@ -2,62 +2,172 @@
 
 namespace GN
 {
-    template<typename ENUM>
-    struct EnumItemDesc
+    template<class ENUM_CLASS>
+    struct SmartEnum : public ENUM_CLASS
     {
-        ENUM value;
-        const char * name;
-        const char * desc;
-    };
+        // *********************************************************************
+        // public types
+        // *********************************************************************
 
-    template<typename ENUM>
-    class SmartEnum
-    {
-        ENUM mValue;
+        //@{
 
-    public:
+        typedef typename ENUM_CLASS::Enum ENUM_TYPE;
 
-        static EnumItemDesc<ENUM> mProp[];
+        //@}
 
+        // *********************************************************************
+        // public methods
+        // *********************************************************************
+
+        //@{
+
+        /// constructor
         SmartEnum()
         {
         }
 
-        SmartEnum & operator=( ENUM e ) { mValue = e; return *this; }
+        /// construct from C enumeration
+        SmartEnum( ENUM_TYPE e ) : mValue(e) {}
 
-        static const char * toStr( ENUM, const char * = 0 )
-        {
-            return mProp[0].name;
-        };
+        //@}
 
-        ENUM fromStr( const char * ) const
+        // *********************************************************************
+        // Overloaded operators
+        // *********************************************************************
+
+        //@{
+
+        SmartEnum operator=( ENUM_TYPE e )
         {
-            return (ENUM)0;
+            mValue = e;
+            return *this;
         }
+
+        bool operator<( const SmartEnum & rhs ) const
+        {
+            return mValue < rhs.mValue;
+        }
+
+        bool operator<=( const SmartEnum & rhs ) const
+        {
+            return mValue <= rhs.mValue;
+        }
+
+        bool operator==( const SmartEnum & rhs ) const
+        {
+            return mValue == rhs.mValue;
+        }
+
+        bool operator!=( const SmartEnum & rhs ) const
+        {
+            return mValue != rhs.mValue;
+        }
+
+        bool operator>( const SmartEnum & rhs ) const
+        {
+            return mValue > rhs.mValue;
+        }
+
+        bool operator>=( const SmartEnum & rhs ) const
+        {
+            return mValue >= rhs.mValue;
+        }
+
+        friend bool operator<( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a < b.mValue;
+        }
+
+        friend bool operator<=( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a <= b.mValue;
+        }
+
+        friend bool operator==( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a == b.mValue;
+        }
+
+        friend bool operator!=( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a != b.mValue;
+        }
+
+        friend bool operator>( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a > b.mValue;
+        }
+
+        friend bool operator>=( const ENUM_TYPE & a, const SmartEnum & b )
+        {
+            return a >= b.mValue;
+        }
+
+        //@}
+
+        // *********************************************************************
+        // private data
+        // *********************************************************************
+
+    private:
+
+        /// the enumeration value.
+        ENUM_TYPE mValue;
     };
+
 }
-
-enum MyEnumHaha { E1, E2, E3 };
-
-typedef GN::SmartEnum< MyEnumHaha > MyEnum;
-
-//GN::EnumItemDesc<MyEnumHaha> MyEnum::mProp[] =
-//{
-//    { E1, "E1", "enum1" },
-//    { E2, "E2", "enum2" },
-//    { E3, "E3", "enum3" },
-//};    
 
 class SmartEnumTest : public CxxTest::TestSuite
 {
+    struct MyEnumDesc
+    {
+        enum Enum
+        {
+            A = 1,
+            B = 2,
+            C = 4,
+        };
+
+        static const char * sToString( Enum )
+        {
+            return 0;
+        }
+
+        static bool sFromString( Enum &, const char * )
+        {
+            return false;
+        }
+    };
+
+    typedef GN::SmartEnum<MyEnumDesc> MyEnum;
+
 public:
+
     void test1()
     {
-        //MyEnum e;
+        MyEnum e;
 
-        //e = E1;
-        //e = E2;
-        //e = E3;
+        e = MyEnum::A;
+        e = MyEnum::C;
+        e = MyEnum::B;
+
+        TS_ASSERT_DIFFERS( e, MyEnum::A );
+        TS_ASSERT_DIFFERS( e, MyEnum::C );
+        TS_ASSERT_EQUALS( e, MyEnum::B );
+
+        TS_ASSERT( MyEnum::A <  e );
+        TS_ASSERT( MyEnum::A <= e );
+        TS_ASSERT( MyEnum::A != e );
+        TS_ASSERT( MyEnum::B == e );
+        TS_ASSERT( MyEnum::C >  e );
+        TS_ASSERT( MyEnum::C >= e );
+
+        TS_ASSERT( e >  MyEnum::A);
+        TS_ASSERT( e >= MyEnum::A);
+        TS_ASSERT( e != MyEnum::A);
+        TS_ASSERT( e == MyEnum::B);
+        TS_ASSERT( e <  MyEnum::C);
+        TS_ASSERT( e <= MyEnum::C);
 
         //MyEnum::toStr(E1);
         //e.fromStr( "E1" );
