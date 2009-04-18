@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "../cmdargs.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -122,15 +123,34 @@ struct InputInitiator
     }
 };
 
-int main( int, const char *[] )
+int main( int argc, const char * argv[] )
 {
     enableCRTMemoryCheck();
 
-    RendererOptions o;
-    o.api = API_OGL;
+    CommandLineArguments cmdargs( argc, argv );
+    switch( cmdargs.status )
+    {
+        case CommandLineArguments::SHOW_HELP:
+            cmdargs.showDefaultHelp();
+            return 0;
 
-    Renderer * r = createMultiThreadRenderer( o );
-    //Renderer * r = createSingleThreadRenderer( o );
+        case CommandLineArguments::INVALID_COMMAND_LINE:
+            return -1;
+
+        case CommandLineArguments::CONTINUE_EXECUTION:
+            // do nothing
+            break;
+
+        default:
+            GN_UNEXPECTED();
+            return -1;
+    }
+
+    Renderer * r;
+    if( cmdargs.useMultiThreadRenderer )
+        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    else
+        r = createSingleThreadRenderer( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);

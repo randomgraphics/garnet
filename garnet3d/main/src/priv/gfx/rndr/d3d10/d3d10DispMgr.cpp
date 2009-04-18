@@ -62,6 +62,12 @@ void GN::gfx::D3D10Renderer::dispQuit()
 {
     GN_GUARD;
 
+    // switch back to windowed mode, before destroy the swap chain.
+    if( mSwapChain && getOptions().fullscreen )
+    {
+        mSwapChain->SetFullscreenState( FALSE, NULL );
+    }
+
     safeRelease( mSwapChain );
     safeRelease( mDevice );
     safeRelease( mAdapter );
