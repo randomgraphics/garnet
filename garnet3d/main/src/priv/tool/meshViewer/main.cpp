@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "loader.h"
+#include "../../test/cmdargs.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -167,11 +168,12 @@ int run()
     return 0;
 }
 
-void printHelp( const char * exepath )
+void printHelp( const CommandLineArguments & cmdargs )
 {
-    StrA exefilename = fs::baseName( exepath ) + fs::extName( exepath );
+    StrA exefilename = fs::baseName( cmdargs.applicationName ) + fs::extName( cmdargs.applicationName );
 
-    printf( "\nUsage: %s <meshfile>\n", exefilename.cptr() );
+    GN_INFO(sLogger)( "\nUsage: %s [options] meshfile\n", exefilename.cptr() );
+    cmdargs.showStandardCommandLineOptions();
 }
 
 struct InputInitiator
@@ -196,18 +198,38 @@ int main( int argc, const char * argv[] )
     enableCRTMemoryCheck();
 
     // parse command line
-    if( argc < 2 )
+    CommandLineArguments cmdargs( argc, argv );
+    switch( cmdargs.status )
     {
-        printHelp( argv[0] );
+        case CommandLineArguments::SHOW_HELP:
+            printHelp( cmdargs );
+            return 0;
+
+        case CommandLineArguments::INVALID_COMMAND_LINE:
+            return -1;
+
+        case CommandLineArguments::CONTINUE_EXECUTION:
+            // do nothing
+            break;
+
+        default:
+            GN_UNEXPECTED();
+            return -1;
+    }
+
+    // get mesh file name
+    if( 0 == cmdargs.extraArgc )
+    {
+        GN_ERROR(sLogger)( "Mesh file name is missing." );
         return -1;
     }
-    filename = argv[1];
+    filename = cmdargs.extraArgv[0];
 
     // create renderer
-    RendererOptions o;
-    o.api = API_OGL;
-    //rndr = createMultiThreadRenderer( o );
-    rndr = createSingleThreadRenderer( o );
+    if( cmdargs.useMultiThreadRenderer )
+        rndr = createMultiThreadRenderer( cmdargs.rendererOptions );
+    else
+        rndr = createSingleThreadRenderer( cmdargs.rendererOptions );
     if( NULL == rndr ) return -1;
 
     // initialize input device
