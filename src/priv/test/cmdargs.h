@@ -43,6 +43,10 @@ public:
     bool                     useMultiThreadRenderer;
     Status                   status;
 
+    // command line arguments that are not recoganized by the parser
+    size_t                   extraArgc;
+    const char     * const * extraArgv;
+
     //@}
 
     // *************************************************************************
@@ -54,13 +58,21 @@ public:
         : applicationName( argv[0] )
         , useMultiThreadRenderer( false )
         , status( INVALID_COMMAND_LINE )
+        , extraArgc(0)
+        , extraArgv(NULL)
         , mLogger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
         status = parseCommandLine( argc, argv );
+
+        if( CONTINUE_EXECUTION == status )
+        {
+            extraArgc = mExtraArgs.size();
+            extraArgv = mExtraArgs.cptr();
+        }
     }
 
     /// show command line options
-    void showStandardCommandLineOptions()
+    void showStandardCommandLineOptions() const
     {
         GN_INFO(mLogger)(
             "Standard command line options:\n"
@@ -77,9 +89,13 @@ public:
     }
 
     /// show default help screen, assuming there's no application specific arguments
-    void showDefaultHelp()
+    void showDefaultHelp() const
     {
-        GN_INFO(mLogger)( "Usage: %s [options]\n", applicationName );
+        using namespace GN;
+
+        StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
+
+        GN_INFO(mLogger)( "Usage: %s [options]\n", executableName.cptr() );
         showStandardCommandLineOptions();
     }
 
@@ -89,7 +105,8 @@ public:
 
 private:
 
-    GN::Logger * mLogger;
+    GN::Logger               * mLogger;
+    GN::DynaArray<const char*> mExtraArgs;
 
     // *************************************************************************
     // private methods
@@ -154,6 +171,17 @@ private:
         return true;
     }
 
+    const char * getOptionValue( int argc, const char * argv[], int & i )
+    {
+        if( i+1 == argc || '-' == *argv[i+1] )
+        {
+            GN_ERROR(mLogger)( "Argument value of option %s is missing.", argv[i] );
+            return NULL;
+        }
+
+        return argv[++i];
+    }
+
     Status parseCommandLine( int argc, const char * argv[] )
     {
         using namespace GN;
@@ -171,30 +199,40 @@ private:
             {
                 // this is a command line option name
 
-                // each option must be followed by a value.
-                if( i+1 == argc || '-' == *argv[i+1] )
-                {
-                    GN_ERROR(mLogger)( "Argument value of option %s is missing.", a );
-                    return INVALID_COMMAND_LINE;
-                }
-
-                const char * value = argv[++i];
-
                 if( 0 == strCmpI( "-fs", a ) )
                 {
+                    const char * value = getOptionValue( argc, argv, i );
+                    if( NULL == value ) return INVALID_COMMAND_LINE;
+
                     if( !parseBool( rendererOptions.fullscreen, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
                 else if( 0 == strCmpI( "-mt", a ) )
                 {
+                    const char * value = getOptionValue( argc, argv, i );
+                    if( NULL == value ) return INVALID_COMMAND_LINE;
+
                     if( !parseBool( useMultiThreadRenderer, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
                 else if( 0 == strCmpI( "-rapi", a ) )
                 {
+                    const char * value = getOptionValue( argc, argv, i );
+                    if( NULL == value ) return INVALID_COMMAND_LINE;
+
                     if( !parseRendererAPI( rendererOptions.api, value ) )
                         return INVALID_COMMAND_LINE;
                 }
+                else
+                {
+                    // this is an extra option
+                    mExtraArgs.append( a );
+                }
+            }
+            else
+            {
+                // this is an extra argument
+                mExtraArgs.append( a );
             }
         }
 
