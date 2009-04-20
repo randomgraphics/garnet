@@ -140,7 +140,7 @@ struct InputInitiator
 {
     InputInitiator( Renderer & r )
     {
-        initializeInputSystem( API_NATIVE );
+        initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }

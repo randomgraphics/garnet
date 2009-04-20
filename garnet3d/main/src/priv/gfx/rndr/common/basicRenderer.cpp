@@ -26,11 +26,11 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
     GN_STDCLASS_INIT( BasicRenderer, () );
 
     // check renderer options
-    if( o.api < 0 || o.api >= NUM_RENDERER_API )
+    if( o.api < 0 || o.api >= RendererAPI::NUM_APIs )
     {
-        if( API_AUTO == o.api )
+        if( RendererAPI::AUTO == o.api )
         {
-            GN_ERROR(sLogger)( "API_AUTO must be changed to actual API value before initializing renderer." );
+            GN_ERROR(sLogger)( "RendererAPI::AUTO must be changed to actual API value before initializing renderer." );
         }
         else
         {

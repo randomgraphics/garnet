@@ -56,7 +56,7 @@ static GN::input::Input * sCreateNativeInputSystem()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::initializeInputSystem( InputApi api )
+bool GN::input::initializeInputSystem( InputAPI api )
 {
     GN_GUARD;
 
@@ -66,10 +66,10 @@ bool GN::input::initializeInputSystem( InputApi api )
     // then create new one
     switch( api )
     {
-        case API_NATIVE : return NULL != sCreateNativeInputSystem();
+        case InputAPI::NATIVE : return NULL != sCreateNativeInputSystem();
 
 #ifdef HAS_DINPUT
-        case API_DINPUT :
+        case InputAPI::DINPUT :
         {
             InputDInput * p = new InputDInput;
             if( !p->init() ) return 0;
@@ -77,7 +77,7 @@ bool GN::input::initializeInputSystem( InputApi api )
         }
 #endif
 
-        case API_FAKE :
+        case InputAPI::FAKE :
         {
             new FakeInput;
             return true;

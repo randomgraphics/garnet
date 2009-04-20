@@ -181,12 +181,12 @@ protected:
 
     void d3d9Init()
     {
-        mApi = GN::gfx::API_D3D9;
+        mApi = GN::gfx::RendererAPI::D3D9;
     }
 
     void oglInit()
     {
-        mApi = GN::gfx::API_OGL;
+        mApi = GN::gfx::RendererAPI::OGL;
     }
 
     void externalWindow()

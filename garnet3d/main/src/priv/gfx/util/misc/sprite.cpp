@@ -220,7 +220,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         mEffectiveContext = &mPrivateContext;
     }
 
-    if( API_D3D9 == mRenderer.getOptions().api )
+    if( RendererAPI::D3D9 == mRenderer.getOptions().api )
     {
         // Shift vertex a little bit on D3D9 platform
         mVertexShift = -0.5f;

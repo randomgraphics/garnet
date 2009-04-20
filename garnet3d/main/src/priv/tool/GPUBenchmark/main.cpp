@@ -230,7 +230,7 @@ struct SolidEffect : public BasicEffect
 struct TexturedEffect : public BasicEffect
 {
     UInt32 mCount;
-    
+
     TexturedEffect( RenderEngine & e, UInt32 count ) : BasicEffect(e), mCount(count) {}
 
     bool create()
@@ -354,7 +354,7 @@ public:
 
     void onDetermineInitParam( InitParam & ip )
     {
-        ip.rapi = API_D3D9;
+        ip.rapi = RendererAPI::D3D9;
         #if GN_XENON
         ip.ro.fullscreen = true;
         ip.ro.displayMode.set( 1024, 768, 32, 0 );
