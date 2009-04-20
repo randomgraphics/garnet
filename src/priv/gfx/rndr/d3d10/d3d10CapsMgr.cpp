@@ -79,10 +79,10 @@ GN::gfx::D3D10Renderer::getDefaultTextureFormat( TextureUsages usages ) const
 {
     if( usages.depth )
     {
-        return COLOR_FORMAT_RG_24_UNORM_8_UINT;
+        return ColorFormat::RG_24_UNORM_8_UINT;
     }
     else
     {
-        return COLOR_FORMAT_RGBA_8_8_8_8_UNORM;
+        return ColorFormat::RGBA_8_8_8_8_UNORM;
     }
 }

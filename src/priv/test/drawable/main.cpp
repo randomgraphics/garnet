@@ -61,7 +61,7 @@ bool init( Renderer & rndr )
     md.vtxfmt.numElements = 1;
     strcpy_s( md.vtxfmt.elements[0].binding, "position" );
     md.vtxfmt.elements[0].bindingIndex = 0;
-    md.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
+    md.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
     md.vtxfmt.elements[0].offset = 0;
     md.vtxfmt.elements[0].stream = 0;
     md.prim = TRIANGLE_LIST;

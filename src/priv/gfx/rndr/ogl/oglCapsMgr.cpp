@@ -276,10 +276,10 @@ GN::gfx::OGLRenderer::getDefaultTextureFormat( TextureUsages usages ) const
 {
     if( usages.depth )
     {
-        return COLOR_FORMAT_R_32_UINT;
+        return ColorFormat::R_32_UINT;
     }
     else
     {
-        return COLOR_FORMAT_RGBA_8_8_8_8_UNORM;
+        return ColorFormat::RGBA_8_8_8_8_UNORM;
     }
 }

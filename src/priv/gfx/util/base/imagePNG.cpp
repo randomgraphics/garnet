@@ -25,8 +25,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                 case 1  :
                 case 2  :
                 case 4  : png_set_gray_1_2_4_to_8( png );
-                case 8  : return GN::gfx::COLOR_FORMAT_L_8_UNORM;
-                //case 16 : return GN::gfx::COLOR_FORMAT_L_16_UNORM;
+                case 8  : return GN::gfx::ColorFormat::L_8_UNORM;
+                //case 16 : return GN::gfx::ColorFormat::L_16_UNORM;
                 default :
                     GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
@@ -35,9 +35,9 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             switch( info->bit_depth )
             {
-                //case 4  : return GN::gfx::COLOR_FORMAT_LA_4_4_UNORM;
-                case 8  : return GN::gfx::COLOR_FORMAT_LA_8_8_UNORM;
-                //case 16 : return GN::gfx::COLOR_FORMAT_LA_16_16_UNORM;
+                //case 4  : return GN::gfx::ColorFormat::LA_4_4_UNORM;
+                case 8  : return GN::gfx::ColorFormat::LA_8_8_UNORM;
+                //case 16 : return GN::gfx::ColorFormat::LA_16_16_UNORM;
                 default :
                     GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
@@ -48,8 +48,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
         case PNG_COLOR_TYPE_RGB_ALPHA:
             switch( info->bit_depth )
             {
-                case 8  : return GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM;
-                case 16 : return GN::gfx::COLOR_FORMAT_RGBA_16_16_16_16_UNORM;
+                case 8  : return GN::gfx::ColorFormat::RGBA_8_8_8_8_UNORM;
+                case 16 : return GN::gfx::ColorFormat::RGBA_16_16_16_16_UNORM;
                 default :
                     GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
@@ -59,13 +59,13 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             png_set_palette_to_rgb( png );
             png_set_add_alpha( png, 0xFFFF, PNG_FILLER_AFTER );
             png_set_bgr( png );
-            return GN::gfx::COLOR_FORMAT_BGRA_8_8_8_8_UNORM;
+            return GN::gfx::ColorFormat::BGRA_8_8_8_8_UNORM;
 
         default:
             GN_ERROR(sLogger)( "unknown PNG format %d", info->color_type );
             break;
     }
-    return GN::gfx::COLOR_FORMAT_UNKNOWN;
+    return GN::gfx::ColorFormat::UNKNOWN;
 }
 
 // *****************************************************************************
@@ -128,7 +128,7 @@ bool PNGReader::readHeader(
 
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
-    if ( GN::gfx::COLOR_FORMAT_UNKNOWN == o_desc.format ) return false;
+    if ( GN::gfx::ColorFormat::UNKNOWN == o_desc.format ) return false;
     UInt32 bpp = (UInt32)o_desc.format.getBitsPerPixel();
 
     // update o_desc

@@ -98,7 +98,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     GN_STDCLASS_INIT( GN::util::SimpleDiffuseEffect, () );
 
     // create a pure white 2x2 texture
-    mDefaultTexture = r.create2DTexture( 2, 2, 0, COLOR_FORMAT_RGBA32 );
+    mDefaultTexture = r.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 );
     if( NULL == mDefaultTexture ) return failure();
     UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
     mDefaultTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SURFACE_UPDATE_DEFAULT );

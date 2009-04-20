@@ -79,12 +79,12 @@ bool JPGReader::readHeader(
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
         // force RGBA output, if not gray-scale image
-        o_desc.format = GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM;
+        o_desc.format = GN::gfx::ColorFormat::RGBA_8_8_8_8_UNORM;
         bpp = 4;
     }
     else
     {
-        o_desc.format = GN::gfx::COLOR_FORMAT_L_8_UNORM;
+        o_desc.format = GN::gfx::ColorFormat::L_8_UNORM;
         bpp = 1;
     }
 
