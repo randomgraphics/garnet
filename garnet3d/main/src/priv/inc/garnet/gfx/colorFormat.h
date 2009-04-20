@@ -77,246 +77,6 @@
 namespace GN { namespace gfx
 {
     ///
-    /// color layout
-    ///
-    enum ColorLayout
-    {
-        LAYOUT_UNKNOWN,
-        LAYOUT_1,
-        LAYOUT_4_4,
-        LAYOUT_4_4_4_4,
-        LAYOUT_5_5_5_1,
-        LAYOUT_5_6_5,
-        LAYOUT_8,
-        LAYOUT_8_8,
-        LAYOUT_8_8_8,
-        LAYOUT_8_8_8_8,
-        LAYOUT_10_11_11,
-        LAYOUT_11_11_10,
-        LAYOUT_10_10_10_2,
-        LAYOUT_16,
-        LAYOUT_16_16,
-        LAYOUT_16_16_16_16,
-        LAYOUT_32,
-        LAYOUT_32_32,
-        LAYOUT_32_32_32,
-        LAYOUT_32_32_32_32,
-        LAYOUT_24,
-        LAYOUT_8_24,
-        LAYOUT_24_8,
-        LAYOUT_4_4_24,
-        LAYOUT_32_8_24,
-        LAYOUT_DXT1,
-        LAYOUT_DXT3,
-        LAYOUT_DXT3A,
-        LAYOUT_DXT5,
-        LAYOUT_DXT5A,
-        LAYOUT_DXN,
-        LAYOUT_CTX1,
-        LAYOUT_DXT3A_AS_1_1_1_1,
-        LAYOUT_GRGB,
-        LAYOUT_RGBG,
-        NUM_COLOR_LAYOUTS,
-    };
-    GN_CASSERT( NUM_COLOR_LAYOUTS <= 64 );
-
-    ///
-    /// color sign
-    ///
-    enum ColorSign
-    {
-        SIGN_UNORM, ///< normalized unsigned integer
-        SIGN_SNORM, ///< normalized signed integer
-        SIGN_GNORM, ///< normalized gamma integer
-        SIGN_BNORM, ///< normalized bias integer
-        SIGN_UINT,  ///< unsigned integer
-        SIGN_SINT,  ///< signed integer
-        SIGN_GINT,  ///< gamma integer
-        SIGN_BINT,  ///< bias integer
-        SIGN_FLOAT, ///< float
-    };
-
-    ///
-    /// color swizzle
-    ///
-    enum ColorSwizzle
-    {
-        SWIZZLE_X = 0,
-        SWIZZLE_Y = 1,
-        SWIZZLE_Z = 2,
-        SWIZZLE_W = 3,
-        SWIZZLE_0 = 4,
-        SWIZZLE_1 = 5,
-        SWIZZLE_R = 0,
-        SWIZZLE_G = 1,
-        SWIZZLE_B = 2,
-        SWIZZLE_A = 3,
-    };
-
-    ///
-    /// color swizzle for 4 channels
-    ///
-    enum ColorSwizzle4
-    {
-        SWIZZLE_RGBA = (0<<0) | (1<<3) | (2<<6) | (3<<9),
-        SWIZZLE_BGRA = (2<<0) | (1<<3) | (0<<6) | (3<<9),
-        SWIZZLE_RGB1 = (0<<0) | (1<<3) | (2<<6) | (5<<9),
-        SWIZZLE_BGR1 = (2<<0) | (1<<3) | (0<<6) | (5<<9),
-        SWIZZLE_RRRG = (0<<0) | (0<<3) | (0<<6) | (1<<9),
-        SWIZZLE_RG00 = (0<<0) | (1<<3) | (4<<6) | (4<<9),
-        SWIZZLE_RG01 = (0<<0) | (1<<3) | (4<<6) | (5<<9),
-        SWIZZLE_R000 = (0<<0) | (4<<3) | (4<<6) | (4<<9),
-        SWIZZLE_R001 = (0<<0) | (4<<3) | (4<<6) | (5<<9),
-        SWIZZLE_RRR1 = (0<<0) | (0<<3) | (0<<6) | (5<<9),
-        SWIZZLE_111R = (5<<0) | (5<<3) | (5<<6) | (0<<9),
-    };
-
-    ///
-    /// alias for commonly used color formats
-    ///
-    enum ColorFormatAlias
-    {
-        COLOR_FORMAT_UNKNOWN = 0,
-
-        // 8 bits
-        COLOR_FORMAT_R_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_R001 ),
-        COLOR_FORMAT_L_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_RRR1 ),
-        COLOR_FORMAT_A_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_111R ),
-
-        // 16 bits
-        COLOR_FORMAT_BGRA_4_4_4_4_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_4_4_4_4, SIGN_UNORM, SWIZZLE_BGRA ),
-        COLOR_FORMAT_BGRX_4_4_4_4_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_4_4_4_4, SIGN_UNORM, SWIZZLE_BGR1 ),
-        COLOR_FORMAT_BGR_5_6_5_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_5_6_5, SIGN_UNORM, SWIZZLE_BGR1 ),
-        COLOR_FORMAT_BGRA_5_5_5_1_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_5_5_5_1, SIGN_UNORM, SWIZZLE_BGRA ),
-        COLOR_FORMAT_BGRX_5_5_5_1_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_5_5_5_1, SIGN_UNORM, SWIZZLE_BGR1 ),
-
-        COLOR_FORMAT_RG_8_8_UNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_UNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_8_8_SNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_SNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_LA_8_8_UNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_UNORM, SWIZZLE_RRRG ),
-
-        COLOR_FORMAT_R_16_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UNORM, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_16_SNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_SNORM, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_16_UINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UINT , SWIZZLE_R001 ),
-        COLOR_FORMAT_R_16_SINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_SINT , SWIZZLE_R001 ),
-        COLOR_FORMAT_R_16_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_FLOAT, SWIZZLE_R001 ),
-
-        COLOR_FORMAT_L_16_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UNORM, SWIZZLE_RRR1 ),
-
-        // 24 bits
-
-        COLOR_FORMAT_RGB_8_8_8_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
-        COLOR_FORMAT_BGR_8_8_8_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8, SIGN_UNORM, SWIZZLE_BGR1 ),
-        COLOR_FORMAT_R_24_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_24, SIGN_FLOAT, SWIZZLE_R001 ),
-
-        // 32 bits
-        COLOR_FORMAT_RGBA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_8_8_8_8_UNORM_SRGB     = GN_MAKE_COLOR_FORMAT2( LAYOUT_8_8_8_8, SIGN_UNORM, SIGN_GNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_8_8_8_8_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_SNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA32                      = COLOR_FORMAT_RGBA_8_8_8_8_UNORM,
-        COLOR_FORMAT_UBYTE4N                     = COLOR_FORMAT_RGBA_8_8_8_8_UNORM,
-
-        COLOR_FORMAT_RGBX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
-
-        COLOR_FORMAT_BGRA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGRA ),
-        COLOR_FORMAT_BGRA32                      = COLOR_FORMAT_BGRA_8_8_8_8_UNORM,
-
-        COLOR_FORMAT_BGRX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGR1 ),
-
-        COLOR_FORMAT_RGBA_10_10_10_2_UNORM       = GN_MAKE_COLOR_FORMAT( LAYOUT_10_10_10_2, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_10_10_10_2_UINT        = GN_MAKE_COLOR_FORMAT( LAYOUT_10_10_10_2, SIGN_UINT , SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_10_10_10_SNORM_2_UNORM = GN_MAKE_COLOR_FORMAT2( LAYOUT_10_10_10_2, SIGN_SNORM, SIGN_UNORM, SWIZZLE_RGBA ),
-
-        COLOR_FORMAT_RG_16_16_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_16_16_SNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_SNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_16_16_UINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_16_16_SINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_SINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_16_16_FLOAT              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_FLOAT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_USHORT2N                    = COLOR_FORMAT_RG_16_16_UNORM,
-        COLOR_FORMAT_SHORT2N                     = COLOR_FORMAT_RG_16_16_SNORM,
-        COLOR_FORMAT_USHORT2                     = COLOR_FORMAT_RG_16_16_UINT,
-        COLOR_FORMAT_SHORT2                      = COLOR_FORMAT_RG_16_16_SINT,
-        COLOR_FORMAT_HALF2                       = COLOR_FORMAT_RG_16_16_FLOAT,
-
-        COLOR_FORMAT_LA_16_16_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UNORM, SWIZZLE_RRRG ),
-
-        COLOR_FORMAT_R_32_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_UNORM, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_32_SNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_SNORM, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_32_UINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_UINT, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_32_SINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_SINT, SWIZZLE_R001 ),
-        COLOR_FORMAT_R_32_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_FLOAT, SWIZZLE_R001 ),
-        COLOR_FORMAT_UINT1N                      = COLOR_FORMAT_R_32_UNORM,
-        COLOR_FORMAT_INT1N                       = COLOR_FORMAT_R_32_SNORM,
-        COLOR_FORMAT_UINT1                       = COLOR_FORMAT_R_32_UINT,
-        COLOR_FORMAT_INT1                        = COLOR_FORMAT_R_32_SINT,
-        COLOR_FORMAT_FLOAT1                      = COLOR_FORMAT_R_32_FLOAT,
-
-        COLOR_FORMAT_GR_8_UINT_24_UNORM          = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_8_24, SIGN_UINT, SIGN_UNORM, SWIZZLE_G, SWIZZLE_R, SWIZZLE_0, SWIZZLE_1 ),
-        COLOR_FORMAT_GX_8_24_UNORM               = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_8_24, SIGN_UINT, SIGN_UNORM, SWIZZLE_G, SWIZZLE_0, SWIZZLE_0, SWIZZLE_1 ),
-
-        COLOR_FORMAT_RG_24_UNORM_8_UINT          = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RX_24_8_UNORM               = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_XG_24_8_UINT                = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_0, SWIZZLE_G, SWIZZLE_0, SWIZZLE_1 ),
-
-        COLOR_FORMAT_RG_24_FLOAT_8_UINT          = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_FLOAT, SIGN_UINT, SWIZZLE_RG01 ),
-
-        COLOR_FORMAT_GRGB_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_GRGB, SIGN_UNORM, SWIZZLE_RGB1 ),
-        COLOR_FORMAT_RGBG_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_RGBG, SIGN_UNORM, SWIZZLE_RGB1 ),
-
-        // 64 bits
-        COLOR_FORMAT_RGBA_16_16_16_16_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_16_16_16_16_SNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_SNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_16_16_16_16_UINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UINT , SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_16_16_16_16_SINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_SINT , SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_16_16_16_16_FLOAT      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_FLOAT, SWIZZLE_RGBA ),
-        COLOR_FORMAT_USHORT4N                    = COLOR_FORMAT_RGBA_16_16_16_16_UNORM,
-        COLOR_FORMAT_SHORT4N                     = COLOR_FORMAT_RGBA_16_16_16_16_SNORM,
-        COLOR_FORMAT_USHORT4                     = COLOR_FORMAT_RGBA_16_16_16_16_UINT,
-        COLOR_FORMAT_SHORT4                      = COLOR_FORMAT_RGBA_16_16_16_16_SINT,
-        COLOR_FORMAT_HALF4                       = COLOR_FORMAT_RGBA_16_16_16_16_FLOAT,
-
-        COLOR_FORMAT_RGBX_16_16_16_16_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UNORM, SWIZZLE_RGB1 ),
-
-        COLOR_FORMAT_RG_32_32_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_UNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_32_32_SNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_SNORM, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_32_32_UINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_UINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_32_32_SINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_SINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RG_32_32_FLOAT              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_FLOAT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_FLOAT2                      = COLOR_FORMAT_RG_32_32_FLOAT,
-
-        COLOR_FORMAT_RGX_32_FLOAT_8_UINT_24      = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_RG01 ),
-        COLOR_FORMAT_RXX_32_8_24_FLOAT           = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_R001 ),
-        COLOR_FORMAT_XGX_32_8_24_UINT            = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_32_8_24, SIGN_UINT, SIGN_UINT, SWIZZLE_0, SWIZZLE_G, SWIZZLE_0, SWIZZLE_1 ),
-
-        // 96 bits
-        COLOR_FORMAT_RGB_32_32_32_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_UNORM, SWIZZLE_RGB1 ),
-        COLOR_FORMAT_RGB_32_32_32_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_SNORM, SWIZZLE_RGB1 ),
-        COLOR_FORMAT_RGB_32_32_32_UINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_UINT , SWIZZLE_RGB1 ),
-        COLOR_FORMAT_RGB_32_32_32_SINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_SINT , SWIZZLE_RGB1 ),
-        COLOR_FORMAT_RGB_32_32_32_FLOAT          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_FLOAT, SWIZZLE_RGB1 ),
-        COLOR_FORMAT_FLOAT3                      = COLOR_FORMAT_RGB_32_32_32_FLOAT,
-
-        // 128 bits
-        COLOR_FORMAT_RGBA_32_32_32_32_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_32_32_32_32_SNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_SNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_32_32_32_32_UINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UINT , SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_32_32_32_32_SINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_SINT , SWIZZLE_RGBA ),
-        COLOR_FORMAT_RGBA_32_32_32_32_FLOAT      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_FLOAT, SWIZZLE_RGBA ),
-        COLOR_FORMAT_FLOAT4                      = COLOR_FORMAT_RGBA_32_32_32_32_FLOAT,
-
-        // compressed
-        COLOR_FORMAT_DXT1_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT1, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT1_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT1, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT3_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT3, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT3_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT3, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT5_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT5_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT5, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT5A_UNORM                 = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5A, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXT5A_SNORM                 = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5A, SIGN_SNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXN_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_DXN, SIGN_UNORM, SWIZZLE_RGBA ),
-        COLOR_FORMAT_DXN_SNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_DXN, SIGN_SNORM, SWIZZLE_RGBA ),
-    };
-
-    ///
     /// color channel desc
     ///
     struct ColorChannelDesc
@@ -330,12 +90,12 @@ namespace GN { namespace gfx
     ///
     struct ColorLayoutDesc
     {
-        unsigned char blockWidth  : 4; ///< width of color block
-        unsigned char blockHeight : 4; ///< heiht of color block
-        unsigned char blockBytes;      ///< bytes of one color block
-        unsigned char bits;            ///< bits per pixel
-        unsigned char numChannels;     ///< number of channels
-        ColorChannelDesc channels[4];  ///< channel descriptors
+        unsigned char    blockWidth  : 4; ///< width of color block
+        unsigned char    blockHeight : 4; ///< heiht of color block
+        unsigned char    blockBytes;      ///< bytes of one color block
+        unsigned char    bits;            ///< bits per pixel
+        unsigned char    numChannels;     ///< number of channels
+        ColorChannelDesc channels[4];     ///< channel descriptors
     };
 
     ///
@@ -348,8 +108,248 @@ namespace GN { namespace gfx
     ///
 	union ColorFormat
     {
+        ///
+        /// color layout
+        ///
+        enum Layout
+        {
+            LAYOUT_UNKNOWN,
+            LAYOUT_1,
+            LAYOUT_4_4,
+            LAYOUT_4_4_4_4,
+            LAYOUT_5_5_5_1,
+            LAYOUT_5_6_5,
+            LAYOUT_8,
+            LAYOUT_8_8,
+            LAYOUT_8_8_8,
+            LAYOUT_8_8_8_8,
+            LAYOUT_10_11_11,
+            LAYOUT_11_11_10,
+            LAYOUT_10_10_10_2,
+            LAYOUT_16,
+            LAYOUT_16_16,
+            LAYOUT_16_16_16_16,
+            LAYOUT_32,
+            LAYOUT_32_32,
+            LAYOUT_32_32_32,
+            LAYOUT_32_32_32_32,
+            LAYOUT_24,
+            LAYOUT_8_24,
+            LAYOUT_24_8,
+            LAYOUT_4_4_24,
+            LAYOUT_32_8_24,
+            LAYOUT_DXT1,
+            LAYOUT_DXT3,
+            LAYOUT_DXT3A,
+            LAYOUT_DXT5,
+            LAYOUT_DXT5A,
+            LAYOUT_DXN,
+            LAYOUT_CTX1,
+            LAYOUT_DXT3A_AS_1_1_1_1,
+            LAYOUT_GRGB,
+            LAYOUT_RGBG,
+            NUM_COLOR_LAYOUTS,
+        };
+        GN_CASSERT( NUM_COLOR_LAYOUTS <= 64 );
+
+        ///
+        /// color sign
+        ///
+        enum Sign
+        {
+            SIGN_UNORM, ///< normalized unsigned integer
+            SIGN_SNORM, ///< normalized signed integer
+            SIGN_GNORM, ///< normalized gamma integer
+            SIGN_BNORM, ///< normalized bias integer
+            SIGN_UINT,  ///< unsigned integer
+            SIGN_SINT,  ///< signed integer
+            SIGN_GINT,  ///< gamma integer
+            SIGN_BINT,  ///< bias integer
+            SIGN_FLOAT, ///< float
+        };
+
+        ///
+        /// color swizzle
+        ///
+        enum Swizzle
+        {
+            SWIZZLE_X = 0,
+            SWIZZLE_Y = 1,
+            SWIZZLE_Z = 2,
+            SWIZZLE_W = 3,
+            SWIZZLE_0 = 4,
+            SWIZZLE_1 = 5,
+            SWIZZLE_R = 0,
+            SWIZZLE_G = 1,
+            SWIZZLE_B = 2,
+            SWIZZLE_A = 3,
+        };
+
+        ///
+        /// color swizzle for 4 channels
+        ///
+        enum Swizzle4
+        {
+            SWIZZLE_RGBA = (0<<0) | (1<<3) | (2<<6) | (3<<9),
+            SWIZZLE_BGRA = (2<<0) | (1<<3) | (0<<6) | (3<<9),
+            SWIZZLE_RGB1 = (0<<0) | (1<<3) | (2<<6) | (5<<9),
+            SWIZZLE_BGR1 = (2<<0) | (1<<3) | (0<<6) | (5<<9),
+            SWIZZLE_RRRG = (0<<0) | (0<<3) | (0<<6) | (1<<9),
+            SWIZZLE_RG00 = (0<<0) | (1<<3) | (4<<6) | (4<<9),
+            SWIZZLE_RG01 = (0<<0) | (1<<3) | (4<<6) | (5<<9),
+            SWIZZLE_R000 = (0<<0) | (4<<3) | (4<<6) | (4<<9),
+            SWIZZLE_R001 = (0<<0) | (4<<3) | (4<<6) | (5<<9),
+            SWIZZLE_RRR1 = (0<<0) | (0<<3) | (0<<6) | (5<<9),
+            SWIZZLE_111R = (5<<0) | (5<<3) | (5<<6) | (0<<9),
+        };
+
+        ///
+        /// alias for commonly used color formats
+        ///
+        enum Alias
+        {
+            UNKNOWN = 0,
+
+            // 8 bits
+            R_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_R001 ),
+            L_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_RRR1 ),
+            A_8_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_8, SIGN_UNORM, SWIZZLE_111R ),
+
+            // 16 bits
+            BGRA_4_4_4_4_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_4_4_4_4, SIGN_UNORM, SWIZZLE_BGRA ),
+            BGRX_4_4_4_4_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_4_4_4_4, SIGN_UNORM, SWIZZLE_BGR1 ),
+            BGR_5_6_5_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_5_6_5, SIGN_UNORM, SWIZZLE_BGR1 ),
+            BGRA_5_5_5_1_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_5_5_5_1, SIGN_UNORM, SWIZZLE_BGRA ),
+            BGRX_5_5_5_1_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_5_5_5_1, SIGN_UNORM, SWIZZLE_BGR1 ),
+
+            RG_8_8_UNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_UNORM, SWIZZLE_RG01 ),
+            RG_8_8_SNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_SNORM, SWIZZLE_RG01 ),
+            LA_8_8_UNORM                = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8, SIGN_UNORM, SWIZZLE_RRRG ),
+
+            R_16_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UNORM, SWIZZLE_R001 ),
+            R_16_SNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_SNORM, SWIZZLE_R001 ),
+            R_16_UINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UINT , SWIZZLE_R001 ),
+            R_16_SINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_SINT , SWIZZLE_R001 ),
+            R_16_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_FLOAT, SWIZZLE_R001 ),
+
+            L_16_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_16, SIGN_UNORM, SWIZZLE_RRR1 ),
+
+            // 24 bits
+
+            RGB_8_8_8_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
+            BGR_8_8_8_UNORM             = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8, SIGN_UNORM, SWIZZLE_BGR1 ),
+            R_24_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_24, SIGN_FLOAT, SWIZZLE_R001 ),
+
+            // 32 bits
+            RGBA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGBA ),
+            RGBA_8_8_8_8_UNORM_SRGB     = GN_MAKE_COLOR_FORMAT2( LAYOUT_8_8_8_8, SIGN_UNORM, SIGN_GNORM, SWIZZLE_RGBA ),
+            RGBA_8_8_8_8_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_SNORM, SWIZZLE_RGBA ),
+            RGBA32                      = RGBA_8_8_8_8_UNORM,
+            UBYTE4N                     = RGBA_8_8_8_8_UNORM,
+
+            RGBX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_RGB1 ),
+
+            BGRA_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGRA ),
+            BGRA32                      = BGRA_8_8_8_8_UNORM,
+
+            BGRX_8_8_8_8_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_8_8_8_8, SIGN_UNORM, SWIZZLE_BGR1 ),
+
+            RGBA_10_10_10_2_UNORM       = GN_MAKE_COLOR_FORMAT( LAYOUT_10_10_10_2, SIGN_UNORM, SWIZZLE_RGBA ),
+            RGBA_10_10_10_2_UINT        = GN_MAKE_COLOR_FORMAT( LAYOUT_10_10_10_2, SIGN_UINT , SWIZZLE_RGBA ),
+            RGBA_10_10_10_SNORM_2_UNORM = GN_MAKE_COLOR_FORMAT2( LAYOUT_10_10_10_2, SIGN_SNORM, SIGN_UNORM, SWIZZLE_RGBA ),
+
+            RG_16_16_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UNORM, SWIZZLE_RG01 ),
+            RG_16_16_SNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_SNORM, SWIZZLE_RG01 ),
+            RG_16_16_UINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UINT, SWIZZLE_RG01 ),
+            RG_16_16_SINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_SINT, SWIZZLE_RG01 ),
+            RG_16_16_FLOAT              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_FLOAT, SWIZZLE_RG01 ),
+            USHORT2N                    = RG_16_16_UNORM,
+            SHORT2N                     = RG_16_16_SNORM,
+            USHORT2                     = RG_16_16_UINT,
+            SHORT2                      = RG_16_16_SINT,
+            HALF2                       = RG_16_16_FLOAT,
+
+            LA_16_16_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16, SIGN_UNORM, SWIZZLE_RRRG ),
+
+            R_32_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_UNORM, SWIZZLE_R001 ),
+            R_32_SNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_SNORM, SWIZZLE_R001 ),
+            R_32_UINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_UINT, SWIZZLE_R001 ),
+            R_32_SINT                   = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_SINT, SWIZZLE_R001 ),
+            R_32_FLOAT                  = GN_MAKE_COLOR_FORMAT( LAYOUT_32, SIGN_FLOAT, SWIZZLE_R001 ),
+            UINT1N                      = R_32_UNORM,
+            INT1N                       = R_32_SNORM,
+            UINT1                       = R_32_UINT,
+            INT1                        = R_32_SINT,
+            FLOAT1                      = R_32_FLOAT,
+
+            GR_8_UINT_24_UNORM          = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_8_24, SIGN_UINT, SIGN_UNORM, SWIZZLE_G, SWIZZLE_R, SWIZZLE_0, SWIZZLE_1 ),
+            GX_8_24_UNORM               = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_8_24, SIGN_UINT, SIGN_UNORM, SWIZZLE_G, SWIZZLE_0, SWIZZLE_0, SWIZZLE_1 ),
+
+            RG_24_UNORM_8_UINT          = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_RG01 ),
+            RX_24_8_UNORM               = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_RG01 ),
+            XG_24_8_UINT                = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_24_8, SIGN_UNORM, SIGN_UINT, SWIZZLE_0, SWIZZLE_G, SWIZZLE_0, SWIZZLE_1 ),
+
+            RG_24_FLOAT_8_UINT          = GN_MAKE_COLOR_FORMAT2( LAYOUT_24_8, SIGN_FLOAT, SIGN_UINT, SWIZZLE_RG01 ),
+
+            GRGB_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_GRGB, SIGN_UNORM, SWIZZLE_RGB1 ),
+            RGBG_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_RGBG, SIGN_UNORM, SWIZZLE_RGB1 ),
+
+            // 64 bits
+            RGBA_16_16_16_16_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UNORM, SWIZZLE_RGBA ),
+            RGBA_16_16_16_16_SNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_SNORM, SWIZZLE_RGBA ),
+            RGBA_16_16_16_16_UINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UINT , SWIZZLE_RGBA ),
+            RGBA_16_16_16_16_SINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_SINT , SWIZZLE_RGBA ),
+            RGBA_16_16_16_16_FLOAT      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_FLOAT, SWIZZLE_RGBA ),
+            USHORT4N                    = RGBA_16_16_16_16_UNORM,
+            SHORT4N                     = RGBA_16_16_16_16_SNORM,
+            USHORT4                     = RGBA_16_16_16_16_UINT,
+            SHORT4                      = RGBA_16_16_16_16_SINT,
+            HALF4                       = RGBA_16_16_16_16_FLOAT,
+
+            RGBX_16_16_16_16_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_16_16_16_16, SIGN_UNORM, SWIZZLE_RGB1 ),
+
+            RG_32_32_UNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_UNORM, SWIZZLE_RG01 ),
+            RG_32_32_SNORM              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_SNORM, SWIZZLE_RG01 ),
+            RG_32_32_UINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_UINT, SWIZZLE_RG01 ),
+            RG_32_32_SINT               = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_SINT, SWIZZLE_RG01 ),
+            RG_32_32_FLOAT              = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32, SIGN_FLOAT, SWIZZLE_RG01 ),
+            FLOAT2                      = RG_32_32_FLOAT,
+
+            RGX_32_FLOAT_8_UINT_24      = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_RG01 ),
+            RXX_32_8_24_FLOAT           = GN_MAKE_COLOR_FORMAT2( LAYOUT_32_8_24, SIGN_FLOAT, SIGN_UINT, SWIZZLE_R001 ),
+            XGX_32_8_24_UINT            = GN_MAKE_COLOR_FORMAT_EX( LAYOUT_32_8_24, SIGN_UINT, SIGN_UINT, SWIZZLE_0, SWIZZLE_G, SWIZZLE_0, SWIZZLE_1 ),
+
+            // 96 bits
+            RGB_32_32_32_UNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_UNORM, SWIZZLE_RGB1 ),
+            RGB_32_32_32_SNORM          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_SNORM, SWIZZLE_RGB1 ),
+            RGB_32_32_32_UINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_UINT , SWIZZLE_RGB1 ),
+            RGB_32_32_32_SINT           = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_SINT , SWIZZLE_RGB1 ),
+            RGB_32_32_32_FLOAT          = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32, SIGN_FLOAT, SWIZZLE_RGB1 ),
+            FLOAT3                      = RGB_32_32_32_FLOAT,
+
+            // 128 bits
+            RGBA_32_32_32_32_UNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UNORM, SWIZZLE_RGBA ),
+            RGBA_32_32_32_32_SNORM      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_SNORM, SWIZZLE_RGBA ),
+            RGBA_32_32_32_32_UINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_UINT , SWIZZLE_RGBA ),
+            RGBA_32_32_32_32_SINT       = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_SINT , SWIZZLE_RGBA ),
+            RGBA_32_32_32_32_FLOAT      = GN_MAKE_COLOR_FORMAT( LAYOUT_32_32_32_32, SIGN_FLOAT, SWIZZLE_RGBA ),
+            FLOAT4                      = RGBA_32_32_32_32_FLOAT,
+
+            // compressed
+            DXT1_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT1, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT1_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT1, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT3_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT3, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT3_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT3, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT5_UNORM                  = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT5_UNORM_SRGB             = GN_MAKE_COLOR_FORMAT2( LAYOUT_DXT5, SIGN_GNORM, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT5A_UNORM                 = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5A, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXT5A_SNORM                 = GN_MAKE_COLOR_FORMAT( LAYOUT_DXT5A, SIGN_SNORM, SWIZZLE_RGBA ),
+            DXN_UNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_DXN, SIGN_UNORM, SWIZZLE_RGBA ),
+            DXN_SNORM                   = GN_MAKE_COLOR_FORMAT( LAYOUT_DXN, SIGN_SNORM, SWIZZLE_RGBA ),
+        };
+
         UInt32           u32;   ///< color format as unsigned integer
-        ColorFormatAlias alias; ///< alias of the format
+        Alias            alias; ///< alias of the format
         struct
         {
             unsigned int layout   : 6;
@@ -375,7 +375,7 @@ namespace GN { namespace gfx
         ///
         /// construct from alias
         ///
-        ColorFormat( ColorFormatAlias a ) : alias(a) {}
+        ColorFormat( Alias a ) : alias(a) {}
 
         ///
         /// construct from individual properties
@@ -395,7 +395,7 @@ namespace GN { namespace gfx
         ///
         /// construct from individual properties
         ///
-        ColorFormat( UInt32 l, UInt32 si012, UInt32 si3, ColorSwizzle4 sw0123 )
+        ColorFormat( UInt32 l, UInt32 si012, UInt32 si3, Swizzle4 sw0123 )
             : layout( l )
             , sign012( si012 )
             , sign3( si3 )
@@ -459,21 +459,21 @@ namespace GN { namespace gfx
         bool operator!=( const ColorFormat & c ) const { return u32 != c.u32; }
 
         ///
+        /// equality check between format alias and format struct
+        ///
+        friend inline bool operator==( const Alias & a, const ColorFormat & c ) { return a == c.alias; }
+
+        ///
+        /// equality check between format alias and format struct
+        ///
+        friend inline bool operator!=( const Alias & a, const ColorFormat & c ) { return a != c.alias; }
+
+        ///
         /// less operator
         ///
         bool operator<( const ColorFormat & c ) const { return u32 < c.u32; }
     };
     GN_CASSERT( 4 == sizeof(ColorFormat) );
-
-    ///
-    /// equality check between format alias and format struct
-    ///
-    inline bool operator==( const ColorFormatAlias & a, const ColorFormat & c ) { return a == c.alias; }
-
-    ///
-    /// equality check between format alias and format struct
-    ///
-    inline bool operator!=( const ColorFormatAlias & a, const ColorFormat & c ) { return a != c.alias; }
 
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
@@ -491,7 +491,7 @@ namespace GN { namespace gfx
     const char * dxgiFormat2Str( int );
 
     ///
-    /// Convert D3DFMT to ColorFormat. Return COLOR_FORMAT_UNKNOWN if failed.
+    /// Convert D3DFMT to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
     ColorFormat d3d9Format2ColorFormat( int );
 
@@ -501,7 +501,7 @@ namespace GN { namespace gfx
     int colorFormat2D3D9Format( ColorFormat );
 
     ///
-    /// Convert Xenon texture format to ColorFormat. Return COLOR_FORMAT_UNKNOWN if failed.
+    /// Convert Xenon texture format to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
     ColorFormat xenonFormat2ColorFormat( int );
 

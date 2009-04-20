@@ -239,31 +239,31 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
         switch ( e.format.alias )
         {
-            case COLOR_FORMAT_FLOAT1 :
+            case ColorFormat::FLOAT1 :
                 ab.info.format = GL_FLOAT;
                 ab.info.components = 1;
                 ab.info.normalization = false;
                 break;
 
-            case COLOR_FORMAT_FLOAT2 :
+            case ColorFormat::FLOAT2 :
                 ab.info.format = GL_FLOAT;
                 ab.info.components = 2;
                 ab.info.normalization = false;
                 break;
 
-            case COLOR_FORMAT_FLOAT3 :
+            case ColorFormat::FLOAT3 :
                 ab.info.format = GL_FLOAT;
                 ab.info.components = 3;
                 ab.info.normalization = false;
                 break;
 
-            case COLOR_FORMAT_FLOAT4 :
+            case ColorFormat::FLOAT4 :
                 ab.info.format = GL_FLOAT;
                 ab.info.components = 4;
                 ab.info.normalization = false;
                 break;
 
-            case COLOR_FORMAT_RGBA32 :
+            case ColorFormat::RGBA32 :
                 ab.info.format = GL_UNSIGNED_BYTE;
                 ab.info.components = 4;
                 ab.info.normalization = true;

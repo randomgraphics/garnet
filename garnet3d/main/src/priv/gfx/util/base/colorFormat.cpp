@@ -199,7 +199,7 @@ static const ColorFormatConvert s_ColorFormatConvertTable[] =
 {
     #define GN_DEFINE_COLOR_FORMAT_CONVERTION( gn, dx9, dxgi ) \
         { \
-            GN::gfx::COLOR_FORMAT_##gn, \
+            GN::gfx::ColorFormat::gn, \
             D3D9_FORMAT_##dx9, \
             DXGI_FORMAT_##dxgi, \
             XENON_FORMAT_##dx9 \
@@ -465,7 +465,7 @@ GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
         if( d3d9fmt == s_ColorFormatConvertTable[i].dx9fmt )
             return s_ColorFormatConvertTable[i].gnfmt;
     }
-    return COLOR_FORMAT_UNKNOWN;
+    return ColorFormat::UNKNOWN;
 }
 
 //
@@ -491,7 +491,7 @@ GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
         if( xefmt == (int)s_ColorFormatConvertTable[i].xefmt )
             return s_ColorFormatConvertTable[i].gnfmt;
     }
-    return COLOR_FORMAT_UNKNOWN;
+    return ColorFormat::UNKNOWN;
 }
 
 //
@@ -517,7 +517,7 @@ GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
         if( dxgifmt == (int)s_ColorFormatConvertTable[i].dxgifmt )
             return s_ColorFormatConvertTable[i].gnfmt;
     }
-    return COLOR_FORMAT_UNKNOWN;
+    return ColorFormat::UNKNOWN;
 }
 
 //

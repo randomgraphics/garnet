@@ -19,7 +19,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     struct BindingMap
     {
         struct MapItem { const char * binding; D3DDECLUSAGE usage; };
-        
+
         std::map<StrA,D3DDECLUSAGE> map;
 
         BindingMap()
@@ -51,7 +51,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     std::map<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( binding );
 
     return ( sConvertTable.map.end() == iter ) ? D3DDECLUSAGE_ERROR : iter->second;
-}   
+}
 
 static const D3DDECLTYPE D3DDECLTYPE_ERROR = D3DDECLTYPE(MAXD3DDECLTYPE+1);
 
@@ -63,52 +63,52 @@ sColorFormatToXenon( GN::gfx::ColorFormat fmt )
 {
     switch ( fmt.alias )
     {
-        case GN::gfx::COLOR_FORMAT_FLOAT1    : return D3DDECLTYPE_FLOAT1;
-        case GN::gfx::COLOR_FORMAT_FLOAT2    : return D3DDECLTYPE_FLOAT2;
-        case GN::gfx::COLOR_FORMAT_FLOAT3    : return D3DDECLTYPE_FLOAT3;
-        case GN::gfx::COLOR_FORMAT_FLOAT4    : return D3DDECLTYPE_FLOAT4;
-        case GN::gfx::COLOR_FORMAT_SHORT2    : return D3DDECLTYPE_SHORT2;
-        case GN::gfx::COLOR_FORMAT_UBYTE4N   : return D3DDECLTYPE_UBYTE4N;
-        case GN::gfx::COLOR_FORMAT_SHORT2N   : return D3DDECLTYPE_SHORT2N;
-        case GN::gfx::COLOR_FORMAT_SHORT4N   : return D3DDECLTYPE_SHORT4N;
-        case GN::gfx::COLOR_FORMAT_USHORT2N  : return D3DDECLTYPE_USHORT2N;
-        case GN::gfx::COLOR_FORMAT_USHORT4N  : return D3DDECLTYPE_USHORT4N;
-        //case GN::gfx::COLOR_FORMAT_UDEC3     : return D3DDECLTYPE_UDEC3;
-        //case GN::gfx::COLOR_FORMAT_DEC3N     : return D3DDECLTYPE_DEC3N;
-        //case GN::gfx::COLOR_FORMAT_FLOAT16_2 : return D3DDECLTYPE_FLOAT16_2;
-        //case GN::gfx::COLOR_FORMAT_FLOAT16_4 : return D3DDECLTYPE_FLOAT16_4;
-        case GN::gfx::COLOR_FORMAT_INT1      : return D3DDECLTYPE_INT1;
-        //case GN::gfx::COLOR_FORMAT_INT2      : return D3DDECLTYPE_INT2;
-        //case GN::gfx::COLOR_FORMAT_INT4      : return D3DDECLTYPE_INT4;
-        case GN::gfx::COLOR_FORMAT_UINT1     : return D3DDECLTYPE_UINT1;
-        //case GN::gfx::COLOR_FORMAT_UINT2     : return D3DDECLTYPE_UINT2;
-        //case GN::gfx::COLOR_FORMAT_UINT4     : return D3DDECLTYPE_UINT4;
-        case GN::gfx::COLOR_FORMAT_INT1N     : return D3DDECLTYPE_INT1N;
-        //case GN::gfx::COLOR_FORMAT_INT2N     : return D3DDECLTYPE_INT2N;
-        //case GN::gfx::COLOR_FORMAT_INT4N     : return D3DDECLTYPE_INT4N;
-        case GN::gfx::COLOR_FORMAT_UINT1N    : return D3DDECLTYPE_UINT1N;
-        //case GN::gfx::COLOR_FORMAT_UINT2N    : return D3DDECLTYPE_UINT2N;
-        //case GN::gfx::COLOR_FORMAT_UINT4N    : return D3DDECLTYPE_UINT4N;
-        //case GN::gfx::COLOR_FORMAT_UBYTE4    : return D3DDECLTYPE_UBYTE4;
-        //case GN::gfx::COLOR_FORMAT_BYTE4     : return D3DDECLTYPE_BYTE4;
-        //case GN::gfx::COLOR_FORMAT_BYTE4N    : return D3DDECLTYPE_BYTE4N;
-        case GN::gfx::COLOR_FORMAT_SHORT4    : return D3DDECLTYPE_SHORT4;
-        case GN::gfx::COLOR_FORMAT_USHORT2   : return D3DDECLTYPE_USHORT2;
-        case GN::gfx::COLOR_FORMAT_USHORT4   : return D3DDECLTYPE_USHORT4;
-        //case GN::gfx::COLOR_FORMAT_DEC3      : return D3DDECLTYPE_DEC3;
-        //case GN::gfx::COLOR_FORMAT_UDEC3N    : return D3DDECLTYPE_UDEC3N;
-        //case GN::gfx::COLOR_FORMAT_UDEC4     : return D3DDECLTYPE_UDEC4;
-        //case GN::gfx::COLOR_FORMAT_DEC4      : return D3DDECLTYPE_DEC4;
-        //case GN::gfx::COLOR_FORMAT_UDEC4N    : return D3DDECLTYPE_UDEC4N;
-        //case GN::gfx::COLOR_FORMAT_DEC4N     : return D3DDECLTYPE_DEC4N;
-        //case GN::gfx::COLOR_FORMAT_UHEND3    : return D3DDECLTYPE_UHEND3;
-        //case GN::gfx::COLOR_FORMAT_HEND3     : return D3DDECLTYPE_HEND3;
-        //case GN::gfx::COLOR_FORMAT_UHEND3N   : return D3DDECLTYPE_UHEND3N;
-        //case GN::gfx::COLOR_FORMAT_HEND3N    : return D3DDECLTYPE_HEND3N;
-        //case GN::gfx::COLOR_FORMAT_UDHEN3    : return D3DDECLTYPE_UDHEN3;
-        //case GN::gfx::COLOR_FORMAT_DHEN3     : return D3DDECLTYPE_DHEN3;
-        //case GN::gfx::COLOR_FORMAT_UDHEN3N   : return D3DDECLTYPE_UDHEN3N;
-        //case GN::gfx::COLOR_FORMAT_DHEN3N    : return D3DDECLTYPE_DHEN3N;
+        case GN::gfx::ColorFormat::FLOAT1    : return D3DDECLTYPE_FLOAT1;
+        case GN::gfx::ColorFormat::FLOAT2    : return D3DDECLTYPE_FLOAT2;
+        case GN::gfx::ColorFormat::FLOAT3    : return D3DDECLTYPE_FLOAT3;
+        case GN::gfx::ColorFormat::FLOAT4    : return D3DDECLTYPE_FLOAT4;
+        case GN::gfx::ColorFormat::SHORT2    : return D3DDECLTYPE_SHORT2;
+        case GN::gfx::ColorFormat::UBYTE4N   : return D3DDECLTYPE_UBYTE4N;
+        case GN::gfx::ColorFormat::SHORT2N   : return D3DDECLTYPE_SHORT2N;
+        case GN::gfx::ColorFormat::SHORT4N   : return D3DDECLTYPE_SHORT4N;
+        case GN::gfx::ColorFormat::USHORT2N  : return D3DDECLTYPE_USHORT2N;
+        case GN::gfx::ColorFormat::USHORT4N  : return D3DDECLTYPE_USHORT4N;
+        //case GN::gfx::ColorFormat::UDEC3     : return D3DDECLTYPE_UDEC3;
+        //case GN::gfx::ColorFormat::DEC3N     : return D3DDECLTYPE_DEC3N;
+        //case GN::gfx::ColorFormat::FLOAT16_2 : return D3DDECLTYPE_FLOAT16_2;
+        //case GN::gfx::ColorFormat::FLOAT16_4 : return D3DDECLTYPE_FLOAT16_4;
+        case GN::gfx::ColorFormat::INT1      : return D3DDECLTYPE_INT1;
+        //case GN::gfx::ColorFormat::INT2      : return D3DDECLTYPE_INT2;
+        //case GN::gfx::ColorFormat::INT4      : return D3DDECLTYPE_INT4;
+        case GN::gfx::ColorFormat::UINT1     : return D3DDECLTYPE_UINT1;
+        //case GN::gfx::ColorFormat::UINT2     : return D3DDECLTYPE_UINT2;
+        //case GN::gfx::ColorFormat::UINT4     : return D3DDECLTYPE_UINT4;
+        case GN::gfx::ColorFormat::INT1N     : return D3DDECLTYPE_INT1N;
+        //case GN::gfx::ColorFormat::INT2N     : return D3DDECLTYPE_INT2N;
+        //case GN::gfx::ColorFormat::INT4N     : return D3DDECLTYPE_INT4N;
+        case GN::gfx::ColorFormat::UINT1N    : return D3DDECLTYPE_UINT1N;
+        //case GN::gfx::ColorFormat::UINT2N    : return D3DDECLTYPE_UINT2N;
+        //case GN::gfx::ColorFormat::UINT4N    : return D3DDECLTYPE_UINT4N;
+        //case GN::gfx::ColorFormat::UBYTE4    : return D3DDECLTYPE_UBYTE4;
+        //case GN::gfx::ColorFormat::BYTE4     : return D3DDECLTYPE_BYTE4;
+        //case GN::gfx::ColorFormat::BYTE4N    : return D3DDECLTYPE_BYTE4N;
+        case GN::gfx::ColorFormat::SHORT4    : return D3DDECLTYPE_SHORT4;
+        case GN::gfx::ColorFormat::USHORT2   : return D3DDECLTYPE_USHORT2;
+        case GN::gfx::ColorFormat::USHORT4   : return D3DDECLTYPE_USHORT4;
+        //case GN::gfx::ColorFormat::DEC3      : return D3DDECLTYPE_DEC3;
+        //case GN::gfx::ColorFormat::UDEC3N    : return D3DDECLTYPE_UDEC3N;
+        //case GN::gfx::ColorFormat::UDEC4     : return D3DDECLTYPE_UDEC4;
+        //case GN::gfx::ColorFormat::DEC4      : return D3DDECLTYPE_DEC4;
+        //case GN::gfx::ColorFormat::UDEC4N    : return D3DDECLTYPE_UDEC4N;
+        //case GN::gfx::ColorFormat::DEC4N     : return D3DDECLTYPE_DEC4N;
+        //case GN::gfx::ColorFormat::UHEND3    : return D3DDECLTYPE_UHEND3;
+        //case GN::gfx::ColorFormat::HEND3     : return D3DDECLTYPE_HEND3;
+        //case GN::gfx::ColorFormat::UHEND3N   : return D3DDECLTYPE_UHEND3N;
+        //case GN::gfx::ColorFormat::HEND3N    : return D3DDECLTYPE_HEND3N;
+        //case GN::gfx::ColorFormat::UDHEN3    : return D3DDECLTYPE_UDHEN3;
+        //case GN::gfx::ColorFormat::DHEN3     : return D3DDECLTYPE_DHEN3;
+        //case GN::gfx::ColorFormat::UDHEN3N   : return D3DDECLTYPE_UDHEN3N;
+        //case GN::gfx::ColorFormat::DHEN3N    : return D3DDECLTYPE_DHEN3N;
 
         default:
             GN_ERROR(sLogger)( "Invalid color format: %d!", fmt );

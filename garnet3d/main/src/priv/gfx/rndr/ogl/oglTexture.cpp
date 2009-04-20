@@ -114,7 +114,7 @@ static inline bool sColorFormat2OGL(
     gl_compressed = false;
     switch( clrfmt.alias )
     {
-        case COLOR_FORMAT_RGBA_32_32_32_32_FLOAT:
+        case ColorFormat::RGBA_32_32_32_32_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -125,7 +125,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case COLOR_FORMAT_RG_32_32_FLOAT:
+        case ColorFormat::RG_32_32_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -136,7 +136,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case COLOR_FORMAT_RGBA_16_16_16_16_FLOAT:
+        case ColorFormat::RGBA_16_16_16_16_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -147,7 +147,7 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case COLOR_FORMAT_RG_16_16_FLOAT:
+        case ColorFormat::RG_16_16_FLOAT:
             if( !GLEW_ARB_texture_float )
             {
                 GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
@@ -158,67 +158,67 @@ static inline bool sColorFormat2OGL(
             gl_type           = GL_FLOAT;
             return true;
 
-        case COLOR_FORMAT_RGBA_16_16_16_16_UNORM:
+        case ColorFormat::RGBA_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGBA16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case COLOR_FORMAT_RGBX_16_16_16_16_UNORM:
+        case ColorFormat::RGBX_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGB16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case COLOR_FORMAT_RGBA_8_8_8_8_UNORM :
+        case ColorFormat::RGBA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_BGRA_8_8_8_8_UNORM :
+        case ColorFormat::BGRA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_RGBX_8_8_8_8_UNORM :
+        case ColorFormat::RGBX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_BGRX_8_8_8_8_UNORM :
+        case ColorFormat::BGRX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_RGB_8_8_8_UNORM :
+        case ColorFormat::RGB_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_RGB;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_BGR_8_8_8_UNORM :
+        case ColorFormat::BGR_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_BGRA_5_5_5_1_UNORM :
+        case ColorFormat::BGRA_5_5_5_1_UNORM :
             gl_internalformat  = GL_RGB5_A1;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_5_5_1;
             return true;
 
-        case COLOR_FORMAT_BGR_5_6_5_UNORM :
+        case ColorFormat::BGR_5_6_5_UNORM :
             gl_internalformat  = GL_RGB5;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_6_5_REV;
             return true;
 
-        case COLOR_FORMAT_RG_8_8_SNORM :
+        case ColorFormat::RG_8_8_SNORM :
             if( GLEW_ATI_envmap_bumpmap )
             {
                 gl_internalformat  = GL_DU8DV8_ATI;
@@ -234,43 +234,43 @@ static inline bool sColorFormat2OGL(
             }
             return true;
 
-        case COLOR_FORMAT_LA_16_16_UNORM :
+        case ColorFormat::LA_16_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16_ALPHA16;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case COLOR_FORMAT_LA_8_8_UNORM :
+        case ColorFormat::LA_8_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8_ALPHA8;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_L_16_UNORM :
+        case ColorFormat::L_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case COLOR_FORMAT_R_8_UNORM :
+        case ColorFormat::R_8_UNORM :
             gl_internalformat  = 1;
             gl_format          = GL_RED;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_L_8_UNORM :
+        case ColorFormat::L_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_A_8_UNORM :
+        case ColorFormat::A_8_UNORM :
             gl_internalformat  = GL_ALPHA8;
             gl_format          = GL_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case COLOR_FORMAT_R_16_UINT :
+        case ColorFormat::R_16_UINT :
             if( usages.depth )
             {
                 if( !GLEW_ARB_depth_texture )
@@ -289,7 +289,7 @@ static inline bool sColorFormat2OGL(
                 return false;
             }
 
-        case COLOR_FORMAT_R_32_UINT :
+        case ColorFormat::R_32_UINT :
             if( usages.depth )
             {
                 if( !GLEW_ARB_depth_texture )
@@ -308,7 +308,7 @@ static inline bool sColorFormat2OGL(
                 return false;
             }
 
-        case COLOR_FORMAT_DXT1_UNORM :
+        case ColorFormat::DXT1_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {
@@ -320,7 +320,7 @@ static inline bool sColorFormat2OGL(
             }
             break;
 
-        case COLOR_FORMAT_DXT3_UNORM :
+        case ColorFormat::DXT3_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {
@@ -332,7 +332,7 @@ static inline bool sColorFormat2OGL(
             }
             break;
 
-        case COLOR_FORMAT_DXT5_UNORM :
+        case ColorFormat::DXT5_UNORM :
             if( GLEW_ARB_texture_compression &&
                 GLEW_EXT_texture_compression_s3tc )
             {

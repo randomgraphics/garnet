@@ -77,7 +77,7 @@ bool init( Renderer & rndr )
     // setup vertex format
     rc.vtxfmt.numElements = 1;
     rc.vtxfmt.elements[0].bindTo( "position", 0 );
-    rc.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT4;
+    rc.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
     rc.vtxfmt.elements[0].offset = 0;
     rc.vtxfmt.elements[0].stream = 0;
 

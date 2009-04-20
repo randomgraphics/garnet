@@ -953,7 +953,7 @@ namespace GN { namespace gfx
         ///
         /// \param usage        Combination of TextureUsage
         ///
-        /// \return             Return COLOR_FORMAT_UNKNOWN, if the usage is not supported by current renderer.
+        /// \return             Return ColorFormat::UNKNOWN, if the usage is not supported by current renderer.
         ///
         virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const = 0;
 
@@ -1012,14 +1012,14 @@ namespace GN { namespace gfx
                        size_t        sz,
                        size_t        faces  = 1,
                        size_t        levels = 0, // 0 means full mipmap chain
-                       ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                       ColorFormat   format = ColorFormat::UNKNOWN,
                        TextureUsages usages = TextureUsages::DEFAULT() )
         {
             TextureDesc desc =
             {
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
-                COLOR_FORMAT_UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
+                ColorFormat::UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
                 usages,
             };
             return createTexture( desc );
@@ -1031,7 +1031,7 @@ namespace GN { namespace gfx
         Texture *
         create1DTexture( size_t        sx,
                          size_t        levels = 0,
-                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, 1, 1, 1, levels, format, usages );
@@ -1044,7 +1044,7 @@ namespace GN { namespace gfx
         create2DTexture( size_t        sx,
                          size_t        sy,
                          size_t        levels = 0,
-                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sy, 1, 1, levels, format, usages );
@@ -1058,7 +1058,7 @@ namespace GN { namespace gfx
                          size_t        sy,
                          size_t        sz,
                          size_t        levels = 0,
-                         ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                         ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sy, sz, 1, levels, format, usages );
@@ -1070,7 +1070,7 @@ namespace GN { namespace gfx
         Texture *
         createCubeTexture( size_t        sx,
                            size_t        levels = 0,
-                           ColorFormat   format = COLOR_FORMAT_UNKNOWN,
+                           ColorFormat   format = ColorFormat::UNKNOWN,
                            TextureUsages usages = TextureUsages::DEFAULT() )
         {
             return createTexture( sx, sx, 1, 6, levels, format, usages );

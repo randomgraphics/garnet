@@ -400,7 +400,7 @@ GN::util::BitmapFont::slotInit(
     //std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
-    TextureDesc td = { texwidth, texheight, 1, 1, 1, COLOR_FORMAT_RGBA_8_8_8_8_UNORM, { 0 } };
+    TextureDesc td = { texwidth, texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, { 0 } };
     GN_ASSERT( texcount <= rndr.getCaps().maxTextures );
     mTextures.resize( texcount );
     for( size_t i = 0; i < texcount; ++i )

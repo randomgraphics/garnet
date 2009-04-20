@@ -75,31 +75,31 @@ Mesh * createMesh()
 
     md.vtxfmt.numElements = 7;
     md.vtxfmt.elements[0].stream = 0;
-    md.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( BezierVertex, p0 );
     md.vtxfmt.elements[0].bindTo( "pos", 0 );
     md.vtxfmt.elements[1].stream = 0;
-    md.vtxfmt.elements[1].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[1].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( BezierVertex, p1 );
     md.vtxfmt.elements[1].bindTo( "pos", 1 );
     md.vtxfmt.elements[2].stream = 0;
-    md.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[2].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( BezierVertex, p2 );
     md.vtxfmt.elements[2].bindTo( "pos", 2 );
     md.vtxfmt.elements[3].stream = 0;
-    md.vtxfmt.elements[3].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[3].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( BezierVertex, n0 );
     md.vtxfmt.elements[3].bindTo( "normal", 0 );
     md.vtxfmt.elements[4].stream = 0;
-    md.vtxfmt.elements[4].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[4].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( BezierVertex, n1 );
     md.vtxfmt.elements[4].bindTo( "nml", 1 );
     md.vtxfmt.elements[5].stream = 0;
-    md.vtxfmt.elements[5].format = COLOR_FORMAT_FLOAT3;
+    md.vtxfmt.elements[5].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( BezierVertex, n2 );
     md.vtxfmt.elements[5].bindTo( "nml", 2 );
     md.vtxfmt.elements[6].stream = 0;
-    md.vtxfmt.elements[6].format = COLOR_FORMAT_FLOAT2;
+    md.vtxfmt.elements[6].format = ColorFormat::FLOAT2;
     md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET( BezierVertex, bc );
     md.vtxfmt.elements[6].bindTo( "bc" );
 

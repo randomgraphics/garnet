@@ -73,54 +73,54 @@ static struct DdpfDesc
     GN::gfx::ColorFormat    clrfmt;
     DDPixelFormat      ddpf;
 } const s_ddpfDescTable[] = {
-    { GN::gfx::COLOR_FORMAT_BGR_8_8_8_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 24,   0xff0000,   0x00ff00,   0x0000ff,          0 } },
-    { GN::gfx::COLOR_FORMAT_BGRA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
-    { GN::gfx::COLOR_FORMAT_BGRX_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff,          0 } },
-    { GN::gfx::COLOR_FORMAT_BGR_5_6_5_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0xf800,     0x07e0,     0x001f,          0 } },
-    { GN::gfx::COLOR_FORMAT_BGRX_5_5_5_1_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0x7c00,     0x03e0,     0x001f,          0 } },
-    { GN::gfx::COLOR_FORMAT_BGRA_5_5_5_1_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x7c00,     0x03e0,     0x001f,     0x8000 } },
-    { GN::gfx::COLOR_FORMAT_BGRA_4_4_4_4_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x0f00,     0x00f0,     0x000f,     0xf000 } },
-  //{ GN::gfx::COLOR_FORMAT_BGR_2_3_3,                     { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0,  8,       0xe0,       0x1c,       0x03,          0 } },
-    { GN::gfx::COLOR_FORMAT_A_8_UNORM,                     { DDS_DDPF_SIZE, DDS_DDPF_ALPHA,                                   0,  8,          0,          0,          0,       0xff } },
-  //{ GN::gfx::COLOR_FORMAT_BGRA_2_3_3_8,                  { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x00e0,     0x001c,     0x0003,     0xff00 } },
-    { GN::gfx::COLOR_FORMAT_BGRX_4_4_4_4_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0x0f00,     0x00f0,     0x000f,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_BGRA_10_10_10_2_UNORM,         { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x3ff00000, 0x000ffc00, 0x000003ff, 0xc0000000 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 } },
-    { GN::gfx::COLOR_FORMAT_RGBX_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000,          0 } },
-    { GN::gfx::COLOR_FORMAT_RG_16_16_UNORM,                { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x0000ffff, 0xffff0000, 0x00000000,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_10_10_10_2_UNORM,         { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x000003ff, 0x000ffc00, 0x3ff00000, 0xc0000000 } },
-  //{ GN::gfx::COLOR_FORMAT_A8P8_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_PALETTEINDEXED8 | DDS_DDPF_ALPHAPIXELS,  0, 16,          0,          0,          0,     0xff00 } },
-  //{ GN::gfx::COLOR_FORMAT_P8_UNORM,                      { DDS_DDPF_SIZE, DDS_DDPF_PALETTEINDEXED8,                         0,  8,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_L_8_UNORM,                     { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE,                               0,  8,       0xff,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_LA_8_8_UNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE | DDS_DDPF_ALPHAPIXELS,        0, 16,     0x00ff,          0,          0,     0xff00 } },
-  //{ GN::gfx::COLOR_FORMAT_LA_4_4_UNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE | DDS_DDPF_ALPHAPIXELS,        0,  8,       0x0f,          0,          0,       0xf0 } },
-  //{ GN::gfx::COLOR_FORMAT_L_16_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE,                               0, 16,     0xffff,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RG_8_8_SNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 16,     0x00ff,     0xff00,     0x0000,     0x0000 } },
-  //{ GN::gfx::COLOR_FORMAT_UVL_5_5_6,                     { DDS_DDPF_SIZE, DDS_DDPF_BUMPLUMINANCE,                           0, 16,     0x001f,     0x03e0,     0xfc00,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_UVLX_8_8_8_8,                  { DDS_DDPF_SIZE, DDS_DDPF_BUMPLUMINANCE,                           0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_8_8_8_8_SNORM,            { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 } },
-    { GN::gfx::COLOR_FORMAT_RG_16_16_UNORM,                { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 32, 0x0000ffff, 0xffff0000, 0x00000000, 0x00000000 } },
-  //{ GN::gfx::COLOR_FORMAT_UVWA_10_10_10_2,               { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV | DDS_DDPF_ALPHAPIXELS,         0, 32, 0x3ff00000, 0x000ffc00, 0x000003ff, 0xc0000000 } },
-    { GN::gfx::COLOR_FORMAT_R_16_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_ZBUFFER,                                 0, 16,          0,     0xffff,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_UYVY,                          { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_UYVY,  0,          0,          0,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_R8G8_B8G8,                     { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               DDS_FOURCC_R8G8_B8G8,  0,          0,          0,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_YUY2,                          { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_YUY2,  0,          0,          0,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_G8R8_G8B8,                     { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               DDS_FOURCC_G8R8_G8B8,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_DXT1_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT1,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_DXT3_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT2,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_DXT3_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT3,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_DXT5_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT4,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_DXT5_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT5,  0,          0,          0,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_D_32_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               D3DFMT_D32F_LOCKABLE,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_16_16_16_16_UNORM,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,            DDS_FOURCC_A16B16G16R16,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_16_16_16_16_SNORM,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,            DDS_FOURCC_Q16W16V16U16,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_R_16_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_R16F,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RG_16_16_FLOAT,                { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                 DDS_FOURCC_G16R16F,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_16_16_16_16_FLOAT,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,           DDS_FOURCC_A16B16G16R16F,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_R_32_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_R32F,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RG_32_32_FLOAT,                { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                 DDS_FOURCC_G32R32F,  0,          0,          0,          0,          0 } },
-    { GN::gfx::COLOR_FORMAT_RGBA_32_32_32_32_FLOAT,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,           DDS_FOURCC_A32B32G32R32F,  0,          0,          0,          0,          0 } },
-  //{ GN::gfx::COLOR_FORMAT_CxV8U8,                        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                  DDS_FOURCC_CxV8U8,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::BGR_8_8_8_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 24,   0xff0000,   0x00ff00,   0x0000ff,          0 } },
+    { GN::gfx::ColorFormat::BGRA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
+    { GN::gfx::ColorFormat::BGRX_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff,          0 } },
+    { GN::gfx::ColorFormat::BGR_5_6_5_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0xf800,     0x07e0,     0x001f,          0 } },
+    { GN::gfx::ColorFormat::BGRX_5_5_5_1_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0x7c00,     0x03e0,     0x001f,          0 } },
+    { GN::gfx::ColorFormat::BGRA_5_5_5_1_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x7c00,     0x03e0,     0x001f,     0x8000 } },
+    { GN::gfx::ColorFormat::BGRA_4_4_4_4_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x0f00,     0x00f0,     0x000f,     0xf000 } },
+  //{ GN::gfx::ColorFormat::BGR_2_3_3,                     { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0,  8,       0xe0,       0x1c,       0x03,          0 } },
+    { GN::gfx::ColorFormat::A_8_UNORM,                     { DDS_DDPF_SIZE, DDS_DDPF_ALPHA,                                   0,  8,          0,          0,          0,       0xff } },
+  //{ GN::gfx::ColorFormat::BGRA_2_3_3_8,                  { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 16,     0x00e0,     0x001c,     0x0003,     0xff00 } },
+    { GN::gfx::ColorFormat::BGRX_4_4_4_4_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 16,     0x0f00,     0x00f0,     0x000f,          0 } },
+  //{ GN::gfx::ColorFormat::BGRA_10_10_10_2_UNORM,         { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x3ff00000, 0x000ffc00, 0x000003ff, 0xc0000000 } },
+    { GN::gfx::ColorFormat::RGBA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 } },
+    { GN::gfx::ColorFormat::RGBX_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000,          0 } },
+    { GN::gfx::ColorFormat::RG_16_16_UNORM,                { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 32, 0x0000ffff, 0xffff0000, 0x00000000,          0 } },
+    { GN::gfx::ColorFormat::RGBA_10_10_10_2_UNORM,         { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x000003ff, 0x000ffc00, 0x3ff00000, 0xc0000000 } },
+  //{ GN::gfx::ColorFormat::A8P8_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_PALETTEINDEXED8 | DDS_DDPF_ALPHAPIXELS,  0, 16,          0,          0,          0,     0xff00 } },
+  //{ GN::gfx::ColorFormat::P8_UNORM,                      { DDS_DDPF_SIZE, DDS_DDPF_PALETTEINDEXED8,                         0,  8,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::L_8_UNORM,                     { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE,                               0,  8,       0xff,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::LA_8_8_UNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE | DDS_DDPF_ALPHAPIXELS,        0, 16,     0x00ff,          0,          0,     0xff00 } },
+  //{ GN::gfx::ColorFormat::LA_4_4_UNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE | DDS_DDPF_ALPHAPIXELS,        0,  8,       0x0f,          0,          0,       0xf0 } },
+  //{ GN::gfx::ColorFormat::L_16_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_LUMINANCE,                               0, 16,     0xffff,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RG_8_8_SNORM,                  { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 16,     0x00ff,     0xff00,     0x0000,     0x0000 } },
+  //{ GN::gfx::ColorFormat::UVL_5_5_6,                     { DDS_DDPF_SIZE, DDS_DDPF_BUMPLUMINANCE,                           0, 16,     0x001f,     0x03e0,     0xfc00,          0 } },
+  //{ GN::gfx::ColorFormat::UVLX_8_8_8_8,                  { DDS_DDPF_SIZE, DDS_DDPF_BUMPLUMINANCE,                           0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000,          0 } },
+    { GN::gfx::ColorFormat::RGBA_8_8_8_8_SNORM,            { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 } },
+    { GN::gfx::ColorFormat::RG_16_16_UNORM,                { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV,                                0, 32, 0x0000ffff, 0xffff0000, 0x00000000, 0x00000000 } },
+  //{ GN::gfx::ColorFormat::UVWA_10_10_10_2,               { DDS_DDPF_SIZE, DDS_DDPF_BUMPDUDV | DDS_DDPF_ALPHAPIXELS,         0, 32, 0x3ff00000, 0x000ffc00, 0x000003ff, 0xc0000000 } },
+    { GN::gfx::ColorFormat::R_16_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_ZBUFFER,                                 0, 16,          0,     0xffff,          0,          0 } },
+  //{ GN::gfx::ColorFormat::UYVY,                          { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_UYVY,  0,          0,          0,          0,          0 } },
+  //{ GN::gfx::ColorFormat::R8G8_B8G8,                     { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               DDS_FOURCC_R8G8_B8G8,  0,          0,          0,          0,          0 } },
+  //{ GN::gfx::ColorFormat::YUY2,                          { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_YUY2,  0,          0,          0,          0,          0 } },
+  //{ GN::gfx::ColorFormat::G8R8_G8B8,                     { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               DDS_FOURCC_G8R8_G8B8,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::DXT1_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT1,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::DXT3_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT2,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::DXT3_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT3,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::DXT5_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT4,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::DXT5_UNORM,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_DXT5,  0,          0,          0,          0,          0 } },
+  //{ GN::gfx::ColorFormat::D_32_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,               D3DFMT_D32F_LOCKABLE,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RGBA_16_16_16_16_UNORM,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,            DDS_FOURCC_A16B16G16R16,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RGBA_16_16_16_16_SNORM,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,            DDS_FOURCC_Q16W16V16U16,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::R_16_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_R16F,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RG_16_16_FLOAT,                { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                 DDS_FOURCC_G16R16F,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RGBA_16_16_16_16_FLOAT,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,           DDS_FOURCC_A16B16G16R16F,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::R_32_FLOAT,                    { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                    DDS_FOURCC_R32F,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RG_32_32_FLOAT,                { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                 DDS_FOURCC_G32R32F,  0,          0,          0,          0,          0 } },
+    { GN::gfx::ColorFormat::RGBA_32_32_32_32_FLOAT,        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,           DDS_FOURCC_A32B32G32R32F,  0,          0,          0,          0,          0 } },
+  //{ GN::gfx::ColorFormat::CxV8U8,                        { DDS_DDPF_SIZE, DDS_DDPF_FOURCC,                  DDS_FOURCC_CxV8U8,  0,          0,          0,          0,          0 } },
 };
 
 struct DX10Info
@@ -230,7 +230,7 @@ static GN::gfx::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
 
     // failed
     GN_ERROR(sLogger)( "unknown DDS format!" );
-    return GN::gfx::COLOR_FORMAT_UNKNOWN;
+    return GN::gfx::ColorFormat::UNKNOWN;
 
     GN_UNGUARD;
 }
@@ -311,12 +311,12 @@ bool DDSReader::readHeader(
         i_size -= sizeof(DX10Info);
 
         mImgDesc.format = GN::gfx::dxgiFormat2ColorFormat( dx10info->format );
-        if( GN::gfx::COLOR_FORMAT_UNKNOWN == mImgDesc.format ) return false;
+        if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
     }
     else
     {
         mImgDesc.format = getImageFormat( mHeader.ddpf );
-        if( GN::gfx::COLOR_FORMAT_UNKNOWN == mImgDesc.format ) return false;
+        if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
     }
 
     // grok image dimension
@@ -348,13 +348,13 @@ bool DDSReader::readHeader(
 
             switch( mImgDesc.format.alias )
             {
-                case GN::gfx::COLOR_FORMAT_DXT1_UNORM:
+                case GN::gfx::ColorFormat::DXT1_UNORM:
                     m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 2;
                     m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
                     break;
 
-    		    case GN::gfx::COLOR_FORMAT_DXT3_UNORM:
-    		    case GN::gfx::COLOR_FORMAT_DXT5_UNORM:
+    		    case GN::gfx::ColorFormat::DXT3_UNORM:
+    		    case GN::gfx::ColorFormat::DXT5_UNORM:
                     m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 4;
                     m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
                     break;

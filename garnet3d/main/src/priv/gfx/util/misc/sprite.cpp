@@ -76,7 +76,7 @@ bool GN::gfx::SpriteRenderer::init()
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach( mRenderer.create2DTexture( 2, 2, 0, COLOR_FORMAT_RGBA32 ) );
+    mPureWhiteTexture.attach( mRenderer.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
@@ -112,15 +112,15 @@ bool GN::gfx::SpriteRenderer::init()
     mPrivateContext.vtxfmt.numElements = 3;
     mPrivateContext.vtxfmt.elements[0].stream = 0;
     mPrivateContext.vtxfmt.elements[0].offset = 0;
-    mPrivateContext.vtxfmt.elements[0].format = COLOR_FORMAT_FLOAT3;
+    mPrivateContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
     mPrivateContext.vtxfmt.elements[0].bindTo( "position", 0 );
     mPrivateContext.vtxfmt.elements[1].stream = 0;
     mPrivateContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
-    mPrivateContext.vtxfmt.elements[1].format = COLOR_FORMAT_RGBA32;
+    mPrivateContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
     mPrivateContext.vtxfmt.elements[1].bindTo( "color", 0 );
     mPrivateContext.vtxfmt.elements[2].stream = 0;
     mPrivateContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
-    mPrivateContext.vtxfmt.elements[2].format = COLOR_FORMAT_FLOAT2;
+    mPrivateContext.vtxfmt.elements[2].format = ColorFormat::FLOAT2;
     mPrivateContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer

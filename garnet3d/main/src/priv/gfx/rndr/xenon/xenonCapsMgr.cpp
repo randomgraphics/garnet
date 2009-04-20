@@ -71,10 +71,10 @@ GN::gfx::XenonRenderer::getDefaultTextureFormat( TextureUsages usages ) const
 
     if( usages.depth )
     {
-        return COLOR_FORMAT_RG_24_FLOAT_8_UINT;
+        return ColorFormat::RG_24_FLOAT_8_UINT;
     }
     else
     {
-        return COLOR_FORMAT_BGRA_8_8_8_8_UNORM;
+        return ColorFormat::BGRA_8_8_8_8_UNORM;
     }
 }
