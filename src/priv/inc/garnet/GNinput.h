@@ -300,18 +300,23 @@ namespace GN
         ///
         /// Input API type
         ///
-        enum InputApi
+        struct InputAPI
         {
-            API_NATIVE,    ///< OS native API (Win32, X11, XInput)
-            API_DINPUT,    ///< DirectInput
-            API_FAKE,      ///< Fake
-            NUM_INPUT_API, ///< input API count.
+            enum Enum
+            {
+                NATIVE,   ///< OS native API (Win32, X11, XInput)
+                DINPUT,   ///< DirectInput
+                FAKE,     ///< Fake
+                NUM_APIs, ///< Number of available input APIs.
+            };
+
+            GN_DEFINE_ENUM_CLASS( InputAPI, Enum );
         };
 
         ///
         /// initialize of input system (shutdown previous input system automatically)
         ///
-        bool initializeInputSystem( InputApi = API_NATIVE );
+        bool initializeInputSystem( InputAPI = InputAPI::NATIVE );
 
         ///
         /// shutdown input system

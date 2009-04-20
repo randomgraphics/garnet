@@ -207,7 +207,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ffd.fontname = "font::/simsun.ttc";
     mInitParam.ffd.width = 16;
     mInitParam.ffd.height = 16;
-    mInitParam.iapi = input::API_NATIVE;
+    mInitParam.iapi = input::InputAPI::NATIVE;
 
 #if GN_XENON
 
@@ -330,7 +330,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 }
                 mInitParam.gscp.monitor = idx;
             }
-            else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
+            else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::InputAPI::DINPUT;
             else if( 0 == strCmpI( a, "-le") ) getLogger( so.OptionArg() )->setEnabled( true );
             else if( 0 == strCmpI( a, "-ld") ) getLogger( so.OptionArg() )->setEnabled( false );
             else if( 0 == strCmpI( a, "-ll") )

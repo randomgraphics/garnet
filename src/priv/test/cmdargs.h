@@ -152,15 +152,15 @@ private:
 
         if( 0 == strCmpI( "auto", value ) )
         {
-            result = API_AUTO;
+            result = RendererAPI::AUTO;
         }
         else if( 0 == strCmpI( "ogl", value ) )
         {
-            result = API_OGL;
+            result = RendererAPI::OGL;
         }
         else if( 0 == strCmpI( "d3d10", value ) )
         {
-            result = API_D3D10;
+            result = RendererAPI::D3D10;
         }
         else
         {

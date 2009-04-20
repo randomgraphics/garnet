@@ -41,17 +41,22 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Define rendering API
+    /// Define rendering API enumeration
     ///
-    enum RendererAPI
+    struct RendererAPI
     {
-        API_OGL,          ///< OpenGL
-        API_D3D9,         ///< D3D9
-        API_D3D10,        ///< D3D10
-        API_XENON,        ///< Xenon
-        API_FAKE,         ///< Fake API
-        NUM_RENDERER_API, ///< Number of avaliable API.
-        API_AUTO,         ///< determine rendering API automatically.
+        enum Enum
+        {
+            OGL,      ///< OpenGL
+            D3D9,     ///< D3D9
+            D3D10,    ///< D3D10
+            XENON,    ///< Xenon
+            FAKE,     ///< Fake API
+            NUM_APIs, ///< Number of avaliable APIs.
+            AUTO,     ///< determine rendering API automatically.
+        };
+
+        GN_DEFINE_ENUM_CLASS( RendererAPI, Enum );
     };
 
     ///
@@ -62,7 +67,7 @@ namespace GN { namespace gfx
     struct RendererOptions
     {
         ///
-        /// Rendering API. Default value is API_AUTO.
+        /// Rendering API. Default value is RendererAPI::AUTO.
         ///
         RendererAPI api;
 
@@ -186,7 +191,7 @@ namespace GN { namespace gfx
         /// Construct default render options
         ///
         RendererOptions()
-            : api(API_AUTO)
+            : api(RendererAPI::AUTO)
             , displayHandle(0)
             , renderWindow(0)
             , parentWindow(0)

@@ -242,6 +242,18 @@
 // *****************************************************************************
 
 ///
+/// Hepers to define enumeration class
+///
+#define GN_DEFINE_ENUM_CLASS( ENUM_CLASS, ENUM_TYPE ) \
+    private: \
+        ENUM_TYPE mValue; \
+    public: \
+        ENUM_CLASS() {} \
+        ENUM_CLASS( ENUM_TYPE e ) : mValue( e ) {} \
+        operator ENUM_TYPE &() { return mValue; } \
+        operator const ENUM_TYPE &() const { return mValue; }
+
+///
 /// º¯ÊýÃû³Æ
 ///
 #if GN_MSVC

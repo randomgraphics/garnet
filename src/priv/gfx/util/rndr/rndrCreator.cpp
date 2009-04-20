@@ -74,9 +74,9 @@ GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
 static GN::gfx::RendererAPI sDetermineDefaultRendererAPI()
 {
 #if GN_XENON
-    return GN::gfx::API_XENON;
+    return GN::gfx::RendererAPI::XENON;
 #else
-    return GN::gfx::API_OGL;
+    return GN::gfx::RendererAPI::OGL;
 #endif
 }
 
@@ -93,10 +93,10 @@ namespace GN { namespace gfx
 
         RendererOptions ro = inputOptions;
 
-        if( API_AUTO == ro.api ) ro.api = sDetermineDefaultRendererAPI();
+        if( RendererAPI::AUTO == ro.api ) ro.api = sDetermineDefaultRendererAPI();
 
         // then create new one.
-        if( API_FAKE == ro.api )
+        if( RendererAPI::FAKE == ro.api )
         {
             GN_UNIMPL();
             return NULL;
@@ -105,11 +105,11 @@ namespace GN { namespace gfx
 #if GN_BUILD_STATIC
         switch( ro.api )
         {
-            case API_OGL   : return GNgfxCreateOGLRenderer( ro );
-            case API_D3D9  : GN_UNIMPL(); return 0;
-            case API_D3D10 : return GNgfxCreateD3D10Renderer( ro );
-            case API_XENON : return GNgfxCreateXenonRenderer( ro );
-            case API_FAKE  : GN_UNIMPL(); return 0;
+            case RendererAPI::OGL   : return GNgfxCreateOGLRenderer( ro );
+            case RendererAPI::D3D9  : GN_UNIMPL(); return 0;
+            case RendererAPI::D3D10 : return GNgfxCreateD3D10Renderer( ro );
+            case RendererAPI::XENON : return GNgfxCreateXenonRenderer( ro );
+            case RendererAPI::FAKE  : GN_UNIMPL(); return 0;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api ); return 0;
         }
 #else
@@ -117,10 +117,10 @@ namespace GN { namespace gfx
         CreateRendererFunc creator;
         switch( ro.api )
         {
-            case API_D3D9  : dllName = "GNrndrD3D9"; break;
-            case API_D3D10 : dllName = "GNrndrD3D10"; break;
-            case API_OGL   : dllName = "GNrndrOGL"; break;
-            case API_XENON : dllName = "GNrndrXenon"; break;
+            case RendererAPI::D3D9  : dllName = "GNrndrD3D9"; break;
+            case RendererAPI::D3D10 : dllName = "GNrndrD3D10"; break;
+            case RendererAPI::OGL   : dllName = "GNrndrOGL"; break;
+            case RendererAPI::XENON : dllName = "GNrndrXenon"; break;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api ); return 0;
         }
         AutoObjPtr<SharedLib> dll( new SharedLib );

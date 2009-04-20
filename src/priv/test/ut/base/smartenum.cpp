@@ -1,125 +1,18 @@
 #include "../testCommon.h"
 
-namespace GN
-{
-    template<class ENUM_CLASS>
-    struct SmartEnum : public ENUM_CLASS
-    {
-        // *********************************************************************
-        // public types
-        // *********************************************************************
-
-        //@{
-
-        typedef typename ENUM_CLASS::Enum ENUM_TYPE;
-
-        //@}
-
-        // *********************************************************************
-        // public methods
-        // *********************************************************************
-
-        //@{
-
-        /// constructor
-        SmartEnum()
-        {
-        }
-
-        /// construct from C enumeration
-        SmartEnum( ENUM_TYPE e ) : mValue(e) {}
-
-        //@}
-
-        // *********************************************************************
-        // Overloaded operators
-        // *********************************************************************
-
-        //@{
-
-        SmartEnum operator=( ENUM_TYPE e )
-        {
-            mValue = e;
-            return *this;
-        }
-
-        bool operator<( const SmartEnum & rhs ) const
-        {
-            return mValue < rhs.mValue;
-        }
-
-        bool operator<=( const SmartEnum & rhs ) const
-        {
-            return mValue <= rhs.mValue;
-        }
-
-        bool operator==( const SmartEnum & rhs ) const
-        {
-            return mValue == rhs.mValue;
-        }
-
-        bool operator!=( const SmartEnum & rhs ) const
-        {
-            return mValue != rhs.mValue;
-        }
-
-        bool operator>( const SmartEnum & rhs ) const
-        {
-            return mValue > rhs.mValue;
-        }
-
-        bool operator>=( const SmartEnum & rhs ) const
-        {
-            return mValue >= rhs.mValue;
-        }
-
-        friend bool operator<( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a < b.mValue;
-        }
-
-        friend bool operator<=( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a <= b.mValue;
-        }
-
-        friend bool operator==( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a == b.mValue;
-        }
-
-        friend bool operator!=( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a != b.mValue;
-        }
-
-        friend bool operator>( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a > b.mValue;
-        }
-
-        friend bool operator>=( const ENUM_TYPE & a, const SmartEnum & b )
-        {
-            return a >= b.mValue;
-        }
-
-        //@}
-
-        // *********************************************************************
-        // private data
-        // *********************************************************************
-
-    private:
-
-        /// the enumeration value.
-        ENUM_TYPE mValue;
-    };
-
-}
+#define GN_DEFINE_SMART_ENUM( ENUM_CLASS, ENUM_TYPE ) \
+    private : \
+        ENUM_TYPE mValue; \
+    public: \
+        ENUM_CLASS() \
+        { \
+        } \
+        ENUM_CLASS( ENUM_TYPE e ) : mValue(e) {}  \
+        operator ENUM_TYPE &() { return mValue; }
 
 class SmartEnumTest : public CxxTest::TestSuite
 {
-    struct MyEnumDesc
+    struct MyEnum
     {
         enum Enum
         {
@@ -137,9 +30,9 @@ class SmartEnumTest : public CxxTest::TestSuite
         {
             return false;
         }
-    };
 
-    typedef GN::SmartEnum<MyEnumDesc> MyEnum;
+        GN_DEFINE_SMART_ENUM( MyEnum, Enum )
+    };
 
 public:
 
@@ -172,5 +65,21 @@ public:
         //MyEnum::toStr(E1);
         //e.fromStr( "E1" );
         //e = MyEnum::sGetAt(0);
+    }
+
+    void testSwitchCase()
+    {
+        MyEnum e;
+
+        e = MyEnum::A;
+
+        switch( e )
+        {
+            case MyEnum::A:
+                break;
+
+            default :
+                break;
+        }
     }
 };

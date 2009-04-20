@@ -48,7 +48,7 @@ bool init( Renderer & rndr )
 
     // create GPU program
     GpuProgramDesc gpd;
-    if( API_OGL == rndr.getOptions().api )
+    if( RendererAPI::OGL == rndr.getOptions().api )
     {
         gpd.lang = GPL_GLSL;
         gpd.vs.source = glsl_vscode;
@@ -194,7 +194,7 @@ struct InputInitiator
 {
     InputInitiator( Renderer & r )
     {
-        initializeInputSystem( API_NATIVE );
+        initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }

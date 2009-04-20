@@ -42,7 +42,7 @@ namespace GN { namespace app
         {
             gfx::GraphicsSystemCreationParameter gscp; ///< graphics system creation parameters
             engine::RenderEngineInitParameters  reip; ///< render engine initialization parameters
-            input::InputApi                      iapi; ///< input API
+            input::InputAPI                      iapi; ///< input API
             scene::FontFaceDesc                  ffd;  ///< default font face descriptor
         };
 

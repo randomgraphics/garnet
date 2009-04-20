@@ -461,7 +461,7 @@ struct InputInitiator
 {
     InputInitiator( Renderer & r )
     {
-        initializeInputSystem( API_NATIVE );
+        initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
@@ -480,7 +480,7 @@ int main()
 
     // create renderer
     RendererOptions o;
-    o.api = API_OGL;
+    o.api = RendererAPI::OGL;
     //rndr = createMultiThreadRenderer( o );
     rndr = createSingleThreadRenderer( o );
     if( NULL == rndr ) return -1;
