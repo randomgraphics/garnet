@@ -11,7 +11,7 @@ RendererContext rc;
 
 const char * hlsl_vscode =
     "uniform float4x4 transform; \n"
-    "struct VSOUT { float4 pos : SV_POSITION; float2 uv : TEXCOORD; }; \n"
+    "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
     "VSOUT main( in float4 pos : POSITION ) { \n"
     "   VSOUT o; \n"
     "   o.pos = mul( transform, pos ); \n"
@@ -22,8 +22,8 @@ const char * hlsl_vscode =
 const char * hlsl_pscode =
     "sampler s0; \n"
     "Texture2D<float4> t0; \n"
-    "struct VSOUT { float4 pos : SV_POSITION; float2 uv : TEXCOORD; }; \n"
-    "float4 main( in VSOUT i ) : SV_TARGET0 { \n"
+    "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
+    "float4 main( in VSOUT i ) : COLOR0 { \n"
     "   return t0.Sample( s0, i.uv ); \n"
     "}";
 
@@ -56,7 +56,7 @@ bool init( Renderer & rndr )
     }
     else
     {
-        gpd.lang = GpuProgramLanguage::HLSL;
+        gpd.lang = GpuProgramLanguage::HLSL9;
         gpd.vs.source = hlsl_vscode;
         gpd.ps.source = hlsl_pscode;
         gpd.vs.entry  = "main";

@@ -252,33 +252,14 @@ namespace GN { namespace gfx
     ///
     struct RendererCaps
     {
-        ///
-        /// Shader profile.
-        ///
-        /// Shader profile defines the minimum requirements that the hardware has to support
-        ///
-        enum GpuProgramProfile
-        {
-            GPP_D3D_1_1  = 1<<0, ///< D3D shader model 1.1
-            GPP_D3D_2_0  = 1<<1, ///< D3D shader model 2.0
-            GPP_D3D_3_0  = 1<<2, ///< D3D shader model 3.0
-            GPP_D3D_4_0  = 1<<3, ///< D3D shader model 4.0
-            GPP_XVS_3_0  = 1<<4, ///< Xenon XVS 3.0 (vertex shader only profile)
-            GPP_XPS_3_0  = 1<<5, ///< Xenon XPS 3.0 (pixel shader only profile)
-            GPP_OGL_ARB1 = 1<<6, ///< OpenGL ARB program
-            GPP_OGL_GLSL = 1<<7, ///< OpenGL GLSL 1.0
-            GPP_CG       = 1<<8, ///< Nvidia Cg
-            NUM_GPU_PROGRAM_PROFILES,
-        };
-
         UInt32 maxTex1DSize[2];       ///< width, array
         UInt32 maxTex2DSize[3];       ///< width, height, array
         UInt32 maxTex3DSize[4];       ///< width, height, array
         UInt32 maxTextures;           ///< max number of simutaneous textures
         UInt32 maxColorRenderTargets; ///< max number of simutaneous render targets
-        UInt32 vsProfiles;            ///< renderer supported vertex program profiles.
-        UInt32 gsProfiles;            ///< renderer supported geometry program profiles.
-        UInt32 psProfiles;            ///< renderer supported pixel program profiles.
+        UInt32 vsLanguages;           ///< renderer supported vertex program languages.
+        UInt32 gsLanguages;           ///< renderer supported geometry program languages.
+        UInt32 psLanguages;           ///< renderer supported pixel program languages.
     };
 
     ///

@@ -46,33 +46,34 @@ sMergeRenderStates(
     GN_UNIMPL_WARNING();
 }
 
-// *****************************************************************************
-// EffectDesc class
-// *****************************************************************************
-
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::ShaderPrerequisites::check( Renderer & r ) const
+static bool
+sCheckRendererCaps( Renderer & r, const GN::gfx::EffectDesc::ShaderDesc & desc )
 {
     const RendererCaps & caps = r.getCaps();
 
-    if( (UInt32)vsProfile != (caps.vsProfiles & vsProfile) )
+    // check vertex shader
+    if( desc.gpd.vs.source && (UInt32)desc.gpd.lang != (caps.vsLanguages & desc.gpd.lang) )
     {
         return false;
     }
 
-    if( (UInt32)gsProfile != (caps.gsProfiles & gsProfile) )
+    // check geometry shader
+    if( desc.gpd.gs.source && (UInt32)desc.gpd.lang != (caps.gsLanguages & desc.gpd.lang) )
     {
         return false;
     }
 
-    if( (UInt32)psProfile != (caps.psProfiles & psProfile) )
+    // check pixel shader
+    if( desc.gpd.ps.source && (UInt32)desc.gpd.lang != (caps.psLanguages & desc.gpd.lang) )
     {
         return false;
     }
 
-    if( caps.maxTextures < numTextures )
+    // check number of textures
+    if( caps.maxTextures < desc.prerequisites.numTextures )
     {
         return false;
     }
@@ -176,7 +177,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::ShaderDesc & shaderDesc = iter->second;
 
         // check shader requirements.
-        if( !shaderDesc.prerequisites.check( mRenderer ) )
+        if( !sCheckRendererCaps( mRenderer, shaderDesc ) )
         {
             GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing renderer caps." );
             continue;
@@ -365,7 +366,7 @@ GN::gfx::Effect::initTech(
         }
 
         // check renderer caps against shader requirments
-        if( !shaderDesc->prerequisites.check( mRenderer ) )
+        if( !sCheckRendererCaps( mRenderer, *shaderDesc ) )
         {
             // Note: it is expected scenario that some shaders are not supported by current hardware.
             //       So here we just issue a verbose log, instead of error.

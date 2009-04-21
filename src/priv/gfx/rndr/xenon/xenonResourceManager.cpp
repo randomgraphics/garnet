@@ -96,7 +96,7 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
             return prog.detach();
         }
 
-        case GpuProgramLanguage::HLSL:
+        case GpuProgramLanguage::HLSL9:
         {
             AutoRef<XenonGpuProgramHLSL> prog( new XenonGpuProgramHLSL(*this) );
             if( !prog->init( desc ) ) return NULL;

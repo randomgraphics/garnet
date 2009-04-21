@@ -109,7 +109,7 @@ namespace GN { namespace gfx
             if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
 
             // check GPU program language
-            if( desc.lang >= GpuProgramLanguage::NUM_LANGUAGES )
+            if( !desc.lang.valid() )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common");
                 GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang );

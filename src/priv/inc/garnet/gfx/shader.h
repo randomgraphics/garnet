@@ -15,12 +15,25 @@ namespace GN { namespace gfx
     {
         enum Enum
         {
-            ASM,           ///< assembly
-            HLSL,          ///< D3D HLSL
-            GLSL,          ///< OpenGL Shading language
-            CG,            ///< Nvidia Cg
-            NUM_LANGUAGES, ///< number of languages.
+            INVALID       = 0,    ///< Indicate invalid language
+            HLSL9         = 1<<0, ///< HLSL for D3D9 and Xenon
+            HLSL10        = 1<<1, ///< HLSL for D3D10
+            MICROCODE     = 1<<2, ///< Xenon microcode shader
+            GLSL          = 1<<3, ///< OpenGL Shading language
+            ARB1          = 1<<4, ///< OpenGL ARB1 shading language
+            CG            = 1<<5, ///< Nvidia Cg
         };
+
+        /// check for validity
+        bool valid() const
+        {
+            return HLSL9 == *this
+                || HLSL10 == *this
+                || MICROCODE == *this
+                || GLSL == *this
+                || ARB1 == *this
+                || CG == *this;
+        }
 
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramLanguage, Enum )
     };
@@ -30,7 +43,7 @@ namespace GN { namespace gfx
     ///
     struct ShaderCode
     {
-        const char * source; ///< NULL terminated shader source
+        const char * source; ///< NULL terminated shader source. Set to NULL to use fixed functional pipeline.
         const char * entry;  ///< NULL terminated shader entry function (ignored for ASM shader code)
 
         /// default ctor
@@ -57,7 +70,7 @@ namespace GN { namespace gfx
         /// default constructor
         ///
         GpuProgramDesc()
-            : lang( GpuProgramLanguage::NUM_LANGUAGES ) // lang is initialized to invalid value.
+            : lang(GpuProgramLanguage::INVALID)
             , optimize(false)
             , debug(false)
         {

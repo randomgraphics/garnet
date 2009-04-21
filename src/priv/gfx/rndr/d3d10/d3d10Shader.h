@@ -227,7 +227,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuProgramDesc & desc );
+        bool init( const GpuProgramDesc & desc, bool hlsl9 );
         void quit();
     private:
         void clear() {}

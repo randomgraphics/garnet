@@ -23,7 +23,7 @@ static const char * glslpscode=
 
 static const char * hlslvscode=
     "struct VSOUT { \n"
-    "   float4 position  : SV_POSITION; \n"
+    "   float4 position  : POSITION0; \n"
     "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
@@ -46,11 +46,11 @@ static const char * hlslpscode=
     "sampler s0; \n"
     "Texture2D<float4> t0; \n"
     "struct VSOUT { \n"
-    "   float4 position  : SV_POSITION; \n"
+    "   float4 position  : POSITION0; \n"
     "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
-    "float4 main( VSOUT i ) : SV_TARGET0 { \n"
+    "float4 main( VSOUT i ) : COLOR0 { \n"
     "   return i.color * t0.Sample( s0, i.texcoords ); \n"
     "}";
 
@@ -84,17 +84,17 @@ bool GN::gfx::SpriteRenderer::init()
     // create GPU program
     const RendererCaps & caps = mRenderer.getCaps();
     GpuProgramDesc gpd;
-    if( caps.vsProfiles & RendererCaps::GPP_OGL_GLSL &&
-        caps.psProfiles & RendererCaps::GPP_OGL_GLSL )
+    if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
+        caps.psLanguages & GpuProgramLanguage::GLSL )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
     }
-    else if( caps.vsProfiles & RendererCaps::GPP_D3D_2_0 &&
-             caps.psProfiles & RendererCaps::GPP_D3D_2_0 )
+    else if( caps.vsLanguages & GpuProgramLanguage::HLSL9 &&
+             caps.psLanguages & GpuProgramLanguage::HLSL9 )
     {
-        gpd.lang = GpuProgramLanguage::HLSL;
+        gpd.lang = GpuProgramLanguage::HLSL9;
         gpd.vs.source = hlslvscode;
         gpd.vs.entry = "main";
         gpd.ps.source = hlslpscode;
