@@ -55,7 +55,6 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
     }
 
     // setup parameter descriptor
-    memset( &mParamDesc, 0, sizeof(mParamDesc) );
     buildUnformNameAndSizeArray();
 
     // success

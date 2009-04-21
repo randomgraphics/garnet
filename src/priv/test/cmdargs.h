@@ -54,6 +54,18 @@ public:
     // *************************************************************************
 
     /// ctor
+#if GN_XENON
+    // Xenon platform does not have command line arguments
+    CommandLineArguments( int, const char *[] )
+        : applicationName( "xenonapp" )
+        , useMultiThreadRenderer( false )
+        , status( CONTINUE_EXECUTION )
+        , extraArgc(0)
+        , extraArgv(NULL)
+        , mLogger(GN::getLogger( "GN.test.CommandLineArguments" ))
+    {
+    }
+#else
     CommandLineArguments( int argc, const char * argv[] )
         : applicationName( argv[0] )
         , useMultiThreadRenderer( false )
@@ -70,6 +82,7 @@ public:
             extraArgv = mExtraArgs.cptr();
         }
     }
+#endif
 
     /// show command line options
     void showStandardCommandLineOptions() const
