@@ -89,7 +89,7 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
 
     switch( desc.lang )
     {
-        case GpuProgramLanguage::ASM:
+        case GpuProgramLanguage::MICROCODE:
         {
             AutoRef<XenonGpuProgramASM> prog( new XenonGpuProgramASM(*this) );
             if( !prog->init( desc ) ) return NULL;

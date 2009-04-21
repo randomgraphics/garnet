@@ -11,6 +11,15 @@
 
 namespace GN { namespace gfx
 {
+    enum XenonTextureDimension
+    {
+        XENON_TEXDIM_1D,
+        XENON_TEXDIM_2D,
+        XENON_TEXDIM_2D_ARRAY,
+        XENON_TEXDIM_3D,
+        XENON_TEXDIM_CUBE,
+    };
+
     ///
     /// D3D texture
     ///
@@ -86,8 +95,9 @@ namespace GN { namespace gfx
         /// D3D texture parameters
         ///
         //@{
-        D3DFORMAT mD3DFormat;
-        DWORD     mD3DUsage;
+        D3DFORMAT               mD3DFormat;
+        XenonTextureDimension   mD3DDimension;
+        DWORD                   mD3DUsage;
         //@}
 
         ///
@@ -104,24 +114,6 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-
-        ///
-        /// convert garnet cube face to D3D tag
-        ///
-        static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
-        {
-            static D3DCUBEMAP_FACES sTable[ NUM_CUBEFACES ] =
-            {
-                D3DCUBEMAP_FACE_POSITIVE_X,
-                D3DCUBEMAP_FACE_NEGATIVE_X,
-                D3DCUBEMAP_FACE_POSITIVE_Y,
-                D3DCUBEMAP_FACE_NEGATIVE_Y,
-                D3DCUBEMAP_FACE_POSITIVE_Z,
-                D3DCUBEMAP_FACE_NEGATIVE_Z,
-            };
-            GN_ASSERT( face < 6 );
-            return sTable[face];
-        }
     };
 }}
 

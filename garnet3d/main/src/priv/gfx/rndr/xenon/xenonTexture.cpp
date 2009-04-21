@@ -10,7 +10,53 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 //
 //
+// ----------------------------------------------------------------------------
+static GN::gfx::XenonTextureDimension
+sDetermineTextureDimension( const GN::gfx::TextureDesc & desc )
+{
+    if( 1 == desc.height && 1 == desc.depth )
+    {
+        if( 1 == desc.faces )
+        {
+            return GN::gfx::XENON_TEXDIM_1D;
+        }
+        else
+        {
+            // Xenon don't have 1D array texture, so we use 2D array texture instead.
+            return GN::gfx::XENON_TEXDIM_2D_ARRAY;
+        }
+    }
+    else if( 1 == desc.depth )
+    {
+        if( desc.width == desc.height && 6 == desc.faces )
+            return GN::gfx::XENON_TEXDIM_CUBE;
+        else if( desc.faces > 1 )
+            return GN::gfx::XENON_TEXDIM_2D_ARRAY;
+        else
+            return GN::gfx::XENON_TEXDIM_2D;
+    }
+    else
+    {
+        return GN::gfx::XENON_TEXDIM_3D;
+    }
+}
+/*
+// convert garnet cube face to D3D tag
 // -----------------------------------------------------------------------------
+static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
+{
+    static D3DCUBEMAP_FACES sTable[6] =
+    {
+        D3DCUBEMAP_FACE_POSITIVE_X,
+        D3DCUBEMAP_FACE_NEGATIVE_X,
+        D3DCUBEMAP_FACE_POSITIVE_Y,
+        D3DCUBEMAP_FACE_NEGATIVE_Y,
+        D3DCUBEMAP_FACE_POSITIVE_Z,
+        D3DCUBEMAP_FACE_NEGATIVE_Z,
+    };
+    GN_ASSERT( face < 6 );
+    return sTable[face];
+}*/
 
 // ****************************************************************************
 //  init / quit functions
@@ -36,16 +82,80 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & desc )
         return failure();
     }
 
-    // rendertarget and depth texture requires tiled format.
-    if( desc.usages.rendertarget || desc.usages.depth )
+    // determine dimension
+    mD3DDimension = sDetermineTextureDimension( desc );
+
+    // determine texture usage
+    mD3DUsage = desc.usages.fastCpuWrite ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
+
+    // create texture
+    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    switch( mD3DDimension )
     {
-        GN_UNIMPL();
+        case XENON_TEXDIM_1D:
+        {
+            IDirect3DLineTexture9 * tex1d;
+            GN_DX9_CHECK_RV(
+                dev.CreateLineTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &tex1d, NULL ),
+                failure() );
+            mD3DTexture = tex1d;
+            break;
+        }
+
+        case XENON_TEXDIM_2D:
+        {
+            if( 1 == desc.faces )
+            {
+                IDirect3DTexture9 * tex2d;
+                GN_DX9_CHECK_RV(
+                    dev.CreateTexture( desc.width, desc.height, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
+                    failure() );
+                mD3DTexture = tex2d;
+            }
+            else
+            {
+                IDirect3DArrayTexture9 * tex2d;
+                GN_DX9_CHECK_RV(
+                    dev.CreateArrayTexture( desc.width, desc.height, desc.faces, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
+                    failure() );
+                mD3DTexture = tex2d;
+            }
+            break;
+        }
+
+        case XENON_TEXDIM_3D:
+        {
+            IDirect3DVolumeTexture9 * tex3d;
+            GN_DX9_CHECK_RV(
+                dev.CreateVolumeTexture( desc.width, desc.height, desc.depth, desc.levels, mD3DUsage, mD3DFormat, 0, &tex3d, NULL ),
+                failure() );
+            mD3DTexture = tex3d;
+            break;
+        }
+
+        case XENON_TEXDIM_CUBE:
+        {
+            IDirect3DCubeTexture9 * texcube;
+            GN_DX9_CHECK_RV(
+                dev.CreateCubeTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &texcube, NULL ),
+                failure() );
+            mD3DTexture = texcube;
+            break;
+        }
+
+        default:
+            GN_UNEXPECTED(); // invalid dimension
+            return failure();
     }
 
-    // TODO: determine D3D usage
+    // calculate mipmap sizes
+    XGTEXTURE_DESC xdesc;
+    for( size_t i = 0; i < desc.levels; ++i )
+    {
+        XGGetTextureDesc( mD3DTexture, i, &xdesc );
 
-    // TODO: create texture
-    GN_UNIMPL_WARNING();
+        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, xdesc.Depth) );
+    }
 
     // success
     return success();
@@ -76,17 +186,66 @@ void GN::gfx::XenonTexture::quit()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::XenonTexture::updateMipmap(
-    size_t              /*face*/,
-    size_t              /*level*/,
-    const Box<UInt32> * /*area*/,
-    size_t              /*rowPitch*/,
-    size_t              /*slicePitch*/,
-    const void        * /*data*/,
-    SurfaceUpdateFlag   /*flag*/ )
+    size_t              face,
+    size_t              level,
+    const Box<UInt32> * area,
+    size_t              rowPitch,
+    size_t              slicePitch,
+    const void        * data,
+    SurfaceUpdateFlag   flag )
 {
-    GN_GUARD_SLOW;
+    // check update parameters
+    Box<UInt32> clippedArea;
+    if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
-    GN_UNIMPL_WARNING();
+    // prepare for update
+    const TextureDesc & desc = getDesc();
+    const ColorLayoutDesc & ld = desc.format.getLayoutDesc();
+    size_t srcBlockRowPitch = rowPitch * ld.blockHeight;
+    XGTEXTURE_DESC xdesc;
+    XGGetTextureDesc( mD3DTexture, level, &xdesc );
+    DWORD gpuformat = XGGetGpuFormat(xdesc.Format);
+    DWORD updateFlag = 0;
+    if( XGIsBorderTexture( mD3DTexture ) ) updateFlag |= XGTILE_BORDER;
+    if( !XGIsPackedTexture( mD3DTexture ) ) updateFlag |= XGTILE_NONPACKED;
+    POINT pt = { clippedArea.x, clippedArea.y };
+    RECT  rc = { 0, 0, clippedArea.w, clippedArea.h };
 
-    GN_UNGUARD_SLOW;
+    // do update
+    switch( mD3DDimension )
+    {
+        case XENON_TEXDIM_2D:
+        {
+            D3DTexture * tex2d = (D3DTexture *)mD3DTexture;
+            D3DLOCKED_RECT lrc;
+            tex2d->LockRect( level, &lrc, NULL, 0 );
+
+            GN_ASSERT( XGIsTiledFormat( mD3DFormat ) );
+            XGTileTextureLevel(
+                xdesc.Width,      // Width,
+                xdesc.Height,     // Height,
+                level,            // Level,
+                gpuformat,        // GpuFormat
+                updateFlag,       // Flags,
+                lrc.pBits,        // pDestination,
+                &pt,              // pPoint,
+                data,             // pSource,
+                srcBlockRowPitch, // RowPitch,
+                &rc );            // pRect
+
+            tex2d->UnlockRect( level );
+            break;
+        }
+
+        case XENON_TEXDIM_1D:
+        case XENON_TEXDIM_2D_ARRAY:
+        case XENON_TEXDIM_3D:
+        case XENON_TEXDIM_CUBE:
+            GN_UNIMPL();
+            return;
+
+        default:
+            GN_UNEXPECTED();
+            return;
+    };
 }

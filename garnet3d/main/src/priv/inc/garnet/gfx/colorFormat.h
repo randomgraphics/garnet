@@ -352,6 +352,7 @@ namespace GN { namespace gfx
         Alias            alias; ///< alias of the format
         struct
         {
+#if GN_LITTLE_ENDIAN
             unsigned int layout   : 6;
             unsigned int sign012  : 4; ///< sign for R/G/B channels
             unsigned int sign3    : 4; ///< sign for alpha channel
@@ -360,6 +361,16 @@ namespace GN { namespace gfx
             unsigned int swizzle2 : 3;
             unsigned int swizzle3 : 3;
             unsigned int reserved : 6; ///< reserved, must be zero
+#else
+            unsigned int reserved : 6; ///< reserved, must be zero
+            unsigned int swizzle3 : 3;
+            unsigned int swizzle2 : 3;
+            unsigned int swizzle1 : 3;
+            unsigned int swizzle0 : 3;
+            unsigned int sign3    : 4; ///< sign for alpha channel
+            unsigned int sign012  : 4; ///< sign for R/G/B channels
+            unsigned int layout   : 6;
+#endif
         };
 
         ///
