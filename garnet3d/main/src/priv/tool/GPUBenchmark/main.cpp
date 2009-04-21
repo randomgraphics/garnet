@@ -87,7 +87,7 @@ struct ManyManyQuads
         , QUAD_COUNT( quadCount )
         , PRIM_COUNT( quadCount * 2 )
         , INDEX_COUNT( quadCount * 6 )
-        , PRIM_TYPE( TRIANGLE_LIST )
+        , PRIM_TYPE( PrimitiveType::TRIANGLE_LIST )
         , vtxfmt( 0 )
         , vtxbuf( 0 )
         , idxbuf( 0 )

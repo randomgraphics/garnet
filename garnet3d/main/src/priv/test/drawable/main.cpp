@@ -30,7 +30,7 @@ bool init( Renderer & rndr )
     EffectDesc ed;
     ed.uniforms["pvw"].size = sizeof(Matrix44f);
     ed.textures["diffuse"]; // create a texture parameter named "diffuse"
-    ed.shaders["glsl"].gpd.lang = GPL_GLSL;
+    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = vscode;
     ed.shaders["glsl"].gpd.ps.source = pscode;
     ed.shaders["glsl"].uniforms["transform"] = "pvw";
@@ -64,7 +64,7 @@ bool init( Renderer & rndr )
     md.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
     md.vtxfmt.elements[0].offset = 0;
     md.vtxfmt.elements[0].stream = 0;
-    md.prim = TRIANGLE_LIST;
+    md.prim = PrimitiveType::TRIANGLE_LIST;
     md.numvtx = 4;
     md.numidx = 3;
     md.vertices[0] = vertices;

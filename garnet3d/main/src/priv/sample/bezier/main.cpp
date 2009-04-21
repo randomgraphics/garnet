@@ -157,7 +157,7 @@ Mesh * createMesh()
     };
     md.numidx = GN_ARRAY_COUNT( indices );
     md.indices = indices;
-    md.prim = TRIANGLE_LIST;
+    md.prim = PrimitiveType::TRIANGLE_LIST;
 
     AutoObjPtr<Mesh> mesh( new Mesh(*rndr) );
     if( !mesh || !mesh->init(md) ) return false;
@@ -310,7 +310,7 @@ createEffect()
     ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
-    ed.shaders["glsl"].gpd.lang = GPL_GLSL;
+    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
     ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";

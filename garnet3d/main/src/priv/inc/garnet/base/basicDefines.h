@@ -242,9 +242,9 @@
 // *****************************************************************************
 
 ///
-/// Hepers to define enumeration class
+/// Define helper data and member methods, that ease defining of a "enum-like" class
 ///
-#define GN_DEFINE_ENUM_CLASS( ENUM_CLASS, ENUM_TYPE ) \
+#define GN_DEFINE_ENUM_CLASS_HELPERS( ENUM_CLASS, ENUM_TYPE ) \
     private: \
         ENUM_TYPE mValue; \
     public: \

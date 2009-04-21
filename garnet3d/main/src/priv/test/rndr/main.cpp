@@ -50,13 +50,13 @@ bool init( Renderer & rndr )
     GpuProgramDesc gpd;
     if( RendererAPI::OGL == rndr.getOptions().api )
     {
-        gpd.lang = GPL_GLSL;
+        gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glsl_vscode;
         gpd.ps.source = glsl_pscode;
     }
     else
     {
-        gpd.lang = GPL_HLSL;
+        gpd.lang = GpuProgramLanguage::HLSL;
         gpd.vs.source = hlsl_vscode;
         gpd.ps.source = hlsl_pscode;
         gpd.vs.entry  = "main";
@@ -134,26 +134,26 @@ void draw( Renderer & r )
     m.translate( -1.0f, -0.0f, 0 );
     rc.uniforms[ui]->update( m );
     r.bindContext( rc );
-    r.drawUp( TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
+    r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
     m.translate( -1.0f, -1.0f, 0 );
     rc.uniforms[ui]->update( m );
     r.bindContext( rc );
-    r.drawIndexedUp( TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
+    r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
     m.identity();
     rc.uniforms[ui]->update( m );
     r.bindContext( rc );
-    r.draw( TRIANGLE_LIST, 3, 0 );
+    r.draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
     m.translate( 0.5f, -1.5f, 0 );
     rc.uniforms[ui]->update( m );
     r.bindContext( rc );
-    r.drawIndexed( TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
+    r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
 int run( Renderer & rndr )

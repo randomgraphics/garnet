@@ -11,16 +11,21 @@ namespace GN { namespace gfx
     ///
     /// ªÊÕº‘≠”Ô
     ///
-    enum PrimitiveType
+    struct PrimitiveType
     {
-        POINT_LIST,     ///< point list
-        LINE_LIST,      ///< line list
-        LINE_STRIP,     ///< line strip
-        TRIANGLE_LIST,  ///< triangle list
-        TRIANGLE_STRIP, ///< triangle strip
-        QUAD_LIST     , ///< quad list. D3D9 does not support this primitive.
-        RECT_LIST     , ///< rect list. This is xenon special primitive.
-        NUM_PRIMITIVES  ///< number of available primitive types
+        enum Enum
+        {
+            POINT_LIST,     ///< point list
+            LINE_LIST,      ///< line list
+            LINE_STRIP,     ///< line strip
+            TRIANGLE_LIST,  ///< triangle list
+            TRIANGLE_STRIP, ///< triangle strip
+            QUAD_LIST     , ///< quad list. D3D9 does not support this primitive.
+            RECT_LIST     , ///< rect list. This is xenon special primitive.
+            NUM_PRIMITIVES  ///< number of available primitive types
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS(PrimitiveType, Enum)
     };
 
     /// \name Primitive utils
@@ -34,13 +39,13 @@ namespace GN { namespace gfx
         GN_GUARD_SLOW;
         switch( pt )
         {
-            case POINT_LIST     : return "POINT_LIST";
-            case LINE_LIST      : return "LINE_LIST";
-            case LINE_STRIP     : return "LINE_STRIP";
-            case TRIANGLE_LIST  : return "TRIANGLE_LIST";
-            case TRIANGLE_STRIP : return "TRIANGLE_STRIP";
-            case QUAD_LIST      : return "QUAD_LIST";
-            case RECT_LIST      : return "RECT_LIST";
+            case PrimitiveType::POINT_LIST     : return "PrimitiveType::POINT_LIST";
+            case PrimitiveType::LINE_LIST      : return "PrimitiveType::LINE_LIST";
+            case PrimitiveType::LINE_STRIP     : return "PrimitiveType::LINE_STRIP";
+            case PrimitiveType::TRIANGLE_LIST  : return "PrimitiveType::TRIANGLE_LIST";
+            case PrimitiveType::TRIANGLE_STRIP : return "PrimitiveType::TRIANGLE_STRIP";
+            case PrimitiveType::QUAD_LIST      : return "PrimitiveType::QUAD_LIST";
+            case PrimitiveType::RECT_LIST      : return "PrimitiveType::RECT_LIST";
             default             : return "Invalid primitive type!";
         }
         GN_UNGUARD_SLOW;
@@ -52,19 +57,19 @@ namespace GN { namespace gfx
     inline PrimitiveType str2PrimitiveType( const StrA & str )
     {
         GN_GUARD_SLOW;
-        if( "POINT_LIST" == str ) return POINT_LIST;
-        else if( "LINE_LIST" == str ) return LINE_LIST;
-        else if( "LINE_STRIP" == str ) return LINE_STRIP;
-        else if( "TRIANGLE_LIST" == str ) return TRIANGLE_LIST;
-        else if( "TRIANGLE_STRIP" == str ) return TRIANGLE_STRIP;
-        else if( "QUAD_LIST" == str ) return QUAD_LIST;
-        else if( "RECT_LIST" == str ) return RECT_LIST;
+        if( "PrimitiveType::POINT_LIST" == str ) return PrimitiveType::POINT_LIST;
+        else if( "PrimitiveType::LINE_LIST" == str ) return PrimitiveType::LINE_LIST;
+        else if( "PrimitiveType::LINE_STRIP" == str ) return PrimitiveType::LINE_STRIP;
+        else if( "PrimitiveType::TRIANGLE_LIST" == str ) return PrimitiveType::TRIANGLE_LIST;
+        else if( "PrimitiveType::TRIANGLE_STRIP" == str ) return PrimitiveType::TRIANGLE_STRIP;
+        else if( "PrimitiveType::QUAD_LIST" == str ) return PrimitiveType::QUAD_LIST;
+        else if( "PrimitiveType::RECT_LIST" == str ) return PrimitiveType::RECT_LIST;
         else
         {
             // failed
             static Logger * sLogger = getLogger("GN.gfx.misc");
             GN_ERROR(sLogger)( "invalid primitive string : '%s'!", str.cptr() );
-            return NUM_PRIMITIVES;
+            return PrimitiveType::NUM_PRIMITIVES;
         }
         GN_UNGUARD_SLOW;
     }
@@ -82,13 +87,13 @@ namespace GN { namespace gfx
 
         switch( pt )
         {
-            case POINT_LIST     : return numvert;
-            case LINE_LIST      : return (numvert >= 2) ? numvert / 2 : 0;
-            case LINE_STRIP     : return (numvert >= 2) ? numvert - 1 : 0;
-            case TRIANGLE_LIST  : return (numvert >= 3) ? numvert / 3 : 0;
-            case TRIANGLE_STRIP : return (numvert >= 3) ? numvert - 2 : 0;
-            case QUAD_LIST      : return (numvert >= 4) ? numvert / 4 : 0;
-            case RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
+            case PrimitiveType::POINT_LIST     : return numvert;
+            case PrimitiveType::LINE_LIST      : return (numvert >= 2) ? numvert / 2 : 0;
+            case PrimitiveType::LINE_STRIP     : return (numvert >= 2) ? numvert - 1 : 0;
+            case PrimitiveType::TRIANGLE_LIST  : return (numvert >= 3) ? numvert / 3 : 0;
+            case PrimitiveType::TRIANGLE_STRIP : return (numvert >= 3) ? numvert - 2 : 0;
+            case PrimitiveType::QUAD_LIST      : return (numvert >= 4) ? numvert / 4 : 0;
+            case PrimitiveType::RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
             default             :
                 {
                     static Logger * sLogger = getLogger("GN.gfx.misc");
@@ -111,13 +116,13 @@ namespace GN { namespace gfx
         GN_GUARD_SLOW;
         switch( pt )
         {
-            case POINT_LIST     : return numprim;
-            case LINE_LIST      : return numprim * 2;
-            case LINE_STRIP     : return numprim > 0 ? numprim + 1 : 0;
-            case TRIANGLE_LIST  : return numprim * 3;
-            case TRIANGLE_STRIP : return numprim > 0 ? numprim + 2 : 0;
-            case QUAD_LIST      : return numprim * 4;
-            case RECT_LIST      : return numprim * 3;
+            case PrimitiveType::POINT_LIST     : return numprim;
+            case PrimitiveType::LINE_LIST      : return numprim * 2;
+            case PrimitiveType::LINE_STRIP     : return numprim > 0 ? numprim + 1 : 0;
+            case PrimitiveType::TRIANGLE_LIST  : return numprim * 3;
+            case PrimitiveType::TRIANGLE_STRIP : return numprim > 0 ? numprim + 2 : 0;
+            case PrimitiveType::QUAD_LIST      : return numprim * 4;
+            case PrimitiveType::RECT_LIST      : return numprim * 3;
             default :
                 {
                     static Logger * sLogger = getLogger("GN.gfx.misc");

@@ -25,7 +25,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     EntityManager & em = mApp.getEntityManager();
 
     // initialize shadow textures
-    mColorMap  = re.create2DRenderTargetTexture( "colormap", 1024, 1024, 1, FMT_R_32_FLOAT ); 
+    mColorMap  = re.create2DRenderTargetTexture( "colormap", 1024, 1024, 1, FMT_R_32_FLOAT );
     mShadowMap = re.create2DDepthTexture( "shadowmap", 1024, 1024 );
     if(0 == mColorMap || 0 == mShadowMap ) return failure();
 
@@ -66,7 +66,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
             0.5f,  0.0f,    0.0f, fOffsetX,
             0.0f, -0.5f,    0.0f, fOffsetY,
             0.0f,  0.0f, fZScale, fBias,
-            0.0f,  0.0f,    0.0f, 1.0f );        
+            0.0f,  0.0f,    0.0f, 1.0f );
         Matrix44f lpvw = scaleBias * mLightProj * mLightView * mShadowProjectors->getLocal2Root();
         e->setUniform( id, lpvw );
     }
@@ -133,7 +133,7 @@ void GN::SimpleShadowMap::update()
     if( n < n_min ) n = n_min;
     re.composePerspectiveMatrixRh( mProj, 0.6f, (float)dd.width/dd.height, n, f );
 }
- 
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -144,7 +144,7 @@ void GN::SimpleShadowMap::draw()
     // draw to shadow map
     mScene.setProj( mLightProj );
     mScene.setView( mLightView );
-    mCtx.setDrawToTextures( 1, mColorMap, 0, 0, 0, mShadowMap, MSAA_NONE );
+    mCtx.setDrawToTextures( 1, mColorMap, 0, 0, 0, mShadowMap, MsaaType::NONE );
     re.setContext( mCtx );
     re.clearScreen();
     mShadowProjectors->draw();

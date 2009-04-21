@@ -121,7 +121,7 @@ public:
 
     Dolphin() : scene(0)
     {
-        // initialize 
+        // initialize
         time = .0f;
         swimming = true;
 
@@ -148,7 +148,7 @@ public:
         rt[1].attach( re.create2DTexture( "rt1", width, height, 1, FMT_RG_32_32_FLOAT, TEXUSAGE_RENDER_TARGET ) );
 
         rtdesc.count = 2;
-        rtdesc.aa = MSAA_NONE;
+        rtdesc.aa = MsaaType::NONE;
         rtdesc.setcbuf( 0, rt[0] );
         rtdesc.setcbuf( 1, rt[1] );
         rtdesc.setzbuf( 0 ); // use automatic z buffer.

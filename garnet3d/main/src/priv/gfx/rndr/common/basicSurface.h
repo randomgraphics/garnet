@@ -49,7 +49,7 @@ namespace GN { namespace gfx
             }
 
             // check flag
-            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
+            if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock flag : %d", flag );
@@ -141,7 +141,7 @@ namespace GN { namespace gfx
                 return false;
             }
 
-            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
+            if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );
@@ -209,7 +209,7 @@ namespace GN { namespace gfx
                 return false;
             }
 
-            if( flag >= NUM_SURFACE_UPDATE_FLAGS )
+            if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );

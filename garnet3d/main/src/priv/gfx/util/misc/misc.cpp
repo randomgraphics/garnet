@@ -19,7 +19,7 @@ GN::gfx::loadTextureFromFile( Renderer & rndr, const char * filename )
 
     // update texture content
     const MipmapDesc & md = id.getMipmap( 0, 0 );
-    tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SURFACE_UPDATE_DEFAULT );
+    tex->updateMipmap( 0, 0, 0, md.rowPitch, md.slicePitch, &texels[0], SurfaceUpdateFlag::DEFAULT );
 
     // success
     return tex.detach();

@@ -30,14 +30,19 @@ namespace GN { namespace gfx
     ///
     /// Msaa type
     ///
-    enum MsaaType
+    struct MsaaType
     {
-        MSAA_NONE,      ///< No MSAA
-        MSAA_LOW,       ///< low quality MSAA
-        MSAA_MEDIUM,    ///< medium quality MSAA
-        MSAA_HIGH,      ///< high quality MSAA
-        MSAA_ULTRA,     ///< ultra quality MSAA
-        NUM_MSAA_TYPES, ///< number of MSAA types
+        enum Enum
+        {
+            NONE,      ///< No MSAA
+            LOW,       ///< low quality MSAA
+            MEDIUM,    ///< medium quality MSAA
+            HIGH,      ///< high quality MSAA
+            ULTRA,     ///< ultra quality MSAA
+            NUM_TYPES, ///< number of MSAA types
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( MsaaType, Enum )
     };
 
     ///
@@ -56,7 +61,7 @@ namespace GN { namespace gfx
             AUTO,     ///< determine rendering API automatically.
         };
 
-        GN_DEFINE_ENUM_CLASS( RendererAPI, Enum );
+        GN_DEFINE_ENUM_CLASS_HELPERS( RendererAPI, Enum );
     };
 
     ///
@@ -134,7 +139,7 @@ namespace GN { namespace gfx
         UInt32 windowedHeight;
 
         ///
-        /// Backbuffer MSAA type. Default value is MSAA_NONE
+        /// Backbuffer MSAA type. Default value is MsaaType::NONE
         ///
         MsaaType msaa;
 
@@ -198,7 +203,7 @@ namespace GN { namespace gfx
             , monitorHandle(0)
             , windowedWidth(0)
             , windowedHeight(0)
-            , msaa(MSAA_NONE)
+            , msaa(MsaaType::NONE)
             , useExternalWindow(false)
             , fullscreen(false)
             , vsync(false)

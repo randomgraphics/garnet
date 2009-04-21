@@ -98,7 +98,7 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 
     switch( desc.lang )
     {
-        case GPL_GLSL:
+        case GpuProgramLanguage::GLSL:
         {
             AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
             if( !prog->init( desc ) ) return NULL;
