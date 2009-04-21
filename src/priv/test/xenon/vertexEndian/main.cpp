@@ -95,7 +95,7 @@ public:
 
         re.setContext( mCtx );
 
-        re.draw( TRIANGLE_LIST, 1, 0 );
+        re.draw( PrimitiveType::TRIANGLE_LIST, 1, 0 );
 	}
 };
 

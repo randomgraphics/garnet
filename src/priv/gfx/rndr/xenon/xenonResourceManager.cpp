@@ -89,14 +89,14 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
 
     switch( desc.lang )
     {
-        case GPL_ASM:
+        case GpuProgramLanguage::ASM:
         {
             AutoRef<XenonGpuProgramASM> prog( new XenonGpuProgramASM(*this) );
             if( !prog->init( desc ) ) return NULL;
             return prog.detach();
         }
-            
-        case GPL_HLSL:
+
+        case GpuProgramLanguage::HLSL:
         {
             AutoRef<XenonGpuProgramHLSL> prog( new XenonGpuProgramHLSL(*this) );
             if( !prog->init( desc ) ) return NULL;

@@ -34,13 +34,13 @@ sLockFlags2Xenon( GN::gfx::SurfaceUpdateFlag flag )
 
     static DWORD CONVERT_TABLE[] =
     {
-        0, // SURFACE_UPDATE_DEFAULT
-        0, // SURFACE_UPDATE_DISCARD
-        D3DLOCK_NOOVERWRITE, // SURFACE_UPDATE_NO_OVERWRITE
+        0, // SurfaceUpdateFlag::DEFAULT
+        0, // SurfaceUpdateFlag::DISCARD
+        D3DLOCK_NOOVERWRITE, // SurfaceUpdateFlag::NO_OVERWRITE
     };
-    GN_CASSERT( GN_ARRAY_COUNT(CONVERT_TABLE) == NUM_SURFACE_UPDATE_FLAGS );
+    GN_CASSERT( GN_ARRAY_COUNT(CONVERT_TABLE) == SurfaceUpdateFlag::NUM_FLAGS );
 
-    GN_ASSERT( flag < NUM_SURFACE_UPDATE_FLAGS );
+    GN_ASSERT( flag < SurfaceUpdateFlag::NUM_FLAGS );
 
     return CONVERT_TABLE[flag];
 }

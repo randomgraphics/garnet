@@ -310,7 +310,7 @@ namespace GN
                 NUM_APIs, ///< Number of available input APIs.
             };
 
-            GN_DEFINE_ENUM_CLASS( InputAPI, Enum );
+            GN_DEFINE_ENUM_CLASS_HELPERS( InputAPI, Enum );
         };
 
         ///

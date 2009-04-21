@@ -62,7 +62,7 @@ static void sDetermineMsaa(
 {
     GN_GUARD;
 
-    GN_ASSERT( msaa < GN::gfx::NUM_MSAA_TYPES );
+    GN_ASSERT( msaa < GN::gfx::MsaaType::NUM_TYPES );
 
     std::vector<GN::gfx::D3D9Renderer::D3DMsaaDesc> table;
 
@@ -520,24 +520,24 @@ GN::gfx::D3D9Renderer::newMsaaDesc( D3DFORMAT format )
 
     size_t n;
 
-    result[MSAA_NONE].type = table[0].type;
-    result[MSAA_NONE].quality = table[0].quality;
+    result[MsaaType::NONE].type = table[0].type;
+    result[MsaaType::NONE].quality = table[0].quality;
 
     n = table.size() / 4;
-    result[MSAA_LOW].type = table[n].type;
-    result[MSAA_LOW].quality = table[n].quality;
+    result[MsaaType::LOW].type = table[n].type;
+    result[MsaaType::LOW].quality = table[n].quality;
 
     n = table.size() / 2;
-    result[MSAA_MEDIUM].type = table[n].type;
-    result[MSAA_MEDIUM].quality = table[n].quality;
+    result[MsaaType::MEDIUM].type = table[n].type;
+    result[MsaaType::MEDIUM].quality = table[n].quality;
 
     n = table.size() * 3 / 4;
-    result[MSAA_HIGH].type = table[n].type;
-    result[MSAA_HIGH].quality = table[n].quality;
+    result[MsaaType::HIGH].type = table[n].type;
+    result[MsaaType::HIGH].quality = table[n].quality;
 
     n = table.size() - 1;
-    result[MSAA_ULTRA].type = table[n].type;
-    result[MSAA_ULTRA].quality = table[n].quality;
+    result[MsaaType::ULTRA].type = table[n].type;
+    result[MsaaType::ULTRA].quality = table[n].quality;
 
     // success
     return result;

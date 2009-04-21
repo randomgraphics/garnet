@@ -11,13 +11,18 @@ namespace GN { namespace gfx
     ///
     /// Shading language
     ///
-    enum GpuProgramLanguage
+    struct GpuProgramLanguage
     {
-        GPL_ASM,  ///< assembly
-        GPL_HLSL, ///< D3D HLSL
-        GPL_GLSL, ///< OpenGL Shading language
-        GPL_CG,   ///< Nvidia Cg
-        NUM_GPU_PROGRAM_LANGUAGES,
+        enum Enum
+        {
+            ASM,           ///< assembly
+            HLSL,          ///< D3D HLSL
+            GLSL,          ///< OpenGL Shading language
+            CG,            ///< Nvidia Cg
+            NUM_LANGUAGES, ///< number of languages.
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramLanguage, Enum )
     };
 
     ///
@@ -52,7 +57,7 @@ namespace GN { namespace gfx
         /// default constructor
         ///
         GpuProgramDesc()
-            : lang( NUM_GPU_PROGRAM_LANGUAGES ) // lang is initialized to invalid value.
+            : lang( GpuProgramLanguage::NUM_LANGUAGES ) // lang is initialized to invalid value.
             , optimize(false)
             , debug(false)
         {
@@ -62,11 +67,16 @@ namespace GN { namespace gfx
     ///
     /// GPU program parameter type
     ///
-    enum GpuProgramParameterType
+    struct GpuProgramParameterType
     {
-        GPPT_UNIFORM, ///< uniform type
-        GPPT_TEXTURE, ///< texture type
-        GPPT_VERTEX,  ///< vertex type
+        enum Enum
+        {
+            UNIFORM, ///< uniform type
+            TEXTURE, ///< texture type
+            VERTEX,  ///< vertex type
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramParameterType, Enum );
     };
 
     ///

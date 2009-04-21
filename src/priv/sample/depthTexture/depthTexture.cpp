@@ -130,7 +130,7 @@ public:
         mCtx.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
         re.setContext( mCtx );
         re.clearScreen();
-        re.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
+        re.drawIndexedUp( PrimitiveType::TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
 
         // render depth texture to screen
         mCtx.setDrawToBackBuf();

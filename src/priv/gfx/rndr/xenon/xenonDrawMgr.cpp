@@ -5,7 +5,7 @@
 ///
 /// static primitive map
 ///
-static const D3DPRIMITIVETYPE PRIMITIVE_TO_XENON[GN::gfx::NUM_PRIMITIVES] =
+static const D3DPRIMITIVETYPE PRIMITIVE_TO_XENON[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
 {
     D3DPT_POINTLIST,
     D3DPT_LINELIST,
@@ -56,7 +56,7 @@ void GN::gfx::XenonRenderer::drawQuit()
         mDevice->EndScene();
         mSceneBegun = false;
     }
-    
+
     safeDelete( mLine );
 }
 
@@ -124,7 +124,7 @@ void GN::gfx::XenonRenderer::drawIndexed(
     size_t        startidx )
 {
     // draw indexed primitives
-    GN_ASSERT( prim < NUM_PRIMITIVES );
+    GN_ASSERT( prim < PrimitiveType::NUM_PRIMITIVES );
     mDevice->DrawIndexedVertices(
         PRIMITIVE_TO_XENON[prim],  // primitive type
         (UINT)basevtx,             // base vertex

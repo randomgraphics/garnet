@@ -110,26 +110,35 @@ namespace GN { namespace gfx
     ///
     /// cube texture face
     ///
-    enum CubeFace
+    struct CubeFace
     {
-        CUBEFACE_PX = 0, ///< positive X
-        CUBEFACE_NX,     ///< negative X
-        CUBEFACE_PY,     ///< positive Y
-        CUBEFACE_NY,     ///< negative Y
-        CUBEFACE_PZ,     ///< positive Z
-        CUBEFACE_NZ,     ///< negative Z
-        NUM_CUBEFACES
+        enum Enum
+        {
+            PX = 0,///< positive X
+            NX,    ///< negative X
+            PY,    ///< positive Y
+            NY,    ///< negative Y
+            PZ,    ///< positive Z
+            NZ,    ///< negative Z
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( CubeFace, Enum );
     };
 
     ///
     /// Update flags
     ///
-    enum SurfaceUpdateFlag
+    struct SurfaceUpdateFlag
     {
-        SURFACE_UPDATE_DEFAULT,      ///< default update flag
-        SURFACE_UPDATE_DISCARD,      ///< discard old content of whole surface.
-        SURFACE_UPDATE_NO_OVERWRITE, ///< promise not to modify any section of the surface that is being used by GPU.
-        NUM_SURFACE_UPDATE_FLAGS     ///< number of update flags.
+        enum Enum
+        {
+            DEFAULT,      ///< default update flag
+            DISCARD,      ///< discard old content of whole surface.
+            NO_OVERWRITE, ///< promise not to modify any section of the surface that is being used by GPU.
+            NUM_FLAGS     ///< number of update flags.
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( SurfaceUpdateFlag, Enum );
     };
 
     ///
@@ -192,7 +201,7 @@ namespace GN { namespace gfx
             size_t              rowPitch,
             size_t              slicePitch,
             const void        * data,
-            SurfaceUpdateFlag   flag = SURFACE_UPDATE_DEFAULT ) = 0;
+            SurfaceUpdateFlag   flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// read mipmap content.
@@ -293,7 +302,7 @@ namespace GN { namespace gfx
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
@@ -340,7 +349,7 @@ namespace GN { namespace gfx
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SURFACE_UPDATE_DEFAULT ) = 0;
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.

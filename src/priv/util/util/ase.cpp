@@ -1476,7 +1476,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     dstmesh.vtxfmt.elements[2].format = ColorFormat::FLOAT2;
     dstmesh.vtxfmt.elements[2].offset = 24;
     dstmesh.vtxfmt.elements[2].bindTo( "texcoord", 0 );
-    dstmesh.prim = TRIANGLE_LIST;
+    dstmesh.prim = PrimitiveType::TRIANGLE_LIST;
     dstmesh.strides[0] = sizeof(OutputVertex);
 
     // generate mesh

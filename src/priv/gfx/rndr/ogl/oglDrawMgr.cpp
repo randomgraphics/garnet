@@ -23,12 +23,12 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
 {
     switch( prim )
     {
-        case GN::gfx::POINT_LIST     : return GL_POINTS;
-        case GN::gfx::LINE_LIST      : return GL_LINES;
-        case GN::gfx::LINE_STRIP     : return GL_LINE_STRIP;
-        case GN::gfx::TRIANGLE_LIST  : return GL_TRIANGLES;
-        case GN::gfx::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
-        case GN::gfx::QUAD_LIST      : return GL_QUADS;
+        case GN::gfx::PrimitiveType::POINT_LIST     : return GL_POINTS;
+        case GN::gfx::PrimitiveType::LINE_LIST      : return GL_LINES;
+        case GN::gfx::PrimitiveType::LINE_STRIP     : return GL_LINE_STRIP;
+        case GN::gfx::PrimitiveType::TRIANGLE_LIST  : return GL_TRIANGLES;
+        case GN::gfx::PrimitiveType::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
+        case GN::gfx::PrimitiveType::QUAD_LIST      : return GL_QUADS;
         default :
             GN_ERROR(sLogger)( "invalid primitve type %d!", prim );
             return GL_TRIANGLES;

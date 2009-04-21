@@ -30,11 +30,11 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS   & d3dpp,
     // msaa parameters
     switch( msaa )
     {
-        case MSAA_NONE   : d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE; break;
-        case MSAA_LOW    :
-        case MSAA_MEDIUM : d3dpp.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES; break;
-        case MSAA_HIGH   :
-        case MSAA_ULTRA  : d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES; break;
+        case MsaaType::NONE   : d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE; break;
+        case MsaaType::LOW    :
+        case MsaaType::MEDIUM : d3dpp.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES; break;
+        case MsaaType::HIGH   :
+        case MsaaType::ULTRA  : d3dpp.MultiSampleType = D3DMULTISAMPLE_4_SAMPLES; break;
         default          : GN_ERROR(sLogger)( "invalid MSAA type: %d", msaa ); return false;
     }
 

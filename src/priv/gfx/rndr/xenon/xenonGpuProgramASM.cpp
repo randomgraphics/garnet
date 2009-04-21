@@ -19,7 +19,7 @@ bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( XenonGpuProgramASM, () );
 
-    GN_ASSERT( GPL_ASM == desc.lang );
+    GN_ASSERT( GpuProgramLanguage::ASM == desc.lang );
 
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
 

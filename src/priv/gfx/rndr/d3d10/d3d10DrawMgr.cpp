@@ -3,7 +3,7 @@
 #include "d3d10RenderTargetMgr.h"
 
 // static primitive map
-static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::NUM_PRIMITIVES] =
+static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
 {
     D3D10_PRIMITIVE_TOPOLOGY_POINTLIST,
     D3D10_PRIMITIVE_TOPOLOGY_LINELIST,

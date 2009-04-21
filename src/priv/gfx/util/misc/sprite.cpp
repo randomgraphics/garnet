@@ -87,14 +87,14 @@ bool GN::gfx::SpriteRenderer::init()
     if( caps.vsProfiles & RendererCaps::GPP_OGL_GLSL &&
         caps.psProfiles & RendererCaps::GPP_OGL_GLSL )
     {
-        gpd.lang = GPL_GLSL;
+        gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glslvscode;
         gpd.ps.source = glslpscode;
     }
     else if( caps.vsProfiles & RendererCaps::GPP_D3D_2_0 &&
              caps.psProfiles & RendererCaps::GPP_D3D_2_0 )
     {
-        gpd.lang = GPL_HLSL;
+        gpd.lang = GpuProgramLanguage::HLSL;
         gpd.vs.source = hlslvscode;
         gpd.vs.entry = "main";
         gpd.ps.source = hlslpscode;
@@ -255,12 +255,12 @@ void GN::gfx::SpriteRenderer::drawEnd()
             firstPendingSpriteOffset * sizeof(Sprite),
             numPendingSprites * sizeof(Sprite),
             mNextPendingSprite,
-            mSprites == mNextPendingSprite ? SURFACE_UPDATE_DISCARD : SURFACE_UPDATE_NO_OVERWRITE );
+            mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
         mRenderer.bindContext( *mEffectiveContext );
 
         mRenderer.drawIndexed(
-            TRIANGLE_LIST,
+            PrimitiveType::TRIANGLE_LIST,
             numPendingSprites * 6,        // numidx
             firstPendingSpriteOffset * 4, // basevtx,
             0,                            // startvtx

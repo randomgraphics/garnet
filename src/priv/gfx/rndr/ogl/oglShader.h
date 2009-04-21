@@ -109,7 +109,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r, GPL_GLSL ) { clear(); }
+        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { clear(); }
         virtual ~OGLGpuProgramGLSL() { quit(); }
         //@}
 

@@ -89,7 +89,7 @@ GN::gfx::D3D10Renderer::createGpuProgram( const void * data, size_t length )
 
     const GpuProgramDesc & desc = s->desc();
 
-    if( GPL_HLSL == desc.lang )
+    if( GpuProgramLanguage::HLSL == desc.lang )
     {
         AutoRef<D3D10GpuProgram> prog( new D3D10GpuProgram(*this) );
         if( !prog->init( desc ) ) return NULL;

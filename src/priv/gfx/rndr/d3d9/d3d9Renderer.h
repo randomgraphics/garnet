@@ -136,7 +136,7 @@ namespace GN { namespace gfx
         ///
         /// Check render target MSAA compability.
         ///
-        /// Return value is a array that has NUM_MSAA_TYPES elements, to descript how MSAA qualities are mapped to D3D.
+        /// Return value is a array that has MsaaType::NUM_TYPES elements, to descript how MSAA qualities are mapped to D3D.
         ///
         const D3DMsaaDesc * getMsaaDesc( D3DFORMAT format )
         {
@@ -173,7 +173,7 @@ namespace GN { namespace gfx
         IDirect3DDevice9      * mDevice;
         D3DCAPS9                mDeviceCaps;
 
-        typedef std::map<D3DFORMAT,StackArray<D3DMsaaDesc,NUM_MSAA_TYPES> > MsaaDescTable;
+        typedef std::map<D3DFORMAT,StackArray<D3DMsaaDesc,MsaaType::NUM_TYPES> > MsaaDescTable;
         MsaaDescTable mMsaaDescTable;
 
         //@}

@@ -115,7 +115,7 @@ namespace GN { namespace gfx
         ///
         static GLenum sCubeface2OGL( size_t face )
         {
-            GLenum sTable[NUM_CUBEFACES] =
+            GLenum sTable[6] =
             {
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB,
                 GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB,

@@ -68,9 +68,9 @@ void GN::gfx::D3D10Buffer::quit()
 
 static const D3D10_MAP SURFACE_UPDATE_FLAG_TO_D3D10_MAP[] =
 {
-    D3D10_MAP_WRITE,              // SURFACE_UPDATE_DEFAULT
-    D3D10_MAP_WRITE_DISCARD,      // SURFACE_UPDATE_DISCARD
-    D3D10_MAP_WRITE_NO_OVERWRITE  // SURFACE_UPDATE_NO_OVERWRITE
+    D3D10_MAP_WRITE,              // SurfaceUpdateFlag::DEFAULT
+    D3D10_MAP_WRITE_DISCARD,      // SurfaceUpdateFlag::DISCARD
+    D3D10_MAP_WRITE_NO_OVERWRITE  // SurfaceUpdateFlag::NO_OVERWRITE
 };
 
 //
@@ -83,7 +83,7 @@ void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * dat
     // parameters should've already been verified by caller.
     GN_ASSERT( ( offset + bytes ) <= mBytes );
     GN_ASSERT( data );
-    GN_ASSERT( 0 <= flag && flag < NUM_SURFACE_UPDATE_FLAGS );
+    GN_ASSERT( 0 <= flag && flag < SurfaceUpdateFlag::NUM_FLAGS );
 
     ID3D10Device & dev = getDeviceRef();
 

@@ -101,7 +101,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     mDefaultTexture = r.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 );
     if( NULL == mDefaultTexture ) return failure();
     UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-    mDefaultTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SURFACE_UPDATE_DEFAULT );
+    mDefaultTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
 
     EffectDesc ed;
     ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
@@ -114,7 +114,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
 
     ed.shaders["glsl"].prerequisites.vsProfile = RendererCaps::GPP_OGL_GLSL;
     ed.shaders["glsl"].prerequisites.psProfile = RendererCaps::GPP_OGL_GLSL;
-    ed.shaders["glsl"].gpd.lang = GPL_GLSL;
+    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
     ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
@@ -129,7 +129,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
 
     ed.shaders["hlsl"].prerequisites.vsProfile = RendererCaps::GPP_D3D_2_0;
     ed.shaders["hlsl"].prerequisites.psProfile = RendererCaps::GPP_D3D_2_0;
-    ed.shaders["hlsl"].gpd.lang = GPL_HLSL;
+    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL;
     ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
     ed.shaders["hlsl"].gpd.vs.entry  = "main";
     ed.shaders["hlsl"].gpd.ps.source = hlslpscode;

@@ -6,7 +6,7 @@
 ///
 /// static primitive map
 ///
-static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
+static D3DPRIMITIVETYPE sPrimMap[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
 {
     D3DPT_POINTLIST,
     D3DPT_LINELIST,
@@ -181,7 +181,7 @@ void GN::gfx::D3D9Renderer::drawIndexed(
     GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
-    GN_ASSERT( prim < NUM_PRIMITIVES );
+    GN_ASSERT( prim < PrimitiveType::NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitive(
             sPrimMap[prim],    // primitive type
@@ -225,7 +225,7 @@ void GN::gfx::D3D9Renderer::draw(
     GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
-    GN_ASSERT( prim < NUM_PRIMITIVES );
+    GN_ASSERT( prim < PrimitiveType::NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawPrimitive(
             sPrimMap[prim],    // primitive type
