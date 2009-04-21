@@ -19,7 +19,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( XenonGpuProgramHLSL, () );
 
-    GN_ASSERT( GpuProgramLanguage::HLSL == desc.lang );
+    GN_ASSERT( GpuProgramLanguage::HLSL9 == desc.lang );
 
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
 

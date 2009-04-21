@@ -229,21 +229,21 @@ bool GN::gfx::OGLRenderer::capsInit()
     }
 
     // vertex shader flags
-    mCaps.vsProfiles |= (!!GLEW_ARB_vertex_program) ? RendererCaps::GPP_OGL_ARB1 : 0;
-    mCaps.vsProfiles |= ( GLEW_ARB_shader_objects && GLEW_ARB_vertex_shader && GLEW_ARB_shading_language_100 )
-                        ? RendererCaps::GPP_OGL_GLSL : 0;
+    mCaps.vsLanguages |= (!!GLEW_ARB_vertex_program) ? GpuProgramLanguage::ARB1 : 0;
+    mCaps.vsLanguages |= ( GLEW_ARB_shader_objects && GLEW_ARB_vertex_shader && GLEW_ARB_shading_language_100 )
+                        ? GpuProgramLanguage::GLSL : 0;
 #ifdef HAS_CG_OGL
-    mCaps.vsProfiles |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) ? RendererCaps::GPP_CG : 0;
+    mCaps.vsLanguages |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) ? GpuProgramLanguage::CG : 0;
 #endif
 
     // note: OGL renderer does not support GS yet.
 
     // pixel shader flags
-    mCaps.psProfiles |= (!!GLEW_ARB_fragment_program) ? RendererCaps::GPP_OGL_ARB1 : 0;
-    mCaps.psProfiles |= (GLEW_ARB_shader_objects && GLEW_ARB_fragment_shader && GLEW_ARB_shading_language_100)
-                        ? RendererCaps::GPP_OGL_GLSL : 0;
+    mCaps.psLanguages |= (!!GLEW_ARB_fragment_program) ? GpuProgramLanguage::ARB1 : 0;
+    mCaps.psLanguages |= (GLEW_ARB_shader_objects && GLEW_ARB_fragment_shader && GLEW_ARB_shading_language_100)
+                        ? GpuProgramLanguage::GLSL : 0;
 #ifdef HAS_CG_OGL
-    mCaps.psProfiles |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT )) ? RendererCaps::GPP_CG : 0;
+    mCaps.psLanguages |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT )) ? GpuProgramLanguage::CG : 0;
 #endif
 
     // success;

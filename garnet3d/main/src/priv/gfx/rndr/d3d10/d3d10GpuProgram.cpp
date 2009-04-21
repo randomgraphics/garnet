@@ -221,7 +221,7 @@ sUpdateConstData(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
+bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
 {
     GN_GUARD;
 
@@ -230,9 +230,13 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 
     // covert shader compile options
     D3D10ShaderCompileOptions options;
-    options.compileFlags = 0;
+    options.compileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
     if( !desc.optimize ) options.compileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
     if( !desc.debug ) options.compileFlags |= D3D10_SHADER_DEBUG;
+    if( hlsl9 )
+        options.compileFlags |= D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
+    else
+        options.compileFlags |= D3D10_SHADER_ENABLE_STRICTNESS;
 
     // compile all shaders
     ID3D10Device & dev = getDeviceRef();

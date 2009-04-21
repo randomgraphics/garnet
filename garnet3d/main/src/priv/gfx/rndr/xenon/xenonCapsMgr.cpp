@@ -26,9 +26,9 @@ bool GN::gfx::XenonRenderer::capsInit()
 
     mCaps.maxTextures = GPU_D3D_PIXEL_TEXTURE_FETCH_CONSTANT_COUNT;
     mCaps.maxColorRenderTargets = 4;
-    mCaps.vsProfiles = RendererCaps::GPP_XVS_3_0 | RendererCaps::GPP_D3D_3_0;
-    mCaps.gsProfiles = 0;
-    mCaps.psProfiles = RendererCaps::GPP_XPS_3_0 | RendererCaps::GPP_D3D_3_0;
+    mCaps.vsLanguages = GpuProgramLanguage::HLSL9 | GpuProgramLanguage::MICROCODE;
+    mCaps.gsLanguages = 0;
+    mCaps.psLanguages = GpuProgramLanguage::HLSL9 | GpuProgramLanguage::MICROCODE;
 
     // successful
     return true;

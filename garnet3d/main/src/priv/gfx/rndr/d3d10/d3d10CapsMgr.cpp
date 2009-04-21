@@ -34,15 +34,9 @@ bool GN::gfx::D3D10Renderer::capsInit()
     mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RendererContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_2_0;
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_3_0;
-    mCaps.vsProfiles |= RendererCaps::GPP_D3D_4_0;
-
-    mCaps.gsProfiles |= RendererCaps::GPP_D3D_4_0;
-
-    mCaps.psProfiles |= RendererCaps::GPP_D3D_2_0;
-    mCaps.psProfiles |= RendererCaps::GPP_D3D_3_0;
-    mCaps.psProfiles |= RendererCaps::GPP_D3D_4_0;
+    mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
+    mCaps.gsLanguages = GpuProgramLanguage::HLSL10;
+    mCaps.psLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
 
     // success
     return true;

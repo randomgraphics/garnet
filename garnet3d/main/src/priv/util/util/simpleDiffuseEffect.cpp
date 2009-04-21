@@ -12,7 +12,7 @@ const char * hlslvscode =
     "uniform float4x4 wit; \n"
     "struct VSOUTPUT \n"
     "{ \n"
-    "   float4 hpos      : SV_POSITION;  // vertex position in projection space \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
     "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
     "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
     "   float2 texcoords : TEXCOORD; \n"
@@ -40,12 +40,12 @@ const char * hlslpscode =
     "Texture2D<float4> t0; \n"
     "struct VSOUTPUT \n"
     "{ \n"
-    "   float4 hpos      : SV_POSITION;  // vertex position in projection space \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
     "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
     "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
-    "float4 main( in VSOUTPUT i ) : SV_TARGET0 { \n"
+    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
     "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
@@ -112,8 +112,6 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
     ed.textures["ALBEDO_TEXTURE"]; // create a texture parameter named "ALBEDO_TEXTURE"
 
-    ed.shaders["glsl"].prerequisites.vsProfile = RendererCaps::GPP_OGL_GLSL;
-    ed.shaders["glsl"].prerequisites.psProfile = RendererCaps::GPP_OGL_GLSL;
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
@@ -127,9 +125,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
-    ed.shaders["hlsl"].prerequisites.vsProfile = RendererCaps::GPP_D3D_2_0;
-    ed.shaders["hlsl"].prerequisites.psProfile = RendererCaps::GPP_D3D_2_0;
-    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL;
+    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
     ed.shaders["hlsl"].gpd.vs.entry  = "main";
     ed.shaders["hlsl"].gpd.ps.source = hlslpscode;

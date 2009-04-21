@@ -351,12 +351,6 @@ sInitShader(
     // do nothing for empty shader code
     if( strEmpty( code.source ) ) return true;
 
-    // determine compile flags
-    DWORD flags =
-        D3D10_SHADER_PACK_MATRIX_ROW_MAJOR |
-        D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY |
-        options.compileFlags;
-
     // initialize shader type template
     D3D10ShaderTypeTemplate<SHADER_TYPE> templ;
 
@@ -366,7 +360,7 @@ sInitShader(
         dev,
         code.source,
         0,
-        flags,
+        options.compileFlags,
         code.entry,
         templ.profile,
         &binary ) );
