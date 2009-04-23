@@ -65,14 +65,17 @@ static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::XenonTexture::init( const TextureDesc & desc )
+bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonTexture, () );
 
-    if( !setDesc( desc ) ) return failure();
+    if( !setDesc( inputDesc ) ) return failure();
+
+    // Note: always use descriptor returned by getDesc(), since it may differ with inputDesc.
+    const TextureDesc & desc = getDesc();
 
     // determine texture format
     mD3DFormat = (D3DFORMAT)colorFormat2XenonFormat( desc.format );
