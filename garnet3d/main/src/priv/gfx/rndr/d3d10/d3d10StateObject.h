@@ -162,6 +162,10 @@ namespace GN { namespace gfx
             clear();
         }
 
+        /// get the D3D10 device
+        ID3D10Device & dev() const { return mDevice; }
+
+        /// get number of objects in cache
         size_t size() const { return mCount; }
 
         ///
@@ -403,12 +407,20 @@ namespace GN { namespace gfx
     ///
     class D3D10StateObjectManager
     {
-    public:
+        // specific state managers
+        RasterStateCache          mRasterStates;
+        ID3D10RasterizerState   * mCurrentRS;
 
-		// state caches
-		RasterStateCache       rasterStates;
-		BlendStateCache        blendStates;
-		DepthStencilStateCache depthStates;
+        BlendStateCache           mBlendStates;
+        ID3D10BlendState        * mCurrentBS;
+        float                     mCurrentBlendFactors[4];
+        UInt32                    mCurrentSampleMask;
+
+        DepthStencilStateCache    mDepthStates;
+        ID3D10DepthStencilState * mCurrentDS;
+        UInt32                    mCurrentStencilRef;
+
+    public:
 
         /// constructor
         D3D10StateObjectManager( ID3D10Device & dev );
@@ -416,10 +428,33 @@ namespace GN { namespace gfx
         /// clear all
         void clear()
         {
-            rasterStates.clear();
-            blendStates.clear();
-            depthStates.clear();
+            mRasterStates.clear();
+            mCurrentRS = NULL;
+
+            mBlendStates.clear();
+            mCurrentBS = NULL;
+
+            mDepthStates.clear();
+            mCurrentDS = NULL;
         }
+
+        /// set rasterization state
+        bool setRS(
+            const D3D10_RASTERIZER_DESC & desc,
+            bool                          skipDirtyCheck );
+
+        /// set blend state
+        bool setBS(
+            const D3D10_BLEND_DESC & desc,
+            const float            * blendFactors,
+            UInt32                   sampleMask,
+            bool                     skipDirtyCheck );
+
+        /// set depth stencil state
+        bool setDS(
+            const D3D10_DEPTH_STENCIL_DESC & desc,
+            UInt32                           stencilRef,
+            bool                             skipDirtyCheck );
     };
 }}
 
