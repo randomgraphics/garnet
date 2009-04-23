@@ -83,3 +83,14 @@ void GN::gfx::XenonGpuProgramASM::applyUniforms(
 {
     GN_UNIMPL();
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::XenonGpuProgramASM::applyTextures(
+    const TextureBinding * /*bindings*/,
+    size_t                 /*count*/,
+    bool                   /*skipDirtyCheck*/ ) const
+{
+    GN_UNIMPL();
+}

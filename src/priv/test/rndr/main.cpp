@@ -20,11 +20,10 @@ const char * hlsl_vscode =
     "}";
 
 const char * hlsl_pscode =
-    "sampler s0; \n"
-    "Texture2D<float4> t0; \n"
+    "sampler t0; \n"
     "struct VSOUT { float4 pos : POSITION0; float2 uv : TEXCOORD; }; \n"
     "float4 main( in VSOUT i ) : COLOR0 { \n"
-    "   return t0.Sample( s0, i.uv ); \n"
+    "   return tex2D( t0, i.uv ); \n"
     "}";
 
 const char * glsl_vscode =
