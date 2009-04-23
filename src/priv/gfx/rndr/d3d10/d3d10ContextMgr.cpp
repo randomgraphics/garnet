@@ -249,10 +249,6 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( skipDirtyCheck );
-    GN_UNIMPL_WARNING();
-
     // rasterization states
     D3D10_RASTERIZER_DESC rsdesc;
     memset( &rsdesc, 0, sizeof(rsdesc) );
@@ -266,9 +262,7 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     rsdesc.ScissorEnable         = true;
     rsdesc.MultisampleEnable     = true;
     rsdesc.AntialiasedLineEnable = false;
-    ID3D10RasterizerState * rs = mSOMgr->rasterStates[rsdesc];
-    if( NULL == rs ) return false;
-    mDevice->RSSetState( rs );
+    if( !mSOMgr->setRS( rsdesc, skipDirtyCheck ) ) return false;
 
     // depth stencil states
     D3D10_DEPTH_STENCIL_DESC dsdesc;
@@ -284,9 +278,8 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     dsdesc.FrontFace.StencilFailOp = D3D10_STENCIL_OP_KEEP;
     dsdesc.FrontFace.StencilDepthFailOp = D3D10_STENCIL_OP_KEEP;
     dsdesc.BackFace = dsdesc.FrontFace;
-    ID3D10DepthStencilState * ds = mSOMgr->depthStates[dsdesc];
-    if( NULL == ds ) return false;
-    mDevice->OMSetDepthStencilState( ds, 0 );
+    UInt32 stencilRef = 0;
+    if( !mSOMgr->setDS( dsdesc, stencilRef, skipDirtyCheck ) ) return false;
 
     // blend states
     D3D10_BLEND_DESC bsdesc;
@@ -314,9 +307,8 @@ inline bool GN::gfx::D3D10Renderer::bindContextState(
     bsdesc.RenderTargetWriteMask[5] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[6] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[7] = D3D10_COLOR_WRITE_ENABLE_ALL;
-    ID3D10BlendState * bs = mSOMgr->blendStates[bsdesc];
-    if( NULL == bs ) return NULL;
-    mDevice->OMSetBlendState( bs, newContext.blendFactors, 0xFFFFFFFF );
+    UInt32 sampleMask = 0xFFFFFFFF;
+    if( !mSOMgr->setBS( bsdesc, newContext.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
 
     // Note: input and sampler states are handled in bindContextResource()
 

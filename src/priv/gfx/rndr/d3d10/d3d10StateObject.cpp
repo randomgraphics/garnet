@@ -9,9 +9,9 @@
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( ID3D10Device & dev )
-    : rasterStates( dev )
-    , blendStates( dev )
-    , depthStates( dev )
+    : mRasterStates( dev )
+    , mBlendStates( dev )
+    , mDepthStates( dev )
 {
     /* setup default rasterization states
     mRasterDirty = false;
@@ -102,4 +102,75 @@ GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( ID3D10Device & dev )
     mDepthKey.stencilreadmask  = mDepthDesc.StencilReadMask;
     mDepthKey.stencilwritemask = mDepthDesc.StencilWriteMask;
     */
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setRS(
+    const D3D10_RASTERIZER_DESC & desc,
+    bool                          skipDirtyCheck )
+{
+    ID3D10RasterizerState * stateObject = mRasterStates[desc];
+    if( NULL == stateObject ) return false;
+
+    if( skipDirtyCheck || stateObject != mCurrentRS )
+    {
+        mRasterStates.dev().RSSetState( stateObject );
+
+        mCurrentRS = stateObject;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setBS(
+    const D3D10_BLEND_DESC & desc,
+    const float            * blendFactors,
+    UInt32                   sampleMask,
+    bool                     skipDirtyCheck )
+{
+    ID3D10BlendState * stateObject = mBlendStates[desc];
+    if( NULL == stateObject ) return false;
+
+    if( skipDirtyCheck ||
+        stateObject != mCurrentBS ||
+        0 != memcmp( blendFactors, mCurrentBlendFactors, sizeof(mCurrentBlendFactors) ) ||
+        sampleMask != mCurrentSampleMask )
+    {
+        mBlendStates.dev().OMSetBlendState( stateObject, blendFactors, sampleMask );
+
+        mCurrentBS = stateObject;
+        memcpy( mCurrentBlendFactors, blendFactors, sizeof(mCurrentBlendFactors) );
+        mCurrentSampleMask = sampleMask;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setDS(
+    const D3D10_DEPTH_STENCIL_DESC & desc,
+    UInt32                           stencilRef,
+    bool                             skipDirtyCheck )
+{
+    ID3D10DepthStencilState * stateObject = mDepthStates[desc];
+    if( NULL == stateObject ) return false;
+
+    if( skipDirtyCheck ||
+        stateObject != mCurrentDS ||
+        stencilRef != mCurrentStencilRef )
+    {
+        mDepthStates.dev().OMSetDepthStencilState( stateObject, stencilRef );
+
+        mCurrentDS = stateObject;
+        mCurrentStencilRef = stencilRef;
+    }
+
+    return true;
 }
