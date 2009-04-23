@@ -43,15 +43,14 @@ static const char * hlslvscode=
     "}";
 
 static const char * hlslpscode=
-    "sampler s0; \n"
-    "Texture2D<float4> t0; \n"
+    "sampler t0; \n"
     "struct VSOUT { \n"
     "   float4 position  : POSITION0; \n"
     "   float4 color     : COLOR; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "float4 main( VSOUT i ) : COLOR0 { \n"
-    "   return i.color * t0.Sample( s0, i.texcoords ); \n"
+    "   return i.color * tex2D( t0, i.texcoords ); \n"
     "}";
 
 // *****************************************************************************

@@ -1,4 +1,3 @@
 Import( 'GN' )
-if GN.conf['has_ogl']:
-    cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
-    GN.newTarget( 'prog', 'GNtestSprite', [cluster] )
+cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
+GN.newTarget( 'prog', 'GNtestSprite', [cluster] )
