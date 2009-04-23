@@ -87,7 +87,7 @@ bool GN::gfx::XenonRenderer::bindContextImpl(
 
     // success
     return true;
-    
+
     GN_UNGUARD_SLOW;
 }
 
@@ -110,7 +110,7 @@ GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
 
     //bool needRebindViewport;
     //mRTMgr->bind( mContext, newContext, skipDirtyCheck, needRebindViewport );
-    
+
 /*
 
 #if GN_XENON
@@ -363,7 +363,7 @@ GN::gfx::XenonRenderer::bindContextShaders(
     if( newContext.gpuProgram )
     {
         const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.get();
-    
+
         if( skipDirtyCheck || mContext.gpuProgram != newContext.gpuProgram )
         {
             prog->apply();
@@ -371,6 +371,8 @@ GN::gfx::XenonRenderer::bindContextShaders(
 
         const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
         prog->applyUniforms( uniforms, newContext.uniforms.size() );
+
+        prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
     }
     else
     {
@@ -439,19 +441,6 @@ GN::gfx::XenonRenderer::bindContextResources(
     }
 
     GN_TODO( "apply textures and samplers" );
-
-    /*
-    // bind textures
-    //
-    for( UINT i = 0; i < RendererContext::MAX_TEXTURES; ++i )
-    {
-        const Texture * tex = newContext.textures[i].get();
-        if( skipDirtyCheck || tex != mContext.textures[i].get() )
-        {
-            GN_TODO( "Should use stage index retrieved from GPU program" );
-            mDevice->SetTexture( i, tex ? safeCastPtr<const XenonTexture>(tex)->getD3DTexture() : NULL );
-        }
-    }*/
 
     /*
     // bind samplers

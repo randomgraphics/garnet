@@ -25,6 +25,14 @@ namespace GN { namespace gfx
         /// Apply uniforms to D3D device
         ///
         virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const = 0;
+
+        ///
+        /// Apply textures to D3D device
+        ///
+        virtual void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const = 0;
     };
 
     // *************************************************************************
@@ -67,6 +75,10 @@ namespace GN { namespace gfx
 
         virtual void apply() const;
         virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
+        virtual void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const;
 
         // ********************************
         // from Shader
@@ -130,6 +142,10 @@ namespace GN { namespace gfx
 
         virtual void apply() const;
         virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
+        virtual void applyTextures(
+            const TextureBinding * bindings,
+            size_t                 count,
+            bool                   skipDirtyCheck ) const;
 
         // ********************************
         // from Shader
@@ -156,12 +172,21 @@ namespace GN { namespace gfx
             XenonUniformParamDesc() : vshandle(0), pshandle(0) {}
         };
 
+        struct XenonTextureParamDesc : public GpuProgramTextureParameterDesc
+        {
+            StrA                 name;
+            D3DXHANDLE           vshandle;
+            D3DXHANDLE           pshandle;
+            XenonTextureParamDesc() : vshandle(0), pshandle(0) {}
+        };
+
         IDirect3DVertexShader9          * mVs;
         ID3DXConstantTable              * mVsConsts;
         IDirect3DPixelShader9           * mPs;
         ID3DXConstantTable              * mPsConsts;
 
         DynaArray<XenonUniformParamDesc>  mUniforms;
+        DynaArray<XenonTextureParamDesc>  mTextures;
 
         XenonGpuProgramParameterDesc      mParamDesc;
 
