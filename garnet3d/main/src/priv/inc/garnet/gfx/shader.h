@@ -35,6 +35,21 @@ namespace GN { namespace gfx
                 || CG == *this;
         }
 
+        /// convert to string
+        const char * toString() const
+        {
+            switch( *this )
+            {
+                case HLSL9     : return "HLSL9";
+                case HLSL10    : return "HLSL10";
+                case MICROCODE : return "MICROCODE";
+                case GLSL      : return "GLSL";
+                case ARB1      : return "ARB1";
+                case CG        : return "CG";
+                default        : return "INVALID_GPU_PROGRAM_LANGUAGE";
+            };
+        }
+
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramLanguage, Enum )
     };
 

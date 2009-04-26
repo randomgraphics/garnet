@@ -310,6 +310,20 @@ namespace GN
                 NUM_APIs, ///< Number of available input APIs.
             };
 
+            const char * toString() const
+            {
+                static const char * TABLE[] =
+                {
+                    "NATIVE",
+                    "DINPUT",
+                    "FAKE",
+                };
+
+                const Enum & e = *this;
+                if( 0 <= e && e <= NUM_APIs ) return TABLE[e];
+                else return "INVALID_INPUT_API";
+            }
+
             GN_DEFINE_ENUM_CLASS_HELPERS( InputAPI, Enum );
         };
 

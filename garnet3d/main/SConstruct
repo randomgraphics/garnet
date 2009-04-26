@@ -1091,7 +1091,7 @@ def BUILD_dynamicLib( name, target ):
 	# Note: scons 1.2.0, on linux system, has a bug that env.SharedLibrary() returns
 	# a object with invalid name, if library name is prefixed with variable (starts with '$')
 	prefix = env['SHLIBPREFIX']
-	while( '$' == prefix[0] ):
+	while( len(prefix) > 1 and '$' == prefix[0] ):
 		prefix = env[prefix[1:]]
 
 	libName = '%s%s%s%s'%(prefix,name,BUILD_getSuffix(),env['SHLIBSUFFIX'])

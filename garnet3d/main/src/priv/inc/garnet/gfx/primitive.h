@@ -25,6 +25,25 @@ namespace GN { namespace gfx
             NUM_PRIMITIVES  ///< number of available primitive types
         };
 
+        /// conver to string
+        const char * toString() const
+        {
+            static const char * TABLE[]=
+            {
+                "POINT_LIST",
+                "LINE_LIST",
+                "LINE_STRIP",
+                "TRIANGLE_LIST",
+                "TRIANGLE_STRIP",
+                "QUAD_LIST",
+                "RECT_LIST",
+            };
+
+            const Enum & e = *this;
+            if( 0 <= e && e < GN_ARRAY_COUNT(TABLE) ) return TABLE[e];
+            else return "INVALID_PRIMITIVE_TYPE";
+        }
+
         GN_DEFINE_ENUM_CLASS_HELPERS(PrimitiveType, Enum)
     };
 
