@@ -38,8 +38,9 @@ namespace GN { namespace gfx
                 "QUAD_LIST",
                 "RECT_LIST",
             };
+            GN_CASSERT( GN_ARRAY_COUNT(TABLE) == (size_t)NUM_PRIMITIVES );
 
-            const Enum & e = *this;
+            unsigned int e = *this;
             if( 0 <= e && e < GN_ARRAY_COUNT(TABLE) ) return TABLE[e];
             else return "INVALID_PRIMITIVE_TYPE";
         }

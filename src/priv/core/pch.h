@@ -15,6 +15,8 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#elif GN_POSIX
+#include <pthread.h>
 #endif
 
 #include <stdarg.h>

@@ -123,12 +123,12 @@ ID3D10Blob * GN::d3d10::compileShader(
     // generate temporary file to store shader source
     StrA filename;
 #if GN_BUILD_DEBUG
-    AutoObjPtr<File> fp( createTemporaryFile( "wt" ) );
-    if( fp )
+    TempFile file;
+    if( file.open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {
-        filename = fp->name();
-        fp->write( source, len, NULL );
-        fp.clear(); // delete file insance, which will close the file on disk
+        filename = file.name();
+        file.write( source, len, NULL );
+        file.close();
     }
 #endif
 

@@ -52,14 +52,14 @@ GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & )
 ///
 /// D3D10 renderer creator
 ///
-#if GN_XENON
+#if GN_XENON | GN_POSIX
 inline
 #else
 extern
 #endif
 GN::gfx::Renderer *
 GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
-#if GN_XENON
+#if GN_XENON | GN_POSIX
 {
     GN_ERROR(sLogger)( "D3D10 renderer is not available on Xbox360." );
     return 0;

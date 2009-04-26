@@ -280,28 +280,78 @@ void GN::DiskFile::close() throw()
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
 
+// *****************************************************************************
+//                   implementation of TempFile
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-GN::File *
-GN::createTemporaryFile( const StrA & mode )
+bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 {
     GN_GUARD_ALWAYS;
 
-    AutoObjPtr<DiskFile> fp( new DiskFile );
+    mBehavior = beh;
 
 #if GN_MSWIN
-    char * tmpname = _tempnam( NULL, "GN_" );
-    bool ok = fp->open( tmpname, mode );
-    ::free( tmpname );
+
+    GN_UNIMPL();
+
 #else
-    char buffer[L_tmpnam];
-    tmpnam( buffer );
-    bool ok = fp->open( buffer, mode );
+
+    StrA fileNameTempl = "/tmp/GN_" + prefix + "XXXXXX";
+    mFileDesc = mkstemp( fileNameTempl );
+    if( -1 == mFileDesc )
+    {
+        GN_ERROR(myLogger())( "Fail to generate temporary file name." );
+        return false;
+    }
+
+    // unlink the temporary file name. So the file will be deleted automatically after beging closed.
+    if( AUTO_DELETE == beh )
+    {
+        unlink( fileNameTempl );
+    }
+
+    // open file
+    FILE * fp = fdopen( mFileDesc, mode );
+    if( 0 == fp )
+    {
+        GN_ERROR(myLogger())( "fail to open file '%s' with mode '%s'!",
+            fileNameTempl.cptr(), mode.cptr() );
+        close();
+        return false;
+    }
+
+    // success
+    setFile( fp );
+    setName( fileNameTempl );
+    return true;
+
 #endif
 
+    GN_UNGUARD_ALWAYS_DO( return false; );
+}
 
-    return ok ? fp.detach() : NULL;
+//
+//
+// -----------------------------------------------------------------------------
+void GN::TempFile::close()
+{
+    GN_GUARD_ALWAYS;
 
-    GN_UNGUARD_ALWAYS_DO( return NULL; );
+    // close file pointer
+    if( getFILE() ) ::fclose( getFILE() );
+    setFile( 0 );
+    setName( "" );
+
+    // close file descriptor
+    if( -1 != mFileDesc )
+    {
+        ::close( mFileDesc );
+
+        mFileDesc = -1;
+    }
+
+    GN_UNGUARD_ALWAYS;
 }

@@ -13,7 +13,7 @@ AutoRef<Texture> tex;
 inline bool
 readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 {
-    std::auto_ptr<File> fp( fs::openFile( "media::texture\\rabit.png", "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( "media::texture\\rabit.png", "rb" ) );
     if( NULL == fp.get() ) return false;
 
     ImageReader ir;

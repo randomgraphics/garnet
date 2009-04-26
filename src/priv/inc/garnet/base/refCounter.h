@@ -30,7 +30,7 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        SInt32  incref() const  throw() { return atomInc32(&mRef); }
+        SInt32 incref() const  throw() { return atomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.

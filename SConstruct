@@ -1034,18 +1034,24 @@ def BUILD_toList( x ):
 	else : return []
 
 def BUILD_addLib( env, name, lib, addSuffix ):
-	if 'gcc' != env['CC'] and lib in env['LIBS']:
-		return # ignore redundant libraries, if not GCC
+	if lib in env['LIBS']:
+		return # ignore redundant libraries
 	if addSuffix:
 		env.Prepend( LIBS = [lib+BUILD_getSuffix()] )
 	else:
 		env.Prepend( LIBS = [lib] )
 	GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
 
+#
+# add external dependencies
+#
 def BUILD_addExternalDependencies( env, name, deps ):
 	for x in deps:
 		BUILD_addLib( env, name, x, False )
 
+#
+# add dependencies to other garnet components
+#
 def BUILD_addDependencies( env, name, deps ):
 	targets = ALL_targets[BUILD_compiler][BUILD_variant]
 	for x in deps:
@@ -1079,12 +1085,15 @@ def BUILD_dynamicLib( name, target ):
 
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
-		if 'GNcore' != name : stdlibs += ['GNcore']
 		stdlibs += TARGET_stlibs
+		if 'GNcore' != name : stdlibs += ['GNcore']
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
+
+	# Duplicate all libarieres twice, to walk around GCC link order limitation
+	if( 'gcc' == env['CC'] ): env['LIBS'] += env['LIBS']
 
 	# get final share lib prefix
 	#
@@ -1122,17 +1131,17 @@ def BUILD_program( name, target ):
 
 	env = BUILD_newLinkEnv( target )
 
+    # setup standard library list
 	stdlibs = []
-
 	if not target.ignoreDefaultDependencies:
-		stdlibs = TARGET_stlibs + TARGET_shlibs;
-
-	# Need 2 GNcore instances to workaround gcc link ordering issue.
-	# stdlibs += ['GNcore']
+		stdlibs += TARGET_stlibs + TARGET_shlibs;
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
-	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
+	BUILD_addDependencies( env, name, stdlibs + BUILD_toList(target.dependencies) )
 	GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
+
+	# Duplicate all libarieres twice, to walk around GCC link order limitation
+	if( 'gcc' == env['CC'] ): env['LIBS'] += env['LIBS']
 
 	exeName = '%s%s%s%s'%(env['PROGPREFIX'],name,BUILD_getSuffix(),env['PROGSUFFIX'])
 	prog = env.Program( os.path.join(str(target.path),exeName), objs )
