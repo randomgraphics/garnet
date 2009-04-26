@@ -106,7 +106,7 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
         }
 
         default:
-            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc.lang );
+            GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %d", desc.lang.toRawEnum() );
             return NULL;
     }
 

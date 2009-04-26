@@ -1042,27 +1042,17 @@ def BUILD_addLib( env, name, lib, addSuffix ):
 		env.Prepend( LIBS = [lib] )
 	GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
 
-class ReverseIteratorProxy:
-	def __init__(self, sequence):
-		self.sequence = sequence
-	def __iter__(self):
-		length = len(self.sequence)
-		i = length
-		while i > 0:
-			i = i - 1
-			yield self.sequence[i]
-
 def BUILD_addExternalDependencies( env, name, deps ):
-	for x in ReverseIteratorProxy(deps):
+	for x in deps:
 		BUILD_addLib( env, name, x, False )
 
 def BUILD_addDependencies( env, name, deps ):
 	targets = ALL_targets[BUILD_compiler][BUILD_variant]
-	for x in ReverseIteratorProxy(deps):
+	for x in deps:
 		if x in targets:
 			BUILD_addExternalDependencies( env, name, BUILD_toList(targets[x].externalDependencies) )
 			BUILD_addDependencies( env, name, BUILD_toList(targets[x].dependencies) )
-			if 'GNcore' == x or 'stlib' == targets[x].type : # here we ignore shared libraried other then GNcore.
+			if 'GNcore' == x or 'stlib' == targets[x].type : # here we ignore dynamic libraries other then GNcore.
 				BUILD_addLib( env, name, x, True )
 		else:
 			GN.warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
@@ -1096,7 +1086,15 @@ def BUILD_dynamicLib( name, target ):
 	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
 
-	libName = '%s%s%s%s'%(env['SHLIBPREFIX'],name,BUILD_getSuffix(),env['SHLIBSUFFIX'])
+	# get final share lib prefix
+	#
+	# Note: scons 1.2.0, on linux system, has a bug that env.SharedLibrary() returns
+	# a object with invalid name, if library name is prefixed with variable (starts with '$')
+	prefix = env['SHLIBPREFIX']
+	while( '$' == prefix[0] ):
+		prefix = env[prefix[1:]]
+
+	libName = '%s%s%s%s'%(prefix,name,BUILD_getSuffix(),env['SHLIBSUFFIX'])
 	lib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
 	BUILD_handleManifest( env, lib )
 
@@ -1125,11 +1123,15 @@ def BUILD_program( name, target ):
 	env = BUILD_newLinkEnv( target )
 
 	stdlibs = []
-	if not target.ignoreDefaultDependencies:
-		stdlibs = TARGET_shlibs + TARGET_stlibs + ['GNcore'] # Need 2 GNcore instances to workaround gcc link ordering issue.
 
-	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
+	if not target.ignoreDefaultDependencies:
+		stdlibs = TARGET_stlibs + TARGET_shlibs;
+
+	# Need 2 GNcore instances to workaround gcc link ordering issue.
+	# stdlibs += ['GNcore']
+
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
+	BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
 	GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
 
 	exeName = '%s%s%s%s'%(env['PROGPREFIX'],name,BUILD_getSuffix(),env['PROGSUFFIX'])
@@ -1220,7 +1222,7 @@ for compiler, variants in ALL_targets.iteritems() :
 
 		################################################################################
 		#
-		# INSTALL
+		# SDK INSTALLATION
 		#
 		################################################################################
 

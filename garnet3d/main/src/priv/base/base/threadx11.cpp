@@ -1,40 +1,10 @@
 #include "pch.h"
 
-#if GN_MSWIN
-
-#include <process.h>
+#if GN_POSIX
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
-
-// *****************************************************************************
-// local class and functions
-// *****************************************************************************
-
-
-// defined in syncmsw.cpp
-extern UInt32 sec2usec( float time );
-
-static int sPriorityTable[] =
-{
-    THREAD_PRIORITY_TIME_CRITICAL,
-    THREAD_PRIORITY_ABOVE_NORMAL,
-    THREAD_PRIORITY_NORMAL,
-    THREAD_PRIORITY_BELOW_NORMAL,
-    THREAD_PRIORITY_IDLE,
-};
-GN_CASSERT( GN_ARRAY_COUNT(sPriorityTable) == NUM_THREAD_PRIORITIES );
-
-///
-/// convert thread priority to WIN32 constant
-///
-static int sPriority2Msw( ThreadPriority p )
-{
-    GN_ASSERT( p < NUM_THREAD_PRIORITIES );
-
-    return sPriorityTable[p];
-}
 
 // *****************************************************************************
 // thread class
@@ -43,9 +13,9 @@ static int sPriority2Msw( ThreadPriority p )
 ///
 /// thread class on MS Windows
 ///
-class ThreadMsw : public Thread, public StdClass
+class ThreadX11 : public Thread, public StdClass
 {
-    GN_DECLARE_STDCLASS( ThreadMsw, StdClass );
+    GN_DECLARE_STDCLASS( ThreadX11, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -53,8 +23,8 @@ class ThreadMsw : public Thread, public StdClass
 
     //@{
 public:
-    ThreadMsw()          { clear(); }
-    virtual ~ThreadMsw() { quit(); }
+    ThreadX11()          { clear(); }
+    virtual ~ThreadX11() { quit(); }
     //@}
 
     // ********************************
@@ -73,7 +43,7 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( ThreadMsw, () );
+        GN_STDCLASS_INIT( ThreadX11, () );
 
         // check parameter
         if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
@@ -82,19 +52,7 @@ public:
             return failure();
         }
 
-        mProc = proc;
-        mParam.instance = this;
-        mParam.userparam = param;
-        mPriority = priority;
-
-        mHandle = (HANDLE)_beginthreadex(
-            0, // security
-            0, // default stack size
-            &sProcDispatcher,
-            &mParam,
-            initialSuspended ? CREATE_SUSPENDED : 0,
-            (unsigned int*)&mId );
-        GN_MSW_CHECK_RV( mHandle, failure() );
+        GN_UNIMPL_WARNING();
 
         // success
         mAttached = false;
@@ -107,14 +65,10 @@ public:
     {
         GN_GUARD;
 
+        GN_UNIMPL_WARNING();
+
         // standard init procedure
-        GN_STDCLASS_INIT( ThreadMsw, () );
-
-        mHandle = GetCurrentThread();
-        mId = GetCurrentThreadId();
-
-        // TODO: get real priority value, then convert to TP_XXX enums.
-        mPriority = TP_NORMAL;
+        GN_STDCLASS_INIT( ThreadX11, () );
 
         // success
         mAttached = true;
@@ -127,13 +81,14 @@ public:
     {
         GN_GUARD;
 
-        if( !mAttached && mHandle )
+        GN_UNIMPL_WARNING();
+
+        if( !mAttached /*&& mHandle*/ )
         {
             // wait for thread termination
             waitForTermination( INFINITE_TIME, 0 );
 
-            // close thread handle
-            CloseHandle( mHandle );
+            // TODO: close thread handle
         }
 
         // standard quit procedure
@@ -146,8 +101,6 @@ private:
     void clear()
     {
         mAttached = false;
-        mHandle = 0;
-        mId = 0;
     }
     //@}
 
@@ -169,45 +122,30 @@ public:
             return;
         }
 
-        GN_MSW_CHECK_R( ::SetThreadPriority( mHandle, sPriority2Msw(p) ) );
+        GN_UNIMPL_WARNING();
 
         mPriority = p;
     }
 
     virtual void setAffinity( UInt32 hardwareThread )
     {
-#if GN_XENON
-        if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
-        {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
-        }
-#else
-        if( (DWORD)-1 == SetThreadIdealProcessor( mHandle, hardwareThread ) )
-        {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
-        }
-#endif
+        GN_UNIMPL_WARNING();
     }
 
     bool isCurrentThread() const
     {
-        return ::GetCurrentThreadId() == mId;
+        GN_UNIMPL_WARNING();
+        return true;
     }
 
     virtual void suspend()
     {
-        if( (DWORD)-1 == ::SuspendThread( mHandle ) )
-        {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
-        }
+        GN_UNIMPL_WARNING();
     }
 
     virtual void resume()
     {
-        if( (DWORD)-1 == ::ResumeThread( mHandle ) )
-        {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
-        }
+        GN_UNIMPL_WARNING();
     }
 
     virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
@@ -215,26 +153,9 @@ public:
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
 
-        UInt32 ret = ::WaitForSingleObject( mHandle, sec2usec( seconds ) );
+        GN_UNIMPL_WARNING();
 
-        if( WAIT_TIMEOUT == ret )
-        {
-            GN_TRACE(sLogger)( "time out!" );
-            return false;
-        }
-        else if( WAIT_OBJECT_0 == ret )
-        {
-            if( threadProcReturnValue )
-            {
-                GN_MSW_CHECK( GetExitCodeThread( mHandle, (LPDWORD)threadProcReturnValue ) );
-            }
-            return true;
-        }
-        else
-        {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
-            return false;
-        }
+        return true;
     }
 
     // ********************************
@@ -244,16 +165,13 @@ private:
 
     struct ThreadParam
     {
-        ThreadMsw * instance;
+        ThreadX11 * instance;
         void      * userparam;
     };
 
     ThreadProcedure mProc;
     ThreadParam     mParam;
     ThreadPriority  mPriority;
-
-    HANDLE          mHandle;
-    DWORD           mId;
 
     bool            mAttached;
 
@@ -265,7 +183,7 @@ private:
     ///
     /// thread procedure dispather
     ///
-    static unsigned int __stdcall sProcDispatcher( void * parameter )
+    static unsigned int sProcDispatcher( void * parameter )
     {
         GN_ASSERT( parameter );
 
@@ -288,14 +206,14 @@ private:
 GN::Thread *
 GN::createThread(
     const ThreadProcedure & proc,
-    void * param,
-    ThreadPriority priority,
-    bool initialSuspended,
-    const char * name )
+    void                  * param,
+    ThreadPriority          priority,
+    bool                    initialSuspended,
+    const char            * name )
 {
     GN_GUARD;
 
-    AutoObjPtr<ThreadMsw> s( new ThreadMsw );
+    AutoObjPtr<ThreadX11> s( new ThreadX11 );
 
     if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
@@ -309,7 +227,7 @@ GN::createThread(
 // -----------------------------------------------------------------------------
 void GN::sleepCurrentThread( float seconds )
 {
-   ::Sleep( sec2usec( seconds ) );
+    GN_UNIMPL_WARNING();
 }
 
 //
@@ -319,7 +237,7 @@ Thread * GN::generateCurrentThreadObject()
 {
     GN_GUARD;
 
-    AutoObjPtr<ThreadMsw> s( new ThreadMsw );
+    AutoObjPtr<ThreadX11> s( new ThreadX11 );
 
     if( !s->attach() ) return 0;
 
@@ -333,7 +251,8 @@ Thread * GN::generateCurrentThreadObject()
 // -----------------------------------------------------------------------------
 SInt32 GN::getCurrentThreadId()
 {
-    return (SInt32)GetCurrentThreadId();
+    GN_UNIMPL_WARNING();
+    return 0;
 }
 
 #endif

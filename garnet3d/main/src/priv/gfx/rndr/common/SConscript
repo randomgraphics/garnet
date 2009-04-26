@@ -3,6 +3,7 @@ sources = [
     'basicRenderer.cpp',
     'basicRendererMsw.cpp',
     'basicRendererXenon.cpp',
+    'basicRendererX11.cpp',
     'basicSurface.cpp',
     'cgShader.cpp',
     'renderWindowMsw.cpp',

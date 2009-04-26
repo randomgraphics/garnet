@@ -52,7 +52,7 @@ namespace GN { namespace gfx
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicTexture");
-                GN_ERROR(sLogger)( "invalid lock flag : %d", flag );
+                GN_ERROR(sLogger)( "invalid lock flag : %d", flag.toRawEnum() );
                 return false;
             }
 
@@ -144,7 +144,7 @@ namespace GN { namespace gfx
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
-                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 
@@ -212,7 +212,7 @@ namespace GN { namespace gfx
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
-                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag );
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 

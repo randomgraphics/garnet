@@ -18,11 +18,13 @@ namespace GN { namespace gfx
         Renderer      * mRenderer;
         bool            mUseExternalWindow;
         Display       * mDisplay;
+        Screen        * mScreen;
+        int             mScreenNumber;
         Window          mWindow;
 
         //@{
     public:
-        RenderWindowX11() : mRenderer(0), mDisplay(0), mWindow(0) {}
+        RenderWindowX11() : mRenderer(0), mDisplay(0), mScreen(0), mWindow(0) {}
         ~RenderWindowX11() {}
         //@}
 
@@ -39,12 +41,12 @@ namespace GN { namespace gfx
         ///
         /// (re)initialize render window to use external window
         ///
-        bool initExternalRenderWindow( HandleType display, HandleType externalWindow );
+        bool initExternalRenderWindow( Renderer * r, Display * display, Window externalWindow );
 
         ///
         /// (re)initialize render window to use internal widow.
         ///
-        bool initInternalRenderWindow( HandleType display, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
+        bool initInternalRenderWindow( Renderer * r, Display * display, Window parentWindow, Screen * monitor, UInt32 width, UInt32 height );
 
         ///
         /// Delete render window
@@ -54,17 +56,17 @@ namespace GN { namespace gfx
         ///
         /// Get display handle
         ///
-        HandleType getDisplay() const { return mDisplay; }
+        Display *  getDisplay() const { return mDisplay; }
 
         ///
         /// Get window handle
         ///
-        HandleType getWindow() const { return (void*)mWindow; }
+        Window getWindow() const { return mWindow; }
 
         ///
-        /// Get monitor handle (pointer to screen structure).
+        /// Get screen number
         ///
-        HandleType getMonitor() const;
+        int getScreenNumber() const { return mScreenNumber; }
 
         ///
         /// Get client size
@@ -85,13 +87,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        bool initDisplay( HandleType display );
+        bool initDisplay( Display * display );
     };
-
-    ///
-    /// Get screen number of a window. Return -1 if failed.
-    ///
-    int getScreenNumberOfWindow( Display * disp, Window win );
 }}
 
 #endif // GN_POSIX

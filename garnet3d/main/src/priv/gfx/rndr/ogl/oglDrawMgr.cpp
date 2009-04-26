@@ -30,7 +30,7 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
         case GN::gfx::PrimitiveType::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
         case GN::gfx::PrimitiveType::QUAD_LIST      : return GL_QUADS;
         default :
-            GN_ERROR(sLogger)( "invalid primitve type %d!", prim );
+            GN_ERROR(sLogger)( "invalid primitve type %d!", prim.toRawEnum() );
             return GL_TRIANGLES;
     }
 }

@@ -250,7 +250,7 @@
     public: \
         ENUM_CLASS() {} \
         ENUM_CLASS( ENUM_TYPE e ) : mValue( e ) {} \
-        operator ENUM_TYPE &() { return mValue; } \
+        const ENUM_TYPE & toRawEnum() const { return mValue; } \
         operator const ENUM_TYPE &() const { return mValue; }
 
 ///
