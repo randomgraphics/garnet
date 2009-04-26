@@ -61,6 +61,26 @@ namespace GN { namespace gfx
             AUTO,     ///< determine rendering API automatically.
         };
 
+        /// convert enum to string
+        const char * toString() const
+        {
+            static const char * TABLE[] =
+            {
+                "OGL",
+                "D3D9",
+                "D3D10",
+                "XENON",
+                "FAKE",
+                "INVALID_RENDERING_API",
+                "AUTO"
+            };
+
+            const Enum & e = *this;
+
+            if( 0 <= e && e <= AUTO ) return TABLE[e];
+            else return "INVALID_RENDERING_API";
+        }
+
         GN_DEFINE_ENUM_CLASS_HELPERS( RendererAPI, Enum );
     };
 

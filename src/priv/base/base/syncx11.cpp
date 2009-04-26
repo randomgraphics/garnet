@@ -1,8 +1,8 @@
 #include "pch.h"
 
-float const GN::INFINITE_TIME = 1e38f;
-
 #if GN_POSIX
+
+float const GN::INFINITE_TIME = 1e38f;
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 

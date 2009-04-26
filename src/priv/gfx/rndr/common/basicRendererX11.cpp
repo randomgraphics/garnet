@@ -2,7 +2,7 @@
 #include "basicRendererX11.h"
 #include "garnet/GNwin.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_POSIX
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
 

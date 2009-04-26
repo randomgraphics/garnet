@@ -138,6 +138,20 @@ namespace GN { namespace gfx
             NUM_FLAGS     ///< number of update flags.
         };
 
+        /// convert enumeration to string
+        const char * toString() const
+        {
+            static const char * TABLE[]=
+            {
+                "DEFAULT",
+                "DISCARD",
+                "NO_OVERWRITE",
+            };
+
+            const Enum & e = *this;
+            if( 0 <= e && e <= NUM_FLAGS ) return TABLE[e];
+            else return "INVALID_SURFACE_UPDATE_FLAG";
+        }
         GN_DEFINE_ENUM_CLASS_HELPERS( SurfaceUpdateFlag, Enum );
     };
 
