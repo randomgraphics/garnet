@@ -289,6 +289,45 @@ namespace GN
     };
 
     ///
+    /// temporary file
+    ///
+    class TempFile : public StdFile
+    {
+    public:
+
+        ///
+        /// Temporary file behavior flags
+        ///
+        enum Behavior
+        {
+            AUTO_DELETE,    ///< The temporary file will be deleted automatically after file is closed.
+            MANUAL_DELETE,  ///< The temporary file will remain on the disc.
+        };
+
+        /// default constructor
+        TempFile() : StdFile(0), mFileDesc(-1) {};
+
+        ///
+        /// open a temporary file with user specified prefix
+        ///
+        bool open( const StrA & prefix, const StrA & mode, Behavior behavior );
+
+        ///
+        /// close the temporary file
+        ///
+        void close();
+
+        ///
+        /// Convert to ANSI FILE *
+        ///
+        operator FILE*() const { return getFILE(); }
+
+    private:
+        Behavior mBehavior;
+        int      mFileDesc; ///< file descriptor (used on linux system only)
+    };
+
+    ///
     /// file class that wraps a fixed-sized memory buffer
     ///
     template< typename T >
@@ -296,7 +335,7 @@ namespace GN
     {
         UInt8 * mStart;
         UInt8 * mPtr;
-        size_t    mSize;
+        size_t  mSize;
 
     public:
 
@@ -382,14 +421,6 @@ namespace GN
         void unmap() {}
         //@}
     };
-
-    ///
-    /// Create temporary file with user specified mode
-    ///
-    /// \param mode     Same as mode parameter of standard fopen().
-    /// \return         Temporary file object.
-    ///
-    File * createTemporaryFile( const StrA & mode );
 }
 
 #include "file.inl"

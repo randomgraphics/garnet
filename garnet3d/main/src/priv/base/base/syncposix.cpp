@@ -17,7 +17,13 @@ using namespace GN;
 // -----------------------------------------------------------------------------
 GN::Mutex::Mutex()
 {
-    GN_UNIMPL_WARNING();
+    // initiialize a recursive mutex (same behavior as mutex on MSWIN)
+    GN_CASSERT( sizeof(pthread_mutex_t) <= sizeof(mInternal) );
+    pthread_mutexattr_t mta;
+    pthread_mutexattr_init(&mta);
+    pthread_mutexattr_settype( &mta, PTHREAD_MUTEX_RECURSIVE );
+    pthread_mutex_init( (pthread_mutex_t*)mInternal, &mta );
+    pthread_mutexattr_destroy(&mta);
 }
 
 //
@@ -25,7 +31,7 @@ GN::Mutex::Mutex()
 // -----------------------------------------------------------------------------
 GN::Mutex::~Mutex()
 {
-    GN_UNIMPL_WARNING();
+    pthread_mutex_destroy( (pthread_mutex_t*)mInternal );
 }
 
 //
@@ -33,8 +39,7 @@ GN::Mutex::~Mutex()
 // -----------------------------------------------------------------------------
 bool GN::Mutex::trylock()
 {
-    GN_UNIMPL_WARNING();
-	return true;
+    return 0 == pthread_mutex_trylock( (pthread_mutex_t*)mInternal );
 }
 
 //
@@ -42,7 +47,7 @@ bool GN::Mutex::trylock()
 // -----------------------------------------------------------------------------
 void GN::Mutex::lock()
 {
-    GN_UNIMPL_WARNING();
+    pthread_mutex_lock( (pthread_mutex_t*)mInternal );
 }
 
 //
@@ -50,7 +55,7 @@ void GN::Mutex::lock()
 // -----------------------------------------------------------------------------
 void GN::Mutex::unlock()
 {
-    GN_UNIMPL_WARNING();
+    pthread_mutex_unlock( (pthread_mutex_t*)mInternal );
 }
 
 // *****************************************************************************

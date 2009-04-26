@@ -110,16 +110,10 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
 
     GN::StrA info;
 
-    // vendor info.
-
-#if GN_POSIX
-    const char * vendor   = (const char *)glXGetClientString( (Display*)disp, GLX_VENDOR );
-    const char * version  = (const char *)glXGetClientString( (Display*)disp, GLX_VERSION );
-#else
+    // vendor and version info.
     GN_UNUSED_PARAM( disp );
     const char * vendor   = (const char *)glGetString(GL_VENDOR);
     const char * version  = (const char *)glGetString(GL_VERSION);
-#endif
     const char * renderer = (const char *)glGetString(GL_RENDERER);
 
     info = GN::strFormat(

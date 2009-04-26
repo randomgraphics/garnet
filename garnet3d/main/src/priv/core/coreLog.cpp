@@ -1,10 +1,16 @@
 #include "pch.h"
 #include <set>
 
+// Note: to prevent circle referencing, this file should try to avoid
+// referencing other garnet components as much as possible.
+
 // *****************************************************************************
 // local classes and utils
 // *****************************************************************************
 
+///
+/// setup and restore console color
+///
 class ConsoleColor
 {
 #if GN_MSWIN & GN_PC
@@ -57,6 +63,52 @@ public:
     ~ConsoleColor()     {}
 #endif
 };
+
+#if GN_POSIX
+///
+/// local mutex class on X11 platform (to avoid referencing GN::LocalMutex)
+///
+class LocalMutexX11
+{
+    pthread_mutex_t mMutex;
+
+public:
+
+    /// ctor
+    LocalMutexX11()
+    {
+        // initiialize a recursive mutex (same behavior as mutex on MSWIN)
+        pthread_mutexattr_t mta;
+        pthread_mutexattr_init(&mta);
+        pthread_mutexattr_settype( &mta, PTHREAD_MUTEX_RECURSIVE );
+        pthread_mutex_init( &mMutex, &mta );
+        pthread_mutexattr_destroy(&mta);
+    }
+
+    /// dtor
+    ~LocalMutexX11()
+    {
+        pthread_mutex_destroy( &mMutex );
+    }
+
+    /// acquire the lock
+    void lock()
+    {
+        pthread_mutex_lock( &mMutex );
+    }
+
+    /// release the lock
+    void unlock()
+    {
+        pthread_mutex_unlock( &mMutex );
+    }
+};
+typedef LocalMutexX11 LocalMutex;
+#elif GN_MSWIN
+typedef GN::Mutex LocalMutex;
+#else
+#error Unsupported platform
+#endif
 
 //
 //
@@ -349,7 +401,7 @@ namespace GN
     {
     public:
 
-        LoggerImpl( const StrA & name, Mutex & mutex )
+        LoggerImpl( const StrA & name, LocalMutex & mutex )
             : Logger(name)
             , mGlobalMutex( mutex )
             , mInheritLevel(true)
@@ -365,53 +417,53 @@ namespace GN
 
         virtual void setLevel( int level )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveUpdateLevel( level );
             mInheritLevel = false;
         }
 
         virtual void setEnabled( bool enabled )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveUpdateEnabled( enabled );
             mInheritEnabled = false;
         }
 
         virtual void doLog( const LogDesc & desc, const StrA & msg )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void doLog( const LogDesc & desc, const StrW & msg )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void addReceiver( Receiver * r )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.insert( r );
         }
 
         virtual void removeReceiver( Receiver * r )
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.erase( r );
         }
 
         virtual void removeAllReceivers()
         {
-            ScopeMutex<Mutex> m(mGlobalMutex);
+            ScopeMutex<LocalMutex> m(mGlobalMutex);
             mReceivers.clear();
         }
 
     private:
 
-        Mutex & mGlobalMutex;
+        LocalMutex & mGlobalMutex;
 
         std::set<Receiver*> mReceivers;
         bool mInheritLevel;
@@ -463,7 +515,7 @@ namespace GN
         FileReceiver    mFr;
         DebugReceiver   mDr;
         LoggerImpl      mRootLogger;
-        Mutex           mMutex;
+        LocalMutex      mMutex;
 
         std::map<StrA,LoggerImpl*> mLoggers;
 
@@ -534,7 +586,7 @@ namespace GN
 
         LoggerImpl * getLogger( const char * name )
         {
-            ScopeMutex<Mutex> m( mMutex );
+            ScopeMutex<LocalMutex> m( mMutex );
 
             // trip leading and trailing dots
             StrA n(name);
@@ -564,15 +616,25 @@ namespace GN
             return newLogger.detach();
         }
     };
+
     LoggerContainer * msInstancePtr = 0;
+
+    //
+    // Implement global log function.
+    // -------------------------------------------------------------------------
+    static LoggerContainer & sGetLoggerContainer()
+    {
+        // WARNING: this function is not thread-safe!
+        static LoggerContainer lc;
+        return lc;
+    }
 
     //
     // Implement global log function.
     // -------------------------------------------------------------------------
     GN_PUBLIC Logger * getLogger( const char * name )
     {
-        // WARNING: this function is not thread-safe!
-        static LoggerContainer lc;
+        LoggerContainer & lc = sGetLoggerContainer();
         return lc.getLogger( name );
     }
 }

@@ -13,7 +13,6 @@ inline void GN::memoryBarrier()
 // -----------------------------------------------------------------------------
 inline SInt32 GN::atomGet32( const SInt32 volatile * dest )
 {
-    GN_UNIMPL();
     GN_ASSERT( dest );
     return *dest;
 }
@@ -33,9 +32,9 @@ inline void GN::atomSet32( SInt32 volatile * dest, SInt32 value )
 // -----------------------------------------------------------------------------
 inline SInt32 GN::atomInc32( SInt32 volatile * dest )
 {
+    GN_UNIMPL_WARNING();
     GN_ASSERT( dest );
-    GN_UNIMPL();
-    return 0;
+    return (++*dest);
 }
 
 //
@@ -43,9 +42,9 @@ inline SInt32 GN::atomInc32( SInt32 volatile * dest )
 // -----------------------------------------------------------------------------
 inline SInt32 GN::atomDec32( SInt32 volatile * dest )
 {
+    GN_UNIMPL_WARNING();
     GN_ASSERT( dest );
-    GN_UNIMPL();
-    return 0;
+    return (--*dest);
 }
 
 //

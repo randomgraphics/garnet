@@ -252,7 +252,7 @@ bool GN::gfx::BasicRendererX11::dispInit( const RendererOptions & ro )
         if( !mWindow.initInternalRenderWindow( this, disp, (Window)ro.parentWindow, (Screen*)desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
     desc.displayHandle = disp;
-    desc.windowHandle = mWindow.getWindow();
+    desc.windowHandle = (void*)mWindow.getWindow();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,

@@ -74,13 +74,9 @@ namespace GN { namespace gfx
         bool getClientSize( UInt32 & width , UInt32 & height ) const;
 
         ///
-        /// Get window size change flag.
+        /// handle render window size move, trigger renderer signal as apropriate.
         ///
-        /// \param autoReset
-        ///     If true, automatically clear the flag.
-        ///
-        bool getSizeChangeFlag( bool autoReset = true )
-        { GN_UNUSED_PARAM(autoReset); return false; }
+        void handleSizeMove();
 
         // ********************************
         // private interface

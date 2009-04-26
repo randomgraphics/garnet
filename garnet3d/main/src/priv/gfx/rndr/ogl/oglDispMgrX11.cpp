@@ -42,7 +42,12 @@ bool GN::gfx::OGLRenderer::dispInit()
     vi.bits_per_rgb = wa.visual->bits_per_rgb;
 
     // create a GLX context
-    mRenderContext = glXCreateContext( disp, &vi, 0, GL_FALSE );
+    mRenderContext = glXCreateContext(
+        disp,
+        &vi,
+        0,    // no sharing
+        true  // enable direct rendering, which yields best feature set and performance.
+        );
     if( 0 == mRenderContext )
     {
         GN_ERROR(sLogger)( "Fail to create GLX context." );
