@@ -1,29 +1,24 @@
-#ifndef __GN_GFXCOMMON_BASICRENDERER_H__
-#define __GN_GFXCOMMON_BASICRENDERER_H__
+#ifndef __GN_GFXCOMMON_BASICRENDERERX11_H__
+#define __GN_GFXCOMMON_BASICRENDERERX11_H__
 // *****************************************************************************
 /// \file
-/// \brief   Basic renderer class
-/// \author  chenlee (2005.10.1)
+/// \brief   Basic renderer class for X Windows
+/// \author  chenlee (2009.4.25)
 // *****************************************************************************
 
-///
-/// Rest-in-peace macro
-///
-#define GN_RNDR_RIP GN::gfx::rip
+#if GN_POSIX
+
+#include "basicRenderer.h"
+#include "renderWindowX11.h"
 
 namespace GN { namespace gfx
 {
     ///
-    /// reset in peace...
-    ///
-    void rip( const char * msg, ... );
-
-    ///
     /// basic renderer class
     ///
-    class BasicRenderer : public Renderer, public StdClass
+    class BasicRendererX11 : public BasicRenderer
     {
-        GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
+        GN_DECLARE_STDCLASS( BasicRendererX11, BasicRenderer );
 
         // ********************************
         // constructor/destructor
@@ -31,8 +26,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRenderer() { clear(); }
-        virtual ~BasicRenderer() {}
+        BasicRendererX11() { clear(); }
+        virtual ~BasicRendererX11() {}
         //@}
 
         // ********************************
@@ -46,8 +41,7 @@ namespace GN { namespace gfx
     private :
         void clear()
         {
-            contextClear();
-            miscClear();
+            dispClear();
         }
         //@}
 
@@ -59,12 +53,29 @@ namespace GN { namespace gfx
 
         //@{
 
-     protected:
+    public:
 
-        ///
-        /// Called by sub class to respond to render window resizing/moving
-        ///
-        virtual void handleRenderWindowSizeMove() = 0;
+        virtual const RendererOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
+
+    private:
+        bool dispInit( const RendererOptions & );
+        void dispQuit();
+        void dispClear() { mDefaultDisplay = 0; }
+
+    protected:
+
+        virtual void handleRenderWindowSizeMove();
+
+        RenderWindowX11 & getRenderWindow() { return mWindow; }
+
+    private:
+
+        RendererOptions   mOptions;
+        DispDesc          mDispDesc;
+
+        Display         * mDefaultDisplay;
+        RenderWindowX11   mWindow;  ///< Render window instance.
 
         //@}
 
@@ -96,25 +107,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
-
-        virtual void bindContext( const RendererContext & c );
-        virtual void rebindContext();
-        virtual inline const RendererContext & getContext() const { return mContext; }
-
-    protected:
-
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck ) = 0;
-
-    private:
-
-        void contextClear() { mContextOk = false; }
-
-    protected:
-
-        RendererContext mContext;
-        bool            mContextOk;
-
         //@}
 
         // *****************************************************************************
@@ -137,34 +129,15 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
-        virtual void         setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
-        virtual bool         hasUserData( const Guid & id ) const;
-
-        bool                 paramCheckEnabled() const { return mParamCheckEnabled; }
-
-    private:
-
-        void miscClear()
-        {
-            mParamCheckEnabled = GN_BUILD_DEBUG;
-            mUserData.clear();
-        }
-
-    private:
-
-        typedef std::map<Guid,DynaArray<UInt8> > UserDataMap;
-
-        bool mParamCheckEnabled;
-
-        UserDataMap mUserData;
+        virtual void processRenderWindowMessages( bool blockWhileMinimized );
 
         //@}
     };
 }}
 
+#endif
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_BASICRENDERER_H__
+#endif // __GN_GFXCOMMON_BASICRENDERERX11_H__

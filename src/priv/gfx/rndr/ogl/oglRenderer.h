@@ -6,6 +6,7 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
+#include "../common/basicRendererX11.h"
 #include "../common/basicRendererMsw.h"
 #include "../common/cgShader.h"
 

@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #include "oglResource.h"
-#include "OGLShader.h"
+#include "oglShader.h"
 
 namespace GN { namespace gfx
 {

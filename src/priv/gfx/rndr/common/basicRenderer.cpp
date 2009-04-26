@@ -34,7 +34,7 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
         }
         else
         {
-            GN_ERROR(sLogger)( "Invalid API: %d", o.api );
+            GN_ERROR(sLogger)( "Invalid API: %d", o.api.toRawEnum() );
         }
 
         return failure();

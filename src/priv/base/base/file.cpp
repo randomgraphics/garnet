@@ -290,11 +290,16 @@ GN::createTemporaryFile( const StrA & mode )
 
     AutoObjPtr<DiskFile> fp( new DiskFile );
 
+#if GN_MSWIN
     char * tmpname = _tempnam( NULL, "GN_" );
-
     bool ok = fp->open( tmpname, mode );
-
     ::free( tmpname );
+#else
+    char buffer[L_tmpnam];
+    tmpnam( buffer );
+    bool ok = fp->open( buffer, mode );
+#endif
+
 
     return ok ? fp.detach() : NULL;
 

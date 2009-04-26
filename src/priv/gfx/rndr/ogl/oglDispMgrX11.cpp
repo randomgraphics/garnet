@@ -24,9 +24,6 @@ bool GN::gfx::OGLRenderer::dispInit()
     Window win = (Window)getDispDesc().windowHandle;
     GN_ASSERT( disp && win );
 
-    int scr = getScreenNumberOfWindow( disp, win );
-    if( scr < 0 ) return false;
-
     // get window attributes
     XWindowAttributes wa;
     GN_X_CHECK_RV( XGetWindowAttributes( disp, win, &wa ), false );
@@ -35,7 +32,7 @@ bool GN::gfx::OGLRenderer::dispInit()
     XVisualInfo vi;
     vi.visual = wa.visual;
     vi.visualid = wa.visual->visualid;
-    vi.screen = scr;
+    vi.screen = getRenderWindow().getScreenNumber();
     vi.depth = wa.depth;
     vi.c_class = wa.visual->c_class;
     vi.red_mask = wa.visual->red_mask;

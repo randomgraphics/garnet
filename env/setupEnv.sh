@@ -1,9 +1,16 @@
-# ===========
-# setup common variables
-# ===========
-GN_BUILD_TARGET_OS=posix
-GN_BUILD_TARGET_CPU=x86
-GN_BUILD_COMPILER=gcc
+# ======================================
+# detect garnet root directory
+# ======================================
+GARNET_ROOT=$(cd $(dirname $(dirname ${BASH_SOURCE[0]})); pwd)
+echo Garnet root : ${GARNET_ROOT}
+
+# ===========================
+# setup build variants
+# ===========================
+export GN_BUILD_TARGET_OS=posix
+export GN_BUILD_TARGET_CPU=x86
+export GN_BUILD_COMPILER=gcc
+export GN_BUILD_VARIANT=stdbg
 
 # ===========
 # setup scons
@@ -12,6 +19,7 @@ echo SCons Directory : ${GARNET_ROOT}/env/scons
 PATH=${GARNET_ROOT}/env/scons/1.2.0/scripts:${PATH}
 SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/1.2.0/lib
 export PATH SCONS_LIB_DIR
+export SCONSFLAGS=-U
 
 # ===========
 # setup alias
@@ -49,7 +57,6 @@ unset LIBS
 # End of setup
 # ============
 
-echo Garnet root : ${GARNET_ROOT}
 cd ${GARNET_ROOT}
 
 # =========================

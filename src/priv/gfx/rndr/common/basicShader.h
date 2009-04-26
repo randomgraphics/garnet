@@ -112,7 +112,7 @@ namespace GN { namespace gfx
             if( !desc.lang.valid() )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common");
-                GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang );
+                GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.toRawEnum() );
                 return false;
             }
 

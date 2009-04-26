@@ -16,7 +16,9 @@ sources = [
 	'spinloop.cpp',
 	'string.cpp',
 	'syncmsw.cpp',
+	'syncx11.cpp',
 	'threadmsw.cpp',
+	'threadx11.cpp',
 	'variant.cpp',
 	'xml.cpp',
 ]
