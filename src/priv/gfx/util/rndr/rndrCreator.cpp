@@ -129,7 +129,7 @@ namespace GN { namespace gfx
         if( !creator ) return 0;
         Renderer * r = creator( ro );
         if( 0 == r ) return 0;
-        SharedLib * dllptr = dll.get();
+        SharedLib * dllptr = dll;
         r->setUserData( RENDERER_DLL_GUID, &dllptr, sizeof(dllptr) );
         dll.detach();
         return r;

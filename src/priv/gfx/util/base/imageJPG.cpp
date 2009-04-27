@@ -179,7 +179,7 @@ bool JPGReader::readImage( void * o_data )
     if( !grayscale )
     {
         GN_ASSERT( rgbBuf );
-        UInt8 * src = (UInt8*)rgbBuf.get();
+        UInt8 * src = (UInt8*)rgbBuf;
         UInt8 * dst = (UInt8*)o_data;
         for( size_t y = 0; y < height; ++y )
         {

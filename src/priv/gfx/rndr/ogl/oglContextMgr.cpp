@@ -182,7 +182,7 @@ GN::gfx::OGLRenderer::findOrCreateOGLVtxFmt(
     AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
     if( !oglvf->init( vf, program ) ) return NULL;
 
-    mVertexFormats[key] = oglvf.get();
+    mVertexFormats[key] = oglvf;
 
     return oglvf.detach();
 }
