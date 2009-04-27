@@ -295,7 +295,23 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 
 #if GN_MSWIN
 
-    GN_UNIMPL();
+    // generate temporary file name
+    AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );
+
+    // open the file
+    FILE * fp = sOpenFile( filename.cptr(), mode );
+    if( 0 == fp )
+    {
+        GN_ERROR(myLogger())( "fail to open file '%s' with mode '%s'!",
+            filename.cptr(), mode.cptr() );
+        close();
+        return false;
+    }
+
+    // success
+    setFile( fp );
+    setName( filename.cptr() );
+    return true;
 
 #else
 
@@ -345,6 +361,7 @@ void GN::TempFile::close()
     setFile( 0 );
     setName( "" );
 
+#if GN_POSIX
     // close file descriptor
     if( -1 != mFileDesc )
     {
@@ -352,6 +369,7 @@ void GN::TempFile::close()
 
         mFileDesc = -1;
     }
+#endif
 
     GN_UNGUARD_ALWAYS;
 }

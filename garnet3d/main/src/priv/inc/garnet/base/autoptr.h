@@ -44,9 +44,9 @@ namespace GN
             bool empty() const { return 0 == mPtr; }
 
             ///
-            /// Get internal pointer
+            /// Get internal C-style raw pointer
             ///
-            T * get() const { return mPtr; }
+            T * cptr() const { return mPtr; }
 
             ///
             /// clear internal pointer. Same as attach(0)
@@ -188,7 +188,7 @@ namespace GN
 
         static void sDoRelease( T * p )
         {
-            if( p ) heapFree(p);
+            if( p ) heapFree((void*)p);
         }
 
     public:
@@ -197,6 +197,32 @@ namespace GN
         /// Construct from C-style pointer
         ///
         explicit AutoTypePtr( T * p = 0 ) throw() : ParentType(p) {}
+    };
+
+    ///
+    /// Automatic C-style array created by malloc. Can NOT be used in STL containers.
+    ///
+    template<typename T>
+    class AutoMallocPtr : public detail::BaseAutoPtr< T, AutoMallocPtr<T> >
+    {
+        typedef detail::BaseAutoPtr< T, AutoMallocPtr<T> > ParentType;
+#if GN_GCC
+        friend class detail::BaseAutoPtr< T, AutoMallocPtr<T> >;
+#else
+        friend class ParentType;
+#endif
+
+        static void sDoRelease( T * p )
+        {
+            if( p ) ::free((void*)p);
+        }
+
+    public:
+
+        ///
+        /// Construct from C-style pointer
+        ///
+        explicit AutoMallocPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 
     ///

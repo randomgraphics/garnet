@@ -14,7 +14,7 @@ inline bool
 readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
 {
     AutoObjPtr<File> fp( fs::openFile( "media::texture\\rabit.png", "rb" ) );
-    if( NULL == fp.get() ) return false;
+    if( NULL == fp ) return false;
 
     ImageReader ir;
     if( !ir.reset( *fp ) ) return false;

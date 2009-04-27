@@ -604,7 +604,7 @@ namespace GN
 
             // not found. create new one.
             AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n,mMutex) );
-            mLoggers[n] = newLogger.get();
+            mLoggers[n] = newLogger;
 
             // update logger tree
             LoggerImpl * parent = findParent( n );
