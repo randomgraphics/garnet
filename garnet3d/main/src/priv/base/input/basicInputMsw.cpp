@@ -181,14 +181,14 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
             {
                 POINT pos;
                 GN_MSW_CHECK( ::GetCursorPos( &pos ) );
-                pushAxisAbs( AXIS_MOUSE_X, pos.x );
-                pushAxisAbs( AXIS_MOUSE_Y, pos.y );
+                pushAxisAbs( Axis::MOUSE_X, pos.x );
+                pushAxisAbs( Axis::MOUSE_Y, pos.y );
             }
             break;
 
         // mouse wheel
         case WM_MOUSEWHEEL :
-            pushAxisMove( AXIS_MOUSE_WHEEL_0, (short)HIWORD(wp)/10 );
+            pushAxisMove( Axis::MOUSE_WHEEL_0, (short)HIWORD(wp)/10 );
             break;
 
         case WM_DESTROY :

@@ -40,12 +40,12 @@ void GN::input::BasicXInput::processInputEvents()
         triggerKeyPress( KEY_XB360_Y              , !!(b & XINPUT_GAMEPAD_Y)              );
 
         // update axises
-        triggerAxisMoveAbs( AXIS_XB360_LEFT_TRIGGER  , (int)pad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
-        triggerAxisMoveAbs( AXIS_XB360_RIGHT_TRIGGER , (int)pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
-        triggerAxisMoveAbs( AXIS_XB360_THUMB_LX      , (int)pad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
-        triggerAxisMoveAbs( AXIS_XB360_THUMB_LY      , (int)pad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
-        triggerAxisMoveAbs( AXIS_XB360_THUMB_RX      , (int)pad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
-        triggerAxisMoveAbs( AXIS_XB360_THUMB_RY      , (int)pad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( Axis::XB360_LEFT_TRIGGER  , (int)pad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
+        triggerAxisMoveAbs( Axis::XB360_RIGHT_TRIGGER , (int)pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
+        triggerAxisMoveAbs( Axis::XB360_THUMB_LX      , (int)pad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( Axis::XB360_THUMB_LY      , (int)pad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( Axis::XB360_THUMB_RX      , (int)pad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( Axis::XB360_THUMB_RY      , (int)pad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
     }
 
     GN_UNGUARD;

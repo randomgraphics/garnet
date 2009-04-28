@@ -263,8 +263,8 @@ public:
         GN_ASSERT( a );
         static const float MIN_SPEED = 0.000001f;
         float speed = max( MIN_SPEED, mRadius * 0.000001f );
-        mMoveSpeed = speed * a[AXIS_XB360_THUMB_LY];
-        mRollSpeed.set( speed * a[AXIS_XB360_THUMB_RY], speed * a[AXIS_XB360_THUMB_RX], 0 );
+        mMoveSpeed = speed * a[Axis::XB360_THUMB_LY];
+        mRollSpeed.set( speed * a[Axis::XB360_THUMB_RY], speed * a[Axis::XB360_THUMB_RX], 0 );
 
         // update radius and euler
         mRadius += mMoveSpeed;

@@ -24,7 +24,7 @@ namespace GN { namespace input
         virtual void processInputEvents() {}
         virtual KeyEvent popLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
         virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
-        virtual const int * getAxisStatus() const { static int as[NUM_AXISES]; return as; }
+        virtual const int * getAxisStatus() const { static int as[Axis::NUM_AXISES]; return as; }
         virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }
     };
 }}

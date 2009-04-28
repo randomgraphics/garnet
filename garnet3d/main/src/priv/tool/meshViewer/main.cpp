@@ -43,7 +43,7 @@ void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
 
 void onAxisMove( Axis a, int d )
 {
-    if( AXIS_MOUSE_WHEEL_0 == a )
+    if( Axis::MOUSE_WHEEL_0 == a )
     {
         float speed = radius / 100.0f;
         radius -= speed * d;

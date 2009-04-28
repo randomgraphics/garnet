@@ -61,9 +61,9 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
     mKeys[TURN_D] = KEY_UP;
     mKeys[AXIS_LOOK] = KEY_MOUSEBTN_1;
 
-    mAxises[TURN_X] = AXIS_MOUSE_X;
-    mAxises[TURN_Y] = AXIS_MOUSE_Y;
-    mAxises[TURN_Z] = AXIS_MOUSE_WHEEL_0;
+    mAxises[TURN_X] = Axis::MOUSE_X;
+    mAxises[TURN_Y] = Axis::MOUSE_Y;
+    mAxises[TURN_Z] = Axis::MOUSE_WHEEL_0;
 }
 
 // *****************************************************************************

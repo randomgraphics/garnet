@@ -84,22 +84,19 @@ namespace GN { namespace input
         {
             int type; // 0 : key, 1: char, 2: axis_move, 3: axis_abs
 
-            union
+            struct
             {
-                struct
-                {
-                    KeyCode code;
-                    bool    down;
-                } key;
+                KeyCode code;
+                bool    down;
+            } key;
 
-                char ch;
+            struct
+            {
+                Axis a;
+                int  d;
+            } axis;
 
-                struct
-                {
-                    Axis a;
-                    int  d;
-                } axis;
-            };
+            char ch;
         };
 
         HMODULE mXInputLibrary;
