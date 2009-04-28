@@ -89,7 +89,7 @@ int run( Renderer & rndr )
 
         in.processInputEvents();
 
-        if( in.getKeyStatus( KEY_ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }

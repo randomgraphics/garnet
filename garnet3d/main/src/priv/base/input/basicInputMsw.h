@@ -84,13 +84,13 @@ namespace GN { namespace input
         {
             int type; // 0 : key, 1: char, 2: axis_move, 3: axis_abs
 
-            struct
+            struct KeyEvent
             {
                 KeyCode code;
                 bool    down;
             } key;
 
-            struct
+            struct AxisEvent
             {
                 Axis a;
                 int  d;
