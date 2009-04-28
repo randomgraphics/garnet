@@ -413,7 +413,7 @@ namespace GN { namespace gfx
 
         BlendStateCache           mBlendStates;
         ID3D10BlendState        * mCurrentBS;
-        float                     mCurrentBlendFactors[4];
+        Vector4f                  mCurrentBlendFactors;
         UInt32                    mCurrentSampleMask;
 
         DepthStencilStateCache    mDepthStates;
@@ -446,7 +446,7 @@ namespace GN { namespace gfx
         /// set blend state
         bool setBS(
             const D3D10_BLEND_DESC & desc,
-            const float            * blendFactors,
+            const Vector4f         & blendFactors,
             UInt32                   sampleMask,
             bool                     skipDirtyCheck );
 

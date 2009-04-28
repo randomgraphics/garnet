@@ -235,6 +235,33 @@ static const D3DCULL CULL_TO_D3D[]=
 };
 GN_CASSERT( GN_ARRAY_COUNT(CULL_TO_D3D) == GN::gfx::RendererContext::NUM_FRONT_FACE_MODES * GN::gfx::RendererContext::NUM_CULL_MODES );
 
+static const D3DBLENDOP BLEND_OP_TO_D3D[]=
+{
+    D3DBLENDOP_ADD,         // BLEND_OP_ADD = 0,
+    D3DBLENDOP_SUBTRACT,    // BLEND_OP_SUB,
+    D3DBLENDOP_REVSUBTRACT, // BLEND_OP_REV_SUB,
+    D3DBLENDOP_MIN,         // BLEND_OP_MIN,
+    D3DBLENDOP_MAX,         // BLEND_OP_MAX,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
+
+static const D3DBLEND BLEND_ARG_TO_D3D[]=
+{
+    D3DBLEND_ZERO,           // BLEND_ZERO = 0,
+    D3DBLEND_ONE,            // BLEND_ONE,
+    D3DBLEND_SRCCOLOR,       // BLEND_SRC_COLOR,
+    D3DBLEND_INVSRCCOLOR,    // BLEND_INV_SRC_COLOR,
+    D3DBLEND_SRCALPHA,       // BLEND_SRC_ALPHA,
+    D3DBLEND_INVSRCALPHA,    // BLEND_INV_SRC_ALPHA,
+    D3DBLEND_DESTALPHA,      // BLEND_DEST_ALPHA,
+    D3DBLEND_INVDESTALPHA,   // BLEND_INV_DEST_ALPHA,
+    D3DBLEND_DESTCOLOR,      // BLEND_DEST_COLOR,
+    D3DBLEND_INVDESTCOLOR,   // BLEND_INV_DEST_COLOR,
+    D3DBLEND_BLENDFACTOR,    // BLEND_BLEND_FACTOR,
+    D3DBLEND_INVBLENDFACTOR, // BLEND_INV_BLEND_FACTOR,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_ARG_TO_D3D) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -243,111 +270,46 @@ GN::gfx::XenonRenderer::bindContextRenderStates(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( skipDirtyCheck );
     GN_UNIMPL_WARNING();
 
-    // cull state
-    D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*RendererContext::NUM_CULL_MODES + newContext.cullMode];
-    mDevice->SetRenderState( D3DRS_CULLMODE, cullMode );
+    // fill mode
 
-    /*
-    // bind shaders
-    //
-    for( int i = 0; i < NUM_SHADER_TYPES; ++i )
+    // cull and face
+    if( skipDirtyCheck || newContext.frontFace != mContext.frontFace || newContext.cullMode != mContext.cullMode )
     {
-        const GN::gfx::Shader * o = mContext.shaders[i];
-        if( newFlags.shaderBit(i) )
-        {
-            const GN::gfx::Shader * n = newContext.shaders[i];
-            if( o != n || forceRebind )
-            {
-                if( n )
-                {
-                    GN::safeCastPtr<const GN::gfx::XenonBasicShader>(n)->apply();
-                }
-                else switch( i )
-                {
-                    case SHADER_VS : GN_DX9_CHECK( mDevice->SetVertexShader( 0 ) ); break;
-                    case SHADER_PS : GN_DX9_CHECK( mDevice->SetPixelShader( 0 ) ); break;
-                    case SHADER_GS : break; // do nothing for geometry shader
-                    default : GN_UNEXPECTED();
-                }
-            }
-            else if( n )
-            {
-                GN::safeCastPtr<const GN::gfx::XenonBasicShader>(n)->applyDirtyUniforms();
-            }
-        } else if( o )
-        {
-            GN::safeCastPtr<const GN::gfx::XenonBasicShader>(o)->applyDirtyUniforms();
-        }
+        D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*RendererContext::NUM_CULL_MODES + newContext.cullMode];
+        mDevice->SetRenderState( D3DRS_CULLMODE, cullMode );
     }
 
-    //
-    // bind render states
-    //
-    if( newFlags.rsb )
+    // msaa
+
+    // depth
+
+    // stencil
+
+    // blend
+    if( skipDirtyCheck || newContext.blendFlags != mContext.blendFlags )
     {
-        const RenderStateBlockDesc & newrsb = newContext.rsb;
-        GN_ASSERT( newrsb.valid() );
-
-        if( forceRebind )
-        {
-            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-                if( newrsb.isSet(RS_##tag) ) sSet_##tag( *this, newrsb.get(RS_##tag) );
-            #include "garnet/gfx/renderStateMeta.h"
-            #undef GNGFX_DEFINE_RS
-        }
-        else
-        {
-            const RenderStateBlockDesc & oldrsb = mContext.rsb;
-
-            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-                GN_ASSERT( oldrsb.isSet( RS_##tag ) ); \
-                if( newrsb.isSet(RS_##tag) && newrsb.get(RS_##tag) != oldrsb.get(RS_##tag) ) \
-                    sSet_##tag( *this, newrsb.get(RS_##tag) );
-            #include "garnet/gfx/renderStateMeta.h"
-            #undef GNGFX_DEFINE_RS
-        }
+        mDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, newContext.blendEnabled );
+        mDevice->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, true );
+        mDevice->SetRenderState( D3DRS_BLENDOP, BLEND_OP_TO_D3D[newContext.blendOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLEND, BLEND_ARG_TO_D3D[newContext.blendSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLEND, BLEND_ARG_TO_D3D[newContext.blendDst] );
+        mDevice->SetRenderState( D3DRS_BLENDOPALPHA, BLEND_OP_TO_D3D[newContext.blendAlphaOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLENDALPHA, BLEND_ARG_TO_D3D[newContext.blendAlphaSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLENDALPHA, BLEND_ARG_TO_D3D[newContext.blendAlphaDst] );
+    }
+    if( skipDirtyCheck || newContext.blendFactors != mContext.blendFactors )
+    {
+        DWORD bgra32 = GN_BGRA32(
+            newContext.blendFactors.r * 255.0f,
+            newContext.blendFactors.g * 255.0f,
+            newContext.blendFactors.b * 255.0f,
+            newContext.blendFactors.a * 255.0f );
+        mDevice->SetRenderState( D3DRS_BLENDFACTOR, bgra32 );
     }
 
-    //
-    // bind render targets
-    //
-    bool needRebindViewport = false;
-    if( newFlags.renderTargets )
-    {
-        mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceRebind, needRebindViewport );
-    }
-
-    // bind viewport
-    if( newFlags.viewport )
-    {
-        if( needRebindViewport || newContext.viewport != mContext.viewport || forceRebind )
-        {
-            float l = newContext.viewport.x;
-            float t = newContext.viewport.y;
-            float r = l + newContext.viewport.w;
-            float b = t + newContext.viewport.h;
-
-            // clamp viewport in valid range
-            clamp<float>( l, 0.0f, 1.0f );
-            clamp<float>( b, 0.0f, 1.0f );
-            clamp<float>( r, 0.0f, 1.0f );
-            clamp<float>( t, 0.0f, 1.0f );
-
-            sSetupXenonViewport( mDevice, l , t, r, b );
-        }
-    }
-    else if( needRebindViewport )
-    {
-        float l = mContext.viewport.x;
-        float t = mContext.viewport.y;
-        float r = l + mContext.viewport.w;
-        float b = t + mContext.viewport.h;
-        sSetupXenonViewport( mDevice, l, t, r, b );
-    }*/
+    // scissor
 
     return true;
 }
@@ -373,6 +335,8 @@ GN::gfx::XenonRenderer::bindContextShaders(
         prog->applyUniforms( uniforms, newContext.uniforms.size() );
 
         prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
+
+        GN_TODO( "apply samplers" );
     }
     else
     {
@@ -439,29 +403,6 @@ GN::gfx::XenonRenderer::bindContextResources(
             ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
             : NULL ) );
     }
-
-    GN_TODO( "apply textures and samplers" );
-
-    /*
-    // bind samplers
-    //
-    if( newFlags.samplers )
-    {
-        UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        UINT numTex = min<UINT>( (UINT)newContext.numTextures, maxStages );
-        UINT stage;
-        for( stage = 0; stage < numTex; ++stage )
-        {
-            SamplerHandle samp = newContext.samplers[stage];
-            if( samp != mContext.samplers[stage] ||
-                stage > mContext.numSamplers ||
-                !forceRebind )
-            {
-                if( 0 == samp ) samp = mDefaultSampler;
-                mSamplers[samp].bind( stage );
-            }
-        }
-    }*/
 
     return true;
 }

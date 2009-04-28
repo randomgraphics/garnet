@@ -698,7 +698,7 @@ namespace GN { namespace gfx
         };
 
         /// blend factors for RGBA
-        float  blendFactors[4];
+        Vector4f blendFactors;
 
         /// 4 bits x 8 render targets.
         UInt32 colorWriteMask;
@@ -765,10 +765,7 @@ namespace GN { namespace gfx
             blendAlphaDst = BLEND_INV_SRC_ALPHA;
             blendAlphaOp  = BLEND_OP_ADD;
 
-            blendFactors[0] =
-            blendFactors[1] =
-            blendFactors[2] =
-            blendFactors[3] = 1.0f;
+            blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
 
             colorWriteMask = 0xFFFFFFFF;
 
@@ -811,9 +808,6 @@ namespace GN { namespace gfx
             dsrt.texture.clear();
         }
     };
-
-    // make sure bit-wise flags occupy only 2 DWORDs.
-    //GN_CASSERT( GN_FIELD_OFFSET(RendererContext,blendFactors) == 2*sizeof(UInt32) );
 
     ///
     /// «Â∆¡±Í÷æ
