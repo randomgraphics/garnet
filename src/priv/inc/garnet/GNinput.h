@@ -71,30 +71,35 @@ namespace GN
         ///
         /// axis type
         ///
-        enum Axis
+        struct Axis
         {
-            AXIS_NONE,          ///< ...
-            AXIS_MOUSE_X,       ///< mouse X
-            AXIS_MOUSE_Y,       ///< mouse Y
-            AXIS_MOUSE_WHEEL_0, ///< mouse wheel 0
-            AXIS_MOUSE_WHEEL_1, ///< mouse wheel 1
+            enum Enum
+            {
+                NONE,          ///< ...
+                MOUSE_X,       ///< mouse X
+                MOUSE_Y,       ///< mouse Y
+                MOUSE_WHEEL_0, ///< mouse wheel 0
+                MOUSE_WHEEL_1, ///< mouse wheel 1
 
-            AXIS_XB360_LEFT_TRIGGER,  ///< xb360 left trigger
-            AXIS_XB360_RIGHT_TRIGGER, ///< xb360 right trigger
-            AXIS_XB360_THUMB_LX,      ///< xb360 left thumb X
-            AXIS_XB360_THUMB_LY,      ///< xb360 left thumb Y
-            AXIS_XB360_THUMB_RX,      ///< xb360 right thumb X
-            AXIS_XB360_THUMB_RY,      ///< xb360 right thumb Y
+                XB360_LEFT_TRIGGER,  ///< xb360 left trigger
+                XB360_RIGHT_TRIGGER, ///< xb360 right trigger
+                XB360_THUMB_LX,      ///< xb360 left thumb X
+                XB360_THUMB_LY,      ///< xb360 left thumb Y
+                XB360_THUMB_RX,      ///< xb360 right thumb X
+                XB360_THUMB_RY,      ///< xb360 right thumb Y
 
-            NUM_AXISES, ///< number of axises.
+                NUM_AXISES, ///< number of axises.
 
-            /// \name some aliases
-            //@{
-            AXIS_MOUSE_FIRST = AXIS_MOUSE_X,
-            AXIS_MOUSE_LAST  = AXIS_MOUSE_WHEEL_1,
-            AXIS_XB360_FIRST = AXIS_XB360_LEFT_TRIGGER,
-            AXIS_XB360_LAST  = AXIS_XB360_THUMB_RY,
-            //@}
+                /// \name some aliases
+                //@{
+                MOUSE_FIRST = MOUSE_X,
+                MOUSE_LAST  = MOUSE_WHEEL_1,
+                XB360_FIRST = XB360_LEFT_TRIGGER,
+                XB360_LAST  = XB360_THUMB_RY,
+                //@}
+            };
+
+            GN_DEFINE_ENUM_CLASS_HELPERS( Axis, Enum );
         };
 
         // TODO: joystick support
@@ -102,20 +107,25 @@ namespace GN
         ///
         /// 定义按键的状态, used by struct KeyEvent
         ///
-        enum KeyState
+        struct KeyState
         {
-            KS_DOWN   = 1<<0,
-            KS_LCTRL  = 1<<1,
-            KS_RCTRL  = 1<<2,
-            KS_LALT   = 1<<3,
-            KS_RALT   = 1<<4,
-            KS_LSHIFT = 1<<5,
-            KS_RSHIFT = 1<<6,
+            enum Enum
+            {
+                DOWN   = 1<<0,
+                LCTRL  = 1<<1,
+                RCTRL  = 1<<2,
+                LALT   = 1<<3,
+                RALT   = 1<<4,
+                LSHIFT = 1<<5,
+                RSHIFT = 1<<6,
+            };
+
+            GN_DEFINE_ENUM_CLASS_HELPERS( KeyState, Enum );
         };
 
         //@{
         // These are provided for easy construction of usual key event constants
-        #define GNINPUT_KEYDOWN( keycode ) ( keycode | (::GN::input::KS_DOWN<<8) )
+        #define GNINPUT_KEYDOWN( keycode ) ( keycode | (::GN::input::KeyState::DOWN<<8) )
         #define GNINPUT_KEYUP( keycode )   ( keycode )
         //@}
 

@@ -67,13 +67,13 @@ namespace GN { namespace input
         void triggerCharPress( char ch );
         void triggerAxisMove( Axis axis, int distance )
         {
-            GN_ASSERT( 0 <= axis && axis < NUM_AXISES );
+            GN_ASSERT( 0 <= axis && axis < Axis::NUM_AXISES );
             mAxisStatus[axis] += distance;
             sigAxisMove(axis,distance);
         }
         void triggerAxisMoveAbs( Axis axis, int value, int deadZone )
         {
-            GN_ASSERT( 0 <= axis && axis < NUM_AXISES );
+            GN_ASSERT( 0 <= axis && axis < Axis::NUM_AXISES );
 
             // handle dead zone
             if( -deadZone <= value && value <= deadZone ) value = 0;
@@ -103,7 +103,7 @@ namespace GN { namespace input
         ///
         /// axis positions
         ///
-        int mAxisStatus[NUM_AXISES];
+        int mAxisStatus[Axis::NUM_AXISES];
 
         ///
         /// ¼ÇÂ¼ÁËCTRL/ALT/SHIFTµÄ×´Ì¬
