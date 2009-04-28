@@ -22,13 +22,13 @@ GN::input::InputX11::InputX11()
 {
     clear();
 
-    // clear all fields to KEY_NONE
-    memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
+    // clear all fields to KeyCode::NONE
+    memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map
     #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) \
         GN_ASSERT( (scancode + 8) < MAX_SCAN_CODE ); \
-        if( scancode > 0 ) mKeyMap[scancode+8] = name;
+        if( scancode > 0 ) mKeyMap[scancode+8] = KeyCode::name;
     #include "garnet/input/keyCodeMeta.h"
     #undef  GNINPUT_DEFINE_KEYCODE
 }
@@ -141,26 +141,26 @@ void GN::input::InputX11::processInputEvents()
                 case KeyPress:
                     //GN_TRACE( "KeyPress: keycode(%d)", e.xkey.keycode );
                     kc = mKeyMap[e.xkey.keycode];
-                    if( KEY_NONE != kc ) triggerKeyPress( kc, true );
+                    if( KeyCode::NONE != kc ) triggerKeyPress( kc, true );
                     break;
 
                 case KeyRelease:
                     //GN_TRACE( "KeyRelease: keycode(%d)", e.xkey.keycode );
                     kc = mKeyMap[e.xkey.keycode];
-                    if( KEY_NONE != kc ) triggerKeyPress( kc, false );
+                    if( KeyCode::NONE != kc ) triggerKeyPress( kc, false );
                     break;
 
                 case ButtonPress:
                     //GN_TRACE( "ButtonPress: button(%d)", e.xbutton.button );
-                    kc = (KeyCode)( KEY_MOUSEBTN_0 + e.xbutton.button );
-                    if( KEY_MOUSEBTN_FIRST <= kc && kc <= KEY_MOUSEBTN_LAST )
+                    kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button );
+                    if( KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON )
                     triggerKeyPress( kc, true );
                     break;
 
                 case ButtonRelease:
                     //GN_TRACE( "ButtonRelease: button(%d)", e.xbutton.button );
-                    kc = (KeyCode)( KEY_MOUSEBTN_0 + e.xbutton.button );
-                    if( KEY_MOUSEBTN_FIRST <= kc && kc <= KEY_MOUSEBTN_LAST )
+                    kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button );
+                    if( KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON )
                     triggerKeyPress( kc, false );
                     break;
 

@@ -102,18 +102,18 @@ public:
         using namespace GN::input;
         if( key.status.down )
         {
-            if( KEY_MOUSEBTN_FIRST <= key.code && key.code <= KEY_MOUSEBTN_LAST )
+            if( KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON )
             {
                 CEGUI::System::getSingleton().injectMouseButtonDown(
-                    (CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KEY_MOUSEBTN_FIRST) );
+                    (CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST) );
             }
         }
         else
         {
-            if( KEY_MOUSEBTN_FIRST <= key.code && key.code <= KEY_MOUSEBTN_LAST )
+            if( KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON )
             {
                 CEGUI::System::getSingleton().injectMouseButtonUp(
-                    (CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KEY_MOUSEBTN_FIRST) );
+                    (CEGUI::MouseButton)(CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST) );
             }
         }
     }

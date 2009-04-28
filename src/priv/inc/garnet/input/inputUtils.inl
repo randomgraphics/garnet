@@ -5,11 +5,11 @@ namespace GN { namespace input
     // ----------------------------------------------------------------------------
     inline KeyCode str2kc( const char * name )
     {
-        if( GN::strEmpty(name) ) return KEY_NONE;
+        if( GN::strEmpty(name) ) return KeyCode::NONE;
 
         static const char * sTable[]=
         {
-            "KEY_NONE",
+            "KeyCode::NONE",
             #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) #name,
             #include "keyCodeMeta.h"
             #undef  GNINPUT_DEFINE_KEYCODE
@@ -20,7 +20,7 @@ namespace GN { namespace input
             if( 0 == strCmp( name, sTable[i] ) ) return (KeyCode)i;
         }
 
-        return KEY_NONE;
+        return KeyCode::NONE;
     }
 
     //
@@ -30,13 +30,13 @@ namespace GN { namespace input
     {
         static const char * sTable[]=
         {
-            "KEY_NONE",
+            "KeyCode::NONE",
             #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) #name,
             #include "keyCodeMeta.h"
             #undef  GNINPUT_DEFINE_KEYCODE
         };
 
-        if( KEY_NONE <= code && code < NUM_KEYS )
+        if( KeyCode::NONE <= code && code < KeyCode::NUM_KEYS )
             return sTable[code];
         else
             return "";

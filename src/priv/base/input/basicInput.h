@@ -98,7 +98,7 @@ namespace GN { namespace input
         ///
         /// 记录键盘的状态，用来过滤/修正不匹配的按键操作
         ///
-        KeyStatus mKeyboardStatus[NUM_KEYS];
+        KeyStatus mKeyboardStatus[KeyCode::NUM_KEYS];
 
         ///
         /// axis positions

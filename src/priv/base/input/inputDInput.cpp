@@ -225,7 +225,7 @@ void GN::input::InputDInput::pollKeyboard()
         UInt32 dikeydata = od[i].dwData;
 
         // do nothing with unrecognized keys
-        if( KEY_NONE != mKeyMap[dikeycode] )
+        if( KeyCode::NONE != mKeyMap[dikeycode] )
         {
             // trigger key_press signal
             triggerKeyPress( mKeyMap[dikeycode], !!(dikeydata & 0x80) );
@@ -258,13 +258,13 @@ void GN::input::InputDInput::pollMouse()
         switch(offset)
         {
             case DIMOFS_BUTTON0:
-                triggerKeyPress( KEY_MOUSEBTN_0, !!(od[i].dwData & 0x80) );
+                triggerKeyPress( KeyCode::MOUSEBTN_0, !!(od[i].dwData & 0x80) );
                 break;
             case DIMOFS_BUTTON1:
-                triggerKeyPress( KEY_MOUSEBTN_1, !!(od[i].dwData & 0x80) );
+                triggerKeyPress( KeyCode::MOUSEBTN_1, !!(od[i].dwData & 0x80) );
                 break;
             case DIMOFS_BUTTON2:
-                triggerKeyPress( KEY_MOUSEBTN_2, !!(od[i].dwData & 0x80) );
+                triggerKeyPress( KeyCode::MOUSEBTN_2, !!(od[i].dwData & 0x80) );
                 break;
             //case DIMOFS_X:
             //    triggerAxisMove( MOUSE_AXIS_0, od[i].dwData );
@@ -286,12 +286,12 @@ void GN::input::InputDInput::pollMouse()
 // ----------------------------------------------------------------------------
 void GN::input::InputDInput::buildKeyMap()
 {
-    // clear all field to KEY_NONE
-    memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
+    // clear all field to KeyCode::NONE
+    memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map
     #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) \
-        if( dikey > 0 ) mKeyMap[dikey] = name;
+        if( dikey > 0 ) mKeyMap[dikey] = KeyCode::name;
     #include "garnet/input/keyCodeMeta.h"
     #undef  GNINPUT_DEFINE_KEYCODE
 }

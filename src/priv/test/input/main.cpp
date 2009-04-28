@@ -80,7 +80,7 @@ class InputTest
         mWin->repaint();
         if( !ke.status.down )
         {
-            if( GN::input::KEY_ESCAPE == ke.code ) mDone = true;
+            if( GN::input::KeyCode::ESCAPE == ke.code ) mDone = true;
         }
     }
 

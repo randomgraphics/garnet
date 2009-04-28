@@ -31,42 +31,47 @@ namespace GN
         ///
         /// keycode type
         ///
-        enum KeyCode
+        struct KeyCode
         {
-            ///
-            /// ¿ÕÂë ( normally indicate a error )
-            ///
-            KEY_NONE = 0,
+            enum Enum
+            {
+                ///
+                /// ¿ÕÂë ( normally indicate a error )
+                ///
+                NONE = 0,
 
-            #include "input/keyCodeMeta.h"
+                #include "input/keyCodeMeta.h"
 
-            ///
-            /// number of available keycodes
-            ///
-            NUM_KEYS,
+                ///
+                /// number of available keycodes
+                ///
+                NUM_KEYS,
 
-            ///
-            /// first mouse button
-            ///
-            KEY_MOUSEBTN_FIRST = KEY_MOUSEBTN_0,
+                ///
+                /// first mouse button
+                ///
+                FIRST_MOUSE_BUTTON = MOUSEBTN_0,
 
-            ///
-            /// last mouse button
-            ///
-            KEY_MOUSEBTN_LAST = KEY_MOUSEBTN_7,
+                ///
+                /// last mouse button
+                ///
+                LAST_MOUSE_BUTTON = MOUSEBTN_7,
 
-            ///
-            /// first xb360 button
-            ///
-            KEY_XB360_FIRST = KEY_XB360_UP,
+                ///
+                /// first xb360 button
+                ///
+                FIRST_XB360_BUTTON = XB360_UP,
 
-            ///
-            /// last xb360 button
-            ///
-            KEY_XB360_LAST = KEY_XB360_Y,
+                ///
+                /// last xb360 button
+                ///
+                LAST_XB360_BUTTON = XB360_Y,
+            };
+
+            GN_DEFINE_ENUM_CLASS_HELPERS(KeyCode, Enum);
         };
+
         #undef GNINPUT_DEFINE_KEYCODE
-        //@}
 
         ///
         /// axis type
@@ -193,7 +198,7 @@ namespace GN
             KeyEvent( const KeyEvent & k ) : u16(k.u16) {}
             KeyEvent( KeyCode kc, KeyStatus ks )
                 : code( static_cast<UInt8>(kc) ), status(ks)
-            { GN_ASSERT( kc < NUM_KEYS ); }
+            { GN_ASSERT( kc < KeyCode::NUM_KEYS ); }
             //@}
 
             ///
@@ -219,7 +224,7 @@ namespace GN
             ///
             const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
-                GN_ASSERT( kc < NUM_KEYS );
+                GN_ASSERT( kc < KeyCode::NUM_KEYS );
                 code = static_cast<UInt8>(kc);
                 status = ks;
                 return *this;
@@ -289,7 +294,7 @@ namespace GN
             ///
             const KeyStatus & getKeyStatus( KeyCode k ) const
             {
-                GN_ASSERT( 0 <= k && k < NUM_KEYS );
+                GN_ASSERT( 0 <= k && k < KeyCode::NUM_KEYS );
                 return getKeyboardStatus()[k];
             }
 
@@ -350,7 +355,7 @@ namespace GN
         ///
         /// convert string to keycode
         ///
-        /// \return Ê§°ÜÊ±·µ»Ø KEY_NONE
+        /// \return Ê§°ÜÊ±·µ»Ø KeyCode::NONE
         ///
         KeyCode str2kc( const char * );
 

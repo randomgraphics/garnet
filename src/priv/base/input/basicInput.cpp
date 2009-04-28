@@ -48,12 +48,12 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
 
     // 更新状态键的标志
     mKeyFlags.down = keydown;
-    if     ( KEY_LCTRL  == code ) mKeyFlags.lctrl  = keydown;
-    else if( KEY_RCTRL  == code ) mKeyFlags.rctrl  = keydown;
-    else if( KEY_LALT   == code ) mKeyFlags.lalt   = keydown;
-    else if( KEY_RALT   == code ) mKeyFlags.ralt   = keydown;
-    else if( KEY_LSHIFT == code ) mKeyFlags.lshift = keydown;
-    else if( KEY_RSHIFT == code ) mKeyFlags.rshift = keydown;
+    if     ( KeyCode::LCTRL  == code ) mKeyFlags.lctrl  = keydown;
+    else if( KeyCode::RCTRL  == code ) mKeyFlags.rctrl  = keydown;
+    else if( KeyCode::LALT   == code ) mKeyFlags.lalt   = keydown;
+    else if( KeyCode::RALT   == code ) mKeyFlags.ralt   = keydown;
+    else if( KeyCode::LSHIFT == code ) mKeyFlags.lshift = keydown;
+    else if( KeyCode::RSHIFT == code ) mKeyFlags.rshift = keydown;
 
     KeyEvent k( code, mKeyFlags );
 

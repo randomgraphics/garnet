@@ -149,7 +149,7 @@ int run()
         rndr->processRenderWindowMessages( false );
         Input & in = gInput;
         in.processInputEvents();
-        if( in.getKeyStatus( KEY_ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }

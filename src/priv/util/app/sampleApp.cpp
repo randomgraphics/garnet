@@ -109,7 +109,7 @@ bool GN::app::SampleApp::onCheckCmdLine( int argc, const char * const argv[] )
 void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_XB360_X == ke.code && ke.status.down ) mDone = true;
-    else if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
+    else if( input::KeyCode::ESCAPE == ke.code && !ke.status.down ) mDone = true;
     else if( input::KEY_R == ke.code && !ke.status.down ) mRenderEngine.disposeAllResources();
     else if( input::KEY_F == ke.code && !ke.status.down )
     {

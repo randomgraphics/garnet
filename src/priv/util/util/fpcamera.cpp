@@ -49,21 +49,21 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
     , mTargetPosition( mPosition, mPosition, INTERP_TIME )
     , mTargetAngle( mAngle, mAngle, INTERP_TIME )
 {
-    mKeys[MOVE_L] = KEY_A;
-    mKeys[MOVE_R] = KEY_D;
-    mKeys[MOVE_U] = KEY_PAGEUP;
-    mKeys[MOVE_D] = KEY_PAGEDOWN;
-    mKeys[MOVE_F] = KEY_W;
-    mKeys[MOVE_B] = KEY_S;
-    mKeys[TURN_L] = KEY_LEFT;
-    mKeys[TURN_R] = KEY_RIGHT;
-    mKeys[TURN_U] = KEY_DOWN;
-    mKeys[TURN_D] = KEY_UP;
-    mKeys[AXIS_LOOK] = KEY_MOUSEBTN_1;
+    mKeys[MOVE_L]    = KeyCode::A;
+    mKeys[MOVE_R]    = KeyCode::D;
+    mKeys[MOVE_U]    = KeyCode::PAGEUP;
+    mKeys[MOVE_D]    = KeyCode::PAGEDOWN;
+    mKeys[MOVE_F]    = KeyCode::W;
+    mKeys[MOVE_B]    = KeyCode::S;
+    mKeys[TURN_L]    = KeyCode::LEFT;
+    mKeys[TURN_R]    = KeyCode::RIGHT;
+    mKeys[TURN_U]    = KeyCode::DOWN;
+    mKeys[TURN_D]    = KeyCode::UP;
+    mKeys[AXIS_LOOK] = KeyCode::MOUSEBTN_1;
 
-    mAxises[TURN_X] = Axis::MOUSE_X;
-    mAxises[TURN_Y] = Axis::MOUSE_Y;
-    mAxises[TURN_Z] = Axis::MOUSE_WHEEL_0;
+    mAxises[TURN_X]  = Axis::MOUSE_X;
+    mAxises[TURN_Y]  = Axis::MOUSE_Y;
+    mAxises[TURN_Z]  = Axis::MOUSE_WHEEL_0;
 }
 
 // *****************************************************************************
