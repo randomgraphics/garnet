@@ -129,7 +129,7 @@ bool GN::gfx::D3D10StateObjectManager::setRS(
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10StateObjectManager::setBS(
     const D3D10_BLEND_DESC & desc,
-    const float            * blendFactors,
+    const Vector4f         & blendFactors,
     UInt32                   sampleMask,
     bool                     skipDirtyCheck )
 {
@@ -138,13 +138,13 @@ bool GN::gfx::D3D10StateObjectManager::setBS(
 
     if( skipDirtyCheck ||
         stateObject != mCurrentBS ||
-        0 != memcmp( blendFactors, mCurrentBlendFactors, sizeof(mCurrentBlendFactors) ) ||
+        blendFactors != mCurrentBlendFactors ||
         sampleMask != mCurrentSampleMask )
     {
         mBlendStates.dev().OMSetBlendState( stateObject, blendFactors, sampleMask );
 
         mCurrentBS = stateObject;
-        memcpy( mCurrentBlendFactors, blendFactors, sizeof(mCurrentBlendFactors) );
+        mCurrentBlendFactors = blendFactors;
         mCurrentSampleMask = sampleMask;
     }
 

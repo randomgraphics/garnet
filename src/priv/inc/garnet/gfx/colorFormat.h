@@ -60,19 +60,19 @@
 /// compose RGBA32 color constant
 ///
 #define GN_RGBA32( r, g, b, a )   \
-        ( ( (UInt32)(r) <<  0 ) | \
-          ( (UInt32)(g) <<  8 ) | \
-          ( (UInt32)(b) << 16 ) | \
-          ( (UInt32)(a) << 24 ) )
+        ( ( ((UInt32)(r)&0xFF) <<  0 ) | \
+          ( ((UInt32)(g)&0xFF) <<  8 ) | \
+          ( ((UInt32)(b)&0xFF) << 16 ) | \
+          ( ((UInt32)(a)&0xFF) << 24 ) )
 
 ///
 /// compose BGRA32 color constant
 ///
 #define GN_BGRA32( r, g, b, a )   \
-        ( ( (UInt32)(b) <<  0 ) | \
-          ( (UInt32)(g) <<  8 ) | \
-          ( (UInt32)(r) << 16 ) | \
-          ( (UInt32)(a) << 24 ) )
+        ( ( ((UInt32)(b)&0xFF) <<  0 ) | \
+          ( ((UInt32)(g)&0xFF) <<  8 ) | \
+          ( ((UInt32)(r)&0xFF) << 16 ) | \
+          ( ((UInt32)(a)&0xFF) << 24 ) )
 
 namespace GN { namespace gfx
 {
