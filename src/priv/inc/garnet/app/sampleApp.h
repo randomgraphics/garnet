@@ -6,8 +6,7 @@
 /// \author  chenlee (2006.1.7)
 // *****************************************************************************
 
-#include "garnet/GNengine.h"
-#include "garnet/GNscene.h"
+#include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNutil.h"
 
@@ -40,29 +39,30 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::GraphicsSystemCreationParameter gscp; ///< graphics system creation parameters
-            engine::RenderEngineInitParameters  reip; ///< render engine initialization parameters
-            input::InputAPI                      iapi; ///< input API
-            scene::FontFaceDesc                  ffd;  ///< default font face descriptor
+            gfx::RendererOptions ro;                     ///< renderer options
+            bool                 useMultithreadRenderer; ///< use multithread renderer or not.
+            input::InputAPI      iapi;                   ///< input API
+            util::FontFaceDesc   ffd;                    ///< default font face descriptor
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
 
         virtual int  run( int argc, const char * const argv[] );
-        ///
-        /// \note
-        ///     - argv[0] is always application name
-        ///     - only non-standard/unknown argument will be send to this function.
-        ///
-        virtual bool onCheckCmdLine( int argc, const char * const argv[] );
-        virtual void onDetermineInitParam( InitParam & ) {}
-        virtual bool onInit() = 0;
+        virtual bool onCheckExtraCmdlineArguments( int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
+        virtual void onPrintHelpScreen( const char * executableName );
+        virtual bool onPreInit( InitParam & ) { return true; }
+        virtual bool onPostInit() = 0;
         virtual void onQuit() = 0;
         virtual void onUpdate() = 0;
         virtual void onRender() = 0;
         virtual void onKeyPress( input::KeyEvent );
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}
+
+        ///
+        /// print standard command line options to console screen
+        ///
+        void printStandardCommandLineOptions();
 
         ///
         /// Return seconds since application starts
@@ -80,14 +80,9 @@ namespace GN { namespace app
         double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
         ///
-        /// post exit event. Application will exit at next frame.
+        /// post exit event. Application will exit at the beginning of next frame.
         ///
         void postExitEvent() { mDone = true; }
-
-        ///
-        /// switch renderer API
-        ///
-        bool switchGraphicsAPI( const FOURCC & newapi );
 
 		///
 		/// show HUD or not?
@@ -100,14 +95,14 @@ namespace GN { namespace app
         float getFps() const { return mFps.getFps(); }
 
         ///
-        /// as is
+        /// get reference to renderer
         ///
-        engine::RenderEngine & getRenderEngine() { return mRenderEngine; }
+        gfx::Renderer & getRenderer() { GN_ASSERT(mRenderer); return *mRenderer; }
 
         ///
         /// get font renderer
         ///
-        scene::BitmapFont & getFont() { return mFont; }
+        util::BitmapFont & getFont() { return mFont; }
 
         //@}
 
@@ -118,17 +113,18 @@ namespace GN { namespace app
 
         InitParam             mInitParam;
 
-        engine::RenderEngine  mRenderEngine;
-        scene::BitmapFont     mFont;
+        gfx::Renderer       * mRenderer;
+        gfx::SpriteRenderer * mSpriteRenderer;
+        util::BitmapFont      mFont;
 
         // time stuff
         util::FpsCalculator   mFps;
         double                mLastFrameTime;
         double                mTimeSinceLastUpdate;
 
-        bool                  mShowHUD;
-        bool                  mShowHelp;
-        bool                  mDone; // exit flag
+        bool                  mShowHUD;  ///< show simple HUD over game scene
+        bool                  mShowHelp; ///< show detailed help text in HUD. No effect if mShowHUD is false.
+        bool                  mDone;     ///< Set to true to quit the application.
 
         // ********************************
         // private functions
@@ -147,6 +143,24 @@ namespace GN { namespace app
         void quitFont();
         void drawHUD();
     };
+
+    ///
+    /// Draw X/Y/Z coordinate axes onto screen
+    ///
+    inline void drawXYZCoordinateAxes(
+        gfx::Renderer   & rndr,
+        const Matrix44f & world,
+        const Matrix44f & view,
+        const Matrix44f & proj )
+    {
+        static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
+        static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
+        static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
+
+        rndr.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
+        rndr.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
+        rndr.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
+    }
 }}
 
 // *****************************************************************************

@@ -331,7 +331,7 @@ createEffect()
 
 bool init()
 {
-    rndr->sigRendererWindowSizeMove.connect( &onRenderWindowResize );
+    rndr->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
 
     AutoObjPtr<Mesh>   mesh;
     AutoObjPtr<Effect> effect;
@@ -365,7 +365,7 @@ bool init()
     // load font
     sr = new SpriteRenderer( *rndr );
     if( !sr->init() ) return false;
-    AutoRef<FontFace> ff( createSimpleAsciiFont() );
+    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
     if( !ff ) return false;
     if( !font.init( sr, ff ) ) return false;
 

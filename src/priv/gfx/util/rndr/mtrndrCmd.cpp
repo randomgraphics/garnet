@@ -48,6 +48,7 @@ void func_VTXBUF_READBACK( Renderer &, void *, size_t );
 void func_IDXBUF_DESTROY( Renderer &, void *, size_t );
 void func_IDXBUF_UPDATE( Renderer &, void *, size_t );
 void func_IDXBUF_READBACK( Renderer &, void *, size_t );
+void func_GET_SIGNALS( Renderer &, void *, size_t );
 
 const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_GET_RENDERER_OPTIONS,
@@ -90,6 +91,7 @@ const RndrCommandHandler g_rndrCommandHandlers[] = {
 &func_IDXBUF_DESTROY,
 &func_IDXBUF_UPDATE,
 &func_IDXBUF_READBACK,
+&func_GET_SIGNALS,
 };
 
 }} // end of file

@@ -49,6 +49,7 @@ enum RndrCommand {
     CMD_IDXBUF_DESTROY,
     CMD_IDXBUF_UPDATE,
     CMD_IDXBUF_READBACK,
+    CMD_GET_SIGNALS,
 };
 
 ///

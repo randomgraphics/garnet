@@ -842,30 +842,14 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// 渲染器模块的主接口类
+    /// define public renderer signals
     ///
-    /// \nosubgrouping
-    ///
-    struct Renderer : public NoCopy
+    struct RendererSignals
     {
-        // ********************************************************************
-        ///
-        /// \name Renderer Signals
-        ///
-        /// - Renderer class may recreate itself when some system event happens,
-        ///   like restoring from lock screen, which will trigger renderer create
-        ///   and destroy signals.
-        /// - Explicty (re)creation of renderer, will also trigger renderer signals.
-        /// - 收到destroy信号后，应该删除所有的图形资源
-        ///
-        // ********************************************************************
-
-        //@{
-
         ///
         /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
         ///
-        Signal0<void> sigRendererDeviceLost;
+        Signal0<void> deviceLost;
 
         ///
         /// Happens when render windows is resized or moved to another monitor.
@@ -875,7 +859,7 @@ namespace GN { namespace gfx
         ///  - UInt32 clientWidth  : width of client area of render window
         ///  - UInt32 clientHeight : height of client area of render window
         ///
-        Signal3<void, HandleType, UInt32, UInt32> sigRendererWindowSizeMove;
+        Signal3<void, HandleType, UInt32, UInt32> rendererWindowSizeMove;
 
         ///
         /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
@@ -893,10 +877,16 @@ namespace GN { namespace gfx
         /// should have external window messages handled already somewhere else
         /// in your code. So you may safely ignore this signal.
         ///
-        Signal0<void> sigRendererWindowClose;
+        Signal0<void> rendererWindowClose;
+    };
 
-        //@}
-
+    ///
+    /// 渲染器模块的主接口类
+    ///
+    /// \nosubgrouping
+    ///
+    struct Renderer : public NoCopy
+    {
         // ********************************************************************
         //
         /// \name Display Manager
@@ -1350,6 +1340,11 @@ namespace GN { namespace gfx
                 ? result.orthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
                 : result.orthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
         }
+
+        ///
+        /// get renderer signals
+        ///
+        virtual RendererSignals & getSignals() = 0;
 
         ///
         /// Process render window messages, to keep render window responding to user inputs.

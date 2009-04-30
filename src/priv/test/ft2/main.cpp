@@ -61,7 +61,7 @@ public:
         ffd.fontname = font_file;
         ffd.width = (size_t)_w;
         ffd.height = (size_t)_h;
-        mFace.attach( createFont( ffd ) );
+        mFace.attach( createFontFace( ffd ) );
         if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;

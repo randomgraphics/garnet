@@ -137,12 +137,15 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
-        virtual void         setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
-        virtual bool         hasUserData( const Guid & id ) const;
+        virtual RendererSignals & getSignals() { return mSignals; }
+        virtual void              enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
+        virtual void              setUserData( const Guid & id, const void * data, size_t length );
+        virtual const void      * getUserData( const Guid & id, size_t * length ) const;
+        virtual bool              hasUserData( const Guid & id ) const;
 
-        bool                 paramCheckEnabled() const { return mParamCheckEnabled; }
+    public:
+
+        bool                      paramCheckEnabled() const { return mParamCheckEnabled; }
 
     private:
 
@@ -156,9 +159,9 @@ namespace GN { namespace gfx
 
         typedef std::map<Guid,DynaArray<UInt8> > UserDataMap;
 
-        bool mParamCheckEnabled;
-
-        UserDataMap mUserData;
+        RendererSignals mSignals;
+        bool            mParamCheckEnabled;
+        UserDataMap     mUserData;
 
         //@}
     };

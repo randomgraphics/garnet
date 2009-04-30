@@ -41,12 +41,13 @@ namespace GN { namespace util
         ///
         void reset()
         {
+            mCurrentTime = mClock.getTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
             mFpsString.format( mFormatString.cptr(), 0 );
             mFrameCounter = 0;
-            mLastFrameTime = mClock.getTimeD();
-            mLastCheckPoint = mLastFrameTime - 1.0f / mFpsValue;
             mLastFrameElapsed = 1.0f / mFpsValue;
+            mLastFrameTime = mCurrentTime - mLastFrameElapsed;
+            mLastCheckPoint = mLastFrameTime - 1.0f / mFpsValue;
             mBeforeFirstUpdate = true;
         }
 
