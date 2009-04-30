@@ -333,7 +333,7 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 // -----------------------------------------------------------------------------
 GN::util::FontFace *
-GN::util::createFont( const FontFaceDesc & desc )
+GN::util::createFontFace( const FontFaceDesc & desc )
 {
     GN_GUARD;
 

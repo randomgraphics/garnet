@@ -1,6 +1,6 @@
 Import( 'GN' )
 sources = []
-#sources.append( SConscript( 'app/SConscript' ) )
+sources.append( SConscript( 'app/SConscript' ) )
 #sources.append( SConscript( 'cegui/SConscript' ) )
 sources.append( SConscript( 'scene/SConscript' ) )
 sources.append( SConscript( 'util/SConscript' ) )

@@ -76,7 +76,7 @@ public:
 //
 // -----------------------------------------------------------------------------
 GN::util::FontFace *
-GN::util::createSimpleAsciiFont()
+GN::util::createSimpleAsciiFontFace()
 {
     return new AsciiFontFace;
 }

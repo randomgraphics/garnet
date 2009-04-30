@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "../cmdargs.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -13,7 +12,7 @@ BitmapFont       ascii, ttf;
 bool initTTF()
 {
     // create font
-    AutoRef<FontFace> ff( createFont(ffd) );
+    AutoRef<FontFace> ff( createFontFace(ffd) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
@@ -28,7 +27,7 @@ bool init( Renderer & rndr )
     if( !sr->init() ) return false;
 
     // initialize ascii font
-    AutoRef<FontFace> ff( createSimpleAsciiFont() );
+    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
     if( !ff ) return false;
     if( !ascii.init( sr, ff ) ) return false;
 

@@ -91,12 +91,12 @@ namespace GN { namespace util
     ///
     /// create font face (usually loading from a TTF file)
     ///
-    FontFace * createFont( const FontFaceDesc & desc );
+    FontFace * createFontFace( const FontFaceDesc & desc );
 
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
     ///
-    FontFace * createSimpleAsciiFont();
+    FontFace * createSimpleAsciiFontFace();
 
     ///
     /// text descriptor

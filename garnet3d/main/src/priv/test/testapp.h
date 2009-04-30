@@ -1,8 +1,8 @@
-#ifndef __GN_TEST_CMDARGS_H__
-#define __GN_TEST_CMDARGS_H__
+#ifndef __GN_TEST_TESTAPP_H__
+#define __GN_TEST_TESTAPP_H__
 // *****************************************************************************
 /// \file
-/// \brief   Command line utilities for test applications
+/// \brief   Common header for test applications
 /// \author  chen@@CHENLI-HOMEPC (2009.4.17)
 // *****************************************************************************
 
@@ -257,4 +257,4 @@ private:
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_TEST_CMDARGS_H__
+#endif // __GN_TEST_TESTAPP_H__

@@ -81,6 +81,7 @@ bool GN::gfx::MultiThreadRenderer::init(
     postCommand1( CMD_GET_D3D_DEVICE, &mD3DDevice );
     postCommand1( CMD_GET_OGL_RC, &mOGLRC );
     postCommand1( CMD_GET_CAPS, &mCaps );
+    postCommand1( CMD_GET_SIGNALS, &mSignals );
     waitForIdle();
 
     // success
@@ -923,6 +924,19 @@ namespace GN { namespace gfx
             dlp->proj );
 
         heapFree( dlp->positions );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_SIGNALS( Renderer & r, void * p, size_t )
+    {
+        struct GetSignalsParam
+        {
+            RendererSignals ** ppSignals;
+        };
+        GetSignalsParam * param = (GetSignalsParam *)p;
+        *(param->ppSignals) = &r.getSignals();
     }
 
     //
