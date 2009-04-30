@@ -237,7 +237,7 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 
         if( test-path -path $batch )
         {
-        	¡°Run DirectX SDK setup script: $batch¡±
+        	"Run DirectX SDK setup script: $batch"
             ""
 
             if( "x64" -eq $env:GN_BUILD_TARGET_CPU )
