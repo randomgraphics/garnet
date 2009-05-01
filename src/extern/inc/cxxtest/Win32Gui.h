@@ -27,30 +27,40 @@ namespace CxxTest
     class Win32Gui : public GuiListener
     {
     public:
-        void enterGui( int &argc, char **argv )
-	{
-	    parseCommandLine( argc, argv );
-	}
-	
-        void enterWorld( const WorldDescription &wd )
+        virtual void enterGui( int argc, const char * const * argv )
+    	{
+    	    parseCommandLine( argc, argv );
+    	}
+
+        virtual void leaveGui()
+        {
+            if ( keep() )
+            {
+                showSummary();
+                WaitForSingleObject( _gui, INFINITE );
+            }
+            DestroyWindow( _mainWindow );
+        }
+
+        virtual void guiEnterWorld( const WorldDescription & wd )
         {
             getTotalTests( wd );
             _testsDone = 0;
             startGuiThread();
         }
 
-	void guiEnterSuite( const char *suiteName )
-	{
-	    showSuiteName( suiteName );
+    	virtual void guiEnterSuite( const char *suiteName )
+    	{
+    	    showSuiteName( suiteName );
             reset( _suiteStart );
-	}
+    	}
 
-        void guiEnterTest( const char *suiteName, const char *testName )
+        virtual void guiEnterTest( const char *suiteName, const char *testName )
         {
             ++ _testsDone;
             setTestCaption( suiteName, testName );
             showTestName( testName );
-	    showTestsDone();
+	        showTestsDone();
             progressBarMessage( PBM_STEPIT );
             reset( _testStart );
         }
@@ -61,7 +71,7 @@ namespace CxxTest
             setIcon( IDI_WARNING );
             getTotalTests();
         }
-        
+
         void redBar()
         {
             if ( _startMinimized )
@@ -69,16 +79,6 @@ namespace CxxTest
 	    setColor( 255, 0, 0 );
 	    setIcon( IDI_ERROR );
             getTotalTests();
-        }
-
-        void leaveGui()
-        {
-            if ( keep() )
-            {
-                showSummary();
-                WaitForSingleObject( _gui, INFINITE );
-            }
-            DestroyWindow( _mainWindow );
         }
 
     private:
@@ -90,11 +90,11 @@ namespace CxxTest
         HANDLE _canStartTests;
         unsigned _numTotalTests, _testsDone;
         char _strTotalTests[WorldDescription::MAX_STRLEN_TOTAL_TESTS];
-        enum { 
+        enum {
             STATUS_SUITE_NAME, STATUS_SUITE_TIME,
             STATUS_TEST_NAME, STATUS_TEST_TIME,
             STATUS_TESTS_DONE, STATUS_WORLD_TIME,
-            STATUS_TOTAL_PARTS 
+            STATUS_TOTAL_PARTS
         };
         int _statusWidths[STATUS_TOTAL_PARTS];
         unsigned _statusOffsets[STATUS_TOTAL_PARTS];
@@ -103,11 +103,11 @@ namespace CxxTest
         DWORD _worldStart, _suiteStart, _testStart;
         char _timeString[sizeof("00:00:00")];
 
-        void parseCommandLine( int argc, char **argv )
+        void parseCommandLine( int argc, const char * const * argv )
         {
             _startMinimized = _keep = false;
-	    _title = argv[0];
-            
+    	    _title = argv[0];
+
             for ( int i = 1; i < argc; ++ i )
             {
                 if ( !lstrcmpA( argv[i], "-minimized" ) )
@@ -118,7 +118,7 @@ namespace CxxTest
                     _title = argv[++i];
             }
         }
-        
+
         void getTotalTests()
         {
             getTotalTests( tracker().world() );
@@ -187,7 +187,7 @@ namespace CxxTest
             HMODULE dll = LoadLibraryA( "comctl32.dll" );
             if ( !dll )
 		return;
-		
+
 	    typedef void (WINAPI *FUNC)( void );
 	    FUNC func = (FUNC)GetProcAddress( dll, "InitCommonControls" );
 	    if ( !func )
@@ -394,7 +394,7 @@ namespace CxxTest
             progressBarMessage( PBM_SETBARCOLOR, 0, RGB( red, green, blue ) );
         }
 #else // !PBM_SETBARCOLOR
-        void setColor( BYTE, BYTE, BYTE ) 
+        void setColor( BYTE, BYTE, BYTE )
         {
         }
 #endif // PBM_SETBARCOLOR
@@ -500,7 +500,7 @@ namespace CxxTest
         {
             setRatios( 0, 0, 0, 0, 1, 1 );
             resizeControls();
-        
+
             const char *tests = (_numTotalTests == 1) ? "test" : "tests";
             if ( tracker().failedTests() )
                 wsprintfA( _statusTestsDone, "Failed %u of %s %s",
