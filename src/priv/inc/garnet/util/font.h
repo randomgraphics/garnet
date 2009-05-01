@@ -33,8 +33,9 @@ namespace GN { namespace util
     ///
     enum FontFaceQuality
     {
-        FFQ_MONOCHROM,   // default quality, suitable for small size font.
-        FFQ_ANTIALIASED, // suitable for larger size font.
+        FFQ_MONOCHROM,      ///< default quality, suitable for small size font.
+        FFQ_ANTIALIASED,    ///< suitable for larger size font.
+        NUM_FONT_QUALITIES, ///< number of font quality enumerations
     };
 
     ///

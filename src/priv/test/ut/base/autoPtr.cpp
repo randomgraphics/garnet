@@ -26,7 +26,7 @@ public:
         TS_ASSERT_EQUALS( 0, a );
     }
 
-    void testReset()
+    void testAttach()
     {
         GN::AutoObjPtr<S1> p1;
 
@@ -37,7 +37,7 @@ public:
         TS_ASSERT_EQUALS( 2, p1->a );
 
         p1.attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1.get() );
+        TS_ASSERT_EQUALS( (S1*)0, p1.cptr() );
     }
 
     void testDetatch()

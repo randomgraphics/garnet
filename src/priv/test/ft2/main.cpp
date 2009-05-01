@@ -61,6 +61,7 @@ public:
         ffd.fontname = font_file;
         ffd.width = (size_t)_w;
         ffd.height = (size_t)_h;
+        ffd.quality = FFQ_MONOCHROM;
         mFace.attach( createFontFace( ffd ) );
         if( !mFace ) exit(-1);
 
