@@ -334,7 +334,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ffd.fontname = "font::/simsun.ttc";
     mInitParam.ffd.width = 16;
     mInitParam.ffd.height = 16;
-    mInitParam.ffd.quality = util::FFQ_ANTIALIASED;
+    mInitParam.ffd.quality = util::FFQ_MONOCHROM;
 
 #if GN_XENON
 

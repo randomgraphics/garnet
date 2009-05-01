@@ -2,6 +2,7 @@ Import( 'GN' )
 sources = [
 	'boundingVolume.cpp',
 	'clock.cpp',
+	'codepage.cpp',
 	'debug.cpp',
 	'endian.cpp',
 	'file.cpp',

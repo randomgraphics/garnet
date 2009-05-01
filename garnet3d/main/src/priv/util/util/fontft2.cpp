@@ -160,6 +160,12 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
 
     GN_ASSERT( sLib && sLib->lib );
 
+    if( desc.quality < 0 || desc.quality >= NUM_FONT_QUALITIES )
+    {
+        GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", desc.quality );
+        return failure();
+    }
+
     // open font file
     File * fp = fs::openFile( desc.fontname, "rb" );
     if( !fp ) return failure();

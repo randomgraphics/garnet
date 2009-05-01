@@ -1,14 +1,6 @@
 #include "../testCommon.h"
 
-#define GN_DEFINE_SMART_ENUM( ENUM_CLASS, ENUM_TYPE ) \
-    private : \
-        ENUM_TYPE mValue; \
-    public: \
-        ENUM_CLASS() \
-        { \
-        } \
-        ENUM_CLASS( ENUM_TYPE e ) : mValue(e) {}  \
-        operator ENUM_TYPE &() { return mValue; }
+#define GN_DEFINE_SMART_ENUM( ENUM_CLASS, ENUM_TYPE ) GN_DEFINE_ENUM_CLASS_HELPERS( ENUM_CLASS, ENUM_TYPE )
 
 class SmartEnumTest : public CxxTest::TestSuite
 {
@@ -31,12 +23,24 @@ class SmartEnumTest : public CxxTest::TestSuite
             return false;
         }
 
-        GN_DEFINE_SMART_ENUM( MyEnum, Enum )
+        GN_DEFINE_SMART_ENUM( MyEnum, Enum );
     };
 
 public:
 
-    void test1()
+    void testCopyCtorAndAssignment()
+    {
+        // copy ctor
+        MyEnum e1 = MyEnum::A;
+
+        // assignment
+        MyEnum e2;
+        e2 = MyEnum::A;
+
+        TS_ASSERT_EQUALS( e1, e2 );
+    }
+
+    void testComparision()
     {
         MyEnum e;
 
