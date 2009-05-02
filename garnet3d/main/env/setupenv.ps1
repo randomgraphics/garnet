@@ -100,7 +100,7 @@ foreach( $a in $args )
             ("retail" -eq $a) -or
             ("stdbg" -eq $a) -or
             ("stprof" -eq $a) -or
-            ("stref" -eq $a) )
+            ("stret" -eq $a) )
     {
         $env:GN_BUILD_VARIANT = $a
     }
