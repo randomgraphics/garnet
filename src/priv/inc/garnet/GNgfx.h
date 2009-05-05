@@ -35,6 +35,7 @@ namespace GN
 #include "gfx/effect.h"
 #include "gfx/mesh.h"
 #include "gfx/sprite.h"
+#include "gfx/line.h"
 #include "gfx/misc.h"
 
 // *****************************************************************************
