@@ -107,6 +107,7 @@ static bool sParseRendererAPI( GN::gfx::RendererAPI & result, const char * value
 GN::app::SampleApp::SampleApp()
     : mRenderer(NULL)
     , mSpriteRenderer(NULL)
+    , mLineRenderer(NULL)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
     , mShowHUD(true)
     , mShowHelp(false)
@@ -238,6 +239,20 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::app::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld )
+{
+    static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
+    static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
+    static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
+    mLineRenderer->drawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
+    mLineRenderer->drawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
+    mLineRenderer->drawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
+    mLineRenderer->flush();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::app::SampleApp::printStandardCommandLineOptions()
 {
     printf(
@@ -351,16 +366,23 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         const char * a = argv[i];
 
         if( 0 == strCmpI( "-h", a ) ||
+            0 == strCmpI( "-?", a ) ||
             0 == strCmpI( "--help", a ) ||
-            0 == strCmpI( "-?", a ) )
+            0 == strCmpI( "/help", a ) ||
+            0 == strCmpI( "/h", a ) ||
+            0 == strCmpI( "/?", a ) )
         {
             StrA executableName = fs::baseName( argv[0] ) + fs::extName( argv[0] );
             onPrintHelpScreen( executableName );
             return false;
         }
-        else if( '-' == *a )
+        else if( '-' == *a
+            #if GN_MSWIN
+            || '/' == *a
+            #endif
+            )
         {
-            if( 0 == strCmpI( "-fs", a ) )
+            if( 0 == strCmpI( "fs", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -368,7 +390,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseBool( mInitParam.ro.fullscreen, a, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "-mt", a ) )
+            else if( 0 == strCmpI( "mt", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -376,7 +398,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseBool( mInitParam.useMultithreadRenderer, a, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "-rapi", a ) )
+            else if( 0 == strCmpI( "rapi", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -384,7 +406,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseRendererAPI( mInitParam.ro.api, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "-ll", a ) )
+            else if( 0 == strCmpI( "ll", a+1 ) )
             {
                 StrA value =sGetOptionValue( argc, argv, i );
                 if( value.empty() ) return false;
@@ -450,6 +472,14 @@ bool GN::app::SampleApp::initRenderer()
     // connect to renderer signal: post quit event, if render window is closed.
     mRenderer->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
+    // create sprite renderer
+    mSpriteRenderer = new SpriteRenderer( *mRenderer );
+    if( !mSpriteRenderer->init() ) return false;
+
+    // create line renderer
+    mLineRenderer = new LineRenderer( *mRenderer );
+    if( !mLineRenderer->init() ) return false;
+
     // create renderer
     return true;
 
@@ -463,6 +493,8 @@ void GN::app::SampleApp::quitRenderer()
 {
     GN_GUARD;
 
+    safeDelete( mLineRenderer );
+    safeDelete( mSpriteRenderer );
     deleteRenderer( mRenderer );
     mRenderer = NULL;
 
@@ -518,10 +550,6 @@ bool GN::app::SampleApp::initFont()
 {
     GN_GUARD;
 
-    // create sprite renderer
-    mSpriteRenderer = new SpriteRenderer( *mRenderer );
-    if( !mSpriteRenderer->init() ) return false;
-
     // try load default font face in mInitParam first
     AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.ffd) );
     if( !ff )
@@ -546,8 +574,6 @@ void GN::app::SampleApp::quitFont()
     GN_GUARD;
 
     mFont.quit();
-
-    safeDelete( mSpriteRenderer );
 
     GN_UNGUARD;
 }
