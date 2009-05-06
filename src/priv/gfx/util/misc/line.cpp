@@ -5,8 +5,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.LineRenderer");
 static const char * glslvscode=
     "varying vec4 color; \n"
     "void main() { \n"
+    "   // NOTE: GLSL matrix is colomn major \n"
     "   mat4 pvw = mat4(gl_MultiTexCoord0, gl_MultiTexCoord1, gl_MultiTexCoord2, gl_MultiTexCoord3); \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
+    "   gl_Position = gl_Vertex * pvw; \n"
     "   color       = gl_Color; \n"
     "}";
 
@@ -90,7 +91,7 @@ bool GN::gfx::LineRenderer::init()
     // create vertex format
     mContext.vtxfmt.numElements = 6;
     mContext.vtxfmt.elements[0].stream = 0;
-    mContext.vtxfmt.elements[0].offset = 0;
+    mContext.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( LineVertex, pos );
     mContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
     mContext.vtxfmt.elements[0].bindTo( "position", 0 );
     mContext.vtxfmt.elements[1].stream = 0;
@@ -188,23 +189,16 @@ void GN::gfx::LineRenderer::drawLines(
     GN_ASSERT( remainingNewLines + mNextFreeLine <= mLines + MAX_LINES );
     for( size_t i = 0; i < remainingNewLines; ++i )
     {
-        mNextFreeLine->v0.pos.set(
-            ((const float*)positionsU8)[0],
-            ((const float*)positionsU8)[1],
-            ((const float*)positionsU8)[2] );
+        mNextFreeLine->v0.pos = *(const Vector3f*)positionsU8;
         mNextFreeLine->v0.colorInRGBA = colorInRgba;
         mNextFreeLine->v0.pvw = projViewWorld;
-        positionsU8 += stride;
 
-        mNextFreeLine->v1.pos.set(
-            ((const float*)positionsU8)[0],
-            ((const float*)positionsU8)[1],
-            ((const float*)positionsU8)[2] );
+        mNextFreeLine->v1.pos = *(const Vector3f*)(positionsU8 + stride);
         mNextFreeLine->v1.colorInRGBA = colorInRgba;
         mNextFreeLine->v1.pvw = projViewWorld;
-        positionsU8 += stride;
 
         // next line segement
+        positionsU8 += stride * 2;
         ++mNextFreeLine;
     }
 
