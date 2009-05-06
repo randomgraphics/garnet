@@ -60,6 +60,11 @@ namespace GN { namespace app
         virtual void onAxisMove( input::Axis, int ) {}
 
         ///
+        /// Draw X/Y/Z coordinate axes onto screen
+        ///
+        void drawXYZCoordinateAxes( const Matrix44f & projViewWorld );
+
+        ///
         /// print standard command line options to console screen
         ///
         void printStandardCommandLineOptions();
@@ -114,6 +119,7 @@ namespace GN { namespace app
         InitParam             mInitParam;
 
         gfx::Renderer       * mRenderer;
+        gfx::LineRenderer   * mLineRenderer;
         gfx::SpriteRenderer * mSpriteRenderer;
         util::BitmapFont      mFont;
 
@@ -143,24 +149,6 @@ namespace GN { namespace app
         void quitFont();
         void drawHUD();
     };
-
-    ///
-    /// Draw X/Y/Z coordinate axes onto screen
-    ///
-    inline void drawXYZCoordinateAxes(
-        gfx::Renderer   & rndr,
-        const Matrix44f & world,
-        const Matrix44f & view,
-        const Matrix44f & proj )
-    {
-        static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
-        static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
-        static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-
-        rndr.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
-        rndr.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
-        rndr.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
-    }
 }}
 
 // *****************************************************************************

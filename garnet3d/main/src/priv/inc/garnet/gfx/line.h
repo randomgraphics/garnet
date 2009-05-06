@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         bool init();
         void quit();
     private:
-        void clear() {}
+        void clear() { mLines = 0; mBatchingModeEnabled = true; }
         //@}
 
         // ********************************
@@ -42,22 +42,54 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        ///
+        /// Enable/Disable batch rendering mode. It is enabled by default.
+        ///
+        void setBatchRenderingEnable( bool enabled ) { flush(); mBatchingModeEnabled = enabled; }
+
+        ///
+        /// draw line list
+        ///
         void drawLines(
             const void *      positions,
             size_t            stride,
             size_t            numpoints,
             UInt32            colorInRgba,
-            const Matrix44f & model,
-            const Matrix44f & view,
-            const Matrix44f & proj );
+            const Matrix44f & projViewWorld );
+
+        ///
+        /// submit any pending line drawing requests to renderer
+        ///
+        void flush();
 
         // ********************************
         // private variables
         // ********************************
     private:
 
+        struct LineVertex
+        {
+            Vector3f  pos;
+            UInt32    colorInRGBA;
+            Matrix44f pvw;
+        };
+
+        struct Line
+        {
+            LineVertex v0, v1;
+        };
+
+        enum
+        {
+            MAX_LINES = 256,
+        };
+
         Renderer        & mRenderer;
         RendererContext   mContext;
+        Line            * mLines;
+        Line            * mNextPendingLine;
+        Line            * mNextFreeLine;
+        bool              mBatchingModeEnabled;
 
         // ********************************
         // private functions

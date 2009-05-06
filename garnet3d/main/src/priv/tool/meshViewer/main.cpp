@@ -124,7 +124,7 @@ public:
                 radius ).cptr(),
             320, 40 );
 
-        drawXYZCoordinateAxes( rndr, arcball.getRotationMatrix44(), view, proj );
+        drawXYZCoordinateAxes( proj * view * arcball.getRotationMatrix44() );
     }
 
     bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )
