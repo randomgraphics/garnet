@@ -283,9 +283,9 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
     count = math::getmin( count, mParamDesc.uniforms.count() );
 
     // dirty flags
-    bool vscDirty[mVs.constBufs.MAX_SIZE];
-    bool gscDirty[mGs.constBufs.MAX_SIZE];
-    bool pscDirty[mPs.constBufs.MAX_SIZE];
+    bool vscDirty[D3D10ConstBufferArray::MAX_SIZE];
+    bool gscDirty[D3D10ConstBufferArray::MAX_SIZE];
+    bool pscDirty[D3D10ConstBufferArray::MAX_SIZE];
     ::memset( vscDirty, 0, sizeof(vscDirty) );
     ::memset( gscDirty, 0, sizeof(gscDirty) );
     ::memset( pscDirty, 0, sizeof(pscDirty) );
