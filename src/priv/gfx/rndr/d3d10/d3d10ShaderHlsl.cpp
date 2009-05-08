@@ -22,8 +22,6 @@ enum D3D10ShaderType
 template<D3D10ShaderType SHADER_TYPE>
 struct D3D10ShaderTypeTemplate
 {
-    // compiler should never reach here.
-    GN_CASSERT( 0 == sizeof(SHADER_TYPE) );
 };
 
 template<>

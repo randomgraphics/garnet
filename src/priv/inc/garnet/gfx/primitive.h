@@ -41,7 +41,7 @@ namespace GN { namespace gfx
             GN_CASSERT( GN_ARRAY_COUNT(TABLE) == (size_t)NUM_PRIMITIVES );
 
             unsigned int e = *this;
-            if( 0 <= e && e < GN_ARRAY_COUNT(TABLE) ) return TABLE[e];
+            if( e < GN_ARRAY_COUNT(TABLE) ) return TABLE[e];
             else return "INVALID_PRIMITIVE_TYPE";
         }
 

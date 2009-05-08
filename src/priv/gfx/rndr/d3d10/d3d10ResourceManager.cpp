@@ -99,7 +99,7 @@ GN::gfx::D3D10Renderer::createGpuProgram( const void * data, size_t length )
     }
     else
     {
-        GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang );
+        GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang.toRawEnum() );
         return NULL;
     }
 

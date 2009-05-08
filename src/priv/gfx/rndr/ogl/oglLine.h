@@ -72,7 +72,7 @@ namespace GN { namespace gfx
 
         struct LineVertex
         {
-            UInt32 c;
+            UInt32   c;
             Vector3f p;
         };
         GN_CASSERT( 16 == sizeof(LineVertex) );
