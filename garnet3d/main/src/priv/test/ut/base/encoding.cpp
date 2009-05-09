@@ -15,7 +15,7 @@ public:
         size_t converted;
 
         char ascii[] = "abcd";
-        wchar_t utf16[5];
+        wchar_t utf16[6];
         converted = c( utf16, ascii );
         TS_ASSERT_EQUALS( converted, 10 );
         TS_ASSERT_EQUALS( utf16, L"abcd" );

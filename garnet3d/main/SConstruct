@@ -495,6 +495,9 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
 	    conf['has_iconv'] = True
 	    conf['iconv_lib'] = 'libiconv'
+	elif c.CheckLibWithHeader( 'c', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    conf['has_iconv'] = True
+	    conf['iconv_lib'] = 'c'
 	else :
 		conf['has_iconv'] = None
 		conf['iconv_lib'] = None
