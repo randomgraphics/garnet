@@ -12,15 +12,19 @@ using namespace GN;
 // Local functions
 // *****************************************************************************
 
-static const char * sEncodingToLocal( MultiByteCharacterEncoding::Enum e )
+static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 {
     static const char * TABLE[] =
     {
-        ".1252", // ISO_8859_1
-        "GBK",   // GBK
-        "CHT",   // BIG5
+        ".ascii",       // ASCII
+        ".1252",        // ISO_8859_1
+        ".UTF-7",       // UTF7
+        ".UTF-8",       // UTF8
+        ".UTF-16",      // UTF16
+        ".GBK",         // GBK
+        ".CHT",         // BIG5
     };
-    GN_CASSERT( GN_ARRAY_COUNT(TABLE) == MultiByteCharacterEncoding::NUM_ENCODINGS );
+    GN_CASSERT( GN_ARRAY_COUNT(TABLE) == CharacterEncodingConverter::NUM_ENCODINGS );
 
     if( 0 <= e && e < GN_ARRAY_COUNT(TABLE) )
     {
@@ -28,7 +32,7 @@ static const char * sEncodingToLocal( MultiByteCharacterEncoding::Enum e )
     }
     else
     {
-        GN_ERROR(sLogger)( "Invalid multibyte character encoding: %d", e );
+        GN_ERROR(sLogger)( "Invalid character encoding: %d", e );
         return NULL;
     }
 }
@@ -40,18 +44,28 @@ static const char * sEncodingToLocal( MultiByteCharacterEncoding::Enum e )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::MBCEImplMSWIN::init( MultiByteCharacterEncoding::Enum e )
+bool GN::CECImplMSWIN::init(
+    CharacterEncodingConverter::Encoding from,
+    CharacterEncodingConverter::Encoding to )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::MBCEImplMSWIN, () );
+    GN_STDCLASS_INIT( GN::CECImplMSWIN, () );
 
-    const char * localstr = sEncodingToLocal( e );
-    if( NULL == localstr ) return failure();
+    const char * fromstr = sEncodingToLocal( from );
+    if( NULL == fromstr ) return failure();
+    mLocaleFrom = _create_locale( LC_ALL, fromstr );
+    if( !mLocaleFrom )
+    {
+        GN_ERROR(sLogger)( "_create_locale() failed." );
+        return failure();
+    }
 
-    mLocale = _create_locale( LC_ALL, localstr );
-    if( !mLocale )
+    const char * tostr = sEncodingToLocal( to );
+    if( NULL == tostr ) return failure();
+    mLocaleTo = _create_locale( LC_ALL, tostr );
+    if( !mLocaleTo )
     {
         GN_ERROR(sLogger)( "_create_locale() failed." );
         return failure();
@@ -66,11 +80,12 @@ bool GN::MBCEImplMSWIN::init( MultiByteCharacterEncoding::Enum e )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::MBCEImplMSWIN::quit()
+void GN::CECImplMSWIN::quit()
 {
     GN_GUARD;
 
-    if( mLocale ) _free_locale( mLocale ), mLocale = 0;
+    if( mLocaleFrom ) _free_locale( mLocaleFrom ), mLocaleFrom = 0;
+    if( mLocaleTo ) _free_locale( mLocaleTo ), mLocaleTo = 0;
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -86,13 +101,15 @@ void GN::MBCEImplMSWIN::quit()
 //
 // -----------------------------------------------------------------------------
 size_t
-GN::MBCEImplMSWIN::toUTF16_LE(
-    wchar_t         * destBuffer,
-    size_t            destBufferSizeInBytes,
-    const char      * sourceBuffer,
-    size_t            sourceBufferSizeInBytes )
+GN::CECImplMSWIN::convert(
+    void            * /*destBuffer*/,
+    size_t            /*destBufferSizeInBytes*/,
+    const void      * /*sourceBuffer*/,
+    size_t            /*sourceBufferSizeInBytes*/ )
 {
-    size_t converted;
+    GN_UNIMPL_WARNING();
+    return 0;
+    /*size_t converted;
 
     errno_t err = ::mbstowcs_s(
         &converted,
@@ -109,34 +126,7 @@ GN::MBCEImplMSWIN::toUTF16_LE(
     else
     {
         return converted * sizeof(wchar_t);
-    }
-}
-
-size_t
-GN::MBCEImplMSWIN::fromUTF16_LE(
-    char            * destBuffer,
-    size_t            destBufferSizeInBytes,
-    const wchar_t   * sourceBuffer,
-    size_t            sourceBufferSizeInBytes )
-{
-    size_t converted;
-
-    errno_t err = ::wcstombs_s(
-        &converted,
-        destBuffer,
-        destBufferSizeInBytes,
-        sourceBuffer,
-        sourceBufferSizeInBytes/sizeof(wchar_t) );
-
-    if( 0 != err )
-    {
-        GN_ERROR(sLogger)( "mbstowcs_s failed." );
-        return 0;
-    }
-    else
-    {
-        return converted;
-    }
+    }*/
 }
 
 #endif

@@ -9,36 +9,31 @@
 namespace GN
 {
     ///
-    /// Unicode encoding enumerations
-    ///
-    struct UnicodeEncoding
-    {
-        enum Enum
-        {
-            UTF7,
-            UTF8,
-            UTF16_LE,
-            UTF16_BE,
-        };
-
-        GN_DEFINE_ENUM_CLASS_HELPERS( UnicodeEncoding, Enum );
-    };
-
-    ///
     /// Multi-Byte character encoding class (represents language specific encodings)
     ///
-    class MultiByteCharacterEncoding
+    class CharacterEncodingConverter
     {
     public:
 
-        enum Enum
+        ///
+        /// Define character encoding enumeration
+        ///
+        enum Encoding
         {
             // ISO
+            ASCII,          ///< ASCII code
             ISO_8859_1,     ///< Western Europe
+
+            // UNICODE
+            UTF7,
+            UTF8,
+            UTF16,
 
             // Chinese
             GBK,            ///< Chinese
             BIG5,           ///< Taiwan Chinese
+
+            NUM_ENCODINGS,  ///< number of encodings.
         };
 
     public:
@@ -46,21 +41,20 @@ namespace GN
         ///
         /// constructor
         ///
-        MultiByteCharacterEncoding( Enum e );
+        CharacterEncodingConverter( Encoding from, Encoding to );
 
         ///
         /// destructor
         ///
-        ~MultiByteCharacterEncoding();
+        ~CharacterEncodingConverter();
 
         ///
-        /// convert from multibyte encoding to unicode encoding
-        ///
-        /// \param destEncoding
-        ///     Specify destination encoding. Must be one of UnicodeEncoding enumration.
+        /// convert from source encoding to destination encoding
         ///
         /// \param destBuffer, destBufferSizeInBytes
         ///     Specify destination buffer and size. destBuffer could be NULL.
+        ///     Note that destBuffer, if not NULL, is always NULL terminated,
+        ///     if conversion successes.
         ///
         /// \param sourceBuffer, sourceBufferSizeInBytes
         ///     Specify source buffer and size
@@ -70,51 +64,73 @@ namespace GN
         ///     2) If destBuffer is NULL, return number of bytes required
         ///        to store convertion result. In this case, value of
         ///        destBufferSizeInBytes is ignored.
-        ///     3) Return number of bytes filled into destination buffer.
+        ///     3) Return number of bytes filled into destination buffer,
+        ///        including null terminator.
         ///
         size_t
-        toUnicode(
-            UnicodeEncoding   destEncoding,
-            void            * destBuffer,
-            size_t            destBufferSizeInBytes,
-            const void      * sourceBuffer,
-            size_t            sourceBufferSizeInBytes );
+        convert(
+            void       * destBuffer,
+            size_t       destBufferSizeInBytes,
+            const void * sourceBuffer,
+            size_t       sourceBufferSizeInBytes );
 
-        ///
-        /// convert from unicode encoding to multibyte encoding
-        ///
-        /// \param destBuffer, destBufferSizeInBytes
-        ///     Specify destination buffer and size. destBuffer could be NULL.
-        ///
-        /// \param sourceEncoding
-        ///     Specify destination encoding. Must be one of UnicodeEncoding enumration.
-        ///
-        /// \param sourceBuffer, sourceBufferSizeInBytes
-        ///     Specify source buffer and size
-        ///
-        /// \return
-        ///     1) Return 0 for failure.
-        ///     2) If destBuffer is NULL, return number of bytes required
-        ///        to store convertion result. In this case, value of
-        ///        destBufferSizeInBytes is ignored.
-        ///     3) Return number of bytes filled into destination buffer.
-        ///
+        /// helper operators
+        //@{
+
         size_t
-        toUnicode(
-            void            * destBuffer,
-            size_t            destBufferSizeInBytes,
-            UnicodeEncoding   sourceEncoding,
-            const void      * sourceBuffer,
-            size_t            sourceBufferSizeInBytes );
+        operator()(
+            void       * destBuffer,
+            size_t       destBufferSizeInBytes,
+            const void * sourceBuffer,
+            size_t       sourceBufferSizeInBytes )
+        {
+            return convert(
+                destBuffer,
+                destBufferSizeInBytes,
+                sourceBuffer,
+                sourceBufferSizeInBytes );
+        }
+
+        template<typename DEST_TYPE, size_t DEST_SIZE>
+        size_t
+        operator()(
+            DEST_TYPE  (& destBuffer)[DEST_SIZE],
+            const void  * sourceBuffer,
+            size_t        sourceBufferSizeInBytes )
+        {
+            return convert(
+                destBuffer,
+                DEST_SIZE * sizeof(DEST_TYPE),
+                sourceBuffer,
+                sourceBufferSizeInBytes );
+        }
+
+        template<
+            typename DEST_TYPE, size_t DEST_SIZE,
+            typename SRC_TYPE, size_t SRC_SIZE>
+        size_t
+        operator()(
+            DEST_TYPE (& destBuffer)[DEST_SIZE],
+            SRC_TYPE  (& sourceBuffer)[SRC_SIZE] )
+        {
+            return convert(
+                destBuffer,
+                DEST_SIZE * sizeof(DEST_TYPE),
+                sourceBuffer,
+                SRC_SIZE * sizeof(SRC_TYPE) );
+        }
+
+        //@}
 
     private:
+
         void * mImpl; ///< implementation instance
     };
 
     ///
     /// get current system encoding
     ///
-    MultiByteCharacterEncoding::Enum getCurrentSystemEncoding();
+    CharacterEncodingConverter::Encoding getCurrentSystemEncoding();
 
     ///
     /// convert wide char string to multi-byte string in current system encoding

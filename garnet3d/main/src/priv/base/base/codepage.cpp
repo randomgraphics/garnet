@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "codepageICONV.h"
 #include "codepageMSWIN.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
@@ -6,39 +7,33 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 using namespace GN;
 
 // *****************************************************************************
-// class MultiByteCharacterEncoding implementation class
+// class CharacterEncodingConverter implementation class
 // *****************************************************************************
 
-#if GN_MSWIN
+#if HAS_ICONV
 
-typedef GN::MBCEImplMSWIN MBCEImpl;
+typedef GN::CECImplICONV CECImpl;
+
+#elif GN_MSWIN
+
+typedef GN::CECImplMSWIN CECImpl;
 
 #else
 
-struct MBCEImpl
+struct CECImpl
 {
-    bool init( MultiByteCharacterEncoding::Enum )
+    bool init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
     {
         GN_ERROR(sLogger)( "Character encoding class is not implemented on " GN_PLATFORM_NAME. );
         return false;
     }
 
     size_t
-    toUTF16_LE(
-        wchar_t         * /*destBuffer*/,
-        size_t            /*destBufferSizeInBytes*/,
-        const char      * /*sourceBuffer*/,
-        size_t            /*sourceBufferSizeInBytes*/ )
-    {
-        return 0;
-    }
-
-    size_t
-    fromUTF16_LE(
-        char            * /*destBuffer*/,
-        size_t            /*destBufferSizeInBytes*/,
-        const wchar_t   * /*sourceBuffer*/,
-        size_t            /*sourceBufferSizeInBytes*/ )
+    convert(
+        void       * /*destBuffer*/,
+        size_t       /*destBufferSizeInBytes*/,
+        const void * /*sourceBuffer*/,
+        size_t       /*sourceBufferSizeInBytes*/ )
     {
         return 0;
     }
@@ -48,18 +43,18 @@ struct MBCEImpl
 
 
 // *****************************************************************************
-// class MultiByteCharacterEncoding
+// class CharacterEncodingConverter
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::MultiByteCharacterEncoding::MultiByteCharacterEncoding( Enum e )
-    : mImpl( new MBCEImpl )
+GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encoding to )
+    : mImpl( new CECImpl )
 {
-    MBCEImpl * p = (MBCEImpl*)mImpl;
+    CECImpl * p = (CECImpl*)mImpl;
 
-    if( !p->init( e ) )
+    if( !p->init( from, to ) )
     {
         delete p;
         mImpl = NULL;
@@ -69,16 +64,15 @@ GN::MultiByteCharacterEncoding::MultiByteCharacterEncoding( Enum e )
 //
 //
 // -----------------------------------------------------------------------------
-GN::MultiByteCharacterEncoding::~MultiByteCharacterEncoding()
+GN::CharacterEncodingConverter::~CharacterEncodingConverter()
 {
-    delete (MBCEImpl*)mImpl;
+    delete (CECImpl*)mImpl;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::MultiByteCharacterEncoding::toUnicode(
-    UnicodeEncoding   destEncoding,
+size_t GN::CharacterEncodingConverter::convert(
     void            * destBuffer,
     size_t            destBufferSizeInBytes,
     const void      * sourceBuffer,
@@ -86,70 +80,17 @@ size_t GN::MultiByteCharacterEncoding::toUnicode(
 {
     if( !mImpl )
     {
-        GN_ERROR(sLogger)( "MultiByteCharacterEncoding is not correctly initialized." );
+        GN_ERROR(sLogger)( "CharacterEncodingConverter is not correctly initialized." );
         return 0;
     }
 
-    MBCEImpl * p = (MBCEImpl*)mImpl;
+    CECImpl * p = (CECImpl*)mImpl;
 
-    switch( destEncoding )
-    {
-        case UnicodeEncoding::UTF16_LE:
-            return p->toUTF16_LE(
-                (wchar_t*)destBuffer,
-                destBufferSizeInBytes,
-                (const char *)sourceBuffer,
-                sourceBufferSizeInBytes );
-
-        case UnicodeEncoding::UTF7 :
-        case UnicodeEncoding::UTF8 :
-        case UnicodeEncoding::UTF16_BE :
-            GN_UNIMPL_WARNING();
-            return 0;
-
-        default:
-            GN_ERROR(sLogger)( "Invalid unicode encoding enumeration: %d", destEncoding.toRawEnum() );
-            return 0;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-size_t GN::MultiByteCharacterEncoding::fromUnicode(
-    void            * destBuffer,
-    size_t            destBufferSizeInBytes,
-    UnicodeEncoding   sourceEncoding,
-    const void      * sourceBuffer,
-    size_t            sourceBufferSizeInBytes )
-{
-    if( !mImpl )
-    {
-        GN_ERROR(sLogger)( "MultiByteCharacterEncoding is not correctly initialized." );
-        return 0;
-    }
-
-    MBCEImpl * p = (MBCEImpl*)mImpl;
-
-    switch( sourceEncoding )
-    {
-        case UnicodeEncoding::UTF16_LE:
-            return p->fromUTF16_LE(
-                (char *)destBuffer,
-                destBufferSizeInBytes,
-                (const wchar_t*)sourceBuffer,
-                sourceBufferSizeInBytes );
-
-        case UnicodeEncoding::UTF7 :
-        case UnicodeEncoding::UTF8 :
-        case UnicodeEncoding::UTF16_BE :
-            GN_UNIMPL_WARNING();
-            return 0;
-
-        default:
-            GN_ERROR(sLogger)( "Invalid unicode encoding enumeration: %d", sourceEncoding.toRawEnum() );
-            return 0;
-    }
+    return p->convert(
+        (wchar_t*)destBuffer,
+        destBufferSizeInBytes,
+        (const char *)sourceBuffer,
+        sourceBufferSizeInBytes );
 }
 
 // *****************************************************************************
@@ -159,9 +100,9 @@ size_t GN::MultiByteCharacterEncoding::fromUnicode(
 //
 //
 // -----------------------------------------------------------------------------
-GN::MultiByteCharacterEncoding::Enum GN::getCurrentSystemEncoding()
+GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
 {
-    return MultiByteCharacterEncoding::ISO_8859_1;
+    return CharacterEncodingConverter::ISO_8859_1;
 }
 
 //
