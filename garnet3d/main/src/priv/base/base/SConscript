@@ -3,6 +3,7 @@ sources = [
 	'boundingVolume.cpp',
 	'clock.cpp',
 	'codepage.cpp',
+	'codepageMSWIN.cpp',
 	'debug.cpp',
 	'endian.cpp',
 	'file.cpp',

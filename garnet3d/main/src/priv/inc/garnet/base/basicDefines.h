@@ -65,57 +65,66 @@
 #define GN_MSWIN  0 ///< If 1, means current platform is Windows serias
 #define GN_CYGWIN 0 ///< If 1, means current platform is Cygwin
 #define GN_POSIX  0 ///< If 1, means current platform is POSIX compatible, such as Cygwin
+#define GN_PC 0     ///< If 1, means PC
+#define GN_XBOX1 0  ///< If 1, means Xbox1
+#define GN_XENON 0  ///< if 1, means Xbox360
 
 /// \def GN_OS
 /// Indicate current OS
 
-#if defined( _WIN32 )      // Windows
 // Windows platform
+#if defined( _WIN32 )
+
 #undef GN_MSWIN
 #define GN_MSWIN 1
-#define GN_OS "mswin"
-#elif defined(__CYGWIN__)
-// Cygwin platform
-#undef GN_CYGWIN
-#undef GN_POSIX
-#define GN_CYGWIN 1
-#define GN_POSIX  1 // cygwin also provides some posix compabilities
-#define GN_OS "cygwin"
-#elif defined( __unix ) || defined( __unix__ )
-// posix-like platform
-#undef GN_POSIX
-#define GN_POSIX 1
-#define GN_OS "posix"
-#else
-#error "unknown OS!"
-#define GN_OS "unknown"
-#endif
-
-// *****************************************************************************
-// 辨识系统平台
-// *****************************************************************************
-
-#define GN_PC 0    ///< PC
-#define GN_XBOX1 0 ///< Xbox
-#define GN_XENON 0 ///< Xbox 360
-
-/// \def GN_SYSTEM
-/// Indicate current system
 
 #ifdef _XBOX_VER
 #if _XBOX_VER >= 200
 #undef GN_XENON
 #define GN_XENON 1
-#define GN_SYSTEM "xenon"
+#undef GN_PLATFORM_NAME
+#define GN_PLATFORM_NAME "xenon"
 #else
 #undef GN_XBOX1
 #define GN_XBOX1 1
-#define GN_SYSTEM "xbox1"
+#undef GN_PLATFORM_NAME
+#define GN_PLATFORM_NAME "xbox1"
 #endif
 #else
 #undef GN_PC
 #define GN_PC 1
-#define GN_SYSTEM "pc"
+#define GN_PLATFORM_NAME "mswin"
+#endif
+
+// Cygwin platform
+#elif defined(__CYGWIN__)
+
+#undef GN_CYGWIN
+#define GN_CYGWIN 1
+
+#undef GN_POSIX
+#define GN_POSIX  1 // cygwin also provides some posix compabilities
+
+#undef GN_PC
+#define GN_PC     1 // Cygwin is only available on PC.
+
+#define GN_PLATFORM_NAME "cygwin"
+
+// unix platform
+#elif defined( __unix ) || defined( __unix__ )
+
+#undef GN_POSIX
+#define GN_POSIX 1
+
+#undef GN_PC
+#define GN_PC    1 // TODO: detect non-PC platform.
+
+#define GN_PLATFORM_NAME "posix"
+
+// error: unknown platform
+#else
+#error "unknown platform!"
+#define GN_PLATFORM_NAME "unknown"
 #endif
 
 // *****************************************************************************
