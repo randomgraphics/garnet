@@ -25,10 +25,9 @@ struct MBCEImpl
 
     size_t
     toUTF16_LE(
-        UnicodeEncoding   /*destEncoding*/,
-        void            * /*destBuffer*/,
+        wchar_t         * /*destBuffer*/,
         size_t            /*destBufferSizeInBytes*/,
-        const void      * /*sourceBuffer*/,
+        const char      * /*sourceBuffer*/,
         size_t            /*sourceBufferSizeInBytes*/ )
     {
         return 0;
@@ -36,10 +35,9 @@ struct MBCEImpl
 
     size_t
     fromUTF16_LE(
-        void            * /*destBuffer*/,
+        char            * /*destBuffer*/,
         size_t            /*destBufferSizeInBytes*/,
-        UnicodeEncoding   /*sourceEncoding*/,
-        const void      * /*sourceBuffer*/,
+        const wchar_t   * /*sourceBuffer*/,
         size_t            /*sourceBufferSizeInBytes*/ )
     {
         return 0;
@@ -98,9 +96,9 @@ size_t GN::MultiByteCharacterEncoding::toUnicode(
     {
         case UnicodeEncoding::UTF16_LE:
             return p->toUTF16_LE(
-                destBuffer,
+                (wchar_t*)destBuffer,
                 destBufferSizeInBytes,
-                sourceBuffer,
+                (const char *)sourceBuffer,
                 sourceBufferSizeInBytes );
 
         case UnicodeEncoding::UTF7 :
@@ -118,7 +116,7 @@ size_t GN::MultiByteCharacterEncoding::toUnicode(
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::MultiByteCharacterEncoding::toUnicode(
+size_t GN::MultiByteCharacterEncoding::fromUnicode(
     void            * destBuffer,
     size_t            destBufferSizeInBytes,
     UnicodeEncoding   sourceEncoding,
@@ -137,9 +135,9 @@ size_t GN::MultiByteCharacterEncoding::toUnicode(
     {
         case UnicodeEncoding::UTF16_LE:
             return p->fromUTF16_LE(
-                destBuffer,
+                (char *)destBuffer,
                 destBufferSizeInBytes,
-                sourceBuffer,
+                (const wchar_t*)sourceBuffer,
                 sourceBufferSizeInBytes );
 
         case UnicodeEncoding::UTF7 :
