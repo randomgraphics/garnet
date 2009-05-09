@@ -7,6 +7,8 @@
 /// \author  chen@@CHENLI-HOMEPC (2009.5.9)
 // *****************************************************************************
 
+#include <locale.h>
+
 namespace GN
 {
     ///
@@ -35,7 +37,7 @@ namespace GN
         bool init( MultiByteCharacterEncoding::Enum e );
         void quit();
     private:
-        void clear() {}
+        void clear() { mLocale = 0; }
         //@}
 
         // ********************************
@@ -47,16 +49,16 @@ namespace GN
 
         size_t
         toUTF16_LE(
-            void            * destBuffer,
+            wchar_t         * destBuffer,
             size_t            destBufferSizeInBytes,
-            const void      * sourceBuffer,
+            const char      * sourceBuffer,
             size_t            sourceBufferSizeInBytes );
 
         size_t
         fromUTF16_LE(
-            void            * destBuffer,
+            char            * destBuffer,
             size_t            destBufferSizeInBytes,
-            const void      * sourceBuffer,
+            const wchar_t   * sourceBuffer,
             size_t            sourceBufferSizeInBytes );
 
         //@}
@@ -65,6 +67,8 @@ namespace GN
         // private variables
         // ********************************
     private:
+
+        _locale_t mLocale;
 
         // ********************************
         // private functions
