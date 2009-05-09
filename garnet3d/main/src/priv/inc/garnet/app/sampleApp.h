@@ -119,8 +119,8 @@ namespace GN { namespace app
         InitParam             mInitParam;
 
         gfx::Renderer       * mRenderer;
-        gfx::LineRenderer   * mLineRenderer;
         gfx::SpriteRenderer * mSpriteRenderer;
+        gfx::LineRenderer   * mLineRenderer;
         util::BitmapFont      mFont;
 
         // time stuff

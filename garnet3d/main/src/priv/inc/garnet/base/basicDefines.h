@@ -303,7 +303,7 @@
 //@{
 template<bool>   struct COMPILE_TIME_ASSERT_FAILURE;
 template<>       struct COMPILE_TIME_ASSERT_FAILURE<true>{ enum { value = 1 }; };
-template<size_t> struct COMPILE_TIME_ASSERT_TEST {};
+template<int>    struct COMPILE_TIME_ASSERT_TEST {};
 //@}
 
 ///
