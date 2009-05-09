@@ -9,93 +9,132 @@
 namespace GN
 {
     ///
-    /// ANSI Code page enumeration
+    /// Unicode encoding enumerations
     ///
-    struct CharacterEncoding
+    struct UnicodeEncoding
     {
+        enum Enum
+        {
+            UTF7,
+            UTF8,
+            UTF16_LE,
+            UTF16_BE,
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( UnicodeEncoding, Enum );
+    };
+
+    ///
+    /// Multi-Byte character encoding class (represents language specific encodings)
+    ///
+    class MultiByteCharacterEncoding
+    {
+    public:
+
         enum Enum
         {
             // ISO
             ISO_8859_1,     ///< Western Europe
-
-            // Unicode
-            UTF_7,          ///< 7-bit Unicode Transformation Format (used in internet e-mail messages)
-            UTF_8,          ///< 8-bit UCS/Unicode Transformation Format)
-            UTF16_LE,       ///< 16-bit Unicode Transformation Format (little endian)
-            UTF16_BE,       ///< 16-bit Unicode Transformation Format (big endian)
 
             // Chinese
             GBK,            ///< Chinese
             BIG5,           ///< Taiwan Chinese
         };
 
-        GN_DEFINE_ENUM_CLASS_HELPERS( CharacterEncoding, Enum );
+    public:
+
+        ///
+        /// constructor
+        ///
+        MultiByteCharacterEncoding( Enum e );
+
+        ///
+        /// destructor
+        ///
+        ~MultiByteCharacterEncoding();
+
+        ///
+        /// convert from multibyte encoding to unicode encoding
+        ///
+        /// \param destEncoding
+        ///     Specify destination encoding. Must be one of UnicodeEncoding enumration.
+        ///
+        /// \param destBuffer, destBufferSizeInBytes
+        ///     Specify destination buffer and size. destBuffer could be NULL.
+        ///
+        /// \param sourceBuffer, sourceBufferSizeInBytes
+        ///     Specify source buffer and size
+        ///
+        /// \return
+        ///     1) Return 0 for failure.
+        ///     2) If destBuffer is NULL, return number of bytes required
+        ///        to store convertion result. In this case, value of
+        ///        destBufferSizeInBytes is ignored.
+        ///     3) Return number of bytes filled into destination buffer.
+        ///
+        size_t
+        toUnicode(
+            UnicodeEncoding   destEncoding,
+            void            * destBuffer,
+            size_t            destBufferSizeInBytes,
+            const void      * sourceBuffer,
+            size_t            sourceBufferSizeInBytes );
+
+        ///
+        /// convert from unicode encoding to multibyte encoding
+        ///
+        /// \param destBuffer, destBufferSizeInBytes
+        ///     Specify destination buffer and size. destBuffer could be NULL.
+        ///
+        /// \param sourceEncoding
+        ///     Specify destination encoding. Must be one of UnicodeEncoding enumration.
+        ///
+        /// \param sourceBuffer, sourceBufferSizeInBytes
+        ///     Specify source buffer and size
+        ///
+        /// \return
+        ///     1) Return 0 for failure.
+        ///     2) If destBuffer is NULL, return number of bytes required
+        ///        to store convertion result. In this case, value of
+        ///        destBufferSizeInBytes is ignored.
+        ///     3) Return number of bytes filled into destination buffer.
+        ///
+        size_t
+        toUnicode(
+            void            * destBuffer,
+            size_t            destBufferSizeInBytes,
+            UnicodeEncoding   sourceEncoding,
+            const void      * sourceBuffer,
+            size_t            sourceBufferSizeInBytes );
+
+    private:
+        void * mImpl; ///< implementation instance
     };
 
     ///
-    /// Universal character encoding converter
+    /// get current system encoding
     ///
-    /// \param destBuffer, destBufferSizeInBytes
-    ///         Specify destination buffer. If both are zero, then the function returns
-    ///         Number of bytes required to store conversion result.
-    ///
-    /// \param destEncoding
-    ///         Specify destination encoding type.
-    ///
-    /// \param sourceBuffer, sourceBufferInBytes
-    ///         Specify source buffer.
-    ///
-    /// \param sourceEncoding
-    ///         Specify source buffer encoding type.
-    ///
-    /// \return
-    ///         Return number of bytes copied to destination buffer, or number of bytes required
-    ///         to store destination buffer.
-    ///         Return 0 on error.
-    size_t
-    ConvertCharacterEncoding(
-        void            * destBuffer,
-        size_t            destBufferSizeInBytes,
-        CharacterEncoding destEncoding,
-        const void      * sourceBuffer,
-        size_t            sourceBufferSizeInBytes,
-        CharacterEncoding sourceEncoding
-        );
+    MultiByteCharacterEncoding::Enum getCurrentSystemEncoding();
 
     ///
-    /// Universal character encoding converter
-    ///
-    /// Simiary as the function above. But destination buffer is allocated by the function from heap,
-    /// and must be freed by GN::heapFree() after use. Return NULL on error.
-    ///
-    void *
-    ConvertCharacterEncoding(
-        size_t           * destBufferSizeInBytes, // return destination buffer size in bytes (optional)
-        CharacterEncoding  destEncoding,
-        const void       * sourceBuffer,
-        size_t             sourceBufferSizeInBytes,
-        CharacterEncoding  sourceEncoding
-        );
-
-    ///
-    /// convert wide char string to multi-byte string in current system codepage
+    /// convert wide char string to multi-byte string in current system encoding
     ///
     void wcs2mbs( StrA &, const wchar_t *, size_t );
 
     ///
-    /// convert wide char string to multi-byte string in current system codepage
+    /// convert wide char string to multi-byte string in current system encoding
     ///
     inline void
     wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cptr(), i.size() ); }
 
     ///
-    /// convert wide char string to multi-byte string in current system codepage
+    /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
     wcs2mbs( const wchar_t * i, size_t l ) { StrA o; wcs2mbs( o, i, l ); return o; }
 
     ///
-    /// convert wide char string to multi-byte string in current system codepage
+    /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
     wcs2mbs( const StrW & i ) { return wcs2mbs( i.cptr(), i.size() ); }
