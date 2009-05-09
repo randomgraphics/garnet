@@ -20,9 +20,13 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
         "ISO-8859-1",  // ISO_8859_1
         "UTF-7",       // UTF7
         "UTF-8",       // UTF8
-        "UTF-16",      // UTF16
+#if GN_LITTLE_ENDIAN
+        "UTF-16LE",    // UTF16
+#else
+        "UTF-16BE",    // UTF16
+#endif
         "GBK",         // GBK
-        "CHT",         // BIG5
+        "BIG5",        // BIG5
     };
     GN_CASSERT( GN_ARRAY_COUNT(TABLE) == CharacterEncodingConverter::NUM_ENCODINGS );
 
@@ -114,11 +118,21 @@ GN::CECImplICONV::convert(
 {
     const char * inbuf  = (const char *)sourceBuffer;
     char       * outbuf = (char*)destBuffer;
-    //char       * outbuf_end = outbuf + sourceBufferSizeInBytes;
 
-    size_t converted = ::iconv(
+    // Note: iconv() on different platform uses different signature.
+    // To avoid conditional compiliation, convert system provided
+    // iconv routine to unified signature.
+    typedef size_t (*MyICONVFuncType)(
+        iconv_t cd,
+        const char ** inbuf,
+        size_t *inbytesleft,
+        char* * outbuf,
+        size_t *outbytesleft );
+    MyICONVFuncType myiconv = (MyICONVFuncType)&iconv;
+
+    size_t converted = myiconv(
         mIconv,
-        (char**)&inbuf,
+        &inbuf,
         &sourceBufferSizeInBytes,
         &outbuf,
         &destBufferSizeInBytes );
@@ -150,8 +164,6 @@ GN::CECImplICONV::convert(
 
         return 0;
     }
-
-    // TODO: make sure output buffer is NULL terminated
 
     return outbuf - (char*)destBuffer;
 }

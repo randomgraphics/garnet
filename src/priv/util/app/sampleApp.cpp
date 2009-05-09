@@ -313,6 +313,20 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
     if( !initFont() ) return false;
     if( !onPostInit() ) return false;
 
+    // convert help text to unicode
+    static const char helpGBK[] =
+        "ESC            : ÍË³ö\n"
+        "XB360 button X : ÍË³ö\n"
+        "F1             : ÇÐ»»°ïÖúÆÁÄ»";
+    wchar_t helpUCS[sizeof(helpGBK)];
+    CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::UTF16 );
+    if( 0 == cec( helpUCS, helpGBK ) )
+    {
+        GN_ERROR(sLogger)( "Fail to convert help text from GBK to UNICODE." );
+        return false;
+    }
+    mHelpText = helpUCS;
+
     // success
     return true;
 
@@ -591,11 +605,7 @@ void GN::app::SampleApp::drawHUD()
 
         if( mShowHelp )
         {
-            static const wchar_t * help =
-                L"ESC            : ÍË³ö\n"
-                L"XB360 button X : ÍË³ö\n"
-                L"F1             : ÇÐ»»°ïÖúÆÁÄ»";
-            mFont.drawText( help, 40, 80 );
+            mFont.drawText( mHelpText, 40, 80 );
         }
     }
 
