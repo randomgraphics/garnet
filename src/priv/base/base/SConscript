@@ -3,6 +3,7 @@ sources = [
 	'boundingVolume.cpp',
 	'clock.cpp',
 	'codepage.cpp',
+	'codepageICONV.cpp',
 	'codepageMSWIN.cpp',
 	'debug.cpp',
 	'endian.cpp',
@@ -25,4 +26,7 @@ sources = [
 	'xml.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_iconv'] :
+    r.addCompileFlags( CPPDEFINES = ['HAS_ICONV=1'] )
+    r.externalDependencies += [GN.conf['iconv_lib']]
 Return( 'r' )

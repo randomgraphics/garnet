@@ -14,9 +14,9 @@ namespace GN
     ///
     /// Multibyte encoding implementation class on MS Windows.
     ///
-    class MBCEImplMSWIN : public StdClass
+    class CECImplMSWIN : public StdClass
     {
-        GN_DECLARE_STDCLASS( MBCEImplMSWIN, StdClass );
+        GN_DECLARE_STDCLASS( CECImplMSWIN, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -24,8 +24,8 @@ namespace GN
 
         //@{
     public:
-        MBCEImplMSWIN()          { clear(); }
-        virtual ~MBCEImplMSWIN() { quit(); }
+        CECImplMSWIN()          { clear(); }
+        virtual ~CECImplMSWIN() { quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN
 
         //@{
     public:
-        bool init( MultiByteCharacterEncoding::Enum e );
+        bool init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
         void quit();
     private:
-        void clear() { mLocale = 0; }
+        void clear() { mLocaleFrom = mLocaleTo = 0; }
         //@}
 
         // ********************************
@@ -48,18 +48,11 @@ namespace GN
         //@{
 
         size_t
-        toUTF16_LE(
-            wchar_t         * destBuffer,
-            size_t            destBufferSizeInBytes,
-            const char      * sourceBuffer,
-            size_t            sourceBufferSizeInBytes );
-
-        size_t
-        fromUTF16_LE(
-            char            * destBuffer,
-            size_t            destBufferSizeInBytes,
-            const wchar_t   * sourceBuffer,
-            size_t            sourceBufferSizeInBytes );
+        convert(
+            void         * destBuffer,
+            size_t         destBufferSizeInBytes,
+            const void   * sourceBuffer,
+            size_t         sourceBufferSizeInBytes );
 
         //@}
 
@@ -68,7 +61,8 @@ namespace GN
         // ********************************
     private:
 
-        _locale_t mLocale;
+        _locale_t mLocaleFrom;
+        _locale_t mLocaleTo;
 
         // ********************************
         // private functions

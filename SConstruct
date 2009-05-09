@@ -486,6 +486,19 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	else :
 	    conf['has_glut'] = None
 
+	# =====
+	# ICONV
+	# =====
+	if c.CheckLibWithHeader( 'iconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    conf['has_iconv'] = True
+	    conf['iconv_lib'] = 'iconv'
+	elif c.CheckLibWithHeader( 'libiconv', 'iconv.h', 'c', 'iconv_open(0,0);' ):
+	    conf['has_iconv'] = True
+	    conf['iconv_lib'] = 'libiconv'
+	else :
+		conf['has_iconv'] = None
+		conf['iconv_lib'] = None
+
 	# =====================
 	# Copy to devkit or not
 	# =====================
@@ -630,7 +643,7 @@ class GarnetEnv :
 		t.variant = self.variant
 		t.type = type
 		t.path = Dir('.')
-		t.sources = sources
+		for s in sources : t.addCluster( s )
 		t.dependencies = dependencies
 		t.ignoreDefaultDependencies = ignoreDefaultDependencies
 		if pdb : t.pdb = File(pdb)
@@ -647,7 +660,7 @@ class GarnetEnv :
 		t.variant = self.variant
 		t.type = 'custom'
 		t.path = Dir('.')
-		t.sources = sources
+		for s in sources : t.addCluster( s )
 		ALL_targets[self.compiler][self.variant][name] = t # insert to global target list
 		return t
 
@@ -663,7 +676,7 @@ class GarnetEnv :
 		t.variant = self.variant
 		t.type = 'custom'
 		t.path = Dir('.')
-		t.sources = sources
+		for s in sources : t.addCluster( s )
 		ALL_targets[0][0][name] = t # insert to global target list
 		return t
 
@@ -698,6 +711,7 @@ class SourceCluster:
 		self.pchSource = None
 		self.extraCompileFlags = CompileFlags()
 		self.removedCompileFlags = CompileFlags()
+		self.externalDependencies = []
 		self.action = None # custom action object, only used for 'custom' type target.
 						   # Should accept a enviroment and a list of sources as parameter,
 						   # and return list of targets.
@@ -743,7 +757,9 @@ class Target:
 		self.extraLinkFlags = LinkFlags()
 		self.removedLinkFlags = LinkFlags()
 
-	def addCluster( self, c ): self.sources.append( c )
+	def addCluster( self, c ):
+		self.sources.append( c )
+		self.externalDependencies += c.externalDependencies
 
 	def addLinkFlags( self, LIBPATH = None, LINKFLAGS = None ):
 		if LIBPATH : self.extraLinkFlags.libpath += LIBPATH
