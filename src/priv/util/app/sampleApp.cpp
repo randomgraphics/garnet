@@ -389,7 +389,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 
 #if GN_XENON
 
-    // Xenon platform don't have command lines at all
+    // Xenon platform has no command line at all.
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
 
