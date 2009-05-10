@@ -152,14 +152,27 @@ void GN::input::InputX11::processInputEvents()
 
                 case ButtonPress:
                     //GN_TRACE( "ButtonPress: button(%d)", e.xbutton.button );
-                    kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button );
-                    if( KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON )
-                    triggerKeyPress( kc, true );
+                    if( 4 == e.xbutton.button )
+                    {
+                        // mouse wheel up
+                        triggerAxisMove( Axis::MOUSE_WHEEL_0, 10 );
+                    }
+                    else if( 5 == e.xbutton.button )
+                    {
+                        // mouse wheel down
+                        triggerAxisMove( Axis::MOUSE_WHEEL_0, -10 );
+                    }
+                    else
+                    {
+                        kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button - 1 );
+                        if( KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON )
+                        triggerKeyPress( kc, true );
+                    }
                     break;
 
                 case ButtonRelease:
                     //GN_TRACE( "ButtonRelease: button(%d)", e.xbutton.button );
-                    kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button );
+                    kc = (KeyCode)( KeyCode::MOUSEBTN_0 + e.xbutton.button - 1 );
                     if( KeyCode::FIRST_MOUSE_BUTTON <= kc && kc <= KeyCode::LAST_MOUSE_BUTTON )
                     triggerKeyPress( kc, false );
                     break;

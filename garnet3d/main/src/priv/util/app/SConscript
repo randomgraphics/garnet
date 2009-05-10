@@ -3,6 +3,4 @@ sources = [
 	'sampleApp.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-if 'gcc' == GN.compiler.name:
-    r.addCompileFlags( CCFLAGS = ['-finput-charset=GBK','-fexec-charset=GBK'] )
 Return( 'r' )

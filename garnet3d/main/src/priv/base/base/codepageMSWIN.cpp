@@ -20,7 +20,13 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
         ".1252",        // ISO_8859_1
         ".UTF-7",       // UTF7
         ".UTF-8",       // UTF8
-        ".UTF-16",      // UTF16
+        ".UTF-16-LE",   // UTF16_LE
+        ".UTF-16-BE",   // UTF16_BE
+        ".UTF-16-LE",   // UTF16
+        ".UTF-32-LE",   // UTF32_LE
+        ".UTF-32-BE",   // UTF32_BE
+        ".UTF-32-LE",   // UTF32
+        ".UTF-16-LE",   // WIDECHAR
         ".GBK",         // GBK
         ".CHT",         // BIG5
     };

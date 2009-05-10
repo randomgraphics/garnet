@@ -16,15 +16,38 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 {
     static const char * TABLE[] =
     {
-        "ASCII",       // ASCII
-        "ISO-8859-1",  // ISO_8859_1
-        "UTF-7",       // UTF7
-        "UTF-8",       // UTF8
+        "ASCII",        // ASCII
+        "ISO-8859-1",   // ISO_8859_1
+        "UTF-7",        // UTF7
+        "UTF-8",        // UTF8
+        "UTF-16LE",     // UTF16_LE
+        "UTF-16BE",     // UTF16_BE
+
 #if GN_LITTLE_ENDIAN
-        "UTF-16LE",    // UTF16
+        "UTF-16LE",     // UTF16
 #else
-        "UTF-16BE",    // UTF16
+        "UTF-16BE",     // UTF16
 #endif
+
+        "UTF-32LE",    // UTF32_LE
+        "UTF-32BE",    // UTF32_BE
+
+#if GN_LITTLE_ENDIAN
+        "UTF-32LE",     // UTF32
+#else
+        "UTF-32BE",     // UTF32
+#endif
+
+#if GN_LITTLE_ENDIAN
+        (2 == sizeof(wchar_t)) // WIDECHAR
+        ? "UTF-16LE"
+        : "UTF-32LE",
+#else
+        (2 == sizeof(wchar_t)) // WIDECHAR
+        ? "UTF-16BE"
+        : "UTF-32BE",
+#endif
+
         "GBK",         // GBK
         "BIG5",        // BIG5
     };
