@@ -10,31 +10,31 @@ public:
 
         CharacterEncodingConverter c(
             CharacterEncodingConverter::ASCII,
-            CharacterEncodingConverter::UTF16 );
+            CharacterEncodingConverter::WIDECHAR );
 
         size_t converted;
 
         char ascii[] = "abcd";
-        wchar_t utf16[4];
-        converted = c( utf16, ascii );
+        wchar_t wide[4];
+        converted = c( wide, ascii );
         TS_ASSERT_EQUALS( converted, 0 );
     }
 
-    void testASCII_to_UTF16()
+    void testASCII_to_WIDECHAR()
     {
         using namespace GN;
 
         CharacterEncodingConverter c(
             CharacterEncodingConverter::ASCII,
-            CharacterEncodingConverter::UTF16 );
+            CharacterEncodingConverter::WIDECHAR );
 
         size_t converted;
 
         char ascii[] = "abcd";
-        wchar_t utf16[5];
-        converted = c( utf16, ascii );
-        TS_ASSERT_EQUALS( converted, 10 );
-        TS_ASSERT_EQUALS( utf16, L"abcd" );
+        wchar_t wide[5];
+        converted = c( wide, ascii );
+        TS_ASSERT_EQUALS( converted, sizeof(wide) );
+        TS_ASSERT_EQUALS( wide, L"abcd" );
     }
 
     void testBIG5_to_GBK()

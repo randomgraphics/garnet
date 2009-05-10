@@ -279,7 +279,8 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     FontImage fbm;
     if( !mFont->loadFontImage( fbm, ch ) )
     {
-        GN_ERROR(sLogger)( "fail to get font bitmap for character!" );
+        wchar_t s[] = { ch, L'\0' };
+        GN_ERROR(sLogger)( L"fail to get font bitmap for character '%s'!", s );
         return false;
     }
 

@@ -63,11 +63,11 @@ void GN::Mutex::unlock()
 // *****************************************************************************
 
 ///
-/// sync event on MS Windows.
+/// sync event on POSIX system.
 ///
-class SyncEventX11 : public SyncEvent, public StdClass
+class SyncEventPOSIX : public SyncEvent, public StdClass
 {
-    GN_DECLARE_STDCLASS( SyncEventX11, StdClass );
+    GN_DECLARE_STDCLASS( SyncEventPOSIX, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -75,8 +75,8 @@ class SyncEventX11 : public SyncEvent, public StdClass
 
     //@{
 public:
-    SyncEventX11()          { clear(); }
-    virtual ~SyncEventX11() { quit(); }
+    SyncEventPOSIX()          { clear(); }
+    virtual ~SyncEventPOSIX() { quit(); }
     //@}
 
     // ********************************
@@ -90,9 +90,9 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SyncEventX11, () );
+        GN_STDCLASS_INIT( SyncEventPOSIX, () );
 
-        GN_UNIMPL_WARNING();
+        GN_UNIMPL();
 
         // success
         return success();
@@ -103,7 +103,7 @@ public:
     {
         GN_GUARD;
 
-        GN_UNIMPL_WARNING();
+        GN_UNIMPL();
 
         // standard quit procedure
         GN_STDCLASS_QUIT();
@@ -151,11 +151,11 @@ private:
 // *****************************************************************************
 
 ///
-/// semaphore on MS Windows.
+/// semaphore on POSIX system.
 ///
-class SemaphoreX11 : public Semaphore, public StdClass
+class SemaphorePOSIX : public Semaphore, public StdClass
 {
-    GN_DECLARE_STDCLASS( SemaphoreX11, StdClass );
+    GN_DECLARE_STDCLASS( SemaphorePOSIX, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -163,8 +163,8 @@ class SemaphoreX11 : public Semaphore, public StdClass
 
     //@{
 public:
-    SemaphoreX11()          { clear(); }
-    virtual ~SemaphoreX11() { quit(); }
+    SemaphorePOSIX()          { clear(); }
+    virtual ~SemaphorePOSIX() { quit(); }
     //@}
 
     // ********************************
@@ -178,9 +178,9 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SemaphoreX11, () );
+        GN_STDCLASS_INIT( SemaphorePOSIX, () );
 
-        GN_UNIMPL_WARNING();
+        GN_UNIMPL();
 
         // success
         return success();
@@ -191,7 +191,7 @@ public:
     {
         GN_GUARD;
 
-        GN_UNIMPL_WARNING();
+        GN_UNIMPL();
 
         // standard quit procedure
         GN_STDCLASS_QUIT();
@@ -243,7 +243,7 @@ GN::SyncEvent * GN::createSyncEvent(
 {
     GN_GUARD;
 
-    AutoObjPtr<SyncEventX11> s( new SyncEventX11 );
+    AutoObjPtr<SyncEventPOSIX> s( new SyncEventPOSIX );
 
     if( !s->init( initialSignaled, autoreset, name ) ) return 0;
 
@@ -262,7 +262,7 @@ GN::Semaphore * GN::createSemaphore(
 {
     GN_GUARD;
 
-    AutoObjPtr<SemaphoreX11> s( new SemaphoreX11 );
+    AutoObjPtr<SemaphorePOSIX> s( new SemaphorePOSIX );
 
     if( !s->init( maxcount, initialcount, name ) ) return 0;
 

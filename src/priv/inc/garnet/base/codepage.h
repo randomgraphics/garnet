@@ -20,6 +20,8 @@ namespace GN
         ///
         enum Encoding
         {
+            //@{
+
             // ISO
             ASCII,          ///< ASCII code
             ISO_8859_1,     ///< Western Europe
@@ -27,13 +29,21 @@ namespace GN
             // UNICODE
             UTF7,
             UTF8,
-            UTF16,
+            UTF16_LE,
+            UTF16_BE,
+            UTF16,          ///< UTF16_LE on little endian system; UTF16_BE on big endian system.
+            UTF32_LE,
+            UTF32_BE,       ///< UTF32_LE on little endian system; UTF32_BE on big endian system.
+            UTF32,
+            WIDECHAR,       ///< UTF16, if sizeof(wchar_t)==2; or UTF32, if sizeof(wchar_t)==4
 
             // Chinese
             GBK,            ///< Chinese
             BIG5,           ///< Taiwan Chinese
 
             NUM_ENCODINGS,  ///< number of encodings.
+
+            //@}
         };
 
     public:

@@ -319,7 +319,7 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
         "XB360 button X : ÍË³ö\n"
         "F1             : ÇÐ»»°ïÖúÆÁÄ»";
     wchar_t helpUCS[sizeof(helpGBK)];
-    CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::UTF16 );
+    CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::WIDECHAR );
     if( 0 == cec( helpUCS, helpGBK ) )
     {
         GN_ERROR(sLogger)( "Fail to convert help text from GBK to UNICODE." );
