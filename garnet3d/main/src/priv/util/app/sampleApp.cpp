@@ -69,6 +69,28 @@ sParseBool( bool & result, const char * option, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
+template<typename T>
+static bool
+sParseInteger( T & result, const char * option, const char * value )
+{
+    using namespace GN;
+    
+    if( str2Int( result, value ) )
+    {
+        return true;
+    }
+    else
+    {
+        GN_ERROR(sLogger)(
+            "Invalid integer argument value (%s) for option %s",
+            value, option );
+        return false;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sParseRendererAPI( GN::gfx::RendererAPI & result, const char * value )
 {
     using namespace GN;
@@ -281,12 +303,12 @@ void GN::app::SampleApp::printStandardCommandLineOptions()
         "   -mt   [on|off]          Use multithread renderer. Default is off.\n"
         "\n"
         "   -rapi [auto|ogl|d3d10]  Choose rendering API. Default is AUTO.\n"
-        //"\n"
-        //"    -ww [num]              Windows width. Default is 640.\n"
-        //"\n"
-        //"    -wh [num]              Windows width. Default is 480.\n"
-        //"\n"
-        //"    -vsync                 Enable vsync.\n"
+        "\n"
+        "    -ww [num]              Windows width. Default is 640.\n"
+        "\n"
+        "    -wh [num]              Windows width. Default is 480.\n"
+        "\n"
+        "    -vsync [on|off]        Enable/Disable vsync. Default is off.\n"
         //"\n"
         //"    -m [num]               Specify monitor index. Default is 0.\n"
         //"\n"
@@ -444,6 +466,27 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                         GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
                     }
                 }
+            }
+            else if( 0 == strCmpI( "ww", a+1 ) )
+            {
+                StrA value = sGetOptionValue( argc, argv, i );
+                if( value.empty() ) return false;
+
+                if( !sParseInteger( mInitParam.ro.windowedWidth, a, value ) ) return false;
+            }
+            else if( 0 == strCmpI( "wh", a+1 ) )
+            {
+                StrA value = sGetOptionValue( argc, argv, i );
+                if( value.empty() ) return false;
+
+                if( !sParseInteger( mInitParam.ro.windowedHeight, a, value ) ) return false;
+            }
+            else if( 0 == strCmpI( "vsync", a+1 ) )
+            {
+                StrA value = sGetOptionValue( argc, argv, i );
+                if( value.empty() ) return false;
+
+                if( !sParseBool( mInitParam.ro.vsync, a, value ) ) return false;
             }
             else
             {

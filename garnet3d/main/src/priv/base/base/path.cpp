@@ -4,8 +4,6 @@
 // Local types, functions and variables
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.filesys");
-
 // *****************************************************************************
 // Public functions
 // *****************************************************************************
@@ -278,10 +276,18 @@ void GN::fs::getCurrentDir( StrA & result )
     result.trimRight( '/' );
 #elif GN_POSIX
     char buf[PATH_MAX+1];
-    getcwd( buf, PATH_MAX );
-    buf[PATH_MAX] = 0;
-    result = buf;
-    result.trimRight( '/' );
+    if( NULL == getcwd( buf, PATH_MAX ) )
+    {
+        static Logger * sLogger = getLogger( "GN.base.path" );
+        GN_ERROR(sLogger)( "getcwd() failed: fail to get current directory." );
+        result = "";
+    }
+    else
+    {
+        buf[PATH_MAX] = 0;
+        result = buf;
+        result.trimRight( '/' );
+    }
 #else
 #error Unknown platform!
 #endif
