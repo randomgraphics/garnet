@@ -63,8 +63,8 @@ namespace GN
         ///
         /// \param destBuffer, destBufferSizeInBytes
         ///     Specify destination buffer and size. destBuffer could be NULL.
-        ///     Note that destBuffer, if not NULL, is always NULL terminated,
-        ///     if conversion successes.
+        ///     Note that destBuffer is null terminated, only if source buffer
+        ///     is null terminated too.
         ///
         /// \param sourceBuffer, sourceBufferSizeInBytes
         ///     Specify source buffer and size
