@@ -61,6 +61,8 @@ namespace GN
         // ********************************
     private:
 
+        CharacterEncodingConverter::Encoding mEncodingFrom;
+        CharacterEncodingConverter::Encoding mEncodingTo;
         _locale_t mLocaleFrom;
         _locale_t mLocaleTo;
 

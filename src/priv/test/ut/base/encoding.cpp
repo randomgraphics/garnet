@@ -15,7 +15,7 @@ public:
         size_t converted;
 
         char ascii[] = "abcd";
-        wchar_t wide[4];
+        wchar_t wide[4] = { 0xEFFE, 0xEFFE, 0xEFFE, 0xEFFE };
         converted = c( wide, ascii );
         TS_ASSERT_EQUALS( converted, 0 );
     }
@@ -31,10 +31,44 @@ public:
         size_t converted;
 
         char ascii[] = "abcd";
-        wchar_t wide[5];
+        wchar_t wide[5] = { 0xEFFE, 0xEFFE, 0xEFFE, 0xEFFE, 0xEFFE };
         converted = c( wide, ascii );
         TS_ASSERT_EQUALS( converted, sizeof(wide) );
         TS_ASSERT_EQUALS( wide, L"abcd" );
+    }
+
+    void testGBK_to_WIDECHAR()
+    {
+        using namespace GN;
+
+        CharacterEncodingConverter c(
+            CharacterEncodingConverter::GBK,
+            CharacterEncodingConverter::WIDECHAR );
+
+        size_t converted;
+
+        char gbk[] = "你好吗";
+        wchar_t wide[4] = { 0xEFFE, 0xEFFE, 0xEFFE, 0xEFFE };
+        converted = c( wide, gbk );
+        TS_ASSERT_EQUALS( converted, sizeof(wide) );
+        TS_ASSERT_EQUALS( wide, L"你好吗" );
+    }
+
+    void testWIDECHAR_to_GBK()
+    {
+        using namespace GN;
+
+        CharacterEncodingConverter c(
+            CharacterEncodingConverter::WIDECHAR,
+            CharacterEncodingConverter::GBK );
+
+        size_t converted;
+
+        wchar_t wide[] = L"你好吗";
+        char gbk[7] = { -2, -2, -2, -2, -2, -2, -2 };
+        converted = c( gbk, wide );
+        TS_ASSERT_EQUALS( converted, sizeof(gbk) );
+        TS_ASSERT_EQUALS( gbk, "你好吗" );
     }
 
     void testBIG5_to_GBK()
@@ -46,7 +80,7 @@ public:
             CharacterEncodingConverter::GBK );
 
         char big5[] = "痷パ"; // { 0xAF, 0x75, 0xA5, 0xD1, 0xAC, 0xFC }
-        char gbk[7];
+        char gbk[7] = { -2, -2, -2, -2, -2, -2, -2 };
         size_t converted = c( gbk, big5 );
         TS_ASSERT_EQUALS( converted, 7 );
         TS_ASSERT_EQUALS( gbk, "真由美" );
@@ -61,7 +95,7 @@ public:
             CharacterEncodingConverter::BIG5 );
 
         char gbk[] = "真由美";
-        char big5[7];
+        char big5[7] = { -2, -2, -2, -2, -2, -2, -2 };
         size_t converted = c( big5, gbk );
         TS_ASSERT_EQUALS( converted, 7 );
         TS_ASSERT_EQUALS( big5, "痷パ" );
