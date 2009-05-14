@@ -373,7 +373,7 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
-    for( size_t i = 0; i < GN_ARRAY_COUNT(rc->crts); ++i )
+    for( size_t i = 0; i < rc->crts.size(); ++i )
     {
         MultiThreadTexture * mtt = (MultiThreadTexture*)rc->crts[i].texture.get();
         sReplaceAutoRefPtr( rc->crts[i].texture, mtt ? mtt->getRealTexture() : NULL );

@@ -730,7 +730,7 @@ namespace GN { namespace gfx
         FixedArray<TextureSampler, MAX_TEXTURES>                  samplers; ///< samplers
 
         // render targets
-        FixedArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> crts;     ///< color render targets
+        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> crts;     ///< color render targets
         RenderTargetTexture                                       dsrt;     ///< depth stencil render target
 
         ///
@@ -804,7 +804,7 @@ namespace GN { namespace gfx
                 samplers[i].clear();
             }
 
-            for( size_t i = 0; i < GN_ARRAY_COUNT(crts); ++i ) crts[i].texture.clear();
+            crts.clear();
             dsrt.texture.clear();
         }
     };
