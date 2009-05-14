@@ -2204,18 +2204,14 @@ namespace GN
         ///
         bool contain( const PointType & p ) const
         {
-            // make sure r is normal rectangle
-            GN_ASSERT( isNormalized() );
-
-            return x <= p.x && p.x < (x + w)
-                && y <= p.y && p.y < (y + h);
-        }
-        ///
-        /// Is the rectangle normalized? (width and height both > 0)
-        ///
-        bool isNormalized() const
-        {
-            return w > T(0) && h > T(0);
+            return
+                ( ( (w >= 0) && x <= p.x && p.x < (x + w) )
+                  ||
+                  ( (w <  0) && (x + w) <= p.x && p.x < x ) )
+                &&
+                ( ( (y >= 0) && y <= p.y && p.y < (y + h) )
+                  ||
+                  ( (y <  0) &&  y <= p.y && p.y < (y + h) ) );
         }
         ///
         /// Normalize the rectangle

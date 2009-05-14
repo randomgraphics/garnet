@@ -84,7 +84,7 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRTMgrCopyFrame::bind(
+bool GN::gfx::OGLRTMgrCopyFrame::bind(
     const OGLRenderTargetDesc & newrt,
     const OGLRenderTargetDesc & oldrt,
     bool                        skipDirtyCheck,
@@ -151,6 +151,8 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
     GN_OGL_CHECK( ; );
 
     */
+
+    return true;
 
     GN_UNGUARD_SLOW;
 }

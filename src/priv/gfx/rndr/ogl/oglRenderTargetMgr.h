@@ -10,10 +10,28 @@ namespace GN { namespace gfx
 {
     class OGLRenderer;
 
+    ///
+    /// render target description
+    ///
     struct OGLRenderTargetDesc
     {
-        RenderTargetTexture * crts; ///< color render targets.
-        RenderTargetTexture * dsrt; ///< depth stencil render targets.
+        /// color render targets
+        const StackArray<RenderTargetTexture,
+                         RendererContext::MAX_COLOR_RENDER_TARGETS> & crts;
+
+        /// depth stencil render target
+        const RenderTargetTexture                                   & dsrt;
+
+
+        /// ctor
+        OGLRenderTargetDesc(
+            const StackArray<RenderTargetTexture,
+                             RendererContext::MAX_COLOR_RENDER_TARGETS> & c,
+            const RenderTargetTexture                                   & d )
+            : crts( c )
+            , dsrt( d )
+        {
+        }
     };
 
     ///
@@ -53,11 +71,11 @@ namespace GN { namespace gfx
         ///
         /// bind render target to device.
         ///
-        virtual void bind(
+        virtual bool bind(
             const OGLRenderTargetDesc & oldRT,
             const OGLRenderTargetDesc & newRT,
-            bool skipDirtyCheck,
-            bool & renderTargetSizeChanged ) = 0;
+            bool                        skipDirtyCheck,
+            bool                      & renderTargetSizeChanged ) = 0;
     };
 
     ///
@@ -82,7 +100,7 @@ namespace GN { namespace gfx
     public:
 
         virtual bool init() { return true; }
-        virtual void bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
+        virtual bool bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
 
         // ********************************
         // private variables
@@ -127,7 +145,11 @@ namespace GN { namespace gfx
         };
 
         virtual bool init();
-        virtual void bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
+        virtual bool bind(
+            const OGLRenderTargetDesc & oldRT,
+            const OGLRenderTargetDesc & newRT,
+            bool                        skipDirtyCheck,
+            bool                      & renderTargetSizeChanged );
 
         // ********************************
         // private variables

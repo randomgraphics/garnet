@@ -90,6 +90,10 @@ static const GLenum CONVERT_BLEND_OP[] =
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLRenderer::contextInit()
 {
+    // create render target manager
+    mRTMgr = OGLRTMgrFBO::usable() ? (OGLBasicRTMgr*)new OGLRTMgrFBO(*this) : new OGLRTMgrCopyFrame(*this);
+    if( !mRTMgr->init() ) return false;
+
     // bind default context to device
     rebindContext();
 
@@ -112,6 +116,9 @@ void GN::gfx::OGLRenderer::contextQuit()
         delete i->second;
     }
     mVertexFormats.clear();
+
+    // delete render target manager
+    safeDelete( mRTMgr );
 }
 
 // *****************************************************************************
@@ -127,14 +134,6 @@ GN::gfx::OGLRenderer::bindContextImpl(
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
-
-    //
-    // Parameter check
-    //
-    if( paramCheckEnabled() )
-    {
-        GN_TODO( "verify renderer context data" );
-    }
 
     if( !bindContextShaders( newContext, skipDirtyCheck ) ) return false;
 
@@ -362,67 +361,61 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
     const RendererContext & newContext,
     bool                    skipDirtyCheck )
 {
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( skipDirtyCheck );
-
-    /* bind render targets
+    // bind render targets
+    OGLRenderTargetDesc oldrt( mContext.crts, mContext.dsrt );
+    OGLRenderTargetDesc newrt( newContext.crts, newContext.dsrt );
     bool renderTargetSizeChanged = false;
-    //mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, skipDirtyCheck, renderTargetSizeChanged );
+    if( !mRTMgr->bind( oldrt, newrt, skipDirtyCheck, renderTargetSizeChanged ) )
+        return false;
 
-    // bind viewport
-    if( renderTargetSizeChanged || newContext.viewport != mContext.viewport || skipDirtyCheck )
-    {
-        UInt32 rtw, rth;
-        mRTMgr->getRTSize( rtw, rth );
-        GLint x = (GLint)( newContext.viewport.x * rtw );
-        GLint y = (GLint)( newContext.viewport.y * rth );
-        GLsizei w = (GLsizei)( newContext.viewport.w * rtw );
-        GLsizei h = (GLsizei)( newContext.viewport.h * rth );
-        GN_OGL_CHECK( glViewport( x, y, w, h ) );
-    }
+    // get render target size
+    UInt32 width, height;
+    mRTMgr->getRTSize( width, height );
 
-    // bind scissor rect
-    if( !skipDirtyCheck || newContext.scissorRect != mContext.scissorRect )
+    // clip viewport against render target size
+    Rect<UInt32> newvp = newContext.viewport;
+    if( (newvp.x+newvp.w) > width )
     {
-        if( 0 == newContext.scissorRect.x ||
-            0 == newContext.scissorRect.y ||
-            0 == newContext.scissorRect.w ||
-            0 == newContext.scissorRect.h )
+        GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );
+        if( newvp.x >= width )
         {
-            glDisable( GL_SCISSOR_TEST );
+             newvp.x = width;
+             newvp.w = 0;
         }
         else
         {
-            glEnable( GL_SCISSOR_TEST );
-            GLint x = newContext.scissorRect.x * renderTargetSize.x;
-            GLint y = newContext.scissorRect.y * renderTargetSize.y;
-            GLint w = newContext.scissorRect.w * renderTargetSize.x;
-            GLint h = newContext.scissorRect.h * renderTargetSize.y;
-            glScissor( x, y, w, h );
+            newvp.w = width - newvp.x;
         }
-    }*/
+    }
+    if( (newvp.y+newvp.h) > height )
+    {
+        GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );
+        if( newvp.y > height )
+        {
+            newvp.y = height;
+            newvp.h = 0;
+        }
+        else
+        {
+            newvp.h = height - newvp.y;
+        }
+    }
 
-    // bind viewport (NOTE: this is temporary code that works only when rendering to back buffer directly)
-    UInt32 width, height;
-    getRenderWindow().getClientSize( width, height );
-    const Rect<UInt32> & newvp = newContext.viewport;
-    GLint x, y;
-    GLsizei w, h;
+    // bind viewport
     if( 0 == newvp.x && 0 == newvp.y && 0 == newvp.w && 0 == newvp.h )
     {
-        x = 0;
-        y = 0;
-        w = (GLsizei)width;
-        h = (GLsizei)height;
+        newvp.x = 0;
+        newvp.y = 0;
+        newvp.w = width;
+        newvp.h = height;
+
+        GN_OGL_CHECK( glViewport( (GLint)newvp.x, (GLint)newvp.y, (GLsizei)newvp.w, (GLsizei)newvp.h ) );
     }
     else
     {
-        x = (GLint)newvp.x;
-        y = (GLint)( height - (newvp.y + newvp.h) );
-        w = (GLint)newvp.w;
-        h = (GLint)newvp.h;
+        newvp.y = height - (newvp.y + newvp.h);
+        GN_OGL_CHECK( glViewport( (GLint)newvp.x, (GLint)newvp.y, (GLsizei)newvp.w, (GLsizei)newvp.h ) );
     }
-    GN_OGL_CHECK( glViewport( x, y, w, h ) );
 
     // done
     GN_OGL_CHECK( (void)0 );
