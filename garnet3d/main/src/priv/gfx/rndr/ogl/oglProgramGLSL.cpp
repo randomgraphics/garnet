@@ -580,7 +580,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTexture( const char * name, size_t stage )
     }
     else
     {
-        GN_ERROR(sLogger)( "texture name '%s' is not found in current GPU program." );
+        GN_ERROR(sLogger)( "texture name '%s' is not found in current GPU program.", name );
     }
 }
 
