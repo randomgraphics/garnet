@@ -4,6 +4,11 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - refine uniform and texture binding structure in renderer context
+    - allow binding by both name and index:
+        uniforms["pvw"] = uniform1
+        uniforms[1] = uniform2
+    - better error message for invalid uniform/texture binding
   - PS2 model beautifier(add bump map and tessellation to PS2 model)
     - implement a CPU based prototype first.
     - ASE or FBX mesh loader
