@@ -9,18 +9,12 @@ TODO
         uniforms["pvw"] = uniform1
         uniforms[1] = uniform2
     - better error message for invalid uniform/texture binding
-  - PS2 model beautifier(add bump map and tessellation to PS2 model)
-    - implement a CPU based prototype first.
-    - ASE or FBX mesh loader
-      - mesh hierachy
-      - optional features
-        - XML mesh file with embeded binary data
-        - XML effect file.
-    - some standard light effects:
-      - flat( no light, one diffuse texture, XYZ_UV0 )
-      - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
-      - skin
-    - a fast mesh smooth implementation.
+  - renderer unit test framework
+  - better PCXS2 GPU plugin:
+    - move operations to GPU as much as possible
+    - model beautifier
+      - add bump map and tessellation to PS2 model if possible.
+      - implement a CPU based prototype first.
 
 - p1
   - C# style enumeration: put enum into class's private namespace
@@ -35,8 +29,14 @@ TODO
       disabled)
     - render to color textures with default depth buffer
     - render to back buffer and depth texture
+  - some commonly used effects:
+    - flat( no light, one diffuse texture, XYZ_UV0 )
+    - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
+    - skeleton animation
 
 - p2
+  - FBX mesh loader
+  - XML effect file.
   - DDS viewer plugin
   	- don't write full viewer from scratch.
   	- just provide a plugin for existing picture viewers like acdsee or something.
@@ -48,8 +48,6 @@ TODO
 
 - p3
   - XML: pointer from parent to last child, for constant time child appending.
-  - code page convertor and test application
-    - may support convertion from/to utf8 be enough?
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
