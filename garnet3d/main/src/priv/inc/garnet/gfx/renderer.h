@@ -724,7 +724,7 @@ namespace GN { namespace gfx
 
         union
         {
-            UInt64 renderStates; ///< all render states in single 64bit integer.
+            UInt64 renderStates; ///< aggregated render states in single 64bit integer.
 
             struct
             {
