@@ -26,6 +26,15 @@ namespace GN { namespace gfx
 
         /// default usage
         static TextureUsages DEFAULT() { TextureUsages u; u.u32 = 0; return u; };
+
+        /// color render target
+        static TextureUsages COLOR_RENDER_TARGET() { TextureUsages u; u.u32 = 0; u.rendertarget = 1; return u; };
+
+        /// depth render target
+        static TextureUsages DEPTH_RENDER_TARGET() { TextureUsages u; u.u32 = 0; u.depth = 1; return u; };
+
+        /// dynamic texture
+        static TextureUsages DYNAMIC_TEXTURE() { TextureUsages u; u.u32 = 0; u.fastCpuWrite = 1; return u; };
     };
     GN_CASSERT( sizeof(TextureUsages) == sizeof(UInt32) );
 

@@ -11,30 +11,6 @@ namespace GN { namespace gfx
     class OGLRenderer;
 
     ///
-    /// render target description
-    ///
-    struct OGLRenderTargetDesc
-    {
-        /// color render targets
-        const StackArray<RenderTargetTexture,
-                         RendererContext::MAX_COLOR_RENDER_TARGETS> & crts;
-
-        /// depth stencil render target
-        const RenderTargetTexture                                   & dsrt;
-
-
-        /// ctor
-        OGLRenderTargetDesc(
-            const StackArray<RenderTargetTexture,
-                             RendererContext::MAX_COLOR_RENDER_TARGETS> & c,
-            const RenderTargetTexture                                   & d )
-            : crts( c )
-            , dsrt( d )
-        {
-        }
-    };
-
-    ///
     /// Basic render target manager
     ///
     class OGLBasicRTMgr
@@ -43,8 +19,10 @@ namespace GN { namespace gfx
 
         OGLRenderer & mRenderer; ///< reference to renderer instance;
 
-        UInt32 mWidth;  ///< color buffer width
-        UInt32 mHeight; ///< color buffer height
+        UInt32 mColorWidth;  ///< color buffer width.
+        UInt32 mColorHeight; ///< color buffer height.
+        UInt32 mDepthWidth;  ///< depth buffer width.
+        UInt32 mDepthHeight; ///< depth buffer height.
 
         ///
         /// protected ctor.
@@ -64,18 +42,22 @@ namespace GN { namespace gfx
         virtual bool init() = 0;
 
         ///
-        /// Get render target size
+        /// Get color render target size
         ///
-        void getRTSize( UInt32 & w, UInt32 & h ) const { w = mWidth; h = mHeight; };
+        void getColorRenderTargetSize( UInt32 & w, UInt32 & h ) const { w = mColorWidth; h = mColorHeight; };
+
+        ///
+        /// Get depth render target size
+        ///
+        void getDepthStencilSize( UInt32 & w, UInt32 & h ) const { w = mDepthWidth; h = mDepthHeight; }
 
         ///
         /// bind render target to device.
         ///
         virtual bool bind(
-            const OGLRenderTargetDesc & oldRT,
-            const OGLRenderTargetDesc & newRT,
-            bool                        skipDirtyCheck,
-            bool                      & renderTargetSizeChanged ) = 0;
+            const RenderTargetDesc & oldRT,
+            const RenderTargetDesc & newRT,
+            bool                     skipDirtyCheck ) = 0;
     };
 
     ///
@@ -100,7 +82,7 @@ namespace GN { namespace gfx
     public:
 
         virtual bool init() { return true; }
-        virtual bool bind( const OGLRenderTargetDesc &, const OGLRenderTargetDesc &, bool, bool &);
+        virtual bool bind( const RenderTargetDesc &, const RenderTargetDesc &, bool );
 
         // ********************************
         // private variables
@@ -112,7 +94,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void clear() { mWidth = 0; mHeight = 0; }
+        void clear() { mColorWidth = 0; mColorHeight = 0; mDepthWidth = 0; mDepthHeight = 0; }
         void quit() { clear(); }
     };
 
@@ -146,10 +128,9 @@ namespace GN { namespace gfx
 
         virtual bool init();
         virtual bool bind(
-            const OGLRenderTargetDesc & oldRT,
-            const OGLRenderTargetDesc & newRT,
-            bool                        skipDirtyCheck,
-            bool                      & renderTargetSizeChanged );
+            const RenderTargetDesc & oldRT,
+            const RenderTargetDesc & newRT,
+            bool                     skipDirtyCheck );
 
         // ********************************
         // private variables

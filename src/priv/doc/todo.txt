@@ -22,6 +22,14 @@ TODO
   - GFX resouce aliasing
   - D3D10 renderer
   - Xenon renderer
+  - render to texture tests
+    - render to both color textures and depth texture.
+    - render to color textures only. No depth buffers at all. (depth read and
+      depth write are disabled)
+    - render to depth textures only. No color buffers at all. (color write is
+      disabled)
+    - render to color textures with default depth buffer
+    - render to back buffer and depth texture
 
 - p2
   - DDS viewer plugin

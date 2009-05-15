@@ -1,3 +1,0 @@
-Import( 'GN' )
-cluster = GN.newSourceCluster( ['renderToTexture.cpp'], 'pch.h', 'pch.cpp' )
-GN.newTarget( 'prog', 'GNsampleRenderToTexture', [cluster] )

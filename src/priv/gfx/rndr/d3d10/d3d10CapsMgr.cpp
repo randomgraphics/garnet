@@ -31,7 +31,7 @@ bool GN::gfx::D3D10Renderer::capsInit()
     mCaps.maxTextures     = math::getmin<size_t>( D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, RendererContext::MAX_TEXTURES );
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RendererContext::MAX_COLOR_RENDER_TARGETS );
+    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RenderTargetDesc::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
     mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;

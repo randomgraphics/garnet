@@ -58,7 +58,7 @@ public:
     // Xenon platform does not have command line arguments
     CommandLineArguments( int, const char *[] )
         : applicationName( "xenonapp" )
-        , useMultiThreadRenderer( false )
+        , useMultiThreadRenderer( true )
         , status( CONTINUE_EXECUTION )
         , extraArgc(0)
         , extraArgv(NULL)
@@ -95,7 +95,7 @@ public:
             "   -h\n"
             "   -?                      Show help.\n"
             "\n"
-            "   -mt   [on|off]          Use multithread renderer. Default is off.\n"
+            "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
             "\n"
             "   -rapi [auto|ogl|d3d10]  Choose rendering API. Default is AUTO.\n"
             );
@@ -204,15 +204,22 @@ private:
             const char * a = argv[i];
 
             if( 0 == strCmpI( "-h", a ) ||
-                0 == strCmpI( "-?", a ) )
+                0 == strCmpI( "/h", a ) ||
+                0 == strCmpI( "-?", a ) ||
+                0 == strCmpI( "/?", a ) ||
+                0 == strCmpI( "--help", a ) )
             {
                 return SHOW_HELP;
             }
-            else if( '-' == *a )
+            else if( '-' == *a
+                #if GN_MSWIN
+                || '/' == *a
+                #endif
+                )
             {
                 // this is a command line option name
 
-                if( 0 == strCmpI( "-fs", a ) )
+                if( 0 == strCmpI( "fs", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -220,7 +227,7 @@ private:
                     if( !parseBool( rendererOptions.fullscreen, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == strCmpI( "-mt", a ) )
+                else if( 0 == strCmpI( "mt", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -228,7 +235,7 @@ private:
                     if( !parseBool( useMultiThreadRenderer, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == strCmpI( "-rapi", a ) )
+                else if( 0 == strCmpI( "rapi", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
