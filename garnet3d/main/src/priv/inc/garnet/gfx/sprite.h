@@ -47,10 +47,18 @@ namespace GN { namespace gfx
         /// sprite drawing options
         enum SpriteDrawOptions
         {
-            USE_COSTOM_CONTEXT = 1, ///< using user defined custom renderer context. This option will overwrite other options.
-            OPAQUE_SPRITE      = 2, ///< draw opaque sprite. ignored when USE_COSTOM_CONTEXT is set.
-            ENABLE_DEPTH_TEST  = 4, ///< enable depth test. ignored when USE_COSTOM_CONTEXT is set.
-            ENABLE_DEPTH_WRITE = 8, ///< enable depth write. ignored when USE_COSTOM_CONTEXT is set.
+            USE_EXTERNAL_GPU_PROGRAM      = 0x00000001, ///< Use GPU program in current renderer context,
+                                                        ///< instead of sprite renderer's default shaders.
+            USE_EXTERNAL_TEXTURE_FILTERS  = 0x00000002, ///< Use texture filters defined in current renderer context.
+                                                        ///< By default, sprite renderer uses point filters.
+            FORCE_ALPHA_BLENDING_ENABLED  = 0x00000010, ///< Always enable alpha blending, disregarding value in current renderer context.
+            FORCE_ALPHA_BLENDING_DISABLED = 0x00000020, ///< Always disable alpha blending, disregarding value in current renderer context.
+
+            FORCE_DEPTH_TEST_ENABLED      = 0x00000100, ///< Always enable depth test, disregarding value in current renderer context.
+            FORCE_DEPTH_TEST_DISABLED     = 0x00000200, ///< Always disable depth test, disregarding value in current renderer context.
+
+            FORCE_DEPTH_WRITE_ENABLED     = 0x00001000, ///< Always enable depth write, disregarding value in current renderer context.
+            FORCE_DEPTH_WRITE_DISABLED    = 0x00002000, ///< Always disable depth write, disregarding value in current renderer context.
         };
 
         /// get underline renderer
@@ -148,10 +156,15 @@ namespace GN { namespace gfx
         };
 
         Renderer                 & mRenderer;
+
         AutoRef<Texture>           mPureWhiteTexture;
-        RendererContext            mPrivateContext;
-        RendererContext            mEnvironmentContext;
-        RendererContext          * mEffectiveContext;
+        AutoRef<GpuProgram>        mGpuProgram;
+        VertexFormat               mVertexFormat;
+        AutoRef<VtxBuf>            mVertexBuffer;
+        AutoRef<IdxBuf>            mIndexBuffer;
+
+        RendererContext            mContext;
+
         BitFields                  mOptions;
         float                      mVertexShift;
         bool                       mDrawBegun;

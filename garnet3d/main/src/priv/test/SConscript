@@ -1,1 +1,14 @@
-SConscript( dirs=Split('d3d10 drawable font ft2 input pcre rndr sprite ut xml xenon') )
+SConscript( dirs=[
+	'd3d10',
+	'drawable',
+	'font',
+	'ft2',
+	'input',
+	'pcre',
+	'renderToTexture',
+	'rndr',
+	'sprite',
+	'ut',
+	'xml',
+	'xenon'
+])

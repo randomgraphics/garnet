@@ -104,32 +104,31 @@ bool GN::gfx::SpriteRenderer::init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return failure();
     }
-    mPrivateContext.gpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
-    if( !mPrivateContext.gpuProgram ) return failure();
+    mGpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
+    if( !mGpuProgram ) return failure();
 
     // create vertex format
-    mPrivateContext.vtxfmt.numElements = 3;
-    mPrivateContext.vtxfmt.elements[0].stream = 0;
-    mPrivateContext.vtxfmt.elements[0].offset = 0;
-    mPrivateContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
-    mPrivateContext.vtxfmt.elements[0].bindTo( "position", 0 );
-    mPrivateContext.vtxfmt.elements[1].stream = 0;
-    mPrivateContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
-    mPrivateContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
-    mPrivateContext.vtxfmt.elements[1].bindTo( "color", 0 );
-    mPrivateContext.vtxfmt.elements[2].stream = 0;
-    mPrivateContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
-    mPrivateContext.vtxfmt.elements[2].format = ColorFormat::FLOAT2;
-    mPrivateContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
+    mVertexFormat.numElements = 3;
+    mVertexFormat.elements[0].stream = 0;
+    mVertexFormat.elements[0].offset = 0;
+    mVertexFormat.elements[0].format = ColorFormat::FLOAT3;
+    mVertexFormat.elements[0].bindTo( "position", 0 );
+    mVertexFormat.elements[1].stream = 0;
+    mVertexFormat.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
+    mVertexFormat.elements[1].format = ColorFormat::RGBA32;
+    mVertexFormat.elements[1].bindTo( "color", 0 );
+    mVertexFormat.elements[2].stream = 0;
+    mVertexFormat.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
+    mVertexFormat.elements[2].format = ColorFormat::FLOAT2;
+    mVertexFormat.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
-    mPrivateContext.vtxbufs[0].attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true ) );
-    if( !mPrivateContext.vtxbufs[0] ) return failure();
-    mPrivateContext.strides[0] = sizeof(SpriteVertex);
+    mVertexBuffer.attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true ) );
+    if( !mVertexBuffer ) return failure();
 
     // create index buffer
-    mPrivateContext.idxbuf.attach( mRenderer.createIdxBuf16( MAX_INDICES, false ) );
-    if( !mPrivateContext.idxbuf ) return failure();
+    mIndexBuffer.attach( mRenderer.createIdxBuf16( MAX_INDICES, false ) );
+    if( !mIndexBuffer ) return failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
     {
@@ -140,15 +139,8 @@ bool GN::gfx::SpriteRenderer::init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mPrivateContext.idxbuf->update( 0, MAX_INDICES, indices.cptr() );
+    mIndexBuffer->update( 0, MAX_INDICES, indices.cptr() );
 
-    // setup sampler (point sampling)
-    mPrivateContext.samplers[0].filterMin = TextureSampler::FILTER_POINT;
-    mPrivateContext.samplers[0].filterMip = TextureSampler::FILTER_POINT;
-    mPrivateContext.samplers[0].filterMag = TextureSampler::FILTER_POINT;
-
-    // setup texture binding
-    mPrivateContext.textures[0].bindTo( "t0" );
 
     // create pending vertex buffer
     mSprites = (Sprite*)heapAlloc( VTXBUF_SIZE );
@@ -173,8 +165,10 @@ void GN::gfx::SpriteRenderer::quit()
     GN_GUARD;
 
     heapFree( mSprites );
-    mPrivateContext.clear();
-    mEnvironmentContext.clear();
+    mContext.clear();
+    mIndexBuffer.clear();
+    mVertexBuffer.clear();
+    mGpuProgram.clear();
     mPureWhiteTexture.clear();
 
     // standard quit procedure
@@ -201,24 +195,82 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     // use pure white texture, if input texture is NULL
     if( NULL == texture ) texture = mPureWhiteTexture;
 
-    if( options & USE_COSTOM_CONTEXT )
+    // copy current renderer context
+    mContext = mRenderer.getContext();
+
+    // setup parameters that are not affected by options
+    mContext.textures[0].texture.set( texture );
+    mContext.textures[0].bindTo( "t0" );
+    mContext.vtxfmt     = mVertexFormat;
+    mContext.strides[0] = sizeof(SpriteVertex);
+    mContext.vtxbufs[0] = mVertexBuffer;
+    mContext.idxbuf     = mIndexBuffer;
+
+    // setup GPU program
+    if( 0 == (options & USE_EXTERNAL_GPU_PROGRAM) )
     {
-        mEnvironmentContext = mRenderer.getContext();
-        mEnvironmentContext.vtxfmt = mPrivateContext.vtxfmt;
-        mEnvironmentContext.vtxbufs[0] = mPrivateContext.vtxbufs[0];
-        mEnvironmentContext.idxbuf = mPrivateContext.idxbuf;
-        mEnvironmentContext.textures[0].texture.set( texture );
-        mEffectiveContext = &mEnvironmentContext;
+        mContext.gpuProgram = mGpuProgram;
     }
-    else
+    if( 0 == (options & USE_EXTERNAL_TEXTURE_FILTERS) )
     {
-        mPrivateContext.textures[0].texture.set( texture );
-        mPrivateContext.blendEnabled = !(options & OPAQUE_SPRITE);
-        mPrivateContext.depthTest = options & ENABLE_DEPTH_TEST;
-        mPrivateContext.depthWrite = options & ENABLE_DEPTH_WRITE;
-        mEffectiveContext = &mPrivateContext;
+        // use point sampling by default
+        mContext.samplers[0].filterMin = TextureSampler::FILTER_POINT;
+        mContext.samplers[0].filterMip = TextureSampler::FILTER_POINT;
+        mContext.samplers[0].filterMag = TextureSampler::FILTER_POINT;
     }
 
+    // setup alpha blending
+    if( options & FORCE_ALPHA_BLENDING_ENABLED )
+    {
+        if( options & FORCE_ALPHA_BLENDING_DISABLED )
+        {
+            GN_WARN(sLogger)( "FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!" );
+        }
+
+        mContext.blendEnabled  = true;
+        mContext.blendSrc      = RendererContext::BLEND_SRC_ALPHA;
+        mContext.blendDst      = RendererContext::BLEND_INV_SRC_ALPHA;
+        mContext.blendOp       = RendererContext::BLEND_OP_ADD;
+        mContext.blendAlphaSrc = RendererContext::BLEND_SRC_ALPHA;
+        mContext.blendAlphaDst = RendererContext::BLEND_INV_SRC_ALPHA;
+        mContext.blendAlphaOp  = RendererContext::BLEND_OP_ADD;
+    }
+    else if( options & FORCE_ALPHA_BLENDING_DISABLED )
+    {
+        mContext.blendEnabled = false;
+    }
+
+    // setup depth test
+    if( options & FORCE_DEPTH_TEST_ENABLED )
+    {
+        if( options & FORCE_DEPTH_TEST_DISABLED )
+        {
+            GN_WARN(sLogger)( "FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!" );
+        }
+
+        mContext.depthTest = true;
+    }
+    else if( options & FORCE_DEPTH_TEST_DISABLED )
+    {
+        mContext.depthTest = true;
+    }
+
+    // setup depth write
+    if( options & FORCE_DEPTH_WRITE_ENABLED )
+    {
+        if( options & FORCE_DEPTH_WRITE_DISABLED )
+        {
+            GN_WARN(sLogger)( "FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!" );
+        }
+
+        mContext.depthWrite = true;
+    }
+    else if( options & FORCE_DEPTH_WRITE_DISABLED )
+    {
+        mContext.depthWrite = false;
+    }
+
+    // setup vertex shift
     if( RendererAPI::D3D9 == mRenderer.getOptions().api )
     {
         // Shift vertex a little bit on D3D9 platform
@@ -250,13 +302,13 @@ void GN::gfx::SpriteRenderer::drawEnd()
     {
         size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
 
-        mPrivateContext.vtxbufs[0]->update(
+        mVertexBuffer->update(
             firstPendingSpriteOffset * sizeof(Sprite),
             numPendingSprites * sizeof(Sprite),
             mNextPendingSprite,
             mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-        mRenderer.bindContext( *mEffectiveContext );
+        mRenderer.bindContext( mContext );
 
         mRenderer.drawIndexed(
             PrimitiveType::TRIANGLE_LIST,
@@ -296,7 +348,7 @@ GN::gfx::SpriteRenderer::drawTextured(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mEffectiveContext->textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture.get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -352,7 +404,7 @@ GN::gfx::SpriteRenderer::drawSolid(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mEffectiveContext->textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture.get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );

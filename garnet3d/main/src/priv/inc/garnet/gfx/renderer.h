@@ -396,6 +396,23 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Vertex buffer binding description
+    ///
+    struct VertexBufferBinding
+    {
+        AutoRef<VtxBuf> vtxbuf; ///< vertex buffer
+        UInt16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
+        UInt32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
+
+        /// ctor
+        VertexBufferBinding()
+            : stride(0)
+            , offset(0)
+        {
+        }
+    };
+
+    ///
     /// texture binding descriptor
     ///
     struct TextureBinding
@@ -531,14 +548,89 @@ namespace GN { namespace gfx
             };
         };
 
+        /// ctor
+        RenderTargetTexture() : subsurface(0) {}
+
+        /// equality check
         bool operator==( const RenderTargetTexture & rhs ) const
         {
             return texture == rhs.texture && subsurface == rhs.subsurface;
         }
 
+        /// equality check
         bool operator!=( const RenderTargetTexture & rhs ) const
         {
             return texture != rhs.texture || subsurface != rhs.subsurface;
+        }
+    };
+
+    ///
+    /// render targets description
+    ///
+    struct RenderTargetDesc
+    {
+        enum
+        {
+            /// Maxinum number of color render targets
+            MAX_COLOR_RENDER_TARGETS = 8,
+        };
+
+        /// color render targets
+        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colors;
+
+        /// depth stencil render target
+        RenderTargetTexture                                       depthstencil;
+
+        /// clear to "render-to-back-buffer"
+        void clear()
+        {
+            colors.clear();
+            depthstencil.texture.clear();
+        }
+
+        /// return true, if the description represents the render target setup for rendering to back buffer.
+        bool isRenderingToBackBuffer() const
+        {
+            return 0 == colors.size() && 0 == depthstencil.texture;
+        }
+
+        /// return true, if color buffers are empty and depth render target is not.
+        bool isRenderingToDepthTextureOnly() const
+        {
+            return 0 == colors.size() && 0 != depthstencil.texture;
+        }
+
+        /// check for invalid description.
+        bool valid() const
+        {
+            for( size_t i = 0; i < colors.size(); ++i )
+            {
+                if( !colors[i].texture )
+                {
+                    GN_ERROR(GN::getLogger("GN.gfx"))(
+                        "NULL color render targets in render target array is not allowed." );
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// equality check
+        bool operator==( const RenderTargetDesc & rhs ) const
+        {
+            if( colors.size() != rhs.colors.size() ) return false;
+            for( size_t i = 0; i < colors.size(); ++i )
+            {
+                if( colors[i] != rhs.colors[i] ) return false;
+            }
+            return depthstencil == rhs.depthstencil;
+        }
+
+        /// equality check
+        bool operator!=( const RenderTargetDesc & rhs ) const
+        {
+            return !operator==( rhs );
         }
     };
 
@@ -573,7 +665,6 @@ namespace GN { namespace gfx
         {
             MAX_VERTEX_BUFFERS       = 16,
             MAX_TEXTURES             = 32,
-            MAX_COLOR_RENDER_TARGETS = 8,
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
@@ -729,9 +820,7 @@ namespace GN { namespace gfx
         FixedArray<TextureBinding, MAX_TEXTURES>                  textures; ///< textures
         FixedArray<TextureSampler, MAX_TEXTURES>                  samplers; ///< samplers
 
-        // render targets
-        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> crts;     ///< color render targets
-        RenderTargetTexture                                       dsrt;     ///< depth stencil render target
+        RenderTargetDesc                                          rendertargets; ///< render targets
 
         ///
         /// ctor
@@ -804,8 +893,7 @@ namespace GN { namespace gfx
                 samplers[i].clear();
             }
 
-            crts.clear();
-            dsrt.texture.clear();
+            rendertargets.clear();
         }
     };
 

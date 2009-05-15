@@ -362,15 +362,12 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
     bool                    skipDirtyCheck )
 {
     // bind render targets
-    OGLRenderTargetDesc oldrt( mContext.crts, mContext.dsrt );
-    OGLRenderTargetDesc newrt( newContext.crts, newContext.dsrt );
-    bool renderTargetSizeChanged = false;
-    if( !mRTMgr->bind( oldrt, newrt, skipDirtyCheck, renderTargetSizeChanged ) )
+    if( !mRTMgr->bind( mContext.rendertargets, newContext.rendertargets, skipDirtyCheck ) )
         return false;
 
     // get render target size
     UInt32 width, height;
-    mRTMgr->getRTSize( width, height );
+    mRTMgr->getColorRenderTargetSize( width, height );
 
     // clip viewport against render target size
     Rect<UInt32> newvp = newContext.viewport;

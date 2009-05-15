@@ -9,8 +9,35 @@
 #include "garnet/GNd3d10.h"
 
 // *****************************************************************************
-// local functions
+// local data and functions
 // *****************************************************************************
+
+static const D3D10_BLEND_OP BLEND_OP_TO_D3D10[] =
+{
+    D3D10_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
+    D3D10_BLEND_OP_SUBTRACT,     // BLEND_OP_SUB,
+    D3D10_BLEND_OP_REV_SUBTRACT, // BLEND_OP_REV_SUB,
+    D3D10_BLEND_OP_MIN,          // BLEND_OP_MIN,
+    D3D10_BLEND_OP_MAX,          // BLEND_OP_MAX,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
+
+static const D3D10_BLEND BLEND_TO_D3D10[] =
+{
+    D3D10_BLEND_ZERO,             // BLEND_ZERO = 0,
+    D3D10_BLEND_ONE,              // BLEND_ONE,
+    D3D10_BLEND_SRC_COLOR,        // BLEND_SRC_COLOR,
+    D3D10_BLEND_INV_SRC_COLOR,    // BLEND_INV_SRC_COLOR,
+    D3D10_BLEND_SRC_ALPHA,        // BLEND_SRC_ALPHA,
+    D3D10_BLEND_INV_SRC_ALPHA,    // BLEND_INV_SRC_ALPHA,
+    D3D10_BLEND_DEST_ALPHA,       // BLEND_DEST_ALPHA,
+    D3D10_BLEND_INV_DEST_ALPHA,   // BLEND_INV_DEST_ALPHA,
+    D3D10_BLEND_DEST_COLOR,       // BLEND_DEST_COLOR,
+    D3D10_BLEND_INV_DEST_COLOR,   // BLEND_INV_DEST_COLOR,
+    D3D10_BLEND_BLEND_FACTOR,     // BLEND_BLEND_FACTOR,
+    D3D10_BLEND_INV_BLEND_FACTOR, // BLEND_INV_BLEND_FACTOR,
+};
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
 
 // *****************************************************************************
 // init/shutdown
@@ -117,14 +144,12 @@ inline bool GN::gfx::D3D10Renderer::bindContextRenderTarget(
     //
     // bind render targets
     //
-    bool needRebindViewport = false;
+    bool renderTargetSizeChanged = false;
     if( !mRTMgr->bind(
-            newContext.crts.cptr(),
-            newContext.dsrt,
-            mContext.crts.cptr(),
-            newContext.dsrt,
+            mContext.rendertargets,
+            newContext.rendertargets,
             skipDirtyCheck,
-            needRebindViewport ) )
+            renderTargetSizeChanged ) )
     {
         return false;
     }
@@ -161,7 +186,7 @@ inline bool GN::gfx::D3D10Renderer::bindContextRenderTarget(
     }
     mDevice->RSSetViewports( 1, &d3dvp );
 
-    // update scissor (same as viewport)
+    // update scissor (always same as viewport)
     D3D10_RECT scissor = {
         (long)( d3dvp.TopLeftX ),
         (long)( d3dvp.TopLeftY ),
@@ -214,33 +239,6 @@ inline bool GN::gfx::D3D10Renderer::bindContextShader(
 
     return true;
 }
-
-static const D3D10_BLEND_OP BLEND_OP_TO_D3D10[] =
-{
-    D3D10_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
-    D3D10_BLEND_OP_SUBTRACT,     // BLEND_OP_SUB,
-    D3D10_BLEND_OP_REV_SUBTRACT, // BLEND_OP_REV_SUB,
-    D3D10_BLEND_OP_MIN,          // BLEND_OP_MIN,
-    D3D10_BLEND_OP_MAX,          // BLEND_OP_MAX,
-};
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
-
-static const D3D10_BLEND BLEND_TO_D3D10[] =
-{
-    D3D10_BLEND_ZERO,             // BLEND_ZERO = 0,
-    D3D10_BLEND_ONE,              // BLEND_ONE,
-    D3D10_BLEND_SRC_COLOR,        // BLEND_SRC_COLOR,
-    D3D10_BLEND_INV_SRC_COLOR,    // BLEND_INV_SRC_COLOR,
-    D3D10_BLEND_SRC_ALPHA,        // BLEND_SRC_ALPHA,
-    D3D10_BLEND_INV_SRC_ALPHA,    // BLEND_INV_SRC_ALPHA,
-    D3D10_BLEND_DEST_ALPHA,       // BLEND_DEST_ALPHA,
-    D3D10_BLEND_INV_DEST_ALPHA,   // BLEND_INV_DEST_ALPHA,
-    D3D10_BLEND_DEST_COLOR,       // BLEND_DEST_COLOR,
-    D3D10_BLEND_INV_DEST_COLOR,   // BLEND_INV_DEST_COLOR,
-    D3D10_BLEND_BLEND_FACTOR,     // BLEND_BLEND_FACTOR,
-    D3D10_BLEND_INV_BLEND_FACTOR, // BLEND_INV_BLEND_FACTOR,
-};
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D10) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
 
 //
 //

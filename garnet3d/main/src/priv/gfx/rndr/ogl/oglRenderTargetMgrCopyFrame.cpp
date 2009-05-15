@@ -85,18 +85,15 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLRTMgrCopyFrame::bind(
-    const OGLRenderTargetDesc & newrt,
-    const OGLRenderTargetDesc & oldrt,
-    bool                        skipDirtyCheck,
-    bool                      & needRebindViewport )
+    const RenderTargetDesc & newrt,
+    const RenderTargetDesc & oldrt,
+    bool                     skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
     GN_UNUSED_PARAM( newrt );
     GN_UNUSED_PARAM( oldrt );
     GN_UNUSED_PARAM( skipDirtyCheck );
-
-    needRebindViewport = false;
 
     /*
 
