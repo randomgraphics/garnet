@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         struct TextureDesc
         {
             /// sampler descriptor
-            TextureSampler sampler;
+            SamplerDesc sampler;
 
             /// default ctor
             TextureDesc()
@@ -323,7 +323,7 @@ namespace GN { namespace gfx
             StrA binding;
 
             /// pointer to sampler, pointer to Effec
-            const TextureSampler * sampler;
+            const SamplerDesc * sampler;
 
             /// default ctor
             PerShaderTextureParam()

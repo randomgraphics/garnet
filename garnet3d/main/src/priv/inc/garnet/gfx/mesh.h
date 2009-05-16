@@ -90,6 +90,7 @@ namespace GN { namespace gfx
         struct VertexBuffer
         {
             AutoRef<VtxBuf>  gpudata;
+            UInt16           stride;
         };
 
         struct IndexBuffer

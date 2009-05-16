@@ -58,10 +58,14 @@ namespace GN { namespace gfx
         ///
         /// Bind the buffer to device
         ///
-        bool bindBuffers( const void * const * buffers,
-                          const UInt16       * strides,
-                          size_t               numbufs,
-                          size_t               startvtx ) const;
+        bool bindBuffers( const VertexBufferBinding * bindings,
+                          size_t                      numbufs,
+                          size_t                      startvtx ) const;
+
+        ///
+        /// Bind raw memory pointer to device, as vertex buffer 0.
+        ///
+        bool bindRawMemoryBuffer( const void * data, size_t stride ) const;
 
         // ********************************
         // private variables

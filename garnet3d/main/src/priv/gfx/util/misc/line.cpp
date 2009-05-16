@@ -116,9 +116,9 @@ bool GN::gfx::LineRenderer::init()
     mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
     // create vertex buffer
-    mContext.vtxbufs[0].attach( mRenderer.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
-    if( !mContext.vtxbufs[0] ) return failure();
-    mContext.strides[0] = sizeof(LineVertex);
+    mContext.vtxbufs[0].vtxbuf.attach( mRenderer.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
+    if( !mContext.vtxbufs[0].vtxbuf ) return failure();
+    mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
     // create line buffer
     mLines = (Line*)heapAlloc( MAX_LINES * sizeof(Line) );
@@ -215,7 +215,7 @@ void GN::gfx::LineRenderer::flush()
 
     size_t firstPendingLineOffset = mNextPendingLine - mLines;
 
-    mContext.vtxbufs[0]->update(
+    mContext.vtxbufs[0].vtxbuf->update(
         firstPendingLineOffset * sizeof(Line),
         numPendingLines * sizeof(Line),
         mNextPendingLine,

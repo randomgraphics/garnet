@@ -68,12 +68,12 @@ namespace GN { namespace gfx
         ///
         /// Apply uniforms to OpenGL
         ///
-        virtual void applyUniforms( const SysMemUniform * const * gpps, size_t count ) const = 0;
+        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const = 0;
 
         ///
-        /// Apply texture to OpenGL
+        /// Apply textures to OpenGL
         ///
-        virtual void applyTexture( const char * name, size_t stage ) const = 0;
+        virtual void applyTextures( const TextureBinding * textures, size_t count ) const = 0;
 
     protected:
 
@@ -150,9 +150,9 @@ namespace GN { namespace gfx
             GN_OGL_CHECK( glUseProgramObjectARB( 0 ) );
         }
 
-        virtual void applyUniforms( const SysMemUniform * const * gpps, size_t count ) const;
+        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const;
 
-        virtual void applyTexture( const char * name, size_t stage ) const;
+        virtual void applyTextures( const TextureBinding * textures, size_t count ) const;
 
         // ********************************
         // private variables

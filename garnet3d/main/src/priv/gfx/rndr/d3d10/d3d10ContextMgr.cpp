@@ -219,12 +219,12 @@ inline bool GN::gfx::D3D10Renderer::bindContextShader(
             newProg->apply();
         }
 
-        // apply uniforms
-        const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
-        newProg->applyUniforms( uniforms, newContext.uniforms.size(), skipDirtyCheck );
+        // Make sure size of AutoRef<T> and T* are same. So we can safely convert AutoRef<T> * to T **
+        GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
-        // apply textures
-        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
+        // apply GPU program resources
+        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
+        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
@@ -358,10 +358,11 @@ inline bool GN::gfx::D3D10Renderer::bindContextResource(
         UINT           offsets[RendererContext::MAX_VERTEX_BUFFERS];
         for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
         {
-            const AutoRef<VtxBuf> & vb = newContext.vtxbufs[i];
-            buf[i]     = vb ? safeCastPtr<const D3D10VtxBuf>(vb.get())->getD3DBuffer() : NULL;
-            strides[i] = 0 == newContext.strides[i] ? layout->defaultStrides[i] : newContext.strides[i];
-            offsets[i] = 0;
+            const VertexBufferBinding & b = newContext.vtxbufs[i];
+
+            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D10VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
+            strides[i] = 0 == b.stride ? layout->defaultStrides[i] : b.stride;
+            offsets[i] = b.offset;
         }
         mDevice->IASetVertexBuffers( 0, RendererContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
     }

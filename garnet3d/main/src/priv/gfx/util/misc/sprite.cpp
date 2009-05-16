@@ -200,23 +200,25 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.set( texture );
-    mContext.textures[0].bindTo( "t0" );
-    mContext.vtxfmt     = mVertexFormat;
-    mContext.strides[0] = sizeof(SpriteVertex);
-    mContext.vtxbufs[0] = mVertexBuffer;
-    mContext.idxbuf     = mIndexBuffer;
+    mContext.vtxfmt            = mVertexFormat;
+    mContext.vtxbufs[0].vtxbuf = mVertexBuffer;
+    mContext.vtxbufs[0].stride = sizeof(SpriteVertex);
+    mContext.idxbuf            = mIndexBuffer;
 
     // setup GPU program
     if( 0 == (options & USE_EXTERNAL_GPU_PROGRAM) )
     {
         mContext.gpuProgram = mGpuProgram;
+
+        // default shader has no uniform
+        mContext.uniforms.clear();
     }
     if( 0 == (options & USE_EXTERNAL_TEXTURE_FILTERS) )
     {
         // use point sampling by default
-        mContext.samplers[0].filterMin = TextureSampler::FILTER_POINT;
-        mContext.samplers[0].filterMip = TextureSampler::FILTER_POINT;
-        mContext.samplers[0].filterMag = TextureSampler::FILTER_POINT;
+        mContext.textures[0].sampler.filterMin = SamplerDesc::FILTER_POINT;
+        mContext.textures[0].sampler.filterMip = SamplerDesc::FILTER_POINT;
+        mContext.textures[0].sampler.filterMag = SamplerDesc::FILTER_POINT;
     }
 
     // setup alpha blending

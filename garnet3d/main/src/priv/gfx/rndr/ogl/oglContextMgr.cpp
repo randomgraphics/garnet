@@ -198,7 +198,6 @@ GN::gfx::OGLRenderer::bindContextShaders(
 
     const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
     const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
-    const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
 
     if( oldProgram == newProgram )
     {
@@ -209,7 +208,11 @@ GN::gfx::OGLRenderer::bindContextShaders(
                 newProgram->enable();
             }
 
-            newProgram->applyUniforms( uniforms, newContext.uniforms.size() );
+            // Make sure size of AutoRef<T> and T* are same. So we can safely convert AutoRef<T> * to T **
+            GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
+
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
         }
     }
     else
@@ -221,7 +224,8 @@ GN::gfx::OGLRenderer::bindContextShaders(
         if( newProgram )
         {
             newProgram->enable();
-            newProgram->applyUniforms( uniforms, newContext.uniforms.size() );
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
         }
     }
 
@@ -442,46 +446,6 @@ GN::gfx::OGLRenderer::bindContextResources(
     //
     // Note: vertex and index buffers are binded by draw manager
     //
-
-    //
-    // bind textures and samplers
-    //
-    size_t maxStages = getCaps().maxTextures;
-    size_t numtex = math::getmin<size_t>( maxStages, RendererContext::MAX_TEXTURES );
-
-    size_t i;
-    for ( i = 0; i < numtex; ++i )
-    {
-        const TextureBinding & tb = newContext.textures[i];
-
-        // if null handle, then disable this texture stage
-        if( tb.texture )
-        {
-            chooseTextureStage( i );
-
-            const OGLTexture * t = safeCastPtr<const OGLTexture>(tb.texture.get());
-
-            t->setSampler( newContext.samplers[i] );
-
-            t->bind();
-
-            if( newContext.gpuProgram )
-            {
-                // we bind texture to specific texture stage, then bind that stage to shader.
-                ((const OGLBasicGpuProgram*)newContext.gpuProgram.get())->applyTexture( tb.binding, i );
-            }
-        }
-        else
-        {
-            disableTextureStage( i );
-        }
-    }
-
-    // disable remaining texture stages
-    for( ; i < maxStages; ++i )
-    {
-        disableTextureStage( i );
-    }
 
     GN_OGL_CHECK( (void)0 );
     return true;

@@ -72,25 +72,25 @@ public:
         context.rendertargets.colors[0].texture = c0;
         rndr.bindContext( context );
         rndr.clearScreen();
-        sr.drawSingleTexturedSprite( tex0, 0, -1.0f, 1.0f, 2.0f, 2.0f );
+        sr.drawSingleTexturedSprite( tex0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, -1.0f, 1.0f, 2.0f, 2.0f );
 
         // draw c0 to left half of the screen
         context.rendertargets.colors.clear();
         rndr.bindContext( context );
         rndr.clearScreen();
-        sr.drawSingleTexturedSprite( c0, 0, 0, 0.0, 0.0, 0.5, 1.0 );
+        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0.0, 0.0, 0.5, 1.0 );
 
         // draw tex1 to color render target
         context.rendertargets.colors.resize( 1 );
         context.rendertargets.colors[0].texture = c0;
         rndr.bindContext( context );
         rndr.clearScreen();
-        sr.drawSingleTexturedSprite( tex1, 0, -1.0f, 1.0f, 2.0f, 2.0f );
+        sr.drawSingleTexturedSprite( tex1, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, -1.0f, 1.0f, 2.0f, 2.0f );
 
         // draw c0 to right half of the screen
         context.rendertargets.colors.clear();
         rndr.bindContext( context );
-        sr.drawSingleTexturedSprite( c0, 0, 0, 0.5, 0.0, 1.0, 1.0 );
+        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0.5, 0.0, 1.0, 1.0 );
     }
 };
 

@@ -66,7 +66,7 @@ void draw( Renderer & )
 
     sr->drawSingleTexturedSprite(
         tex,
-        0, // options
+        GN::gfx::SpriteRenderer::DEFAULT_OPTIONS,
         pos_x, pos_y, // x1, y1
         (float)td.width, (float)td.height ); // z
 }

@@ -34,6 +34,11 @@ namespace GN
         T* cptr() { return mElements; }
 
         ///
+        /// return size of the array (always be MAX_SIZE)
+        ///
+        size_t size() const { return MAX_SIZE; }
+
+        ///
         /// at operator
         ///
         T & operator[]( size_t i ) { GN_ASSERT( i < N ); return mElements[i]; }

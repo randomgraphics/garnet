@@ -359,13 +359,13 @@ static inline GLint sTexWrap2OGL( UInt32 wrap )
 {
     switch( wrap )
     {
-        case GN::gfx::TextureSampler::ADDRESS_REPEAT :
+        case GN::gfx::SamplerDesc::ADDRESS_REPEAT :
             return GL_REPEAT;
 
-        case GN::gfx::TextureSampler::ADDRESS_CLAMP  :
+        case GN::gfx::SamplerDesc::ADDRESS_CLAMP  :
             return GL_CLAMP;
 
-        case GN::gfx::TextureSampler::ADDRESS_CLAMP_BORDER :
+        case GN::gfx::SamplerDesc::ADDRESS_CLAMP_BORDER :
             if( GLEW_EXT_texture_edge_clamp )
             {
                 return GL_CLAMP_TO_EDGE_EXT;
@@ -380,7 +380,7 @@ static inline GLint sTexWrap2OGL( UInt32 wrap )
                 return GL_CLAMP;
             }
 
-        case GN::gfx::TextureSampler::ADDRESS_MIRROR:
+        case GN::gfx::SamplerDesc::ADDRESS_MIRROR:
             if( GLEW_ARB_texture_mirrored_repeat )
             {
                 return GL_MIRRORED_REPEAT_ARB;
@@ -878,7 +878,7 @@ void GN::gfx::OGLTexture::readMipmap( size_t, size_t, MipmapData & )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::setSampler( const TextureSampler & samp, bool forceUpdate ) const
+void GN::gfx::OGLTexture::setSampler( const SamplerDesc & samp, bool forceUpdate ) const
 {
     if( !forceUpdate && samp == mSampler ) return;
 

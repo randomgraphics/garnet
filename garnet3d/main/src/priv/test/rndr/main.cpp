@@ -64,13 +64,9 @@ bool init( Renderer & rndr )
     if( !rc.gpuProgram ) return false;
 
     // create uniform
-    const GpuProgramParameterDesc & gppd = rc.gpuProgram->getParameterDesc();
-    rc.uniforms.resize( gppd.uniforms.count() );
-    for( size_t i = 0; i < gppd.uniforms.count(); ++i )
-    {
-        rc.uniforms[i].attach( rndr.createUniform( gppd.uniforms[i].size ) );
-        if( !rc.uniforms[i] ) return false;
-    }
+    rc.uniforms.resize( 1 );
+    rc.uniforms[0].attach( rndr.createUniform( sizeof(Matrix44f) ) );
+    if( !rc.uniforms[0] ) return false;
 
     // setup vertex format
     rc.vtxfmt.numElements = 1;
@@ -81,7 +77,6 @@ bool init( Renderer & rndr )
 
     // create texture
     rc.textures[0].texture.attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
-    rc.textures[0].bindTo( "t0" );
 
     // create vertex buffer
     static float vertices[] =
@@ -95,9 +90,9 @@ bool init( Renderer & rndr )
         sizeof(vertices),
         false,
     };
-    rc.vtxbufs[0].attach( rndr.createVtxBuf( vbd ) );
-    if( NULL == rc.vtxbufs[0] ) return false;
-    rc.vtxbufs[0]->update( 0, 0, vertices );
+    rc.vtxbufs[0].vtxbuf.attach( rndr.createVtxBuf( vbd ) );
+    if( NULL == rc.vtxbufs[0].vtxbuf ) return false;
+    rc.vtxbufs[0].vtxbuf->update( 0, 0, vertices );
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
@@ -116,9 +111,6 @@ void quit( Renderer & )
 
 void draw( Renderer & r )
 {
-    size_t ui = rc.gpuProgram->getParameterDesc().uniforms["transform"];
-    if( GPU_PROGRAM_PARAMETER_NOT_FOUND == ui ) return;
-
     Matrix44f m;
 
     // DRAW_UP: triangle at left top corner
@@ -130,26 +122,26 @@ void draw( Renderer & r )
         0,1,0,1,
     };
     m.translate( -1.0f, -0.0f, 0 );
-    rc.uniforms[ui]->update( m );
+    rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
     m.translate( -1.0f, -1.0f, 0 );
-    rc.uniforms[ui]->update( m );
+    rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
     m.identity();
-    rc.uniforms[ui]->update( m );
+    rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
     m.translate( 0.5f, -1.5f, 0 );
-    rc.uniforms[ui]->update( m );
+    rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }

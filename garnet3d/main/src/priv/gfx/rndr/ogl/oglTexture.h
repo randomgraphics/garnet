@@ -99,7 +99,7 @@ namespace GN { namespace gfx
         ///
         /// set texture sampler (not effective until next binding)
         ///
-        void setSampler( const TextureSampler & sampler, bool forceUpdate = false ) const;
+        void setSampler( const SamplerDesc & sampler, bool forceUpdate = false ) const;
 
         ///
         /// \name get GL texture parameters
@@ -155,7 +155,7 @@ namespace GN { namespace gfx
         /// \name sampler stuff
         //@{
         mutable bool           mSamplerDirty;
-        mutable TextureSampler mSampler;
+        mutable SamplerDesc    mSampler;
         mutable GLint          mOGLFilters[2]; /// filters (min,mag)
         mutable GLint          mOGLWraps[3];   /// address modes (s,t,r)
         //@}

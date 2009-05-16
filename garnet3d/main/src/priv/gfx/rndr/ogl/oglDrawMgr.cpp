@@ -35,31 +35,6 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
     }
 }
 
-static inline bool
-sApplyVtxBufs(
-    const OGLVtxFmt       & vtxfmt,
-    const AutoRef<VtxBuf> * vtxbufs,
-    const UInt16          * strides,
-    size_t                  startvtx )
-{
-    const void * vtxdata[RendererContext::MAX_VERTEX_BUFFERS];
-
-    for( size_t i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
-    {
-        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( vtxbufs[i].get() );
-        if( vb )
-        {
-            vtxdata[i] = vb->getVtxData();
-        }
-        else
-        {
-            vtxdata[i] = NULL;
-        }
-    }
-
-    return vtxfmt.bindBuffers( vtxdata, strides, RendererContext::MAX_VERTEX_BUFFERS, startvtx );
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -184,11 +159,10 @@ void GN::gfx::OGLRenderer::drawIndexed(
     if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
-            *mCurrentOGLVtxFmt,
-            mContext.vtxbufs.cptr(),
-            mContext.strides.cptr(),
-            basevtx ) )
+    if( mCurrentOGLVtxFmt &&
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+                                         mContext.vtxbufs.size(),
+                                         basevtx ) )
     {
         return;
     }
@@ -262,11 +236,10 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t start
     if( !mContextOk ) return;
 
     // bind vertex buffer based on current startvtx
-    if( mCurrentOGLVtxFmt && !sApplyVtxBufs(
-            *mCurrentOGLVtxFmt,
-            mContext.vtxbufs.cptr(),
-            mContext.strides.cptr(),
-            startvtx ) )
+    if( mCurrentOGLVtxFmt &&
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+                                         mContext.vtxbufs.size(),
+                                         startvtx ) )
     {
         return;
     }
@@ -308,9 +281,8 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING_ARB, (GLint*)&oldvbo ) );
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
-        UInt16 stride = (UInt16)strideInBytes;
 
-        bindSuccess = mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( vertexData, strideInBytes );
     }
 
     if( bindSuccess )
@@ -388,9 +360,8 @@ void GN::gfx::OGLRenderer::drawUp(
             GN_OGL_CHECK( glGetIntegerv( GL_ARRAY_BUFFER_BINDING_ARB, (GLint*)&oldvbo ) );
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
         }
-        UInt16 stride = (UInt16)strideInBytes;
 
-        bindSuccess = mCurrentOGLVtxFmt->bindBuffers( &vertexData, &stride, 1, 0 );
+        bindSuccess = mCurrentOGLVtxFmt->bindRawMemoryBuffer( vertexData, strideInBytes );
     }
 
     // draw primitives

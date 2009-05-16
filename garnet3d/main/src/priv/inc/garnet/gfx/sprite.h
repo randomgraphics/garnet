@@ -59,6 +59,9 @@ namespace GN { namespace gfx
 
             FORCE_DEPTH_WRITE_ENABLED     = 0x00001000, ///< Always enable depth write, disregarding value in current renderer context.
             FORCE_DEPTH_WRITE_DISABLED    = 0x00002000, ///< Always disable depth write, disregarding value in current renderer context.
+
+            // Default drawing options
+            DEFAULT_OPTIONS               = FORCE_ALPHA_BLENDING_ENABLED | FORCE_DEPTH_TEST_DISABLED | FORCE_DEPTH_WRITE_DISABLED,
         };
 
         /// get underline renderer
@@ -67,7 +70,7 @@ namespace GN { namespace gfx
         ///
         /// \note set texture to NULL, to draw solid sprite
         ///
-        void drawBegin( Texture * texture, BitFields options = 0 );
+        void drawBegin( Texture * texture, BitFields options = DEFAULT_OPTIONS );
         void drawEnd();
 
         void drawTextured(

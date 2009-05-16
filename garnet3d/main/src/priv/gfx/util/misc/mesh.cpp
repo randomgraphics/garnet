@@ -96,6 +96,8 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
         // copy vertices to vertex buffer
         const void * vertices = desc.vertices[i];
         if( vertices ) vb->update( 0, 0, vertices );
+
+        mVtxBufs[i].stride = (UInt16)stride;
     }
 
     // initialize index buffer
@@ -148,7 +150,8 @@ GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset )
     GN_CASSERT( GN_ARRAY_COUNT(drawable.rc.vtxbufs) == GN_ARRAY_COUNT(mVtxBufs) );
     for( size_t i = 0; i < GN_ARRAY_COUNT(drawable.rc.vtxbufs); ++i )
     {
-        drawable.rc.vtxbufs[i] = mVtxBufs[i].gpudata;
+        drawable.rc.vtxbufs[i].vtxbuf = mVtxBufs[i].gpudata;
+        drawable.rc.vtxbufs[i].stride = mVtxBufs[i].stride;
     }
 
     // index buffers
