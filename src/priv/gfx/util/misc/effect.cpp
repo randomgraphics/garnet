@@ -299,16 +299,20 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
         }
     }
 
-    // setup textures
+    // setup textures and samplers
     size_t numtex = math::getmin<size_t>( p.textures.size(), RendererContext::MAX_TEXTURES );
     for( size_t i = 0; i < numtex; ++i )
     {
         const PerShaderTextureParam & t = p.textures[i];
 
-        AutoRef<Texture> & tp = t.iter->second;
+        size_t idx = p.gpuProgram->getParameterDesc().textures[t.binding];
 
-        drawable.rc.textures[i].texture = tp;
-        drawable.rc.textures[i].bindTo( t.binding.cptr() );
+        if( idx != GPU_PROGRAM_PARAMETER_NOT_FOUND )
+        {
+            AutoRef<Texture> & tp = t.iter->second;
+            drawable.rc.textures[idx].texture = tp;
+            GN_TODO( "apply samplers." );
+        }
     }
 
     // clear unused texture stages

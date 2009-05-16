@@ -200,7 +200,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
     {
         mSpriteRenderer->drawSingleSolidSprite(
             GN_RGBA32( 0, 0, 0, 128 ), // TODO: configurable backround color
-            0, // option
+            GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, // option
             bbox.x,
             bbox.y,
             bbox.w,
@@ -216,7 +216,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 
         if( 0 == numchars ) continue;
 
-        mSpriteRenderer->drawBegin( mTextures[i], 0 );
+        mSpriteRenderer->drawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
 
         ci = mCharList[i];
 

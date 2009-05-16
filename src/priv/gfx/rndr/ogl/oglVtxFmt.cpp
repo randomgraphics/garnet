@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "oglVtxFmt.h"
 #include "oglRenderer.h"
+#include "oglVtxBuf.h"
 
 using namespace GN::gfx;
 
@@ -107,10 +108,9 @@ bool GN::gfx::OGLVtxFmt::bindStates() const
 // -----------------------------------------------------------------------------
 bool
 GN::gfx::OGLVtxFmt::bindBuffers(
-     const void * const * buffers,
-     const UInt16       * strides,
-     size_t               numbufs,
-     size_t               startvtx ) const
+     const VertexBufferBinding * bindings,
+     size_t                      numbufs,
+     size_t                      startvtx ) const
 {
     GN_GUARD_SLOW;
 
@@ -125,22 +125,53 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         if( stream >= numbufs )
         {
             GN_ERROR(sLogger)(
-                "Current vertex format requires %u vertex buffers. But only %u are provided.",
-                stream, numbufs );
+                "Current vertex format requires at least %u vertex buffers. But only %u are provided.",
+                stream+1, numbufs );
             return false;
         }
 
-        size_t stride = strides[stream];
+        const VertexBufferBinding & b = bindings[stream];
+        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
+
+        const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
+        size_t       stride  = b.stride;
+        size_t       offset  = b.offset;
         if( 0 == stride ) stride = mDefaultStrides[stream];
 
-        const UInt8 * ptr = (const UInt8*)buffers[stream];
-
-        ab.bind( ptr + startvtx * stride, stride );
+        ab.bind( vtxdata + (startvtx+offset) * stride, stride );
     }
 
     return true;
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) const
+{
+    if( !mValid ) return false;
+
+    for( size_t i = 0; i < mAttribBindings.size(); ++i )
+    {
+        const AttribBinding & ab = mAttribBindings[i];
+
+        if( ab.info.stream > 0 )
+        {
+            GN_ERROR(sLogger)(
+                "Current vertex format requires at least %u vertex buffers. But only 1 are provided.",
+                ab.info.stream+1 );
+            return false;
+        }
+
+        if( 0 == stride ) stride = mDefaultStrides[0];
+
+        ab.bind( (const UInt8*)data, stride );
+    }
+
+    return true;
 }
 
 // *****************************************************************************

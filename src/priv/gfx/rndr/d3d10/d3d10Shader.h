@@ -287,9 +287,9 @@ namespace GN { namespace gfx
         /// Apply uniforms to D3D device
         ///
         void applyUniforms(
-            const SysMemUniform * const * uniforms,
-            size_t                        count,
-            bool                          skipDirtyCheck ) const;
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const;
 
         ///
         /// apply textures to D3D device

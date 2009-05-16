@@ -364,8 +364,8 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     // vertex buffers
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->vtxbufs); ++i )
     {
-        MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].get();
-        sReplaceAutoRefPtr( rc->vtxbufs[i], mtvb ? mtvb->getRealVtxBuf() : NULL );
+        MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].vtxbuf.get();
+        sReplaceAutoRefPtr( rc->vtxbufs[i].vtxbuf, mtvb ? mtvb->getRealVtxBuf() : NULL );
     }
 
     // index buffer

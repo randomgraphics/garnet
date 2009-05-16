@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "oglShader.h"
 #include "oglRenderer.h"
+#include "oglTexture.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -447,97 +448,101 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const
+void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
+    const Uniform * const * uniforms,
+    size_t                  count ) const
 {
+    if( count != mUniforms.size() )
+    {
+        GN_ERROR(sLogger)( "Current GPU program requires %d uniforms. But %d are provided.", mUniforms.size(), count );
+    }
+
+    if( count > mUniforms.size() ) count = mUniforms.size();
+
     for( size_t i = 0; i < count; ++i )
     {
-        if( i >= mUniforms.size() )
+        // get uniform pointer
+        const SysMemUniform * uniform = (const SysMemUniform *)uniforms[i];
+        if( NULL == uniform )
         {
-            GN_WARN(sLogger)( "there are more GPU parameters than the shader needs." );
-            return;
-        }
-
-        const SysMemUniform * u = uniforms[i];
-
-        if( NULL == u )
-        {
-            GN_ERROR(sLogger)( "Null uniform pointer." );
+            GN_ERROR(sLogger)( "Null uniform pointer for GPU program uniform parameter #%d.", i );
             continue;
         }
 
-        const GLSLUniformOrTextureDesc & d = mUniforms[i];
+        // get uniform descriptor
+        const GLSLUniformOrTextureDesc & desc = mUniforms[i];
 
-        if( u == d.lastUniform && u->getTimeStamp() == d.lastStamp )
+        // If the uniform is currently bind to OpenGL, skip it.
+        if( uniform == desc.lastUniform && uniform->getTimeStamp() == desc.lastStamp )
         {
-            // ignore redundant parameters
             continue;
         }
 
         // update time stamp
-        d.lastUniform.set( u );
-        d.lastStamp = u->getTimeStamp();
+        desc.lastUniform.set( uniform );
+        desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
         if( getRenderer().paramCheckEnabled() )
         {
-            if( u->size() != d.size )
+            if( uniform->size() != desc.size )
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.name.cptr(),
-                    u->size(),
-                    d.size );
+                    desc.name.cptr(),
+                    uniform->size(),
+                    desc.size );
             }
         }
 
-        switch( d.type )
+        switch( desc.type )
         {
             case GL_FLOAT                      :
-                glUniform1fvARB( d.location, d.count, (GLfloat*)u->getval() );
+                glUniform1fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC2_ARB             :
-                glUniform2fvARB( d.location, d.count, (GLfloat*)u->getval() );
+                glUniform2fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC3_ARB             :
-                glUniform3fvARB( d.location, d.count, (GLfloat*)u->getval() );
+                glUniform3fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC4_ARB             :
-                glUniform4fvARB( d.location, d.count, (GLfloat*)u->getval() );
+                glUniform4fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_INT                        :
             case GL_BOOL_ARB                   :
-                glUniform1ivARB( d.location, d.count, (GLint*)u->getval() );
+                glUniform1ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC2_ARB               :
             case GL_BOOL_VEC2_ARB              :
-                glUniform2ivARB( d.location, d.count, (GLint*)u->getval() );
+                glUniform2ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC3_ARB               :
             case GL_BOOL_VEC3_ARB              :
-                glUniform3ivARB( d.location, d.count, (GLint*)u->getval() );
+                glUniform3ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC4_ARB               :
             case GL_BOOL_VEC4_ARB              :
-                glUniform4ivARB( d.location, d.count, (GLint*)u->getval() );
+                glUniform4ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT2_ARB             :
-                glUniformMatrix2fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
+                glUniformMatrix2fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT3_ARB             :
-                glUniformMatrix3fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
+                glUniformMatrix3fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT4_ARB             :
-                glUniformMatrix4fvARB( d.location, d.count, true, (GLfloat*)u->getval() );
+                glUniformMatrix4fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_SAMPLER_1D_ARB             :
@@ -559,28 +564,59 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms( const SysMemUniform * const * un
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::applyTexture( const char * name, size_t stage ) const
+void GN::gfx::OGLGpuProgramGLSL::applyTextures(
+    const TextureBinding * textures,
+    size_t                 count ) const
 {
-    GN_ASSERT( name );
+    OGLRenderer & r = getRenderer();
+    size_t maxStages = r.getCaps().maxTextures;
 
-    size_t idx = mParamDesc.textures[name];
-
-    if( GPU_PROGRAM_PARAMETER_NOT_FOUND != idx )
+    // determine effective texture count
+    if( count > mTextures.size() )
     {
-        GN_ASSERT( idx < mTextures.size() );
+        count = mTextures.size();
+    }
+    GN_ASSERT( count <= maxStages );
 
-        const GLSLUniformOrTextureDesc & t = mTextures[idx];
+    // apply textures to OpenGL, one by one
+    size_t i;
+    for( i = 0; i < count; ++i )
+    {
+        const TextureBinding & b = textures[i];
 
-        if( t.lastTexStage != stage )
+        // get texture descriptor
+        const GLSLUniformOrTextureDesc & desc = mTextures[i];
+
+        if( b.texture )
         {
-            GLint s = (GLint)stage;
-            GN_OGL_CHECK( glUniform1ivARB( t.location, t.count, &s ) );
-            t.lastTexStage = stage;
+            r.chooseTextureStage( i );
+
+            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.get());
+
+            // bind sampler
+            ogltexture->setSampler( b.sampler );
+
+            // bind texture to current stage
+            ogltexture->bind();
+
+            // bind current texture stage to the GPU program parameter
+            if( desc.lastTexStage != i )
+            {
+                GLint s = (GLint)i;
+                GN_OGL_CHECK( glUniform1ivARB( desc.location, desc.count, &s ) );
+                desc.lastTexStage = i;
+            }
+        }
+        else
+        {
+            r.disableTextureStage( i );
         }
     }
-    else
+
+    // disable remaining texture stages
+    for( ; i < maxStages; ++i )
     {
-        GN_ERROR(sLogger)( "texture name '%s' is not found in current GPU program.", name );
+        r.disableTextureStage( i );
     }
 }
 
@@ -656,6 +692,14 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
             &mTextures[0].textureDesc,
             mTextures.size(),
             sizeof(GLSLUniformOrTextureDesc) );
+    }
+
+    // check for texture capability
+    OGLRenderer & r = getRenderer();
+    if( mTextures.size() > r.getCaps().maxTextures )
+    {
+        GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
+        return false;
     }
 
     // success

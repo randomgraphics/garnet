@@ -410,53 +410,20 @@ namespace GN { namespace gfx
             , offset(0)
         {
         }
-    };
 
-    ///
-    /// texture binding descriptor
-    ///
-    struct TextureBinding
-    {
-        AutoRef<Texture> texture;     ///< texture pointer
-        char             binding[16]; ///< binding to specific GPU program parameter
-
-        ///
-        /// clear to empty
-        ///
+        /// clear the binding
         void clear()
         {
-            texture.clear();
-            binding[0] = '\0';
-        }
-
-        ///
-        /// Bind to specific GPU program parameter.
-        ///
-        void bindTo( const char * gpuTextureParameterName )
-        {
-            size_t len = strLen( gpuTextureParameterName );
-            if( 0 == len )
-            {
-                GN_ERROR(getLogger("GN.gfx.TextureBinding"))( "Empty binding string is not allowed." );
-                return;
-            }
-
-            if( len >= GN_ARRAY_COUNT(binding) )
-            {
-                GN_ERROR(getLogger("GN.gfx.binding"))(
-                    "GPU program parameter name (%s) is too long. Maxinum length is %d characters including ending zero.",
-                    gpuTextureParameterName,
-                    GN_ARRAY_COUNT(binding) );
-            }
-            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
-            memcpy( binding, gpuTextureParameterName, len );
+            vtxbuf.clear();
+            stride = 0;
+            offset = 0;
         }
     };
 
     ///
-    /// define a texture sampler
+    /// define a sampler
     ///
-    struct TextureSampler
+    struct SamplerDesc
     {
         enum SamplerEnum
         {
@@ -496,25 +463,24 @@ namespace GN { namespace gfx
             };
         };
 
-        UInt8       border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
-
-        float       mipbias;   ///< Mip bias. Default is 0.0
-        float       minlod;    ///< Min mipmap level. Default is zero
-        float       maxlod;    ///< Max mipmap level. Default is negative that means no limination
+        UInt8            border[4]; ///< border color in R-G-B-A. Default is (0,0,0,0)
+        float            mipbias;   ///< Mip bias. Default is 0.0
+        float            minlod;    ///< Min mipmap level. Default is zero
+        float            maxlod;    ///< Max mipmap level. Default is negative that means no limination
 
         void clear()
         {
-            filterMin = filterMip = filterMag = FILTER_LINEAR;
-            aniso = 0;
+            filterMin    = filterMip = filterMag = FILTER_LINEAR;
+            aniso        = 0;
             addressModes = 0;
-            addressU = addressV = addressW = ADDRESS_REPEAT;
-            border[0] = border[1] = border[2] = border[3] = 0;
-            mipbias = 0.0f;
-            minlod = 0.0f;
-            maxlod = -1.0f;
+            addressU     = addressV = addressW = ADDRESS_REPEAT;
+            border[0]    = border[1] = border[2] = border[3] = 0;
+            mipbias      = 0.0f;
+            minlod       = 0.0f;
+            maxlod       = -1.0f;
         }
 
-        bool operator==( const TextureSampler & rhs ) const
+        bool operator==( const SamplerDesc & rhs ) const
         {
             return filters == rhs.filters
                 && addressModes == rhs.addressModes
@@ -524,10 +490,43 @@ namespace GN { namespace gfx
                 && maxlod == rhs.maxlod;
         }
 
-        bool operator!=( const TextureSampler & rhs ) const
+        bool operator!=( const SamplerDesc & rhs ) const
         {
             return !operator==( rhs );
         }
+    };
+
+    /// texture binding structure
+    struct TextureBinding
+    {
+        AutoRef<Texture> texture; ///< the texture
+        SamplerDesc      sampler; ///< the sampler
+
+        /// clear the binding
+        void clear()
+        {
+            texture.clear();
+            sampler.clear();
+        }
+    };
+
+    ///
+    /// interface of GPU uniform
+    ///
+    struct Uniform : public RefCounter
+    {
+        /// get parameter size
+        virtual size_t size() const = 0;
+
+        /// get current parameter value
+        virtual const void * getval() const = 0;
+
+        /// update parameter value
+        virtual void update( size_t offset, size_t length, const void * data ) = 0;
+
+        /// update parameter value
+        template<typename T>
+        void update( const T & t ) { update( 0, sizeof(t), &t ); }
     };
 
     ///
@@ -632,25 +631,6 @@ namespace GN { namespace gfx
         {
             return !operator==( rhs );
         }
-    };
-
-    ///
-    /// interface of GPU uniform
-    ///
-    struct Uniform : public RefCounter
-    {
-        /// get parameter size
-        virtual size_t size() const = 0;
-
-        /// get current parameter value
-        virtual const void * getval() const = 0;
-
-        /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data ) = 0;
-
-        /// update parameter value
-        template<typename T>
-        void update( const T & t ) { update( 0, sizeof(t), &t ); }
     };
 
     ///
@@ -805,22 +785,23 @@ namespace GN { namespace gfx
         /// shader
         AutoRef<GpuProgram> gpuProgram;
 
-        // Resources
+        /// shader Resources
+        ///
+        /// \note   Resources are ordered in according to their binding index in current GPU program.
+        //@{
+        DynaArray<AutoRef<Uniform> >             uniforms; ///< uniforms
+        FixedArray<TextureBinding, MAX_TEXTURES> textures; ///< textures
+        //@}
 
-        /// Uniform array, in the order described in GPU program uniform descriptor.
-        DynaArray<AutoRef<Uniform> >                              uniforms; ///< uniforms
+        /// geometry data
+        //@{
+        FixedArray<VertexBufferBinding, MAX_VERTEX_BUFFERS> vtxbufs;  ///< vertex buffers
+        VertexFormat                                        vtxfmt;   ///< vertex format (bindings to GPU program)
+        AutoRef<IdxBuf>                                     idxbuf;   ///< index buffer
+        //@}
 
-        FixedArray<AutoRef<VtxBuf>, MAX_VERTEX_BUFFERS>           vtxbufs;  ///< vertex buffers
-        FixedArray<UInt16,          MAX_VERTEX_BUFFERS>           strides;  ///< stride for each vertex buffer, in bytes. Set to 0 to use default stride.
-        FixedArray<UInt32,          MAX_VERTEX_BUFFERS>           offsets;  ///< offset for each vertex buffer, in bytes.
-        VertexFormat                                              vtxfmt;   ///< vertex format (bindings to GPU program)
-
-        AutoRef<IdxBuf>                                           idxbuf;   ///< index buffer
-
-        FixedArray<TextureBinding, MAX_TEXTURES>                  textures; ///< textures
-        FixedArray<TextureSampler, MAX_TEXTURES>                  samplers; ///< samplers
-
-        RenderTargetDesc                                          rendertargets; ///< render targets
+        /// render targets
+        RenderTargetDesc rendertargets;
 
         ///
         /// ctor
@@ -864,8 +845,6 @@ namespace GN { namespace gfx
 
             gpuProgram.clear();
 
-            uniforms.clear();
-
             clearResources();
         }
 
@@ -874,24 +853,20 @@ namespace GN { namespace gfx
         //
         void clearResources()
         {
-            GN_CASSERT( GN_ARRAY_COUNT(vtxbufs) == GN_ARRAY_COUNT(strides) );
-            GN_CASSERT( GN_ARRAY_COUNT(vtxbufs) == GN_ARRAY_COUNT(offsets) );
+            uniforms.clear();
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
+            {
+                textures[i].clear();
+            }
+
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
             {
                 vtxbufs[i].clear();
-                strides[i] = 0;
-                offsets[i] = 0;
             }
             vtxfmt.numElements = 0;
 
             idxbuf.clear();
-
-            GN_CASSERT( GN_ARRAY_COUNT(textures) == GN_ARRAY_COUNT(samplers) );
-            for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
-            {
-                textures[i].clear();
-                samplers[i].clear();
-            }
 
             rendertargets.clear();
         }
@@ -1262,8 +1237,6 @@ namespace GN { namespace gfx
         /// \param z     深度值
         /// \param s     模板值
         ///
-        /// \note Must be called btween drawBegin() and drawEnd().
-        ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
                      float z = 1.0f, UInt8 s = 0,
@@ -1283,8 +1256,6 @@ namespace GN { namespace gfx
         /// \param startidx
         ///     index into index buffer of the first index
         ///
-        /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
-        ///
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
@@ -1301,8 +1272,6 @@ namespace GN { namespace gfx
         ///     number of vertices
         /// \param startvtx
         ///     index into vertex buffer of the first vertex.
-        ///
-        /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
         ///
         virtual void draw( PrimitiveType prim,
                            size_t        numvtx,

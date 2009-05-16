@@ -247,6 +247,13 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
     // build parameter array
     mParamDesc.buildParameterArrays();
 
+    const size_t NUM_STAGES = getRenderer().getCaps().maxTextures;
+    if( mParamDesc.textures.count() > NUM_STAGES )
+    {
+        GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
+        return failure();
+    }
+
     // success
     return success();
 
@@ -274,12 +281,10 @@ void GN::gfx::D3D10GpuProgram::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10GpuProgram::applyUniforms(
-    const SysMemUniform * const * uniforms,
-    size_t                        count,
-    bool                          skipDirtyCheck ) const
+    const Uniform * const * uniforms,
+    size_t                  count,
+    bool                    skipDirtyCheck ) const
 {
-    GN_UNUSED_PARAM( skipDirtyCheck );
-
     count = math::getmin( count, mParamDesc.uniforms.count() );
 
     // dirty flags
@@ -294,7 +299,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
     for( size_t i = 0; i < count; ++i )
     {
         const D3D10UniformParameterDesc & ud = (const D3D10UniformParameterDesc &)mParamDesc.uniforms[i];
-        const SysMemUniform             & u  = *uniforms[i];
+        const SysMemUniform             & u  = *(const SysMemUniform*)uniforms[i];
 
         sUpdateConstData( ud, u, mVs.constData, 0, vscDirty );
         sUpdateConstData( ud, u, mGs.constData, 1, gscDirty );
@@ -352,6 +357,13 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     ID3D10ShaderResourceView ** srvArray = (ID3D10ShaderResourceView **)alloca( SRV_ARRAY_SIZE );
     memset( srvArray, 0, SRV_ARRAY_SIZE );
 
+    // determine effective texture count
+    if( count > mParamDesc.textures.count() )
+    {
+        count = mParamDesc.textures.count();
+    }
+    GN_ASSERT( count <= NUM_STAGES );
+
     // iterate textures
     for( size_t i = 0; i < count; ++i )
     {
@@ -361,22 +373,15 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
 
         if( tex )
         {
-            const D3D10TextureParameterDesc * texParam = mParamDesc.findTexture( tb.binding );
-            if( texParam )
+            const D3D10TextureParameterDesc & texParam = (const D3D10TextureParameterDesc &)mParamDesc.textures[i];
+            for( int i = 0; i < 3; ++i )
             {
-                for( int i = 0; i < 3; ++i )
+                if( texParam.ssp[i].used )
                 {
-                    if( texParam->ssp[i].used )
-                    {
-                        size_t srvidx = NUM_STAGES * i + texParam->ssp[i].stage;
+                    size_t srvidx = NUM_STAGES * i + texParam.ssp[i].stage;
 
-                        srvArray[srvidx] = tex->getSRView();
-                    }
+                    srvArray[srvidx] = tex->getSRView();
                 }
-            }
-            else
-            {
-                GN_ERROR(sLogger)( "texture %d is binding to invalid GPU parameter named \"%s\".", i, tb.binding );
             }
         }
     }
