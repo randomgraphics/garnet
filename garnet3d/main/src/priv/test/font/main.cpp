@@ -51,34 +51,34 @@ void onKeyPress( KeyEvent ke )
 
     switch( ke.code )
     {
-        case KEY_UP :
+        case KeyCode::UP :
             ffd.height *= 2;
             initTTF();
             break;
 
-        case KEY_DOWN:
+        case KeyCode::DOWN:
             ffd.height /= 2;
             if( 0 == ffd.height ) ffd.height = 1;
             initTTF();
             break;
 
-        case KEY_LEFT :
+        case KeyCode::LEFT :
             ffd.width /= 2;
             if( 0 == ffd.width ) ffd.width = 1;
             initTTF();
             break;
 
-        case KEY_RIGHT :
+        case KeyCode::RIGHT :
             ffd.width *= 2;
             initTTF();
             break;
 
-        case KEY_A :
+        case KeyCode::A :
             ffd.quality = FFQ_ANTIALIASED;
             initTTF();
             break;
 
-        case KEY_M :
+        case KeyCode::M :
             ffd.quality = FFQ_MONOCHROM;
             initTTF();
             break;

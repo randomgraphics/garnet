@@ -20,8 +20,7 @@ namespace GN { namespace gfx
         void clear()
         {
             mBindBy = NOTHING;
-            resource.clear();
-        }
+         }
 
         /// binding utilities
         //@{

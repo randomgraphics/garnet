@@ -178,14 +178,14 @@ struct D3D9StateDump
         // vs
         if( !vs.source.empty() )
         {
-            vs.vs.attach( assembleVS( &dev, vs.source.cptr(), 0 ) );
+            vs.vs.attach( assembleAndCreateVS( &dev, vs.source.cptr(), 0 ) );
             if( vs.vs.empty() ) return false;
         }
 
         // ps
         if( !ps.source.empty() )
         {
-            ps.ps.attach( assemblePS( &dev, ps.source.cptr(), 0 ) );
+            ps.ps.attach( assembleAndCreatePS( &dev, ps.source.cptr(), 0 ) );
             if( ps.ps.empty() ) return false;
         }
 
