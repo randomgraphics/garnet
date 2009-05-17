@@ -114,7 +114,7 @@ bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 
     // success
     mWindow = hwnd;
-    GN_TRACE(sLogger)( "Attach to window 0x%X", mWindow );
+    GN_VERBOSE(sLogger)( "Attach to window 0x%X", mWindow );
     return true;
 
     GN_UNGUARD;

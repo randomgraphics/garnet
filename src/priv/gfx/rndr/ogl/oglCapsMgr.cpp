@@ -136,22 +136,27 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
     info += GN::strFormat(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
-        "    Max number of texture stages    :    %d\n",
+        "    Max number of texture stages    :    %d\n"
+        "===================================================\n"
+        "\n\n",
         ts,tu );
+    GN_INFO(sLogger)( info.cptr() );
 
     // extension info.
-    info +=
+    info =
+        "\n\n"
+        "===================================================\n"
+        "              OpenGL Extension List\n"
         "---------------------------------------------------\n";
     for ( size_t i = 0; i < glexts.size(); ++i )
     {
         info += "     " + glexts[i] + "\n";
     }
-
     info +=
         "===================================================\n"
         "\n\n";
 
-    GN_INFO(sLogger)( info.cptr() );
+    GN_VERBOSE(sLogger)( info.cptr() );
 
     GN_UNGUARD;
 }

@@ -87,7 +87,7 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.unimpl"))( "Function %s is not implmented yet.", GN_FUNCTION ) );
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
 
 ///
 /// Output a todo message.

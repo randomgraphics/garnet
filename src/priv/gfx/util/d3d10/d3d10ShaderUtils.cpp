@@ -83,7 +83,7 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
         NULL,
         &asm_ );
 
-    GN_TRACE(sLogger)(
+    GN_VTRACE(sLogger)(
         "\n================== Shader compile success ===============\n"
         "%s\n"
         "\n---------------------------------------------------------\n"

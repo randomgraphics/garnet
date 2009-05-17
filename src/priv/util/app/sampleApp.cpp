@@ -74,7 +74,7 @@ static bool
 sParseInteger( T & result, const char * option, const char * value )
 {
     using namespace GN;
-    
+
     if( str2Int( result, value ) )
     {
         return true;
@@ -296,9 +296,8 @@ void GN::app::SampleApp::printStandardCommandLineOptions()
         "                               ERROR    = 20\n"
         "                               WARN     = 30\n"
         "                               INFO     = 40\n"
-        "                               TRACE    = 50\n"
-        "                               VERBOSE  = 60\n"
-        "                               VVERBOSE = 70\n"
+        "                               VERBOSE  = 50\n"
+        "                               VVERBOSE = 60\n"
         "\n"
         "   -mt   [on|off]          Use multithread renderer. Default is off.\n"
         "\n"

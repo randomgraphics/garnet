@@ -21,7 +21,7 @@ public:
     {
         // store console attributes
         mConsole = GetStdHandle(
-            ( GN::Logger::LL_INFO == level || GN::Logger::LL_VERBOSE == level )
+            ( level >= GN::Logger::INFO )
                 ? STD_OUTPUT_HANDLE
                 : STD_ERROR_HANDLE );
         CONSOLE_SCREEN_BUFFER_INFO csbf;
@@ -32,18 +32,19 @@ public:
         WORD attrib;
         switch( level )
         {
-            case GN::Logger::LL_FATAL:
-            case GN::Logger::LL_ERROR:
+            case GN::Logger::FATAL:
+            case GN::Logger::ERROR_:
                 attrib = FOREGROUND_RED;
                 break;
 
-            case GN::Logger::LL_WARN:
+            case GN::Logger::WARN:
                 attrib = FOREGROUND_RED | FOREGROUND_GREEN;
                 break;
 
-            case GN::Logger::LL_INFO:
-
-            default: // GN_TRACE_###
+            case GN::Logger::INFO:
+            case GN::Logger::VERBOSE:
+            case GN::Logger::VVERBOSE:
+            default:
                 attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
                 break;
         }
@@ -117,13 +118,13 @@ static inline GN::StrA sLevel2Str( int level )
 {
     switch( level )
     {
-        case GN::Logger::LL_FATAL   : return "FATAL";
-        case GN::Logger::LL_ERROR   : return "ERROR";
-        case GN::Logger::LL_WARN    : return "WARN";
-        case GN::Logger::LL_INFO    : return "INFO";
-        case GN::Logger::LL_VERBOSE : return "VERBOSE";
-        case GN::Logger::LL_TRACE   : return "TRACE";
-        default                     : return GN::strFormat( "%d", level );
+        case GN::Logger::FATAL    : return "FATAL";
+        case GN::Logger::ERROR_   : return "ERROR";
+        case GN::Logger::WARN     : return "WARN";
+        case GN::Logger::INFO     : return "INFO";
+        case GN::Logger::VERBOSE  : return "VERBOSE";
+        case GN::Logger::VVERBOSE : return "VERY_VERBOSE";
+        default                   : return GN::strFormat( "%d", level );
     }
 }
 
@@ -242,7 +243,7 @@ namespace GN
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
-            if( GN::Logger::LL_INFO == desc.level || GN::Logger::LL_VERBOSE == desc.level )
+            if( desc.level >= GN::Logger::INFO )
             {
                 ::fprintf( stdout, "%s\n", msg.cptr() );
             }
@@ -263,7 +264,7 @@ namespace GN
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
-            if( GN::Logger::LL_INFO == desc.level || GN::Logger::LL_VERBOSE == desc.level )
+            if( desc.level >= GN::Logger::INFO )
             {
                 ::fprintf( stdout, "%S\n", msg.cptr() );
             }
@@ -566,7 +567,7 @@ namespace GN
         LoggerContainer() : mRootLogger("ROOT",mMutex)
         {
             // config root logger
-            mRootLogger.setLevel( Logger::LL_TRACE );
+            mRootLogger.setLevel( Logger::INFO );
             mRootLogger.setEnabled( true );
 #if !GN_XENON
             mRootLogger.addReceiver( &mCr );

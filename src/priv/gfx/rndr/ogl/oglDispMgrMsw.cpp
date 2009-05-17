@@ -25,9 +25,9 @@ static int sChoosePixelFormat( HDC hdc )
     // flags that can not exist
     DWORD xxx_flags = PFD_NEED_PALETTE; // we're aiming for a RGB device
 
-    GN_TRACE(sLogger)( "Enumerating pixelformats..." );
+    GN_VERBOSE(sLogger)( "Enumerating pixelformats..." );
     int num = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_TRACE(sLogger)( "%d pixelformats in total.", num );
+    GN_VERBOSE(sLogger)( "%d pixelformats in total.", num );
 
     int candidates[4] =
     {
@@ -153,7 +153,7 @@ static bool sSetupPixelFormat( HDC hdc )
     // choose pixel format
     int n = sChoosePixelFormat( hdc );
     if( 0 == n ) return false;
-    GN_TRACE(sLogger)( "select pixelformat #%d.", n );
+    GN_VERBOSE(sLogger)( "select pixelformat #%d.", n );
 
     // Set the pixel format for the device context
     if (!SetPixelFormat(hdc, n, &pfd))
