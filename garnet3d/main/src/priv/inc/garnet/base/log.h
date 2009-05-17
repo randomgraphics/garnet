@@ -27,47 +27,59 @@
 ///
 /// output fatal error message
 ///
-#define GN_FATAL( logger )  GN_LOG( logger, GN::Logger::LL_FATAL )
+#define GN_FATAL( logger )  GN_LOG( logger, GN::Logger::FATAL )
 
 ///
 /// output error message
 ///
-#define GN_ERROR( logger )  GN_LOG( logger, GN::Logger::LL_ERROR )
+#define GN_ERROR( logger )  GN_LOG( logger, GN::Logger::ERROR_ )
 
 ///
 /// output warning message
 ///
-#define GN_WARN( logger )  GN_LOG( logger, GN::Logger::LL_WARN )
+#define GN_WARN( logger )  GN_LOG( logger, GN::Logger::WARN )
 
 ///
 /// output informational message
 ///
-#define GN_INFO( logger )  GN_LOG( logger, GN::Logger::LL_INFO )
+#define GN_INFO( logger )  GN_LOG( logger, GN::Logger::INFO )
 
 ///
-/// output debug message (only effective in debug build)
+/// Debug only informational message (only effective in debug build)
 ///
 #if GN_BUILD_DEBUG
-#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::LL_TRACE )
+#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::INFO )
 #else
 #define GN_TRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
 #endif
 
-/// begin/end of a code block to output trace messages
-//@{
-#define GN_TRACE_BEGIN( logger ) GN_LOG_BEGIN( logger, GN::Logger::LL_TRACE )
-#define GN_TRACE_END()           GN_LOG_END()
-//@}
-
 ///
 /// output verbose message
 ///
-#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VERBOSE )
+#define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::VERBOSE )
+
+///
+/// Debug only verbose message (only effective in debug build)
+///
+#if GN_BUILD_DEBUG
+#define GN_VTRACE( logger ) GN_LOG( logger, GN::Logger::VERBOSE )
+#else
+#define GN_VTRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
+#endif
 
 ///
 /// output very-verbose message
 ///
-#define GN_VVERBOSE( logger ) GN_LOG( logger, GN::Logger::LL_VVERBOSE )
+#define GN_VVERBOSE( logger ) GN_LOG( logger, GN::Logger::VVERBOSE )
+
+///
+/// Debug only very-verbose message (only effective in debug build)
+///
+#if GN_BUILD_DEBUG
+#define GN_VVTRACE( logger ) GN_LOG( logger, GN::Logger::VVERBOSE )
+#else
+#define GN_VVTRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
+#endif
 
 namespace GN
 {
@@ -83,13 +95,12 @@ namespace GN
         ///
         enum LogLevel
         {
-            LL_FATAL    = 10,  ///< fatal error message
-            LL_ERROR    = 20,  ///< error message
-            LL_WARN     = 30,  ///< warning message
-            LL_INFO     = 40,  ///< informational message
-            LL_TRACE    = 50,  ///< debug only information (only available in debug build)
-            LL_VERBOSE  = 60,  ///< verbose message
-            LL_VVERBOSE = 70,  ///< very verbose message
+            FATAL    = 10,  ///< fatal error message
+            ERROR_   = 20,  ///< error message (Note: ERROR is define as a macro)
+            WARN     = 30,  ///< warning message
+            INFO     = 40,  ///< informational message
+            VERBOSE  = 50,  ///< verbose message
+            VVERBOSE = 60,  ///< very verbose message
         };
 
         ///

@@ -5,10 +5,11 @@ TODO
 
 - p0
   - refine uniform and texture binding structure in renderer context
-    - allow binding by both name and index:
-        uniforms["pvw"] = uniform1
-        uniforms[1] = uniform2
-    - better error message for invalid uniform/texture binding
+    - renderer accepts binding by index only, for simplicity and
+      better performance.
+    - Effect class allows binding by name, for ease of use:
+        effect.uniforms["pvw"] = uniform1
+        effect.textures["diffuse"] = texture1
   - renderer unit test framework
   - better PCXS2 GPU plugin:
     - move operations to GPU as much as possible

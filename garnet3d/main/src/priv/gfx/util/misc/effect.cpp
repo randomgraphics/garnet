@@ -300,23 +300,22 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     }
 
     // setup textures and samplers
-    size_t numtex = math::getmin<size_t>( p.textures.size(), RendererContext::MAX_TEXTURES );
-    for( size_t i = 0; i < numtex; ++i )
+    GN_ASSERT( p.textures.size() == p.gpuProgram->getParameterDesc().textures.count() );
+    GN_ASSERT( p.textures.size() <= RendererContext::MAX_TEXTURES );
+    for( size_t i = 0; i < p.textures.size(); ++i )
     {
         const PerShaderTextureParam & t = p.textures[i];
 
-        size_t idx = p.gpuProgram->getParameterDesc().textures[t.binding];
-
-        if( idx != GPU_PROGRAM_PARAMETER_NOT_FOUND )
+        if( t.iter != mTextures.end() )
         {
             AutoRef<Texture> & tp = t.iter->second;
-            drawable.rc.textures[idx].texture = tp;
-            GN_TODO( "apply samplers." );
+            drawable.rc.textures[i].texture = tp;
+            drawable.rc.textures[i].sampler = *t.sampler;
         }
     }
 
     // clear unused texture stages
-    for( size_t i = numtex; i < RendererContext::MAX_TEXTURES; ++i )
+    for( size_t i = p.textures.size(); i < RendererContext::MAX_TEXTURES; ++i )
     {
         drawable.rc.textures[i].clear();
     }
@@ -349,13 +348,13 @@ GN::gfx::Effect::initTech(
     sMergeRenderStates( commonRenderStates, techDesc.rsd, mDesc.rsd );
 
     // initialize each pass
-    for( size_t i = 0; i < tech.passes.size(); ++i )
+    for( size_t ipass = 0; ipass < tech.passes.size(); ++ipass )
     {
-        const EffectDesc::PassDesc & passDesc = techDesc.passes[i];
+        const EffectDesc::PassDesc & passDesc = techDesc.passes[ipass];
 
         const StrA & shaderName = passDesc.shader; // shader techName alias for easy referencing
 
-        Pass & p = tech.passes[i];
+        Pass & p = tech.passes[ipass];
 
         // Look up GPU program description
         const EffectDesc::ShaderDesc * shaderDesc = sFindNamedPtr( mDesc.shaders, shaderName );
@@ -365,7 +364,7 @@ GN::gfx::Effect::initTech(
                 "Technique '%s' referencs non-exist shader name '%s' in pass %u",
                 techName.cptr(),
                 shaderName.cptr(),
-                i );
+                ipass );
             return false;
         }
 
@@ -379,7 +378,7 @@ GN::gfx::Effect::initTech(
                 "is not supported by current graphics hardware.",
                 techName.cptr(),
                 shaderName.cptr(),
-                i );
+                ipass );
             return false;
         }
 
@@ -391,7 +390,7 @@ GN::gfx::Effect::initTech(
                 "Shader '%s' referenced by technique '%s' in pass %u is not initialized",
                 shaderName.cptr(),
                 techName.cptr(),
-                i );
+                ipass );
             return false;
         }
 
@@ -401,6 +400,12 @@ GN::gfx::Effect::initTech(
         const EffectDesc::ShaderDesc & sdesc = mDesc.shaders.find(shaderName)->second;
 
         // look up textures
+        p.textures.resize( gpuparam.textures.count() );
+        GN_ASSERT( p.textures.size() <= RendererContext::MAX_TEXTURES );
+        for( size_t itex = 0; itex < p.textures.size(); ++itex )
+        {
+            p.textures[itex].iter = mTextures.end();
+        }
         for( std::map<StrA,StrA>::const_iterator iter = sdesc.textures.begin(); iter != sdesc.textures.end(); ++iter )
         {
             const StrA & texBind = iter->first;
@@ -410,33 +415,50 @@ GN::gfx::Effect::initTech(
             if( NULL == tdesc )
             {
                 GN_ERROR(sLogger)(
-                    "shader '%s' referencs non-exisit texture '%s'.",
-                    shaderName.cptr(), texName.cptr() );
+                    "Effect technique '%s', pass #%d: "
+                    "'%s' is not a valid effect texture parameter name.",
+                    techName.cptr(),
+                    ipass,
+                    texName.cptr() );
             }
-            else if( GPU_PROGRAM_PARAMETER_NOT_FOUND == gpuparam.textures[texBind.cptr()] )
-            {
-                GN_ERROR(sLogger)(
-                    "texture '%s' is binded to invalid parameter '%s' of shader '%s'.",
-                    texName.cptr(), texBind.cptr(), shaderName.cptr() );
-            }
-            // TODO: check GPU parameter type. Make sure it is a texture parameter.
             else
             {
-                PerShaderTextureParam tex;
+                size_t tidx = gpuparam.textures[texBind];
+                if( GPU_PROGRAM_PARAMETER_NOT_FOUND == tidx )
+                {
+                    GN_ERROR(sLogger)(
+                        "Effect technique '%s', pass #%d: "
+                        "'%s' is not a valid texture parameter name of shader '%s'.",
+                        techName.cptr(),
+                        ipass,
+                        texBind.cptr(),
+                        shaderName.cptr() );
+                }
+                else
+                {
+                    p.textures[tidx].iter = mTextures.find(texName);
+                    p.textures[tidx].sampler = &tdesc->sampler;
 
-                tex.iter    = mTextures.find(texName);
-                tex.binding = texBind;
-                tex.sampler = &tdesc->sampler;
-
-                p.textures.append( tex );
-
-                // this must be a valid texture parameter
-                GN_ASSERT( mTextures.end() != tex.iter );
+                    // this must be a valid texture parameter
+                    GN_ASSERT( mTextures.end() != p.textures[tidx].iter );
+                }
             }
         }
-        if( p.textures.size() > RendererContext::MAX_TEXTURES )
+        for( size_t itex = 0; itex < p.textures.size(); ++itex )
         {
-            GN_ERROR(sLogger)( "technique %s pass %u has too many textures.", techName.cptr(), i );
+            if( mTextures.end() == p.textures[itex].iter )
+            {
+                // Note: Although uninitialize shader parameter is allowed,
+                // technically speaking, it usually implies error
+                // in effect definition.
+                GN_WARN(sLogger)(
+                    "Effect technique '%s', pass #%d: "
+                    "texture parameter '%s' of shader '%s' is left uninitialized.",
+                    techName.cptr(),
+                    ipass,
+                    gpuparam.textures[itex].name,
+                    shaderName.cptr() );
+            }
         }
 
         // look up uniforms
@@ -464,7 +486,6 @@ GN::gfx::Effect::initTech(
                         "uniform '%s' is binded to invalid parameter '%s' of shader '%s'.",
                         uniformName.cptr(), uniformBind.cptr(), shaderName.cptr() );
                 }
-                // TODO: check parameter type.
                 else
                 {
                     GN_ASSERT( uidx < p.uniforms.size() );
@@ -473,6 +494,22 @@ GN::gfx::Effect::initTech(
 
                     GN_ASSERT( mUniforms.end() != p.uniforms[uidx] );
                 }
+            }
+        }
+        for( size_t iuniform = 0; iuniform < p.uniforms.size(); ++iuniform )
+        {
+            if( mUniforms.end() == p.uniforms[iuniform] )
+            {
+                // Note: Although uninitialize shader parameter is allowed,
+                // technically speaking, it usually implies error
+                // in effect definition.
+                GN_WARN(sLogger)(
+                    "Effect technique '%s', pass #%d: "
+                    "uniform parameter '%s' of shader '%s' is left uninitialized.",
+                    techName.cptr(),
+                    ipass,
+                    gpuparam.uniforms[iuniform].name,
+                    shaderName.cptr() );
             }
         }
 

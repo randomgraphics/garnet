@@ -319,9 +319,6 @@ namespace GN { namespace gfx
             /// texture parameter iterator into global texture map (Effect::mTextures)
             TextureIter iter;
 
-            /// texture binding string
-            StrA binding;
-
             /// pointer to sampler, pointer to Effec
             const SamplerDesc * sampler;
 
@@ -333,7 +330,6 @@ namespace GN { namespace gfx
             /// copy ctor
             PerShaderTextureParam( const PerShaderTextureParam & p )
                 : iter(p.iter)
-                , binding(p.binding)
                 , sampler(p.sampler)
             {
             }
@@ -342,7 +338,6 @@ namespace GN { namespace gfx
             PerShaderTextureParam & operator=( const PerShaderTextureParam & rhs )
             {
                 iter    = rhs.iter;
-                binding = rhs.binding;
                 sampler = rhs.sampler;
                 return *this;
             }
@@ -351,10 +346,14 @@ namespace GN { namespace gfx
         struct Pass
         {
             GpuProgram                     * gpuProgram; ///< Pointer to the GPU program
-            DynaArray<PerShaderTextureParam> textures;   ///< Textures used in the pass.
-            DynaArray<UniformIter>           uniforms;   ///< uniforms used in the pass. Note that offset of the uniform
-                                                         ///< in this array is exactly same as the binding index to
-                                                         ///< the GPU program in this pass.
+            DynaArray<PerShaderTextureParam> textures;   ///< Textures used in the pass. Note that
+                                                         ///< the index of the texture in this array
+                                                         ///< is the binding index to the GPU
+                                                         ///< program used in this pass.
+            DynaArray<UniformIter>           uniforms;   ///< uniforms used in the pass. Note that
+                                                         ///< the index of the uniform in this array
+                                                         ///< is the binding index to the GPU
+                                                         ///< program used in this pass.
             EffectDesc::RenderStateDesc rsd;             ///< render states
         };
 

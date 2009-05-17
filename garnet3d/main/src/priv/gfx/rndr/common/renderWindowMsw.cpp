@@ -116,7 +116,7 @@ void GN::gfx::RenderWindowMsw::quit()
     // tru unregister window class
     if( !mClassName.empty() )
     {
-        GN_TRACE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
         GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
@@ -241,7 +241,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    GN_TRACE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
     wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;

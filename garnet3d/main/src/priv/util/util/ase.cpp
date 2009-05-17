@@ -1240,7 +1240,7 @@ static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & nam
 // -----------------------------------------------------------------------------
 static bool sBuildNodeTree( AseSceneInternal & scene )
 {
-    GN_INFO(sLogger)( "\nASE: Build node tree:" );
+    GN_VERBOSE(sLogger)( "\nASE: Build node tree:" );
 
     // setup root node
     scene.root.node.name = "root";
@@ -1317,13 +1317,13 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             n->node.bbox.size().y,
             n->node.bbox.size().z );
 
-        GN_INFO(sLogger)( s.cptr() );
+        GN_VERBOSE(sLogger)( s.cptr() );
 
         // next node
         n = ttpre.next( n, &level );
     }
 
-    GN_INFO(sLogger)( "" );
+    GN_VERBOSE(sLogger)( "" );
 
     // success
     return true;
