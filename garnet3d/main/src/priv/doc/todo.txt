@@ -4,12 +4,6 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - refine uniform and texture binding structure in renderer context
-    - renderer accepts binding by index only, for simplicity and
-      better performance.
-    - Effect class allows binding by name, for ease of use:
-        effect.uniforms["pvw"] = uniform1
-        effect.textures["diffuse"] = texture1
   - renderer unit test framework
   - better PCXS2 GPU plugin:
     - move operations to GPU as much as possible
