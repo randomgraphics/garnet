@@ -24,7 +24,10 @@ namespace GN { namespace gfx
         ///
         /// Apply uniforms to D3D device
         ///
-        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const = 0;
+        virtual void applyUniforms(
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const = 0;
 
         ///
         /// Apply textures to D3D device
@@ -74,7 +77,10 @@ namespace GN { namespace gfx
     public:
 
         virtual void apply() const;
-        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
+        virtual void applyUniforms(
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const;
         virtual void applyTextures(
             const TextureBinding * bindings,
             size_t                 count,
@@ -141,7 +147,10 @@ namespace GN { namespace gfx
     public:
 
         virtual void apply() const;
-        virtual void applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const;
+        virtual void applyUniforms(
+            const Uniform * const * uniforms,
+            size_t                  count,
+            bool                    skipDirtyCheck ) const;
         virtual void applyTextures(
             const TextureBinding * bindings,
             size_t                 count,
@@ -174,10 +183,17 @@ namespace GN { namespace gfx
 
         struct XenonTextureParamDesc : public GpuProgramTextureParameterDesc
         {
-            StrA                 name;
-            D3DXHANDLE           vshandle;
-            D3DXHANDLE           pshandle;
-            XenonTextureParamDesc() : vshandle(0), pshandle(0) {}
+            StrA                  name;
+            D3DXHANDLE            vshandle;
+            mutable SamplerDesc   vssampler;
+            D3DXHANDLE            pshandle;
+            mutable SamplerDesc   pssampler;
+            XenonTextureParamDesc() : vshandle(0), pshandle(0)
+            {
+                // invalidate sampler structure
+                memset( &vssampler, 0xFF, sizeof(vssampler) );
+                memset( &pssampler, 0xFF, sizeof(pssampler) );
+            }
         };
 
         IDirect3DVertexShader9          * mVs;

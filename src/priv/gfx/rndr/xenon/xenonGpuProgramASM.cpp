@@ -78,8 +78,9 @@ void GN::gfx::XenonGpuProgramASM::apply() const
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramASM::applyUniforms(
-    const SysMemUniform * const * /*uniforms*/,
-    size_t                        /*count*/ ) const
+    const Uniform * const * /*uniforms*/,
+    size_t                  /*count*/,
+    bool                    /*skipDirtyCheck*/ ) const
 {
     GN_UNIMPL();
 }

@@ -66,7 +66,7 @@ bool GN::CECImplMSWIN::init(
     if( NULL == fromstr ) return failure();
     if( 0 != *fromstr )
     {
-        mLocaleFrom = _create_locale( LC_ALL, fromstr );
+        mLocaleFrom = new std::locale( fromstr );//_create_locale( LC_ALL, fromstr );
         if( !mLocaleFrom )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
@@ -78,7 +78,8 @@ bool GN::CECImplMSWIN::init(
     if( NULL == tostr ) return failure();
     if( 0 != *tostr )
     {
-        mLocaleTo = _create_locale( LC_ALL, tostr );
+        //mLocaleTo = _create_locale( LC_ALL, tostr );
+        mLocaleTo = new std::locale( tostr );
         if( !mLocaleTo )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
@@ -101,8 +102,8 @@ void GN::CECImplMSWIN::quit()
 {
     GN_GUARD;
 
-    if( mLocaleFrom ) _free_locale( mLocaleFrom ), mLocaleFrom = 0;
-    if( mLocaleTo ) _free_locale( mLocaleTo ), mLocaleTo = 0;
+    safeDelete( mLocaleFrom );
+    safeDelete( mLocaleTo );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -132,19 +133,32 @@ GN::CECImplMSWIN::convert(
     {
         tempBuffer.resize( sourceBufferSizeInBytes );
 
-        errno_t err = ::_mbstowcs_s_l(
+        /*errno_t err = ::_mbstowcs_s_l(
             &converted,
             tempBuffer.cptr(),
             tempBuffer.size(),
             (const char *)sourceBuffer,
             sourceBufferSizeInBytes,
-            mLocaleFrom );
+            (_locale_t)mLocaleFrom );*/
+        mbstate_t    state = {0};
+        const char * srcnext;
+        wchar_t    * tempnext;
+        int err = std::use_facet<std::codecvt<wchar_t,char,mbstate_t> >(*mLocaleFrom).in(
+            state,
+            (const char *)sourceBuffer,
+            ((const char *)sourceBuffer)+sourceBufferSizeInBytes,
+            srcnext,
+            tempBuffer.cptr(),
+            tempBuffer.cptr() + tempBuffer.size(),
+            tempnext );
 
-        if( 0 != err )
+        if( std::codecvt_base::error == err )
         {
             GN_ERROR(sLogger)( "fail to convert input buffer to UNICODE." );
             return 0;
         }
+
+        converted = tempnext - tempBuffer.cptr();
 
         sourceBuffer = tempBuffer.cptr();
         sourceBufferSizeInBytes = converted * sizeof(wchar_t);
@@ -166,7 +180,7 @@ GN::CECImplMSWIN::convert(
     {
         converted = 0;
 
-        char          * d = (char*)destBuffer;
+        /*char          * d = (char*)destBuffer;
         const wchar_t * s = (const wchar_t*)sourceBuffer;
         for( size_t i = 0; i < sourceBufferSizeInBytes / sizeof(wchar_t); ++i )
         {
@@ -176,7 +190,7 @@ GN::CECImplMSWIN::convert(
                 d,
                 destBufferSizeInBytes,
                 *s,
-                mLocaleTo );
+                (_locale_t)mLocaleTo );
 
             if( 0 != err )
             {
@@ -190,7 +204,26 @@ GN::CECImplMSWIN::convert(
             d += retval;
 
             converted += (size_t)retval;
+        }*/
+        mbstate_t       state = {0};
+        const wchar_t * srcnext;
+        char          * dstnext;
+        int err = std::use_facet<std::codecvt<wchar_t,char,mbstate_t> >(*mLocaleTo).out(
+            state,
+            (const wchar_t*)sourceBuffer,
+            (const wchar_t*)sourceBuffer + sourceBufferSizeInBytes/sizeof(wchar_t),
+            srcnext,
+            (char *)destBuffer,
+            ((char *)destBuffer)+destBufferSizeInBytes,
+            dstnext );
+
+        if( std::codecvt_base::error == err )
+        {
+            GN_ERROR(sLogger)( "fail to convert from UNICODE to target encoding." );
+            return 0;
         }
+
+        converted = dstnext - (char*)destBuffer;
 
         return converted;
     }

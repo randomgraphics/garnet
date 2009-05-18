@@ -331,12 +331,8 @@ GN::gfx::XenonRenderer::bindContextShaders(
             prog->apply();
         }
 
-        const SysMemUniform * const * uniforms = (const SysMemUniform * const *)newContext.uniforms.cptr();
-        prog->applyUniforms( uniforms, newContext.uniforms.size() );
-
+        prog->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
         prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
-
-        GN_TODO( "apply samplers" );
     }
     else
     {
@@ -381,16 +377,15 @@ GN::gfx::XenonRenderer::bindContextResources(
     ///
     for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
     {
-        const AutoRef<VtxBuf> & vb     = newContext.vtxbufs[i];
-        UINT                    stride = newContext.strides[i];
+        const VertexBufferBinding & vbb = newContext.vtxbufs[i];
 
-        if( skipDirtyCheck || vb != mContext.vtxbufs[i] || stride != mContext.strides[i] )
+        if( skipDirtyCheck || vbb != mContext.vtxbufs[i] )
         {
             GN_DX9_CHECK( mDevice->SetStreamSource(
                 i,
-                vb ? safeCastPtr<const XenonVtxBuf>(vb.get())->getD3DBuffer() : NULL,
-                0, // offset
-                stride ) );
+                vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
+                vbb.offset,
+                vbb.stride ) );
         }
     }
 

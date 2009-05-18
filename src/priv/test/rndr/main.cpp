@@ -153,7 +153,7 @@ int run( Renderer & rndr )
     bool gogogo = true;
 
     FpsCalculator fps;
-    getLogger("GN.util.fps")->setLevel( Logger::LL_VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
@@ -163,7 +163,7 @@ int run( Renderer & rndr )
 
         in.processInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_A ).down )
         {
             gogogo = false;
         }
