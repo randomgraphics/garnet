@@ -7,7 +7,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2009.5.9)
 // *****************************************************************************
 
-#include <locale.h>
+#include <locale>
 
 namespace GN
 {
@@ -63,8 +63,9 @@ namespace GN
 
         CharacterEncodingConverter::Encoding mEncodingFrom;
         CharacterEncodingConverter::Encoding mEncodingTo;
-        _locale_t mLocaleFrom;
-        _locale_t mLocaleTo;
+
+        std::locale * mLocaleFrom;
+        std::locale * mLocaleTo;
 
         // ********************************
         // private functions

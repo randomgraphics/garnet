@@ -418,6 +418,22 @@ namespace GN { namespace gfx
             stride = 0;
             offset = 0;
         }
+
+        /// equality check
+        bool operator==( const VertexBufferBinding & rhs ) const
+        {
+            return vtxbuf == rhs.vtxbuf
+                && stride == rhs.stride
+                && offset == rhs.offset;
+        }
+
+        /// equality check
+        bool operator!=( const VertexBufferBinding & rhs ) const
+        {
+            return vtxbuf != rhs.vtxbuf
+                || stride != rhs.stride
+                || offset != rhs.offset;
+        }
     };
 
     ///
@@ -425,15 +441,24 @@ namespace GN { namespace gfx
     ///
     struct SamplerDesc
     {
+        ///
+        /// sampler enumerations
+        ///
         enum SamplerEnum
         {
+            //@{
+
             FILTER_POINT  = 0,
             FILTER_LINEAR,
+            NUM_FILTERS,
 
             ADDRESS_REPEAT = 0,
             ADDRESS_CLAMP,
             ADDRESS_CLAMP_BORDER,
             ADDRESS_MIRROR,
+            NUM_ADDRESS_MODES,
+
+            //@}
         };
 
         union

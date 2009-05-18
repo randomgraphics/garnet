@@ -281,12 +281,12 @@ def UTIL_newEnv( compiler, variant ):
 		linkflags['profile'] += ['/NODEFAULTLIB:xapilib.lib']
 		linkflags['stprof'] += ['/NODEFAULTLIB:xapilib.lib']
 		libs['common']  += Split('xboxkrnl xbdm dxerr9')
-		libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
-		libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')
-		libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp  libcmt')
-		libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
-		libs['stprof']  += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')
-		libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp  libcmt')
+		libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
+		libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
+		libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
+		libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod2 xactd3 vcompd libcmtd')
+		libs['stprof']  += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudio2  xacti3 vcomp  libcmt')
+		libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio2  xact3  vcomp  libcmt')
 	elif 'mswin' == compiler.os:
 		libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
 	else:

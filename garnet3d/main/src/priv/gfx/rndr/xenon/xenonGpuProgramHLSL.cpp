@@ -6,6 +6,8 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
+using namespace GN::gfx;
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -20,6 +22,36 @@ static T * sFindParameter( ARRAY & array, const char * name )
     }
 
     return NULL;
+}
+
+static const D3DTEXTUREADDRESS ADDRESS_TO_D3D[] =
+{
+    D3DTADDRESS_WRAP,   // ADDRESS_REPEAT = 0,
+    D3DTADDRESS_CLAMP,  // ADDRESS_CLAMP,
+    D3DTADDRESS_CLAMP,  // ADDRESS_CLAMP_BORDER,
+    D3DTADDRESS_MIRROR, // ADDRESS_MIRROR,
+};
+GN_CASSERT( GN_ARRAY_COUNT(ADDRESS_TO_D3D) == SamplerDesc::NUM_ADDRESS_MODES );
+
+static const D3DTEXTUREFILTERTYPE FILTER_TO_D3D[] =
+{
+    D3DTEXF_POINT,  // FILTER_POINT  = 0,
+    D3DTEXF_LINEAR, // FILTER_LINEAR,
+};
+GN_CASSERT( GN_ARRAY_COUNT(FILTER_TO_D3D) == SamplerDesc::NUM_FILTERS );
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void
+sSetSampler( IDirect3DDevice9 & dev, UInt32 stage, const SamplerDesc & s )
+{
+    dev.SetSamplerState_Inline( stage, D3DSAMP_ADDRESSU, ADDRESS_TO_D3D[s.addressU] );
+    dev.SetSamplerState_Inline( stage, D3DSAMP_ADDRESSV, ADDRESS_TO_D3D[s.addressV] );
+    dev.SetSamplerState_Inline( stage, D3DSAMP_ADDRESSW, ADDRESS_TO_D3D[s.addressW] );
+    dev.SetSamplerState_Inline( stage, D3DSAMP_MINFILTER, FILTER_TO_D3D[s.filterMin] );
+    dev.SetSamplerState_Inline( stage, D3DSAMP_MAGFILTER, FILTER_TO_D3D[s.filterMag] );
+    dev.SetSamplerState_Inline( stage, D3DSAMP_MIPFILTER, FILTER_TO_D3D[s.filterMip] );
 }
 
 
@@ -118,7 +150,10 @@ void GN::gfx::XenonGpuProgramHLSL::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpuProgramHLSL::applyUniforms( const SysMemUniform * const * uniforms, size_t count ) const
+void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
+    const Uniform * const * uniforms,
+    size_t                  count,
+    bool                    /*skipDirtyCheck*/ ) const
 {
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
 
@@ -130,7 +165,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms( const SysMemUniform * const * 
             return;
         }
 
-        const SysMemUniform * u = uniforms[i];
+        const SysMemUniform * u = (const SysMemUniform*)uniforms[i];
 
         if( NULL == u )
         {
@@ -177,32 +212,42 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
 {
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
 
+    // determine effective texture count
+    if( count > mParamDesc.textures.count() )
+    {
+        count = mParamDesc.textures.count();
+    }
+
     for( size_t i = 0; i < count; ++i )
     {
         const TextureBinding & tb = bindings[i];
 
-        if( '\0' == tb.binding[0] ) continue;
-
-        const XenonTextureParamDesc * param = sFindParameter<const XenonTextureParamDesc>( mTextures, tb.binding );
-
-        if( !param )
-        {
-            GN_ERROR(sLogger)( "Texture #%d is binding to invalid GPU parameter named \"%s\".", i, tb.binding );
-            continue;
-        }
+        const XenonTextureParamDesc & param = mTextures[i];
 
         IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.get())->getD3DTexture() : NULL;
 
-        if( param->vshandle )
+        if( param.vshandle )
         {
-            UINT stage = mVsConsts->GetSamplerIndex( param->vshandle );
+            UINT stage = mVsConsts->GetSamplerIndex( param.vshandle );
             dev.SetTexture( stage, d3dtex );
+
+            if( tb.sampler != param.vssampler )
+            {
+                sSetSampler( dev, stage, tb.sampler );
+                param.vssampler = tb.sampler;
+            }
         }
 
-        if( param->pshandle )
+        if( param.pshandle )
         {
-            UINT stage = mPsConsts->GetSamplerIndex( param->pshandle );
+            UINT stage = mPsConsts->GetSamplerIndex( param.pshandle );
             dev.SetTexture( stage, d3dtex );
+
+            if( tb.sampler != param.pssampler )
+            {
+                sSetSampler( dev, stage, tb.sampler );
+                param.pssampler = tb.sampler;
+            }
         }
     }
 }
