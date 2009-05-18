@@ -32,11 +32,40 @@ namespace GN { namespace gfx
             return obj;
         }
 
-        static inline size_t
-        hash( const D3D10_RASTERIZER_DESC & )
+        union CompactDesc
         {
-            GN_UNIMPL_WARNING();
-            return 0;
+            UInt64           u64;
+            struct
+            {
+                unsigned int fillmode  :  2;
+                unsigned int cullmode  :  2;
+                unsigned int frontccw  :  1;
+                unsigned int depthclip :  1;
+                unsigned int scissor   :  1;
+                unsigned int msaa      :  1;
+                unsigned int antialias :  1;
+                unsigned int depthbias : 23;
+                float        misc;
+            };
+        };
+        GN_CASSERT( 8 == sizeof(CompactDesc) );
+
+        static inline UInt64
+        hash( const D3D10_RASTERIZER_DESC & desc )
+        {
+            CompactDesc cd;
+
+            cd.fillmode  = desc.FillMode;
+            cd.cullmode  = desc.CullMode;
+            cd.frontccw  = desc.FrontCounterClockwise;
+            cd.depthclip = desc.DepthClipEnable;
+            cd.scissor   = desc.ScissorEnable;
+            cd.msaa      = desc.MultisampleEnable;
+            cd.antialias = desc.AntialiasedLineEnable;
+            cd.depthbias = desc.DepthBias;
+            cd.misc      = desc.DepthBiasClamp + desc.SlopeScaledDepthBias;
+
+            return cd.u64;
         }
 
         ///
@@ -64,11 +93,46 @@ namespace GN { namespace gfx
             return obj;
         }
 
-        static inline size_t
-        hash( const D3D10_BLEND_DESC & )
+        union CompactDesc
         {
-            GN_UNIMPL_WARNING();
-            return 0;
+            UInt64 u64;
+            struct
+            {
+                UInt64 be   :  8;
+                UInt64 a2c  :  1;
+                UInt64 sb   :  5;
+                UInt64 db   :  5;
+                UInt64 bo   :  3;
+                UInt64 sba  :  5;
+                UInt64 dba  :  5;
+                UInt64 boa  :  3;
+                UInt64 mask : 29;
+            };
+        };
+        GN_CASSERT( 8 == sizeof(CompactDesc) );
+
+        static inline UInt64
+        hash( const D3D10_BLEND_DESC & desc )
+        {
+            CompactDesc cd;
+
+            cd.be = desc.BlendEnable[0];
+            cd.a2c = desc.AlphaToCoverageEnable;
+            cd.sb  = desc.SrcBlend;
+            cd.db  = desc.DestBlend;
+            cd.bo  = desc.BlendOp;
+            cd.sba = desc.SrcBlendAlpha;
+            cd.dba = desc.DestBlendAlpha;
+            cd.boa = desc.BlendOpAlpha;
+            cd.mask = desc.RenderTargetWriteMask[0];
+
+            for( int i = 1; i < 8; ++i )
+            {
+                cd.be |= desc.BlendEnable[1] << i;
+                cd.mask += desc.RenderTargetWriteMask[i];
+            }
+
+            return cd.u64;
         }
 
         ///
@@ -96,11 +160,52 @@ namespace GN { namespace gfx
             return obj;
         }
 
-        static inline size_t
-        hash( const D3D10_DEPTH_STENCIL_DESC & )
+        union CompactDesc
         {
-            GN_UNIMPL_WARNING();
-            return 0;
+            UInt64 u64;
+            struct
+            {
+                unsigned int depth     : 1;
+                unsigned int write     : 1;
+                unsigned int zfunc     : 3;
+                unsigned int stencil   : 1;
+                unsigned int ff_fail   : 3;
+                unsigned int ff_zfail  : 3;
+                unsigned int ff_pass   : 3;
+                unsigned int ff_func   : 3;
+                unsigned int bf_fail   : 3;
+                unsigned int bf_zfail  : 3;
+                unsigned int bf_pass   : 3;
+                unsigned int bf_func   : 3;
+                unsigned int nouse     : 2;
+                unsigned int srmask    : 16;
+                unsigned int swmask    : 16;
+            };
+        };
+        GN_CASSERT( 8 == sizeof(CompactDesc) );
+
+        static inline UInt64
+        hash( const D3D10_DEPTH_STENCIL_DESC & desc )
+        {
+            CompactDesc cd;
+
+            cd.depth    = desc.DepthEnable;
+            cd.write    = desc.DepthWriteMask;
+            cd.zfunc    = desc.DepthFunc - 1;
+            cd.stencil  = desc.StencilEnable;
+            cd.ff_fail  = desc.FrontFace.StencilFailOp - 1;
+            cd.ff_zfail = desc.FrontFace.StencilDepthFailOp - 1;
+            cd.ff_pass  = desc.FrontFace.StencilPassOp - 1;
+            cd.ff_func  = desc.FrontFace.StencilFunc - 1;
+            cd.bf_fail  = desc.BackFace.StencilFailOp - 1;
+            cd.bf_zfail = desc.BackFace.StencilDepthFailOp - 1;
+            cd.bf_pass  = desc.BackFace.StencilPassOp - 1;
+            cd.bf_func  = desc.BackFace.StencilFunc - 1;
+            cd.nouse    = 0;
+            cd.srmask   = desc.StencilReadMask;
+            cd.swmask   = desc.StencilWriteMask;
+
+            return cd.u64;
         }
 
         ///

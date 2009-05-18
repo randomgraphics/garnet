@@ -14,7 +14,7 @@ namespace GN
     template<
         class  KEY,
         class  VALUE,
-        size_t(*HASH_FUNC)( const KEY & ),
+        UInt64(*HASH_FUNC)( const KEY & ),
         bool  (*EQUAL_FUNC)( const KEY &, const KEY & ),
         size_t LOAD_FACTOR = 2 >
     class HashMap
@@ -344,11 +344,10 @@ namespace GN
     private:
 
         /// mod interger into range [0..N)
-        static inline size_t mod( size_t i, size_t N )
+        static inline size_t mod( UInt64 i, size_t N )
         {
-            return i % N;
+            return (size_t)( i % N );
         }
-
     };
 
 }
