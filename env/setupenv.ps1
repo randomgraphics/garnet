@@ -251,13 +251,13 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
         }
         else
         {
-            warning "DiretX build environment setup failed: file $batch not found."
+            warn "DiretX build environment setup failed: file $batch not found."
         }
     }
     else
     {
         # Note: Just issue a warning, instead of error, since DXSDK is not required to build garnet application.
-        warning "Environment variable DXSDK_DIR not found. Please install DirectX SDK."
+        warn "Environment variable DXSDK_DIR not found. Please install DirectX SDK."
     }
 }
 
@@ -345,7 +345,7 @@ if( Test-Path -path "$GARNET_ROOT\env\alias.txt" )
 }
 else
 {
-	warning "$GARNET_ROOT\env\alias.txt is missing."
+	warn "$GARNET_ROOT\env\alias.txt is missing."
 }
 
 # ==============================================================================
