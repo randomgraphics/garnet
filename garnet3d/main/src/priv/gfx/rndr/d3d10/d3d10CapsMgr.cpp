@@ -58,10 +58,24 @@ bool GN::gfx::D3D10Renderer::checkTextureFormatSupport(
     DXGI_FORMAT d3dfmt = (DXGI_FORMAT)colorFormat2DxgiFormat( format );
     if( DXGI_FORMAT_UNKNOWN == d3dfmt ) return false;
 
-    UINT d3dUsages;
-    if( FAILED( mDevice->CheckFormatSupport( d3dfmt, &d3dUsages ) ) ) return false;
+    UINT formatSupport;
+    if( FAILED( mDevice->CheckFormatSupport( d3dfmt, &formatSupport ) ) ) return false;
 
-    // TODO: check d3dUsages against input type and usage.
+    if( usages.rendertarget && (0 == (D3D10_FORMAT_SUPPORT_RENDER_TARGET &formatSupport)) )
+    {
+        return false;
+    }
+
+    if( usages.depth && (0 == (D3D10_FORMAT_SUPPORT_DEPTH_STENCIL &formatSupport)) )
+    {
+        return false;
+    }
+
+    if( usages.fastCpuWrite && (0 == (D3D10_FORMAT_SUPPORT_CPU_LOCKABLE &formatSupport)) )
+    {
+        return false;
+    }
+
     return true;
 }
 

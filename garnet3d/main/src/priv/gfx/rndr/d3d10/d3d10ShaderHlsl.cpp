@@ -384,8 +384,6 @@ sInitShader(
     // initialize texture parameters
     if( !sInitTextures<SHADER_TYPE>( *reflection, paramDesc ) ) return false;
 
-    GN_TODO( "initialize attribute parameters." );
-
     // success
     return true;
 
