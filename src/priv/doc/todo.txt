@@ -14,8 +14,6 @@ TODO
 - p1
   - C# style enumeration: put enum into class's private namespace
   - GFX resouce aliasing
-  - D3D10 renderer
-  - Xenon renderer
   - render to texture tests
     - render to both color textures and depth texture.
     - render to color textures only. No depth buffers at all. (depth read and

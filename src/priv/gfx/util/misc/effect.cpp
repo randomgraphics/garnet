@@ -32,7 +32,20 @@ sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
 }
 
 //
-// merge render states 'a' and 'b'.
+// merge single render state 'a' and 'b'.
+// -----------------------------------------------------------------------------
+template<typename T>
+static void
+sMergeRenderState(
+    GN::gfx::EffectDesc::RenderState<T>       & out,
+    const GN::gfx::EffectDesc::RenderState<T> & a,
+    const GN::gfx::EffectDesc::RenderState<T> & b )
+{
+    out = b.inherited ? a : b;
+}
+
+//
+// merge render states 'a' and 'b'. Values in B take over values in a.
 // -----------------------------------------------------------------------------
 static void
 sMergeRenderStates(
@@ -40,10 +53,38 @@ sMergeRenderStates(
     const GN::gfx::EffectDesc::RenderStateDesc & a,
     const GN::gfx::EffectDesc::RenderStateDesc & b )
 {
-    GN_UNUSED_PARAM( out );
-    GN_UNUSED_PARAM( a );
-    GN_UNUSED_PARAM( b );
-    GN_UNIMPL_WARNING();
+    #define MERGE_SINGLE_RENDER_STATE( state ) out.state = b.state.inherited ? a.state : b.state
+
+    MERGE_SINGLE_RENDER_STATE( fillMode );
+    MERGE_SINGLE_RENDER_STATE( cullMode );
+    MERGE_SINGLE_RENDER_STATE( frontFace );
+    MERGE_SINGLE_RENDER_STATE( msaaEnabled );
+    MERGE_SINGLE_RENDER_STATE( depthTest );
+    MERGE_SINGLE_RENDER_STATE( depthWrite );
+    MERGE_SINGLE_RENDER_STATE( depthFunc );
+
+    #undef MERGE_SINGLE_RENDER_STATE
+}
+
+//
+// apply render states to renderer context
+// -----------------------------------------------------------------------------
+static void
+sApplyRenderStates(
+    GN::gfx::RendererContext                   & context,
+    const GN::gfx::EffectDesc::RenderStateDesc & rsd )
+{
+    #define APPLY_SINGLE_RENDER_STATE( state ) if( !rsd.state.inherited ) context.state = rsd.state.value; else void(0)
+
+    APPLY_SINGLE_RENDER_STATE( fillMode );
+    APPLY_SINGLE_RENDER_STATE( cullMode );
+    APPLY_SINGLE_RENDER_STATE( frontFace );
+    APPLY_SINGLE_RENDER_STATE( msaaEnabled );
+    APPLY_SINGLE_RENDER_STATE( depthTest );
+    APPLY_SINGLE_RENDER_STATE( depthWrite );
+    APPLY_SINGLE_RENDER_STATE( depthFunc );
+
+    #undef APPLY_SINGLE_RENDER_STATE
 }
 
 //
@@ -320,7 +361,8 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
         drawable.rc.textures[i].clear();
     }
 
-    GN_TODO( "setup render states, vertex format." );
+    // setup render states
+    sApplyRenderStates( drawable.rc, p.rsd );
 
     // success
     drawable.rndr = &mRenderer;
@@ -516,8 +558,6 @@ GN::gfx::Effect::initTech(
         // get pass specific render states
         sMergeRenderStates( p.rsd, commonRenderStates, passDesc.rsd );
     }
-
-    GN_TODO( "build vertex format structure" );
 
     // success
     return true;
