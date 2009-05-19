@@ -131,6 +131,15 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     /// Enumerates all DXGI numer formats
     enum DXGINumberFormat
     {
+        // Typeless format
+        DXGINF_TYPELESS,
+
+        // Unsinged normalized format
+        DXGINF_UNORM,
+
+        // Signed normalized format
+        DXGINF_SNORM,
+
         // Unsigned int DXGI format.
         DXGINF_UINT,
 
@@ -170,8 +179,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         /// Correspondance uint format.
         DXGI_FORMAT      m_uintFormat;
 
-        /// Combination of D3D10_FORMAT_SUPPORT flags
-        UInt32           m_formatSupportFlags;
+        /// Correspondance depth stencil buffer format
+        DXGI_FORMAT      m_dsForamt;
 
         /// Is the format can be used as
     };

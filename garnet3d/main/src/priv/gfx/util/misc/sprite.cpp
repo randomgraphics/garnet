@@ -254,7 +254,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     }
     else if( options & FORCE_DEPTH_TEST_DISABLED )
     {
-        mContext.depthTest = true;
+        mContext.depthTest = false;
     }
 
     // setup depth write
@@ -355,12 +355,28 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
-    const DispDesc & dd = mRenderer.getDispDesc();
+    // get screen size based on current context
+    UInt32 screenWidth, screenHeight;
+    const RendererContext & rc = mRenderer.getContext();
+    if( 0 == rc.rendertargets.colors.size() && 0 == rc.rendertargets.depthstencil.texture )
+    {
+        const DispDesc & dd = mRenderer.getDispDesc();
+        screenWidth = dd.width;
+        screenHeight = dd.height;
+    }
+    else if( rc.rendertargets.colors.size() > 0 )
+    {
+        rc.rendertargets.colors[0].texture->getMipSize( rc.rendertargets.colors[0].level, &screenWidth, &screenHeight );
+    }
+    else
+    {
+        rc.rendertargets.depthstencil.texture->getMipSize( rc.rendertargets.depthstencil.level, &screenWidth, &screenHeight );
+    }
 
-    float x1 = ( x + mVertexShift ) / dd.width;
-    float y1 = ( y + mVertexShift ) / dd.height;
-    float x2 = x1 + w / dd.width;
-    float y2 = y1 + h / dd.height;
+    float x1 = ( x + mVertexShift ) / screenWidth;
+    float y1 = ( y + mVertexShift ) / screenHeight;
+    float x2 = x1 + w / screenWidth;
+    float y2 = y1 + h / screenHeight;
     float u2 = u + tw;
     float v2 = v + th;
 

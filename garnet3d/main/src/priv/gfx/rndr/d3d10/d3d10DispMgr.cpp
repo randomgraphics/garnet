@@ -49,6 +49,23 @@ bool GN::gfx::D3D10Renderer::dispInit()
             &mDevice ),
         false );
 
+    // customize D3D10 debug output
+    AutoComPtr<ID3D10InfoQueue> iq;
+    if( S_OK == mDevice->QueryInterface( IID_ID3D10InfoQueue, (void**)&iq ) )
+    {
+        // ignore some warnings
+        D3D10_MESSAGE_ID disabledWarnings[] =
+        {
+            D3D10_MESSAGE_ID_DEVICE_OMSETRENDERTARGETS_HAZARD,
+            D3D10_MESSAGE_ID_DEVICE_PSSETSHADERRESOURCES_HAZARD,
+        };
+        D3D10_INFO_QUEUE_FILTER filter;
+        memset( &filter, 0, sizeof(filter) );
+        filter.DenyList.NumIDs  = GN_ARRAY_COUNT( disabledWarnings );
+        filter.DenyList.pIDList = disabledWarnings;
+        iq->AddStorageFilterEntries( &filter );
+    }
+
     // success
     return true;
 

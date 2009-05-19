@@ -12,7 +12,7 @@ TODO
       - implement a CPU based prototype first.
 
 - p1
-  - C# style enumeration: put enum into class's private namespace
+  - D3D11 renderer
   - GFX resouce aliasing
   - render to texture tests
     - render to both color textures and depth texture.

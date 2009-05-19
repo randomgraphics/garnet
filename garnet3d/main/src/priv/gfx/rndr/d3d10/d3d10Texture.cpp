@@ -12,7 +12,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 using namespace GN;
 using namespace GN::gfx;
 
-
 //
 // less operator for SRV descriptor
 // ----------------------------------------------------------------------------
@@ -24,39 +23,43 @@ static inline bool operator<(
 }
 
 //
-//
+// less operator for RTV descriptor
 // ----------------------------------------------------------------------------
-static void
-sDetermineTextureDimension(
-    const GN::gfx::TextureDesc     & desc,
-    GN::gfx::D3D10TextureDimension & texdim,
-    D3D10_SRV_DIMENSION            & srvdim )
+static inline bool operator<(
+    const D3D10_RENDER_TARGET_VIEW_DESC & a,
+    const D3D10_RENDER_TARGET_VIEW_DESC & b )
+{
+    return ::memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+//
+// Determine texture dimension
+// ----------------------------------------------------------------------------
+static D3D10_SRV_DIMENSION
+sDetermineTextureDimension( const GN::gfx::TextureDesc & desc )
 {
     if( 1 == desc.height && 1 == desc.depth )
     {
-        texdim = TEXDIM_1D;
-        srvdim = desc.faces > 1 ? D3D10_SRV_DIMENSION_TEXTURE1DARRAY : D3D10_SRV_DIMENSION_TEXTURE1D;
+        return desc.faces > 1 ? D3D10_SRV_DIMENSION_TEXTURE1DARRAY : D3D10_SRV_DIMENSION_TEXTURE1D;
     }
     else if( 1 == desc.depth )
     {
-        texdim = TEXDIM_2D;
         if( 6 == desc.faces && desc.width == desc.height )
         {
-            srvdim = D3D10_SRV_DIMENSION_TEXTURECUBE;
+            return D3D10_SRV_DIMENSION_TEXTURECUBE;
         }
         else if( desc.faces > 1 )
         {
-            srvdim = D3D10_SRV_DIMENSION_TEXTURE2DARRAY;
+            return D3D10_SRV_DIMENSION_TEXTURE2DARRAY;
         }
         else
         {
-            srvdim = D3D10_SRV_DIMENSION_TEXTURE2D;
+            return D3D10_SRV_DIMENSION_TEXTURE2D;
         }
     }
     else
     {
-        texdim = TEXDIM_3D;
-        srvdim = D3D10_SRV_DIMENSION_TEXTURE3D;
+        return D3D10_SRV_DIMENSION_TEXTURE3D;
     }
 }
 
@@ -92,6 +95,7 @@ void GN::gfx::D3D10Texture::quit()
 
     mSRViews.clear();
     mRTViews.clear();
+    mDSViews.clear();
     safeRelease( mTexture );
 
     // standard quit procedure
@@ -182,11 +186,12 @@ GN::gfx::D3D10Texture::getSRView(
     D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc;
     memset( &srvdesc, 0, sizeof(srvdesc) );
     srvdesc.Format        = format;
-    srvdesc.ViewDimension = mDefaultSrvDimension;
+    srvdesc.ViewDimension = mDimension;
 
-    switch( mDefaultSrvDimension )
+    switch( mDimension )
     {
         case D3D10_SRV_DIMENSION_BUFFER :
+            GN_UNIMPL();
             break;
 
         case D3D10_SRV_DIMENSION_TEXTURE1D :
@@ -256,26 +261,105 @@ GN::gfx::D3D10Texture::getSRView(
 ID3D10RenderTargetView *
 GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 {
-    GN_UNUSED_PARAM( face );
-    GN_UNUSED_PARAM( level );
-    GN_UNUSED_PARAM( slice );
-    GN_UNIMPL();
-    return NULL;
+    D3D10_RENDER_TARGET_VIEW_DESC rtvdesc;
+    memset( &rtvdesc, 0, sizeof(rtvdesc) );
+    rtvdesc.Format = mRTVFormat;
+
+    switch( mDimension )
+    {
+        case D3D10_SRV_DIMENSION_BUFFER :
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_BUFFER;
+            GN_UNIMPL();
+            return NULL;
+
+        case D3D10_SRV_DIMENSION_TEXTURE1D :
+            if( 0 != face || 0 != slice )
+            {
+                GN_ERROR(sLogger)( "face or slice is out of range." );
+                return NULL;
+            }
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_TEXTURE1D;
+            rtvdesc.Texture1D.MipSlice = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE1DARRAY :
+            if( 0 != slice )
+            {
+                GN_ERROR(sLogger)( "slice is out of range." );
+                return NULL;
+            }
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_TEXTURE1DARRAY;
+            rtvdesc.Texture1DArray.FirstArraySlice = face;
+            rtvdesc.Texture1DArray.ArraySize       = 1;
+            rtvdesc.Texture1DArray.MipSlice        = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2D :
+            if( 0 != face || 0 != slice )
+            {
+                GN_ERROR(sLogger)( "face or slice is out of range." );
+                return NULL;
+            }
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_TEXTURE2D;
+            rtvdesc.Texture2D.MipSlice = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2DARRAY :
+        case D3D10_SRV_DIMENSION_TEXTURECUBE :
+            if( 0 != slice )
+            {
+                GN_ERROR(sLogger)( "slice is out of range." );
+                return NULL;
+            }
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_TEXTURE2DARRAY;
+            rtvdesc.Texture2DArray.FirstArraySlice = face;
+            rtvdesc.Texture2DArray.ArraySize       = 1;
+            rtvdesc.Texture2DArray.MipSlice        = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2DMS :
+        case D3D10_SRV_DIMENSION_TEXTURE2DMSARRAY :
+            GN_UNIMPL();
+            return NULL;
+
+        case D3D10_SRV_DIMENSION_TEXTURE3D :
+            if( 0 != face )
+            {
+                GN_ERROR(sLogger)( "face is out of range." );
+                return NULL;
+            }
+            rtvdesc.ViewDimension = D3D10_RTV_DIMENSION_TEXTURE3D;
+            rtvdesc.Texture3D.MipSlice    = level;
+            rtvdesc.Texture3D.FirstWSlice = slice;
+            rtvdesc.Texture3D.WSize       = 1;
+            break;
+
+        default:
+            GN_UNEXPECTED();
+            return NULL;
+    }
+
+    AutoComPtr<ID3D10RenderTargetView> & rtv = mRTViews[rtvdesc];
+
+    if( rtv.empty() )
+    {
+        ID3D10Device & dev = getDeviceRef();
+
+        GN_DX10_CHECK_RV( dev.CreateRenderTargetView( mTexture, &rtvdesc, &rtv ), NULL );
+    }
+
+    return rtv;
 }
 
 //
 //
 // ----------------------------------------------------------------------------
 ID3D10DepthStencilView *
-GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
+GN::gfx::D3D10Texture::getDSView( UInt32 /*face*/, UInt32 /*level*/, UInt32 /*slice*/ )
 {
-    GN_UNUSED_PARAM( face );
-    GN_UNUSED_PARAM( level );
-    GN_UNUSED_PARAM( slice );
-    GN_UNIMPL();
+    GN_UNIMPL_WARNING();
     return NULL;
 }
-
 
 // ****************************************************************************
 //      private functions
@@ -293,15 +377,23 @@ bool GN::gfx::D3D10Texture::createTexture()
     const TextureDesc & desc = getDesc();
 
     // determine shader resource view format
-    mDefaultSRVFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
-    if( DXGI_FORMAT_UNKNOWN == mDefaultSRVFormat )
+    mSRVFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
+    if( DXGI_FORMAT_UNKNOWN == mSRVFormat )
     {
         GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", desc.format.toString().cptr() );
         return false;
     }
 
-    // always try using typeless format to create the texture
-    mTextureFormat = mDefaultSRVFormat;//d3d10::getDXGIFormatDesc( mDefaultSRVFormat ).m_typelessFormat;
+    // determine texture format
+#if 0
+    // Use typeless format to create the texture
+    mTextureFormat = d3d10::getDXGIFormatDesc( mSRVFormat ).m_typelessFormat;
+#else
+    mTextureFormat = mSRVFormat;
+#endif
+
+    // determine RTV format
+    mRTVFormat = mSRVFormat;
 
     // determine usage and CPU access flag
     D3D10_USAGE usage;
@@ -329,16 +421,16 @@ bool GN::gfx::D3D10Texture::createTexture()
     }
 
     // determine texture dimension
-    sDetermineTextureDimension( desc, mTextureDimension, mDefaultSrvDimension );
+    mDimension = sDetermineTextureDimension( desc );
 
     // determine cube flag
     UINT mf = 0;
-    if( TEXDIM_2D == mTextureDimension && desc.width == desc.height && 6 == desc.faces )
-        mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
+    if( D3D10_SRV_DIMENSION_TEXTURECUBE == mDimension ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
 
     // create texture instance
     ID3D10Device & dev = getDeviceRef();
-    if( TEXDIM_1D == mTextureDimension )
+    if( D3D10_SRV_DIMENSION_TEXTURE1D == mDimension ||
+        D3D10_SRV_DIMENSION_TEXTURE1DARRAY == mDimension )
     {
         ID3D10Texture1D * tex1d;
         D3D10_TEXTURE1D_DESC desc1d;
@@ -353,7 +445,9 @@ bool GN::gfx::D3D10Texture::createTexture()
         GN_DX10_CHECK_RV( dev.CreateTexture1D( &desc1d, 0, &tex1d ), false );
         mTexture = tex1d;
     }
-    else if( TEXDIM_2D == mTextureDimension )
+    else if( D3D10_SRV_DIMENSION_TEXTURE2D == mDimension ||
+             D3D10_SRV_DIMENSION_TEXTURE2DARRAY == mDimension ||
+             D3D10_SRV_DIMENSION_TEXTURECUBE == mDimension )
     {
         ID3D10Texture2D * tex2d;
         D3D10_TEXTURE2D_DESC desc2d;
@@ -371,7 +465,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         GN_DX10_CHECK_RV( dev.CreateTexture2D( &desc2d, 0, &tex2d ), false );
         mTexture = tex2d;
     }
-    else if( TEXDIM_3D == mTextureDimension )
+    else if( D3D10_SRV_DIMENSION_TEXTURE3D == mDimension )
     {
         ID3D10Texture3D * tex3d;
         D3D10_TEXTURE3D_DESC desc3d;
@@ -389,7 +483,7 @@ bool GN::gfx::D3D10Texture::createTexture()
     }
     else
     {
-        GN_ERROR(sLogger)( "Invalid texture dimension: %d", mTextureDimension );
+        GN_ERROR(sLogger)( "Invalid texture dimension: %d", mDimension );
         GN_UNEXPECTED();
         return false;
     }
