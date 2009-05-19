@@ -393,6 +393,43 @@ namespace GN { namespace gfx
 
             return false;
         }
+
+        ///
+        /// return a vertex format definition for vertex like this:
+        ///
+        /// struct VertexFormat
+        /// {
+        ///     float position[3];
+        ///     float normal[3];
+        ///     float texcoord[2];
+        /// };
+        ///
+        static VertexFormat XYZ_NORM_UV()
+        {
+            VertexFormat vf;
+
+            vf.numElements = 3;
+
+            vf.elements[0].bindTo( "POSITION", 0 );
+            vf.elements[0].format       = ColorFormat::FLOAT3;
+            vf.elements[0].bindingIndex = 0;
+            vf.elements[0].stream       = 0;
+            vf.elements[0].offset       = 0;
+
+            vf.elements[1].bindTo( "NORMAL", 0 );
+            vf.elements[1].format       = ColorFormat::FLOAT3;
+            vf.elements[1].bindingIndex = 0;
+            vf.elements[1].stream       = 0;
+            vf.elements[1].offset       = 12;
+
+            vf.elements[2].bindTo( "TEXCOORD", 0 );
+            vf.elements[2].format       = ColorFormat::FLOAT2;
+            vf.elements[2].bindingIndex = 0;
+            vf.elements[2].stream       = 0;
+            vf.elements[2].offset       = 24;
+
+            return vf;
+        }
     };
 
     ///
@@ -575,6 +612,13 @@ namespace GN { namespace gfx
         /// ctor
         RenderTargetTexture() : subsurface(0) {}
 
+        /// clear to empty render target texture
+        void clear()
+        {
+            texture.clear();
+            subsurface = 0;
+        }
+
         /// equality check
         bool operator==( const RenderTargetTexture & rhs ) const
         {
@@ -585,6 +629,13 @@ namespace GN { namespace gfx
         bool operator!=( const RenderTargetTexture & rhs ) const
         {
             return texture != rhs.texture || subsurface != rhs.subsurface;
+        }
+
+        /// less operator
+        bool operator<( const RenderTargetTexture & rhs ) const
+        {
+            if( texture != rhs.texture ) return texture < rhs.texture;
+            return subsurface < rhs.subsurface;
         }
     };
 
@@ -600,7 +651,7 @@ namespace GN { namespace gfx
         };
 
         /// color render targets
-        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colors;
+        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colortargets;
 
         /// depth stencil render target
         RenderTargetTexture                                       depthstencil;
@@ -608,28 +659,28 @@ namespace GN { namespace gfx
         /// clear to "render-to-back-buffer"
         void clear()
         {
-            colors.clear();
+            colortargets.clear();
             depthstencil.texture.clear();
         }
 
         /// return true, if the description represents the render target setup for rendering to back buffer.
         bool isRenderingToBackBuffer() const
         {
-            return 0 == colors.size() && 0 == depthstencil.texture;
+            return 0 == colortargets.size() && 0 == depthstencil.texture;
         }
 
         /// return true, if color buffers are empty and depth render target is not.
         bool isRenderingToDepthTextureOnly() const
         {
-            return 0 == colors.size() && 0 != depthstencil.texture;
+            return 0 == colortargets.size() && 0 != depthstencil.texture;
         }
 
         /// check for invalid description.
         bool valid() const
         {
-            for( size_t i = 0; i < colors.size(); ++i )
+            for( size_t i = 0; i < colortargets.size(); ++i )
             {
-                if( !colors[i].texture )
+                if( !colortargets[i].texture )
                 {
                     GN_ERROR(GN::getLogger("GN.gfx"))(
                         "NULL color render targets in render target array is not allowed." );
@@ -643,10 +694,10 @@ namespace GN { namespace gfx
         /// equality check
         bool operator==( const RenderTargetDesc & rhs ) const
         {
-            if( colors.size() != rhs.colors.size() ) return false;
-            for( size_t i = 0; i < colors.size(); ++i )
+            if( colortargets.size() != rhs.colortargets.size() ) return false;
+            for( size_t i = 0; i < colortargets.size(); ++i )
             {
-                if( colors[i] != rhs.colors[i] ) return false;
+                if( colortargets[i] != rhs.colortargets[i] ) return false;
             }
             return depthstencil == rhs.depthstencil;
         }

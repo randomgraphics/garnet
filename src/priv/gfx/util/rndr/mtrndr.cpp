@@ -373,10 +373,10 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
-    for( size_t i = 0; i < rc->rendertargets.colors.size(); ++i )
+    for( size_t i = 0; i < rc->rendertargets.colortargets.size(); ++i )
     {
-        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->rendertargets.colors[i].texture.get();
-        sReplaceAutoRefPtr( rc->rendertargets.colors[i].texture, mtt ? mtt->getRealTexture() : NULL );
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->rendertargets.colortargets[i].texture.get();
+        sReplaceAutoRefPtr( rc->rendertargets.colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // depth-stencil render target

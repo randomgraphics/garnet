@@ -33,6 +33,54 @@ static inline bool operator<(
 }
 
 //
+// less operator for RTV descriptor
+// ----------------------------------------------------------------------------
+static inline bool operator<(
+    const D3D10_DEPTH_STENCIL_VIEW_DESC & a,
+    const D3D10_DEPTH_STENCIL_VIEW_DESC & b )
+{
+    return ::memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+//
+// Determine depth reading format from typeless format
+// ----------------------------------------------------------------------------
+static DXGI_FORMAT
+sGetDepthReadingFormat( DXGI_FORMAT format )
+{
+    switch( format )
+    {
+        case DXGI_FORMAT_R32_TYPELESS      : return DXGI_FORMAT_R32_FLOAT;
+        case DXGI_FORMAT_R32G8X24_TYPELESS : return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+        case DXGI_FORMAT_R24G8_TYPELESS    : return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_R16_UNORM;
+        default:
+            GN_ERROR(sLogger)( "Format %s is not a valid typeless depth buffer format.",
+                d3d10::getDXGIFormatDesc( format ).name );
+            return DXGI_FORMAT_UNKNOWN;
+    }
+}
+
+//
+// Determine depth writing format from typeless format
+// ----------------------------------------------------------------------------
+static DXGI_FORMAT
+sGetDepthWritingFormat( DXGI_FORMAT format )
+{
+    switch( format )
+    {
+        case DXGI_FORMAT_R32_TYPELESS      : return DXGI_FORMAT_D32_FLOAT;
+        case DXGI_FORMAT_R32G8X24_TYPELESS : return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        case DXGI_FORMAT_R24G8_TYPELESS    : return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_D16_UNORM;
+        default:
+            GN_ERROR(sLogger)( "Format %s is not a valid depth buffer format.",
+                d3d10::getDXGIFormatDesc( format ).name );
+            return DXGI_FORMAT_UNKNOWN;
+    }
+}
+
+//
 // Determine texture dimension
 // ----------------------------------------------------------------------------
 static D3D10_SRV_DIMENSION
@@ -150,7 +198,7 @@ void GN::gfx::D3D10Texture::updateMipmap(
             D3D10CalcSubresource( level, face, desc.levels ),
             &box,
             data,
-            rowPitch * fmtdesc.m_blockHeight,
+            rowPitch * fmtdesc.blockHeight,
             slicePitch );
     }
 }
@@ -261,9 +309,12 @@ GN::gfx::D3D10Texture::getSRView(
 ID3D10RenderTargetView *
 GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 {
+    // must be a render target texture
+    GN_ASSERT( getDesc().usages.rendertarget );
+
     D3D10_RENDER_TARGET_VIEW_DESC rtvdesc;
     memset( &rtvdesc, 0, sizeof(rtvdesc) );
-    rtvdesc.Format = mRTVFormat;
+    rtvdesc.Format = mWritingFormat;
 
     switch( mDimension )
     {
@@ -355,10 +406,90 @@ GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 //
 // ----------------------------------------------------------------------------
 ID3D10DepthStencilView *
-GN::gfx::D3D10Texture::getDSView( UInt32 /*face*/, UInt32 /*level*/, UInt32 /*slice*/ )
+GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 {
-    GN_UNIMPL_WARNING();
-    return NULL;
+    // must be a render target texture
+    GN_ASSERT( getDesc().usages.depth );
+
+    D3D10_DEPTH_STENCIL_VIEW_DESC dsvdesc;
+    memset( &dsvdesc, 0, sizeof(dsvdesc) );
+    dsvdesc.Format = mWritingFormat;
+
+    switch( mDimension )
+    {
+        case D3D10_SRV_DIMENSION_BUFFER :
+            GN_ERROR(sLogger)( "A D3D10Buffer cannot be used as depth buffer." );
+            return NULL;
+
+        case D3D10_SRV_DIMENSION_TEXTURE1D :
+            if( 0 != face || 0 != slice )
+            {
+                GN_ERROR(sLogger)( "face or slice is out of range." );
+                return NULL;
+            }
+            dsvdesc.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE1D;
+            dsvdesc.Texture1D.MipSlice = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE1DARRAY :
+            if( 0 != slice )
+            {
+                GN_ERROR(sLogger)( "slice is out of range." );
+                return NULL;
+            }
+            dsvdesc.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE1DARRAY;
+            dsvdesc.Texture1DArray.FirstArraySlice = face;
+            dsvdesc.Texture1DArray.ArraySize       = 1;
+            dsvdesc.Texture1DArray.MipSlice        = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2D :
+            if( 0 != face || 0 != slice )
+            {
+                GN_ERROR(sLogger)( "face or slice is out of range." );
+                return NULL;
+            }
+            dsvdesc.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE2D;
+            dsvdesc.Texture2D.MipSlice = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2DARRAY :
+        case D3D10_SRV_DIMENSION_TEXTURECUBE :
+            if( 0 != slice )
+            {
+                GN_ERROR(sLogger)( "slice is out of range." );
+                return NULL;
+            }
+            dsvdesc.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE2DARRAY;
+            dsvdesc.Texture2DArray.FirstArraySlice = face;
+            dsvdesc.Texture2DArray.ArraySize       = 1;
+            dsvdesc.Texture2DArray.MipSlice        = level;
+            break;
+
+        case D3D10_SRV_DIMENSION_TEXTURE2DMS :
+        case D3D10_SRV_DIMENSION_TEXTURE2DMSARRAY :
+            GN_UNIMPL();
+            return NULL;
+
+        case D3D10_SRV_DIMENSION_TEXTURE3D :
+            GN_ERROR(sLogger)( "A 3D texture cannot be used as depth buffer." );
+            return NULL;
+
+        default:
+            GN_UNEXPECTED();
+            return NULL;
+    }
+
+    AutoComPtr<ID3D10DepthStencilView> & dsv = mDSViews[dsvdesc];
+
+    if( dsv.empty() )
+    {
+        ID3D10Device & dev = getDeviceRef();
+
+        GN_DX10_CHECK_RV( dev.CreateDepthStencilView( mTexture, &dsvdesc, &dsv ), NULL );
+    }
+
+    return dsv;
 }
 
 // ****************************************************************************
@@ -376,24 +507,39 @@ bool GN::gfx::D3D10Texture::createTexture()
 
     const TextureDesc & desc = getDesc();
 
-    // determine shader resource view format
-    mSRVFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
-    if( DXGI_FORMAT_UNKNOWN == mSRVFormat )
+    // determine texture formats
+    if( desc.usages.depth )
     {
-        GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", desc.format.toString().cptr() );
-        return false;
+        // special case for depth texture
+
+        if( desc.usages.rendertarget )
+        {
+            GN_ERROR(sLogger)( "D3D10 renderer does not support texture being used as depth buffer and color render target simuteneously." );
+            return false;
+        }
+
+        mTextureFormat = d3d10::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
+        mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
+        mWritingFormat = sGetDepthWritingFormat( mTextureFormat );
+        if( DXGI_FORMAT_UNKNOWN == mTextureFormat ||
+            DXGI_FORMAT_UNKNOWN == mReadingFormat ||
+            DXGI_FORMAT_UNKNOWN == mWritingFormat )
+        {
+            GN_ERROR(sLogger)( "Fail to determine depth texture format." );
+            return false;
+        }
     }
-
-    // determine texture format
-#if 0
-    // Use typeless format to create the texture
-    mTextureFormat = d3d10::getDXGIFormatDesc( mSRVFormat ).m_typelessFormat;
-#else
-    mTextureFormat = mSRVFormat;
-#endif
-
-    // determine RTV format
-    mRTVFormat = mSRVFormat;
+    else
+    {
+        mReadingFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
+        mTextureFormat = mReadingFormat;
+        mWritingFormat = mReadingFormat;
+        if( DXGI_FORMAT_UNKNOWN == mReadingFormat )
+        {
+            GN_ERROR(sLogger)( "Fail to determine texture format." );
+            return false;
+        }
+    }
 
     // determine usage and CPU access flag
     D3D10_USAGE usage;

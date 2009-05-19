@@ -52,15 +52,23 @@ namespace GN { namespace gfx
         };
 
         ///
+        /// Effect render target descriptor
+        ///
+        struct RenderTargetDesc
+        {
+            // TODO: minimal size, format and usage requirements, and etc.
+        };
+
+        ///
         /// Shader descriptor
         ///
         struct ShaderDesc
         {
-            GpuProgramDesc      gpd;           ///< GPU Program descriptor
-            std::map<StrA,StrA> vertices;      ///< vertices. Key is vertex element binding, value is vertex element name.
-            std::map<StrA,StrA> textures;      ///< textures. Key is texture binding, value is user-visible texture name.
-            std::map<StrA,StrA> uniforms;      ///< uniforms. Key is uniform binding, value is user-visible uniform name.
-            ShaderPrerequisites prerequisites; ///< prerequisites of the shader.
+            GpuProgramDesc      gpd;                ///< GPU Program descriptor
+            std::map<StrA,StrA> vertices;           ///< vertices. Key is vertex element binding, value is vertex element name.
+            std::map<StrA,StrA> textures;           ///< textures. Key is texture binding, value is user-visible texture name defined in EffectDesc::textures.
+            std::map<StrA,StrA> uniforms;           ///< uniforms. Key is uniform binding, value is user-visible uniform name defined in EffectDesc::uniforms.
+            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
         };
 
         /// template for single render state
@@ -120,8 +128,17 @@ namespace GN { namespace gfx
         ///
         struct PassDesc
         {
-            StrA            shader; ///< Name of shader used in this pass. Can't be empty
-            RenderStateDesc rsd;    ///< pass specific render states
+            StrA            shader;       ///< Name of shader used in this pass. Can't be empty
+            RenderStateDesc rsd;          ///< pass specific render states
+            DynaArray<StrA> colortargets; ///< color render targets. Values are user-visible render target names defined in EffectDesc::rendertargets.
+            StrA            depthstencil; ///< depth render targets. Value is user-visible render target name defined in EffectDesc::rendertargets.
+
+            PassDesc()
+            {
+                colortargets.resize( 1 );
+                colortargets[0] = "color0";
+                depthstencil = "depth";
+            }
         };
 
         ///
@@ -139,11 +156,20 @@ namespace GN { namespace gfx
             TechniqueDesc() : quality(100) {}
         };
 
-        std::map<StrA,TextureDesc>   textures;   ///< Texture list
-        std::map<StrA,UniformDesc>   uniforms;   ///< Uniform list
-        std::map<StrA,ShaderDesc>    shaders;    ///< Shader list
-        std::map<StrA,TechniqueDesc> techniques; ///< Technique list. Technique name must be unique.
-        RenderStateDesc              rsd;        ///< effect specific render states
+        std::map<StrA,TextureDesc>      textures;      ///< Texture list
+        std::map<StrA,UniformDesc>      uniforms;      ///< Uniform list
+        std::map<StrA,RenderTargetDesc> rendertargets; ///< Render taret list. Empty means using default setttings: one "color0", one "depth".
+        std::map<StrA,ShaderDesc>       shaders;       ///< Shader list
+        std::map<StrA,TechniqueDesc>    techniques;    ///< Technique list. Technique name must be unique.
+        RenderStateDesc                 rsd;           ///< effect specific render states
+
+        ///
+        /// constructor
+        ///
+        EffectDesc()
+        {
+            clear();
+        }
 
         ///
         /// Make sure the effect descriptor is valid.
@@ -151,15 +177,19 @@ namespace GN { namespace gfx
         bool valid() const;
 
         ///
-        /// clear to a empty descriptor
+        /// clear to a default descriptor
         ///
         void clear()
         {
             textures.clear();
             uniforms.clear();
+            rendertargets.clear();
+            rendertargets["color0"];
+            rendertargets["depth"];
             shaders.clear();
             techniques.clear();
             rsd.clear();
+
         }
 
         ///
@@ -214,10 +244,10 @@ namespace GN { namespace gfx
         template<typename T>
         class EffectParamCollection : public NoCopy
         {
-            typedef std::map<StrA,AutoRef<T> >                          MapType;
-            typedef typename std::map<StrA,AutoRef<T> >::iterator       Iterator;
-            typedef typename std::map<StrA,AutoRef<T> >::const_iterator ConstIter;
-            typedef Delegate0<AutoRef<T>&>                              GetDummyFunc;
+            typedef std::map<StrA,T>                          MapType;
+            typedef typename std::map<StrA,T>::iterator       Iterator;
+            typedef typename std::map<StrA,T>::const_iterator ConstIter;
+            typedef Delegate0<T&>                             GetDummyFunc;
 
             MapType     * mMap;
             GetDummyFunc  mGetDummyFunc;
@@ -234,7 +264,7 @@ namespace GN { namespace gfx
             }
 
             /// constant bracket operator
-            const AutoRef<T> & operator[]( const StrA & name ) const
+            const T & operator[]( const StrA & name ) const
             {
                 GN_ASSERT( mMap );
 
@@ -251,7 +281,7 @@ namespace GN { namespace gfx
             }
 
             /// non-const bracket operator
-            AutoRef<T> & operator[]( const StrA & name )
+            T & operator[]( const StrA & name )
             {
                 GN_ASSERT( mMap );
 
@@ -276,12 +306,17 @@ namespace GN { namespace gfx
         ///
         /// uniform collection
         ///
-        EffectParamCollection<Uniform> uniforms;
+        EffectParamCollection<AutoRef<Uniform> > uniforms;
 
         ///
         /// texture collection
         ///
-        EffectParamCollection<Texture> textures;
+        EffectParamCollection<AutoRef<Texture> > textures;
+
+        ///
+        /// render target collection
+        ///
+        EffectParamCollection<RenderTargetTexture> rendertargets;
 
         // ********************************
         // public functions
@@ -311,8 +346,9 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        typedef std::map<StrA,AutoRef<Uniform> >::iterator UniformIter;
-        typedef std::map<StrA,AutoRef<Texture> >::iterator TextureIter;
+        typedef std::map<StrA,AutoRef<Uniform> >::iterator   UniformIter;
+        typedef std::map<StrA,AutoRef<Texture> >::iterator   TextureIter;
+        typedef std::map<StrA,RenderTargetTexture>::iterator RenderTargetIter;
 
         struct PerShaderTextureParam
         {
@@ -345,16 +381,18 @@ namespace GN { namespace gfx
 
         struct Pass
         {
-            GpuProgram                     * gpuProgram; ///< Pointer to the GPU program
-            DynaArray<PerShaderTextureParam> textures;   ///< Textures used in the pass. Note that
-                                                         ///< the index of the texture in this array
-                                                         ///< is the binding index to the GPU
-                                                         ///< program used in this pass.
-            DynaArray<UniformIter>           uniforms;   ///< uniforms used in the pass. Note that
-                                                         ///< the index of the uniform in this array
-                                                         ///< is the binding index to the GPU
-                                                         ///< program used in this pass.
-            EffectDesc::RenderStateDesc rsd;             ///< render states
+            GpuProgram                     * gpuProgram;   ///< Pointer to the GPU program
+            DynaArray<PerShaderTextureParam> textures;     ///< Textures used in the pass. Note that
+                                                           ///< the index of the texture in this array
+                                                           ///< is the binding index to the GPU
+                                                           ///< program used in this pass.
+            DynaArray<UniformIter>           uniforms;     ///< uniforms used in the pass. Note that
+                                                           ///< the index of the uniform in this array
+                                                           ///< is the binding index to the GPU
+                                                           ///< program used in this pass.
+            DynaArray<RenderTargetIter>      colortargets; ///< color render targets used in this pass
+            RenderTargetIter                 depthstencil; ///< depth render target used in this pass
+            EffectDesc::RenderStateDesc rsd;               ///< render states
         };
 
         struct Technique
@@ -367,6 +405,7 @@ namespace GN { namespace gfx
 
         std::map<StrA,AutoRef<Uniform> >      mUniforms;
         std::map<StrA,AutoRef<Texture> >      mTextures;
+        std::map<StrA,RenderTargetTexture>    mRenderTargets;
         std::map<StrA,AutoRef<GpuProgram> >   mGpuPrograms;
         std::map<StrA,Technique>              mTechniques;
         Technique *                           mActiveTech;
@@ -376,6 +415,9 @@ namespace GN { namespace gfx
 
         /// dummy texture
         AutoRef<Texture> mDummyTexture;
+
+        /// dummy render target
+        RenderTargetTexture mDummyRenderTargetTexture;
 
         // ********************************
         // private functions
@@ -393,6 +435,9 @@ namespace GN { namespace gfx
 
         /// get dummy texture
         AutoRef<Texture> & getDummyTexture();
+
+        /// get dummy render target
+        RenderTargetTexture & getDummyRenderTargetTexture() { return mDummyRenderTargetTexture; }
     };
 }}
 
