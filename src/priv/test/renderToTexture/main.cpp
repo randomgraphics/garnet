@@ -67,30 +67,34 @@ public:
 
     void render()
     {
+        const TextureDesc & c0desc = c0->getDesc();
+        const TextureDesc & t0desc = tex0->getDesc();
+        const TextureDesc & t1desc = tex1->getDesc();
+
         // draw tex0 to c0
         context.rendertargets.colors.resize( 1 );
         context.rendertargets.colors[0].texture = c0;
         rndr.bindContext( context );
-        rndr.clearScreen();
-        sr.drawSingleTexturedSprite( tex0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, -1.0f, 1.0f, 2.0f, 2.0f );
+        rndr.clearScreen( Vector4f(1, 0, 0, 1 ) ); // clear to red
+        sr.drawSingleTexturedSprite( tex0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)t0desc.width, (float)t0desc.height );
 
         // draw c0 to left half of the screen
         context.rendertargets.colors.clear();
         rndr.bindContext( context );
         rndr.clearScreen();
-        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0.0, 0.0, 0.5, 1.0 );
+        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)c0desc.width, (float)c0desc.height );
 
         // draw tex1 to color render target
         context.rendertargets.colors.resize( 1 );
         context.rendertargets.colors[0].texture = c0;
         rndr.bindContext( context );
-        rndr.clearScreen();
-        sr.drawSingleTexturedSprite( tex1, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, -1.0f, 1.0f, 2.0f, 2.0f );
+        rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        sr.drawSingleTexturedSprite( tex1, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)t1desc.width, (float)t1desc.height );
 
         // draw c0 to right half of the screen
         context.rendertargets.colors.clear();
         rndr.bindContext( context );
-        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0.5, 0.0, 1.0, 1.0 );
+        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, (float)c0desc.width, 0, (float)c0desc.width, (float)c0desc.height );
     }
 };
 

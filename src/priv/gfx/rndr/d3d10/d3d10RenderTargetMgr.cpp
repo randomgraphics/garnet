@@ -101,52 +101,57 @@ bool GN::gfx::D3D10RTMgr::bind(
         return true;
     }
 
-    // build RTV array
-    mNumColors = newrt.colors.size();
-    for( size_t i = 0; i < mNumColors; ++i )
+    if( 0 == newrt.colors.size() && 0 == newrt.depthstencil.texture )
     {
-        const RenderTargetTexture & rtt = newrt.colors[i];
-
-        D3D10Texture * tex = (D3D10Texture*)rtt.texture.get();
-
-        GN_ASSERT( tex );
-
-        mColors[i] = tex->getRTView( rtt.face, rtt.level, rtt.slice );
-
-        if( NULL == mColors[i] )
-        {
-            return false;
-        }
-    }
-    // fill remained items in RTV array with NULLs
-    for( size_t i = mNumColors; i < RenderTargetDesc::MAX_COLOR_RENDER_TARGETS; ++i )
-    {
-        mColors[i] = NULL;
-    }
-    // handle render-to-back-buffer case
-    if( 0 == mNumColors )
-    {
+        // separate code path for rendering to back buffer
+        memset( mColors, 0, sizeof(mColors) );
         mColors[0] = mAutoColor0;
+        mDepth     = mAutoDepth;
         mNumColors = 1;
-    }
-
-    // Get RSV pointer
-    D3D10Texture * dstex = (D3D10Texture*)newrt.depthstencil.texture.get();
-    if( dstex )
-    {
-        mDepth = dstex->getDSView(
-            newrt.depthstencil.face,
-            newrt.depthstencil.level,
-            newrt.depthstencil.slice );
-        if( NULL == mDepth )
-        {
-            return false;
-        }
     }
     else
     {
-        GN_ASSERT( mAutoDepth );
-        mDepth = mAutoDepth;
+        // build RTV array
+        for( size_t i = 0; i < newrt.colors.size(); ++i )
+        {
+            const RenderTargetTexture & rtt = newrt.colors[i];
+
+            D3D10Texture * tex = (D3D10Texture*)rtt.texture.get();
+
+            GN_ASSERT( tex );
+
+            mColors[i] = tex->getRTView( rtt.face, rtt.level, rtt.slice );
+
+            if( NULL == mColors[i] )
+            {
+                return false;
+            }
+        }
+        // fill remained items in RTV array with NULLs
+        for( size_t i = newrt.colors.size(); i < RenderTargetDesc::MAX_COLOR_RENDER_TARGETS; ++i )
+        {
+            mColors[i] = NULL;
+        }
+
+        mNumColors = 1;
+
+        // Get depth stencil view
+        D3D10Texture * dstex = (D3D10Texture*)newrt.depthstencil.texture.get();
+        if( dstex )
+        {
+            mDepth = dstex->getDSView(
+                newrt.depthstencil.face,
+                newrt.depthstencil.level,
+                newrt.depthstencil.slice );
+            if( NULL == mDepth )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            mDepth = NULL;
+        }
     }
 
     // bind to D3D device
@@ -155,11 +160,15 @@ bool GN::gfx::D3D10RTMgr::bind(
         mColors,
         mDepth );
 
-    // update mRenderTargetSize, according to render target 0 size
+    // update mRenderTargetSize
     Vector2<UInt32> newRtSize;
     if( newrt.colors.size() > 0 )
     {
         newrt.colors[0].texture->getMipSize( newrt.colors[0].level, &newRtSize.x, &newRtSize.y );
+    }
+    else if( newrt.depthstencil.texture )
+    {
+        newrt.depthstencil.texture->getMipSize( newrt.colors[0].level, &newRtSize.x, &newRtSize.y );
     }
     else
     {

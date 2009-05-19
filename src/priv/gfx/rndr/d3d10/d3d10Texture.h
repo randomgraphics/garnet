@@ -14,16 +14,6 @@ namespace GN { namespace gfx
     class D3D10Renderer;
 
     ///
-    /// D3D10 texture dimension enumeration
-    ///
-    enum D3D10TextureDimension
-    {
-        TEXDIM_1D, ///< 1D texture and 1D texture array
-        TEXDIM_2D, ///< 2D texture and 2D texture array (including CUBE texture)
-        TEXDIM_3D, ///< 3D texture
-    };
-
-    ///
     /// D3D texture
     ///
     class D3D10Texture : public BasicTexture, public D3D10Resource, public StdClass
@@ -80,7 +70,7 @@ namespace GN { namespace gfx
             const TextureDesc & desc = getDesc();
 
             return getSRView(
-                mDefaultSRVFormat,
+                mSRVFormat,
                 0, desc.faces,
                 0, desc.levels,
                 0, desc.depth );
@@ -114,16 +104,18 @@ namespace GN { namespace gfx
     private:
 
         // mapping subresource index to render target view
-        typedef std::map<UInt32,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
         typedef std::map<D3D10_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D10ShaderResourceView> > SRViewMap;
+        typedef std::map<D3D10_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
+        typedef std::map<D3D10_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D10RenderTargetView> > DSViewMap;
 
-        D3D10TextureDimension      mTextureDimension;    ///< texture dimension
-        DXGI_FORMAT                mTextureFormat;       ///< D3D10 texture format
-        DXGI_FORMAT                mDefaultSRVFormat;    ///< default SRV format;
-        D3D10_SRV_DIMENSION        mDefaultSrvDimension; ///< default SRV dimension
-        ID3D10Resource           * mTexture;             ///< resource instance
-        SRViewMap                  mSRViews;             ///< shader resource views
-        RTViewMap                  mRTViews;             ///< render target views
+        D3D10_SRV_DIMENSION        mDimension;      ///< texture dimension
+        DXGI_FORMAT                mTextureFormat;  ///< D3D10 texture format
+        DXGI_FORMAT                mSRVFormat;      ///< default SRV format;
+        DXGI_FORMAT                mRTVFormat;      ///< default RTV format;
+        ID3D10Resource           * mTexture;        ///< resource instance
+        SRViewMap                  mSRViews;        ///< shader resource views
+        RTViewMap                  mRTViews;        ///< render target views
+        DSViewMap                  mDSViews;        ///< depth stencil views
 
         // ********************************
         // private functions
