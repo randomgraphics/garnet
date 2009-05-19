@@ -101,7 +101,7 @@ bool GN::gfx::D3D10RTMgr::bind(
         return true;
     }
 
-    if( 0 == newrt.colors.size() && 0 == newrt.depthstencil.texture )
+    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
     {
         // separate code path for rendering to back buffer
         memset( mColors, 0, sizeof(mColors) );
@@ -112,9 +112,9 @@ bool GN::gfx::D3D10RTMgr::bind(
     else
     {
         // build RTV array
-        for( size_t i = 0; i < newrt.colors.size(); ++i )
+        for( size_t i = 0; i < newrt.colortargets.size(); ++i )
         {
-            const RenderTargetTexture & rtt = newrt.colors[i];
+            const RenderTargetTexture & rtt = newrt.colortargets[i];
 
             D3D10Texture * tex = (D3D10Texture*)rtt.texture.get();
 
@@ -128,12 +128,12 @@ bool GN::gfx::D3D10RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colors.size(); i < RenderTargetDesc::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( size_t i = newrt.colortargets.size(); i < RenderTargetDesc::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }
 
-        mNumColors = 1;
+        mNumColors = newrt.colortargets.size();
 
         // Get depth stencil view
         D3D10Texture * dstex = (D3D10Texture*)newrt.depthstencil.texture.get();
@@ -162,13 +162,13 @@ bool GN::gfx::D3D10RTMgr::bind(
 
     // update mRenderTargetSize
     Vector2<UInt32> newRtSize;
-    if( newrt.colors.size() > 0 )
+    if( newrt.colortargets.size() > 0 )
     {
-        newrt.colors[0].texture->getMipSize( newrt.colors[0].level, &newRtSize.x, &newRtSize.y );
+        newrt.colortargets[0].texture->getMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
     }
     else if( newrt.depthstencil.texture )
     {
-        newrt.depthstencil.texture->getMipSize( newrt.colors[0].level, &newRtSize.x, &newRtSize.y );
+        newrt.depthstencil.texture->getMipSize( newrt.depthstencil.level, &newRtSize.x, &newRtSize.y );
     }
     else
     {

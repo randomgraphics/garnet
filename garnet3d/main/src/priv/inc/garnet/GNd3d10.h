@@ -153,34 +153,34 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     struct DXGI_FORMAT_DESCRIPTION
     {
         /// The format name.
-        const char *     m_name;
+        const char *     name;
 
         /// The block width.
-        UInt32           m_blockWidth;
+        UInt32           blockWidth;
 
         /// The block height.
-        UInt32           m_blockHeight;
+        UInt32           blockHeight;
 
         /// Block size in bytes
-        UInt32           m_blockBytes;
+        UInt32           blockBytes;
 
         /// Bits of a single texel
-        UInt32           m_texelBits;
+        UInt32           texelBits;
 
         /// Number of color channels.
-        UInt32           m_numChannels;
+        UInt32           numChannels;
 
         /// The number format.
-        DXGINumberFormat m_numfmt;
+        DXGINumberFormat numfmt;
 
         /// Correspondance typeless format.
-        DXGI_FORMAT      m_typelessFormat;
+        DXGI_FORMAT      typelessFormat;
 
         /// Correspondance uint format.
-        DXGI_FORMAT      m_uintFormat;
+        DXGI_FORMAT      uintFormat;
 
         /// Correspondance depth stencil buffer format
-        DXGI_FORMAT      m_dsForamt;
+        DXGI_FORMAT      dsForamt;
 
         /// Is the format can be used as
     };

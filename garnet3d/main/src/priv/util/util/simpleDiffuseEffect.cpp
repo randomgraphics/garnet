@@ -161,6 +161,12 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     mAlbedoTexture = &mEffect->textures["ALBEDO_TEXTURE"];
     mAlbedoTexture->set( mDefaultTexture );
 
+    // setup render targets
+    GN_ASSERT( mEffect->rendertargets.contains( "color0" ) );
+    GN_ASSERT( mEffect->rendertargets.contains( "depth" ) );
+    mColorTarget = &mEffect->rendertargets["color0"];
+    mDepthTarget = &mEffect->rendertargets["depth"];
+
     // success
     return success();
 
@@ -237,6 +243,24 @@ void GN::util::SimpleDiffuseEffect::setAlbedoTexture( gfx::Texture * tex )
 void GN::util::SimpleDiffuseEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
 {
     mesh.applyToDrawable( mDrawable, subset );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::SimpleDiffuseEffect::setRenderTarget(
+    const gfx::RenderTargetTexture * color,
+    const gfx::RenderTargetTexture * depth )
+{
+    if( color )
+        *mColorTarget = *color;
+    else
+        mColorTarget->clear();
+
+    if( depth )
+        *mDepthTarget = *depth;
+    else
+        mDepthTarget->clear();
 }
 
 //

@@ -138,6 +138,10 @@ GN::gfx::Effect::Effect( Renderer & r )
 
     textures.mMap = &mTextures;
     textures.mGetDummyFunc = makeDelegate(this,&Effect::getDummyTexture);
+
+    rendertargets.mMap = &mRenderTargets;
+    rendertargets.mGetDummyFunc = makeDelegate(this, &Effect::getDummyRenderTargetTexture);
+
     clear();
 }
 
@@ -156,6 +160,9 @@ GN::gfx::Effect::Effect( const Effect & e )
 
     textures.mMap = &mTextures;
     textures.mGetDummyFunc = makeDelegate(this,&Effect::getDummyTexture);
+
+    rendertargets.mMap = &mRenderTargets;
+    rendertargets.mGetDummyFunc = makeDelegate(this, &Effect::getDummyRenderTargetTexture);
 
     clear();
     clone( e );
@@ -207,6 +214,15 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
 
         // add new item, with NULL texture pointer, in texture array.
         mTextures[texName];
+    }
+
+    // create render target array
+    for( std::map<StrA,EffectDesc::RenderTargetDesc>::const_iterator iter = desc.rendertargets.begin();
+        iter != desc.rendertargets.end();
+        ++iter )
+    {
+        const StrA & rtname = iter->first;
+        mRenderTargets[rtname];
     }
 
     // create GPU program array
@@ -364,6 +380,26 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     // setup render states
     sApplyRenderStates( drawable.rc, p.rsd );
 
+    // setup render targets
+    bool noColorTargets = true;
+    drawable.rc.rendertargets.colortargets.resize( p.colortargets.size() );
+    for( size_t i = 0; i < p.colortargets.size(); ++i )
+    {
+        GN_ASSERT( p.colortargets[i] != mRenderTargets.end() );
+
+        const RenderTargetTexture & rtt = p.colortargets[i]->second;
+
+        drawable.rc.rendertargets.colortargets[i] = rtt;
+
+        if( rtt.texture ) noColorTargets = false;
+    }
+    if( noColorTargets )
+    {
+        drawable.rc.rendertargets.colortargets.clear();
+    }
+    const RenderTargetTexture & depthstencil = p.depthstencil->second;
+    drawable.rc.rendertargets.depthstencil = depthstencil;
+
     // success
     drawable.rndr = &mRenderer;
     drawable.rc.gpuProgram.set( p.gpuProgram );
@@ -462,37 +498,33 @@ GN::gfx::Effect::initTech(
                     techName.cptr(),
                     ipass,
                     texName.cptr() );
+                return false;
             }
-            else
-            {
-                size_t tidx = gpuparam.textures[texBind];
-                if( GPU_PROGRAM_PARAMETER_NOT_FOUND == tidx )
-                {
-                    GN_ERROR(sLogger)(
-                        "Effect technique '%s', pass #%d: "
-                        "'%s' is not a valid texture parameter name of shader '%s'.",
-                        techName.cptr(),
-                        ipass,
-                        texBind.cptr(),
-                        shaderName.cptr() );
-                }
-                else
-                {
-                    p.textures[tidx].iter = mTextures.find(texName);
-                    p.textures[tidx].sampler = &tdesc->sampler;
 
-                    // this must be a valid texture parameter
-                    GN_ASSERT( mTextures.end() != p.textures[tidx].iter );
-                }
+            size_t tidx = gpuparam.textures[texBind];
+            if( GPU_PROGRAM_PARAMETER_NOT_FOUND == tidx )
+            {
+                GN_ERROR(sLogger)(
+                    "Effect technique '%s', pass #%d: "
+                    "'%s' is not a valid texture parameter name of shader '%s'.",
+                    techName.cptr(),
+                    ipass,
+                    texBind.cptr(),
+                    shaderName.cptr() );
+                return false;
             }
+
+            // this must be a valid texture parameter
+            p.textures[tidx].iter = mTextures.find(texName);
+            p.textures[tidx].sampler = &tdesc->sampler;
+            GN_ASSERT( mTextures.end() != p.textures[tidx].iter );
         }
         for( size_t itex = 0; itex < p.textures.size(); ++itex )
         {
             if( mTextures.end() == p.textures[itex].iter )
             {
                 // Note: Although uninitialize shader parameter is allowed,
-                // technically speaking, it usually implies error
-                // in effect definition.
+                // it usually implies error in effect definition.
                 GN_WARN(sLogger)(
                     "Effect technique '%s', pass #%d: "
                     "texture parameter '%s' of shader '%s' is left uninitialized.",
@@ -517,26 +549,22 @@ GN::gfx::Effect::initTech(
                 GN_ERROR(sLogger)(
                     "shader '%s' is referencing non-exisit uniform '%s'.",
                     shaderName.cptr(), uniformName.cptr() );
+                return false;
             }
-            else
+
+            size_t uidx = gpuparam.uniforms[uniformBind.cptr()];
+            if( GPU_PROGRAM_PARAMETER_NOT_FOUND == uidx )
             {
-                size_t uidx = gpuparam.uniforms[uniformBind.cptr()];
-
-                if( GPU_PROGRAM_PARAMETER_NOT_FOUND == uidx )
-                {
-                    GN_ERROR(sLogger)(
-                        "uniform '%s' is binded to invalid parameter '%s' of shader '%s'.",
-                        uniformName.cptr(), uniformBind.cptr(), shaderName.cptr() );
-                }
-                else
-                {
-                    GN_ASSERT( uidx < p.uniforms.size() );
-
-                    p.uniforms[uidx] = mUniforms.find( uniformName );
-
-                    GN_ASSERT( mUniforms.end() != p.uniforms[uidx] );
-                }
+                GN_ERROR(sLogger)(
+                    "uniform '%s' is binded to invalid parameter '%s' of shader '%s'.",
+                    uniformName.cptr(), uniformBind.cptr(), shaderName.cptr() );
+                return false;
             }
+
+            // must be a valid uniform parameter
+            GN_ASSERT( uidx < p.uniforms.size() );
+            p.uniforms[uidx] = mUniforms.find( uniformName );
+            GN_ASSERT( mUniforms.end() != p.uniforms[uidx] );
         }
         for( size_t iuniform = 0; iuniform < p.uniforms.size(); ++iuniform )
         {
@@ -553,6 +581,38 @@ GN::gfx::Effect::initTech(
                     gpuparam.uniforms[iuniform].name,
                     shaderName.cptr() );
             }
+        }
+
+        // lookup render targets
+        p.colortargets.resize( passDesc.colortargets.size() );
+        std::fill( p.colortargets.begin(), p.colortargets.end(), mRenderTargets.end() );
+        for( size_t itarget = 0; itarget < p.colortargets.size(); ++itarget )
+        {
+            const StrA & rtName = passDesc.colortargets[itarget];
+
+            const EffectDesc::RenderTargetDesc * rtdesc = sFindNamedPtr( mDesc.rendertargets, rtName );
+            if( NULL == rtdesc )
+            {
+                GN_ERROR(sLogger)(
+                    "Effect technique '%s', pass #%d: invalid color render target name: %s.",
+                    techName.cptr(),
+                    ipass,
+                    rtName.cptr() );
+                return false;
+            }
+
+            p.colortargets[itarget] = mRenderTargets.find( rtName );
+            GN_ASSERT( mRenderTargets.end() != p.colortargets[itarget] );
+        }
+        p.depthstencil = mRenderTargets.find( passDesc.depthstencil );
+        if( mRenderTargets.end() == p.depthstencil )
+        {
+            GN_ERROR(sLogger)(
+                "Effect technique '%s', pass #%d: invalid depth render target name: %s.",
+                techName.cptr(),
+                ipass,
+                passDesc.depthstencil.cptr() );
+            return false;
         }
 
         // get pass specific render states
@@ -580,13 +640,14 @@ void GN::gfx::Effect::clone( const Effect & e )
     *(StdClass*)this = (const StdClass&)e;
 
     // copy misc. members
-    mDesc         = e.mDesc;
-    mUniforms     = e.mUniforms;
-    mTextures     = e.mTextures;
-    mGpuPrograms  = e.mGpuPrograms;
-    mTechniques   = e.mTechniques;
-    mDummyUniform = e.mDummyUniform;
-    mDummyTexture = e.mDummyTexture;
+    mDesc          = e.mDesc;
+    mUniforms      = e.mUniforms;
+    mTextures      = e.mTextures;
+    mRenderTargets = e.mRenderTargets;
+    mGpuPrograms   = e.mGpuPrograms;
+    mTechniques    = e.mTechniques;
+    mDummyUniform  = e.mDummyUniform;
+    mDummyTexture  = e.mDummyTexture;
 
     // Fix up iterators and pointers for each technique
     for( std::map<StrA,Technique>::const_iterator i = e.mTechniques.begin(); i != e.mTechniques.end(); ++i )
@@ -633,6 +694,22 @@ void GN::gfx::Effect::clone( const Effect & e )
 
                 GN_ASSERT( mUniforms.end() != pdst.uniforms[i] );
             }
+
+            // for each color render targets
+            for( size_t i = 0; i < pdst.colortargets.size(); ++i )
+            {
+                RenderTargetIter & ri = pdst.colortargets[i];
+
+                const StrA & rtname = ri->first;
+
+                ri = mRenderTargets.find( rtname );
+
+                GN_ASSERT( mRenderTargets.end() != ri );
+            }
+
+            // fix depth render target iterator
+            pdst.depthstencil = mRenderTargets.find( pdst.depthstencil->first );
+            GN_ASSERT( mRenderTargets.end() != pdst.depthstencil );
         }
 
         // fix active technique pointer

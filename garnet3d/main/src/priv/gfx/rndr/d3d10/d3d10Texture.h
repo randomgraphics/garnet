@@ -70,7 +70,7 @@ namespace GN { namespace gfx
             const TextureDesc & desc = getDesc();
 
             return getSRView(
-                mSRVFormat,
+                mReadingFormat,
                 0, desc.faces,
                 0, desc.levels,
                 0, desc.depth );
@@ -106,12 +106,12 @@ namespace GN { namespace gfx
         // mapping subresource index to render target view
         typedef std::map<D3D10_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D10ShaderResourceView> > SRViewMap;
         typedef std::map<D3D10_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
-        typedef std::map<D3D10_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D10RenderTargetView> > DSViewMap;
+        typedef std::map<D3D10_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D10DepthStencilView> > DSViewMap;
 
         D3D10_SRV_DIMENSION        mDimension;      ///< texture dimension
         DXGI_FORMAT                mTextureFormat;  ///< D3D10 texture format
-        DXGI_FORMAT                mSRVFormat;      ///< default SRV format;
-        DXGI_FORMAT                mRTVFormat;      ///< default RTV format;
+        DXGI_FORMAT                mReadingFormat;  ///< format for reading from the texture
+        DXGI_FORMAT                mWritingFormat;  ///< format for writing to the texture
         ID3D10Resource           * mTexture;        ///< resource instance
         SRViewMap                  mSRViews;        ///< shader resource views
         RTViewMap                  mRTViews;        ///< render target views

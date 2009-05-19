@@ -7,6 +7,9 @@ using namespace GN::input;
 
 static GN::Logger * sLogger = GN::getLogger( "GN.test.RenderToTexture" );
 
+float RT_WIDTH  = 256.0f;
+float RT_HEIGHT = 256.0f;
+
 class RenderToTexture
 {
     Renderer       & rndr;
@@ -14,6 +17,15 @@ class RenderToTexture
     AutoRef<Texture> c0, ds;
     AutoRef<Texture> tex0, tex1;
     RendererContext  context;
+
+    // box scene data
+    struct BoxVert
+    {
+        float x, y, z, nx, ny, nz, u, v;
+    };
+    Matrix44f           proj, view;
+    SimpleDiffuseEffect effect;
+    Clock               timer;
 
 public:
 
@@ -34,14 +46,14 @@ public:
         if( !sr.init() ) return false;
 
         // create render targets
-        c0.attach( rndr.create2DTexture( 256, 256, 1, ColorFormat::RGBA32, TextureUsages::COLOR_RENDER_TARGET() ) );
+        c0.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsages::COLOR_RENDER_TARGET() ) );
         if( c0.empty() )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.attach( rndr.create2DTexture( 256, 256, 1, ColorFormat::UNKNOWN, TextureUsages::DEPTH_RENDER_TARGET() ) );
+        ds.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsages::DEPTH_RENDER_TARGET() ) );
         if( ds.empty() )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
@@ -52,11 +64,44 @@ public:
         tex1.attach( loadTextureFromFile( rndr, "media::texture/earth.jpg" ) );
         if( 0 == tex0 || 0 == tex1 ) return false;
 
+        // create box mesh
+        float edge = 200.0f;
+        BoxVert vertices[24];
+        UInt16  indices[36];
+        createBox(
+            edge, edge, edge,
+            &vertices[0].x, sizeof(BoxVert),
+            &vertices[0].u, sizeof(BoxVert),
+            &vertices[0].nx, sizeof(BoxVert),
+            0, 0, // tangent
+            0, 0, // binormal
+            indices, 0 );
+        MeshDesc md;
+        md.vtxfmt      = VertexFormat::XYZ_NORM_UV();
+        md.prim        = PrimitiveType::TRIANGLE_LIST;
+        md.numvtx      = 24;
+        md.numidx      = 36;
+        md.vertices[0] = vertices;
+        md.indices     = indices;
+        Mesh boxmesh( rndr );
+        if( !boxmesh.init( md ) ) return false;
+
+        // setup transformation matrices
+        view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
+        rndr.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+
+        // initialize the effect
+        if( !effect.init( rndr ) ) return false;
+        effect.setMesh( boxmesh );
+        effect.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
+        effect.setAlbedoTexture( tex1 );
+
         return true;
     }
 
     void quit()
     {
+        effect.quit();
         c0.clear();
         ds.clear();
         tex0.clear();
@@ -65,36 +110,74 @@ public:
         sr.quit();
     }
 
-    void render()
+    void drawBox( float speed )
     {
-        const TextureDesc & c0desc = c0->getDesc();
-        const TextureDesc & t0desc = tex0->getDesc();
-        const TextureDesc & t1desc = tex1->getDesc();
+        float angle = speed * fmod( timer.getTimef(), GN_TWO_PI );
 
-        // draw tex0 to c0
-        context.rendertargets.colors.resize( 1 );
-        context.rendertargets.colors[0].texture = c0;
-        rndr.bindContext( context );
-        rndr.clearScreen( Vector4f(1, 0, 0, 1 ) ); // clear to red
-        sr.drawSingleTexturedSprite( tex0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)t0desc.width, (float)t0desc.height );
+        Matrix44f world;
+        world.rotateY( angle );
 
-        // draw c0 to left half of the screen
-        context.rendertargets.colors.clear();
-        rndr.bindContext( context );
-        rndr.clearScreen();
-        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)c0desc.width, (float)c0desc.height );
+        effect.setTransformation( proj, view, world );
 
-        // draw tex1 to color render target
-        context.rendertargets.colors.resize( 1 );
-        context.rendertargets.colors[0].texture = c0;
+        effect.draw();
+    }
+
+    void drawToColorRenderTarget( Texture * tex )
+    {
+        context.rendertargets.colortargets.resize( 1 );
+        context.rendertargets.colortargets[0].texture = c0;
         rndr.bindContext( context );
         rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
-        sr.drawSingleTexturedSprite( tex1, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, (float)t1desc.width, (float)t1desc.height );
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
+    }
 
-        // draw c0 to right half of the screen
-        context.rendertargets.colors.clear();
+    void drawToDepthTexture()
+    {
+        context.rendertargets.colortargets.clear();
+        context.rendertargets.depthstencil.texture = ds;
         rndr.bindContext( context );
-        sr.drawSingleTexturedSprite( c0, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, (float)c0desc.width, 0, (float)c0desc.width, (float)c0desc.height );
+        rndr.clearScreen();
+
+        RenderTargetTexture rtt;
+        rtt.texture = ds;
+        effect.setRenderTarget( NULL, &rtt );
+        drawBox( 1.0f );
+    }
+
+    void drawToBothColorAndDepthTexture()
+    {
+        context.rendertargets.colortargets.resize( 1 );
+        context.rendertargets.colortargets[0].texture = c0;
+        context.rendertargets.depthstencil.texture = ds;
+        rndr.bindContext( context );
+        rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+
+        RenderTargetTexture c, d;
+        c.texture = c0;
+        d.texture = ds;
+        effect.setRenderTarget( &c, &d );
+        drawBox( -1.0f );
+    }
+
+    void drawToBackBuffer( Texture * tex, float x, float y )
+    {
+        context.rendertargets.colortargets.clear();
+        context.rendertargets.depthstencil.clear();
+        rndr.bindContext( context );
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
+    }
+
+    void render()
+    {
+        drawToColorRenderTarget( tex0 );
+        drawToBackBuffer( c0, 0, 0 );
+
+        drawToDepthTexture();
+        drawToBackBuffer( ds, RT_WIDTH, 0 );
+
+        drawToBothColorAndDepthTexture();
+        drawToBackBuffer( c0, 0, RT_HEIGHT );
+        drawToBackBuffer( ds, RT_WIDTH, RT_HEIGHT );
     }
 };
 
@@ -169,6 +252,9 @@ int main( int argc, const char * argv[] )
             GN_UNEXPECTED();
             return -1;
     }
+
+    cmdargs.rendererOptions.windowedWidth = (UInt32)RT_WIDTH * 2;
+    cmdargs.rendererOptions.windowedHeight = (UInt32)RT_HEIGHT * 2;
 
     Renderer * r;
     if( cmdargs.useMultiThreadRenderer )

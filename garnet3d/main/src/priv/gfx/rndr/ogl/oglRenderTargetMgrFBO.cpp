@@ -155,7 +155,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ) );
 
     // setup color buffers
-    if( 0 == newrt.colors.size() )
+    if( 0 == newrt.colortargets.size() )
     {
         GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
         GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
@@ -186,17 +186,17 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GL_COLOR_ATTACHMENT14_EXT,
             GL_COLOR_ATTACHMENT15_EXT,
         };
-        GN_ASSERT( newrt.colors.size() <= 16 );
-        GN_OGL_CHECK( glDrawBuffersARB( newrt.colors.size(), buffers ) );
+        GN_ASSERT( newrt.colortargets.size() <= 16 );
+        GN_OGL_CHECK( glDrawBuffersARB( newrt.colortargets.size(), buffers ) );
 
         // update color render target size
-        newrt.colors[0].texture->getMipSize<UInt32>( newrt.colors[0].level, &mColorWidth, &mColorHeight );
+        newrt.colortargets[0].texture->getMipSize<UInt32>( newrt.colortargets[0].level, &mColorWidth, &mColorHeight );
     }
 
     // bind color buffers
-    for( GLenum i = 0; i < newrt.colors.size(); ++i )
+    for( GLenum i = 0; i < newrt.colortargets.size(); ++i )
     {
-        sAttachRTT2FBO( newrt.colors[i], GL_COLOR_ATTACHMENT0_EXT + i );
+        sAttachRTT2FBO( newrt.colortargets[i], GL_COLOR_ATTACHMENT0_EXT + i );
     }
 
     // bind depth buffer
@@ -204,7 +204,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     {
         sAttachRTT2FBO( newrt.depthstencil, GL_DEPTH_ATTACHMENT_EXT );
 
-        newrt.depthstencil.texture->getMipSize<UInt32>( newrt.colors[0].level, &mDepthWidth, &mDepthHeight );
+        newrt.depthstencil.texture->getMipSize<UInt32>( newrt.depthstencil.level, &mDepthWidth, &mDepthHeight );
     }
     else
     {
