@@ -448,6 +448,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		return  vista or win7
 	conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
 
+	# =============
+	# 是否支持D3D11
+	# =============
+	conf['has_d3d11'] = c.CheckCXXHeader( 'd3d11.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
+
 	# ===================
 	# 是否支持DirectInput
 	# ===================
@@ -862,6 +867,7 @@ TARGET_shlibs = [
     'GNrndrOGL',
 	'GNrndrXenon',
 	'GNrndrD3D10',
+	'GNrndrD3D11',
     ]
 
 TARGET_tests = [

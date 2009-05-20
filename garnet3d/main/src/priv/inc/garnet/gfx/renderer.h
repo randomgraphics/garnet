@@ -55,6 +55,7 @@ namespace GN { namespace gfx
             OGL,      ///< OpenGL
             D3D9,     ///< D3D9
             D3D10,    ///< D3D10
+            D3D11,    ///< D3D11
             XENON,    ///< Xenon
             FAKE,     ///< Fake API
             NUM_APIs, ///< Number of avaliable APIs.
