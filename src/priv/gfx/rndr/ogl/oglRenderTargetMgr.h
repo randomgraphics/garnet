@@ -20,11 +20,7 @@ namespace GN { namespace gfx
     protected:
 
         OGLRenderer & mRenderer; ///< reference to renderer instance;
-
-        UInt32 mColorWidth;  ///< color buffer width.
-        UInt32 mColorHeight; ///< color buffer height.
-        UInt32 mDepthWidth;  ///< depth buffer width.
-        UInt32 mDepthHeight; ///< depth buffer height.
+        Vector2<UInt32> mRenderTargetSize;  ///< render target size
 
         ///
         /// protected ctor.
@@ -46,12 +42,7 @@ namespace GN { namespace gfx
         ///
         /// Get color render target size
         ///
-        void getColorRenderTargetSize( UInt32 & w, UInt32 & h ) const { w = mColorWidth; h = mColorHeight; };
-
-        ///
-        /// Get depth render target size
-        ///
-        void getDepthStencilSize( UInt32 & w, UInt32 & h ) const { w = mDepthWidth; h = mDepthHeight; }
+        const Vector2<UInt32> & getRenderTargetSize() const { return mRenderTargetSize; }
 
         ///
         /// bind render target to device.
@@ -96,7 +87,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void clear() { mColorWidth = 0; mColorHeight = 0; mDepthWidth = 0; mDepthHeight = 0; }
+        void clear() { mRenderTargetSize.set( 0, 0 ); }
         void quit() { clear(); }
     };
 

@@ -135,7 +135,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     }
 
     // special case for render to back buffer
-    if( newrt.isRenderingToBackBuffer() )
+    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
     {
         // disable FBO, render to back buffer
         GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ) );
@@ -143,10 +143,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_BACK ) );
 
         // update render target size
-        mColorWidth  = mRenderer.getDispDesc().width;
-        mColorHeight = mRenderer.getDispDesc().height;
-        mDepthWidth  = mColorWidth;
-        mDepthHeight = mColorHeight;
+        mRenderTargetSize.x = mRenderer.getDispDesc().width;
+        mRenderTargetSize.y = mRenderer.getDispDesc().height;
 
         return true;
     }
@@ -155,16 +153,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ) );
 
     // setup color buffers
-    if( 0 == newrt.colortargets.size() )
-    {
-        GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
-        GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
-
-        // update color render target size
-        mColorWidth  = mRenderer.getDispDesc().width;
-        mColorHeight = mRenderer.getDispDesc().height;
-    }
-    else
+    if( newrt.colortargets.size() > 0 )
     {
         // setup color buffer attachments
         static GLenum buffers[] =
@@ -189,33 +178,54 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_ASSERT( newrt.colortargets.size() <= 16 );
         GN_OGL_CHECK( glDrawBuffersARB( newrt.colortargets.size(), buffers ) );
 
-        // update color render target size
-        newrt.colortargets[0].texture->getMipSize<UInt32>( newrt.colortargets[0].level, &mColorWidth, &mColorHeight );
-    }
+        // bind color buffers
+        for( GLenum i = 0; i < newrt.colortargets.size(); ++i )
+        {
+            sAttachRTT2FBO( newrt.colortargets[i], GL_COLOR_ATTACHMENT0_EXT + i );
+        }
 
-    // bind color buffers
-    for( GLenum i = 0; i < newrt.colortargets.size(); ++i )
+        // update color render target size
+        newrt.colortargets[0].texture->getMipSize<UInt32>(
+            newrt.colortargets[0].level,
+            &mRenderTargetSize.x,
+            &mRenderTargetSize.y );
+    }
+    else
     {
-        sAttachRTT2FBO( newrt.colortargets[i], GL_COLOR_ATTACHMENT0_EXT + i );
+        // depth only rendering
+        GN_ASSERT( newrt.depthstencil.texture );
+
+        GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
+        GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
+
+        // update color render target size
+        newrt.depthstencil.texture->getMipSize<UInt32>(
+            newrt.depthstencil.level,
+            &mRenderTargetSize.x,
+            &mRenderTargetSize.y );
     }
 
     // bind depth buffer
     if( newrt.depthstencil.texture )
     {
         sAttachRTT2FBO( newrt.depthstencil, GL_DEPTH_ATTACHMENT_EXT );
-
-        newrt.depthstencil.texture->getMipSize<UInt32>( newrt.depthstencil.level, &mDepthWidth, &mDepthHeight );
     }
     else
     {
-        if( mColorWidth > mAutoZSize.x || mColorHeight > mAutoZSize.y )
+        if( mRenderTargetSize.x > mAutoZSize.x || mRenderTargetSize.y > mAutoZSize.y )
         {
             //
             // Current auto-z buffer is smaller than color render targets. Need to enlarge it.
             //
+            UInt32 newWidth  = math::getmax( mRenderTargetSize.x, mAutoZSize.x );
+            UInt32 newHeight = math::getmax( mRenderTargetSize.y, mAutoZSize.y );
 
             // delete old z buffer
-            if( mAutoZ ) GN_OGL_CHECK( glDeleteRenderbuffersEXT( 1, &mAutoZ ) );
+            if( mAutoZ )
+            {
+                GN_OGL_CHECK( glDeleteRenderbuffersEXT( 1, &mAutoZ ) );
+                mAutoZSize.set( 0, 0 );
+            }
 
             // create new z buffer
             GN_OGL_CHECK_DO( glGenRenderbuffersEXT( 1, &mAutoZ ),
@@ -226,18 +236,14 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             // create a new z buffer as large as current render target
             // TODO: choose appropriate depth format
             GN_OGL_CHECK( glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, mAutoZ ) );
-            GN_OGL_CHECK( glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, mColorWidth, mColorHeight ) );
+            GN_OGL_CHECK( glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, newWidth, newHeight ) );
 
             // update size of auto z buffer
-            mAutoZSize.set( mColorWidth, mColorHeight );
+            mAutoZSize.set( newWidth, newHeight );
         }
 
         // bind auto-Z buffer to OpenGL
         GN_OGL_CHECK( glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mAutoZ ) );
-
-        // updat depth size in parent class
-        mDepthWidth = mAutoZSize.x;
-        mDepthHeight = mAutoZSize.y;
     }
 
     GN_OGL_CHECK( ; );

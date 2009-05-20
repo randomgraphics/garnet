@@ -177,18 +177,6 @@ namespace GN { namespace gfx
         /// depth stencil render target
         RenderTargetTexture                                                        depthstencil;
 
-        /// return true, if the description represents the render target setup for rendering to back buffer.
-        bool isRenderingToBackBuffer() const
-        {
-            return 0 == colortargets.size() && 0 == depthstencil.texture;
-        }
-
-        /// return true, if color buffers are empty and depth render target is not.
-        bool isRenderingToDepthTextureOnly() const
-        {
-            return 0 == colortargets.size() && 0 != depthstencil.texture;
-        }
-
         /// check for invalid description.
         bool valid() const
         {
