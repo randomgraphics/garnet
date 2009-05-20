@@ -46,14 +46,14 @@ public:
         if( !sr.init() ) return false;
 
         // create render targets
-        c0.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsages::COLOR_RENDER_TARGET() ) );
+        c0.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
         if( c0.empty() )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsages::DEPTH_RENDER_TARGET() ) );
+        ds.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
         if( ds.empty() )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
@@ -124,8 +124,8 @@ public:
 
     void drawToColorRenderTarget( Texture * tex )
     {
-        context.rendertargets.colortargets.resize( 1 );
-        context.rendertargets.colortargets[0].texture = c0;
+        context.colortargets.resize( 1 );
+        context.colortargets[0].texture = c0;
         rndr.bindContext( context );
         rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
@@ -133,8 +133,8 @@ public:
 
     void drawToDepthTexture()
     {
-        context.rendertargets.colortargets.clear();
-        context.rendertargets.depthstencil.texture = ds;
+        context.colortargets.clear();
+        context.depthstencil.texture = ds;
         rndr.bindContext( context );
         rndr.clearScreen();
 
@@ -146,9 +146,9 @@ public:
 
     void drawToBothColorAndDepthTexture()
     {
-        context.rendertargets.colortargets.resize( 1 );
-        context.rendertargets.colortargets[0].texture = c0;
-        context.rendertargets.depthstencil.texture = ds;
+        context.colortargets.resize( 1 );
+        context.colortargets[0].texture = c0;
+        context.depthstencil.texture = ds;
         rndr.bindContext( context );
         rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
 
@@ -161,8 +161,8 @@ public:
 
     void drawToBackBuffer( Texture * tex, float x, float y )
     {
-        context.rendertargets.colortargets.clear();
-        context.rendertargets.depthstencil.clear();
+        context.colortargets.clear();
+        context.depthstencil.clear();
         rndr.bindContext( context );
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }

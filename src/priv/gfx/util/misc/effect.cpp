@@ -382,23 +382,23 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
 
     // setup render targets
     bool noColorTargets = true;
-    drawable.rc.rendertargets.colortargets.resize( p.colortargets.size() );
+    drawable.rc.colortargets.resize( p.colortargets.size() );
     for( size_t i = 0; i < p.colortargets.size(); ++i )
     {
         GN_ASSERT( p.colortargets[i] != mRenderTargets.end() );
 
         const RenderTargetTexture & rtt = p.colortargets[i]->second;
 
-        drawable.rc.rendertargets.colortargets[i] = rtt;
+        drawable.rc.colortargets[i] = rtt;
 
         if( rtt.texture ) noColorTargets = false;
     }
     if( noColorTargets )
     {
-        drawable.rc.rendertargets.colortargets.clear();
+        drawable.rc.colortargets.clear();
     }
     const RenderTargetTexture & depthstencil = p.depthstencil->second;
-    drawable.rc.rendertargets.depthstencil = depthstencil;
+    drawable.rc.depthstencil = depthstencil;
 
     // success
     drawable.rndr = &mRenderer;

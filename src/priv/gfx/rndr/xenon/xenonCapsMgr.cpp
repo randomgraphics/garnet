@@ -45,7 +45,7 @@ bool GN::gfx::XenonRenderer::capsInit()
 // -----------------------------------------------------------------------------
 bool GN::gfx::XenonRenderer::checkTextureFormatSupport(
     ColorFormat   format,
-    TextureUsages usages ) const
+    TextureUsage usages ) const
 {
     GN_GUARD;
 
@@ -65,11 +65,11 @@ bool GN::gfx::XenonRenderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::XenonRenderer::getDefaultTextureFormat( TextureUsages usages ) const
+GN::gfx::XenonRenderer::getDefaultTextureFormat( TextureUsage usage ) const
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    if( usages.depth )
+    if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {
         return ColorFormat::RG_24_FLOAT_8_UINT;
     }

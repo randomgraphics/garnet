@@ -221,8 +221,8 @@ namespace GN { namespace gfx
         virtual void * getOGLRC() const { return mOGLRC; }
 
         virtual const RendererCaps & getCaps() const { return mCaps; }
-        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const;
-        virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const;
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const;
 
         virtual CompiledGpuProgram * compileGpuProgram( const GpuProgramDesc & desc );
         virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );

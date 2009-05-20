@@ -640,76 +640,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// render targets description
-    ///
-    struct RenderTargetDesc
-    {
-        enum
-        {
-            /// Maxinum number of color render targets
-            MAX_COLOR_RENDER_TARGETS = 8,
-        };
-
-        /// color render targets
-        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colortargets;
-
-        /// depth stencil render target
-        RenderTargetTexture                                       depthstencil;
-
-        /// clear to "render-to-back-buffer"
-        void clear()
-        {
-            colortargets.clear();
-            depthstencil.texture.clear();
-        }
-
-        /// return true, if the description represents the render target setup for rendering to back buffer.
-        bool isRenderingToBackBuffer() const
-        {
-            return 0 == colortargets.size() && 0 == depthstencil.texture;
-        }
-
-        /// return true, if color buffers are empty and depth render target is not.
-        bool isRenderingToDepthTextureOnly() const
-        {
-            return 0 == colortargets.size() && 0 != depthstencil.texture;
-        }
-
-        /// check for invalid description.
-        bool valid() const
-        {
-            for( size_t i = 0; i < colortargets.size(); ++i )
-            {
-                if( !colortargets[i].texture )
-                {
-                    GN_ERROR(GN::getLogger("GN.gfx"))(
-                        "NULL color render targets in render target array is not allowed." );
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// equality check
-        bool operator==( const RenderTargetDesc & rhs ) const
-        {
-            if( colortargets.size() != rhs.colortargets.size() ) return false;
-            for( size_t i = 0; i < colortargets.size(); ++i )
-            {
-                if( colortargets[i] != rhs.colortargets[i] ) return false;
-            }
-            return depthstencil == rhs.depthstencil;
-        }
-
-        /// equality check
-        bool operator!=( const RenderTargetDesc & rhs ) const
-        {
-            return !operator==( rhs );
-        }
-    };
-
-    ///
     /// renderer context
     ///
     struct RendererContext
@@ -719,8 +649,11 @@ namespace GN { namespace gfx
         ///
         enum RendererContextEnum
         {
+            //@{
+
             MAX_VERTEX_BUFFERS       = 16,
             MAX_TEXTURES             = 32,
+            MAX_COLOR_RENDER_TARGETS = 8,
 
             FILL_SOLID = 0,
             FILL_WIREFRAME,
@@ -776,7 +709,12 @@ namespace GN { namespace gfx
             BLEND_OP_MIN,
             BLEND_OP_MAX,
             NUM_BLEND_OPERATIONS,
+
+            //@}
         };
+
+        /// Aggregated render states
+        //@{
 
         union
         {
@@ -844,6 +782,8 @@ namespace GN { namespace gfx
             };
         };
 
+        //@}
+
         /// blend factors for RGBA
         Vector4f blendFactors;
 
@@ -877,7 +817,10 @@ namespace GN { namespace gfx
         //@}
 
         /// render targets
-        RenderTargetDesc rendertargets;
+        //@{
+        StackArray<RenderTargetTexture, MAX_COLOR_RENDER_TARGETS> colortargets;
+        RenderTargetTexture                                       depthstencil;
+        //@}
 
         ///
         /// ctor
@@ -944,7 +887,8 @@ namespace GN { namespace gfx
 
             idxbuf.clear();
 
-            rendertargets.clear();
+            colortargets.clear();
+            depthstencil.clear();
         }
     };
 
@@ -1075,7 +1019,7 @@ namespace GN { namespace gfx
         /// \param format       The texture format.
         /// \param usages       Combination of TextureUsage
         ///
-        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const = 0;
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const = 0;
 
         ///
         /// Get default texture format.
@@ -1084,7 +1028,7 @@ namespace GN { namespace gfx
         ///
         /// \return             Return ColorFormat::UNKNOWN, if the usage is not supported by current renderer.
         ///
-        virtual ColorFormat getDefaultTextureFormat( TextureUsages usages ) const = 0;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const = 0;
 
         //@}
 
@@ -1142,7 +1086,7 @@ namespace GN { namespace gfx
                        size_t        faces  = 1,
                        size_t        levels = 0, // 0 means full mipmap chain
                        ColorFormat   format = ColorFormat::UNKNOWN,
-                       TextureUsages usages = TextureUsages::DEFAULT() )
+                       TextureUsage usages = TextureUsage::DEFAULT )
         {
             TextureDesc desc =
             {
@@ -1161,7 +1105,7 @@ namespace GN { namespace gfx
         create1DTexture( size_t        sx,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
-                         TextureUsages usages = TextureUsages::DEFAULT() )
+                         TextureUsage usages = TextureUsage::DEFAULT )
         {
             return createTexture( sx, 1, 1, 1, levels, format, usages );
         }
@@ -1174,7 +1118,7 @@ namespace GN { namespace gfx
                          size_t        sy,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
-                         TextureUsages usages = TextureUsages::DEFAULT() )
+                         TextureUsage usages = TextureUsage::DEFAULT )
         {
             return createTexture( sx, sy, 1, 1, levels, format, usages );
         }
@@ -1188,7 +1132,7 @@ namespace GN { namespace gfx
                          size_t        sz,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
-                         TextureUsages usages = TextureUsages::DEFAULT() )
+                         TextureUsage usages = TextureUsage::DEFAULT )
         {
             return createTexture( sx, sy, sz, 1, levels, format, usages );
         }
@@ -1200,7 +1144,7 @@ namespace GN { namespace gfx
         createCubeTexture( size_t        sx,
                            size_t        levels = 0,
                            ColorFormat   format = ColorFormat::UNKNOWN,
-                           TextureUsages usages = TextureUsages::DEFAULT() )
+                           TextureUsage usages = TextureUsage::DEFAULT )
         {
             return createTexture( sx, sx, 1, 6, levels, format, usages );
         }
@@ -1289,6 +1233,32 @@ namespace GN { namespace gfx
         /// Get current render context
         ///
         virtual const RendererContext & getContext() const = 0;
+
+        ///
+        /// get current render target size.
+        ///
+        /// \param width, height
+        ///     Return render target width and height. Could be NULL.
+        ///
+        template<typename T>
+        void getCurrentRenderTargetSize( T * width, T * height ) const
+        {
+            const RendererContext & rc = getContext();
+            if( 0 == rc.colortargets.size() && 0 == rc.depthstencil.texture )
+            {
+                const DispDesc & dd = getDispDesc();
+                if( width ) *width = dd.width;
+                if( height ) *height = dd.height;
+            }
+            else if( rc.colortargets.size() > 0 )
+            {
+                rc.colortargets[0].texture->getMipSize( rc.colortargets[0].level, width, height );
+            }
+            else
+            {
+                rc.depthstencil.texture->getMipSize( rc.depthstencil.level, width, height );
+            }
+        }
 
         //@}
 

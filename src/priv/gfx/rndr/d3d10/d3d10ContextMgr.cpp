@@ -146,8 +146,8 @@ inline bool GN::gfx::D3D10Renderer::bindContextRenderTarget(
     //
     bool renderTargetSizeChanged = false;
     if( !mRTMgr->bind(
-            mContext.rendertargets,
-            newContext.rendertargets,
+            *(const RenderTargetDesc*)&mContext.colortargets,
+            *(const RenderTargetDesc*)&newContext.colortargets,
             skipDirtyCheck,
             renderTargetSizeChanged ) )
     {

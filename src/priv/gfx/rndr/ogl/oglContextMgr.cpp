@@ -366,7 +366,10 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
     bool                    skipDirtyCheck )
 {
     // bind render targets
-    if( !mRTMgr->bind( mContext.rendertargets, newContext.rendertargets, skipDirtyCheck ) )
+    if( !mRTMgr->bind(
+            *(const RenderTargetDesc*)&mContext.colortargets,
+            *(const RenderTargetDesc*)&newContext.colortargets,
+            skipDirtyCheck ) )
         return false;
 
     // get render target size

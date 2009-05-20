@@ -173,7 +173,7 @@ void GN::gfx::D3D10Texture::updateMipmap(
 
     const TextureDesc & desc = getDesc();
 
-    if( desc.usages.fastCpuWrite )
+    if( TextureUsage::FAST_CPU_WRITE == desc.usage )
     {
         GN_TODO( "Updating dynamic texture is not implemented yet." );
     }
@@ -309,8 +309,8 @@ GN::gfx::D3D10Texture::getSRView(
 ID3D10RenderTargetView *
 GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 {
-    // must be a render target texture
-    GN_ASSERT( getDesc().usages.rendertarget );
+    // must be a color render target texture
+    GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == getDesc().usage );
 
     D3D10_RENDER_TARGET_VIEW_DESC rtvdesc;
     memset( &rtvdesc, 0, sizeof(rtvdesc) );
@@ -408,8 +408,8 @@ GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 ID3D10DepthStencilView *
 GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 {
-    // must be a render target texture
-    GN_ASSERT( getDesc().usages.depth );
+    // must be a depth texture
+    GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == getDesc().usage );
 
     D3D10_DEPTH_STENCIL_VIEW_DESC dsvdesc;
     memset( &dsvdesc, 0, sizeof(dsvdesc) );
@@ -508,15 +508,9 @@ bool GN::gfx::D3D10Texture::createTexture()
     const TextureDesc & desc = getDesc();
 
     // determine texture formats
-    if( desc.usages.depth )
+    if( TextureUsage::DEPTH_RENDER_TARGET == desc.usage )
     {
         // special case for depth texture
-
-        if( desc.usages.rendertarget )
-        {
-            GN_ERROR(sLogger)( "D3D10 renderer does not support texture being used as depth buffer and color render target simuteneously." );
-            return false;
-        }
 
         mTextureFormat = d3d10::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
@@ -541,29 +535,32 @@ bool GN::gfx::D3D10Texture::createTexture()
         }
     }
 
-    // determine usage and CPU access flag
-    D3D10_USAGE usage;
-    UINT        caf;
-    if( desc.usages.fastCpuWrite )
+    // determine usage, CPU access and binding flags
+    D3D10_USAGE usage = D3D10_USAGE_DEFAULT;
+    UINT        caf   = 0;
+    UINT        bf    = D3D10_BIND_SHADER_RESOURCE;
+    switch( desc.usage )
     {
-        usage = D3D10_USAGE_DYNAMIC;
-        caf   = D3D10_CPU_ACCESS_WRITE;
-    }
-    else
-    {
-        usage = D3D10_USAGE_DEFAULT;
-        caf   = 0;
-    }
+        case TextureUsage::DEFAULT:
+            // nothing to do
+            break;
 
-    // determine bind flags
-    UINT bf = D3D10_BIND_SHADER_RESOURCE;
-    if( desc.usages.depth )
-    {
-        bf |= D3D10_BIND_DEPTH_STENCIL;
-    }
-    else if( desc.usages.rendertarget )
-    {
-        bf |= D3D10_BIND_RENDER_TARGET;
+        case TextureUsage::COLOR_RENDER_TARGET:
+            bf |= D3D10_BIND_RENDER_TARGET;
+            break;
+
+        case TextureUsage::DEPTH_RENDER_TARGET:
+            bf |= D3D10_BIND_DEPTH_STENCIL;
+            break;
+
+        case TextureUsage::FAST_CPU_WRITE:
+            usage = D3D10_USAGE_DYNAMIC;
+            caf   = D3D10_CPU_ACCESS_WRITE;
+            break;
+
+        default:
+            GN_ERROR(sLogger)( "Invalid texture usage enumeration." );
+            return false;
     }
 
     // determine texture dimension
