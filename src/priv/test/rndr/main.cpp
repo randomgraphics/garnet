@@ -6,6 +6,7 @@ using namespace GN::input;
 using namespace GN::win;
 using namespace GN::util;
 
+bool blankScreen = false;
 RendererContext rc;
 
 const char * hlsl_vscode =
@@ -42,6 +43,8 @@ const char * glsl_pscode =
 
 bool init( Renderer & rndr )
 {
+    if( blankScreen ) return true;
+
     rc.clear();
 
     // create GPU program
@@ -111,6 +114,8 @@ void quit( Renderer & )
 
 void draw( Renderer & r )
 {
+    if( blankScreen ) return;
+
     Matrix44f m;
 
     // DRAW_UP: triangle at left top corner
@@ -195,6 +200,15 @@ struct InputInitiator
     }
 };
 
+void showHelp( CommandLineArguments & ca )
+{
+    StrA executableName = fs::baseName( ca.applicationName ) + fs::extName( ca.applicationName );
+    GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.cptr() );
+    ca.showStandardCommandLineOptions();
+    GN_INFO(ca.logger)(
+            "  -b                       Draw blank screen only. Do not create any graphics resources.\n" );
+}
+
 int main( int argc, const char * argv[] )
 {
     enableCRTMemoryCheck();
@@ -203,7 +217,7 @@ int main( int argc, const char * argv[] )
     switch( cmdargs.status )
     {
         case CommandLineArguments::SHOW_HELP:
-            cmdargs.showDefaultHelp();
+            showHelp( cmdargs );
             return 0;
 
         case CommandLineArguments::INVALID_COMMAND_LINE:
@@ -216,6 +230,20 @@ int main( int argc, const char * argv[] )
         default:
             GN_UNEXPECTED();
             return -1;
+    }
+
+    for( size_t i = 0; i < cmdargs.extraArgc; ++i )
+    {
+        if( 0 == strCmpI( "-b", cmdargs.extraArgv[i] ) )
+        {
+            blankScreen = true;
+        }
+        else
+        {
+            GN_ERROR(cmdargs.logger)( "Invalid command line argument: %s", cmdargs.extraArgv[i] );
+            showHelp( cmdargs );
+            return -1;
+        }
     }
 
     Renderer * r;

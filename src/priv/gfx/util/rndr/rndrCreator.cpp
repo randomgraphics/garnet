@@ -68,6 +68,25 @@ GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
 ;
 #endif
 
+///
+/// D3D10 renderer creator
+///
+#if GN_XENON | GN_POSIX
+inline
+#else
+extern
+#endif
+GN::gfx::Renderer *
+GNgfxCreateD3D11Renderer( const GN::gfx::RendererOptions & )
+#if GN_XENON | GN_POSIX
+{
+    GN_ERROR(sLogger)( "D3D11 renderer is not available on Xbox360." );
+    return 0;
+}
+#else
+;
+#endif
+
 //
 // determine renderer API
 // -----------------------------------------------------------------------------
@@ -108,6 +127,7 @@ namespace GN { namespace gfx
             case RendererAPI::OGL   : return GNgfxCreateOGLRenderer( ro );
             case RendererAPI::D3D9  : GN_UNIMPL(); return 0;
             case RendererAPI::D3D10 : return GNgfxCreateD3D10Renderer( ro );
+            case RendererAPI::D3D11 : return GNgfxCreateD3D11Renderer( ro );
             case RendererAPI::XENON : return GNgfxCreateXenonRenderer( ro );
             case RendererAPI::FAKE  : GN_UNIMPL(); return 0;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
@@ -119,6 +139,7 @@ namespace GN { namespace gfx
         {
             case RendererAPI::D3D9  : dllName = "GNrndrD3D9"; break;
             case RendererAPI::D3D10 : dllName = "GNrndrD3D10"; break;
+            case RendererAPI::D3D11 : dllName = "GNrndrD3D11"; break;
             case RendererAPI::OGL   : dllName = "GNrndrOGL"; break;
             case RendererAPI::XENON : dllName = "GNrndrXenon"; break;
             default        : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;

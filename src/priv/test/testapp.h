@@ -47,6 +47,8 @@ public:
     size_t                   extraArgc;
     const char     * const * extraArgv;
 
+    GN::Logger             * logger;
+
     //@}
 
     // *************************************************************************
@@ -62,7 +64,7 @@ public:
         , status( CONTINUE_EXECUTION )
         , extraArgc(0)
         , extraArgv(NULL)
-        , mLogger(GN::getLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
     }
 #else
@@ -72,7 +74,7 @@ public:
         , status( INVALID_COMMAND_LINE )
         , extraArgc(0)
         , extraArgv(NULL)
-        , mLogger(GN::getLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
         status = parseCommandLine( argc, argv );
 
@@ -87,7 +89,7 @@ public:
     /// show command line options
     void showStandardCommandLineOptions() const
     {
-        GN_INFO(mLogger)(
+        GN_INFO(logger)(
             "Standard command line options:\n"
             "\n"
             "   -fs   [on|off]          Full screen rendering. Default is off.\n"
@@ -108,7 +110,7 @@ public:
 
         StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
 
-        GN_INFO(mLogger)( "Usage: %s [options]\n", executableName.cptr() );
+        GN_INFO(logger)( "Usage: %s [options]\n", executableName.cptr() );
         showStandardCommandLineOptions();
     }
 
@@ -118,7 +120,6 @@ public:
 
 private:
 
-    GN::Logger               * mLogger;
     GN::DynaArray<const char*> mExtraArgs;
 
     // *************************************************************************
@@ -151,7 +152,7 @@ private:
         }
         else
         {
-            GN_ERROR(mLogger)(
+            GN_ERROR(logger)(
                 "Invalid boolean argument value (%s) for option %s",
                 value, option );
             return false;
@@ -175,9 +176,13 @@ private:
         {
             result = RendererAPI::D3D10;
         }
+        else if( 0 == strCmpI( "d3d11", value ) )
+        {
+            result = RendererAPI::D3D11;
+        }
         else
         {
-            GN_ERROR(mLogger)( "invalid renderer API: %s", value );
+            GN_ERROR(logger)( "invalid renderer API: %s", value );
             return false;
         }
 
@@ -188,7 +193,7 @@ private:
     {
         if( i+1 == argc || '-' == *argv[i+1] )
         {
-            GN_ERROR(mLogger)( "Argument value of option %s is missing.", argv[i] );
+            GN_ERROR(logger)( "Argument value of option %s is missing.", argv[i] );
             return NULL;
         }
 
