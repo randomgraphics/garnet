@@ -373,35 +373,34 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
         return false;
 
     // get render target size
-    UInt32 width, height;
-    mRTMgr->getColorRenderTargetSize( width, height );
+    const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
 
     // clip viewport against render target size
     Rect<UInt32> newvp = newContext.viewport;
-    if( (newvp.x+newvp.w) > width )
+    if( (newvp.x+newvp.w) > rtsize.x )
     {
         GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );
-        if( newvp.x >= width )
+        if( newvp.x >= rtsize.x )
         {
-             newvp.x = width;
+             newvp.x = rtsize.x;
              newvp.w = 0;
         }
         else
         {
-            newvp.w = width - newvp.x;
+            newvp.w = rtsize.x - newvp.x;
         }
     }
-    if( (newvp.y+newvp.h) > height )
+    if( (newvp.y+newvp.h) > rtsize.y )
     {
         GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );
-        if( newvp.y > height )
+        if( newvp.y > rtsize.y )
         {
-            newvp.y = height;
+            newvp.y = rtsize.y;
             newvp.h = 0;
         }
         else
         {
-            newvp.h = height - newvp.y;
+            newvp.h = rtsize.y - newvp.y;
         }
     }
 
@@ -410,14 +409,14 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
     {
         newvp.x = 0;
         newvp.y = 0;
-        newvp.w = width;
-        newvp.h = height;
+        newvp.w = rtsize.x;
+        newvp.h = rtsize.y;
 
         GN_OGL_CHECK( glViewport( (GLint)newvp.x, (GLint)newvp.y, (GLsizei)newvp.w, (GLsizei)newvp.h ) );
     }
     else
     {
-        newvp.y = height - (newvp.y + newvp.h);
+        newvp.y = rtsize.y - (newvp.y + newvp.h);
         GN_OGL_CHECK( glViewport( (GLint)newvp.x, (GLint)newvp.y, (GLsizei)newvp.w, (GLsizei)newvp.h ) );
     }
 
