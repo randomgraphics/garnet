@@ -357,21 +357,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     // get screen size based on current context
     UInt32 screenWidth, screenHeight;
-    const RendererContext & rc = mRenderer.getContext();
-    if( 0 == rc.rendertargets.colortargets.size() && 0 == rc.rendertargets.depthstencil.texture )
-    {
-        const DispDesc & dd = mRenderer.getDispDesc();
-        screenWidth = dd.width;
-        screenHeight = dd.height;
-    }
-    else if( rc.rendertargets.colortargets.size() > 0 )
-    {
-        rc.rendertargets.colortargets[0].texture->getMipSize( rc.rendertargets.colortargets[0].level, &screenWidth, &screenHeight );
-    }
-    else
-    {
-        rc.rendertargets.depthstencil.texture->getMipSize( rc.rendertargets.depthstencil.level, &screenWidth, &screenHeight );
-    }
+    mRenderer.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = ( x + mVertexShift ) / screenWidth;
     float y1 = ( y + mVertexShift ) / screenHeight;

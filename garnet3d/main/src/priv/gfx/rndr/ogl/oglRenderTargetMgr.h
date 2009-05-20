@@ -6,6 +6,8 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.1.11)
 // *****************************************************************************
 
+#include "../common/basicRenderer.h"
+
 namespace GN { namespace gfx
 {
     class OGLRenderer;

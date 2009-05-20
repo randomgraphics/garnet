@@ -96,7 +96,7 @@ namespace GN { namespace gfx
         ID3D10Texture2D *        mAutoDepthTexture;
         ID3D10DepthStencilView * mAutoDepth;
 
-        ID3D10RenderTargetView * mColors[RenderTargetDesc::MAX_COLOR_RENDER_TARGETS];
+        ID3D10RenderTargetView * mColors[RendererContext::MAX_COLOR_RENDER_TARGETS];
         ID3D10DepthStencilView * mDepth;
         size_t                   mNumColors;
 

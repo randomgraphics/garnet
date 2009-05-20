@@ -165,6 +165,63 @@ namespace GN { namespace gfx
 
         //@}
     };
+
+    ///
+    /// render targets description
+    ///
+    struct RenderTargetDesc
+    {
+        /// color render targets
+        StackArray<RenderTargetTexture, RendererContext::MAX_COLOR_RENDER_TARGETS> colortargets;
+
+        /// depth stencil render target
+        RenderTargetTexture                                                        depthstencil;
+
+        /// return true, if the description represents the render target setup for rendering to back buffer.
+        bool isRenderingToBackBuffer() const
+        {
+            return 0 == colortargets.size() && 0 == depthstencil.texture;
+        }
+
+        /// return true, if color buffers are empty and depth render target is not.
+        bool isRenderingToDepthTextureOnly() const
+        {
+            return 0 == colortargets.size() && 0 != depthstencil.texture;
+        }
+
+        /// check for invalid description.
+        bool valid() const
+        {
+            for( size_t i = 0; i < colortargets.size(); ++i )
+            {
+                if( !colortargets[i].texture )
+                {
+                    GN_ERROR(GN::getLogger("GN.gfx"))(
+                        "NULL color render targets in render target array is not allowed." );
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// equality check
+        bool operator==( const RenderTargetDesc & rhs ) const
+        {
+            if( colortargets.size() != rhs.colortargets.size() ) return false;
+            for( size_t i = 0; i < colortargets.size(); ++i )
+            {
+                if( colortargets[i] != rhs.colortargets[i] ) return false;
+            }
+            return depthstencil == rhs.depthstencil;
+        }
+
+        /// equality check
+        bool operator!=( const RenderTargetDesc & rhs ) const
+        {
+            return !operator==( rhs );
+        }
+    };
 }}
 
 // *****************************************************************************

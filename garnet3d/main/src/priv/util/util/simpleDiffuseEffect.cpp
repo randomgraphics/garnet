@@ -50,7 +50,7 @@ const char * hlslpscode =
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
     "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
-    "   return diff * lightColor * albedoColor * tex; \n"
+    "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
 const char * glslvscode =
@@ -80,7 +80,7 @@ const char * glslpscode =
     "   vec3  N      = normalize( nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
     "   vec4  tex    = texture2D( t0, texcoords ); \n"
-    "   gl_FragColor = diff * lightColor * albedoColor * tex; \n"
+    "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
 // *****************************************************************************

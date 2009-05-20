@@ -107,7 +107,7 @@ static inline bool sColorFormat2OGL(
     GLuint               & gl_type,
     bool                 & gl_compressed,
     GN::gfx::ColorFormat   clrfmt,
-    GN::gfx::TextureUsages usages )
+    GN::gfx::TextureUsage  usage )
 {
     using namespace GN::gfx;
 
@@ -271,7 +271,7 @@ static inline bool sColorFormat2OGL(
             return true;
 
         case ColorFormat::R_16_UINT :
-            if( usages.depth )
+            if( TextureUsage::DEPTH_RENDER_TARGET == usage )
             {
                 if( !GLEW_ARB_depth_texture )
                 {
@@ -290,7 +290,7 @@ static inline bool sColorFormat2OGL(
             }
 
         case ColorFormat::R_32_UINT :
-            if( usages.depth )
+            if( TextureUsage::DEPTH_RENDER_TARGET == usage )
             {
                 if( !GLEW_ARB_depth_texture )
                 {
@@ -590,7 +590,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
                            mOGLType,
                            mOGLCompressed,
                            desc.format,
-                           desc.usages ) )
+                           desc.usage ) )
         return failure();
 
     // create new opengl texture object

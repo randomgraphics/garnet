@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "d3d10Renderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+
 // *****************************************************************************
 // init/quit
 // *****************************************************************************
@@ -31,7 +33,7 @@ bool GN::gfx::D3D10Renderer::capsInit()
     mCaps.maxTextures     = math::getmin<size_t>( D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, RendererContext::MAX_TEXTURES );
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RenderTargetDesc::MAX_COLOR_RENDER_TARGETS );
+    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, RendererContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
     mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
@@ -52,8 +54,8 @@ bool GN::gfx::D3D10Renderer::capsInit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10Renderer::checkTextureFormatSupport(
-    ColorFormat   format,
-    TextureUsages usages ) const
+    ColorFormat  format,
+    TextureUsage usage ) const
 {
     DXGI_FORMAT d3dfmt = (DXGI_FORMAT)colorFormat2DxgiFormat( format );
     if( DXGI_FORMAT_UNKNOWN == d3dfmt ) return false;
@@ -61,19 +63,38 @@ bool GN::gfx::D3D10Renderer::checkTextureFormatSupport(
     UINT formatSupport;
     if( FAILED( mDevice->CheckFormatSupport( d3dfmt, &formatSupport ) ) ) return false;
 
-    if( usages.rendertarget && (0 == (D3D10_FORMAT_SUPPORT_RENDER_TARGET &formatSupport)) )
+    switch( usage )
     {
-        return false;
-    }
+        case TextureUsage::DEFAULT:
+            if( 0 == (D3D10_FORMAT_SUPPORT_SHADER_SAMPLE & formatSupport) )
+            {
+                return false;
+            }
+            break;
 
-    if( usages.depth && (0 == (D3D10_FORMAT_SUPPORT_DEPTH_STENCIL &formatSupport)) )
-    {
-        return false;
-    }
+        case TextureUsage::COLOR_RENDER_TARGET:
+            if( 0 == (D3D10_FORMAT_SUPPORT_RENDER_TARGET &formatSupport) )
+            {
+                return false;
+            }
+            break;
 
-    if( usages.fastCpuWrite && (0 == (D3D10_FORMAT_SUPPORT_CPU_LOCKABLE &formatSupport)) )
-    {
-        return false;
+        case TextureUsage::DEPTH_RENDER_TARGET:
+            if( 0 == (D3D10_FORMAT_SUPPORT_DEPTH_STENCIL &formatSupport) )
+            {
+                return false;
+            }
+
+        case TextureUsage::FAST_CPU_WRITE:
+            if( 0 == (D3D10_FORMAT_SUPPORT_CPU_LOCKABLE &formatSupport) )
+            {
+                return false;
+            }
+            break;
+
+        default:
+            GN_ERROR(sLogger)( "Invalid texture usage." );
+            return false;
     }
 
     return true;
@@ -83,9 +104,9 @@ bool GN::gfx::D3D10Renderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::D3D10Renderer::getDefaultTextureFormat( TextureUsages usages ) const
+GN::gfx::D3D10Renderer::getDefaultTextureFormat( TextureUsage usage ) const
 {
-    if( usages.depth )
+    if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {
         return ColorFormat::RG_24_UNORM_8_UINT;
     }

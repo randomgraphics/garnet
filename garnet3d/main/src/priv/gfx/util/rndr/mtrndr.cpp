@@ -218,7 +218,7 @@ UInt32 GN::gfx::MultiThreadRenderer::threadProc( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadRenderer::checkTextureFormatSupport( ColorFormat format, TextureUsages usages ) const
+bool GN::gfx::MultiThreadRenderer::checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const
 {
     MultiThreadRenderer * nonConstPtr = const_cast<GN::gfx::MultiThreadRenderer*>(this);
     bool result;
@@ -230,7 +230,7 @@ bool GN::gfx::MultiThreadRenderer::checkTextureFormatSupport( ColorFormat format
 //
 //
 // -----------------------------------------------------------------------------
-ColorFormat GN::gfx::MultiThreadRenderer::getDefaultTextureFormat( TextureUsages usages ) const
+ColorFormat GN::gfx::MultiThreadRenderer::getDefaultTextureFormat( TextureUsage usages ) const
 {
     MultiThreadRenderer * nonConstPtr = const_cast<GN::gfx::MultiThreadRenderer*>(this);
     ColorFormat result;
@@ -373,15 +373,15 @@ void GN::gfx::MultiThreadRenderer::bindContext( const RendererContext & inputrc 
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
-    for( size_t i = 0; i < rc->rendertargets.colortargets.size(); ++i )
+    for( size_t i = 0; i < rc->colortargets.size(); ++i )
     {
-        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->rendertargets.colortargets[i].texture.get();
-        sReplaceAutoRefPtr( rc->rendertargets.colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->colortargets[i].texture.get();
+        sReplaceAutoRefPtr( rc->colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // depth-stencil render target
-    MultiThreadTexture * ds = (MultiThreadTexture*)rc->rendertargets.depthstencil.texture.get();
-    sReplaceAutoRefPtr( rc->rendertargets.depthstencil.texture, ds ? ds->getRealTexture() : NULL );
+    MultiThreadTexture * ds = (MultiThreadTexture*)rc->depthstencil.texture.get();
+    sReplaceAutoRefPtr( rc->depthstencil.texture, ds ? ds->getRealTexture() : NULL );
 
     // done
     endPostCommand();
@@ -657,7 +657,7 @@ namespace GN { namespace gfx
         {
             bool        * result;
             ColorFormat   format;
-            TextureUsages usages;
+            TextureUsage usages;
         };
         CheckTextureFormatSupportParam * param = (CheckTextureFormatSupportParam*)p;
 
@@ -672,7 +672,7 @@ namespace GN { namespace gfx
         struct GetDefaultTextureFormatParam
         {
             ColorFormat * result;
-            TextureUsages usages;
+            TextureUsage usages;
         };
         GetDefaultTextureFormatParam * param = (GetDefaultTextureFormatParam*)p;
 

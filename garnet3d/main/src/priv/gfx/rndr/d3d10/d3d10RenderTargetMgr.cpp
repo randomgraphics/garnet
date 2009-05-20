@@ -128,7 +128,7 @@ bool GN::gfx::D3D10RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colortargets.size(); i < RenderTargetDesc::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( size_t i = newrt.colortargets.size(); i < RendererContext::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }
@@ -156,7 +156,7 @@ bool GN::gfx::D3D10RTMgr::bind(
 
     // bind to D3D device
     mRenderer.getDeviceRefInlined().OMSetRenderTargets(
-        (UINT)RenderTargetDesc::MAX_COLOR_RENDER_TARGETS,
+        (UINT)RendererContext::MAX_COLOR_RENDER_TARGETS,
         mColors,
         mDepth );
 

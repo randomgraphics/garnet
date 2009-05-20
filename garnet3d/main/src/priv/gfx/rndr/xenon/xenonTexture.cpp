@@ -89,7 +89,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     mD3DDimension = sDetermineTextureDimension( desc );
 
     // determine texture usage
-    mD3DUsage = desc.usages.fastCpuWrite ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
+    mD3DUsage = (TextureUsage::FAST_CPU_WRITE == desc.usage ) ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
 
     // create texture
     IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();

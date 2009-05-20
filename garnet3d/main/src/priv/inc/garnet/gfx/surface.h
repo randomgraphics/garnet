@@ -9,34 +9,22 @@
 namespace GN { namespace gfx
 {
     ///
-    /// texture usage flags
+    /// texture usage enumeration
     ///
-    union TextureUsages
+    struct TextureUsage
     {
-        UInt32 u32;     ///< usage bits as unsigned integer
-
-        struct
+        enum Enum
         {
-            unsigned int rendertarget :  1; ///< use as color render target
-            unsigned int depth        :  1; ///< use as depth buffer
-            unsigned int fastCpuWrite :  1; ///< Allow fast CPU write, in exchange of GPU rendering speed.
-                                            ///< Note that only textures with this usage off, can be used as render target or depth buffer.
-            unsigned int nouse        : 29; ///< no use. must be zero.
+            DEFAULT = 0,         ///< Default usage.
+            COLOR_RENDER_TARGET, ///< use as color render target
+            DEPTH_RENDER_TARGET, ///< use as depth buffer
+            FAST_CPU_WRITE,      ///< Allow fast CPU write, in exchange of GPU rendering speed
+            NUM_USAGES,          ///< number of usage flags
         };
 
-        /// default usage
-        static TextureUsages DEFAULT() { TextureUsages u; u.u32 = 0; return u; };
-
-        /// color render target
-        static TextureUsages COLOR_RENDER_TARGET() { TextureUsages u; u.u32 = 0; u.rendertarget = 1; return u; };
-
-        /// depth render target
-        static TextureUsages DEPTH_RENDER_TARGET() { TextureUsages u; u.u32 = 0; u.depth = 1; return u; };
-
-        /// dynamic texture
-        static TextureUsages DYNAMIC_TEXTURE() { TextureUsages u; u.u32 = 0; u.fastCpuWrite = 1; return u; };
+        GN_DEFINE_ENUM_CLASS_HELPERS( TextureUsage, Enum );
     };
-    GN_CASSERT( sizeof(TextureUsages) == sizeof(UInt32) );
+    GN_CASSERT( sizeof(TextureUsage) == sizeof(UInt32) );
 
     ///
     /// Texture descriptor
@@ -51,7 +39,7 @@ namespace GN { namespace gfx
         UInt32        levels;  ///< mipmap level count. When used as parameter of Renderer::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
         ColorFormat   format;  ///< pixel format.
-        TextureUsages usages;  ///< texture usages
+        TextureUsage  usage;   ///< texture usage
 
         ///
         /// get basemap size
@@ -69,10 +57,9 @@ namespace GN { namespace gfx
             faces      = id.numFaces;
             levels     = id.numLevels;
             format     = id.format;
-            usages.u32 = 0;
+            usage      = TextureUsage::DEFAULT;
             return validate();
         }
-
 
         ///
         /// validate texture descriptor
@@ -101,6 +88,14 @@ namespace GN { namespace gfx
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().cptr() );
+                return false;
+            }
+
+            // check usage
+            if( usage < 0 && usage >= TextureUsage::NUM_USAGES )
+            {
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                GN_ERROR(sLogger)( "invalid texture usage: %d", usage.toRawEnum() );
                 return false;
             }
 

@@ -261,7 +261,7 @@ bool GN::gfx::OGLRenderer::capsInit()
 bool
 GN::gfx::OGLRenderer::checkTextureFormatSupport(
     ColorFormat   /*format*/,
-    TextureUsages /*usages*/ ) const
+    TextureUsage /*usages*/ ) const
 {
     GN_UNIMPL_WARNING();
     return true;
@@ -271,9 +271,9 @@ GN::gfx::OGLRenderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::OGLRenderer::getDefaultTextureFormat( TextureUsages usages ) const
+GN::gfx::OGLRenderer::getDefaultTextureFormat( TextureUsage usage ) const
 {
-    if( usages.depth )
+    if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {
         return ColorFormat::R_32_UINT;
     }
