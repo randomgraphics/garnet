@@ -3,9 +3,8 @@
 //#include "d3d11RenderTargetMgr.h"
 //#include "d3d11StateObject.h"
 //#include "d3d11Shader.h"
-//#include "d3d11Texture.h"
-//#include "d3d11VtxLayout.h"
-//#include "d3d11Buffer.h"
+#include "d3d11Texture.h"
+#include "d3d11Buffer.h"
 
 // *****************************************************************************
 // local data and functions

@@ -164,13 +164,13 @@ GN::gfx::D3D11GpuProgramParameterDesc::findAttribute( const char * name )
 // -----------------------------------------------------------------------------
 static inline void
 sUpdateConstBuffer(
-    ID3D11Device & dev,
+    ID3D11DeviceContext & cxt,
     ID3D11Buffer & buf,
     const void   * data,
     size_t         size )
 {
 #if 0
-        dev.UpdateSubresource(
+        cxt.UpdateSubresource(
             &buf,   // destination buffer
             0,      // sub resource
             0,      // box
@@ -178,11 +178,10 @@ sUpdateConstBuffer(
             size,   // row pitch
             size ); // slice pitch
 #else
-        GN_UNUSED_PARAM( dev );
-        void * dst;
-        GN_DX10_CHECK_R( buf.Map( D3D11_MAP_WRITE_DISCARD, 0, &dst ) );
-        memcpy( dst, data, size );
-        buf.Unmap();
+        D3D11_MAPPED_SUBRESOURCE dst;
+        GN_DX10_CHECK_R( cxt.Map( &buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &dst ) );
+        memcpy( dst.pData, data, size );
+        cxt.Unmap( &buf, 0 );
 #endif
 }
 
@@ -230,13 +229,13 @@ bool GN::gfx::D3D11GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
 
     // covert shader compile options
     D3D11ShaderCompileOptions options;
-    options.compileFlags = D3D11_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
-    if( !desc.optimize ) options.compileFlags |= D3D11_SHADER_SKIP_OPTIMIZATION;
-    if( !desc.debug ) options.compileFlags |= D3D11_SHADER_DEBUG;
+    options.compileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
+    if( !desc.optimize ) options.compileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
+    if( !desc.debug ) options.compileFlags |= D3D10_SHADER_DEBUG;
     if( hlsl9 )
-        options.compileFlags |= D3D11_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
+        options.compileFlags |= D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
     else
-        options.compileFlags |= D3D11_SHADER_ENABLE_STRICTNESS;
+        options.compileFlags |= D3D10_SHADER_ENABLE_STRICTNESS;
 
     // compile all shaders
     ID3D11Device & dev = getDeviceRef();
@@ -306,7 +305,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         sUpdateConstData( ud, u, mPs.constData, 2, pscDirty );
     }
 
-    ID3D11Device & dev = getDeviceRef();
+    ID3D11DeviceContext & cxt = getDeviceContextRef();
 
     // update vertex shader constant buffers
     for( size_t i = 0; i < mVs.constBufs.size(); ++i )
@@ -315,7 +314,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mVs.constBufs[i];
             const DynaArray<UInt8> & data = mVs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }
 
@@ -326,7 +325,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mGs.constBufs[i];
             const DynaArray<UInt8> & data = mGs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }
 
@@ -337,7 +336,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mPs.constBufs[i];
             const DynaArray<UInt8> & data = mPs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
         }
     }
 }
@@ -386,9 +385,9 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
         }
     }
 
-    ID3D11Device & dev = getDeviceRef();
+    ID3D11DeviceContext & cxt = getDeviceContextRef();
 
-    dev.VSSetShaderResources( 0, NUM_STAGES, srvArray );
-    dev.GSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES );
-    dev.PSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES * 2 );
+    cxt.VSSetShaderResources( 0, NUM_STAGES, srvArray );
+    cxt.GSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES );
+    cxt.PSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES * 2 );
 }

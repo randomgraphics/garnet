@@ -85,15 +85,16 @@ void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * dat
     GN_ASSERT( data );
     GN_ASSERT( 0 <= flag && flag < SurfaceUpdateFlag::NUM_FLAGS );
 
-    ID3D11Device & dev = getDeviceRef();
+    ID3D11DeviceContext & dev = getDeviceContextRef();
 
     if( mFastCpuWrite )
     {
         // update dynamic d3d buffer
-        UInt8 * dst;
-        GN_DX10_CHECK_R( mD3DBuffer->Map( SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, (void**)&dst ) );
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        GN_DX10_CHECK_R( dev.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
+        UInt8 * dst = (UInt8*)mapped.pData;
         memcpy( dst+offset, data, bytes );
-        mD3DBuffer->Unmap();
+        dev.Unmap( mD3DBuffer, 0 );
     }
     else
     {

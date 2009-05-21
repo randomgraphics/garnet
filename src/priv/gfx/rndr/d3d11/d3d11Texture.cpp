@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d11Renderer.h"
 #include "d3d11Texture.h"
-#include "garnet/GNd3d11.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
 
@@ -56,7 +56,7 @@ sGetDepthReadingFormat( DXGI_FORMAT format )
         case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_R16_UNORM;
         default:
             GN_ERROR(sLogger)( "Format %s is not a valid typeless depth buffer format.",
-                d3d11::getDXGIFormatDesc( format ).name );
+                d3d10::getDXGIFormatDesc( format ).name );
             return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -75,7 +75,7 @@ sGetDepthWritingFormat( DXGI_FORMAT format )
         case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_D16_UNORM;
         default:
             GN_ERROR(sLogger)( "Format %s is not a valid depth buffer format.",
-                d3d11::getDXGIFormatDesc( format ).name );
+                d3d10::getDXGIFormatDesc( format ).name );
             return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -179,8 +179,6 @@ void GN::gfx::D3D11Texture::updateMipmap(
     }
     else
     {
-        ID3D11Device & dev = getDeviceRef();
-
         D3D11_BOX box =
         {
             clippedArea.x,
@@ -191,9 +189,9 @@ void GN::gfx::D3D11Texture::updateMipmap(
             clippedArea.z + clippedArea.d,
         };
 
-        const d3d11::DXGI_FORMAT_DESCRIPTION & fmtdesc = d3d11::getDXGIFormatDesc( mTextureFormat );
+        const d3d10::DXGI_FORMAT_DESCRIPTION & fmtdesc = d3d10::getDXGIFormatDesc( mTextureFormat );
 
-        dev.UpdateSubresource(
+        getDeviceContextRef().UpdateSubresource(
             mTexture,
             D3D11CalcSubresource( level, face, desc.levels ),
             &box,
@@ -512,7 +510,7 @@ bool GN::gfx::D3D11Texture::createTexture()
     {
         // special case for depth texture
 
-        mTextureFormat = d3d11::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
+        mTextureFormat = d3d10::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
         mWritingFormat = sGetDepthWritingFormat( mTextureFormat );
         if( DXGI_FORMAT_UNKNOWN == mTextureFormat ||

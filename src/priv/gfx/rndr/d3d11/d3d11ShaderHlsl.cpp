@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "d3d11Shader.h"
 #include "d3d11Renderer.h"
-#include "garnet/GNd3d11.h"
+#include "garnet/GNd3d10.h"
+#include <d3d11shader.h>
 
 using namespace GN;
 using namespace GN::gfx;
@@ -30,16 +31,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
     //@{
     typedef ID3D11VertexShader ShaderClass;
 
-    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
-            ID3D11Device & dev,
-            const char   * source,
-            size_t         len,
-            UInt32         flags,
-            const char   * entry,
-            const char   * profile,
-            ID3D11Blob  ** binary );
-
-    typedef void (__stdcall ID3D11Device::*SetConstantBuffersFuncPtr)(
+    typedef void (__stdcall ID3D11DeviceContext::*SetConstantBuffersFuncPtr)(
             UINT StartSlot,
             UINT NumBuffers,
             ID3D11Buffer *const * ppConstantBuffers );
@@ -47,7 +39,6 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
 
     /// member data
     //@{
-    CompileAndCreateShaderFuncPtr compileAndCreateShader;
     SetConstantBuffersFuncPtr     setConstantBuffers;
     const char                  * profile;
     //@}
@@ -55,9 +46,28 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
     /// ctor
     D3D11ShaderTypeTemplate()
     {
-        compileAndCreateShader = &GN::d3d11::compileAndCreateVS;
-        setConstantBuffers     = &ID3D11Device::VSSetConstantBuffers;
+        setConstantBuffers     = &ID3D11DeviceContext::VSSetConstantBuffers;
         profile                = "vs_4_0";
+    }
+
+    ID3D11VertexShader * create(
+        ID3D11Device & dev,
+        const char   * source,
+        size_t         len,
+        UInt32         flags,
+        const char   * entry,
+        const char   * profile,
+        ID3D10Blob  ** signature )
+    {
+        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        if( !bin ) return NULL;
+
+        ID3D11VertexShader * shader;
+        GN_DX10_CHECK_RV( dev.CreateVertexShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+
+        // success
+        if( signature ) *signature = bin.detach();
+        return shader;
     }
 };
 
@@ -67,16 +77,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
     //@{
     typedef ID3D11GeometryShader ShaderClass;
 
-    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
-            ID3D11Device & dev,
-            const char   * source,
-            size_t         len,
-            UInt32         flags,
-            const char   * entry,
-            const char   * profile,
-            ID3D11Blob  ** binary );
-
-    typedef void (__stdcall ID3D11Device::*SetConstantBuffersFuncPtr)(
+    typedef void (__stdcall ID3D11DeviceContext::*SetConstantBuffersFuncPtr)(
             UINT StartSlot,
             UINT NumBuffers,
             ID3D11Buffer *const * ppConstantBuffers );
@@ -84,7 +85,6 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
 
     /// member data
     //@{
-    CompileAndCreateShaderFuncPtr compileAndCreateShader;
     SetConstantBuffersFuncPtr     setConstantBuffers;
     const char                  * profile;
     //@}
@@ -92,9 +92,28 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
     /// ctor
     D3D11ShaderTypeTemplate()
     {
-        compileAndCreateShader = &GN::d3d11::compileAndCreateGS;
-        setConstantBuffers     = &ID3D11Device::GSSetConstantBuffers;
+        setConstantBuffers     = &ID3D11DeviceContext::GSSetConstantBuffers;
         profile                = "gs_4_0";
+    }
+
+    ID3D11GeometryShader * create(
+        ID3D11Device & dev,
+        const char   * source,
+        size_t         len,
+        UInt32         flags,
+        const char   * entry,
+        const char   * profile,
+        ID3D10Blob  ** signature )
+    {
+        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        if( !bin ) return NULL;
+
+        ID3D11GeometryShader * shader;
+        GN_DX10_CHECK_RV( dev.CreateGeometryShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+
+        // success
+        if( signature ) *signature = bin.detach();
+        return shader;
     }
 };
 
@@ -104,16 +123,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
     //@{
     typedef ID3D11PixelShader ShaderClass;
 
-    typedef ShaderClass * (*CompileAndCreateShaderFuncPtr)(
-            ID3D11Device & dev,
-            const char   * source,
-            size_t         len,
-            UInt32         flags,
-            const char   * entry,
-            const char   * profile,
-            ID3D11Blob  ** binary );
-
-    typedef void (__stdcall ID3D11Device::*SetConstantBuffersFuncPtr)(
+    typedef void (__stdcall ID3D11DeviceContext::*SetConstantBuffersFuncPtr)(
             UINT StartSlot,
             UINT NumBuffers,
             ID3D11Buffer *const * ppConstantBuffers );
@@ -121,7 +131,6 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
 
     /// member data
     //@{
-    CompileAndCreateShaderFuncPtr compileAndCreateShader;
     SetConstantBuffersFuncPtr     setConstantBuffers;
     const char                  * profile;
     //@}
@@ -129,9 +138,28 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
     /// ctor
     D3D11ShaderTypeTemplate()
     {
-        compileAndCreateShader = &GN::d3d11::compileAndCreatePS;
-        setConstantBuffers     = &ID3D11Device::PSSetConstantBuffers;
+        setConstantBuffers     = &ID3D11DeviceContext::PSSetConstantBuffers;
         profile                = "ps_4_0";
+    }
+
+    ID3D11PixelShader * create(
+        ID3D11Device & dev,
+        const char   * source,
+        size_t         len,
+        UInt32         flags,
+        const char   * entry,
+        const char   * profile,
+        ID3D10Blob  ** signature )
+    {
+        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        if( !bin ) return NULL;
+
+        ID3D11PixelShader * shader;
+        GN_DX10_CHECK_RV( dev.CreatePixelShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+
+        // success
+        if( signature ) *signature = bin.detach();
+        return shader;
     }
 };
 
@@ -194,7 +222,7 @@ sInitConstBuffers(
 
         D3D11_SHADER_BUFFER_DESC cbdesc;
         cb->GetDesc( &cbdesc );
-        GN_ASSERT( D3D11_CT_CBUFFER == cbdesc.Type );
+        GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
 
         ID3D11Buffer * buf;
         D3D11_BUFFER_DESC bufdesc;
@@ -353,8 +381,8 @@ sInitShader(
     D3D11ShaderTypeTemplate<SHADER_TYPE> templ;
 
     // compile shader
-    AutoComPtr<ID3D11Blob> binary;
-    shader.attach( templ.compileAndCreateShader(
+    AutoComPtr<ID3D10Blob> binary;
+    shader.attach( templ.create(
         dev,
         code.source,
         0,
@@ -437,97 +465,3 @@ bool GN::gfx::D3D11PixelShaderHLSL::init(
 {
     return sInitShader<PIXEL_SHADER>( dev, code, options, paramDesc, shader, constBufs, constData );
 }
-
-/*
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D11ShaderHLSL::applyUniform( const Uniform & u ) const
-{
-    GN_GUARD_SLOW;
-
-    UniformUserData uud;
-
-    uud.u32 = (UInt32)u.userData;
-
-    // get source pointer
-    const void * src = 0;
-    switch( u.value.type )
-    {
-        case UVT_BOOL:
-            if( !u.value.bools.empty() )
-            {
-                GN_ASSERT( uud.sizedw == u.value.bools.size() );
-                src = &u.value.bools[0];
-            }
-            break;
-
-        case UVT_INT:
-            if( !u.value.ints.empty() )
-            {
-                GN_ASSERT( uud.sizedw == u.value.ints.size() );
-                src = &u.value.ints[0];
-            }
-            break;
-
-        case UVT_FLOAT:
-            if( !u.value.floats.empty() )
-            {
-                GN_ASSERT( uud.sizedw == u.value.floats.size() );
-                src = &u.value.floats[0];
-            }
-            break;
-
-        case UVT_VECTOR4:
-            if( !u.value.vector4s.empty() )
-            {
-                GN_ASSERT( uud.sizedw == u.value.vector4s.size() * 4 );
-                src = &u.value.vector4s[0];
-            }
-            break;
-
-        case UVT_MATRIX44:
-            if( !u.value.matrix44s.empty() )
-            {
-                GN_ASSERT( uud.sizedw == u.value.matrix44s.size() * 16 );
-                src = &u.value.matrix44s[0];
-            }
-            break;
-
-        default:
-            GN_ERROR(GN::getLogger("GN.gfx.rndr.D3D9"))( "unitialized/invalid uniform!" );
-            break;
-
-    }
-
-    if( 0 == src ) return;
-
-    GN_ASSERT( uud.bufidx < constBufs.size() );
-    ID3D11Buffer * cb = constBufs[uud.bufidx];
-    DynaArray<UInt8> & syscopy = constData[uud.bufidx];
-
-    // copy data to system copy
-    memcpy( &syscopy[uud.offsetdw*4], src, uud.sizedw * 4 );
-
-    // then copy to D3D constant buffer
-#if 0
-    getDevice()->UpdateSubresource(
-        cb,
-        0, // sub resource
-        0, // box
-        syscopy.cptr(),
-        0,   // row pitch
-        0 ); // slice pitch
-
-#else
-    UInt32 * data;
-    if( FAILED( cb->Map( D3D11_MAP_WRITE_DISCARD, 0, (void**)&data ) ) )
-    {
-        GN_ERROR(sLogger)( "fail to map constant buffer." );
-        return;
-    }
-    memcpy( data, syscopy.cptr(), syscopy.size() );
-    cb->Unmap();
-#endif
-
-    GN_UNGUARD_SLOW;
-}*/

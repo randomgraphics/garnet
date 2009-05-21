@@ -29,6 +29,11 @@ namespace GN { namespace gfx
         ///
         ID3D11Device & getDeviceRef() const { return mRenderer.getDeviceRefInlined(); }
 
+        ///
+        /// Get reference to D3D11Device
+        ///
+        ID3D11DeviceContext & getDeviceContextRef() const { return mRenderer.getDeviceContextRefInlined(); }
+
     protected :
 
         D3D11Resource( D3D11Renderer & ); ///< ctor

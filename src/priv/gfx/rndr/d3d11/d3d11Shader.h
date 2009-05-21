@@ -250,17 +250,17 @@ namespace GN { namespace gfx
         ///
         void apply() const
         {
-            ID3D11Device & dev = getDeviceRef();
+            ID3D11DeviceContext & cxt = getDeviceContextRef();
 
             // bind shader
-            dev.VSSetShader( mVs.shader );
-            dev.GSSetShader( mGs.shader );
-            dev.PSSetShader( mPs.shader );
+            cxt.VSSetShader( mVs.shader, NULL, 0 );
+            cxt.GSSetShader( mGs.shader, NULL, 0 );
+            cxt.PSSetShader( mPs.shader, NULL, 0 );
 
             // bind constant buffers
             if( mVs.constBufs.size() )
             {
-                dev.VSSetConstantBuffers(
+                cxt.VSSetConstantBuffers(
                     0,
                     (UInt32)mVs.constBufs.size(),
                     mVs.constBufs.cptr() );
@@ -268,7 +268,7 @@ namespace GN { namespace gfx
 
             if( mGs.constBufs.size() )
             {
-                dev.GSSetConstantBuffers(
+                cxt.GSSetConstantBuffers(
                     0,
                     (UInt32)mGs.constBufs.size(),
                     mGs.constBufs.cptr() );
@@ -276,7 +276,7 @@ namespace GN { namespace gfx
 
             if( mPs.constBufs.size() )
             {
-                dev.PSSetConstantBuffers(
+                cxt.PSSetConstantBuffers(
                     0,
                     (UInt32)mPs.constBufs.size(),
                     mPs.constBufs.cptr() );
