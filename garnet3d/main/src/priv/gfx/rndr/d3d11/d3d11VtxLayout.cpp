@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d11Renderer.h"
 #include "d3d11VtxLayout.h"
-#include "garnet/GNd3d11.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11.VtxLayout");
 
@@ -71,7 +71,7 @@ sVtxFmt2InputLayout(
 ///
 /// Build a fake shader that can accept the input vertex format
 // -----------------------------------------------------------------------------
-static ID3D11Blob *
+static ID3D10Blob *
 sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
 {
     GN_GUARD;
@@ -91,7 +91,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
     code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
 
     // return compiled shader binary
-    return d3d11::compileShader( "vs_4_0", code.cptr(), code.size() );
+    return d3d10::compileShader( "vs_4_0", code.cptr(), code.size() );
 
     GN_UNGUARD;
 }
@@ -115,7 +115,7 @@ sCreateD3D11InputLayout( ID3D11Device & dev, const GN::gfx::VertexFormat & forma
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
     GN_ASSERT( !elements.empty() );
 
-    AutoComPtr<ID3D11Blob> bin( sVtxFmt2ShaderBinary( format ) );
+    AutoComPtr<ID3D10Blob> bin( sVtxFmt2ShaderBinary( format ) );
     if( !bin ) return false;
 
     ID3D11InputLayout * layout;

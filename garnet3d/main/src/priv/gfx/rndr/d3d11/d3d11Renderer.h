@@ -92,8 +92,9 @@ namespace GN { namespace gfx
 
     public :
 
-        ID3D11Device   & getDeviceRefInlined() const { GN_ASSERT(mDevice); return *mDevice; }
-        IDXGISwapChain & getSwapChainRef() const { GN_ASSERT(mSwapChain); return *mSwapChain; }
+        ID3D11Device        & getDeviceRefInlined() const { GN_ASSERT(mDevice); return *mDevice; }
+        ID3D11DeviceContext & getDeviceContextRefInlined() const { GN_ASSERT(mDeviceContext); return *mDeviceContext; }
+        IDXGISwapChain      & getSwapChainRef() const { GN_ASSERT(mSwapChain); return *mSwapChain; }
 
     private :
 

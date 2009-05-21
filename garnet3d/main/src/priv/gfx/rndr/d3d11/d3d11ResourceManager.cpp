@@ -3,12 +3,8 @@
 #include "d3d11Resource.h"
 #include "../common/basicShader.h"
 //#include "d3d11Shader.h"
-//#include "d3d11Texture.h"
-//#include "d3d11Buffer.h"
-//#include "d3d11VtxLayout.h"
-//#include "d3d11Font.h"
-//#include "d3d11Quad.h"
-//#include "d3d11Line.h"
+#include "d3d11Texture.h"
+#include "d3d11Buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
 
@@ -67,13 +63,11 @@ void GN::gfx::D3D11Renderer::resourceQuit()
 GN::gfx::CompiledGpuProgram *
 GN::gfx::D3D11Renderer::compileGpuProgram( const GpuProgramDesc & gpd )
 {
-    GN_UNIMPL();
-    return NULL;
-    /*AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->init( gpd ) ) return NULL;
 
     // success
-    return s.detach();*/
+    return s.detach();
 }
 
 //
@@ -120,12 +114,9 @@ GN::gfx::D3D11Renderer::createUniform( size_t size )
 GN::gfx::Texture *
 GN::gfx::D3D11Renderer::createTexture( const TextureDesc & desc )
 {
-    GN_UNIMPL();
-    return NULL;
-
-    /*AutoRef<D3D11Texture> p( new D3D11Texture(*this) );
+    AutoRef<D3D11Texture> p( new D3D11Texture(*this) );
     if( !p->init( desc ) ) return 0;
-    return p.detach();*/
+    return p.detach();
 }
 
 //
@@ -133,14 +124,11 @@ GN::gfx::D3D11Renderer::createTexture( const TextureDesc & desc )
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3D11Renderer::createVtxBuf( const VtxBufDesc & desc )
 {
-    GN_UNIMPL();
-    return NULL;
-
-    /*AutoRef<D3D11VtxBuf> buf( new D3D11VtxBuf(*this) );
+    AutoRef<D3D11VtxBuf> buf( new D3D11VtxBuf(*this) );
 
     if( !buf->init( desc ) ) return 0;
 
-    return buf.detach();*/
+    return buf.detach();
 }
 
 //
@@ -148,12 +136,9 @@ GN::gfx::VtxBuf * GN::gfx::D3D11Renderer::createVtxBuf( const VtxBufDesc & desc 
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf * GN::gfx::D3D11Renderer::createIdxBuf( const IdxBufDesc & desc )
 {
-    GN_UNIMPL();
-    return NULL;
-
-    /*AutoRef<D3D11IdxBuf> buf( new D3D11IdxBuf(*this) );
+    AutoRef<D3D11IdxBuf> buf( new D3D11IdxBuf(*this) );
 
     if( !buf->init( desc ) ) return 0;
 
-    return buf.detach();*/
+    return buf.detach();
 }
