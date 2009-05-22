@@ -6,8 +6,8 @@ import sys
 cases = []
 cases += GN.glob( 'base/encoding.cpp' )
 cases += ['gfx/miscGfxTest.cpp']
+if GN.conf['has_d3d10']: cases += ['gfx/d3d10rndrtest.cpp']
 #if GN.conf['has_ogl']: cases += ['gfx/ogl.cpp']
-#if GN.conf['has_d3d9']: cases += ['gfx/d3d9.cpp']
 
 # generate cxxtest glue file.
 cxxtest = Command(
