@@ -83,3 +83,45 @@ void GN::gfx::D3D10Renderer::quit()
 
     GN_UNGUARD;
 }
+
+// *****************************************************************************
+// Misc. utilities
+// *****************************************************************************
+
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D10Renderer::getBackBufferContent( BackBufferContent & bc )
+{
+    bc.data.clear();
+    bc.format = ColorFormat::UNKNOWN;
+    bc.width = 0;
+    bc.height = 0;
+    bc.pitch = 0;
+
+    AutoComPtr<ID3D10Texture2D> backbuf;
+    GN_DX10_CHECK_R( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backbuf ) );
+
+    D3D10_TEXTURE2D_DESC desc;
+    backbuf->GetDesc( &desc );
+
+    /// create a temporary copy of back buffer in system memory for reading data back
+    AutoComPtr<ID3D10Texture2D> sysbuf;
+    desc.Usage = D3D10_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
+    GN_DX10_CHECK_R( mDevice->CreateTexture2D( &desc, NULL, &sysbuf ) );
+    mDevice->CopyResource( sysbuf, backbuf );
+
+    D3D10_MAPPED_TEXTURE2D mt;
+    GN_DX10_CHECK_R( sysbuf->Map( 0, D3D10_MAP_READ, 0, &mt ) );
+
+    bc.format = dxgiFormat2ColorFormat( desc.Format );
+    bc.width  = desc.Width;
+    bc.height = desc.Height;
+    bc.pitch  = mt.RowPitch;
+    bc.data.append( (UInt8*)mt.pData, mt.RowPitch * desc.Height );
+
+    sysbuf->Unmap( 0 );
+}

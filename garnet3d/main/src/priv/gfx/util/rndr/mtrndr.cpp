@@ -552,6 +552,15 @@ GN::gfx::MultiThreadRenderer::drawLines(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::MultiThreadRenderer::getBackBufferContent( BackBufferContent & result )
+{
+    postCommand1( CMD_GET_BACK_BUFFER_CONTENT, &result );
+    waitForIdle();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadRenderer::processRenderWindowMessages( bool blockWhileMinimized )
 {
     postCommand1( CMD_PROCESS_RENDER_WINDOW_MESSAGES, blockWhileMinimized );
@@ -937,6 +946,15 @@ namespace GN { namespace gfx
         };
         GetSignalsParam * param = (GetSignalsParam *)p;
         *(param->ppSignals) = &r.getSignals();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_GET_BACK_BUFFER_CONTENT( Renderer & r, void * p, size_t )
+    {
+        Renderer::BackBufferContent ** param = (Renderer::BackBufferContent **)p;
+        r.getBackBufferContent( **param );
     }
 
     //

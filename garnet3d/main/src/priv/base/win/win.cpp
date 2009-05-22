@@ -29,7 +29,7 @@ namespace GN { namespace win
         void hide() {}
         void minimize() {}
         void moveTo( int, int ) {}
-        void resize( size_t, size_t ) {}
+        void setClientSize( size_t, size_t ) {}
         void repaint() {}
         void run() {}
         void runWhileEvents() {}

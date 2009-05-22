@@ -1450,6 +1450,20 @@ namespace GN { namespace gfx
         ///
         virtual RendererSignals & getSignals() = 0;
 
+        struct BackBufferContent
+        {
+            DynaArray<UInt8> data;
+            ColorFormat      format;
+            size_t           width;
+            size_t           height;
+            size_t           pitch;
+        };
+
+        ///
+        /// retrieve back buffer data
+        ///
+        virtual void getBackBufferContent( BackBufferContent & ) = 0;
+
         ///
         /// Process render window messages, to keep render window responding to user inputs.
         ///

@@ -54,7 +54,7 @@ namespace GN { namespace win
         void hide();
         void minimize() { GN_UNIMPL_WARNING(); }
         void moveTo( int, int );
-        void resize( size_t, size_t );
+        void setClientSize( size_t, size_t );
         void repaint();
         void run();
         void runWhileEvents() { processWindowMessages(mWindow,false); }
