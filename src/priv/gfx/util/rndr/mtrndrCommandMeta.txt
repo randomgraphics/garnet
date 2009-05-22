@@ -1,5 +1,5 @@
-GET_RENDERER_OPTIONS          	///< get renderer options
-GET_DISP_DESC					///< get display descriptor
+GET_RENDERER_OPTIONS            ///< get renderer options
+GET_DISP_DESC                   ///< get display descriptor
 GET_D3D_DEVICE
 GET_OGL_RC
 GET_CAPS
@@ -20,6 +20,7 @@ DRAW
 DRAW_INDEXED_UP
 DRAW_UP
 DRAW_LINES
+GET_BACK_BUFFER_CONTENT
 PROCESS_RENDER_WINDOW_MESSAGES
 ENABLE_PARAMETER_CHECK
 DUMP_NEXT_FRAME

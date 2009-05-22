@@ -289,6 +289,8 @@ namespace GN { namespace gfx
 
     public:
 
+        virtual void getBackBufferContent( BackBufferContent & );
+
         virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
         {
             GN_UNUSED_PARAM( startBatchIndex );

@@ -270,6 +270,7 @@ namespace GN { namespace gfx
                                 const Matrix44f & proj );
 
         virtual RendererSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
+        virtual void getBackBufferContent( BackBufferContent & );
         virtual void processRenderWindowMessages( bool blockWhileMinimized );
         virtual void enableParameterCheck( bool enable );
         virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );

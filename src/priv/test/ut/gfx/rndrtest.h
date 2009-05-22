@@ -79,16 +79,28 @@ class RendererTest
     ///     - this function may crash because of invalid parameters.
     RenderTargetPixel getBackBufferPixel( GN::gfx::Renderer & r, size_t x, size_t y )
     {
-        GN_UNUSED_PARAM( r );
-        GN_UNUSED_PARAM( x );
-        GN_UNUSED_PARAM( y );
+        using namespace GN;
+        using namespace GN::gfx;
 
         RenderTargetPixel rtp;
-
         rtp.s32[0] = rand();
         rtp.s32[1] = rand();
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
+
+        Renderer::BackBufferContent bc;
+        r.getBackBufferContent( bc );
+
+        TS_ASSERT( x < bc.width && y < bc.height );
+        if( x >= bc.width && y >= bc.height ) return rtp;
+
+        size_t bytesPerPixel = bc.format.getBytesPerBlock();
+        size_t srcOffset = bc.pitch * y + x * bytesPerPixel;
+        TS_ASSERT( srcOffset < bc.data.size() );
+        if( srcOffset >= bc.data.size() ) return rtp;
+        const UInt8 * src = &bc.data[srcOffset];
+        size_t copiedBytes = math::getmin( bc.data.size() - srcOffset, sizeof(rtp) );
+        memcpy( &rtp, src, copiedBytes );
 
         return rtp;
     }
@@ -148,7 +160,7 @@ protected :
         win.attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
         TS_ASSERT( !win.empty() );
         if( win.empty() ) return;
-        win->resize( 511, 236 );
+        win->setClientSize( 511, 236 );
         win->show();
 
         RendererOptions ro;
@@ -159,6 +171,11 @@ protected :
         TS_ASSERT( rndr );
         if( !rndr ) return;
         Renderer & r = *rndr;
+
+        // the renderer should be in same size as the external window client
+        const DispDesc & dd = r.getDispDesc();
+        TS_ASSERT_EQUALS( dd.width, 511 );
+        TS_ASSERT_EQUALS( dd.height, 236 );
 
         r.clearScreen( Vector4f(1,1,0,1) );
 

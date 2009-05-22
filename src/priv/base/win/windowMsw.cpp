@@ -137,7 +137,7 @@ void GN::win::WindowMsw::moveTo( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::resize( size_t w, size_t h )
+void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );

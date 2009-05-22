@@ -92,6 +92,18 @@ void GN::gfx::BasicRenderer::rebindContext()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::getBackBufferContent( BackBufferContent & c )
+{
+    c.data.clear();
+    c.format = ColorFormat::UNKNOWN;
+    c.width = 0;
+    c.height = 0;
+    c.pitch = 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::setUserData( const Guid & id, const void * data, size_t length )
 {
     UserDataMap::iterator iter = mUserData.find( id );
