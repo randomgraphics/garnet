@@ -5,6 +5,7 @@
 
 #pragma comment(lib, "d3d9.lib") // for PIX routines.
 #pragma comment(lib, "d3d10.lib")
+#pragma comment(lib, "dxguid.lib")
 #if GN_BUILD_DEBUG
 #pragma comment(lib, "d3dx10d.lib")
 #else
