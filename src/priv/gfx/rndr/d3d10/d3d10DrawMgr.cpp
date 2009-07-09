@@ -18,7 +18,7 @@ static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::PrimitiveType::NUM_PRIMIT
 //
 // -----------------------------------------------------------------------------
 static bool
-sSetupUserD3DBuffer(
+sSetupUserD3D10Buffer(
     ID3D10Device  & dev,
     ID3D10Buffer ** buffer,
     size_t          size,
@@ -72,7 +72,7 @@ sSetupUserD3DBuffer(
 ///
 /// class to automatically store/restore VB0 and IB
 ///
-class RestoreVB0AndIB
+class D3D10RestoreVB0AndIB
 {
     ID3D10Device & mDevice;
     ID3D10Buffer * mOldVB;
@@ -84,13 +84,13 @@ class RestoreVB0AndIB
 
 public:
 
-    RestoreVB0AndIB( ID3D10Device & dev ) : mDevice( dev )
+    D3D10RestoreVB0AndIB( ID3D10Device & dev ) : mDevice( dev )
     {
         mDevice.IAGetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IAGetIndexBuffer( &mOldIB, &mOldFormat, &mOldIBOffset );
     }
 
-    ~RestoreVB0AndIB()
+    ~D3D10RestoreVB0AndIB()
     {
         mDevice.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
@@ -203,7 +203,7 @@ void GN::gfx::D3D10Renderer::drawIndexedUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D10Buffer(
         *mDevice,
         &mUserVB,
         strideInBytes * numvtx,
@@ -213,7 +213,7 @@ void GN::gfx::D3D10Renderer::drawIndexedUp(
         return;
     }
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D10Buffer(
         *mDevice,
         &mUserIB,
         strideInBytes * numidx,
@@ -224,7 +224,7 @@ void GN::gfx::D3D10Renderer::drawIndexedUp(
     }
 
     // this will restore VB0 and IB when function exists.
-    RestoreVB0AndIB autoRestore( *mDevice );
+    D3D10RestoreVB0AndIB autoRestore( *mDevice );
 
     // setup vertex buffer and index buffer
     UInt32 stride = (UInt32)strideInBytes;
@@ -248,7 +248,7 @@ void GN::gfx::D3D10Renderer::drawUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D10Buffer(
         *mDevice,
         &mUserVB,
         strideInBytes * numvtx,
@@ -259,7 +259,7 @@ void GN::gfx::D3D10Renderer::drawUp(
     }
 
     // this will restore VB0 and IB when function exists.
-    RestoreVB0AndIB autoRestore( *mDevice );
+    D3D10RestoreVB0AndIB autoRestore( *mDevice );
 
     // setup vertex buffer and index buffer
     UInt32 stride = (UInt32)strideInBytes;

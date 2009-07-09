@@ -18,7 +18,7 @@ static D3D11_PRIMITIVE_TOPOLOGY sD3D11PrimMap[GN::gfx::PrimitiveType::NUM_PRIMIT
 //
 // -----------------------------------------------------------------------------
 static bool
-sSetupUserD3DBuffer(
+sSetupUserD3D11Buffer(
     ID3D11Device         & dev,
     ID3D11DeviceContext  & context,
     ID3D11Buffer        ** buffer,
@@ -73,7 +73,7 @@ sSetupUserD3DBuffer(
 ///
 /// class to automatically store/restore VB0 and IB
 ///
-class RestoreVB0AndIB
+class D3D11RestoreVB0AndIB
 {
     ID3D11DeviceContext & mDevice;
     ID3D11Buffer        * mOldVB;
@@ -85,13 +85,13 @@ class RestoreVB0AndIB
 
 public:
 
-    RestoreVB0AndIB( ID3D11DeviceContext & dev ) : mDevice( dev )
+    D3D11RestoreVB0AndIB( ID3D11DeviceContext & dev ) : mDevice( dev )
     {
         mDevice.IAGetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IAGetIndexBuffer( &mOldIB, &mOldFormat, &mOldIBOffset );
     }
 
-    ~RestoreVB0AndIB()
+    ~D3D11RestoreVB0AndIB()
     {
         mDevice.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
@@ -204,7 +204,7 @@ void GN::gfx::D3D11Renderer::drawIndexedUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D11Buffer(
         *mDevice,
         *mDeviceContext,
         &mUserVB,
@@ -215,7 +215,7 @@ void GN::gfx::D3D11Renderer::drawIndexedUp(
         return;
     }
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D11Buffer(
         *mDevice,
         *mDeviceContext,
         &mUserIB,
@@ -227,7 +227,7 @@ void GN::gfx::D3D11Renderer::drawIndexedUp(
     }
 
     // this will restore VB0 and IB when function exists.
-    RestoreVB0AndIB autoRestore( *mDeviceContext );
+    D3D11RestoreVB0AndIB autoRestore( *mDeviceContext );
 
     // setup vertex buffer and index buffer
     UInt32 stride = (UInt32)strideInBytes;
@@ -251,7 +251,7 @@ void GN::gfx::D3D11Renderer::drawUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    if( !sSetupUserD3DBuffer(
+    if( !sSetupUserD3D11Buffer(
         *mDevice,
         *mDeviceContext,
         &mUserVB,
@@ -263,7 +263,7 @@ void GN::gfx::D3D11Renderer::drawUp(
     }
 
     // this will restore VB0 and IB when function exists.
-    RestoreVB0AndIB autoRestore( *mDeviceContext );
+    D3D11RestoreVB0AndIB autoRestore( *mDeviceContext );
 
     // setup vertex buffer and index buffer
     UInt32 stride = (UInt32)strideInBytes;
