@@ -299,7 +299,7 @@ void GN::app::SampleApp::printStandardCommandLineOptions()
         "                               VERBOSE  = 50\n"
         "                               VVERBOSE = 60\n"
         "\n"
-        "   -mt   [on|off]          Use multithread renderer. Default is off.\n"
+        "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
         "\n"
         "   -rapi [auto|ogl|d3d10]  Choose rendering API. Default is AUTO.\n"
         "\n"
