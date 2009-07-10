@@ -53,7 +53,7 @@ namespace GN { namespace util
         void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
         void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
         void setAlbedoTexture( gfx::Texture * ); ///< set to NULL to use pure white texture. Default is NULL.
-        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL );
+        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
         void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
         void draw();
         //@}
@@ -81,7 +81,84 @@ namespace GN { namespace util
         // ********************************
     private:
     };
-}}
+
+    ///
+    /// simple normal map effect
+    ///
+    class SimpleNormalMapEffect : public StdClass
+    {
+        GN_DECLARE_STDCLASS( SimpleNormalMapEffect, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        SimpleNormalMapEffect() : mEffect(NULL) { clear(); }
+        virtual ~SimpleNormalMapEffect() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( gfx::Renderer & );
+        void quit();
+    private:
+        void clear()
+        {
+            mDefaultAlbedoTexture = NULL;
+            mDefaultNormalTexture = NULL;
+            mEffect = NULL;
+        }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        //@{
+        gfx::Effect * getEffect() const { return mEffect; }
+        void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
+        void setLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
+        void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
+        void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
+        void setAlbedoTexture( gfx::Texture * ); ///< set to NULL to use pure white texture. Default is NULL.
+        void setNormalTexture( gfx::Texture * ); ///< set to NULL to use flat normal texture. Defau is NULL.
+        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal, tangent and texcoord
+        void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
+        void draw();
+        //@}
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        gfx::Texture             * mDefaultAlbedoTexture;
+        gfx::Texture             * mDefaultNormalTexture;
+        gfx::Effect              * mEffect;
+        AutoRef<gfx::Uniform>    * mMatrixPvw;
+        AutoRef<gfx::Uniform>    * mMatrixWorld;
+        AutoRef<gfx::Uniform>    * mMatrixWorldIT;
+        AutoRef<gfx::Uniform>    * mLightPos;
+        AutoRef<gfx::Uniform>    * mLightColor;
+        AutoRef<gfx::Uniform>    * mAlbedoColor;
+        AutoRef<gfx::Texture>    * mAlbedoTexture;
+        AutoRef<gfx::Texture>    * mNormalTexture;
+        gfx::RenderTargetTexture * mColorTarget;
+        gfx::RenderTargetTexture * mDepthTarget;
+        gfx::Drawable              mDrawable;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };}}
 
 // *****************************************************************************
 //                                     EOF

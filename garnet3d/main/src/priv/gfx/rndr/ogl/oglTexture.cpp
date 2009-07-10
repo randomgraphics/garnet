@@ -170,6 +170,12 @@ static inline bool sColorFormat2OGL(
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
+        case ColorFormat::RG_16_16_UNORM:
+            gl_internalformat = GL_LUMINANCE_ALPHA;
+            gl_format         = GL_RGBA;
+            gl_type           = GL_UNSIGNED_SHORT;
+            return true;
+
         case ColorFormat::RGBA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_RGBA;

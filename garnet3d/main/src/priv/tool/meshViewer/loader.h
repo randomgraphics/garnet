@@ -6,5 +6,4 @@
 GN::scene::GeometryNode *
 loadGeometryFromFile(
     GN::scene::Scene      & scene,
-    const GN::gfx::Effect * effect,
     const char            * filename );

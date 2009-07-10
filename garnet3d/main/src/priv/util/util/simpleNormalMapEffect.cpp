@@ -15,12 +15,14 @@ static const char * hlslvscode =
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
     "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
     "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float3 tan_world : TANGENT_WORLD; // vertex tangent in world space \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "struct VSINPUT \n"
     "{ \n"
     "   float4 position  : POSITION; \n"
     "   float3 normal    : NORMAL; \n"
+    "   float3 tangent   : TANGENT; \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "VSOUTPUT main( in VSINPUT i ) { \n"
@@ -28,6 +30,7 @@ static const char * hlslvscode =
     "   o.hpos      = mul( pvw, i.position ); \n"
     "   o.pos_world = mul( world, i.position ); \n"
     "   o.nml_world = mul( wit, float4(i.normal,0) ).xyz; \n"
+    "   o.tan_world = mul( wit, float4(i.tangent,0) ).xyz; \n"
     "   o.texcoords = i.texcoords; \n"
     "   return o; \n"
     "}";
@@ -37,19 +40,21 @@ static const char * hlslpscode =
     "uniform float4 lightColor; \n"
     "uniform float4 albedoColor; \n"
     "sampler s0; \n"
-    "Texture2D<float4> t0; \n"
+    "Texture2D<float4> t0; // albedo texture \n"
+    "Texture2D<float2> t1; // normal texture \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
     "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
     "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float3 tan_world : TANGENT_WORLD; // vertex tangent in world space \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
     "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   float4  tex  = t0.Sample( s0, i.texcoords ) + t1.Sample( s0, i.texcoords ).xyyy; \n"
     "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
@@ -71,7 +76,8 @@ static const char * glslpscode =
     "uniform vec4 lightpos; // light positin in world space \n"
     "uniform vec4 lightColor; \n"
     "uniform vec4 albedoColor; \n"
-    "uniform sampler2D t0; \n"
+    "uniform sampler2D t0; // albedo texture \n"
+    "uniform sampler2D t1; // normal texture \n"
     "varying vec4 pos_world; // position in world space \n"
     "varying vec3 nml_world; // normal in world space \n"
     "varying vec2 texcoords; \n"
@@ -79,7 +85,7 @@ static const char * glslpscode =
     "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
     "   vec3  N      = normalize( nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   vec4  tex    = texture2D( t0, texcoords ); \n"
+    "   vec4  tex    = texture2D( t0, texcoords ) + texture2D( t1, texcoords ); \n"
     "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
@@ -90,18 +96,24 @@ static const char * glslpscode =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
+bool GN::util::SimpleNormalMapEffect::init( Renderer & r )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::util::SimpleDiffuseEffect, () );
+    GN_STDCLASS_INIT( GN::util::SimpleNormalMapEffect, () );
 
-    // create a pure white 2x2 texture
-    mDefaultTexture = r.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 );
-    if( NULL == mDefaultTexture ) return failure();
+    // create a white 2x2 texture as default albedo texture
+    mDefaultAlbedoTexture = r.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 );
+    if( NULL == mDefaultAlbedoTexture ) return failure();
     UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-    mDefaultTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
+    mDefaultAlbedoTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
+
+    // create default normal texture
+    mDefaultNormalTexture = r.create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM );
+    if( NULL == mDefaultNormalTexture ) return failure();
+    UInt32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
+    mDefaultNormalTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, up, SurfaceUpdateFlag::DEFAULT );
 
     EffectDesc ed;
     ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
@@ -111,6 +123,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
     ed.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
     ed.textures["ALBEDO_TEXTURE"]; // create a texture parameter named "ALBEDO_TEXTURE"
+    ed.textures["NORMAL_TEXTURE"]; // create a texture parameter named "NORMAL_TEXTURE"
 
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
@@ -122,6 +135,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.shaders["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
     ed.shaders["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.shaders["glsl"].textures["t1"] = "NORMAL_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
@@ -137,6 +151,7 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
     ed.shaders["hlsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
     ed.shaders["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.shaders["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.shaders["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
     ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].shader = "hlsl";
 
@@ -159,7 +174,9 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
 
     // setup default texture
     mAlbedoTexture = &mEffect->textures["ALBEDO_TEXTURE"];
-    mAlbedoTexture->set( mDefaultTexture );
+    mAlbedoTexture->set( mDefaultAlbedoTexture );
+    mNormalTexture = &mEffect->textures["NORMAL_TEXTURE"];
+    mNormalTexture->set( mDefaultAlbedoTexture );
 
     // setup render targets
     GN_ASSERT( mEffect->rendertargets.contains( "color0" ) );
@@ -176,11 +193,12 @@ bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::quit()
+void GN::util::SimpleNormalMapEffect::quit()
 {
     GN_GUARD;
 
-    safeDecref( mDefaultTexture );
+    safeDecref( mDefaultAlbedoTexture );
+    safeDecref( mDefaultNormalTexture );
     safeDelete( mEffect );
     mDrawable.clear();
 
@@ -193,7 +211,7 @@ void GN::util::SimpleDiffuseEffect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setTransformation(
+void GN::util::SimpleNormalMapEffect::setTransformation(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
@@ -208,7 +226,7 @@ void GN::util::SimpleDiffuseEffect::setTransformation(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
+void GN::util::SimpleNormalMapEffect::setLightPos( const Vector4f & pos )
 {
     (*mLightPos)->update( pos );
 }
@@ -216,7 +234,7 @@ void GN::util::SimpleDiffuseEffect::setLightPos( const Vector4f & pos )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
+void GN::util::SimpleNormalMapEffect::setLightColor( const Vector4f & clr )
 {
     (*mLightColor)->update( clr );
 }
@@ -224,7 +242,7 @@ void GN::util::SimpleDiffuseEffect::setLightColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setAlbedoColor( const Vector4f & clr )
+void GN::util::SimpleNormalMapEffect::setAlbedoColor( const Vector4f & clr )
 {
     (*mAlbedoColor)->update( clr );
 }
@@ -232,15 +250,23 @@ void GN::util::SimpleDiffuseEffect::setAlbedoColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setAlbedoTexture( gfx::Texture * tex )
+void GN::util::SimpleNormalMapEffect::setAlbedoTexture( gfx::Texture * tex )
 {
-    mAlbedoTexture->set( tex ? tex : mDefaultTexture );
+    mAlbedoTexture->set( tex ? tex : mDefaultAlbedoTexture );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
+void GN::util::SimpleNormalMapEffect::setNormalTexture( gfx::Texture * tex )
+{
+    mNormalTexture->set( tex ? tex : mDefaultNormalTexture );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::SimpleNormalMapEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
 {
     mesh.applyToDrawable( mDrawable, subset );
 }
@@ -248,7 +274,7 @@ void GN::util::SimpleDiffuseEffect::setMesh( const gfx::Mesh & mesh, const gfx::
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setRenderTarget(
+void GN::util::SimpleNormalMapEffect::setRenderTarget(
     const gfx::RenderTargetTexture * color,
     const gfx::RenderTargetTexture * depth )
 {
@@ -266,8 +292,9 @@ void GN::util::SimpleDiffuseEffect::setRenderTarget(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::draw()
+void GN::util::SimpleNormalMapEffect::draw()
 {
     mEffect->applyToDrawable( mDrawable, 0 );
     mDrawable.draw();
 }
+
