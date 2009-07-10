@@ -46,17 +46,12 @@ public:
 
         rndr.getSignals().rendererWindowSizeMove.connect( this, &MyApp::onRenderWindowResize );
 
-        SimpleDiffuseEffect effect;
-
         // create scene
         rootScene.attach( createScene( rndr ) );
         if( !rootScene ) return false;
 
-        // initialize effect
-        if( !effect.init( rndr ) ) return false;
-
         // load model
-        model.attach( loadGeometryFromFile( *rootScene, effect.getEffect(), filename ) );
+        model.attach( loadGeometryFromFile( *rootScene, filename ) );
         if( !model ) return false;
 
         // update camera stuff
