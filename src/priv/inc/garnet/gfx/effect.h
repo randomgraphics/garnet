@@ -339,6 +339,12 @@ namespace GN { namespace gfx
         bool applyToDrawable( Drawable & drawable, size_t pass ) const;
 
         /// copy operator (make clone)
+        ///
+        /// Note that this method only clones the effect itself. Resources referenced by the effect,
+        /// like uniforms and textures, will be shared by the original effect and the clone, which means that:
+        ///     - if you change content of the uniform or the texture, both the original effect and the clone are affected.
+        ///     - if you change the original effect itself (like point diffuse texture parameter to another texture),
+        ///       the clone won't be affected.
         Effect & operator=( const Effect & rhs ) { if( this != &rhs ) { clone( rhs ); } return *this; }
 
         // ********************************
