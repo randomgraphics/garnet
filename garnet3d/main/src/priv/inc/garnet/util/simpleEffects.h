@@ -9,6 +9,69 @@
 namespace GN { namespace util
 {
     ///
+    /// simple wireframe effect (no lighting, requires position only)
+    ///
+    class SimpleWireframeEffect : public StdClass
+    {
+        GN_DECLARE_STDCLASS( SimpleWireframeEffect, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        SimpleWireframeEffect() : mEffect(NULL) { clear(); }
+        virtual ~SimpleWireframeEffect() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( gfx::Renderer & );
+        void quit();
+    private:
+        void clear()
+        {
+            mEffect = NULL;
+        }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        //@{
+        gfx::Effect * getEffect() const { return mEffect; }
+        void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
+        void setColor( const Vector4f & ); ///< set wireframe color, default is (1,1,1,1)
+        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
+        void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
+        void draw();
+        //@}
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        gfx::Effect              * mEffect;
+        gfx::RenderTargetTexture * mColorTarget;
+        gfx::RenderTargetTexture * mDepthTarget;
+        gfx::Drawable              mDrawable;
+        AutoRef<gfx::Uniform>    * mMatrixPvw;
+        AutoRef<gfx::Uniform>    * mColor;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };    
+    ///
     /// simple diffuse effect
     ///
     class SimpleDiffuseEffect : public StdClass

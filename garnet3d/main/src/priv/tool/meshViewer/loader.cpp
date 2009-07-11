@@ -30,6 +30,7 @@ struct EffectType
     enum ENUM
     {
         NONE,
+        WIREFRAME,
         DIFFUSE,
         NORMAL_MAP,
         NUM_EFFECT_TYPES,
@@ -85,17 +86,16 @@ static EffectType::ENUM sDetermineBestEffect( const Mesh & m )
         return EffectType::NONE;
     }
 
-    // normal is required too
     if( !sHasNormal( m ) )
     {
-        GN_ERROR(sLogger)( "The mesh has no normal, which is required by the mesh viewer." );
-        return EffectType::NONE;
+        GN_WARN(sLogger)( "The mesh has no normal." );
+        return EffectType::WIREFRAME;
     }
 
-    // texcoord is required, 3.
     if( !sHasTex0( m ) )
     {
-        GN_ERROR(sLogger)( "The mesh has no texture coordinate, which is required by the mesh viewer." );
+        GN_WARN(sLogger)( "The mesh has no texture coordinate." );
+        return EffectType::WIREFRAME;
     }
 
     // use normal map, if the mesh has both normal and tangent.
@@ -321,6 +321,8 @@ loadGeometryFromAse( Scene & sc, File & file )
     }
 
     // initialize effects
+    SimpleWireframeEffect wireframeEffect;
+    if( !wireframeEffect.init( sc.getRenderer() ) ) return false;
     SimpleDiffuseEffect diffuseEffect;
     if( !diffuseEffect.init( sc.getRenderer() ) ) return false;
     SimpleNormalMapEffect normalMapEffect;
@@ -339,6 +341,10 @@ loadGeometryFromAse( Scene & sc, File & file )
         Effect * e;
         switch( et )
         {
+            case EffectType::WIREFRAME:
+                e = wireframeEffect.getEffect();
+                break;
+
             case EffectType::DIFFUSE:
                 e = diffuseEffect.getEffect();
                 break;
