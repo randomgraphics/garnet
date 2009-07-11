@@ -361,6 +361,17 @@ loadGeometryFromAse( Scene & sc, File & file )
         // skip the mesh, if there's no appropriate effect for it.
         if( !e ) continue;
 
+        // bind textures to effect
+        const AseMaterial & am = ase.materials[s.matid];
+        if( e->textures.contains( "ALBEDO_TEXTURE" ) && !am.mapdiff.bitmap.empty() )
+        {
+            e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapdiff.bitmap ) );
+        }
+        if( e->textures.contains( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
+        {
+            e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapbump.bitmap ) );
+        }
+
         model->addGeometryBlock( e, m, &s );
     }
 
