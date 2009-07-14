@@ -8,134 +8,107 @@
 
 namespace GN { namespace scene
 {
-    class ResourceManager
+    struct ModelDesc
     {
-
-    public:
-
-        //@{
-
-        struct ResourceClass : NoCopy
+        struct TextureDesc
         {
-            virtual bool load( const StrA & filename ) = 0;
-            virtual void unload() = 0;
-            virtual bool dump( const StrA & filename ) = 0;
+            StrA             brief;
+            bool             loadFromExternalFile;
+            StrA             filename;
+            gfx::TextureDesc desc;
         };
 
-        typedef UInt32 ResourceHandle;
+        struct UniformDesc
+        {
+            StrA             brief;
+            size_t           size;
+            DynaArray<UInt8> value;
+        };
 
-        //@}
+        struct EffectDesc
+        {
+            StrA                  filename;        // effect file name
+            std::map<StrA,size_t> textureBindings; // bind texture (value) to effect parameter (key)
+            std::map<StrA,size_t> uniformBindings; // bind uniform (value) to effect parameter (key)
+        };
 
-    public:
+        struct MeshDesc
+        {
+            StrA          brief;
+            gfx::MeshDesc desc;
+        };
 
-        //@{
+        struct SubsetDesc
+        {
+            StrA                  brief;
 
-        ///
-        /// ctor
-        ///
-        ResourceManager();
+            size_t                effect;
+            size_t                mesh;
 
-        ///
-        /// dtor
-        ///
-        virtual ~ResourceManager();
+            // vertices/indices range (0,0,0,0) means the whole mesh
+            size_t                startvtx;
+            size_t                numvtx;
+            size_t                startidx;
+            size_t                numidx;
 
-        ///
-        /// Clear the resource manager, delete all resources
-        ///
-        void clear();
+            /// ctor
+            SubsetDesc()
+                : startvtx(0)
+                , numvtx(0)
+                , startidx(0)
+                , numidx(0)
+            {
+            }
+        };
 
-        ///
-        /// Return true for valid resource handle
-        ///
-        bool validResourceHandle( ResourceHandle ) const;
-
-        ///
-        /// Return true for valid resource name
-        ///
-        bool validResourceName( const StrA & ) const;
-
-        ///
-        /// Convert resource name to handle
-        ///
-        ResourceHandle getResourceHandle( const StrA & name );
-
-        ///
-        /// Convert resource handle to name
-        ///
-        const StrA & getResourceName( ResourceHandle handle );
-
-        ///
-        /// Acquire a reference to resource instance.
-        ///
-        /// Note: remember to release the resource after being used.
-        ///
-        ResourceClass & getResource( ResourceHandle );
-
-        ///
-        /// Remove resource out of the manager. Delete resource instance as well.
-        ///
-        void removeResource( ResourceHandle );
-
-        ///
-        /// Dispose/Unload resource instance from memory.
-        ///
-        /// Note that the resource itself is still keeped by the manager, and will
-        /// be loaded into memory again when getResource() is called next time.
-        ///
-        void unloadResource( ResourceHandle );
-
-        ///
-        /// Unload all resource instances.
-        ///
-        void unloadAll();
-
-        ///
-        /// Preload all resources into memory
-        ///
-        bool preloadAll();
-
-        //@}
-
-        //@{
-        RES & getResource( const StrA & );
-        void  removeResource( const StrA & );
-        void  unloadResource( const StrA & );
-        //@}
+        DynaArray<TextureDesc> textures;
+        DynaArray<UniformDesc> uniforms;
+        DynaArray<MeshDesc>    meshes;
+        DynaArray<EffectDesc>  effects;
+        DynaArray<SubsetDesc>  subsets;
     };
 
-    ///
-    /// graphics effect wrapper for resource management
-    ///
     class EffectResource
     {
-    public:
-
-        //@{
-        gfx::Effect * getEffect();
-        //@}
     };
 
-    ///
-    /// graphics mesh wrapper for resource management
-    ///
-    class MeshResource
+    class ModelResource
     {
     };
 
-    ///
-    /// Graphics resource manager (a singleton)
-    ///
-    class GraphicsResourceManager
-    {
-    public:
+    typedef UInt32 ResourceHandle;
 
-        //@{
-        ResourceManagerTempl<gfx::Texture*>  textures;
-        ResourceManagerTempl<gfx::Uniform*>  uniforms;
-        ResourceManagerTempl<EffectResource> effects;
-        ResourceManagerTempl<MeshResource>   meshes;
-        //@}
+    template<typename RES, typename DESC, typename HANDLE>
+    struct ResourceMapperTempl
+    {
+        HANDLE       createFromFile( const StrA & filename );
+        HANDLE       createFromDesc( const StrA & name, const DESC & desc );
+        void         deleteResource( HANDLE );
+        void         clear(); // delete all resources
+        const StrA & getResourceName( HANDLE );
+        HANDLE       getResourceHandle( const StrA & name );
+        RES        & getResource( HANDLE );
+    };
+
+    struct ResourceMapper
+    {
+        ResourceMapperTempl<gfx::Texture*,gfx::TextureDesc,ResourceHandle> textures;
+        ResourceMapperTempl<gfx::Uniform*,UniformDesc,ResourceHandle>      uniforms;
+        ResourceMapperTempl<gfx::Mesh,gfx::MeshDesc,ResourceHandle>        meshes;
+        ResourceMapperTempl<EffectResource,gfx::EffectDesc,ResourceHandle> effects;
+        ResourceMapperTempl<ModelResource,ModelDesc,ResourceHandle>        models;
+    };
+
+    struct ResourceClass
+    {
+        void * creator(...);
+        void   deletor(...);
+    };
+
+    struct ResourceDataBase
+    {
+        ResourceHandle addNewResource( const StrA & name, ResourceClass class );
+        void           activateResource( ResourceHandle
     };
 }}
 

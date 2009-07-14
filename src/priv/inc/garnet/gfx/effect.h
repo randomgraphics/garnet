@@ -44,8 +44,7 @@ namespace GN { namespace gfx
         ///
         struct UniformDesc
         {
-            size_t           size;   ///< uniform size
-            DynaArray<UInt8> defval; ///< default uniform value. Could be empty if there's no default value.
+            size_t size;   ///< uniform size
 
             /// default ctor
             UniformDesc() : size(0) {}
