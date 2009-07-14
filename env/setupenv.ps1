@@ -50,6 +50,14 @@ function global:prompt()
 }
 
 # ==============================================================================
+# Get the root directory
+# ==============================================================================
+
+# note: $GARNET_ROOT is a global variable that could be used in other places outside of this script.
+$global:GARNET_ROOT=split-path -parent $MyInvocation.InvocationName|split-path -parent
+$env:GARNET_ROOT=$GARNET_ROOT
+
+# ==============================================================================
 # detect current platform
 # ==============================================================================
 
@@ -57,9 +65,6 @@ function global:prompt()
 $current_cpu="x86"
 if( ("amd64" -eq $env:PROCESSOR_ARCHITECTURE) -or ("amd64" -eq $env:PROCESSOR_ARCHITEWOW64) ) { $current_cpu="x64" }
 elseif( "ia64" -eq $env:PROCESSOR_ARCHITECTURE ) { $current_cpu="ia64" }
-
-# note: $GARNET_ROOT is a global variable that could be used in other places outside of this script.
-$global:GARNET_ROOT=split-path -parent $MyInvocation.InvocationName|split-path -parent
 
 # ==============================================================================
 # setup build variant

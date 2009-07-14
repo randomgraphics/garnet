@@ -221,9 +221,6 @@ namespace GN
 // registry class
 #include "base/registry.h"
 
-// resource manager
-#include "base/resourceManager.h"
-
 // high resolution clock
 #include "base/clock.h"
 
