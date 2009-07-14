@@ -5,17 +5,6 @@ using namespace GN::gfx;
 
 namespace GN
 {
-    struct Resource : NoCopy
-    {
-        virtual bool load( const StrA & filename ) = 0;
-        virtual void unload() = 0;
-        virtual bool dump( const StrA & filename ) = 0;
-    };
-
-    class GraphicsResourceManager
-    {
-    };
-
     struct SpatialInfo
     {
         Entity * parentEntity;
