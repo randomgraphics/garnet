@@ -5,23 +5,25 @@ TODO
 
 - p0
   - renderer unit test framework
+  - experiment with scene framework that supports ultra large world
+    - spatial management
+    - resource streaming
+  - refine mesh concept: could mesh reference effect directly? So that
+    we don't need another class to bind mesh and effect together.
+
+- p1
+  - D3D11 renderer
+  - GFX resouce aliasing
+
+- p2
   - better PCXS2 GPU plugin:
     - move operations to GPU as much as possible
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
       - implement a CPU based prototype first.
-
-- p1
-  - D3D11 renderer
-  - GFX resouce aliasing
-  - some commonly used effects:
-    - flat( no light, one diffuse texture, XYZ_UV0 )
-    - normal map(single light, one diffuse, one normal map, XYZ_NORMAL_TANGENT_UV0 )
-    - skeleton animation
-
-- p2
-  - FBX mesh loader
-  - XML effect file.
+  - effect and mesh loader (from XML)
+  - FBX loader
+  - 3DS loader
   - DDS viewer plugin
   	- don't write full viewer from scratch.
   	- just provide a plugin for existing picture viewers like acdsee or something.
