@@ -8,17 +8,22 @@
 
 namespace GN { namespace scene
 {
-    ///
-    /// General resource manager that is responsible for resource loading,
-    /// releasing, mapping between name and instance.
-    ///
     class ResourceManager
     {
 
     public:
 
         //@{
+
+        struct ResourceClass : NoCopy
+        {
+            virtual bool load( const StrA & filename ) = 0;
+            virtual void unload() = 0;
+            virtual bool dump( const StrA & filename ) = 0;
+        };
+
         typedef UInt32 ResourceHandle;
+
         //@}
 
     public:
@@ -65,7 +70,7 @@ namespace GN { namespace scene
         ///
         /// Note: remember to release the resource after being used.
         ///
-        Resource & getResource( ResourceHandle );
+        ResourceClass & getResource( ResourceHandle );
 
         ///
         /// Remove resource out of the manager. Delete resource instance as well.
