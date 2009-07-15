@@ -110,8 +110,12 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
         if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );
     }
 
-    // success
+    // store descriptor, but clear data pointers
     mDesc = desc;
+    memset( mDesc.vertices, 0, sizeof(mDesc.vertices) );
+    mDesc.indices = NULL;
+
+    // success
     return success();
 
     GN_UNGUARD;
@@ -152,6 +156,7 @@ GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset )
     {
         drawable.rc.vtxbufs[i].vtxbuf = mVtxBufs[i].gpudata;
         drawable.rc.vtxbufs[i].stride = mVtxBufs[i].stride;
+        drawable.rc.vtxbufs[i].offset = 0;
     }
 
     // index buffers
