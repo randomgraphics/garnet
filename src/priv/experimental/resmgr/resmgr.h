@@ -12,17 +12,13 @@ namespace GN { namespace scene
     {
         struct TextureDesc
         {
-            StrA             brief;
-            bool             loadFromExternalFile;
-            StrA             filename;
+            StrA             filename; /// if empty, then use the descriptor
             gfx::TextureDesc desc;
         };
 
         struct UniformDesc
         {
-            StrA             brief;
-            size_t           size;
-            DynaArray<UInt8> value;
+            DynaArray<UInt8> defaultValue; ///< if empty, then no default value.
         };
 
         struct EffectDesc
@@ -34,81 +30,107 @@ namespace GN { namespace scene
 
         struct MeshDesc
         {
-            StrA          brief;
+            StrA          filename; ///< if empty, then use the descriptor
             gfx::MeshDesc desc;
         };
 
-        struct SubsetDesc
-        {
-            StrA                  brief;
+        EffectDesc                 effect;
+        std::map<StrA,TextureDesc> textures;
+        std::map<StrA,UniformDesc> uniforms;
 
-            size_t                effect;
-            size_t                mesh;
-
-            // vertices/indices range (0,0,0,0) means the whole mesh
-            size_t                startvtx;
-            size_t                numvtx;
-            size_t                startidx;
-            size_t                numidx;
-
-            /// ctor
-            SubsetDesc()
-                : startvtx(0)
-                , numvtx(0)
-                , startidx(0)
-                , numidx(0)
-            {
-            }
-        };
-
-        DynaArray<TextureDesc> textures;
-        DynaArray<UniformDesc> uniforms;
-        DynaArray<MeshDesc>    meshes;
-        DynaArray<EffectDesc>  effects;
-        DynaArray<SubsetDesc>  subsets;
+        MeshDesc                   mesh;
+        size_t                     startvtx;
+        size_t                     numvtx;
+        size_t                     startidx;
+        size_t                     numidx;
     };
 
-    class EffectResource
+    ///
+    /// graphice resource handle type
+    ///
+    typedef UInt32 GraphicsResourceHandle;
+
+    class GraphicsResourceDatabase;
+
+    ///
+    /// Model, a glue class for effect, mesh and textures.
+    ///
+    class Model : public StdClass
     {
+        GN_DECLARE_STDCLASS( Model, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    protected:
+        Model( GraphicsResourceDatabase & gdb ) : mDatabase(gdb) { clear(); }
+        virtual ~Model() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const ModelDesc & desc );
+        void quit();
+    private:
+        void clear() { mDatabase = NULL; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        GraphicsResourceDatabase        & mDatabase;
+        ModelDesc                         mDesc;
+        GraphicsResourceHandle            mEffect;
+        DynaArray<GraphicsResourceHandle> mTextures;
+        DynaArray<GraphicsResourceHandle> mUniforms;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
     };
 
-    class ModelResource
+    ///
+    /// Map name/handle to graphics resource instance.
+    ///
+    class GraphicsResourceDatabase
     {
-    };
+    public:
 
-    typedef UInt32 ResourceHandle;
+        //@{
+        GraphicsResourceDatabase( gfx::Renderer & r );
+        virtual ~GraphicsResourceDatabase();
+        //@}
 
-    template<typename RES, typename DESC, typename HANDLE>
-    struct ResourceMapperTempl
-    {
-        HANDLE       createFromFile( const StrA & filename );
-        HANDLE       createFromDesc( const StrA & name, const DESC & desc );
-        void         deleteResource( HANDLE );
-        void         clear(); // delete all resources
-        const StrA & getResourceName( HANDLE );
-        HANDLE       getResourceHandle( const StrA & name );
-        RES        & getResource( HANDLE );
-    };
+        //@{
+        GraphicsResourceHandle  openTextureHandle( const StrA & name );
+        GraphicsResourceHandle  openUniformHandle( const StrA & name );
+        GraphicsResourceHandle  openEffectHandle( const StrA & name );
+        GraphicsResourceHandle  openMeshHandle( const StrA & name );
+        GraphicsResourceHandle  openModelHandle( const StrA & name );
 
-    struct ResourceMapper
-    {
-        ResourceMapperTempl<gfx::Texture*,gfx::TextureDesc,ResourceHandle> textures;
-        ResourceMapperTempl<gfx::Uniform*,UniformDesc,ResourceHandle>      uniforms;
-        ResourceMapperTempl<gfx::Mesh,gfx::MeshDesc,ResourceHandle>        meshes;
-        ResourceMapperTempl<EffectResource,gfx::EffectDesc,ResourceHandle> effects;
-        ResourceMapperTempl<ModelResource,ModelDesc,ResourceHandle>        models;
-    };
+        void                    closeHandle( GraphicsResourceHandle );
+        void                    closeAllHandles();
 
-    struct ResourceClass
-    {
-        void * creator(...);
-        void   deletor(...);
-    };
-
-    struct ResourceDataBase
-    {
-        ResourceHandle addNewResource( const StrA & name, ResourceClass class );
-        void           activateResource( ResourceHandle
+        AutoRef<gfx::Texture> & handle2Texture( GraphicsResourceHandle );
+        AutoRef<gfx::Uniform> & handle2Uniform( GraphicsResourceHandle );
+        gfx::Effect           & handle2Effect( GraphicsResourceHandle );
+        gfx::Mesh             & handle2Mesh( GraphicsResourceHandle );
+        gfx::Model            & handle2Model( GraphicsResourceHandle );
+        //@}
     };
 }}
 
