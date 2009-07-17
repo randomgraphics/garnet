@@ -164,30 +164,32 @@ void GN::gfx::LineRenderer::drawLines(
 {
     size_t numNewLines = numpoints / 2;
 
+    const UInt8 * positionsU8 = (const UInt8*)positions;
+
+    if( numNewLines > MAX_LINES )
+    {
+        // handle line buffer longer than maxinum length.
+        for( size_t i = 0; i < numNewLines / MAX_LINES; ++i )
+        {
+            drawLines(
+                positionsU8,
+                stride,
+                MAX_LINES * 2,
+                colorInRgba,
+                projViewWorld );
+
+            positionsU8 += MAX_LINES * 2 * stride;
+        }
+        numNewLines %= MAX_LINES;
+    }
+
     if( numNewLines + mNextFreeLine > mLines + MAX_LINES )
     {
         // there's no enough space to hold incoming lines, flush the pending buffer.
         flush();
     }
 
-    const UInt8 * positionsU8 = (const UInt8*)positions;
-
-    // handle line buffer longer than maxinum length
-    for( size_t i = 0; i < numNewLines / MAX_LINES; ++i )
-    {
-        drawLines(
-            positionsU8,
-            stride,
-            MAX_LINES * 2,
-            colorInRgba,
-            projViewWorld );
-
-        positionsU8 += MAX_LINES * 2 * stride;
-    }
-
-    size_t remainingNewLines = numNewLines % MAX_LINES;
-    GN_ASSERT( remainingNewLines + mNextFreeLine <= mLines + MAX_LINES );
-    for( size_t i = 0; i < remainingNewLines; ++i )
+    for( size_t i = 0; i < numNewLines; ++i )
     {
         mNextFreeLine->v0.pos = *(const Vector3f*)positionsU8;
         mNextFreeLine->v0.colorInRGBA = colorInRgba;

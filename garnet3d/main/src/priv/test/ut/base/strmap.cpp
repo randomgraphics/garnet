@@ -829,7 +829,7 @@ public:
 
     void testPerfWith_25000_Items()
     {
-        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         Dictionary d = dict();
         printf( "num words = %d\n", d.count );
         doPerfTest( d );
@@ -837,19 +837,19 @@ public:
 
     void testPerfWith_1000_Items()
     {
-        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         doPerfTestWithFixedNumberOfItems( 1009 );
     }
 
     void testPerfWith_100_Items()
     {
-        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         doPerfTestWithFixedNumberOfItems( 103 );
     }
 
     void testPerfWith_10_Items()
     {
-        srand( (int)GN::Clock::sGetSystemCycleCount() );
+        srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
         doPerfTestWithFixedNumberOfItems( 11 );
     }
 };

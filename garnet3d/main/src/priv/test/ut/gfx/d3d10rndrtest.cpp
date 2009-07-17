@@ -7,5 +7,10 @@ public:
 
     D3D10RendererTest() : RendererTest( GN::gfx::RendererAPI::D3D10, false ) {}
 
-    void testExternalWindow() { externalWindow(); }
+    void testExternalWindow()
+    {
+        #ifdef HAS_D3D10
+        externalWindow();
+        #endif
+    }
 };
