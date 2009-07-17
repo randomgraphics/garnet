@@ -9,7 +9,7 @@ try:
 	CONF_has_xenon_extension = True
 except ImportError:
 	CONF_has_xenon_extension = False
-	print "no xeon extension for scons found."
+	print "no xenon extension for scons found."
 
 # enviroment use by local functions
 LOCAL_env = Environment( tools=[] )
