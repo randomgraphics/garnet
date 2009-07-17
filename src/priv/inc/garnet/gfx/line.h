@@ -51,8 +51,8 @@ namespace GN { namespace gfx
         /// draw line list
         ///
         void drawLines(
-            const void *      positions,
-            size_t            stride,
+            const void *      positions, // 3D positions
+            size_t            stride,    // position buffer stride. 0 for default stride.
             size_t            numpoints,
             UInt32            colorInRgba,
             const Matrix44f & projViewWorld );

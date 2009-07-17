@@ -1063,7 +1063,7 @@ namespace GN
     /// string hash function
     ///
     template<typename CHAR>
-    inline size_t strHash( const Str<CHAR> & s )
+    inline UInt64 strHash( const Str<CHAR> & s )
     {
         unsigned long hash = 5381;
 

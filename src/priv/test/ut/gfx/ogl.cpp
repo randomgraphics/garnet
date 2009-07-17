@@ -1,23 +1,16 @@
-#include "common.h"
+#include "rndrtest.h"
 
-class GfxOGLTest : public CxxTest::TestSuite, public GfxTest
+class OGLRendererTest : public CxxTest::TestSuite, public RendererTest
 {
 
 public:
 
-    void setUp() { oglInit(); }
+    OGLRendererTest() : RendererTest( GN::gfx::RendererAPI::OGL, false ) {}
 
-    void tearDown() { GN::gfx::deleteRenderer(); }
-
-    void testExternalWindow() { externalWindow(); }
-
-    void testChangeUserOptions() { changeOptions(); }
-
-    //void testFullscreen() { fullscreen(); }
-
-    void testDefaultBackbufferSize() { defaultBackbufferSize(); }
-
-    void testRenderStateBlock() { renderStateBlock(); }
-
-    void testVtxBuf() { vtxBuf(); }
+    void testExternalWindow()
+    {
+        #ifdef HAS_OGL
+        externalWindow();
+        #endif
+    }
 };
