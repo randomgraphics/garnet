@@ -1,4 +1,5 @@
 Import( 'GN' )
+
 sources = [
 	'mtidxbuf.cpp',
 	'mtrndr.cpp',
@@ -9,5 +10,9 @@ sources = [
 	'ringbuffer.cpp',
 	'rndrCreator.cpp',
 ]
+
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+
+if GN.conf['has_d3d11'] : r.addCompileFlags( CPPDEFINES = ['HAS_D3D11=1'] )
+
 Return( 'r' )

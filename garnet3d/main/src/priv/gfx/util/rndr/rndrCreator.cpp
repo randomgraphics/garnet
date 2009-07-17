@@ -69,16 +69,16 @@ GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
 #endif
 
 ///
-/// D3D10 renderer creator
+/// D3D11 renderer creator
 ///
-#if GN_XENON | GN_POSIX
+#ifndef HAS_D3D11
 inline
 #else
 extern
 #endif
 GN::gfx::Renderer *
 GNgfxCreateD3D11Renderer( const GN::gfx::RendererOptions & )
-#if GN_XENON | GN_POSIX
+#ifndef HAS_D3D11
 {
     GN_ERROR(sLogger)( "D3D11 renderer is not available on Xbox360." );
     return 0;

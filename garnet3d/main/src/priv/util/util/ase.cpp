@@ -129,6 +129,7 @@ struct AseFile
     DynaArray<char> buf;
     char *          str;
     int             line;
+    StrA            filedir; // directory of the ASE file
 
     bool open( File & file )
     {
@@ -144,6 +145,9 @@ struct AseFile
 
         str = buf.cptr();
         line = 0;
+
+        // get file dir
+        filedir = GN::fs::dirName( file.name() );
 
         // success
         return true;
@@ -391,6 +395,17 @@ struct AseFile
     }
 
     //
+    //
+    // -----------------------------------------------------------------------------
+    bool readAndResolveRelativePath( StrA & result, ScanOption option = 0  )
+    {
+        StrA relpath;
+        if( !readString( relpath, option ) ) return false;
+        GN::fs::resolvePath( result, filedir, relpath );
+        return true;
+    }
+
+    //
     // Note: symbol is a word w/o quotes and spaces.
     // -----------------------------------------------------------------------------
     bool readSymbol( StrA & result, ScanOption option = 0  )
@@ -507,7 +522,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
         }
         else if( 0 == strCmp( token, "*BITMAP" ) )
         {
-            if( !ase.readString( m.bitmap ) ) return false;
+            if( !ase.readAndResolveRelativePath( m.bitmap ) ) return false;
         }
         else if( 0 == strCmp( token, "*MAP_TYPE" ) )
         {
