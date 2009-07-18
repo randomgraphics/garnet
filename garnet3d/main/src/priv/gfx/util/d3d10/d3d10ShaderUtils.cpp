@@ -1,6 +1,17 @@
 #include "pch.h"
 #include "garnet/GNd3d10.h"
 
+#if GN_MSVC
+#if GN_BUILD_DEBUG
+#pragma comment(lib, "d3dx10d.lib")
+#else
+#pragma comment(lib, "d3dx10.lib")
+#endif
+#pragma comment( lib, "d3dcompiler.lib" )
+#pragma comment( lib, "d3d10.lib" )
+#endif // GN_MSVC
+
+
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 
 // *****************************************************************************
