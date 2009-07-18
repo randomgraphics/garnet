@@ -306,18 +306,23 @@ loadGeometryFromXpr( Scene & sc, File & file )
 static GN::scene::GeometryNode *
 loadGeometryFromAse( Scene & sc, File & file )
 {
+    GN_SCOPE_PROFILER( loadGeometryFromAse );
+
     // load ASE scene
     AseScene ase;
     if( !loadAseSceneFromFile(ase, file) ) return false;
 
     // create mesh list
     MeshContainer mc;
-    for( size_t i = 0; i < ase.meshes.size(); ++i )
     {
-        AutoObjPtr<Mesh> m( new Mesh(sc.getRenderer()) );
-        if( !m || !m->init(ase.meshes[i]) ) return false;
-        mc.meshes.append( m );
-        m.detach();
+        GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList );
+        for( size_t i = 0; i < ase.meshes.size(); ++i )
+        {
+            AutoObjPtr<Mesh> m( new Mesh(sc.getRenderer()) );
+            if( !m || !m->init(ase.meshes[i]) ) return false;
+            mc.meshes.append( m );
+            m.detach();
+        }
     }
 
     // initialize effects
@@ -362,14 +367,17 @@ loadGeometryFromAse( Scene & sc, File & file )
         if( !e ) continue;
 
         // bind textures to effect
-        const AseMaterial & am = ase.materials[s.matid];
-        if( e->textures.contains( "ALBEDO_TEXTURE" ) && !am.mapdiff.bitmap.empty() )
         {
-            e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapdiff.bitmap ) );
-        }
-        if( e->textures.contains( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
-        {
-            e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapbump.bitmap ) );
+            GN_SCOPE_PROFILER( loadGeometryFromAse_LoadTextures );
+            const AseMaterial & am = ase.materials[s.matid];
+            if( e->textures.contains( "ALBEDO_TEXTURE" ) && !am.mapdiff.bitmap.empty() )
+            {
+                e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapdiff.bitmap ) );
+            }
+            if( e->textures.contains( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
+            {
+                e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapbump.bitmap ) );
+            }
         }
 
         model->addGeometryBlock( e, m, &s );
@@ -398,6 +406,8 @@ loadGeometryFromAse( Scene & sc, File & file )
 GN::scene::GeometryNode *
 loadGeometryFromFile( Scene & sc, const char * filename )
 {
+    GN_SCOPE_PROFILER( loadGeometryFromFile );
+
     // open file
     DiskFile file;
     if( !file.open( filename, "rb" ) ) return false;

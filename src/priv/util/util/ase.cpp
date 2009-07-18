@@ -1184,6 +1184,8 @@ static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
 // -----------------------------------------------------------------------------
 static bool sReadAse( AseSceneInternal & scene, File & file )
 {
+    GN_SCOPE_PROFILER( sReadAse );
+
     GN_GUARD;
 
     // open ase file
@@ -1255,6 +1257,8 @@ static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & nam
 // -----------------------------------------------------------------------------
 static bool sBuildNodeTree( AseSceneInternal & scene )
 {
+    GN_SCOPE_PROFILER( sBuildNodeTree );
+
     GN_VERBOSE(sLogger)( "\nASE: Build node tree:" );
 
     // setup root node
@@ -1593,6 +1597,8 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 // -----------------------------------------------------------------------------
 static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
 {
+    GN_SCOPE_PROFILER( sWriteScene );
+
     GN_GUARD;
 
     for( size_t i = 0; i < src.objects.size(); ++i )
@@ -1633,6 +1639,7 @@ void GN::util::AseScene::clear()
 // -----------------------------------------------------------------------------
 bool GN::util::loadAseSceneFromFile( AseScene & scene, File & file )
 {
+    GN_SCOPE_PROFILER( loadAseSceneFromFile );
     AseSceneInternal internal;
     if( !sReadAse( internal, file ) ) return false;
     if( !sBuildNodeTree( internal ) ) return false;
