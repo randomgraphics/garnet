@@ -28,7 +28,6 @@ namespace GN { namespace input
         // *****************************
     public:
         virtual bool attachToWindow( HandleType , HandleType ) { return true; }
-        virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus sTable[256]; return sTable; }
         virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }
     };
 }}
