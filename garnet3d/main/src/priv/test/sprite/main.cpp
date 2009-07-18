@@ -8,24 +8,6 @@ using namespace GN::util;
 SpriteRenderer * sr = NULL;
 AutoRef<Texture> tex;
 
-/// read image from file
-inline bool
-readImageFromFile( ImageDesc & desc, std::vector<UInt8> & data )
-{
-    AutoObjPtr<File> fp( fs::openFile( "media::texture\\rabit.png", "rb" ) );
-    if( NULL == fp ) return false;
-
-    ImageReader ir;
-    if( !ir.reset( *fp ) ) return false;
-
-    if( !ir.readHeader( desc ) ) return false;
-
-    data.resize( desc.getTotalBytes() );
-    if( !ir.readImage( &data[0] ) ) return false;
-
-    return true;
-}
-
 bool init( Renderer & rndr )
 {
     // create sprite renderer
@@ -52,12 +34,24 @@ static float angle = 0;
 
 void update( float timestep )
 {
-    angle += timestep * GN_HALF_PI;
-    angle = fmod( angle, GN_TWO_PI );
-    pos_x = sin( angle ) * 20.0f;
-    pos_y = cos( angle ) * 20.0f;
-    pos_x += 20.0f;
-    pos_y += 20.0f;
+    static bool paused = false;
+
+    Input & in = gInput;
+    KeyEvent ke = in.popLastKeyEvent();
+    if( ke.status.down && ( KeyCode::SPACEBAR == ke.code || KeyCode::XB360_A == ke.code ) )
+    {
+        paused = !paused;
+    }
+
+    if( !paused )
+    {
+        angle += timestep * GN_HALF_PI;
+        angle = fmod( angle, GN_TWO_PI );
+        pos_x = sin( angle ) * 20.0f;
+        pos_y = cos( angle ) * 20.0f;
+        pos_x += 20.0f;
+        pos_y += 20.0f;
+    }
 }
 
 void draw( Renderer & )
@@ -88,7 +82,7 @@ int run( Renderer & rndr )
 
         in.processInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_A ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_B ).down )
         {
             gogogo = false;
         }
@@ -146,7 +140,7 @@ int main( int argc, const char * argv[] )
     }
 
     Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
+    if( 0 )//cmdargs.useMultiThreadRenderer )
         r = createMultiThreadRenderer( cmdargs.rendererOptions );
     else
         r = createSingleThreadRenderer( cmdargs.rendererOptions );

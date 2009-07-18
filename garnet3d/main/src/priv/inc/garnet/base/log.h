@@ -45,27 +45,9 @@
 #define GN_INFO( logger )  GN_LOG( logger, GN::Logger::INFO )
 
 ///
-/// Debug only informational message (only effective in debug build)
-///
-#if GN_BUILD_DEBUG
-#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::INFO )
-#else
-#define GN_TRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
-#endif
-
-///
 /// output verbose message
 ///
 #define GN_VERBOSE( logger ) GN_LOG( logger, GN::Logger::VERBOSE )
-
-///
-/// Debug only verbose message (only effective in debug build)
-///
-#if GN_BUILD_DEBUG
-#define GN_VTRACE( logger ) GN_LOG( logger, GN::Logger::VERBOSE )
-#else
-#define GN_VTRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
-#endif
 
 ///
 /// output very-verbose message
@@ -73,13 +55,19 @@
 #define GN_VVERBOSE( logger ) GN_LOG( logger, GN::Logger::VVERBOSE )
 
 ///
-/// Debug only very-verbose message (only effective in debug build)
+/// Debug only log macros (no effect to non-debug build)
 ///
+//@{
 #if GN_BUILD_DEBUG
-#define GN_VVTRACE( logger ) GN_LOG( logger, GN::Logger::VVERBOSE )
+#define GN_TRACE( logger )   GN_INFO( logger )
+#define GN_VTRACE( logger )  GN_VERBOSE( logger )
+#define GN_VVTRACE( logger ) GN_VVERBOSE( logger )
 #else
+#define GN_TRACE( logger )   if( 1 ) {} else ::GN::Logger::sFakeLog
+#define GN_VTRACE( logger )  if( 1 ) {} else ::GN::Logger::sFakeLog
 #define GN_VVTRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
 #endif
+//@}
 
 namespace GN
 {
