@@ -140,7 +140,7 @@ int main( int argc, const char * argv[] )
     }
 
     Renderer * r;
-    if( 0 )//cmdargs.useMultiThreadRenderer )
+    if( cmdargs.useMultiThreadRenderer )
         r = createMultiThreadRenderer( cmdargs.rendererOptions );
     else
         r = createSingleThreadRenderer( cmdargs.rendererOptions );
