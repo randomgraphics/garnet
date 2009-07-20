@@ -4,7 +4,6 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - renderer unit test framework
   - experiment with scene framework that supports ultra large world
     - spatial management
     - resource streaming
@@ -12,12 +11,13 @@ TODO
     we don't need another class to bind mesh and effect together.
 
 - p1
+  - renderer unit test framework
   - Enable ETW in profiler
   - D3D11 renderer
   - GFX resouce aliasing
 
 - p2
-  - better PCXS2 GPU plugin:
+  - PCXS2 GPU plugin:
     - move operations to GPU as much as possible
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
@@ -41,6 +41,7 @@ TODO
     - set window title
     - change window size
     - ...
+    - use wxWidgets?
   - runtime call-stack dump
   - in game GUI:
   - debug variable registry
@@ -50,16 +51,21 @@ TODO
     - depends on renderer state dumper
 
 - more
-  - new build system
+  - refine build system
+    - figure out a way to simplify scons script
   - image format conversion
-  - try implementing a ray tracer
+  - a ray tracer (for self-learning purpose)
 
 ISSUES
 ======
 
 - Unified interface for different APIs is too difficult, and maybe pointless.
   How about a higher level abstraction: material/effect system?
-  - RESOLVED: higher effect based system is the way to go.
+  - RESOLVED: we need both
+    - They stay at different level ans serve for different purpose.
+      - Unified API is easy for prototyping
+      - Material/effect system is required to build complex rendering framework.
+        It could be built upon unified API, or not.
 
 - Do we need embed buffer for short string?
 

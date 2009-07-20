@@ -144,7 +144,6 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 
     Rectf bbox( td.x, td.y, 0, (float)(ffd.height+1) );
 
-    // TODO: configurable tab size.
     const size_t TAB_SIZE = 8;
 
     // draw characters one by one
@@ -199,7 +198,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
     if( td.background )
     {
         mSpriteRenderer->drawSingleSolidSprite(
-            GN_RGBA32( 0, 0, 0, 128 ), // TODO: configurable backround color
+            GN_RGBA32( 0, 0, 0, 128 ),
             GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, // option
             bbox.x,
             bbox.y,
