@@ -53,7 +53,6 @@ namespace GN { namespace gfx
         enum Enum
         {
             OGL,      ///< OpenGL
-            D3D9,     ///< D3D9
             D3D10,    ///< D3D10
             D3D11,    ///< D3D11
             XENON,    ///< Xenon

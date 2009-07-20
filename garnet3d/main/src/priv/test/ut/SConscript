@@ -18,9 +18,6 @@ Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
 cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
-if GN.conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
-if GN.conf['has_d3d10']: cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
-if GN.conf['has_ogl']: cluster.addCompileFlags( CPPDEFINES = ['HAS_OGL'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )
 
 # disable signed compare with unsigned warning of GCC

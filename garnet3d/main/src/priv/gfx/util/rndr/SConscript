@@ -11,8 +11,5 @@ sources = [
 	'rndrCreator.cpp',
 ]
 
-r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-
-if GN.conf['has_d3d11'] : r.addCompileFlags( CPPDEFINES = ['HAS_D3D11=1'] )
-
-Return( 'r' )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+Return( 'cluster' )
