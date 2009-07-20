@@ -9,7 +9,7 @@ public:
 
     void testExternalWindow()
     {
-        #ifdef HAS_OGL
+        #ifdef GN_BUILD_RENDERER_API_HAS_OGL
         externalWindow();
         #endif
     }

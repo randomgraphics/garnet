@@ -2,7 +2,7 @@ Import( 'GN' )
 
 import os.path
 
-def GenVariantHeader( target, source, env ):
+def GenConfigHeader( target, source, env ):
 	# determine variant value.
 	if   'retail'  == GN.variant: variant = 0
 	elif 'profile' == GN.variant: variant = 1
@@ -14,13 +14,16 @@ def GenVariantHeader( target, source, env ):
 		return -1;
 
 	# create header file
-	FILE = open( target[0].path, 'w' )
+	FILE = open( target[0].path, 'wt' )
 	FILE.writelines(
-		'// AUTO GENERATED FILE. DO NOT EDIT!\n'
-		'\n'
-		'// This file defines main switch of build flavor. Acceptable values are:\n'
+		'// *NOTE*: AUTO GENERATED FILE. DO NOT EDIT!\n'
 		'//\n'
-		'//   0 - retail build (default)\n'
+		'// This file defines compile time configurations.\n'
+		'//\n'
+		'\n'
+		'// Define build variant.\n'
+		'//\n'
+		'//   0 - retail build\n'
 		'//   1 - profile build\n'
 		'//   2 - debug build\n'
 		'//   3 - static retail build\n'
@@ -29,14 +32,27 @@ def GenVariantHeader( target, source, env ):
 		'//\n'
 		'#define GN_BUILD_VARIANT %d\n'%variant
 		)
+	FILE.writelines(
+		'\n'
+		'// Define available renderer APIs.\n'
+		'#define GN_BUILD_RENDERER_API_HAS_OGL   %d\n'
+		'#define GN_BUILD_RENDERER_API_HAS_D3D10 %d\n'
+		'#define GN_BUILD_RENDERER_API_HAS_D3D11 %d\n'
+		'#define GN_BUILD_RENDERER_API_HAS_XENON %d\n'
+		%(
+		GN.conf['has_ogl'],
+		GN.conf['has_d3d10'],
+		GN.conf['has_d3d11'],
+		GN.conf['has_xtl'],
+		))
 	FILE.close();
 	return 0
 
-def BuildVariantHeaderBuilder( env, sources, blddir ):
-	targets = [os.path.join(blddir, 'src/priv/inc/garnet/base/define_build_variant.h')]
-	env.Command( targets[0], None, GenVariantHeader )
+def ConfigHeaderBuilder( env, sources, blddir ):
+	targets = [os.path.join(blddir, 'src/priv/inc/garnet/base/gnconfig.h')]
+	env.Command( targets[0], None, GenConfigHeader )
 	return targets
 
-cluster = GN.newCustomSourceCluster( [], BuildVariantHeaderBuilder )
+cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
 
 GN.newCustomTarget( 'GNinc', [cluster] )

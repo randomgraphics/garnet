@@ -9,7 +9,7 @@ public:
 
     void testExternalWindow()
     {
-        #ifdef HAS_D3D10
+        #ifdef GN_BUILD_RENDERER_API_HAS_D3D10
         externalWindow();
         #endif
     }

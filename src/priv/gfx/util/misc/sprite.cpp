@@ -272,17 +272,8 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         mContext.depthWrite = false;
     }
 
-    // setup vertex shift
-    if( RendererAPI::D3D9 == mRenderer.getOptions().api )
-    {
-        // Shift vertex a little bit on D3D9 platform
-        mVertexShift = -0.5f;
-    }
-    else
-    {
-        // no need to shift pixel on platform other than D3D9
-        mVertexShift = 0.0f;
-    }
+    // Note: Only D3D9 needs -0.5f vertex shift
+    mVertexShift = 0.0f;
 
     mDrawBegun = true;
     mOptions   = options;

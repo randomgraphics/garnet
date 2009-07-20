@@ -4,6 +4,8 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - DDS loader bug when loading DDS with mipmaps
+    - repro: GNtoolMeshViewer.exe ..\media\models\R.F.01\a01.ase
   - renderer unit test framework
   - experiment with scene framework that supports ultra large world
     - spatial management
@@ -12,8 +14,7 @@ TODO
     we don't need another class to bind mesh and effect together.
 
 - p1
-  - DDS loader bug when loading DDS with mipmaps
-    - repro: GNtoolMeshViewer.exe ..\media\models\R.F.01\a01.ase
+  - Enable ETW in profiler
   - D3D11 renderer
   - GFX resouce aliasing
 
