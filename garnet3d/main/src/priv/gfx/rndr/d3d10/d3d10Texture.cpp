@@ -181,6 +181,12 @@ void GN::gfx::D3D10Texture::updateMipmap(
     {
         ID3D10Device & dev = getDeviceRef();
 
+        const d3d10::DXGI_FORMAT_DESCRIPTION & fmtdesc = d3d10::getDXGIFormatDesc( mTextureFormat );
+
+        // align width and heigh to texel block boundary
+        clippedArea.w = math::align<UInt32>( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::align<UInt32>( clippedArea.h, fmtdesc.blockHeight );
+
         D3D10_BOX box =
         {
             clippedArea.x,
@@ -190,8 +196,6 @@ void GN::gfx::D3D10Texture::updateMipmap(
             clippedArea.y + clippedArea.h,
             clippedArea.z + clippedArea.d,
         };
-
-        const d3d10::DXGI_FORMAT_DESCRIPTION & fmtdesc = d3d10::getDXGIFormatDesc( mTextureFormat );
 
         dev.UpdateSubresource(
             mTexture,

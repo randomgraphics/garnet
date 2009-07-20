@@ -70,8 +70,8 @@ enum DdsFlag
 ///
 static struct DdpfDesc
 {
-    GN::gfx::ColorFormat    clrfmt;
-    DDPixelFormat      ddpf;
+    GN::gfx::ColorFormat clrfmt;
+    DDPixelFormat        ddpf;
 } const s_ddpfDescTable[] = {
     { GN::gfx::ColorFormat::BGR_8_8_8_UNORM,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 24,   0xff0000,   0x00ff00,   0x0000ff,          0 } },
     { GN::gfx::ColorFormat::BGRA_8_8_8_8_UNORM,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
@@ -125,9 +125,9 @@ static struct DdpfDesc
 
 struct DX10Info
 {
-    SInt32 format;
-    SInt32 dim;
-    UInt32 miscFlag; // Used for D3D10_RESOURCE_MISC_FLAG
+    SInt32 format;    // DXGI_FORMAT
+    SInt32 dim;       // D3D10_RESOURCE_DIMENSION
+    UInt32 miscFlag;  // D3D10_RESOURCE_MISC_FLAG
     UInt32 arraySize;
     UInt32 reserved;
 };
@@ -349,14 +349,16 @@ bool DDSReader::readHeader(
             switch( mImgDesc.format.alias )
             {
                 case GN::gfx::ColorFormat::DXT1_UNORM:
-                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 2;
-                    m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
+                    m.rowPitch = ((m.width + 3) & ~3) / 2;
+                    m.slicePitch = m.rowPitch * ((m.height + 3) & ~3);
+                    GN_ASSERT( m.slicePitch >= 8 );
                     break;
 
     		    case GN::gfx::ColorFormat::DXT3_UNORM:
     		    case GN::gfx::ColorFormat::DXT5_UNORM:
-                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 4;
-                    m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
+                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC);
+                    m.slicePitch = m.rowPitch * ((m.height + 3) & ~3);
+                    GN_ASSERT( m.slicePitch >= 16 );
                     break;
 
                 default:

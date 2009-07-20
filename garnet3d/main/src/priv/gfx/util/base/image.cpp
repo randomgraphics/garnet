@@ -46,23 +46,21 @@ bool GN::gfx::ImageDesc::valid() const
         }
 
         // check pitches
-        UInt32 w = m.width / cld.blockWidth;
-        UInt32 h = m.height / cld.blockHeight;
-        if( 0 == w ) w = 1;
-        if( 0 == h ) h = 1;
-        if( m.rowPitch != w * cld.blockWidth * cld.blockHeight * cld.bits / 8 )
+        UInt32 w = math::align<UInt32>( m.width, cld.blockWidth );
+        UInt32 h = math::align<UInt32>( m.height, cld.blockHeight );
+        if( m.rowPitch < w * cld.bits / 8 )
         {
-            GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is too small!", f, l );
             return false;
         }
-        if( m.slicePitch != m.rowPitch * h )
+        if( m.slicePitch < m.rowPitch * h )
         {
-            GN_ERROR(sLogger)( "slicePitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "slicePitch of mipmaps[%d][%d] is too small!", f, l );
             return false;
         }
-        if( m.levelPitch != m.slicePitch * m.depth )
+        if( m.levelPitch < m.slicePitch * m.depth )
         {
-            GN_ERROR(sLogger)( "levelPitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "levelPitch of mipmaps[%d][%d] is too small!", f, l );
             return false;
         }
     }
