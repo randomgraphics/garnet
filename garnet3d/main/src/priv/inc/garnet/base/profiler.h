@@ -53,50 +53,34 @@ namespace GN
     class ProfileTimer
     {
         Clock & clock;
-        size_t count;
-        double timesum, timemin, timemax, timestart;
+
+        size_t  count;
+
+        double  timesum, timemin, timemax, timestart;
+
+        void * impl;
 
         friend class ProfilerManager;
 
     protected:
 
         /// ctor
-        ProfileTimer( Clock & c )
-            : clock(c)
-            , count(0)
-            , timesum(0)
-            , timemin( DBL_MAX )
-            , timemax( 0 )
-            , timestart(0)
-        {}
+        ProfileTimer( Clock & c );
 
         /// dtor
-        virtual ~ProfileTimer() {}
+        ~ProfileTimer();
 
     public:
 
         ///
         /// start the timer
         ///
-        void start()
-        {
-            GN_ASSERT( 0 == timestart );
-            timestart = clock.getTimeD();
-        }
+        void start();
 
         ///
         /// stop the timer
         ///
-        void stop()
-        {
-            GN_ASSERT( 0 != timestart );
-            double t = clock.getTimeD() - timestart;
-            if( t < timemin ) timemin = t;
-            if( t > timemax ) timemax = t;
-            timesum += t;
-            timestart = 0;
-            ++count;
-        }
+        void stop();
     };
 
     ///

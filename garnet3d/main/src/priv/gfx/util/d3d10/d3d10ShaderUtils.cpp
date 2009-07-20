@@ -7,7 +7,6 @@
 #else
 #pragma comment(lib, "d3dx10.lib")
 #endif
-#pragma comment( lib, "d3dcompiler.lib" )
 #pragma comment( lib, "d3d10.lib" )
 #endif // GN_MSVC
 

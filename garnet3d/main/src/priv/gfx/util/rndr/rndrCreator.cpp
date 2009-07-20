@@ -59,7 +59,7 @@ GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & )
 ///
 /// D3D11 renderer creator
 ///
-#ifdef GN_BUILD_RENDERER_API_HAS_D3D10
+#if GN_BUILD_RENDERER_API_HAS_D3D11
 extern GN::gfx::Renderer *
 GNgfxCreateD3D11Renderer( const GN::gfx::RendererOptions & );
 #else
