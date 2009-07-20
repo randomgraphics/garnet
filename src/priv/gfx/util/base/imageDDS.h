@@ -31,7 +31,7 @@ struct DDSFileHeader
     UInt32        flags;
     UInt32        height;
     UInt32        width;
-    UInt32        pitchOrLinearSize;
+    UInt32        pitchOrLinearSize; // The number of bytes per scan line in an uncompressed texture; the total number of bytes in the top level texture for a compressed texture. The pitch must be DWORD aligned.
     UInt32        depth;
     UInt32        mipCount;
     UInt32        reserved[11];

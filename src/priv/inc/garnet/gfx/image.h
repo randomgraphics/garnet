@@ -29,12 +29,12 @@ namespace GN { namespace gfx
         UInt32 rowPitch;
 
         ///
-        /// bytes of one slice. Equals rowPitch * height
+        /// bytes of one slice. Must be equal or larger than rowPitch * height
         ///
         UInt32 slicePitch;
 
         ///
-        /// total bytes of this mip level. Equals slicePitch * depth.
+        /// total bytes of this mip level. Must be equal or larger than slicePitch * depth.
         ///
         UInt32 levelPitch;
     };
