@@ -23,17 +23,6 @@
 ///
 #define GN_TWO_PI   (GN_PI * 2.0f)
 
-///
-/// Get element count of C-style array
-///
-#define GN_ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
-
-///
-/// Get byte offset of class member or struct field
-///
-#define GN_FIELD_OFFSET( class_, field ) \
-    ( (size_t)(UIntPtr) &( ((class_*)(void*)(8))->field ) - 8 )
-
 namespace GN
 {
     ///
