@@ -9,6 +9,17 @@
 #include <vector>
 
 ///
+/// Get element count of C-style array
+///
+#define GN_ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
+
+///
+/// Get byte offset of class member or struct field
+///
+#define GN_FIELD_OFFSET( class_, field ) \
+    ( (size_t)(UIntPtr) &( ((class_*)(void*)(8))->field ) - 8 )
+
+///
 /// Execute only limited times during the entir life of the
 /// application, no matter how many time it is called.
 ///
