@@ -1,3 +1,0 @@
-Import( 'GN' )
-cluster = GN.newSourceCluster( ['depthTexture.cpp'], 'pch.h', 'pch.cpp' )
-GN.newTarget( 'prog', 'GNsampleDepthTexture', [cluster] )
