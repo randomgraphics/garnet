@@ -102,6 +102,11 @@ void GN::gfx::MultiThreadRenderer::quit()
 
     if( mThread )
     {
+        // When ring buffer receives quit message, it will
+        // ignore all existing messages in it, and return
+        // immediatly. So before posting quit message,
+        // waitForIdle() must be called.
+        waitForIdle();
         mRingBuffer.postQuitMessage();
         mThread->waitForTermination();
         delete mThread;

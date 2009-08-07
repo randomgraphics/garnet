@@ -52,10 +52,10 @@ namespace GN { namespace gfx
         ///
         void drawLines(
             const void *      positions, // 3D positions
-            size_t            stride,    // position buffer stride. 0 for default stride.
+            size_t            stride,    // position buffer stride. 0 for default stride (3 floats).
             size_t            numpoints,
             UInt32            colorInRgba,
-            const Matrix44f & projViewWorld );
+            const Matrix44f & transform );
 
         ///
         /// submit any pending line drawing requests to renderer
@@ -71,7 +71,7 @@ namespace GN { namespace gfx
         {
             Vector3f  pos;
             UInt32    colorInRGBA;
-            Matrix44f pvw;
+            Matrix44f transform;
         };
 
         struct Line

@@ -99,19 +99,19 @@ bool GN::gfx::LineRenderer::init()
     mContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
     mContext.vtxfmt.elements[1].bindTo( "color", 0 );
     mContext.vtxfmt.elements[2].stream = 0;
-    mContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( LineVertex, pvw );
+    mContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
     mContext.vtxfmt.elements[2].format = ColorFormat::FLOAT4;
     mContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
     mContext.vtxfmt.elements[3].stream = 0;
-    mContext.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( LineVertex, pvw ) + sizeof(Vector4f);
+    mContext.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f);
     mContext.vtxfmt.elements[3].format = ColorFormat::FLOAT4;
     mContext.vtxfmt.elements[3].bindTo( "texcoord", 1 );
     mContext.vtxfmt.elements[4].stream = 0;
-    mContext.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( LineVertex, pvw ) + sizeof(Vector4f) * 2;
+    mContext.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 2;
     mContext.vtxfmt.elements[4].format = ColorFormat::FLOAT4;
     mContext.vtxfmt.elements[4].bindTo( "texcoord", 2 );
     mContext.vtxfmt.elements[5].stream = 0;
-    mContext.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( LineVertex, pvw ) + sizeof(Vector4f) * 3;
+    mContext.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 3;
     mContext.vtxfmt.elements[5].format = ColorFormat::FLOAT4;
     mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
@@ -160,8 +160,10 @@ void GN::gfx::LineRenderer::drawLines(
     size_t            stride,
     size_t            numpoints,
     UInt32            colorInRgba,
-    const Matrix44f & projViewWorld )
+    const Matrix44f & transform )
 {
+    if( 0 == stride ) stride = sizeof(float)*3;
+
     size_t numNewLines = numpoints / 2;
 
     const UInt8 * positionsU8 = (const UInt8*)positions;
@@ -176,28 +178,33 @@ void GN::gfx::LineRenderer::drawLines(
                 stride,
                 MAX_LINES * 2,
                 colorInRgba,
-                projViewWorld );
+                transform );
 
             positionsU8 += MAX_LINES * 2 * stride;
         }
         numNewLines %= MAX_LINES;
     }
 
+    GN_ASSERT( numNewLines <= MAX_LINES );
+
     if( numNewLines + mNextFreeLine > mLines + MAX_LINES )
     {
-        // there's no enough space to hold incoming lines, flush the pending buffer.
+        // there's no enough space to hold all incoming lines. So flush first.
         flush();
     }
 
+    GN_ASSERT( numNewLines + mNextFreeLine <= mLines + MAX_LINES );
+
     for( size_t i = 0; i < numNewLines; ++i )
     {
+        GN_ASSERT( mLines <= mNextFreeLine && mNextFreeLine < (mLines + MAX_LINES) );
         mNextFreeLine->v0.pos = *(const Vector3f*)positionsU8;
         mNextFreeLine->v0.colorInRGBA = colorInRgba;
-        mNextFreeLine->v0.pvw = projViewWorld;
+        mNextFreeLine->v0.transform = transform;
 
         mNextFreeLine->v1.pos = *(const Vector3f*)(positionsU8 + stride);
         mNextFreeLine->v1.colorInRGBA = colorInRgba;
-        mNextFreeLine->v1.pvw = projViewWorld;
+        mNextFreeLine->v1.transform = transform;
 
         // next line segement
         positionsU8 += stride * 2;
@@ -217,6 +224,8 @@ void GN::gfx::LineRenderer::flush()
 
     size_t firstPendingLineOffset = mNextPendingLine - mLines;
 
+    GN_ASSERT( firstPendingLineOffset + numPendingLines <= MAX_LINES );
+
     mContext.vtxbufs[0].vtxbuf->update(
         firstPendingLineOffset * sizeof(Line),
         numPendingLines * sizeof(Line),
@@ -231,6 +240,7 @@ void GN::gfx::LineRenderer::flush()
         firstPendingLineOffset * 2 // startvtx,
         );
 
-    if( mNextFreeLine == mLines + MAX_LINES ) mNextFreeLine = mLines; // rewind next-free pointer if needed.
-    mNextPendingLine = mNextFreeLine;
+    // rewind all pointers
+    mNextFreeLine = mLines;
+    mNextPendingLine = mLines;
 }
