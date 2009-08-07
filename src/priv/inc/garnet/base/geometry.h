@@ -376,8 +376,9 @@ namespace GN
         //@{
         Vector3()
         {}
-        Vector3( T ix, T iy, T iz )
-            : x(ix), y(iy), z(iz)
+        template<typename TX, typename TY, typename TZ>
+        Vector3( TX ix, TY iy, TZ iz )
+            : x((T)ix), y((T)iy), z((T)iz)
         {}
         Vector3( const Vector3 & v )
             : x(v.x), y(v.y), z(v.z)
