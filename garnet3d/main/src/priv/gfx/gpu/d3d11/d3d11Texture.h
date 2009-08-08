@@ -11,7 +11,7 @@
 
 namespace GN { namespace gfx
 {
-    class D3D11Renderer;
+    class D3D11Gpu;
 
     ///
     /// D3D texture
@@ -26,7 +26,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11Texture( D3D11Renderer & r ) : D3D11Resource(r) { clear(); }
+        D3D11Texture( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
         virtual ~D3D11Texture() { quit(); }
         //@}
 

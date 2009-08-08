@@ -1,15 +1,15 @@
 #include "rndrtest.h"
 
-class OGLRendererTest : public CxxTest::TestSuite, public RendererTest
+class OGLGpuTest : public CxxTest::TestSuite, public GpuTest
 {
 
 public:
 
-    OGLRendererTest() : RendererTest( GN::gfx::RendererAPI::OGL, false ) {}
+    OGLGpuTest() : GpuTest( GN::gfx::GpuAPI::OGL, false ) {}
 
     void testExternalWindow()
     {
-        #ifdef GN_BUILD_RENDERER_API_HAS_OGL
+        #ifdef GN_BUILD_GPU_API_HAS_OGL
         externalWindow();
         #endif
     }

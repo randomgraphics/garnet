@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    class OGLRenderer;
+    class OGLGpu;
 
     ///
     /// OGL line renderer
@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLLine( OGLRenderer & r ) : mRenderer(r) { clear(); }
+        OGLLine( OGLGpu & r ) : mGpu(r) { clear(); }
         virtual ~OGLLine() { quit(); }
         //@}
 
@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         ///
         /// Draw lines on screen
         ///
-        /// \sa Renderer::drawLines
+        /// \sa Gpu::drawLines
         ///
         void drawLines(
             BitFields options,
@@ -79,7 +79,7 @@ namespace GN { namespace gfx
 
         LineVertex * mVtxBuf;
 
-        OGLRenderer & mRenderer;
+        OGLGpu & mGpu;
 
         size_t mNextLine;
 

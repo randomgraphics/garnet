@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    class XenonRenderer;
+    class XenonGpu;
 
     ///
     /// General Xenon resource class
@@ -20,16 +20,16 @@ namespace GN { namespace gfx
         ///
         /// Get the renderer that the resource belongs to.
         ///
-        XenonRenderer & getRenderer() const { return mRenderer; }
+        XenonGpu & getGpu() const { return mGpu; }
 
     protected :
 
-        XenonResource( XenonRenderer & ); ///< ctor
+        XenonResource( XenonGpu & ); ///< ctor
         virtual ~XenonResource();         ///< dtor
 
     private:
 
-        XenonRenderer & mRenderer;
+        XenonGpu & mGpu;
     };
 }}
 

@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 #include "d3d11Texture.h"
 #include "garnet/GNd3d10.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // local functions

@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "mtshader.h"
-#include "mtrndrCmd.h"
+#include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mtshader");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
 
 using namespace GN::gfx;
 
@@ -66,7 +66,7 @@ void GN::gfx::MultiThreadUniform::quit()
 
     if( mUniform )
     {
-        mRenderer.postCommand1( CMD_UNIFORM_DESTROY, mUniform );
+        mGpu.postCommand1( CMD_UNIFORM_DESTROY, mUniform );
         mUniform = NULL;
     }
 
@@ -97,9 +97,9 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
     memcpy( mFrontEndData + offset, data, length );
 
     size_t cmdsize = sizeof(UniformUpdateParam) + length;
-    if( cmdsize <= mRenderer.getRingBufferSize() )
+    if( cmdsize <= mGpu.getRingBufferSize() )
     {
-        UniformUpdateParam * p = (UniformUpdateParam*)mRenderer.beginPostCommand( CMD_UNIFORM_UPDATE, cmdsize );
+        UniformUpdateParam * p = (UniformUpdateParam*)mGpu.beginPostCommand( CMD_UNIFORM_UPDATE, cmdsize );
         if( NULL == p ) return;
 
         p->uniform = mUniform;
@@ -108,7 +108,7 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
         p->data    = p + 1;
         memcpy( p->data, data, length );
 
-        mRenderer.endPostCommand();
+        mGpu.endPostCommand();
     }
     else
     {
@@ -138,8 +138,8 @@ bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
     // get parameter informations
     volatile GpuProgramInitParam gpip;
     gpip.gp = mGpuProgram;
-    mRenderer.postCommand1( CMD_GPU_PROGRAM_INIT, &gpip );
-    mRenderer.waitForIdle();
+    mGpu.postCommand1( CMD_GPU_PROGRAM_INIT, &gpip );
+    mGpu.waitForIdle();
     mParamDesc = gpip.params;
 
     // success
@@ -157,7 +157,7 @@ void GN::gfx::MultiThreadGpuProgram::quit()
 
     if( mGpuProgram )
     {
-        mRenderer.postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
+        mGpu.postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
     }
 
     // standard quit procedure
@@ -175,7 +175,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GPU_PROGRAM_DESTROY( Renderer &, void * p, size_t )
+    void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, size_t )
     {
         GpuProgram & gp = **(GpuProgram**)p;
         gp.decref();
@@ -184,7 +184,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_GPU_PROGRAM_INIT( Renderer &, void * p, size_t )
+    void func_GPU_PROGRAM_INIT( Gpu &, void * p, size_t )
     {
         GpuProgramInitParam * gpip = *(GpuProgramInitParam**)p;
         gpip->params = &gpip->gp->getParameterDesc();
@@ -193,7 +193,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_UNIFORM_DESTROY( Renderer &, void * p, size_t )
+    void func_UNIFORM_DESTROY( Gpu &, void * p, size_t )
     {
         Uniform & u = **(Uniform**)p;
         u.decref();
@@ -202,7 +202,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_UNIFORM_UPDATE( Renderer &, void * p, size_t )
+    void func_UNIFORM_UPDATE( Gpu &, void * p, size_t )
     {
         const UniformUpdateParam & uup = *(const UniformUpdateParam*)p;
         uup.uniform->update( uup.offset, uup.length, uup.data );

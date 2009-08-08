@@ -858,16 +858,16 @@ TARGET_stlibs = [
 	'GNextern',
 	'GNbase',
 	'GNgfxUtil',
-	'GNrndrCommon',
+	'GNgpuCommon',
 	'GNutil',
 	]
 
 TARGET_shlibs = [
     'GNcore',
-    'GNrndrOGL',
-	'GNrndrXenon',
-	'GNrndrD3D10',
-	'GNrndrD3D11',
+    'GNgpuOGL',
+	'GNgpuXenon',
+	'GNgpuD3D10',
+	'GNgpuD3D11',
     ]
 
 TARGET_tests = [

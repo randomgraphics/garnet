@@ -1,23 +1,23 @@
-#ifndef __GN_GFXCOMMON_BASICRENDERERXENON_H__
-#define __GN_GFXCOMMON_BASICRENDERERXENON_H__
+#ifndef __GN_GPUCOMMON_BASICGPUXENON_H__
+#define __GN_GPUCOMMON_BASICGPUXENON_H__
 // *****************************************************************************
 /// \file
-/// \brief   Basic renderer class
+/// \brief   Basic GPU class
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
 #ifdef GN_XENON
 
-#include "basicRenderer.h"
+#include "basicGpu.h"
 
 namespace GN { namespace gfx
 {
     ///
-    /// basic renderer class on Xenon platform
+    /// basic GPU class on Xenon platform
     ///
-    class BasicRendererXenon : public BasicRenderer
+    class BasicGpuXenon : public BasicGpu
     {
-        GN_DECLARE_STDCLASS( BasicRendererXenon, BasicRenderer );
+        GN_DECLARE_STDCLASS( BasicGpuXenon, BasicGpu );
 
         // ********************************
         // constructor/destructor
@@ -25,8 +25,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRendererXenon() { clear(); }
-        virtual ~BasicRendererXenon() {}
+        BasicGpuXenon() { clear(); }
+        virtual ~BasicGpuXenon() {}
         //@}
 
         // ********************************
@@ -35,7 +35,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init( const GpuOptions & );
         void quit();
     private :
         void clear()
@@ -54,11 +54,11 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual const RendererOptions & getOptions() const { return mOptions; }
+        virtual const GpuOptions & getOptions() const { return mOptions; }
         virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
 
     private:
-        bool dispInit( const RendererOptions & );
+        bool dispInit( const GpuOptions & );
         void dispQuit();
         void dispClear() {}
 
@@ -68,7 +68,7 @@ namespace GN { namespace gfx
 
     private:
 
-        RendererOptions   mOptions;
+        GpuOptions   mOptions;
         DispDesc          mDispDesc;
 
         //@}
@@ -134,4 +134,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_BASICRENDERERXENON_H__
+#endif // __GN_GPUCOMMON_BASICGPUXENON_H__

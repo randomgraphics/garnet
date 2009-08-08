@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    class OGLRenderer; // forware declaration of OGL renderer.
+    class OGLGpu; // forware declaration of OGL GPU.
 
     ///
     /// General OGL resource class
@@ -18,17 +18,17 @@ namespace GN { namespace gfx
     protected :
 
         //@{
-        OGLResource( OGLRenderer & );
+        OGLResource( OGLGpu & );
         virtual ~OGLResource();
         //@}
 
         ///
         /// Get renderer that the resource belongs to
         ///
-        OGLRenderer & getRenderer() const { return mRenderer; }
+        OGLGpu & getGpu() const { return mGpu; }
 
     private:
-        OGLRenderer & mRenderer;
+        OGLGpu & mGpu;
     };
 
 }}

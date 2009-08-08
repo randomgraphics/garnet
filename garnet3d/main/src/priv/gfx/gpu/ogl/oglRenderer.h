@@ -1,13 +1,13 @@
-#ifndef __GN_GFX_OGLRENDERER_H__
-#define __GN_GFX_OGLRENDERER_H__
+#ifndef __GN_GFX_OGLGPU_H__
+#define __GN_GFX_OGLGPU_H__
 // *****************************************************************************
 /// \file
-/// \brief   OGL renderer class
+/// \brief   OGL GPU class
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicRendererX11.h"
-#include "../common/basicRendererMsw.h"
+#include "../common/basicGpuX11.h"
+#include "../common/basicGpuMsw.h"
 #include "../common/cgShader.h"
 
 namespace GN { namespace gfx
@@ -21,23 +21,23 @@ namespace GN { namespace gfx
     ///
     /// OGL specific caps
     ///
-    struct OGLRendererCaps : public RendererCaps
+    struct OGLGpuCaps : public GpuCaps
     {
         UInt32 maxVertexAttributes; ///< query GL_MAX_VERTEX_ATTRIBS_ARB
     };
 
 #if GN_MSWIN
-    typedef BasicRendererMsw ParentRenderer;
+    typedef BasicGpuMsw ParentGpu;
 #else
-    typedef BasicRendererX11 ParentRenderer;
+    typedef BasicGpuX11 ParentGpu;
 #endif
 
     ///
-    /// OGL renderer class
+    /// OGL GPU class
     ///
-    class OGLRenderer : public ParentRenderer
+    class OGLGpu : public ParentGpu
     {
-        GN_DECLARE_STDCLASS(OGLRenderer, ParentRenderer);
+        GN_DECLARE_STDCLASS(OGLGpu, ParentGpu);
 
         static Logger * sLogger;
 
@@ -47,8 +47,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        OGLRenderer() { clear(); }
-        virtual ~OGLRenderer() { quit(); }
+        OGLGpu() { clear(); }
+        virtual ~OGLGpu() { quit(); }
         //@}
 
         // ********************************
@@ -59,7 +59,7 @@ namespace GN { namespace gfx
 
     public:
 
-        bool init( const RendererOptions & );
+        bool init( const GpuOptions & );
         void quit();
 
     private:
@@ -136,13 +136,13 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual const GpuCaps & getCaps() const { return mCaps; }
         virtual bool                 checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
         virtual ColorFormat          getDefaultTextureFormat( TextureUsage usages ) const;
 
     public :
 
-        const OGLRendererCaps & getOGLCaps() const { return mCaps; }
+        const OGLGpuCaps & getOGLCaps() const { return mCaps; }
 
     private :
         bool capsInit();
@@ -151,7 +151,7 @@ namespace GN { namespace gfx
 
     private:
 
-        OGLRendererCaps mCaps;
+        OGLGpuCaps mCaps;
 
         //@}
 
@@ -218,7 +218,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck );
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -233,10 +233,10 @@ namespace GN { namespace gfx
         void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
         inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexFormat & vf, const OGLBasicGpuProgram * gpuProgram );
-        inline bool bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextRenderTargets( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTargets( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResources( const GpuContext & newContext, bool skipDirtyCheck );
 
     private:
 
@@ -347,4 +347,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_OGLRENDERER_H__
+#endif // __GN_GFX_OGLGPU_H__

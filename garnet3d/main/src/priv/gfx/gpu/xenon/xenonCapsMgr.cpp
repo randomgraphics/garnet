@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 
 // *****************************************************************************
 // init / quit
@@ -8,7 +8,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::capsInit()
+bool GN::gfx::XenonGpu::capsInit()
 {
     GN_GUARD;
 
@@ -37,13 +37,13 @@ bool GN::gfx::XenonRenderer::capsInit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::checkTextureFormatSupport(
+bool GN::gfx::XenonGpu::checkTextureFormatSupport(
     ColorFormat   format,
     TextureUsage usages ) const
 {
@@ -65,7 +65,7 @@ bool GN::gfx::XenonRenderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::XenonRenderer::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::XenonGpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 

@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "basicRendererMsw.h"
+#include "basicGpuMsw.h"
 #include "garnet/GNwin.h"
 
 #if GN_MSWIN && !GN_XENON
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 //
 //
@@ -31,7 +31,7 @@ sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
 /// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
 static HMONITOR
-sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
+sDetermineMonitorHandle( const GN::gfx::GpuOptions & ro )
 {
     if( 0 == ro.monitorHandle )
     {
@@ -64,7 +64,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 // ----------------------------------------------------------------------------
 static bool
 sGetCurrentDisplayMode(
-    const GN::gfx::RendererOptions & ro,
+    const GN::gfx::GpuOptions & ro,
     GN::gfx::DisplayMode           & dm )
 {
     GN_GUARD;
@@ -102,7 +102,7 @@ sGetCurrentDisplayMode(
 // ----------------------------------------------------------------------------
 static bool
 sDetermineWindowSize(
-    const GN::gfx::RendererOptions & ro,
+    const GN::gfx::GpuOptions & ro,
     const GN::gfx::DisplayMode & currentDisplayMode,
     UInt32 & width,
     UInt32 & height )
@@ -137,18 +137,18 @@ sDetermineWindowSize(
 }
 
 // *****************************************************************************
-//                         BasicRendererMsw init / quit functions
+//                         BasicGpuMsw init / quit functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererMsw::init( const RendererOptions & o )
+bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicRendererMsw, (o) );
+    GN_STDCLASS_INIT( BasicGpuMsw, (o) );
 
     // initialize sub-components one by one
     if( !dispInit(o) ) return failure();
@@ -162,7 +162,7 @@ bool GN::gfx::BasicRendererMsw::init( const RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRendererMsw::quit()
+void GN::gfx::BasicGpuMsw::quit()
 {
     GN_GUARD;
 
@@ -176,26 +176,26 @@ void GN::gfx::BasicRendererMsw::quit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRendererMsw::processRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::BasicGpuMsw::processRenderWindowMessages( bool blockWhileMinimized )
 {
     GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************
-// from BasicRenderer
+// from BasicGpu
 // ****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
 void
-GN::gfx::BasicRendererMsw::handleRenderWindowSizeMove()
+GN::gfx::BasicGpuMsw::handleRenderWindowSizeMove()
 {
     mWindow.handleSizeMove();
 }
@@ -207,7 +207,7 @@ GN::gfx::BasicRendererMsw::handleRenderWindowSizeMove()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererMsw::dispInit( const RendererOptions & ro )
+bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
 {
     DispDesc desc;
 
@@ -262,7 +262,7 @@ bool GN::gfx::BasicRendererMsw::dispInit( const RendererOptions & ro )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::BasicRendererMsw::dispQuit()
+void GN::gfx::BasicGpuMsw::dispQuit()
 {
     mWindow.quit();
 }

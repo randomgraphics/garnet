@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 ///
 /// 根据显示模式和option设定present parameters
@@ -69,7 +69,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS   & d3dpp,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::dispInit()
+bool GN::gfx::XenonGpu::dispInit()
 {
     GN_GUARD;
 
@@ -81,7 +81,7 @@ bool GN::gfx::XenonRenderer::dispInit()
         return false;
     }
 
-    const RendererOptions & ro = getOptions();
+    const GpuOptions & ro = getOptions();
     const DispDesc        & dd = getDispDesc();
 
     // init d3d present parameters
@@ -110,7 +110,7 @@ bool GN::gfx::XenonRenderer::dispInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::dispQuit()
+void GN::gfx::XenonGpu::dispQuit()
 {
     GN_GUARD;
 

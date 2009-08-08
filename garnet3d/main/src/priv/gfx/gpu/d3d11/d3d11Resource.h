@@ -6,11 +6,11 @@
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
 namespace GN { namespace gfx
 {
-    class D3D11Renderer;
+    class D3D11Gpu;
 
     ///
     /// General D3D11 resource class
@@ -20,28 +20,28 @@ namespace GN { namespace gfx
     public:
 
         ///
-        /// Get the renderer that the resource belongs to.
+        /// Get the GPU that the resource belongs to.
         ///
-        D3D11Renderer & getRenderer() const { return mRenderer; }
+        D3D11Gpu & getGpu() const { return mGpu; }
 
         ///
         /// Get reference to D3D11Device
         ///
-        ID3D11Device & getDeviceRef() const { return mRenderer.getDeviceRefInlined(); }
+        ID3D11Device & getDeviceRef() const { return mGpu.getDeviceRefInlined(); }
 
         ///
         /// Get reference to D3D11Device
         ///
-        ID3D11DeviceContext & getDeviceContextRef() const { return mRenderer.getDeviceContextRefInlined(); }
+        ID3D11DeviceContext & getDeviceContextRef() const { return mGpu.getDeviceContextRefInlined(); }
 
     protected :
 
-        D3D11Resource( D3D11Renderer & ); ///< ctor
+        D3D11Resource( D3D11Gpu & ); ///< ctor
         virtual ~D3D11Resource();         ///< dtor
 
     private:
 
-        D3D11Renderer & mRenderer;
+        D3D11Gpu & mGpu;
     };
 }}
 

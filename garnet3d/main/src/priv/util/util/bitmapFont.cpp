@@ -22,15 +22,15 @@ sDetermineTextureSizeAndCount(
     size_t   & texwidth,
     size_t   & texheight,
     size_t   & texcount,
-    Renderer & rndr,
+    Gpu      & gpu,
     size_t     rectw,
     size_t     recth,
     size_t     maxchars )
 {
     // determine texture size
-    size_t maxw = rndr.getCaps().maxTex2DSize[0];
-    size_t maxh = rndr.getCaps().maxTex2DSize[1];
-    size_t maxc = rndr.getCaps().maxTextures;
+    size_t maxw = gpu.getCaps().maxTex2DSize[0];
+    size_t maxh = gpu.getCaps().maxTex2DSize[1];
+    size_t maxc = gpu.getCaps().maxTextures;
 
     for( texcount = 1; texcount <= maxc; ++texcount )
     {
@@ -68,11 +68,11 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
         return failure();
     }
 
-    Renderer & rndr = sr->getRenderer();
+    Gpu & gpu = sr->getGpu();
     const FontFaceDesc & ffd = ff->getDesc();
 
     // initialize font slots
-    if( !slotInit( rndr, ffd.width, ffd.height, maxchars ) ) return failure();
+    if( !slotInit( gpu, ffd.width, ffd.height, maxchars ) ) return failure();
 
     // create character list
     for( int i = 0; i < MAX_TEXTURES; ++i )
@@ -327,7 +327,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 // -----------------------------------------------------------------------------
 bool
 GN::util::BitmapFont::slotInit(
-    Renderer & rndr,
+    Gpu      & gpu,
     UInt16     fontw,
     UInt16     fonth,
     size_t     maxchars )
@@ -339,7 +339,7 @@ GN::util::BitmapFont::slotInit(
 
     // determine texture size
     size_t texwidth, texheight, texcount;
-    if( !sDetermineTextureSizeAndCount( texwidth, texheight, texcount, rndr, rectw, recth, maxchars ) )
+    if( !sDetermineTextureSizeAndCount( texwidth, texheight, texcount, gpu, rectw, recth, maxchars ) )
     {
         GN_ERROR(sLogger)( "Fail to determine font texture size, please decrease font size or maxchars." );
         return false;
@@ -401,11 +401,11 @@ GN::util::BitmapFont::slotInit(
 
     // create font textures
     TextureDesc td = { texwidth, texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
-    GN_ASSERT( texcount <= rndr.getCaps().maxTextures );
+    GN_ASSERT( texcount <= gpu.getCaps().maxTextures );
     mTextures.resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
-        mTextures[i].attach( rndr.createTexture( td ) );
+        mTextures[i].attach( gpu.createTexture( td ) );
 
         if( 0 == mTextures[i] )
         {

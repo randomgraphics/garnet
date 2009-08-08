@@ -6,10 +6,10 @@ namespace GN { namespace gfx
 {
 
 ///
-/// Renderer command enumerations.
+/// Gpu command enumerations.
 ///
-enum RndrCommand {
-    CMD_GET_RENDERER_OPTIONS,///< get renderer options
+enum GpuCommand {
+    CMD_GET_GPU_OPTIONS,///< get GPU options
     CMD_GET_DISP_DESC,///< get display descriptor
     CMD_GET_D3D_DEVICE,
     CMD_GET_OGL_RC,
@@ -54,13 +54,13 @@ enum RndrCommand {
 };
 
 ///
-/// Renderer command handler type.
+/// Gpu command handler type.
 ///
-typedef void (*RndrCommandHandler)( Renderer & r, void * param, size_t size );
+typedef void (*GpuCommandHandler)( Gpu & r, void * param, size_t size );
 
 ///
-/// Renderer command handler table.
+/// Gpu command handler table.
 ///
-extern const RndrCommandHandler g_rndrCommandHandlers[];
+extern const GpuCommandHandler g_gpuCommandHandlers[];
 
 }} // end of file

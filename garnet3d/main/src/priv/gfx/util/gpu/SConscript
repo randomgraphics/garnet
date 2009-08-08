@@ -2,13 +2,13 @@ Import( 'GN' )
 
 sources = [
 	'mtidxbuf.cpp',
-	'mtrndr.cpp',
-	'mtrndrCmd.cpp',
+	'mtgpu.cpp',
+	'mtgpuCmd.cpp',
 	'mtshader.cpp',
 	'mttexture.cpp',
 	'mtvtxbuf.cpp',
 	'ringbuffer.cpp',
-	'rndrCreator.cpp',
+	'gpuCreator.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

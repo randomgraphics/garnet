@@ -47,7 +47,7 @@ static const char * glslpscode =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWireframeEffect::init( Renderer & r )
+bool GN::util::SimpleWireframeEffect::init( Gpu & r )
 {
     GN_GUARD;
 

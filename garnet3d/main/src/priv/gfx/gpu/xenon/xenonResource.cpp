@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "xenonResource.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 
-GN::gfx::XenonResource::XenonResource( XenonRenderer & r )
-    : mRenderer(r)
+GN::gfx::XenonResource::XenonResource( XenonGpu & r )
+    : mGpu(r)
 {
-    mRenderer.insertResource( this );
+    mGpu.insertResource( this );
 }
 
 GN::gfx::XenonResource::~XenonResource()
 {
-    mRenderer.removeResource( this );
+    mGpu.removeResource( this );
 }

@@ -9,7 +9,7 @@
 namespace GN { namespace gfx
 {
     ///
-    /// Colored line Renderer
+    /// Colored line renderer
     ///
     class LineRenderer : public StdClass
     {
@@ -21,7 +21,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        LineRenderer( Renderer & r ) : mRenderer(r) { clear(); }
+        LineRenderer( Gpu & r ) : mGpu(r) { clear(); }
         virtual ~LineRenderer() { quit(); }
         //@}
 
@@ -84,8 +84,8 @@ namespace GN { namespace gfx
             MAX_LINES = 256,
         };
 
-        Renderer        & mRenderer;
-        RendererContext   mContext;
+        Gpu        & mGpu;
+        GpuContext   mContext;
         Line            * mLines;
         Line            * mNextPendingLine;
         Line            * mNextFreeLine;

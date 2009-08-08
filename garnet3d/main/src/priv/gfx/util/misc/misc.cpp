@@ -6,7 +6,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.misc");
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::loadTextureFromFile( Renderer & rndr, const char * filename )
+GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
 {
     GN_VERBOSE(sLogger)( "Load texture from file: %s", filename );
 
@@ -18,7 +18,7 @@ GN::gfx::loadTextureFromFile( Renderer & rndr, const char * filename )
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
-    AutoRef<Texture> tex( rndr.createTexture( td ) );
+    AutoRef<Texture> tex( gpu.createTexture( td ) );
     if( !tex ) return 0;
 
     // update texture content

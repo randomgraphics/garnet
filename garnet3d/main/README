@@ -22,11 +22,11 @@ Directory Structure
     - doc           documenation
     - gfx           graphics libraries
       - util        graphics utility library
-      - rndr        renderers
-        - ogl       OpenGL renderer
-        - d3d9      D3D9.1 renderer (obsolete)
-        - d3d10     D3D10.0 renderer
-        - xenon     Xbox360 renderer
+      - gpu         GPUs
+        - ogl       OpenGL GPU
+        - d3d9      D3D9.1 GPU (obsolete)
+        - d3d10     D3D10.0 GPU
+        - xenon     Xbox360 GPU
     - inc           public headers of garnet library.
     - media         media files (textures, models, shaders, fonts and etc.)
     - misc          misc. files (normally not source code)

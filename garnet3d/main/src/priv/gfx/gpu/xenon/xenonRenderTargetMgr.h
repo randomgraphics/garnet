@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    class XenonRenderer;
+    class XenonGpu;
 
     ///
     /// Xenon render target description
@@ -32,7 +32,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonRenderTargetManager( XenonRenderer & r ) : mRenderer(r) { clear(); }
+        XenonRenderTargetManager( XenonGpu & r ) : mGpu(r) { clear(); }
         virtual ~XenonRenderTargetManager() { quit(); }
         //@}
 
@@ -67,7 +67,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        XenonRenderer & mRenderer;
+        XenonGpu & mGpu;
 
         // ********************************
         // private functions

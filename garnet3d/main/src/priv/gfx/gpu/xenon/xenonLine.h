@@ -23,7 +23,7 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        XenonLine( XenonRenderer & r ) : XenonResource(r) { clear(); }
+        XenonLine( XenonGpu & r ) : XenonResource(r) { clear(); }
         virtual ~XenonLine() { quit(); }
         //@}
 
@@ -54,7 +54,7 @@ namespace GN { namespace gfx {
         ///
         /// Draw lines on screen
         ///
-        /// \sa Renderer::drawLines
+        /// \sa Gpu::drawLines
         ///
         void drawLines(
             BitFields         options,

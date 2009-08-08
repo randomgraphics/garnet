@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include "oglLine.h"
 #include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
@@ -8,7 +8,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -42,7 +42,7 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::drawInit()
+bool GN::gfx::OGLGpu::drawInit()
 {
     GN_GUARD;
 
@@ -60,7 +60,7 @@ bool GN::gfx::OGLRenderer::drawInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawQuit()
+void GN::gfx::OGLGpu::drawQuit()
 {
     GN_GUARD;
 
@@ -76,7 +76,7 @@ void GN::gfx::OGLRenderer::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::present()
+void GN::gfx::OGLGpu::present()
 {
     GN_GUARD_SLOW;
 
@@ -100,7 +100,7 @@ void GN::gfx::OGLRenderer::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::clearScreen(
+void GN::gfx::OGLGpu::clearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
@@ -146,7 +146,7 @@ void GN::gfx::OGLRenderer::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawIndexed(
+void GN::gfx::OGLGpu::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -181,7 +181,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
             {
                 if( startvtx <= *indices && *indices < (startvtx+numvtx) )
                 {
-                    GN_RNDR_RIP( "Invalid index: %u", *indices );
+                    GN_GPU_RIP( "Invalid index: %u", *indices );
                 }
             }
         }
@@ -192,7 +192,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
             {
                 if( startvtx <= *indices && *indices < (startvtx+numvtx) )
                 {
-                    GN_RNDR_RIP( "Invalid index: %u", *indices );
+                    GN_GPU_RIP( "Invalid index: %u", *indices );
                 }
             }
         }
@@ -229,7 +229,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
+void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_GUARD_SLOW;
 
@@ -258,7 +258,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numvtx, size_t start
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawIndexedUp(
+void GN::gfx::OGLGpu::drawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -295,7 +295,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
             {
                 if( *indices >= numvtx )
                 {
-                    GN_RNDR_RIP( "Invalid index (%u) in index buffer.", *indices );
+                    GN_GPU_RIP( "Invalid index (%u) in index buffer.", *indices );
                 }
             }
         }
@@ -339,7 +339,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawUp(
+void GN::gfx::OGLGpu::drawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -387,7 +387,7 @@ void GN::gfx::OGLRenderer::drawUp(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawLines(
+void GN::gfx::OGLGpu::drawLines(
     BitFields options,
     const void * positions,
     size_t stride,
@@ -402,7 +402,7 @@ void GN::gfx::OGLRenderer::drawLines(
     GN_ASSERT( mLine );
 
     // disable GPU program and resources
-    RendererContext ctx = getContext();
+    GpuContext ctx = getContext();
     ctx.gpuProgram.clear();
     ctx.uniforms.clear();
     ctx.clearResources();

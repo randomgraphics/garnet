@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "xenonVertexDecl.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions

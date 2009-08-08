@@ -23,12 +23,12 @@ public:
 
     void updateRadius()
     {
-        Renderer & rndr = getRenderer();
+        Gpu & gpu = getGpu();
 
-        const DispDesc & dd = rndr.getDispDesc();
+        const DispDesc & dd = gpu.getDispDesc();
 
         view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        rndr.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
 
         float h = tan( 0.5f ) * radius * 2.0f;
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
@@ -42,12 +42,12 @@ public:
 
     bool onPostInit()
     {
-        Renderer & rndr = getRenderer();
+        Gpu & gpu = getGpu();
 
-        rndr.getSignals().rendererWindowSizeMove.connect( this, &MyApp::onRenderWindowResize );
+        gpu.getSignals().rendererWindowSizeMove.connect( this, &MyApp::onRenderWindowResize );
 
         // create scene
-        rootScene.attach( createScene( rndr ) );
+        rootScene.attach( createScene( gpu ) );
         if( !rootScene ) return false;
 
         // load model
@@ -97,9 +97,9 @@ public:
 
     void onRender()
     {
-        Renderer & rndr = getRenderer();
+        Gpu & gpu = getGpu();
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
         const Vector3f & position = arcball.getTranslation();
 

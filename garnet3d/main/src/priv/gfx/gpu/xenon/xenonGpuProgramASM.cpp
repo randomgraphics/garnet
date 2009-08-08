@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "xenonShader.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "garnet/GNd3d9.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -21,7 +21,7 @@ bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::MICROCODE == desc.lang );
 
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
@@ -69,7 +69,7 @@ void GN::gfx::XenonGpuProgramASM::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramASM::apply() const
 {
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }

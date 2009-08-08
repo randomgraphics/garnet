@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
 
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
 namespace GN { namespace gfx
 {
@@ -251,7 +251,7 @@ namespace GN { namespace gfx
             mTail.next = NULL;
             mTail.object = 0;
             mCount = 0;
-            mLogger = getLogger( "GN.gfx.rndr.D3D11.D3D11StateObjectCache" );
+            mLogger = getLogger( "GN.gfx.gpu.D3D11.D3D11StateObjectCache" );
 
             // initialize free item list
             mNextFreeItem = &mPool[0];

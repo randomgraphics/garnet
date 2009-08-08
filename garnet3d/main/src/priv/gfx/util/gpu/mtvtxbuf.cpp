@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "mtvtxbuf.h"
-#include "mtrndrCmd.h"
+#include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mtvtxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtvtxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -41,7 +41,7 @@ void GN::gfx::MultiThreadVtxBuf::quit()
 
     if( mVtxBuf )
     {
-        mRenderer.postCommand1( CMD_VTXBUF_DESTROY, mVtxBuf );
+        mGpu.postCommand1( CMD_VTXBUF_DESTROY, mVtxBuf );
         mVtxBuf = NULL;
     }
 
@@ -73,7 +73,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
     }
     memcpy( tmpbuf, data, length );
 
-    mRenderer.postCommand5( CMD_VTXBUF_UPDATE, mVtxBuf, offset, length, tmpbuf, flag );
+    mGpu.postCommand5( CMD_VTXBUF_UPDATE, mVtxBuf, offset, length, tmpbuf, flag );
 }
 
 //
@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadVtxBuf::readback( std::vector<UInt8> & data )
 {
-    mRenderer.postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
+    mGpu.postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
 }
 
 // *****************************************************************************
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_DESTROY( Renderer &, void * p, size_t )
+    void func_VTXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         VtxBuf * vb = *(VtxBuf**)p;
         vb->decref();
@@ -102,7 +102,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_UPDATE( Renderer &, void * p, size_t )
+    void func_VTXBUF_UPDATE( Gpu &, void * p, size_t )
     {
         struct VtxBufUpdateParam
         {
@@ -123,7 +123,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_VTXBUF_READBACK( Renderer &, void * p, size_t )
+    void func_VTXBUF_READBACK( Gpu &, void * p, size_t )
     {
         struct VtxBufReadBackParam
         {

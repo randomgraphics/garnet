@@ -35,10 +35,10 @@ def GenConfigHeader( target, source, env ):
 	FILE.writelines(
 		'\n'
 		'// Define available renderer APIs.\n'
-		'#define GN_BUILD_RENDERER_API_HAS_OGL   %d\n'
-		'#define GN_BUILD_RENDERER_API_HAS_D3D10 %d\n'
-		'#define GN_BUILD_RENDERER_API_HAS_D3D11 %d\n'
-		'#define GN_BUILD_RENDERER_API_HAS_XENON %d\n'
+		'#define GN_BUILD_GPU_API_HAS_OGL   %d\n'
+		'#define GN_BUILD_GPU_API_HAS_D3D10 %d\n'
+		'#define GN_BUILD_GPU_API_HAS_D3D11 %d\n'
+		'#define GN_BUILD_GPU_API_HAS_XENON %d\n'
 		%(
 		GN.conf['has_ogl'],
 		GN.conf['has_d3d10'],

@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "oglLine.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -150,7 +150,7 @@ void GN::gfx::OGLLine::drawLines(
     }
 
     // disable texturing
-    mRenderer.disableTextureStage( 0 );
+    mGpu.disableTextureStage( 0 );
     glDisable( GL_LIGHTING );
 
     // disable VBO

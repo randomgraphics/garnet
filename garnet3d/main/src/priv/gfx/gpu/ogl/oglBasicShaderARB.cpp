@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "oglShader.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Local function

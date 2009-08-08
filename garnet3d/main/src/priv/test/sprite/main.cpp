@@ -8,21 +8,21 @@ using namespace GN::util;
 SpriteRenderer * sr = NULL;
 AutoRef<Texture> tex;
 
-bool init( Renderer & rndr )
+bool init( Gpu & gpu )
 {
     // create sprite renderer
-    sr = new SpriteRenderer( rndr );
+    sr = new SpriteRenderer( gpu );
     if( !sr->init() ) return false;
 
     // create texture
-    tex.attach( loadTextureFromFile( rndr, "media::texture\\rabit.png" ) );
+    tex.attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
     if( !tex ) return false;
 
     // success
     return true;
 }
 
-void quit( Renderer & )
+void quit( Gpu & )
 {
     safeDelete( sr );
     tex.clear();
@@ -54,7 +54,7 @@ void update( float timestep )
     }
 }
 
-void draw( Renderer & )
+void draw( Gpu & )
 {
     const TextureDesc & td = tex->getDesc();
 
@@ -65,9 +65,9 @@ void draw( Renderer & )
         (float)td.width, (float)td.height ); // z
 }
 
-int run( Renderer & rndr )
+int run( Gpu & gpu )
 {
-    if( !init( rndr ) ) { quit( rndr ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -76,7 +76,7 @@ int run( Renderer & rndr )
 
     while( gogogo )
     {
-        rndr.processRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -87,23 +87,23 @@ int run( Renderer & rndr )
             gogogo = false;
         }
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         double frameTime = fps.getLastFrameElasped();
         update( (float)frameTime );
-        draw( rndr );
-        rndr.present();
+        draw( gpu );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    quit( rndr );
+    quit( gpu );
 
     return 0;
 }
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -139,18 +139,18 @@ int main( int argc, const char * argv[] )
             return -1;
     }
 
-    Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
-        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    Gpu * r;
+    if( cmdargs.useMultiThreadGpu )
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadRenderer( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = run( *r );
 
-    deleteRenderer( r );
+    deleteGpu( r );
 
     return result;
 }

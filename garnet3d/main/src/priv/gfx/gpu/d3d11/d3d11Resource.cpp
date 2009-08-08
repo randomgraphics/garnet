@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "d3d11Resource.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
-GN::gfx::D3D11Resource::D3D11Resource( D3D11Renderer & r )
-    : mRenderer(r)
+GN::gfx::D3D11Resource::D3D11Resource( D3D11Gpu & r )
+    : mGpu(r)
 {
-    mRenderer.insertResource( this );
+    mGpu.insertResource( this );
 }
 
 GN::gfx::D3D11Resource::~D3D11Resource()
 {
-    mRenderer.removeResource( this );
+    mGpu.removeResource( this );
 }

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "xenonLine.h"
 
 ///
@@ -32,7 +32,7 @@ static inline D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::drawInit()
+bool GN::gfx::XenonGpu::drawInit()
 {
     // create line renderer
     mLine = new XenonLine( *this );
@@ -48,7 +48,7 @@ bool GN::gfx::XenonRenderer::drawInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::drawQuit()
+void GN::gfx::XenonGpu::drawQuit()
 {
     // endScene
     if( mSceneBegun )
@@ -61,13 +61,13 @@ void GN::gfx::XenonRenderer::drawQuit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::present()
+void GN::gfx::XenonGpu::present()
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
 
@@ -97,7 +97,7 @@ void GN::gfx::XenonRenderer::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::clearScreen(
+void GN::gfx::XenonGpu::clearScreen(
     const Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
@@ -115,7 +115,7 @@ void GN::gfx::XenonRenderer::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::drawIndexed(
+void GN::gfx::XenonGpu::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -137,7 +137,7 @@ void GN::gfx::XenonRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::draw(
+void GN::gfx::XenonGpu::draw(
     PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_ASSERT( getCurrentThreadId() == mThreadId );
@@ -153,7 +153,7 @@ void GN::gfx::XenonRenderer::draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::drawIndexedUp(
+void GN::gfx::XenonGpu::drawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -193,7 +193,7 @@ void GN::gfx::XenonRenderer::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::drawUp(
+void GN::gfx::XenonGpu::drawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -224,7 +224,7 @@ void GN::gfx::XenonRenderer::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::drawLines(
+void GN::gfx::XenonGpu::drawLines(
     BitFields         options,
     const void      * positions,
     size_t            stride,

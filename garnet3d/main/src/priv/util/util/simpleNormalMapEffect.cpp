@@ -96,7 +96,7 @@ static const char * glslpscode =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleNormalMapEffect::init( Renderer & r )
+bool GN::util::SimpleNormalMapEffect::init( Gpu & r )
 {
     GN_GUARD;
 

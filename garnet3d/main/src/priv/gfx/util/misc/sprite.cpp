@@ -75,13 +75,13 @@ bool GN::gfx::SpriteRenderer::init()
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach( mRenderer.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    mPureWhiteTexture.attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
 
     // create GPU program
-    const RendererCaps & caps = mRenderer.getCaps();
+    const GpuCaps & caps = mGpu.getCaps();
     GpuProgramDesc gpd;
     if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
         caps.psLanguages & GpuProgramLanguage::GLSL )
@@ -104,7 +104,7 @@ bool GN::gfx::SpriteRenderer::init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return failure();
     }
-    mGpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
+    mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
     if( !mGpuProgram ) return failure();
 
     // create vertex format
@@ -123,11 +123,11 @@ bool GN::gfx::SpriteRenderer::init()
     mVertexFormat.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
-    mVertexBuffer.attach( mRenderer.createVtxBuf( VTXBUF_SIZE, true ) );
+    mVertexBuffer.attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
     if( !mVertexBuffer ) return failure();
 
     // create index buffer
-    mIndexBuffer.attach( mRenderer.createIdxBuf16( MAX_INDICES, false ) );
+    mIndexBuffer.attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
     if( !mIndexBuffer ) return failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
@@ -196,7 +196,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     if( NULL == texture ) texture = mPureWhiteTexture;
 
     // copy current renderer context
-    mContext = mRenderer.getContext();
+    mContext = mGpu.getContext();
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.set( texture );
@@ -230,12 +230,12 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         }
 
         mContext.blendEnabled  = true;
-        mContext.blendSrc      = RendererContext::BLEND_SRC_ALPHA;
-        mContext.blendDst      = RendererContext::BLEND_INV_SRC_ALPHA;
-        mContext.blendOp       = RendererContext::BLEND_OP_ADD;
-        mContext.blendAlphaSrc = RendererContext::BLEND_SRC_ALPHA;
-        mContext.blendAlphaDst = RendererContext::BLEND_INV_SRC_ALPHA;
-        mContext.blendAlphaOp  = RendererContext::BLEND_OP_ADD;
+        mContext.blendSrc      = GpuContext::BLEND_SRC_ALPHA;
+        mContext.blendDst      = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.blendOp       = GpuContext::BLEND_OP_ADD;
+        mContext.blendAlphaSrc = GpuContext::BLEND_SRC_ALPHA;
+        mContext.blendAlphaDst = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.blendAlphaOp  = GpuContext::BLEND_OP_ADD;
     }
     else if( options & FORCE_ALPHA_BLENDING_DISABLED )
     {
@@ -301,9 +301,9 @@ void GN::gfx::SpriteRenderer::drawEnd()
             mNextPendingSprite,
             mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-        mRenderer.bindContext( mContext );
+        mGpu.bindContext( mContext );
 
-        mRenderer.drawIndexed(
+        mGpu.drawIndexed(
             PrimitiveType::TRIANGLE_LIST,
             numPendingSprites * 6,        // numidx
             firstPendingSpriteOffset * 4, // basevtx,
@@ -348,7 +348,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     // get screen size based on current context
     UInt32 screenWidth, screenHeight;
-    mRenderer.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
+    mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = ( x + mVertexShift ) / screenWidth;
     float y1 = ( y + mVertexShift ) / screenHeight;
@@ -404,7 +404,7 @@ GN::gfx::SpriteRenderer::drawSolid(
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
-    const DispDesc & dd = mRenderer.getDispDesc();
+    const DispDesc & dd = mGpu.getDispDesc();
 
     float x1 = x / dd.width;
     float y1 = y / dd.height;

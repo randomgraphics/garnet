@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "d3d11Buffer.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
 // *****************************************************************************
 // Initialize and shutdown

@@ -39,8 +39,8 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::RendererOptions ro;                     ///< renderer options
-            bool                 useMultithreadRenderer; ///< use multithread renderer or not.
+            gfx::GpuOptions ro;                     ///< renderer options
+            bool                 useMultithreadGpu; ///< use multithread renderer or not.
             input::InputAPI      iapi;                   ///< input API
             util::FontFaceDesc   ffd;                    ///< default font face descriptor
         };
@@ -102,7 +102,7 @@ namespace GN { namespace app
         ///
         /// get reference to renderer
         ///
-        gfx::Renderer & getRenderer() { GN_ASSERT(mRenderer); return *mRenderer; }
+        gfx::Gpu & getGpu() { GN_ASSERT(mGpu); return *mGpu; }
 
         ///
         /// get font renderer
@@ -118,7 +118,7 @@ namespace GN { namespace app
 
         InitParam             mInitParam;
 
-        gfx::Renderer       * mRenderer;
+        gfx::Gpu       * mGpu;
         gfx::SpriteRenderer * mSpriteRenderer;
         gfx::LineRenderer   * mLineRenderer;
         util::BitmapFont      mFont;
@@ -141,9 +141,9 @@ namespace GN { namespace app
         bool init( int argc, const char *  const argv[] );
         void quit();
         bool checkCmdLine( int argc, const char * const argv[] );
-        bool initRenderer();
-        void quitRenderer();
-        bool recreateRenderer();
+        bool initGpu();
+        void quitGpu();
+        bool recreateGpu();
         bool initInput();
         void quitInput();
         bool initFont();

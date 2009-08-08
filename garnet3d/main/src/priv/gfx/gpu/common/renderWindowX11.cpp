@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "renderWindowX11.h"
-#include "basicRenderer.h"
+#include "basicGpu.h"
 
 #if GN_POSIX
 
 #include "glew.h"
 #include "glxew.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.X11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
 
 // *****************************************************************************
 // local functions
@@ -74,13 +74,13 @@ static int sGetScreenNumber( Display * disp, Screen * screen )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
-    Renderer * rndr,
-    Display *  display,
-    Window     externalWindow )
+    Gpu     * gpu,
+    Display * display,
+    Window    externalWindow )
 {
     GN_GUARD;
 
-    mRenderer = rndr;
+    mGpu = gpu;
 
     if( !initDisplay( display ) ) return false;
 
@@ -104,7 +104,7 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
-    Renderer * rndr,
+    Gpu * gpu,
     Display  * display,
     Window     parentWindow,
     Screen   * monitor,
@@ -116,7 +116,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     GN_ASSERT( width > 0 && height > 0 && display && monitor );
 
     // remember renderer pointer
-    mRenderer = rndr;
+    mGpu = gpu;
 
     // remember screen/monitor pointer
     mScreen = monitor;

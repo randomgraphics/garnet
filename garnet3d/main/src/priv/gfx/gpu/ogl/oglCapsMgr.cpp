@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include <algorithm>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local types/variables/functions
@@ -174,7 +174,7 @@ static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::capsInit()
+bool GN::gfx::OGLGpu::capsInit()
 {
     GN_GUARD;
 
@@ -235,7 +235,7 @@ bool GN::gfx::OGLRenderer::capsInit()
     mCaps.vsLanguages |= (CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX )) ? GpuProgramLanguage::CG : 0;
 #endif
 
-    // note: OGL renderer does not support GS yet.
+    // note: OGL GPU does not support GS yet.
 
     // pixel shader flags
     mCaps.psLanguages |= (!!GLEW_ARB_fragment_program) ? GpuProgramLanguage::ARB1 : 0;
@@ -252,14 +252,14 @@ bool GN::gfx::OGLRenderer::capsInit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLRenderer::checkTextureFormatSupport(
+GN::gfx::OGLGpu::checkTextureFormatSupport(
     ColorFormat   /*format*/,
     TextureUsage /*usages*/ ) const
 {
@@ -271,7 +271,7 @@ GN::gfx::OGLRenderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::OGLRenderer::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::OGLGpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

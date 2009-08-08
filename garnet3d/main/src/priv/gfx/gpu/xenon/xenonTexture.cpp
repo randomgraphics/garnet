@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "xenonTexture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -92,7 +92,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     mD3DUsage = (TextureUsage::FAST_CPU_WRITE == desc.usage ) ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
 
     // create texture
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     switch( mD3DDimension )
     {
         case XENON_TEXDIM_1D:

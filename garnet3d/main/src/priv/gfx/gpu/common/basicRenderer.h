@@ -1,15 +1,15 @@
-#ifndef __GN_GFXCOMMON_BASICRENDERER_H__
-#define __GN_GFXCOMMON_BASICRENDERER_H__
+#ifndef __GN_GPUCOMMON_BASICGPU_H__
+#define __GN_GPUCOMMON_BASICGPU_H__
 // *****************************************************************************
 /// \file
-/// \brief   Basic renderer class
+/// \brief   Basic GPU class
 /// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
 ///
 /// Rest-in-peace macro
 ///
-#define GN_RNDR_RIP GN::gfx::rip
+#define GN_GPU_RIP GN::gfx::rip
 
 namespace GN { namespace gfx
 {
@@ -19,11 +19,11 @@ namespace GN { namespace gfx
     void rip( const char * msg, ... );
 
     ///
-    /// basic renderer class
+    /// basic GPU class
     ///
-    class BasicRenderer : public Renderer, public StdClass
+    class BasicGpu : public Gpu, public StdClass
     {
-        GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
+        GN_DECLARE_STDCLASS( BasicGpu, StdClass );
 
         // ********************************
         // constructor/destructor
@@ -31,8 +31,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRenderer() { clear(); }
-        virtual ~BasicRenderer() {}
+        BasicGpu() { clear(); }
+        virtual ~BasicGpu() {}
         //@}
 
         // ********************************
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init( const GpuOptions & );
         void quit();
     private :
         void clear()
@@ -98,13 +98,13 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void bindContext( const RendererContext & c );
+        virtual void bindContext( const GpuContext & c );
         virtual void rebindContext();
-        virtual inline const RendererContext & getContext() const { return mContext; }
+        virtual inline const GpuContext & getContext() const { return mContext; }
 
     protected:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck ) = 0;
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck ) = 0;
 
     private:
 
@@ -112,7 +112,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        RendererContext mContext;
+        GpuContext mContext;
         bool            mContextOk;
 
         //@}
@@ -137,7 +137,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual RendererSignals & getSignals() { return mSignals; }
+        virtual GpuSignals & getSignals() { return mSignals; }
         virtual void              getBackBufferContent( BackBufferContent & );
         virtual void              enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
         virtual void              setUserData( const Guid & id, const void * data, size_t length );
@@ -160,7 +160,7 @@ namespace GN { namespace gfx
 
         typedef std::map<Guid,DynaArray<UInt8> > UserDataMap;
 
-        RendererSignals mSignals;
+        GpuSignals mSignals;
         bool            mParamCheckEnabled;
         UserDataMap     mUserData;
 
@@ -173,7 +173,7 @@ namespace GN { namespace gfx
     struct RenderTargetDesc
     {
         /// color render targets
-        StackArray<RenderTargetTexture, RendererContext::MAX_COLOR_RENDER_TARGETS> colortargets;
+        StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS> colortargets;
 
         /// depth stencil render target
         RenderTargetTexture                                                        depthstencil;
@@ -216,4 +216,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_BASICRENDERER_H__
+#endif // __GN_GPUCOMMON_BASICGPU_H__

@@ -9,13 +9,13 @@ class LineRendererTest : public CxxTest::TestSuite
     public:
 
         GN::AutoObjPtr<GN::win::Window> mWindow;
-        GN::gfx::Renderer             * mRndr;
+        GN::gfx::Gpu             * mRndr;
         GN::gfx::LineRenderer         * mLineRndr;
 
         LineRendererInitiator() : mRndr(NULL), mLineRndr(NULL)
         {
-            GN::gfx::RendererOptions ro;
-            mRndr = GN::gfx::createSingleThreadRenderer( ro );
+            GN::gfx::GpuOptions ro;
+            mRndr = GN::gfx::createSingleThreadGpu( ro );
             if( NULL == mRndr ) return;
 
             mLineRndr = new GN::gfx::LineRenderer( *mRndr );
@@ -25,7 +25,7 @@ class LineRendererTest : public CxxTest::TestSuite
         ~LineRendererInitiator()
         {
             if( mLineRndr ) delete mLineRndr;
-            if( mRndr ) GN::gfx::deleteRenderer( mRndr );
+            if( mRndr ) GN::gfx::deleteGpu( mRndr );
         }
 
         operator bool() const { return NULL != mLineRndr; }

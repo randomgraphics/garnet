@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 #include "d3d10Shader.h"
 #include "d3d10Texture.h"
 #include "d3d10Buffer.h"
@@ -8,7 +8,7 @@
 //#include "d3d10Quad.h"
 //#include "d3d10Line.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // init/shutdown
@@ -16,7 +16,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::resourceInit()
+bool GN::gfx::D3D10Gpu::resourceInit()
 {
     GN_GUARD;
 
@@ -35,13 +35,13 @@ bool GN::gfx::D3D10Renderer::resourceInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::resourceQuit()
+void GN::gfx::D3D10Gpu::resourceQuit()
 {
     GN_GUARD;
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR(sLogger)( "All graphics resouces MUST be released, before destroying renderer!" );
+        GN_ERROR(sLogger)( "All GPU resouces MUST be released, before destroying the GPU!" );
 
         std::list<D3D10Resource*>::iterator i = mResourceList.begin();
         while( i != mResourceList.end() )
@@ -56,14 +56,14 @@ void GN::gfx::D3D10Renderer::resourceQuit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::CompiledGpuProgram *
-GN::gfx::D3D10Renderer::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::D3D10Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
@@ -80,7 +80,7 @@ GN::gfx::D3D10Renderer::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D10Renderer::createGpuProgram( const void * data, size_t length )
+GN::gfx::D3D10Gpu::createGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
@@ -110,7 +110,7 @@ GN::gfx::D3D10Renderer::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D10Renderer::createUniform( size_t size )
+GN::gfx::D3D10Gpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -119,7 +119,7 @@ GN::gfx::D3D10Renderer::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
+GN::gfx::D3D10Gpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -133,7 +133,7 @@ GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -149,7 +149,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf( const VtxBufDesc & desc 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D10Renderer::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::D3D10Gpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

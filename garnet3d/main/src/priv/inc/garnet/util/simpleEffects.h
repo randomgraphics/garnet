@@ -31,7 +31,7 @@ namespace GN { namespace util
 
         //@{
     public:
-        bool init( gfx::Renderer & );
+        bool init( gfx::Gpu & );
         void quit();
     private:
         void clear()
@@ -70,7 +70,7 @@ namespace GN { namespace util
         // private functions
         // ********************************
     private:
-    };    
+    };
     ///
     /// simple diffuse effect
     ///
@@ -94,7 +94,7 @@ namespace GN { namespace util
 
         //@{
     public:
-        bool init( gfx::Renderer & );
+        bool init( gfx::Gpu & );
         void quit();
     private:
         void clear()
@@ -168,7 +168,7 @@ namespace GN { namespace util
 
         //@{
     public:
-        bool init( gfx::Renderer & );
+        bool init( gfx::Gpu & );
         void quit();
     private:
         void clear()

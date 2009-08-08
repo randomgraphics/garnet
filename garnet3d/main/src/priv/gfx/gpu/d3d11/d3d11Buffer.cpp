@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "d3d11Buffer.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11.Buffer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.Buffer");
 
 // *****************************************************************************
 // init / quit functions

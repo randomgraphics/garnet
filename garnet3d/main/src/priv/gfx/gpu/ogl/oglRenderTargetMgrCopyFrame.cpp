@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "oglRenderTargetMgr.h"
 #include "oglTexture.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-//static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -98,7 +98,7 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
     /*
 
     // bind color buffers
-    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mRenderer.getCaps().maxRenderTargets ) );
+    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.getCaps().maxRenderTargets ) );
     for( UInt32 i = 0; i < count; ++i )
     {
         const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;
@@ -128,8 +128,8 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
                 else
                 {
                     // use default back buffer size
-                    mWidth = mRenderer.getDispDesc().width;
-                    mHeight = mRenderer.getDispDesc().height;
+                    mWidth = mGpu.getDispDesc().width;
+                    mHeight = mGpu.getDispDesc().height;
                 }
 
                 renderTargetSizeChanged = ( oldw != mWidth || oldh != mHeight );

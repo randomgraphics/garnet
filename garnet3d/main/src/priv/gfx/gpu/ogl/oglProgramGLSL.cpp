@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "oglShader.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include "oglTexture.h"
 
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.GpuProgramGLSL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.GpuProgramGLSL");
 
 // *****************************************************************************
 // Local function
@@ -483,7 +483,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
-        if( getRenderer().paramCheckEnabled() )
+        if( getGpu().paramCheckEnabled() )
         {
             if( uniform->size() != desc.size )
             {
@@ -568,7 +568,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
     const TextureBinding * textures,
     size_t                 count ) const
 {
-    OGLRenderer & r = getRenderer();
+    OGLGpu & r = getGpu();
     size_t maxStages = r.getCaps().maxTextures;
 
     // determine effective texture count
@@ -695,7 +695,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     }
 
     // check for texture capability
-    OGLRenderer & r = getRenderer();
+    OGLGpu & r = getGpu();
     if( mTextures.size() > r.getCaps().maxTextures )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );

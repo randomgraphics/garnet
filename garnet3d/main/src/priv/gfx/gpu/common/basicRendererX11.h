@@ -1,24 +1,24 @@
-#ifndef __GN_GFXCOMMON_BASICRENDERERX11_H__
-#define __GN_GFXCOMMON_BASICRENDERERX11_H__
+#ifndef __GN_GPUCOMMON_BASICGPUX11_H__
+#define __GN_GPUCOMMON_BASICGPUX11_H__
 // *****************************************************************************
 /// \file
-/// \brief   Basic renderer class for X Windows
+/// \brief   Basic GPU class for X Windows
 /// \author  chenlee (2009.4.25)
 // *****************************************************************************
 
 #if GN_POSIX
 
-#include "basicRenderer.h"
+#include "basicGpu.h"
 #include "renderWindowX11.h"
 
 namespace GN { namespace gfx
 {
     ///
-    /// basic renderer class
+    /// basic GPU class
     ///
-    class BasicRendererX11 : public BasicRenderer
+    class BasicGpuX11 : public BasicGpu
     {
-        GN_DECLARE_STDCLASS( BasicRendererX11, BasicRenderer );
+        GN_DECLARE_STDCLASS( BasicGpuX11, BasicGpu );
 
         // ********************************
         // constructor/destructor
@@ -26,8 +26,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicRendererX11() { clear(); }
-        virtual ~BasicRendererX11() {}
+        BasicGpuX11() { clear(); }
+        virtual ~BasicGpuX11() {}
         //@}
 
         // ********************************
@@ -36,7 +36,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init( const GpuOptions & );
         void quit();
     private :
         void clear()
@@ -55,11 +55,11 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual const RendererOptions & getOptions() const { return mOptions; }
+        virtual const GpuOptions & getOptions() const { return mOptions; }
         virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
 
     private:
-        bool dispInit( const RendererOptions & );
+        bool dispInit( const GpuOptions & );
         void dispQuit();
         void dispClear() { mDefaultDisplay = 0; }
 
@@ -71,7 +71,7 @@ namespace GN { namespace gfx
 
     private:
 
-        RendererOptions   mOptions;
+        GpuOptions   mOptions;
         DispDesc          mDispDesc;
 
         Display         * mDefaultDisplay;
@@ -140,4 +140,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_BASICRENDERERX11_H__
+#endif // __GN_GPUCOMMON_BASICGPUX11_H__

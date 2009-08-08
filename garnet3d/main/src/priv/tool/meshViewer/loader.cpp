@@ -282,7 +282,7 @@ loadGeometryFromXpr( Scene & sc, File & file )
     MeshContainer mc;
     for( size_t i = 0; i < xpr.meshes.size(); ++i )
     {
-        AutoObjPtr<Mesh> m( new Mesh(sc.getRenderer()) );
+        AutoObjPtr<Mesh> m( new Mesh(sc.getGpu()) );
         if( !m || !m->init(xpr.meshes[i]) ) return false;
         mc.meshes.append( m );
         m.detach();
@@ -318,7 +318,7 @@ loadGeometryFromAse( Scene & sc, File & file )
         GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList );
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
-            AutoObjPtr<Mesh> m( new Mesh(sc.getRenderer()) );
+            AutoObjPtr<Mesh> m( new Mesh(sc.getGpu()) );
             if( !m || !m->init(ase.meshes[i]) ) return false;
             mc.meshes.append( m );
             m.detach();
@@ -327,11 +327,11 @@ loadGeometryFromAse( Scene & sc, File & file )
 
     // initialize effects
     SimpleWireframeEffect wireframeEffect;
-    if( !wireframeEffect.init( sc.getRenderer() ) ) return false;
+    if( !wireframeEffect.init( sc.getGpu() ) ) return false;
     SimpleDiffuseEffect diffuseEffect;
-    if( !diffuseEffect.init( sc.getRenderer() ) ) return false;
+    if( !diffuseEffect.init( sc.getGpu() ) ) return false;
     SimpleNormalMapEffect normalMapEffect;
-    if( !normalMapEffect.init( sc.getRenderer() ) ) return false;
+    if( !normalMapEffect.init( sc.getGpu() ) ) return false;
 
     // create model
     GeometryNode * model = new GeometryNode(sc);
@@ -372,11 +372,11 @@ loadGeometryFromAse( Scene & sc, File & file )
             const AseMaterial & am = ase.materials[s.matid];
             if( e->textures.contains( "ALBEDO_TEXTURE" ) && !am.mapdiff.bitmap.empty() )
             {
-                e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapdiff.bitmap ) );
+                e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getGpu(), am.mapdiff.bitmap ) );
             }
             if( e->textures.contains( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
             {
-                e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getRenderer(), am.mapbump.bitmap ) );
+                e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getGpu(), am.mapbump.bitmap ) );
             }
         }
 

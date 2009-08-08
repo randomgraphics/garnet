@@ -145,7 +145,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
 
     Scene & s = getScene();
 
-    AutoObjPtr<GeometryBlock> b( new GeometryBlock( s.getRenderer() ) );
+    AutoObjPtr<GeometryBlock> b( new GeometryBlock( s.getGpu() ) );
 
     // make a copy of the input effect
     b->effect = *inputEffect;
@@ -165,7 +165,7 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
             {
                 StandardUniform su;
                 su.type  = (StandardSceneParameterType)i;
-                su.uniform.attach( s.getRenderer().createUniform(d.size) );
+                su.uniform.attach( s.getGpu().createUniform(d.size) );
                 mStandardPerObjectUniforms.append( su );
                 u = su.uniform.get();
             }
@@ -330,7 +330,7 @@ class SceneImpl : public Scene
         }
     };
 
-    Renderer            & mRenderer;
+    Gpu                 & mGpu;
     DirtyFlags            mDirtyFlags;
     UniformCollectionImpl mUniformCollection;
     AutoRef<Uniform>      mGlobalUniforms[NUM_STANDARD_SCENE_PARAMETERS];
@@ -405,9 +405,9 @@ class SceneImpl : public Scene
 public:
 
     /// ctor
-    SceneImpl( Renderer & r )
+    SceneImpl( Gpu & r )
         : Scene( mUniformCollection )
-        , mRenderer( r )
+        , mGpu( r )
     {
     }
 
@@ -429,12 +429,12 @@ public:
             const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
             if( d.global )
             {
-                mGlobalUniforms[i].attach( mRenderer.createUniform( d.size ) );
+                mGlobalUniforms[i].attach( mGpu.createUniform( d.size ) );
 
                 if( NULL == mGlobalUniforms[i] ) return false;
             }
         }
-        mDummyUniform.attach( mRenderer.createUniform( 1 ) );
+        mDummyUniform.attach( mGpu.createUniform( 1 ) );
         if( NULL == mDummyUniform ) return false;
         mUniformCollection.updateUniformPointers( mGlobalUniforms, mDummyUniform );
 
@@ -453,7 +453,7 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
-    virtual gfx::Renderer & getRenderer() const { return mRenderer; }
+    virtual gfx::Gpu & getGpu() const { return mGpu; }
 
     ///
     ///
@@ -510,7 +510,7 @@ public:
 ///
 /// ----------------------------------------------------------------------------
 GN::scene::Scene *
-GN::scene::createScene( gfx::Renderer & r )
+GN::scene::createScene( gfx::Gpu & r )
 {
     AutoObjPtr<SceneImpl> s( new SceneImpl(r) );
     if( !s->init() ) return NULL;

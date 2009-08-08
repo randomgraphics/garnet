@@ -141,7 +141,7 @@ namespace GN
                 gfx::Effect              effect;
                 DynaArray<gfx::Drawable> drawables;
 
-                GeometryBlock( gfx::Renderer & r ) : effect(r) {}
+                GeometryBlock( gfx::Gpu & r ) : effect(r) {}
             };
 
             struct StandardUniform
@@ -234,8 +234,8 @@ namespace GN
                 gfx::Uniform *         mDummy;
             };
 
-            /// get renderer
-            virtual gfx::Renderer & getRenderer() const = 0;
+            /// get GPU
+            virtual gfx::Gpu & getGpu() const = 0;
 
             /// \name global parameter management
             //@{
@@ -256,7 +256,7 @@ namespace GN
         ///
         /// create simple scene object
         ///
-        Scene * createScene( gfx::Renderer & );
+        Scene * createScene( gfx::Gpu & );
     }
 }
 

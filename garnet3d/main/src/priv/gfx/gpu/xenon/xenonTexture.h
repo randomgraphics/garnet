@@ -33,7 +33,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonTexture( XenonRenderer & r ) : XenonResource(r) { clear(); }
+        XenonTexture( XenonGpu & r ) : XenonResource(r) { clear(); }
         virtual ~XenonTexture() { quit(); }
         //@}
 

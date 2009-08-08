@@ -231,7 +231,7 @@ namespace GN { namespace util
         // private constants
         enum
         {
-            MAX_TEXTURES = gfx::RendererContext::MAX_TEXTURES,
+            MAX_TEXTURES = gfx::GpuContext::MAX_TEXTURES,
         };
 
         // character information
@@ -285,10 +285,10 @@ namespace GN { namespace util
         /// initialize font slots and font textures
         ///
         bool slotInit(
-            gfx::Renderer & rndr,
-            UInt16          fontw,
-            UInt16          fonth,
-            size_t          maxchars );
+            gfx::Gpu & gpu,
+            UInt16     fontw,
+            UInt16     fonth,
+            size_t     maxchars );
     };
 }}
 

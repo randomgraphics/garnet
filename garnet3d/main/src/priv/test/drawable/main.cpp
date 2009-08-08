@@ -23,7 +23,7 @@ const char * pscode =
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
 
-bool init( Renderer & rndr )
+bool init( Gpu & gpu )
 {
     // create effect
     EffectDesc ed;
@@ -36,7 +36,7 @@ bool init( Renderer & rndr )
     ed.shaders["glsl"].textures["t0"] = "diffuse";
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
-    Effect e( rndr );
+    Effect e( gpu );
     if( !e.init( ed ) ) return false;
 
     // set transformation to identity
@@ -45,7 +45,7 @@ bool init( Renderer & rndr )
     e.uniforms["pvw"]->update( m );
 
     // create texture
-    e.textures["diffuse"].attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
+    e.textures["diffuse"].attach( loadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
 
     // create mesh
     float vertices[] =
@@ -68,7 +68,7 @@ bool init( Renderer & rndr )
     md.numidx = 3;
     md.vertices[0] = vertices;
     md.indices = indices;
-    Mesh mesh(rndr);
+    Mesh mesh(gpu);
     if( !mesh.init( md ) ) return false;
 
     // create drawable 1
@@ -79,7 +79,7 @@ bool init( Renderer & rndr )
     // make a clone of the whole drawable, with its own transformation parameter
     UInt32 ui = d1.rc.gpuProgram->getParameterDesc().uniforms["transform"];
     d2 = d1;
-    d2.rc.uniforms[ui].attach( rndr.createUniform( sizeof(Matrix44f) ) );
+    d2.rc.uniforms[ui].attach( gpu.createUniform( sizeof(Matrix44f) ) );
 
     // modify d2's transformation (should not affect d1)
     m.translate( -1.0f, -1.0f, 0.0f );
@@ -89,21 +89,21 @@ bool init( Renderer & rndr )
     return true;
 }
 
-void quit( Renderer & )
+void quit( Gpu & )
 {
     d1.clear();
     d2.clear();
 }
 
-void draw( Renderer & )
+void draw( Gpu & )
 {
     d1.draw();
     d2.draw();
 }
 
-int run( Renderer & rndr )
+int run( Gpu & gpu )
 {
-    if( !init( rndr ) ) { quit( rndr ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -112,7 +112,7 @@ int run( Renderer & rndr )
 
     while( gogogo )
     {
-        rndr.processRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -123,21 +123,21 @@ int run( Renderer & rndr )
             gogogo = false;
         }
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( rndr );
-        rndr.present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    quit( rndr );
+    quit( gpu );
 
     return 0;
 }
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -173,18 +173,18 @@ int main( int argc, const char * argv[] )
             return -1;
     }
 
-    Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
-        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    Gpu * r;
+    if( cmdargs.useMultiThreadGpu )
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadRenderer( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = run( *r );
 
-    deleteRenderer( r );
+    deleteGpu( r );
 
     return result;
 }

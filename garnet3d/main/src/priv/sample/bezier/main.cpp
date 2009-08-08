@@ -27,7 +27,7 @@ struct BezierVertex
 };
 
 static GN::Logger          * sLogger = GN::getLogger("GN.sample.Bezier");
-Renderer                   * rndr;
+Gpu                        * gpu;
 ArcBall                      arcball; // arcball camera
 float                        radius;  // distance from camera to object
 Matrix44f                    proj, view;
@@ -38,10 +38,10 @@ BitmapFont                   font;
 
 void updateRadius()
 {
-    const DispDesc & dd = rndr->getDispDesc();
+    const DispDesc & dd = gpu->getDispDesc();
 
     view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-    rndr->composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+    gpu->composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
 
     float h = tan( 0.5f ) * radius * 2.0f;
     arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
@@ -159,7 +159,7 @@ Mesh * createMesh()
     md.indices = indices;
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
-    AutoObjPtr<Mesh> mesh( new Mesh(*rndr) );
+    AutoObjPtr<Mesh> mesh( new Mesh(*gpu) );
     if( !mesh || !mesh->init(md) ) return false;
 
     return mesh.detach();
@@ -321,23 +321,23 @@ createEffect()
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
-    Effect * e = new Effect( *rndr );
+    Effect * e = new Effect( *gpu );
     if( !e->init( ed ) ) { delete e; return NULL; }
 
-    e->textures["DIFFUSE_TEXTURE"].attach( loadTextureFromFile( *rndr, "media::texture/earth.jpg" ) );
+    e->textures["DIFFUSE_TEXTURE"].attach( loadTextureFromFile( *gpu, "media::texture/earth.jpg" ) );
 
     return e;
 }
 
 bool init()
 {
-    rndr->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
+    gpu->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
 
     AutoObjPtr<Mesh>   mesh;
     AutoObjPtr<Effect> effect;
 
     // create scene
-    rootScene.attach( createScene( *rndr ) );
+    rootScene.attach( createScene( *gpu ) );
     if( !rootScene ) return false;
 
     // initialize effect
@@ -363,7 +363,7 @@ bool init()
     arcball.connectToInput();
 
     // load font
-    sr = new SpriteRenderer( *rndr );
+    sr = new SpriteRenderer( *gpu );
     if( !sr->init() ) return false;
     AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
     if( !ff ) return false;
@@ -411,9 +411,9 @@ void drawCoords()
     static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
     const Matrix44f & world = arcball.getRotationMatrix44();
-    rndr->drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
-    rndr->drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
-    rndr->drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
+    gpu->drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
+    gpu->drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
+    gpu->drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
 }
 
 int run()
@@ -428,7 +428,7 @@ int run()
     while( gogogo )
     {
         // handle inputs
-        rndr->processRenderWindowMessages( false );
+        gpu->processRenderWindowMessages( false );
         Input & in = gInput;
         in.processInputEvents();
         if( in.getKeyStatus( KeyCode::ESCAPE ).down )
@@ -437,10 +437,10 @@ int run()
         }
 
         // render
-        rndr->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         draw( fps.getFpsString() );
         drawCoords();
-        rndr->present();
+        gpu->present();
 
         fps.onFrame();
     }
@@ -459,7 +459,7 @@ void printHelp( const char * exepath )
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -478,21 +478,21 @@ int main()
 
     enableCRTMemoryCheck();
 
-    // create renderer
-    RendererOptions o;
-    o.api = RendererAPI::OGL;
-    //rndr = createMultiThreadRenderer( o );
-    rndr = createSingleThreadRenderer( o );
-    if( NULL == rndr ) return -1;
+    // create GPU
+    GpuOptions o;
+    o.api = GpuAPI::OGL;
+    //gpu = createMultiThreadGpu( o );
+    gpu = createSingleThreadGpu( o );
+    if( NULL == gpu ) return -1;
 
     // initialize input device
-    InputInitiator ii(*rndr);
+    InputInitiator ii(*gpu);
 
     // enter main loop
     int result = run();
 
     // done
-    deleteRenderer( rndr );
+    deleteGpu( gpu );
     return result;
 }
 

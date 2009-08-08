@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "mttexture.h"
-#include "mtrndrCmd.h"
+#include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mttexture");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mttexture");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -65,7 +65,7 @@ void GN::gfx::MultiThreadTexture::quit()
 
     if( mTexture )
     {
-        mRenderer.postCommand1( CMD_TEXTURE_DESTROY, mTexture );
+        mGpu.postCommand1( CMD_TEXTURE_DESTROY, mTexture );
         mTexture = NULL;
     }
 
@@ -109,7 +109,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     }
     memcpy( tmpbuf, data, dataSize );
 
-    UpdateMipmapParam * ump = (UpdateMipmapParam*)mRenderer.beginPostCommand( CMD_TEXTURE_UPDATE_MIPMAP, sizeof(*ump) );
+    UpdateMipmapParam * ump = (UpdateMipmapParam*)mGpu.beginPostCommand( CMD_TEXTURE_UPDATE_MIPMAP, sizeof(*ump) );
     ump->tex        = mTexture;
     ump->face       = face;
     ump->level      = level;
@@ -119,7 +119,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     ump->data       = tmpbuf;
     ump->flag       = flag;
 
-    mRenderer.endPostCommand();
+    mGpu.endPostCommand();
 }
 
 //
@@ -181,7 +181,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_DESTROY( Renderer &, void * p, size_t )
+    void func_TEXTURE_DESTROY( Gpu &, void * p, size_t )
     {
         Texture ** tex = (Texture**)p;
         (*tex)->decref();
@@ -190,7 +190,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_UPDATE_MIPMAP( Renderer &, void * p, size_t )
+    void func_TEXTURE_UPDATE_MIPMAP( Gpu &, void * p, size_t )
     {
         UpdateMipmapParam * ump = (UpdateMipmapParam*)p;
 
@@ -209,7 +209,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_READ_MIPMAP( Renderer &, void *, size_t )
+    void func_TEXTURE_READ_MIPMAP( Gpu &, void *, size_t )
     {
         GN_UNIMPL();
     }
@@ -217,7 +217,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_WRITE( Renderer &, void *, size_t )
+    void func_TEXTURE_BLOB_WRITE( Gpu &, void *, size_t )
     {
         GN_UNIMPL();
     }
@@ -225,7 +225,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_TEXTURE_BLOB_READ( Renderer &, void *, size_t )
+    void func_TEXTURE_BLOB_READ( Gpu &, void *, size_t )
     {
         GN_UNIMPL();
     }

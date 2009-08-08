@@ -12,19 +12,19 @@ using namespace GN::gfx;
 // -----------------------------------------------------------------------------
 void GN::gfx::Drawable::draw() const
 {
-    GN_ASSERT( rndr );
+    GN_ASSERT( gpu );
 
     // bind context
-    rndr->bindContext( rc );
+    gpu->bindContext( rc );
 
     // do rendering
     if( rc.idxbuf )
     {
-        rndr->drawIndexed( prim, numidx, basevtx, startvtx, numvtx, startidx );
+        gpu->drawIndexed( prim, numidx, basevtx, startvtx, numvtx, startidx );
     }
     else
     {
-        rndr->draw( prim, numvtx, startvtx );
+        gpu->draw( prim, numvtx, startvtx );
     }
 }
 
@@ -34,7 +34,7 @@ void GN::gfx::Drawable::draw() const
 GN::gfx::Drawable &
 GN::gfx::Drawable::operator=( const Drawable & rhs )
 {
-    rndr = rhs.rndr;
+    gpu = rhs.gpu;
     rc = rhs.rc;
     prim = rhs.prim;
     startvtx = rhs.startvtx;

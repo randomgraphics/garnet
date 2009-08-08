@@ -34,9 +34,9 @@ namespace GN { namespace gfx
         UInt32        width;   ///< basemap width
         UInt32        height;  ///< basemap height
         UInt32        depth;   ///< basemap depth
-        UInt32        faces;   ///< face count. When used as parameter of Renderer::createTexture(),
+        UInt32        faces;   ///< face count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32        levels;  ///< mipmap level count. When used as parameter of Renderer::createTexture(),
+        UInt32        levels;  ///< mipmap level count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
         ColorFormat   format;  ///< pixel format.
         TextureUsage  usage;   ///< texture usage

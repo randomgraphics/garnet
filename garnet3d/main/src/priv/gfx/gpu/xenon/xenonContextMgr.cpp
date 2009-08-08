@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "xenonRenderTargetMgr.h"
 #include "xenonShader.h"
 #include "xenonTexture.h"
@@ -18,7 +18,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::contextInit()
+bool GN::gfx::XenonGpu::contextInit()
 {
     GN_GUARD;
 
@@ -39,7 +39,7 @@ bool GN::gfx::XenonRenderer::contextInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::contextQuit()
+void GN::gfx::XenonGpu::contextQuit()
 {
     GN_GUARD;
 
@@ -55,14 +55,14 @@ void GN::gfx::XenonRenderer::contextQuit()
 }
 
 // *****************************************************************************
-// from BasicRenderer
+// from BasicGpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::bindContextImpl(
-    const RendererContext & context,
+bool GN::gfx::XenonGpu::bindContextImpl(
+    const GpuContext & context,
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
@@ -74,7 +74,7 @@ bool GN::gfx::XenonRenderer::bindContextImpl(
     //
     if( paramCheckEnabled() )
     {
-        GN_TODO( "verify renderer context data" );
+        GN_TODO( "verify GPU context data" );
     }
 
     if( !bindContextRenderTargetsAndViewport( context, skipDirtyCheck ) ) return false;
@@ -99,8 +99,8 @@ bool GN::gfx::XenonRenderer::bindContextImpl(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
-    const RendererContext & newContext,
+GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_UNUSED_PARAM( newContext );
@@ -116,8 +116,8 @@ GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
 #if GN_XENON
 	if( newFlags.colorBuffers )
     {
-        static const RendererContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
-        const RendererContext::SurfaceDesc *newSurf, *oldSurf;
+        static const GpuContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
+        const GpuContext::SurfaceDesc *newSurf, *oldSurf;
 
         for( UInt32 i = 0; i < 4; ++i )
         {
@@ -163,7 +163,7 @@ GN::gfx::XenonRenderer::bindContextRenderTargetsAndViewport(
 
     if( newFlags.depthBuffer )
     {
-        const RendererContext::SurfaceDesc *newSurf, *oldSurf;
+        const GpuContext::SurfaceDesc *newSurf, *oldSurf;
 
         // bind depth buffer
         newSurf = &newContext.depthBuffer;
@@ -233,7 +233,7 @@ static const D3DCULL CULL_TO_D3D[]=
     D3DCULL_CW,   // FRONT_CW,  CULL_FRONT,
     D3DCULL_CCW,  // FRONT_CW,  CULL_BACK,
 };
-GN_CASSERT( GN_ARRAY_COUNT(CULL_TO_D3D) == GN::gfx::RendererContext::NUM_FRONT_FACE_MODES * GN::gfx::RendererContext::NUM_CULL_MODES );
+GN_CASSERT( GN_ARRAY_COUNT(CULL_TO_D3D) == GN::gfx::GpuContext::NUM_FRONT_FACE_MODES * GN::gfx::GpuContext::NUM_CULL_MODES );
 
 static const D3DBLENDOP BLEND_OP_TO_D3D[]=
 {
@@ -243,7 +243,7 @@ static const D3DBLENDOP BLEND_OP_TO_D3D[]=
     D3DBLENDOP_MIN,         // BLEND_OP_MIN,
     D3DBLENDOP_MAX,         // BLEND_OP_MAX,
 };
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D) == GN::gfx::GpuContext::NUM_BLEND_OPERATIONS );
 
 static const D3DBLEND BLEND_ARG_TO_D3D[]=
 {
@@ -260,14 +260,14 @@ static const D3DBLEND BLEND_ARG_TO_D3D[]=
     D3DBLEND_BLENDFACTOR,    // BLEND_BLEND_FACTOR,
     D3DBLEND_INVBLENDFACTOR, // BLEND_INV_BLEND_FACTOR,
 };
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_ARG_TO_D3D) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_ARG_TO_D3D) == GN::gfx::GpuContext::NUM_BLEND_ARGUMENTS );
 
 //
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::XenonRenderer::bindContextRenderStates(
-    const RendererContext & newContext,
+GN::gfx::XenonGpu::bindContextRenderStates(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_UNIMPL_WARNING();
@@ -277,7 +277,7 @@ GN::gfx::XenonRenderer::bindContextRenderStates(
     // cull and face
     if( skipDirtyCheck || newContext.frontFace != mContext.frontFace || newContext.cullMode != mContext.cullMode )
     {
-        D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*RendererContext::NUM_CULL_MODES + newContext.cullMode];
+        D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*GpuContext::NUM_CULL_MODES + newContext.cullMode];
         mDevice->SetRenderState( D3DRS_CULLMODE, cullMode );
     }
 
@@ -318,8 +318,8 @@ GN::gfx::XenonRenderer::bindContextRenderStates(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::XenonRenderer::bindContextShaders(
-    const RendererContext & newContext,
+GN::gfx::XenonGpu::bindContextShaders(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     if( newContext.gpuProgram )
@@ -352,8 +352,8 @@ GN::gfx::XenonRenderer::bindContextShaders(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::XenonRenderer::bindContextResources(
-    const RendererContext & newContext,
+GN::gfx::XenonGpu::bindContextResources(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     //
@@ -375,7 +375,7 @@ GN::gfx::XenonRenderer::bindContextResources(
     ///
     /// bind vertex buffers
     ///
-    for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+    for( UINT i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         const VertexBufferBinding & vbb = newContext.vtxbufs[i];
 

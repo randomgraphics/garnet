@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 //#include "d3d11RenderTargetMgr.h"
 //#include "d3d11StateObject.h"
 //#include "d3d11Shader.h"
@@ -18,7 +18,7 @@
     D3D11_BLEND_OP_MIN,          // BLEND_OP_MIN,
     D3D11_BLEND_OP_MAX,          // BLEND_OP_MAX,
 };
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D11) == GN::gfx::RendererContext::NUM_BLEND_OPERATIONS );
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_OP_TO_D3D11) == GN::gfx::GpuContext::NUM_BLEND_OPERATIONS );
 
 static const D3D11_BLEND BLEND_TO_D3D11[] =
 {
@@ -35,7 +35,7 @@ static const D3D11_BLEND BLEND_TO_D3D11[] =
     D3D11_BLEND_BLEND_FACTOR,     // BLEND_BLEND_FACTOR,
     D3D11_BLEND_INV_BLEND_FACTOR, // BLEND_INV_BLEND_FACTOR,
 };
-GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D11) == GN::gfx::RendererContext::NUM_BLEND_ARGUMENTS );
+GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D11) == GN::gfx::GpuContext::NUM_BLEND_ARGUMENTS );
 */
 
 // *****************************************************************************
@@ -45,7 +45,7 @@ GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D11) == GN::gfx::RendererContext::NUM_BLEN
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::contextInit()
+bool GN::gfx::D3D11Gpu::contextInit()
 {
     GN_GUARD;
 
@@ -82,7 +82,7 @@ bool GN::gfx::D3D11Renderer::contextInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Renderer::contextQuit()
+void GN::gfx::D3D11Gpu::contextQuit()
 {
     GN_GUARD;
 
@@ -100,13 +100,13 @@ void GN::gfx::D3D11Renderer::contextQuit()
 }
 
 // *****************************************************************************
-// from BasicRenderer
+// from BasicGpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::bindContextImpl( const RendererContext & newContext, bool skipDirtyCheck )
+bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -125,8 +125,8 @@ bool GN::gfx::D3D11Renderer::bindContextImpl( const RendererContext & newContext
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D11Renderer::bindContextRenderTarget(
-    const RendererContext & ,//newContext,
+inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
+    const GpuContext & ,//newContext,
     bool                    )//skipDirtyCheck )
 {
     /*
@@ -189,8 +189,8 @@ inline bool GN::gfx::D3D11Renderer::bindContextRenderTarget(
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D11Renderer::bindContextShader(
-    const RendererContext & ,//newContext,
+inline bool GN::gfx::D3D11Gpu::bindContextShader(
+    const GpuContext & ,//newContext,
     bool                    )//skipDirtyCheck )
 {
     /*
@@ -231,8 +231,8 @@ inline bool GN::gfx::D3D11Renderer::bindContextShader(
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D11Renderer::bindContextState(
-    const RendererContext & ,//newContext,
+inline bool GN::gfx::D3D11Gpu::bindContextState(
+    const GpuContext & ,//newContext,
     bool                    )//skipDirtyCheck )
 {
     /* rasterization states
@@ -304,8 +304,8 @@ inline bool GN::gfx::D3D11Renderer::bindContextState(
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::D3D11Renderer::bindContextResource(
-    const RendererContext & ,//newContext,
+inline bool GN::gfx::D3D11Gpu::bindContextResource(
+    const GpuContext & ,//newContext,
     bool                    )//skipDirtyCheck )
 {
     /*
@@ -341,10 +341,10 @@ inline bool GN::gfx::D3D11Renderer::bindContextResource(
     ///
     if( layout )
     {
-        ID3D11Buffer * buf[RendererContext::MAX_VERTEX_BUFFERS];
-        UINT           strides[RendererContext::MAX_VERTEX_BUFFERS];
-        UINT           offsets[RendererContext::MAX_VERTEX_BUFFERS];
-        for( UINT i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+        ID3D11Buffer * buf[GpuContext::MAX_VERTEX_BUFFERS];
+        UINT           strides[GpuContext::MAX_VERTEX_BUFFERS];
+        UINT           offsets[GpuContext::MAX_VERTEX_BUFFERS];
+        for( UINT i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
@@ -352,7 +352,7 @@ inline bool GN::gfx::D3D11Renderer::bindContextResource(
             strides[i] = 0 == b.stride ? layout->defaultStrides[i] : b.stride;
             offsets[i] = b.offset;
         }
-        mDevice->IASetVertexBuffers( 0, RendererContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
+        mDevice->IASetVertexBuffers( 0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
     }
 
     //

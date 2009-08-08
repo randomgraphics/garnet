@@ -1,12 +1,12 @@
-#ifndef __GN_GFX_UTIL_RNDR_MTTEXTURE_H__
-#define __GN_GFX_UTIL_RNDR_MTTEXTURE_H__
+#ifndef __GN_GFX_UTIL_GPU_MTTEXTURE_H__
+#define __GN_GFX_UTIL_GPU_MTTEXTURE_H__
 // *****************************************************************************
 /// \file
 /// \brief   multi-thread texture wrappers
 /// \author  chenli@@REDMOND (2009.1.3)
 // *****************************************************************************
 
-#include "mtrndr.h"
+#include "mtgpu.h"
 
 namespace GN { namespace gfx
 {
@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadTexture( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
+        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { clear(); }
         virtual ~MultiThreadTexture() { quit(); }
         //@}
 
@@ -69,7 +69,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadRenderer & mRenderer;
+        MultiThreadGpu & mGpu;
         Texture             * mTexture;
 
         // ********************************
@@ -82,4 +82,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_UTIL_RNDR_MTTEXTURE_H__
+#endif // __GN_GFX_UTIL_GPU_MTTEXTURE_H__
