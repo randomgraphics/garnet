@@ -45,11 +45,12 @@ def GenConfigHeader( target, source, env ):
 		GN.conf['has_d3d11'],
 		GN.conf['has_xtl'],
 		))
-	FILE.close();
+	FILE.close()
 	return 0
 
 def ConfigHeaderBuilder( env, sources, blddir ):
 	targets = [os.path.join(blddir, 'src/priv/inc/garnet/base/gnconfig.h')]
+	env.AlwaysBuild( targets ) # TODO: need a better decider
 	env.Command( targets[0], None, GenConfigHeader )
 	return targets
 

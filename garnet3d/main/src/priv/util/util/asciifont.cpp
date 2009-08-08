@@ -45,7 +45,7 @@ public:
         {
             for( size_t x = 0; x < 8; ++x )
             {
-                mImage[y*8+x] = 255 * !!( bcd->bitmap[bcd->height-y-1] & (1L<<(7-x)) );
+                mImage[y*8+x] = 255 * !!( bcd->bitmap[12-y] & (1L<<(7-x)) );
             }
         }
 
