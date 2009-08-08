@@ -1,7 +1,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-inline void GN::gfx::OGLRenderer::chooseClientTextureStage( size_t stage ) const
+inline void GN::gfx::OGLGpu::chooseClientTextureStage( size_t stage ) const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( stage < getCaps().maxTextures );
@@ -13,7 +13,7 @@ inline void GN::gfx::OGLRenderer::chooseClientTextureStage( size_t stage ) const
 //
 //
 // ----------------------------------------------------------------------------
-inline void GN::gfx::OGLRenderer::chooseTextureStage( size_t stage ) const
+inline void GN::gfx::OGLGpu::chooseTextureStage( size_t stage ) const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( stage < getCaps().maxTextures );
@@ -25,7 +25,7 @@ inline void GN::gfx::OGLRenderer::chooseTextureStage( size_t stage ) const
 //
 //
 // ----------------------------------------------------------------------------
-inline void GN::gfx::OGLRenderer::disableTextureStage( size_t stage ) const
+inline void GN::gfx::OGLGpu::disableTextureStage( size_t stage ) const
 {
     GN_GUARD_SLOW;
 

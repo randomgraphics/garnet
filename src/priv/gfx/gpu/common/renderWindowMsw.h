@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        RenderWindowMsw() : mRenderer(0), mWindow(0), mHook(0), mMonitor(0) {}
+        RenderWindowMsw() : mGpu(0), mWindow(0), mHook(0), mMonitor(0) {}
         ~RenderWindowMsw() { quit(); }
         //@}
 
@@ -34,12 +34,12 @@ namespace GN { namespace gfx
         //@{
     public:
         /// initialize render window to use external window
-        bool initExternalWindow( Renderer * rndr, HandleType externalWindow );
+        bool initExternalWindow( Gpu * gpu, HandleType externalWindow );
         /// initialize render window to use internal widow.
-        bool initInternalWindow( Renderer * rndr, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
+        bool initInternalWindow( Gpu * gpu, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
         void quit();
     private:
-        void clear() { mRenderer = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
+        void clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
         //@}
 
         // ********************************
@@ -83,7 +83,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        Renderer * mRenderer;
+        Gpu * mGpu;
         HWND       mWindow;
         StrW       mClassName;
         HINSTANCE  mModuleInstance;

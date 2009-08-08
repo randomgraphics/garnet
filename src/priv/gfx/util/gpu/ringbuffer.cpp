@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ringbuffer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.RingBuffer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.RingBuffer");
 
 // *****************************************************************************
 // Initialize and shutdown

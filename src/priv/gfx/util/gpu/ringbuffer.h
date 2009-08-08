@@ -1,5 +1,5 @@
-#ifndef __GN_GFX_UTIL_RNDR_RINGBUFFER_H__
-#define __GN_GFX_UTIL_RNDR_RINGBUFFER_H__
+#ifndef __GN_GFX_UTIL_GPU_RINGBUFFER_H__
+#define __GN_GFX_UTIL_GPU_RINGBUFFER_H__
 // *****************************************************************************
 /// \file
 /// \brief   ring buffer for multithread renderer
@@ -97,4 +97,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_UTIL_RNDR_RINGBUFFER_H__
+#endif // __GN_GFX_UTIL_GPU_RINGBUFFER_H__

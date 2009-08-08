@@ -1,23 +1,23 @@
 #include "pch.h"
-#include "basicRendererXenon.h"
+#include "basicGpuXenon.h"
 
 #if GN_XENON
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 // *****************************************************************************
-//                         BasicRendererXenon init / quit functions
+//                         BasicGpuXenon init / quit functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererXenon::init( const RendererOptions & o )
+bool GN::gfx::BasicGpuXenon::init( const GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicRendererXenon, (o) );
+    GN_STDCLASS_INIT( BasicGpuXenon, (o) );
 
     // initialize sub-components one by one
     if( !dispInit(o) ) return failure();
@@ -31,7 +31,7 @@ bool GN::gfx::BasicRendererXenon::init( const RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRendererXenon::quit()
+void GN::gfx::BasicGpuXenon::quit()
 {
     GN_GUARD;
 
@@ -51,7 +51,7 @@ void GN::gfx::BasicRendererXenon::quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererXenon::dispInit( const RendererOptions & ro )
+bool GN::gfx::BasicGpuXenon::dispInit( const GpuOptions & ro )
 {
     // get current display mode
     XVIDEO_MODE xvm;
@@ -66,7 +66,7 @@ bool GN::gfx::BasicRendererXenon::dispInit( const RendererOptions & ro )
     mDispDesc.monitorHandle = 0;
     mDispDesc.windowHandle  = 0;
 
-    // store renderer options
+    // store GPU options
     mOptions = ro;
 
     // success
@@ -76,7 +76,7 @@ bool GN::gfx::BasicRendererXenon::dispInit( const RendererOptions & ro )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::BasicRendererXenon::dispQuit()
+void GN::gfx::BasicGpuXenon::dispQuit()
 {
 }
 

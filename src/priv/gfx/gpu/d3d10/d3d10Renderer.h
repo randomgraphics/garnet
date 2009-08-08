@@ -1,12 +1,12 @@
-#ifndef __GN_GFXD3D10_D3D10RENDERER_H__
-#define __GN_GFXD3D10_D3D10RENDERER_H__
+#ifndef __GN_GFXD3D10_D3D10GPU_H__
+#define __GN_GFXD3D10_D3D10GPU_H__
 // *****************************************************************************
 /// \file
-/// \brief   D3D10 renderer class
+/// \brief   D3D10 GPU class
 /// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/basicRendererMsw.h"
+#include "../common/basicGpuMsw.h"
 
 #pragma warning(disable:4100)
 
@@ -25,7 +25,7 @@ namespace GN { namespace gfx
     public:
 
         AutoComPtr<ID3D10InputLayout> il; ///< D3D10 input layout
-        UInt32                        defaultStrides[RendererContext::MAX_VERTEX_BUFFERS];
+        UInt32                        defaultStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
     public:
 
@@ -42,11 +42,11 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// D3D10 renderer class
+    /// D3D10 GPU class
     ///
-    class D3D10Renderer : public BasicRendererMsw
+    class D3D10Gpu : public BasicGpuMsw
     {
-        GN_DECLARE_STDCLASS(D3D10Renderer, BasicRendererMsw);
+        GN_DECLARE_STDCLASS(D3D10Gpu, BasicGpuMsw);
 
         // ********************************
         // ctor/dtor
@@ -54,8 +54,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        D3D10Renderer()          { clear(); }
-        virtual ~D3D10Renderer() { quit(); }
+        D3D10Gpu()          { clear(); }
+        virtual ~D3D10Gpu() { quit(); }
         //@}
 
         // ********************************
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init( const GpuOptions & );
         void quit();
     private:
         void clear()
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual const GpuCaps & getCaps() const { return mCaps; }
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
         virtual ColorFormat getDefaultTextureFormat( TextureUsage usage ) const;
 
@@ -136,7 +136,7 @@ namespace GN { namespace gfx
 
     private :
 
-        RendererCaps mCaps;
+        GpuCaps mCaps;
 
         //@}
 
@@ -200,7 +200,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck );
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     private :
 
@@ -208,10 +208,10 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
 
-        inline bool bindContextRenderTarget( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextShader( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextState( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextResource( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextState( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResource( const GpuContext & newContext, bool skipDirtyCheck );
 
     private:
 
@@ -230,7 +230,7 @@ namespace GN { namespace gfx
 
         //@{
 
-    public: // from Renderer
+    public: // from Gpu
 
         virtual void present();
         virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
@@ -305,4 +305,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFXD3D10_D3D10RENDERER_H__
+#endif // __GN_GFXD3D10_D3D10GPU_H__

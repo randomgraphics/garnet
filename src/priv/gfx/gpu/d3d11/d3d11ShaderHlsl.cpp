@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "d3d11Shader.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 #include "garnet/GNd3d10.h"
 #include <d3d11shader.h>
 
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 ///
 /// D3D11 shader type
@@ -175,7 +175,7 @@ static const char * sCloneString( const char * str )
     char * clone = (char*)GN::heapAlloc( n );
     if( NULL == clone )
     {
-        GN_RNDR_RIP( "Out of memory!" );
+        GN_GPU_RIP( "Out of memory!" );
         return NULL;
     }
 
@@ -207,7 +207,7 @@ sInitConstBuffers(
     {
         GN_ERROR(sLogger)(
             "Too many constant buffers. "
-            "Currently D3D11 renderer support %d constant buffers.",
+            "Currently D3D11 GPU support %d constant buffers.",
             constBufs.MAX_SIZE );
         return false;
     }

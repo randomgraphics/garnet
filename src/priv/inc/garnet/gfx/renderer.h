@@ -1,5 +1,5 @@
-#ifndef __GN_GFX_RENDERER_H__
-#define __GN_GFX_RENDERER_H__
+#ifndef __GN_GFX_GPU_H__
+#define __GN_GFX_GPU_H__
 // *****************************************************************************
 /// \file
 /// \brief   Main renderer interface of GFX module
@@ -48,7 +48,7 @@ namespace GN { namespace gfx
     ///
     /// Define rendering API enumeration
     ///
-    struct RendererAPI
+    struct GpuAPI
     {
         enum Enum
         {
@@ -81,20 +81,20 @@ namespace GN { namespace gfx
             else return "INVALID_RENDERING_API";
         }
 
-        GN_DEFINE_ENUM_CLASS_HELPERS( RendererAPI, Enum );
+        GN_DEFINE_ENUM_CLASS_HELPERS( GpuAPI, Enum );
     };
 
     ///
-    /// Renderer option structure.
+    /// Gpu option structure.
     ///
-    /// \sa Renderer::getOptions()
+    /// \sa Gpu::getOptions()
     ///
-    struct RendererOptions
+    struct GpuOptions
     {
         ///
-        /// Rendering API. Default value is RendererAPI::AUTO.
+        /// Rendering API. Default value is GpuAPI::AUTO.
         ///
-        RendererAPI api;
+        GpuAPI api;
 
         ///
         /// Display handle. No use on platform other than X Window. Default is zero.
@@ -215,8 +215,8 @@ namespace GN { namespace gfx
         ///
         /// Construct default render options
         ///
-        RendererOptions()
-            : api(RendererAPI::AUTO)
+        GpuOptions()
+            : api(GpuAPI::AUTO)
             , displayHandle(0)
             , renderWindow(0)
             , parentWindow(0)
@@ -238,7 +238,7 @@ namespace GN { namespace gfx
     ///
     /// Display descriptor.
     ///
-    /// \sa RendererOptions, Renderer::getDispDesc()
+    /// \sa GpuOptions, Gpu::getDispDesc()
     ///
     struct DispDesc
     {
@@ -270,7 +270,7 @@ namespace GN { namespace gfx
     ///
     /// renderer caps
     ///
-    struct RendererCaps
+    struct GpuCaps
     {
         UInt32 maxTex1DSize[2];       ///< width, array
         UInt32 maxTex2DSize[3];       ///< width, height, array
@@ -642,12 +642,12 @@ namespace GN { namespace gfx
     ///
     /// renderer context
     ///
-    struct RendererContext
+    struct GpuContext
     {
         ///
         /// enumerations used by renderer context structure
         ///
-        enum RendererContextEnum
+        enum GpuContextEnum
         {
             //@{
 
@@ -825,7 +825,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        RendererContext() { clear(); }
+        GpuContext() { clear(); }
 
         ///
         /// reset context to default value
@@ -904,7 +904,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Options for Renderer::drawLines
+    /// Options for Gpu::drawLines
     ///
     enum DrawLineOptions
     {
@@ -927,7 +927,7 @@ namespace GN { namespace gfx
     ///
     /// define public renderer signals
     ///
-    struct RendererSignals
+    struct GpuSignals
     {
         ///
         /// D3D device is lost. The renderer, as well as all graphics resources, have to be recreated.
@@ -968,7 +968,7 @@ namespace GN { namespace gfx
     ///
     /// \nosubgrouping
     ///
-    struct Renderer : public NoCopy
+    struct Gpu : public NoCopy
     {
         // ********************************************************************
         //
@@ -981,7 +981,7 @@ namespace GN { namespace gfx
         ///
         /// Get renderer options that are used to create this renderer.
         ///
-        virtual const RendererOptions & getOptions() const = 0;
+        virtual const GpuOptions & getOptions() const = 0;
 
         ///
         /// Get Display Description
@@ -1011,7 +1011,7 @@ namespace GN { namespace gfx
         ///
         /// Get render device caps
         ///
-        virtual const RendererCaps & getCaps() const = 0;
+        virtual const GpuCaps & getCaps() const = 0;
 
         ///
         /// Check texture format support
@@ -1214,12 +1214,12 @@ namespace GN { namespace gfx
         ///
         /// If binding failed, the renderer will try to restore device state to previos context.
         ///
-        virtual void bindContext( const RendererContext & ) = 0;
+        virtual void bindContext( const GpuContext & ) = 0;
 
         ///
         /// Rebind current rendering context to rendering device.
         ///
-        /// Renderer usually has internal cache mechanism to avoid
+        /// Gpu usually has internal cache mechanism to avoid
         /// redunant state changing. So if you call D3D/OGL functions
         /// directly in your code that changes D3D/OGL states, this cache
         /// mechanism will be broken. One way to avoid this situation, is
@@ -1232,7 +1232,7 @@ namespace GN { namespace gfx
         ///
         /// Get current render context
         ///
-        virtual const RendererContext & getContext() const = 0;
+        virtual const GpuContext & getContext() const = 0;
 
         ///
         /// get current render target size.
@@ -1243,7 +1243,7 @@ namespace GN { namespace gfx
         template<typename T>
         void getCurrentRenderTargetSize( T * width, T * height ) const
         {
-            const RendererContext & rc = getContext();
+            const GpuContext & rc = getContext();
             if( 0 == rc.colortargets.size() && 0 == rc.depthstencil.texture )
             {
                 const DispDesc & dd = getDispDesc();
@@ -1447,7 +1447,7 @@ namespace GN { namespace gfx
         ///
         /// get renderer signals
         ///
-        virtual RendererSignals & getSignals() = 0;
+        virtual GpuSignals & getSignals() = 0;
 
         struct BackBufferContent
         {
@@ -1493,8 +1493,8 @@ namespace GN { namespace gfx
         /// \param id               User data ID.
         /// \param data, length     User data buffer.
         ///
-        /// - Renderer won't touch user data.
-        /// - Renderer will make a copy the input data buffer, and overwriting any existing data with same ID.
+        /// - Gpu won't touch user data.
+        /// - Gpu will make a copy the input data buffer, and overwriting any existing data with same ID.
         /// - Settting both data and length to zero, to delete exsiting user data.
         /// - User data buffer will be deleted automatically when the renderer is deleted.
         ///
@@ -1547,22 +1547,22 @@ namespace GN { namespace gfx
     ///
     /// Create new single thread renderer.
     ///
-    Renderer * createSingleThreadRenderer( const RendererOptions & );
+    Gpu * createSingleThreadGpu( const GpuOptions & );
 
     ///
     /// Create new renderer with a simple multithread wrapper. So
     /// the renderer will run in another thread, and communite with
     /// user through an internal command buffer.
     ///
-    Renderer * createMultiThreadRenderer( const RendererOptions & );
+    Gpu * createMultiThreadGpu( const GpuOptions & );
 
     ///
     /// Delete renderer
     ///
-    void deleteRenderer( gfx::Renderer * );
+    void deleteGpu( gfx::Gpu * );
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_RENDERER_H__
+#endif // __GN_GFX_GPU_H__

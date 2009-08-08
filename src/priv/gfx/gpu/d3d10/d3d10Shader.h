@@ -213,7 +213,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10GpuProgram( D3D10Renderer & r )
+        D3D10GpuProgram( D3D10Gpu & r )
             : D3D10Resource(r)
         {
             clear();
@@ -234,7 +234,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from Renderer
+        // from Gpu
         // ********************************
     public:
 

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 
 #if GN_MSVC
 
@@ -14,7 +14,7 @@
 
 #endif // GN_MSVC
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // Global functions
@@ -23,16 +23,16 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
 bool gD3D10EnablePixPerf = true; // default is enabled
 
 #if GN_BUILD_STATIC
-GN::gfx::Renderer *
-GNgfxCreateD3D10Renderer( const GN::gfx::RendererOptions & o )
+GN::gfx::Gpu *
+GNgfxCreateD3D10Gpu( const GN::gfx::GpuOptions & o )
 #else
-extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
+extern "C" GN_EXPORT GN::gfx::Gpu *
+GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 #endif
 {
     GN_GUARD;
 
-    GN::AutoObjPtr<GN::gfx::D3D10Renderer> p( new GN::gfx::D3D10Renderer );
+    GN::AutoObjPtr<GN::gfx::D3D10Gpu> p( new GN::gfx::D3D10Gpu );
     if( !p->init( o ) ) return 0;
     return p.detach();
 
@@ -46,12 +46,12 @@ GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Renderer::init( const GN::gfx::RendererOptions & o )
+bool GN::gfx::D3D10Gpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D10Renderer, ( o ) );
+    GN_STDCLASS_INIT( GN::gfx::D3D10Gpu, ( o ) );
 
     // init sub-components
     if( !dispInit()        ) return failure();
@@ -69,7 +69,7 @@ bool GN::gfx::D3D10Renderer::init( const GN::gfx::RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::quit()
+void GN::gfx::D3D10Gpu::quit()
 {
     GN_GUARD;
 
@@ -92,7 +92,7 @@ void GN::gfx::D3D10Renderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::getBackBufferContent( BackBufferContent & bc )
+void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
 {
     bc.data.clear();
     bc.format = ColorFormat::UNKNOWN;

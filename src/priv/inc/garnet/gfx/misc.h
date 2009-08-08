@@ -12,7 +12,7 @@ namespace GN { namespace gfx
     ///
     /// load texture from image file
     ///
-    Texture * loadTextureFromFile( Renderer & rndr, const char * filename );
+    Texture * loadTextureFromFile( Gpu & gpu, const char * filename );
 }}
 
 // *****************************************************************************

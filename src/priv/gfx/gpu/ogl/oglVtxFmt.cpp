@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "oglVtxFmt.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include "oglVtxBuf.h"
 
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.VtxFmt");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxFmt");
 
 // *****************************************************************************
 // Local classes and functions
@@ -185,8 +185,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 {
     GN_GUARD;
 
-    UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getRenderer().getCaps().maxTextures;
+    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getGpu().getCaps().maxTextures;
 
     bool hasVertex = false;
     bool hasNormal = false;
@@ -394,8 +394,8 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     // then try stanadard/predefined bindings
     //
 
-    UInt32 maxAttributes = getRenderer().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getRenderer().getCaps().maxTextures;
+    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getGpu().getCaps().maxTextures;
 
     if( ( 0 == strCmpI( "position", bindingName ) ||
           0 == strCmpI( "pos", bindingName ) ||
@@ -533,7 +533,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
     const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( info.self );
-    OGLRenderer & r = info.self->getRenderer();
+    OGLGpu & r = info.self->getGpu();
     r.chooseClientTextureStage( info.index );
     GN_OGL_CHECK( glTexCoordPointer(
         info.components,
@@ -587,13 +587,13 @@ void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
 void GN::gfx::OGLVtxFmt::sEnableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->getRenderer().chooseClientTextureStage( info.texStage );
+    info.self->getGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }
 //
 void GN::gfx::OGLVtxFmt::sDisableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->getRenderer().chooseClientTextureStage( info.texStage );
+    info.self->getGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }

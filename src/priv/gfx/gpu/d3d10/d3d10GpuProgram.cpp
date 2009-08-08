@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "d3d10Shader.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 #include "d3d10Texture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -247,7 +247,7 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
     // build parameter array
     mParamDesc.buildParameterArrays();
 
-    const size_t NUM_STAGES = getRenderer().getCaps().maxTextures;
+    const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
     if( mParamDesc.textures.count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
@@ -350,7 +350,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     size_t                 count,
     bool                   /*skipDirtyCheck*/ ) const
 {
-    const size_t NUM_STAGES = getRenderer().getCaps().maxTextures;
+    const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
 
     // allocate SRV array on stack, clear to zero.
     const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;

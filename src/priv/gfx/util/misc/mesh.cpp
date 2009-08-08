@@ -8,10 +8,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.Mesh");
 struct VertexFormatProperties
 {
     /// minimal strides for each stream
-    size_t minStrides[RendererContext::MAX_VERTEX_BUFFERS];
+    size_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
     /// true means that stream is referenced by the vertex format.
-    bool used[RendererContext::MAX_VERTEX_BUFFERS];
+    bool used[GpuContext::MAX_VERTEX_BUFFERS];
 
     /// analyze vertex format
     bool analyze( const VertexFormat & vf )
@@ -22,7 +22,7 @@ struct VertexFormatProperties
         {
             const VertexElement & e = vf.elements[i];
 
-            if( e.stream > RendererContext::MAX_VERTEX_BUFFERS )
+            if( e.stream > GpuContext::MAX_VERTEX_BUFFERS )
             {
                 GN_ERROR(sLogger)( "Invalid stream ID: %d", e.stream );
                 return false;
@@ -65,7 +65,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
     if( !vfp.analyze( desc.vtxfmt ) ) return failure();
 
     // initialize vertex buffers
-    for( size_t i = 0; i < RendererContext::MAX_VERTEX_BUFFERS; ++i )
+    for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( !vfp.used[i] ) continue; // ignore unused vertex buffer
 
@@ -90,7 +90,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
         // create GPU vertex buffer
         VtxBufDesc vbd = { vbsize, desc.dynavb };
         AutoRef<VtxBuf> & vb = mVtxBufs[i].gpudata;
-        vb.attach( mRenderer.createVtxBuf( vbd ) );
+        vb.attach( mGpu.createVtxBuf( vbd ) );
         if( NULL == vb ) return failure();
 
         // copy vertices to vertex buffer
@@ -104,7 +104,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
     if( desc.numidx > 0 )
     {
         IdxBufDesc ibd = { desc.numidx, desc.idx32, desc.dynaib };
-        mIdxBuf.gpudata.attach( mRenderer.createIdxBuf( ibd ) );
+        mIdxBuf.gpudata.attach( mGpu.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return failure();
 
         if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );

@@ -12,11 +12,11 @@ float RT_HEIGHT = 256.0f;
 
 class RenderToTexture
 {
-    Renderer       & rndr;
+    Gpu            & gpu;
     SpriteRenderer   sr;
     AutoRef<Texture> c0, ds;
     AutoRef<Texture> tex0, tex1;
-    RendererContext  context;
+    GpuContext  context;
 
     // box scene data
     struct BoxVert
@@ -29,8 +29,8 @@ class RenderToTexture
 
 public:
 
-    RenderToTexture( Renderer & r )
-        : rndr(r)
+    RenderToTexture( Gpu & r )
+        : gpu(r)
         , sr(r)
     {
     }
@@ -46,22 +46,22 @@ public:
         if( !sr.init() ) return false;
 
         // create render targets
-        c0.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
+        c0.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
         if( c0.empty() )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.attach( rndr.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
+        ds.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
         if( ds.empty() )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
         }
 
         // load textures
-        tex0.attach( loadTextureFromFile( rndr, "media::texture/rabit.png" ) );
-        tex1.attach( loadTextureFromFile( rndr, "media::texture/earth.jpg" ) );
+        tex0.attach( loadTextureFromFile( gpu, "media::texture/rabit.png" ) );
+        tex1.attach( loadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
         if( 0 == tex0 || 0 == tex1 ) return false;
 
         // create box mesh
@@ -83,15 +83,15 @@ public:
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        Mesh boxmesh( rndr );
+        Mesh boxmesh( gpu );
         if( !boxmesh.init( md ) ) return false;
 
         // setup transformation matrices
         view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
-        rndr.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+        gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize the effect
-        if( !effect.init( rndr ) ) return false;
+        if( !effect.init( gpu ) ) return false;
         effect.setMesh( boxmesh );
         effect.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
         effect.setAlbedoTexture( tex1 );
@@ -126,8 +126,8 @@ public:
     {
         context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
-        rndr.bindContext( context );
-        rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        gpu.bindContext( context );
+        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
     }
 
@@ -135,8 +135,8 @@ public:
     {
         context.colortargets.clear();
         context.depthstencil.texture = ds;
-        rndr.bindContext( context );
-        rndr.clearScreen();
+        gpu.bindContext( context );
+        gpu.clearScreen();
 
         RenderTargetTexture rtt;
         rtt.texture = ds;
@@ -149,8 +149,8 @@ public:
         context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
-        rndr.bindContext( context );
-        rndr.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        gpu.bindContext( context );
+        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
 
         RenderTargetTexture c, d;
         c.texture = c0;
@@ -163,7 +163,7 @@ public:
     {
         context.colortargets.clear();
         context.depthstencil.clear();
-        rndr.bindContext( context );
+        gpu.bindContext( context );
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }
 
@@ -181,9 +181,9 @@ public:
     }
 };
 
-int run( Renderer & rndr )
+int run( Gpu & gpu )
 {
-    RenderToTexture scene( rndr );
+    RenderToTexture scene( gpu );
 
     if( !scene.init() ) return -1;
 
@@ -194,7 +194,7 @@ int run( Renderer & rndr )
 
     while( gogogo )
     {
-        rndr.processRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -205,9 +205,9 @@ int run( Renderer & rndr )
             gogogo = false;
         }
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         scene.render();
-        rndr.present();
+        gpu.present();
 
         fps.onFrame();
     }
@@ -217,7 +217,7 @@ int run( Renderer & rndr )
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -256,18 +256,18 @@ int main( int argc, const char * argv[] )
     cmdargs.rendererOptions.windowedWidth = (UInt32)RT_WIDTH * 2;
     cmdargs.rendererOptions.windowedHeight = (UInt32)RT_HEIGHT * 2;
 
-    Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
-        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    Gpu * r;
+    if( cmdargs.useMultiThreadGpu )
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadRenderer( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = run( *r );
 
-    deleteRenderer( r );
+    deleteGpu( r );
 
     return result;
 }

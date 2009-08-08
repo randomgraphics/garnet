@@ -67,11 +67,11 @@ sMergeRenderStates(
 }
 
 //
-// apply render states to renderer context
+// apply render states to GPU context
 // -----------------------------------------------------------------------------
 static void
 sApplyRenderStates(
-    GN::gfx::RendererContext                   & context,
+    GN::gfx::GpuContext                   & context,
     const GN::gfx::EffectDesc::RenderStateDesc & rsd )
 {
     #define APPLY_SINGLE_RENDER_STATE( state ) if( !rsd.state.inherited ) context.state = rsd.state.value; else void(0)
@@ -91,9 +91,9 @@ sApplyRenderStates(
 //
 // -----------------------------------------------------------------------------
 static bool
-sCheckRendererCaps( Renderer & r, const GN::gfx::EffectDesc::ShaderDesc & desc )
+sCheckGpuCaps( Gpu & r, const GN::gfx::EffectDesc::ShaderDesc & desc )
 {
-    const RendererCaps & caps = r.getCaps();
+    const GpuCaps & caps = r.getCaps();
 
     // check vertex shader
     if( desc.gpd.vs.source && (UInt32)desc.gpd.lang != (caps.vsLanguages & desc.gpd.lang) )
@@ -129,8 +129,8 @@ sCheckRendererCaps( Renderer & r, const GN::gfx::EffectDesc::ShaderDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Effect::Effect( Renderer & r )
-    : mRenderer(r)
+GN::gfx::Effect::Effect( Gpu & r )
+    : mGpu(r)
     , mDummyUniform( r.createUniform( 1 ) )
 {
     uniforms.mMap = &mUniforms;
@@ -149,7 +149,7 @@ GN::gfx::Effect::Effect( Renderer & r )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Effect::Effect( const Effect & e )
-    : mRenderer( e.mRenderer )
+    : mGpu( e.mGpu )
     , mDummyUniform( e.mDummyUniform )
     , mDummyTexture( e.mDummyTexture )
 {
@@ -198,7 +198,7 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::UniformDesc & udesc = iter->second;
 
         // create GPU program
-        Uniform * u = mRenderer.createUniform( udesc.size );
+        Uniform * u = mGpu.createUniform( udesc.size );
         if( NULL == u ) return false;
 
         // add to uniform array
@@ -234,14 +234,14 @@ bool GN::gfx::Effect::init( const EffectDesc & desc, const StrA & activeTechName
         const EffectDesc::ShaderDesc & shaderDesc = iter->second;
 
         // check shader requirements.
-        if( !sCheckRendererCaps( mRenderer, shaderDesc ) )
+        if( !sCheckGpuCaps( mGpu, shaderDesc ) )
         {
-            GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing renderer caps." );
+            GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing GPU caps." );
             continue;
         }
 
         // create GPU program
-        GpuProgram * gp = mRenderer.createGpuProgram( shaderDesc.gpd );
+        GpuProgram * gp = mGpu.createGpuProgram( shaderDesc.gpd );
         if( NULL == gp )
         {
             // ignore problematic shader.
@@ -358,7 +358,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
 
     // setup textures and samplers
     GN_ASSERT( p.textures.size() == p.gpuProgram->getParameterDesc().textures.count() );
-    GN_ASSERT( p.textures.size() <= RendererContext::MAX_TEXTURES );
+    GN_ASSERT( p.textures.size() <= GpuContext::MAX_TEXTURES );
     for( size_t i = 0; i < p.textures.size(); ++i )
     {
         const PerShaderTextureParam & t = p.textures[i];
@@ -372,7 +372,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     }
 
     // clear unused texture stages
-    for( size_t i = p.textures.size(); i < RendererContext::MAX_TEXTURES; ++i )
+    for( size_t i = p.textures.size(); i < GpuContext::MAX_TEXTURES; ++i )
     {
         drawable.rc.textures[i].clear();
     }
@@ -401,7 +401,7 @@ bool GN::gfx::Effect::applyToDrawable( Drawable & drawable, size_t pass ) const
     drawable.rc.depthstencil = depthstencil;
 
     // success
-    drawable.rndr = &mRenderer;
+    drawable.gpu = &mGpu;
     drawable.rc.gpuProgram.set( p.gpuProgram );
     return true;
 }
@@ -446,8 +446,8 @@ GN::gfx::Effect::initTech(
             return false;
         }
 
-        // check renderer caps against shader requirments
-        if( !sCheckRendererCaps( mRenderer, *shaderDesc ) )
+        // check GPU caps against shader requirments
+        if( !sCheckGpuCaps( mGpu, *shaderDesc ) )
         {
             // Note: it is expected scenario that some shaders are not supported by current hardware.
             //       So here we just issue a verbose log, instead of error.
@@ -479,7 +479,7 @@ GN::gfx::Effect::initTech(
 
         // look up textures
         p.textures.resize( gpuparam.textures.count() );
-        GN_ASSERT( p.textures.size() <= RendererContext::MAX_TEXTURES );
+        GN_ASSERT( p.textures.size() <= GpuContext::MAX_TEXTURES );
         for( size_t itex = 0; itex < p.textures.size(); ++itex )
         {
             p.textures[itex].iter = mTextures.end();
@@ -727,7 +727,7 @@ AutoRef<Uniform> & GN::gfx::Effect::getDummyUniform()
 {
     if( !mDummyUniform )
     {
-        mDummyUniform.attach( mRenderer.createUniform( 1 ) );
+        mDummyUniform.attach( mGpu.createUniform( 1 ) );
         GN_ASSERT( mDummyUniform );
     }
 
@@ -741,7 +741,7 @@ AutoRef<Texture> & GN::gfx::Effect::getDummyTexture()
 {
     if( !mDummyTexture )
     {
-        mDummyTexture.attach( mRenderer.create1DTexture( 1 ) );
+        mDummyTexture.attach( mGpu.create1DTexture( 1 ) );
         GN_ASSERT( mDummyTexture );
     }
 

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "xenonResource.h"
 
 #if GN_MSVC
@@ -19,23 +19,23 @@
 
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Global functions
 // *****************************************************************************
 
 #if GN_BUILD_STATIC
-GN::gfx::Renderer *
-GNgfxCreateXenonRenderer( const GN::gfx::RendererOptions & o )
+GN::gfx::Gpu *
+GNgfxCreateXenonGpu( const GN::gfx::GpuOptions & o )
 #else
-extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
+extern "C" GN_EXPORT GN::gfx::Gpu *
+GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 #endif
 {
     GN_GUARD;
 
-    GN::AutoObjPtr<GN::gfx::XenonRenderer> p( new GN::gfx::XenonRenderer );
+    GN::AutoObjPtr<GN::gfx::XenonGpu> p( new GN::gfx::XenonGpu );
     if( !p->init( o ) ) return 0;
     return p.detach();
 
@@ -49,7 +49,7 @@ GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::init( const GN::gfx::RendererOptions & o )
+bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
@@ -58,7 +58,7 @@ bool GN::gfx::XenonRenderer::init( const GN::gfx::RendererOptions & o )
     PIXPERF_FUNCTION_EVENT();
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::XenonRenderer, (o) );
+    GN_STDCLASS_INIT( GN::gfx::XenonGpu, (o) );
 
     // init sub-components
     if( !dispInit()         ) return failure();
@@ -76,7 +76,7 @@ bool GN::gfx::XenonRenderer::init( const GN::gfx::RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::quit()
+void GN::gfx::XenonGpu::quit()
 {
     GN_GUARD;
 
@@ -96,13 +96,13 @@ void GN::gfx::XenonRenderer::quit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::XenonGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
     GN_UNUSED_PARAM( startBatchIndex );
     GN_UNUSED_PARAM( numBatches );

@@ -1,8 +1,8 @@
-#ifndef __GN_GFX_UTIL_RNDR_MTRNDR_H__
-#define __GN_GFX_UTIL_RNDR_MTRNDR_H__
+#ifndef __GN_GFX_UTIL_GPU_MTGPU_H__
+#define __GN_GFX_UTIL_GPU_MTGPU_H__
 // *****************************************************************************
 /// \file
-/// \brief   multi thread renderer
+/// \brief   multi thread GPU
 /// \author  chenli@@REDMOND (2009.1.2)
 // *****************************************************************************
 
@@ -12,8 +12,8 @@
 namespace GN { namespace gfx
 {
     ///
-    /// options specific to multi-thread renderer
-    struct MultiThreadRendererOptions
+    /// options specific to multi-thread GPU
+    struct MultiThreadGpuOptions
     {
         ///
         /// internal command buffer size. Default is 4MB.
@@ -26,7 +26,7 @@ namespace GN { namespace gfx
         bool cacheOneFrameAtMost;
 
         /// ctor
-        MultiThreadRendererOptions()
+        MultiThreadGpuOptions()
             : commandBufferSize( 4 * 1024 * 1024 )
             , cacheOneFrameAtMost( true )
         {
@@ -34,11 +34,11 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Multi thread renderer wrapper
+    /// Multi thread GPU wrapper
     ///
-    class MultiThreadRenderer : public Renderer, public StdClass
+    class MultiThreadGpu : public Gpu, public StdClass
     {
-        GN_DECLARE_STDCLASS( MultiThreadRenderer, StdClass );
+        GN_DECLARE_STDCLASS( MultiThreadGpu, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -46,8 +46,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadRenderer()          { clear(); }
-        virtual ~MultiThreadRenderer() { quit(); }
+        MultiThreadGpu()          { clear(); }
+        virtual ~MultiThreadGpu() { quit(); }
         //@}
 
         // ********************************
@@ -56,13 +56,13 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & o, const MultiThreadRendererOptions & mo );
+        bool init( const GpuOptions & o, const MultiThreadGpuOptions & mo );
         void quit();
     private:
         void clear()
         {
             mThread   = NULL;
-            mRenderer = NULL;
+            mGpu = NULL;
         }
         //@}
 
@@ -173,7 +173,7 @@ namespace GN { namespace gfx
     private:
 
         RingBuffer      mRingBuffer;
-        volatile UInt32 mRendererCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
+        volatile UInt32 mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
         volatile UInt32 mFrontEndFence;
         volatile UInt32 mBackEndFence;
         Thread        * mThread;
@@ -183,14 +183,14 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadRendererOptions mMultithreadOptions;
-        RendererOptions            mRendererOptions;
+        MultiThreadGpuOptions mMultithreadOptions;
+        GpuOptions            mGpuOptions;
         DispDesc                   mDispDesc;
         void *                     mD3DDevice;
         void *                     mOGLRC;
-        RendererCaps               mCaps;
-        RendererSignals          * mSignals;
-        RendererContext            mRendererContext;
+        GpuCaps               mCaps;
+        GpuSignals          * mSignals;
+        GpuContext            mGpuContext;
         UInt32                     mLastPresentFence;
 
         // ********************************
@@ -199,7 +199,7 @@ namespace GN { namespace gfx
     private:
 
         // variables used in backend thread
-        Renderer * mRenderer;
+        Gpu * mGpu;
 
         // ********************************
         // private functions
@@ -209,18 +209,18 @@ namespace GN { namespace gfx
         UInt32 threadProc( void * );
 
         // ********************************
-        // rendering methods from Renderer
+        // rendering methods from Gpu
         // ********************************
     public:
 
         //@{
 
-        virtual const RendererOptions & getOptions() const { return mRendererOptions; }
+        virtual const GpuOptions & getOptions() const { return mGpuOptions; }
         virtual const DispDesc & getDispDesc() const { return mDispDesc; }
         virtual void * getD3DDevice() const { return mD3DDevice; }
         virtual void * getOGLRC() const { return mOGLRC; }
 
-        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual const GpuCaps & getCaps() const { return mCaps; }
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
         virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const;
 
@@ -231,9 +231,9 @@ namespace GN { namespace gfx
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
 
-        virtual void bindContext( const RendererContext & );
+        virtual void bindContext( const GpuContext & );
         virtual void rebindContext();
-        virtual const RendererContext & getContext() const;
+        virtual const GpuContext & getContext() const;
 
         virtual void present();
         virtual void clearScreen( const Vector4f & c,
@@ -269,7 +269,7 @@ namespace GN { namespace gfx
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
 
-        virtual RendererSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
+        virtual GpuSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
         virtual void getBackBufferContent( BackBufferContent & );
         virtual void processRenderWindowMessages( bool blockWhileMinimized );
         virtual void enableParameterCheck( bool enable );
@@ -285,5 +285,5 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_UTIL_RNDR_MTRNDR_H__
+#endif // __GN_GFX_UTIL_GPU_MTGPU_H__
 

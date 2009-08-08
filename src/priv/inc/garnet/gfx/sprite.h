@@ -21,7 +21,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SpriteRenderer( Renderer & r ) : mRenderer(r) { clear(); }
+        SpriteRenderer( Gpu & r ) : mGpu(r) { clear(); }
         virtual ~SpriteRenderer() { quit(); }
         //@}
 
@@ -65,7 +65,7 @@ namespace GN { namespace gfx
         };
 
         /// get underline renderer
-        Renderer & getRenderer() const { return mRenderer; }
+        Gpu & getGpu() const { return mGpu; }
 
         ///
         /// \note set texture to NULL, to draw solid sprite
@@ -158,7 +158,7 @@ namespace GN { namespace gfx
             MAX_SPRITES  = 256,
         };
 
-        Renderer                 & mRenderer;
+        Gpu                 & mGpu;
 
         AutoRef<Texture>           mPureWhiteTexture;
         AutoRef<GpuProgram>        mGpuProgram;
@@ -166,7 +166,7 @@ namespace GN { namespace gfx
         AutoRef<VtxBuf>            mVertexBuffer;
         AutoRef<IdxBuf>            mIndexBuffer;
 
-        RendererContext            mContext;
+        GpuContext            mContext;
 
         BitFields                  mOptions;
         float                      mVertexShift;

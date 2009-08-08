@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 #include "d3d11Resource.h"
 #include "../common/basicShader.h"
 //#include "d3d11Shader.h"
 #include "d3d11Texture.h"
 #include "d3d11Buffer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // init/shutdown
@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
 
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::resourceInit()
+bool GN::gfx::D3D11Gpu::resourceInit()
 {
     GN_GUARD;
 
@@ -33,13 +33,13 @@ bool GN::gfx::D3D11Renderer::resourceInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Renderer::resourceQuit()
+void GN::gfx::D3D11Gpu::resourceQuit()
 {
     GN_GUARD;
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR(sLogger)( "All graphics resouces MUST be released, before destroying renderer!" );
+        GN_ERROR(sLogger)( "All graphics resouces MUST be released, before destroying GPU!" );
 
         std::list<D3D11Resource*>::iterator i = mResourceList.begin();
         while( i != mResourceList.end() )
@@ -54,14 +54,14 @@ void GN::gfx::D3D11Renderer::resourceQuit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::CompiledGpuProgram *
-GN::gfx::D3D11Renderer::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->init( gpd ) ) return NULL;
@@ -74,7 +74,7 @@ GN::gfx::D3D11Renderer::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D11Renderer::createGpuProgram( const void * data, size_t length )
+GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 {
     GN_UNIMPL();
     return NULL;
@@ -103,7 +103,7 @@ GN::gfx::D3D11Renderer::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D11Renderer::createUniform( size_t size )
+GN::gfx::D3D11Gpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -112,7 +112,7 @@ GN::gfx::D3D11Renderer::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D11Renderer::createTexture( const TextureDesc & desc )
+GN::gfx::D3D11Gpu::createTexture( const TextureDesc & desc )
 {
     AutoRef<D3D11Texture> p( new D3D11Texture(*this) );
     if( !p->init( desc ) ) return 0;
@@ -122,7 +122,7 @@ GN::gfx::D3D11Renderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D11Renderer::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::D3D11Gpu::createVtxBuf( const VtxBufDesc & desc )
 {
     AutoRef<D3D11VtxBuf> buf( new D3D11VtxBuf(*this) );
 
@@ -134,7 +134,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D11Renderer::createVtxBuf( const VtxBufDesc & desc 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D11Renderer::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::D3D11Gpu::createIdxBuf( const IdxBufDesc & desc )
 {
     AutoRef<D3D11IdxBuf> buf( new D3D11IdxBuf(*this) );
 

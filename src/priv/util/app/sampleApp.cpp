@@ -91,22 +91,22 @@ sParseInteger( T & result, const char * option, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sParseRendererAPI( GN::gfx::RendererAPI & result, const char * value )
+static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
 {
     using namespace GN;
     using namespace GN::gfx;
 
     if( 0 == strCmpI( "auto", value ) )
     {
-        result = RendererAPI::AUTO;
+        result = GpuAPI::AUTO;
     }
     else if( 0 == strCmpI( "ogl", value ) )
     {
-        result = RendererAPI::OGL;
+        result = GpuAPI::OGL;
     }
     else if( 0 == strCmpI( "d3d10", value ) )
     {
-        result = RendererAPI::D3D10;
+        result = GpuAPI::D3D10;
     }
     else
     {
@@ -127,7 +127,7 @@ static bool sParseRendererAPI( GN::gfx::RendererAPI & result, const char * value
 //
 // -----------------------------------------------------------------------------
 GN::app::SampleApp::SampleApp()
-    : mRenderer(NULL)
+    : mGpu(NULL)
     , mSpriteRenderer(NULL)
     , mLineRenderer(NULL)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
@@ -158,7 +158,7 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
     while( !mDone )
     {
         // process render window messages
-        mRenderer->processRenderWindowMessages( false );
+        mGpu->processRenderWindowMessages( false );
 
         // update timing stuff
         mFps.onFrame();
@@ -185,7 +185,7 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
         mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
         onRender();
         drawHUD();
-        mRenderer->present();
+        mGpu->present();
     }
 
     // success
@@ -329,7 +329,7 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 
     if( !checkCmdLine(argc,argv) ) return false;
     if( !onPreInit( mInitParam ) ) return false;
-    if( !initRenderer() ) return false;
+    if( !initGpu() ) return false;
     if( !initInput() ) return false;
     if( !initFont() ) return false;
     if( !onPostInit() ) return false;
@@ -366,7 +366,7 @@ void GN::app::SampleApp::quit()
     onQuit();
     quitFont();
     quitInput();
-    quitRenderer();
+    quitGpu();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -379,7 +379,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     GN_GUARD;
 
     // setup default options
-    mInitParam.useMultithreadRenderer = true;
+    mInitParam.useMultithreadGpu = true;
     mInitParam.iapi = input::InputAPI::NATIVE;
     mInitParam.ffd.fontname = "font::/simsun.ttc";
     mInitParam.ffd.width = 16;
@@ -430,7 +430,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
 
-                if( !sParseBool( mInitParam.useMultithreadRenderer, a, value ) )
+                if( !sParseBool( mInitParam.useMultithreadGpu, a, value ) )
                     return false;
             }
             else if( 0 == strCmpI( "rapi", a+1 ) )
@@ -438,7 +438,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
 
-                if( !sParseRendererAPI( mInitParam.ro.api, value ) )
+                if( !sParseGpuAPI( mInitParam.ro.api, value ) )
                     return false;
             }
             else if( 0 == strCmpI( "ll", a+1 ) )
@@ -514,26 +514,26 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initRenderer()
+bool GN::app::SampleApp::initGpu()
 {
     GN_GUARD;
 
     // initialize renderer
-    if( mInitParam.useMultithreadRenderer )
-        mRenderer = createMultiThreadRenderer( mInitParam.ro );
+    if( mInitParam.useMultithreadGpu )
+        mGpu = createMultiThreadGpu( mInitParam.ro );
     else
-        mRenderer = createSingleThreadRenderer( mInitParam.ro );
-    if( NULL == mRenderer ) return false;
+        mGpu = createSingleThreadGpu( mInitParam.ro );
+    if( NULL == mGpu ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    mRenderer->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
+    mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
     // create sprite renderer
-    mSpriteRenderer = new SpriteRenderer( *mRenderer );
+    mSpriteRenderer = new SpriteRenderer( *mGpu );
     if( !mSpriteRenderer->init() ) return false;
 
     // create line renderer
-    mLineRenderer = new LineRenderer( *mRenderer );
+    mLineRenderer = new LineRenderer( *mGpu );
     if( !mLineRenderer->init() ) return false;
 
     // create renderer
@@ -545,14 +545,14 @@ bool GN::app::SampleApp::initRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitRenderer()
+void GN::app::SampleApp::quitGpu()
 {
     GN_GUARD;
 
     safeDelete( mLineRenderer );
     safeDelete( mSpriteRenderer );
-    deleteRenderer( mRenderer );
-    mRenderer = NULL;
+    deleteGpu( mGpu );
+    mGpu = NULL;
 
     GN_UNGUARD;
 }
@@ -566,7 +566,7 @@ bool GN::app::SampleApp::initInput()
 
     // create INPUT system
     if( !initializeInputSystem( mInitParam.iapi ) ) return false;
-    const DispDesc & dd = mRenderer->getDispDesc();
+    const DispDesc & dd = mGpu->getDispDesc();
     gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
 
     // connect to input signals

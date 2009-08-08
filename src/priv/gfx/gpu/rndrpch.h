@@ -1,6 +1,6 @@
 // *****************************************************************************
 /// \file
-/// \brief   common PCH header for Renderer modules
+/// \brief   common PCH header for Gpu modules
 /// \author  chen@@CHENLI-HOMEPC (2009.1.12)
 // *****************************************************************************
 

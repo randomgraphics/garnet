@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "d3d10Buffer.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 
 // *****************************************************************************
 // Initialize and shutdown

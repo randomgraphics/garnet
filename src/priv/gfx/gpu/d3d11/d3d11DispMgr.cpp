@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // device management
@@ -10,11 +10,11 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::dispInit()
+bool GN::gfx::D3D11Gpu::dispInit()
 {
     GN_GUARD;
 
-    const RendererOptions & ro = getOptions();
+    const GpuOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
     UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
@@ -86,7 +86,7 @@ bool GN::gfx::D3D11Renderer::dispInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Renderer::dispQuit()
+void GN::gfx::D3D11Gpu::dispQuit()
 {
     GN_GUARD;
 

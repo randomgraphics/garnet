@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
 #if GN_POSIX
 
@@ -14,7 +14,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispInit()
+bool GN::gfx::OGLGpu::dispInit()
 {
     GN_GUARD;
 
@@ -82,7 +82,7 @@ bool GN::gfx::OGLRenderer::dispInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispQuit()
+void GN::gfx::OGLGpu::dispQuit()
 {
     GN_GUARD;
 

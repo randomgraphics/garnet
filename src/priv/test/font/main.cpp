@@ -20,10 +20,10 @@ bool initTTF()
     return ttf.init( sr, ff );
 }
 
-bool init( Renderer & rndr )
+bool init( Gpu & gpu )
 {
     // create sprite renderer
-    sr = new SpriteRenderer( rndr );
+    sr = new SpriteRenderer( gpu );
     if( !sr->init() ) return false;
 
     // initialize ascii font
@@ -38,7 +38,7 @@ bool init( Renderer & rndr )
     return true;
 }
 
-void quit( Renderer & )
+void quit( Gpu & )
 {
     ascii.quit();
     ttf.quit();
@@ -88,7 +88,7 @@ void onKeyPress( KeyEvent ke )
     }
 }
 
-void draw( Renderer &, const wchar_t * fps )
+void draw( Gpu &, const wchar_t * fps )
 {
     ascii.drawText( fps, 0, 0 );
 
@@ -99,9 +99,9 @@ void draw( Renderer &, const wchar_t * fps )
     }
 }
 
-int run( Renderer & rndr )
+int run( Gpu & gpu )
 {
-    if( !init( rndr ) ) { quit( rndr ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -110,7 +110,7 @@ int run( Renderer & rndr )
 
     while( gogogo )
     {
-        rndr.processRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -121,21 +121,21 @@ int run( Renderer & rndr )
             gogogo = false;
         }
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( rndr, fps.getFpsString() );
-        rndr.present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu, fps.getFpsString() );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    quit( rndr );
+    quit( gpu );
 
     return 0;
 }
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -172,18 +172,18 @@ int main( int argc, const char * argv[] )
             return -1;
     }
 
-    Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
-        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    Gpu * r;
+    if( cmdargs.useMultiThreadGpu )
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadRenderer( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = run( *r );
 
-    deleteRenderer( r );
+    deleteGpu( r );
 
     return result;
 }

@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "xenonVtxBuf.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Local functions
@@ -67,7 +67,7 @@ bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
 
     setDesc( desc );
 
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     //
     // create d3d vertex buffer

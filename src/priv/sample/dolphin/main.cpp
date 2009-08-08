@@ -186,7 +186,7 @@ public:
     {
         GN_ASSERT( scene );
 
-        //Renderer & r = gRenderer;
+        //Gpu & r = gGpu;
 
         // draw to textures
         //r.setRenderTargets( rtdesc );

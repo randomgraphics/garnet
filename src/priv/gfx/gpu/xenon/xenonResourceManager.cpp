@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "xenonShader.h"
 #include "xenonTexture.h"
 #include "xenonVertexDecl.h"
 #include "xenonVtxBuf.h"
 #include "xenonIdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -18,7 +18,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
 
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderer::resourceInit()
+bool GN::gfx::XenonGpu::resourceInit()
 {
     GN_GUARD;
 
@@ -31,7 +31,7 @@ bool GN::gfx::XenonRenderer::resourceInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderer::resourceQuit()
+void GN::gfx::XenonGpu::resourceQuit()
 {
     GN_GUARD;
 
@@ -52,14 +52,14 @@ void GN::gfx::XenonRenderer::resourceQuit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::CompiledGpuProgram *
-GN::gfx::XenonRenderer::compileGpuProgram( const GpuProgramDesc & desc )
+GN::gfx::XenonGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -76,7 +76,7 @@ GN::gfx::XenonRenderer::compileGpuProgram( const GpuProgramDesc & desc )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
+GN::gfx::XenonGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
 {
     GN_GUARD;
 
@@ -116,7 +116,7 @@ GN::gfx::XenonRenderer::createGpuProgram( const void * compiledGpuProgramBinary,
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::XenonRenderer::createUniform( size_t size )
+GN::gfx::XenonGpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -125,7 +125,7 @@ GN::gfx::XenonRenderer::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::XenonRenderer::createTexture( const TextureDesc & desc )
+GN::gfx::XenonGpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -141,7 +141,7 @@ GN::gfx::XenonRenderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::XenonRenderer::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::XenonGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -159,7 +159,7 @@ GN::gfx::VtxBuf * GN::gfx::XenonRenderer::createVtxBuf( const VtxBufDesc & desc 
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::XenonRenderer::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::XenonGpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

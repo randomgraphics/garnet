@@ -24,7 +24,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonVtxBuf( XenonRenderer & r ) : XenonResource(r) { clear(); }
+        XenonVtxBuf( XenonGpu & r ) : XenonResource(r) { clear(); }
         virtual ~XenonVtxBuf() { quit(); }
         //@}
 

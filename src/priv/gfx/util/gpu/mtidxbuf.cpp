@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "mtidxbuf.h"
-#include "mtrndrCmd.h"
+#include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.rndr.mtidxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtidxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -41,7 +41,7 @@ void GN::gfx::MultiThreadIdxBuf::quit()
 
     if( mIdxBuf )
     {
-        mRenderer.postCommand1( CMD_IDXBUF_DESTROY, mIdxBuf );
+        mGpu.postCommand1( CMD_IDXBUF_DESTROY, mIdxBuf );
         mIdxBuf = NULL;
     }
 
@@ -75,7 +75,7 @@ void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const voi
     }
     memcpy( tmpbuf, data, length );
 
-    mRenderer.postCommand5( CMD_IDXBUF_UPDATE, mIdxBuf, offset, length, tmpbuf, flag );
+    mGpu.postCommand5( CMD_IDXBUF_UPDATE, mIdxBuf, offset, length, tmpbuf, flag );
 }
 
 //
@@ -83,7 +83,7 @@ void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const voi
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadIdxBuf::readback( std::vector<UInt8> & data )
 {
-    mRenderer.postCommand2( CMD_IDXBUF_READBACK, mIdxBuf, &data );
+    mGpu.postCommand2( CMD_IDXBUF_READBACK, mIdxBuf, &data );
 }
 
 // *****************************************************************************
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_DESTROY( Renderer &, void * p, size_t )
+    void func_IDXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         IdxBuf * ib = *(IdxBuf**)p;
         ib->decref();
@@ -104,7 +104,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_UPDATE( Renderer &, void * p, size_t )
+    void func_IDXBUF_UPDATE( Gpu &, void * p, size_t )
     {
         struct IdxBufUpdateParam
         {
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void func_IDXBUF_READBACK( Renderer &, void * p, size_t )
+    void func_IDXBUF_READBACK( Gpu &, void * p, size_t )
     {
         struct IdxBufReadBackParam
         {

@@ -12,7 +12,7 @@
 
 /// \cond
 
-class RendererTest
+class GpuTest
 {
     union RenderTargetPixel
     {
@@ -31,12 +31,12 @@ class RendererTest
     /// \note
     ///     - position (0,0) is left-top corner of the render target
     ///     - this function may crash because of invalid parameters.
-    RenderTargetPixel getRenderTargetPixel( GN::gfx::Renderer & r, size_t rtidx, size_t x, size_t y )
+    RenderTargetPixel getRenderTargetPixel( GN::gfx::Gpu & r, size_t rtidx, size_t x, size_t y )
     {
         using namespace GN;
         using namespace GN::gfx;
 
-        const RendererContext & rc = r.getContext();
+        const GpuContext & rc = r.getContext();
 
         TS_ASSERT( rc.colortargets.size() > rtidx );
         TS_ASSERT( rc.colortargets[rtidx].texture );
@@ -77,7 +77,7 @@ class RendererTest
     /// \note
     ///     - position (0,0) is left-top corner of the back buffer
     ///     - this function may crash because of invalid parameters.
-    RenderTargetPixel getBackBufferPixel( GN::gfx::Renderer & r, size_t x, size_t y )
+    RenderTargetPixel getBackBufferPixel( GN::gfx::Gpu & r, size_t x, size_t y )
     {
         using namespace GN;
         using namespace GN::gfx;
@@ -88,7 +88,7 @@ class RendererTest
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
 
-        Renderer::BackBufferContent bc;
+        Gpu::BackBufferContent bc;
         r.getBackBufferContent( bc );
 
         TS_ASSERT( x < bc.width && y < bc.height );
@@ -105,49 +105,49 @@ class RendererTest
         return rtp;
     }
 
-    GN::gfx::Renderer *
-    createRenderer( const GN::gfx::RendererOptions & ro )
+    GN::gfx::Gpu *
+    createGpu( const GN::gfx::GpuOptions & ro )
     {
-        GN::gfx::RendererOptions effectiveRO = ro;
+        GN::gfx::GpuOptions effectiveRO = ro;
         effectiveRO.api = mAPI;
 
         if( mMultiThreading )
         {
-            return GN::gfx::createMultiThreadRenderer( effectiveRO );
+            return GN::gfx::createMultiThreadGpu( effectiveRO );
         }
         else
         {
-            return GN::gfx::createSingleThreadRenderer( effectiveRO );
+            return GN::gfx::createSingleThreadGpu( effectiveRO );
         }
     }
 
-    class AutoRenderer
+    class AutoGpu
     {
-        GN::gfx::Renderer * mRndr;
+        GN::gfx::Gpu * mRndr;
 
     public:
 
-        AutoRenderer( GN::gfx::Renderer * r ) : mRndr( r )
+        AutoGpu( GN::gfx::Gpu * r ) : mRndr( r )
         {
         }
 
-        ~AutoRenderer()
+        ~AutoGpu()
         {
-            if( mRndr ) GN::gfx::deleteRenderer( mRndr );
+            if( mRndr ) GN::gfx::deleteGpu( mRndr );
         }
 
-        operator GN::gfx::Renderer *() const { return mRndr; }
+        operator GN::gfx::Gpu *() const { return mRndr; }
 
-        GN::gfx::Renderer *operator->() const { return mRndr; }
+        GN::gfx::Gpu *operator->() const { return mRndr; }
     };
 
-    GN::gfx::RendererAPI mAPI;
+    GN::gfx::GpuAPI mAPI;
     bool                 mMultiThreading;
 
 protected :
 
     /// ctor
-    RendererTest( GN::gfx::RendererAPI api, bool multithreading ) : mAPI( api ), mMultiThreading( multithreading )
+    GpuTest( GN::gfx::GpuAPI api, bool multithreading ) : mAPI( api ), mMultiThreading( multithreading )
     {
     }
 
@@ -163,14 +163,14 @@ protected :
         win->setClientSize( 511, 236 );
         win->show();
 
-        RendererOptions ro;
+        GpuOptions ro;
         ro.useExternalWindow = true;
         ro.displayHandle     = win->getDisplayHandle();
         ro.renderWindow      = win->getWindowHandle();
-        AutoRenderer rndr( createRenderer( ro ) );
-        TS_ASSERT( rndr );
-        if( !rndr ) return;
-        Renderer & r = *rndr;
+        AutoGpu gpu( createGpu( ro ) );
+        TS_ASSERT( gpu );
+        if( !gpu ) return;
+        Gpu & r = *gpu;
 
         // the renderer should be in same size as the external window client
         const DispDesc & dd = r.getDispDesc();

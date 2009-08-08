@@ -8,7 +8,7 @@ sources = [
     'xenonGpuProgramHLSL.cpp',
     'xenonIdxBuf.cpp',
     'xenonLine.cpp',
-    'xenonRenderer.cpp',
+    'xenonGpu.cpp',
     'xenonRenderTargetMgr.cpp',
     'xenonResource.cpp',
     'xenonResourceManager.cpp',
@@ -18,4 +18,4 @@ sources = [
     'xenonVtxBuf.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-target  = GN.newTarget( 'shlib', 'GNrndrXenon', [cluster], dependencies = ['GNrndrCommon'] )
+target  = GN.newTarget( 'shlib', 'GNgpuXenon', [cluster], dependencies = ['GNgpuCommon'] )

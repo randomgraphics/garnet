@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    class D3D10Renderer;
+    class D3D10Gpu;
 
     ///
     /// D3D10 render target manager
@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10RTMgr( D3D10Renderer & r ) : mRenderer(r) { clear(); }
+        D3D10RTMgr( D3D10Gpu & r ) : mGpu(r) { clear(); }
         virtual ~D3D10RTMgr() { quit(); }
         //@}
 
@@ -90,13 +90,13 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        D3D10Renderer & mRenderer;
+        D3D10Gpu & mGpu;
 
         ID3D10RenderTargetView * mAutoColor0;
         ID3D10Texture2D *        mAutoDepthTexture;
         ID3D10DepthStencilView * mAutoDepth;
 
-        ID3D10RenderTargetView * mColors[RendererContext::MAX_COLOR_RENDER_TARGETS];
+        ID3D10RenderTargetView * mColors[GpuContext::MAX_COLOR_RENDER_TARGETS];
         ID3D10DepthStencilView * mDepth;
         size_t                   mNumColors;
 

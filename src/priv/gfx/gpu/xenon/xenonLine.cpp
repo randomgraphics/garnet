@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "xenonLine.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "garnet/GNd3d9.h"
 
 struct XenonLineVertex
@@ -22,8 +22,8 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     D3DDECL_END()
 };
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
- 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -40,7 +40,7 @@ bool GN::gfx::XenonLine::init()
 
     GN_ASSERT( !mVtxShader && !mPxlShader );
 
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // create vertex decl
     GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
@@ -118,7 +118,7 @@ void GN::gfx::XenonLine::drawLines(
     const Matrix44f & /*proj*/ )
 {
     GN_UNIMPL_WARNING();
-    
+
     /*if( 0 == positions )
     {
         GN_ERROR(sLogger)( "Line positions can't be NULL!" );
@@ -142,7 +142,7 @@ void GN::gfx::XenonLine::drawLines(
         count -= n;
     }
 
-    XenonRenderer & r = getRenderer();
+    XenonGpu & r = getGpu();
     IDirect3DDevice9 & dev = r.getDeviceInlined();
 
     D3DPRIMITIVETYPE d3dpt;
@@ -205,7 +205,7 @@ void GN::gfx::XenonLine::drawLines(
     GN_DX9_CHECK( mVtxBuf->Unlock() );
 
     // setup context and data flags
-    RendererContext::FieldFlags cf;
+    GpuContext::FieldFlags cf;
     cf.u32 = 0;
 
     // setup render states
@@ -245,7 +245,7 @@ void GN::gfx::XenonLine::drawLines(
     // draw
     GN_DX9_CHECK( dev.DrawPrimitive(
         d3dpt,
-        (UINT)( mNextLine * 2 ), 
+        (UINT)( mNextLine * 2 ),
         (UINT)count ) );
 
     // restore renderer context

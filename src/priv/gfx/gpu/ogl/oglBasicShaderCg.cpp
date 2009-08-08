@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "oglShader.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
 #ifdef HAS_CG_OGL
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -33,7 +33,7 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     StrA entry = reg.gets( "entry", "main" );
 
     // create the shader
-    if( !mShader.init( getRenderer().getCgContext(), mProfile, code, entry ) ) return failure();
+    if( !mShader.init( getGpu().getCgContext(), mProfile, code, entry ) ) return failure();
 
     // load the program
     GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), failure() );
@@ -126,7 +126,7 @@ bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
     const char * name, HandleType & userData ) const
 {
     GN_GUARD;
-    
+
     GN_ASSERT( !strEmpty(name) );
 
     CGparameter param = mShader.getUniformHandle( name );

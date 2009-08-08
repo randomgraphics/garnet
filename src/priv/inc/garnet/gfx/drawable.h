@@ -13,8 +13,8 @@ namespace GN { namespace gfx
     ///
     struct Drawable
     {
-        Renderer      * rndr;
-        RendererContext rc;
+        Gpu         * gpu;
+        GpuContext    rc;
 
         // parameters for DRAW_PRIMITIVE
         PrimitiveType prim;
@@ -31,7 +31,7 @@ namespace GN { namespace gfx
         ///
         void clear()
         {
-            rndr = NULL;
+            gpu = NULL;
             rc.clear();
         }
 

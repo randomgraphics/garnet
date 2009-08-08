@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "d3d10Resource.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 
-GN::gfx::D3D10Resource::D3D10Resource( D3D10Renderer & r )
-    : mRenderer(r)
+GN::gfx::D3D10Resource::D3D10Resource( D3D10Gpu & r )
+    : mGpu(r)
 {
-    mRenderer.insertResource( this );
+    mGpu.insertResource( this );
 }
 
 GN::gfx::D3D10Resource::~D3D10Resource()
 {
-    mRenderer.removeResource( this );
+    mGpu.removeResource( this );
 }

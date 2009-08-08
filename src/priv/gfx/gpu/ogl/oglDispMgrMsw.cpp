@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
 #if GN_MSWIN
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local functions
@@ -175,7 +175,7 @@ static bool sSetupPixelFormat( HDC hdc )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::dispInit()
+bool GN::gfx::OGLGpu::dispInit()
 {
     GN_GUARD;
 
@@ -201,7 +201,7 @@ bool GN::gfx::OGLRenderer::dispInit()
     // init GLEW
     glewInit();
 
-    const RendererOptions & ro = getOptions();
+    const GpuOptions & ro = getOptions();
 
     // modify fullscreen render window properties
     if( ro.fullscreen )
@@ -243,7 +243,7 @@ bool GN::gfx::OGLRenderer::dispInit()
     // setup message hook
     if( ro.autoRestore )
     {
-        getRenderWindow().sigMessage.connect( this, &OGLRenderer::msgHook );
+        getRenderWindow().sigMessage.connect( this, &OGLGpu::msgHook );
     }
 
     // set swap interval
@@ -264,7 +264,7 @@ bool GN::gfx::OGLRenderer::dispInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::dispQuit()
+void GN::gfx::OGLGpu::dispQuit()
 {
     GN_GUARD;
 
@@ -299,7 +299,7 @@ void GN::gfx::OGLRenderer::dispQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::activateDisplayMode()
+bool GN::gfx::OGLGpu::activateDisplayMode()
 {
     GN_GUARD;
 
@@ -357,7 +357,7 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::restoreDisplayMode()
+void GN::gfx::OGLGpu::restoreDisplayMode()
 {
     GN_GUARD;
 
@@ -383,7 +383,7 @@ void GN::gfx::OGLRenderer::restoreDisplayMode()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
+void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 {
     GN_GUARD;
 

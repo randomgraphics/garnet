@@ -1,12 +1,12 @@
-#ifndef __GN_GFX_UTIL_RNDR_MTIDXBUF_H__
-#define __GN_GFX_UTIL_RNDR_MTIDXBUF_H__
+#ifndef __GN_GFX_UTIL_GPU_MTIDXBUF_H__
+#define __GN_GFX_UTIL_GPU_MTIDXBUF_H__
 // *****************************************************************************
 /// \file
 /// \brief   multi-thread idxbuf wrappers
 /// \author  chenli@@REDMOND (2009.1.3)
 // *****************************************************************************
 
-#include "mtrndr.h"
+#include "mtgpu.h"
 
 namespace GN { namespace gfx
 {
@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadIdxBuf( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
+        MultiThreadIdxBuf( MultiThreadGpu & r ) : mGpu(r) { clear(); }
         virtual ~MultiThreadIdxBuf() { quit(); }
         //@}
 
@@ -59,7 +59,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadRenderer & mRenderer;
+        MultiThreadGpu & mGpu;
         IdxBuf              * mIdxBuf;
 
         // ********************************
@@ -72,4 +72,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_UTIL_RNDR_MTIDXBUF_H__
+#endif // __GN_GFX_UTIL_GPU_MTIDXBUF_H__

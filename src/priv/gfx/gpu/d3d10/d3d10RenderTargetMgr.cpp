@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 #include "d3d10RenderTargetMgr.h"
 #include "d3d10Texture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -19,16 +19,16 @@ bool GN::gfx::D3D10RTMgr::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D10RTMgr, () );
 
-    ID3D10Device & dev = mRenderer.getDeviceRefInlined();
+    ID3D10Device & dev = mGpu.getDeviceRefInlined();
 
     // create default rener target view
     AutoComPtr<ID3D10Texture2D> backBuffer;
-    GN_DX10_CHECK_RV( mRenderer.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), failure() );
+    GN_DX10_CHECK_RV( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), failure() );
     GN_DX10_CHECK_RV( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
     GN_ASSERT( mAutoColor0 );
 
     // create depth texture
-    const DispDesc & dd = mRenderer.getDispDesc();
+    const DispDesc & dd = mGpu.getDispDesc();
     D3D10_TEXTURE2D_DESC td;
     td.Width              = dd.width;
     td.Height             = dd.height;
@@ -128,7 +128,7 @@ bool GN::gfx::D3D10RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colortargets.size(); i < RendererContext::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( size_t i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }
@@ -155,8 +155,8 @@ bool GN::gfx::D3D10RTMgr::bind(
     }
 
     // bind to D3D device
-    mRenderer.getDeviceRefInlined().OMSetRenderTargets(
-        (UINT)RendererContext::MAX_COLOR_RENDER_TARGETS,
+    mGpu.getDeviceRefInlined().OMSetRenderTargets(
+        (UINT)GpuContext::MAX_COLOR_RENDER_TARGETS,
         mColors,
         mDepth );
 
@@ -172,7 +172,7 @@ bool GN::gfx::D3D10RTMgr::bind(
     }
     else
     {
-        const DispDesc & dd = mRenderer.getDispDesc();
+        const DispDesc & dd = mGpu.getDispDesc();
         newRtSize.x = dd.width;
         newRtSize.y = dd.height;
     }

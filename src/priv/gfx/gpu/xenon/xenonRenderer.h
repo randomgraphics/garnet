@@ -1,12 +1,12 @@
-#ifndef __GN_GFX_XENONRENDERER_H__
-#define __GN_GFX_XENONRENDERER_H__
+#ifndef __GN_GFX_XENONGPU_H__
+#define __GN_GFX_XENONGPU_H__
 // *****************************************************************************
 /// \file
-/// \brief   Xenon renderer class
+/// \brief   Xenon GPU class
 /// \author  chenlee (2004.4.1) -- happy april fool's day!!!
 // *****************************************************************************
 
-#include "../common/basicRendererXenon.h"
+#include "../common/basicGpuXenon.h"
 
 namespace GN { namespace gfx
 {
@@ -24,11 +24,11 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Xenon renderer class
+    /// Xenon GPU class
     ///
-    class XenonRenderer : public BasicRendererXenon
+    class XenonGpu : public BasicGpuXenon
     {
-        GN_DECLARE_STDCLASS(XenonRenderer, BasicRendererXenon);
+        GN_DECLARE_STDCLASS(XenonGpu, BasicGpuXenon);
 
         // ********************************
         // ctor/dtor
@@ -36,8 +36,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        XenonRenderer() : mThreadId(getCurrentThreadId()) { clear(); }
-        virtual ~XenonRenderer() { quit(); }
+        XenonGpu() : mThreadId(getCurrentThreadId()) { clear(); }
+        virtual ~XenonGpu() { quit(); }
         //@}
 
         // ********************************
@@ -46,7 +46,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & ro );
+        bool init( const GpuOptions & ro );
         void quit();
     private:
         void clear()
@@ -70,7 +70,7 @@ namespace GN { namespace gfx
 
     public :
 
-        // from Renderer
+        // from Gpu
         virtual void * getD3DDevice() const { return mDevice; }
         virtual void * getOGLRC() const { return 0; }
 
@@ -117,7 +117,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual const RendererCaps & getCaps() const { return mCaps; }
+        virtual const GpuCaps & getCaps() const { return mCaps; }
         virtual bool                 checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
         virtual ColorFormat          getDefaultTextureFormat( TextureUsage usages ) const;
 
@@ -129,7 +129,7 @@ namespace GN { namespace gfx
 
     private :
 
-        RendererCaps mCaps;
+        GpuCaps mCaps;
 
         //@}
 
@@ -193,7 +193,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const RendererContext & context, bool skipDirtyCheck );
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -206,10 +206,10 @@ namespace GN { namespace gfx
         void contextQuit();
         void contextClear() { mContext.clear(); mRTMgr = 0; }
 
-        inline bool bindContextRenderTargetsAndViewport( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextRenderStates( const RendererContext & newContext, bool skipDirtyCheck  );
-        inline bool bindContextShaders( const RendererContext & newContext, bool skipDirtyCheck );
-        inline bool bindContextResources( const RendererContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderTargetsAndViewport( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck  );
+        inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );
+        inline bool bindContextResources( const GpuContext & newContext, bool skipDirtyCheck );
 
     private:
 
@@ -313,4 +313,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_XENONRENDERER_H__
+#endif // __GN_GFX_XENONGPU_H__

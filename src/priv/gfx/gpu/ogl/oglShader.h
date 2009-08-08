@@ -80,7 +80,7 @@ namespace GN { namespace gfx
         ///
         /// protected ctor
         ///
-        OGLBasicGpuProgram( OGLRenderer & r, GpuProgramLanguage lang ) : OGLResource(r), mLanguage(lang)
+        OGLBasicGpuProgram( OGLGpu & r, GpuProgramLanguage lang ) : OGLResource(r), mLanguage(lang)
         {
             static UInt64 counter = 1;
             mID = counter++;
@@ -109,7 +109,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLRenderer & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { clear(); }
+        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { clear(); }
         virtual ~OGLGpuProgramGLSL() { quit(); }
         //@}
 
@@ -270,7 +270,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLBasicShaderCg( OGLRenderer & r, ShaderType t, CGGLenum profileClass )
+        OGLBasicShaderCg( OGLGpu & r, ShaderType t, CGGLenum profileClass )
             : OGLShader( t, LANG_CG )
             , OGLResource( r )
             , mProfileClass( profileClass ) { clear(); }
@@ -330,7 +330,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        OGLVtxShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_VS, CG_GL_VERTEX ) {}
+        OGLVtxShaderCg( OGLGpu & r ) : OGLBasicShaderCg( r, SHADER_VS, CG_GL_VERTEX ) {}
     };
 
     ///
@@ -342,7 +342,7 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        OGLPxlShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
+        OGLPxlShaderCg( OGLGpu & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
     };
 
 #endif

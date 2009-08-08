@@ -90,7 +90,7 @@ static const char * glslpscode =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleDiffuseEffect::init( Renderer & r )
+bool GN::util::SimpleDiffuseEffect::init( Gpu & r )
 {
     GN_GUARD;
 

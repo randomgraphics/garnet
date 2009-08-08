@@ -1,12 +1,12 @@
-#ifndef __GN_GFX_UTIL_RNDR_MTSHADER_H__
-#define __GN_GFX_UTIL_RNDR_MTSHADER_H__
+#ifndef __GN_GFX_UTIL_GPU_MTSHADER_H__
+#define __GN_GFX_UTIL_GPU_MTSHADER_H__
 // *****************************************************************************
 /// \file
 /// \brief   multi-thread shader wrappers
 /// \author  chenli@@REDMOND (2009.1.3)
 // *****************************************************************************
 
-#include "mtrndr.h"
+#include "mtgpu.h"
 
 namespace GN { namespace gfx
 {
@@ -23,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadUniform( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
+        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { clear(); }
         virtual ~MultiThreadUniform() { quit(); }
         //@}
 
@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadRenderer & mRenderer;
+        MultiThreadGpu & mGpu;
         Uniform             * mUniform;
         size_t                mSize;
         UInt8               * mFrontEndData;
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadGpuProgram( MultiThreadRenderer & r ) : mRenderer(r) { clear(); }
+        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { clear(); }
         virtual ~MultiThreadGpuProgram() { quit(); }
         //@}
 
@@ -119,7 +119,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        MultiThreadRenderer           & mRenderer;
+        MultiThreadGpu           & mGpu;
         GpuProgram                    * mGpuProgram;
         size_t                          mNumParams;
         const GpuProgramParameterDesc * mParamDesc;
@@ -134,4 +134,4 @@ namespace GN { namespace gfx
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_UTIL_RNDR_MTSHADER_H__
+#endif // __GN_GFX_UTIL_GPU_MTSHADER_H__

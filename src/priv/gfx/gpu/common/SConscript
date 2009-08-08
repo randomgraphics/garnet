@@ -1,9 +1,9 @@
 Import( 'GN' )
 sources = [
-    'basicRenderer.cpp',
-    'basicRendererMsw.cpp',
-    'basicRendererXenon.cpp',
-    'basicRendererX11.cpp',
+    'basicGpu.cpp',
+    'basicGpuMsw.cpp',
+    'basicGpuXenon.cpp',
+    'basicGpuX11.cpp',
     'basicSurface.cpp',
     'cgShader.cpp',
     'renderWindowMsw.cpp',

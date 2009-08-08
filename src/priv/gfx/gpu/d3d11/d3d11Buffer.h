@@ -24,7 +24,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11Buffer( D3D11Renderer & r ) : D3D11Resource(r) { clear(); }
+        D3D11Buffer( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
         virtual ~D3D11Buffer() { quit(); }
         //@}
 
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11VtxBuf( D3D11Renderer & r ) : D3D11Buffer(r) { clear(); }
+        D3D11VtxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
         virtual ~D3D11VtxBuf() { quit(); }
         //@}
 
@@ -137,7 +137,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11IdxBuf( D3D11Renderer & r ) : D3D11Buffer(r) { clear(); }
+        D3D11IdxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
         virtual ~D3D11IdxBuf() { quit(); }
         //@}
 

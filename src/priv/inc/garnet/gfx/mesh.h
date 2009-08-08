@@ -20,8 +20,8 @@ namespace GN { namespace gfx
         bool          dynaib; ///< trur for dynamic index buffer
         size_t        numvtx; ///< number of vertices
         size_t        numidx; ///< number of indices. 0 means non-indexed mesh
-        size_t        strides[RendererContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using minimal stride defined by vertex format.
-        const void *  vertices[RendererContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data undefined
+        size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using minimal stride defined by vertex format.
+        const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data undefined
         const void *  indices; // Null means index data undefined.
 
         /// default ctor
@@ -53,7 +53,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Mesh( Renderer & r ) : mRenderer(r) { clear(); }
+        Mesh( Gpu & r ) : mGpu(r) { clear(); }
         virtual ~Mesh() { quit(); }
         //@}
 
@@ -98,9 +98,9 @@ namespace GN { namespace gfx
             AutoRef<IdxBuf>  gpudata;
         };
 
-        Renderer   & mRenderer;
+        Gpu   & mGpu;
         MeshDesc     mDesc;
-        VertexBuffer mVtxBufs[RendererContext::MAX_VERTEX_BUFFERS];
+        VertexBuffer mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
         IndexBuffer  mIdxBuf;
 
         // ********************************

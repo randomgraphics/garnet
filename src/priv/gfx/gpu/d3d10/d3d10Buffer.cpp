@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "d3d10Buffer.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.Buffer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10.Buffer");
 
 // *****************************************************************************
 // init / quit functions

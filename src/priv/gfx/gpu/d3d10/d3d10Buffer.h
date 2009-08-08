@@ -24,7 +24,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10Buffer( D3D10Renderer & r ) : D3D10Resource(r) { clear(); }
+        D3D10Buffer( D3D10Gpu & r ) : D3D10Resource(r) { clear(); }
         virtual ~D3D10Buffer() { quit(); }
         //@}
 
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10VtxBuf( D3D10Renderer & r ) : D3D10Buffer(r) { clear(); }
+        D3D10VtxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { clear(); }
         virtual ~D3D10VtxBuf() { quit(); }
         //@}
 
@@ -137,7 +137,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10IdxBuf( D3D10Renderer & r ) : D3D10Buffer(r) { clear(); }
+        D3D10IdxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { clear(); }
         virtual ~D3D10IdxBuf() { quit(); }
         //@}
 

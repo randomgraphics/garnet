@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include "oglRenderTargetMgr.h"
 #include "oglShader.h"
 #include "oglVtxFmt.h"
@@ -88,7 +88,7 @@ static const GLenum CONVERT_BLEND_OP[] =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::contextInit()
+bool GN::gfx::OGLGpu::contextInit()
 {
     // create render target manager
     mRTMgr = OGLRTMgrFBO::usable() ? (OGLBasicRTMgr*)new OGLRTMgrFBO(*this) : new OGLRTMgrCopyFrame(*this);
@@ -103,7 +103,7 @@ bool GN::gfx::OGLRenderer::contextInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::contextQuit()
+void GN::gfx::OGLGpu::contextQuit()
 {
     // reset context
     mContext.clear();
@@ -122,15 +122,15 @@ void GN::gfx::OGLRenderer::contextQuit()
 }
 
 // *****************************************************************************
-// from BasicRenderer
+// from BasicGpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLRenderer::bindContextImpl(
-    const RendererContext & newContext,
+GN::gfx::OGLGpu::bindContextImpl(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
@@ -156,7 +156,7 @@ GN::gfx::OGLRenderer::bindContextImpl(
 //
 // -----------------------------------------------------------------------------
 inline OGLVtxFmt *
-GN::gfx::OGLRenderer::findOrCreateOGLVtxFmt(
+GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
     const VertexFormat       & vf,
     const OGLBasicGpuProgram * program )
 {
@@ -190,8 +190,8 @@ GN::gfx::OGLRenderer::findOrCreateOGLVtxFmt(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::OGLRenderer::bindContextShaders(
-    const RendererContext & newContext,
+GN::gfx::OGLGpu::bindContextShaders(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
@@ -239,8 +239,8 @@ GN::gfx::OGLRenderer::bindContextShaders(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::OGLRenderer::bindContextRenderStates(
-    const RendererContext & newContext,
+GN::gfx::OGLGpu::bindContextRenderStates(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;
@@ -285,8 +285,8 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
             if( !GLEW_EXT_stencil_wrap )
             {
 #define CHECK_WRAP_STENCIL_OP( op ) \
-                if( RendererContext::STENCIL_INC_SAT == op ) { op = RendererContext::STENCIL_INC; nonSupportedWrapOp = true; } \
-                if( RendererContext::STENCIL_DEC_SAT == op ) { op = RendererContext::STENCIL_DEC; nonSupportedWrapOp = true; }
+                if( GpuContext::STENCIL_INC_SAT == op ) { op = GpuContext::STENCIL_INC; nonSupportedWrapOp = true; } \
+                if( GpuContext::STENCIL_DEC_SAT == op ) { op = GpuContext::STENCIL_DEC; nonSupportedWrapOp = true; }
 
                 bool nonSupportedWrapOp = false;
                 CHECK_WRAP_STENCIL_OP( failop );
@@ -331,7 +331,7 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
                     CONVERT_BLEND_ARG[newContext.blendSrc],
                     CONVERT_BLEND_ARG[newContext.blendDst] );
 
-                if( newContext.blendOp != RendererContext::BLEND_OP_ADD )
+                if( newContext.blendOp != GpuContext::BLEND_OP_ADD )
                 {
                     GN_ERROR(sLogger)(
                         "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
@@ -361,8 +361,8 @@ GN::gfx::OGLRenderer::bindContextRenderStates(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::OGLRenderer::bindContextRenderTargets(
-    const RendererContext & newContext,
+GN::gfx::OGLGpu::bindContextRenderTargets(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     // bind render targets
@@ -429,8 +429,8 @@ GN::gfx::OGLRenderer::bindContextRenderTargets(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::gfx::OGLRenderer::bindContextResources(
-    const RendererContext & newContext,
+GN::gfx::OGLGpu::bindContextResources(
+    const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
     GN_GUARD_SLOW;

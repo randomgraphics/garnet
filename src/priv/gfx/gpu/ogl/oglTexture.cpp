@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "oglTexture.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.Texture");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.Texture");
 
 // *****************************************************************************
 // local var/types/functions

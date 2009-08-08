@@ -5,7 +5,7 @@
 
 std::map<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.MSW");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -15,14 +15,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.MSW
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::initExternalWindow( Renderer * rndr, HandleType externalWindow )
+bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externalWindow )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::RenderWindowMsw, () );
 
-    if( !rndr )
+    if( !gpu )
     {
         GN_ERROR(sLogger)( "Null renderer pointer." );
         return failure();
@@ -48,7 +48,7 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Renderer * rndr, HandleType e
         return failure();
     }
 
-    mRenderer          = rndr;
+    mGpu          = gpu;
     mWindow            = (HWND)externalWindow;
     mUseExternalWindow = true;
 
@@ -65,7 +65,7 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Renderer * rndr, HandleType e
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowMsw::initInternalWindow(
-    Renderer * rndr,
+    Gpu * gpu,
     HandleType parentWindow,
     HandleType monitor,
     UInt32     width,
@@ -80,7 +80,7 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 
     if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return failure();
 
-    mRenderer = rndr;
+    mGpu = gpu;
     mUseExternalWindow = false;
 
     // success
@@ -151,7 +151,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
 {
     GN_GUARD;
 
-    const RendererOptions & ro = mRenderer->getOptions();
+    const GpuOptions & ro = mGpu->getOptions();
 
     // do nothing if in full screen mode
     if( ro.fullscreen ) return;
@@ -170,7 +170,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
         mOldMonitor = mMonitor;
 
         // trigger renderer signal when window size is changed or window is moved to another monitor
-        mRenderer->getSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
+        mGpu->getSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
     }
 
     GN_UNGUARD;
@@ -315,8 +315,8 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
     {
         case WM_CLOSE:
             // do not close the window. just trigger the signal
-            GN_ASSERT( mRenderer );
-            mRenderer->getSignals().rendererWindowClose();
+            GN_ASSERT( mGpu );
+            mGpu->getSignals().rendererWindowClose();
             break;
 
         case WM_ENTERSIZEMOVE :

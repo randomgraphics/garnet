@@ -8,7 +8,7 @@
 
 #include "../common/basicSurface.h"
 #include "oglResource.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
 namespace GN { namespace gfx
 {
@@ -27,7 +27,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLTexture( OGLRenderer & r ) :OGLResource(r) { clear(); }
+        OGLTexture( OGLGpu & r ) :OGLResource(r) { clear(); }
         virtual ~OGLTexture() { quit(); }
         //@}
 

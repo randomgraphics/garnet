@@ -15,7 +15,7 @@ namespace GN { namespace gfx
     ///
     class RenderWindowX11
     {
-        Renderer      * mRenderer;
+        Gpu      * mGpu;
         bool            mUseExternalWindow;
         Display       * mDisplay;
         Screen        * mScreen;
@@ -24,7 +24,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        RenderWindowX11() : mRenderer(0), mDisplay(0), mScreen(0), mWindow(0) {}
+        RenderWindowX11() : mGpu(0), mDisplay(0), mScreen(0), mWindow(0) {}
         ~RenderWindowX11() {}
         //@}
 
@@ -36,17 +36,17 @@ namespace GN { namespace gfx
         ///
         /// associate the window with a renderer
         ///
-        void setRenderer( Renderer * r ) { GN_ASSERT(r); mRenderer = r; }
+        void setGpu( Gpu * r ) { GN_ASSERT(r); mGpu = r; }
 
         ///
         /// (re)initialize render window to use external window
         ///
-        bool initExternalRenderWindow( Renderer * r, Display * display, Window externalWindow );
+        bool initExternalRenderWindow( Gpu * r, Display * display, Window externalWindow );
 
         ///
         /// (re)initialize render window to use internal widow.
         ///
-        bool initInternalRenderWindow( Renderer * r, Display * display, Window parentWindow, Screen * monitor, UInt32 width, UInt32 height );
+        bool initInternalRenderWindow( Gpu * r, Display * display, Window parentWindow, Screen * monitor, UInt32 width, UInt32 height );
 
         ///
         /// Delete render window

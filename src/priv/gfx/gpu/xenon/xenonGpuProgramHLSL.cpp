@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "xenonShader.h"
 #include "xenonTexture.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 #include "garnet/GNd3d9.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 using namespace GN::gfx;
 
@@ -71,7 +71,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::HLSL9 == desc.lang );
 
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
@@ -142,7 +142,7 @@ void GN::gfx::XenonGpuProgramHLSL::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::apply() const
 {
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }
@@ -155,7 +155,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
     size_t                  count,
     bool                    /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     for( size_t i = 0; i < count; ++i )
     {
@@ -178,7 +178,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         GN_ASSERT( !d.name.empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
-        if( getRenderer().paramCheckEnabled() )
+        if( getGpu().paramCheckEnabled() )
         {
             if( u->size() != d.size )
             {
@@ -210,7 +210,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
     size_t                 count,
     bool                   /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // determine effective texture count
     if( count > mParamDesc.textures.count() )
@@ -297,7 +297,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                     {
                         if( u->size != cd.Bytes )
                         {
-                            GN_ERROR(sLogger)( "VS and PS are referencing uniform with same name but different type, which is not supported by Xenon renderer." );
+                            GN_ERROR(sLogger)( "VS and PS are referencing uniform with same name but different type, which is not supported by Xenon GPU." );
                             return false;
                         }
 

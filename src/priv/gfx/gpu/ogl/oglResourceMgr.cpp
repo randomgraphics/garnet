@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 #include "oglShader.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
@@ -8,7 +8,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.ResourceMgr");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.ResourceMgr");
 
 // *****************************************************************************
 // device management
@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.ResourceMgr");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::resourceInit()
+bool GN::gfx::OGLGpu::resourceInit()
 {
     GN_GUARD;
 
@@ -40,7 +40,7 @@ bool GN::gfx::OGLRenderer::resourceInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::resourceQuit()
+void GN::gfx::OGLGpu::resourceQuit()
 {
     GN_GUARD;
 
@@ -63,14 +63,14 @@ void GN::gfx::OGLRenderer::resourceQuit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::CompiledGpuProgram *
-GN::gfx::OGLRenderer::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
@@ -87,7 +87,7 @@ GN::gfx::OGLRenderer::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
+GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
@@ -117,7 +117,7 @@ GN::gfx::OGLRenderer::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::OGLRenderer::createUniform( size_t size )
+GN::gfx::OGLGpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -126,7 +126,7 @@ GN::gfx::OGLRenderer::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
+GN::gfx::OGLGpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -140,7 +140,7 @@ GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::OGLRenderer::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::OGLGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -163,7 +163,7 @@ GN::gfx::VtxBuf * GN::gfx::OGLRenderer::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::OGLRenderer::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::OGLGpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

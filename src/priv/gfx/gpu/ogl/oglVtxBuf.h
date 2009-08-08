@@ -24,7 +24,7 @@ namespace GN { namespace gfx
     protected :
 
         /// protected ctor
-        OGLBasicVtxBuf( OGLRenderer & r ) : OGLResource( r ) {}
+        OGLBasicVtxBuf( OGLGpu & r ) : OGLResource( r ) {}
     };
 
     ///
@@ -40,7 +40,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufNormal( OGLRenderer & r ) : OGLBasicVtxBuf(r) { clear(); }
+        OGLVtxBufNormal( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
         virtual ~OGLVtxBufNormal() { quit(); }
         //@}
 
@@ -99,7 +99,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufVBO( OGLRenderer & r ) : OGLBasicVtxBuf(r) { clear(); }
+        OGLVtxBufVBO( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
         virtual ~OGLVtxBufVBO() { quit(); }
         //@}
 

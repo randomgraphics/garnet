@@ -62,7 +62,7 @@ bool GN::gfx::LineRenderer::init()
     GN_STDCLASS_INIT( GN::gfx::LineRenderer, () );
 
     // create GPU program
-    const RendererCaps & caps = mRenderer.getCaps();
+    const GpuCaps & caps = mGpu.getCaps();
     GpuProgramDesc gpd;
     if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
         caps.psLanguages & GpuProgramLanguage::GLSL )
@@ -85,7 +85,7 @@ bool GN::gfx::LineRenderer::init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return failure();
     }
-    mContext.gpuProgram.attach( mRenderer.createGpuProgram( gpd ) );
+    mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
     if( !mContext.gpuProgram ) return failure();
 
     // create vertex format
@@ -116,7 +116,7 @@ bool GN::gfx::LineRenderer::init()
     mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
     // create vertex buffer
-    mContext.vtxbufs[0].vtxbuf.attach( mRenderer.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
+    mContext.vtxbufs[0].vtxbuf.attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
     if( !mContext.vtxbufs[0].vtxbuf ) return failure();
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
@@ -232,9 +232,9 @@ void GN::gfx::LineRenderer::flush()
         mNextPendingLine,
         mLines == mNextPendingLine ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-    mRenderer.bindContext( mContext );
+    mGpu.bindContext( mContext );
 
-    mRenderer.draw(
+    mGpu.draw(
         PrimitiveType::LINE_LIST,
         numPendingLines * 2,       // numvtx
         firstPendingLineOffset * 2 // startvtx,

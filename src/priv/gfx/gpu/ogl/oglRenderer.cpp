@@ -1,21 +1,21 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-GN::Logger * GN::gfx::OGLRenderer::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Global functions
 // *****************************************************************************
 
 #if GN_BUILD_STATIC
-GN::gfx::Renderer * GNgfxCreateOGLRenderer( const GN::gfx::RendererOptions & o )
+GN::gfx::Gpu * GNgfxCreateOGLGpu( const GN::gfx::GpuOptions & o )
 #else
-extern "C" GN_EXPORT GN::gfx::Renderer * GNgfxCreateRenderer( const GN::gfx::RendererOptions & o )
+extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 #endif
 {
     GN_GUARD;
 
-    GN::AutoObjPtr<GN::gfx::OGLRenderer> p( new GN::gfx::OGLRenderer );
+    GN::AutoObjPtr<GN::gfx::OGLGpu> p( new GN::gfx::OGLGpu );
     if( !p->init( o ) ) return 0;
     return p.detach();
 
@@ -29,12 +29,12 @@ extern "C" GN_EXPORT GN::gfx::Renderer * GNgfxCreateRenderer( const GN::gfx::Ren
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::init( const RendererOptions & o )
+bool GN::gfx::OGLGpu::init( const GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLRenderer, (o) );
+    GN_STDCLASS_INIT( GN::gfx::OGLGpu, (o) );
 
     // init sub-components
     if( !dispInit()     ) return failure();
@@ -52,7 +52,7 @@ bool GN::gfx::OGLRenderer::init( const RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::quit()
+void GN::gfx::OGLGpu::quit()
 {
     GN_GUARD;
 

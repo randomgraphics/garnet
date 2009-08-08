@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx::XenonRenderer::setD3DRenderState(
+inline void GN::gfx::XenonGpu::setD3DRenderState(
     D3DRENDERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -27,7 +27,7 @@ inline void GN::gfx::XenonRenderer::setD3DRenderState(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx::XenonRenderer::setD3DSamplerState(
+inline void GN::gfx::XenonGpu::setD3DSamplerState(
     UINT stage, D3DSAMPLERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -57,7 +57,7 @@ inline void GN::gfx::XenonRenderer::setD3DSamplerState(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::gfx::XenonRenderer::setD3DTextureState(
+inline void GN::gfx::XenonGpu::setD3DTextureState(
     UINT stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;

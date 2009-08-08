@@ -55,7 +55,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonGpuProgramASM( XenonRenderer & r ) : XenonResource(r) { clear(); }
+        XenonGpuProgramASM( XenonGpu & r ) : XenonResource(r) { clear(); }
         virtual ~XenonGpuProgramASM() { quit(); }
         //@}
 
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonGpuProgramHLSL( XenonRenderer & r ) : XenonResource(r) { clear(); }
+        XenonGpuProgramHLSL( XenonGpu & r ) : XenonResource(r) { clear(); }
         virtual ~XenonGpuProgramHLSL() { quit(); }
         //@}
 

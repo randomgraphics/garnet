@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "d3d10Shader.h"
-#include "d3d10Renderer.h"
+#include "d3d10Gpu.h"
 #include "garnet/GNd3d10.h"
 
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 ///
 /// D3D10 shader type
@@ -147,7 +147,7 @@ static const char * sCloneString( const char * str )
     char * clone = (char*)GN::heapAlloc( n );
     if( NULL == clone )
     {
-        GN_RNDR_RIP( "Out of memory!" );
+        GN_GPU_RIP( "Out of memory!" );
         return NULL;
     }
 
@@ -179,7 +179,7 @@ sInitConstBuffers(
     {
         GN_ERROR(sLogger)(
             "Too many constant buffers. "
-            "Currently D3D10 renderer support %d constant buffers.",
+            "Currently D3D10 GPU support %d constant buffers.",
             constBufs.MAX_SIZE );
         return false;
     }
@@ -494,7 +494,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
             break;
 
         default:
-            GN_ERROR(GN::getLogger("GN.gfx.rndr.D3D9"))( "unitialized/invalid uniform!" );
+            GN_ERROR(GN::getLogger("GN.gfx.gpu.D3D9"))( "unitialized/invalid uniform!" );
             break;
 
     }

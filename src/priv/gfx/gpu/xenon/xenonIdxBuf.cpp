@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "xenonIdxBuf.h"
-#include "xenonRenderer.h"
+#include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Local functions
@@ -67,7 +67,7 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
 
     setDesc( desc );
 
-    IDirect3DDevice9 & dev = getRenderer().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // get bytes per index
     UInt32 bpi = 2 << (UInt32)desc.bits32;

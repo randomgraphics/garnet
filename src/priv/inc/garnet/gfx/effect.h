@@ -75,7 +75,7 @@ namespace GN { namespace gfx
         struct RenderState
         {
             T    value;
-            bool inherited; ///< if true, then this effect will inherit this value from current renderer context.
+            bool inherited; ///< if true, then this effect will inherit this value from current GPU context.
 
             /// default ctor
             RenderState() : inherited(true) {}
@@ -215,7 +215,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Effect( Renderer & r );
+        Effect( Gpu & r );
         Effect( const Effect & ); // copy ctor
         virtual ~Effect();
         //@}
@@ -405,7 +405,7 @@ namespace GN { namespace gfx
             DynaArray<Pass> passes;
         };
 
-        Renderer & mRenderer;
+        Gpu & mGpu;
         EffectDesc mDesc;
 
         std::map<StrA,AutoRef<Uniform> >      mUniforms;

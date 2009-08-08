@@ -7,7 +7,7 @@ using namespace GN::win;
 using namespace GN::util;
 
 bool blankScreen = false;
-RendererContext rc;
+GpuContext rc;
 
 const char * hlsl_vscode =
     "uniform float4x4 transform; \n"
@@ -41,7 +41,7 @@ const char * glsl_pscode =
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
 
-bool init( Renderer & rndr )
+bool init( Gpu & gpu )
 {
     if( blankScreen ) return true;
 
@@ -49,7 +49,7 @@ bool init( Renderer & rndr )
 
     // create GPU program
     GpuProgramDesc gpd;
-    if( RendererAPI::OGL == rndr.getOptions().api )
+    if( GpuAPI::OGL == gpu.getOptions().api )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glsl_vscode;
@@ -63,12 +63,12 @@ bool init( Renderer & rndr )
         gpd.vs.entry  = "main";
         gpd.ps.entry  = "main";
     }
-    rc.gpuProgram.attach( rndr.createGpuProgram( gpd ) );
+    rc.gpuProgram.attach( gpu.createGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
     // create uniform
     rc.uniforms.resize( 1 );
-    rc.uniforms[0].attach( rndr.createUniform( sizeof(Matrix44f) ) );
+    rc.uniforms[0].attach( gpu.createUniform( sizeof(Matrix44f) ) );
     if( !rc.uniforms[0] ) return false;
 
     // setup vertex format
@@ -79,7 +79,7 @@ bool init( Renderer & rndr )
     rc.vtxfmt.elements[0].stream = 0;
 
     // create texture
-    rc.textures[0].texture.attach( loadTextureFromFile( rndr, "media::texture\\earth.jpg" ) );
+    rc.textures[0].texture.attach( loadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
 
     // create vertex buffer
     static float vertices[] =
@@ -93,26 +93,26 @@ bool init( Renderer & rndr )
         sizeof(vertices),
         false,
     };
-    rc.vtxbufs[0].vtxbuf.attach( rndr.createVtxBuf( vbd ) );
+    rc.vtxbufs[0].vtxbuf.attach( gpu.createVtxBuf( vbd ) );
     if( NULL == rc.vtxbufs[0].vtxbuf ) return false;
     rc.vtxbufs[0].vtxbuf->update( 0, 0, vertices );
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
     IdxBufDesc ibd = { 4, false, false };
-    rc.idxbuf.attach( rndr.createIdxBuf( ibd ) );
+    rc.idxbuf.attach( gpu.createIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
     rc.idxbuf->update( 0, 0, indices );
 
     return true;
 }
 
-void quit( Renderer & )
+void quit( Gpu & )
 {
     rc.clear();
 }
 
-void draw( Renderer & r )
+void draw( Gpu & r )
 {
     if( blankScreen ) return;
 
@@ -151,9 +151,9 @@ void draw( Renderer & r )
     r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
-int run( Renderer & rndr )
+int run( Gpu & gpu )
 {
-    if( !init( rndr ) ) { quit( rndr ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -162,7 +162,7 @@ int run( Renderer & rndr )
 
     while( gogogo )
     {
-        rndr.processRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -173,21 +173,21 @@ int run( Renderer & rndr )
             gogogo = false;
         }
 
-        rndr.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( rndr );
-        rndr.present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    quit( rndr );
+    quit( gpu );
 
     return 0;
 }
 
 struct InputInitiator
 {
-    InputInitiator( Renderer & r )
+    InputInitiator( Gpu & r )
     {
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
@@ -246,18 +246,18 @@ int main( int argc, const char * argv[] )
         }
     }
 
-    Renderer * r;
-    if( cmdargs.useMultiThreadRenderer )
-        r = createMultiThreadRenderer( cmdargs.rendererOptions );
+    Gpu * r;
+    if( cmdargs.useMultiThreadGpu )
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadRenderer( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = run( *r );
 
-    deleteRenderer( r );
+    deleteGpu( r );
 
     return result;
 }

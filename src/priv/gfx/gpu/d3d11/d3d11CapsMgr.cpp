@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "d3d11Renderer.h"
+#include "d3d11Gpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // init/quit
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D11");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::capsInit()
+bool GN::gfx::D3D11Gpu::capsInit()
 {
     GN_GUARD;
 
@@ -30,10 +30,10 @@ bool GN::gfx::D3D11Renderer::capsInit()
     mCaps.maxTex3DSize[2] = 1;
 
     // max simultaneous textures
-    mCaps.maxTextures     = math::getmin<size_t>( D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, RendererContext::MAX_TEXTURES );
+    mCaps.maxTextures     = math::getmin<size_t>( D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, GpuContext::MAX_TEXTURES );
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, RendererContext::MAX_COLOR_RENDER_TARGETS );
+    mCaps.maxColorRenderTargets = math::getmin<size_t>( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
     mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
@@ -60,13 +60,13 @@ bool GN::gfx::D3D11Renderer::capsInit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Renderer::checkTextureFormatSupport(
+bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(
     ColorFormat  format,
     TextureUsage usage ) const
 {
@@ -117,7 +117,7 @@ bool GN::gfx::D3D11Renderer::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::D3D11Renderer::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::D3D11Gpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

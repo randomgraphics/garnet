@@ -7,7 +7,7 @@ sources = [
 	'd3d11DrawMgr.cpp',
 	#'d3d11GpuProgram.cpp',
 	'd3d11IdxBuf.cpp',
-	'd3d11Renderer.cpp',
+	'd3d11Gpu.cpp',
 	'd3d11Resource.cpp',
 	'd3d11ResourceManager.cpp',
 	#'d3d11RenderTargetMgr.cpp',
@@ -18,4 +18,4 @@ sources = [
 	'd3d11VtxLayout.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-GN.newTarget( 'shlib', 'GNrndrD3D11', [cluster], dependencies = ['GNrndrCommon'] )
+GN.newTarget( 'shlib', 'GNgpuD3D11', [cluster], dependencies = ['GNgpuCommon'] )

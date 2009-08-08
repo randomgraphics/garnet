@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "oglRenderTargetMgr.h"
 #include "oglTexture.h"
-#include "oglRenderer.h"
+#include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -143,8 +143,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_BACK ) );
 
         // update render target size
-        mRenderTargetSize.x = mRenderer.getDispDesc().width;
-        mRenderTargetSize.y = mRenderer.getDispDesc().height;
+        mRenderTargetSize.x = mGpu.getDispDesc().width;
+        mRenderTargetSize.y = mGpu.getDispDesc().height;
 
         return true;
     }

@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "basicRenderer.h"
+#include "basicGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 //
-// RIP for renderer modules
+// RIP for GPU modules
 // -----------------------------------------------------------------------------
 void GN::gfx::rip( const char * msg, ... )
 {
@@ -12,25 +12,25 @@ void GN::gfx::rip( const char * msg, ... )
 }
 
 // *****************************************************************************
-//                         BasicRenderer init / quit functions
+//                         BasicGpu init / quit functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
+bool GN::gfx::BasicGpu::init( const GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicRenderer, () );
+    GN_STDCLASS_INIT( BasicGpu, () );
 
-    // check renderer options
-    if( o.api < 0 || o.api >= RendererAPI::NUM_APIs )
+    // check GPU options
+    if( o.api < 0 || o.api >= GpuAPI::NUM_APIs )
     {
-        if( RendererAPI::AUTO == o.api )
+        if( GpuAPI::AUTO == o.api )
         {
-            GN_ERROR(sLogger)( "RendererAPI::AUTO must be changed to actual API value before initializing renderer." );
+            GN_ERROR(sLogger)( "GpuAPI::AUTO must be changed to actual API value before initializing GPU." );
         }
         else
         {
@@ -41,9 +41,9 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
     }
 
     // sanity check: warning when render context size is larger than 2K bytes
-    if( sizeof(RendererContext) > 2048 )
+    if( sizeof(GpuContext) > 2048 )
     {
-        GN_WARN(sLogger)( "GN::gfx::RendererContext is huge! (%u bytes)", sizeof(RendererContext) );
+        GN_WARN(sLogger)( "GN::gfx::GpuContext is huge! (%u bytes)", sizeof(GpuContext) );
     }
 
     // success
@@ -55,7 +55,7 @@ bool GN::gfx::BasicRenderer::init( const RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::quit()
+void GN::gfx::BasicGpu::quit()
 {
     GN_GUARD;
 
@@ -68,7 +68,7 @@ void GN::gfx::BasicRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
+void GN::gfx::BasicGpu::bindContext( const GpuContext & c )
 {
     // skip dirty check, if last context binding failed.
     bool skipDirtyCheck = !mContextOk;
@@ -84,7 +84,7 @@ void GN::gfx::BasicRenderer::bindContext( const RendererContext & c )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::rebindContext()
+void GN::gfx::BasicGpu::rebindContext()
 {
     mContextOk = bindContextImpl( mContext, true );
 }
@@ -92,7 +92,7 @@ void GN::gfx::BasicRenderer::rebindContext()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::getBackBufferContent( BackBufferContent & c )
+void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
 {
     c.data.clear();
     c.format = ColorFormat::UNKNOWN;
@@ -104,7 +104,7 @@ void GN::gfx::BasicRenderer::getBackBufferContent( BackBufferContent & c )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::setUserData( const Guid & id, const void * data, size_t length )
+void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t length )
 {
     UserDataMap::iterator iter = mUserData.find( id );
 
@@ -152,7 +152,7 @@ void GN::gfx::BasicRenderer::setUserData( const Guid & id, const void * data, si
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::BasicRenderer::getUserData( const Guid & id, size_t * length ) const
+const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) const
 {
     UserDataMap::const_iterator iter = mUserData.find( id );
 
@@ -177,7 +177,7 @@ const void * GN::gfx::BasicRenderer::getUserData( const Guid & id, size_t * leng
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::hasUserData( const Guid & id ) const
+bool GN::gfx::BasicGpu::hasUserData( const Guid & id ) const
 {
     return mUserData.find( id ) != mUserData.end();
 }

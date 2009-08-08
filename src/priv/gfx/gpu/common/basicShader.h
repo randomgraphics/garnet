@@ -24,14 +24,14 @@ namespace GN { namespace gfx
         {
             if( 0 != sc.source && ( sc.source < begin || sc.source >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.rndr.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader source pointer.", type );
                 return false;
             }
 
             if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.rndr.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
                 return false;
             }
@@ -111,7 +111,7 @@ namespace GN { namespace gfx
             // check GPU program language
             if( !desc.lang.valid() )
             {
-                static Logger * sLogger = getLogger("GN.gfx.rndr.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.toRawEnum() );
                 return false;
             }
@@ -121,7 +121,7 @@ namespace GN { namespace gfx
                 !sCheckShaderCode( "geometry", desc.gs, start, end ) ||
                 !sCheckShaderCode( "pixel", desc.ps, start, end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.rndr.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "Invalid shader binary." );
                 return false;
             }

@@ -39,8 +39,8 @@ public:
     //@{
 
     const char             * applicationName;
-    GN::gfx::RendererOptions rendererOptions;
-    bool                     useMultiThreadRenderer;
+    GN::gfx::GpuOptions rendererOptions;
+    bool                     useMultiThreadGpu;
     Status                   status;
 
     // command line arguments that are not recoganized by the parser
@@ -60,7 +60,7 @@ public:
     // Xenon platform does not have command line arguments
     CommandLineArguments( int, const char *[] )
         : applicationName( "xenonapp" )
-        , useMultiThreadRenderer( true )
+        , useMultiThreadGpu( true )
         , status( CONTINUE_EXECUTION )
         , extraArgc(0)
         , extraArgv(NULL)
@@ -70,7 +70,7 @@ public:
 #else
     CommandLineArguments( int argc, const char * argv[] )
         : applicationName( argv[0] )
-        , useMultiThreadRenderer( true )
+        , useMultiThreadGpu( true )
         , status( INVALID_COMMAND_LINE )
         , extraArgc(0)
         , extraArgv(NULL)
@@ -159,26 +159,26 @@ private:
         }
     }
 
-    bool parseRendererAPI( GN::gfx::RendererAPI & result, const char * value )
+    bool parseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
     {
         using namespace GN;
         using namespace GN::gfx;
 
         if( 0 == strCmpI( "auto", value ) )
         {
-            result = RendererAPI::AUTO;
+            result = GpuAPI::AUTO;
         }
         else if( 0 == strCmpI( "ogl", value ) )
         {
-            result = RendererAPI::OGL;
+            result = GpuAPI::OGL;
         }
         else if( 0 == strCmpI( "d3d10", value ) )
         {
-            result = RendererAPI::D3D10;
+            result = GpuAPI::D3D10;
         }
         else if( 0 == strCmpI( "d3d11", value ) )
         {
-            result = RendererAPI::D3D11;
+            result = GpuAPI::D3D11;
         }
         else
         {
@@ -237,7 +237,7 @@ private:
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
-                    if( !parseBool( useMultiThreadRenderer, a, value ) )
+                    if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
                 else if( 0 == strCmpI( "rapi", a+1 ) )
@@ -245,7 +245,7 @@ private:
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
 
-                    if( !parseRendererAPI( rendererOptions.api, value ) )
+                    if( !parseGpuAPI( rendererOptions.api, value ) )
                         return INVALID_COMMAND_LINE;
                 }
                 else

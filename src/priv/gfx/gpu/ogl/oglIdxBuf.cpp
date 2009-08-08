@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglIdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL.IdxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.IdxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown

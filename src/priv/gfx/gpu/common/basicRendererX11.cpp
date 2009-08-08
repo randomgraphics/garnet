@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "basicRendererX11.h"
+#include "basicGpuX11.h"
 #include "garnet/GNwin.h"
 
 #if GN_POSIX
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 // ****************************************************************************
 // local function
@@ -31,7 +31,7 @@ sGetClientSize( Display * disp, Window win, UInt32 * width, UInt32 * height )
 /// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
 static GN::HandleType
-sDetermineMonitorHandle( Display * disp, const GN::gfx::RendererOptions & ro )
+sDetermineMonitorHandle( Display * disp, const GN::gfx::GpuOptions & ro )
 {
     if( 0 == ro.monitorHandle )
     {
@@ -51,7 +51,7 @@ sDetermineMonitorHandle( Display * disp, const GN::gfx::RendererOptions & ro )
 static bool
 sGetCurrentDisplayMode(
     Display                        * disp,
-    const GN::gfx::RendererOptions & ro,
+    const GN::gfx::GpuOptions & ro,
     GN::gfx::DisplayMode           & dm )
 {
     GN_GUARD;
@@ -89,7 +89,7 @@ sGetCurrentDisplayMode(
 static bool
 sDetermineWindowSize(
     Display                        * disp,
-    const GN::gfx::RendererOptions & ro,
+    const GN::gfx::GpuOptions & ro,
     const GN::gfx::DisplayMode     & currentDisplayMode,
     UInt32                         & width,
     UInt32                         & height )
@@ -124,18 +124,18 @@ sDetermineWindowSize(
 }
 
 // *****************************************************************************
-//                         BasicRendererX11 init / quit functions
+//                         BasicGpuX11 init / quit functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererX11::init( const RendererOptions & o )
+bool GN::gfx::BasicGpuX11::init( const GpuOptions & o )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( BasicRendererX11, (o) );
+    GN_STDCLASS_INIT( BasicGpuX11, (o) );
 
     // initialize sub-components one by one
     if( !dispInit(o) ) return failure();
@@ -149,7 +149,7 @@ bool GN::gfx::BasicRendererX11::init( const RendererOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRendererX11::quit()
+void GN::gfx::BasicGpuX11::quit()
 {
     GN_GUARD;
 
@@ -163,26 +163,26 @@ void GN::gfx::BasicRendererX11::quit()
 }
 
 // *****************************************************************************
-// from Renderer
+// from Gpu
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRendererX11::processRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::BasicGpuX11::processRenderWindowMessages( bool blockWhileMinimized )
 {
     GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************
-// from BasicRenderer
+// from BasicGpu
 // ****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
 void
-GN::gfx::BasicRendererX11::handleRenderWindowSizeMove()
+GN::gfx::BasicGpuX11::handleRenderWindowSizeMove()
 {
     mWindow.handleSizeMove();
 }
@@ -194,7 +194,7 @@ GN::gfx::BasicRendererX11::handleRenderWindowSizeMove()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::BasicRendererX11::dispInit( const RendererOptions & ro )
+bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
 {
     // determine display
     Display * disp;
@@ -266,7 +266,7 @@ bool GN::gfx::BasicRendererX11::dispInit( const RendererOptions & ro )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::BasicRendererX11::dispQuit()
+void GN::gfx::BasicGpuX11::dispQuit()
 {
     mWindow.quit();
 

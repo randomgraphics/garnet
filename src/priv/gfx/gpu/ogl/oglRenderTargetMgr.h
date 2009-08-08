@@ -6,11 +6,11 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.1.11)
 // *****************************************************************************
 
-#include "../common/basicRenderer.h"
+#include "../common/basicGpu.h"
 
 namespace GN { namespace gfx
 {
-    class OGLRenderer;
+    class OGLGpu;
 
     ///
     /// Basic render target manager
@@ -19,13 +19,13 @@ namespace GN { namespace gfx
     {
     protected:
 
-        OGLRenderer & mRenderer; ///< reference to renderer instance;
+        OGLGpu & mGpu; ///< reference to GPU instance;
         Vector2<UInt32> mRenderTargetSize;  ///< render target size
 
         ///
         /// protected ctor.
         ///
-        OGLBasicRTMgr( OGLRenderer & r ) : mRenderer( r ) {}
+        OGLBasicRTMgr( OGLGpu & r ) : mGpu( r ) {}
 
     public:
 
@@ -65,7 +65,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLRTMgrCopyFrame( OGLRenderer & r ) : OGLBasicRTMgr(r) { clear(); }
+        OGLRTMgrCopyFrame( OGLGpu & r ) : OGLBasicRTMgr(r) { clear(); }
         virtual ~OGLRTMgrCopyFrame() { quit(); }
         //@}
 
@@ -102,7 +102,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLRTMgrFBO( OGLRenderer & r ) : OGLBasicRTMgr(r) { clear(); }
+        OGLRTMgrFBO( OGLGpu & r ) : OGLBasicRTMgr(r) { clear(); }
         virtual ~OGLRTMgrFBO() { quit(); }
         //@}
 

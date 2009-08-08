@@ -1,5 +1,5 @@
-GET_RENDERER_OPTIONS            ///< get renderer options
-GET_DISP_DESC                   ///< get display descriptor
+GET_GPU_OPTIONS            ///< get GPU options
+GET_DISP_DESC              ///< get display descriptor
 GET_D3D_DEVICE
 GET_OGL_RC
 GET_CAPS
