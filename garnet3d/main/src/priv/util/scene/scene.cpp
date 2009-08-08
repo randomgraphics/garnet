@@ -129,7 +129,7 @@ GN::scene::GeometryNode::~GeometryNode()
 ///
 /// -----------------------------------------------------------------------------
 void
-GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, const gfx::Mesh * mesh, const gfx::MeshSubset * subset )
+GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset )
 {
     if( NULL == inputEffect || NULL == mesh )
     {

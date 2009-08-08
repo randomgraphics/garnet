@@ -3,7 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.Mesh");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.GpuMesh");
 
 struct VertexFormatProperties
 {
@@ -47,18 +47,18 @@ struct VertexFormatProperties
 // -----------------------------------------------------------------------------
 
 // *****************************************************************************
-// Mesh class
+// GpuMesh class
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::Mesh::init( const MeshDesc & desc )
+bool GN::gfx::GpuMesh::init( const GpuMeshDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::Mesh, () );
+    GN_STDCLASS_INIT( GN::gfx::GpuMesh, () );
 
     // analyze vertex format
     VertexFormatProperties vfp;
@@ -124,7 +124,7 @@ bool GN::gfx::Mesh::init( const MeshDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Mesh::quit()
+void GN::gfx::GpuMesh::quit()
 {
     GN_GUARD;
 
@@ -145,7 +145,7 @@ void GN::gfx::Mesh::quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset ) const
+GN::gfx::GpuMesh::applyToDrawable( Drawable & drawable, const GpuMeshSubset * subset ) const
 {
     // vertex format
     drawable.rc.vtxfmt = mDesc.vtxfmt;
@@ -162,7 +162,7 @@ GN::gfx::Mesh::applyToDrawable( Drawable & drawable, const MeshSubset * subset )
     // index buffers
     drawable.rc.idxbuf = mIdxBuf.gpudata;
 
-    MeshSubset fullmesh;
+    GpuMeshSubset fullmesh;
     if( NULL == subset )
     {
         fullmesh.startvtx = 0;

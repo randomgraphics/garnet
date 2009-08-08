@@ -6,7 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "../rndrpch.h"
+#include "../gpupch.h"
 
 #if GN_BUILD_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"

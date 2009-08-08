@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
 struct MeshContainer
 {
-    DynaArray<Mesh*> meshes;
+    DynaArray<GpuMesh*> meshes;
 
     ~MeshContainer()
     {
@@ -37,7 +37,7 @@ struct EffectType
     };
 };
 
-static bool sHasSemantic( const Mesh & m, const char * binding, size_t index )
+static bool sHasSemantic( const GpuMesh & m, const char * binding, size_t index )
 {
     const VertexFormat & vf = m.getDesc().vtxfmt;
 
@@ -53,23 +53,23 @@ static bool sHasSemantic( const Mesh & m, const char * binding, size_t index )
     return false;
 }
 
-static bool sHasPosition( const Mesh & m )
+static bool sHasPosition( const GpuMesh & m )
 {
     return sHasSemantic( m, "position", 0 )
         || sHasSemantic( m, "pos", 0 );
 }
 
-static bool sHasNormal( const Mesh & m )
+static bool sHasNormal( const GpuMesh & m )
 {
     return sHasSemantic( m, "normal", 0 );
 }
 
-static bool sHasTex0( const Mesh & m )
+static bool sHasTex0( const GpuMesh & m )
 {
     return sHasSemantic( m, "texcoord", 0 );
 }
 
-static bool sHasTangent( const Mesh & m )
+static bool sHasTangent( const GpuMesh & m )
 {
     return sHasSemantic( m, "tangent", 0 );
 }
@@ -77,7 +77,7 @@ static bool sHasTangent( const Mesh & m )
 ///
 /// Determine the best effect that can show the mesh
 ///
-static EffectType::ENUM sDetermineBestEffect( const Mesh & m )
+static EffectType::ENUM sDetermineBestEffect( const GpuMesh & m )
 {
     // position is required
     if( !sHasPosition( m ) )
@@ -164,7 +164,7 @@ GN_CASSERT( 0x14 == sizeof(XPRIBufDesc) );
 
 struct XPRScene
 {
-    DynaArray<gfx::MeshDesc> meshes;
+    DynaArray<gfx::GpuMeshDesc> meshes;
     DynaArray<XPRTex2DDesc*> texDescs;
     DynaArray<XPRVBufDesc*>  vbDescs;
     DynaArray<XPRIBufDesc*>  ibDescs;
@@ -282,7 +282,7 @@ loadGeometryFromXpr( Scene & sc, File & file )
     MeshContainer mc;
     for( size_t i = 0; i < xpr.meshes.size(); ++i )
     {
-        AutoObjPtr<Mesh> m( new Mesh(sc.getGpu()) );
+        AutoObjPtr<GpuMesh> m( new GpuMesh(sc.getGpu()) );
         if( !m || !m->init(xpr.meshes[i]) ) return false;
         mc.meshes.append( m );
         m.detach();
@@ -318,7 +318,7 @@ loadGeometryFromAse( Scene & sc, File & file )
         GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList );
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
-            AutoObjPtr<Mesh> m( new Mesh(sc.getGpu()) );
+            AutoObjPtr<GpuMesh> m( new GpuMesh(sc.getGpu()) );
             if( !m || !m->init(ase.meshes[i]) ) return false;
             mc.meshes.append( m );
             m.detach();
@@ -339,7 +339,7 @@ loadGeometryFromAse( Scene & sc, File & file )
     {
         const AseMeshSubset & s = ase.subsets[i];
 
-        Mesh * m = mc.meshes[s.meshid];
+        GpuMesh * m = mc.meshes[s.meshid];
 
         // determine effect
         EffectType::ENUM et = sDetermineBestEffect( *m );

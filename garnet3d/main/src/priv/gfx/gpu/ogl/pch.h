@@ -6,7 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "../rndrpch.h"
+#include "../gpupch.h"
 
 #if GN_MSWIN && !GN_XENON
 #ifndef NOMINMAX

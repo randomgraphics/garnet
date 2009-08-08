@@ -11,7 +11,7 @@
 #include "garnet/gfx/primitive.h"
 #include "garnet/gfx/surface.h"
 #include "garnet/gfx/shader.h"
-#include "garnet/gfx/renderer.h"
+#include "garnet/gfx/gpu.h"
 
 // *****************************************************************************
 //                                     EOF

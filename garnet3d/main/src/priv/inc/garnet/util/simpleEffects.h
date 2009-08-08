@@ -49,7 +49,7 @@ namespace GN { namespace util
         gfx::Effect * getEffect() const { return mEffect; }
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
         void setColor( const Vector4f & ); ///< set wireframe color, default is (1,1,1,1)
-        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
+        void setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
         void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
         void draw();
         //@}
@@ -116,7 +116,7 @@ namespace GN { namespace util
         void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
         void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
         void setAlbedoTexture( gfx::Texture * ); ///< set to NULL to use pure white texture. Default is NULL.
-        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
+        void setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset = NULL ); ///< mesh should have position, normal and texcoord
         void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
         void draw();
         //@}
@@ -192,7 +192,7 @@ namespace GN { namespace util
         void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
         void setAlbedoTexture( gfx::Texture * ); ///< set to NULL to use pure white texture. Default is NULL.
         void setNormalTexture( gfx::Texture * ); ///< set to NULL to use flat normal texture. Defau is NULL.
-        void setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset = NULL ); ///< mesh should have position, normal, tangent and texcoord
+        void setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset = NULL ); ///< mesh should have position, normal, tangent and texcoord
         void setRenderTarget( const gfx::RenderTargetTexture * color, const gfx::RenderTargetTexture * depth ); ///< set both color and depth to NULL to render to back buffer, which is the default behavior.
         void draw();
         //@}

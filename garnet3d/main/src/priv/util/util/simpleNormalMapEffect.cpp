@@ -266,7 +266,7 @@ void GN::util::SimpleNormalMapEffect::setNormalTexture( gfx::Texture * tex )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleNormalMapEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
+void GN::util::SimpleNormalMapEffect::setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset )
 {
     mesh.applyToDrawable( mDrawable, subset );
 }

@@ -1482,7 +1482,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
     dst.meshes.resize( dst.meshes.size() + 1 );
 
-    gfx::MeshDesc & dstmesh = dst.meshes.back();
+    gfx::GpuMeshDesc & dstmesh = dst.meshes.back();
 
     // setup constant mesh properties
     dstmesh.vtxfmt.numElements = 3;

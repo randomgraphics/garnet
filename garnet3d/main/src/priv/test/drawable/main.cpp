@@ -56,7 +56,7 @@ bool init( Gpu & gpu )
         0,1,0,1,
     };
     UInt16 indices[] = { 0, 1, 3, 2 };
-    MeshDesc md;
+    GpuMeshDesc md;
     md.vtxfmt.numElements = 1;
     strcpy_s( md.vtxfmt.elements[0].binding, "position" );
     md.vtxfmt.elements[0].bindingIndex = 0;
@@ -68,7 +68,7 @@ bool init( Gpu & gpu )
     md.numidx = 3;
     md.vertices[0] = vertices;
     md.indices = indices;
-    Mesh mesh(gpu);
+    GpuMesh mesh(gpu);
     if( !mesh.init( md ) ) return false;
 
     // create drawable 1

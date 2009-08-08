@@ -9,26 +9,26 @@ class LineRendererTest : public CxxTest::TestSuite
     public:
 
         GN::AutoObjPtr<GN::win::Window> mWindow;
-        GN::gfx::Gpu             * mRndr;
-        GN::gfx::LineRenderer         * mLineRndr;
+        GN::gfx::Gpu                  * mGpu;
+        GN::gfx::LineRenderer         * mLine;
 
-        LineRendererInitiator() : mRndr(NULL), mLineRndr(NULL)
+        LineRendererInitiator() : mGpu(NULL), mLine(NULL)
         {
             GN::gfx::GpuOptions ro;
-            mRndr = GN::gfx::createSingleThreadGpu( ro );
-            if( NULL == mRndr ) return;
+            mGpu = GN::gfx::createSingleThreadGpu( ro );
+            if( NULL == mGpu ) return;
 
-            mLineRndr = new GN::gfx::LineRenderer( *mRndr );
-            if( !mLineRndr->init() ) delete mLineRndr, mLineRndr = NULL;
+            mLine = new GN::gfx::LineRenderer( *mGpu );
+            if( !mLine->init() ) delete mLine, mLine = NULL;
         }
 
         ~LineRendererInitiator()
         {
-            if( mLineRndr ) delete mLineRndr;
-            if( mRndr ) GN::gfx::deleteGpu( mRndr );
+            if( mLine ) delete mLine;
+            if( mGpu ) GN::gfx::deleteGpu( mGpu );
         }
 
-        operator bool() const { return NULL != mLineRndr; }
+        operator bool() const { return NULL != mLine; }
     };
 
 public:
@@ -40,6 +40,6 @@ public:
 
         GN::DynaArray<GN::Vector3f> positions( 513 );
 
-        l.mLineRndr->drawLines( positions.cptr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
+        l.mLine->drawLines( positions.cptr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
     }
 };

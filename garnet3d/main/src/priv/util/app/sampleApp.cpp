@@ -301,7 +301,7 @@ void GN::app::SampleApp::printStandardCommandLineOptions()
         "\n"
         "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
         "\n"
-        "   -rapi [auto|ogl|d3d10]  Choose rendering API. Default is AUTO.\n"
+        "   -gapi [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
         "\n"
         "   -ww [num]               Windows width. Default is 640.\n"
         "\n"
@@ -433,7 +433,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseBool( mInitParam.useMultithreadGpu, a, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "rapi", a+1 ) )
+            else if( 0 == strCmpI( "gapi", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;

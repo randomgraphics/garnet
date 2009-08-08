@@ -2,7 +2,7 @@
 #define __GN_GFX_MESH_H__
 // *****************************************************************************
 /// \file
-/// \brief   Graphics mesh class
+/// \brief   GPU mesh class
 /// \author  chenli@@REDMOND (2009.1.14)
 // *****************************************************************************
 
@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// mesh descriptor
     ///
-    struct MeshDesc
+    struct GpuMeshDesc
     {
         VertexFormat  vtxfmt; ///< vertex format
         PrimitiveType prim;   ///< primitive type
@@ -25,14 +25,14 @@ namespace GN { namespace gfx
         const void *  indices; // Null means index data undefined.
 
         /// default ctor
-        MeshDesc()
+        GpuMeshDesc()
         {
             memset( this, 0, sizeof(*this) );
         };
     };
 
-    /// define a subset of the mesh
-    struct MeshSubset
+    /// define a subset of the GPU mesh
+    struct GpuMeshSubset
     {
         size_t startvtx;
         size_t numvtx;
@@ -43,9 +43,9 @@ namespace GN { namespace gfx
     ///
     /// Graphics mesh class
     ///
-    class Mesh : public StdClass, public NoCopy
+    class GpuMesh : public StdClass, public NoCopy
     {
-        GN_DECLARE_STDCLASS( Mesh, StdClass );
+        GN_DECLARE_STDCLASS( GpuMesh, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -53,8 +53,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Mesh( Gpu & r ) : mGpu(r) { clear(); }
-        virtual ~Mesh() { quit(); }
+        GpuMesh( Gpu & r ) : mGpu(r) { clear(); }
+        virtual ~GpuMesh() { quit(); }
         //@}
 
         // ********************************
@@ -63,7 +63,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const MeshDesc & desc );
+        bool init( const GpuMeshDesc & desc );
         void quit();
     private:
         void clear() {}
@@ -75,12 +75,12 @@ namespace GN { namespace gfx
     public:
 
         /// get mesh descriptor
-        const MeshDesc & getDesc() const { return mDesc; }
+        const GpuMeshDesc & getDesc() const { return mDesc; }
 
         ///
         /// apply mesh to drawable
         ///
-        void applyToDrawable( Drawable & drawable, const MeshSubset * subset = NULL ) const;
+        void applyToDrawable( Drawable & drawable, const GpuMeshSubset * subset = NULL ) const;
 
         // ********************************
         // private variables
@@ -99,7 +99,7 @@ namespace GN { namespace gfx
         };
 
         Gpu   & mGpu;
-        MeshDesc     mDesc;
+        GpuMeshDesc     mDesc;
         VertexBuffer mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
         IndexBuffer  mIdxBuf;
 
