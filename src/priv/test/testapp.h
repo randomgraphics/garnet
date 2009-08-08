@@ -99,7 +99,7 @@ public:
             "\n"
             "   -mt   [on|off]          Use multithread renderer. Default is on.\n"
             "\n"
-            "   -rapi [auto|ogl|d3d10]  Choose rendering API. Default is AUTO.\n"
+            "   -gapi [auto|ogl|d3d10]  Choose GPU API. Default is AUTO.\n"
             );
     }
 
@@ -240,7 +240,7 @@ private:
                     if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == strCmpI( "rapi", a+1 ) )
+                else if( 0 == strCmpI( "gapi", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;

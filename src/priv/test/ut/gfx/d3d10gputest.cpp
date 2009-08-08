@@ -1,4 +1,4 @@
-#include "rndrtest.h"
+#include "gputest.h"
 
 class D3D10GpuTest : public CxxTest::TestSuite, public GpuTest
 {

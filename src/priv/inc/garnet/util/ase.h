@@ -55,7 +55,7 @@ namespace GN { namespace util
     ///
     /// ase mesh subset
     ///
-    struct AseMeshSubset : public gfx::MeshSubset
+    struct AseMeshSubset : public gfx::GpuMeshSubset
     {
         size_t matid;  ///< index into AseScene::materials array
         size_t meshid; ///< index into AseScene::meshes array
@@ -67,7 +67,7 @@ namespace GN { namespace util
     struct AseScene : public NoCopy
     {
         DynaArray<AseMaterial>       materials;
-        DynaArray<gfx::MeshDesc>     meshes;
+        DynaArray<gfx::GpuMeshDesc>     meshes;
         DynaArray<AseMeshSubset>     subsets;
         DynaArray<void*>             meshdata; ///< store all vertex and index buffers
         Boxf                         bbox;     ///< bounding box of the whole scene

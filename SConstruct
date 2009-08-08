@@ -883,7 +883,7 @@ TARGET_tests = [
     'GNtestOGL',
     'GNtestPcre',
     'GNtestSprite',
-    'GNtestRndr',
+    'GNtestGpu',
     'GNtestXenonNegativeZRange',
     'GNtestXenonStackTexture',
     'GNtestXenonVertexEndian',

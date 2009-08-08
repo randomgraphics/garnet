@@ -140,7 +140,7 @@ void GN::util::SimpleWireframeEffect::setColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
+void GN::util::SimpleWireframeEffect::setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset )
 {
     mesh.applyToDrawable( mDrawable, subset );
 }

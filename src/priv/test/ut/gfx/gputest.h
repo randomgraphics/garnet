@@ -123,22 +123,22 @@ class GpuTest
 
     class AutoGpu
     {
-        GN::gfx::Gpu * mRndr;
+        GN::gfx::Gpu * mGpu;
 
     public:
 
-        AutoGpu( GN::gfx::Gpu * r ) : mRndr( r )
+        AutoGpu( GN::gfx::Gpu * r ) : mGpu( r )
         {
         }
 
         ~AutoGpu()
         {
-            if( mRndr ) GN::gfx::deleteGpu( mRndr );
+            if( mGpu ) GN::gfx::deleteGpu( mGpu );
         }
 
-        operator GN::gfx::Gpu *() const { return mRndr; }
+        operator GN::gfx::Gpu *() const { return mGpu; }
 
-        GN::gfx::Gpu *operator->() const { return mRndr; }
+        GN::gfx::Gpu *operator->() const { return mGpu; }
     };
 
     GN::gfx::GpuAPI mAPI;

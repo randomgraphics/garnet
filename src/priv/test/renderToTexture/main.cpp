@@ -76,14 +76,14 @@ public:
             0, 0, // tangent
             0, 0, // binormal
             indices, 0 );
-        MeshDesc md;
+        GpuMeshDesc md;
         md.vtxfmt      = VertexFormat::XYZ_NORM_UV();
         md.prim        = PrimitiveType::TRIANGLE_LIST;
         md.numvtx      = 24;
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        Mesh boxmesh( gpu );
+        GpuMesh boxmesh( gpu );
         if( !boxmesh.init( md ) ) return false;
 
         // setup transformation matrices

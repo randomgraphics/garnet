@@ -1,4 +1,4 @@
-#include "rndrtest.h"
+#include "gputest.h"
 
 class OGLGpuTest : public CxxTest::TestSuite, public GpuTest
 {

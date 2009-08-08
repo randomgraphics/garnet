@@ -69,9 +69,9 @@ void onAxisMove( Axis a, int d )
     }
 }
 
-Mesh * createMesh()
+GpuMesh * createMesh()
 {
-    MeshDesc md;
+    GpuMeshDesc md;
 
     md.vtxfmt.numElements = 7;
     md.vtxfmt.elements[0].stream = 0;
@@ -159,7 +159,7 @@ Mesh * createMesh()
     md.indices = indices;
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
-    AutoObjPtr<Mesh> mesh( new Mesh(*gpu) );
+    AutoObjPtr<GpuMesh> mesh( new GpuMesh(*gpu) );
     if( !mesh || !mesh->init(md) ) return false;
 
     return mesh.detach();
@@ -333,7 +333,7 @@ bool init()
 {
     gpu->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
 
-    AutoObjPtr<Mesh>   mesh;
+    AutoObjPtr<GpuMesh>   mesh;
     AutoObjPtr<Effect> effect;
 
     // create scene

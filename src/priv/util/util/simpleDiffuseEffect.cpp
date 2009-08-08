@@ -240,7 +240,7 @@ void GN::util::SimpleDiffuseEffect::setAlbedoTexture( gfx::Texture * tex )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleDiffuseEffect::setMesh( const gfx::Mesh & mesh, const gfx::MeshSubset * subset )
+void GN::util::SimpleDiffuseEffect::setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset )
 {
     mesh.applyToDrawable( mDrawable, subset );
 }

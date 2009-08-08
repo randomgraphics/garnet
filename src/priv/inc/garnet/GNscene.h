@@ -163,7 +163,7 @@ namespace GN
 
             /// Add new geometry block to the node.
             /// Note that caller is free to destroy input parameters after the function returns.
-            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::Mesh * mesh, const gfx::MeshSubset * subset = NULL );
+            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset = NULL );
 
             /// get number of geometry blocks
             virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }

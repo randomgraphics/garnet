@@ -28,17 +28,17 @@ namespace GN { namespace scene
             std::map<StrA,size_t> uniformBindings; // bind uniform (value) to effect parameter (key)
         };
 
-        struct MeshDesc
+        struct GpuMeshDesc
         {
             StrA          filename; ///< if empty, then use the descriptor
-            gfx::MeshDesc desc;
+            gfx::GpuMeshDesc desc;
         };
 
         EffectDesc                 effect;
         std::map<StrA,TextureDesc> textures;
         std::map<StrA,UniformDesc> uniforms;
 
-        MeshDesc                   mesh;
+        GpuMeshDesc                   mesh;
         size_t                     startvtx;
         size_t                     numvtx;
         size_t                     startidx;
@@ -128,7 +128,7 @@ namespace GN { namespace scene
         AutoRef<gfx::Texture> & handle2Texture( GraphicsResourceHandle );
         AutoRef<gfx::Uniform> & handle2Uniform( GraphicsResourceHandle );
         gfx::Effect           & handle2Effect( GraphicsResourceHandle );
-        gfx::Mesh             & handle2Mesh( GraphicsResourceHandle );
+        gfx::GpuMesh          & handle2Mesh( GraphicsResourceHandle );
         gfx::Model            & handle2Model( GraphicsResourceHandle );
         //@}
     };

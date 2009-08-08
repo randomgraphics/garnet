@@ -4,7 +4,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "../rndrpch.h"
+#include "../gpupch.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX

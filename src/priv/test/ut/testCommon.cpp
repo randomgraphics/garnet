@@ -1,7 +1,5 @@
 #include "garnet/GNbase.h"
 
-bool gSkipRndr = false;
-
 static void sPrintUsage()
 {
     printf(
