@@ -10,7 +10,7 @@ sources = [
     'renderWindowX11.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-target = GN.newTarget( 'stlib', 'GNrndrCommon', [cluster] )
+target = GN.newTarget( 'stlib', 'GNgpuCommon', [cluster] )
 if GN.conf['has_cg'] :
     cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1'] )
     target.externalDependencies += ['cg']
