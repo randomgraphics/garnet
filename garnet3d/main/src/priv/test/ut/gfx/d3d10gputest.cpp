@@ -9,7 +9,7 @@ public:
 
     void testExternalWindow()
     {
-        #ifdef GN_BUILD_GPU_API_HAS_D3D10
+        #if GN_BUILD_GPU_API_HAS_D3D10
         externalWindow();
         #endif
     }
