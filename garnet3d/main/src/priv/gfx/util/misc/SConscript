@@ -3,7 +3,7 @@ sources = [
 	'drawable.cpp',
 	'effect.cpp',
 	'line.cpp',
-	'mesh.cpp',
+	'gpumesh.cpp',
 	'misc.cpp',
 	'sprite.cpp',
 ]
