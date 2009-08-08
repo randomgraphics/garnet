@@ -9,7 +9,7 @@ public:
 
     void testExternalWindow()
     {
-        #ifdef GN_BUILD_GPU_API_HAS_OGL
+        #if GN_BUILD_GPU_API_HAS_OGL
         externalWindow();
         #endif
     }
