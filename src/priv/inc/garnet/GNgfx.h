@@ -33,7 +33,7 @@ namespace GN
 // utils
 #include "gfx/drawable.h"
 #include "gfx/effect.h"
-#include "gfx/mesh.h"
+#include "gfx/gpumesh.h"
 #include "gfx/sprite.h"
 #include "gfx/line.h"
 #include "gfx/misc.h"
