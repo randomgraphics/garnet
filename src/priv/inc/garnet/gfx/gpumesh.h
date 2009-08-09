@@ -98,8 +98,8 @@ namespace GN { namespace gfx
             AutoRef<IdxBuf>  gpudata;
         };
 
-        Gpu   & mGpu;
-        GpuMeshDesc     mDesc;
+        Gpu        & mGpu;
+        GpuMeshDesc  mDesc;
         VertexBuffer mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
         IndexBuffer  mIdxBuf;
 

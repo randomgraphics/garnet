@@ -7,7 +7,7 @@ namespace GN
 {
     struct SpatialInfo
     {
-        Entity * parentEntity;
+        Entity * parent;
     };
 
     struct VisualInfo

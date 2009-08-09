@@ -8,54 +8,126 @@
 
 namespace GN { namespace scene
 {
-    struct ModelDesc
+    ///
+    /// GPU resource type
+    ///
+    struct GpuResourceType
     {
-        struct TextureDesc
+        enum ENUM
         {
-            StrA             filename; /// if empty, then use the descriptor
-            gfx::TextureDesc desc;
+            TEXTURE,
+            UNIFORM,
+            EFFECT,
+            MESH,
+            MODEL,
+            NUM_TYPES,
         };
-
-        struct UniformDesc
-        {
-            DynaArray<UInt8> defaultValue; ///< if empty, then no default value.
-        };
-
-        struct EffectDesc
-        {
-            StrA                  filename;        // effect file name
-            std::map<StrA,size_t> textureBindings; // bind texture (value) to effect parameter (key)
-            std::map<StrA,size_t> uniformBindings; // bind uniform (value) to effect parameter (key)
-        };
-
-        struct GpuMeshDesc
-        {
-            StrA          filename; ///< if empty, then use the descriptor
-            gfx::GpuMeshDesc desc;
-        };
-
-        EffectDesc                 effect;
-        std::map<StrA,TextureDesc> textures;
-        std::map<StrA,UniformDesc> uniforms;
-
-        GpuMeshDesc                   mesh;
-        size_t                     startvtx;
-        size_t                     numvtx;
-        size_t                     startidx;
-        size_t                     numidx;
     };
 
     ///
-    /// graphice resource handle type
+    /// GPU resource handle type
     ///
-    typedef UInt32 GraphicsResourceHandle;
+    UInt32 GpuResourceHandle;
 
-    class GraphicsResourceDatabase;
+    class GpuResourceDatabase;
+    class GpuResource;
+    class TextureResource;
+    class UniformResource;
+    class EffectResource;
+    class GpuMeshResource;
+
+    class GpuResource : public RefCounter
+    {
+    public:
+
+        GpuResourceHandle handle() const;
+        void addReferencer( GpuResource & referencer ) const;
+        void removeReferencer( GpuResource & referencer ) const;
+
+    protected:
+
+        void NotifyAllReferencers( int notification );
+
+        virtual void handlNodificationFromReferencee(
+            GpuResource & referencee,
+            int notification ) = 0;
+
+    private:
+
+        ///< Other GPU resources that are referencing this resource.
+        mutable DynaArray<WeakRef<GpuResource> > mReferencers;
+    };
+
+    class TextureResource : public GpuResource
+    {
+    };
+
+    class UniformResource : public GpuResource
+    {
+    };
+
+    class EffectResource : public GpuResource
+    {
+    };
+
+    class GpuMeshResource : public GpuResource
+    {
+    };
+
+    struct ModelResourceDesc
+    {
+        struct ModelTextureDesc
+        {
+            StrA             resourceName; /// if empty, then use the descriptor
+            gfx::TextureDesc desc;
+        };
+
+        struct ModelUniformDesc
+        {
+            StrA             resourceName; ///< if empty, then create a new uniform
+            size_t           size;
+            DynaArray<UInt8> defaultValue; ///< if empty, then no default value.
+        };
+
+        struct ModelEffectDesc
+        {
+            StrA                resourceName;    // effect file name
+            std::map<StrA,StrA> textureBindings; // bind texture (value) to effect parameter (key)
+            std::map<StrA,StrA> uniformBindings; // bind uniform (value) to effect parameter (key)
+        };
+
+        struct ModelMeshDesc
+        {
+            StrA             resourceName; ///< if empty, then use the descriptor
+            gfx::GpuMeshDesc desc;
+        };
+
+        struct ModelSubsetDesc
+        {
+            StrA   effect;
+            StrA   mesh;
+
+            // note: (0,0,0,0) means full mesh
+            size_t startvtx;
+            size_t numvtx;
+            size_t startidx;
+            size_t numidx;
+        };
+
+        std::map<StrA,ModelEffectDesc>  effects;
+        std::map<StrA,ModelMeshDesc>    meshes;
+        std::map<StrA,ModelTextureDesc> textures;
+        std::map<StrA,ModelUniformDesc> uniforms;
+
+        DynaArray<ModelSubsetDesc>      subsets;
+    };
 
     ///
-    /// Model, a glue class for effect, mesh and textures.
+    /// Model, a glue class for various GPU resources, such as effect, mesh and textures.
     ///
-    class Model : public StdClass
+    /// The top level class used for rendering: myModel->render(...);
+    ///
+    class ModelResource : public GpuResource, public StdClass
     {
         GN_DECLARE_STDCLASS( Model, StdClass );
 
@@ -65,7 +137,7 @@ namespace GN { namespace scene
 
         //@{
     protected:
-        Model( GraphicsResourceDatabase & gdb ) : mDatabase(gdb) { clear(); }
+        Model( GpuResourceDatabase & gdb ) : mDatabase(gdb) { clear(); }
         virtual ~Model() { quit(); }
         //@}
 
@@ -75,27 +147,49 @@ namespace GN { namespace scene
 
         //@{
     public:
-        bool init( const ModelDesc & desc );
+        bool init( const ModelResourceDesc & desc );
         void quit();
     private:
         void clear() { mDatabase = NULL; }
         //@}
 
         // ********************************
+        // public properties
+        // ********************************
+    public:
+
+        template<typename T>
+        class ParameterCollection
+        {
+        };
+
+        ParameterCollection<TextureResource> textures;
+        ParameterCollection<UniformResource> uniforms;
+
+        // ********************************
         // public functions
         // ********************************
     public:
+
+        void clone();
+
+        void render();
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        GraphicsResourceDatabase        & mDatabase;
-        ModelDesc                         mDesc;
-        GraphicsResourceHandle            mEffect;
-        DynaArray<GraphicsResourceHandle> mTextures;
-        DynaArray<GraphicsResourceHandle> mUniforms;
+        struct Subset
+        {
+        };
+
+        GpuResourceDatabase        & mDatabase;
+        DynaArray<GpuResourceHandle> mEffect;
+        DynaArray<GpuResourceHandle> mMeshes;
+        DynaArray<GpuResourceHandle> mTextures;
+        DynaArray<GpuResourceHandle> mUniforms;
+        DynaArray<Subset>            mSubsets;
 
         // ********************************
         // private functions
@@ -103,33 +197,37 @@ namespace GN { namespace scene
     private:
     };
 
+    struct GpuResourceLoader : public NoCopy
+    {
+        virtual GpuResourceHandle load( const StrA & name ) = 0;
+    };
+
+    typedef GpuResourceLoader * (*GpuResourceLoaderFactory)();
+
     ///
-    /// Map name/handle to graphics resource instance.
+    /// Map name/handle to GPU resource instance.
     ///
-    class GraphicsResourceDatabase
+    class GpuResourceDatabase
     {
     public:
 
         //@{
-        GraphicsResourceDatabase( gfx::Renderer & r );
-        virtual ~GraphicsResourceDatabase();
+        GpuResourceDatabase( gfx::GPU & );
+        virtual ~GpuResourceDatabase();
         //@}
 
         //@{
-        GraphicsResourceHandle  openTextureHandle( const StrA & name );
-        GraphicsResourceHandle  openUniformHandle( const StrA & name );
-        GraphicsResourceHandle  openEffectHandle( const StrA & name );
-        GraphicsResourceHandle  openMeshHandle( const StrA & name );
-        GraphicsResourceHandle  openModelHandle( const StrA & name );
+        void prependResourceLoader( const StrA & loaderName, GpuResourceLoaderFactory );
+        void appendResourceLoader( const StrA & loaderName, GpuResourceLoaderFactory );
+        void removeResourceLoader( const StrA & loaderName );
+        void removeAllResourceLoaders();
+        //@}
 
-        void                    closeHandle( GraphicsResourceHandle );
-        void                    closeAllHandles();
-
-        AutoRef<gfx::Texture> & handle2Texture( GraphicsResourceHandle );
-        AutoRef<gfx::Uniform> & handle2Uniform( GraphicsResourceHandle );
-        gfx::Effect           & handle2Effect( GraphicsResourceHandle );
-        gfx::GpuMesh          & handle2Mesh( GraphicsResourceHandle );
-        gfx::Model            & handle2Model( GraphicsResourceHandle );
+        //@{
+        GpuResourceHandle openResourceHandle( GpuResourceType type, const StrA & name );
+        void              closeResourceHandle( GpuResourceHandle );
+        void              closeAllResourceHandles();
+        GpuResource     & handle2Resource( GpuResourceHandle );
         //@}
     };
 }}

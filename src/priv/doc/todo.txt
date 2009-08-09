@@ -4,25 +4,34 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - experiment with scene framework that supports ultra large world
-    - spatial management
-    - resource streaming
-  - refine mesh concept: could mesh reference effect directly? So that
-    we don't need another class to bind mesh and effect together.
+  - scene framework refactor:
+    - separate spatial and rendering management
+    - experiment with scene framework that supports ultra large world
+      - spatial management
+      - resource streaming
+  - a coordinate basis renderer (like Maya)
+  - skin mesh test case: porting DXSDK sample.
 
 - p1
   - renderer unit test framework
   - Enable ETW in profiler
   - D3D11 renderer
-  - GFX resouce aliasing
+  - GPU resouce aliasing
 
 - p2
+  - mesh classes
+    - refine GPU mesh concept:
+      - could mesh reference effect directly?
+      - could mesh be a direct parameter of GPU, like texture?
+        - No. See resolved issues for details.
+    - a cpu mesh that could be used to convert mesh format
+    - a half-edge mesh for more complex mesh algorithm
   - PCXS2 GPU plugin:
     - move operations to GPU as much as possible
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
       - implement a CPU based prototype first.
-  - effect and mesh loader (from XML)
+  - effect and mesh loader/exporter (from/to XML)
   - FBX loader
   - 3DS loader
   - DDS viewer plugin
@@ -31,7 +40,6 @@ TODO
   - sigslot class:
     - allow any type of functor
     - check behavior of redundant slot functors.
-  - skin mesh test case: porting DXSDK sample.
   - memory-mapped IO.
 
 - p3
@@ -59,6 +67,9 @@ TODO
 ISSUES
 ======
 
+- Could mesh be a first class parameter of GPU, like texture?
+  - RESOLVED: No, since that would make resource aliasing impossible.
+
 - Unified interface for different APIs is too difficult, and maybe pointless.
   How about a higher level abstraction: material/effect system?
   - RESOLVED: we need both
@@ -83,5 +94,5 @@ ISSUES
 DROPPED TASKS
 =============
 - runtime configuable profilers, like loggers
-  - WHY: rofiler has to be light-weight and fast. Logger style configuration
+  - WHY: profiler has to be light-weight and fast. Logger style configuration
          is too heavy.
