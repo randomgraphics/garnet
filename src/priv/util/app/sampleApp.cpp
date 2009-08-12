@@ -527,6 +527,7 @@ bool GN::app::SampleApp::initGpu()
 
     // connect to renderer signal: post quit event, if render window is closed.
     mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
+    mGpu->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
 
     // create sprite renderer
     mSpriteRenderer = new SpriteRenderer( *mGpu );

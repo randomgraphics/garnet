@@ -55,6 +55,7 @@ namespace GN { namespace app
         virtual void onQuit() = 0;
         virtual void onUpdate() = 0;
         virtual void onRender() = 0;
+        virtual void onRenderWindowResize( HandleType /*window*/, UInt32 /*width*/, UInt32 /*height*/ ) {}
         virtual void onKeyPress( input::KeyEvent );
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}

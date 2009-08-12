@@ -44,8 +44,6 @@ public:
     {
         Gpu & gpu = getGpu();
 
-        gpu.getSignals().rendererWindowSizeMove.connect( this, &MyApp::onRenderWindowResize );
-
         // create scene
         rootScene.attach( createScene( gpu ) );
         if( !rootScene ) return false;

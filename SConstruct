@@ -895,6 +895,7 @@ TARGET_samples = [
     'GNsampleBezier',
     'GNsampleDolphin',
     'GNsampleRenderToCube',
+    'GNsampleRipple',
     'GNsampleShadowMap',
     ]
 
