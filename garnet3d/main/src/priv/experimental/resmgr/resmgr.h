@@ -60,18 +60,22 @@ namespace GN { namespace scene
 
     class TextureResource : public GpuResource
     {
+        gfx::Texture * mTexture;
     };
 
     class UniformResource : public GpuResource
     {
+        gfx::Uniform * mUniform;
     };
 
     class EffectResource : public GpuResource
     {
+        gfx::Effect * mEffect;
     };
 
     class GpuMeshResource : public GpuResource
     {
+        gfx::GpuMesh * mMesh;
     };
 
     struct ModelResourceDesc
