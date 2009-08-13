@@ -24,10 +24,7 @@ namespace GN { namespace scene
         };
     };
 
-    ///
-    /// GPU resource handle type
-    ///
-    UInt32 GpuResourceHandle;
+    typedef UInt32 GpuResourceHandle;
 
     class GpuResourceDatabase;
     class GpuResource;
@@ -36,26 +33,19 @@ namespace GN { namespace scene
     class EffectResource;
     class GpuMeshResource;
 
-    class GpuResource : public RefCounter
+    class GpuResource : public NoCopy
     {
     public:
 
         GpuResourceHandle handle() const;
-        void addReferencer( GpuResource & referencer ) const;
-        void removeReferencer( GpuResource & referencer ) const;
 
-    protected:
-
-        void NotifyAllReferencers( int notification );
-
-        virtual void handlNodificationFromReferencee(
-            GpuResource & referencee,
-            int notification ) = 0;
-
-    private:
-
-        ///< Other GPU resources that are referencing this resource.
-        mutable DynaArray<WeakRef<GpuResource> > mReferencers;
+        /// This event is fired when the underlying GPU resource pointer is changed, like
+        /// reloaded by database, or explicity changed by user.
+        ///
+        /// Note that this event does not care about the content of the resource. If only
+        /// the content of the resource is changed. But the resource pointer remains same,
+        /// then this event won't be fired.
+        Signal1<void, GpuResource&> sigUnderlyingResourcePointerChanged;
     };
 
     class TextureResource : public GpuResource
@@ -188,12 +178,12 @@ namespace GN { namespace scene
         {
         };
 
-        GpuResourceDatabase        & mDatabase;
-        DynaArray<GpuResourceHandle> mEffect;
-        DynaArray<GpuResourceHandle> mMeshes;
-        DynaArray<GpuResourceHandle> mTextures;
-        DynaArray<GpuResourceHandle> mUniforms;
-        DynaArray<Subset>            mSubsets;
+        GpuResourceDatabase                & mDatabase;
+        DynaArray<AutoRef<EffectResource> >  mEffects;
+        DynaArray<AutoRef<GpuMeshResource> > mMeshes;
+        DynaArray<AutoRef<TextureResource> > mTextures;
+        DynaArray<AutoRef<UniformResource> > mUniforms;
+        DynaArray<Subset>                    mSubsets;
 
         // ********************************
         // private functions
@@ -203,7 +193,7 @@ namespace GN { namespace scene
 
     struct GpuResourceLoader : public NoCopy
     {
-        virtual GpuResourceHandle load( const StrA & name ) = 0;
+        virtual AutoRef<GpuResource> load( GpuResourceType type, const StrA & name ) = 0;
     };
 
     typedef GpuResourceLoader * (*GpuResourceLoaderFactory)();
@@ -228,10 +218,10 @@ namespace GN { namespace scene
         //@}
 
         //@{
-        GpuResourceHandle openResourceHandle( GpuResourceType type, const StrA & name );
-        void              closeResourceHandle( GpuResourceHandle );
-        void              closeAllResourceHandles();
-        GpuResource     & handle2Resource( GpuResourceHandle );
+        GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
+        GpuResourceType      getResourceType( GpuResourceHandle );
+        const char *         getResourceName( GpuResourceHandle );
+        AutoRef<GpuResource> getResource( GpuResourceHandle );
         //@}
     };
 }}
