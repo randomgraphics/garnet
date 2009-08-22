@@ -144,9 +144,9 @@ namespace GN
     public :
 
         ///
-        /// Instance of empty reference pointer
+        /// Instance of empty/null reference pointer
         ///
-        static AutoRef<X,MUTEX> EMPTYPTR;
+        static AutoRef<X,MUTEX> NULLREF;
 
         ///
         /// construct from a normal pointer
@@ -353,7 +353,7 @@ namespace GN
         }
     };
 
-    template<typename X,typename M> AutoRef<X,M> AutoRef<X,M>::EMPTYPTR;
+    template<typename X,typename M> AutoRef<X,M> AutoRef<X,M>::NULLREF;
 
     namespace detail
     {
