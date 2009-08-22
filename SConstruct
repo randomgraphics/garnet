@@ -874,21 +874,18 @@ TARGET_tests = [
     'GNtestCegui',
     'GNtestD3D10',
     'GNtestDrawable',
-    'GNtestEngine',
     'GNtestFt2',
-    'GNtestGfx',
-    'GNtestGfx2',
-    'GNtestFont',
-    'GNtestInput',
-    'GNtestOGL',
-    'GNtestPcre',
-    'GNtestSprite',
     'GNtestGpu',
+    'GNtestInput',
+    'GNtestPcre',
+    'GNtestRenderToTexture',
+    'GNtestResourceDB',
+    'GNtestSprite',
+    'GNut',
     'GNtestXenonNegativeZRange',
     'GNtestXenonStackTexture',
     'GNtestXenonVertexEndian',
     'GNtestXml',
-    'GNut',
     ]
 
 TARGET_samples = [
@@ -904,7 +901,6 @@ TARGET_tools = [
     'GNtoolD3D9DumpViewer',
     'GNtoolD3D9Wrapper',
     'GNtoolGPUBenchmark',
-    'GNtoolMeshConverter',
     'GNtoolMeshViewer',
     'GNtoolOGLInfo',
     ]
@@ -1335,7 +1331,7 @@ def HELP_generateAliasList():
  		s += '\n    ' + a[0] + ('%' + str(24-len(a[0])) +'s')%' ' + d
 	return s
 
-HELP_opts = Options()
+HELP_opts = Variables()
 HELP_opts.Add(
 	'trace',
 	'Set trace level (GN_BUILD_TRACE).\n'
@@ -1357,7 +1353,7 @@ HELP_opts.Add(
 	CONF_defaultCmdArgs['cpu'] )
 HELP_opts.Add(
 	'variant',
-	'Specify variant. Could be : one of (%s) or "all". (GN_BUILD_VARIANT)'%CONF_allVariants,
+	'Specify variant. Could be %s or "all". (GN_BUILD_VARIANT)'%CONF_allVariants,
 	CONF_defaultCmdArgs['variant'] )
 HELP_opts.Add(
 	'cg',
@@ -1380,8 +1376,7 @@ Options:%s
 
 Targets:%s
 """ % (
-	HELP_opts.GenerateHelpText( Environment( options = HELP_opts, tools=[] ) ),
-	#HELP_generateTargetList()
+	HELP_opts.GenerateHelpText( Environment( variables = HELP_opts, tools=[] ) ),
 	HELP_generateAliasList()
 	)
 Help( HELP_text )
