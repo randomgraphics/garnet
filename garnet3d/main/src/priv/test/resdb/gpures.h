@@ -23,6 +23,7 @@ namespace GN { namespace gfx
             MESH,
             MODEL,
             NUM_TYPES,
+            INVALID = NUM_TYPES,
         };
 
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuResourceType, ENUM );
@@ -261,11 +262,11 @@ namespace GN { namespace gfx
         {
         };
 
-        DynaArray<AutoRef<EffectResource> >  mEffects;
-        DynaArray<AutoRef<GpuMeshResource> > mMeshes;
-        DynaArray<AutoRef<TextureResource> > mTextures;
-        DynaArray<AutoRef<UniformResource> > mUniforms;
-        DynaArray<Subset>                    mSubsets;
+        DynaArray<GpuResourceHandle> mEffects;
+        DynaArray<GpuResourceHandle> mMeshes;
+        DynaArray<GpuResourceHandle> mTextures;
+        DynaArray<GpuResourceHandle> mUniforms;
+        DynaArray<Subset>            mSubsets;
 
         // ********************************
         // private functions
@@ -273,19 +274,31 @@ namespace GN { namespace gfx
     private:
     };
 
-    struct GpuResourceLoadingParameters
+    struct TextureSubsurfaceData
     {
-        const char * filename;
-        const void * userData;
-        size_t       userDataLength;
+        const void * data;
+        size_t       rowPitch;
+        size_t       slicePitch;
     };
 
-    struct GpuResourceLoader : public NoCopy
+    struct TextureCreationParameters
     {
-        virtual AutoRef<GpuResource> load( GpuResourceType type, const GpuResourceLoadingParameters & parameters ) = 0;
+        TextureDesc             desc;
+        TextureSubsurfaceData * initalData;
     };
 
-    typedef GpuResourceLoader * (*GpuResourceLoaderFactory)();
+    struct UniformCreationParameters
+    {
+        size_t       length;
+        const void * initialData;
+    };
+
+    struct GpuResourceCreationParameters
+    {
+        const char              * filename;
+        TextureCreationParameters tcp;
+        UniformCreationParameters ucp;
+    };
 
     ///
     /// Maps name/handle to GPU resource instance. Also manages resource
@@ -311,15 +324,9 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        void prependResourceLoader( const StrA & loaderName, GpuResourceLoaderFactory );
-        void appendResourceLoader( const StrA & loaderName, GpuResourceLoaderFactory );
-        void removeResourceLoader( const StrA & loaderName );
-        void removeAllResourceLoaders();
-        //@}
-
-        //@{
-        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceLoadingParameters & lp );
+        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceCreationParameters & cp );
         void                 removeResource( GpuResourceHandle );
+        void                 removeAllResources();
         GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
         GpuResourceType      getResourceType( GpuResourceHandle );
         const char *         getResourceName( GpuResourceHandle );
