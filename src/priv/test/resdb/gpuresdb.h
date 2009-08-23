@@ -21,7 +21,7 @@ namespace GN { namespace gfx
     ///
     /// utility to retrieve internal handle of the resource
     ///
-    inline UInt32 retriveGpuResourceInternalHandle( GpuResourceHandle handle )
+    inline UInt32 retrieveGpuResourceInternalHandle( GpuResourceHandle handle )
     {
         return handle & 0x1FFFFFFF;
     }
@@ -34,47 +34,47 @@ namespace GN { namespace gfx
         return (((UInt32)type)<<29) | (internalHandle & 0x1FFFFFFF);
     }
 
+    ///
+    /// GPU resource database implementation class
+    ///
     class GpuResourceDatabase::Impl
     {
+        struct CreationParam : public GpuResourceCreationParameters
+        {
+            DynaArray<UInt8> mBuffer;
+            CreationParam & operator=( const GpuResourceCreationParameters & );
+        };
+
         struct ResourceItem
         {
-            GpuResource resource;
+            GpuResource * resource;
+            CreationParam cp;
         };
 
         typedef NamedHandleManager<ResourceItem,UInt32> NamedGpuResMgr;
 
-        Gpu            mGpu;
+        Gpu          & mGpu;
         NamedGpuResMgr mResources[GpuResourceType::NUM_TYPES];
 
     public:
 
         //@{
 
-        Impl( GPU & );
+        Impl( Gpu & );
         virtual ~Impl();
 
-        // reset to database to intial data, that is:
-        //  1. invalidate all existing resource
-        //  2. delete all existing handles
-        //  3. remove all existing resource loaders and factories
         void clear();
 
         //@}
 
         //@{
-        const char * getFirstLoaderName() const;
-        void insertResourceLoader( const StrA & where, const StrA & loaderName, GpuResourceLoaderFactory );
-        void removeResourceLoader( const StrA & loaderName );
-        void removeAllResourceLoaders();
-        //@}
-
-        //@{
-        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceLoadingParameters & lp );
+        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceCreationParameters & lp );
         void                 removeResource( GpuResourceHandle );
+        void                 removeAllResources();
         GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
         GpuResourceType      getResourceType( GpuResourceHandle );
         const char *         getResourceName( GpuResourceHandle );
-        AutoRef<GpuResource> getResource( GpuResourceHandle );
+        GpuResource        * getResource( GpuResourceHandle );
         void                 reloadResource( GpuResourceHandle );
         void                 reloadAllResources();
         //@}
@@ -82,6 +82,8 @@ namespace GN { namespace gfx
     private:
 
         ResourceItem * getResourceItem( GpuResourceHandle );
+        GpuResource  * createResourceInstance( GpuResourceType type, const GpuResourceCreationParameters & cp );
+        void           reloadResourceItem( ResourceItem & );
     };
 }}
 
