@@ -10,37 +10,14 @@
 
 namespace GN { namespace gfx
 {
-    ///
-    /// GPU resource type
-    ///
-    struct GpuResourceType
-    {
-        enum ENUM
-        {
-            TEXTURE,
-            UNIFORM,
-            MESH,
-            EFFECT,
-            MODEL,
-            NUM_TYPES,
-            INVALID = NUM_TYPES,
-        };
-
-        GN_DEFINE_ENUM_CLASS_HELPERS( GpuResourceType, ENUM );
-    };
-
     typedef UInt32 GpuResourceHandle;
 
     class GpuResourceDatabase;
-    class GpuResource;
-    class TextureResource;
-    class UniformResource;
-    //class EffectResource;
-    //class GpuMeshResource;
-    class ModelResource;
 
     ///
-    /// comments....
+    /// GpuResource provides one level of indirection to those real graphics classes
+    /// like Texture, Uniform and etc, which is necessary to support runtime resource
+    /// modification and reloading.
     ///
     class GpuResource : public NoCopy
     {
@@ -63,7 +40,8 @@ namespace GN { namespace gfx
     public:
 
         GpuResourceDatabase & database() const { return mDatabase; }
-        GpuResourceHandle     handle()   const { return mHandle; }
+        GpuResourceHandle     handle() const { return mHandle; }
+        virtual const Guid  & type() const = 0;
 
         // *****************************
         // protected members
@@ -71,12 +49,10 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        GpuResource( GpuResourceDatabase & db ) : mDatabase(db)
+        GpuResource( GpuResourceDatabase & db, GpuResourceHandle h )
+            : mDatabase(db), mHandle(h)
         {
         }
-
-        /// protected handle value
-        GpuResourceHandle mHandle;
 
         // *****************************
         // private members
@@ -84,6 +60,55 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & mDatabase;
+        GpuResourceHandle     mHandle;
+    };
+
+    ///
+    /// GPU resource factory
+    ///
+    typedef GpuResource * (*GpuResourceFactory)(
+        GpuResourceDatabase & db,
+        GpuResourceHandle     handle,
+        const void          * userData );
+
+    ///
+    /// Maps name/handle to GPU resource instance.
+    ///
+    class GpuResourceDatabase
+    {
+        class Impl;
+
+        Impl * mImpl;
+
+    public:
+
+        //@{
+        GpuResourceDatabase( Gpu & );
+        virtual ~GpuResourceDatabase();
+
+        // reset the database to intial state, that is:
+        //  1. delete all handles;
+        //  3. unregister all factories.
+        void clear();
+        //@}
+
+        //@{
+        bool registerResourceFactory( const Guid & type, GpuResourceFactory factory );
+        bool hasResourceFactory( const Guid & type );
+        void unregisterResourceFactory( const Guid & type );
+        //@}
+
+        //@{
+        GpuResourceHandle    createResource( Guid & type, const char * name, const void * userData = NULL );
+        void                 deleteResource( GpuResourceHandle );
+        void                 deleteAllResources();
+        GpuResourceHandle    getResourceHandle( const Guid & type, const char * name );
+        GpuResourceType      getResourceType( GpuResourceHandle );
+        const char *         getResourceName( GpuResourceHandle );
+        GpuResource        * getResource( GpuResourceHandle );
+        //@}
+
+    private:
     };
 
     ///
@@ -100,7 +125,7 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        TextureResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+        TextureResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
 
     };
 
@@ -117,7 +142,7 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        UniformResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+        UniformResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
 
     };
 
@@ -148,7 +173,7 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        GpuMeshResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+        GpuMeshResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
     };
 
     ///
@@ -161,7 +186,7 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        EffectResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+        EffectResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
     };
 
     ///
@@ -273,41 +298,6 @@ namespace GN { namespace gfx
         // ********************************
         // private functions
         // ********************************
-    private:
-    };
-
-    ///
-    /// Maps name/handle to GPU resource instance.
-    ///
-    class GpuResourceDatabase
-    {
-        class Impl;
-
-        Impl * mImpl;
-
-    public:
-
-        //@{
-        GpuResourceDatabase( Gpu & );
-        virtual ~GpuResourceDatabase();
-
-        // reset the database to intial state, that is:
-        //  1. unload all resources;
-        //  2. remove all handles;
-        //  3. remove all loaders and factories.
-        void clear();
-        //@}
-
-        //@{
-        GpuResourceHandle    createResource( GpuResourceType type, const char * name );
-        void                 deleteResource( GpuResourceHandle );
-        void                 deleteAllResources();
-        GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
-        GpuResourceType      getResourceType( GpuResourceHandle );
-        const char *         getResourceName( GpuResourceHandle );
-        GpuResource        * getResource( GpuResourceHandle );
-        //@}
-
     private:
     };
 }}
