@@ -309,7 +309,7 @@ namespace GN
         {
             for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
             {
-                mPool.dealloc( mItems[i] );
+                mPool.deconstructAndFree( mItems[i] );
             }
             mItems.clear();
             mNames.clear();
@@ -421,7 +421,7 @@ namespace GN
 
             mItems.remove( item->handle );
 
-            mPool.dealloc( item );
+            mPool.deconstructAndFree( item );
         }
 
         void remove( const StrA & name )
@@ -445,7 +445,7 @@ namespace GN
 
             mItems.remove( handle );
 
-            mPool.dealloc( item );
+            mPool.deconstructAndFree( item );
         }
 
         bool validHandle( H h ) const

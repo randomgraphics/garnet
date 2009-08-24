@@ -592,11 +592,12 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// define a render target texture
+    /// Render target texture template
     ///
-    struct RenderTargetTexture
+    template<class T>
+    struct RenderTargetTextureTempl
     {
-        AutoRef<Texture>     texture;
+        T                    texture;
 
         union
         {
@@ -610,7 +611,7 @@ namespace GN { namespace gfx
         };
 
         /// ctor
-        RenderTargetTexture() : subsurface(0) {}
+        RenderTargetTextureTempl() : subsurface(0) {}
 
         /// clear to empty render target texture
         void clear()
@@ -620,24 +621,29 @@ namespace GN { namespace gfx
         }
 
         /// equality check
-        bool operator==( const RenderTargetTexture & rhs ) const
+        bool operator==( const RenderTargetTextureTempl & rhs ) const
         {
             return texture == rhs.texture && subsurface == rhs.subsurface;
         }
 
         /// equality check
-        bool operator!=( const RenderTargetTexture & rhs ) const
+        bool operator!=( const RenderTargetTextureTempl & rhs ) const
         {
             return texture != rhs.texture || subsurface != rhs.subsurface;
         }
 
         /// less operator
-        bool operator<( const RenderTargetTexture & rhs ) const
+        bool operator<( const RenderTargetTextureTempl & rhs ) const
         {
             if( texture != rhs.texture ) return texture < rhs.texture;
             return subsurface < rhs.subsurface;
         }
     };
+
+    ///
+    /// Render target texture
+    ///
+    typedef RenderTargetTextureTempl<AutoRef<Texture> > RenderTargetTexture;
 
     ///
     /// renderer context

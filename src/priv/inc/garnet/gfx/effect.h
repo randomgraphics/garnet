@@ -64,7 +64,6 @@ namespace GN { namespace gfx
         struct ShaderDesc
         {
             GpuProgramDesc      gpd;                ///< GPU Program descriptor
-            std::map<StrA,StrA> vertices;           ///< vertices. Key is vertex element binding, value is vertex element name.
             std::map<StrA,StrA> textures;           ///< textures. Key is texture binding, value is user-visible texture name defined in EffectDesc::textures.
             std::map<StrA,StrA> uniforms;           ///< uniforms. Key is uniform binding, value is user-visible uniform name defined in EffectDesc::uniforms.
             ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.

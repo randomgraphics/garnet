@@ -19,8 +19,8 @@ namespace GN { namespace gfx
         {
             TEXTURE,
             UNIFORM,
-            EFFECT,
             MESH,
+            EFFECT,
             MODEL,
             NUM_TYPES,
             INVALID = NUM_TYPES,
@@ -35,8 +35,9 @@ namespace GN { namespace gfx
     class GpuResource;
     class TextureResource;
     class UniformResource;
-    class EffectResource;
-    class GpuMeshResource;
+    //class EffectResource;
+    //class GpuMeshResource;
+    class ModelResource;
 
     ///
     /// comments....
@@ -85,73 +86,87 @@ namespace GN { namespace gfx
         GpuResourceDatabase & mDatabase;
     };
 
-    template<class T>
-    class SimpleTypedGpuResource : public GpuResource
+    ///
+    /// comments....
+    ///
+    class TextureResource : public GpuResource
     {
-        const T & get() const
-        {
-            return mValue;
-        }
+    public:
 
-        void set( const T & v )
-        {
-            if( v != mValue )
-            {
-                mValue = v;
-                sigUnderlyingResourcePointerChanged(*mValue);
-            }
-        }
+        void setTexture( Texture * );
+
+        Texture * getTexture() const;
 
     protected:
 
         /// protected constructor
-        SimpleTypedGpuResource( GpuResourceDatabase & db ) : GpuResource(db) {}
-
-    private:
-
-        T mValue;
-    };
-
-    class TextureResource : public SimpleTypedGpuResource<AutoRef<Texture> >
-    {
-    protected:
-
-        /// protected constructor
-        TextureResource( GpuResourceDatabase & db ) : SimpleTypedGpuResource(db) {}
+        TextureResource( GpuResourceDatabase & db ) : GpuResource(db) {}
 
     };
 
-    class UniformResource : public SimpleTypedGpuResource<AutoRef<Uniform> >
+    ///
+    /// comments....
+    ///
+    class UniformResource : public GpuResource
     {
-    protected:
+    public:
 
-        /// protected constructor
-        UniformResource( GpuResourceDatabase & db ) : SimpleTypedGpuResource(db) {}
-
-    };
-
-    class EffectResource : public GpuResource
-    {
-        Effect * mEffect;
+        void setUniform( Uniform * );
+        Uniform * getUniform() const;
 
     protected:
 
         /// protected constructor
-        EffectResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+        UniformResource( GpuResourceDatabase & db ) : GpuResource(db) {}
 
     };
 
+    ///
+    /// comments....
+    ///
+    struct GpuMeshDesc
+    {
+        VertexFormat  vtxfmt; ///< vertex format
+        VtxBuf     *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data undefined
+        size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using minimal stride defined by vertex format.
+        size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
+        const void *  indices; // Null means index data undefined.
+        PrimitiveType prim;   ///< primitive type
+        size_t        numvtx; ///< number of vertices
+        size_t        numidx; ///< number of indices. 0 means non-indexed mesh
+    };
+
+    ///
+    /// comments....
+    ///
     class GpuMeshResource : public GpuResource
     {
-        GpuMesh * mMesh;
+    public:
+
+        void setMesh( const GpuMeshDesc & );
 
     protected:
 
         /// protected constructor
         GpuMeshResource( GpuResourceDatabase & db ) : GpuResource(db) {}
-
     };
 
+    ///
+    /// comments....
+    ///
+    class EffectResource : public GpuResource
+    {
+    public:
+
+    protected:
+
+        /// protected constructor
+        EffectResource( GpuResourceDatabase & db ) : GpuResource(db) {}
+    };
+
+    ///
+    /// comments....
+    ///
     struct ModelResourceDesc
     {
         struct ModelTextureDesc
@@ -201,34 +216,18 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Model, a glue class for various GPU resources, such as effect, mesh and textures.
+    /// Model resource, the basic class used for rendering: myModel->render(...);
     ///
-    /// The top level class used for rendering: myModel->render(...);
-    ///
-    class ModelResource : public GpuResource, public StdClass
+    class ModelResource : public GpuResource
     {
-        GN_DECLARE_STDCLASS( ModelResource, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     protected:
-        ModelResource( GpuResourceDatabase & db ) : GpuResource(db) { clear(); }
-        virtual ~ModelResource() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const ModelResourceDesc & desc );
-        void quit();
-    private:
-        void clear() {}
+        ModelResource( GpuResourceDatabase & db );
+        virtual ~ModelResource();
         //@}
 
         // ********************************
@@ -236,29 +235,32 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        template<typename T>
-        class ParameterCollection
-        {
-        };
-
-        ParameterCollection<TextureResource> textures;
-        ParameterCollection<UniformResource> uniforms;
-
         // ********************************
         // public functions
         // ********************************
     public:
 
-        void clone();
+        void setTexture( const StrA & name, GpuResourceHandle );
+        GpuResourceHandle getTexture( const StrA & name ) const;
 
-        void render();
+        void setUniform( const StrA & name, GpuResourceHandle );
+        GpuResourceHandle getUniform( const StrA & name ) const;
+
+        void setRenderTarget( const StrA & name, GpuResourceHandle texture, size_t face, size_t leve, size_t slice );
+        GpuResourceHandle getRenderTargetTexture( const StrA & name ) const;
+
+        void setMesh( const StrA & name, GpuResourceHandle mesh );
+        GpuResourceHandle getMesh( const StrA & name ) const;
+
+        void setEffect( const StrA & name, GpuResourceHandle mesh );
+        GpuResourceHandle getEffect( const StrA & name ) const;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        struct Subset
+        /*struct Subset
         {
         };
 
@@ -266,7 +268,7 @@ namespace GN { namespace gfx
         DynaArray<GpuResourceHandle> mMeshes;
         DynaArray<GpuResourceHandle> mTextures;
         DynaArray<GpuResourceHandle> mUniforms;
-        DynaArray<Subset>            mSubsets;
+        DynaArray<Subset>            mSubsets;*/
 
         // ********************************
         // private functions
@@ -274,35 +276,8 @@ namespace GN { namespace gfx
     private:
     };
 
-    struct TextureSubsurfaceData
-    {
-        const void * data;
-        size_t       rowPitch;
-        size_t       slicePitch;
-    };
-
-    struct TextureCreationParameters
-    {
-        TextureDesc             desc;
-        TextureSubsurfaceData * initalData;
-    };
-
-    struct UniformCreationParameters
-    {
-        size_t       length;
-        const void * initialData;
-    };
-
-    struct GpuResourceCreationParameters
-    {
-        const char              * filename;
-        TextureCreationParameters tcp;
-        UniformCreationParameters ucp;
-    };
-
     ///
-    /// Maps name/handle to GPU resource instance. Also manages resource
-    /// loading/unloading from file system.
+    /// Maps name/handle to GPU resource instance.
     ///
     class GpuResourceDatabase
     {
@@ -324,15 +299,13 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceCreationParameters & cp );
-        void                 removeResource( GpuResourceHandle );
-        void                 removeAllResources();
+        GpuResourceHandle    createResource( GpuResourceType type, const char * name );
+        void                 deleteResource( GpuResourceHandle );
+        void                 deleteAllResources();
         GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
         GpuResourceType      getResourceType( GpuResourceHandle );
         const char *         getResourceName( GpuResourceHandle );
         GpuResource        * getResource( GpuResourceHandle );
-        void                 reloadResource( GpuResourceHandle );
-        void                 reloadAllResources();
         //@}
 
     private:
