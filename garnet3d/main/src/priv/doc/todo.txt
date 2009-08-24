@@ -58,7 +58,8 @@ TODO
   - make sure OGL resource creation/deletion do not affect renderer states
     - depends on renderer state dumper
 
-- more
+- p?
+  - multi-window rendering
   - refine build system
     - figure out a way to simplify scons script
   - image format conversion

@@ -69,7 +69,7 @@ namespace GN { namespace scene
         /// get renderer
         virtual gfx::Renderer & getRenderer() const = 0;
 
-        /// \name scene graph
+        /// \name spatial scene graph
         //@{
         virtual SpatialSceneGraph & getSpatialSceneGraph() const = 0;
         //@}

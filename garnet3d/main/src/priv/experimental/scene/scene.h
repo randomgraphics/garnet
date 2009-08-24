@@ -12,8 +12,7 @@ namespace GN
 
     struct VisualInfo
     {
-        ResourceHandle model;
-        void           render();
+        void render();
     };
 
     struct Entity : public NoCopy

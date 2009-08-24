@@ -39,16 +39,9 @@ namespace GN { namespace gfx
     ///
     class GpuResourceDatabase::Impl
     {
-        struct CreationParam : public GpuResourceCreationParameters
-        {
-            DynaArray<UInt8> mBuffer;
-            CreationParam & operator=( const GpuResourceCreationParameters & );
-        };
-
         struct ResourceItem
         {
             GpuResource * resource;
-            CreationParam cp;
         };
 
         typedef NamedHandleManager<ResourceItem,UInt32> NamedGpuResMgr;
