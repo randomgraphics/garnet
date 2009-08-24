@@ -10,50 +10,69 @@
 
 namespace GN { namespace gfx
 {
-    ///
-    /// utility to retrieve type of the resource
-    ///
-    inline GpuResourceType retrieveGpuResourceType( GpuResourceHandle handle )
+    union GpuResourceHandleStruct
     {
-        return (GpuResourceType)(handle >> 29);
-    }
+        UInt32 u32;
+        struct
+        {
+            UInt32 type           : 8;
+            UInt32 internalHandle : 24;
+        };
 
-    ///
-    /// utility to retrieve internal handle of the resource
-    ///
-    inline UInt32 retrieveGpuResourceInternalHandle( GpuResourceHandle handle )
-    {
-        return handle & 0x1FFFFFFF;
-    }
-
-    ///
-    /// Compose a public resource handle
-    ///
-    inline GpuResourceHandle composeGpuResourceHandle( GpuResourceType type, UInt32 internalHandle )
-    {
-        return (((UInt32)type)<<29) | (internalHandle & 0x1FFFFFFF);
-    }
+        enum
+        {
+            MAX_TYPES = (2^8-1)
+        };
+    };
 
     ///
     /// GPU resource database implementation class
     ///
     class GpuResourceDatabase::Impl
     {
+        // *********************************************************************
+        // private types
+        // *********************************************************************
+
+    private:
+
         struct ResourceItem
         {
             GpuResource * resource;
         };
 
-        typedef NamedHandleManager<ResourceItem,UInt32> NamedGpuResMgr;
+        typedef NamedHandleManager<ResourceItem,UInt32> NamedResourceMapper;
 
-        Gpu          & mGpu;
-        NamedGpuResMgr mResources[GpuResourceType::NUM_TYPES];
+        struct ResourceManager
+        {
+            Guid                guid;
+            StrA                desc;
+            size_t              index; // index into manager array
+            GpuResourceFactory  factory;
+            NamedResourceMapper resources;
+        };
+
+        typedef StackArray<ResourceManager, GpuResourceHandleStruct::MAX_TYPES> ManagerArray;
+
+        // *********************************************************************
+        // private data
+        // *********************************************************************
+
+    private:
+
+        GpuResourceDatabase & mDatabase;
+        Gpu                 & mGpu;
+        ManagerArray          mManagers;
+
+        // *********************************************************************
+        //
+        // *********************************************************************
 
     public:
 
         //@{
 
-        Impl( Gpu & );
+        Impl( GpuResourceDatabase & db, Gpu & );
         virtual ~Impl();
 
         void clear();
@@ -61,22 +80,24 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    addResource( GpuResourceType type, const char * name, const GpuResourceCreationParameters & lp );
-        void                 removeResource( GpuResourceHandle );
-        void                 removeAllResources();
-        GpuResourceHandle    getResourceHandle( GpuResourceType type, const char * name );
-        GpuResourceType      getResourceType( GpuResourceHandle );
+        bool registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory );
+        bool hasResourceFactory( const Guid & type );
+        //@}
+
+        //@{
+        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
+        void                 deleteResource( GpuResourceHandle );
+        void                 deleteAllResources();
+        GpuResourceHandle    findResource( const Guid & type, const char * name );
         const char *         getResourceName( GpuResourceHandle );
         GpuResource        * getResource( GpuResourceHandle );
-        void                 reloadResource( GpuResourceHandle );
-        void                 reloadAllResources();
         //@}
 
     private:
 
-        ResourceItem * getResourceItem( GpuResourceHandle );
-        GpuResource  * createResourceInstance( GpuResourceType type, const GpuResourceCreationParameters & cp );
-        void           reloadResourceItem( ResourceItem & );
+        const ResourceManager * getManager( const Guid & type ) const;
+        ResourceManager       * getManager( const Guid & type );
+        ResourceItem          * getResourceItem( GpuResourceHandle ) const;
     };
 }}
 

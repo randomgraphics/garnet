@@ -41,7 +41,6 @@ namespace GN { namespace gfx
 
         GpuResourceDatabase & database() const { return mDatabase; }
         GpuResourceHandle     handle() const { return mHandle; }
-        virtual const Guid  & type() const = 0;
 
         // *****************************
         // protected members
@@ -66,10 +65,14 @@ namespace GN { namespace gfx
     ///
     /// GPU resource factory
     ///
-    typedef GpuResource * (*GpuResourceFactory)(
-        GpuResourceDatabase & db,
-        GpuResourceHandle     handle,
-        const void          * userData );
+    struct GpuResourceFactory
+    {
+        GpuResource * (*createResource)( GpuResourceDatabase & db,
+                                         GpuResourceHandle     handle,
+                                         const void          * parameters );
+
+        void          (*deleteResource)( GpuResource * );
+    };
 
     ///
     /// Maps name/handle to GPU resource instance.
@@ -93,18 +96,16 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool registerResourceFactory( const Guid & type, GpuResourceFactory factory );
+        bool registerResourceFactory( const Guid & type, const char * descriptiveName, GpuResourceFactory factory );
         bool hasResourceFactory( const Guid & type );
-        void unregisterResourceFactory( const Guid & type );
         //@}
 
         //@{
-        GpuResourceHandle    createResource( Guid & type, const char * name, const void * userData = NULL );
+        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters = NULL );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
-        GpuResourceHandle    getResourceHandle( const Guid & type, const char * name );
-        GpuResourceType      getResourceType( GpuResourceHandle );
-        const char *         getResourceName( GpuResourceHandle );
+        GpuResourceHandle    findResource( const Guid & type, const char * name );
+        const char         * getResourceName( GpuResourceHandle );
         GpuResource        * getResource( GpuResourceHandle );
         //@}
 
@@ -112,21 +113,30 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// comments....
+    /// Texture resource
     ///
     class TextureResource : public GpuResource
     {
     public:
 
-        void setTexture( Texture * );
+        /// return GUID of the texture resource class
+        static const Guid & guid();
 
+        /// create new texture resource. Would fail if the name exists.
+        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const TextureDesc & desc );
+
+        /// load texture from file. Would return existing handle, if it is already loaded.
+        static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
+
+        //@{
+        void      setTexture( Texture * );
         Texture * getTexture() const;
+        //@}
 
     protected:
 
         /// protected constructor
-        TextureResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
-
+        TextureResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
     };
 
     ///
@@ -136,17 +146,27 @@ namespace GN { namespace gfx
     {
     public:
 
-        void setUniform( Uniform * );
+        /// return GUID of the uniform resource class
+        static const Guid & guid();
+
+        /// create new uniform resource. Would fail if the name exists.
+        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, size_t length, const void * initialData = NULL );
+
+        /// load uniform from file. Would return existing handle, if it is already loaded.
+        static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
+
+        //@{
+        void      setUniform( Uniform * );
         Uniform * getUniform() const;
+        //@}
 
     protected:
 
         /// protected constructor
-        UniformResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
-
+        UniformResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
     };
 
-    ///
+    /*
     /// comments....
     ///
     struct GpuMeshDesc
@@ -187,7 +207,7 @@ namespace GN { namespace gfx
 
         /// protected constructor
         EffectResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
-    };
+    };*/
 
     ///
     /// comments....
