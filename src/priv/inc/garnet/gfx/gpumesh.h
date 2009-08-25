@@ -31,7 +31,7 @@ namespace GN { namespace gfx
         };
     };
 
-    /// define a subset of the GPU mesh
+    /// define a subset of the GPU mesh. (0,0,0,0) means the whole mesh.
     struct GpuMeshSubset
     {
         size_t startvtx;
