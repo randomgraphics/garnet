@@ -266,24 +266,24 @@ namespace GN { namespace gfx
     class ModelResource : public GpuResource
     {
         // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    protected:
-        ModelResource( GpuResourceDatabase & db );
-        virtual ~ModelResource();
-        //@}
-
-        // ********************************
-        // public properties
-        // ********************************
-    public:
-
-        // ********************************
         // public functions
         // ********************************
     public:
+
+        //@{
+
+        /// return GUID of the uniform resource class
+        static const Guid & guid();
+
+        /// create new uniform resource. Would fail if the name exists.
+        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const ModelResourceDesc & desc );
+
+        /// load uniform from file. Would return existing handle, if it is already loaded.
+        static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
+
+        //@}
+
+        //@{
 
         void setTexture( const StrA & name, GpuResourceHandle );
         GpuResourceHandle getTexture( const StrA & name ) const;
@@ -300,25 +300,26 @@ namespace GN { namespace gfx
         void setEffect( const StrA & name, GpuResourceHandle mesh );
         GpuResourceHandle getEffect( const StrA & name ) const;
 
+        //@}
+
         // ********************************
-        // private variables
+        // ctor/dtor
         // ********************************
+
+        //@{
+    protected:
+        ModelResource( GpuResourceDatabase & db, GpuResourceHandle h );
+        virtual ~ModelResource();
+        //@}
+
+        // ********************************
+        // Impl clas
+        // ********************************
+
     private:
 
-        /*struct Subset
-        {
-        };
-
-        DynaArray<GpuResourceHandle> mEffects;
-        DynaArray<GpuResourceHandle> mMeshes;
-        DynaArray<GpuResourceHandle> mTextures;
-        DynaArray<GpuResourceHandle> mUniforms;
-        DynaArray<Subset>            mSubsets;*/
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
+        class Impl;
+        Impl * mImpl;
     };
 }}
 
