@@ -262,10 +262,10 @@ namespace GN { namespace gfx
         ///
         struct EffectShaderDesc
         {
+            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
             GpuProgramDesc      gpd;                ///< GPU Program descriptor
             std::map<StrA,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
             std::map<StrA,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
-            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
         };
 
         /// template for single render state
@@ -414,17 +414,15 @@ namespace GN { namespace gfx
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
         //@{
-        size_t            getNumPasses() const;
-        void              setContext( size_t pass, GpuContext * rc );
-
-        void              setTexture( const StrA & name, GpuResourceHandle );
-        GpuResourceHandle getTexture( const StrA & name ) const;
-
-        void              setUniform( const StrA & name, GpuResourceHandle );
-        GpuResourceHandle getUniform( const StrA & name ) const;
-
-        void              setRenderTarget( const StrA & name, GpuResourceHandle, size_t face, size_t level, size_t slice );
-        GpuResourceHandle getRenderTarget( const StrA & name, size_t * face = NULL, size_t * level = NULL, size_t * slice = NULL ) const;
+        size_t         getNumPasses() const;
+        size_t         getNumTextures( size_t pass ) const;
+        size_t         getNumUniforms( size_t pass ) const;
+        size_t         getNumColorRenderTargets( size_t pass ) const;
+        const size_t * getTextureIndices( const StrA & textureParameterName ) const;
+        const size_t * getUniformIndices( const StrA & uniformParameterName ) const;
+        const size_t * getColorRenderTargetIndices( const StrA & colorRenderTargetName ) const;
+        const bool   * getDepthRenderTargetFlags( const StrA & depthRenderTargetName ) const;
+        void           applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
         //@}
 
     protected:
@@ -456,10 +454,6 @@ namespace GN { namespace gfx
             DynaArray<UInt8> defaultValue; ///< if empty, then no default value.
         };
 
-        struct SubsetDesc
-        {
-        };
-
         StrA                            effectResourceName; // effect resource name. If empty, then create a new effect using effectDesc
         EffectResourceDesc              effectDesc;
         std::map<StrA,ModelTextureDesc> textures;           // key is effect parameter name
@@ -487,13 +481,19 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        void                     setEffect( const StrA & name, GpuResourceHandle effect );
-        GpuResourceHandle        getEffect( const StrA & name ) const;
+        void              setTexture( const StrA & effectParameterName, GpuResourceHandle );
+        GpuResourceHandle getTexture( const StrA & effectParameterName ) const;
 
-        void                     setMesh( const StrA & name, GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
-        GpuResourceHandle        getMesh( const StrA & name, GpuMeshSubset * subset = NULL ) const;
+        void              setUniform( const StrA & effectParameterName, GpuResourceHandle );
+        GpuResourceHandle getUniform( const StrA & effectParameterName ) const;
 
-        void                     draw() const;
+        void              setRenderTarget( const StrA & effectParameterName, GpuResourceHandle, size_t face, size_t level, size_t slice );
+        GpuResourceHandle getRenderTarget( const StrA & effectParameterName, size_t * face = NULL, size_t * level = NULL, size_t * slice = NULL ) const;
+
+        void              setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
+        GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
+
+        void              draw() const;
         //@}
 
         // ********************************
