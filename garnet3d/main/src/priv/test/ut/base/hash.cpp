@@ -2,12 +2,14 @@
 
 class StrHashTest : public CxxTest::TestSuite
 {
-    static bool strEqual( const GN::StrA & a, const GN::StrA & b )
+    static bool equal( const GN::StrA & a, const GN::StrA & b )
     {
         return a == b;
     }
 
-    typedef GN::HashMap< GN::StrA, int, GN::strHash<char>, strEqual > StrHashMap;
+    static UInt64 hash( const GN::StrA & s ) { return s.hash(); }
+
+    typedef GN::HashMap< GN::StrA, int, hash, equal > StrHashMap;
 
 public:
 
