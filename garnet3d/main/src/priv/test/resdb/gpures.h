@@ -171,10 +171,10 @@ namespace GN { namespace gfx
     ///
     struct MeshResourceDesc
     {
-        PrimitiveType prim;   ///< primitive type
-        size_t        numvtx; ///< number of vertices
-        size_t        numidx; ///< number of indices. 0 means non-indexed mesh
-        VertexFormat  vtxfmt; ///< vertex format
+        PrimitiveType prim;   //< primitive type
+        size_t        numvtx; //< number of vertices
+        size_t        numidx; //< number of indices. 0 means non-indexed mesh
+        VertexFormat  vtxfmt; //< vertex format
         const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data are undefined
         size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using vertex size defined by vertex format.
         size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
@@ -210,6 +210,9 @@ namespace GN { namespace gfx
         Impl * mImpl;
     };
 
+    ///
+    /// Effect resource description
+    ///
     struct EffectResourceDesc
     {
         ///
@@ -217,7 +220,7 @@ namespace GN { namespace gfx
         ///
         struct ShaderPrerequisites
         {
-            UInt32 numTextures; ///< minimal number of textures required.
+            UInt32 numTextures; //< minimal number of textures required.
 
             /// default constructor
             ShaderPrerequisites()
@@ -243,7 +246,7 @@ namespace GN { namespace gfx
         ///
         struct EffectUniformDesc
         {
-            size_t size;   ///< uniform size
+            size_t size;   //< uniform size
 
             /// default ctor
             EffectUniformDesc() : size(0) {}
@@ -262,10 +265,10 @@ namespace GN { namespace gfx
         ///
         struct EffectShaderDesc
         {
-            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
-            GpuProgramDesc      gpd;                ///< GPU Program descriptor
-            std::map<StrA,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
-            std::map<StrA,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
+            ShaderPrerequisites prerequisites;      //< prerequisites of the shader.
+            GpuProgramDesc      gpd;                //< GPU Program descriptor
+            std::map<StrA,StrA> textures;           //< textures. Key is shader parameter name, value is user-visible texture name.
+            std::map<StrA,StrA> uniforms;           //< uniforms. Key is shader parameter name, value is user-visible uniform name.
         };
 
         /// template for single render state
@@ -273,7 +276,7 @@ namespace GN { namespace gfx
         struct EffectRenderState
         {
             T    value;
-            bool inherited; ///< if true, then this effect will inherit this value from current GPU context.
+            bool inherited; //< if true, then this effect will inherit this value from current GPU context.
 
             /// default ctor
             EffectRenderState() : inherited(true) {}
@@ -325,10 +328,10 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA                  shader;       ///< Name of shader used in this pass. Can't be empty
-            EffectRenderStateDesc rsd;          ///< pass specific render states
-            DynaArray<StrA>       colortargets; ///< color render targets. Values are user-visible render target names.
-            StrA                  depthstencil; ///< depth render targets. Value is user-visible render target name.
+            StrA                  shader;       //< Name of shader used in this pass. Can't be empty
+            EffectRenderStateDesc rsd;          //< pass specific render states
+            DynaArray<StrA>       colortargets; //< color render targets. Values are user-visible render target names.
+            StrA                  depthstencil; //< depth render targets. Value is user-visible render target name.
 
             EffectPassDesc()
             {
@@ -343,21 +346,21 @@ namespace GN { namespace gfx
         ///
         struct EffectTechniqueDesc
         {
-            int                       quality; ///< user defined rendering quality. Effect class uses
-                                               ///< the technique with the hightest quality as default technique.
-            DynaArray<EffectPassDesc> passes;  ///< pass list.
-            EffectRenderStateDesc     rsd;     ///< Technique specific render states
+            int                       quality; //< user defined rendering quality. Effect class uses
+                                               //< the technique with the hightest quality as default technique.
+            DynaArray<EffectPassDesc> passes;  //< pass list.
+            EffectRenderStateDesc     rsd;     //< Technique specific render states
 
             /// default ctor
             EffectTechniqueDesc() : quality(100) {}
         };
 
-        std::map<StrA,EffectTextureDesc>      textures;      ///< Texture list
-        std::map<StrA,EffectUniformDesc>      uniforms;      ///< Uniform list
-        std::map<StrA,EffectRenderTargetDesc> rendertargets; ///< Render taret list. Empty means using default setttings: one "color0", one "depth".
-        std::map<StrA,EffectShaderDesc>       shaders;       ///< Shader list
-        std::map<StrA,EffectTechniqueDesc>    techniques;    ///< Technique list. Technique name must be unique.
-        EffectRenderStateDesc                 rsd;           ///< effect specific render states
+        std::map<StrA,EffectTextureDesc>      textures;      //< Texture list
+        std::map<StrA,EffectUniformDesc>      uniforms;      //< Uniform list
+        std::map<StrA,EffectRenderTargetDesc> rendertargets; //< Render taret list. Empty means using default setttings: one "color0", one "depth".
+        std::map<StrA,EffectShaderDesc>       shaders;       //< Shader list
+        std::map<StrA,EffectTechniqueDesc>    techniques;    //< Technique list. Technique name must be unique.
+        EffectRenderStateDesc                 rsd;           //< effect specific render states
 
         ///
         /// constructor
@@ -398,7 +401,8 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Effect resource
+    /// Effect defines GPU program and render states, and how textures,
+    /// uniforms and render targets are binded to GPU context.
     ///
     class EffectResource : public GpuResource
     {
@@ -412,18 +416,6 @@ namespace GN { namespace gfx
 
         /// load effect from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
-
-        //@{
-        size_t         getNumPasses() const;
-        size_t         getNumTextures( size_t pass ) const;
-        size_t         getNumUniforms( size_t pass ) const;
-        size_t         getNumColorRenderTargets( size_t pass ) const;
-        const size_t * getTextureIndices( const StrA & textureParameterName ) const;
-        const size_t * getUniformIndices( const StrA & uniformParameterName ) const;
-        const size_t * getColorRenderTargetIndices( const StrA & colorRenderTargetName ) const;
-        const bool   * getDepthRenderTargetFlags( const StrA & depthRenderTargetName ) const;
-        void           applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
-        //@}
 
     protected:
 
@@ -449,19 +441,19 @@ namespace GN { namespace gfx
 
         struct ModelUniformDesc
         {
-            StrA             resourceName; ///< if empty, then create a new uniform
+            StrA             resourceName; //< if empty, then create a new uniform
             size_t           size;
-            DynaArray<UInt8> defaultValue; ///< if empty, then no default value.
+            DynaArray<UInt8> defaultValue; //< if empty, then no default value.
         };
 
-        StrA                            effectResourceName; // effect resource name. If empty, then create a new effect using effectDesc
-        EffectResourceDesc              effectDesc;
-        std::map<StrA,ModelTextureDesc> textures;           // key is effect parameter name
-        std::map<StrA,ModelUniformDesc> uniforms;           // key is effect parameter name
+        StrA                            effectResourceName; //< effect resource name. If empty, then create a new effect using effectDesc
+        EffectResourceDesc              effectDesc;         //< Used to create new effect, if effect resource name is empty.
+        std::map<StrA,ModelTextureDesc> textures;           //< key is effect parameter name
+        std::map<StrA,ModelUniformDesc> uniforms;           //< key is effect parameter name
 
-        StrA                            meshResourceName; ///< if empty, then create a new mesh using meshDesc
-        MeshResourceDesc                meshResourceDesc;
-        GpuMeshSubset                   subset;
+        StrA                            meshResourceName; //< if empty, then create a new mesh using meshDesc
+        MeshResourceDesc                meshResourceDesc; //< Used to create new mesh, if mesh resource name is empty
+        GpuMeshSubset                   subset;           //< Mesh subset information.
     };
 
     ///
@@ -493,7 +485,7 @@ namespace GN { namespace gfx
         void              setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
         GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
 
-        void              draw() const;
+        const GpuContext & getGC() const;
         //@}
 
         // ********************************
