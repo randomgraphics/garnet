@@ -165,6 +165,37 @@ namespace GN
         va_list         args );
 
     ///
+    /// string hash function
+    ///
+    /// set to length to 0 to hash NULL terminated string.
+    ///
+    template<typename CHAR>
+    inline UInt64 strHash( const CHAR * s, size_t length = 0 )
+    {
+        unsigned long hash = 5381;
+
+        if( length > 0 )
+        {
+            for( size_t i = 0; i < length; ++i )
+            {
+                hash = ((hash << 5) + hash) + *s; /* hash * 33 + c */
+                ++s;
+            }
+        }
+        else
+        {
+            while( *s )
+            {
+                hash = ((hash << 5) + hash) + *s; /* hash * 33 + c */
+                ++s;
+            }
+        }
+
+        return hash;
+    }
+
+
+    ///
     /// Custom string class
     ///
     template<typename CHAR, typename ALLOCATOR = StlAllocator<CHAR> >
@@ -464,6 +495,11 @@ namespace GN
         /// get string caps
         ///
         size_t getCaps() const { return mCaps; }
+
+        ///
+        /// string hash
+        ///
+        UInt64 hash() const { return strHash( mPtr, mCount ); }
 
         ///
         /// Insert a character at specific position
@@ -1060,26 +1096,9 @@ namespace GN
     //@}
 
     ///
-    /// string hash function
+    /// printf-like string format function.
     ///
-    template<typename CHAR>
-    inline UInt64 strHash( const Str<CHAR> & s )
-    {
-        unsigned long hash = 5381;
-
-        const CHAR * p = s.cptr();
-
-        while( *p )
-        {
-            hash = ((hash << 5) + hash) + *p; /* hash * 33 + c */
-            ++p;
-        }
-
-        return hash;
-    }
-
-    ///
-    /// printf-like string format function
+    /// Similar as strPrintf(...), but returns a string object
     ///
     inline StrA strFormat( const char * fmt, ... )
     {
@@ -1093,6 +1112,8 @@ namespace GN
 
     ///
     /// printf-like string format function (wide-char version)
+    ///
+    /// Similar as strPrintf(...), but returns a string object
     ///
     inline StrW strFormat( const wchar_t * fmt, ... )
     {
