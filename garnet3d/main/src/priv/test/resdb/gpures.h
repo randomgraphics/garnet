@@ -63,12 +63,23 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Cast GPU resource pointer with debug time check.
+    /// Cast GPU resource pointer with type check.
+    ///
     template<typename T>
     inline T * safeCastResource( GpuResource * r )
     {
-        GN_ASSERT( 0 == r || T::guid() == r->database().getResourceType( r.handle() ) );
+        GN_ASSERT( 0 == r || T::guid() == *r->database().getResourceType( r->handle() ) );
         return (T*)r;
+    }
+
+    ///
+    /// Cast GPU resource pointer with type check.
+    ///
+    template<typename T>
+    inline T & safeCastResource( GpuResource & r )
+    {
+        GN_ASSERT( T::guid() == *r.database().getResourceType( r.handle() ) );
+        return (T&)r;
     }
 
     ///
@@ -113,9 +124,10 @@ namespace GN { namespace gfx
         GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters = NULL );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
-        GpuResourceHandle    findResource( const Guid & type, const char * name );
-        const char         * getResourceName( GpuResourceHandle );
-        const Guid         * getResourceType( GpuResourceHandle );
+        bool                 checkHandle( GpuResourceHandle ) const;
+        GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
+        const char         * getResourceName( GpuResourceHandle ) const;
+        const Guid         * getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
         //@}
 
@@ -447,12 +459,20 @@ namespace GN { namespace gfx
             DynaArray<BindingLocation> bindings;
         };
 
+        struct TextureProperties : public ParameterProperties
+        {
+            SamplerDesc sampler;
+        };
+
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
 
-        size_t                      getNumPasses() const;
-        size_t                      getNumTextures() const;
-        size_t                      findTextureByName( const char * name ) const;
-        const ParameterProperties & getTextureProperties( size_t i ) const;
+        size_t                    getNumPasses() const;
+
+        size_t                    getNumTextures() const;
+        size_t                    findTextureByName( const char * name ) const;
+        const TextureProperties & getTextureProperties( size_t i ) const;
+
+        void                      applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
 
         //@}
 

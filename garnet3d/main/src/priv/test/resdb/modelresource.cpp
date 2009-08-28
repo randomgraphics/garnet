@@ -58,7 +58,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setHandle(
     {
         // connect to new handle
         GpuResource * r = db.getResource( newTextureHandle );
-        r->sigUnderlyingResourcePointerChanged.connect( this, onTextureChange );
+        r->sigUnderlyingResourcePointerChanged.connect( this, &TextureItem::onTextureChange );
 
         tex = ((TextureResource*)r)->getTexture();
     }
@@ -98,16 +98,19 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 
     GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
 
-    const EffectResource::ParameterProperties & prop = effect->getTextureProperties( mEffectParameterIndex );
+    const EffectResource::TextureProperties & prop = effect->getTextureProperties( mEffectParameterIndex );
 
     for( size_t i = 0; i < prop.bindings.size(); ++i )
     {
-        const EffectResource::BindingLocation & b = prop.bindings[i];
+        const EffectResource::BindingLocation & location = prop.bindings[i];
 
-        GN_ASSERT( b.pass < mOwner->mPasses.size() );
-        GN_ASSERT( b.stage < GpuContext::MAX_TEXTURES );
+        GN_ASSERT( location.pass < mOwner->mPasses.size() );
+        GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
-        mOwner->mPasses[b.pass].gc.textures[b.stage].set( tex );
+        TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
+
+        binding.texture.set( tex );
+        binding.sampler = prop.sampler;
     }
 }
 
@@ -166,11 +169,11 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
         return failure();
     }
     GpuResource * mesh = db.getResource( mMesh.handle );
-    mesh->sigUnderlyingResourcePointerChanged.connect( this, onMeshChanged );
+    mesh->sigUnderlyingResourcePointerChanged.connect( this, &Impl::onMeshChanged );
 
     // attach to effect changing event
     GpuResource * effect = db.getResource( mEffect.handle );
-    effect->sigUnderlyingResourcePointerChanged.connect( this, onEffectChanged );
+    effect->sigUnderlyingResourcePointerChanged.connect( this, &Impl::onEffectChanged );
 
     // trigger a effect changing event to initialize everthing else.
     onEffectChanged( *effect );
@@ -285,13 +288,15 @@ GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) con
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 {
-    EffectResource & effect = (EffectResource&)r;
+    EffectResource & effect = safeCastResource<EffectResource>( r );
 
     mPasses.resize( effect.getNumPasses() );
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
         RenderPass & pass = mPasses[i];
         pass.gc.clear();
+
+        effect.applyGpuProgramAndRenderStates( i, pass.gc );
     }
 
     // reapply mesh

@@ -182,9 +182,9 @@ void GpuResourceDatabase::Impl::deleteAllResources()
 //
 // -----------------------------------------------------------------------------
 GpuResourceHandle
-GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name )
+GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) const
 {
-    ResourceManager * mgr = getManager( type );
+    const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return 0;
 
     UInt32 internalHandle = mgr->resources.name2handle(name);
@@ -204,7 +204,7 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name )
 //
 // -----------------------------------------------------------------------------
 const char *
-GpuResourceDatabase::Impl::getResourceName( GpuResourceHandle handle )
+GpuResourceDatabase::Impl::getResourceName( GpuResourceHandle handle ) const
 {
     ResourceItem * r = getResourceItem( handle );
     if( NULL == r ) return NULL;
@@ -212,9 +212,26 @@ GpuResourceDatabase::Impl::getResourceName( GpuResourceHandle handle )
     GpuResourceHandleStruct hs;
     hs.u32 = handle;
 
-    ResourceManager & mgr = mManagers[hs.type];
+    const ResourceManager & mgr = mManagers[hs.type];
 
     return mgr.resources.handle2name(hs.internalHandle);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const Guid *
+GpuResourceDatabase::Impl::getResourceType( GpuResourceHandle handle ) const
+{
+    ResourceItem * r = getResourceItem( handle );
+    if( NULL == r ) return NULL;
+
+    GpuResourceHandleStruct hs;
+    hs.u32 = handle;
+
+    const ResourceManager & mgr = mManagers[hs.type];
+
+    return &mgr.guid;
 }
 
 //
@@ -277,14 +294,17 @@ GpuResourceDatabase::Impl::getManager( const Guid & type )
 //
 // -----------------------------------------------------------------------------
 GpuResourceDatabase::Impl::ResourceItem *
-GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle ) const
+GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle, bool silent ) const
 {
     GpuResourceHandleStruct hs;
     hs.u32 = handle;
 
     if( hs.type >= mManagers.size() )
     {
-        GN_ERROR(sLogger)( "Invalid resource handle %d : invalid type", handle );
+        if( !silent )
+        {
+            GN_ERROR(sLogger)( "Invalid resource handle %d : invalid type", handle );
+        }
         return NULL;
     }
 
@@ -292,7 +312,10 @@ GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle ) const
 
     if( !mgr.resources.validHandle(hs.internalHandle) )
     {
-        GN_ERROR(sLogger)( "Invalid resource handle %d : invalid internal handle", handle );
+        if( !silent )
+        {
+            GN_ERROR(sLogger)( "Invalid resource handle %d : invalid internal handle", handle );
+        }
         return NULL;
     }
 
@@ -311,6 +334,8 @@ bool GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl
 GpuResourceHandle    GpuResourceDatabase::createResource( const Guid & type, const char * name, const void * parameters ) { return mImpl->createResource( type, name, parameters ); }
 void                 GpuResourceDatabase::deleteResource( GpuResourceHandle handle ) { mImpl->deleteResource( handle ); }
 void                 GpuResourceDatabase::deleteAllResources() { mImpl->deleteAllResources(); }
-GpuResourceHandle    GpuResourceDatabase::findResource( const Guid & type, const char * name ) { return mImpl->findResource( type, name ); }
-const char         * GpuResourceDatabase::getResourceName( GpuResourceHandle handle ) { return mImpl->getResourceName(handle); }
+bool                 GpuResourceDatabase::checkHandle( GpuResourceHandle handle ) const { return mImpl->checkHandle(handle); }
+GpuResourceHandle    GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
+const char         * GpuResourceDatabase::getResourceName( GpuResourceHandle handle ) const { return mImpl->getResourceName(handle); }
+const Guid         * GpuResourceDatabase::getResourceType( GpuResourceHandle handle ) const { return mImpl->getResourceType(handle); }
 GpuResource        * GpuResourceDatabase::getResource( GpuResourceHandle handle ) { return mImpl->getResource(handle); }
