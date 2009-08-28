@@ -7,18 +7,36 @@ using namespace GN::input;
 using namespace GN::win;
 using namespace GN::util;
 
-bool init( Gpu & )
+
+GpuResourceDatabase * db = NULL;
+GpuResourceHandle  model = 0;
+
+bool init( Gpu & g )
 {
+    db = new GpuResourceDatabase( g );
+
+    model = MeshResource::loadFromFile( *db, "media::model\\model1.xml" );
+
     // success
     return true;
 }
 
 void quit( Gpu & )
 {
+    safeDelete( db );
 }
 
 void draw( Gpu & )
 {
+    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
+    if( m )
+    {
+        UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "pvw" ) ) );
+
+        u->getUniform()->update( Matrix44f::sIdentity() );
+
+        m->draw();
+    }
 }
 
 int run( Gpu & gpu )

@@ -42,6 +42,50 @@ namespace GN { namespace gfx
         GpuResourceDatabase & database() const { return mDatabase; }
         GpuResourceHandle     handle() const { return mHandle; }
 
+        //@{
+
+        ///
+        /// Cast GPU resource pointer with type check.
+        ///
+        template<typename T>
+        static inline T * castTo( GpuResource * r )
+        {
+            GN_ASSERT( 0 == r || T::guid() == *r->database().getResourceType( r->handle() ) );
+            return (T*)r;
+        }
+
+        ///
+        /// Cast GPU resource pointer with type check.
+        ///
+        template<typename T>
+        static inline T & castTo( GpuResource & r )
+        {
+            GN_ASSERT( T::guid() == *r.database().getResourceType( r.handle() ) );
+            return (T&)r;
+        }
+
+        ///
+        /// Cast GPU resource pointer with type check.
+        ///
+        template<typename T>
+        inline T & castTo()
+        {
+            GN_ASSERT( T::guid() == *database().getResourceType( handle() ) );
+            return (T&)*this;
+        }
+
+        ///
+        /// Cast GPU resource pointer with type check.
+        ///
+        template<typename T>
+        inline const T & castTo() const
+        {
+            GN_ASSERT( T::guid() == *database().getResourceType( handle() ) );
+            return (const T&)*this;
+        }
+
+        //@}
+
         // *****************************
         // protected members
         // *****************************
@@ -61,26 +105,6 @@ namespace GN { namespace gfx
         GpuResourceDatabase & mDatabase;
         GpuResourceHandle     mHandle;
     };
-
-    ///
-    /// Cast GPU resource pointer with type check.
-    ///
-    template<typename T>
-    inline T * safeCastResource( GpuResource * r )
-    {
-        GN_ASSERT( 0 == r || T::guid() == *r->database().getResourceType( r->handle() ) );
-        return (T*)r;
-    }
-
-    ///
-    /// Cast GPU resource pointer with type check.
-    ///
-    template<typename T>
-    inline T & safeCastResource( GpuResource & r )
-    {
-        GN_ASSERT( T::guid() == *r.database().getResourceType( r.handle() ) );
-        return (T&)r;
-    }
 
     ///
     /// GPU resource factory
@@ -111,8 +135,11 @@ namespace GN { namespace gfx
 
         // reset the database to intial state, that is:
         //  1. delete all handles;
-        //  3. unregister all factories.
+        //  2. unregister all factories.
         void clear();
+
+        Gpu & gpu() const;
+
         //@}
 
         //@{
@@ -129,6 +156,7 @@ namespace GN { namespace gfx
         const char         * getResourceName( GpuResourceHandle ) const;
         const Guid         * getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
+        GpuResource        * getResource( const Guid & type, const char * name ) { return getResource( findResource( type, name ) ); }
         //@}
 
     private:
@@ -544,7 +572,7 @@ namespace GN { namespace gfx
         void              setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
         GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
 
-        const GpuContext & getGC() const;
+        void              draw() const;
         //@}
 
         // ********************************

@@ -239,7 +239,7 @@ void GN::gfx::ModelResource::Impl::clear()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName, GpuResourceHandle handle )
 {
-    EffectResource * effect = safeCastResource<EffectResource>( database().getResource( mEffect.handle ) );
+    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
     if( NULL == effect )
     {
         GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", myname() );
@@ -262,7 +262,7 @@ void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName,
 GpuResourceHandle
 GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) const
 {
-    EffectResource * effect = safeCastResource<EffectResource>( database().getResource( mEffect.handle ) );
+    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
     if( NULL == effect )
     {
         GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", myname() );
@@ -279,6 +279,19 @@ GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) con
     return mTextures[parameterIndex].getHandle();
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::draw() const
+{
+    Gpu & g = database().gpu();
+
+    for( size_t i = 0; i < mPasses.size(); ++i )
+    {
+        g.bindContext( mPasses[i].gc );
+    }
+}
+
 // *****************************************************************************
 // GN::gfx::ModelResource::Impl - private methods
 // *****************************************************************************
@@ -288,7 +301,7 @@ GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) con
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 {
-    EffectResource & effect = safeCastResource<EffectResource>( r );
+    EffectResource & effect = r.castTo<EffectResource>();
 
     mPasses.resize( effect.getNumPasses() );
     for( size_t i = 0; i < mPasses.size(); ++i )
