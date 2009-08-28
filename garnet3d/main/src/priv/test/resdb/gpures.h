@@ -63,6 +63,15 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// Cast GPU resource pointer with debug time check.
+    template<typename T>
+    inline T * safeCastResource( GpuResource * r )
+    {
+        GN_ASSERT( 0 == r || T::guid() == r->database().getResourceType( r.handle() ) );
+        return (T*)r;
+    }
+
+    ///
     /// GPU resource factory
     ///
     struct GpuResourceFactory
@@ -106,6 +115,7 @@ namespace GN { namespace gfx
         void                 deleteAllResources();
         GpuResourceHandle    findResource( const Guid & type, const char * name );
         const char         * getResourceName( GpuResourceHandle );
+        const Guid         * getResourceType( GpuResourceHandle );
         GpuResource        * getResource( GpuResourceHandle );
         //@}
 
@@ -392,7 +402,7 @@ namespace GN { namespace gfx
         ///
         /// setup the descriptor from XML
         ///
-        bool loadFromXmlNode( const XmlNode & root, const StrA & basedir );
+        bool loadFromXmlNode( const XmlNode & root, const char * basedir );
 
         ///
         /// write the descriptor to XML
@@ -408,6 +418,9 @@ namespace GN { namespace gfx
     {
     public:
 
+        /// effect factory
+        //@{
+
         /// return GUID of the effect resource class
         static const Guid & guid();
 
@@ -417,7 +430,33 @@ namespace GN { namespace gfx
         /// load effect from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
-    protected:
+        //@
+
+        /// Effect properties
+        //@{
+
+        struct BindingLocation
+        {
+            UInt8 pass;
+            UInt8 stage;
+        };
+
+        struct ParameterProperties
+        {
+            const char               * effectParameterName;
+            DynaArray<BindingLocation> bindings;
+        };
+
+        static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
+
+        size_t                      getNumPasses() const;
+        size_t                      getNumTextures() const;
+        size_t                      findTextureByName( const char * name ) const;
+        const ParameterProperties & getTextureProperties( size_t i ) const;
+
+        //@}
+
+     protected:
 
         /// protected constructor
         EffectResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
@@ -447,7 +486,7 @@ namespace GN { namespace gfx
         };
 
         StrA                            effectResourceName; //< effect resource name. If empty, then create a new effect using effectDesc
-        EffectResourceDesc              effectDesc;         //< Used to create new effect, if effect resource name is empty.
+        EffectResourceDesc              effectResourceDesc; //< Used to create new effect, if effect resource name is empty.
         std::map<StrA,ModelTextureDesc> textures;           //< key is effect parameter name
         std::map<StrA,ModelUniformDesc> uniforms;           //< key is effect parameter name
 
@@ -473,14 +512,14 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        void              setTexture( const StrA & effectParameterName, GpuResourceHandle );
-        GpuResourceHandle getTexture( const StrA & effectParameterName ) const;
+        void              setTexture( const char * effectParameterName, GpuResourceHandle );
+        GpuResourceHandle getTexture( const char * effectParameterName ) const;
 
-        void              setUniform( const StrA & effectParameterName, GpuResourceHandle );
-        GpuResourceHandle getUniform( const StrA & effectParameterName ) const;
+        void              setUniform( const char * effectParameterName, GpuResourceHandle );
+        GpuResourceHandle getUniform( const char * effectParameterName ) const;
 
-        void              setRenderTarget( const StrA & effectParameterName, GpuResourceHandle, size_t face, size_t level, size_t slice );
-        GpuResourceHandle getRenderTarget( const StrA & effectParameterName, size_t * face = NULL, size_t * level = NULL, size_t * slice = NULL ) const;
+        void              setRenderTarget( const char * effectParameterName, GpuResourceHandle, size_t face, size_t level, size_t slice );
+        GpuResourceHandle getRenderTarget( const char * effectParameterName, size_t * face = NULL, size_t * level = NULL, size_t * slice = NULL ) const;
 
         void              setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
         GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
