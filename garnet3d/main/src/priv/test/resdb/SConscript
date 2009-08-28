@@ -1,6 +1,7 @@
 Import( 'GN' )
 
 sources = [
+	'effectresource.cpp',
 	'main.cpp',
 	'gpuresdb.cpp',
 	'modelresource.cpp',

@@ -549,6 +549,17 @@ namespace GN { namespace gfx
     class ModelResource : public GpuResource
     {
         // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    private:
+        ModelResource( GpuResourceDatabase & db, GpuResourceHandle h );
+    public:
+        virtual ~ModelResource();
+        //@}
+
+        // ********************************
         // public functions
         // ********************************
     public:
@@ -573,16 +584,6 @@ namespace GN { namespace gfx
         GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
 
         void              draw() const;
-        //@}
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    protected:
-        ModelResource( GpuResourceDatabase & db, GpuResourceHandle h );
-        virtual ~ModelResource();
         //@}
 
         // ********************************
