@@ -10,19 +10,40 @@
 
 namespace GN { namespace gfx
 {
-    union GpuResourceHandleStruct
+    class GpuResourceHandleStruct
     {
-        UInt32 u32;
-        struct
+        union
         {
-            UInt32 type           : 8;
-            UInt32 internalHandle : 24;
+            UInt32 mExternalHandle;
+            struct
+            {
+                UInt32 mIndexPlusOne   : 8;
+                UInt32 mInternalHandle : 24;
+            };
         };
 
-        enum
+    public:
+
+        //@{
+
+        enum { MAX_TYPES = 2^8-1 };
+
+        explicit GpuResourceHandleStruct( UInt32 externalHandle )
+            : mExternalHandle( externalHandle )
         {
-            MAX_TYPES = (2^8-1)
-        };
+        }
+
+        GpuResourceHandleStruct( UInt32 managerIndex, UInt32 internalHandle )
+        {
+            mIndexPlusOne = managerIndex + 1;
+            mInternalHandle = internalHandle;
+        }
+
+        UInt32 externalHandle() const { return mExternalHandle; }
+        UInt32 managerIndex() const { return mIndexPlusOne - 1; }
+        UInt32 internalHandle() const { return mInternalHandle; }
+
+        //@}
     };
 
     ///
@@ -72,10 +93,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        Impl( GpuResourceDatabase & db, Gpu & );
+        Impl( GpuResourceDatabase & db, Gpu & gpu );
         virtual ~Impl();
 
         void clear();
+
+        Gpu & gpu() const { return mGpu; }
 
         //@}
 

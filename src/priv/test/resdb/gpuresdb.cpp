@@ -10,6 +10,26 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 // local functions
 // *****************************************************************************
 
+//
+//
+// -----------------------------------------------------------------------------
+static StrA sGuidToStr( const Guid & guid )
+{
+    return strFormat(
+        "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        guid.data1,
+        guid.data2,
+        guid.data3,
+        guid.data4[0],
+        guid.data4[1],
+        guid.data4[2],
+        guid.data4[3],
+        guid.data4[4],
+        guid.data4[5],
+        guid.data4[6],
+        guid.data4[7] );
+}
+
 // *****************************************************************************
 // GpuResourceDatabase::Impl public methods
 // *****************************************************************************
@@ -123,19 +143,17 @@ GpuResourceDatabase::Impl::createResource(
     UInt32 internalHandle = mgr->resources.add( name );
     if( 0 == internalHandle ) return 0;
 
-    GpuResourceHandleStruct hs;
-    hs.type = mgr->index;
-    hs.internalHandle = internalHandle;
+    GpuResourceHandleStruct hs( mgr->index, internalHandle );
 
     ResourceItem & item = mgr->resources[internalHandle];
-    item.resource = mgr->factory.createResource( mDatabase, hs.u32, parameters );
+    item.resource = mgr->factory.createResource( mDatabase, hs.externalHandle(), parameters );
     if( NULL == item.resource )
     {
         mgr->resources.remove( internalHandle );
         return 0;
     }
 
-    return hs.u32;
+    return hs.externalHandle();
 }
 
 //
@@ -146,16 +164,15 @@ void GpuResourceDatabase::Impl::deleteResource( GpuResourceHandle handle )
     ResourceItem * r = getResourceItem( handle );
     if( NULL == r ) return;
 
-    GpuResourceHandleStruct hs;
-    hs.u32 = handle;
+    GpuResourceHandleStruct hs( handle );
 
-    ResourceManager & mgr = mManagers[hs.type];
+    ResourceManager & mgr = mManagers[hs.managerIndex()];
 
     GN_ASSERT( r->resource );
     mgr.factory.deleteResource( r->resource );
 
     // note: this will invalidate variable "r".
-    mgr.resources.remove( hs.internalHandle );
+    mgr.resources.remove( hs.internalHandle() );
 }
 
 //
@@ -194,10 +211,8 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) 
         return 0;
     }
 
-    GpuResourceHandleStruct hs;
-    hs.type = mgr->index;
-    hs.internalHandle = internalHandle;
-    return hs.u32;
+    GpuResourceHandleStruct hs( mgr->index, internalHandle );
+    return hs.externalHandle();
 }
 
 //
@@ -209,12 +224,11 @@ GpuResourceDatabase::Impl::getResourceName( GpuResourceHandle handle ) const
     ResourceItem * r = getResourceItem( handle );
     if( NULL == r ) return NULL;
 
-    GpuResourceHandleStruct hs;
-    hs.u32 = handle;
+    GpuResourceHandleStruct hs( handle );
 
-    const ResourceManager & mgr = mManagers[hs.type];
+    const ResourceManager & mgr = mManagers[hs.managerIndex()];
 
-    return mgr.resources.handle2name(hs.internalHandle);
+    return mgr.resources.handle2name( hs.internalHandle() );
 }
 
 //
@@ -226,10 +240,9 @@ GpuResourceDatabase::Impl::getResourceType( GpuResourceHandle handle ) const
     ResourceItem * r = getResourceItem( handle );
     if( NULL == r ) return NULL;
 
-    GpuResourceHandleStruct hs;
-    hs.u32 = handle;
+    GpuResourceHandleStruct hs( handle );
 
-    const ResourceManager & mgr = mManagers[hs.type];
+    const ResourceManager & mgr = mManagers[hs.managerIndex()];
 
     return &mgr.guid;
 }
@@ -265,7 +278,7 @@ GpuResourceDatabase::Impl::getManager( const Guid & type ) const
         }
     }
 
-    GN_ERROR(sLogger)( "Invalid resource type guid." );
+    GN_ERROR(sLogger)( "Invalid resource type GUID: %s", sGuidToStr(type).cptr() );
 
     return NULL;
 }
@@ -285,7 +298,7 @@ GpuResourceDatabase::Impl::getManager( const Guid & type )
         }
     }
 
-    GN_ERROR(sLogger)( "Invalid resource type guid." );
+    GN_ERROR(sLogger)( "Unregistered resource type GUID: %s", sGuidToStr(type).cptr() );
 
     return NULL;
 }
@@ -296,30 +309,29 @@ GpuResourceDatabase::Impl::getManager( const Guid & type )
 GpuResourceDatabase::Impl::ResourceItem *
 GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle, bool silent ) const
 {
-    GpuResourceHandleStruct hs;
-    hs.u32 = handle;
+    GpuResourceHandleStruct hs( handle );
 
-    if( hs.type >= mManagers.size() )
+    if( hs.managerIndex() >= mManagers.size() )
     {
         if( !silent )
         {
-            GN_ERROR(sLogger)( "Invalid resource handle %d : invalid type", handle );
+            GN_ERROR(sLogger)( "Invalid resource handle 0x%08X: invalid resource type.", handle );
         }
         return NULL;
     }
 
-    const ResourceManager & mgr = mManagers[hs.type];
+    const ResourceManager & mgr = mManagers[hs.managerIndex()];
 
-    if( !mgr.resources.validHandle(hs.internalHandle) )
+    if( !mgr.resources.validHandle(hs.internalHandle()) )
     {
         if( !silent )
         {
-            GN_ERROR(sLogger)( "Invalid resource handle %d : invalid internal handle", handle );
+            GN_ERROR(sLogger)( "Invalid resource handle 0x%08X: invalid internal handle.", handle );
         }
         return NULL;
     }
 
-    return &mgr.resources[hs.internalHandle];
+    return &mgr.resources[hs.internalHandle()];
 }
 
 // *****************************************************************************
@@ -328,9 +340,10 @@ GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle, bool silen
 
 GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL) { mImpl = new Impl(*this,g); }
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
-void GpuResourceDatabase::clear() { mImpl->clear(); }
-bool GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
-bool GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
+void                 GpuResourceDatabase::clear() { mImpl->clear(); }
+Gpu                & GpuResourceDatabase::gpu() const { return mImpl->gpu(); }
+bool                 GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
+bool                 GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
 GpuResourceHandle    GpuResourceDatabase::createResource( const Guid & type, const char * name, const void * parameters ) { return mImpl->createResource( type, name, parameters ); }
 void                 GpuResourceDatabase::deleteResource( GpuResourceHandle handle ) { mImpl->deleteResource( handle ); }
 void                 GpuResourceDatabase::deleteAllResources() { mImpl->deleteAllResources(); }

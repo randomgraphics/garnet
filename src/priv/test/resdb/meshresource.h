@@ -1,20 +1,19 @@
-#ifndef __GN_GFX_EFFECTRESOURCE_H__
-#define __GN_GFX_EFFECTRESOURCE_H__
+#ifndef __GN_GFX_MESHRESOURCE_H__
+#define __GN_GFX_MESHRESOURCE_H__
 // *****************************************************************************
 /// \file
-/// \brief   Effect resource implementation class
-/// \author  chenli@@REDMOND (2009.8.27)
+/// \brief   Mesh resource implementation class
+/// \author  chenli@@REDMOND (2009.8.28)
 // *****************************************************************************
 
 #include "gpures.h"
 
 namespace GN { namespace gfx
 {
-
     ///
-    /// Effect resource implementation class
+    /// Mesh resource implementation class
     ///
-    class EffectResource::Impl : public StdClass, public SlotBase
+    class MeshResource::Impl : public StdClass
     {
         GN_DECLARE_STDCLASS( Impl, StdClass );
 
@@ -24,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        Impl( EffectResource & owner ) : mOwner(owner) { clear(); }
+        Impl( MeshResource & owner ) : mOwner(owner) { clear(); }
         virtual ~Impl() { quit(); }
         //@}
 
@@ -34,7 +33,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const EffectResourceDesc & desc );
+        bool init( const MeshResourceDesc & desc );
         void quit();
     private:
         void clear() {}
@@ -45,20 +44,12 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        size_t                    getNumPasses() const;
-
-        size_t                    getNumTextures() const;
-        size_t                    findTexture( const char * name ) const;
-        const TextureProperties & getTextureProperties( size_t i ) const;
-
-        void                      applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
-
         // ********************************
         // private variables
         // ********************************
     private:
 
-        EffectResource & mOwner;
+        MeshResource & mOwner;
 
         // ********************************
         // private functions
@@ -67,12 +58,10 @@ namespace GN { namespace gfx
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          myname() const { return mOwner.database().getResourceName( mOwner.handle() ); }
-
     };
-
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_GFX_EFFECTRESOURCE_H__
+#endif // __GN_GFX_MESHRESOURCE_H__

@@ -15,7 +15,7 @@ bool init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
-    model = MeshResource::loadFromFile( *db, "media::model\\model1.xml" );
+    model = ModelResource::loadFromFile( *db, "media::model\\model1.xml" );
 
     // success
     return true;
@@ -31,9 +31,8 @@ void draw( Gpu & )
     ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
     if( m )
     {
-        UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "pvw" ) ) );
-
-        u->getUniform()->update( Matrix44f::sIdentity() );
+        //UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "pvw" ) ) );
+        //if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
 
         m->draw();
     }
