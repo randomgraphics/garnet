@@ -22,6 +22,16 @@ namespace GN { namespace gfx
     class GpuResource : public NoCopy
     {
         // *****************************
+        // ctor / dtor
+        // *****************************
+
+        //@{
+    protected:
+        GpuResource( GpuResourceDatabase & db, GpuResourceHandle h );
+        virtual ~GpuResource();
+        //@}
+
+        // *****************************
         // public events
         // *****************************
     public:
@@ -39,63 +49,19 @@ namespace GN { namespace gfx
         // *****************************
     public:
 
+        /// common resource properties
+        //@{
         GpuResourceDatabase & database() const { return mDatabase; }
         GpuResourceHandle     handle() const { return mHandle; }
-
-        //@{
-
-        ///
-        /// Cast GPU resource pointer with type check.
-        ///
-        template<typename T>
-        static inline T * castTo( GpuResource * r )
-        {
-            GN_ASSERT( 0 == r || T::guid() == *r->database().getResourceType( r->handle() ) );
-            return (T*)r;
-        }
-
-        ///
-        /// Cast GPU resource pointer with type check.
-        ///
-        template<typename T>
-        static inline T & castTo( GpuResource & r )
-        {
-            GN_ASSERT( T::guid() == *r.database().getResourceType( r.handle() ) );
-            return (T&)r;
-        }
-
-        ///
-        /// Cast GPU resource pointer with type check.
-        ///
-        template<typename T>
-        inline T & castTo()
-        {
-            GN_ASSERT( T::guid() == *database().getResourceType( handle() ) );
-            return (T&)*this;
-        }
-
-        ///
-        /// Cast GPU resource pointer with type check.
-        ///
-        template<typename T>
-        inline const T & castTo() const
-        {
-            GN_ASSERT( T::guid() == *database().getResourceType( handle() ) );
-            return (const T&)*this;
-        }
-
         //@}
 
-        // *****************************
-        // protected members
-        // *****************************
-    protected:
-
-        /// protected constructor
-        GpuResource( GpuResourceDatabase & db, GpuResourceHandle h )
-            : mDatabase(db), mHandle(h)
-        {
-        }
+        /// Cast GPU resource pointer with type check.
+        //@{
+        template<typename T> static inline T * castTo( GpuResource * r );
+        template<typename T> static inline T & castTo( GpuResource & r );
+        template<typename T>        inline T & castTo();
+        template<typename T>        inline const T & castTo() const;
+        //@}
 
         // *****************************
         // private members
@@ -111,10 +77,12 @@ namespace GN { namespace gfx
     ///
     struct GpuResourceFactory
     {
+        /// create new resource instance
         GpuResource * (*createResource)( GpuResourceDatabase & db,
                                          GpuResourceHandle     handle,
                                          const void          * parameters );
 
+        /// delete resource instance
         void          (*deleteResource)( GpuResource * );
     };
 
@@ -148,7 +116,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters = NULL );
+        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
         bool                 checkHandle( GpuResourceHandle ) const;
@@ -169,6 +137,9 @@ namespace GN { namespace gfx
     {
     public:
 
+        /// Texture resource factory
+        //@{
+
         /// return GUID of the texture resource class
         static const Guid & guid();
 
@@ -178,15 +149,23 @@ namespace GN { namespace gfx
         /// load texture from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
-        //@{
-        void      setTexture( Texture * );
-        Texture * getTexture() const;
         //@}
 
-    protected:
+        /// Texture resource properties
+        //@{
+        void                     setTexture( const AutoRef<Texture> & );
+        const AutoRef<Texture> & getTexture() const { return mTexture; }
+        //@}
 
-        /// protected constructor
+    private:
+
+        AutoRef<Texture> mTexture;
+
         TextureResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
+        virtual ~TextureResource() {}
+
+        static GpuResource * createInstance( GpuResourceDatabase &, GpuResourceHandle, const void *);
+        static void          deleteInstance( GpuResource * );
     };
 
     ///
@@ -195,6 +174,9 @@ namespace GN { namespace gfx
     class UniformResource : public GpuResource
     {
     public:
+
+        /// Uniform resource factory
+        //@{
 
         /// return GUID of the uniform resource class
         static const Guid & guid();
@@ -205,15 +187,22 @@ namespace GN { namespace gfx
         /// load uniform from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
-        //@{
-        void      setUniform( Uniform * );
-        Uniform * getUniform() const;
         //@}
 
-    protected:
+        //@{
+        void                     setUniform( const AutoRef<Uniform> & );
+        const AutoRef<Uniform> & getUniform() const { return mUniform; }
+        //@}
 
-        /// protected constructor
+    private:
+
+        AutoRef<Uniform> mUniform;
+
         UniformResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
+        virtual ~UniformResource() {}
+
+        static GpuResource * createInstance( GpuResourceDatabase &, GpuResourceHandle, const void *);
+        static void          deleteInstance( GpuResource * );
     };
 
     ///
@@ -229,6 +218,15 @@ namespace GN { namespace gfx
         size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using vertex size defined by vertex format.
         size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
         const void *  indices; // Null means index data are undefined.
+
+        ///
+        /// clear to an empty descriptor
+        ///
+        void clear()
+        {
+            numvtx = 0;
+            numidx = 0;
+        }
     };
 
     ///
@@ -252,12 +250,18 @@ namespace GN { namespace gfx
     protected:
 
         /// protected constructor
-        MeshResource( GpuResourceDatabase & db ) : GpuResource(db,0) {}
+        MeshResource( GpuResourceDatabase & db, GpuResourceHandle h );
 
-    private:
+        /// protected destructor
+        virtual ~MeshResource();
 
+    protected:
+
+        /// implementation class
+        //@{
         class Impl;
         Impl * mImpl;
+        //@}
     };
 
     ///
@@ -456,6 +460,13 @@ namespace GN { namespace gfx
     ///
     class EffectResource : public GpuResource
     {
+
+        /// ctor / dtor
+        //@{
+    protected:
+        EffectResource( GpuResourceDatabase & db, GpuResourceHandle h );
+        ~EffectResource();
+
     public:
 
         /// effect factory
@@ -497,22 +508,41 @@ namespace GN { namespace gfx
         size_t                    getNumPasses() const;
 
         size_t                    getNumTextures() const;
-        size_t                    findTextureByName( const char * name ) const;
+        size_t                    findTexture( const char * name ) const;
         const TextureProperties & getTextureProperties( size_t i ) const;
 
         void                      applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
 
         //@}
 
-     protected:
+    protected:
 
-        /// protected constructor
-        EffectResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
-
-    private:
-
+        /// Effect implementation class
+        //@{
         class Impl;
         Impl * mImpl;
+        //@}
+    };
+
+    /// define a subset of the mesh resource. (0,0,0,0) means the whole mesh.
+    struct MeshResourceSubset
+    {
+        /// data members
+        //@{
+
+        size_t startvtx;
+        size_t numvtx;
+        size_t startidx;
+        size_t numidx;
+
+        //@}
+
+        /// methods
+        //@{
+
+        void clear() { startvtx = numvtx = startidx = numidx = 0; }
+
+        //@}
     };
 
     ///
@@ -520,6 +550,8 @@ namespace GN { namespace gfx
     ///
     struct ModelResourceDesc
     {
+        //@{
+
         struct ModelTextureDesc
         {
             StrA        resourceName; /// if empty, then create a new texture using the descriptor
@@ -533,6 +565,10 @@ namespace GN { namespace gfx
             DynaArray<UInt8> defaultValue; //< if empty, then no default value.
         };
 
+        //@}
+
+        //@{
+
         StrA                            effectResourceName; //< effect resource name. If empty, then create a new effect using effectDesc
         EffectResourceDesc              effectResourceDesc; //< Used to create new effect, if effect resource name is empty.
         std::map<StrA,ModelTextureDesc> textures;           //< key is effect parameter name
@@ -540,7 +576,24 @@ namespace GN { namespace gfx
 
         StrA                            meshResourceName; //< if empty, then create a new mesh using meshDesc
         MeshResourceDesc                meshResourceDesc; //< Used to create new mesh, if mesh resource name is empty
-        GpuMeshSubset                   subset;           //< Mesh subset information.
+        MeshResourceSubset              subset;           //< Mesh subset information.
+
+        //@}
+
+        ///
+        /// clear to an empty descriptor
+        ///
+        void clear();
+
+        ///
+        /// setup the descriptor from XML
+        ///
+        bool loadFromXmlNode( const XmlNode & root, const char * basedir );
+
+        ///
+        /// write the descriptor to XML
+        ///
+        void saveToXmlNode( const XmlNode & root );
     };
 
     ///
@@ -553,9 +606,8 @@ namespace GN { namespace gfx
         // ********************************
 
         //@{
-    private:
+    protected:
         ModelResource( GpuResourceDatabase & db, GpuResourceHandle h );
-    public:
         virtual ~ModelResource();
         //@}
 
@@ -580,8 +632,8 @@ namespace GN { namespace gfx
         void              setRenderTarget( const char * effectParameterName, GpuResourceHandle, size_t face, size_t level, size_t slice );
         GpuResourceHandle getRenderTarget( const char * effectParameterName, size_t * face = NULL, size_t * level = NULL, size_t * slice = NULL ) const;
 
-        void              setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset = NULL );
-        GpuResourceHandle getMesh( GpuMeshSubset * subset = NULL ) const;
+        void              setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset = NULL );
+        GpuResourceHandle getMesh( MeshResourceSubset * subset = NULL ) const;
 
         void              draw() const;
         //@}
@@ -590,12 +642,17 @@ namespace GN { namespace gfx
         // Impl
         // ********************************
 
-    private:
+    protected:
 
+        /// Model implementation class
+        //@{
         class Impl;
         Impl * mImpl;
+        //@}
     };
 }}
+
+#include "gpures.inl"
 
 // *****************************************************************************
 //                                     EOF

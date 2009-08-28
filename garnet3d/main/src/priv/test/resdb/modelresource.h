@@ -47,6 +47,9 @@ namespace GN { namespace gfx
         void              setTexture( const char * effectParameterName, GpuResourceHandle );
         GpuResourceHandle getTexture( const char * effectParameterName ) const;
 
+        void              setUniform( const char * effectParameterName, GpuResourceHandle );
+        GpuResourceHandle getUniform( const char * effectParameterName ) const;
+
         void              draw() const;
 
         // ********************************

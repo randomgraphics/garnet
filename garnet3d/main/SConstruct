@@ -879,7 +879,7 @@ TARGET_tests = [
     'GNtestInput',
     'GNtestPcre',
     'GNtestRenderToTexture',
-    'GNtestResourceDB',
+    'GNtestGpuResDB',
     'GNtestSprite',
     'GNut',
     'GNtestXenonNegativeZRange',

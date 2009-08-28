@@ -162,7 +162,7 @@ macro GN_StdClassImpl()
 	SetBufSelText( hbuf, "" )
 
     InsBufLine( hbuf,  currentLine+ 0, "// *****************************************************************************" )
-    InsBufLine( hbuf,  currentLine+ 1, "// Initialize and shutdown" )
+    InsBufLine( hbuf,  currentLine+ 1, "// @className@ - Initialize and shutdown" )
     InsBufLine( hbuf,  currentLine+ 2, "// *****************************************************************************" )
     InsBufLine( hbuf,  currentLine+ 3, "" )
     InsBufLine( hbuf,  currentLine+ 4, "//" )

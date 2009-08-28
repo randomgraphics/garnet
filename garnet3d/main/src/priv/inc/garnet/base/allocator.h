@@ -85,6 +85,13 @@ namespace GN
         void destroy( pointer ptr )
         {
             ptr->T::~T();
+
+            // Note:
+            //  This is to ensure that the compiler thinks that variable ptr is used.
+            //
+            //  When T is a simple type, like char or integer, VC compiler will generate
+            //  warning of "unreferenced formal parameter", since there's no destructor for POD types.
+            (void)ptr;
         }
 
         size_type max_size() const GN_NOTHROW()
