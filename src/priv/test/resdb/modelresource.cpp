@@ -335,3 +335,63 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
     // TODO: initialize render targets
     mRenderTargets.resize( 0 );
 }
+
+// *****************************************************************************
+// GN::gfx::ModelResource
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ModelResource::ModelResource( GpuResourceDatabase & db, GpuResourceHandle h )
+    : GpuResource( db, h ), mImpl(NULL)
+{
+    mImpl = new Impl(this);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ModelResource::~ModelResource()
+{
+    delete mImpl;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const Guid & GN::gfx::ModelResource::guid()
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GpuResourceHandle GN::gfx::ModelResource::create(
+    GpuResourceDatabase     & db,
+    const char              * name,
+    const ModelResourceDesc & desc )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GpuResourceHandle GN::gfx::ModelResource::loadFromFile(
+    GpuResourceDatabase & db,
+    const char          * filename )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void              GN::gfx::ModelResource::setTexture( const char * effectParameterName, GpuResourceHandle handle );
+GpuResourceHandle GN::gfx::ModelResource::getTexture( const char * effectParameterName ) const;
+void              GN::gfx::ModelResource::setUniform( const char * effectParameterName, GpuResourceHandle handle );
+GpuResourceHandle GN::gfx::ModelResource::getUniform( const char * effectParameterName ) const;
+void              GN::gfx::ModelResource::setRenderTarget( const char * effectParameterName, GpuResourceHandle handle, size_t face, size_t level, size_t slice );
+GpuResourceHandle GN::gfx::ModelResource::getRenderTarget( const char * effectParameterName, size_t * face, size_t * level, size_t * slice ) const;
+void              GN::gfx::ModelResource::setMesh( GpuResourceHandle mesh, const GpuMeshSubset * subset );
+GpuResourceHandle GN::gfx::ModelResource::getMesh( GpuMeshSubset * subset ) const;
+void              GN::gfx::ModelResource::draw() const { mImpl->draw(); }
