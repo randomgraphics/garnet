@@ -88,8 +88,10 @@ namespace GN { namespace gfx
         GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
-        GpuResourceHandle    findResource( const Guid & type, const char * name );
-        const char *         getResourceName( GpuResourceHandle );
+        bool                 checkHandle( GpuResourceHandle handle ) const { return NULL != getResourceItem( handle, true ); }
+        GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
+        const char *         getResourceName( GpuResourceHandle ) const;
+        const Guid         * getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
         //@}
 
@@ -97,7 +99,7 @@ namespace GN { namespace gfx
 
         const ResourceManager * getManager( const Guid & type ) const;
         ResourceManager       * getManager( const Guid & type );
-        ResourceItem          * getResourceItem( GpuResourceHandle ) const;
+        ResourceItem          * getResourceItem( GpuResourceHandle handle, bool silent = false ) const;
     };
 }}
 

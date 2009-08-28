@@ -55,7 +55,7 @@ namespace GN { namespace gfx
         ///
         /// comments...
         ///
-        class TextureItem : SlotBase
+        class TextureItem : public SlotBase
         {
         public:
 
