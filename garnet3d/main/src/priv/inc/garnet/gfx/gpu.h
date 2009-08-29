@@ -653,6 +653,8 @@ namespace GN { namespace gfx
         ///
         /// enumerations used by renderer context structure
         ///
+        /// \note: XXXX_INHERITED means using value from last context
+        ///
         enum GpuContextEnum
         {
             //@{
@@ -665,16 +667,23 @@ namespace GN { namespace gfx
             FILL_WIREFRAME,
             FILL_POINT,
             NUM_FILL_MODES,
-
-            FRONT_CCW = 0,
-            FRONT_CW,
-            NUM_FRONT_FACE_MODES,
+            FILL_INHERITED,
 
             CULL_NONE = 0,
             CULL_FRONT,
             CULL_BACK,
             NUM_CULL_MODES,
+            CULL_INHERITED,
 
+            FRONT_CCW = 0,
+            FRONT_CW,
+            NUM_FRONT_FACE_MODES,
+            FRONT_INHERITED,
+
+            // 0 and 1 are reserved for "false" and "true"
+            SWITCH_INHERITED = 2,
+
+            // comparison flags (4bits)
             CMP_NEVER = 0,
             CMP_LESS,
             CMP_LESS_EQUAL,
@@ -684,7 +693,9 @@ namespace GN { namespace gfx
             CMP_NOT_EQUAL,
             CMP_ALWAYS,
             NUM_CMP_FUNCTIONS,
+            CMP_INHERITED,
 
+            // stencil flags (4bits)
             STENCIL_KEEP = 0,
             STENCIL_ZERO,
             STENCIL_REPLACE,
@@ -694,7 +705,9 @@ namespace GN { namespace gfx
             STENCIL_INC,
             STENCIL_DEC,
             NUM_STENCIL_OPERATIONS,
+            STENCIL_INHERITED,
 
+            // blend arguments (4bits)
             BLEND_ZERO = 0,
             BLEND_ONE,
             BLEND_SRC_COLOR,
@@ -708,101 +721,100 @@ namespace GN { namespace gfx
             BLEND_BLEND_FACTOR,
             BLEND_INV_BLEND_FACTOR,
             NUM_BLEND_ARGUMENTS,
+            BLEND_ARGUMENT_INHERITED,
 
+            // blend operation (3bits)
             BLEND_OP_ADD = 0,
             BLEND_OP_SUB,
             BLEND_OP_REV_SUB,
             BLEND_OP_MIN,
             BLEND_OP_MAX,
             NUM_BLEND_OPERATIONS,
+            BLEND_OP_INHERITED,
 
             //@}
         };
 
-        /// Aggregated render states
+        /// Render state bit flags
         //@{
 
-        union
+        struct RenderStates
         {
-            UInt64 renderStates; ///< aggregated render states in single 64bit integer.
+            union
+            {
+
+            UInt64 bitFlags; ///< aggregated render state bit flags in single 64 bits integer.
 
             struct
             {
-                // BYTE 0
-                union
-                {
-                    UInt8     miscFlags0;
-                    struct
-                    {
-                        UInt8 fillMode       : 2;
-                        UInt8 cullMode       : 2;
-                        UInt8 frontFace      : 1;
-                        UInt8 msaaEnabled    : 1;
-                        UInt8 miscNoUse      : 2; //< no use. Must be zero.
-                    };
-                };
 
-                // BYTE 1
-                union
-                {
-                    UInt8     depthFlags;
-                    struct
-                    {
-                        UInt8 depthTest  : 1;
-                        UInt8 depthWrite : 1;
-                        UInt8 depthFunc  : 3;
-                        UInt8 depthNoUse : 3;
-                    };
-                };
+            // depth stencil flags ( 2 bytes )
+            UInt64 depthTestEnabled  : 2;
+            UInt64 depthWriteEnabled : 2;
+            UInt64 depthFunc         : 4;
+            UInt64 depthNoUse        : 4;
+            UInt64 _reserved0        : 4; ///< reserved bits. keep them zero.
 
-                // BYTE 2-3
-                union
-                {
-                    UInt16     stencilFlags;
-                    struct
-                    {
-                        UInt16 stencilEnabled : 1;
-                        UInt16 stencilPassOp  : 3; ///< pass both stencil and Z
-                        UInt16 stencilFailOp  : 3; ///< fail stencil (no z test at all)
-                        UInt16 stencilZFailOp : 3; ///< pass stencil but fail Z
-                        UInt16 stencilNoUse   : 6; ///< no use. must be zero
-                    };
-                };
+            // stencil flags ( 2 bytes )
+            UInt64 stencilEnabled    : 2;
+            UInt64 stencilPassOp     : 4; ///< pass both stencil and Z
+            UInt64 stencilFailOp     : 4; ///< fail stencil (no z test at all)
+            UInt64 stencilZFailOp    : 4; ///< pass stencil but fail Z
+            UInt64 _reserved1        : 2; ///< reserved bits. keep them zero.
 
-                // DWORD 1
-                union
-                {
-                    UInt32     blendFlags;
-                    struct
-                    {
-                        UInt32 blendSrc       : 4;
-                        UInt32 blendDst       : 4;
-                        UInt32 blendOp        : 3;
-                        UInt32 blendEnabled   : 1;
-                        UInt32 blendAlphaSrc  : 4;
-                        UInt32 blendAlphaDst  : 4;
-                        UInt32 blendAlphaOp   : 3;
-                        UInt32 nouse_1        : 9;///< no use. must be zero
-                    };
-                };
+            // alpha blending flags (3 bytes)
+            UInt64 blendEnabled      : 2;
+            UInt64 blendSrc          : 4;
+            UInt64 blendDst          : 4;
+            UInt64 blendOp           : 3;
+            UInt64 blendAlphaSrc     : 4;
+            UInt64 blendAlphaDst     : 4;
+            UInt64 blendAlphaOp      : 3;
+
+            // misc. flags (1 byte)
+            UInt64 fillMode          : 2;
+            UInt64 cullMode          : 2;
+            UInt64 frontFace         : 2;
+            UInt64 msaaEnabled       : 2;
+
             };
+
+            struct
+            {
+
+            UInt64 depthFlags    : 16;
+            UInt64 stencilFlags  : 16;
+            UInt64 blendingFlags : 24;
+            UInt64 miscFlags     :  8;
+
+            };
+
+            };
+
+            /// blend factors for RGBA
+            Vector4f blendFactors;
+
+            /// 4 bits x 8 render targets.
+            UInt32 colorWriteMask;
+
+            /// viewport. (0,0,0,0) is used to represent current size of render target.
+            Rect<UInt32> viewport;
+
+            /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
+            Rect<UInt32> scissorRect;
+
+            /// inheritance flags for non-aggregated render states
+            //@{
+            bool useInheritedBlendFactors;
+            bool useInheritedColorWriteMasks;
+            bool useInheritedViewport;
+            bool useInheritedScissorRect;
+            //@}
         };
+        GN_CASSERT( GN_FIELD_OFFSET( RenderStates, blendFactors ) == 8 );
 
-        //@}
-
-        /// blend factors for RGBA
-        Vector4f blendFactors;
-
-        /// 4 bits x 8 render targets.
-        UInt32 colorWriteMask;
-
-        /// viewport. (0,0,0,0) is used to represent current size of render target.
-        Rect<UInt32> viewport;
-
-        /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
-        Rect<UInt32> scissorRect;
-
-        // TODO: depth bias
+        /// render state bit flags
+        RenderStates rs;
 
         /// shader
         AutoRef<GpuProgram> gpuProgram;
@@ -833,44 +845,47 @@ namespace GN { namespace gfx
         ///
         GpuContext() { clear(); }
 
-        ///
-        /// reset context to default value
-        ///
-        void clear()
+        //
+        // clear all render states to default value (nothing is inherited)
+        //
+        void clearToDefaultRenderStates()
         {
             // clear all render states first
-            renderStates = 0;
+            rs.bitFlags = 0;
 
-            fillMode = FILL_SOLID;
-            cullMode = CULL_BACK;
-            frontFace = FRONT_CCW;
-            msaaEnabled = true;
-            depthTest = true;
-            depthWrite = true;
-            depthFunc = CMP_LESS;
-            stencilEnabled = false;
-            stencilPassOp = STENCIL_KEEP;
-            stencilFailOp = STENCIL_KEEP;
-            stencilZFailOp = STENCIL_KEEP;
+            rs.fillMode = FILL_SOLID;
+            rs.cullMode = CULL_BACK;
+            rs.frontFace = FRONT_CCW;
+            rs.msaaEnabled = false;
 
-            blendSrc = BLEND_SRC_ALPHA;
-            blendDst = BLEND_INV_SRC_ALPHA;
-            blendOp  = BLEND_OP_ADD;
-            blendAlphaSrc = BLEND_SRC_ALPHA;
-            blendAlphaDst = BLEND_INV_SRC_ALPHA;
-            blendAlphaOp  = BLEND_OP_ADD;
+            rs.depthTestEnabled = true;
+            rs.depthWriteEnabled = true;
+            rs.depthFunc = CMP_LESS;
 
-            blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
+            rs.stencilEnabled = false;
+            rs.stencilPassOp = STENCIL_KEEP;
+            rs.stencilFailOp = STENCIL_KEEP;
+            rs.stencilZFailOp = STENCIL_KEEP;
 
-            colorWriteMask = 0xFFFFFFFF;
+            rs.blendEnabled = false;
+            rs.blendSrc = BLEND_SRC_ALPHA;
+            rs.blendDst = BLEND_INV_SRC_ALPHA;
+            rs.blendOp  = BLEND_OP_ADD;
+            rs.blendAlphaSrc = BLEND_SRC_ALPHA;
+            rs.blendAlphaDst = BLEND_INV_SRC_ALPHA;
+            rs.blendAlphaOp  = BLEND_OP_ADD;
 
-            viewport.set( 0, 0, 0, 0 );
+            rs.blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
+            rs.useInheritedBlendFactors = false;
 
-            scissorRect.set( 0, 0, 0, 0 );
+            rs.colorWriteMask = 0xFFFFFFFF;
+            rs.useInheritedColorWriteMasks = false;
 
-            gpuProgram.clear();
+            rs.viewport.set( 0, 0, 0, 0 );
+            rs.useInheritedViewport = false;
 
-            clearResources();
+            rs.scissorRect.set( 0, 0, 0, 0 );
+            rs.useInheritedBlendFactors = false;
         }
 
         //
@@ -896,6 +911,19 @@ namespace GN { namespace gfx
             colortargets.clear();
             depthstencil.clear();
         }
+
+        ///
+        /// reset context to default value
+        ///
+        void clear()
+        {
+            clearToDefaultRenderStates();
+
+            gpuProgram.clear();
+
+            clearResources();
+        }
+
     };
 
     ///

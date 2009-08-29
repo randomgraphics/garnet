@@ -103,8 +103,8 @@ namespace GN { namespace gfx
             RenderState<UInt8> cullMode;
             RenderState<UInt8> frontFace;
             RenderState<bool>  msaaEnabled;
-            RenderState<bool>  depthTest;
-            RenderState<bool>  depthWrite;
+            RenderState<bool>  depthTestEnabled;
+            RenderState<bool>  depthWriteEnabled;
             RenderState<UInt8> depthFunc;
 
             // TODO: more render states.
@@ -115,8 +115,8 @@ namespace GN { namespace gfx
                 cullMode.inherited = true;
                 frontFace.inherited = true;
                 msaaEnabled.inherited = true;
-                depthTest.inherited = true;
-                depthWrite.inherited = true;
+                depthTestEnabled.inherited = true;
+                depthWriteEnabled.inherited = true;
                 depthFunc.inherited = true;
             }
         };
