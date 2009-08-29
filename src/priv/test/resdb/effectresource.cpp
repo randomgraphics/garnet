@@ -58,24 +58,6 @@ void GN::gfx::EffectResource::Impl::quit()
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::EffectResource::Impl::getNumPasses() const
-{
-    GN_UNIMPL_WARNING();
-    return 0;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-size_t GN::gfx::EffectResource::Impl::getNumTextures() const
-{
-    GN_UNIMPL_WARNING();
-    return 0;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 {
     GN_UNIMPL_WARNING();
@@ -86,19 +68,17 @@ size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::EffectResource::TextureProperties &
-GN::gfx::EffectResource::Impl::getTextureProperties( size_t parameterIndex ) const
+size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 {
-    GN_UNIMPL();
-    GN_UNUSED_PARAM( parameterIndex );
-    static TextureProperties dummy;
-    return dummy;
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( name );
+    return PARAMETER_NOT_FOUND;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const
+void GN::gfx::EffectResource::Impl::applyToContext( size_t pass, GpuContext & gc ) const
 {
     GN_UNUSED_PARAM( pass );
     GN_UNUSED_PARAM( gc );
@@ -220,7 +200,13 @@ GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
 //
 // -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::getNumPasses() const { return mImpl->getNumPasses(); }
+
 size_t GN::gfx::EffectResource::getNumTextures() const { return mImpl->getNumTextures(); }
 size_t GN::gfx::EffectResource::findTexture( const char * name ) const { return mImpl->findTexture( name ); }
 const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::getTextureProperties( size_t i ) const { return mImpl->getTextureProperties( i ); }
-void GN::gfx::EffectResource::applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const { return mImpl->applyGpuProgramAndRenderStates( pass, gc ); }
+
+size_t GN::gfx::EffectResource::getNumUniforms() const { return mImpl->getNumUniforms(); }
+size_t GN::gfx::EffectResource::findUniform( const char * name ) const { return mImpl->findUniform( name ); }
+const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::getUniformProperties( size_t i ) const { return mImpl->getUniformProperties( i ); }
+
+void GN::gfx::EffectResource::applyToContext( size_t pass, GpuContext & gc ) const { return mImpl->applyToContext( pass, gc ); }
