@@ -370,7 +370,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         RenderPass & pass = mPasses[i];
         pass.gc.clear();
 
-        effect.applyGpuProgramAndRenderStates( i, pass.gc );
+        effect.applyToContext( i, pass.gc );
     }
 
     // reapply mesh

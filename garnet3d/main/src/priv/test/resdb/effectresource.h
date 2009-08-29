@@ -45,20 +45,46 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        size_t                    getNumPasses() const;
+        size_t                    getNumPasses() const { return mPasses.size(); }
 
-        size_t                    getNumTextures() const;
+        size_t                    getNumTextures() const { return mTextures.size(); }
         size_t                    findTexture( const char * name ) const;
-        const TextureProperties & getTextureProperties( size_t i ) const;
+        const TextureProperties & getTextureProperties( size_t i ) const { return mTextures[i]; }
 
-        void                      applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
+        size_t                    getNumUniforms() const { return mUniforms.size(); }
+        size_t                    findUniform( const char * name ) const;
+        const UniformProperties & getUniformProperties( size_t i ) const { return mUniforms[i]; }
+
+        void                      applyToContext( size_t pass, GpuContext & gc ) const;
+
+        // ********************************
+        // private types
+        // ********************************
+    private:
+
+        struct GpuProgramProperties
+        {
+            AutoRef<GpuProgram> gp;
+        };
+
+        struct RenderPass
+        {
+            // TODO: define per-pass render states
+
+            /// Index of GPU program used in this pass
+            size_t gpuProgramIndex;
+        };
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        EffectResource & mOwner;
+        EffectResource                & mOwner;
+        DynaArray<TextureProperties>    mTextures;
+        DynaArray<UniformProperties>    mUniforms;
+        DynaArray<GpuProgramProperties> mPrograms;
+        DynaArray<RenderPass>           mPasses;
 
         // ********************************
         // private functions

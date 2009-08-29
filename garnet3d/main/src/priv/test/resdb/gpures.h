@@ -244,7 +244,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        void setContext( GpuContext * );
+        void applyToContext( GpuContext & ) const;
         //@}
 
     protected:
@@ -325,56 +325,58 @@ namespace GN { namespace gfx
             std::map<StrA,StrA> uniforms;           //< uniforms. Key is shader parameter name, value is user-visible uniform name.
         };
 
-        /// template for single render state
-        template<typename T>
-        struct EffectRenderState
+        ///
+        /// render state desriptor
+        ///
+        struct RenderStateDesc
         {
-            T    value;
-            bool inherited; //< if true, then this effect will inherit this value from current GPU context.
-
-            /// default ctor
-            EffectRenderState() : inherited(true) {}
-
-            /// set render state value
-            EffectRenderState & operator=( const T & rhs )
+            /// template for single variable that could inherite value from parent object
+            template<typename T>
+            struct InheritableVariable
             {
-                value = rhs;
-                inherited = false;
-                return *this;
+                T    value;
+                bool customized; //< if false, then this variable will inherit this value from parent render state object.
+
+                /// default ctor
+                InheritableVariable() : customized(false) {}
+
+                /// set value
+                InheritableVariable & operator=( const T & rhs )
+                {
+                    value      = rhs;
+                    customized = true;
+                    return *this;
+                }
+
+                /// set value
+                InheritableVariable & operator=( const InheritableVariable<T> & rhs )
+                {
+                    value      = rhs.value;
+                    customized = rhs.customized;
+                    return *this;
+                }
+            };
+
+            //@{
+
+            InheritableVariable<UInt8> fillMode;
+            InheritableVariable<UInt8> cullMode;
+            InheritableVariable<UInt8> frontFace;
+            InheritableVariable<bool>  msaaEnabled;
+            InheritableVariable<bool>  depthTest;
+            InheritableVariable<bool>  depthWrite;
+            InheritableVariable<UInt8> depthFunc;
+
+            //@}
+
+            //@{
+
+            void setAllValuesToInherited()
+            {
+                memset( this, 0, sizeof(*this) );
             }
 
-            /// set render state value
-            EffectRenderState & operator=( const EffectRenderState<T> & rhs )
-            {
-                value = rhs.value;
-                inherited = rhs.inherited;
-                return *this;
-            }
-        };
-
-        /// render state block
-        struct EffectRenderStateDesc
-        {
-            EffectRenderState<UInt8> fillMode;
-            EffectRenderState<UInt8> cullMode;
-            EffectRenderState<UInt8> frontFace;
-            EffectRenderState<bool>  msaaEnabled;
-            EffectRenderState<bool>  depthTest;
-            EffectRenderState<bool>  depthWrite;
-            EffectRenderState<UInt8> depthFunc;
-
-            // TODO: more render states.
-
-            void clear()
-            {
-                fillMode.inherited = true;
-                cullMode.inherited = true;
-                frontFace.inherited = true;
-                msaaEnabled.inherited = true;
-                depthTest.inherited = true;
-                depthWrite.inherited = true;
-                depthFunc.inherited = true;
-            }
+            //@}
         };
 
         ///
@@ -382,10 +384,10 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA                  shader;       //< Name of shader used in this pass. Can't be empty
-            EffectRenderStateDesc rsd;          //< pass specific render states
-            DynaArray<StrA>       colortargets; //< color render targets. Values are user-visible render target names.
-            StrA                  depthstencil; //< depth render targets. Value is user-visible render target name.
+            StrA            shader;       //< Name of shader used in this pass. Can't be empty
+            RenderStateDesc rsdesc;       //< Pass specific render states
+            DynaArray<StrA> colortargets; //< color render targets. Values are user-visible render target names.
+            StrA            depthstencil; //< depth render targets. Value is user-visible render target name.
 
             EffectPassDesc()
             {
@@ -403,7 +405,7 @@ namespace GN { namespace gfx
             int                       quality; //< user defined rendering quality. Effect class uses
                                                //< the technique with the hightest quality as default technique.
             DynaArray<EffectPassDesc> passes;  //< pass list.
-            EffectRenderStateDesc     rsd;     //< Technique specific render states
+            RenderStateDesc           rsdesc;  //< Technique specific render states
 
             /// default ctor
             EffectTechniqueDesc() : quality(100) {}
@@ -414,15 +416,7 @@ namespace GN { namespace gfx
         std::map<StrA,EffectRenderTargetDesc> rendertargets; //< Render taret list. Empty means using default setttings: one "color0", one "depth".
         std::map<StrA,EffectShaderDesc>       shaders;       //< Shader list
         std::map<StrA,EffectTechniqueDesc>    techniques;    //< Technique list. Technique name must be unique.
-        EffectRenderStateDesc                 rsd;           //< effect specific render states
-
-        ///
-        /// constructor
-        ///
-        EffectResourceDesc()
-        {
-            clear();
-        }
+        RenderStateDesc                       rsdesc;        //< Root render states for the effect, which is inherited from global render state resource named "default".
 
         ///
         /// Make sure the effect descriptor is valid.
@@ -439,8 +433,7 @@ namespace GN { namespace gfx
             rendertargets.clear();
             shaders.clear();
             techniques.clear();
-            rsd.clear();
-
+            rsdesc.setAllValuesToInherited();
         }
 
         ///
@@ -494,13 +487,17 @@ namespace GN { namespace gfx
 
         struct ParameterProperties
         {
-            const char               * effectParameterName;
+            StrA                       parameterName;
             DynaArray<BindingLocation> bindings;
         };
 
         struct TextureProperties : public ParameterProperties
         {
             SamplerDesc sampler;
+        };
+
+        struct UniformProperties : public ParameterProperties
+        {
         };
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
@@ -511,7 +508,11 @@ namespace GN { namespace gfx
         size_t                    findTexture( const char * name ) const;
         const TextureProperties & getTextureProperties( size_t i ) const;
 
-        void                      applyGpuProgramAndRenderStates( size_t pass, GpuContext & gc ) const;
+        size_t                    getNumUniforms() const;
+        size_t                    findUniform( const char * name ) const;
+        const UniformProperties & getUniformProperties( size_t i ) const;
+
+        void                      applyToContext( size_t pass, GpuContext & gc ) const;
 
         //@}
 
