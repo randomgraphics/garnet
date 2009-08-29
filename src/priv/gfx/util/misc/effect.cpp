@@ -59,8 +59,8 @@ sMergeRenderStates(
     MERGE_SINGLE_RENDER_STATE( cullMode );
     MERGE_SINGLE_RENDER_STATE( frontFace );
     MERGE_SINGLE_RENDER_STATE( msaaEnabled );
-    MERGE_SINGLE_RENDER_STATE( depthTest );
-    MERGE_SINGLE_RENDER_STATE( depthWrite );
+    MERGE_SINGLE_RENDER_STATE( depthTestEnabled );
+    MERGE_SINGLE_RENDER_STATE( depthWriteEnabled );
     MERGE_SINGLE_RENDER_STATE( depthFunc );
 
     #undef MERGE_SINGLE_RENDER_STATE
@@ -74,14 +74,14 @@ sApplyRenderStates(
     GN::gfx::GpuContext                   & context,
     const GN::gfx::EffectDesc::RenderStateDesc & rsd )
 {
-    #define APPLY_SINGLE_RENDER_STATE( state ) if( !rsd.state.inherited ) context.state = rsd.state.value; else void(0)
+    #define APPLY_SINGLE_RENDER_STATE( state ) if( !rsd.state.inherited ) context.rs.state = rsd.state.value; else void(0)
 
     APPLY_SINGLE_RENDER_STATE( fillMode );
     APPLY_SINGLE_RENDER_STATE( cullMode );
     APPLY_SINGLE_RENDER_STATE( frontFace );
     APPLY_SINGLE_RENDER_STATE( msaaEnabled );
-    APPLY_SINGLE_RENDER_STATE( depthTest );
-    APPLY_SINGLE_RENDER_STATE( depthWrite );
+    APPLY_SINGLE_RENDER_STATE( depthTestEnabled );
+    APPLY_SINGLE_RENDER_STATE( depthWriteEnabled );
     APPLY_SINGLE_RENDER_STATE( depthFunc );
 
     #undef APPLY_SINGLE_RENDER_STATE

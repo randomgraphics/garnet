@@ -229,17 +229,17 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
             GN_WARN(sLogger)( "FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!" );
         }
 
-        mContext.blendEnabled  = true;
-        mContext.blendSrc      = GpuContext::BLEND_SRC_ALPHA;
-        mContext.blendDst      = GpuContext::BLEND_INV_SRC_ALPHA;
-        mContext.blendOp       = GpuContext::BLEND_OP_ADD;
-        mContext.blendAlphaSrc = GpuContext::BLEND_SRC_ALPHA;
-        mContext.blendAlphaDst = GpuContext::BLEND_INV_SRC_ALPHA;
-        mContext.blendAlphaOp  = GpuContext::BLEND_OP_ADD;
+        mContext.rs.blendEnabled  = true;
+        mContext.rs.blendSrc      = GpuContext::BLEND_SRC_ALPHA;
+        mContext.rs.blendDst      = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.rs.blendOp       = GpuContext::BLEND_OP_ADD;
+        mContext.rs.blendAlphaSrc = GpuContext::BLEND_SRC_ALPHA;
+        mContext.rs.blendAlphaDst = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.rs.blendAlphaOp  = GpuContext::BLEND_OP_ADD;
     }
     else if( options & FORCE_ALPHA_BLENDING_DISABLED )
     {
-        mContext.blendEnabled = false;
+        mContext.rs.blendEnabled = false;
     }
 
     // setup depth test
@@ -250,11 +250,11 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
             GN_WARN(sLogger)( "FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!" );
         }
 
-        mContext.depthTest = true;
+        mContext.rs.depthTestEnabled = true;
     }
     else if( options & FORCE_DEPTH_TEST_DISABLED )
     {
-        mContext.depthTest = false;
+        mContext.rs.depthTestEnabled = false;
     }
 
     // setup depth write
@@ -265,11 +265,11 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
             GN_WARN(sLogger)( "FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!" );
         }
 
-        mContext.depthWrite = true;
+        mContext.rs.depthWriteEnabled = true;
     }
     else if( options & FORCE_DEPTH_WRITE_DISABLED )
     {
-        mContext.depthWrite = false;
+        mContext.rs.depthWriteEnabled = false;
     }
 
     // Note: Only D3D9 needs -0.5f vertex shift

@@ -241,111 +241,108 @@ GN::gfx::OGLGpu::bindContextShaders(
 inline bool
 GN::gfx::OGLGpu::bindContextRenderStates(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
-    if( skipDirtyCheck || newContext.renderStates != mContext.renderStates )
+    // misc 0
+    if( skipDirtyCheck || newContext.rs.miscFlags != mContext.rs.miscFlags )
     {
-        // misc 0
-        if( skipDirtyCheck || newContext.miscFlags0 != mContext.miscFlags0 )
+        // fill mode
+        glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.rs.fillMode] );
+
+        // cull mode
+        glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.rs.fillMode] );
+
+        // front face
+        glFrontFace( CONVERT_FRONT_FACE[newContext.rs.frontFace] );
+
+        // TODO: msaa flag
+        if( newContext.rs.msaaEnabled != mContext.rs.msaaEnabled )
         {
-            // fill mode
-            glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.fillMode] );
-
-            // cull mode
-            glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.fillMode] );
-
-            // front face
-            glFrontFace( CONVERT_FRONT_FACE[newContext.frontFace] );
-
-            // TODO: msaa flag
-            if( newContext.msaaEnabled != mContext.msaaEnabled )
-            {
-                GN_UNIMPL();
-            }
+            GN_UNIMPL();
         }
+    }
 
-        // depth
-        if( skipDirtyCheck || newContext.depthFlags != mContext.depthFlags )
+    // depth
+    if( skipDirtyCheck || newContext.rs.depthFlags != mContext.rs.depthFlags )
+    {
+        if( newContext.rs.depthTestEnabled ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
+        glDepthMask( newContext.rs.depthWriteEnabled );
+        glDepthFunc( CONVERT_CMP[newContext.rs.depthFunc] );
+    };
+
+    // stencil
+    if( skipDirtyCheck || newContext.rs.stencilFlags != mContext.rs.stencilFlags )
+    {
+        if( newContext.rs.stencilEnabled ) glEnable( GL_STENCIL_TEST ); else glDisable( GL_STENCIL_TEST );
+
+        GLenum failop  = newContext.rs.stencilFailOp;
+        GLenum zfailop = newContext.rs.stencilZFailOp;
+        GLenum zpassop = newContext.rs.stencilPassOp;
+        if( !GLEW_EXT_stencil_wrap )
         {
-            if( newContext.depthTest ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
-            glDepthMask( newContext.depthWrite );
-            glDepthFunc( CONVERT_CMP[newContext.depthFunc] );
-        };
-
-        // stencil
-        if( skipDirtyCheck || newContext.stencilFlags != mContext.stencilFlags )
-        {
-            if( newContext.stencilEnabled ) glEnable( GL_STENCIL_TEST ); else glDisable( GL_STENCIL_TEST );
-
-            GLenum failop  = newContext.stencilFailOp;
-            GLenum zfailop = newContext.stencilZFailOp;
-            GLenum zpassop = newContext.stencilPassOp;
-            if( !GLEW_EXT_stencil_wrap )
-            {
 #define CHECK_WRAP_STENCIL_OP( op ) \
-                if( GpuContext::STENCIL_INC_SAT == op ) { op = GpuContext::STENCIL_INC; nonSupportedWrapOp = true; } \
-                if( GpuContext::STENCIL_DEC_SAT == op ) { op = GpuContext::STENCIL_DEC; nonSupportedWrapOp = true; }
+            if( GpuContext::STENCIL_INC_SAT == op ) { op = GpuContext::STENCIL_INC; nonSupportedWrapOp = true; } \
+            if( GpuContext::STENCIL_DEC_SAT == op ) { op = GpuContext::STENCIL_DEC; nonSupportedWrapOp = true; }
 
-                bool nonSupportedWrapOp = false;
-                CHECK_WRAP_STENCIL_OP( failop );
-                CHECK_WRAP_STENCIL_OP( zfailop );
-                CHECK_WRAP_STENCIL_OP( zpassop );
+            bool nonSupportedWrapOp = false;
+            CHECK_WRAP_STENCIL_OP( failop );
+            CHECK_WRAP_STENCIL_OP( zfailop );
+            CHECK_WRAP_STENCIL_OP( zpassop );
 
-                if( nonSupportedWrapOp )
-                {
-                    GN_ERROR(sLogger)( "EXT_stencil_wrap is not supported, which is required to implement STENCIL_INC_SAT and STENCIL_DEC_SAT opertion." );
-                }
+            if( nonSupportedWrapOp )
+            {
+                GN_ERROR(sLogger)( "EXT_stencil_wrap is not supported, which is required to implement STENCIL_INC_SAT and STENCIL_DEC_SAT opertion." );
             }
-            glStencilOp(
-                CONVERT_STENCIL_OP[failop],
-                CONVERT_STENCIL_OP[zfailop],
-                CONVERT_STENCIL_OP[zpassop] );
         }
+        glStencilOp(
+            CONVERT_STENCIL_OP[failop],
+            CONVERT_STENCIL_OP[zfailop],
+            CONVERT_STENCIL_OP[zpassop] );
+    }
 
-        // alpha blending
-        if( skipDirtyCheck || newContext.blendFlags != mContext.blendFlags )
+    // alpha blending
+    if( skipDirtyCheck || newContext.rs.blendingFlags != mContext.rs.blendingFlags )
+    {
+        // blending enable bit
+        if( newContext.rs.blendEnabled ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
+
+        if( GLEW_EXT_blend_minmax &&
+            GLEW_EXT_blend_subtract &&
+            GLEW_EXT_blend_func_separate &&
+            GLEW_EXT_blend_equation_separate )
         {
-            // blending enable bit
-            if( newContext.blendEnabled ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
+            glBlendFuncSeparateEXT(
+                CONVERT_BLEND_ARG[newContext.rs.blendSrc],
+                CONVERT_BLEND_ARG[newContext.rs.blendDst],
+                CONVERT_BLEND_ARG[newContext.rs.blendAlphaSrc],
+                CONVERT_BLEND_ARG[newContext.rs.blendAlphaDst] );
 
-            if( GLEW_EXT_blend_minmax &&
-                GLEW_EXT_blend_subtract &&
-                GLEW_EXT_blend_func_separate &&
-                GLEW_EXT_blend_equation_separate )
+            glBlendEquationSeparateEXT(
+                CONVERT_BLEND_OP[newContext.rs.blendOp],
+                CONVERT_BLEND_OP[newContext.rs.blendAlphaOp] );
+        }
+        else
+        {
+            glBlendFunc(
+                CONVERT_BLEND_ARG[newContext.rs.blendSrc],
+                CONVERT_BLEND_ARG[newContext.rs.blendDst] );
+
+            if( newContext.rs.blendOp != GpuContext::BLEND_OP_ADD )
             {
-                glBlendFuncSeparateEXT(
-                    CONVERT_BLEND_ARG[newContext.blendSrc],
-                    CONVERT_BLEND_ARG[newContext.blendDst],
-                    CONVERT_BLEND_ARG[newContext.blendAlphaSrc],
-                    CONVERT_BLEND_ARG[newContext.blendAlphaDst] );
-
-                glBlendEquationSeparateEXT(
-                    CONVERT_BLEND_OP[newContext.blendOp],
-                    CONVERT_BLEND_OP[newContext.blendAlphaOp] );
+                GN_ERROR(sLogger)(
+                    "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
+                    "required to implement extended alpha blending operation other than ADD." );
             }
-            else
+
+            if( newContext.rs.blendAlphaOp  != newContext.rs.blendOp ||
+                newContext.rs.blendAlphaSrc != newContext.rs.blendSrc ||
+                newContext.rs.blendAlphaDst != newContext.rs.blendDst )
             {
-                glBlendFunc(
-                    CONVERT_BLEND_ARG[newContext.blendSrc],
-                    CONVERT_BLEND_ARG[newContext.blendDst] );
-
-                if( newContext.blendOp != GpuContext::BLEND_OP_ADD )
-                {
-                    GN_ERROR(sLogger)(
-                        "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
-                        "required to implement extended alpha blending operation other than ADD." );
-                }
-
-                if( newContext.blendAlphaOp  != newContext.blendOp ||
-                    newContext.blendAlphaSrc != newContext.blendSrc ||
-                    newContext.blendAlphaDst != newContext.blendDst )
-                {
-                    GN_ERROR(sLogger)(
-                        "EXT_blend_func_separate is missing that is support "
-                        "different blend function for alpha channel." );
-                }
+                GN_ERROR(sLogger)(
+                    "EXT_blend_func_separate is missing that is support "
+                    "different blend function for alpha channel." );
             }
         }
     }
@@ -376,7 +373,7 @@ GN::gfx::OGLGpu::bindContextRenderTargets(
     const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
 
     // clip viewport against render target size
-    Rect<UInt32> newvp = newContext.viewport;
+    Rect<UInt32> newvp = newContext.rs.viewport;
     if( (newvp.x+newvp.w) > rtsize.x )
     {
         GN_WARN(sLogger)( "Viewport cannot be larger with current render target size." );
