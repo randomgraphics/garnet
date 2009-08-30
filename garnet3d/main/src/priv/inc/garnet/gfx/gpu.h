@@ -673,15 +673,10 @@ namespace GN { namespace gfx
             CULL_FRONT,
             CULL_BACK,
             NUM_CULL_MODES,
-            CULL_INHERITED,
 
             FRONT_CCW = 0,
             FRONT_CW,
             NUM_FRONT_FACE_MODES,
-            FRONT_INHERITED,
-
-            // 0 and 1 are reserved for "false" and "true"
-            SWITCH_INHERITED = 2,
 
             // comparison flags (4bits)
             CMP_NEVER = 0,
@@ -693,7 +688,6 @@ namespace GN { namespace gfx
             CMP_NOT_EQUAL,
             CMP_ALWAYS,
             NUM_CMP_FUNCTIONS,
-            CMP_INHERITED,
 
             // stencil flags (4bits)
             STENCIL_KEEP = 0,
@@ -705,7 +699,6 @@ namespace GN { namespace gfx
             STENCIL_INC,
             STENCIL_DEC,
             NUM_STENCIL_OPERATIONS,
-            STENCIL_INHERITED,
 
             // blend arguments (4bits)
             BLEND_ZERO = 0,
@@ -721,7 +714,6 @@ namespace GN { namespace gfx
             BLEND_BLEND_FACTOR,
             BLEND_INV_BLEND_FACTOR,
             NUM_BLEND_ARGUMENTS,
-            BLEND_ARGUMENT_INHERITED,
 
             // blend operation (3bits)
             BLEND_OP_ADD = 0,
@@ -730,7 +722,6 @@ namespace GN { namespace gfx
             BLEND_OP_MIN,
             BLEND_OP_MAX,
             NUM_BLEND_OPERATIONS,
-            BLEND_OP_INHERITED,
 
             //@}
         };
@@ -748,19 +739,17 @@ namespace GN { namespace gfx
             struct
             {
 
-            // depth stencil flags ( 2 bytes )
+            // depth stencil flags ( 1 bytes )
             UInt64 depthTestEnabled  : 2;
             UInt64 depthWriteEnabled : 2;
             UInt64 depthFunc         : 4;
-            UInt64 depthNoUse        : 4;
-            UInt64 _reserved0        : 4; ///< reserved bits. keep them zero.
 
             // stencil flags ( 2 bytes )
             UInt64 stencilEnabled    : 2;
             UInt64 stencilPassOp     : 4; ///< pass both stencil and Z
             UInt64 stencilFailOp     : 4; ///< fail stencil (no z test at all)
             UInt64 stencilZFailOp    : 4; ///< pass stencil but fail Z
-            UInt64 _reserved1        : 2; ///< reserved bits. keep them zero.
+            UInt64 _reserved0        : 2; ///< reserved bits. keep them zero.
 
             // alpha blending flags (3 bytes)
             UInt64 blendEnabled      : 2;
@@ -777,12 +766,15 @@ namespace GN { namespace gfx
             UInt64 frontFace         : 2;
             UInt64 msaaEnabled       : 2;
 
+            // reserved (1 byte)
+            UInt64 _reserved1        : 8; ///< reserved bits. keep them zero.
+
             };
 
             struct
             {
 
-            UInt64 depthFlags    : 16;
+            UInt64 depthFlags    :  8;
             UInt64 stencilFlags  : 16;
             UInt64 blendingFlags : 24;
             UInt64 miscFlags     :  8;
@@ -802,14 +794,6 @@ namespace GN { namespace gfx
 
             /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
             Rect<UInt32> scissorRect;
-
-            /// inheritance flags for non-aggregated render states
-            //@{
-            bool useInheritedBlendFactors;
-            bool useInheritedColorWriteMasks;
-            bool useInheritedViewport;
-            bool useInheritedScissorRect;
-            //@}
         };
         GN_CASSERT( GN_FIELD_OFFSET( RenderStates, blendFactors ) == 8 );
 
@@ -876,16 +860,12 @@ namespace GN { namespace gfx
             rs.blendAlphaOp  = BLEND_OP_ADD;
 
             rs.blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
-            rs.useInheritedBlendFactors = false;
 
             rs.colorWriteMask = 0xFFFFFFFF;
-            rs.useInheritedColorWriteMasks = false;
 
             rs.viewport.set( 0, 0, 0, 0 );
-            rs.useInheritedViewport = false;
 
             rs.scissorRect.set( 0, 0, 0, 0 );
-            rs.useInheritedBlendFactors = false;
         }
 
         //

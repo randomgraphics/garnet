@@ -300,10 +300,6 @@ namespace GN { namespace gfx
         ///
         struct EffectUniformDesc
         {
-            size_t size;   //< uniform size
-
-            /// default ctor
-            EffectUniformDesc() : size(0) {}
         };
 
         ///
@@ -328,51 +324,61 @@ namespace GN { namespace gfx
         ///
         /// render state desriptor
         ///
-        struct RenderStateDesc
+        struct EffectRenderStateDesc
         {
             /// template for single variable that could inherite value from parent object
             template<typename T>
-            struct InheritableVariable
+            struct OverridableVariable
             {
                 T    value;
-                bool customized; //< if false, then this variable will inherit this value from parent render state object.
+                bool overridden; //< if true, then this variable will override the value from parent render state object.
 
                 /// default ctor
-                InheritableVariable() : customized(false) {}
+                OverridableVariable() : overridden(false) {}
 
                 /// set value
-                InheritableVariable & operator=( const T & rhs )
+                OverridableVariable & operator=( const T & rhs )
                 {
                     value      = rhs;
-                    customized = true;
+                    overridden = true;
                     return *this;
                 }
 
                 /// set value
-                InheritableVariable & operator=( const InheritableVariable<T> & rhs )
+                OverridableVariable & operator=( const OverridableVariable<T> & rhs )
                 {
                     value      = rhs.value;
-                    customized = rhs.customized;
+                    overridden = rhs.overridden;
                     return *this;
                 }
             };
 
             //@{
 
-            InheritableVariable<UInt8> fillMode;
-            InheritableVariable<UInt8> cullMode;
-            InheritableVariable<UInt8> frontFace;
-            InheritableVariable<bool>  msaaEnabled;
-            InheritableVariable<bool>  depthTest;
-            InheritableVariable<bool>  depthWrite;
-            InheritableVariable<UInt8> depthFunc;
+            OverridableVariable<bool>     depthTestEnabled;
+            OverridableVariable<bool>     depthWriteEnabled;
+            OverridableVariable<UInt8>    depthFunc;
+
+            OverridableVariable<bool>     stencilEnabled;
+            OverridableVariable<UInt8>    stencilPassOp;
+            OverridableVariable<UInt8>    stencilFailOp;
+            OverridableVariable<UInt8>    stencilZFailOp;
+
+            OverridableVariable<bool>     blendingEnabled;
+            OverridableVariable<Vector4f> blendFactors;
+
+            OverridableVariable<UInt8>    fillMode;
+            OverridableVariable<UInt8>    cullMode;
+            OverridableVariable<UInt8>    frontFace;
+            OverridableVariable<bool>     msaaEnabled;
 
             //@}
 
             //@{
 
-            void setAllValuesToInherited()
+            void clear()
             {
+                // so all render states are inherited
                 memset( this, 0, sizeof(*this) );
             }
 
@@ -384,10 +390,10 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA            shader;       //< Name of shader used in this pass. Can't be empty
-            RenderStateDesc rsdesc;       //< Pass specific render states
-            DynaArray<StrA> colortargets; //< color render targets. Values are user-visible render target names.
-            StrA            depthstencil; //< depth render targets. Value is user-visible render target name.
+            StrA                  shader;       //< Name of shader used in this pass. Can't be empty
+            EffectRenderStateDesc rsdesc;       //< Pass specific render states
+            DynaArray<StrA>       colortargets; //< color render targets. Values are user-visible render target names.
+            StrA                  depthstencil; //< depth render targets. Value is user-visible render target name.
 
             EffectPassDesc()
             {
@@ -405,7 +411,7 @@ namespace GN { namespace gfx
             int                       quality; //< user defined rendering quality. Effect class uses
                                                //< the technique with the hightest quality as default technique.
             DynaArray<EffectPassDesc> passes;  //< pass list.
-            RenderStateDesc           rsdesc;  //< Technique specific render states
+            EffectRenderStateDesc     rsdesc;  //< Technique specific render states
 
             /// default ctor
             EffectTechniqueDesc() : quality(100) {}
@@ -416,7 +422,7 @@ namespace GN { namespace gfx
         std::map<StrA,EffectRenderTargetDesc> rendertargets; //< Render taret list. Empty means using default setttings: one "color0", one "depth".
         std::map<StrA,EffectShaderDesc>       shaders;       //< Shader list
         std::map<StrA,EffectTechniqueDesc>    techniques;    //< Technique list. Technique name must be unique.
-        RenderStateDesc                       rsdesc;        //< Root render states for the effect, which is inherited from global render state resource named "default".
+        EffectRenderStateDesc                 rsdesc;        //< Root render state descriptor for the effect.
 
         ///
         /// Make sure the effect descriptor is valid.
@@ -433,7 +439,7 @@ namespace GN { namespace gfx
             rendertargets.clear();
             shaders.clear();
             techniques.clear();
-            rsdesc.setAllValuesToInherited();
+            rsdesc.clear();
         }
 
         ///
@@ -481,8 +487,8 @@ namespace GN { namespace gfx
 
         struct BindingLocation
         {
-            UInt8 pass;
-            UInt8 stage;
+            size_t pass;
+            size_t stage;
         };
 
         struct ParameterProperties

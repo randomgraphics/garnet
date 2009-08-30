@@ -10,7 +10,6 @@
 
 namespace GN { namespace gfx
 {
-
     ///
     /// Effect resource implementation class
     ///
@@ -64,15 +63,17 @@ namespace GN { namespace gfx
 
         struct GpuProgramProperties
         {
-            AutoRef<GpuProgram> gp;
+            StrA                name;
+            AutoRef<GpuProgram> prog;
         };
 
         struct RenderPass
         {
-            // TODO: define per-pass render states
-
             /// Index of GPU program used in this pass
             size_t gpuProgramIndex;
+
+            /// render states
+            EffectResourceDesc::EffectRenderStateDesc rsdesc;
         };
 
         // ********************************
@@ -81,10 +82,10 @@ namespace GN { namespace gfx
     private:
 
         EffectResource                & mOwner;
-        DynaArray<TextureProperties>    mTextures;
-        DynaArray<UniformProperties>    mUniforms;
         DynaArray<GpuProgramProperties> mPrograms;
         DynaArray<RenderPass>           mPasses;
+        DynaArray<TextureProperties>    mTextures;
+        DynaArray<UniformProperties>    mUniforms;
 
         // ********************************
         // private functions
@@ -94,6 +95,18 @@ namespace GN { namespace gfx
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          myname() const { return mOwner.database().getResourceName( mOwner.handle() ); }
 
+        bool initGpuPrograms( const EffectResourceDesc & effectDesc );
+
+        bool initTechniques( const EffectResourceDesc & effectDesc );
+
+        bool initTech(
+            const EffectResourceDesc                      & effectDesc,
+            const StrA                                    & techName,
+            const EffectResourceDesc::EffectTechniqueDesc & techDesc );
+
+        bool initUniforms( const EffectResourceDesc & effectDesc );
+
+        size_t findGpuProgram( const StrA & shaderName ) const;
     };
 
 }}
