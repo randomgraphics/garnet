@@ -179,7 +179,7 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     }
     else
     {
-        mEffect.handle = EffectResource::create( db, strFormat("%s.effect", myname()), desc.effectResourceDesc );
+        mEffect.handle = EffectResource::create( db, strFormat("%s.effect", modelName()), desc.effectResourceDesc );
     }
 
     // fallback to dummy effect
@@ -199,7 +199,7 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     }
     else
     {
-        mMesh.handle = MeshResource::create( db, strFormat("%s.model", myname()), mDesc.meshResourceDesc );
+        mMesh.handle = MeshResource::create( db, strFormat("%s.model", modelName()), mDesc.meshResourceDesc );
     }
     if( 0 == mMesh.handle )
     {
@@ -283,14 +283,14 @@ void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName,
     EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", myname() );
+        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
         return;
     }
 
     size_t parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
-        GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, myname() );
+        GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
         return;
     }
 
@@ -306,14 +306,14 @@ GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) con
     EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", myname() );
+        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
         return 0;
     }
 
     size_t parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
-        GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, myname() );
+        GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
         return 0;
     }
 
@@ -478,6 +478,7 @@ const Guid & GN::gfx::ModelResource::guid()
     static const Guid MODEL_GUID = { 0x24a6e5eb, 0xeb76, 0x440f, { 0xaa, 0x9d, 0x6a, 0x59, 0x34, 0x2f, 0x89, 0x2e } };
     return MODEL_GUID;
 }
+
 //
 //
 // -----------------------------------------------------------------------------

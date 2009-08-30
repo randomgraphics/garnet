@@ -7,15 +7,48 @@ using namespace GN::input;
 using namespace GN::win;
 using namespace GN::util;
 
-
 GpuResourceDatabase * db = NULL;
 GpuResourceHandle  model = 0;
+
+static const char * glslvscode =
+    "uniform mat4 pvw; \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   gl_Position = pvw * gl_Vertex; \n"
+    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "}";
+
+static const char * glslpscode =
+    "uniform sampler2D t0; \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   vec4  tex    = texture2D( t0, texcoords ); \n"
+    "   gl_FragColor = tex; \n"
+    "}";
+
+void initEffectDesc( EffectResourceDesc & ed )
+{
+    ed.uniforms["MATRIX_PVW"];
+    ed.textures["ALBEDO_TEXTURE"];
+
+    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.shaders["glsl"].gpd.vs.source = glslvscode;
+    ed.shaders["glsl"].gpd.ps.source = glslpscode;
+    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].shader = "glsl";
+}
 
 bool init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
-    model = ModelResource::loadFromFile( *db, "media::model\\model1.xml" );
+    ModelResourceDesc md;
+    initEffectDesc( md.effectResourceDesc );
+
+    model = ModelResource::create( *db, "m0",  md );
 
     // success
     return true;
@@ -28,9 +61,10 @@ void quit( Gpu & )
 
 void draw( Gpu & )
 {
-    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
-    if( m )
+    if( 0 != model )
     {
+        ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
+
         //UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "pvw" ) ) );
         //if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
 

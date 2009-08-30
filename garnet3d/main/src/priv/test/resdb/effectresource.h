@@ -93,7 +93,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          myname() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+        const char *          effectName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
 
         bool initGpuPrograms( const EffectResourceDesc & effectDesc );
 
@@ -103,6 +103,8 @@ namespace GN { namespace gfx
             const EffectResourceDesc                      & effectDesc,
             const StrA                                    & techName,
             const EffectResourceDesc::EffectTechniqueDesc & techDesc );
+
+        bool initTextures( const EffectResourceDesc & effectDesc );
 
         bool initUniforms( const EffectResourceDesc & effectDesc );
 
