@@ -68,17 +68,10 @@ void GN::gfx::BasicGpu::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::bindContext( const GpuContext & c )
+void GN::gfx::BasicGpu::bindContext( const GpuContext & newContext )
 {
     // skip dirty check, if last context binding failed.
     bool skipDirtyCheck = !mContextOk;
-
-    GpuContext & newContext = const_cast<GpuContext&>(c);
-
-    // store render state bit flags
-    GpuContext::RenderStates rs = newContext.rs;
-
-    GN_TODO( "take care of all inherited render state values." );
 
     mContextOk = bindContextImpl( newContext, skipDirtyCheck );
 
@@ -86,9 +79,6 @@ void GN::gfx::BasicGpu::bindContext( const GpuContext & c )
     {
         mContext = newContext;
     }
-
-    // restore render states
-    newContext.rs = rs;
 }
 
 //
