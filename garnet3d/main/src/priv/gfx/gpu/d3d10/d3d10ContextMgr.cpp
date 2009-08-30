@@ -139,7 +139,7 @@ bool GN::gfx::D3D10Gpu::bindContextImpl( const GpuContext & newContext, bool ski
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     //
     // bind render targets
@@ -156,7 +156,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
 
     // bind viewport
     const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
-    const Rect<UInt32> & newvp = newContext.viewport;
+    const Rect<UInt32> & newvp = newContext.rs.viewport;
     D3D10_VIEWPORT d3dvp;
     d3dvp.MinDepth = 0.0f;
     d3dvp.MaxDepth = 1.0f;
@@ -203,7 +203,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D10Gpu::bindContextShader(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     //
     // bind shaders
@@ -265,10 +265,10 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     // depth stencil states
     D3D10_DEPTH_STENCIL_DESC dsdesc;
     memset( &dsdesc, 0, sizeof(dsdesc) );
-    dsdesc.DepthEnable = newContext.depthTest;
-    dsdesc.DepthWriteMask = newContext.depthWrite ? D3D10_DEPTH_WRITE_MASK_ALL : D3D10_DEPTH_WRITE_MASK_ZERO;
+    dsdesc.DepthEnable = newContext.rs.depthTestEnabled;
+    dsdesc.DepthWriteMask = newContext.rs.depthWriteEnabled ? D3D10_DEPTH_WRITE_MASK_ALL : D3D10_DEPTH_WRITE_MASK_ZERO;
     dsdesc.DepthFunc = D3D10_COMPARISON_LESS_EQUAL;
-    dsdesc.StencilEnable = newContext.stencilEnabled;
+    dsdesc.StencilEnable = newContext.rs.stencilEnabled;
     dsdesc.StencilReadMask = 0xFF;
     dsdesc.StencilWriteMask = 0xFF;
     dsdesc.FrontFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
@@ -290,13 +290,13 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     bsdesc.BlendEnable[4]           =
     bsdesc.BlendEnable[5]           =
     bsdesc.BlendEnable[6]           =
-    bsdesc.BlendEnable[7]           = newContext.blendEnabled;
-    bsdesc.SrcBlend                 = BLEND_TO_D3D10[newContext.blendSrc];
-    bsdesc.DestBlend                = BLEND_TO_D3D10[newContext.blendDst];
-    bsdesc.BlendOp                  = BLEND_OP_TO_D3D10[newContext.blendOp];
-    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D10[newContext.blendAlphaSrc];
-    bsdesc.DestBlendAlpha           = BLEND_TO_D3D10[newContext.blendAlphaDst];
-    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D10[newContext.blendAlphaOp];
+    bsdesc.BlendEnable[7]           = newContext.rs.blendEnabled;
+    bsdesc.SrcBlend                 = BLEND_TO_D3D10[newContext.rs.blendSrc];
+    bsdesc.DestBlend                = BLEND_TO_D3D10[newContext.rs.blendDst];
+    bsdesc.BlendOp                  = BLEND_OP_TO_D3D10[newContext.rs.blendOp];
+    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D10[newContext.rs.blendAlphaSrc];
+    bsdesc.DestBlendAlpha           = BLEND_TO_D3D10[newContext.rs.blendAlphaDst];
+    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D10[newContext.rs.blendAlphaOp];
     bsdesc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[1] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[2] = D3D10_COLOR_WRITE_ENABLE_ALL;
@@ -306,7 +306,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     bsdesc.RenderTargetWriteMask[6] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[7] = D3D10_COLOR_WRITE_ENABLE_ALL;
     UInt32 sampleMask = 0xFFFFFFFF;
-    if( !mSOMgr->setBS( bsdesc, newContext.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
+    if( !mSOMgr->setBS( bsdesc, newContext.rs.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
 
     // Note: input and sampler states are handled in bindContextResource()
 
