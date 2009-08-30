@@ -50,6 +50,12 @@ sCheckGpuCaps( Gpu & r, const EffectShaderDesc & desc )
         return false;
     }
 
+    // check number of render targets
+    if( caps.maxColorRenderTargets < desc.prerequisites.numColorRenderTargets )
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -169,6 +175,32 @@ sCheckShaderUniforms(
     }
 
     return true;
+}
+
+// *****************************************************************************
+// GN::gfx::EffectResourceDesc
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectResourceDesc::loadFromXmlNode(
+    const XmlNode & root,
+    const char    * basedir )
+{
+    GN_UNIMPL();
+    GN_UNUSED_PARAM( root );
+    GN_UNUSED_PARAM( basedir );
+    return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root )
+{
+    GN_UNIMPL();
+    GN_UNUSED_PARAM( root );
 }
 
 // *****************************************************************************

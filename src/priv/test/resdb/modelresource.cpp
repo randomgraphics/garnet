@@ -349,6 +349,7 @@ void GN::gfx::ModelResource::Impl::draw() const
 
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
+        // TODO: copy render states and render targets from current context
         g.bindContext( mPasses[i].gc );
     }
 }
