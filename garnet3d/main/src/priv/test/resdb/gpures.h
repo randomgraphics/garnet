@@ -274,11 +274,13 @@ namespace GN { namespace gfx
         ///
         struct ShaderPrerequisites
         {
-            UInt32 numTextures; //< minimal number of textures required.
+            UInt32 numTextures;           //< minimal number of textures required.
+            UInt32 numColorRenderTargets; //< minimal number of color render targets.
 
             /// default constructor
             ShaderPrerequisites()
                 : numTextures(0)
+                , numColorRenderTargets(0)
             {
             }
         };
@@ -300,14 +302,6 @@ namespace GN { namespace gfx
         ///
         struct EffectUniformDesc
         {
-        };
-
-        ///
-        /// Effect render target descriptor
-        ///
-        struct EffectRenderTargetDesc
-        {
-            // TODO: minimal size, format and usage requirements, and etc.
         };
 
         ///
@@ -390,17 +384,8 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA                  shader;       //< Name of shader used in this pass. Can't be empty
-            EffectRenderStateDesc rsdesc;       //< Pass specific render states
-            DynaArray<StrA>       colortargets; //< color render targets. Values are user-visible render target names.
-            StrA                  depthstencil; //< depth render targets. Value is user-visible render target name.
-
-            EffectPassDesc()
-            {
-                colortargets.resize( 1 );
-                colortargets[0] = "color0";
-                depthstencil = "depth";
-            }
+            StrA                  shader; //< Name of shader used in this pass. Can't be empty
+            EffectRenderStateDesc rsdesc; //< Pass specific render states
         };
 
         ///
@@ -417,17 +402,16 @@ namespace GN { namespace gfx
             EffectTechniqueDesc() : quality(100) {}
         };
 
-        std::map<StrA,EffectTextureDesc>      textures;      //< Texture list
-        std::map<StrA,EffectUniformDesc>      uniforms;      //< Uniform list
-        std::map<StrA,EffectRenderTargetDesc> rendertargets; //< Render taret list. Empty means using default setttings: one "color0", one "depth".
-        std::map<StrA,EffectShaderDesc>       shaders;       //< Shader list
-        std::map<StrA,EffectTechniqueDesc>    techniques;    //< Technique list. Technique name must be unique.
-        EffectRenderStateDesc                 rsdesc;        //< Root render state descriptor for the effect.
+        std::map<StrA,EffectTextureDesc>      textures;     //< Texture list
+        std::map<StrA,EffectUniformDesc>      uniforms;     //< Uniform list
+        std::map<StrA,EffectShaderDesc>       shaders;      //< Shader list
+        std::map<StrA,EffectTechniqueDesc>    techniques;   //< Technique list. Technique name must be unique.
+        EffectRenderStateDesc                 rsdesc;       //< Root render state descriptor for the effect.
 
         ///
-        /// Make sure the effect descriptor is valid.
+        /// constructor
         ///
-        bool valid() const;
+        EffectResourceDesc() { clear(); }
 
         ///
         /// clear to a default descriptor
@@ -436,7 +420,6 @@ namespace GN { namespace gfx
         {
             textures.clear();
             uniforms.clear();
-            rendertargets.clear();
             shaders.clear();
             techniques.clear();
             rsdesc.clear();
