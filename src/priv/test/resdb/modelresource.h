@@ -145,7 +145,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          myname() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+        const char *          modelName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
 
         void onEffectChanged( GpuResource & );
         void onMeshChanged( GpuResource & );

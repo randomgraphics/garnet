@@ -588,6 +588,11 @@ namespace GN { namespace gfx
         //@}
 
         ///
+        /// constructor
+        ///
+        ModelResourceDesc() { clear(); }
+
+        ///
         /// clear to an empty descriptor
         ///
         void clear();

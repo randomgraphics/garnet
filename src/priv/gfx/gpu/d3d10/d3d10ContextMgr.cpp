@@ -245,7 +245,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextShader(
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D10Gpu::bindContextState(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     // rasterization states
     D3D10_RASTERIZER_DESC rsdesc;
@@ -318,7 +318,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D10Gpu::bindContextResource(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     //
     // bind vertex format

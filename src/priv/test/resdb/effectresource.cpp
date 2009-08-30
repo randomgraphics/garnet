@@ -96,6 +96,44 @@ sMergeRenderStates(
 }
 
 //
+// Check for texture errors in shader descriptor
+// -----------------------------------------------------------------------------
+static bool
+sCheckShaderTextures(
+    const EffectResourceDesc & effectDesc,
+    const EffectShaderDesc   & shaderDesc,
+    const char               * shaderName,
+    const GpuProgram         & program )
+{
+    const GpuProgramParameterDesc & param = program.getParameterDesc();
+
+    for( std::map<StrA,StrA>::const_iterator iter = shaderDesc.textures.begin();
+         iter != shaderDesc.textures.end();
+         ++iter )
+    {
+        const StrA & shaderParameterName = iter->first;
+        const StrA & textureName = iter->second;
+
+        if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName] )
+        {
+            GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
+                shaderParameterName.cptr(),
+                shaderName );
+            return false;
+        }
+        else if( effectDesc.textures.end() == effectDesc.textures.find( textureName ) )
+        {
+            GN_ERROR(sLogger)( "Invalid texture named '%s' is referenced in shader '%s'.",
+                shaderParameterName.cptr(),
+                shaderName );
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//
 // Check for uniform errors in shader descriptor
 // -----------------------------------------------------------------------------
 static bool
@@ -149,6 +187,7 @@ bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
 
     if( !initGpuPrograms( desc ) ) return failure();
     if( !initTechniques( desc ) ) return failure();
+    if( !initTextures( desc ) ) return failure();
     if( !initUniforms( desc ) ) return failure();
 
     // success
@@ -245,6 +284,7 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
         if( !gpp.prog ) continue;
 
         // check textures and uniforms
+        if( !sCheckShaderTextures( effectDesc, shaderDesc, shaderName, *gpp.prog ) ) continue;
         if( !sCheckShaderUniforms( effectDesc, shaderDesc, shaderName, *gpp.prog ) ) continue;
 
         // add to GPU program array
@@ -261,12 +301,6 @@ bool
 GN::gfx::EffectResource::Impl::initTechniques(
     const EffectResourceDesc & effectDesc )
 {
-   if( effectDesc.techniques.empty() )
-    {
-        GN_ERROR(sLogger)( "Effect descriptor must define at least one techniuqe." );
-        return false;
-    }
-
     int currentQuality = (int)0x80000000; // minimal signed integer
 
     for( std::map<StrA,EffectTechniqueDesc>::const_iterator iter = effectDesc.techniques.begin();
@@ -294,10 +328,10 @@ GN::gfx::EffectResource::Impl::initTechniques(
             mPasses = passes;
         }
     }
+
     if( (int)0x80000000 == currentQuality )
     {
-        GN_ERROR(sLogger)( "No valid technique is found." );
-        return false;
+        GN_WARN(sLogger)( "No valid technique is found in effect '%s'", effectName() );
     }
 
     return true;
@@ -382,6 +416,60 @@ GN::gfx::EffectResource::Impl::initTech(
 //
 // -----------------------------------------------------------------------------
 bool
+GN::gfx::EffectResource::Impl::initTextures(
+    const EffectResourceDesc  & effectDesc )
+{
+    for( std::map<StrA,EffectTextureDesc>::const_iterator iter = effectDesc.textures.begin();
+         iter != effectDesc.textures.end();
+         ++iter )
+    {
+        TextureProperties tp;
+
+        tp.parameterName = iter->first;
+        tp.sampler = iter->second.sampler;
+
+        // setup texture binding point array
+        for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
+        {
+            const GpuProgramProperties & gpp = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const GpuProgramParameterDesc & gpuparam = gpp.prog->getParameterDesc();
+            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpp.name );
+
+            for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->textures.begin();
+                 iter != shaderDesc->textures.end();
+                 ++iter )
+            {
+                const StrA & shaderParameterName = iter->first;
+                const StrA & textureName = iter->second;
+
+                GN_ASSERT( effectDesc.textures.end() != effectDesc.textures.find( textureName ) );
+
+                if( textureName == tp.parameterName )
+                {
+                    BindingLocation b = { ipass, gpuparam.textures[shaderParameterName] };
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
+                    tp.bindings.append( b );
+                }
+            }
+        }
+
+        if( tp.bindings.empty() )
+        {
+            GN_WARN(sLogger)( "Non used texture parameter '%s' in effect '%s'.",
+                tp.parameterName.cptr(),
+                effectName() );
+        }
+
+        mTextures.append( tp );
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
 GN::gfx::EffectResource::Impl::initUniforms(
     const EffectResourceDesc  & effectDesc )
 {
@@ -417,6 +505,15 @@ GN::gfx::EffectResource::Impl::initUniforms(
                 }
             }
         }
+
+        if( up.bindings.empty() )
+        {
+            GN_WARN(sLogger)( "Non used uniform parameter '%s' in effect '%s'.",
+                up.parameterName.cptr(),
+                effectName() );
+        }
+
+        mUniforms.append( up );
     }
 
     return true;
