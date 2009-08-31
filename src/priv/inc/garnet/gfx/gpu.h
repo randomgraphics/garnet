@@ -399,6 +399,36 @@ namespace GN { namespace gfx
         ///
         /// struct VertexFormat
         /// {
+        ///     float position[2];
+        ///     float texcoord[2];
+        /// };
+        ///
+        static VertexFormat XY_UV()
+        {
+            VertexFormat vf;
+
+            vf.numElements = 2;
+
+            vf.elements[0].bindTo( "POSITION", 0 );
+            vf.elements[0].format       = ColorFormat::FLOAT2;
+            vf.elements[0].bindingIndex = 0;
+            vf.elements[0].stream       = 0;
+            vf.elements[0].offset       = 0;
+
+            vf.elements[2].bindTo( "TEXCOORD", 0 );
+            vf.elements[2].format       = ColorFormat::FLOAT2;
+            vf.elements[2].bindingIndex = 0;
+            vf.elements[2].stream       = 0;
+            vf.elements[2].offset       = 8;
+
+            return vf;
+        }
+
+        ///
+        /// return a vertex format definition for vertex like this:
+        ///
+        /// struct VertexFormat
+        /// {
         ///     float position[3];
         ///     float normal[3];
         ///     float texcoord[2];

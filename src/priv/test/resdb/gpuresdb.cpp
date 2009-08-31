@@ -201,13 +201,21 @@ void GpuResourceDatabase::Impl::deleteAllResources()
 GpuResourceHandle
 GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) const
 {
-    const ResourceManager * mgr = getManager( type );
+    const ResourceManager * mgr = NULL;
+    for( size_t i = 0; i < mManagers.size(); ++i )
+    {
+        const ResourceManager & m = mManagers[i];
+        if( type == m.guid )
+        {
+            mgr = &m;
+            break;
+        }
+    }
     if( NULL == mgr ) return 0;
 
     UInt32 internalHandle = mgr->resources.name2handle(name);
     if( 0 == internalHandle )
     {
-        GN_ERROR(sLogger)( "Invalid resource name: %s", name ? name : "NULL name pointer!" );
         return 0;
     }
 

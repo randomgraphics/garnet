@@ -42,12 +42,12 @@ const Guid & GN::gfx::TextureResource::guid()
 GpuResourceHandle GN::gfx::TextureResource::create(
     GpuResourceDatabase & db,
     const char          * name,
-    const TextureDesc   & desc )
+    const TextureDesc   * desc )
 {
     GpuResourceFactory factory = { &createInstance, &deleteInstance };
-    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return NULL;
+    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return 0;
 
-    return db.createResource( TextureResource::guid(), name, &desc );
+    return db.createResource( TextureResource::guid(), name, desc );
 }
 
 //
@@ -57,13 +57,50 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
+    // check and register texture factory
     GpuResourceFactory factory = { &createInstance, &deleteInstance };
-    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return NULL;
+    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return 0;
 
-    GN_UNUSED_PARAM( filename );
-    GN_UNIMPL();
+    // convert to full (absolute) path
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = abspath;
 
-    return NULL;
+    // Reuse existing resource, if possible
+    GpuResourceHandle handle = db.findResource( guid(), filename );
+    if( handle ) return handle;
+
+    // load new texture from file
+    GN_INFO(sLogger)( "Load texture from file: %s", filename );
+
+    // load image
+    ImageDesc id;
+    std::vector<UInt8> texels;
+    if( !loadImageFromFile( id, texels, filename ) ) return 0;
+
+    // create texture
+    TextureDesc td;
+    td.fromImageDesc( id );
+    AutoRef<Texture> tex( db.gpu().createTexture( td ) );
+    if( !tex ) return 0;
+
+    // update texture content
+    for( size_t f = 0; f < td.faces; ++f )
+    for( size_t l = 0; l < td.levels; ++l )
+    {
+        const MipmapDesc & md = id.getMipmap( f, l );
+        size_t offset = id.getMipmapOffset( f, l );
+        tex->updateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
+    }
+
+    // create texture resource
+    handle = db.createResource( TextureResource::guid(), filename, NULL );
+    if( 0 == handle ) return 0;
+
+    // attach the texture to the resource
+    db.getResource( handle )->castTo<TextureResource>().setTexture( tex );
+
+    // success
+    return handle;
 }
 
 //
@@ -89,15 +126,11 @@ GN::gfx::TextureResource::createInstance(
 {
     TextureResource * m = new TextureResource( db, handle );
 
-    if( NULL == parameters )
+    if( NULL != parameters )
     {
-        GN_ERROR(sLogger)( "Null parameter pointer." );
-        return NULL;
+        const TextureDesc * desc = (const TextureDesc*)parameters;
+        m->mTexture.attach( db.gpu().createTexture( *desc ) );
     }
-
-    const TextureDesc * desc = (const TextureDesc*)parameters;
-
-    m->mTexture.attach( db.gpu().createTexture( *desc ) );
 
     return m;
 }

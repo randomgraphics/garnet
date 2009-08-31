@@ -41,12 +41,36 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.techniques["glsl"].passes[0].shader = "glsl";
 }
 
+void initMeshDesc( MeshResourceDesc & md )
+{
+    struct Vertex { float x, y, u, v; };
+
+    const Vertex vertices[] = {
+        { -1.0f,  1.0f, 0.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        {  1.0f,  1.0f, 1.0f, 0.0f },
+        {  1.0f, -1.0f, 1.0f, 1.0f },
+    };
+
+    const UInt16 indices[] = { 0, 1, 2, 0, 2, 3 };
+
+    md.prim = PrimitiveType::TRIANGLE_LIST;
+    md.numvtx = GN_ARRAY_COUNT( vertices );
+    md.numidx = GN_ARRAY_COUNT( indices );
+    md.vtxfmt = VertexFormat::XY_UV();
+    md.vertices[0] = vertices;
+    md.indices = indices;
+}
+
 bool init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
     ModelResourceDesc md;
     initEffectDesc( md.effectResourceDesc );
+    initMeshDesc( md.meshResourceDesc );
+    md.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
+    md.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
     model = ModelResource::create( *db, "m0",  md );
 

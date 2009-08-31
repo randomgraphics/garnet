@@ -13,6 +13,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
+template<typename T>
+static inline const T *
+sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
+{
+    typename std::map<StrA,T>::const_iterator iter = container.find( name );
+    return ( container.end() == iter ) ? NULL : &iter->second;
+}
 
 // *****************************************************************************
 // local classes and functions
@@ -176,6 +183,10 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     if( !desc.effectResourceName.empty() )
     {
         mEffect.handle = db.findResource( EffectResource::guid(), desc.effectResourceName );
+        if( 0 == mEffect.handle )
+        {
+            GN_ERROR(sLogger)( "%s is not a valid effect name.", desc.effectResourceName.cptr() );
+        }
     }
     else
     {
@@ -186,24 +197,31 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     if( 0 == mEffect.handle )
     {
         mEffect.handle = db.findResource( EffectResource::guid(), "dummy" );
+        if( 0 == mEffect.handle ) GN_ERROR(sLogger)( "No dummy effect defined in GPU resource database." );
     }
     if( 0 == mEffect.handle )
     {
+        GN_ERROR(sLogger)( "Fail to initialize effect for model '%s'.", modelName() );
         return failure();
     }
 
     // initialize mesh
-    if( !mDesc.meshResourceName.empty() )
+    if( !desc.meshResourceName.empty() )
     {
-        mMesh.handle = db.findResource( MeshResource::guid(), mDesc.meshResourceName );
+        mMesh.handle = db.findResource( MeshResource::guid(), desc.meshResourceName );
+        if( 0 == mMesh.handle )
+        {
+            GN_ERROR(sLogger)( "%s is not a valid mesh name.", desc.meshResourceName.cptr() );
+        }
     }
     else
     {
-        mMesh.handle = MeshResource::create( db, strFormat("%s.model", modelName()), mDesc.meshResourceDesc );
+        mMesh.handle = MeshResource::create( db, strFormat("%s.model", modelName()), desc.meshResourceDesc );
     }
     if( 0 == mMesh.handle )
     {
         mMesh.handle = db.findResource( MeshResource::guid(), "dummy" );
+        if( 0 == mMesh.handle ) GN_ERROR(sLogger)( "No dummy mesh defined in GPU resource database." );
     }
     if( 0 == mMesh.handle )
     {
@@ -215,6 +233,9 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     // attach to effect changing event
     GpuResource * effect = db.getResource( mEffect.handle );
     effect->sigUnderlyingResourcePointerChanged.connect( this, &Impl::onEffectChanged );
+
+    // store the descriptor (used in onEffectChanged())
+    mDesc = desc;
 
     // trigger a effect changing event to initialize everthing else.
     onEffectChanged( *effect );
@@ -347,9 +368,22 @@ void GN::gfx::ModelResource::Impl::draw() const
 {
     Gpu & g = database().gpu();
 
+    const GpuContext & currentContext = g.getContext();
+
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
-        // TODO: copy render states and render targets from current context
+        GpuContext & gc = mPasses[i].gc;
+
+        // copy render targets from current context
+        gc.colortargets = currentContext.colortargets;
+        gc.depthstencil = currentContext.depthstencil;
+
+        // TODO: copy render states from current context
+    }
+
+    // draw
+    for( size_t i = 0; i < mPasses.size(); ++i )
+    {
         g.bindContext( mPasses[i].gc );
     }
 }
@@ -365,13 +399,16 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 {
     EffectResource & effect = r.castTo<EffectResource>();
 
+    // initialize passes array
     mPasses.resize( effect.getNumPasses() );
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
         RenderPass & pass = mPasses[i];
-        pass.gc.clear();
 
+        pass.gc.clear();
         effect.applyToContext( i, pass.gc );
+
+        pass.rsdesc = effect.getRenderState( i );
     }
 
     // reapply mesh
@@ -386,9 +423,37 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
     for( size_t i = 0; i < effect.getNumTextures(); ++i )
     {
         TextureItem & t = mTextures[i];
-        GpuResourceHandle h = t.getHandle();
+
+        const EffectResource::TextureProperties & tp = effect.getTextureProperties( i );
+
+        const ModelResourceDesc::ModelTextureDesc * td = sFindNamedPtr( mDesc.textures, tp.parameterName );
+
+        GpuResourceHandle texhandle;
+        if( td )
+        {
+            if( td->resourceName )
+            {
+                texhandle = TextureResource::loadFromFile( database(), td->resourceName );
+            }
+            else
+            {
+                StrA texname = strFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+                texhandle = TextureResource::create( database(), texname, &td->desc );
+            }
+        }
+        else
+        {
+            GN_WARN(sLogger)(
+                "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
+                tp.parameterName.cptr(),
+                database().getResourceName( effect.handle() ),
+                modelName() );
+
+            texhandle = 0;
+        }
+
         t.setHandle( *this, i, 0 );
-        t.setHandle( *this, i, h );
+        t.setHandle( *this, i, texhandle );
     }
 
     // TODO: initialize uniform array
@@ -502,14 +567,17 @@ GpuResourceHandle GN::gfx::ModelResource::loadFromFile(
 {
     if( !ModelResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
 
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = abspath;
+
+    GpuResourceHandle handle = db.findResource( guid(), filename );
+    if( handle ) return handle;
+
     ModelResourceDesc desc;
     desc.clear();
+    //if( !loadFromXmlFile( desc, filename ) ) return 0;
 
-    //if( !loadFromXmlFile( desc, filename ) ) return NULL;
-
-    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
-
-    return db.createResource( ModelResource::guid(), abspath, &desc );;
+    return db.createResource( ModelResource::guid(), abspath, &desc );
 }
 
 //

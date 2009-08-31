@@ -679,4 +679,6 @@ size_t GN::gfx::EffectResource::getNumUniforms() const { return mImpl->getNumUni
 size_t GN::gfx::EffectResource::findUniform( const char * name ) const { return mImpl->findUniform( name ); }
 const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::getUniformProperties( size_t i ) const { return mImpl->getUniformProperties( i ); }
 
+const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::getRenderState( size_t pass ) const { return mImpl->getRenderState( pass ); }
+
 void GN::gfx::EffectResource::applyToContext( size_t pass, GpuContext & gc ) const { return mImpl->applyToContext( pass, gc ); }
