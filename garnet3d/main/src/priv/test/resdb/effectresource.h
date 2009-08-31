@@ -44,17 +44,20 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        size_t                    getNumPasses() const { return mPasses.size(); }
+        size_t                        getNumPasses() const { return mPasses.size(); }
 
-        size_t                    getNumTextures() const { return mTextures.size(); }
-        size_t                    findTexture( const char * name ) const;
-        const TextureProperties & getTextureProperties( size_t i ) const { return mTextures[i]; }
+        size_t                        getNumTextures() const { return mTextures.size(); }
+        size_t                        findTexture( const char * name ) const;
+        const TextureProperties     & getTextureProperties( size_t i ) const { return mTextures[i]; }
 
-        size_t                    getNumUniforms() const { return mUniforms.size(); }
-        size_t                    findUniform( const char * name ) const;
-        const UniformProperties & getUniformProperties( size_t i ) const { return mUniforms[i]; }
+        size_t                        getNumUniforms() const { return mUniforms.size(); }
+        size_t                        findUniform( const char * name ) const;
+        const UniformProperties     & getUniformProperties( size_t i ) const { return mUniforms[i]; }
 
-        void                      applyToContext( size_t pass, GpuContext & gc ) const;
+        const EffectResourceDesc::EffectRenderStateDesc &
+                                      getRenderState( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].rsdesc; }
+
+        void                          applyToContext( size_t pass, GpuContext & gc ) const;
 
         // ********************************
         // private types

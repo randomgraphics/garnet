@@ -144,7 +144,7 @@ namespace GN { namespace gfx
         static const Guid & guid();
 
         /// create new texture resource. Would fail if the name exists.
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const TextureDesc & desc );
+        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const TextureDesc * desc = NULL );
 
         /// load texture from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
@@ -220,12 +220,16 @@ namespace GN { namespace gfx
         const void *  indices; // Null means index data are undefined.
 
         ///
+        /// constructor
+        ///
+        MeshResourceDesc() { clear(); }
+
+        ///
         /// clear to an empty descriptor
         ///
         void clear()
         {
-            numvtx = 0;
-            numidx = 0;
+            memset( this, 0, sizeof(*this) );
         }
     };
 
@@ -491,17 +495,20 @@ namespace GN { namespace gfx
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
 
-        size_t                    getNumPasses() const;
+        size_t                        getNumPasses() const;
 
-        size_t                    getNumTextures() const;
-        size_t                    findTexture( const char * name ) const;
-        const TextureProperties & getTextureProperties( size_t i ) const;
+        size_t                        getNumTextures() const;
+        size_t                        findTexture( const char * name ) const;
+        const TextureProperties     & getTextureProperties( size_t i ) const;
 
-        size_t                    getNumUniforms() const;
-        size_t                    findUniform( const char * name ) const;
-        const UniformProperties & getUniformProperties( size_t i ) const;
+        size_t                        getNumUniforms() const;
+        size_t                        findUniform( const char * name ) const;
+        const UniformProperties     & getUniformProperties( size_t i ) const;
 
-        void                      applyToContext( size_t pass, GpuContext & gc ) const;
+        const EffectResourceDesc::EffectRenderStateDesc &
+                                      getRenderState( size_t pass ) const;
+
+        void                          applyToContext( size_t pass, GpuContext & gc ) const;
 
         //@}
 
