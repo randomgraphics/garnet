@@ -63,7 +63,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         if( !bin ) return NULL;
 
         ID3D11VertexShader * shader;
-        GN_DX10_CHECK_RV( dev.CreateVertexShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+        GN_DX_CHECK_RETURN( dev.CreateVertexShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
         if( signature ) *signature = bin.detach();
@@ -109,7 +109,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         if( !bin ) return NULL;
 
         ID3D11GeometryShader * shader;
-        GN_DX10_CHECK_RV( dev.CreateGeometryShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+        GN_DX_CHECK_RETURN( dev.CreateGeometryShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
         if( signature ) *signature = bin.detach();
@@ -155,7 +155,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         if( !bin ) return NULL;
 
         ID3D11PixelShader * shader;
-        GN_DX10_CHECK_RV( dev.CreatePixelShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
+        GN_DX_CHECK_RETURN( dev.CreatePixelShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
         if( signature ) *signature = bin.detach();
@@ -231,7 +231,7 @@ sInitConstBuffers(
         bufdesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
         bufdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         bufdesc.MiscFlags      = 0;
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
         constBufs[i] = buf;
         constData[i].resize( cbdesc.Size );
     }

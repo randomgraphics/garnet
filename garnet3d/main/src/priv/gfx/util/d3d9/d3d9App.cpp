@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )
 #pragma comment( lib, "d3dx9.lib" )
-#pragma comment( lib, "dxerr9.lib" )
+#pragma comment( lib, "dxerr.lib" )
 #endif
 
 // *****************************************************************************
@@ -83,7 +83,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     // get monitor's working area rectangle
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( GetMonitorInfoW( monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
     RECT rc = { 0, 0, width, height };
@@ -128,7 +128,7 @@ static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullsc
 
     // calculate boundary size
     RECT rc = { 0, 0, width, height };
-    GN_MSW_CHECK_RV(
+    GN_MSW_CHECK_RETURN(
         ::AdjustWindowRectEx(
             &rc,
             style,
@@ -137,7 +137,7 @@ static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullsc
         false );
 
     // resize the window
-    GN_MSW_CHECK_RV(
+    GN_MSW_CHECK_RETURN(
         ::SetWindowPos(
             window, HWND_TOP,
             0, 0, // position, ignored.
@@ -355,7 +355,7 @@ bool GN::d3d9::D3D9Application::createDevice()
     for( UInt32 i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
-        GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
         if( strstr(Identifier.Description,"PerfHUD") )
         {
@@ -386,7 +386,7 @@ bool GN::d3d9::D3D9Application::createDevice()
     mBehavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
     // device found, create it!
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         mD3D->CreateDevice(
             mAdapter,
             mDeviceType,
@@ -415,7 +415,7 @@ bool GN::d3d9::D3D9Application::restoreDevice()
     sAdjustWindow( mWindow, w, h, mOption.fullscreen );
 
     if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
-    GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+    GN_DX_CHECK_RETURN( mDevice->Reset( &mPresentParameters ), false );
 
     // success
     return onRestore();

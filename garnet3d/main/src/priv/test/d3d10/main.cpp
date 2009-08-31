@@ -58,7 +58,7 @@ public:
 
         // load effect
         AutoComPtr<ID3D10Blob> err;
-        GN_DX10_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             D3DX10CreateEffectFromMemory(
                 fxcode, strLen(fxcode),
                 "effect.h",

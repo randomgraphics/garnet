@@ -6,7 +6,7 @@
 #if GN_MSVC
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dinput8.lib")
-#pragma comment(lib, "dxerr9.lib" )
+#pragma comment(lib, "dxerr.lib" )
 #endif
 
 #define IDX_INPUT_BUFFER_SIZE  128
@@ -70,14 +70,14 @@ bool GN::input::InputDInput::attachToWindow( HandleType disp, HandleType window 
     GN_ASSERT( ::IsWindow( (HWND)window ) );
 
     // set keyboard cooperative level
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         mKeyboard->SetCooperativeLevel(
             (HWND)window,
             DISCL_NONEXCLUSIVE | DISCL_FOREGROUND ),
         false );
 
     // set mouse cooperative level
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         mMouse->SetCooperativeLevel(
             (HWND)window,
             DISCL_NONEXCLUSIVE | DISCL_FOREGROUND ),
@@ -159,8 +159,8 @@ bool GN::input::InputDInput::acquire()
 
     mAcquired = false;
 
-    GN_DX9_CHECK_RV( mKeyboard->Acquire(), 0 );
-    GN_DX9_CHECK_RV( mMouse->Acquire(), 0 );
+    GN_DX_CHECK_RETURN( mKeyboard->Acquire(), 0 );
+    GN_DX_CHECK_RETURN( mMouse->Acquire(), 0 );
 
     // success
     GN_TRACE(sLogger)( "Acquire DInput devices" );
@@ -186,7 +186,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", DXGetErrorString9A(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", DXGetErrorStringA(rval) );
             return false;
         }
     }
@@ -195,7 +195,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", DXGetErrorString9A(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", DXGetErrorStringA(rval) );
             return false;
         }
     }
@@ -215,7 +215,7 @@ void GN::input::InputDInput::pollKeyboard()
     // retrieve keyboard data
     DIDEVICEOBJECTDATA od[IDX_INPUT_BUFFER_SIZE];
     UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
-    GN_DX9_CHECK_DO(
+    GN_DX_CHECK_DO(
         mKeyboard->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
         mLost = (DIERR_INPUTLOST==rr||DIERR_NOTACQUIRED==rr); return; );
 
@@ -248,7 +248,7 @@ void GN::input::InputDInput::pollMouse()
     UInt32 i;
     DIDEVICEOBJECTDATA od[IDX_INPUT_BUFFER_SIZE];
     UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
-    GN_DX9_CHECK_DO(
+    GN_DX_CHECK_DO(
         mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
         mLost = (DIERR_INPUTLOST==rr||DIERR_NOTACQUIRED==rr); return; );
 
@@ -312,7 +312,7 @@ bool GN::input::InputDInput::diInit()
     GN_MSW_CHECK( ( dc = (DICreator)::GetProcAddress( mLibrary, "DirectInput8Create" ) ) );
 
     // create dinput
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dc( (HINSTANCE)GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&mDInput, 0 ),
         false );
 
@@ -352,10 +352,10 @@ bool GN::input::InputDInput::kbInit()
     GN_GUARD;
 
     // create keyboard device
-    GN_DX9_CHECK_RV( mDInput->CreateDevice(GUID_SysKeyboard, &mKeyboard, 0), 0 );
+    GN_DX_CHECK_RETURN( mDInput->CreateDevice(GUID_SysKeyboard, &mKeyboard, 0), 0 );
 
     // set keyboard data format
-    GN_DX9_CHECK_RV( mKeyboard->SetDataFormat(&c_dfDIKeyboard), 0 );
+    GN_DX_CHECK_RETURN( mKeyboard->SetDataFormat(&c_dfDIKeyboard), 0 );
 
     // set to buffer mode
     DIPROPDWORD dipdw;
@@ -364,7 +364,7 @@ bool GN::input::InputDInput::kbInit()
     dipdw.diph.dwObj        = 0;
     dipdw.diph.dwHow        = DIPH_DEVICE;
     dipdw.dwData            = IDX_INPUT_BUFFER_SIZE;
-    GN_DX9_CHECK_RV( mKeyboard->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph), 0 );
+    GN_DX_CHECK_RETURN( mKeyboard->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph), 0 );
 
     // success
     return true;
@@ -380,10 +380,10 @@ bool GN::input::InputDInput::mouseInit()
     GN_GUARD;
 
     // create mouse device
-    GN_DX9_CHECK_RV( mDInput->CreateDevice(GUID_SysMouse, &mMouse, 0), false );
+    GN_DX_CHECK_RETURN( mDInput->CreateDevice(GUID_SysMouse, &mMouse, 0), false );
 
     // set mouse data format
-    GN_DX9_CHECK_RV( mMouse->SetDataFormat(&c_dfDIMouse), false );
+    GN_DX_CHECK_RETURN( mMouse->SetDataFormat(&c_dfDIMouse), false );
 
 //* // set to buffer mode
     DIPROPDWORD dipdw;
@@ -392,7 +392,7 @@ bool GN::input::InputDInput::mouseInit()
     dipdw.diph.dwObj        = 0;
     dipdw.diph.dwHow        = DIPH_DEVICE;
     dipdw.dwData            = IDX_INPUT_BUFFER_SIZE;
-    GN_DX9_CHECK_RV( mMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph), false );
+    GN_DX_CHECK_RETURN( mMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph), false );
 /**/
 
     // success

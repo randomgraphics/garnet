@@ -451,7 +451,8 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# =============
 	# 是否支持D3D11
 	# =============
-	conf['has_d3d11'] = c.CheckCXXHeader( 'd3d11.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
+	#conf['has_d3d11'] = c.CheckCXXHeader( 'd3d11.h' ) and c.CheckLibrary( 'd3d11.lib' )( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
+	conf['has_d3d11'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
 
 	# ===================
 	# 是否支持DirectInput

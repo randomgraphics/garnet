@@ -38,7 +38,7 @@ sSetupUserD3D11Buffer(
         desc.BindFlags      = bindFlags;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         desc.MiscFlags      = 0;
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &desc, NULL, buffer ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &desc, NULL, buffer ), false );
     }
     else
     {
@@ -56,13 +56,13 @@ sSetupUserD3D11Buffer(
 
             (*buffer)->Release();
 
-            GN_DX10_CHECK_RV( dev.CreateBuffer( &desc, NULL, buffer ), false );
+            GN_DX_CHECK_RETURN( dev.CreateBuffer( &desc, NULL, buffer ), false );
         }
     }
 
     // update buffer content
     D3D11_MAPPED_SUBRESOURCE dst;
-    GN_DX10_CHECK_RV( context.Map( (*buffer), 0, D3D11_MAP_WRITE_DISCARD, 0, &dst ), false );
+    GN_DX_CHECK_RETURN( context.Map( (*buffer), 0, D3D11_MAP_WRITE_DISCARD, 0, &dst ), false );
     memcpy( dst.pData, data, size );
     context.Unmap( (*buffer), 0 );
 
@@ -128,7 +128,7 @@ void GN::gfx::D3D11Gpu::drawQuit()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::present()
 {
-    GN_DX10_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
+    GN_DX_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
 }
 
 //

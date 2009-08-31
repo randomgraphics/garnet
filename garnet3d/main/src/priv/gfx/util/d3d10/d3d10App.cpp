@@ -96,7 +96,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     // get monitor's working area rectangle
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( GetMonitorInfoW( monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
     RECT rc = { 0, 0, width, height };
@@ -162,7 +162,7 @@ static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullsc
 
     // calculate boundary size
     RECT rc = { 0, 0, width, height };
-    GN_MSW_CHECK_RV(
+    GN_MSW_CHECK_RETURN(
         ::AdjustWindowRectEx(
             &rc,
             style,
@@ -171,7 +171,7 @@ static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullsc
         false );
 
     // resize the window
-    GN_MSW_CHECK_RV(
+    GN_MSW_CHECK_RETURN(
         ::SetWindowPos(
             window, HWND_TOP,
             0, 0, // position, ignored.
@@ -360,7 +360,7 @@ bool GN::d3d10::D3D10Application::createDevice()
 
     // create factory
     AutoComPtr<IDXGIFactory> factory;
-    GN_DX10_CHECK_RV( CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&factory) ), false );
+    GN_DX_CHECK_RETURN( CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&factory) ), false );
 
 	// select adapter (use NVIDIA PerfHUD device, if avaliable)
 	mAdapter = 0;
@@ -372,7 +372,7 @@ bool GN::d3d10::D3D10Application::createDevice()
 
 		DXGI_ADAPTER_DESC adaptDesc;
 
-        GN_DX10_CHECK_DO( mAdapter->GetDesc( &adaptDesc ), continue; );
+        GN_DX_CHECK_DO( mAdapter->GetDesc( &adaptDesc ), continue; );
 
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
 
@@ -401,7 +401,7 @@ bool GN::d3d10::D3D10Application::createDevice()
     if( mOption.debug ) flags |= D3D10_CREATE_DEVICE_DEBUG;
 
     // create device
-    GN_DX10_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         D3D10CreateDevice( mAdapter, driverType, 0, flags, D3D10_SDK_VERSION, &mDevice ),
         false );
 
@@ -421,17 +421,17 @@ bool GN::d3d10::D3D10Application::createDevice()
     sd.Windowed = !mOption.fullscreen;
 
     // create swap chain
-    GN_DX10_CHECK_RV( factory->CreateSwapChain( mDevice, &sd, &mSwapChain ), false );
+    GN_DX_CHECK_RETURN( factory->CreateSwapChain( mDevice, &sd, &mSwapChain ), false );
 
     // get default back buffer
 	DXGI_SWAP_CHAIN_DESC scdesc;
     mSwapChain->GetDesc( &scdesc );
-    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof(*mBackBuf), (void**)&mBackBuf ), false );
+    GN_DX_CHECK_RETURN( mSwapChain->GetBuffer( 0, __uuidof(*mBackBuf), (void**)&mBackBuf ), false );
     D3D10_RENDER_TARGET_VIEW_DESC rtvd;
     rtvd.Format             = scdesc.BufferDesc.Format;
     rtvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_RTV_DIMENSION_TEXTURE2DMS : D3D10_RTV_DIMENSION_TEXTURE2D;
     rtvd.Texture2D.MipSlice = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( mBackBuf, NULL, &mBackRTV ), false );
+    GN_DX_CHECK_RETURN( mDevice->CreateRenderTargetView( mBackBuf, NULL, &mBackRTV ), false );
 
     // create default depth texture
     D3D10_TEXTURE2D_DESC td;
@@ -445,14 +445,14 @@ bool GN::d3d10::D3D10Application::createDevice()
     td.BindFlags          = D3D10_BIND_DEPTH_STENCIL;
     td.CPUAccessFlags     = 0;
     td.MiscFlags          = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateTexture2D( &td, NULL, &mDepthBuf ), false );
+    GN_DX_CHECK_RETURN( mDevice->CreateTexture2D( &td, NULL, &mDepthBuf ), false );
 
     // create depth stencil view
     D3D10_DEPTH_STENCIL_VIEW_DESC dsvd;
     dsvd.Format             = td.Format;
     dsvd.ViewDimension      = scdesc.SampleDesc.Count > 1 ? D3D10_DSV_DIMENSION_TEXTURE2DMS : D3D10_DSV_DIMENSION_TEXTURE2D;
     dsvd.Texture2D.MipSlice = 0;
-    GN_DX10_CHECK_RV( mDevice->CreateDepthStencilView( mDepthBuf, &dsvd, &mDepthDSV ), false );
+    GN_DX_CHECK_RETURN( mDevice->CreateDepthStencilView( mDepthBuf, &dsvd, &mDepthDSV ), false );
 
     // setup render targets
     mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV );

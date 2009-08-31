@@ -181,7 +181,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     }
 
     // map window
-    GN_X_CHECK_RV( XSelectInput( display, mWindow, StructureNotifyMask ), false );
+    GN_X_CHECK_RETURN( XSelectInput( display, mWindow, StructureNotifyMask ), false );
     XEvent e;
     XMapWindow( display, mWindow );
     for(;;)
@@ -230,7 +230,7 @@ bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) 
     GN_ASSERT( sIsWindow( mDisplay, mWindow ) );
 
     XWindowAttributes attr;
-    GN_X_CHECK_RV( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
+    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
 
     width = (UInt32)attr.width;
     height = (UInt32)attr.height;

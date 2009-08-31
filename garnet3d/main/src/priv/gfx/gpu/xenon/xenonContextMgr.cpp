@@ -137,11 +137,11 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                     // restore to default RT
                     if( 0 == i )
                     {
-                        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
+                        GN_DX_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
                     }
                     else
                     {
-                        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, 0 ) );
+                        GN_DX_CHECK( mDevice->SetRenderTarget( 0, 0 ) );
                     }
                 }
                 else
@@ -155,10 +155,10 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
         }
 
         // setup default render targets
-        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
-        GN_DX9_CHECK( mDevice->SetRenderTarget( 1, 0 ) );
-        GN_DX9_CHECK( mDevice->SetRenderTarget( 2, 0 ) );
-        GN_DX9_CHECK( mDevice->SetRenderTarget( 3, 0 ) );
+        GN_DX_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
+        GN_DX_CHECK( mDevice->SetRenderTarget( 1, 0 ) );
+        GN_DX_CHECK( mDevice->SetRenderTarget( 2, 0 ) );
+        GN_DX_CHECK( mDevice->SetRenderTarget( 3, 0 ) );
 	}
 
     if( newFlags.depthBuffer )
@@ -171,24 +171,24 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
         if( 0 == newSurf->texture )
         {
             AutoComPtr<IDirect3DSurface9> rt0;
-            GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
+            GN_DX_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
             GN_ASSERT( rt0 );
             D3DSURFACE_DESC rt0Desc;
-            GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
+            GN_DX_CHECK( rt0->GetDesc( &rt0Desc ) );
             if( mAutoDepth )
             {
                 D3DSURFACE_DESC depthDesc;
-                GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
+                GN_DX_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
                 if( depthDesc.Width < rt0Desc.Width ||
                     depthDesc.Height < rt0Desc.Height ||
                     forceRebind )
                 {
                     // release old depth surface
-                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( NULL ) );
+                    GN_DX_CHECK( mDevice->SetDepthStencilSurface( NULL ) );
                     mAutoDepth.clear();
 
                     // create new depth buffer
-                    GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
+                    GN_DX_CHECK_RETURN_VOID( mDevice->CreateDepthStencilSurface(
                         max(depthDesc.Width, rt0Desc.Width),
                         max(depthDesc.Height, rt0Desc.Height),
                         depthDesc.Format,
@@ -196,12 +196,12 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                         depthDesc.MultiSampleQuality,
                         TRUE, // discardable depth buffer
                         &mAutoDepth, 0 ) );
-                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                    GN_DX_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
                 }
             }
             else
             {
-                GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
+                GN_DX_CHECK_RETURN_VOID( mDevice->CreateDepthStencilSurface(
                     rt0Desc.Width,
                     rt0Desc.Height,
                     DEFAULT_DEPTH_FORMAT, // TODO: enumerate appropriate depth buffer format.
@@ -209,7 +209,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                     mPresentParameters.MultiSampleQuality,
                     TRUE,
                     &mAutoDepth, 0 ) );
-                GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                GN_DX_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
             }
         }
         else if( *newSurf != *oldSurf || forceRebind )
@@ -369,7 +369,7 @@ GN::gfx::XenonGpu::bindContextResources(
         }
 
         // apply to D3D device
-        GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl ) );
+        GN_DX_CHECK( mDevice->SetVertexDeclaration( decl ) );
     }
 
     ///
@@ -381,7 +381,7 @@ GN::gfx::XenonGpu::bindContextResources(
 
         if( skipDirtyCheck || vbb != mContext.vtxbufs[i] )
         {
-            GN_DX9_CHECK( mDevice->SetStreamSource(
+            GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
                 vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
                 vbb.offset,
@@ -394,7 +394,7 @@ GN::gfx::XenonGpu::bindContextResources(
     //
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
-        GN_DX9_CHECK( mDevice->SetIndices( newContext.idxbuf
+        GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
             ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
             : NULL ) );
     }

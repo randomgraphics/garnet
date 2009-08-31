@@ -11,7 +11,7 @@
 #ifdef HAS_DINPUT
 
 #include <dinput.h>
-#include <dxerr9.h>
+#include <dxerr.h>
 
 namespace GN { namespace input
 {

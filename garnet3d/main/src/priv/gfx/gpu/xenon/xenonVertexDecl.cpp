@@ -196,7 +196,7 @@ GN::gfx::createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFor
     GN_ASSERT( !elements.empty() );
 
     IDirect3DVertexDeclaration9 * decl;
-    GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( &elements[0], &decl ), NULL );
+    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( &elements[0], &decl ), NULL );
 
     // success
     return decl;

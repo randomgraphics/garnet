@@ -24,7 +24,7 @@ template<> struct ShaderFunc<ID3D10VertexShader>
     static ID3D10VertexShader * sCreate( ID3D10Device & dev, const void * binary, size_t bytes )
     {
         ID3D10VertexShader * result;
-        GN_DX10_CHECK_RV( dev.CreateVertexShader( binary, bytes, &result ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreateVertexShader( binary, bytes, &result ), NULL );
         return result;
     }
 
@@ -44,7 +44,7 @@ template<> struct ShaderFunc<ID3D10PixelShader>
     static ID3D10PixelShader * sCreate( ID3D10Device & dev, const void * binary, size_t bytes )
     {
         ID3D10PixelShader * result;
-        GN_DX10_CHECK_RV( dev.CreatePixelShader( binary, bytes, &result ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreatePixelShader( binary, bytes, &result ), NULL );
         return result;
     }
 
@@ -64,7 +64,7 @@ template<> struct ShaderFunc<ID3D10GeometryShader>
     static ID3D10GeometryShader * sCreate( ID3D10Device & dev, const void * binary, size_t bytes )
     {
         ID3D10GeometryShader * result;
-        GN_DX10_CHECK_RV( dev.CreateGeometryShader( binary, bytes, &result ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreateGeometryShader( binary, bytes, &result ), NULL );
         return result;
     }
 
@@ -279,7 +279,7 @@ struct D3D10ViewDump
 
         ID3D10Buffer * buf;
 
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &bd, &sd, &buf ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &bd, &sd, &buf ), false );
 
         res.attach( buf );
         return true;
@@ -289,7 +289,7 @@ struct D3D10ViewDump
     {
         // get image information
         D3DX10_IMAGE_INFO info;
-        GN_DX10_CHECK_RV( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ), false );
+        GN_DX_CHECK_RETURN( D3DX10GetImageInfoFromMemory( content.cptr(), content.size(), 0, &info, 0 ), false );
         width  = info.Width;
         height = info.Height;
 
@@ -348,13 +348,13 @@ struct D3D10ViewDump
 
                     ID3D10Texture2D * tex2d;
 
-                    GN_DX10_CHECK_RV( dev.CreateTexture2D( &desc2d, subdata.cptr(), &tex2d ), false );
+                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.cptr(), &tex2d ), false );
                     original.attach( tex2d );
 
                     desc2d.Usage = D3D10_USAGE_DEFAULT;
                     desc2d.BindFlags = bind;
                     desc2d.CPUAccessFlags = 0;
-                    GN_DX10_CHECK_RV( dev.CreateTexture2D( &desc2d, subdata.cptr(), &tex2d ), false );
+                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.cptr(), &tex2d ), false );
                     res.attach( tex2d );
 
                     break;
@@ -388,7 +388,7 @@ struct D3D10ViewDump
                 load.Format = format;
             }
 
-            GN_DX10_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 D3DX10CreateTextureFromMemory(
                     &dev,
                     content.cptr(),
@@ -402,7 +402,7 @@ struct D3D10ViewDump
             load.BindFlags = bind;
             load.CpuAccessFlags = 0;
 
-            GN_DX10_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 D3DX10CreateTextureFromMemory(
                     &dev,
                     content.cptr(),
@@ -449,7 +449,7 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
         }
 
         // create view
-        GN_DX10_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             dev.CreateShaderResourceView( res, srvdesc, &view ),
             false );
 
@@ -470,7 +470,7 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
 
         if( !createTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format ) ) return false;
 
-        GN_DX10_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             dev.CreateRenderTargetView( res, rtvdesc, &view ),
             false );
 
@@ -494,7 +494,7 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
                 break;
         };
 
-        GN_DX10_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             dev.CreateShaderResourceView( res, &srvdesc, &srv ),
             false );
 
@@ -520,7 +520,7 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
         if( !createTexture( dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format ) ) return false;
 
         // create view
-        GN_DX10_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             dev.CreateDepthStencilView( res, dsvdesc, &view ),
             false );
 
@@ -866,19 +866,19 @@ struct D3D10StateDump
         // vs
         if( !vs.binary.empty() )
         {
-            GN_DX10_CHECK_RV( dev.CreateVertexShader( vs.binary.cptr(), vs.binary.size(), &vs.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreateVertexShader( vs.binary.cptr(), vs.binary.size(), &vs.comptr ), false );
         }
 
         // ps
         if( !ps.binary.empty() )
         {
-            GN_DX10_CHECK_RV( dev.CreatePixelShader( ps.binary.cptr(), ps.binary.size(), &ps.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreatePixelShader( ps.binary.cptr(), ps.binary.size(), &ps.comptr ), false );
         }
 
         // gs
         if( !gs.binary.empty() )
         {
-            GN_DX10_CHECK_RV( dev.CreateGeometryShader( gs.binary.cptr(), gs.binary.size(), &gs.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreateGeometryShader( gs.binary.cptr(), gs.binary.size(), &gs.comptr ), false );
         }
 
         // const buffers
@@ -892,7 +892,7 @@ struct D3D10StateDump
         // il
         if( !il.elements.empty() )
         {
-	        GN_DX10_CHECK_RV(
+	        GN_DX_CHECK_RETURN(
 	            dev.CreateInputLayout(
 	                il.elements.cptr(),
 	                (UINT)il.elements.size(),
@@ -945,15 +945,15 @@ struct D3D10StateDump
 
         // rs
         GN_ASSERT( sizeof(D3D10_RASTERIZER_DESC) == rs.binary.size() );
-        GN_DX10_CHECK_RV( dev.CreateRasterizerState( (const D3D10_RASTERIZER_DESC *)rs.binary.cptr(), &rs.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateRasterizerState( (const D3D10_RASTERIZER_DESC *)rs.binary.cptr(), &rs.comptr ), false );
 
         // bs
         GN_ASSERT( sizeof(D3D10_BLEND_DESC) == bs.binary.size() );
-        GN_DX10_CHECK_RV( dev.CreateBlendState( (const D3D10_BLEND_DESC *)bs.binary.cptr(), &bs.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBlendState( (const D3D10_BLEND_DESC *)bs.binary.cptr(), &bs.comptr ), false );
 
         // ds
         GN_ASSERT( sizeof(D3D10_DEPTH_STENCIL_DESC) == ds.binary.size() );
-        GN_DX10_CHECK_RV( dev.CreateDepthStencilState( (const D3D10_DEPTH_STENCIL_DESC *)ds.binary.cptr(), &ds.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateDepthStencilState( (const D3D10_DEPTH_STENCIL_DESC *)ds.binary.cptr(), &ds.comptr ), false );
 
         // success
         return true;
@@ -1165,7 +1165,7 @@ protected:
 
         if( !mState.onCreate( device() ) ) return false;
 
-        GN_DX10_CHECK_RV( D3DX10CreateSprite( &device(), 1, &mSprite ), false );
+        GN_DX_CHECK_RETURN( D3DX10CreateSprite( &device(), 1, &mSprite ), false );
 
         return true;
 

@@ -54,7 +54,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
         "%s\n"
         "\n=========================================================\n",
         code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
-        hr, DXGetErrorDescription9A(hr),
+        hr, DXGetErrorDescriptionA(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -160,7 +160,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, con
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -204,7 +204,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -250,7 +250,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, co
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -288,7 +288,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -332,7 +332,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, cons
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -376,7 +376,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -422,7 +422,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, con
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -460,7 +460,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),

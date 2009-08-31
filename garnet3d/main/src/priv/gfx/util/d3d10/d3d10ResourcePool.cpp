@@ -241,7 +241,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_BUFFER:
         {
             ID3D10Buffer * buf;
-            GN_DX10_CHECK_RV( m_device->CreateBuffer( &desc.buf, data, &buf ), NULL );
+            GN_DX_CHECK_RETURN( m_device->CreateBuffer( &desc.buf, data, &buf ), NULL );
             res = buf;
             break;
         }
@@ -249,7 +249,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE1D:
         {
             ID3D10Texture1D * tex;
-            GN_DX10_CHECK_RV( m_device->CreateTexture1D( &desc.tex1d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( m_device->CreateTexture1D( &desc.tex1d, data, &tex ), NULL );
             res = tex;
             break;
         }
@@ -257,7 +257,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE2D:
         {
             ID3D10Texture2D * tex;
-            GN_DX10_CHECK_RV( m_device->CreateTexture2D( &desc.tex2d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( m_device->CreateTexture2D( &desc.tex2d, data, &tex ), NULL );
             res = tex;
             break;
         }
@@ -265,7 +265,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE3D:
         {
             ID3D10Texture3D * tex;
-            GN_DX10_CHECK_RV( m_device->CreateTexture3D( &desc.tex3d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( m_device->CreateTexture3D( &desc.tex3d, data, &tex ), NULL );
             res = tex;
             break;
         }

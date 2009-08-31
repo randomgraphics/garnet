@@ -180,7 +180,7 @@ sUpdateConstBuffer(
 #else
         GN_UNUSED_PARAM( dev );
         void * dst;
-        GN_DX10_CHECK_R( buf.Map( D3D10_MAP_WRITE_DISCARD, 0, &dst ) );
+        GN_DX_CHECK_RETURN_VOID( buf.Map( D3D10_MAP_WRITE_DISCARD, 0, &dst ) );
         memcpy( dst, data, size );
         buf.Unmap();
 #endif

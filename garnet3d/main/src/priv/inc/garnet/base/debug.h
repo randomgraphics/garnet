@@ -157,26 +157,26 @@
 ///
 /// check return value of Windows function, return if failed
 ///
-#define GN_MSW_CHECK_R( func ) GN_MSW_CHECK_DO( func, return; )
+#define GN_MSW_CHECK_RETURN_VOID( func ) GN_MSW_CHECK_DO( func, return; )
 
 ///
 /// check return value of Windows function, return if failed
 ///
-#define GN_MSW_CHECK_RV( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
+#define GN_MSW_CHECK_RETURN( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
 
 ///
 /// DX9 error check routine
 ///
 #ifdef D3DCOMPILE_USEVOIDS
-#define GN_DX9_CHECK_DO( func, something ) func
+#define GN_DX_CHECK_DO( func, something ) func
 #else
-#define GN_DX9_CHECK_DO( func, something )                                  \
+#define GN_DX_CHECK_DO( func, something )                                   \
     if( true ) {                                                            \
         HRESULT rr = func;                                                  \
         if( FAILED(rr) )                                                    \
         {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DX9Error"); \
-            GN_ERROR(sLogger)( DXGetErrorString9A(rr) );                    \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
+            GN_ERROR(sLogger)( DXGetErrorStringA(rr) );                     \
             something                                                       \
         }                                                                   \
     } else void(0)
@@ -186,53 +186,20 @@
 /// DX error check routine
 ///
 #if GN_BUILD_DEBUG
-#define GN_DX9_CHECK( func )         GN_DX9_CHECK_DO( func, )
+#define GN_DX_CHECK( func )         GN_DX_CHECK_DO( func, )
 #else
-#define GN_DX9_CHECK( func )         func
+#define GN_DX_CHECK( func )         func
 #endif
 
 ///
 /// DX error check routine
 ///
-#define GN_DX9_CHECK_R( func )        GN_DX9_CHECK_DO( func, return; )
+#define GN_DX_CHECK_RETURN_VOID( func )        GN_DX_CHECK_DO( func, return; )
 
 ///
 /// DX error check routine
 ///
-#define GN_DX9_CHECK_RV( func, rval ) GN_DX9_CHECK_DO( func, return rval; )
-
-///
-/// DX9 error check routine
-///
-#define GN_DX10_CHECK_DO( func, something )                                  \
-    if( true ) {                                                             \
-        HRESULT rr = func;                                                   \
-        if( FAILED(rr) )                                                     \
-        {                                                                    \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DX10Error"); \
-            GN_ERROR(sLogger)( "D3D10 error : 0x%X", rr );                   \
-            something                                                        \
-        }                                                                    \
-    } else void(0)
-
-///
-/// DX error check routine
-///
-#if GN_BUILD_DEBUG
-#define GN_DX10_CHECK( func )         GN_DX10_CHECK_DO( func, )
-#else
-#define GN_DX10_CHECK( func )         func
-#endif
-
-///
-/// DX error check routine
-///
-#define GN_DX10_CHECK_R( func )        GN_DX10_CHECK_DO( func, return; )
-
-///
-/// DX error check routine
-///
-#define GN_DX10_CHECK_RV( func, rval ) GN_DX10_CHECK_DO( func, return rval; )
+#define GN_DX_CHECK_RETURN( func, rval ) GN_DX_CHECK_DO( func, return rval; )
 
 #elif GN_POSIX
 
@@ -262,12 +229,12 @@
 ///
 /// check return value of XLib function, return if failed
 ///
-#define GN_X_CHECK_R( func ) GN_X_CHECK_DO( func, return; )
+#define GN_X_CHECK_RETURN_VOID( func ) GN_X_CHECK_DO( func, return; )
 
 ///
 /// check return value of XLib function, return if failed
 ///
-#define GN_X_CHECK_RV( func, rval ) GN_X_CHECK_DO( func, return rval; )
+#define GN_X_CHECK_RETURN( func, rval ) GN_X_CHECK_DO( func, return rval; )
 
 #endif
 

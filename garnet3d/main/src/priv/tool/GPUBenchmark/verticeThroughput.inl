@@ -90,7 +90,7 @@ struct DenseMesh
         // load mesh from file
         AutoComPtr<ID3DXMesh> sysMesh;
         AutoComPtr<ID3DXBuffer> adjacency;
-        GN_DX9_CHECK_RV( D3DXLoadMeshFromXA(
+        GN_DX_CHECK_RETURN( D3DXLoadMeshFromXA(
             filename.cptr(),
             D3DXMESH_SYSTEMMEM,
             dev,
@@ -103,9 +103,9 @@ struct DenseMesh
         // Lock the vertex buffer, to generate a simple bounding sphere
         AutoComPtr<IDirect3DVertexBuffer9> vb;
         void * vertices;
-        GN_DX9_CHECK_RV( sysMesh->GetVertexBuffer( &vb ), false );
-        GN_DX9_CHECK_RV( vb->Lock( 0, 0, &vertices, D3DLOCK_NOSYSLOCK ), false );
-        GN_DX9_CHECK_RV( D3DXComputeBoundingSphere(
+        GN_DX_CHECK_RETURN( sysMesh->GetVertexBuffer( &vb ), false );
+        GN_DX_CHECK_RETURN( vb->Lock( 0, 0, &vertices, D3DLOCK_NOSYSLOCK ), false );
+        GN_DX_CHECK_RETURN( D3DXComputeBoundingSphere(
             (D3DXVECTOR3*)vertices, sysMesh->GetNumVertices(),
             D3DXGetFVFVertexSize( sysMesh->GetFVF() ),
             (D3DXVECTOR3*)&boundingSphere.center,
@@ -117,7 +117,7 @@ struct DenseMesh
         if( sysMesh->GetFVF() != (D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1) )
         {
             AutoComPtr<ID3DXMesh> tmp;
-            GN_DX9_CHECK_RV( sysMesh->CloneMeshFVF(
+            GN_DX_CHECK_RETURN( sysMesh->CloneMeshFVF(
                     sysMesh->GetOptions(),
                     D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1,
                     dev, &tmp ), false );
@@ -127,7 +127,7 @@ struct DenseMesh
         // Compute normals for the mesh, if not present
         if( !hasNormal )
         {
-            GN_DX9_CHECK_RV( D3DXComputeNormals( sysMesh, NULL ), false );
+            GN_DX_CHECK_RETURN( D3DXComputeNormals( sysMesh, NULL ), false );
         }
 
         // make sure vertex size is 32 bytes
@@ -135,14 +135,14 @@ struct DenseMesh
 
         // do optimize
         AutoComPtr<ID3DXMesh> optimizedMesh;
-        GN_DX9_CHECK_RV( sysMesh->Optimize(
+        GN_DX_CHECK_RETURN( sysMesh->Optimize(
             D3DXMESHOPT_VERTEXCACHE | sysMesh->GetOptions(),
             (DWORD*)adjacency->GetBufferPointer(),
             NULL, NULL, NULL,
             &optimizedMesh ), false );
 
         // move to default pool
-        GN_DX9_CHECK_RV( optimizedMesh->CloneMeshFVF(
+        GN_DX_CHECK_RETURN( optimizedMesh->CloneMeshFVF(
             D3DXMESH_WRITEONLY,
             optimizedMesh->GetFVF(),
             dev, &mesh ), false );
@@ -165,7 +165,7 @@ struct DenseMesh
         {
             for( DWORD j = 0; j < numMaterials; ++j )
             {
-                GN_DX9_CHECK( mesh->DrawSubset( j ) );
+                GN_DX_CHECK( mesh->DrawSubset( j ) );
             }
         }
 

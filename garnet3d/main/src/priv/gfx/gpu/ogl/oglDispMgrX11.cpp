@@ -26,7 +26,7 @@ bool GN::gfx::OGLGpu::dispInit()
 
     // get window attributes
     XWindowAttributes wa;
-    GN_X_CHECK_RV( XGetWindowAttributes( disp, win, &wa ), false );
+    GN_X_CHECK_RETURN( XGetWindowAttributes( disp, win, &wa ), false );
 
     // fill VisualInfo structure of the window
     XVisualInfo vi;

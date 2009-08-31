@@ -40,7 +40,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
         { "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
         { "USER"    , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D10_APPEND_ALIGNED_ELEMENT, D3D10_INPUT_PER_VERTEX_DATA, 0 },
     };
-    GN_DX10_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev->CreateInputLayout( elements, GN_ARRAY_COUNT(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout ),
         failure() );
 
@@ -135,7 +135,7 @@ void GN::d3d10::SimpleMesh::endVertices()
             0,
         };
 
-        GN_DX10_CHECK_R( mDevice->CreateBuffer( &desc, 0, &mVtxBuf ) );
+        GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mVtxBuf ) );
 
         mVtxBufCapacity = mVertices.size();
     }
@@ -201,7 +201,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
             0,
         };
 
-        GN_DX10_CHECK_R( mDevice->CreateBuffer( &desc, 0, &mIdxBuf ) );
+        GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mIdxBuf ) );
 
         mIdxBufCapacity = mIndices.size();
     }

@@ -100,7 +100,7 @@ class TestTextureBandwidth : public BasicTestCase
         tex = new IDirect3DTexture9;
         TEX_BYTES = XGSetTextureHeader( TEX_SIZE,
                                         TEX_SIZE,
-                                        1, 
+                                        1,
                                 #if USE_WRITE_COMBINE
                                         0,
                                 #else
@@ -113,12 +113,12 @@ class TestTextureBandwidth : public BasicTestCase
                                       0,
                                       tex,
                                       NULL,
-                                      NULL ); 
+                                      NULL );
         desc.baseMap = memAlloc( TEX_BYTES, 'd' );
         XGOffsetResourceAddress( tex, desc.baseMap );
 #else
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
-        GN_DX9_CHECK_RV(
+        GN_DX_CHECK_RETURN(
             dev->CreateTexture(
                 TEX_SIZE, TEX_SIZE, 1,
                 D3DUSAGE_DYNAMIC, clrFmt2D3DFormat(TEX_FORMAT,false), D3DPOOL_DEFAULT,
@@ -128,8 +128,8 @@ class TestTextureBandwidth : public BasicTestCase
 
 		// get texture size in bytes.
         D3DLOCKED_RECT lrc;
-        GN_DX9_CHECK_RV( tex->LockRect( 0, &lrc, 0, 0 ), false );
-        GN_DX9_CHECK_RV( tex->UnlockRect( 0 ), false );
+        GN_DX_CHECK_RETURN( tex->LockRect( 0, &lrc, 0, 0 ), false );
+        GN_DX_CHECK_RETURN( tex->UnlockRect( 0 ), false );
         TEX_BYTES = lrc.Pitch * TEX_SIZE;
 #endif
 
@@ -164,7 +164,7 @@ class TestTextureBandwidth : public BasicTestCase
         dev->InvalidateGpuCache( desc.baseMap, TEX_BYTES, 0 );
 #else
         D3DLOCKED_RECT lrc;
-        GN_DX9_CHECK_R( desc.texture->LockRect( 0, &lrc, 0, D3DLOCK_DISCARD ) );
+        GN_DX_CHECK_RETURN_VOID( desc.texture->LockRect( 0, &lrc, 0, D3DLOCK_DISCARD ) );
         GN_ASSERT( TEX_BYTES == lrc.Pitch * TEX_SIZE );
         memCopy( lrc.pBits, data, TEX_BYTES );
         desc.texture->UnlockRect( 0 );

@@ -103,7 +103,7 @@ public:
         // standard init procedure
         GN_STDCLASS_INIT( SyncEventMsw, () );
 
-        GN_MSW_CHECK_RV(
+        GN_MSW_CHECK_RETURN(
             mHandle = CreateEventA( 0, !autoreset, initialSignaled, name ),
             failure() );
 
@@ -196,7 +196,7 @@ public:
         // standard init procedure
         GN_STDCLASS_INIT( SemaphoreMsw, () );
 
-        GN_MSW_CHECK_RV(
+        GN_MSW_CHECK_RETURN(
             mHandle = CreateSemaphoreA( 0, (LONG)initialcount, (LONG)maxcount, name ),
             failure() );
 

@@ -43,7 +43,7 @@ bool GN::gfx::XenonLine::init()
     IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // create vertex decl
-    GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
 
     // create vertex shader
     static const char * vscode =
@@ -64,7 +64,7 @@ bool GN::gfx::XenonLine::init()
     if( 0 == mPxlShader ) return failure();
 
     // create vertex buffer
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev.CreateVertexBuffer(
             (UINT)( LINE_STRIDE * MAX_LINES ),
             D3DUSAGE_CPU_CACHED_MEMORY,
@@ -161,7 +161,7 @@ void GN::gfx::XenonLine::drawLines(
     // lock vertex buffer
     XenonLineVertex * vbData;
     dev.SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
-    GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, 0 ) );
+    GN_DX_CHECK_RETURN_VOID( mVtxBuf->Lock( 0, 0, (void**)&vbData, 0 ) );
     vbData += mNextLine * ( LINE_STRIDE / sizeof(XenonLineVertex) );
 
     UInt32 bgra =
@@ -176,7 +176,7 @@ void GN::gfx::XenonLine::drawLines(
         float scaleX, offsetX;
         float scaleY, offsetY;
         D3DVIEWPORT9 vp;
-        GN_DX9_CHECK( dev.GetViewport( &vp ) );
+        GN_DX_CHECK( dev.GetViewport( &vp ) );
         scaleX = 2.0f/(float)vp.Width;
         scaleY = -2.0f/(float)vp.Height;
         offsetX = -1.0f;
@@ -202,7 +202,7 @@ void GN::gfx::XenonLine::drawLines(
     }
 
     // unlock the buffer
-    GN_DX9_CHECK( mVtxBuf->Unlock() );
+    GN_DX_CHECK( mVtxBuf->Unlock() );
 
     // setup context and data flags
     GpuContext::FieldFlags cf;
@@ -219,12 +219,12 @@ void GN::gfx::XenonLine::drawLines(
     // bind shaders
     cf.setShaderBit( SHADER_VS );
 
-    GN_DX9_CHECK( dev.SetVertexShader( mVtxShader ) );
+    GN_DX_CHECK( dev.SetVertexShader( mVtxShader ) );
 
     if( mVtxShader )
     {
         Matrix44f mat = proj * view * model;
-        GN_DX9_CHECK( dev.SetVertexShaderConstantF( 0, mat[0], 4 ) );
+        GN_DX_CHECK( dev.SetVertexShaderConstantF( 0, mat[0], 4 ) );
     }
     else
     {
@@ -232,18 +232,18 @@ void GN::gfx::XenonLine::drawLines(
     }
 
     cf.setShaderBit( SHADER_PS );
-    GN_DX9_CHECK( dev.SetPixelShader( mPxlShader ) );
+    GN_DX_CHECK( dev.SetPixelShader( mPxlShader ) );
 
     // bind buffers
     cf.vtxfmt = 1;
     cf.vtxbufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(XenonLineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
-    GN_DX9_CHECK( dev.SetStreamSource( 0, mVtxBuf, 0, sizeof(XenonLineVertex) ) );
-    GN_DX9_CHECK( dev.SetVertexDeclaration( mDecl ) );
+    GN_DX_CHECK( dev.SetStreamSource( 0, mVtxBuf, 0, sizeof(XenonLineVertex) ) );
+    GN_DX_CHECK( dev.SetVertexDeclaration( mDecl ) );
 
     // draw
-    GN_DX9_CHECK( dev.DrawPrimitive(
+    GN_DX_CHECK( dev.DrawPrimitive(
         d3dpt,
         (UINT)( mNextLine * 2 ),
         (UINT)count ) );

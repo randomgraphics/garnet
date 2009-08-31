@@ -88,7 +88,7 @@ GN::Vector2<size_t> GN::win::WindowMsw::getClientSize() const
     GN_ASSERT( ::IsWindow( mWindow ) );
     Vector2<size_t> sz(0,0);
     RECT rc;
-    GN_MSW_CHECK_RV( ::GetClientRect( mWindow, &rc ), sz );
+    GN_MSW_CHECK_RETURN( ::GetClientRect( mWindow, &rc ), sz );
     sz.x = (size_t)(rc.right - rc.left);
     sz.y = (size_t)(rc.bottom - rc.top);
     return sz;
@@ -142,7 +142,7 @@ void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
     RECT rc = { 0, 0, (int)w, (int)h };
-    GN_MSW_CHECK_R( ::AdjustWindowRectEx(
+    GN_MSW_CHECK_RETURN_VOID( ::AdjustWindowRectEx(
         &rc,
         (DWORD)::GetWindowLong( mWindow, GWL_STYLE ),
         (BOOL)::GetMenu( mWindow ),
