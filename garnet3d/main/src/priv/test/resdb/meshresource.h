@@ -44,12 +44,28 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        const MeshResourceDesc & getDesc() const { return mDesc; }
+        void applyToContext( GpuContext & context ) const;
+
         // ********************************
         // private variables
         // ********************************
     private:
 
-        MeshResource & mOwner;
+        struct VertexBuffer
+        {
+            AutoRef<VtxBuf>  gpudata;
+        };
+
+        struct IndexBuffer
+        {
+            AutoRef<IdxBuf>  gpudata;
+        };
+
+        MeshResource    & mOwner;
+        MeshResourceDesc  mDesc;
+        VertexBuffer      mVtxBufs[GpuContext::MAX_VERTEX_BUFFERS];
+        IndexBuffer       mIdxBuf;
 
         // ********************************
         // private functions
@@ -57,7 +73,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          myname() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+        const char *          meshName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
     };
 }}
 

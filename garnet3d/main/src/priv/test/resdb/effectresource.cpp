@@ -273,11 +273,19 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::applyToContext( size_t pass, GpuContext & gc ) const
+void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext & gc ) const
 {
-    GN_UNUSED_PARAM( pass );
-    GN_UNUSED_PARAM( gc );
-    GN_UNIMPL_WARNING();
+    if( passIndex >= mPasses.size() )
+    {
+        GN_ERROR(sLogger)( "Pass index is too large: %u", passIndex );
+        return;
+    }
+
+    const RenderPass & pass = mPasses[passIndex];
+
+    const GpuProgramItem & gpitem = mPrograms[pass.gpuProgramIndex];
+
+    gc.gpuProgram = gpitem.prog;
 }
 
 // *****************************************************************************
@@ -310,17 +318,17 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
         }
 
         // create GPU program
-        GpuProgramProperties gpp;
-        gpp.name = shaderName;
-        gpp.prog.attach( gpu.createGpuProgram( shaderDesc.gpd ) );
-        if( !gpp.prog ) continue;
+        GpuProgramItem gpitem;
+        gpitem.name = shaderName;
+        gpitem.prog.attach( gpu.createGpuProgram( shaderDesc.gpd ) );
+        if( !gpitem.prog ) continue;
 
         // check textures and uniforms
-        if( !sCheckShaderTextures( effectDesc, shaderDesc, shaderName, *gpp.prog ) ) continue;
-        if( !sCheckShaderUniforms( effectDesc, shaderDesc, shaderName, *gpp.prog ) ) continue;
+        if( !sCheckShaderTextures( effectDesc, shaderDesc, shaderName, *gpitem.prog ) ) continue;
+        if( !sCheckShaderUniforms( effectDesc, shaderDesc, shaderName, *gpitem.prog ) ) continue;
 
         // add to GPU program array
-        if( gpp.prog ) mPrograms.append( gpp );
+        if( gpitem.prog ) mPrograms.append( gpitem );
     }
 
     return true;
@@ -463,9 +471,9 @@ GN::gfx::EffectResource::Impl::initTextures(
         // setup texture binding point array
         for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
         {
-            const GpuProgramProperties & gpp = mPrograms[mPasses[ipass].gpuProgramIndex];
-            const GpuProgramParameterDesc & gpuparam = gpp.prog->getParameterDesc();
-            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpp.name );
+            const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
+            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpitem.name );
 
             for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->textures.begin();
                  iter != shaderDesc->textures.end();
@@ -478,7 +486,7 @@ GN::gfx::EffectResource::Impl::initTextures(
 
                 if( textureName == tp.parameterName )
                 {
-                    BindingLocation b = { ipass, gpuparam.textures[shaderParameterName] };
+                    BindingLocation b = { ipass, gpparam.textures[shaderParameterName] };
                     GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
                     tp.bindings.append( b );
                 }
@@ -516,9 +524,9 @@ GN::gfx::EffectResource::Impl::initUniforms(
         // setup uniform binding point array
         for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
         {
-            const GpuProgramProperties & gpp = mPrograms[mPasses[ipass].gpuProgramIndex];
-            const GpuProgramParameterDesc & gpuparam = gpp.prog->getParameterDesc();
-            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpp.name );
+            const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
+            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpitem.name );
 
             for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->uniforms.begin();
                  iter != shaderDesc->uniforms.end();
@@ -531,7 +539,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
 
                 if( uniformName == up.parameterName )
                 {
-                    BindingLocation b = { ipass, gpuparam.uniforms[shaderParameterName] };
+                    BindingLocation b = { ipass, gpparam.uniforms[shaderParameterName] };
                     GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
                     up.bindings.append( b );
                 }
