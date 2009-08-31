@@ -119,7 +119,7 @@ sCreateD3D11InputLayout( ID3D11Device & dev, const GN::gfx::VertexFormat & forma
     if( !bin ) return false;
 
     ID3D11InputLayout * layout;
-    GN_DX10_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev.CreateInputLayout(
             &elements[0],
             (UINT)elements.size(),

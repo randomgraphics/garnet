@@ -23,8 +23,8 @@ bool GN::gfx::D3D11RTMgr::init()
 
     // create default rener target view
     AutoComPtr<ID3D11Texture2D> backBuffer;
-    GN_DX10_CHECK_RV( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D11Texture2D ), (void**)&backBuffer ), failure() );
-    GN_DX10_CHECK_RV( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
+    GN_DX_CHECK_RETURN( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D11Texture2D ), (void**)&backBuffer ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
     GN_ASSERT( mAutoColor0 );
 
     // create depth texture
@@ -41,14 +41,14 @@ bool GN::gfx::D3D11RTMgr::init()
     td.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
     td.CPUAccessFlags     = 0;
     td.MiscFlags          = 0;
-    GN_DX10_CHECK_RV( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), failure() );
 
     // create depth stencil view
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
     dsvd.Format             = td.Format;
     dsvd.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvd.Texture2D.MipSlice = 0;
-    GN_DX10_CHECK_RV( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
 
     // bind these views to device.
     dev.OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );

@@ -37,7 +37,7 @@ sSetupUserD3D10Buffer(
         desc.BindFlags      = bindFlags;
         desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
         desc.MiscFlags      = 0;
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &desc, NULL, buffer ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &desc, NULL, buffer ), false );
     }
     else
     {
@@ -55,13 +55,13 @@ sSetupUserD3D10Buffer(
 
             (*buffer)->Release();
 
-            GN_DX10_CHECK_RV( dev.CreateBuffer( &desc, NULL, buffer ), false );
+            GN_DX_CHECK_RETURN( dev.CreateBuffer( &desc, NULL, buffer ), false );
         }
     }
 
     // update buffer content
     void * dstptr;
-    GN_DX10_CHECK_RV( (*buffer)->Map( D3D10_MAP_WRITE_DISCARD, 0, &dstptr ), false );
+    GN_DX_CHECK_RETURN( (*buffer)->Map( D3D10_MAP_WRITE_DISCARD, 0, &dstptr ), false );
     memcpy( dstptr, data, size );
     (*buffer)->Unmap();
 
@@ -127,7 +127,7 @@ void GN::gfx::D3D10Gpu::drawQuit()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Gpu::present()
 {
-    GN_DX10_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
+    GN_DX_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
 }
 
 //

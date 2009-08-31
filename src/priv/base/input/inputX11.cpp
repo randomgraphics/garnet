@@ -89,7 +89,7 @@ bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 
     // get current input selection
     XWindowAttributes wa;
-    GN_X_CHECK_RV( XGetWindowAttributes( mDisplay, mWindow, &wa ), false );
+    GN_X_CHECK_RETURN( XGetWindowAttributes( mDisplay, mWindow, &wa ), false );
 
     int mask = wa.your_event_mask;
 

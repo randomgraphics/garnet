@@ -28,7 +28,7 @@ namespace GN { namespace gfx
         create( ID3D11Device & dev, const D3D11_RASTERIZER_DESC & desc )
         {
             ID3D11RasterizerState  * obj;
-            GN_DX10_CHECK_RV( dev.CreateRasterizerState( &desc, &obj ), NULL );
+            GN_DX_CHECK_RETURN( dev.CreateRasterizerState( &desc, &obj ), NULL );
             return obj;
         }
 
@@ -89,7 +89,7 @@ namespace GN { namespace gfx
         create( ID3D11Device & dev, const D3D11_BLEND_DESC & desc )
         {
             ID3D11BlendState * obj;
-            GN_DX10_CHECK_RV( dev.CreateBlendState( &desc, &obj ), NULL );
+            GN_DX_CHECK_RETURN( dev.CreateBlendState( &desc, &obj ), NULL );
             return obj;
         }
 
@@ -156,7 +156,7 @@ namespace GN { namespace gfx
         create( ID3D11Device & dev, const D3D11_DEPTH_STENCIL_DESC & desc )
         {
             ID3D11DepthStencilState * obj;
-            GN_DX10_CHECK_RV( dev.CreateDepthStencilState( &desc, &obj ), NULL );
+            GN_DX_CHECK_RETURN( dev.CreateDepthStencilState( &desc, &obj ), NULL );
             return obj;
         }
 

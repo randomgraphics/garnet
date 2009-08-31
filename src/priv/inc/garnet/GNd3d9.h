@@ -25,7 +25,7 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <dxerr9.h>
+#include <dxerr.h>
 
 // Check d3d version
 #if DIRECT3D_VERSION < 0x0900
@@ -151,7 +151,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         {
             return assembleAndCreatePS( &dev, code, len, flags );
         }
-        
+
         static inline IDirect3DPixelShader9 *
         compileAndCreate( IDirect3DDevice9 & dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 )
         {
@@ -175,8 +175,8 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         GN_GUARD_SLOW;
         GN_ASSERT( dev );
         AutoComPtr<IDirect3DSurface9> surf;
-        GN_DX9_CHECK_RV( dev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &surf ), false );
-        GN_DX9_CHECK_RV( surf->GetDesc( &desc ), false );
+        GN_DX_CHECK_RETURN( dev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &surf ), false );
+        GN_DX_CHECK_RETURN( surf->GetDesc( &desc ), false );
 		return true;
         GN_UNGUARD_SLOW;
     }
@@ -202,8 +202,8 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         GN_GUARD_SLOW;
         GN_ASSERT( dev );
         AutoComPtr<IDirect3DSurface9> surf;
-        GN_DX9_CHECK_RV( dev->GetDepthStencilSurface( &surf ), false );
-        GN_DX9_CHECK_RV( surf->GetDesc( &desc ), false );
+        GN_DX_CHECK_RETURN( dev->GetDepthStencilSurface( &surf ), false );
+        GN_DX_CHECK_RETURN( surf->GetDesc( &desc ), false );
 		return true;
         GN_UNGUARD_SLOW;
     }

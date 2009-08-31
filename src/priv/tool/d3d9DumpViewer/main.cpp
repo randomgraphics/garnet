@@ -190,7 +190,7 @@ struct D3D9StateDump
         }
 
         // decl
-        GN_DX9_CHECK_RV( dev.CreateVertexDeclaration( vtxdecl.elements, &vtxdecl.decl ), false );
+        GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( vtxdecl.elements, &vtxdecl.decl ), false );
 
         // vb
         for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
@@ -204,10 +204,10 @@ struct D3D9StateDump
 
             size_t bytes = fp->size();
 
-            GN_DX9_CHECK_RV( dev.CreateVertexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
+            GN_DX_CHECK_RETURN( dev.CreateVertexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
 
             void * vertices;
-            GN_DX9_CHECK_RV( vbd.vb->Lock( 0, 0, &vertices, 0 ), false );
+            GN_DX_CHECK_RETURN( vbd.vb->Lock( 0, 0, &vertices, 0 ), false );
 
             bool ok = fp->read( vertices, bytes, 0 );
 
@@ -224,10 +224,10 @@ struct D3D9StateDump
 
             size_t bytes = fp->size();
 
-            GN_DX9_CHECK_RV( dev.CreateIndexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
+            GN_DX_CHECK_RETURN( dev.CreateIndexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
 
             void * indices;
-            GN_DX9_CHECK_RV( idxbuf.ib->Lock( 0, 0, &indices, 0 ), false );
+            GN_DX_CHECK_RETURN( idxbuf.ib->Lock( 0, 0, &indices, 0 ), false );
 
             bool ok = fp->read( indices, bytes, 0 );
 
@@ -247,24 +247,24 @@ struct D3D9StateDump
 
             D3DXIMAGE_INFO info;
 
-            GN_DX9_CHECK_RV( D3DXGetImageInfoFromFileA( filename.cptr(), &info ), false );
+            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.cptr(), &info ), false );
 
             switch( info.ResourceType )
             {
                 case D3DRTYPE_TEXTURE:
-                    GN_DX9_CHECK_RV(
+                    GN_DX_CHECK_RETURN(
                         D3DXCreateTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_CUBETEXTURE:
-                    GN_DX9_CHECK_RV(
+                    GN_DX_CHECK_RETURN(
                         D3DXCreateCubeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_VOLUMETEXTURE:
-                    GN_DX9_CHECK_RV(
+                    GN_DX_CHECK_RETURN(
                         D3DXCreateVolumeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
                         false );
                     break;
@@ -284,14 +284,14 @@ struct D3D9StateDump
 #if RENDER_TO_BACKBUF
             if( 0 == i )
             {
-                GN_DX9_CHECK_RV(
+                GN_DX_CHECK_RETURN(
                     dev.GetRenderTarget( 0, &rtd.surf ),
                     false );
             }
 #endif
             else
             {
-                GN_DX9_CHECK_RV(
+                GN_DX_CHECK_RETURN(
                     dev.CreateRenderTarget(
                         rtd.width,
                         rtd.height,
@@ -307,7 +307,7 @@ struct D3D9StateDump
         // ds
         if( depthstencil.inuse )
         {
-            GN_DX9_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 dev.CreateDepthStencilSurface(
                     depthstencil.width,
                     depthstencil.height,
@@ -425,7 +425,7 @@ struct D3D9StateDump
                 D3D9RtDump & rtd = rendertargets[i];
                 if( !rtd.inuse ) continue;
 
-                GN_DX9_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.cptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
+                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.cptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
             }
         }
 

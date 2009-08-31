@@ -23,7 +23,7 @@ bool GN::gfx::D3D10Gpu::resourceInit()
     GN_ASSERT( mResourceList.empty() );
 
 #ifdef HAS_CG_D3D10
-    GN_DX10_CHECK_RV( cgD3D10SetDevice( &getDeviceRefInlined() ), false );
+    GN_DX_CHECK_RETURN( cgD3D10SetDevice( &getDeviceRefInlined() ), false );
 #endif
 
     // success

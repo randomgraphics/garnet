@@ -35,7 +35,7 @@ bool GN::gfx::D3D11Buffer::init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFla
     d3ddesc.MiscFlags      = 0;
 
     // create d3d ibuffer
-    GN_DX10_CHECK_RV( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), failure() );
 
     // store buffer parameters
     mBytes        = bytes;
@@ -91,7 +91,7 @@ void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * dat
     {
         // update dynamic d3d buffer
         D3D11_MAPPED_SUBRESOURCE mapped;
-        GN_DX10_CHECK_R( dev.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
+        GN_DX_CHECK_RETURN_VOID( dev.Map( mD3DBuffer, 0, SURFACE_UPDATE_FLAG_TO_D3D11_MAP[flag], 0, &mapped ) );
         UInt8 * dst = (UInt8*)mapped.pData;
         memcpy( dst+offset, data, bytes );
         dev.Unmap( mD3DBuffer, 0 );

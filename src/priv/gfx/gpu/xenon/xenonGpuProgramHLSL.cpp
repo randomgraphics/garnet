@@ -193,11 +193,11 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         // apply to D3D
         if( d.vshandle )
         {
-            GN_DX9_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->getval(), (UINT)d.size ) );
+            GN_DX_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->getval(), (UINT)d.size ) );
         }
         if( d.pshandle )
         {
-            GN_DX9_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->getval(), (UINT)d.size ) );
+            GN_DX_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->getval(), (UINT)d.size ) );
         }
     }
 }
@@ -265,7 +265,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
 {
     // get number of constants
     D3DXCONSTANTTABLE_DESC tableDesc;
-    GN_DX9_CHECK_RV( constTable->GetDesc( &tableDesc ), false );
+    GN_DX_CHECK_RETURN( constTable->GetDesc( &tableDesc ), false );
     UINT numConstant = tableDesc.Constants;
 
     // for each const
@@ -275,7 +275,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
         D3DXHANDLE        c = constTable->GetConstant( NULL, i );
         D3DXCONSTANT_DESC cdarray[GPU_D3D_PIXEL_TEXTURE_FETCH_CONSTANT_COUNT];
         size_t            count;
-        GN_DX9_CHECK_RV( constTable->GetConstantDesc( c, cdarray, &count ), false );
+        GN_DX_CHECK_RETURN( constTable->GetConstantDesc( c, cdarray, &count ), false );
 
         GN_ASSERT( count > 0 );
 

@@ -16,7 +16,7 @@ sGetClientSize( HWND win, UInt32 * width, UInt32 * height )
 
     RECT rc;
 
-    GN_MSW_CHECK_RV( ::GetClientRect( win, &rc ), false );
+    GN_MSW_CHECK_RETURN( ::GetClientRect( win, &rc ), false );
 
     if( width ) *width = (UInt32)(rc.right - rc.left);
 
@@ -80,8 +80,8 @@ sGetCurrentDisplayMode(
     windm.dmSize = sizeof(windm);
     windm.dmDriverExtra = 0;
 
-    GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
-    GN_MSW_CHECK_RV( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
+    GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
 
     GN_ASSERT( (UInt32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
     GN_ASSERT( (UInt32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );

@@ -19,7 +19,7 @@ sGetClientSize( Display * disp, Window win, UInt32 * width, UInt32 * height )
     GN_GUARD;
 
     XWindowAttributes attr;
-    GN_X_CHECK_RV( XGetWindowAttributes( disp, win, &attr ), false );
+    GN_X_CHECK_RETURN( XGetWindowAttributes( disp, win, &attr ), false );
     if( width ) *width = (UInt32)attr.width;
     if( height ) *height = (UInt32)attr.height;
     return true;

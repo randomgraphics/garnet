@@ -24,7 +24,7 @@ bool GN::input::BasicInputMsw::init()
 
     // initialize internal mouse position
     POINT pos;
-    GN_MSW_CHECK_RV( ::GetCursorPos( &pos ), failure() );
+    GN_MSW_CHECK_RETURN( ::GetCursorPos( &pos ), failure() );
     updateMousePosition( pos.x, pos.y, false );
 
     // success

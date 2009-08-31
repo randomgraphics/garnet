@@ -75,7 +75,7 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
     //
     // create d3d vertex buffer
     //
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev.CreateIndexBuffer(
             desc.numidx * bpi,
             sBufUsage2Xenon( desc ),
@@ -131,14 +131,14 @@ GN::gfx::XenonIdxBuf::update(
 
     // Note: XDK does not support partial locking on index buffer
     UInt8 * buf;
-    GN_DX9_CHECK_DO(
+    GN_DX_CHECK_DO(
         mIb->Lock( 0, 0, (void**)&buf, sLockFlags2Xenon( flag ) ),
         return; );
     buf += startidx * bpi;
 
     ::memcpy( buf, data, numidx * bpi );
 
-    GN_DX9_CHECK( mIb->Unlock() );
+    GN_DX_CHECK( mIb->Unlock() );
 
     GN_UNGUARD_SLOW;
 }

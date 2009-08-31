@@ -301,7 +301,7 @@ GN::gfx::D3D10Texture::getSRView(
     {
         ID3D10Device & dev = getDeviceRef();
 
-        GN_DX10_CHECK_RV( dev.CreateShaderResourceView( mTexture, &srvdesc, &srv ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreateShaderResourceView( mTexture, &srvdesc, &srv ), NULL );
     }
 
     return srv;
@@ -400,7 +400,7 @@ GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
     {
         ID3D10Device & dev = getDeviceRef();
 
-        GN_DX10_CHECK_RV( dev.CreateRenderTargetView( mTexture, &rtvdesc, &rtv ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( mTexture, &rtvdesc, &rtv ), NULL );
     }
 
     return rtv;
@@ -490,7 +490,7 @@ GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
     {
         ID3D10Device & dev = getDeviceRef();
 
-        GN_DX10_CHECK_RV( dev.CreateDepthStencilView( mTexture, &dsvdesc, &dsv ), NULL );
+        GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mTexture, &dsvdesc, &dsv ), NULL );
     }
 
     return dsv;
@@ -589,7 +589,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc1d.BindFlags = bf;
         desc1d.CPUAccessFlags = caf;
         desc1d.MiscFlags = mf;
-        GN_DX10_CHECK_RV( dev.CreateTexture1D( &desc1d, 0, &tex1d ), false );
+        GN_DX_CHECK_RETURN( dev.CreateTexture1D( &desc1d, 0, &tex1d ), false );
         mTexture = tex1d;
     }
     else if( D3D10_SRV_DIMENSION_TEXTURE2D == mDimension ||
@@ -609,7 +609,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc2d.BindFlags = bf;
         desc2d.CPUAccessFlags = caf;
         desc2d.MiscFlags = mf;
-        GN_DX10_CHECK_RV( dev.CreateTexture2D( &desc2d, 0, &tex2d ), false );
+        GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, 0, &tex2d ), false );
         mTexture = tex2d;
     }
     else if( D3D10_SRV_DIMENSION_TEXTURE3D == mDimension )
@@ -625,7 +625,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc3d.BindFlags = bf;
         desc3d.CPUAccessFlags = caf;
         desc3d.MiscFlags = mf;
-        GN_DX10_CHECK_RV( dev.CreateTexture3D( &desc3d, 0, &tex3d ), false );
+        GN_DX_CHECK_RETURN( dev.CreateTexture3D( &desc3d, 0, &tex3d ), false );
         mTexture = tex3d;
     }
     else

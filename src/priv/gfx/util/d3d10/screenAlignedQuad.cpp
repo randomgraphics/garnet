@@ -59,7 +59,7 @@ bool GN::d3d10::ScreenAlignedQuad::init(
             D3D10_COMPARISON_ALWAYS
         },
     };
-    GN_DX10_CHECK_RV( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), failure() );
+    GN_DX_CHECK_RETURN( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), failure() );
 
     // create internal shaders
     static const char * vscode =

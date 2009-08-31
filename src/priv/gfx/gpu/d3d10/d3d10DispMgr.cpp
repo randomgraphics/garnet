@@ -37,7 +37,7 @@ bool GN::gfx::D3D10Gpu::dispInit()
     sd.Windowed = !ro.fullscreen;
 
     // create device
-    GN_DX10_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         D3D10CreateDeviceAndSwapChain(
             mAdapter,
             ro.reference ? D3D10_DRIVER_TYPE_REFERENCE : D3D10_DRIVER_TYPE_HARDWARE,

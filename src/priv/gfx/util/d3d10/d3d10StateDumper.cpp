@@ -740,7 +740,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVS(
 {
     AutoComPtr<ID3D10VertexShader> shader;
 
-    GN_DX10_CHECK_RV( device.CreateVertexShader( binary, bytes, &shader ), 0 );
+    GN_DX_CHECK_RETURN( device.CreateVertexShader( binary, bytes, &shader ), 0 );
 
     shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
 
@@ -757,7 +757,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGS(
 {
     AutoComPtr<ID3D10GeometryShader> shader;
 
-    GN_DX10_CHECK_RV( device.CreateGeometryShader( binary, bytes, &shader ), 0 );
+    GN_DX_CHECK_RETURN( device.CreateGeometryShader( binary, bytes, &shader ), 0 );
 
     shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
 
@@ -774,7 +774,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePS(
 {
     AutoComPtr<ID3D10PixelShader> shader;
 
-    GN_DX10_CHECK_RV( device.CreatePixelShader( binary, bytes, &shader ), 0 );
+    GN_DX_CHECK_RETURN( device.CreatePixelShader( binary, bytes, &shader ), 0 );
 
     shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
 
@@ -793,7 +793,7 @@ ID3D10InputLayout * GN::d3d10::createDumpableIL(
 {
     ID3D10InputLayout * il;
 
-    GN_DX10_CHECK_RV( device.CreateInputLayout( elements, (UINT)count, signature, bytes, &il ), 0 );
+    GN_DX_CHECK_RETURN( device.CreateInputLayout( elements, (UINT)count, signature, bytes, &il ), 0 );
 
     il->SetPrivateData(
         IL0GUID(),

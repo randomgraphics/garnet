@@ -3,7 +3,7 @@
 #include "mydevice9.h"
 
 #if GN_MSVC
-#pragma comment(lib, "dxerr9.lib")
+#pragma comment(lib, "dxerr.lib")
 #pragma comment(lib, "dxguid.lib")
 #endif
 

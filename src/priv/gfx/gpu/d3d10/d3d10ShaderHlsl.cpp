@@ -203,7 +203,7 @@ sInitConstBuffers(
         bufdesc.BindFlags      = D3D10_BIND_CONSTANT_BUFFER;
         bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
         bufdesc.MiscFlags      = 0;
-        GN_DX10_CHECK_RV( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
         constBufs[i] = buf;
         constData[i].resize( cbdesc.Size );
     }

@@ -53,7 +53,7 @@ bool GN::gfx::D3D10Gpu::contextInit()
     // create default sampler, then bind to D3D device
     D3D10_SAMPLER_DESC sd;
     GN::d3d10::constructDefaultSamplerDesc( sd );
-    GN_DX10_CHECK_RV( mDevice->CreateSamplerState( &sd, &mDefaultSampler ), false );
+    GN_DX_CHECK_RETURN( mDevice->CreateSamplerState( &sd, &mDefaultSampler ), false );
     ID3D10SamplerState * samplers[D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT];
     for( size_t i = 0; i < D3D10_COMMONSHADER_SAMPLER_REGISTER_COUNT; ++i )
     {

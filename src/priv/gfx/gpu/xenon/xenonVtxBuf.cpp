@@ -72,7 +72,7 @@ bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
     //
     // create d3d vertex buffer
     //
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         dev.CreateVertexBuffer(
             desc.length,
             sBufUsage2Xenon( desc ),
@@ -125,14 +125,14 @@ GN::gfx::XenonVtxBuf::update(
 
     // Note: XDK does not support range locking on vertex buffer
     UInt8 * buf;
-    GN_DX9_CHECK_DO(
+    GN_DX_CHECK_DO(
         mVb->Lock( 0, 0, (void**)&buf, sLockFlags2Xenon( flag ) ),
         return; );
     buf += offset;
 
     ::memcpy( buf, data, length );
 
-    GN_DX9_CHECK( mVb->Unlock() );
+    GN_DX_CHECK( mVb->Unlock() );
 
     GN_UNGUARD_SLOW;
 }

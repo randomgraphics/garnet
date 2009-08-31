@@ -10,16 +10,16 @@ inline void GN::gfx::XenonGpu::setD3DRenderState(
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;
-        GN_DX9_CHECK( mDevice->GetRenderState( type, &old ) );
+        GN_DX_CHECK( mDevice->GetRenderState( type, &old ) );
         if( old != value )
         {
-            GN_DX9_CHECK( mDevice->SetRenderState( type, value ) );
+            GN_DX_CHECK( mDevice->SetRenderState( type, value ) );
         }
     }
     else
 #endif
 
-    GN_DX9_CHECK( mDevice->SetRenderState( type, value ) );
+    GN_DX_CHECK( mDevice->SetRenderState( type, value ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -38,16 +38,16 @@ inline void GN::gfx::XenonGpu::setD3DSamplerState(
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;
-        GN_DX9_CHECK( mDevice->GetSamplerState( stage, type, &old ) );
+        GN_DX_CHECK( mDevice->GetSamplerState( stage, type, &old ) );
         if( old != value )
         {
-            GN_DX9_CHECK( mDevice->SetSamplerState( stage, type, value ) );
+            GN_DX_CHECK( mDevice->SetSamplerState( stage, type, value ) );
         }
     }
     else
 #endif
 
-    GN_DX9_CHECK( mDevice->SetSamplerState( stage, type, value ) );
+    GN_DX_CHECK( mDevice->SetSamplerState( stage, type, value ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -68,16 +68,16 @@ inline void GN::gfx::XenonGpu::setD3DTextureState(
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD old;
-        GN_DX9_CHECK( mDevice->GetTextureStageState( stage, type, &old ) );
+        GN_DX_CHECK( mDevice->GetTextureStageState( stage, type, &old ) );
         if( value != old )
         {
-            GN_DX9_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
+            GN_DX_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
         }
     }
     else
 #endif
 
-    GN_DX9_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
+    GN_DX_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
 
     GN_UNGUARD_SLOW;
 }

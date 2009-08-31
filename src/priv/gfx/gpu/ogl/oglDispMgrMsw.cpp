@@ -188,15 +188,15 @@ bool GN::gfx::OGLGpu::dispInit()
         return false;
     }
 
-    GN_MSW_CHECK_RV( mDeviceContext = ::GetDC(hwnd), false );
+    GN_MSW_CHECK_RETURN( mDeviceContext = ::GetDC(hwnd), false );
 
     if( !sSetupPixelFormat(mDeviceContext) ) return false;
 
-    GN_MSW_CHECK_RV(
+    GN_MSW_CHECK_RETURN(
         mRenderContext = ::wglCreateContext( mDeviceContext ),
         false );
 
-    GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
+    GN_MSW_CHECK_RETURN( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     // init GLEW
     glewInit();
@@ -226,7 +226,7 @@ bool GN::gfx::OGLGpu::dispInit()
         // get monitor information
         MONITORINFOEXA mi;
         mi.cbSize = sizeof(mi);
-        GN_MSW_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
+        GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
         // move window to left-top of the monitor, and set it as TOPMOST window.
         GN_TRACE(sLogger)( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
@@ -317,7 +317,7 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
     // get monitor information
     MONITORINFOEXA mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)dd.monitorHandle, &mi ), false );
+    GN_MSW_CHECK_RETURN( ::GetMonitorInfoA( (HMONITOR)dd.monitorHandle, &mi ), false );
 
     // change display mode
     DEVMODEA dm;

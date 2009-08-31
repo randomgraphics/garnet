@@ -168,10 +168,10 @@ void GN::gfx::XenonGpu::drawIndexedUp(
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
     AutoComPtr<IDirect3DIndexBuffer9> ib;
-    GN_DX9_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
-    GN_DX9_CHECK( mDevice->GetIndices( &ib ) );
+    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+    GN_DX_CHECK( mDevice->GetIndices( &ib ) );
 
-    GN_DX9_CHECK(
+    GN_DX_CHECK(
         mDevice->DrawIndexedVerticesUP(
             PRIMITIVE_TO_XENON[prim],
             0, // MinVertexIndex
@@ -183,8 +183,8 @@ void GN::gfx::XenonGpu::drawIndexedUp(
             (UINT)strideInBytes ) );
 
     // restore vertex and index buffer
-    GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
-    GN_DX9_CHECK( mDevice->SetIndices( ib ) );
+    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+    GN_DX_CHECK( mDevice->SetIndices( ib ) );
 
     // success
     ++mDrawCounter;
@@ -205,17 +205,17 @@ void GN::gfx::XenonGpu::drawUp(
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
-    GN_DX9_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
 
     // do draw
-    GN_DX9_CHECK( mDevice->DrawVerticesUP(
+    GN_DX_CHECK( mDevice->DrawVerticesUP(
         PRIMITIVE_TO_XENON[prim],
         (UINT)numvtx,
         vertexData,
         (UINT)strideInBytes ) );
 
     // restore vertex and index buffer
-    GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
 
     // success
     ++mDrawCounter;

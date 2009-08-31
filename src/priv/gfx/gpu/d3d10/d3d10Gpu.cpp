@@ -101,7 +101,7 @@ void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
     bc.pitch = 0;
 
     AutoComPtr<ID3D10Texture2D> backbuf;
-    GN_DX10_CHECK_R( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backbuf ) );
+    GN_DX_CHECK_RETURN_VOID( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backbuf ) );
 
     D3D10_TEXTURE2D_DESC desc;
     backbuf->GetDesc( &desc );
@@ -111,11 +111,11 @@ void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
     desc.Usage = D3D10_USAGE_STAGING;
     desc.BindFlags = 0;
     desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
-    GN_DX10_CHECK_R( mDevice->CreateTexture2D( &desc, NULL, &sysbuf ) );
+    GN_DX_CHECK_RETURN_VOID( mDevice->CreateTexture2D( &desc, NULL, &sysbuf ) );
     mDevice->CopyResource( sysbuf, backbuf );
 
     D3D10_MAPPED_TEXTURE2D mt;
-    GN_DX10_CHECK_R( sysbuf->Map( 0, D3D10_MAP_READ, 0, &mt ) );
+    GN_DX_CHECK_RETURN_VOID( sysbuf->Map( 0, D3D10_MAP_READ, 0, &mt ) );
 
     bc.format = dxgiFormat2ColorFormat( desc.Format );
     bc.width  = desc.Width;

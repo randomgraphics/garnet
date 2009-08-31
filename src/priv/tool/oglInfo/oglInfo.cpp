@@ -131,11 +131,11 @@ void createOGL( HDC hdc, int pfdIndex )
 {
     // Set the pixel format for the device context
     PIXELFORMATDESCRIPTOR pfd;
-    GN_MSW_CHECK_R( SetPixelFormat( hdc, pfdIndex, &pfd ) );
+    GN_MSW_CHECK_RETURN_VOID( SetPixelFormat( hdc, pfdIndex, &pfd ) );
 
     // create OGL render context
     HGLRC hrc;
-    GN_MSW_CHECK_R( hrc = ::wglCreateContext( hdc ) );
+    GN_MSW_CHECK_RETURN_VOID( hrc = ::wglCreateContext( hdc ) );
     ::wglMakeCurrent( hdc, hrc);
 
     // init GLEW
@@ -156,7 +156,7 @@ void createWindow( int pfdIndex )
 
     HWND hwnd = (HWND)oglWindow->getWindowHandle();
     HDC hdc;
-    GN_MSW_CHECK_R( hdc = ::GetDC(hwnd) );
+    GN_MSW_CHECK_RETURN_VOID( hdc = ::GetDC(hwnd) );
     createOGL( hdc, pfdIndex );
     ::ReleaseDC( hwnd, hdc );
 }
@@ -168,7 +168,7 @@ int main()
 
     HWND hwnd = (HWND)mainWindow->getWindowHandle();
     HDC hdc;
-    GN_MSW_CHECK_RV( hdc = ::GetDC(hwnd), -1 );
+    GN_MSW_CHECK_RETURN( hdc = ::GetDC(hwnd), -1 );
 
     GN_INFO(sLogger)( "Enumerating pixelformats..." );
     int count = DescribePixelFormat(hdc, 1, 0, 0);

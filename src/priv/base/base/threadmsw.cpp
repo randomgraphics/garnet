@@ -94,7 +94,7 @@ public:
             &mParam,
             initialSuspended ? CREATE_SUSPENDED : 0,
             (unsigned int*)&mId );
-        GN_MSW_CHECK_RV( mHandle, failure() );
+        GN_MSW_CHECK_RETURN( mHandle, failure() );
 
         // success
         mAttached = false;
@@ -169,7 +169,7 @@ public:
             return;
         }
 
-        GN_MSW_CHECK_R( ::SetThreadPriority( mHandle, sPriority2Msw(p) ) );
+        GN_MSW_CHECK_RETURN_VOID( ::SetThreadPriority( mHandle, sPriority2Msw(p) ) );
 
         mPriority = p;
     }

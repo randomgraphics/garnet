@@ -98,7 +98,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
         case XENON_TEXDIM_1D:
         {
             IDirect3DLineTexture9 * tex1d;
-            GN_DX9_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 dev.CreateLineTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &tex1d, NULL ),
                 failure() );
             mD3DTexture = tex1d;
@@ -110,7 +110,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
             if( 1 == desc.faces )
             {
                 IDirect3DTexture9 * tex2d;
-                GN_DX9_CHECK_RV(
+                GN_DX_CHECK_RETURN(
                     dev.CreateTexture( desc.width, desc.height, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
                     failure() );
                 mD3DTexture = tex2d;
@@ -118,7 +118,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
             else
             {
                 IDirect3DArrayTexture9 * tex2d;
-                GN_DX9_CHECK_RV(
+                GN_DX_CHECK_RETURN(
                     dev.CreateArrayTexture( desc.width, desc.height, desc.faces, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
                     failure() );
                 mD3DTexture = tex2d;
@@ -129,7 +129,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
         case XENON_TEXDIM_3D:
         {
             IDirect3DVolumeTexture9 * tex3d;
-            GN_DX9_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 dev.CreateVolumeTexture( desc.width, desc.height, desc.depth, desc.levels, mD3DUsage, mD3DFormat, 0, &tex3d, NULL ),
                 failure() );
             mD3DTexture = tex3d;
@@ -139,7 +139,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
         case XENON_TEXDIM_CUBE:
         {
             IDirect3DCubeTexture9 * texcube;
-            GN_DX9_CHECK_RV(
+            GN_DX_CHECK_RETURN(
                 dev.CreateCubeTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &texcube, NULL ),
                 failure() );
             mD3DTexture = texcube;

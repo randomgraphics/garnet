@@ -91,7 +91,7 @@ bool GN::gfx::XenonGpu::dispInit()
     mD3DBehavior  = 0;
 
     // create device
-    GN_DX9_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         mD3D->CreateDevice(
             D3DADAPTER_DEFAULT,
             D3DDEVTYPE_HAL,

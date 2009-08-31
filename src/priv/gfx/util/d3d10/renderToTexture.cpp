@@ -52,7 +52,7 @@ bool GN::d3d10::RenderToTexture::init(
 
         // create texture
         ID3D10Texture2D * tex2d;
-        GN_DX10_CHECK_RV( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         rtt.res = tex2d;
 
         // create RTV
@@ -61,7 +61,7 @@ bool GN::d3d10::RenderToTexture::init(
             options.msaa ? D3D10_RTV_DIMENSION_TEXTURE2DMS : D3D10_RTV_DIMENSION_TEXTURE2D,
         };
         rtvdesc.Texture2D.MipSlice = 0;
-        GN_DX10_CHECK_RV( device->CreateRenderTargetView( tex2d, &rtvdesc, &rtt.rtv ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateRenderTargetView( tex2d, &rtvdesc, &rtt.rtv ), failure() );
 
         // create SRV
         D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc = {
@@ -70,7 +70,7 @@ bool GN::d3d10::RenderToTexture::init(
         };
         srvdesc.Texture2D.MostDetailedMip = 0;
         srvdesc.Texture2D.MipLevels = 1;
-        GN_DX10_CHECK_RV( device->CreateShaderResourceView( tex2d, &srvdesc, &rtt.srv ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &rtt.srv ), failure() );
 
         mColorViews[i] = rtt.rtv;
     }
@@ -82,7 +82,7 @@ bool GN::d3d10::RenderToTexture::init(
         texdesc.BindFlags = D3D10_BIND_DEPTH_STENCIL;
 
         ID3D10Texture2D * tex2d;
-        GN_DX10_CHECK_RV( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         mDepth.res = tex2d;
 
         // create DSV
@@ -90,7 +90,7 @@ bool GN::d3d10::RenderToTexture::init(
             DXGI_FORMAT_D32_FLOAT,
             D3D10_DSV_DIMENSION_TEXTURE2DMS,
         };
-        GN_DX10_CHECK_RV( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
     }
     else
     {
@@ -98,7 +98,7 @@ bool GN::d3d10::RenderToTexture::init(
         texdesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D10_BIND_SHADER_RESOURCE;
 
         ID3D10Texture2D * tex2d;
-        GN_DX10_CHECK_RV( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         mDepth.res = tex2d;
 
         // create DSV
@@ -107,7 +107,7 @@ bool GN::d3d10::RenderToTexture::init(
             D3D10_DSV_DIMENSION_TEXTURE2D,
         };
         dsvdesc.Texture2D.MipSlice = 0;
-        GN_DX10_CHECK_RV( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
 
         // create SRV
         D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc = {
@@ -116,7 +116,7 @@ bool GN::d3d10::RenderToTexture::init(
         };
         srvdesc.Texture2D.MostDetailedMip = 0;
         srvdesc.Texture2D.MipLevels = 1;
-        GN_DX10_CHECK_RV( device->CreateShaderResourceView( tex2d, &srvdesc, &mDepth.srv ), failure() );
+        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &mDepth.srv ), failure() );
     }
 
     // success

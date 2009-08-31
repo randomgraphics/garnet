@@ -44,7 +44,7 @@ bool GN::gfx::D3D11Gpu::dispInit()
     };
 
     // create device
-    GN_DX10_CHECK_RV(
+    GN_DX_CHECK_RETURN(
         D3D11CreateDeviceAndSwapChain(
             mAdapter,
             ro.reference ? D3D_DRIVER_TYPE_REFERENCE : D3D_DRIVER_TYPE_HARDWARE,

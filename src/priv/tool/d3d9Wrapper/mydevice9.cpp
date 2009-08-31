@@ -42,7 +42,7 @@ HRESULT MyDevice9::create(
     for( UInt32 i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
-        GN_DX9_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_DX_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
         if( strstr(Identifier.Description,"PerfHUD") )
         {
@@ -78,7 +78,7 @@ ULONG MyDevice9::Release()
     if( c > 0 )
     {
         UInt32 r = 0;
-        
+
         // calculate number of streams in device
         for( UInt32 i = 0; i < mCaps.MaxStreams; ++i )
         {

@@ -138,7 +138,7 @@ void GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) 
     width = height = 0;
 
     RECT rc;
-    GN_MSW_CHECK_R( ::GetClientRect( mWindow, &rc ) );
+    GN_MSW_CHECK_RETURN_VOID( ::GetClientRect( mWindow, &rc ) );
 
     width = (UINT)(rc.right - rc.left);
     height = (UINT)(rc.bottom - rc.top);
@@ -267,7 +267,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     // get monitor's working area rectangle
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( GetMonitorInfoW( monitor, &mi ), false );
+    GN_MSW_CHECK_RETURN( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
     RECT rc = { 0, 0, width, height };
