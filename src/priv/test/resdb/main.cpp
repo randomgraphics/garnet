@@ -11,10 +11,11 @@ GpuResourceDatabase * db = NULL;
 GpuResourceHandle  model = 0;
 
 static const char * glslvscode =
-    "uniform mat4 pvw; \n"
+    //"uniform mat4 pvw; \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    "   gl_Position = pvw * gl_Vertex; \n"
+    //"   gl_Position = pvw * gl_Vertex; \n"
+    "   gl_Position = gl_Vertex; \n"
     "   texcoords   = gl_MultiTexCoord0.xy; \n"
     "}";
 
@@ -28,13 +29,13 @@ static const char * glslpscode =
 
 void initEffectDesc( EffectResourceDesc & ed )
 {
-    ed.uniforms["MATRIX_PVW"];
+    //ed.uniforms["MATRIX_PVW"];
     ed.textures["ALBEDO_TEXTURE"];
 
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
-    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    //ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
 
     ed.techniques["glsl"].passes.resize( 1 );

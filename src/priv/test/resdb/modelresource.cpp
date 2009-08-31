@@ -163,6 +163,106 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 }
 
 // *****************************************************************************
+// UniformItem
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ModelResource::Impl::UniformItem::UniformItem()
+    : mOwner( 0 )
+    , mHandle( 0 )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ModelResource::Impl::UniformItem::~UniformItem()
+{
+}
+
+/*
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
+    Impl            & owner,
+    size_t            effectParameterIndex,
+    GpuResourceHandle newUniformHandle )
+{
+    if( mHandle == newUniformHandle ) return;
+
+    GpuResourceDatabase & db = owner.mOwner.database();
+
+    // disconnect from old handle
+    if( mHandle )
+    {
+        GpuResource * r = db.getResource( mHandle );
+        r->sigUnderlyingResourcePointerChanged.disconnect( this );
+    }
+
+    Uniform * uni;
+    if( newUniformHandle )
+    {
+        // connect to new handle
+        GpuResource * r = db.getResource( newUniformHandle );
+        r->sigUnderlyingResourcePointerChanged.connect( this, &UniformItem::onUniformChange );
+
+        uni = ((UniformResource*)r)->getUniform();
+    }
+    else
+    {
+        uni = NULL;
+    }
+
+    // update stored handle value
+    mOwner = &owner;
+    mEffectParameterIndex = effectParameterIndex;
+    mHandle = newUniformHandle;
+
+    updateContext( uni );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( GpuResource & r )
+{
+    GN_ASSERT( r.handle() == mHandle );
+
+    Uniform * uni = ((UniformResource&)r).getUniform();
+
+    updateContext( uni );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uni )
+{
+    GN_ASSERT( mOwner );
+
+    EffectResource * effect = (EffectResource*)mOwner->mOwner.database().getResource( mOwner->mEffect.handle );
+
+    GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
+
+    const EffectResource::UniformProperties & prop = effect->getUniformProperties( mEffectParameterIndex );
+
+    for( size_t i = 0; i < prop.bindings.size(); ++i )
+    {
+        const EffectResource::BindingLocation & location = prop.bindings[i];
+
+        GN_ASSERT( location.pass < mOwner->mPasses.size() );
+        GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
+
+        UniformBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
+
+        binding.texture.set( uni );
+        binding.sampler = prop.sampler;
+    }
+}*/
+
+// *****************************************************************************
 // GN::gfx::ModelResource::Impl - Initialize and shutdown
 // *****************************************************************************
 
@@ -384,6 +484,17 @@ void GN::gfx::ModelResource::Impl::draw() const
         // TODO: copy render states from current context
     }
 
+    // determine the subset
+    MeshResourceSubset subset = mDesc.subset;
+    if( 0 == subset.basevtx && 0 == subset.numvtx )
+    {
+        subset.numvtx = meshdesc.numvtx;
+    }
+    if( 0 == subset.startidx && 0 == subset.numidx )
+    {
+        subset.numidx = meshdesc.numidx;
+    }
+
     // draw
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
@@ -396,15 +507,18 @@ void GN::gfx::ModelResource::Impl::draw() const
         {
             g.drawIndexed(
                 meshdesc.prim,
-                mDesc.subset.numidx,
-                mDesc.subset.basevtx,
+                subset.numidx,
+                subset.basevtx,
                 0, // startvtx,
-                mDesc.subset.numvtx,
-                mDesc.subset.startidx );
+                subset.numvtx,
+                subset.startidx );
         }
         else
         {
-            g.draw( meshdesc.prim, mDesc.subset.numvtx, mDesc.subset.basevtx );
+            g.draw(
+                meshdesc.prim,
+                subset.numvtx,
+                subset.basevtx );
         }
 
     }
@@ -478,8 +592,43 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         t.setHandle( *this, i, texhandle );
     }
 
-    GN_TODO( "initialize uniform array" );
-    mUniforms.resize( 0 );
+    /* reapply uniforms
+    mUniforms.resize( effect.getNumUniforms() );
+    for( size_t i = 0; i < effect.getNumUniforms(); ++i )
+    {
+        UniformItem & u = mUniforms[i];
+
+        const EffectResource::UniformProperties & up = effect.getUniformProperties( i );
+
+        const ModelResourceDesc::ModelUniformDesc * ud = sFindNamedPtr( mDesc.uniforms, up.parameterName );
+
+        GpuResourceHandle uniformhandle;
+        if( ud )
+        {
+            if( ud->resourceName )
+            {
+                uniformhandle = UniformResource::loadFromFile( database(), ud->resourceName );
+            }
+            else
+            {
+                StrA texname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+                uniformhandle = UniformResource::create( database(), texname, &ud->desc );
+            }
+        }
+        else
+        {
+            GN_WARN(sLogger)(
+                "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
+                up.parameterName.cptr(),
+                database().getResourceName( effect.handle() ),
+                modelName() );
+
+            uniformhandle = 0;
+        }
+
+        u.setHandle( *this, i, 0 );
+        u.setHandle( *this, i, uniformhandle );
+    }*/
 }
 
 //
