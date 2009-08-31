@@ -10,6 +10,39 @@ using namespace GN::util;
 GpuResourceDatabase * db = NULL;
 GpuResourceHandle  model = 0;
 
+static const char * hlslvscode =
+    //"uniform float4x4 pvw; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "struct VSINPUT \n"
+    "{ \n"
+    "   float4 position  : POSITION; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "VSOUTPUT main( in VSINPUT i ) { \n"
+    "   VSOUTPUT o; \n"
+    "   o.hpos      = i.position; \n"
+    //"   o.hpos      = mul( pvw, i.position ); \n"
+    "   o.texcoords = i.texcoords; \n"
+    "   return o; \n"
+    "}";
+
+static const char * hlslpscode =
+    "sampler s0; \n"
+    "Texture2D<float4> t0; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
+    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   return tex; \n"
+    "}";
+
 static const char * glslvscode =
     //"uniform mat4 pvw; \n"
     "varying vec2 texcoords; \n"
@@ -38,22 +71,33 @@ void initEffectDesc( EffectResourceDesc & ed )
     //ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
 
+    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
+    ed.shaders["hlsl"].gpd.vs.entry = "main";
+    ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
+    ed.shaders["hlsl"].gpd.ps.entry = "main";
+    //ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
+
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
+
+    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes[0].shader = "hlsl";
 }
 
 void initMeshDesc( MeshResourceDesc & md )
 {
     struct Vertex { float x, y, u, v; };
 
-    const Vertex vertices[] = {
+    static const Vertex vertices[] = {
         { -1.0f,  1.0f, 0.0f, 0.0f },
         { -1.0f, -1.0f, 0.0f, 1.0f },
         {  1.0f,  1.0f, 1.0f, 0.0f },
         {  1.0f, -1.0f, 1.0f, 1.0f },
     };
 
-    const UInt16 indices[] = { 0, 1, 2, 0, 2, 3 };
+    static const UInt16 indices[] = { 0, 1, 2, 2, 1, 3 };
 
     md.prim = PrimitiveType::TRIANGLE_LIST;
     md.numvtx = GN_ARRAY_COUNT( vertices );
