@@ -87,11 +87,28 @@ namespace GN { namespace gfx
         ///
         /// comments...
         ///
-        struct UniformItem
+        class UniformItem : public SlotBase
         {
-            GpuResourceHandle handle;
+        public:
 
-            UniformItem() : handle(0) {}
+            UniformItem();
+            ~UniformItem();
+
+            void setHandle( Impl & owner, size_t effectParameterIndex, GpuResourceHandle texture );
+
+            GpuResourceHandle getHandle() const { return mHandle; }
+
+        private:
+
+            Impl            * mOwner;
+            size_t            mEffectParameterIndex;
+            GpuResourceHandle mHandle;
+
+        private:
+
+            void onUniformChange( GpuResource & r );
+
+            void updateContext( Uniform * );
         };
 
         ///

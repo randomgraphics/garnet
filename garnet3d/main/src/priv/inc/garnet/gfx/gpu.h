@@ -415,11 +415,11 @@ namespace GN { namespace gfx
             vf.elements[0].stream       = 0;
             vf.elements[0].offset       = 0;
 
-            vf.elements[2].bindTo( "TEXCOORD", 0 );
-            vf.elements[2].format       = ColorFormat::FLOAT2;
-            vf.elements[2].bindingIndex = 0;
-            vf.elements[2].stream       = 0;
-            vf.elements[2].offset       = 8;
+            vf.elements[1].bindTo( "TEXCOORD", 0 );
+            vf.elements[1].format       = ColorFormat::FLOAT2;
+            vf.elements[1].bindingIndex = 0;
+            vf.elements[1].stream       = 0;
+            vf.elements[1].offset       = 8;
 
             return vf;
         }

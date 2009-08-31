@@ -77,23 +77,21 @@ bool GN::gfx::MeshResource::Impl::init( const MeshResourceDesc & desc )
         {
             if( !vfp.used[i] ) continue; // ignore unused vertex buffer
 
-            // determine stride
-            size_t stride;
+            // calculate vertex buffer size in bytes
+            size_t vbsize;
             if( 0 == desc.strides[i] )
             {
-                stride = vfp.minStrides[i];
+                vbsize = vfp.minStrides[i] * desc.numvtx;
             }
-            else if( desc.strides[i] < vfp.minStrides[i] )
+            else if( desc.strides[i] >= vfp.minStrides[i] )
+            {
+                vbsize = desc.strides[i] * desc.numvtx;
+            }
+            else
             {
                 GN_ERROR(sLogger)( "stride for stream %u is too small.", i );
                 return failure();
             }
-            else
-            {
-                stride = desc.strides[i];
-            }
-
-            size_t vbsize = desc.strides[i] * desc.numvtx;
 
             // create GPU vertex buffer
             VtxBufDesc vbdesc = { vbsize, desc.dynavb };
