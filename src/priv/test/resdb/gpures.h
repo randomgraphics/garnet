@@ -360,22 +360,32 @@ namespace GN { namespace gfx
 
             //@{
 
-            OverridableVariable<bool>     depthTestEnabled;
-            OverridableVariable<bool>     depthWriteEnabled;
-            OverridableVariable<UInt8>    depthFunc;
+            OverridableVariable<bool>          depthTestEnabled;
+            OverridableVariable<bool>          depthWriteEnabled;
+            OverridableVariable<UInt8>         depthFunc;
 
-            OverridableVariable<bool>     stencilEnabled;
-            OverridableVariable<UInt8>    stencilPassOp;
-            OverridableVariable<UInt8>    stencilFailOp;
-            OverridableVariable<UInt8>    stencilZFailOp;
+            OverridableVariable<bool>          stencilEnabled;
+            OverridableVariable<UInt8>         stencilPassOp;
+            OverridableVariable<UInt8>         stencilFailOp;
+            OverridableVariable<UInt8>         stencilZFailOp;
 
-            OverridableVariable<bool>     blendingEnabled;
-            OverridableVariable<Vector4f> blendFactors;
+            OverridableVariable<bool>          blendEnabled;
+            OverridableVariable<UInt8>         blendSrc;
+            OverridableVariable<UInt8>         blendDst;
+            OverridableVariable<UInt8>         blendOp;
+            OverridableVariable<UInt8>         blendAlphaSrc;
+            OverridableVariable<UInt8>         blendAlphaDst;
+            OverridableVariable<UInt8>         blendAlphaOp;
 
-            OverridableVariable<UInt8>    fillMode;
-            OverridableVariable<UInt8>    cullMode;
-            OverridableVariable<UInt8>    frontFace;
-            OverridableVariable<bool>     msaaEnabled;
+            OverridableVariable<UInt8>         fillMode;
+            OverridableVariable<UInt8>         cullMode;
+            OverridableVariable<UInt8>         frontFace;
+            OverridableVariable<bool>          msaaEnabled;
+
+            OverridableVariable<Vector4f>      blendFactors;
+            OverridableVariable<UInt32>        colorWriteMask;
+            OverridableVariable<Rect<UInt32> > viewport;
+            OverridableVariable<Rect<UInt32> > scissorRect;
 
             //@}
 

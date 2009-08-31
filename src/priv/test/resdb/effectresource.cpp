@@ -90,13 +90,23 @@ sMergeRenderStates(
     MERGE_SINGLE_RENDER_STATE( stencilFailOp );
     MERGE_SINGLE_RENDER_STATE( stencilZFailOp );
 
-    MERGE_SINGLE_RENDER_STATE( blendingEnabled );
-    MERGE_SINGLE_RENDER_STATE( blendFactors );
+    MERGE_SINGLE_RENDER_STATE( blendEnabled );
+    MERGE_SINGLE_RENDER_STATE( blendSrc );
+    MERGE_SINGLE_RENDER_STATE( blendDst );
+    MERGE_SINGLE_RENDER_STATE( blendOp );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaSrc );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaDst );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaOp );
 
     MERGE_SINGLE_RENDER_STATE( fillMode );
     MERGE_SINGLE_RENDER_STATE( cullMode );
     MERGE_SINGLE_RENDER_STATE( frontFace );
     MERGE_SINGLE_RENDER_STATE( msaaEnabled );
+
+    MERGE_SINGLE_RENDER_STATE( blendFactors );
+    MERGE_SINGLE_RENDER_STATE( colorWriteMask );
+    MERGE_SINGLE_RENDER_STATE( viewport );
+    MERGE_SINGLE_RENDER_STATE( scissorRect );
 
     #undef MERGE_SINGLE_RENDER_STATE
 }
@@ -495,7 +505,7 @@ GN::gfx::EffectResource::Impl::initTextures(
 
         if( tp.bindings.empty() )
         {
-            GN_WARN(sLogger)( "Non used texture parameter '%s' in effect '%s'.",
+            GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
                 tp.parameterName.cptr(),
                 effectName() );
         }

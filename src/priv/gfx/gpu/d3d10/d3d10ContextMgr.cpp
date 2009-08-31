@@ -12,6 +12,22 @@
 // local data and functions
 // *****************************************************************************
 
+static const D3D10_FILL_MODE FILL_MODE_TO_D3D10[] =
+{
+    D3D10_FILL_SOLID,     // FILL_SOLID = 0,
+    D3D10_FILL_WIREFRAME, // FILL_WIREFRAME,
+    D3D10_FILL_SOLID,     // FILL_POINT,
+};
+GN_CASSERT( GN_ARRAY_COUNT(FILL_MODE_TO_D3D10) == GN::gfx::GpuContext::NUM_FILL_MODES );
+
+static const D3D10_CULL_MODE CULL_MODE_TO_D3D10[] =
+{
+    D3D10_CULL_NONE,    // CULL_NONE = 0,
+    D3D10_CULL_FRONT,   // CULL_FRONT,
+    D3D10_CULL_BACK,    // CULL_BACK,
+};
+GN_CASSERT( GN_ARRAY_COUNT(CULL_MODE_TO_D3D10) == GN::gfx::GpuContext::NUM_CULL_MODES );
+
 static const D3D10_BLEND_OP BLEND_OP_TO_D3D10[] =
 {
     D3D10_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
@@ -250,15 +266,15 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     // rasterization states
     D3D10_RASTERIZER_DESC rsdesc;
     memset( &rsdesc, 0, sizeof(rsdesc) );
-    rsdesc.FillMode              = D3D10_FILL_SOLID;
-    rsdesc.CullMode              = D3D10_CULL_BACK;
-    rsdesc.FrontCounterClockwise = true;
+    rsdesc.FillMode              = FILL_MODE_TO_D3D10[newContext.rs.fillMode];
+    rsdesc.CullMode              = CULL_MODE_TO_D3D10[newContext.rs.cullMode];
+    rsdesc.FrontCounterClockwise = GpuContext::FRONT_CCW == newContext.rs.frontFace;
     rsdesc.DepthBias             = 0;
     rsdesc.DepthBiasClamp        = 0.0f;
     rsdesc.SlopeScaledDepthBias  = 0.0f;
     rsdesc.DepthClipEnable       = false;
     rsdesc.ScissorEnable         = true;
-    rsdesc.MultisampleEnable     = true;
+    rsdesc.MultisampleEnable     = 0 != newContext.rs.msaaEnabled;
     rsdesc.AntialiasedLineEnable = false;
     if( !mSOMgr->setRS( rsdesc, skipDirtyCheck ) ) return false;
 

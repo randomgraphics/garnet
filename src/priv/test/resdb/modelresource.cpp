@@ -21,6 +21,47 @@ sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
     return ( container.end() == iter ) ? NULL : &iter->second;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void
+sApplyRenderState(
+    GN::gfx::GpuContext::RenderStates               & dst,
+    const GN::gfx::GpuContext::RenderStates         & src,
+    const EffectResourceDesc::EffectRenderStateDesc & rsdesc )
+{
+    #define MERGE_SINGLE_RENDER_STATE( state ) dst.state = ( rsdesc.state.overridden ? rsdesc.state.value : src.state )
+
+    MERGE_SINGLE_RENDER_STATE( depthTestEnabled );
+    MERGE_SINGLE_RENDER_STATE( depthWriteEnabled );
+    MERGE_SINGLE_RENDER_STATE( depthFunc );
+
+    MERGE_SINGLE_RENDER_STATE( stencilEnabled );
+    MERGE_SINGLE_RENDER_STATE( stencilPassOp );
+    MERGE_SINGLE_RENDER_STATE( stencilFailOp );
+    MERGE_SINGLE_RENDER_STATE( stencilZFailOp );
+
+    MERGE_SINGLE_RENDER_STATE( blendEnabled );
+    MERGE_SINGLE_RENDER_STATE( blendSrc );
+    MERGE_SINGLE_RENDER_STATE( blendDst );
+    MERGE_SINGLE_RENDER_STATE( blendOp );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaSrc );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaDst );
+    MERGE_SINGLE_RENDER_STATE( blendAlphaOp );
+
+    MERGE_SINGLE_RENDER_STATE( fillMode );
+    MERGE_SINGLE_RENDER_STATE( cullMode );
+    MERGE_SINGLE_RENDER_STATE( frontFace );
+    MERGE_SINGLE_RENDER_STATE( msaaEnabled );
+
+    MERGE_SINGLE_RENDER_STATE( blendFactors );
+    MERGE_SINGLE_RENDER_STATE( colorWriteMask );
+    MERGE_SINGLE_RENDER_STATE( viewport );
+    MERGE_SINGLE_RENDER_STATE( scissorRect );
+
+    #undef MERGE_SINGLE_RENDER_STATE
+}
+
 // *****************************************************************************
 // local classes and functions
 // *****************************************************************************
@@ -482,6 +523,7 @@ void GN::gfx::ModelResource::Impl::draw() const
         gc.depthstencil = currentContext.depthstencil;
 
         // TODO: copy render states from current context
+        sApplyRenderState( gc.rs, currentContext.rs, mPasses[i].rsdesc );
     }
 
     // determine the subset
