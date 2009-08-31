@@ -10,6 +10,42 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 // Local stuff
 // *****************************************************************************
 
+struct VertexFormatProperties
+{
+    /// minimal strides for each stream
+    size_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
+
+    /// true means that stream is referenced by the vertex format.
+    bool used[GpuContext::MAX_VERTEX_BUFFERS];
+
+    /// analyze vertex format
+    bool analyze( const VertexFormat & vf )
+    {
+        memset( this, 0, sizeof(*this) );
+
+        for( size_t i = 0; i < vf.numElements; ++i )
+        {
+            const VertexElement & e = vf.elements[i];
+
+            if( e.stream > GpuContext::MAX_VERTEX_BUFFERS )
+            {
+                GN_ERROR(sLogger)( "Invalid stream ID: %d", e.stream );
+                return false;
+            }
+
+            used[e.stream] = true;
+
+            size_t currentStride = minStrides[e.stream];
+
+            size_t newStride = e.offset + e.format.getBytesPerBlock();
+
+            if( newStride > currentStride ) minStrides[e.stream] = newStride;
+        }
+
+        return true;
+    }
+};
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -21,12 +57,69 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResource::Impl::init( const MeshResourceDesc & )
+bool GN::gfx::MeshResource::Impl::init( const MeshResourceDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MeshResource::Impl, () );
+
+    // analyze vertex format
+    VertexFormatProperties vfp;
+    if( !vfp.analyze( desc.vtxfmt ) ) return failure();
+
+    Gpu & gpu = database().gpu();
+
+    // initialize vertex buffers
+    if( desc.numvtx > 0 )
+    {
+        for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
+        {
+            if( !vfp.used[i] ) continue; // ignore unused vertex buffer
+
+            // determine stride
+            size_t stride;
+            if( 0 == desc.strides[i] )
+            {
+                stride = vfp.minStrides[i];
+            }
+            else if( desc.strides[i] < vfp.minStrides[i] )
+            {
+                GN_ERROR(sLogger)( "stride for stream %u is too small.", i );
+                return failure();
+            }
+            else
+            {
+                stride = desc.strides[i];
+            }
+
+            size_t vbsize = desc.strides[i] * desc.numvtx;
+
+            // create GPU vertex buffer
+            VtxBufDesc vbdesc = { vbsize, desc.dynavb };
+            mVtxBufs[i].gpudata.attach( gpu.createVtxBuf( vbdesc ) );
+            if( NULL == mVtxBufs[i].gpudata ) return failure();
+
+            // copy vertices to vertex buffer
+            const void * vertices = desc.vertices[i];
+            if( vertices ) mVtxBufs[i].gpudata->update( 0, 0, vertices );
+        }
+    }
+
+    // initialize index buffer
+    if( desc.numidx > 0 )
+    {
+        IdxBufDesc ibd = { desc.numidx, desc.idx32, desc.dynaib };
+        mIdxBuf.gpudata.attach( gpu.createIdxBuf( ibd ) );
+        if( NULL == mIdxBuf.gpudata ) return failure();
+
+        if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );
+    }
+
+    // store descriptor, but clear data pointers
+    mDesc = desc;
+    memset( mDesc.vertices, 0, sizeof(mDesc.vertices) );
+    mDesc.indices = NULL;
 
     // success
     return success();
@@ -41,6 +134,13 @@ void GN::gfx::MeshResource::Impl::quit()
 {
     GN_GUARD;
 
+    for( size_t i = 0; i < GN_ARRAY_COUNT(mVtxBufs); ++i )
+    {
+        mVtxBufs[i].gpudata.clear();
+    }
+
+    mIdxBuf.gpudata.clear();
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -54,6 +154,24 @@ void GN::gfx::MeshResource::Impl::quit()
 //
 //
 // -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
+{
+    // vertex format
+    context.vtxfmt = mDesc.vtxfmt;
+
+    // verex buffers
+    GN_CASSERT( GN_ARRAY_COUNT(context.vtxbufs) == GN_ARRAY_COUNT(mVtxBufs) );
+    for( size_t i = 0; i < GN_ARRAY_COUNT(context.vtxbufs); ++i )
+    {
+        context.vtxbufs[i].vtxbuf = mVtxBufs[i].gpudata;
+        context.vtxbufs[i].stride = (UInt16)mDesc.strides[i];
+        context.vtxbufs[i].offset = (UInt32)mDesc.offsets[i];
+    }
+
+    // index buffers
+    context.idxbuf = mIdxBuf.gpudata;
+}
 
 // *****************************************************************************
 // GN::gfx::MeshResource::Impl - private methods
@@ -168,4 +286,22 @@ GpuResourceHandle GN::gfx::MeshResource::loadFromFile(
     GN_UNIMPL();
 
     return NULL;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+const MeshResourceDesc & GN::gfx::MeshResource::getDesc() const
+{
+    return mImpl->getDesc();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
+{
+    mImpl->applyToContext( context );
 }

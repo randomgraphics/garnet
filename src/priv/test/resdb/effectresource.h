@@ -64,7 +64,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        struct GpuProgramProperties
+        struct GpuProgramItem
         {
             StrA                name;
             AutoRef<GpuProgram> prog;
@@ -85,7 +85,7 @@ namespace GN { namespace gfx
     private:
 
         EffectResource                & mOwner;
-        DynaArray<GpuProgramProperties> mPrograms;
+        DynaArray<GpuProgramItem>       mPrograms;
         DynaArray<RenderPass>           mPasses;
         DynaArray<TextureProperties>    mTextures;
         DynaArray<UniformProperties>    mUniforms;

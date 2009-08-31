@@ -213,6 +213,9 @@ namespace GN { namespace gfx
         PrimitiveType prim;   //< primitive type
         size_t        numvtx; //< number of vertices
         size_t        numidx; //< number of indices. 0 means non-indexed mesh
+        bool          idx32;  ///< true for 32-bit index buffer
+        bool          dynavb; ///< true for dynamic vertex buffer
+        bool          dynaib; ///< trur for dynamic index buffer
         VertexFormat  vtxfmt; //< vertex format
         const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data are undefined
         size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using vertex size defined by vertex format.
@@ -248,7 +251,11 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        void applyToContext( GpuContext & ) const;
+
+        const MeshResourceDesc & getDesc() const;
+
+        void applyToContext( GpuContext & context ) const;
+
         //@}
 
     protected:
@@ -527,7 +534,7 @@ namespace GN { namespace gfx
         /// data members
         //@{
 
-        size_t startvtx;
+        size_t basevtx;
         size_t numvtx;
         size_t startidx;
         size_t numidx;
@@ -537,7 +544,7 @@ namespace GN { namespace gfx
         /// methods
         //@{
 
-        void clear() { startvtx = numvtx = startidx = numidx = 0; }
+        void clear() { basevtx = numvtx = startidx = numidx = 0; }
 
         //@}
     };

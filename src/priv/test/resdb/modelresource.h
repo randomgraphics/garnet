@@ -97,13 +97,6 @@ namespace GN { namespace gfx
         ///
         /// comments...
         ///
-        struct RenderTargetItem
-        {
-        };
-
-        ///
-        /// comments...
-        ///
         struct EffectItem
         {
             GpuResourceHandle handle;
@@ -138,7 +131,6 @@ namespace GN { namespace gfx
         DynaArray<RenderPass>       mPasses;
         DynaArray<TextureItem>      mTextures;
         DynaArray<UniformItem>      mUniforms;
-        DynaArray<RenderTargetItem> mRenderTargets;
 
         // ********************************
         // private functions

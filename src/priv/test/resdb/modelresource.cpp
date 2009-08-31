@@ -289,7 +289,6 @@ void GN::gfx::ModelResource::Impl::clear()
     mPasses.clear();
     mTextures.clear();
     mUniforms.clear();
-    mRenderTargets.clear();
 }
 
 // *****************************************************************************
@@ -366,6 +365,10 @@ GN::gfx::ModelResource::Impl::getUniform( const char * effectParameterName ) con
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::draw() const
 {
+    MeshResource * mesh = GpuResource::castTo<MeshResource>( database().getResource( mMesh.handle ) );
+    if( NULL == mesh ) return;
+    const MeshResourceDesc & meshdesc = mesh->getDesc();
+
     Gpu & g = database().gpu();
 
     const GpuContext & currentContext = g.getContext();
@@ -384,7 +387,26 @@ void GN::gfx::ModelResource::Impl::draw() const
     // draw
     for( size_t i = 0; i < mPasses.size(); ++i )
     {
-        g.bindContext( mPasses[i].gc );
+        const GpuContext & gc = mPasses[i].gc;
+
+        g.bindContext( gc );
+
+        // do rendering
+        if( gc.idxbuf )
+        {
+            g.drawIndexed(
+                meshdesc.prim,
+                mDesc.subset.numidx,
+                mDesc.subset.basevtx,
+                0, // startvtx,
+                mDesc.subset.numvtx,
+                mDesc.subset.startidx );
+        }
+        else
+        {
+            g.draw( meshdesc.prim, mDesc.subset.numvtx, mDesc.subset.basevtx );
+        }
+
     }
 }
 
@@ -456,19 +478,31 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         t.setHandle( *this, i, texhandle );
     }
 
-    // TODO: initialize uniform array
+    GN_TODO( "initialize uniform array" );
     mUniforms.resize( 0 );
-
-    // TODO: initialize render targets
-    mRenderTargets.resize( 0 );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::onMeshChanged( GpuResource & )
+void GN::gfx::ModelResource::Impl::onMeshChanged( GpuResource & r )
 {
-    GN_UNIMPL_WARNING();
+    MeshResource & mesh = r.castTo<MeshResource>( r );
+
+    const MeshResourceDesc & meshdesc = mesh.getDesc();
+
+    if( ( mDesc.subset.startidx + mDesc.subset.numidx ) > meshdesc.numidx ||
+        ( mDesc.subset.basevtx + mDesc.subset.numvtx ) > meshdesc.numvtx )
+    {
+        GN_ERROR(sLogger)( "Mesh subset is out of range." );
+    }
+
+    for( size_t i = 0; i < mPasses.size(); ++i )
+    {
+        RenderPass & pass = mPasses[i];
+
+        mesh.applyToContext( pass.gc );
+    }
 }
 
 // *****************************************************************************
