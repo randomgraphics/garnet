@@ -171,7 +171,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::onTextureChange( GpuResource & r
 {
     GN_ASSERT( r.handle() == mHandle );
 
-    Texture * tex = ((TextureResource&)r).getTexture();
+    Texture * tex = r.castTo<TextureResource>().getTexture();
 
     updateContext( tex );
 }
@@ -223,7 +223,7 @@ GN::gfx::ModelResource::Impl::UniformItem::~UniformItem()
 {
 }
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
@@ -242,18 +242,18 @@ void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
         r->sigUnderlyingResourcePointerChanged.disconnect( this );
     }
 
-    Uniform * uni;
+    Uniform * uniform;
     if( newUniformHandle )
     {
         // connect to new handle
         GpuResource * r = db.getResource( newUniformHandle );
         r->sigUnderlyingResourcePointerChanged.connect( this, &UniformItem::onUniformChange );
 
-        uni = ((UniformResource*)r)->getUniform();
+        uniform = ((UniformResource*)r)->getUniform();
     }
     else
     {
-        uni = NULL;
+        uniform = NULL;
     }
 
     // update stored handle value
@@ -261,7 +261,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
     mEffectParameterIndex = effectParameterIndex;
     mHandle = newUniformHandle;
 
-    updateContext( uni );
+    updateContext( uniform );
 }
 
 //
@@ -271,15 +271,15 @@ void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( GpuResource & r
 {
     GN_ASSERT( r.handle() == mHandle );
 
-    Uniform * uni = ((UniformResource&)r).getUniform();
+    Uniform * uniform = r.castTo<UniformResource>().getUniform();
 
-    updateContext( uni );
+    updateContext( uniform );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uni )
+void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform )
 {
     GN_ASSERT( mOwner );
 
@@ -296,12 +296,16 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uni )
         GN_ASSERT( location.pass < mOwner->mPasses.size() );
         GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
-        UniformBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
+        GpuContext & gc = mOwner->mPasses[location.pass].gc;
 
-        binding.texture.set( uni );
-        binding.sampler = prop.sampler;
+        if( location.stage >= gc.uniforms.size() )
+        {
+            gc.uniforms.resize( location.stage + 1 );
+        }
+
+        gc.uniforms[location.stage].set( uniform );
     }
-}*/
+}
 
 // *****************************************************************************
 // GN::gfx::ModelResource::Impl - Initialize and shutdown
@@ -486,9 +490,21 @@ GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) con
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::setUniform( const char * effectParameterName, GpuResourceHandle handle )
 {
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( effectParameterName );
-    GN_UNUSED_PARAM( handle );
+    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    if( NULL == effect )
+    {
+        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
+        return;
+    }
+
+    size_t parameterIndex = effect->findUniform( effectParameterName );
+    if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
+    {
+        GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
+        return;
+    }
+
+    mUniforms[parameterIndex].setHandle( *this, parameterIndex, handle );
 }
 
 //
@@ -497,9 +513,21 @@ void GN::gfx::ModelResource::Impl::setUniform( const char * effectParameterName,
 GpuResourceHandle
 GN::gfx::ModelResource::Impl::getUniform( const char * effectParameterName ) const
 {
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( effectParameterName );
-    return 0;
+    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    if( NULL == effect )
+    {
+        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
+        return 0;
+    }
+
+    size_t parameterIndex = effect->findUniform( effectParameterName );
+    if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
+    {
+        GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
+        return 0;
+    }
+
+    return mUniforms[parameterIndex].getHandle();
 }
 //
 //
@@ -609,7 +637,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         GpuResourceHandle texhandle;
         if( td )
         {
-            if( td->resourceName )
+            if( !td->resourceName.empty() )
             {
                 texhandle = TextureResource::loadFromFile( database(), td->resourceName );
             }
@@ -634,7 +662,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         t.setHandle( *this, i, texhandle );
     }
 
-    /* reapply uniforms
+    // reapply uniforms
     mUniforms.resize( effect.getNumUniforms() );
     for( size_t i = 0; i < effect.getNumUniforms(); ++i )
     {
@@ -647,14 +675,25 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         GpuResourceHandle uniformhandle;
         if( ud )
         {
-            if( ud->resourceName )
+            if( !ud->resourceName.empty() )
             {
                 uniformhandle = UniformResource::loadFromFile( database(), ud->resourceName );
             }
             else
             {
-                StrA texname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
-                uniformhandle = UniformResource::create( database(), texname, &ud->desc );
+                StrA uniname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+
+                const void * initialValue = ud->initialValue.cptr();
+                if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )
+                {
+                    GN_ERROR(sLogger)(
+                        "Incorrect initial data size of uniform '%s in model '%s'.",
+                        up.parameterName.cptr(),
+                        modelName() );
+                    initialValue = NULL;
+                }
+
+                uniformhandle = UniformResource::create( database(), uniname, ud->size, initialValue );
             }
         }
         else
@@ -670,7 +709,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 
         u.setHandle( *this, i, 0 );
         u.setHandle( *this, i, uniformhandle );
-    }*/
+    }
 }
 
 //
