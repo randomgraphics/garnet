@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "gpures.h"
+#include "textureresource.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -9,19 +9,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 // *****************************************************************************
 // Local stuff
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-static bool
-sCheckAndRegisterTextureFactory(
-    GpuResourceDatabase      & db,
-    const GpuResourceFactory & factory )
-{
-    if( db.hasResourceFactory( TextureResource::guid() ) ) return true;
-
-    return db.registerResourceFactory( TextureResource::guid(), "Texture Resource", factory );
-}
 
 // *****************************************************************************
 // GN::gfx::TextureResource
@@ -44,9 +31,6 @@ GpuResourceHandle GN::gfx::TextureResource::create(
     const char          * name,
     const TextureDesc   * desc )
 {
-    GpuResourceFactory factory = { &createInstance, &deleteInstance };
-    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return 0;
-
     return db.createResource( TextureResource::guid(), name, desc );
 }
 
@@ -57,10 +41,6 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    // check and register texture factory
-    GpuResourceFactory factory = { &createInstance, &deleteInstance };
-    if( !sCheckAndRegisterTextureFactory( db, factory ) ) return 0;
-
     // convert to full (absolute) path
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
@@ -115,30 +95,76 @@ void GN::gfx::TextureResource::setTexture( const AutoRef<Texture> & newTexture )
     sigUnderlyingResourcePointerChanged(*this);
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-GpuResource *
-GN::gfx::TextureResource::createInstance(
-    GpuResourceDatabase & db,
-    GpuResourceHandle     handle,
-    const void          * parameters )
-{
-    TextureResource * m = new TextureResource( db, handle );
+// *****************************************************************************
+// GN::gfx::TextureResourceInternal
+// *****************************************************************************
 
-    if( NULL != parameters )
+class TextureResourceInternal : public TextureResource
+{
+    //
+    //
+    // -----------------------------------------------------------------------------
+    TextureResourceInternal( GpuResourceDatabase & db, GpuResourceHandle h )
+        : TextureResource( db, h )
     {
-        const TextureDesc * desc = (const TextureDesc*)parameters;
-        m->mTexture.attach( db.gpu().createTexture( *desc ) );
     }
 
-    return m;
-}
+    //
+    //
+    // -----------------------------------------------------------------------------
+    ~TextureResourceInternal()
+    {
+    }
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    static GpuResource * sCreateInstance(
+        GpuResourceDatabase & db,
+        GpuResourceHandle     handle,
+        const void          * parameters )
+    {
+        TextureResource * m = new TextureResourceInternal( db, handle );
+
+        if( NULL != parameters )
+        {
+            const TextureDesc * desc = (const TextureDesc*)parameters;
+
+            AutoRef<Texture> t( db.gpu().createTexture( *desc ) );
+
+            m->setTexture( t );
+        }
+
+        return m;
+    }
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    static void sDeleteInstance( GpuResource * p )
+    {
+        delete GpuResource::castTo<TextureResourceInternal>( p );
+    }
+
+public:
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    static bool sRegisterFactory( GpuResourceDatabase & db )
+    {
+        GpuResourceFactory factory = { &sCreateInstance, &sDeleteInstance };
+
+        if( db.hasResourceFactory( TextureResource::guid() ) ) return true;
+
+        return db.registerResourceFactory( TextureResource::guid(), "Texture Resource", factory );
+    }
+};
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::TextureResource::deleteInstance( GpuResource * p )
+bool GN::gfx::registerTextureResourceFactory( GpuResourceDatabase & db )
 {
-    delete GpuResource::castTo<TextureResource>( p );
+    return TextureResourceInternal::sRegisterFactory( db );
 }
