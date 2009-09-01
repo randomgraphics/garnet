@@ -11,7 +11,7 @@ GpuResourceDatabase * db = NULL;
 GpuResourceHandle  model = 0;
 
 static const char * hlslvscode =
-    //"uniform float4x4 pvw; \n"
+    "uniform float4x4 pvw; \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
@@ -24,8 +24,7 @@ static const char * hlslvscode =
     "}; \n"
     "VSOUTPUT main( in VSINPUT i ) { \n"
     "   VSOUTPUT o; \n"
-    "   o.hpos      = i.position; \n"
-    //"   o.hpos      = mul( pvw, i.position ); \n"
+    "   o.hpos      = mul( pvw, i.position ); \n"
     "   o.texcoords = i.texcoords; \n"
     "   return o; \n"
     "}";
@@ -44,11 +43,10 @@ static const char * hlslpscode =
     "}";
 
 static const char * glslvscode =
-    //"uniform mat4 pvw; \n"
+    "uniform mat4 pvw; \n"
     "varying vec2 texcoords; \n"
     "void main() { \n"
-    //"   gl_Position = pvw * gl_Vertex; \n"
-    "   gl_Position = gl_Vertex; \n"
+    "   gl_Position = pvw * gl_Vertex; \n"
     "   texcoords   = gl_MultiTexCoord0.xy; \n"
     "}";
 
@@ -62,13 +60,13 @@ static const char * glslpscode =
 
 void initEffectDesc( EffectResourceDesc & ed )
 {
-    //ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["MATRIX_PVW"];
     ed.textures["ALBEDO_TEXTURE"];
 
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
     ed.shaders["glsl"].gpd.ps.source = glslpscode;
-    //ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
 
     ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
@@ -76,7 +74,7 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.shaders["hlsl"].gpd.vs.entry = "main";
     ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
     ed.shaders["hlsl"].gpd.ps.entry = "main";
-    //ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.shaders["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
 
     ed.techniques["glsl"].passes.resize( 1 );
@@ -134,8 +132,12 @@ void draw( Gpu & )
     {
         ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
 
-        //UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "pvw" ) ) );
-        //if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
+        UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "MATRIX_PVW" ) ) );
+
+        if( u )
+        {
+            u->getUniform()->update( Matrix44f::sIdentity() );
+        }
 
         m->draw();
     }

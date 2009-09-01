@@ -576,7 +576,7 @@ namespace GN { namespace gfx
         {
             StrA             resourceName; //< if empty, then create a new uniform
             size_t           size;
-            DynaArray<UInt8> defaultValue; //< if empty, then no default value.
+            DynaArray<UInt8> initialValue; //< if empty, then no initial value.
         };
 
         //@}

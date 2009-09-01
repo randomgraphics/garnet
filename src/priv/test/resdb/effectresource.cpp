@@ -265,8 +265,16 @@ void GN::gfx::EffectResource::Impl::quit()
 // -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 {
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( name );
+    if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
+
+    for( size_t i = 0; i < mTextures.size(); ++i )
+    {
+        if( name == mTextures[i].parameterName )
+        {
+            return i;
+        }
+    }
+
     return PARAMETER_NOT_FOUND;
 }
 
@@ -275,8 +283,16 @@ size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 // -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 {
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( name );
+    if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
+
+    for( size_t i = 0; i < mUniforms.size(); ++i )
+    {
+        if( name == mUniforms[i].parameterName )
+        {
+            return i;
+        }
+    }
+
     return PARAMETER_NOT_FOUND;
 }
 
