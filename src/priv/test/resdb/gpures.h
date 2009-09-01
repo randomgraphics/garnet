@@ -161,11 +161,10 @@ namespace GN { namespace gfx
 
         AutoRef<Texture> mTexture;
 
+    protected:
+
         TextureResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
         virtual ~TextureResource() {}
-
-        static GpuResource * createInstance( GpuResourceDatabase &, GpuResourceHandle, const void *);
-        static void          deleteInstance( GpuResource * );
     };
 
     ///
@@ -198,11 +197,10 @@ namespace GN { namespace gfx
 
         AutoRef<Uniform> mUniform;
 
+    protected:
+
         UniformResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
         virtual ~UniformResource() {}
-
-        static GpuResource * createInstance( GpuResourceDatabase &, GpuResourceHandle, const void *);
-        static void          deleteInstance( GpuResource * );
     };
 
     ///

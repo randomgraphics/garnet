@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gpuresdb.h"
+#include "textureresource.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -41,6 +42,7 @@ static StrA sGuidToStr( const Guid & guid )
 GpuResourceDatabase::Impl::Impl( GpuResourceDatabase & db, Gpu & g )
     : mDatabase(db), mGpu(g)
 {
+    clear();
 }
 
 //
@@ -60,6 +62,9 @@ void GpuResourceDatabase::Impl::clear()
 
     // unregister all factories
     mManagers.clear();
+
+    // register built-in resource factories
+    GN_VERIFY( registerTextureResourceFactory( mDatabase ) );
 }
 
 //
