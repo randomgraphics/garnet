@@ -400,22 +400,18 @@ void GN::gfx::ModelResource::Impl::quit()
 
     GpuResourceDatabase & db = database();
 
-    if( mMesh.handle )
+    if( db.isValidResourceHandle( mMesh.handle ) )
     {
         GpuResource * mesh = db.getResource( mMesh.handle );
-        if( mesh )
-        {
-            mesh->sigUnderlyingResourcePointerChanged.disconnect( this );
-        }
+        mesh->sigUnderlyingResourcePointerChanged.disconnect( this );
+        mMesh.handle = 0;
     }
 
-    if( mEffect.handle )
+    if( db.isValidResourceHandle( mEffect.handle ) )
     {
         GpuResource * effect = db.getResource( mEffect.handle );
-        if( effect )
-        {
-            effect->sigUnderlyingResourcePointerChanged.disconnect( this );
-        }
+        effect->sigUnderlyingResourcePointerChanged.disconnect( this );
+        mEffect.handle = 0;
     }
 
     // standard quit procedure
@@ -677,7 +673,13 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
         {
             if( !ud->resourceName.empty() )
             {
-                uniformhandle = UniformResource::loadFromFile( database(), ud->resourceName );
+                uniformhandle = database().findResource( UniformResource::guid(), ud->resourceName );
+                if( 0 == uniformhandle )
+                {
+                    GN_ERROR(sLogger)( "Invalid uniform resource name '%s' in model '%s'.",
+                        ud->resourceName.cptr(),
+                        modelName() );
+                }
             }
             else
             {
@@ -756,32 +758,35 @@ class ModelResourceInternal : public ModelResource
         return mImpl->init( *(const ModelResourceDesc*)parameters );
     }
 
+public:
+
     static GpuResource *
-    createInstance( GpuResourceDatabase & db,
-                    GpuResourceHandle     handle,
-                    const void          * parameters )
+    sCreateInstance( GpuResourceDatabase & db,
+                     GpuResourceHandle     handle,
+                     const void          * parameters )
     {
         AutoObjPtr<ModelResourceInternal> m( new ModelResourceInternal( db, handle ) );
         if( !m->init( parameters ) ) return NULL;
         return m.detach();
     }
 
-    static void deleteInstance( GpuResource * p )
+    static void sDeleteInstance( GpuResource * p )
     {
         delete GpuResource::castTo<ModelResourceInternal>( p );
     }
-
-public:
-
-    static bool checkAndRegisterFactory( GpuResourceDatabase & db )
-    {
-        if( db.hasResourceFactory( guid() ) ) return true;
-
-        GpuResourceFactory factory = { &createInstance, &deleteInstance };
-
-        return db.registerResourceFactory( guid(), "Model Resource", factory );
-    }
 };
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::registerModelResourceFactory( GpuResourceDatabase & db )
+{
+    if( db.hasResourceFactory( ModelResource::guid() ) ) return true;
+
+    GpuResourceFactory factory = { &ModelResourceInternal::sCreateInstance, &ModelResourceInternal::sDeleteInstance };
+
+    return db.registerResourceFactory( ModelResource::guid(), "Model Resource", factory );
+}
 
 //
 //
@@ -817,8 +822,6 @@ GpuResourceHandle GN::gfx::ModelResource::create(
     const char              * name,
     const ModelResourceDesc & desc )
 {
-    if( !ModelResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
     return db.createResource( ModelResource::guid(), name, &desc );
 }
 
@@ -829,8 +832,6 @@ GpuResourceHandle GN::gfx::ModelResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    if( !ModelResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 

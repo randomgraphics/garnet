@@ -119,7 +119,7 @@ namespace GN { namespace gfx
         GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
-        bool                 checkHandle( GpuResourceHandle ) const;
+        bool                 isValidResourceHandle( GpuResourceHandle ) const;
         GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
         const char         * getResourceName( GpuResourceHandle ) const;
         const Guid         * getResourceType( GpuResourceHandle ) const;
@@ -182,9 +182,6 @@ namespace GN { namespace gfx
 
         /// create new uniform resource. Would fail if the name exists.
         static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, size_t length, const void * initialData = NULL );
-
-        /// load uniform from file. Would return existing handle, if it is already loaded.
-        static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
         //@}
 

@@ -598,7 +598,7 @@ size_t GN::gfx::EffectResource::Impl::findGpuProgram( const StrA & shaderName ) 
 }
 
 // *****************************************************************************
-// GN::gfx::EffectResource
+// EffectResourceInternal
 // *****************************************************************************
 
 class EffectResourceInternal : public EffectResource
@@ -618,32 +618,39 @@ class EffectResourceInternal : public EffectResource
         return mImpl->init( *(const EffectResourceDesc*)parameters );
     }
 
+public:
+
     static GpuResource *
-    createInstance( GpuResourceDatabase & db,
-                    GpuResourceHandle     handle,
-                    const void          * parameters )
+    sCreateInstance( GpuResourceDatabase & db,
+                     GpuResourceHandle     handle,
+                     const void          * parameters )
     {
         AutoObjPtr<EffectResourceInternal> m( new EffectResourceInternal( db, handle ) );
         if( !m->init( parameters ) ) return NULL;
         return m.detach();
     }
 
-    static void deleteInstance( GpuResource * p )
+    static void sDeleteInstance( GpuResource * p )
     {
         delete GpuResource::castTo<EffectResourceInternal>( p );
     }
-
-public:
-
-    static bool checkAndRegisterFactory( GpuResourceDatabase & db )
-    {
-        if( db.hasResourceFactory( guid() ) ) return true;
-
-        GpuResourceFactory factory = { &createInstance, &deleteInstance };
-
-        return db.registerResourceFactory( guid(), "Effect Resource", factory );
-    }
 };
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::registerEffectResourceFactory( GpuResourceDatabase & db )
+{
+    if( db.hasResourceFactory( EffectResource::guid() ) ) return true;
+
+    GpuResourceFactory factory = { &EffectResourceInternal::sCreateInstance, &EffectResourceInternal::sDeleteInstance };
+
+    return db.registerResourceFactory( EffectResource::guid(), "Effect Resource", factory );
+}
+
+// *****************************************************************************
+// GN::gfx::EffectResource
+// *****************************************************************************
 
 //
 //
@@ -680,8 +687,6 @@ GpuResourceHandle GN::gfx::EffectResource::create(
     const char               * name,
     const EffectResourceDesc & desc )
 {
-    if( !EffectResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
     return db.createResource( EffectResource::guid(), name, &desc );
 }
 
@@ -692,8 +697,7 @@ GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    if( !EffectResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
+    GN_UNUSED_PARAM( db );
     GN_UNUSED_PARAM( filename );
     GN_UNIMPL();
 

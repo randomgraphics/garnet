@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "gpuresdb.h"
 #include "textureresource.h"
+#include "uniformresource.h"
+#include "meshresource.h"
+#include "effectresource.h"
+#include "modelresource.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -42,7 +46,6 @@ static StrA sGuidToStr( const Guid & guid )
 GpuResourceDatabase::Impl::Impl( GpuResourceDatabase & db, Gpu & g )
     : mDatabase(db), mGpu(g)
 {
-    clear();
 }
 
 //
@@ -65,6 +68,10 @@ void GpuResourceDatabase::Impl::clear()
 
     // register built-in resource factories
     GN_VERIFY( registerTextureResourceFactory( mDatabase ) );
+    GN_VERIFY( registerUniformResourceFactory( mDatabase ) );
+    GN_VERIFY( registerMeshResourceFactory( mDatabase ) );
+    GN_VERIFY( registerEffectResourceFactory( mDatabase ) );
+    GN_VERIFY( registerModelResourceFactory( mDatabase ) );
 }
 
 //
@@ -351,7 +358,7 @@ GpuResourceDatabase::Impl::getResourceItem( GpuResourceHandle handle, bool silen
 // GpuResourceDatabase
 // *****************************************************************************
 
-GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL) { mImpl = new Impl(*this,g); }
+GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL) { mImpl = new Impl(*this,g); mImpl->clear(); }
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
 void                 GpuResourceDatabase::clear() { mImpl->clear(); }
 Gpu                & GpuResourceDatabase::gpu() const { return mImpl->gpu(); }
@@ -360,7 +367,7 @@ bool                 GpuResourceDatabase::hasResourceFactory( const Guid & type 
 GpuResourceHandle    GpuResourceDatabase::createResource( const Guid & type, const char * name, const void * parameters ) { return mImpl->createResource( type, name, parameters ); }
 void                 GpuResourceDatabase::deleteResource( GpuResourceHandle handle ) { mImpl->deleteResource( handle ); }
 void                 GpuResourceDatabase::deleteAllResources() { mImpl->deleteAllResources(); }
-bool                 GpuResourceDatabase::checkHandle( GpuResourceHandle handle ) const { return mImpl->checkHandle(handle); }
+bool                 GpuResourceDatabase::isValidResourceHandle( GpuResourceHandle handle ) const { return mImpl->isValidResourceHandle(handle); }
 GpuResourceHandle    GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
 const char         * GpuResourceDatabase::getResourceName( GpuResourceHandle handle ) const { return mImpl->getResourceName(handle); }
 const Guid         * GpuResourceDatabase::getResourceType( GpuResourceHandle handle ) const { return mImpl->getResourceType(handle); }

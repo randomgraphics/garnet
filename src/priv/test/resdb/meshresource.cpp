@@ -204,32 +204,39 @@ class MeshResourceInternal : public MeshResource
         return mImpl->init( *(const MeshResourceDesc*)parameters );
     }
 
+public:
+
     static GpuResource *
-    createInstance( GpuResourceDatabase & db,
-                    GpuResourceHandle     handle,
-                    const void          * parameters )
+    sCreateInstance( GpuResourceDatabase & db,
+                     GpuResourceHandle     handle,
+                     const void          * parameters )
     {
         AutoObjPtr<MeshResourceInternal> m( new MeshResourceInternal( db, handle ) );
         if( !m->init( parameters ) ) return NULL;
         return m.detach();
     }
 
-    static void deleteInstance( GpuResource * p )
+    static void sDeleteInstance( GpuResource * p )
     {
         delete GpuResource::castTo<MeshResourceInternal>( p );
     }
-
-public:
-
-    static bool checkAndRegisterFactory( GpuResourceDatabase & db )
-    {
-        if( db.hasResourceFactory( guid() ) ) return true;
-
-        GpuResourceFactory factory = { &createInstance, &deleteInstance };
-
-        return db.registerResourceFactory( guid(), "Mesh Resource", factory );
-    }
 };
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::registerMeshResourceFactory( GpuResourceDatabase & db )
+{
+    if( db.hasResourceFactory( MeshResource::guid() ) ) return true;
+
+    GpuResourceFactory factory = { &MeshResourceInternal::sCreateInstance, &MeshResourceInternal::sDeleteInstance };
+
+    return db.registerResourceFactory( MeshResource::guid(), "Mesh Resource", factory );
+}
+
+// *****************************************************************************
+// GN::gfx::MeshResource
+// *****************************************************************************
 
 //
 //
@@ -266,8 +273,6 @@ GpuResourceHandle GN::gfx::MeshResource::create(
     const char             * name,
     const MeshResourceDesc & desc )
 {
-    if( !MeshResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
     return db.createResource( MeshResource::guid(), name, &desc );
 }
 
@@ -278,8 +283,7 @@ GpuResourceHandle GN::gfx::MeshResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    if( !MeshResourceInternal::checkAndRegisterFactory( db ) ) return NULL;
-
+    GN_UNUSED_PARAM( db );
     GN_UNUSED_PARAM( filename );
     GN_UNIMPL();
 

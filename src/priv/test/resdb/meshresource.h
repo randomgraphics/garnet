@@ -75,6 +75,11 @@ namespace GN { namespace gfx
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          meshName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
     };
+
+    ///
+    /// register mesh resource factory
+    ///
+    bool registerMeshResourceFactory( GpuResourceDatabase & db );
 }}
 
 // *****************************************************************************
