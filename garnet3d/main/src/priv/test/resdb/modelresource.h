@@ -160,6 +160,12 @@ namespace GN { namespace gfx
         void onEffectChanged( GpuResource & );
         void onMeshChanged( GpuResource & );
     };
+
+    ///
+    /// register model resource factory to database
+    ///
+    bool registerModelResourceFactory( GpuResourceDatabase & );
+
 }};
 
 // *****************************************************************************

@@ -114,6 +114,11 @@ namespace GN { namespace gfx
         size_t findGpuProgram( const StrA & shaderName ) const;
     };
 
+    ///
+    /// register effect resource factory to database
+    ///
+    bool registerEffectResourceFactory( GpuResourceDatabase & );
+
 }}
 
 // *****************************************************************************

@@ -45,20 +45,6 @@ GpuResourceHandle GN::gfx::UniformResource::create(
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::UniformResource::loadFromFile(
-    GpuResourceDatabase & db,
-    const char          * filename )
-{
-    GN_UNUSED_PARAM( db );
-    GN_UNUSED_PARAM( filename );
-    GN_UNIMPL();
-
-    return NULL;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
 {
     if( mUniform == newUniform ) return;
