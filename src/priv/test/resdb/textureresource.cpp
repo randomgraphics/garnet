@@ -26,17 +26,6 @@ const Guid & GN::gfx::TextureResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::TextureResource::create(
-    GpuResourceDatabase & db,
-    const char          * name,
-    const TextureDesc   * desc )
-{
-    return db.createResource( TextureResource::guid(), name, desc );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
@@ -73,7 +62,7 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     }
 
     // create texture resource
-    handle = db.createResource( TextureResource::guid(), filename, NULL );
+    handle = db.createResource( TextureResource::guid(), filename );
     if( 0 == handle ) return 0;
 
     // attach the texture to the resource
@@ -86,13 +75,31 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::TextureResource::reset( const TextureDesc * desc )
+{
+    AutoRef<Texture> tex;
+
+    if( desc )
+    {
+        tex.attach( database().gpu().createTexture( *desc ) );
+        if( !tex ) return false;
+    }
+
+    setTexture( tex );
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::TextureResource::setTexture( const AutoRef<Texture> & newTexture )
 {
     if( mTexture == newTexture ) return;
 
     mTexture = newTexture;
 
-    sigUnderlyingResourcePointerChanged(*this);
+    sigResourceChanged(*this);
 }
 
 // *****************************************************************************
@@ -121,21 +128,9 @@ class TextureResourceInternal : public TextureResource
     // -----------------------------------------------------------------------------
     static GpuResource * sCreateInstance(
         GpuResourceDatabase & db,
-        GpuResourceHandle     handle,
-        const void          * parameters )
+        GpuResourceHandle     handle )
     {
-        TextureResource * m = new TextureResourceInternal( db, handle );
-
-        if( NULL != parameters )
-        {
-            const TextureDesc * desc = (const TextureDesc*)parameters;
-
-            AutoRef<Texture> t( db.gpu().createTexture( *desc ) );
-
-            m->setTexture( t );
-        }
-
-        return m;
+        return new TextureResourceInternal( db, handle );
     }
 
     //

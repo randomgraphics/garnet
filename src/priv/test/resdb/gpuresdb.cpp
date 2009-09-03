@@ -134,8 +134,7 @@ bool GpuResourceDatabase::Impl::hasResourceFactory( const Guid & type )
 GpuResourceHandle
 GpuResourceDatabase::Impl::createResource(
     const Guid & type,
-    const char * name,
-    const void * parameters )
+    const char * name )
 {
     if( 0 == name || 0 == *name )
     {
@@ -158,7 +157,7 @@ GpuResourceDatabase::Impl::createResource(
     GpuResourceHandleStruct hs( mgr->index, internalHandle );
 
     ResourceItem & item = mgr->resources[internalHandle];
-    item.resource = mgr->factory.createResource( mDatabase, hs.externalHandle(), parameters );
+    item.resource = mgr->factory.createResource( mDatabase, hs.externalHandle() );
     if( NULL == item.resource )
     {
         mgr->resources.remove( internalHandle );
@@ -364,7 +363,7 @@ void                 GpuResourceDatabase::clear() { mImpl->clear(); }
 Gpu                & GpuResourceDatabase::gpu() const { return mImpl->gpu(); }
 bool                 GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
 bool                 GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
-GpuResourceHandle    GpuResourceDatabase::createResource( const Guid & type, const char * name, const void * parameters ) { return mImpl->createResource( type, name, parameters ); }
+GpuResourceHandle    GpuResourceDatabase::createResource( const Guid & type, const char * name ) { return mImpl->createResource( type, name ); }
 void                 GpuResourceDatabase::deleteResource( GpuResourceHandle handle ) { mImpl->deleteResource( handle ); }
 void                 GpuResourceDatabase::deleteAllResources() { mImpl->deleteAllResources(); }
 bool                 GpuResourceDatabase::isValidResourceHandle( GpuResourceHandle handle ) const { return mImpl->isValidResourceHandle(handle); }

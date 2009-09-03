@@ -32,14 +32,18 @@ const Guid & GN::gfx::UniformResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::UniformResource::create(
-    GpuResourceDatabase & db,
-    const char          * name,
+bool GN::gfx::UniformResource::reset(
     size_t                length,
     const void          * initialData )
 {
-    UniformDesc desc = { length, initialData };
-    return db.createResource( UniformResource::guid(), name, &desc );
+    AutoRef<Uniform> u( database().gpu().createUniform( length ) );
+    if( !u ) return false;
+
+    if( initialData ) u->update( 0, 0, initialData );
+
+    setUniform( u );
+
+    return true;
 }
 
 //
@@ -51,7 +55,7 @@ void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
 
     mUniform = newUniform;
 
-    sigUnderlyingResourcePointerChanged(*this);
+    sigResourceChanged(*this);
 }
 
 // *****************************************************************************
@@ -80,27 +84,9 @@ class UniformResourceInternal : public UniformResource
     // -----------------------------------------------------------------------------
     static GpuResource * sCreateInstance(
         GpuResourceDatabase & db,
-        GpuResourceHandle     handle,
-        const void          * parameters )
+        GpuResourceHandle     handle )
     {
-        UniformResource * m = new UniformResourceInternal( db, handle );
-
-        if( NULL == parameters )
-        {
-            GN_ERROR(sLogger)( "Null parameter pointer." );
-            return NULL;
-        }
-
-        const UniformDesc * desc = (const UniformDesc*)parameters;
-        AutoRef<Uniform> u( db.gpu().createUniform( desc->length ) );
-        if( u && desc->initialData )
-        {
-            u->update( 0, 0, desc->initialData );
-        }
-
-        m->setUniform( u );
-
-        return m;
+        return new UniformResourceInternal( db, handle );
     }
 
     //

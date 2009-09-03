@@ -115,7 +115,11 @@ bool init( Gpu & g )
     md.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
     md.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
-    model = ModelResource::create( *db, "m0",  md );
+    model = db->createResource( ModelResource::guid(), "m0" );
+    if( 0 == model ) return false;
+
+    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
+    if( !m->reset( &md ) ) return false;
 
     // success
     return true;
@@ -128,19 +132,16 @@ void quit( Gpu & )
 
 void draw( Gpu & )
 {
-    if( 0 != model )
+    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
+
+    UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "MATRIX_PVW" ) ) );
+
+    if( u )
     {
-        ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
-
-        UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "MATRIX_PVW" ) ) );
-
-        if( u )
-        {
-            u->getUniform()->update( Matrix44f::sIdentity() );
-        }
-
-        m->draw();
+        u->getUniform()->update( Matrix44f::sIdentity() );
     }
+
+    m->draw();
 }
 
 int run( Gpu & gpu )

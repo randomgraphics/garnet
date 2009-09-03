@@ -13,18 +13,16 @@ namespace GN { namespace gfx
     ///
     /// Effect resource implementation class
     ///
-    class EffectResource::Impl : public StdClass, public SlotBase
+    class EffectResource::Impl : public SlotBase
     {
-        GN_DECLARE_STDCLASS( Impl, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     public:
-        Impl( EffectResource & owner ) : mOwner(owner) { clear(); }
-        virtual ~Impl() { quit(); }
+        Impl( EffectResource & owner ) : mOwner(owner) {}
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
@@ -33,16 +31,14 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const EffectResourceDesc & desc );
-        void quit();
-    private:
-        void clear() {}
         //@}
 
         // ********************************
         // public functions
         // ********************************
     public:
+
+        bool                          reset( const EffectResourceDesc * desc );
 
         size_t                        getNumPasses() const { return mPasses.size(); }
 
@@ -97,6 +93,9 @@ namespace GN { namespace gfx
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          effectName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+
+        bool init( const EffectResourceDesc & desc );
+        void clear();
 
         bool initGpuPrograms( const EffectResourceDesc & effectDesc );
 

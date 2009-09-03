@@ -36,13 +36,8 @@ namespace GN { namespace gfx
         // *****************************
     public:
 
-        /// This event is fired when the underlying GPU resource pointer is changed, like
-        /// reloaded by database, or explicity changed by user.
-        ///
-        /// Note that this event does not care about the content of the resource. If only
-        /// the content of the resource is changed, but the resource pointer remains same,
-        /// then this event won't be fired.
-        Signal1<void, GpuResource&> sigUnderlyingResourcePointerChanged;
+        /// This event is fired when the GPU resource is changed.
+        Signal1<void, GpuResource&> sigResourceChanged;
 
         // *****************************
         // public methods
@@ -79,8 +74,7 @@ namespace GN { namespace gfx
     {
         /// create new resource instance
         GpuResource * (*createResource)( GpuResourceDatabase & db,
-                                         GpuResourceHandle     handle,
-                                         const void          * parameters );
+                                         GpuResourceHandle     handle );
 
         /// delete resource instance
         void          (*deleteResource)( GpuResource * );
@@ -116,11 +110,12 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
+        GpuResourceHandle    createResource( const Guid & type, const char * name );
+        GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
+        GpuResourceHandle    findOrCreateResource( const Guid & type, const char * name );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
         bool                 isValidResourceHandle( GpuResourceHandle ) const;
-        GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
         const char         * getResourceName( GpuResourceHandle ) const;
         const Guid         * getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
@@ -143,9 +138,6 @@ namespace GN { namespace gfx
         /// return GUID of the texture resource class
         static const Guid & guid();
 
-        /// create new texture resource. Would fail if the name exists.
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const TextureDesc * desc = NULL );
-
         /// load texture from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
@@ -153,6 +145,7 @@ namespace GN { namespace gfx
 
         /// Texture resource properties
         //@{
+        bool                     reset( const TextureDesc * desc );
         void                     setTexture( const AutoRef<Texture> & );
         const AutoRef<Texture> & getTexture() const { return mTexture; }
         //@}
@@ -180,12 +173,10 @@ namespace GN { namespace gfx
         /// return GUID of the uniform resource class
         static const Guid & guid();
 
-        /// create new uniform resource. Would fail if the name exists.
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, size_t length, const void * initialData = NULL );
-
         //@}
 
         //@{
+        bool                     reset( size_t length, const void * initialData );
         void                     setUniform( const AutoRef<Uniform> & );
         const AutoRef<Uniform> & getUniform() const { return mUniform; }
         //@}
@@ -241,15 +232,14 @@ namespace GN { namespace gfx
         /// factory
         //@{
         static const Guid & guid();
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const MeshResourceDesc & desc );
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
         //@}
 
         //@{
 
+        bool                     reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
-
-        void applyToContext( GpuContext & context ) const;
+        void                     applyToContext( GpuContext & context ) const;
 
         //@}
 
@@ -473,9 +463,6 @@ namespace GN { namespace gfx
         /// return GUID of the effect resource class
         static const Guid & guid();
 
-        /// create new effect resource. Would fail if the name exists.
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const EffectResourceDesc & desc );
-
         /// load effect from file. Would return existing handle, if it is already loaded.
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
 
@@ -506,6 +493,8 @@ namespace GN { namespace gfx
         };
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
+
+        bool                          reset( const EffectResourceDesc * desc );
 
         size_t                        getNumPasses() const;
 
@@ -632,11 +621,12 @@ namespace GN { namespace gfx
 
         //@{
         static const Guid      & guid();
-        static GpuResourceHandle create( GpuResourceDatabase & db, const char * name, const ModelResourceDesc & desc );
         static GpuResourceHandle loadFromFile( GpuResourceDatabase & db, const char * filename );
         //@}
 
         //@{
+        bool              reset( const ModelResourceDesc * desc );
+
         void              setTexture( const char * effectParameterName, GpuResourceHandle );
         GpuResourceHandle getTexture( const char * effectParameterName ) const;
 
