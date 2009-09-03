@@ -13,36 +13,24 @@ namespace GN { namespace gfx
     ///
     /// Model resource implementation class
     ///
-    class ModelResource::Impl : public StdClass, public SlotBase
+    class ModelResource::Impl : public SlotBase
     {
-        GN_DECLARE_STDCLASS( ModelResource::Impl, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     public:
-        Impl( ModelResource & owner ) : mOwner(owner) { clear(); }
-        virtual ~Impl() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const ModelResourceDesc & desc );
-        void quit();
-    private:
-        void clear();
+        Impl( ModelResource & owner ) : mOwner(owner) {}
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
         // public functions
         // ********************************
     public:
+
+        bool              reset( const ModelResourceDesc * desc );
 
         void              setTexture( const char * effectParameterName, GpuResourceHandle );
         GpuResourceHandle getTexture( const char * effectParameterName ) const;
@@ -156,6 +144,9 @@ namespace GN { namespace gfx
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          modelName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+
+        bool init( const ModelResourceDesc & desc );
+        void clear();
 
         void onEffectChanged( GpuResource & );
         void onMeshChanged( GpuResource & );

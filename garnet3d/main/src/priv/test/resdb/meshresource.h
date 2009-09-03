@@ -13,30 +13,16 @@ namespace GN { namespace gfx
     ///
     /// Mesh resource implementation class
     ///
-    class MeshResource::Impl : public StdClass
+    class MeshResource::Impl
     {
-        GN_DECLARE_STDCLASS( Impl, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     public:
-        Impl( MeshResource & owner ) : mOwner(owner) { clear(); }
-        virtual ~Impl() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const MeshResourceDesc & desc );
-        void quit();
-    private:
-        void clear() {}
+        Impl( MeshResource & owner ) : mOwner(owner) {}
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
@@ -44,6 +30,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        bool  reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const { return mDesc; }
         void applyToContext( GpuContext & context ) const;
 
@@ -74,6 +61,9 @@ namespace GN { namespace gfx
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          meshName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+
+        bool create( const MeshResourceDesc & desc );
+        void clear();
     };
 
     ///

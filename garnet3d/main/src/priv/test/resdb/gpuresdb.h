@@ -108,7 +108,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    createResource( const Guid & type, const char * name, const void * parameters );
+        GpuResourceHandle    createResource( const Guid & type, const char * name );
         void                 deleteResource( GpuResourceHandle );
         void                 deleteAllResources();
         bool                 isValidResourceHandle( GpuResourceHandle handle ) const { return NULL != getResourceItem( handle, true ); }

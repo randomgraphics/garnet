@@ -56,3 +56,17 @@ inline const T & GN::gfx::GpuResource::castTo() const
     GN_ASSERT( T::guid() == *database().getResourceType( handle() ) );
     return (const T&)*this;
 }
+
+// *****************************************************************************
+// GpuResourceDatabase class
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+inline GN::gfx::GpuResourceHandle
+GN::gfx::GpuResourceDatabase::findOrCreateResource( const Guid & type, const char * name )
+{
+    GpuResourceHandle h = findResource( type, name );
+    return h ? h : createResource( type, name );
+}

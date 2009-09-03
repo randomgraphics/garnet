@@ -214,51 +214,24 @@ void GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root )
 }
 
 // *****************************************************************************
-// GN::gfx::EffectResource::Impl - Initialize and shutdown
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
-{
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::EffectResource::Impl, () );
-
-    if( !initGpuPrograms( desc ) ) return failure();
-    if( !initTechniques( desc ) ) return failure();
-    if( !initTextures( desc ) ) return failure();
-    if( !initUniforms( desc ) ) return failure();
-
-    // success
-    return success();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::quit()
-{
-    GN_GUARD;
-
-    mPrograms.clear();
-    mPasses.clear();
-    mTextures.clear();
-    mUniforms.clear();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
 // GN::gfx::EffectResource::Impl - public methods
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectResource::Impl::reset( const EffectResourceDesc * desc )
+{
+    clear();
+
+    if( desc && !init( *desc ) )
+    {
+        clear();
+        return false;
+    }
+
+    return true;
+}
 
 //
 //
@@ -317,6 +290,31 @@ void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext
 // *****************************************************************************
 // GN::gfx::EffectResource::Impl - private methods
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
+{
+    if( !initGpuPrograms( desc ) ) return false;
+    if( !initTechniques( desc ) ) return false;
+    if( !initTextures( desc ) ) return false;
+    if( !initUniforms( desc ) ) return false;
+
+    // success
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectResource::Impl::clear()
+{
+    mPrograms.clear();
+    mPasses.clear();
+    mTextures.clear();
+    mUniforms.clear();
+}
 
 //
 //
@@ -608,26 +606,13 @@ class EffectResourceInternal : public EffectResource
     {
     }
 
-    bool init( const void * parameters )
-    {
-        if( NULL == parameters )
-        {
-            GN_ERROR(sLogger)( "Null parameter pointer." );
-            return false;
-        }
-        return mImpl->init( *(const EffectResourceDesc*)parameters );
-    }
-
 public:
 
     static GpuResource *
     sCreateInstance( GpuResourceDatabase & db,
-                     GpuResourceHandle     handle,
-                     const void          * parameters )
+                     GpuResourceHandle     handle )
     {
-        AutoObjPtr<EffectResourceInternal> m( new EffectResourceInternal( db, handle ) );
-        if( !m->init( parameters ) ) return NULL;
-        return m.detach();
+        return new EffectResourceInternal( db, handle );
     }
 
     static void sDeleteInstance( GpuResource * p )
@@ -682,17 +667,6 @@ const Guid & GN::gfx::EffectResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::EffectResource::create(
-    GpuResourceDatabase      & db,
-    const char               * name,
-    const EffectResourceDesc & desc )
-{
-    return db.createResource( EffectResource::guid(), name, &desc );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
@@ -707,6 +681,8 @@ GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::EffectResource::reset( const EffectResourceDesc * desc ) { return mImpl->reset( desc ); }
+
 size_t GN::gfx::EffectResource::getNumPasses() const { return mImpl->getNumPasses(); }
 
 size_t GN::gfx::EffectResource::getNumTextures() const { return mImpl->getNumTextures(); }
