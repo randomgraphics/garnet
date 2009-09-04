@@ -10,14 +10,15 @@
 
 namespace GN { namespace gfx
 {
+    ///
+    /// Gpu resource handle
+    ///
     typedef UInt32 GpuResourceHandle;
 
     class GpuResourceDatabase;
 
     ///
-    /// GpuResource provides one level of indirection to those real graphics classes
-    /// like Texture, Uniform and etc, which is necessary to support runtime resource
-    /// modification and reloading.
+    /// Gpu Resource baes class.
     ///
     class GpuResource : public NoCopy
     {
@@ -52,9 +53,9 @@ namespace GN { namespace gfx
 
         /// Cast GPU resource pointer with type check.
         //@{
-        template<typename T> static inline T * castTo( GpuResource * r );
-        template<typename T> static inline T & castTo( GpuResource & r );
-        template<typename T>        inline T & castTo();
+        template<typename T> static inline       T * castTo( GpuResource * r );
+        template<typename T> static inline       T & castTo( GpuResource & r );
+        template<typename T>        inline       T & castTo();
         template<typename T>        inline const T & castTo() const;
         //@}
 
@@ -81,7 +82,8 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Maps name/handle to GPU resource instance.
+    /// This class manages GPU resource creation, deletion, as well as
+    /// mapping betwen resource name and resource handle.
     ///
     class GpuResourceDatabase
     {
@@ -95,9 +97,9 @@ namespace GN { namespace gfx
         GpuResourceDatabase( Gpu & );
         virtual ~GpuResourceDatabase();
 
-        // reset the database to intial state, that is:
+        // reset the database to the intial state, that is:
         //  1. delete all handles;
-        //  2. unregister all factories.
+        //  2. unregister all non-built-in factories.
         void clear();
 
         Gpu & gpu() const;
@@ -156,8 +158,10 @@ namespace GN { namespace gfx
 
     protected:
 
+        //@{
         TextureResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
         virtual ~TextureResource() {}
+        //@}
     };
 
     ///
@@ -187,12 +191,14 @@ namespace GN { namespace gfx
 
     protected:
 
+        //@{
         UniformResource( GpuResourceDatabase & db, GpuResourceHandle h ) : GpuResource(db,h) {}
         virtual ~UniformResource() {}
+        //@}
     };
 
     ///
-    /// comments....
+    /// Mesh resource descriptor
     ///
     struct MeshResourceDesc
     {
@@ -223,7 +229,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// comments....
+    /// Mesh resource
     ///
     class MeshResource : public GpuResource
     {
@@ -265,6 +271,10 @@ namespace GN { namespace gfx
     ///
     struct EffectResourceDesc
     {
+        // *****************************
+        // types
+        // *****************************
+
         ///
         /// Shader Prerequisites
         ///
@@ -408,11 +418,19 @@ namespace GN { namespace gfx
             EffectTechniqueDesc() : quality(100) {}
         };
 
+        // *****************************
+        // data
+        // *****************************
+
         std::map<StrA,EffectTextureDesc>      textures;     //< Texture list
         std::map<StrA,EffectUniformDesc>      uniforms;     //< Uniform list
         std::map<StrA,EffectShaderDesc>       shaders;      //< Shader list
         std::map<StrA,EffectTechniqueDesc>    techniques;   //< Technique list. Technique name must be unique.
         EffectRenderStateDesc                 rsdesc;       //< Root render state descriptor for the effect.
+
+        // *****************************
+        // methods
+        // *****************************
 
         ///
         /// constructor
@@ -454,6 +472,7 @@ namespace GN { namespace gfx
     protected:
         EffectResource( GpuResourceDatabase & db, GpuResourceHandle h );
         ~EffectResource();
+        //@}
 
     public:
 

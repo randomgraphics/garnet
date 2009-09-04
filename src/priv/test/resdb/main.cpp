@@ -9,6 +9,7 @@ using namespace GN::util;
 
 GpuResourceDatabase * db = NULL;
 GpuResourceHandle  model = 0;
+AutoRef<Texture> tex[2];
 
 static const char * hlslvscode =
     "uniform float4x4 pvw; \n"
@@ -121,13 +122,35 @@ bool init( Gpu & g )
     ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
     if( !m->reset( &md ) ) return false;
 
+    tex[0].attach( loadTextureFromFile( db->gpu(), "media::/texture/rabit.png" ) );
+    tex[1].attach( loadTextureFromFile( db->gpu(), "media::/texture/earth.jpg" ) );
+
     // success
     return true;
 }
 
 void quit( Gpu & )
 {
+    tex[0].clear();
+    tex[1].clear();
     safeDelete( db );
+}
+
+void update( Input & in )
+{
+    KeyEvent k = in.popLastKeyEvent();
+
+    if( KeyCode::SPACEBAR == k.code && k.status.down )
+    {
+        static int i = 0;
+        i = ( i + 1 ) % 2;
+
+        GpuResourceHandle t = db->findResource( TextureResource::guid(), "media::/texture/rabit.png" );
+        if( t )
+        {
+            db->getResource(t)->castTo<TextureResource>().setTexture( tex[i] );
+        }
+    }
 }
 
 void draw( Gpu & )
@@ -165,6 +188,8 @@ int run( Gpu & gpu )
         {
             gogogo = false;
         }
+
+        update( in );
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         draw( gpu );
