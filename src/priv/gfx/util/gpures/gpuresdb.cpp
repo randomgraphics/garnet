@@ -136,10 +136,12 @@ GpuResourceDatabase::Impl::createResource(
     const Guid & type,
     const char * name )
 {
+    char uniqueName[256];
     if( 0 == name || 0 == *name )
     {
-        GN_ERROR(sLogger)( "Invalid name: empty or null string pointer is not allowed." );
-        return 0;
+        static int i = 0;
+        strPrintf( uniqueName, GN_ARRAY_COUNT(uniqueName), "UnnamedResource_%d", i );
+        name = uniqueName;
     }
 
     ResourceManager * mgr = getManager( type );
@@ -253,17 +255,21 @@ GpuResourceDatabase::Impl::getResourceName( GpuResourceHandle handle ) const
 //
 //
 // -----------------------------------------------------------------------------
-const Guid *
+const Guid &
 GpuResourceDatabase::Impl::getResourceType( GpuResourceHandle handle ) const
 {
     ResourceItem * r = getResourceItem( handle );
-    if( NULL == r ) return NULL;
+    if( NULL == r )
+    {
+        static const Guid INVALID_TYPE = { 0x374dda0c, 0x138e, 0x4b6a, { 0x94, 0xae, 0xce, 0x56, 0xb7, 0x9c, 0x63, 0x7b } };
+        return INVALID_TYPE;
+    }
 
     GpuResourceHandleStruct hs( handle );
 
     const ResourceManager & mgr = mManagers[hs.managerIndex()];
 
-    return &mgr.guid;
+    return mgr.guid;
 }
 
 //
@@ -369,5 +375,5 @@ void                 GpuResourceDatabase::deleteAllResources() { mImpl->deleteAl
 bool                 GpuResourceDatabase::isValidResourceHandle( GpuResourceHandle handle ) const { return mImpl->isValidResourceHandle(handle); }
 GpuResourceHandle    GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
 const char         * GpuResourceDatabase::getResourceName( GpuResourceHandle handle ) const { return mImpl->getResourceName(handle); }
-const Guid         * GpuResourceDatabase::getResourceType( GpuResourceHandle handle ) const { return mImpl->getResourceType(handle); }
+const Guid         & GpuResourceDatabase::getResourceType( GpuResourceHandle handle ) const { return mImpl->getResourceType(handle); }
 GpuResource        * GpuResourceDatabase::getResource( GpuResourceHandle handle ) { return mImpl->getResource(handle); }

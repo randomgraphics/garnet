@@ -30,10 +30,11 @@ namespace GN
 #include "gfx/shader.h"   // GPU program
 #include "gfx/gpu.h" // main GPU interface
 
+// GPU resource database
+#include "gfx/gpures.h"
+#include "gfx/simplemodel.h" // commonly used model class wrapper
+
 // utils
-#include "gfx/drawable.h"
-#include "gfx/effect.h"
-#include "gfx/gpumesh.h"
 #include "gfx/sprite.h"
 #include "gfx/line.h"
 #include "gfx/misc.h"

@@ -1,0 +1,16 @@
+Import( 'GN' )
+
+sources = [
+	'effectresource.cpp',
+	'gpuresdb.cpp',
+	'meshresource.cpp',
+	'modelresource.cpp',
+    'simpleWireframeModel.cpp',
+	'simpleDiffuseModel.cpp',
+	'simpleNormalMapModel.cpp',
+	'textureresource.cpp',
+	'uniformresource.cpp',
+]
+
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+Return( 'cluster' )

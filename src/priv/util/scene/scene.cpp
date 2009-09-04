@@ -129,26 +129,23 @@ GN::scene::GeometryNode::~GeometryNode()
 ///
 /// -----------------------------------------------------------------------------
 void
-GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset )
+GN::scene::GeometryNode::addModel( gfx::GpuResourceHandle model )
 {
-    if( NULL == inputEffect || NULL == mesh )
-    {
-        GN_ERROR(sLogger)( "NULL parameter." );
-        return;
-    }
-
-    if( !inputEffect->ok() )
-    {
-        GN_ERROR(sLogger)( "Unintialized effect class is not allowed." );
-        return;
-    }
-
     Scene & s = getScene();
 
-    AutoObjPtr<GeometryBlock> b( new GeometryBlock( s.getGpu() ) );
+    GpuResourceDatabase & db = s.database();
+
+    ModelResource * m = GpuResource::castTo<ModelResource>( db.getResource( model ) );
+    if( NULL == m )
+    {
+        GN_ERROR(sLogger)( "Invalid model handle." );
+        return;
+    }
+
+    AutoObjPtr<GeometryBlock> b( new GeometryBlock );
 
     // make a copy of the input effect
-    b->effect = *inputEffect;
+    b->model = model;
 
     // get list of standard parameters
     Scene::UniformCollection & globalUniforms = s.globalUniforms;
@@ -158,35 +155,27 @@ GN::scene::GeometryNode::addGeometryBlock( const gfx::Effect * inputEffect, cons
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        if( b->effect.uniforms.contains( d.name ) )
+        GpuResourceHandle uniformhandle = m->getUniform( d.name );
+
+        if( uniformhandle )
         {
-            Uniform * u;
+            AutoRef<Uniform> u;
             if( !d.global )
             {
                 StandardUniform su;
                 su.type  = (StandardSceneParameterType)i;
-                su.uniform.attach( s.getGpu().createUniform(d.size) );
+                su.uniform.attach( s.database().gpu().createUniform(d.size) );
                 mStandardPerObjectUniforms.append( su );
-                u = su.uniform.get();
+                u = su.uniform;
             }
             else
             {
-                u = &globalUniforms[i];
+                u.set( &globalUniforms[i] );
             }
             GN_ASSERT( u );
 
-            b->effect.uniforms[d.name].set( u );
+            db.getResource(uniformhandle)->castTo<UniformResource>().setUniform( u );
         }
-    }
-
-    // create drawables
-    size_t n = b->effect.getNumPasses();
-    b->drawables.resize( n );
-    for( size_t i = 0; i < n; ++i )
-    {
-        Drawable & d = b->drawables[i];
-        b->effect.applyToDrawable( d, i );
-        mesh->applyToDrawable( d, subset );
     }
 
     // insert b into block array
@@ -269,11 +258,9 @@ void GN::scene::GeometryNode::draw()
     {
         const GeometryBlock * b = mBlocks[i];
 
-        for( size_t i = 0; i < b->drawables.size(); ++i )
-        {
-            const Drawable & d = b->drawables[i];
-            d.draw();
-        }
+        ModelResource * m = GpuResource::castTo<ModelResource>( s.database().getResource(b->model) );
+
+        if( m ) m->draw();
     }
 }
 
@@ -330,7 +317,7 @@ class SceneImpl : public Scene
         }
     };
 
-    Gpu                 & mGpu;
+    GpuResourceDatabase & mDatabase;
     DirtyFlags            mDirtyFlags;
     UniformCollectionImpl mUniformCollection;
     AutoRef<Uniform>      mGlobalUniforms[NUM_STANDARD_SCENE_PARAMETERS];
@@ -405,9 +392,9 @@ class SceneImpl : public Scene
 public:
 
     /// ctor
-    SceneImpl( Gpu & r )
+    SceneImpl( GpuResourceDatabase & db )
         : Scene( mUniformCollection )
-        , mGpu( r )
+        , mDatabase( db )
     {
     }
 
@@ -429,12 +416,12 @@ public:
             const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
             if( d.global )
             {
-                mGlobalUniforms[i].attach( mGpu.createUniform( d.size ) );
+                mGlobalUniforms[i].attach( mDatabase.gpu().createUniform( d.size ) );
 
                 if( NULL == mGlobalUniforms[i] ) return false;
             }
         }
-        mDummyUniform.attach( mGpu.createUniform( 1 ) );
+        mDummyUniform.attach( mDatabase.gpu().createUniform( 1 ) );
         if( NULL == mDummyUniform ) return false;
         mUniformCollection.updateUniformPointers( mGlobalUniforms, mDummyUniform );
 
@@ -453,7 +440,7 @@ public:
     ///
     ///
     /// ------------------------------------------------------------------------
-    virtual gfx::Gpu & getGpu() const { return mGpu; }
+    virtual gfx::GpuResourceDatabase & database() const { return mDatabase; }
 
     ///
     ///
@@ -510,9 +497,9 @@ public:
 ///
 /// ----------------------------------------------------------------------------
 GN::scene::Scene *
-GN::scene::createScene( gfx::Gpu & r )
+GN::scene::createScene( gfx::GpuResourceDatabase & db )
 {
-    AutoObjPtr<SceneImpl> s( new SceneImpl(r) );
+    AutoObjPtr<SceneImpl> s( new SceneImpl(db) );
     if( !s->init() ) return NULL;
     return s.detach();
 }

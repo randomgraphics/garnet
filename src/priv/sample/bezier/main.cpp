@@ -350,7 +350,7 @@ bool init()
 
     // create model
     model.attach( new GeometryNode(*rootScene) );
-    model->addGeometryBlock( effect, mesh );
+    model->addModel( effect, mesh );
     model->setPivot( Vector3f(0,0,0) );
 
     // update camera stuff

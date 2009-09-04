@@ -6,7 +6,7 @@
 /// \author  chenli@@REDMOND (2009.8.21)
 // *****************************************************************************
 
-#include "gpures.h"
+#include "garnet/GNgfx.h"
 
 namespace GN { namespace gfx
 {
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
         bool                 isValidResourceHandle( GpuResourceHandle handle ) const { return NULL != getResourceItem( handle, true ); }
         GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
         const char *         getResourceName( GpuResourceHandle ) const;
-        const Guid         * getResourceType( GpuResourceHandle ) const;
+        const Guid         & getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
         //@}
 

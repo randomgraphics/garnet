@@ -12,11 +12,11 @@ float RT_HEIGHT = 256.0f;
 
 class RenderToTexture
 {
-    Gpu            & gpu;
-    SpriteRenderer   sr;
-    AutoRef<Texture> c0, ds;
-    AutoRef<Texture> tex0, tex1;
-    GpuContext  context;
+    GpuResourceDatabase & db;
+    SpriteRenderer        sr;
+    AutoRef<Texture>      c0, ds;
+    AutoRef<Texture>      tex0, tex1;
+    GpuContext            context;
 
     // box scene data
     struct BoxVert
@@ -24,14 +24,15 @@ class RenderToTexture
         float x, y, z, nx, ny, nz, u, v;
     };
     Matrix44f           proj, view;
-    SimpleDiffuseEffect effect;
+    SimpleDiffuseModel  model;
     Clock               timer;
 
 public:
 
-    RenderToTexture( Gpu & r )
-        : gpu(r)
-        , sr(r)
+    RenderToTexture( GpuResourceDatabase & db_ )
+        : db(db_)
+        , sr(db_.gpu())
+        , model(db_)
     {
     }
 
@@ -44,6 +45,8 @@ public:
     {
         // create sprite renderer
         if( !sr.init() ) return false;
+
+        Gpu & gpu = db.gpu();
 
         // create render targets
         c0.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
@@ -76,32 +79,32 @@ public:
             0, 0, // tangent
             0, 0, // binormal
             indices, 0 );
-        GpuMeshDesc md;
+        MeshResourceDesc md;
         md.vtxfmt      = VertexFormat::XYZ_NORM_UV();
         md.prim        = PrimitiveType::TRIANGLE_LIST;
         md.numvtx      = 24;
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        GpuMesh boxmesh( gpu );
-        if( !boxmesh.init( md ) ) return false;
+        GpuResourceHandle boxmesh = db.createResource( MeshResource::guid(), NULL );
+        if( !db.getResource(boxmesh)->castTo<MeshResource>().reset( &md ) ) return false;
 
         // setup transformation matrices
         view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
         gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
-        // initialize the effect
-        if( !effect.init( gpu ) ) return false;
-        effect.setMesh( boxmesh );
-        effect.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
-        effect.setAlbedoTexture( tex1 );
+        // initialize the model
+        if( !model.init() ) return false;
+        model.modelResource().setMesh( boxmesh );
+        model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
+        model.setAlbedoTexture( tex1 );
 
         return true;
     }
 
     void quit()
     {
-        effect.quit();
+        model.quit();
         c0.clear();
         ds.clear();
         tex0.clear();
@@ -117,13 +120,14 @@ public:
         Matrix44f world;
         world.rotateY( angle );
 
-        effect.setTransformation( proj, view, world );
+        model.setTransformation( proj, view, world );
 
-        effect.draw();
+        model.modelResource().draw();
     }
 
     void drawToColorRenderTarget( Texture * tex )
     {
+        Gpu & gpu = db.gpu();
         context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
         gpu.bindContext( context );
@@ -133,34 +137,30 @@ public:
 
     void drawToDepthTexture()
     {
+        Gpu & gpu = db.gpu();
         context.colortargets.clear();
         context.depthstencil.texture = ds;
         gpu.bindContext( context );
         gpu.clearScreen();
 
-        RenderTargetTexture rtt;
-        rtt.texture = ds;
-        effect.setRenderTarget( NULL, &rtt );
         drawBox( 1.0f );
     }
 
     void drawToBothColorAndDepthTexture()
     {
+        Gpu & gpu = db.gpu();
         context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
         gpu.bindContext( context );
         gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
 
-        RenderTargetTexture c, d;
-        c.texture = c0;
-        d.texture = ds;
-        effect.setRenderTarget( &c, &d );
         drawBox( -1.0f );
     }
 
     void drawToBackBuffer( Texture * tex, float x, float y )
     {
+        Gpu & gpu = db.gpu();
         context.colortargets.clear();
         context.depthstencil.clear();
         gpu.bindContext( context );
@@ -183,7 +183,9 @@ public:
 
 int run( Gpu & gpu )
 {
-    RenderToTexture scene( gpu );
+    GpuResourceDatabase db(gpu);
+
+    RenderToTexture scene( db );
 
     if( !scene.init() ) return -1;
 

@@ -74,7 +74,7 @@ namespace GN { namespace scene
         virtual ~GeometryEntity();
 
         /// add new geometry block to the node
-        void addGeometryBlock( const gfx::Effect * effect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset = NULL );
+        void addModel( const gfx::Effect * effect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset = NULL );
 
         /// get number of geometry blocks
         size_t getNumGeometryBlocks() const { return mBlocks.size(); }

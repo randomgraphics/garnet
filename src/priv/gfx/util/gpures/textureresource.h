@@ -1,18 +1,19 @@
-#ifndef __GN_PCH_H__
-#define __GN_PCH_H__
+#ifndef __GN_GFX_TEXTURERESOURCE_H__
+#define __GN_GFX_TEXTURERESOURCE_H__
 // *****************************************************************************
-// \file    pch.h
-// \brief   PCH header
-// \author  chenlee (2005.10.1)
+/// \file
+/// \brief   Texture resource implementation header.
+/// \author  chenli@@REDMOND (2009.8.31)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
-#include "garnet/GNinput.h"
-#include "garnet/GNwin.h"
-#include "garnet/GNutil.h"
-#include "../testapp.h"
+
+namespace GN { namespace gfx
+{
+    bool registerTextureResourceFactory( GpuResourceDatabase & db );
+}}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_PCH_H__
+#endif // __GN_GFX_TEXTURERESOURCE_H__

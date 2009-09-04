@@ -1,9 +1,6 @@
 Import( 'GN' )
 sources = [
-	'drawable.cpp',
-	'effect.cpp',
 	'line.cpp',
-	'gpumesh.cpp',
 	'misc.cpp',
 	'sprite.cpp',
 ]

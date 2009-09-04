@@ -6,8 +6,6 @@
 /// \author  chenli@@REDMOND (2009.8.13)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
-
 namespace GN { namespace gfx
 {
     ///
@@ -119,7 +117,7 @@ namespace GN { namespace gfx
         void                 deleteAllResources();
         bool                 isValidResourceHandle( GpuResourceHandle ) const;
         const char         * getResourceName( GpuResourceHandle ) const;
-        const Guid         * getResourceType( GpuResourceHandle ) const;
+        const Guid         & getResourceType( GpuResourceHandle ) const;
         GpuResource        * getResource( GpuResourceHandle );
         GpuResource        * getResource( const Guid & type, const char * name ) { return getResource( findResource( type, name ) ); }
         //@}

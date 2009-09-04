@@ -6,7 +6,7 @@
 /// \author  chenli@@REDMOND (2009.8.27)
 // *****************************************************************************
 
-#include "gpures.h"
+#include "garnet/GNgfx.h"
 
 namespace GN { namespace gfx
 {
