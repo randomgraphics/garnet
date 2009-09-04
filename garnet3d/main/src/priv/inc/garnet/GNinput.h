@@ -282,6 +282,8 @@ namespace GN
             ///
             /// Return a empty event, if there's no more events in event queue.
             ///
+            /// Note: the input device will buffer the most recent 32 key events.
+            ///
             virtual KeyEvent popLastKeyEvent() = 0;
 
             ///
