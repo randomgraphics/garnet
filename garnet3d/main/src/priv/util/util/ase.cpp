@@ -1482,7 +1482,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
     dst.meshes.resize( dst.meshes.size() + 1 );
 
-    gfx::GpuMeshDesc & dstmesh = dst.meshes.back();
+    gfx::MeshResourceDesc & dstmesh = dst.meshes.back();
 
     // setup constant mesh properties
     dstmesh.vtxfmt.numElements = 3;
@@ -1535,8 +1535,8 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
             }
         }
 
-        subset.startvtx = minidx;
-        subset.numvtx   = maxidx - minidx + 1;
+        subset.basevtx = 0;
+        subset.numvtx  = maxidx + 1;
     }
 
     // copy vertices into destination scene

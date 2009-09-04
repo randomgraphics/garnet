@@ -420,6 +420,45 @@ GN::gfx::ModelResource::Impl::getUniform( const char * effectParameterName ) con
 
     return mUniforms[parameterIndex].getHandle();
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::setMesh(
+    GpuResourceHandle          mesh,
+    const MeshResourceSubset * subset )
+{
+    if( !database().isValidResourceHandle( mesh ) ||
+        MeshResource::guid() != database().getResourceType(mesh) )
+    {
+        GN_ERROR(sLogger)( "invalid mesh handle" );
+        return;
+    }
+
+    // detach with the old mesh
+    if( mMesh.handle )
+    {
+        GpuResource & m = database().getResource( mMesh.handle )->castTo<MeshResource>();
+        m.sigResourceChanged.disconnect( this );
+    }
+
+    mMesh.handle = mesh;
+
+    if( subset )
+    {
+        mDesc.subset = *subset;
+    }
+    else
+    {
+        mDesc.subset.clear();
+    }
+
+    GpuResource & m = database().getResource( mMesh.handle )->castTo<MeshResource>();
+    m.sigResourceChanged.connect( this, &Impl::onMeshChanged );
+
+    onMeshChanged( m );
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -836,6 +875,6 @@ void              GN::gfx::ModelResource::setTexture( const char * effectParamet
 GpuResourceHandle GN::gfx::ModelResource::getTexture( const char * effectParameterName ) const { return mImpl->getTexture( effectParameterName ); }
 void              GN::gfx::ModelResource::setUniform( const char * effectParameterName, GpuResourceHandle handle ) { return mImpl->setUniform( effectParameterName, handle ); }
 GpuResourceHandle GN::gfx::ModelResource::getUniform( const char * effectParameterName ) const { return mImpl->getUniform( effectParameterName ); }
-//void              GN::gfx::ModelResource::setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset );
+void              GN::gfx::ModelResource::setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset ) { mImpl->setMesh( mesh, subset ); }
 //GpuResourceHandle GN::gfx::ModelResource::getMesh( MeshResourceSubset * subset ) const;
 void              GN::gfx::ModelResource::draw() const { mImpl->draw(); }

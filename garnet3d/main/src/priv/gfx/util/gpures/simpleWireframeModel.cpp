@@ -1,10 +1,9 @@
 #include "pch.h"
-#include "garnet/GNutil.h"
 
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 static const char * hlslvscode =
     "uniform float4x4 pvw; \n"
@@ -47,16 +46,21 @@ static const char * glslpscode =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWireframeEffect::init( Gpu & r )
+bool GN::gfx::SimpleWireframeModel::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::util::SimpleWireframeEffect, () );
+    GN_STDCLASS_INIT( GN::gfx::SimpleWireframeModel, () );
 
-    EffectDesc ed;
-    ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
-    ed.uniforms["COLOR"].size = sizeof(Vector4f);
+    ModelResourceDesc md;
+
+    md.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
+    md.uniforms["COLOR"].size = sizeof(Vector4f);
+
+    EffectResourceDesc & ed = md.effectResourceDesc;
+    ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["COLOR"];
 
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
@@ -76,24 +80,22 @@ bool GN::util::SimpleWireframeEffect::init( Gpu & r )
     ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].shader = "hlsl";
 
-    mEffect = new Effect( r );
-    if( !mEffect->init( ed ) ) return failure();
+    GpuResourceHandle h = mDatabase.createResource( ModelResource::guid(), NULL );
+    if( 0 == h ) return failure();
+
+    mModel = GpuResource::castTo<ModelResource>( mDatabase.getResource(h) );
+    if( NULL == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    GN_ASSERT( mEffect->uniforms.contains( name ) ); \
-    x = &mEffect->uniforms[name]; \
+    h = mModel->getUniform( name ); \
+    GN_ASSERT( h ); \
+    x = GpuResource::castTo<UniformResource>( mDatabase.getResource(h) ); \
     GN_ASSERT( x ); \
-    (*x)->update( defval );
+    x->getUniform()->update( defval );
 
     // initialize uniforms
     INIT_UNIFORM( mMatrixPvw     , "MATRIX_PVW"      , Matrix44f::sIdentity() );
     INIT_UNIFORM( mColor         , "COLOR"           , Vector4f(1,1,1,1) );
-
-    // setup render targets
-    GN_ASSERT( mEffect->rendertargets.contains( "color0" ) );
-    GN_ASSERT( mEffect->rendertargets.contains( "depth" ) );
-    mColorTarget = &mEffect->rendertargets["color0"];
-    mDepthTarget = &mEffect->rendertargets["depth"];
 
     // success
     return success();
@@ -104,12 +106,15 @@ bool GN::util::SimpleWireframeEffect::init( Gpu & r )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::quit()
+void GN::gfx::SimpleWireframeModel::quit()
 {
     GN_GUARD;
 
-    safeDelete( mEffect );
-    mDrawable.clear();
+    if( mModel )
+    {
+        mDatabase.deleteResource( mModel->handle() );
+        mModel = NULL;
+    }
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -120,54 +125,19 @@ void GN::util::SimpleWireframeEffect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::setTransformation(
+void GN::gfx::SimpleWireframeModel::setTransformation(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
 {
     Matrix44f pvw = proj * view * world;
-    (*mMatrixPvw)->update( pvw );
+    mMatrixPvw->getUniform()->update( pvw );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::setColor( const Vector4f & clr )
+void GN::gfx::SimpleWireframeModel::setColor( const Vector4f & clr )
 {
-    (*mColor)->update( clr );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::setMesh( const gfx::GpuMesh & mesh, const gfx::GpuMeshSubset * subset )
-{
-    mesh.applyToDrawable( mDrawable, subset );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::setRenderTarget(
-    const gfx::RenderTargetTexture * color,
-    const gfx::RenderTargetTexture * depth )
-{
-    if( color )
-        *mColorTarget = *color;
-    else
-        mColorTarget->clear();
-
-    if( depth )
-        *mDepthTarget = *depth;
-    else
-        mDepthTarget->clear();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SimpleWireframeEffect::draw()
-{
-    mEffect->applyToDrawable( mDrawable, 0 );
-    mDrawable.draw();
+    mColor->getUniform()->update( clr );
 }

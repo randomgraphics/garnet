@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "gpures.h"
 
 using namespace GN;
 using namespace GN::gfx;

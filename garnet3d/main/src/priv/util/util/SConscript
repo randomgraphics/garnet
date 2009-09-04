@@ -7,9 +7,6 @@ sources = [
 	'charBitmap8x13.cpp',
 	'fontft2.cpp',
 	'fpcamera.cpp',
-	'simpleDiffuseEffect.cpp',
-	'simpleNormalMapEffect.cpp',
-	'simpleWireframeEffect.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

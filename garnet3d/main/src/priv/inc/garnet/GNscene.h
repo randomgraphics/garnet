@@ -138,10 +138,7 @@ namespace GN
         {
             struct GeometryBlock
             {
-                gfx::Effect              effect;
-                DynaArray<gfx::Drawable> drawables;
-
-                GeometryBlock( gfx::Gpu & r ) : effect(r) {}
+                gfx::GpuResourceHandle model;
             };
 
             struct StandardUniform
@@ -161,9 +158,9 @@ namespace GN
             /// dtor
             virtual ~GeometryNode();
 
-            /// Add new geometry block to the node.
+            /// Add new model to the node.
             /// Note that caller is free to destroy input parameters after the function returns.
-            virtual void addGeometryBlock( const gfx::Effect * effect, const gfx::GpuMesh * mesh, const gfx::GpuMeshSubset * subset = NULL );
+            virtual void addModel( gfx::GpuResourceHandle model );
 
             /// get number of geometry blocks
             virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }
@@ -235,7 +232,7 @@ namespace GN
             };
 
             /// get GPU
-            virtual gfx::Gpu & getGpu() const = 0;
+            virtual gfx::GpuResourceDatabase & database() const = 0;
 
             /// \name global parameter management
             //@{
@@ -256,7 +253,7 @@ namespace GN
         ///
         /// create simple scene object
         ///
-        Scene * createScene( gfx::Gpu & );
+        Scene * createScene( gfx::GpuResourceDatabase & );
     }
 }
 

@@ -1,6 +1,5 @@
 SConscript( dirs=[
 	'd3d10',
-	'drawable',
 	'font',
 	'ft2',
 	'gpu',

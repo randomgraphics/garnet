@@ -17,7 +17,6 @@ namespace GN
 }
 
 #include "util/font.h"
-#include "util/simpleEffects.h"
 #include "util/camera.h"
 #include "util/fps.h"
 #include "util/ase.h"

@@ -6,7 +6,7 @@
 /// \author  chenli@@REDMOND (2009.8.26)
 // *****************************************************************************
 
-#include "gpures.h"
+#include "garnet/GNgfx.h"
 
 namespace GN { namespace gfx
 {
@@ -37,6 +37,8 @@ namespace GN { namespace gfx
 
         void              setUniform( const char * effectParameterName, GpuResourceHandle );
         GpuResourceHandle getUniform( const char * effectParameterName ) const;
+
+        void              setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset );
 
         void              draw() const;
 

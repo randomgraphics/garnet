@@ -1,13 +1,7 @@
 Import( 'GN' )
 
 sources = [
-	'effectresource.cpp',
 	'main.cpp',
-	'meshresource.cpp',
-	'gpuresdb.cpp',
-	'modelresource.cpp',
-	'textureresource.cpp',
-	'uniformresource.cpp',
 	]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
