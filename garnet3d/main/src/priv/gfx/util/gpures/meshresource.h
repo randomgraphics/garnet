@@ -32,7 +32,7 @@ namespace GN { namespace gfx
 
         bool  reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const { return mDesc; }
-        void applyToContext( GpuContext & context ) const;
+        void  applyToContext( GpuContext & context ) const;
 
         // ********************************
         // private variables
@@ -60,7 +60,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          meshName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+        const char *          meshName() const { return mOwner.database().getResourceName( &mOwner ); }
 
         bool create( const MeshResourceDesc & desc );
         void clear();

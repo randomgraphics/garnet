@@ -67,8 +67,8 @@ class UniformResourceInternal : public UniformResource
     //
     //
     // -----------------------------------------------------------------------------
-    UniformResourceInternal( GpuResourceDatabase & db, GpuResourceHandle h )
-        : UniformResource( db, h )
+    UniformResourceInternal( GpuResourceDatabase & db )
+        : UniformResource( db )
     {
     }
 
@@ -82,19 +82,9 @@ class UniformResourceInternal : public UniformResource
     //
     //
     // -----------------------------------------------------------------------------
-    static GpuResource * sCreateInstance(
-        GpuResourceDatabase & db,
-        GpuResourceHandle     handle )
+    static GpuResource * sCreateInstance( GpuResourceDatabase & db )
     {
-        return new UniformResourceInternal( db, handle );
-    }
-
-    //
-    //
-    // -----------------------------------------------------------------------------
-    static void sDeleteInstance( GpuResource * p )
-    {
-        delete GpuResource::castTo<UniformResourceInternal>( p );
+        return new UniformResourceInternal( db );
     }
 
 public:
@@ -104,7 +94,7 @@ public:
     // -----------------------------------------------------------------------------
     static bool sRegisterFactory( GpuResourceDatabase & db )
     {
-        GpuResourceFactory factory = { &sCreateInstance, &sDeleteInstance };
+        GpuResourceFactory factory = { &sCreateInstance };
 
         if( db.hasResourceFactory( UniformResource::guid() ) ) return true;
 

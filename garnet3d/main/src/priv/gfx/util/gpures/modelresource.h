@@ -30,17 +30,17 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool              reset( const ModelResourceDesc * desc );
+        bool                        reset( const ModelResourceDesc * desc );
 
-        void              setTexture( const char * effectParameterName, GpuResourceHandle );
-        GpuResourceHandle getTexture( const char * effectParameterName ) const;
+        void                        setTexture( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource>    getTexture( const char * effectParameterName ) const;
 
-        void              setUniform( const char * effectParameterName, GpuResourceHandle );
-        GpuResourceHandle getUniform( const char * effectParameterName ) const;
+        void                        setUniform( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource>    getUniform( const char * effectParameterName ) const;
 
-        void              setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset );
+        void                        setMesh( GpuResource * mesh, const MeshResourceSubset * subset );
 
-        void              draw() const;
+        void                        draw() const;
 
         // ********************************
         // private classes
@@ -57,15 +57,15 @@ namespace GN { namespace gfx
             TextureItem();
             ~TextureItem();
 
-            void setHandle( Impl & owner, size_t effectParameterIndex, GpuResourceHandle texture );
+            void setResource( Impl & owner, size_t effectParameterIndex, TextureResource * );
 
-            GpuResourceHandle getHandle() const { return mHandle; }
+            const AutoRef<TextureResource> & getResource() const { return mResource; }
 
         private:
 
-            Impl            * mOwner;
-            size_t            mEffectParameterIndex;
-            GpuResourceHandle mHandle;
+            Impl                   * mOwner;
+            size_t                   mEffectParameterIndex;
+            AutoRef<TextureResource> mResource;
 
         private:
 
@@ -84,15 +84,15 @@ namespace GN { namespace gfx
             UniformItem();
             ~UniformItem();
 
-            void setHandle( Impl & owner, size_t effectParameterIndex, GpuResourceHandle texture );
+            void setResource( Impl & owner, size_t effectParameterIndex, UniformResource * );
 
-            GpuResourceHandle getHandle() const { return mHandle; }
+            const AutoRef<UniformResource> & getResource() const { return mResource; }
 
         private:
 
-            Impl            * mOwner;
-            size_t            mEffectParameterIndex;
-            GpuResourceHandle mHandle;
+            Impl                   * mOwner;
+            size_t                   mEffectParameterIndex;
+            AutoRef<UniformResource> mResource;
 
         private:
 
@@ -106,7 +106,7 @@ namespace GN { namespace gfx
         ///
         struct EffectItem
         {
-            GpuResourceHandle handle;
+            AutoRef<EffectResource> resource;
         };
 
         ///
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
         ///
         struct MeshItem
         {
-            GpuResourceHandle handle;
+            AutoRef<MeshResource> resource;
         };
 
         ///
@@ -145,7 +145,7 @@ namespace GN { namespace gfx
     private:
 
         GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          modelName() const { return mOwner.database().getResourceName( mOwner.handle() ); }
+        const char *          modelName() const { return mOwner.database().getResourceName( &mOwner ); }
 
         bool init( const ModelResourceDesc & desc );
         void clear();

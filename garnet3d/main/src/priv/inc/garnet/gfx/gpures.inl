@@ -3,18 +3,21 @@
 // *****************************************************************************
 
 //
-// protected constructor
+// Get resource type (GUID)
 // -----------------------------------------------------------------------------
-inline GN::gfx::GpuResource::GpuResource( GpuResourceDatabase & db, GpuResourceHandle h )
-    : mDatabase(db), mHandle(h)
+inline const GN::Guid &
+GN::gfx::GpuResource::type() const
 {
+    return mDatabase.getResourceType(this);
 }
 
 //
-// protected destructor
+// Get resource name
 // -----------------------------------------------------------------------------
-inline GN::gfx::GpuResource::~GpuResource()
+inline const char *
+GN::gfx::GpuResource::name() const
 {
+    return mDatabase.getResourceName(this);
 }
 
 //
@@ -23,7 +26,7 @@ inline GN::gfx::GpuResource::~GpuResource()
 template<typename T>
 inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
 {
-    GN_ASSERT( 0 == r || T::guid() == r->database().getResourceType( r->handle() ) );
+    GN_ASSERT( 0 == r || T::guid() == r->database().getResourceType( r ) );
     return (T*)r;
 }
 
@@ -33,7 +36,7 @@ inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
 template<typename T>
 inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.database().getResourceType( r.handle() ) );
+    GN_ASSERT( T::guid() == r.database().getResourceType( &r ) );
     return (T&)r;
 }
 
@@ -41,20 +44,10 @@ inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 // Cast GPU resource pointer with type check.
 // -----------------------------------------------------------------------------
 template<typename T>
-inline T & GN::gfx::GpuResource::castTo()
+inline const T & GN::gfx::GpuResource::castTo( const GpuResource & r )
 {
-    GN_ASSERT( T::guid() == database().getResourceType( handle() ) );
-    return (T&)*this;
-}
-
-//
-// Cast GPU resource pointer with type check.
-// -----------------------------------------------------------------------------
-template<typename T>
-inline const T & GN::gfx::GpuResource::castTo() const
-{
-    GN_ASSERT( T::guid() == database().getResourceType( handle() ) );
-    return (const T&)*this;
+    GN_ASSERT( T::guid() == r.database().getResourceType( this ) );
+    return (const T&)r;
 }
 
 // *****************************************************************************
@@ -64,9 +57,39 @@ inline const T & GN::gfx::GpuResource::castTo() const
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::gfx::GpuResourceHandle
+inline GN::AutoRef<GN::gfx::GpuResource>
 GN::gfx::GpuResourceDatabase::findOrCreateResource( const Guid & type, const char * name )
 {
-    GpuResourceHandle h = findResource( type, name );
-    return h ? h : createResource( type, name );
+    AutoRef<GpuResource> res = findResource( type, name );
+    return res ? res : createResource( type, name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<class T> inline GN::AutoRef<T>
+GN::gfx::GpuResourceDatabase::createResource( const char * name )
+{
+    GpuResource * res = createResource( T::guid(), name ).detach();
+    return AutoRef<T>( GpuResource::castTo<T>(res) );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<class T> inline GN::AutoRef<T>
+GN::gfx::GpuResourceDatabase::findResource( const char * name ) const
+{
+    GpuResource * res = findResource( T::guid(), name ).detach();
+    return AutoRef<T>( GpuResource::castTo<T>(res) );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template<class T> inline GN::AutoRef<T>
+GN::gfx::GpuResourceDatabase::findOrCreateResource( const char * name )
+{
+    GpuResource * res = findOrCreateResource( T::guid(), name ).detach();
+    return AutoRef<T>( GpuResource::castTo<T>(res) );
 }

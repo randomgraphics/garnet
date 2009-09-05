@@ -112,7 +112,6 @@ void GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root )
 // -----------------------------------------------------------------------------
 GN::gfx::ModelResource::Impl::TextureItem::TextureItem()
     : mOwner( 0 )
-    , mHandle( 0 )
 {
 }
 
@@ -126,30 +125,23 @@ GN::gfx::ModelResource::Impl::TextureItem::~TextureItem()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::TextureItem::setHandle(
+void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     Impl            & owner,
     size_t            effectParameterIndex,
-    GpuResourceHandle newTextureHandle )
+    TextureResource * newTexture )
 {
-    if( mHandle == newTextureHandle ) return;
-
-    GpuResourceDatabase & db = owner.mOwner.database();
+    if( mResource.get() == newTexture ) return;
 
     // disconnect from old handle
-    if( mHandle )
-    {
-        GpuResource * r = db.getResource( mHandle );
-        r->sigResourceChanged.disconnect( this );
-    }
+    if( mResource ) mResource->sigResourceChanged.disconnect( this );
 
     Texture * tex;
-    if( newTextureHandle )
+    if( newTexture )
     {
         // connect to new handle
-        GpuResource * r = db.getResource( newTextureHandle );
-        r->sigResourceChanged.connect( this, &TextureItem::onTextureChange );
+        newTexture->sigResourceChanged.connect( this, &TextureItem::onTextureChange );
 
-        tex = ((TextureResource*)r)->getTexture();
+        tex = newTexture->getTexture();
     }
     else
     {
@@ -159,7 +151,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setHandle(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mHandle = newTextureHandle;
+    mResource.set( newTexture );
 
     updateContext( tex );
 }
@@ -169,11 +161,9 @@ void GN::gfx::ModelResource::Impl::TextureItem::setHandle(
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::TextureItem::onTextureChange( GpuResource & r )
 {
-    GN_ASSERT( r.handle() == mHandle );
+    GN_ASSERT( &r == (GpuResource*)mResource );
 
-    Texture * tex = r.castTo<TextureResource>().getTexture();
-
-    updateContext( tex );
+    updateContext( mResource->getTexture() );
 }
 
 //
@@ -183,7 +173,9 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 {
     GN_ASSERT( mOwner );
 
-    EffectResource * effect = (EffectResource*)mOwner->mOwner.database().getResource( mOwner->mEffect.handle );
+    GN_ASSERT( mOwner->mEffect.resource );
+
+    EffectResource * effect = mOwner->mEffect.resource;
 
     GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
 
@@ -212,7 +204,6 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 // -----------------------------------------------------------------------------
 GN::gfx::ModelResource::Impl::UniformItem::UniformItem()
     : mOwner( 0 )
-    , mHandle( 0 )
 {
 }
 
@@ -226,30 +217,23 @@ GN::gfx::ModelResource::Impl::UniformItem::~UniformItem()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
+void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     Impl            & owner,
     size_t            effectParameterIndex,
-    GpuResourceHandle newUniformHandle )
+    UniformResource * newUniform )
 {
-    if( mHandle == newUniformHandle ) return;
-
-    GpuResourceDatabase & db = owner.mOwner.database();
+    if( mResource.get() == newUniform ) return;
 
     // disconnect from old handle
-    if( mHandle )
-    {
-        GpuResource * r = db.getResource( mHandle );
-        r->sigResourceChanged.disconnect( this );
-    }
+    if( mResource ) mResource->sigResourceChanged.disconnect( this );
 
     Uniform * uniform;
-    if( newUniformHandle )
+    if( newUniform )
     {
         // connect to new handle
-        GpuResource * r = db.getResource( newUniformHandle );
-        r->sigResourceChanged.connect( this, &UniformItem::onUniformChange );
+        newUniform->sigResourceChanged.connect( this, &UniformItem::onUniformChange );
 
-        uniform = ((UniformResource*)r)->getUniform();
+        uniform = newUniform->getUniform();
     }
     else
     {
@@ -259,7 +243,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mHandle = newUniformHandle;
+    mResource.set( newUniform );
 
     updateContext( uniform );
 }
@@ -269,11 +253,9 @@ void GN::gfx::ModelResource::Impl::UniformItem::setHandle(
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( GpuResource & r )
 {
-    GN_ASSERT( r.handle() == mHandle );
+    GN_ASSERT( &r == (GpuResource*)mResource );
 
-    Uniform * uniform = r.castTo<UniformResource>().getUniform();
-
-    updateContext( uniform );
+    updateContext( mResource->getUniform() );
 }
 
 //
@@ -283,7 +265,9 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 {
     GN_ASSERT( mOwner );
 
-    EffectResource * effect = (EffectResource*)mOwner->mOwner.database().getResource( mOwner->mEffect.handle );
+    GN_ASSERT( mOwner->mEffect.resource );
+
+    EffectResource * effect = mOwner->mEffect.resource;
 
     GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
 
@@ -334,12 +318,18 @@ bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName, GpuResourceHandle handle )
+void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName, GpuResource * texture )
 {
-    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    if( texture && !database().validResource( TextureResource::guid(), texture ) )
+    {
+        GN_ERROR(sLogger)( "Invalid texture resource pointer.", modelName() );
+        return;
+    }
+
+    EffectResource * effect = mEffect.resource;
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
+        GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
         return;
     }
 
@@ -350,41 +340,47 @@ void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName,
         return;
     }
 
-    mTextures[parameterIndex].setHandle( *this, parameterIndex, handle );
+    mTextures[parameterIndex].setResource( *this, parameterIndex, GpuResource::castTo<TextureResource>(texture) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle
+AutoRef<TextureResource>
 GN::gfx::ModelResource::Impl::getTexture( const char * effectParameterName ) const
 {
-    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    EffectResource * effect = mEffect.resource;
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
-        return 0;
+        GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
+        return AutoRef<TextureResource>::NULLREF;
     }
 
     size_t parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
-        return 0;
+        return AutoRef<TextureResource>::NULLREF;
     }
 
-    return mTextures[parameterIndex].getHandle();
+    return mTextures[parameterIndex].getResource();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::setUniform( const char * effectParameterName, GpuResourceHandle handle )
+void GN::gfx::ModelResource::Impl::setUniform( const char * effectParameterName, GpuResource * uniform )
 {
-    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    if( uniform && !database().validResource( UniformResource::guid(), uniform ) )
+    {
+        GN_ERROR(sLogger)( "Invalid uniform resource pointer.", modelName() );
+        return;
+    }
+
+    EffectResource * effect = mEffect.resource;
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
+        GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
         return;
     }
 
@@ -395,54 +391,52 @@ void GN::gfx::ModelResource::Impl::setUniform( const char * effectParameterName,
         return;
     }
 
-    mUniforms[parameterIndex].setHandle( *this, parameterIndex, handle );
+    mUniforms[parameterIndex].setResource( *this, parameterIndex, GpuResource::castTo<UniformResource>(uniform) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle
+AutoRef<UniformResource>
 GN::gfx::ModelResource::Impl::getUniform( const char * effectParameterName ) const
 {
-    EffectResource * effect = GpuResource::castTo<EffectResource>( database().getResource( mEffect.handle ) );
+    EffectResource * effect = mEffect.resource;
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is referencing a invalid effect handle!", modelName() );
-        return 0;
+        GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
+        return AutoRef<UniformResource>::NULLREF;
     }
 
     size_t parameterIndex = effect->findUniform( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
-        return 0;
+        return AutoRef<UniformResource>::NULLREF;
     }
 
-    return mUniforms[parameterIndex].getHandle();
+    return mUniforms[parameterIndex].getResource();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::setMesh(
-    GpuResourceHandle          mesh,
+    GpuResource              * mesh,
     const MeshResourceSubset * subset )
 {
-    if( !database().isValidResourceHandle( mesh ) ||
-        MeshResource::guid() != database().getResourceType(mesh) )
+    if( mesh && !database().validResource( MeshResource::guid(), mesh ) )
     {
-        GN_ERROR(sLogger)( "invalid mesh handle" );
+        GN_ERROR(sLogger)( "invalid mesh resource pointer" );
         return;
     }
 
     // detach with the old mesh
-    if( mMesh.handle )
+    if( mMesh.resource )
     {
-        GpuResource & m = database().getResource( mMesh.handle )->castTo<MeshResource>();
-        m.sigResourceChanged.disconnect( this );
+        mMesh.resource->sigResourceChanged.disconnect( this );
     }
 
-    mMesh.handle = mesh;
+    mMesh.resource.set( GpuResource::castTo<MeshResource>(mesh) );
 
     if( subset )
     {
@@ -453,10 +447,13 @@ void GN::gfx::ModelResource::Impl::setMesh(
         mDesc.subset.clear();
     }
 
-    GpuResource & m = database().getResource( mMesh.handle )->castTo<MeshResource>();
-    m.sigResourceChanged.connect( this, &Impl::onMeshChanged );
+    // attach to the new mesh
+    if( mMesh.resource )
+    {
+        mMesh.resource->sigResourceChanged.connect( this, &Impl::onMeshChanged );
 
-    onMeshChanged( m );
+        onMeshChanged( *mMesh.resource );
+    }
 }
 
 //
@@ -464,8 +461,9 @@ void GN::gfx::ModelResource::Impl::setMesh(
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::draw() const
 {
-    MeshResource * mesh = GpuResource::castTo<MeshResource>( database().getResource( mMesh.handle ) );
+    MeshResource * mesh = mMesh.resource;
     if( NULL == mesh ) return;
+
     const MeshResourceDesc & meshdesc = mesh->getDesc();
 
     Gpu & g = database().gpu();
@@ -536,68 +534,63 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
     GpuResourceDatabase & db = database();
 
     // initialize effect handle
-    mEffect.handle = 0;
     if( !desc.effectResourceName.empty() )
     {
-        mEffect.handle = db.findResource( EffectResource::guid(), desc.effectResourceName );
-        if( 0 == mEffect.handle )
+        mEffect.resource = db.findResource<EffectResource>( desc.effectResourceName );
+        if( 0 == mEffect.resource )
         {
             GN_ERROR(sLogger)( "%s is not a valid effect name.", desc.effectResourceName.cptr() );
         }
     }
     else
     {
-        mEffect.handle = db.findOrCreateResource( EffectResource::guid(), strFormat("%s.effect", modelName()) );
-        db.getResource(mEffect.handle)->castTo<EffectResource>().reset( &desc.effectResourceDesc );
+        mEffect.resource = db.findOrCreateResource<EffectResource>( strFormat("%s.effect", modelName()) );
+        if( mEffect.resource ) mEffect.resource->reset( &desc.effectResourceDesc );
     }
 
     // fallback to dummy effect
-    if( 0 == mEffect.handle )
+    if( 0 == mEffect.resource )
     {
-        mEffect.handle = db.findResource( EffectResource::guid(), "dummy" );
-        if( 0 == mEffect.handle ) GN_ERROR(sLogger)( "No dummy effect defined in GPU resource database." );
+        mEffect.resource = db.findResource<EffectResource>( "dummy" );
+        if( 0 == mEffect.resource ) GN_ERROR(sLogger)( "No dummy effect defined in GPU resource database." );
     }
-    if( 0 == mEffect.handle )
+    if( 0 == mEffect.resource )
     {
         GN_ERROR(sLogger)( "Fail to initialize effect for model '%s'.", modelName() );
         return false;
     }
+    mEffect.resource->sigResourceChanged.connect( this, &Impl::onEffectChanged );
 
     // initialize mesh
     if( !desc.meshResourceName.empty() )
     {
-        mMesh.handle = db.findResource( MeshResource::guid(), desc.meshResourceName );
-        if( 0 == mMesh.handle )
+        mMesh.resource = db.findResource<MeshResource>( desc.meshResourceName );
+        if( 0 == mMesh.resource )
         {
             GN_ERROR(sLogger)( "%s is not a valid mesh name.", desc.meshResourceName.cptr() );
         }
     }
     else
     {
-        mMesh.handle = db.findOrCreateResource( MeshResource::guid(), strFormat("%s.model", modelName()) );
-        db.getResource( mMesh.handle )->castTo<MeshResource>().reset( &desc.meshResourceDesc );
+        mMesh.resource = db.findOrCreateResource<MeshResource>( strFormat("%s.model", modelName()) );
+        if( mMesh.resource ) mMesh.resource->reset( &desc.meshResourceDesc );
     }
-    if( 0 == mMesh.handle )
+    if( 0 == mMesh.resource )
     {
-        mMesh.handle = db.findResource( MeshResource::guid(), "dummy" );
-        if( 0 == mMesh.handle ) GN_ERROR(sLogger)( "No dummy mesh defined in GPU resource database." );
+        mMesh.resource = db.findResource<MeshResource>( "dummy" );
+        if( 0 == mMesh.resource ) GN_ERROR(sLogger)( "No dummy mesh defined in GPU resource database." );
     }
-    if( 0 == mMesh.handle )
+    if( 0 == mMesh.resource )
     {
         return false;
     }
-    GpuResource * mesh = db.getResource( mMesh.handle );
-    mesh->sigResourceChanged.connect( this, &Impl::onMeshChanged );
-
-    // attach to effect changing event
-    GpuResource * effect = db.getResource( mEffect.handle );
-    effect->sigResourceChanged.connect( this, &Impl::onEffectChanged );
+    mMesh.resource->sigResourceChanged.connect( this, &Impl::onMeshChanged );
 
     // store the descriptor (used in onEffectChanged())
     mDesc = desc;
 
     // trigger a effect changing event to initialize everthing else.
-    onEffectChanged( *effect );
+    onEffectChanged( *mEffect.resource );
 
     // success
     return true;
@@ -608,21 +601,17 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::clear()
 {
-    GpuResourceDatabase & db = database();
-
-    if( db.isValidResourceHandle( mMesh.handle ) )
+    if( mMesh.resource )
     {
-        GpuResource * mesh = db.getResource( mMesh.handle );
-        mesh->sigResourceChanged.disconnect( this );
+        mMesh.resource->sigResourceChanged.disconnect( this );
+        mMesh.resource.clear();
     }
-    mMesh.handle = 0;
 
-    if( db.isValidResourceHandle( mEffect.handle ) )
+    if( mEffect.resource )
     {
-        GpuResource * effect = db.getResource( mEffect.handle );
-        effect->sigResourceChanged.disconnect( this );
+        mEffect.resource->sigResourceChanged.disconnect( this );
+        mEffect.resource.clear();
     }
-    mEffect.handle = 0;
 
     mPasses.clear();
     mTextures.clear();
@@ -634,9 +623,11 @@ void GN::gfx::ModelResource::Impl::clear()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 {
+    GN_ASSERT( &r == (GpuResource*)mEffect.resource );
+
     GpuResourceDatabase & db = database();
 
-    EffectResource & effect = r.castTo<EffectResource>();
+    EffectResource & effect = GpuResource::castTo<EffectResource>(r);
 
     // initialize passes array
     mPasses.resize( effect.getNumPasses() );
@@ -651,11 +642,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
     }
 
     // reapply mesh
-    if( mMesh.handle )
-    {
-        GpuResource * mesh = db.getResource( mMesh.handle );
-        if( mesh ) onMeshChanged( *mesh );
-    }
+    if( mMesh.resource ) onMeshChanged( *mMesh.resource );
 
     // reapply textures
     mTextures.resize( effect.getNumTextures() );
@@ -667,18 +654,18 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 
         const ModelResourceDesc::ModelTextureDesc * td = sFindNamedPtr( mDesc.textures, tp.parameterName );
 
-        GpuResourceHandle texhandle;
+        AutoRef<TextureResource> texres;
         if( td )
         {
             if( !td->resourceName.empty() )
             {
-                texhandle = TextureResource::loadFromFile( db, td->resourceName );
+                texres = TextureResource::loadFromFile( db, td->resourceName );
             }
             else
             {
                 StrA texname = strFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
-                texhandle = db.findOrCreateResource( TextureResource::guid(), texname );
-                db.getResource( texhandle )->castTo<TextureResource>().reset( &td->desc );
+                texres = db.findOrCreateResource<TextureResource>( texname );
+                if( texres ) texres->reset( &td->desc );
             }
         }
         else
@@ -686,14 +673,12 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
             GN_WARN(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
                 tp.parameterName.cptr(),
-                db.getResourceName( effect.handle() ),
+                effect.name(),
                 modelName() );
-
-            texhandle = 0;
         }
 
-        t.setHandle( *this, i, 0 );
-        t.setHandle( *this, i, texhandle );
+        t.setResource( *this, i, NULL );
+        t.setResource( *this, i, texres );
     }
 
     // reapply uniforms
@@ -706,13 +691,13 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 
         const ModelResourceDesc::ModelUniformDesc * ud = sFindNamedPtr( mDesc.uniforms, up.parameterName );
 
-        GpuResourceHandle uniformhandle;
+        AutoRef<UniformResource> unires;
         if( ud )
         {
             if( !ud->resourceName.empty() )
             {
-                uniformhandle = db.findResource( UniformResource::guid(), ud->resourceName );
-                if( 0 == uniformhandle )
+                unires = db.findResource<UniformResource>( ud->resourceName );
+                if( !unires )
                 {
                     GN_ERROR(sLogger)( "Invalid uniform resource name '%s' in model '%s'.",
                         ud->resourceName.cptr(),
@@ -733,8 +718,8 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
                     initialValue = NULL;
                 }
 
-                uniformhandle = db.findOrCreateResource( UniformResource::guid(), uniname );
-                db.getResource(uniformhandle)->castTo<UniformResource>().reset( ud->size, initialValue );
+                unires = db.findOrCreateResource<UniformResource>( uniname );
+                if( unires ) unires->reset( ud->size, initialValue );
             }
         }
         else
@@ -742,14 +727,12 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
             GN_WARN(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
                 up.parameterName.cptr(),
-                db.getResourceName( effect.handle() ),
+                effect.name(),
                 modelName() );
-
-            uniformhandle = 0;
         }
 
-        u.setHandle( *this, i, 0 );
-        u.setHandle( *this, i, uniformhandle );
+        u.setResource( *this, i, NULL );
+        u.setResource( *this, i, unires );
     }
 }
 
@@ -758,7 +741,9 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onMeshChanged( GpuResource & r )
 {
-    MeshResource & mesh = r.castTo<MeshResource>( r );
+    GN_ASSERT( &r == (GpuResource*)mMesh.resource );
+
+    MeshResource & mesh = GpuResource::castTo<MeshResource>( r );
 
     const MeshResourceDesc & meshdesc = mesh.getDesc();
 
@@ -782,23 +767,17 @@ void GN::gfx::ModelResource::Impl::onMeshChanged( GpuResource & r )
 
 class ModelResourceInternal : public ModelResource
 {
-    ModelResourceInternal( GpuResourceDatabase & db, GpuResourceHandle handle )
-        : ModelResource( db, handle )
+    ModelResourceInternal( GpuResourceDatabase & db )
+        : ModelResource( db )
     {
     }
 
 public:
 
     static GpuResource *
-    sCreateInstance( GpuResourceDatabase & db,
-                     GpuResourceHandle     handle )
+    sCreateInstance( GpuResourceDatabase & db )
     {
-        return new ModelResourceInternal( db, handle );
-    }
-
-    static void sDeleteInstance( GpuResource * p )
-    {
-        delete GpuResource::castTo<ModelResourceInternal>( p );
+        return new ModelResourceInternal( db );
     }
 };
 
@@ -809,7 +788,7 @@ bool GN::gfx::registerModelResourceFactory( GpuResourceDatabase & db )
 {
     if( db.hasResourceFactory( ModelResource::guid() ) ) return true;
 
-    GpuResourceFactory factory = { &ModelResourceInternal::sCreateInstance, &ModelResourceInternal::sDeleteInstance };
+    GpuResourceFactory factory = { &ModelResourceInternal::sCreateInstance };
 
     return db.registerResourceFactory( ModelResource::guid(), "Model Resource", factory );
 }
@@ -817,8 +796,8 @@ bool GN::gfx::registerModelResourceFactory( GpuResourceDatabase & db )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ModelResource::ModelResource( GpuResourceDatabase & db, GpuResourceHandle h )
-    : GpuResource( db, h ), mImpl(NULL)
+GN::gfx::ModelResource::ModelResource( GpuResourceDatabase & db )
+    : GpuResource( db ), mImpl(NULL)
 {
     mImpl = new Impl(*this);
 }
@@ -843,38 +822,35 @@ const Guid & GN::gfx::ModelResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::ModelResource::loadFromFile(
+AutoRef<ModelResource>
+GN::gfx::ModelResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
-    GpuResourceHandle handle = db.findResource( guid(), filename );
-    if( handle ) return handle;
+    AutoRef<ModelResource> m( db.findResource<ModelResource>( filename ) );
+    if( m ) return m;
 
     ModelResourceDesc desc;
     desc.clear();
     //if( !loadFromXmlFile( desc, filename ) ) return 0;
 
-    GpuResourceHandle h = db.createResource( ModelResource::guid(), abspath );
-    if( 0 == h ) return 0;
+    m = db.createResource<ModelResource>( abspath );
+    if( m ) m->reset( &desc );
 
-    ModelResource & m = db.getResource(h)->castTo<ModelResource>();
-
-    m.reset( &desc );
-
-    return h;
+    return m;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool              GN::gfx::ModelResource::reset( const ModelResourceDesc * desc ) { return mImpl->reset( desc ); }
-void              GN::gfx::ModelResource::setTexture( const char * effectParameterName, GpuResourceHandle handle ) { return mImpl->setTexture( effectParameterName, handle ); }
-GpuResourceHandle GN::gfx::ModelResource::getTexture( const char * effectParameterName ) const { return mImpl->getTexture( effectParameterName ); }
-void              GN::gfx::ModelResource::setUniform( const char * effectParameterName, GpuResourceHandle handle ) { return mImpl->setUniform( effectParameterName, handle ); }
-GpuResourceHandle GN::gfx::ModelResource::getUniform( const char * effectParameterName ) const { return mImpl->getUniform( effectParameterName ); }
-void              GN::gfx::ModelResource::setMesh( GpuResourceHandle mesh, const MeshResourceSubset * subset ) { mImpl->setMesh( mesh, subset ); }
+bool                        GN::gfx::ModelResource::reset( const ModelResourceDesc * desc ) { return mImpl->reset( desc ); }
+void                        GN::gfx::ModelResource::setTexture( const char * effectParameterName, GpuResource * texture ) { return mImpl->setTexture( effectParameterName, texture ); }
+AutoRef<TextureResource>    GN::gfx::ModelResource::getTexture( const char * effectParameterName ) const { return mImpl->getTexture( effectParameterName ); }
+void                        GN::gfx::ModelResource::setUniform( const char * effectParameterName, GpuResource * uniform ) { return mImpl->setUniform( effectParameterName, uniform ); }
+AutoRef<UniformResource>    GN::gfx::ModelResource::getUniform( const char * effectParameterName ) const { return mImpl->getUniform( effectParameterName ); }
+void                        GN::gfx::ModelResource::setMesh( GpuResource * mesh, const MeshResourceSubset * subset ) { mImpl->setMesh( mesh, subset ); }
 //GpuResourceHandle GN::gfx::ModelResource::getMesh( MeshResourceSubset * subset ) const;
-void              GN::gfx::ModelResource::draw() const { mImpl->draw(); }
+void                        GN::gfx::ModelResource::draw() const { mImpl->draw(); }

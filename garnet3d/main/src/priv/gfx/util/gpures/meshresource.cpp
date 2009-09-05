@@ -178,23 +178,16 @@ void GN::gfx::MeshResource::Impl::clear()
 // -----------------------------------------------------------------------------
 class MeshResourceInternal : public MeshResource
 {
-    MeshResourceInternal( GpuResourceDatabase & db, GpuResourceHandle handle )
-        : MeshResource( db, handle )
+    MeshResourceInternal( GpuResourceDatabase & db ) : MeshResource( db )
     {
     }
 
 public:
 
     static GpuResource *
-    sCreateInstance( GpuResourceDatabase & db,
-                     GpuResourceHandle     handle )
+    sCreateInstance( GpuResourceDatabase & db )
     {
-        return new MeshResourceInternal( db, handle );
-    }
-
-    static void sDeleteInstance( GpuResource * p )
-    {
-        delete GpuResource::castTo<MeshResourceInternal>( p );
+        return new MeshResourceInternal( db );
     }
 };
 
@@ -205,7 +198,7 @@ bool GN::gfx::registerMeshResourceFactory( GpuResourceDatabase & db )
 {
     if( db.hasResourceFactory( MeshResource::guid() ) ) return true;
 
-    GpuResourceFactory factory = { &MeshResourceInternal::sCreateInstance, &MeshResourceInternal::sDeleteInstance };
+    GpuResourceFactory factory = { &MeshResourceInternal::sCreateInstance };
 
     return db.registerResourceFactory( MeshResource::guid(), "Mesh Resource", factory );
 }
@@ -217,8 +210,8 @@ bool GN::gfx::registerMeshResourceFactory( GpuResourceDatabase & db )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::MeshResource::MeshResource( GpuResourceDatabase & db, GpuResourceHandle h )
-    : GpuResource( db, h )
+GN::gfx::MeshResource::MeshResource( GpuResourceDatabase & db )
+    : GpuResource( db )
     , mImpl(NULL)
 {
     mImpl = new Impl(*this);
@@ -244,7 +237,8 @@ const Guid & GN::gfx::MeshResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::MeshResource::loadFromFile(
+AutoRef<MeshResource>
+GN::gfx::MeshResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -252,7 +246,7 @@ GpuResourceHandle GN::gfx::MeshResource::loadFromFile(
     GN_UNUSED_PARAM( filename );
     GN_UNIMPL();
 
-    return NULL;
+    return AutoRef<MeshResource>::NULLREF;
 }
 
 //

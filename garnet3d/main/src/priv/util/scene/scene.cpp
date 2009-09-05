@@ -129,23 +129,24 @@ GN::scene::GeometryNode::~GeometryNode()
 ///
 /// -----------------------------------------------------------------------------
 void
-GN::scene::GeometryNode::addModel( gfx::GpuResourceHandle model )
+GN::scene::GeometryNode::addModel( gfx::GpuResource * model )
 {
     Scene & s = getScene();
 
     GpuResourceDatabase & db = s.database();
 
-    ModelResource * m = GpuResource::castTo<ModelResource>( db.getResource( model ) );
-    if( NULL == m )
+    if( !db.validResource( ModelResource::guid(), model ) )
     {
-        GN_ERROR(sLogger)( "Invalid model handle." );
+        GN_ERROR(sLogger)( "Invalid model resource pointer." );
         return;
     }
+
+    ModelResource * m = GpuResource::castTo<ModelResource>( model );
 
     AutoObjPtr<GeometryBlock> b( new GeometryBlock );
 
     // make a copy of the input effect
-    b->model = model;
+    b->model.set( m );
 
     // get list of standard parameters
     Scene::UniformCollection & globalUniforms = s.globalUniforms;
@@ -155,9 +156,9 @@ GN::scene::GeometryNode::addModel( gfx::GpuResourceHandle model )
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        GpuResourceHandle uniformhandle = m->getUniform( d.name );
+        AutoRef<UniformResource> unires = m->getUniform( d.name );
 
-        if( uniformhandle )
+        if( unires )
         {
             AutoRef<Uniform> u;
             if( !d.global )
@@ -174,7 +175,7 @@ GN::scene::GeometryNode::addModel( gfx::GpuResourceHandle model )
             }
             GN_ASSERT( u );
 
-            db.getResource(uniformhandle)->castTo<UniformResource>().setUniform( u );
+            unires->setUniform( u );
         }
     }
 
@@ -258,9 +259,7 @@ void GN::scene::GeometryNode::draw()
     {
         const GeometryBlock * b = mBlocks[i];
 
-        ModelResource * m = GpuResource::castTo<ModelResource>( s.database().getResource(b->model) );
-
-        if( m ) m->draw();
+        if( b->model ) b->model->draw();
     }
 }
 
