@@ -34,13 +34,15 @@ namespace GN { namespace gfx
 
         AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
 
-        void                        setTexture( const char * effectParameterName, GpuResource * );
+        bool                        setEffect( GpuResource * resource );
+
+        bool                        setTexture( const char * effectParameterName, GpuResource * );
         AutoRef<TextureResource>    getTexture( const char * effectParameterName ) const;
 
-        void                        setUniform( const char * effectParameterName, GpuResource * );
+        bool                        setUniform( const char * effectParameterName, GpuResource * );
         AutoRef<UniformResource>    getUniform( const char * effectParameterName ) const;
 
-        void                        setMesh( GpuResource * mesh, const MeshResourceSubset * subset );
+        bool                        setMesh( GpuResource * mesh, const MeshResourceSubset * subset );
 
         void                        draw() const;
 
@@ -71,7 +73,7 @@ namespace GN { namespace gfx
 
         private:
 
-            void onTextureChange( GpuResource & r );
+            void onTextureChange( TextureResource & r );
 
             void updateContext( Texture * );
         };
@@ -98,7 +100,7 @@ namespace GN { namespace gfx
 
         private:
 
-            void onUniformChange( GpuResource & r );
+            void onUniformChange( UniformResource & r );
 
             void updateContext( Uniform * );
         };
@@ -117,6 +119,7 @@ namespace GN { namespace gfx
         struct MeshItem
         {
             AutoRef<MeshResource> resource;
+            MeshResourceSubset    subset;
         };
 
         ///
@@ -134,7 +137,6 @@ namespace GN { namespace gfx
     private:
 
         ModelResource             & mOwner;
-        ModelResourceDesc           mDesc;
         EffectItem                  mEffect;
         MeshItem                    mMesh;
         DynaArray<RenderPass>       mPasses;
@@ -154,8 +156,8 @@ namespace GN { namespace gfx
 
         void copyFrom( const Impl & other );
 
-        void onEffectChanged( GpuResource & );
-        void onMeshChanged( GpuResource & );
+        void onEffectChanged( EffectResource & );
+        void onMeshChanged( MeshResource & );
     };
 
     ///

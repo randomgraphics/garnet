@@ -55,7 +55,7 @@ void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
 
     mUniform = newUniform;
 
-    sigResourceChanged(*this);
+    sigUniformChanged(*this);
 }
 
 // *****************************************************************************
