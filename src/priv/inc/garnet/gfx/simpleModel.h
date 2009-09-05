@@ -36,7 +36,6 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mModel = NULL;
         }
         //@}
 
@@ -57,10 +56,10 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & mDatabase;
-        ModelResource       * mModel;
-        UniformResource     * mMatrixPvw;
-        UniformResource     * mColor;
+        GpuResourceDatabase    & mDatabase;
+        AutoRef<ModelResource>   mModel;
+        AutoRef<UniformResource> mMatrixPvw;
+        AutoRef<UniformResource> mColor;
 
         // ********************************
         // private functions
@@ -99,7 +98,6 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mModel = NULL;
         }
         //@}
 
@@ -123,16 +121,16 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & mDatabase;
-        ModelResource       * mModel;
-        AutoRef<Texture>      mDefaultTexture;
-        UniformResource     * mMatrixPvw;
-        UniformResource     * mMatrixWorld;
-        UniformResource     * mMatrixWorldIT;
-        UniformResource     * mLightPos;
-        UniformResource     * mLightColor;
-        UniformResource     * mAlbedoColor;
-        TextureResource     * mAlbedoTexture;
+        GpuResourceDatabase    & mDatabase;
+        AutoRef<ModelResource>   mModel;
+        AutoRef<Texture>         mDefaultTexture;
+        AutoRef<UniformResource> mMatrixPvw;
+        AutoRef<UniformResource> mMatrixWorld;
+        AutoRef<UniformResource> mMatrixWorldIT;
+        AutoRef<UniformResource> mLightPos;
+        AutoRef<UniformResource> mLightColor;
+        AutoRef<UniformResource> mAlbedoColor;
+        AutoRef<TextureResource> mAlbedoTexture;
 
         // ********************************
         // private functions
@@ -168,7 +166,6 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mModel = NULL;
         }
         //@}
 
@@ -193,18 +190,18 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase   mDatabase;
-        ModelResource       * mModel;
-        AutoRef<Texture>      mDefaultAlbedoTexture;
-        AutoRef<Texture>      mDefaultNormalTexture;
-        UniformResource     * mMatrixPvw;
-        UniformResource     * mMatrixWorld;
-        UniformResource     * mMatrixWorldIT;
-        UniformResource     * mLightPos;
-        UniformResource     * mLightColor;
-        UniformResource     * mAlbedoColor;
-        TextureResource     * mAlbedoTexture;
-        TextureResource     * mNormalTexture;
+        GpuResourceDatabase    & mDatabase;
+        AutoRef<ModelResource>   mModel;
+        AutoRef<Texture>         mDefaultAlbedoTexture;
+        AutoRef<Texture>         mDefaultNormalTexture;
+        AutoRef<UniformResource> mMatrixPvw;
+        AutoRef<UniformResource> mMatrixWorld;
+        AutoRef<UniformResource> mMatrixWorldIT;
+        AutoRef<UniformResource> mLightPos;
+        AutoRef<UniformResource> mLightColor;
+        AutoRef<UniformResource> mAlbedoColor;
+        AutoRef<TextureResource> mAlbedoTexture;
+        AutoRef<TextureResource> mNormalTexture;
 
         // ********************************
         // private functions

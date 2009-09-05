@@ -79,7 +79,7 @@ namespace GN { namespace gfx
     /// This class manages GPU resource creation, deletion, as well as
     /// mapping betwen resource name and resource handle.
     ///
-    class GpuResourceDatabase
+    class GpuResourceDatabase : public NoCopy
     {
         friend class GpuResource;
 

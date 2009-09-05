@@ -5,9 +5,9 @@ sources = [
 	'gpuresdb.cpp',
 	'meshresource.cpp',
 	'modelresource.cpp',
-    #'simpleWireframeModel.cpp',
-	#'simpleDiffuseModel.cpp',
-	#'simpleNormalMapModel.cpp',
+    'simpleWireframeModel.cpp',
+	'simpleDiffuseModel.cpp',
+	'simpleNormalMapModel.cpp',
 	'textureresource.cpp',
 	'uniformresource.cpp',
 ]

@@ -80,16 +80,11 @@ bool GN::gfx::SimpleWireframeModel::init()
     ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].shader = "hlsl";
 
-    GpuResourceHandle h = mDatabase.createResource( ModelResource::guid(), NULL );
-    if( 0 == h ) return failure();
-
-    mModel = GpuResource::castTo<ModelResource>( mDatabase.getResource(h) );
-    if( NULL == mModel || !mModel->reset(&md) ) return failure();
+    mModel = mDatabase.createResource<ModelResource>( NULL );
+    if( 0 == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    h = mModel->getUniform( name ); \
-    GN_ASSERT( h ); \
-    x = GpuResource::castTo<UniformResource>( mDatabase.getResource(h) ); \
+    x = mModel->getUniform( name ); \
     GN_ASSERT( x ); \
     x->getUniform()->update( defval );
 
@@ -110,11 +105,9 @@ void GN::gfx::SimpleWireframeModel::quit()
 {
     GN_GUARD;
 
-    if( mModel )
-    {
-        mDatabase.deleteResource( mModel->handle() );
-        mModel = NULL;
-    }
+    mModel.clear();
+    mMatrixPvw.clear();
+    mColor.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
