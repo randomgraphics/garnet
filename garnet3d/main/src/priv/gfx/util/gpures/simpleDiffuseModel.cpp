@@ -151,15 +151,11 @@ bool GN::gfx::SimpleDiffuseModel::init()
     ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].shader = "hlsl";
 
-    GpuResourceHandle h = mDatabase.createResource( ModelResource::guid(), NULL );
-    if( 0 == h ) return failure();
-    mModel = GpuResource::castTo<ModelResource>( mDatabase.getResource(h) );
-    if( !mModel || !mModel->reset( &md ) ) return failure();
+    mModel = mDatabase.createResource<ModelResource>( NULL );
+    if( 0 == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    h = mModel->getUniform( name ); \
-    GN_ASSERT( h ); \
-    x = GpuResource::castTo<UniformResource>( mDatabase.getResource(h) ); \
+    x = mModel->getUniform( name ); \
     GN_ASSERT( x ); \
     x->getUniform()->update( defval );
 
@@ -172,7 +168,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     INIT_UNIFORM( mAlbedoColor   , "ALBEDO_COLOR"    , Vector4f(1,1,1,1) );
 
     // setup default texture
-    mAlbedoTexture = GpuResource::castTo<TextureResource>( mDatabase.getResource( mModel->getTexture("ALBEDO_TEXTURE") ) );
+    mAlbedoTexture = mModel->getTexture("ALBEDO_TEXTURE");
     mAlbedoTexture->setTexture( mDefaultTexture );
 
     // success
@@ -188,13 +184,15 @@ void GN::gfx::SimpleDiffuseModel::quit()
 {
     GN_GUARD;
 
+    mModel.clear();
     mDefaultTexture.clear();
-
-    if( mModel )
-    {
-        mDatabase.deleteResource( mModel->handle() );
-        mModel = 0;
-    }
+    mMatrixPvw.clear();
+    mMatrixWorld.clear();
+    mMatrixWorldIT.clear();
+    mLightPos.clear();
+    mLightColor.clear();
+    mAlbedoColor.clear();
+    mAlbedoTexture.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

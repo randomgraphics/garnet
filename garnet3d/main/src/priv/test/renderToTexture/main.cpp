@@ -86,8 +86,8 @@ public:
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        GpuResourceHandle boxmesh = db.createResource( MeshResource::guid(), NULL );
-        if( !db.getResource(boxmesh)->castTo<MeshResource>().reset( &md ) ) return false;
+        AutoRef<MeshResource> boxmesh = db.createResource<MeshResource>( NULL );
+        if( !boxmesh->reset( &md ) ) return false;
 
         // setup transformation matrices
         view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
