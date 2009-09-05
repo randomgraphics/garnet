@@ -7,7 +7,7 @@ using namespace GN::win;
 using namespace GN::util;
 
 GpuResourceDatabase * db = NULL;
-GpuResourceHandle  model = 0;
+ModelResource * model = 0;
 AutoRef<Texture> tex[2];
 
 static const char * hlslvscode =
@@ -115,11 +115,10 @@ bool init( Gpu & g )
     md.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
     md.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
-    model = db->createResource( ModelResource::guid(), "m0" );
+    model = db->createResource<ModelResource>( "m0" ).detach();
     if( 0 == model ) return false;
 
-    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
-    if( !m->reset( &md ) ) return false;
+    if( !model->reset( &md ) ) return false;
 
     tex[0].attach( loadTextureFromFile( db->gpu(), "media::/texture/rabit.png" ) );
     tex[1].attach( loadTextureFromFile( db->gpu(), "media::/texture/earth.jpg" ) );
@@ -132,6 +131,7 @@ void quit( Gpu & )
 {
     tex[0].clear();
     tex[1].clear();
+    safeDecref( model );
     safeDelete( db );
 }
 
@@ -144,26 +144,17 @@ void update( Input & in )
         static int i = 0;
         i = ( i + 1 ) % 2;
 
-        GpuResourceHandle t = db->findResource( TextureResource::guid(), "media::/texture/rabit.png" );
-        if( t )
-        {
-            db->getResource(t)->castTo<TextureResource>().setTexture( tex[i] );
-        }
+        AutoRef<TextureResource> t( db->findResource<TextureResource>( "media::/texture/rabit.png" ) );
+        if( t ) t->setTexture( tex[i] );
     }
 }
 
 void draw( Gpu & )
 {
-    ModelResource * m = GpuResource::castTo<ModelResource>( db->getResource(model) );
+    AutoRef<UniformResource> u( model->getUniform( "MATRIX_PVW" ) );
+    if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
 
-    UniformResource * u = GpuResource::castTo<UniformResource>( db->getResource( m->getUniform( "MATRIX_PVW" ) ) );
-
-    if( u )
-    {
-        u->getUniform()->update( Matrix44f::sIdentity() );
-    }
-
-    m->draw();
+    model->draw();
 }
 
 int run( Gpu & gpu )

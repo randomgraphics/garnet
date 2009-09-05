@@ -10,11 +10,11 @@
 
 namespace GN { namespace gfx
 {
-    class GpuResourceHandleStruct
+    class GpuResourceHandle
     {
         union
         {
-            UInt32 mExternalHandle;
+            UInt32 mU32;
             struct
             {
                 UInt32 mIndexPlusOne   : 8;
@@ -28,22 +28,46 @@ namespace GN { namespace gfx
 
         enum { MAX_TYPES = 2^8-1 };
 
-        explicit GpuResourceHandleStruct( UInt32 externalHandle )
-            : mExternalHandle( externalHandle )
+        explicit GpuResourceHandle( UInt32 u32 )
+            : mU32( u32 )
         {
         }
 
-        GpuResourceHandleStruct( UInt32 managerIndex, UInt32 internalHandle )
+        GpuResourceHandle( UInt32 managerIndex, UInt32 internalHandle )
         {
             mIndexPlusOne = managerIndex + 1;
             mInternalHandle = internalHandle;
         }
 
-        UInt32 externalHandle() const { return mExternalHandle; }
-        UInt32 managerIndex() const { return mIndexPlusOne - 1; }
+        void  set( UInt32 managerIndex, UInt32 internalHandle )
+        {
+            mIndexPlusOne = managerIndex + 1;
+            mInternalHandle = internalHandle;
+        }
+
+        UInt32 u32()            const { return mU32; }
+        UInt32 managerIndex()   const { return mIndexPlusOne - 1; }
         UInt32 internalHandle() const { return mInternalHandle; }
 
         //@}
+    };
+
+    ///
+    /// GPU resource implementation class
+    ///
+    class GpuResource::Impl
+    {
+    public:
+
+        GpuResourceDatabase::Impl & database;
+        GpuResource               & resource;
+        GpuResourceHandle           handle;
+
+        /// constructor
+        Impl( GpuResourceDatabase::Impl & db, GpuResource & res );
+
+        /// destructor
+        ~Impl();
     };
 
     ///
@@ -51,18 +75,15 @@ namespace GN { namespace gfx
     ///
     class GpuResourceDatabase::Impl
     {
+        friend class GpuResource::Impl;
+
         // *********************************************************************
         // private types
         // *********************************************************************
 
     private:
 
-        struct ResourceItem
-        {
-            GpuResource * resource;
-        };
-
-        typedef NamedHandleManager<ResourceItem,UInt32> NamedResourceMapper;
+        typedef NamedHandleManager<GpuResource::Impl*,UInt32> ResourceMap;
 
         struct ResourceManager
         {
@@ -70,10 +91,10 @@ namespace GN { namespace gfx
             StrA                desc;
             size_t              index; // index into manager array
             GpuResourceFactory  factory;
-            NamedResourceMapper resources;
+            ResourceMap         resources;
         };
 
-        typedef StackArray<ResourceManager, GpuResourceHandleStruct::MAX_TYPES> ManagerArray;
+        typedef StackArray<ResourceManager, GpuResourceHandle::MAX_TYPES> ManagerArray;
 
         // *********************************************************************
         // private data
@@ -108,21 +129,23 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        GpuResourceHandle    createResource( const Guid & type, const char * name );
-        void                 deleteResource( GpuResourceHandle );
-        void                 deleteAllResources();
-        bool                 isValidResourceHandle( GpuResourceHandle handle ) const { return NULL != getResourceItem( handle, true ); }
-        GpuResourceHandle    findResource( const Guid & type, const char * name ) const;
-        const char *         getResourceName( GpuResourceHandle ) const;
-        const Guid         & getResourceType( GpuResourceHandle ) const;
-        GpuResource        * getResource( GpuResourceHandle );
+        AutoRef<GpuResource> createResource( const Guid & type, const char * name );
+        AutoRef<GpuResource> findResource( const Guid & type, const char * name ) const;
+        bool                 validResource( const Guid & type, const GpuResource * resource ) const;
+        bool                 validResource( const GpuResource * resource ) const;
+        const char *         getResourceName( const GpuResource * ) const;
+        const Guid         & getResourceType( const GpuResource * ) const;
+        //@}
+
+        //@{
+        void                 onResourceDelete( GpuResourceHandle handle );
         //@}
 
     private:
 
-        const ResourceManager * getManager( const Guid & type ) const;
-        ResourceManager       * getManager( const Guid & type );
-        ResourceItem          * getResourceItem( GpuResourceHandle handle, bool silent = false ) const;
+        inline const ResourceManager * getManager( const Guid & type ) const;
+        inline ResourceManager       * getManager( const Guid & type );
+        inline GpuResource::Impl     * getResourceImpl( const GpuResource * resource ) const;
     };
 }}
 

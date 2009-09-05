@@ -601,23 +601,17 @@ size_t GN::gfx::EffectResource::Impl::findGpuProgram( const StrA & shaderName ) 
 
 class EffectResourceInternal : public EffectResource
 {
-    EffectResourceInternal( GpuResourceDatabase & db, GpuResourceHandle handle )
-        : EffectResource( db, handle )
+    EffectResourceInternal( GpuResourceDatabase & db )
+        : EffectResource( db )
     {
     }
 
 public:
 
     static GpuResource *
-    sCreateInstance( GpuResourceDatabase & db,
-                     GpuResourceHandle     handle )
+    sCreateInstance( GpuResourceDatabase & db )
     {
-        return new EffectResourceInternal( db, handle );
-    }
-
-    static void sDeleteInstance( GpuResource * p )
-    {
-        delete GpuResource::castTo<EffectResourceInternal>( p );
+        return new EffectResourceInternal( db );
     }
 };
 
@@ -628,7 +622,7 @@ bool GN::gfx::registerEffectResourceFactory( GpuResourceDatabase & db )
 {
     if( db.hasResourceFactory( EffectResource::guid() ) ) return true;
 
-    GpuResourceFactory factory = { &EffectResourceInternal::sCreateInstance, &EffectResourceInternal::sDeleteInstance };
+    GpuResourceFactory factory = { &EffectResourceInternal::sCreateInstance };
 
     return db.registerResourceFactory( EffectResource::guid(), "Effect Resource", factory );
 }
@@ -640,8 +634,8 @@ bool GN::gfx::registerEffectResourceFactory( GpuResourceDatabase & db )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::EffectResource::EffectResource( GpuResourceDatabase & db, GpuResourceHandle h )
-    : GpuResource( db, h )
+GN::gfx::EffectResource::EffectResource( GpuResourceDatabase & db )
+    : GpuResource( db )
     , mImpl(NULL)
 {
     mImpl = new Impl(*this);
@@ -667,7 +661,7 @@ const Guid & GN::gfx::EffectResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
+AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -675,7 +669,7 @@ GpuResourceHandle GN::gfx::EffectResource::loadFromFile(
     GN_UNUSED_PARAM( filename );
     GN_UNIMPL();
 
-    return NULL;
+    return AutoRef<EffectResource>::NULLREF;
 }
 
 //

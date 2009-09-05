@@ -138,7 +138,7 @@ namespace GN
         {
             struct GeometryBlock
             {
-                gfx::GpuResourceHandle model;
+                AutoRef<gfx::ModelResource> model;
             };
 
             struct StandardUniform
@@ -160,7 +160,7 @@ namespace GN
 
             /// Add new model to the node.
             /// Note that caller is free to destroy input parameters after the function returns.
-            virtual void addModel( gfx::GpuResourceHandle model );
+            virtual void addModel( gfx::GpuResource * model );
 
             /// get number of geometry blocks
             virtual size_t getNumGeometryBlocks() const { return mBlocks.size(); }

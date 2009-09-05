@@ -26,7 +26,8 @@ const Guid & GN::gfx::TextureResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
+AutoRef<TextureResource>
+GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -35,8 +36,8 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     filename = abspath;
 
     // Reuse existing resource, if possible
-    GpuResourceHandle handle = db.findResource( guid(), filename );
-    if( handle ) return handle;
+    AutoRef<TextureResource> texres( db.findResource<TextureResource>( filename ) );
+    if( texres ) return texres;
 
     // load new texture from file
     GN_INFO(sLogger)( "Load texture from file: %s", filename );
@@ -44,13 +45,13 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
     // load image
     ImageDesc id;
     std::vector<UInt8> texels;
-    if( !loadImageFromFile( id, texels, filename ) ) return 0;
+    if( !loadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
     TextureDesc td;
     td.fromImageDesc( id );
     AutoRef<Texture> tex( db.gpu().createTexture( td ) );
-    if( !tex ) return 0;
+    if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
     for( size_t f = 0; f < td.faces; ++f )
@@ -61,15 +62,15 @@ GpuResourceHandle GN::gfx::TextureResource::loadFromFile(
         tex->updateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
     }
 
-    // create texture resource
-    handle = db.createResource( TextureResource::guid(), filename );
-    if( 0 == handle ) return 0;
+    // create new texture resource
+    texres = db.createResource<TextureResource>( filename );
+    if( 0 == texres ) return AutoRef<TextureResource>::NULLREF;
 
     // attach the texture to the resource
-    db.getResource( handle )->castTo<TextureResource>().setTexture( tex );
+    texres->setTexture( tex );
 
     // success
-    return handle;
+    return texres;
 }
 
 //
@@ -111,35 +112,26 @@ class TextureResourceInternal : public TextureResource
     //
     //
     // -----------------------------------------------------------------------------
-    TextureResourceInternal( GpuResourceDatabase & db, GpuResourceHandle h )
-        : TextureResource( db, h )
+    TextureResourceInternal( GpuResourceDatabase & db )
+        : TextureResource( db )
     {
     }
 
     //
     //
     // -----------------------------------------------------------------------------
-    ~TextureResourceInternal()
+    virtual ~TextureResourceInternal()
     {
     }
 
     //
     //
     // -----------------------------------------------------------------------------
-    static GpuResource * sCreateInstance(
-        GpuResourceDatabase & db,
-        GpuResourceHandle     handle )
+    static GpuResource * sCreateInstance( GpuResourceDatabase & db )
     {
-        return new TextureResourceInternal( db, handle );
+        return new TextureResourceInternal( db );
     }
 
-    //
-    //
-    // -----------------------------------------------------------------------------
-    static void sDeleteInstance( GpuResource * p )
-    {
-        delete GpuResource::castTo<TextureResourceInternal>( p );
-    }
 
 public:
 
@@ -148,7 +140,7 @@ public:
     // -----------------------------------------------------------------------------
     static bool sRegisterFactory( GpuResourceDatabase & db )
     {
-        GpuResourceFactory factory = { &sCreateInstance, &sDeleteInstance };
+        GpuResourceFactory factory = { &sCreateInstance };
 
         if( db.hasResourceFactory( TextureResource::guid() ) ) return true;
 
