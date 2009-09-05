@@ -238,11 +238,9 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-
         bool                     reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
         void                     applyToContext( GpuContext & context ) const;
-
         //@}
 
     protected:
@@ -641,6 +639,8 @@ namespace GN { namespace gfx
 
         //@{
         bool                     reset( const ModelResourceDesc * desc );
+
+        AutoRef<ModelResource>   makeClone( const char * nameOfTheClone = NULL ) const;
 
         void                     setTexture( const char * effectParameterName, GpuResource * );
         AutoRef<TextureResource> getTexture( const char * effectParameterName ) const;

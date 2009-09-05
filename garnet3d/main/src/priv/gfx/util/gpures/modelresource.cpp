@@ -318,6 +318,21 @@ bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
+AutoRef<ModelResource>
+GN::gfx::ModelResource::Impl::makeClone( const char * nameOfTheClone ) const
+{
+    AutoRef<ModelResource> clone = database().createResource<ModelResource>( nameOfTheClone );
+
+    if( !clone ) return AutoRef<ModelResource>::NULLREF;
+
+    clone->mImpl->copyFrom( *this );
+
+    return clone;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::setTexture( const char * effectParameterName, GpuResource * texture )
 {
     if( texture && !database().validResource( TextureResource::guid(), texture ) )
@@ -621,6 +636,14 @@ void GN::gfx::ModelResource::Impl::clear()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::copyFrom( const Impl & )
+{
+    GN_UNIMPL();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onEffectChanged( GpuResource & r )
 {
     GN_ASSERT( &r == (GpuResource*)mEffect.resource );
@@ -847,6 +870,7 @@ GN::gfx::ModelResource::loadFromFile(
 //
 // -----------------------------------------------------------------------------
 bool                        GN::gfx::ModelResource::reset( const ModelResourceDesc * desc ) { return mImpl->reset( desc ); }
+AutoRef<ModelResource>      GN::gfx::ModelResource::makeClone( const char * nameOfTheClone ) const { return mImpl->makeClone( nameOfTheClone ); }
 void                        GN::gfx::ModelResource::setTexture( const char * effectParameterName, GpuResource * texture ) { return mImpl->setTexture( effectParameterName, texture ); }
 AutoRef<TextureResource>    GN::gfx::ModelResource::getTexture( const char * effectParameterName ) const { return mImpl->getTexture( effectParameterName ); }
 void                        GN::gfx::ModelResource::setUniform( const char * effectParameterName, GpuResource * uniform ) { return mImpl->setUniform( effectParameterName, uniform ); }

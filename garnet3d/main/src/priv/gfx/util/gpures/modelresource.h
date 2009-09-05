@@ -32,6 +32,8 @@ namespace GN { namespace gfx
 
         bool                        reset( const ModelResourceDesc * desc );
 
+        AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
+
         void                        setTexture( const char * effectParameterName, GpuResource * );
         AutoRef<TextureResource>    getTexture( const char * effectParameterName ) const;
 
@@ -149,6 +151,8 @@ namespace GN { namespace gfx
 
         bool init( const ModelResourceDesc & desc );
         void clear();
+
+        void copyFrom( const Impl & other );
 
         void onEffectChanged( GpuResource & );
         void onMeshChanged( GpuResource & );
