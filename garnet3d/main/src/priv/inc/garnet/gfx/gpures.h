@@ -26,14 +26,6 @@ namespace GN { namespace gfx
         //@}
 
         // *****************************
-        // public events
-        // *****************************
-    public:
-
-        /// This event is fired when the GPU resource is changed.
-        Signal1<void, GpuResource&> sigResourceChanged;
-
-        // *****************************
         // public methods
         // *****************************
     public:
@@ -141,6 +133,11 @@ namespace GN { namespace gfx
 
         //@}
 
+        /// events
+        //@{
+        Signal1<void, TextureResource&> sigTextureChanged;
+        //@}
+
         /// Texture resource properties
         //@{
         bool                     reset( const TextureDesc * desc );
@@ -173,6 +170,11 @@ namespace GN { namespace gfx
         /// return GUID of the uniform resource class
         static const Guid & guid();
 
+        //@}
+
+        /// events
+        //@{
+        Signal1<void, UniformResource&> sigUniformChanged;
         //@}
 
         //@{
@@ -235,6 +237,11 @@ namespace GN { namespace gfx
         //@{
         static const Guid          & guid();
         static AutoRef<MeshResource> loadFromFile( GpuResourceDatabase & db, const char * filename );
+        //@}
+
+        /// events
+        //@{
+        Signal1<void, MeshResource&> sigMeshChanged;
         //@}
 
         //@{
@@ -481,7 +488,7 @@ namespace GN { namespace gfx
 
         //@
 
-        /// Effect properties
+        /// public data types
         //@{
 
         struct BindingLocation
@@ -506,6 +513,16 @@ namespace GN { namespace gfx
         };
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
+
+        //@}
+
+        /// events
+        //@{
+        Signal1<void, EffectResource&> sigEffectChanged;
+        //@}
+
+        /// public properties
+        //@{
 
         bool                          reset( const EffectResourceDesc * desc );
 

@@ -224,13 +224,20 @@ bool GN::gfx::EffectResource::Impl::reset( const EffectResourceDesc * desc )
 {
     clear();
 
+    bool ok;
     if( desc && !init( *desc ) )
     {
         clear();
-        return false;
+        ok = false;
+    }
+    else
+    {
+        ok = true;
     }
 
-    return true;
+    mOwner.sigEffectChanged( mOwner );
+
+    return ok;
 }
 
 //

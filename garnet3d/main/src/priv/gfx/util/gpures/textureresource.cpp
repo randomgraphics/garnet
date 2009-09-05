@@ -100,7 +100,7 @@ void GN::gfx::TextureResource::setTexture( const AutoRef<Texture> & newTexture )
 
     mTexture = newTexture;
 
-    sigResourceChanged(*this);
+    sigTextureChanged(*this);
 }
 
 // *****************************************************************************

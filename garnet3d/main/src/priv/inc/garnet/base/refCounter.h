@@ -210,22 +210,6 @@ namespace GN
         ///
         /// 比较操作
         ///
-        friend inline bool operator == ( const X * lhs, const AutoRef & rhs ) throw()
-        {
-            return lhs == rhs.mPtr;
-        }
-
-        ///
-        /// 比较操作
-        ///
-        friend inline bool operator == ( const AutoRef & rhs, const X * lhs ) throw()
-        {
-            return lhs.mPtr == rhs;
-        }
-
-        ///
-        /// 比较操作
-        ///
         bool operator == ( const AutoRef & rhs ) const throw()
         {
             return mPtr == rhs.mPtr;

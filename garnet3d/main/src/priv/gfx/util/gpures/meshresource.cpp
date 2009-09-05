@@ -57,13 +57,20 @@ bool GN::gfx::MeshResource::Impl::reset( const MeshResourceDesc * desc )
 {
     clear();
 
+    bool ok;
     if( desc && !create( *desc ) )
     {
         clear();
-        return false;
+        ok = false;
+    }
+    else
+    {
+        ok = true;
     }
 
-    return true;
+    mOwner.sigMeshChanged( mOwner );
+
+    return ok;
 }
 
 //
