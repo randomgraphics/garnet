@@ -194,6 +194,55 @@ sCheckShaderUniforms(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::EffectResourceDesc::clear()
+{
+    textures.clear();
+    uniforms.clear();
+    shaders.clear();
+    techniques.clear();
+
+    GpuContext gc;
+    gc.clearToDefaultRenderStates();
+    memset( &rsdesc, 0, sizeof(rsdesc) );
+
+    // copy default render state values from GPU context
+    rsdesc.depthTestEnabled  = !!gc.rs.depthTestEnabled;
+    rsdesc.depthWriteEnabled = !!gc.rs.depthWriteEnabled;
+    rsdesc.depthFunc         = gc.rs.depthFunc;
+
+    rsdesc.stencilEnabled    = !!gc.rs.stencilEnabled;
+    rsdesc.stencilPassOp     = gc.rs.stencilPassOp;
+    rsdesc.stencilFailOp     = gc.rs.stencilFailOp;
+    rsdesc.stencilZFailOp    = gc.rs.stencilZFailOp;
+
+    rsdesc.blendEnabled      = !!gc.rs.blendEnabled;
+    rsdesc.blendSrc          = gc.rs.blendSrc;
+    rsdesc.blendDst          = gc.rs.blendDst;
+    rsdesc.blendOp           = gc.rs.blendOp;
+    rsdesc.blendAlphaSrc     = gc.rs.blendAlphaSrc;
+    rsdesc.blendAlphaDst     = gc.rs.blendAlphaDst;
+    rsdesc.blendAlphaOp      = gc.rs.blendAlphaOp;
+
+    rsdesc.fillMode          = gc.rs.fillMode;
+    rsdesc.cullMode          = gc.rs.cullMode;
+    rsdesc.frontFace         = gc.rs.frontFace;
+    rsdesc.msaaEnabled       = !!gc.rs.msaaEnabled;
+
+    rsdesc.blendFactors      = gc.rs.blendFactors;
+
+    // exept these:
+    //rsdesc.colorWriteMask    = gc.rs.colorWriteMask;
+    //rsdesc.viewport          = gc.rs.viewport;
+    //rsdesc.scissorRect       = gc.rs.scissorRect;
+
+
+
+
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::EffectResourceDesc::loadFromXmlNode(
     const XmlNode & root,
     const char    * basedir )
