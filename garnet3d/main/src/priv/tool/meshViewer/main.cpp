@@ -42,10 +42,10 @@ public:
 
     bool onPostInit()
     {
-        Gpu & gpu = getGpu();
+        GpuResourceDatabase & db = getGpuResourceDatabase();
 
         // create scene
-        rootScene.attach( createScene( gpu ) );
+        rootScene.attach( createScene( db ) );
         if( !rootScene ) return false;
 
         // load model

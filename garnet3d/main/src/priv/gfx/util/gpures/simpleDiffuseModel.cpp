@@ -155,7 +155,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     if( 0 == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    x = mModel->getUniform( name ); \
+    x = mModel->getUniformResource( name ); \
     GN_ASSERT( x ); \
     x->getUniform()->update( defval );
 
@@ -168,7 +168,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     INIT_UNIFORM( mAlbedoColor   , "ALBEDO_COLOR"    , Vector4f(1,1,1,1) );
 
     // setup default texture
-    mAlbedoTexture = mModel->getTexture("ALBEDO_TEXTURE");
+    mAlbedoTexture = mModel->getTextureResource("ALBEDO_TEXTURE");
     mAlbedoTexture->setTexture( mDefaultTexture );
 
     // success

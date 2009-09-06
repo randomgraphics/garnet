@@ -12,20 +12,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 // Local utilities
 // *****************************************************************************
 
-struct MeshContainer
-{
-    DynaArray<GpuMesh*> meshes;
-
-    ~MeshContainer()
-    {
-        for( size_t i = 0; i < meshes.size(); ++i )
-        {
-            delete meshes[i];
-        }
-    }
-};
-
-struct EffectType
+struct ModelType
 {
     enum ENUM
     {
@@ -37,10 +24,8 @@ struct EffectType
     };
 };
 
-static bool sHasSemantic( const GpuMesh & m, const char * binding, size_t index )
+static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t index )
 {
-    const VertexFormat & vf = m.getDesc().vtxfmt;
-
     for( size_t i = 0; i < vf.numElements; ++i )
     {
         if( 0 == strCmpI( vf.elements[i].binding, binding ) &&
@@ -53,59 +38,61 @@ static bool sHasSemantic( const GpuMesh & m, const char * binding, size_t index 
     return false;
 }
 
-static bool sHasPosition( const GpuMesh & m )
+static bool sHasPosition( const VertexFormat & vf )
 {
-    return sHasSemantic( m, "position", 0 )
-        || sHasSemantic( m, "pos", 0 );
+    return sHasSemantic( vf, "position", 0 )
+        || sHasSemantic( vf, "pos", 0 );
 }
 
-static bool sHasNormal( const GpuMesh & m )
+static bool sHasNormal( const VertexFormat & vf )
 {
-    return sHasSemantic( m, "normal", 0 );
+    return sHasSemantic( vf, "normal", 0 );
 }
 
-static bool sHasTex0( const GpuMesh & m )
+static bool sHasTex0( const VertexFormat & vf )
 {
-    return sHasSemantic( m, "texcoord", 0 );
+    return sHasSemantic( vf, "texcoord", 0 );
 }
 
-static bool sHasTangent( const GpuMesh & m )
+static bool sHasTangent( const VertexFormat & vf )
 {
-    return sHasSemantic( m, "tangent", 0 );
+    return sHasSemantic( vf, "tangent", 0 );
 }
 
 ///
 /// Determine the best effect that can show the mesh
 ///
-static EffectType::ENUM sDetermineBestEffect( const GpuMesh & m )
+static ModelType::ENUM sDetermineBestModel( const MeshResource & m )
 {
+    const VertexFormat & vf = m.getDesc().vtxfmt;
+
     // position is required
-    if( !sHasPosition( m ) )
+    if( !sHasPosition( vf ) )
     {
         GN_ERROR(sLogger)( "The mesh has no position, which is required by the mesh viewer." );
-        return EffectType::NONE;
+        return ModelType::NONE;
     }
 
-    if( !sHasNormal( m ) )
+    if( !sHasNormal( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no normal." );
-        return EffectType::WIREFRAME;
+        return ModelType::WIREFRAME;
     }
 
-    if( !sHasTex0( m ) )
+    if( !sHasTex0( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no texture coordinate." );
-        return EffectType::WIREFRAME;
+        return ModelType::WIREFRAME;
     }
 
     // use normal map, if the mesh has both normal and tangent.
-    if( sHasTangent( m ) )
+    if( sHasTangent( vf ) )
     {
-        return EffectType::NORMAL_MAP;
+        return ModelType::NORMAL_MAP;
     }
     else
     {
-        return EffectType::DIFFUSE;
+        return ModelType::DIFFUSE;
     }
 }
 
@@ -164,12 +151,12 @@ GN_CASSERT( 0x14 == sizeof(XPRIBufDesc) );
 
 struct XPRScene
 {
-    DynaArray<gfx::GpuMeshDesc> meshes;
-    DynaArray<XPRTex2DDesc*> texDescs;
-    DynaArray<XPRVBufDesc*>  vbDescs;
-    DynaArray<XPRIBufDesc*>  ibDescs;
-    DynaArray<void*>         sceneData; ///< store all texture and mesh data
-    Boxf                     bbox;      ///< bounding box
+    DynaArray<gfx::MeshResourceDesc> meshes;
+    DynaArray<XPRTex2DDesc*>         texDescs;
+    DynaArray<XPRVBufDesc*>          vbDescs;
+    DynaArray<XPRIBufDesc*>          ibDescs;
+    DynaArray<void*>                 sceneData; ///< store all texture and mesh data
+    Boxf                             bbox;      ///< bounding box
 };
 
 static bool
@@ -278,14 +265,16 @@ loadGeometryFromXpr( Scene & sc, File & file )
     XPRScene xpr;
     if( !loadXprSceneFromFile( xpr, file ) ) return NULL;
 
+    GpuResourceDatabase & db = sc.database();
+
     // create mesh list
-    MeshContainer mc;
+    DynaArray<AutoRef<MeshResource> > meshes;
+    meshes.resize( xpr.meshes.size() );
     for( size_t i = 0; i < xpr.meshes.size(); ++i )
     {
-        AutoObjPtr<GpuMesh> m( new GpuMesh(sc.getGpu()) );
-        if( !m || !m->init(xpr.meshes[i]) ) return false;
-        mc.meshes.append( m );
-        m.detach();
+        meshes[i] = db.createResource<MeshResource>( NULL );
+        if( !meshes[i] ) return false;
+        if( !meshes[i]->reset( &xpr.meshes[i] ) ) return false;
     }
 
     // create model
@@ -312,75 +301,89 @@ loadGeometryFromAse( Scene & sc, File & file )
     AseScene ase;
     if( !loadAseSceneFromFile(ase, file) ) return false;
 
+    GpuResourceDatabase & db = sc.database();
+
     // create mesh list
-    MeshContainer mc;
+    DynaArray<AutoRef<MeshResource> > meshes;
     {
         GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList );
+        meshes.resize( ase.meshes.size() );
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
-            AutoObjPtr<GpuMesh> m( new GpuMesh(sc.getGpu()) );
-            if( !m || !m->init(ase.meshes[i]) ) return false;
-            mc.meshes.append( m );
-            m.detach();
+            meshes[i] = db.createResource<MeshResource>( NULL );
+            if( !meshes[i] ) return false;
+            if( !meshes[i]->reset( &ase.meshes[i] ) ) return false;
         }
     }
 
-    // initialize effects
-    SimpleWireframeEffect wireframeEffect;
-    if( !wireframeEffect.init( sc.getGpu() ) ) return false;
-    SimpleDiffuseEffect diffuseEffect;
-    if( !diffuseEffect.init( sc.getGpu() ) ) return false;
-    SimpleNormalMapEffect normalMapEffect;
-    if( !normalMapEffect.init( sc.getGpu() ) ) return false;
+    // initialize models
+    SimpleWireframeModel wireframeModel( db );
+    if( !wireframeModel.init() ) return false;
+    SimpleDiffuseModel diffuseModel( db );
+    if( !diffuseModel.init() ) return false;
+    SimpleNormalMapModel normalMapModel( db );
+    if( !normalMapModel.init() ) return false;
 
     // create model
-    GeometryNode * model = new GeometryNode(sc);
+    GeometryNode * node = new GeometryNode(sc);
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & s = ase.subsets[i];
 
-        GpuMesh * m = mc.meshes[s.meshid];
+        MeshResource * mesh = meshes[s.meshid];
 
-        // determine effect
-        EffectType::ENUM et = sDetermineBestEffect( *m );
-        Effect * e;
-        switch( et )
+        // determine the model
+        ModelType::ENUM mt = sDetermineBestModel( *mesh );
+        ModelResource * model;
+        switch( mt )
         {
-            case EffectType::WIREFRAME:
-                e = wireframeEffect.getEffect();
+            case ModelType::WIREFRAME:
+                model = &wireframeModel.modelResource();
                 break;
 
-            case EffectType::DIFFUSE:
-                e = diffuseEffect.getEffect();
+            case ModelType::DIFFUSE:
+                model = &diffuseModel.modelResource();
                 break;
 
-            case EffectType::NORMAL_MAP:
-                e = normalMapEffect.getEffect();
+            case ModelType::NORMAL_MAP:
+                model = &normalMapModel.modelResource();
                 break;
 
             default:
-                e = NULL;
+                model = NULL;
                 break;
         }
 
         // skip the mesh, if there's no appropriate effect for it.
-        if( !e ) continue;
+        if( !model ) continue;
+
+        // make a clone the selected model
+        AutoRef<ModelResource> clone = model->makeClone( NULL );
+        if( NULL == clone ) return false;
 
         // bind textures to effect
         {
             GN_SCOPE_PROFILER( loadGeometryFromAse_LoadTextures );
+
+            AutoRef<EffectResource> e = clone->getEffectResource();
+
             const AseMaterial & am = ase.materials[s.matid];
-            if( e->textures.contains( "ALBEDO_TEXTURE" ) && !am.mapdiff.bitmap.empty() )
+
+            AutoRef<Texture> t;
+
+            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
             {
-                e->textures["ALBEDO_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getGpu(), am.mapdiff.bitmap ) );
+                t.attach( GN::gfx::loadTextureFromFile( db.gpu(), am.mapdiff.bitmap ) );
+                clone->getTextureResource( "ALBEDO_TEXTURE" )->setTexture( t );
             }
-            if( e->textures.contains( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
+            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
             {
-                e->textures["NORMAL_TEXTURE"].attach( GN::gfx::loadTextureFromFile( sc.getGpu(), am.mapbump.bitmap ) );
+                t.attach( GN::gfx::loadTextureFromFile( db.gpu(), am.mapbump.bitmap ) );
+                clone->getTextureResource( "NORMAL_TEXTURE" )->setTexture( t );
             }
         }
 
-        model->addGeometryBlock( e, m, &s );
+        node->addModel( clone );
     }
 
     // calculate bounding sphere
@@ -389,11 +392,11 @@ loadGeometryFromAse( Scene & sc, File & file )
     bs.center = bbox.center();
     bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
 
-    // set model properties
-    model->setPivot( Vector3f(0,0,0) );
-    model->setBoundingSphere( bs );
+    // set node properties
+    node->setPivot( Vector3f(0,0,0) );
+    node->setBoundingSphere( bs );
 
-    return model;
+    return node;
 }
 
 // *****************************************************************************

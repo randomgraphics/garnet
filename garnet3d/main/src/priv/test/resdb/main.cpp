@@ -151,7 +151,7 @@ void update( Input & in )
 
 void draw( Gpu & )
 {
-    AutoRef<UniformResource> u( model->getUniform( "MATRIX_PVW" ) );
+    AutoRef<UniformResource> u( model->getUniformResource( "MATRIX_PVW" ) );
     if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
 
     model->draw();

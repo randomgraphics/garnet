@@ -95,7 +95,7 @@ public:
 
         // initialize the model
         if( !model.init() ) return false;
-        model.modelResource().setMesh( boxmesh );
+        model.modelResource().setMeshResource( boxmesh );
         model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
         model.setAlbedoTexture( tex1 );
 

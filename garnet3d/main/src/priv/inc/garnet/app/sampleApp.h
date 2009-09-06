@@ -103,7 +103,12 @@ namespace GN { namespace app
         ///
         /// get reference to renderer
         ///
-        gfx::Gpu & getGpu() { GN_ASSERT(mGpu); return *mGpu; }
+        gfx::Gpu & getGpu() const { GN_ASSERT(mGpu); return *mGpu; }
+
+        ///
+        /// get reference to GPU resource database
+        ///
+        gfx::GpuResourceDatabase & getGpuResourceDatabase() const { return *mGpuResourceDatabase; }
 
         ///
         /// get font renderer
@@ -117,22 +122,23 @@ namespace GN { namespace app
         // ********************************
     private:
 
-        InitParam             mInitParam;
+        InitParam                  mInitParam;
 
-        gfx::Gpu       * mGpu;
-        gfx::SpriteRenderer * mSpriteRenderer;
-        gfx::LineRenderer   * mLineRenderer;
-        util::BitmapFont      mFont;
+        gfx::Gpu                 * mGpu;
+        gfx::GpuResourceDatabase * mGpuResourceDatabase;
+        gfx::SpriteRenderer      * mSpriteRenderer;
+        gfx::LineRenderer        * mLineRenderer;
+        util::BitmapFont           mFont;
 
         // time stuff
-        util::FpsCalculator   mFps;
-        double                mLastFrameTime;
-        double                mTimeSinceLastUpdate;
+        util::FpsCalculator        mFps;
+        double                     mLastFrameTime;
+        double                     mTimeSinceLastUpdate;
 
-        StrW                  mHelpText;
-        bool                  mShowHUD;  ///< show simple HUD over game scene
-        bool                  mShowHelp; ///< show detailed help text in HUD. No effect if mShowHUD is false.
-        bool                  mDone;     ///< Set to true to quit the application.
+        StrW                       mHelpText;
+        bool                       mShowHUD;  ///< show simple HUD over game scene
+        bool                       mShowHelp; ///< show detailed help text in HUD. No effect if mShowHUD is false.
+        bool                       mDone;     ///< Set to true to quit the application.
 
         // ********************************
         // private functions
