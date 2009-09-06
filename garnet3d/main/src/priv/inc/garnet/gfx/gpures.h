@@ -384,16 +384,6 @@ namespace GN { namespace gfx
             OverridableVariable<Rect<UInt32> > scissorRect;
 
             //@}
-
-            //@{
-
-            void clear()
-            {
-                // all render states are inherited
-                memset( this, 0, sizeof(*this) );
-            }
-
-            //@}
         };
 
         ///
@@ -441,14 +431,7 @@ namespace GN { namespace gfx
         ///
         /// clear to a default descriptor
         ///
-        void clear()
-        {
-            textures.clear();
-            uniforms.clear();
-            shaders.clear();
-            techniques.clear();
-            rsdesc.clear();
-        }
+        void clear();
 
         ///
         /// setup the descriptor from XML
