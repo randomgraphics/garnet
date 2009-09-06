@@ -170,7 +170,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     if( 0 == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    x = mModel->getUniform( name ); \
+    x = mModel->getUniformResource( name ); \
     GN_ASSERT( x ); \
     x->getUniform()->update( defval );
 
@@ -183,9 +183,9 @@ bool GN::gfx::SimpleNormalMapModel::init()
     INIT_UNIFORM( mAlbedoColor   , "ALBEDO_COLOR"    , Vector4f(1,1,1,1) );
 
     // setup default texture
-    mAlbedoTexture = mModel->getTexture("ALBEDO_TEXTURE");
+    mAlbedoTexture = mModel->getTextureResource("ALBEDO_TEXTURE");
     mAlbedoTexture->setTexture( mDefaultAlbedoTexture );
-    mNormalTexture = mModel->getTexture("NORMAL_TEXTURE");
+    mNormalTexture = mModel->getTextureResource("NORMAL_TEXTURE");
     mNormalTexture->setTexture( mDefaultNormalTexture );
 
     // success

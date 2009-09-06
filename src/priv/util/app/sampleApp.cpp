@@ -128,6 +128,7 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
 // -----------------------------------------------------------------------------
 GN::app::SampleApp::SampleApp()
     : mGpu(NULL)
+    , mGpuResourceDatabase( NULL )
     , mSpriteRenderer(NULL)
     , mLineRenderer(NULL)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
@@ -518,12 +519,15 @@ bool GN::app::SampleApp::initGpu()
 {
     GN_GUARD;
 
-    // initialize renderer
+    // initialize GPU
     if( mInitParam.useMultithreadGpu )
         mGpu = createMultiThreadGpu( mInitParam.ro );
     else
         mGpu = createSingleThreadGpu( mInitParam.ro );
     if( NULL == mGpu ) return false;
+
+    // create GPU resource database
+    mGpuResourceDatabase = new GpuResourceDatabase( *mGpu );
 
     // connect to renderer signal: post quit event, if render window is closed.
     mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
@@ -552,6 +556,7 @@ void GN::app::SampleApp::quitGpu()
 
     safeDelete( mLineRenderer );
     safeDelete( mSpriteRenderer );
+    safeDelete( mGpuResourceDatabase );
     deleteGpu( mGpu );
     mGpu = NULL;
 

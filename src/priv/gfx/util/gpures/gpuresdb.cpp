@@ -168,6 +168,7 @@ GpuResourceDatabase::Impl::createResource(
     if( 0 == name || 0 == *name )
     {
         static int i = 0;
+        ++i;
         strPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.cptr(), i );
         name = unnamed;
 

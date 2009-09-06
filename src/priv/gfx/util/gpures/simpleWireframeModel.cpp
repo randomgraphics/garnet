@@ -84,7 +84,7 @@ bool GN::gfx::SimpleWireframeModel::init()
     if( 0 == mModel || !mModel->reset(&md) ) return failure();
 
 #define INIT_UNIFORM( x, name, defval ) \
-    x = mModel->getUniform( name ); \
+    x = mModel->getUniformResource( name ); \
     GN_ASSERT( x ); \
     x->getUniform()->update( defval );
 

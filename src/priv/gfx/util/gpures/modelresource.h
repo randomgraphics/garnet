@@ -34,15 +34,16 @@ namespace GN { namespace gfx
 
         AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
 
-        bool                        setEffect( GpuResource * resource );
+        bool                        setTextureResource( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource>    getTextureResource( const char * effectParameterName ) const;
 
-        bool                        setTexture( const char * effectParameterName, GpuResource * );
-        AutoRef<TextureResource>    getTexture( const char * effectParameterName ) const;
+        bool                        setUniformResource( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource>    getUniformResource( const char * effectParameterName ) const;
 
-        bool                        setUniform( const char * effectParameterName, GpuResource * );
-        AutoRef<UniformResource>    getUniform( const char * effectParameterName ) const;
+        bool                        setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
 
-        bool                        setMesh( GpuResource * mesh, const MeshResourceSubset * subset );
+        bool                        setEffectResource( GpuResource * resource );
+        AutoRef<EffectResource>     getEffectResource() const { return mEffect.resource; }
 
         void                        draw() const;
 

@@ -530,10 +530,12 @@ namespace GN { namespace gfx
 
         size_t                        getNumTextures() const;
         size_t                        findTexture( const char * name ) const;
+        bool                          hasTexture( const char * name ) const { return PARAMETER_NOT_FOUND != findTexture( name ); }
         const TextureProperties     & getTextureProperties( size_t i ) const;
 
         size_t                        getNumUniforms() const;
         size_t                        findUniform( const char * name ) const;
+        bool                          hasUniform( const char * name ) const { return PARAMETER_NOT_FOUND != findUniform( name ); }
         const UniformProperties     & getUniformProperties( size_t i ) const;
 
         const EffectResourceDesc::EffectRenderStateDesc &
@@ -659,14 +661,16 @@ namespace GN { namespace gfx
 
         AutoRef<ModelResource>   makeClone( const char * nameOfTheClone = NULL ) const;
 
-        void                     setTexture( const char * effectParameterName, GpuResource * );
-        AutoRef<TextureResource> getTexture( const char * effectParameterName ) const;
+        void                     setTextureResource( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource> getTextureResource( const char * effectParameterName ) const;
 
-        void                     setUniform( const char * effectParameterName, GpuResource * );
-        AutoRef<UniformResource> getUniform( const char * effectParameterName ) const;
+        void                     setUniformResource( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource> getUniformResource( const char * effectParameterName ) const;
 
-        void                     setMesh( GpuResource * mesh, const MeshResourceSubset * subset = NULL );
-        AutoRef<MeshResource>    getMesh( MeshResourceSubset * subset = NULL ) const;
+        void                     setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset = NULL );
+        AutoRef<MeshResource>    getMeshResource( MeshResourceSubset * subset = NULL ) const;
+
+        AutoRef<EffectResource>  getEffectResource() const;
 
         void                     draw() const;
         //@}

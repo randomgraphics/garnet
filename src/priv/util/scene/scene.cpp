@@ -156,7 +156,7 @@ GN::scene::GeometryNode::addModel( gfx::GpuResource * model )
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        AutoRef<UniformResource> unires = m->getUniform( d.name );
+        AutoRef<UniformResource> unires = m->getUniformResource( d.name );
 
         if( unires )
         {
