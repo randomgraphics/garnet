@@ -200,17 +200,17 @@ namespace GN { namespace gfx
     ///
     struct MeshResourceDesc
     {
-        PrimitiveType prim;   //< primitive type
-        size_t        numvtx; //< number of vertices
-        size_t        numidx; //< number of indices. 0 means non-indexed mesh
+        PrimitiveType prim;   ///< primitive type
+        size_t        numvtx; ///< number of vertices
+        size_t        numidx; ///< number of indices. 0 means non-indexed mesh
         bool          idx32;  ///< true for 32-bit index buffer
         bool          dynavb; ///< true for dynamic vertex buffer
         bool          dynaib; ///< trur for dynamic index buffer
-        VertexFormat  vtxfmt; //< vertex format
-        const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; // NULL pointer means vertex data are undefined
-        size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  // vertex buffer strides. 0 means using vertex size defined by vertex format.
+        VertexFormat  vtxfmt; ///< vertex format
+        const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
+        size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
         size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
-        const void *  indices; // Null means index data are undefined.
+        const void *  indices; ///< Null means index data are undefined.
 
         ///
         /// constructor
@@ -281,8 +281,8 @@ namespace GN { namespace gfx
         ///
         struct ShaderPrerequisites
         {
-            UInt32 numTextures;           //< minimal number of textures required.
-            UInt32 numColorRenderTargets; //< minimal number of color render targets.
+            UInt32 numTextures;           ///< minimal number of textures required.
+            UInt32 numColorRenderTargets; ///< minimal number of color render targets.
 
             /// default constructor
             ShaderPrerequisites()
@@ -316,10 +316,10 @@ namespace GN { namespace gfx
         ///
         struct EffectShaderDesc
         {
-            ShaderPrerequisites prerequisites;      //< prerequisites of the shader.
-            GpuProgramDesc      gpd;                //< GPU Program descriptor
-            std::map<StrA,StrA> textures;           //< textures. Key is shader parameter name, value is user-visible texture name.
-            std::map<StrA,StrA> uniforms;           //< uniforms. Key is shader parameter name, value is user-visible uniform name.
+            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
+            GpuProgramDesc      gpd;                ///< GPU Program descriptor
+            std::map<StrA,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
+            std::map<StrA,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
         };
 
         ///
@@ -332,7 +332,7 @@ namespace GN { namespace gfx
             struct OverridableVariable
             {
                 T    value;
-                bool overridden; //< if true, then this variable will override the value from parent render state object.
+                bool overridden; ///< if true, then this variable will override the value from parent render state object.
 
                 /// default ctor
                 OverridableVariable() : overridden(false) {}
@@ -391,8 +391,8 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA                  shader; //< Name of shader used in this pass. Can't be empty
-            EffectRenderStateDesc rsdesc; //< Pass specific render states
+            StrA                  shader; ///< Name of shader used in this pass. Can't be empty
+            EffectRenderStateDesc rsdesc; ///< Pass specific render states
         };
 
         ///
@@ -400,10 +400,10 @@ namespace GN { namespace gfx
         ///
         struct EffectTechniqueDesc
         {
-            int                       quality; //< user defined rendering quality. Effect class uses
-                                               //< the technique with the hightest quality as default technique.
-            DynaArray<EffectPassDesc> passes;  //< pass list.
-            EffectRenderStateDesc     rsdesc;  //< Technique specific render states
+            int                       quality; ///< user defined rendering quality. Effect class uses
+                                               ///< the technique with the hightest quality as default technique.
+            DynaArray<EffectPassDesc> passes;  ///< pass list.
+            EffectRenderStateDesc     rsdesc;  ///< Technique specific render states
 
             /// default ctor
             EffectTechniqueDesc() : quality(100) {}
@@ -413,11 +413,11 @@ namespace GN { namespace gfx
         // data
         // *****************************
 
-        std::map<StrA,EffectTextureDesc>      textures;     //< Texture list
-        std::map<StrA,EffectUniformDesc>      uniforms;     //< Uniform list
-        std::map<StrA,EffectShaderDesc>       shaders;      //< Shader list
-        std::map<StrA,EffectTechniqueDesc>    techniques;   //< Technique list. Technique name must be unique.
-        EffectRenderStateDesc                 rsdesc;       //< Root render state descriptor for the effect.
+        std::map<StrA,EffectTextureDesc>      textures;     ///< Texture list
+        std::map<StrA,EffectUniformDesc>      uniforms;     ///< Uniform list
+        std::map<StrA,EffectShaderDesc>       shaders;      ///< Shader list
+        std::map<StrA,EffectTechniqueDesc>    techniques;   ///< Technique list. Technique name must be unique.
+        EffectRenderStateDesc                 rsdesc;       ///< Root render state descriptor for the effect.
 
         // *****************************
         // methods
@@ -573,23 +573,23 @@ namespace GN { namespace gfx
 
         struct ModelUniformDesc
         {
-            StrA             resourceName; //< if empty, then create a new uniform
+            StrA             resourceName; ///< if empty, then create a new uniform
             size_t           size;
-            DynaArray<UInt8> initialValue; //< if empty, then no initial value.
+            DynaArray<UInt8> initialValue; ///< if empty, then no initial value.
         };
 
         //@}
 
         //@{
 
-        StrA                            effectResourceName; //< effect resource name. If empty, then create a new effect using effectDesc
-        EffectResourceDesc              effectResourceDesc; //< Used to create new effect, if effect resource name is empty.
-        std::map<StrA,ModelTextureDesc> textures;           //< key is effect parameter name
-        std::map<StrA,ModelUniformDesc> uniforms;           //< key is effect parameter name
+        StrA                            effectResourceName; ///< effect resource name. If empty, then create a new effect using effectDesc
+        EffectResourceDesc              effectResourceDesc; ///< Used to create new effect, if effect resource name is empty.
+        std::map<StrA,ModelTextureDesc> textures;           ///< key is effect parameter name
+        std::map<StrA,ModelUniformDesc> uniforms;           ///< key is effect parameter name
 
-        StrA                            meshResourceName; //< if empty, then create a new mesh using meshDesc
-        MeshResourceDesc                meshResourceDesc; //< Used to create new mesh, if mesh resource name is empty
-        MeshResourceSubset              subset;           //< Mesh subset information.
+        StrA                            meshResourceName; ///< if empty, then create a new mesh using meshDesc
+        MeshResourceDesc                meshResourceDesc; ///< Used to create new mesh, if mesh resource name is empty
+        MeshResourceSubset              subset;           ///< Mesh subset information.
 
         //@}
 

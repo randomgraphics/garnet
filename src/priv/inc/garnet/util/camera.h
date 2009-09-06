@@ -121,7 +121,7 @@ namespace GN { namespace util
         Matrix33f   mRotation3x3;
         Matrix44f   mRotation4x4;
 
-        Matrix44f   mTransView; //< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to world space.
+        Matrix44f   mTransView; ///< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to world space.
         Vector2i    mWindowCenter;
         Vector2i    mWindowHalfSize;
         float       mHandness; ///< -1 for left-hand, 1 for left-hand
