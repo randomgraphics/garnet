@@ -151,16 +151,19 @@ GN::scene::GeometryNode::addModel( gfx::GpuResource * model )
     // get list of standard parameters
     Scene::UniformCollection & globalUniforms = s.globalUniforms;
 
+    AutoRef<EffectResource> effect = m->getEffectResource();
+
     // handle standard parameters
     for( size_t i = 0; i < NUM_STANDARD_SCENE_PARAMETERS; ++i )
     {
         const StandardSceneParameterDesc & d = getStandardSceneParameterName( i );
 
-        AutoRef<UniformResource> unires = m->getUniformResource( d.name );
-
-        if( unires )
+        if( effect->hasUniform( d.name ) )
         {
+            AutoRef<UniformResource> unires = m->getUniformResource( d.name );
+
             AutoRef<Uniform> u;
+
             if( !d.global )
             {
                 StandardUniform su;
@@ -173,6 +176,7 @@ GN::scene::GeometryNode::addModel( gfx::GpuResource * model )
             {
                 u.set( &globalUniforms[i] );
             }
+
             GN_ASSERT( u );
 
             unires->setUniform( u );

@@ -328,9 +328,9 @@ loadGeometryFromAse( Scene & sc, File & file )
     GeometryNode * node = new GeometryNode(sc);
     for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
-        const AseMeshSubset & s = ase.subsets[i];
+        const AseMeshSubset & subset = ase.subsets[i];
 
-        MeshResource * mesh = meshes[s.meshid];
+        MeshResource * mesh = meshes[subset.meshid];
 
         // determine the model
         ModelType::ENUM mt = sDetermineBestModel( *mesh );
@@ -354,7 +354,7 @@ loadGeometryFromAse( Scene & sc, File & file )
                 break;
         }
 
-        // skip the mesh, if there's no appropriate effect for it.
+        // skip the mesh, if there'subset no appropriate effect for it.
         if( !model ) continue;
 
         // make a clone the selected model
@@ -367,7 +367,7 @@ loadGeometryFromAse( Scene & sc, File & file )
 
             AutoRef<EffectResource> e = clone->getEffectResource();
 
-            const AseMaterial & am = ase.materials[s.matid];
+            const AseMaterial & am = ase.materials[subset.matid];
 
             AutoRef<Texture> t;
 
@@ -382,6 +382,8 @@ loadGeometryFromAse( Scene & sc, File & file )
                 clone->getTextureResource( "NORMAL_TEXTURE" )->setTexture( t );
             }
         }
+
+        clone->setMeshResource( mesh, &subset );
 
         node->addModel( clone );
     }

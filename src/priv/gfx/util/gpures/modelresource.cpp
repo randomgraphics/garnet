@@ -481,10 +481,6 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
         {
             mMesh.resource->applyToContext( pass.gc );
         }
-        else
-        {
-            GN_TODO( "clear context VB/IB/VF" );
-        }
     }
 
     return true;
