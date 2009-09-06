@@ -389,7 +389,7 @@ namespace GN { namespace gfx
 
             void clear()
             {
-                // so all render states are inherited
+                // all render states are inherited
                 memset( this, 0, sizeof(*this) );
             }
 
