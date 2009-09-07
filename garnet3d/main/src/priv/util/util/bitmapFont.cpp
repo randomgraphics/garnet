@@ -72,7 +72,7 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
     const FontFaceDesc & ffd = ff->getDesc();
 
     // initialize font slots
-    if( !slotInit( gpu, ffd.width, ffd.height, maxchars ) ) return failure();
+    if( !slotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return failure();
 
     // create character list
     for( int i = 0; i < MAX_TEXTURES; ++i )
@@ -136,15 +136,17 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
     const FontSlot     * fs;
     CharInfo           * ci;
     size_t               index   = 0;
-    float                sx      = td.x;
-    float                sy      = td.y;
+    float                penx    = td.x;
+    float                peny    = td.y;
     const wchar_t      * text    = td.text;
     size_t               textlen = ( 0 == td.len ) ? static_cast<size_t>(-1) : td.len;
     const FontFaceDesc & ffd     = mFont->getDesc();
 
-    Rectf bbox( td.x, td.y, 0, (float)(ffd.height+1) );
+    float baselineDistance = ffd.baseLineDistance();
 
-    const size_t TAB_SIZE = 8;
+    Rectf bbox( td.x + ffd.xmin, td.y + ffd.ymin, 0, baselineDistance );
+
+    const float TAB_SIZE = 8.0f;
 
     // draw characters one by one
     while( *text && index < textlen )
@@ -159,17 +161,17 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 
         if( L'\n' == ch )
         {
-            sx      = td.x;
-            sy     += ffd.height+1;
-            bbox.h += ffd.height+1;
+            penx    = td.x;
+            peny   += baselineDistance;
+            bbox.h += baselineDistance;
         }
         else if( L'\t' == ch )
         {
             fs = getSlot( L' ' );
             if ( fs )
             {
-                size_t tabx = fs->advx * TAB_SIZE;
-                sx = floor((sx+tabx-1) / tabx) * tabx;
+                float tabx = fs->advx * TAB_SIZE;
+                penx = floor((penx+tabx-1) / tabx) * tabx;
             }
         }
         else // normal character
@@ -182,15 +184,15 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
             size_t texidx = fs->texidx;
             ci            = &mCharList[texidx][mNumChars[texidx]];
             ci->fs        = fs;
-            ci->x         = sx + fs->offx;
-            ci->y         = sy + fs->offy;
+            ci->x         = penx + fs->offx;
+            ci->y         = peny + fs->offy;
             ++mNumChars[texidx];
 
             // increase pen position
-            sx += fs->advx;
+            penx += fs->advx;
 
             // adjust bounding box
-            bbox.w = math::getmax( sx - td.x, bbox.w );
+            bbox.w = math::getmax( penx - td.x, bbox.w );
         }
     }
 
@@ -289,10 +291,10 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 
     // update slot fields
     slot.ch   = ch;
-    slot.offx = fbm.offx;
-    slot.offy = fbm.offy + slot.h - fbm.height;
-    slot.advx = fbm.advx;
-    slot.advy = fbm.advy;
+    slot.offx = fbm.horiBearingX;
+    slot.offy = fbm.horiBearingY;
+    slot.advx = fbm.horiAdvance;
+    slot.advy = fbm.vertAdvance;
 
     // copy font image into RGBA
     GN_ASSERT( fbm.width <= slot.w && fbm.height <= slot.h );

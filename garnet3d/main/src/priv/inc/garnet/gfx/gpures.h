@@ -653,6 +653,7 @@ namespace GN { namespace gfx
         void                     setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset = NULL );
         AutoRef<MeshResource>    getMeshResource( MeshResourceSubset * subset = NULL ) const;
 
+        void                     setEffectResource( GpuResource * effect );
         AutoRef<EffectResource>  getEffectResource() const;
 
         void                     draw() const;

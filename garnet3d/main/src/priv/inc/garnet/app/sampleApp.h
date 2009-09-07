@@ -39,10 +39,10 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::GpuOptions ro;                     ///< renderer options
-            bool                 useMultithreadGpu; ///< use multithread renderer or not.
-            input::InputAPI      iapi;                   ///< input API
-            util::FontFaceDesc   ffd;                    ///< default font face descriptor
+            gfx::GpuOptions            ro;                ///< renderer options
+            bool                       useMultithreadGpu; ///< use multithread renderer or not.
+            input::InputAPI            iapi;              ///< input API
+            util::FontFaceCreationDesc ffc;               ///< default font face creation descriptor
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
