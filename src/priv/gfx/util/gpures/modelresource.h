@@ -41,6 +41,7 @@ namespace GN { namespace gfx
         AutoRef<UniformResource>    getUniformResource( const char * effectParameterName ) const;
 
         bool                        setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
+        AutoRef<MeshResource>       getMeshResource( MeshResourceSubset * subset ) const;
 
         bool                        setEffectResource( GpuResource * resource );
         AutoRef<EffectResource>     getEffectResource() const { return mEffect.resource; }

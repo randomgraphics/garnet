@@ -11,12 +11,12 @@
 ///
 struct BitmapCharDesc
 {
-    UInt32 width;  ///< character width, in pixel
-    UInt32 height; ///< character height, in pixel
-    SInt32  xorig;  ///< origin of the image
-    SInt32  yorig;  ///< origin of the image
-    SInt32  advance; ///< x-advance of the character
-    const UInt8 * bitmap; ///< character image
+    UInt32        width;   ///< character width, in pixel
+    UInt32        height;  ///< character height, in pixel
+    SInt32        xorig;   ///< origin of the image
+    SInt32        yorig;   ///< origin of the image
+    SInt32        advance; ///< x-advance of the character
+    const UInt8 * bitmap;  ///< character image
 };
 extern const BitmapCharDesc * const gBitmapChars8x13[]; ///< 8x13 ASCII bitmaps.
 

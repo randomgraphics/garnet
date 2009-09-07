@@ -19,12 +19,14 @@ namespace GN { namespace util
         size_t        height; ///< bitmap height in pixel
         const UInt8 * buffer; ///< bitmap data (8 bits gray image)
 
-        /// \name character position metrics in pixel
+        /// \name per character metrics in unit of pixels,
+        ///       X coordinate points left; Y coordinate points down.
         //@{
-        int offx;
-        int offy;
-        int advx;
-        int advy;
+        float horiBearingX;
+        float horiBearingY;
+        float horiAdvance;
+
+        float vertAdvance;
         //@}
     };
 
@@ -49,21 +51,34 @@ namespace GN { namespace util
         StrA fontname;
 
         ///
-        /// Maximum single character width in pixel.
-        ///
-        /// This value can be used to position characters in fixed-width mannter.
-        ///
-        UInt16 width;
-
-        ///
-        /// get character height (minimal line step) in pixel
-        ///
-        UInt16 height;
-
-        ///
         /// font quality
         ///
         FontFaceQuality quality;
+
+        /// Metrics that are defined for all glyphs in a given font.
+        //@{
+
+        // bounding box in pixles. X is left; Y is down
+        float xmin;
+        float xmax;
+        float ymin;
+        float ymax;
+
+        /// The distance that must be placed between two lines of text
+        /// The baseline-to-baseline distance should be computed as
+        /// maxGlyphHeight + linegap
+        float linegap;
+
+        /// max height in pixels of all the glyphs.
+        UInt16 maxGlyphWidth() const { return (UInt16)ceil(xmax - xmin); }
+
+        /// max height in pixels of all the glyphs.
+        UInt16 maxGlyphHeight() const { return (UInt16)ceil(ymax - ymin); }
+
+        /// baseline-to-baseline distance of 2 rows of text
+        float baseLineDistance() const { return ymax - ymin + linegap; }
+
+        //@}
     };
 
     ///
@@ -90,9 +105,35 @@ namespace GN { namespace util
     };
 
     ///
+    /// Font face creation descriptor
+    ///
+    struct FontFaceCreationDesc
+    {
+        ///
+        /// font file name. Normally would be something like "font::/xxxx"
+        ///
+        StrA fontname;
+
+        ///
+        /// Character width in pixel.
+        ///
+        UInt16 width;
+
+        ///
+        /// get character height in pixel
+        ///
+        UInt16 height;
+
+        ///
+        /// font quality
+        ///
+        FontFaceQuality quality;
+    };
+
+    ///
     /// create font face (usually loading from a TTF file)
     ///
-    FontFace * createFontFace( const FontFaceDesc & desc );
+    FontFace * createFontFace( const FontFaceCreationDesc & cd );
 
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
@@ -210,12 +251,12 @@ namespace GN { namespace util
             ///
             /// offset value ( in pixel unit )
             ///
-            int offx, offy;
+            float offx, offy;
 
             ///
             /// advance value ( in pixel unit )
             ///
-            int advx, advy;
+            float advx, advy;
 
             ///
             /// texture coord square ( in texture unit )

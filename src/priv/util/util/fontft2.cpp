@@ -63,7 +63,7 @@ public:
 
     //@{
 public:
-    bool init( const FontFaceDesc & desc );
+    bool init( const FontFaceCreationDesc & desc );
     void quit();
 private:
     void clear() { mFace = 0; }
@@ -151,7 +151,7 @@ Ft2Library * FontFaceFt2::sLib = 0;
 //
 //
 // -----------------------------------------------------------------------------
-bool FontFaceFt2::init( const FontFaceDesc & desc )
+bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
@@ -160,14 +160,14 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
 
     GN_ASSERT( sLib && sLib->lib );
 
-    if( desc.quality < 0 || desc.quality >= NUM_FONT_QUALITIES )
+    if( cd.quality < 0 || cd.quality >= NUM_FONT_QUALITIES )
     {
-        GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", desc.quality );
+        GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", cd.quality );
         return failure();
     }
 
     // open font file
-    File * fp = fs::openFile( desc.fontname, "rb" );
+    File * fp = fs::openFile( cd.fontname, "rb" );
     if( !fp ) return failure();
 
     // initialize FT2 stream
@@ -191,20 +191,28 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
         &mFace );
     if( err )
     {
-        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", desc.fontname.cptr() );
+        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.cptr() );
         return failure();
     }
 
     // set font size
-    err = FT_Set_Pixel_Sizes( mFace, desc.width, desc.height );
+    err = FT_Set_Pixel_Sizes( mFace, cd.width, cd.height );
     if( err )
     {
         GN_ERROR(sLogger)( "FT_Set_Pixel_Sizes() failed!" );
         return failure();
     }
 
+    // initialize descriptor
+    mDesc.fontname = cd.fontname;
+    mDesc.quality  = cd.quality;
+    mDesc.xmin     = 0;
+    mDesc.xmax     = (float)cd.width;
+    mDesc.ymin     = -(float)cd.height;
+    mDesc.ymax     = 0;
+    mDesc.linegap = 0;
+
     // success
-    mDesc = desc;
     return success();
 
     GN_UNGUARD;
@@ -260,6 +268,9 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 	size_t      height = (size_t)bitmap.rows;
     size_t       pitch = (size_t)abs(bitmap.pitch);
 
+    GN_ASSERT( width <= mDesc.maxGlyphWidth() );
+    GN_ASSERT( height <= mDesc.maxGlyphHeight() );
+
     //取道位图数据
     mBitmapBuffer.resize( width * height );
     UInt8 * buf = mBitmapBuffer.cptr();
@@ -287,13 +298,13 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     };
 
     // copy glyph data to result structure
-    result.width  = width;
-    result.height = height;
-    result.buffer = mBitmapBuffer.cptr();
-    result.offx   = slot->bitmap_left;
-    result.offy   = (int)( height - slot->bitmap_top );
-    result.advx   = slot->advance.x / 64;
-    result.advy   = slot->advance.y / 64;
+    result.width        = width;
+    result.height       = height;
+    result.buffer       = mBitmapBuffer.cptr();
+    result.horiBearingX = (float)slot->bitmap_left;
+    result.horiBearingY = (float)-slot->bitmap_top;
+    result.horiAdvance  = slot->advance.x / 64.0f;
+    result.vertAdvance  = slot->advance.y / 64.0f;
 
     // success
     return true;
@@ -339,13 +350,13 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 // -----------------------------------------------------------------------------
 GN::util::FontFace *
-GN::util::createFontFace( const FontFaceDesc & desc )
+GN::util::createFontFace( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
     AutoRef<FontFaceFt2> font( new FontFaceFt2 );
 
-    if( !font->init( desc ) ) return 0;
+    if( !font->init( cd ) ) return 0;
 
     // success
     return font.detach();

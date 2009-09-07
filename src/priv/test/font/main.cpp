@@ -5,14 +5,14 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-SpriteRenderer * sr = NULL;
-FontFaceDesc     ffd = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
-BitmapFont       ascii, ttf;
+SpriteRenderer      * sr = NULL;
+FontFaceCreationDesc ffc = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
+BitmapFont    ascii, ttf;
 
 bool initTTF()
 {
     // create font
-    AutoRef<FontFace> ff( createFontFace(ffd) );
+    AutoRef<FontFace> ff( createFontFace(ffc) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
@@ -52,34 +52,34 @@ void onKeyPress( KeyEvent ke )
     switch( ke.code )
     {
         case KeyCode::UP :
-            ffd.height *= 2;
+            ffc.height *= 2;
             initTTF();
             break;
 
         case KeyCode::DOWN:
-            ffd.height /= 2;
-            if( 0 == ffd.height ) ffd.height = 1;
+            ffc.height /= 2;
+            if( 0 == ffc.height ) ffc.height = 1;
             initTTF();
             break;
 
         case KeyCode::LEFT :
-            ffd.width /= 2;
-            if( 0 == ffd.width ) ffd.width = 1;
+            ffc.width /= 2;
+            if( 0 == ffc.width ) ffc.width = 1;
             initTTF();
             break;
 
         case KeyCode::RIGHT :
-            ffd.width *= 2;
+            ffc.width *= 2;
             initTTF();
             break;
 
         case KeyCode::A :
-            ffd.quality = FFQ_ANTIALIASED;
+            ffc.quality = FFQ_ANTIALIASED;
             initTTF();
             break;
 
         case KeyCode::M :
-            ffd.quality = FFQ_MONOCHROM;
+            ffc.quality = FFQ_MONOCHROM;
             initTTF();
             break;
 
@@ -90,7 +90,7 @@ void onKeyPress( KeyEvent ke )
 
 void draw( Gpu &, const wchar_t * fps )
 {
-    ascii.drawText( fps, 0, 0 );
+    ascii.drawText( fps, 10, 13 );
 
     if( ttf.ok() )
     {

@@ -17,13 +17,10 @@ TODO
   - Enable ETW in profiler
   - D3D11 renderer
   - GPU resouce aliasing
+  - A tweakable variable template for easy parameter tuning.
 
 - p2
   - mesh classes
-    - refine GPU mesh concept:
-      - could mesh reference effect directly?
-      - could mesh be a direct parameter of GPU, like texture?
-        - No. See resolved issues for details.
     - a cpu mesh that could be used to convert mesh format
     - a half-edge mesh for more complex mesh algorithm
   - PCXS2 GPU plugin:
@@ -59,6 +56,8 @@ TODO
     - depends on renderer state dumper
 
 - p?
+  - script layer
+  - network layer
   - multi-window rendering
   - refine build system
     - figure out a way to simplify scons script

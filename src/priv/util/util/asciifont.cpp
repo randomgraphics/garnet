@@ -14,17 +14,35 @@ static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
 class AsciiFontFace : public FontFace
 {
     FontFaceDesc mDesc;
-    UInt8        mImage[8*16];
+    UInt8        mImage[8*13];
 
 public:
 
     /// ctor
     AsciiFontFace()
     {
-        mDesc.fontname = "ascii_8x16";
-        mDesc.quality  = FFQ_MONOCHROM;
-        mDesc.width    = 8;
-        mDesc.height   = 16;
+        mDesc.fontname       = "ascii_8x13";
+        mDesc.quality        = FFQ_MONOCHROM;
+        mDesc.xmin           = 100;
+        mDesc.xmax           = -100;
+        mDesc.ymin           = 100;
+        mDesc.ymax           = -100;
+        mDesc.linegap        = 3;
+
+        for( size_t i = 0; i < 256; ++i )
+        {
+            const BitmapCharDesc * bcd = gBitmapChars8x13[i];
+
+            float xmin = (float)bcd->xorig;
+            float xmax = (float)xmin + bcd->width;
+            float ymin = (float)bcd->yorig - bcd->height;
+            float ymax = (float)bcd->yorig;
+
+            if( xmin < mDesc.xmin ) mDesc.xmin = xmin;
+            if( xmax > mDesc.xmax ) mDesc.xmax = xmax;
+            if( ymin < mDesc.ymin ) mDesc.ymin = ymin;
+            if( ymax > mDesc.ymax ) mDesc.ymax = ymax;
+        }
     }
 
     virtual const FontFaceDesc & getDesc() const { return mDesc; }
@@ -45,17 +63,17 @@ public:
         {
             for( size_t x = 0; x < 8; ++x )
             {
-                mImage[y*8+x] = 255 * !!( bcd->bitmap[12-y] & (1L<<(7-x)) );
+                mImage[(bcd->height-y-1)*8+x] = 255 * !!( bcd->bitmap[y] & (1L<<(7-x)) );
             }
         }
 
-        result.width  = 8;
-        result.height = bcd->height;
-        result.buffer = mImage;
-        result.offx   = -bcd->xorig;
-        result.offy   = bcd->yorig;
-        result.advx   = bcd->advance;
-        result.advy   = 16;
+        result.width        = 8;
+        result.height       = bcd->height;
+        result.buffer       = mImage;
+        result.horiBearingX = (float)bcd->xorig;
+        result.horiBearingY = (float)bcd->yorig - bcd->height;
+        result.horiAdvance  = (float)bcd->advance;
+        result.vertAdvance  = mDesc.maxGlyphHeight() + mDesc.linegap;
 
         return true;
     }

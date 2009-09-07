@@ -489,6 +489,16 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
 //
 //
 // -----------------------------------------------------------------------------
+AutoRef<MeshResource>
+GN::gfx::ModelResource::Impl::getMeshResource( MeshResourceSubset * subset ) const
+{
+    if( subset )*subset = mMesh.subset;
+    return mMesh.resource;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 {
     if( resource && !database().validResource( EffectResource::guid(), resource ) )
@@ -534,6 +544,14 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
         AutoRef<TextureResource> texres = t.getResource();
 
+        if( !texres )
+        {
+            const EffectResource::TextureProperties & tp = mEffect.resource->getTextureProperties( i );
+            StrA texname = strFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+            texres = database().findOrCreateResource<TextureResource>( texname );
+            if( !texres ) return false;
+        }
+
         t.setResource( *this, i, NULL );
         t.setResource( *this, i, texres );
     }
@@ -546,6 +564,14 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         UniformItem & u = mUniforms[i];
 
         AutoRef<UniformResource> unires = u.getResource();
+
+        if( !unires )
+        {
+            const EffectResource::UniformProperties & up = mEffect.resource->getUniformProperties( i );
+            StrA uniname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+            unires = database().findOrCreateResource<UniformResource>( uniname );
+            if( !unires ) return false;
+        }
 
         u.setResource( *this, i, NULL );
         u.setResource( *this, i, unires );
@@ -924,6 +950,7 @@ AutoRef<TextureResource>    GN::gfx::ModelResource::getTextureResource( const ch
 void                        GN::gfx::ModelResource::setUniformResource( const char * effectParameterName, GpuResource * uniform ) { mImpl->setUniformResource( effectParameterName, uniform ); }
 AutoRef<UniformResource>    GN::gfx::ModelResource::getUniformResource( const char * effectParameterName ) const { return mImpl->getUniformResource( effectParameterName ); }
 void                        GN::gfx::ModelResource::setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset ) { mImpl->setMeshResource( mesh, subset ); }
-//GpuResourceHandle GN::gfx::ModelResource::getMeshResource( MeshResourceSubset * subset ) const;
+AutoRef<MeshResource>       GN::gfx::ModelResource::getMeshResource( MeshResourceSubset * subset ) const { return mImpl->getMeshResource( subset ); }
+void                        GN::gfx::ModelResource::setEffectResource( GpuResource * effect ) { mImpl->setEffectResource( effect ); }
 AutoRef<EffectResource>     GN::gfx::ModelResource::getEffectResource() const { return mImpl->getEffectResource(); }
 void                        GN::gfx::ModelResource::draw() const { mImpl->draw(); }

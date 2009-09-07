@@ -382,10 +382,10 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     // setup default options
     mInitParam.useMultithreadGpu = true;
     mInitParam.iapi = input::InputAPI::NATIVE;
-    mInitParam.ffd.fontname = "font::/simsun.ttc";
-    mInitParam.ffd.width = 16;
-    mInitParam.ffd.height = 16;
-    mInitParam.ffd.quality = util::FFQ_MONOCHROM;
+    mInitParam.ffc.fontname = "font::/simsun.ttc";
+    mInitParam.ffc.width = 16;
+    mInitParam.ffc.height = 16;
+    mInitParam.ffc.quality = util::FFQ_MONOCHROM;
 
 #if GN_XENON
 
@@ -613,7 +613,7 @@ bool GN::app::SampleApp::initFont()
     GN_GUARD;
 
     // try load default font face in mInitParam first
-    AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.ffd) );
+    AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.ffc) );
     if( !ff )
     {
         // if failed, then use simple ASCII font face

@@ -27,12 +27,13 @@ struct BezierVertex
 };
 
 static GN::Logger          * sLogger = GN::getLogger("GN.sample.Bezier");
-Gpu                        * gpu;
+Gpu                        * gpu = NULL;
+GpuResourceDatabase        * gpuresdb = NULL;
 ArcBall                      arcball; // arcball camera
 float                        radius;  // distance from camera to object
 Matrix44f                    proj, view;
 AutoObjPtr<Scene>            rootScene;
-AutoObjPtr<GeometryNode>     model;
+AutoObjPtr<GeometryNode>     geomNode;
 SpriteRenderer             * sr = NULL;
 BitmapFont                   font;
 
@@ -69,9 +70,9 @@ void onAxisMove( Axis a, int d )
     }
 }
 
-GpuMesh * createMesh()
+MeshResource * createMesh()
 {
-    GpuMeshDesc md;
+    MeshResourceDesc md;
 
     md.vtxfmt.numElements = 7;
     md.vtxfmt.elements[0].stream = 0;
@@ -159,13 +160,13 @@ GpuMesh * createMesh()
     md.indices = indices;
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
-    AutoObjPtr<GpuMesh> mesh( new GpuMesh(*gpu) );
-    if( !mesh || !mesh->init(md) ) return false;
+    AutoRef<MeshResource> mesh( gpuresdb->createResource<MeshResource>(NULL) );
+    if( !mesh || !mesh->reset(&md) ) return 0;
 
     return mesh.detach();
 }
 
-Effect *
+EffectResource *
 createEffect()
 {
     const char * glslvscode =
@@ -304,11 +305,11 @@ createEffect()
         "   gl_FragColor = diff * tex; \n"
         "}";
 
-    EffectDesc ed;
-    ed.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
-    ed.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
-    ed.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
-    ed.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
+    EffectResourceDesc ed;
+    ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["MATRIX_WORLD"];
+    ed.uniforms["MATRIX_WORLD_IT"]; // used to translate normal from local space into world space
+    ed.uniforms["LIGHT0_POSITION"];
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
     ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
     ed.shaders["glsl"].gpd.vs.source = glslvscode;
@@ -321,23 +322,22 @@ createEffect()
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
-    Effect * e = new Effect( *gpu );
-    if( !e->init( ed ) ) { delete e; return NULL; }
+    AutoRef<EffectResource> e = gpuresdb->createResource<EffectResource>(NULL);
+    if( !e || !e->reset( &ed ) ) return NULL;
 
-    e->textures["DIFFUSE_TEXTURE"].attach( loadTextureFromFile( *gpu, "media::texture/earth.jpg" ) );
-
-    return e;
+    return e.detach();
 }
 
 bool init()
 {
     gpu->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
 
-    AutoObjPtr<GpuMesh>   mesh;
-    AutoObjPtr<Effect> effect;
+    AutoRef<MeshResource>   mesh;
+    AutoRef<EffectResource> effect;
+    AutoRef<ModelResource> model;
 
     // create scene
-    rootScene.attach( createScene( *gpu ) );
+    rootScene.attach( createScene( *gpuresdb ) );
     if( !rootScene ) return false;
 
     // initialize effect
@@ -348,10 +348,16 @@ bool init()
     mesh.attach( createMesh() );
     if( !mesh ) return false;
 
-    // create model
-    model.attach( new GeometryNode(*rootScene) );
-    model->addModel( effect, mesh );
-    model->setPivot( Vector3f(0,0,0) );
+    // initialize model
+    model = gpuresdb->createResource<ModelResource>(NULL);
+    model->setEffectResource( effect );
+    model->setMeshResource( mesh );
+    model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( *gpuresdb, "media::texture/earth.jpg" ) );
+
+    // create geomNode
+    geomNode.attach( new GeometryNode(*rootScene) );
+    geomNode->addModel( model );
+    geomNode->setPivot( Vector3f(0,0,0) );
 
     // update camera stuff
     radius = 3.0f;
@@ -378,7 +384,7 @@ bool init()
 
 void quit()
 {
-    model.clear();
+    geomNode.clear();
     rootScene.clear();
     font.quit();
     safeDelete( sr );
@@ -390,9 +396,9 @@ void draw( const wchar_t * fps )
 
     rootScene->setProj( proj );
     rootScene->setView( view );
-    model->setPosition( position );
-    model->setRotation( arcball.getRotation() );
-    rootScene->renderNodeHierarchy( model );
+    geomNode->setPosition( position );
+    geomNode->setRotation( arcball.getRotation() );
+    rootScene->renderNodeHierarchy( geomNode );
 
     font.drawText( fps, 0, 0 );
     font.drawText(
@@ -488,10 +494,14 @@ int main()
     // initialize input device
     InputInitiator ii(*gpu);
 
+    gpuresdb = new GpuResourceDatabase( *gpu );
+    if( NULL == gpuresdb ) { deleteGpu(gpu); return -1; }
+
     // enter main loop
     int result = run();
 
     // done
+    delete gpuresdb;
     deleteGpu( gpu );
     return result;
 }

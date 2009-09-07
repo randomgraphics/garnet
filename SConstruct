@@ -874,13 +874,13 @@ TARGET_shlibs = [
 TARGET_tests = [
     'GNtestCegui',
     'GNtestD3D10',
-    'GNtestDrawable',
     'GNtestFt2',
     'GNtestGpu',
     'GNtestInput',
     'GNtestPcre',
     'GNtestRenderToTexture',
     'GNtestGpuResDB',
+    'GNtestScene',
     'GNtestSprite',
     'GNut',
     'GNtestXenonNegativeZRange',
@@ -1283,7 +1283,7 @@ for compiler, variants in ALL_targets.iteritems() :
 					dst     = os.path.join( INSTALL_root, dstroot, relpath )
 					InstallAs( dst, src )
 
-		installTargets( 'bin',        TARGET_shlibs + TARGET_tools )
+		installTargets( 'bin',        TARGET_shlibs + TARGET_tools + TARGET_samples )
 		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
 		installTargets( 'doc',        ['GNdoc'] )
 		installMedia  ( 'media',      os.path.join( UTIL_buildDir( compiler, variant ), 'media' ) )
