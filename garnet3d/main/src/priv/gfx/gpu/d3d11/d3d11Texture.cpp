@@ -193,11 +193,11 @@ void GN::gfx::D3D11Texture::updateMipmap(
 
         getDeviceContextRef().UpdateSubresource(
             mTexture,
-            D3D11CalcSubresource( level, face, desc.levels ),
+            D3D11CalcSubresource( (UInt32)level, (UInt32)face, desc.levels ),
             &box,
             data,
-            rowPitch * fmtdesc.blockHeight,
-            slicePitch );
+            (UInt32)(rowPitch * fmtdesc.blockHeight),
+            (UInt32)slicePitch );
     }
 }
 

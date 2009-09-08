@@ -303,7 +303,7 @@ namespace GN { namespace gfx
     ///
     struct VtxBufDesc
     {
-        UInt32 length;        ///< length in bytes of the vertex buffer
+        size_t length;        ///< length in bytes of the vertex buffer
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
     };
 

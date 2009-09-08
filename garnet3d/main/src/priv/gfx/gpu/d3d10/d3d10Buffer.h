@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFlags );
+        bool init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags );
         void quit();
     private:
         void clear()
@@ -62,7 +62,7 @@ namespace GN { namespace gfx
     private:
 
         ID3D10Buffer * mD3DBuffer;
-        UInt32         mBytes;
+        size_t         mBytes;
         bool           mFastCpuWrite;
 
         // ********************************

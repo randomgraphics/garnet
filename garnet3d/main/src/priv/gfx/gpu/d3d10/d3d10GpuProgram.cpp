@@ -388,7 +388,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
 
     ID3D10Device & dev = getDeviceRef();
 
-    dev.VSSetShaderResources( 0, NUM_STAGES, srvArray );
-    dev.GSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES );
-    dev.PSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES * 2 );
+    dev.VSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray );
+    dev.GSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray + NUM_STAGES );
+    dev.PSSetShaderResources( 0, (UInt32)NUM_STAGES, srvArray + NUM_STAGES * 2 );
 }

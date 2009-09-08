@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFlags )
+bool GN::gfx::D3D10Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -28,7 +28,7 @@ bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool fastCpuWrite, UInt32 bindFla
     ID3D10Device & dev = getDeviceRef();
 
     D3D10_BUFFER_DESC d3ddesc;
-    d3ddesc.ByteWidth      = bytes;
+    d3ddesc.ByteWidth      = (UInt32)bytes;
     d3ddesc.Usage          = fastCpuWrite ? D3D10_USAGE_DYNAMIC : D3D10_USAGE_DEFAULT ;
     d3ddesc.BindFlags      = bindFlags;
     d3ddesc.CPUAccessFlags = fastCpuWrite ? D3D10_CPU_ACCESS_WRITE : 0;
@@ -98,7 +98,7 @@ void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * dat
     else
     {
         // update non-dynamic d3d buffer
-        D3D10_BOX box = { offset, 0, 0, offset+bytes, 1, 1 };
+        D3D10_BOX box = { (UInt32)offset, 0, 0, (UInt32)(offset+bytes), 1, 1 };
         dev.UpdateSubresource(
             mD3DBuffer,
             0,   // subresource
