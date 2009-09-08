@@ -8,6 +8,7 @@ using namespace GN::util;
 SpriteRenderer      * sr = NULL;
 FontFaceCreationDesc ffc = { "font::simsun.ttc", (UInt16)64, (UInt16)64, FFQ_ANTIALIASED };
 BitmapFont    ascii, ttf;
+wchar_t              textw[256];
 
 bool initTTF()
 {
@@ -33,6 +34,9 @@ bool init( Gpu & gpu )
 
     // initialize TTF font
     if( !initTTF() ) return false;
+
+    CharacterEncodingConverter cec( CharacterEncodingConverter::GBK, CharacterEncodingConverter::WIDECHAR );
+    cec( textw, "ÄãºÃ!¹þ¹þ" );
 
     // success
     return true;
@@ -94,7 +98,7 @@ void draw( Gpu &, const wchar_t * fps )
 
     if( ttf.ok() )
     {
-        ttf.drawText( L"ÄãºÃ!¹þ¹þ", 100, 100 );
+        ttf.drawText( textw, 100, 100 );
         ttf.drawText( L"Hello!", 200, 200 );
     }
 }
