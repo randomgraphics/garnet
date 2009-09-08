@@ -141,6 +141,22 @@ namespace GN { namespace util
     FontFace * createSimpleAsciiFontFace();
 
     ///
+    /// font alignment flags
+    ///
+    struct TextAlignment
+    {
+        enum ENUM
+        {
+            HORI_LEFT      = 0,
+
+            VERT_TOP       = 0,
+            VERT_CENTER    = 1,
+            VERT_BASELINE  = 2,
+            VERT_BOTTOM    = 3,
+        };
+    };
+
+    ///
     /// text descriptor
     ///
     struct TextDesc
@@ -151,12 +167,13 @@ namespace GN { namespace util
         float           y;          ///< position of top-left corner of the first character
         float           z;          ///< position of top-left corner of the first character
         UInt32          rgba;       ///< text color in R-G-B-A format.
+        UInt32          alignment;  ///< combination of TextAlignment flags
         bool            background; ///< draw background
         bool            kerning;    ///< enable text kerning
     };
 
     ///
-    /// bitmap font renderer. Support unicode characters like CJK.
+    /// bitmap font renderer.
     ///
     class BitmapFont : public StdClass
     {
@@ -221,7 +238,9 @@ namespace GN { namespace util
             td.y = y;
             td.z = 0;
             td.rgba = 0xFFFFFFFF;
+            td.alignment = TextAlignment::HORI_LEFT | TextAlignment::VERT_TOP;
             td.background = true;
+            td.kerning = false;
             drawText( td );
         }
 

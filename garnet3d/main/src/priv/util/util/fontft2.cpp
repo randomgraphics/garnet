@@ -203,14 +203,18 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
         return failure();
     }
 
+    double scalex  = (double)mFace->size->metrics.x_scale / 65536.0 / 64.0;
+    double scaley  = (double)mFace->size->metrics.y_scale / 65536.0 / 64.0;
+    double linegap = mFace->height - (mFace->bbox.yMax - mFace->bbox.yMin);
+
     // initialize descriptor
     mDesc.fontname = cd.fontname;
     mDesc.quality  = cd.quality;
-    mDesc.xmin     = 0;
-    mDesc.xmax     = (float)cd.width;
-    mDesc.ymin     = -(float)cd.height;
-    mDesc.ymax     = 0;
-    mDesc.linegap = 0;
+    mDesc.xmin     = (float)(mFace->bbox.xMin * scalex);
+    mDesc.xmax     = (float)(mFace->bbox.xMax * scalex);
+    mDesc.ymin     = (float)(-mFace->bbox.yMax* scaley);
+    mDesc.ymax     = (float)(-mFace->bbox.yMin* scaley);;
+    mDesc.linegap  = (float)(linegap * scaley);
 
     // success
     return success();
