@@ -156,7 +156,7 @@ bool GN::gfx::D3D10VertexLayout::init(
         const VertexElement & e = format.elements[i];
 
         GN_ASSERT( e.format.getBytesPerBlock() > 0 );
-        size_t elementsize = e.offset + e.format.getBytesPerBlock();
+        UInt32 elementsize = e.offset + e.format.getBytesPerBlock();
 
         if( defaultStrides[e.stream] < elementsize )
         {

@@ -64,7 +64,7 @@ namespace GN { namespace gfx
         ///
         /// get render target count
         ///
-        UInt32 getRenderTargetCount() const { return mNumColors; }
+        UInt32 getRenderTargetCount() const { return (UInt32)mNumColors; }
 
         ///
         /// get render target view

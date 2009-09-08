@@ -199,11 +199,11 @@ void GN::gfx::D3D10Texture::updateMipmap(
 
         dev.UpdateSubresource(
             mTexture,
-            D3D10CalcSubresource( level, face, desc.levels ),
+            D3D10CalcSubresource( (UInt32)level, (UInt32)face, desc.levels ),
             &box,
             data,
-            rowPitch * fmtdesc.blockHeight,
-            slicePitch );
+            (UInt32)(rowPitch * fmtdesc.blockHeight),
+            (UInt32)slicePitch );
     }
 }
 
