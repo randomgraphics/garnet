@@ -176,7 +176,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GL_COLOR_ATTACHMENT15_EXT,
         };
         GN_ASSERT( newrt.colortargets.size() <= 16 );
-        GN_OGL_CHECK( glDrawBuffersARB( newrt.colortargets.size(), buffers ) );
+        GN_OGL_CHECK( glDrawBuffersARB( (GLsizei)newrt.colortargets.size(), buffers ) );
 
         // bind color buffers
         for( GLenum i = 0; i < newrt.colortargets.size(); ++i )

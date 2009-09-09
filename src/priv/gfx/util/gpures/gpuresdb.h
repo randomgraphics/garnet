@@ -33,7 +33,7 @@ namespace GN { namespace gfx
         {
         }
 
-        GpuResourceHandle( UInt32 managerIndex, UInt32 internalHandle )
+        GpuResourceHandle( size_t managerIndex, UInt32 internalHandle )
         {
             mIndexPlusOne = managerIndex + 1;
             mInternalHandle = internalHandle;

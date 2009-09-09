@@ -348,11 +348,10 @@ namespace GN { namespace gfx
     ///
     struct IdxBufDesc
     {
-        UInt32 numidx;        ///< number of indices in index buffer
+        size_t numidx;        ///< number of indices in index buffer
         bool   bits32;        ///< is 32-bit index buffer or not.
         bool   fastCpuWrite;  ///< support fast CPU write (rendering speed compromised)
     };
-    GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 
     ///
     /// Index Buffer

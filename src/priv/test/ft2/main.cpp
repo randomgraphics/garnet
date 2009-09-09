@@ -57,12 +57,12 @@ public:
 	void load( const char * font_file , int _w , int _h )
 	{
 		//加载一个字体,取默认的Face,一般为Regualer
-        FontFaceDesc ffd;
-        ffd.fontname = font_file;
-        ffd.width = (size_t)_w;
-        ffd.height = (size_t)_h;
-        ffd.quality = FFQ_MONOCHROM;
-        mFace.attach( createFontFace( ffd ) );
+        FontFaceCreationDesc ffc;
+        ffc.fontname = font_file;
+        ffc.width = (UInt16)_w;
+        ffc.height = (UInt16)_h;
+        ffc.quality = FFQ_MONOCHROM;
+        mFace.attach( createFontFace( ffc ) );
         if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;
@@ -87,10 +87,10 @@ public:
 
 		charTex.m_Width = width;
 		charTex.m_Height = height;
-		charTex.m_adv_x = fbm.advx;
-		charTex.m_adv_y = fbm.advy;
-		charTex.m_delta_x = fbm.offx;
-		charTex.m_delta_y = fbm.offy;
+		charTex.m_adv_x = fbm.horiAdvance;
+		charTex.m_adv_y = fbm.vertAdvance;
+		charTex.m_delta_x = fbm.horiBearingX;
+		charTex.m_delta_y = fbm.horiBearingY;
 		glGenTextures(1,&charTex.m_texID);
         glBindTexture(GL_TEXTURE_2D,charTex.m_texID);
 		char* pBuf = new char[width * height * 4];
