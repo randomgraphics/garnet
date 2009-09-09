@@ -1460,7 +1460,7 @@ sGetFaceChunkMatID(
     }
 
     // this is a new material
-    UInt32 newidx = dst.materials.size();
+    UInt32 newidx = (UInt32)dst.materials.size();
     dst.materials.resize( dst.materials.size() + 1 );
     dst.materials.back() = *mat;
     return newidx;

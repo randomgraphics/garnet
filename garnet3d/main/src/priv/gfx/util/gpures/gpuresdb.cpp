@@ -194,7 +194,7 @@ GpuResourceDatabase::Impl::createResource(
     // create new handle
     UInt32 internalHandle = mgr->resources.add( name, resimpl );
     if( 0 ==internalHandle ) return AutoRef<GpuResource>::NULLREF;
-    resimpl->handle.set( mgr->index, internalHandle );
+    resimpl->handle.set( (UInt32)mgr->index, internalHandle );
 
     // done
     return newres;

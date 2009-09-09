@@ -147,7 +147,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     // initialize index buffer
     if( desc.numidx > 0 )
     {
-        IdxBufDesc ibd = { desc.numidx, desc.idx32, desc.dynaib };
+        IdxBufDesc ibd = { (UInt32)desc.numidx, desc.idx32, desc.dynaib };
         mIdxBuf.gpudata.attach( gpu.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return false;
 
