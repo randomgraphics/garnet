@@ -73,3 +73,30 @@ void GN::getEnv( StrA & result, const char * name )
     }
 #endif
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::GuidStr GN::Guid::toStr() const
+{
+    GuidStr s;
+
+    strPrintf(
+        s.str,
+        sizeof(s),
+        "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+        data1,
+        data2,
+        data3,
+        data4[0],
+        data4[1],
+        data4[2],
+        data4[3],
+        data4[4],
+        data4[5],
+        data4[6],
+        data4[7] );
+
+    return s;
+}
+
