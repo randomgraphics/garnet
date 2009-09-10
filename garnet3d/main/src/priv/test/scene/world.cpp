@@ -40,15 +40,7 @@ const Guid GN::scene::LIGHT_ENTITY   = { 0x64c543ac, 0x6c7c, 0x4781, { 0xbb, 0x2
 void GN::scene::World::Impl::clear()
 {
     // delete all entities
-    for( size_t i = 0; i < mManagers.size(); ++i )
-    {
-        EntityManager & m = mManagers[i];
-
-        for( UInt32 h = m.entities.first(); h != 0; h = m.entities.next( h ) )
-        {
-            delete (EntityInternal*)m.entities[h];
-        }
-    }
+    deleteAllEntities();
 
     // clear everything
     mManagers.clear();
@@ -62,15 +54,12 @@ void GN::scene::World::Impl::clear()
     registerEntityFactory( LIGHT_ENTITY, "Build-in light entity", lightFactory, this );
 }
 
-#pragma warning( disable: 4100 ) // unreferneced formal parameter
-
 //
 //
 // -----------------------------------------------------------------------------
 bool GN::scene::World::Impl::hasEntityFactory( const Guid & type )
 {
-    GN_UNIMPL();
-    return false;
+    return NULL != getManager( type );
 }
 
 //
@@ -78,16 +67,44 @@ bool GN::scene::World::Impl::hasEntityFactory( const Guid & type )
 // -----------------------------------------------------------------------------
 bool GN::scene::World::Impl::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter )
 {
-    GN_UNIMPL();
-    return false;
+    if( hasEntityFactory( type ) )
+    {
+        GN_ERROR(sLogger)( "Entity type exisits already!" );
+        return false;
+    }
+
+    if( NULL == factory.initializeEntity )
+    {
+        GN_ERROR(sLogger)( "Entity factory has NULL function pointer(s)." );
+        return false;
+    }
+
+    if( mManagers.size() == mManagers.MAX_SIZE )
+    {
+        GN_ERROR(sLogger)( "Entity manager pool is full. Cannot register more entity types!" );
+        return false;
+    }
+
+    mManagers.resize( mManagers.size() + 1 );
+
+    EntityManager & mgr = mManagers.back();
+
+    mgr.guid = type;
+    mgr.desc = desc ? desc : "unnamed entity type";
+    mgr.index = mManagers.size() - 1;
+    mgr.factory = factory;
+    mgr.param = factoryParameter;
+    GN_ASSERT( mgr.entities.empty() );
+
+    return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::unregisterEntityFactory( const Guid & type )
+void GN::scene::World::Impl::unregisterEntityFactory( const Guid & )
 {
-    GN_UNIMPL();
+    GN_UNIMPL_WARNING();
 }
 
 //
@@ -95,9 +112,18 @@ void GN::scene::World::Impl::unregisterEntityFactory( const Guid & type )
 // -----------------------------------------------------------------------------
 EntityFactory GN::scene::World::Impl::getEntityFactory( const Guid & type )
 {
-    GN_UNIMPL();
-    EntityFactory dummy = { NULL };
-    return dummy;
+    EntityManager * mgr = getManager( type );
+
+    if( mgr )
+    {
+        return mgr->factory;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Invalid entity type: %s", type.toStr() );
+        EntityFactory dummy = { NULL };
+        return dummy;
+    }
 }
 
 //
@@ -105,8 +131,47 @@ EntityFactory GN::scene::World::Impl::getEntityFactory( const Guid & type )
 // -----------------------------------------------------------------------------
 Entity * GN::scene::World::Impl::createEntity( const Guid & type, const char * name )
 {
-    GN_UNIMPL();
-    return NULL;
+    EntityManager * mgr = getManager( type );
+
+    if( !mgr )
+    {
+        GN_ERROR(sLogger)( "Entity creation failed: invalid entity type: %s", type.toStr() );
+        return NULL;
+    }
+
+    // compose a unique name for unnamed entity
+    char unnamed[256];
+    if( 0 == name || 0 == *name )
+    {
+        static int i = 0;
+        ++i;
+        strPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.cptr(), i );
+        name = unnamed;
+
+        GN_ASSERT( !mgr->entities.validName( name ) );
+    }
+
+    if( mgr->entities.validName( name ) )
+    {
+        GN_ERROR(sLogger)( "Entity creation failed: entity named '%s' exists already." );
+        return NULL;
+    }
+
+    // create new ID
+    EntityID id( mgr->index, mgr->entities.add(name) );
+    if( 0 == id.internalHandle() ) return false;
+
+    // create new entity
+    AutoObjPtr<EntityInternal> newEntity( new EntityInternal( mOwner, id.i32() ) );
+    if( !newEntity ||
+        !mgr->factory.initializeEntity( *newEntity, mgr->param ) )
+    {
+        mgr->entities.remove( id.internalHandle() );
+        return NULL;
+    }
+
+    // done
+    return newEntity.detach();
 }
 
 //
@@ -114,15 +179,51 @@ Entity * GN::scene::World::Impl::createEntity( const Guid & type, const char * n
 // -----------------------------------------------------------------------------
 void GN::scene::World::Impl::deleteEntity( const Guid & type, const char * name )
 {
-    GN_UNIMPL();
+    EntityManager * mgr = getManager( type );
+
+    if( !mgr )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid entity type: %s", type.toStr() );
+        return;
+    }
+
+    if( !mgr->entities.validName( name ) )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid entity named '%s'.", name ? name : "<NULL_NAME>" );
+        return;
+    }
+
+    UInt32 internalHandle = mgr->entities.name2handle( name );
+
+    delete (EntityInternal*)mgr->entities[internalHandle];
+
+    mgr->entities.remove( internalHandle );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::deleteEntity( int id )
+void GN::scene::World::Impl::deleteEntity( int idAsI32 )
 {
-    GN_UNIMPL();
+    EntityID id( idAsI32 );
+
+    if( id.managerIndex() >= mManagers.size() )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
+        return;
+    }
+
+    EntityManager & mgr = mManagers[id.managerIndex()];
+
+    if( !mgr.entities.validHandle( id.internalHandle() ) )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
+        return;
+    }
+
+    delete (EntityInternal*)mgr.entities[id.internalHandle()];
+
+    mgr.entities.remove( id.internalHandle() );
 }
 
 //
@@ -130,7 +231,15 @@ void GN::scene::World::Impl::deleteEntity( int id )
 // -----------------------------------------------------------------------------
 void GN::scene::World::Impl::deleteEntity( Entity * entity )
 {
-    GN_UNIMPL();
+    if( NULL == entity ) return;
+
+    if( this != entity->world().mImpl )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: the entity is from another world." );
+        return;
+    }
+
+    deleteEntity( entity->id() );
 }
 
 //
@@ -138,7 +247,15 @@ void GN::scene::World::Impl::deleteEntity( Entity * entity )
 // -----------------------------------------------------------------------------;
 void GN::scene::World::Impl::deleteAllEntities()
 {
-    GN_UNIMPL();
+    for( size_t i = 0; i < mManagers.size(); ++i )
+    {
+        EntityManager & m = mManagers[i];
+
+        for( UInt32 h = m.entities.first(); h != 0; h = m.entities.next( h ) )
+        {
+            delete (EntityInternal*)m.entities[h];
+        }
+    }
 }
 
 //
@@ -146,8 +263,13 @@ void GN::scene::World::Impl::deleteAllEntities()
 // -----------------------------------------------------------------------------
 Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * name )
 {
-    GN_UNIMPL();
-    return NULL;
+    EntityManager * mgr = getManager( type );
+
+    if( !mgr ) return NULL;
+
+    if( !mgr->entities.validName( name ) ) return NULL;
+
+    return mgr->entities[name];
 }
 
 //
@@ -155,6 +277,7 @@ Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * nam
 // -----------------------------------------------------------------------------
 Entity * GN::scene::World::Impl::findEntity( int id )
 {
+    GN_UNUSED_PARAM( id );
     GN_UNIMPL();
     return NULL;
 }
