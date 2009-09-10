@@ -498,7 +498,8 @@ namespace GN
         {
             GN_ASSERT( validName(name) );
             typename NameMap::const_iterator i = mNames.find( name );
-            return mItems[mItems.get( i->second )]->data;
+            H handle = i->second;
+            return mItems[handle]->data;
         }
 
         T & operator[]( H h ) const { return get(h); }
