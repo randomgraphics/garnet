@@ -212,6 +212,18 @@ namespace GN
     };
 
     ///
+    /// GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+    ///
+    struct GuidStr
+    {
+        /// The GUID as fixed size string
+        char str[1+8+1+4+1+4+1+4+1+12+1];
+
+        /// operator to convert to const char *
+        operator const char *() const { return str; }
+    };
+
+    ///
     /// GUID class
     ///
     struct Guid
@@ -222,6 +234,13 @@ namespace GN
         UInt16 data2;
         UInt16 data3;
         UInt8  data4[8];
+        //@}
+
+        /// \name public methods
+        //@{
+
+        GuidStr toStr() const;
+
         //@}
 
         /// \name operators

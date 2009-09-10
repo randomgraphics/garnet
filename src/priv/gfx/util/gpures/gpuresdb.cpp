@@ -12,30 +12,6 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
-// local functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-static StrA sGuidToStr( const Guid & guid )
-{
-    return strFormat(
-        "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-        guid.data1,
-        guid.data2,
-        guid.data3,
-        guid.data4[0],
-        guid.data4[1],
-        guid.data4[2],
-        guid.data4[3],
-        guid.data4[4],
-        guid.data4[5],
-        guid.data4[6],
-        guid.data4[7] );
-}
-
-// *****************************************************************************
 // GpuResource::Impl public methods
 // *****************************************************************************
 
@@ -159,7 +135,7 @@ GpuResourceDatabase::Impl::createResource(
     ResourceManager * mgr = getManager( type );
     if( NULL == mgr )
     {
-        GN_ERROR(sLogger)( "Invalid resouce type: %s", sGuidToStr(type) );
+        GN_ERROR(sLogger)( "Invalid resouce type: %s", type.toStr() );
         return AutoRef<GpuResource>::NULLREF;
     }
 
