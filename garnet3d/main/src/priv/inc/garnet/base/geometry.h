@@ -2593,12 +2593,12 @@ namespace GN
     ///
     /// Calculate bounding sphere.
     ///
-    void calcBoundingSphere( Spheref & result, const Vector3f * positions, size_t count, size_t strideInBytes );
+    void calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t count, size_t strideInBytes );
 
     ///
-    /// Calculate bounding box.
+    /// Calculate axis aligned bounding box.
     ///
-    void calcBoundingBox( Boxf & result, const Vector3f * positions, size_t count, size_t strideInBytes );
+    void calculateAABB( Boxf & result, const Vector3f * positions, size_t count, size_t strideInBytes );
 }
 
 // *****************************************************************************

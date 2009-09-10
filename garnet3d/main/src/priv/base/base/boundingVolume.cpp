@@ -5,13 +5,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.BoundVolume");
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calcBoundingSphere( Spheref & result, const Vector3f * positions, size_t count, size_t strideInBytes )
+void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t count, size_t strideInBytes )
 {
     GN_GUARD;
 
     Boxf box;
 
-    calcBoundingBox( box, positions, count, strideInBytes );
+    calculateAABB( box, positions, count, strideInBytes );
 
     result.center = box.center();
     result.radius = Vector3f::sDistance( result.center, box.pos() );
@@ -22,7 +22,7 @@ void GN::calcBoundingSphere( Spheref & result, const Vector3f * positions, size_
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calcBoundingBox( Boxf & result, const Vector3f * positions, size_t count, size_t strideInBytes )
+void GN::calculateAABB( Boxf & result, const Vector3f * positions, size_t count, size_t strideInBytes )
 {
     GN_GUARD;
 

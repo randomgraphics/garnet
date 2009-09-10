@@ -8,7 +8,7 @@
 
 #include "garnet/GNgfx.h"
 
-namespace GN { namespace scene2
+namespace GN { namespace scene
 {
     class NodeBase;
 
@@ -21,6 +21,10 @@ namespace GN { namespace scene2
 
     class World;
 
+    // *************************************************************************
+    // Entity and World
+    // *************************************************************************
+
     ///
     /// Represent a entity in the world
     ///
@@ -31,18 +35,19 @@ namespace GN { namespace scene2
         //@{
 
         World             & world() const;
-        int               & id() const;
+        int                 id() const;
         const char        * name() const;
 
-        bool                hasNode( const Guid & type ) const;
-
-        // Note: invalid type triggers exception.
-        const NodeBase    & getNode( const Guid & type ) const;
-        NodeBase          & getNode( const Guid & type );
+        bool                hasNode( const Guid & nodeType ) const;
+        const NodeBase    * getNode( const Guid & nodeType ) const;
+        NodeBase          * getNode( const Guid & nodeType );
+        void                attachNode( const Guid & nodeType, NodeBase * node );
+        void                detachNode( const Guid & nodeType ) { attachNode( nodeType, NULL ); }
 
         // templated node helpers
-        template<class T> const T & getNode() const { return (const T&)getNode( T::guid() ); }
-        template<class T> T       & getNode()       { return (T&)getNode( T::guid() ); }
+        template<class T> const T * getNode() const        { return (const T*)getNode( T::guid() ); }
+        template<class T> T       * getNode()              { return (T*)getNode( T::guid() ); }
+        template<class T> void      attachNode( T * node ) { attachNode( T::guid(), node ); }
 
         //@}
 
@@ -50,23 +55,30 @@ namespace GN { namespace scene2
 
         //@{
 
-        Entity( World & world, int id ) : mWorld(world), mId(id) {}
-        virtual ~Entity() {}
+        Entity( World & world, int id );
+        virtual ~Entity();
 
         //@}
 
     private:
 
-        World & mWorld;
-        int     mId;
+        friend class World;
+        class  Impl;
+        Impl * mImpl;
     };
 
-    struct NodeFactory
+    ///
+    /// entity factory
+    ///
+    struct EntityFactory
     {
-        NodeBase * (*createNode)();
-        void       (*deleteNode)( NodeBase * );
+        /// initialize a newly created entity
+        bool (*initializeEntity)( Entity &, const void * factoryParameter );
     };
 
+    ///
+    /// world class that manages instance of all entities
+    ///
     class World
     {
     public:
@@ -77,26 +89,30 @@ namespace GN { namespace scene2
         virtual ~World();
 
         /// delete all entities, unregister all non-built-in factories
-        void clear();
+        void          clear();
+
+        bool          hasEntityFactory( const Guid & type );
+        bool          registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter );
+        void          unregisterEntityFactory( const Guid & type );
+        EntityFactory getEntityFactory( const Guid & type );
+
+        Entity      * createEntity( const Guid & type, const char * name = NULL );
+        void          deleteEntity( const Guid & type, const char * name );
+        void          deleteEntity( int id );
+        void          deleteEntity( Entity * entity );
+        void          deleteAllEntities();
+        Entity      * findEntity( const Guid & type, const char * name );
+        Entity      * findEntity( int id );
+        Entity      * findOrCreateEntity( const Guid & type, const char * name );
 
         //@}
 
-        //@{
-        bool registerNodeFactory( const Guid & nodeType, NodeFactory factory );
-        void hasNodeFactory( const Guid & nodeType );
-        //@}
+    private:
 
-        //@{
-        Entity * createEntity( const char * name );
-        void     deleteEntity( const char * name );
-        void     deleteEntity( int id );
-        void     deleteEntity( Entity * );
-        void     deleteAllEntities();
-        Entity * findEntity( const char * name );
-        Entity * findEntity( int id );
-        Entity * findOrCreateEntity( const char * name );
-        Entity * findOrCreateEntity( int id );
-        //@}
+        friend class Entity;
+        friend class Entity::Impl;
+        class Impl;
+        Impl * mImpl;
     };
 
     ///
@@ -107,6 +123,9 @@ namespace GN { namespace scene2
     public:
 
         //@{
+
+        /// public destructor
+        virtual ~NodeBase() {}
 
         /// Get the entity that the node belongs to
         Entity & entity() const { return mEntity; }
@@ -120,8 +139,8 @@ namespace GN { namespace scene2
 
         //@{
 
+        // protected constructor
         NodeBase( Entity & entity ) : mEntity(entity) {}
-        virtual ~NodeBase() {}
 
         //@}
 
@@ -129,6 +148,61 @@ namespace GN { namespace scene2
 
         Entity & mEntity;
     };
+
+    /// build-in entity types
+    //@{
+
+    extern const Guid SPATIAL_ENTITY; ///< entity that has spatial node only
+    extern const Guid VISUAL_ENTITY;  ///< entity that has spatial and visual node
+    extern const Guid LIGHT_ENTITY;   ///< entity that has spatial and light node
+
+    //@}
+
+    // *************************************************************************
+    // Camera
+    // *************************************************************************
+
+    ///
+    /// camera class
+    ///
+    class Camera
+    {
+        // *****************************
+        // public methods
+        // *****************************
+    public:
+
+        //@{
+
+        /// constructor
+        Camera();
+
+        /// destructor
+        ~Camera();
+
+        //@}
+
+        //@{
+
+        void setViewMatrix( const Matrix44f & );
+        void setProjectionMatrix( const Matrix44f & );
+        void setViewport( const Rect<UInt32> & );
+
+        const Matrix44f    & getViewMatrix() const;
+        const Matrix44f    & getProjectionMatrix() const;
+        const Rect<UInt32> & getViewport() const;
+
+        //@}
+
+    private:
+
+        class Impl;
+        Impl * mImpl;
+    };
+
+    // *************************************************************************
+    // Spatial node
+    // *************************************************************************
 
     ///
     /// Basic class that contains node's spatial inforamtion
@@ -140,11 +214,14 @@ namespace GN { namespace scene2
         //@{
 
         static const Guid & guid();
-        SpatialGraph      & graph() const { return mGraph; }
 
         //@}
 
         //@{
+
+        virtual             ~SpatialNode();
+
+        SpatialGraph      & graph() const;
 
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
@@ -171,14 +248,14 @@ namespace GN { namespace scene2
 
         //@{
 
-        SpatialNode( Entity & entity, SpatialGraph & graph ) : NodeBase(entity), mGraph(graph) {}
-        virtual ~SpatialNode() {}
+        SpatialNode( Entity & entity, SpatialGraph & graph );
 
         //@}
 
     private:
 
-        SpatialGraph & mGraph;
+        class Impl;
+        Impl * mImpl;
     };
 
     ///
@@ -188,7 +265,20 @@ namespace GN { namespace scene2
     ///
     class SpatialGraph
     {
+    public:
+
+        //@{
+
+        SpatialGraph() {}
+
+        virtual ~SpatialGraph() {}
+
+        //@}
     };
+
+    // *************************************************************************
+    // Visual node
+    // *************************************************************************
 
     ///
     /// contains visual information
@@ -199,8 +289,17 @@ namespace GN { namespace scene2
 
         //@{
 
-        void addModel( gfx::GpuResource * model );
-        void draw();
+        static const Guid & guid();
+
+        //@}
+
+        //@{
+
+        virtual       ~VisualNode();
+
+        VisualGraph & graph() const;
+        void          addModel( gfx::GpuResource * model );
+        void          draw( Camera & ) const; ///< render myself and all children.
 
         //@}
 
@@ -208,22 +307,14 @@ namespace GN { namespace scene2
 
         //@{
 
-        VisualNode( Entity & entity, VisualGraph & graph )
-            : NodeBase( entity )
-            , mGraph( graph )
-        {
-        }
-
-        virtual ~VisualNode()
-        {
-        }
+        VisualNode( Entity & entity, VisualGraph & graph );
 
         //@}
 
     private:
 
-        VisualGraph & mGraph;
-
+        class Impl;
+        Impl * mImpl;
     };
 
     ///
@@ -235,7 +326,13 @@ namespace GN { namespace scene2
 
         //@{
 
-        // public methods go here.
+        static const Guid & guid();
+
+        //@}
+
+        //@{
+
+        virtual ~LightNode();
 
         //@}
 
@@ -243,21 +340,14 @@ namespace GN { namespace scene2
 
         //@{
 
-        LightNode( Entity & entity, VisualGraph & graph )
-            : NodeBase( entity )
-            , mGraph( graph )
-        {
-        }
-
-        virtual ~LightNode()
-        {
-        }
+        LightNode( Entity & entity, VisualGraph & graph );
 
         //@}
 
     private:
 
-        VisualGraph & mGraph;
+        class Impl;
+        Impl * mImpl;
     };
 
     ///
@@ -265,8 +355,24 @@ namespace GN { namespace scene2
     ///
     class VisualGraph
     {
+    public:
+
+        //@{
+
+        VisualGraph() {}
+
+        virtual ~VisualGraph() {}
+
+        //@}
+
+    private:
+
+        class Impl;
+        Impl * mImpl;
     };
 }}
+
+#include "scene.inl"
 
 // *****************************************************************************
 //                                     EOF

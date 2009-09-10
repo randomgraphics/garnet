@@ -95,6 +95,27 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
     context.idxbuf = mIdxBuf.gpudata;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::Impl::calculateAABB( Box<float> & box ) const
+{
+    GN_UNIMPL();
+    box.x = box.y = box.w = box.h = 0.0f;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) const
+{
+    GN_UNIMPL();
+    sphere.center.set( 0, 0, 0 );
+    sphere.radius = 0;
+}
+
 // *****************************************************************************
 // GN::gfx::MeshResource::Impl - private methods
 // *****************************************************************************
@@ -280,4 +301,22 @@ void
 GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
 {
     mImpl->applyToContext( context );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::calculateAABB( Box<float> & box ) const
+{
+    return mImpl->calculateAABB( box );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::calculateBoundingSphere( Sphere<float> & sphere ) const
+{
+    return mImpl->calculateBoundingSphere( sphere );
 }

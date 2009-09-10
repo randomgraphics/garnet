@@ -248,6 +248,8 @@ namespace GN { namespace gfx
         bool                     reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
         void                     applyToContext( GpuContext & context ) const;
+        void                     calculateAABB( Box<float> & ) const; // AABB: axis aligned bounding box
+        void                     calculateBoundingSphere( Sphere<float> & ) const;
         //@}
 
     protected:
