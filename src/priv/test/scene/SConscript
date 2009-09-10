@@ -1,7 +1,13 @@
 Import( 'GN' )
 
 sources = [
+	'camera.cpp',
+	'entity.cpp',
+	'lightNode.cpp',
 	'main.cpp',
+	'spatialNode.cpp',
+	'visualNode.cpp',
+	'world.cpp',
 	]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
