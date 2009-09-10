@@ -31,8 +31,8 @@ namespace GN { namespace scene
 
         enum { MAX_TYPES = 2^8-1 };
 
-        explicit EntityID( UInt32 u32 )
-            : mI32( u32 )
+        explicit EntityID( SInt32 i32 )
+            : mI32( i32 )
         {
         }
 
@@ -112,6 +112,7 @@ namespace GN { namespace scene
             StrA          desc;
             size_t        index; // index into manager array
             EntityFactory factory;
+            const void *  param;
             EntityMap     entities;
         };
 
@@ -138,13 +139,11 @@ namespace GN { namespace scene
 
     private:
 
-        //@{
+        EntityManager * getManager( const Guid & type ) const;
 
         static bool sInitSpatialEntity( Entity & entity, const void * parameters );
         static bool sInitVisualEntity( Entity & entity, const void * parameters );
         static bool sInitLightEntity( Entity & entity, const void * parameters );
-
-        //@}
     };
 }}
 
