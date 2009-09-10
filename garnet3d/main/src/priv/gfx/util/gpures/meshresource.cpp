@@ -46,6 +46,29 @@ struct VertexFormatProperties
     }
 };
 
+//
+//
+// -----------------------------------------------------------------------------
+const VertexElement * sFindPositionElement( const VertexFormat & vf )
+{
+    for( size_t i = 0; i < vf.numElements; ++i )
+    {
+        const VertexElement & e = vf.elements[i];
+
+        if( ( 0 == strCmpI( "position", e.bindingName ) ||
+              0 == strCmpI( "pos", e.bindingName ) ||
+              0 == strCmpI( "gl_vertex", e.bindingName ) )
+            &&
+            0 == e.bindingIndex )
+        {
+            return &e;
+        }
+    }
+
+    GN_ERROR(sLogger)( "Position semantice is not found in vertex format." );
+    return NULL;
+}
+
 // *****************************************************************************
 // GN::gfx::MeshResource::Impl - public methods
 // *****************************************************************************
@@ -101,8 +124,51 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 void
 GN::gfx::MeshResource::Impl::calculateAABB( Box<float> & box ) const
 {
-    GN_UNIMPL();
     box.x = box.y = box.w = box.h = 0.0f;
+
+    const VertexElement * positionElement = sFindPositionElement( mDesc.vtxfmt );
+    if( NULL == positionElement ) return;
+
+    std::vector<UInt8> vertices;
+    mVtxBufs[positionElement->stream].gpudata->readback( vertices );
+
+    float * x, * y, * z;
+    size_t stride;
+    if( ColorFormat::FLOAT1 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = 0;
+        z = 0;
+        stride = sizeof(float);
+    }
+    else if( ColorFormat::FLOAT2 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = 0;
+        stride = sizeof(float) * 2;
+    }
+    else if( ColorFormat::FLOAT3 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = (float*)(vertices.cptr() + sizeof(float)*2);;
+        stride = sizeof(float) * 3;
+    }
+    else if( ColorFormat::FLOAT4 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = (float*)(vertices.cptr() + sizeof(float)*2);;
+        stride = sizeof(float) * 4;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().c_str() );
+        return;
+    }
+
+    GN::calculateAABB( box, x, stride, y, stride, z, stride, mDesc.numvtx );
 }
 
 //
@@ -111,9 +177,52 @@ GN::gfx::MeshResource::Impl::calculateAABB( Box<float> & box ) const
 void
 GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) const
 {
-    GN_UNIMPL();
     sphere.center.set( 0, 0, 0 );
     sphere.radius = 0;
+
+    const VertexElement * positionElement = sFindPositionElement( mDesc.vtxfmt );
+    if( NULL == positionElement ) return;
+
+    std::vector<UInt8> vertices;
+    mVtxBufs[positionElement->stream].gpudata->readback( vertices );
+
+    float * x, * y, * z;
+    size_t stride;
+    if( ColorFormat::FLOAT1 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = 0;
+        z = 0;
+        stride = sizeof(float);
+    }
+    else if( ColorFormat::FLOAT2 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = 0;
+        stride = sizeof(float) * 2;
+    }
+    else if( ColorFormat::FLOAT3 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = (float*)(vertices.cptr() + sizeof(float)*2);;
+        stride = sizeof(float) * 3;
+    }
+    else if( ColorFormat::FLOAT4 == positionElement->format )
+    {
+        x = (float*)vertices.cptr();
+        y = (float*)(vertices.cptr() + sizeof(float));
+        z = (float*)(vertices.cptr() + sizeof(float)*2);;
+        stride = sizeof(float) * 4;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Bounding sphere calculation failed: unsupported vertex format %s", positionElement->format.toString().c_str() );
+        return;
+    }
+
+    GN::calculateBoundingSphere( sphere, x, stride, y, stride, z, stride, mDesc.numvtx );
 }
 
 // *****************************************************************************

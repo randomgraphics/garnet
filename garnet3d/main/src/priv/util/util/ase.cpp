@@ -786,7 +786,7 @@ static bool sReadMesh( AseMesh & m, const Matrix44f & transform, AseFile & ase )
     // calculate mesh bounding box
     if( m.vertices.size() > 0 )
     {
-        calculateAABB( m.bbox, &m.vertices[0].p, m.vertices.size(), sizeof(AseVertex) );
+        calculateAABB( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
     }
     else
     {

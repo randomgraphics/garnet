@@ -101,6 +101,7 @@ GN::scene::Entity::~Entity()
 //
 // -----------------------------------------------------------------------------
 World             & GN::scene::Entity::world() const { return mImpl->world(); }
+int                 GN::scene::Entity::id() const { return mImpl->id(); }
 const char        * GN::scene::Entity::name() const { return mImpl->name(); }
 
 bool                GN::scene::Entity::hasNode( const Guid & nodeType ) const { return mImpl->hasNode( nodeType ); }

@@ -275,16 +275,48 @@ Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * nam
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::scene::World::Impl::findEntity( int id )
+Entity * GN::scene::World::Impl::findEntity( int idAsI32 )
 {
-    GN_UNUSED_PARAM( id );
-    GN_UNIMPL();
-    return NULL;
+    EntityID id( idAsI32 );
+
+    if( id.managerIndex() >= mManagers.size() )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
+        return NULL;
+    }
+
+    EntityManager & mgr = mManagers[id.managerIndex()];
+
+    if( !mgr.entities.validHandle( id.internalHandle() ) )
+    {
+        GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
+        return NULL;
+    }
+
+    return mgr.entities[id.internalHandle()];
 }
 
 // *****************************************************************************
 // World::Impl private methods
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::scene::World::Impl::EntityManager *
+GN::scene::World::Impl::getManager( const Guid & type ) const
+{
+    for( size_t i = 0; i < mManagers.size(); ++i )
+    {
+        const EntityManager & m = mManagers[i];
+        if( type == m.guid )
+        {
+            return const_cast<EntityManager*>( &m );
+        }
+    }
+
+    return NULL;
+}
 
 //
 //
