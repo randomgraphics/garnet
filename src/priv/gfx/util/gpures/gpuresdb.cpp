@@ -242,7 +242,14 @@ GpuResourceDatabase::Impl::getResourceName( const GpuResource * resource ) const
 
     const ResourceManager & mgr = mManagers[resimpl->handle.managerIndex()];
 
-    return mgr.resources.handle2name( resimpl->handle.internalHandle() );
+    const char * name = mgr.resources.handle2name( resimpl->handle.internalHandle() );
+
+    if( NULL == name )
+    {
+        GN_ERROR(sLogger)( "Fail to get reosource name: Invalid resource pointer." );
+    }
+
+    return name;
 }
 
 //
@@ -255,7 +262,7 @@ GpuResourceDatabase::Impl::getResourceType( const GpuResource * resource ) const
 
     if( NULL == resimpl )
     {
-        static const Guid INVALID_TYPE = { 0x374dda0c, 0x138e, 0x4b6a, { 0x94, 0xae, 0xce, 0x56, 0xb7, 0x9c, 0x63, 0x7b } };
+        static const Guid INVALID_TYPE = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
         return INVALID_TYPE;
     }
 

@@ -26,7 +26,7 @@ GN::assertFunc(
     bool *       ignoreFromNowOn ) throw()
 {
     if( RAB_SILENCE == gRuntimeAssertBehavior ) return false;
-    
+
     ::fprintf(
         stderr,
         "\n"
@@ -48,13 +48,13 @@ GN::assertFunc(
     strPrintf( buf, 1024,
         "%s(%d)\n"
         "%s\n\n"
-        "转入调试器？\n"
-        "（如果选择Cancel，则以后这个Assert失败时将不再弹出对话框）",
+        "Break into debugger?\n"
+        "(If canceled, this specific assert failure will not be triggered again)",
         file?file:"", line, msg?msg:"" );
     int ret = ::MessageBoxA(
         0,
         buf,
-        "Assert失败",
+        "Assert Failure",
         MB_YESNOCANCEL|MB_ICONQUESTION
         );
 

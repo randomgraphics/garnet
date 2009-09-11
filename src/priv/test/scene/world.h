@@ -95,6 +95,8 @@ namespace GN { namespace scene
         void          deleteAllEntities();
         Entity      * findEntity( const Guid & type, const char * name );
         Entity      * findEntity( int id );
+        const Guid  & getEntityType( int id ) const;
+        const char  * getEntityName( int id ) const;
 
         //@}
 

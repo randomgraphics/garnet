@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "camera.h"
+#include "visualGraph.h"
 
 using namespace GN;
 using namespace GN::scene;
@@ -66,8 +67,8 @@ GN::scene::Camera::~Camera()
 //
 // -----------------------------------------------------------------------------
 void                 GN::scene::Camera::setViewMatrix( const Matrix44f & m ) { return mImpl->setViewMatrix( m ); }
-void                 GN::scene::Camera::setProjectionMatrix( const Matrix44f & m ) { return mImpl->setProjectionMatrix( m ); }
-void                 GN::scene::Camera::setViewport( const Rect<UInt32> & v ) { return mImpl->setViewport( v ); }
 const Matrix44f    & GN::scene::Camera::getViewMatrix() const { return mImpl->getViewMatrix(); }
+void                 GN::scene::Camera::setProjectionMatrix( const Matrix44f & m ) { return mImpl->setProjectionMatrix( m ); }
 const Matrix44f    & GN::scene::Camera::getProjectionMatrix() const { return mImpl->getProjectionMatrix(); }
+void                 GN::scene::Camera::setViewport( const Rect<UInt32> & v ) { return mImpl->setViewport( v ); }
 const Rect<UInt32> & GN::scene::Camera::getViewport() const { return mImpl->getViewport(); }

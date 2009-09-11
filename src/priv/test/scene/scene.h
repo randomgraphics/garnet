@@ -36,6 +36,7 @@ namespace GN { namespace scene
 
         World             & world() const;
         int                 id() const;
+        const Guid        & type() const;
         const char        * name() const;
 
         bool                hasNode( const Guid & nodeType ) const;
@@ -155,11 +156,12 @@ namespace GN { namespace scene
     extern const Guid SPATIAL_ENTITY; ///< entity that has spatial node only
     extern const Guid VISUAL_ENTITY;  ///< entity that has spatial and visual node
     extern const Guid LIGHT_ENTITY;   ///< entity that has spatial and light node
+    extern const Guid CAMERA_ENTITY;  ///< entity that represents a camera in the world. It has spatial and camera node.
 
     //@}
 
     // *************************************************************************
-    // Camera
+    // Camera class
     // *************************************************************************
 
     ///
@@ -184,12 +186,13 @@ namespace GN { namespace scene
 
         //@{
 
-        void setViewMatrix( const Matrix44f & );
-        void setProjectionMatrix( const Matrix44f & );
-        void setViewport( const Rect<UInt32> & );
-
+        void                 setViewMatrix( const Matrix44f & );
         const Matrix44f    & getViewMatrix() const;
+
+        void                 setProjectionMatrix( const Matrix44f & );
         const Matrix44f    & getProjectionMatrix() const;
+
+        void                 setViewport( const Rect<UInt32> & );
         const Rect<UInt32> & getViewport() const;
 
         //@}
@@ -226,7 +229,7 @@ namespace GN { namespace scene
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
         void                setPivot( const Vector3f  & );          ///< set pivot in parent space
-        void                setRotation( const Quaternionf & );     ///< set node orientation, parent space.
+        void                setRotation( const Quaternionf & );     ///< set node rotation around the pivot point parent space.
         void                setBoundingSphere( const Spheref & s ); /// set bounding sphere, in local space
 
         SpatialNode       * getParent() const;
@@ -295,11 +298,29 @@ namespace GN { namespace scene
 
         //@{
 
-        virtual       ~VisualNode();
+        /// public destructor
+        virtual ~VisualNode();
 
+        /// get the graph that this visual node belongs to.
         VisualGraph & graph() const;
-        void          addModel( gfx::GpuResource * model );
-        void          draw( Camera & ) const; ///< render myself and all children.
+
+        /// add new model to the node. return the model ID, or 0 for failure.
+        int  addModel( gfx::GpuResource * model );
+
+        /// remove all models that are attached to the node
+        void removeAllModels();
+
+        /// load models from file, and attach them to the visual node
+        bool loadModelsFromFile( gfx::GpuResourceDatabase & db, const char * filename );
+
+        /// load models from file, and attach them to the visual node
+        bool loadModelsFromFile( gfx::GpuResourceDatabase & db, File & fp );
+
+        /// the VisualNode implementation class
+        class Impl;
+
+        /// return reference to the instance of implementation class
+        Impl & impl() { GN_ASSERT(mImpl); return *mImpl; }
 
         //@}
 
@@ -313,12 +334,31 @@ namespace GN { namespace scene
 
     private:
 
-        class Impl;
         Impl * mImpl;
     };
 
     ///
-    /// contains lighting information
+    /// Light description
+    ///
+    struct LightDesc
+    {
+        //@{
+        Vector4f  diffuse;
+        Vector4f  ambient;
+        Vector4f  specular;
+        //@}
+
+        /// construct default light
+        LightDesc()
+            : diffuse(1.0f,1.0f,1.0f,1.0f)
+            , ambient(0.2f,0.2f,0.2f,0.2f)
+            , specular(0.6f,0.6f,0.6f,0.6f)
+        {
+        }
+    };
+
+    ///
+    /// built-in light node that contains standard lighting information
     ///
     class LightNode : public NodeBase
     {
@@ -332,7 +372,16 @@ namespace GN { namespace scene
 
         //@{
 
-        virtual ~LightNode();
+        virtual          ~LightNode();
+
+        const LightDesc & getDesc() const;
+        void              setDesc( const LightDesc & desc );
+
+        /// the LightNode implementation class
+        class Impl;
+
+        /// return reference to the instance of implementation class
+        Impl & impl() { GN_ASSERT(mImpl); return *mImpl; }
 
         //@}
 
@@ -346,12 +395,11 @@ namespace GN { namespace scene
 
     private:
 
-        class Impl;
         Impl * mImpl;
     };
 
     ///
-    /// manage rendering of all nodes
+    /// Manags all visual and light nodes. Store global rendering data.
     ///
     class VisualGraph
     {
@@ -359,15 +407,19 @@ namespace GN { namespace scene
 
         //@{
 
-        VisualGraph() {}
+        VisualGraph();
 
-        virtual ~VisualGraph() {}
+        virtual ~VisualGraph();
+
+        void draw( Camera & camera );
+
+        class Impl;
+        Impl & impl() const { GN_ASSERT(mImpl); return *mImpl; }
 
         //@}
 
     private:
 
-        class Impl;
         Impl * mImpl;
     };
 }}

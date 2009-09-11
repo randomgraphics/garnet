@@ -30,13 +30,16 @@ namespace GN { namespace scene
         // methods from Camera
         //@{
 
-        void setViewMatrix( const Matrix44f & );
-        void setProjectionMatrix( const Matrix44f & );
-        void setViewport( const Rect<UInt32> & );
-
+        void                 setViewMatrix( const Matrix44f & );
         const Matrix44f    & getViewMatrix() const { return mView; }
+
+        void                 setProjectionMatrix( const Matrix44f & );
         const Matrix44f    & getProjectionMatrix() const { return mProj; }
+
+        void                 setViewport( const Rect<UInt32> & );
         const Rect<UInt32> & getViewport() const { return mViewport; }
+
+        void                 draw( Entity * const * entities, size_t count );
 
         //@}
 

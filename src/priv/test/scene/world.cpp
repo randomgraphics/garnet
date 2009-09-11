@@ -203,9 +203,9 @@ void GN::scene::World::Impl::deleteEntity( const Guid & type, const char * name 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::deleteEntity( int idAsI32 )
+void GN::scene::World::Impl::deleteEntity( int id32 )
 {
-    EntityID id( idAsI32 );
+    EntityID id( id32 );
 
     if( id.managerIndex() >= mManagers.size() )
     {
@@ -275,25 +275,59 @@ Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * nam
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::scene::World::Impl::findEntity( int idAsI32 )
+Entity * GN::scene::World::Impl::findEntity( int id32 )
 {
-    EntityID id( idAsI32 );
+    EntityID id( id32 );
+
+    if( id.managerIndex() >= mManagers.size() ) return NULL;
+
+    EntityManager & mgr = mManagers[id.managerIndex()];
+
+    if( !mgr.entities.validHandle( id.internalHandle() ) ) return NULL;
+
+    return mgr.entities[id.internalHandle()];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const Guid & GN::scene::World::Impl::getEntityType( int id32 ) const
+{
+    EntityID id( id32 );
 
     if( id.managerIndex() >= mManagers.size() )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
-        return NULL;
+        static const Guid INVALID_TYPE = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+        return INVALID_TYPE;
     }
 
-    EntityManager & mgr = mManagers[id.managerIndex()];
+    return mManagers[id.managerIndex()].guid;
+}
 
-    if( !mgr.entities.validHandle( id.internalHandle() ) )
+//
+//
+// -----------------------------------------------------------------------------
+const char  * GN::scene::World::Impl::getEntityName( int id32 ) const
+{
+    EntityID id( id32 );
+
+    if( id.managerIndex() >= mManagers.size() )
     {
-        GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
+        GN_ERROR(sLogger)( "Fail to get reosource name: invalid ID" );
         return NULL;
     }
 
-    return mgr.entities[id.internalHandle()];
+    const EntityManager & mgr = mManagers[id.managerIndex()];
+
+    const char * name = mgr.entities.handle2name(id.internalHandle());
+
+    if( NULL == name )
+    {
+        GN_ERROR(sLogger)( "Fail to get reosource name: Invalid ID." );
+    }
+
+    return name;
 }
 
 // *****************************************************************************
