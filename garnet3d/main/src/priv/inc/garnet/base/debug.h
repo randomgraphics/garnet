@@ -288,6 +288,11 @@ namespace GN
     const char * getOSErrorInfo() throw();
 #endif
 
+    ///
+    /// convert errno value to string
+    ///
+    const char * errno2str( int );
+
     //@}
 }
 

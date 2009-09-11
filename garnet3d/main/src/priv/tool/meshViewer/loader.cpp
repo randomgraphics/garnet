@@ -414,8 +414,8 @@ loadGeometryFromFile( Scene & sc, const char * filename )
     GN_SCOPE_PROFILER( loadGeometryFromFile, "Load GeometryNode from file" );
 
     // open file
-    DiskFile file;
-    if( !file.open( filename, "rb" ) ) return false;
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    if( !fp ) return false;
 
     // get file extension
     StrA ext = fs::extName( filename );
@@ -423,12 +423,12 @@ loadGeometryFromFile( Scene & sc, const char * filename )
     // do loading
     if( 0 == strCmpI( ".ase", ext.cptr() ) )
     {
-        return loadGeometryFromAse( sc, file );
+        return loadGeometryFromAse( sc, *fp );
     }
     else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
              0 == strCmpI( ".tpr", ext.cptr() ))
     {
-        return loadGeometryFromXpr( sc, file );
+        return loadGeometryFromXpr( sc, *fp );
     }
     else
     {

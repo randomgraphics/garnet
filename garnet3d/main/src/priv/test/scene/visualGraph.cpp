@@ -16,25 +16,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-static UniformResource *
-sInitializeUniform(
-    GpuResourceDatabase      & db,
-    AutoRef<UniformResource> & ur,
-    const char               * name,
-    size_t                     size )
-{
-    StrA fullname = strFormat( "GN.scene.visualgraph.stduniform.%s", name );
-
-    ur = db.findOrCreateResource<UniformResource>( fullname );
-
-    if( !ur->getUniform() )
-    {
-        AutoRef<Uniform> u( db.gpu().createUniform( size ) );
-        ur->setUniform( u );
-    }
-
-    return ur;
-}
 
 // *****************************************************************************
 // VisualGraph::Impl public methods
@@ -43,9 +24,26 @@ sInitializeUniform(
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::Impl::Impl( VisualGraph & owner )
+GN::scene::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gdb )
     : mOwner(owner)
+    , mGdb(gdb)
 {
+    for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
+    {
+        AutoRef<UniformResource> & ur = mUniforms[type];
+
+        if( type.desc().global )
+        {
+            StrA fullname = strFormat( "GN.scene.visualgraph.stduniform.%s", type.desc().name );
+
+            ur = gdb.findOrCreateResource<UniformResource>( fullname );
+            if( ur && !ur->getUniform() )
+            {
+                AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
+                ur->setUniform( u );
+            }
+        }
+    }
 }
 
 //
@@ -53,32 +51,10 @@ GN::scene::VisualGraph::Impl::Impl( VisualGraph & owner )
 // -----------------------------------------------------------------------------
 GN::scene::VisualGraph::Impl::~Impl()
 {
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-UniformResource *
-GN::scene::VisualGraph::Impl::getGlobalUniform( gfx::GpuResourceDatabase & db, StandardUniformType type )
-{
-    // Note: this value doesn't really matter. It is randomly chosen to match the size of a 4x4 matrix, since
-    //       it is one of the most frequently used uniform data types.
-    const size_t DUMMY_UNIFORM_SIZE = sizeof(float)*16;
-
-    if( type >= StandardUniformType::NUM_STANDARD_UNIFORMS )
+    for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
-        GN_ERROR(sLogger)( "Invalid uniform type: %d", type );
-        return sInitializeUniform( db, mDummyUniform, "dummy", DUMMY_UNIFORM_SIZE );
+        mUniforms[type].clear();
     }
-
-    const StandardUniformDesc & desc = type.desc();
-    if( !desc.global )
-    {
-        GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through this function.", desc.name );
-        return sInitializeUniform( db, mDummyUniform, "dummy", DUMMY_UNIFORM_SIZE );
-    }
-
-    return sInitializeUniform( db, mUniforms[type], desc.name, desc.size );
 }
 
 //
@@ -90,14 +66,14 @@ GN::scene::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
     if( type >= StandardUniformType::NUM_STANDARD_UNIFORMS )
     {
         GN_ERROR(sLogger)( "Invalid uniform type: %d", type );
-        return mDummyUniform;
+        return NULL;
     }
 
     const StandardUniformDesc & desc = type.desc();
     if( !desc.global )
     {
         GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through this function.", desc.name );
-        return mDummyUniform;
+        return NULL;
     }
 
     return mUniforms[type];
@@ -232,9 +208,9 @@ void GN::scene::VisualGraph::Impl::updateDefaultLighting()
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::VisualGraph()
+GN::scene::VisualGraph::VisualGraph( GpuResourceDatabase & gdb )
 {
-    mImpl = new Impl( *this );
+    mImpl = new Impl( *this, gdb );
 }
 
 //
@@ -243,6 +219,14 @@ GN::scene::VisualGraph::VisualGraph()
 GN::scene::VisualGraph::~VisualGraph()
 {
     delete mImpl;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GpuResourceDatabase & GN::scene::VisualGraph::gdb() const
+{
+    return mImpl->gdb();
 }
 
 //

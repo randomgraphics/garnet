@@ -34,16 +34,18 @@ namespace GN { namespace scene
 
         //@{
 
-        World             & world() const;
-        int                 id() const;
-        const Guid        & type() const;
-        const char        * name() const;
+        World                     & world() const;
+        gfx::GpuResourceDatabase  & gdb() const;
 
-        bool                hasNode( const Guid & nodeType ) const;
-        const NodeBase    * getNode( const Guid & nodeType ) const;
-        NodeBase          * getNode( const Guid & nodeType );
-        void                attachNode( const Guid & nodeType, NodeBase * node );
-        void                detachNode( const Guid & nodeType ) { attachNode( nodeType, NULL ); }
+        int                         id() const;
+        const Guid                & type() const;
+        const char                * name() const;
+
+        bool                        hasNode( const Guid & nodeType ) const;
+        const NodeBase            * getNode( const Guid & nodeType ) const;
+        NodeBase                  * getNode( const Guid & nodeType );
+        void                        attachNode( const Guid & nodeType, NodeBase * node );
+        void                        detachNode( const Guid & nodeType ) { attachNode( nodeType, NULL ); }
 
         // templated node helpers
         template<class T> const T * getNode() const        { return (const T*)getNode( T::guid() ); }
@@ -86,8 +88,10 @@ namespace GN { namespace scene
 
         //@{
 
-        World();
+        World( gfx::GpuResourceDatabase & gdb );
         virtual ~World();
+
+        gfx::GpuResourceDatabase & gdb() const;
 
         /// delete all entities, unregister all non-built-in factories
         void          clear();
@@ -407,9 +411,11 @@ namespace GN { namespace scene
 
         //@{
 
-        VisualGraph();
+        VisualGraph( gfx::GpuResourceDatabase & gdb );
 
         virtual ~VisualGraph();
+
+        gfx::GpuResourceDatabase & gdb() const;
 
         void draw( Camera & camera );
 

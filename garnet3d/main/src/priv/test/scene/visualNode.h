@@ -63,7 +63,7 @@ namespace GN { namespace scene
 
     private:
 
-        gfx::UniformResource * getPerObjectUniform( gfx::GpuResourceDatabase & db, StandardUniformType type );
+        gfx::UniformResource * getPerObjectUniform( StandardUniformType type );
     };
 
     ///

@@ -169,6 +169,7 @@ Entity * GN::scene::World::Impl::createEntity( const Guid & type, const char * n
         mgr->entities.remove( id.internalHandle() );
         return NULL;
     }
+    mgr->entities[id.internalHandle()] = newEntity;
 
     // done
     return newEntity.detach();
@@ -255,6 +256,8 @@ void GN::scene::World::Impl::deleteAllEntities()
         {
             delete (EntityInternal*)m.entities[h];
         }
+
+        m.entities.clear();
     }
 }
 
@@ -418,9 +421,9 @@ bool GN::scene::World::Impl::sInitLightEntity( Entity & entity, const void * par
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::World::World() : mImpl(NULL)
+GN::scene::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
 {
-    mImpl = new Impl( *this );
+    mImpl = new Impl( *this, gdb );
 
     // this will register all built-in factories
     mImpl->clear();
@@ -437,17 +440,18 @@ GN::scene::World::~World()
 //
 //
 // -----------------------------------------------------------------------------
-void          GN::scene::World::clear() { return mImpl->clear(); }
+gfx::GpuResourceDatabase & GN::scene::World::gdb() const { return mImpl->gdb(); }
+void                       GN::scene::World::clear() { return mImpl->clear(); }
 
-bool          GN::scene::World::hasEntityFactory( const Guid & type ) { return mImpl->hasEntityFactory( type ); }
-bool          GN::scene::World::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter ) { return mImpl->registerEntityFactory( type, desc, factory, factoryParameter ); }
-void          GN::scene::World::unregisterEntityFactory( const Guid & type ) { return mImpl->unregisterEntityFactory( type ); }
-EntityFactory GN::scene::World::getEntityFactory( const Guid & type ) { return mImpl->getEntityFactory( type ); }
+bool                       GN::scene::World::hasEntityFactory( const Guid & type ) { return mImpl->hasEntityFactory( type ); }
+bool                       GN::scene::World::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter ) { return mImpl->registerEntityFactory( type, desc, factory, factoryParameter ); }
+void                       GN::scene::World::unregisterEntityFactory( const Guid & type ) { return mImpl->unregisterEntityFactory( type ); }
+EntityFactory              GN::scene::World::getEntityFactory( const Guid & type ) { return mImpl->getEntityFactory( type ); }
 
-Entity      * GN::scene::World::createEntity( const Guid & type, const char * name ) { return mImpl->createEntity( type, name ); }
-void          GN::scene::World::deleteEntity( const Guid & type, const char * name ) { return mImpl->deleteEntity( type, name ); }
-void          GN::scene::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }
-void          GN::scene::World::deleteEntity( Entity * entity ) { return mImpl->deleteEntity( entity ); }
-void          GN::scene::World::deleteAllEntities() { return mImpl->deleteAllEntities(); }
-Entity      * GN::scene::World::findEntity( const Guid & type, const char * name ) { return mImpl->findEntity( type, name ); }
-Entity      * GN::scene::World::findEntity( int id ) { return mImpl->findEntity( id ); }
+Entity                   * GN::scene::World::createEntity( const Guid & type, const char * name ) { return mImpl->createEntity( type, name ); }
+void                       GN::scene::World::deleteEntity( const Guid & type, const char * name ) { return mImpl->deleteEntity( type, name ); }
+void                       GN::scene::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }
+void                       GN::scene::World::deleteEntity( Entity * entity ) { return mImpl->deleteEntity( entity ); }
+void                       GN::scene::World::deleteAllEntities() { return mImpl->deleteAllEntities(); }
+Entity                   * GN::scene::World::findEntity( const Guid & type, const char * name ) { return mImpl->findEntity( type, name ); }
+Entity                   * GN::scene::World::findEntity( int id ) { return mImpl->findEntity( id ); }

@@ -25,7 +25,7 @@ namespace GN { namespace scene
 
         //@{
 
-        Impl( VisualGraph & owner );
+        Impl( VisualGraph & owner, gfx::GpuResourceDatabase & gdb );
 
         virtual ~Impl();
 
@@ -33,9 +33,7 @@ namespace GN { namespace scene
 
         //@{
 
-        /// get pointer to specific standard uniform resource, if
-        /// that uniform is not initialized, then initialized it.
-        gfx::UniformResource * getGlobalUniform( gfx::GpuResourceDatabase & db, StandardUniformType type );
+        gfx::GpuResourceDatabase & gdb() const { return mGdb; }
 
         /// get pointer to specific standard uniform resource, assuming that it is initialized already.
         gfx::UniformResource * getGlobalUniform( StandardUniformType type ) const;
@@ -71,8 +69,8 @@ namespace GN { namespace scene
     private:
 
         VisualGraph                 & mOwner;
+        gfx::GpuResourceDatabase    & mGdb;
         AutoRef<gfx::UniformResource> mUniforms[StandardUniformType::NUM_STANDARD_UNIFORMS];
-        AutoRef<gfx::UniformResource> mDummyUniform;
 
         std::list<VisualNode::Impl*>  mVisualNodes;
         std::list<LightNode::Impl*>   mLightNodes;

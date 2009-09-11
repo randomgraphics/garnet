@@ -54,9 +54,16 @@ int GN::scene::VisualNode::Impl::addModel( GpuResource * model )
         return 0;
     }
 
+    GpuResourceDatabase & gdb = model->database();
+
+    if( &gdb != &mGraph.gdb() )
+    {
+        GN_ERROR(sLogger)( "fail to attach model to visual node: the model and the node belong to different GPU resource database." );
+        return 0;
+    }
+
     // handle standard uniforms
-    GpuResourceDatabase & db = model->database();
-    ModelResource       * m = GpuResource::castTo<ModelResource>( model );
+    ModelResource * m = GpuResource::castTo<ModelResource>( model );
     AutoRef<EffectResource> effect = m->getEffectResource();
     for( StandardUniformType type = 0; type < StandardUniformType::NUM_STANDARD_UNIFORMS; ++type )
     {
@@ -66,11 +73,11 @@ int GN::scene::VisualNode::Impl::addModel( GpuResource * model )
         {
             if( d.global )
             {
-                m->setUniformResource( d.name, mGraph.impl().getGlobalUniform( db, type ) );
+                m->setUniformResource( d.name, mGraph.impl().getGlobalUniform( type ) );
             }
             else
             {
-                m->setUniformResource( d.name, getPerObjectUniform( db, type ) );
+                m->setUniformResource( d.name, getPerObjectUniform( type ) );
             }
         }
     }
@@ -167,17 +174,19 @@ void GN::scene::VisualNode::Impl::draw() const
 //
 // -----------------------------------------------------------------------------
 UniformResource *
-GN::scene::VisualNode::Impl::getPerObjectUniform( GpuResourceDatabase & db, StandardUniformType type )
+GN::scene::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 {
     AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
 
     StrA fullname = strFormat( "GN.scene.visualnode.stduniform.%s", type.name() );
 
-    ur = db.findOrCreateResource<UniformResource>( fullname );
+    GpuResourceDatabase & gdb = mGraph.gdb();
+
+    ur = gdb.findOrCreateResource<UniformResource>( fullname );
 
     if( !ur->getUniform() )
     {
-        AutoRef<Uniform> u( db.gpu().createUniform( type.desc().size ) );
+        AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
         ur->setUniform( u );
     }
 

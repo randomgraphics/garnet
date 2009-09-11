@@ -117,3 +117,54 @@ GN::getOSErrorInfo() throw()
     return info;
 }
 #endif
+
+//
+//
+// -----------------------------------------------------------------------------
+const char *
+GN::errno2str( int err )
+{
+    switch( err )
+    {
+        case EPERM        : return "Operation not permitted";
+        case ENOENT       : return "No such file or directory";
+        case ESRCH        : return "No such process";
+        case EINTR        : return "Interrupted function";
+        case EIO          : return "I/O error";
+        case ENXIO        : return "No such device or address";
+        case E2BIG        : return "Argument list too long";
+        case ENOEXEC      : return "Exec format error";
+        case EBADF        : return "Bad file number";
+        case ECHILD       : return "No spawned processes";
+        case EAGAIN       : return "No more processes or not enough memory or maximum nesting level reached";
+        case ENOMEM       : return "Not enough memory";
+        case EACCES       : return "Permission denied";
+        case EFAULT       : return "Bad address";
+        case EBUSY        : return "Device or resource busy";
+        case EEXIST       : return "File exists";
+        case EXDEV        : return "Cross-device link";
+        case ENODEV       : return "No such device";
+        case ENOTDIR      : return "Not a directory";
+        case EISDIR       : return "Is a directory";
+        case EINVAL       : return "Invalid argument";
+        case ENFILE       : return "Too many files open in system";
+        case EMFILE       : return "Too many open files";
+        case ENOTTY       : return "Inappropriate I/O control operation";
+        case EFBIG        : return "File too large";
+        case ENOSPC       : return "No space left on device";
+        case ESPIPE       : return "Invalid seek";
+        case EROFS        : return "Read-only file system";
+        case EMLINK       : return "Too many links";
+        case EPIPE        : return "Broken pipe";
+        case EDOM         : return "Math argument";
+        case ERANGE       : return "Result too large";
+        case EDEADLK      : return "Resource deadlock would occur";
+        case ENAMETOOLONG : return "Filename too long";
+        case ENOLCK       : return "No locks available";
+        case ENOSYS       : return "Function not supported";
+        case ENOTEMPTY    : return "Directory not empty";
+        case EILSEQ       : return "Illegal byte sequence";
+        case STRUNCATE    : return "String was truncated";
+        default           : return "Unknown error.";
+    }
+}

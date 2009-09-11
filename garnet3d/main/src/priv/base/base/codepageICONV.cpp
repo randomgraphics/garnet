@@ -97,7 +97,7 @@ bool GN::CECImplICONV::init(
                 break;
 
             default:
-                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d.", err );
+                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d (%s).", err, errno2str(err) );
                 break;
         };
 
@@ -179,7 +179,7 @@ GN::CECImplICONV::convert(
                 break;
 
             default :
-                reason = "unknow error.";
+                reason = errno2str( err );
                 break;
         }
 
