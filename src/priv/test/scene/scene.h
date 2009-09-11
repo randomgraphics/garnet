@@ -160,7 +160,6 @@ namespace GN { namespace scene
     extern const Guid SPATIAL_ENTITY; ///< entity that has spatial node only
     extern const Guid VISUAL_ENTITY;  ///< entity that has spatial and visual node
     extern const Guid LIGHT_ENTITY;   ///< entity that has spatial and light node
-    extern const Guid CAMERA_ENTITY;  ///< entity that represents a camera in the world. It has spatial and camera node.
 
     //@}
 
@@ -232,9 +231,8 @@ namespace GN { namespace scene
 
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
-        void                setPivot( const Vector3f  & );          ///< set pivot in parent space
-        void                setRotation( const Quaternionf & );     ///< set node rotation around the pivot point parent space.
-        void                setBoundingSphere( const Spheref & s ); /// set bounding sphere, in local space
+        void                setRotation( const Quaternionf & );     ///< set node rotation around it's local origin.
+        void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere, in local space.
 
         SpatialNode       * getParent() const;
         SpatialNode       * getPrevSibling() const;
@@ -243,7 +241,6 @@ namespace GN { namespace scene
         SpatialNode       * getLastChild() const;
 
         const Vector3f    & getPosition() const;       ///< get position in parent space
-        const Vector3f    & getPivot() const;          ///< get pivot in parent space
         const Quaternionf & getRotation() const;       ///< get orientation, in parent space
         const Spheref     & getBoundingSphere() const; ///< get bounding sphere, in local space
         const Matrix44f   & getLocal2Parent() const;   ///< get local space to parent space transformation matrix
