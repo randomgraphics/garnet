@@ -68,7 +68,13 @@ namespace GN { namespace scene
 
         //@{
 
-        Impl( World & owner ) : mOwner(owner) {}
+        Impl( World & owner, gfx::GpuResourceDatabase & gdb )
+            : mOwner(owner)
+            , mGpuResourceDatabase( gdb )
+            , mVisualGraph( gdb )
+        {
+        }
+
         ~Impl() { clear(); }
 
         //@}
@@ -80,6 +86,8 @@ namespace GN { namespace scene
         //@}
 
         //@{
+
+        gfx::GpuResourceDatabase & gdb() const { return mGpuResourceDatabase; }
 
         void          clear();
 
@@ -128,10 +136,11 @@ namespace GN { namespace scene
 
         //@{
 
-        World      & mOwner;
-        EntityArray  mManagers;
-        SpatialGraph mSpatialGraph;
-        VisualGraph  mVisualGraph;
+        World                    & mOwner;
+        gfx::GpuResourceDatabase & mGpuResourceDatabase;
+        EntityArray                mManagers;
+        SpatialGraph               mSpatialGraph;
+        VisualGraph                mVisualGraph;
 
         //@}
 

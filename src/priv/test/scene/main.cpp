@@ -17,6 +17,7 @@ struct Scene
     Scene( Gpu & g )
         : gpu(g)
         , gdb(g)
+        , world( gdb )
     {
     }
 };
@@ -34,7 +35,7 @@ bool init( Scene & sc )
     // robot stays at the origin.
     robot = sc.world.createEntity( VISUAL_ENTITY );
     robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media://model/R.F.R01/a01.ase" );
+    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/model/R.F.R01/a01.ase" );
 
     const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
 
@@ -43,15 +44,15 @@ bool init( Scene & sc )
     light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     light->getNode<SpatialNode>()->setPosition( Vector3f( 0, bs.radius * 2.0f, 0 ) );
 
-    // box is attached to the camera
+    // box is attached to the light
     box = sc.world.createEntity( VISUAL_ENTITY );
     box->getNode<SpatialNode>()->setParent( light->getNode<SpatialNode>() );
-    box->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media://box/boxes.ase" );
+    box->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/boxes/boxes.ase" );
 
     // setup camera
     Matrix44f proj, view;
     sc.gpu.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
-    view.lookAtRh( Vector3f( 0, 0, bs.radius * 2.0f ), Vector3f(0,0,0), Vector3f(0,0,1) );
+    view.lookAtRh( Vector3f( 0, 0, bs.radius * 2.0f ), Vector3f(0,0,0), Vector3f(0,1,0) );
     camera.setProjectionMatrix( proj );
     camera.setViewMatrix( view );
 

@@ -423,8 +423,8 @@ bool GN::scene::VisualNode::Impl::loadModelsFromFile(
     removeAllModels();
 
     // open file
-    DiskFile file;
-    if( !file.open( filename, "rb" ) ) return false;
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    if( !fp ) return false;
 
     // get file extension
     StrA ext = fs::extName( filename );
@@ -432,12 +432,12 @@ bool GN::scene::VisualNode::Impl::loadModelsFromFile(
     // do loading
     if( 0 == strCmpI( ".ase", ext.cptr() ) )
     {
-        return sLoadModelsFromASE( mOwner, db, file );
+        return sLoadModelsFromASE( mOwner, db, *fp );
     }
     else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
              0 == strCmpI( ".tpr", ext.cptr() ))
     {
-        return sLoadModelsFromXPR( mOwner, db, file );
+        return sLoadModelsFromXPR( mOwner, db, *fp );
     }
     else
     {
