@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "lightNode.h"
+#include "visualGraph.h"
 
 using namespace GN;
 using namespace GN::scene;
@@ -13,6 +14,20 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
+GN::scene::LightNode::Impl::Impl( LightNode & owner, VisualGraph & graph )
+    : mOwner(owner)
+    , mGraph(graph)
+{
+    mGraphIter = mGraph.impl().insertLightNode( this );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::scene::LightNode::Impl::~Impl()
+{
+    mGraph.impl().removeLightNode( mGraphIter );
+}
 
 // *****************************************************************************
 // LightNode::Impl private methods
@@ -56,6 +71,8 @@ const Guid & GN::scene::LightNode::guid()
 //
 //
 // -----------------------------------------------------------------------------
+const LightDesc & GN::scene::LightNode::getDesc() const { return mImpl->getDesc(); }
+void              GN::scene::LightNode::setDesc( const LightDesc & desc ) { return mImpl->setDesc( desc ); }
 
 // *****************************************************************************
 // LightNode factory

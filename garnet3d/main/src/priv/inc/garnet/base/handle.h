@@ -481,10 +481,10 @@ namespace GN
             }
         }
 
-        const StrA & handle2name( H h ) const
+        const char * handle2name( H h ) const
         {
             if( !mItems.validHandle( h ) )
-                return StrA::EMPTYSTR;
+                return NULL;
             else
                 return mItems[h]->name;
         }

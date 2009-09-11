@@ -23,34 +23,30 @@ struct Scene
 
 Entity * root;
 Entity * light;
-Entity * object1;
-Entity * object2;
+Entity * box;
+Entity * robot;
 Camera   camera;
 
 bool init( Scene & sc )
 {
-    AutoRef<ModelResource> sphereModel = ModelResource::loadFromFile( sc.gdb, "media://model/sphere.ase" );
-    AutoRef<ModelResource> robotModel = ModelResource::loadFromFile( sc.gdb, "media://model/R.F.R01/a01.ase" );
-
-    Spheref bs;
-    sphereModel->getMeshResource()->calculateBoundingSphere( bs );
-
     root = sc.world.createEntity( SPATIAL_ENTITY, "root" );
+
+    // robot stays at the origin.
+    robot = sc.world.createEntity( VISUAL_ENTITY );
+    robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
+    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media://model/R.F.R01/a01.ase" );
+
+    const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
 
     // light is right above the origin
     light = sc.world.createEntity( LIGHT_ENTITY, "light" );
     light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     light->getNode<SpatialNode>()->setPosition( Vector3f( 0, bs.radius * 2.0f, 0 ) );
 
-    // object1 is attached to the camera
-    object1 = sc.world.createEntity( VISUAL_ENTITY );
-    object1->getNode<SpatialNode>()->setParent( light->getNode<SpatialNode>() );
-    object1->getNode<VisualNode>()->addModel( sphereModel );
-
-    // object2 stays at the origin.
-    object2 = sc.world.createEntity( VISUAL_ENTITY );
-    object2->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-    object2->getNode<VisualNode>()->addModel( robotModel );
+    // box is attached to the camera
+    box = sc.world.createEntity( VISUAL_ENTITY );
+    box->getNode<SpatialNode>()->setParent( light->getNode<SpatialNode>() );
+    box->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media://box/boxes.ase" );
 
     // setup camera
     Matrix44f proj, view;
@@ -73,7 +69,7 @@ void update()
 
 void draw( Scene & )
 {
-    root->getNode<VisualNode>()->draw( camera );
+    box->getNode<VisualNode>()->graph().draw( camera );
 }
 
 struct InputInitiator

@@ -7,6 +7,8 @@
 // *****************************************************************************
 
 #include "scene.h"
+#include "standardUniforms.h"
+#include <list>
 
 namespace GN { namespace scene
 {
@@ -21,9 +23,9 @@ namespace GN { namespace scene
 
         //@{
 
-        Impl( VisualNode & owner, VisualGraph & graph ) : mOwner(owner), mGraph(graph) {}
+        Impl( VisualNode & owner, VisualGraph & graph );
 
-        virtual ~Impl() {}
+        virtual ~Impl();
 
         //@}
 
@@ -31,8 +33,11 @@ namespace GN { namespace scene
         //@{
 
         VisualGraph & graph() const { return mGraph; }
-        void          addModel( gfx::GpuResource * model );
-        void          draw( Camera & ) const;
+        int           addModel( gfx::GpuResource * model );
+        void          removeAllModels();
+        bool          loadModelsFromFile( gfx::GpuResourceDatabase & db, const char * filename );
+        bool          loadModelsFromFile( gfx::GpuResourceDatabase & db, File & fp );
+        void          draw() const;
 
         //@}
 
@@ -42,8 +47,15 @@ namespace GN { namespace scene
 
     private:
 
-        VisualNode  & mOwner;
-        VisualGraph & mGraph;
+        typedef HandleManager<AutoRef<gfx::ModelResource>,int> ModelManager;
+
+        typedef FixedArray<AutoRef<gfx::UniformResource>,StandardUniformType::NUM_STANDARD_UNIFORMS> StandardUniformArray;
+
+        VisualNode               & mOwner;
+        VisualGraph              & mGraph;
+        std::list<Impl*>::iterator mGraphIter;
+        ModelManager               mModels;
+        StandardUniformArray       mStandardPerObjectUniforms;
 
         // *****************************
         // private methods
@@ -51,6 +63,7 @@ namespace GN { namespace scene
 
     private:
 
+        gfx::UniformResource * getPerObjectUniform( gfx::GpuResourceDatabase & db, StandardUniformType type );
     };
 
     ///

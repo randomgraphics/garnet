@@ -18,7 +18,7 @@
 ///
 /// define a static instance of the timer
 ///
-#define GN_DEFINE_STATIC_PROFILER(name) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().getTimer( #name )
+#define GN_DEFINE_STATIC_PROFILER( name, desc ) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().getTimer( desc )
 
 ///
 /// start a previously defined profile timer
@@ -33,7 +33,7 @@
 ///
 /// define an automatic profiler that evaluate the time of its life-scope.
 ///
-#define GN_SCOPE_PROFILER( name ) GN_DEFINE_STATIC_PROFILER(name); GN::ScopeTimer GN_JOIN(__GN_scope_profiler,name)( &GN_JOIN(__GN_profiler_,name) )
+#define GN_SCOPE_PROFILER( name, desc ) GN_DEFINE_STATIC_PROFILER( name, desc ); GN::ScopeTimer GN_JOIN(__GN_scope_profiler,name)( &GN_JOIN(__GN_profiler_,name) )
 
 #else
 

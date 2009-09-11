@@ -14,6 +14,23 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
+GN::scene::Entity::Impl::~Impl()
+{
+    for( NodeMap::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
+    {
+        NodeBase * n = i->second;
+
+        GN_ASSERT( n );
+
+        delete n;
+    }
+
+    mNodes.clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 World & GN::scene::Entity::Impl::world() const
 {
     return mWorld.owner();
@@ -22,10 +39,17 @@ World & GN::scene::Entity::Impl::world() const
 //
 //
 // -----------------------------------------------------------------------------
+const Guid & GN::scene::Entity::Impl::type() const
+{
+    return mWorld.getEntityType( mID );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 const char * GN::scene::Entity::Impl::name() const
 {
-    GN_UNIMPL();
-    return NULL;
+    return mWorld.getEntityName( mID );
 }
 
 //
@@ -33,9 +57,7 @@ const char * GN::scene::Entity::Impl::name() const
 // -----------------------------------------------------------------------------
 bool GN::scene::Entity::Impl::hasNode( const Guid & nodeType ) const
 {
-    GN_UNUSED_PARAM( nodeType );
-    GN_UNIMPL();
-    return false;
+    return mNodes.find( nodeType ) != mNodes.end();
 }
 
 //
@@ -43,9 +65,19 @@ bool GN::scene::Entity::Impl::hasNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 const NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType ) const
 {
-    GN_UNUSED_PARAM( nodeType );
-    GN_UNIMPL();
-    return NULL;
+    NodeMap::const_iterator i = mNodes.find( nodeType );
+
+    if( i == mNodes.end() )
+    {
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
+        return NULL;
+    }
+    else
+    {
+        const NodeBase * n = i->second;
+        GN_ASSERT( n );
+        return n;
+    }
 }
 
 //
@@ -53,9 +85,19 @@ const NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType )
 {
-    GN_UNUSED_PARAM( nodeType );
-    GN_UNIMPL();
-    return NULL;
+    NodeMap::iterator i = mNodes.find( nodeType );
+
+    if( i == mNodes.end() )
+    {
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
+        return NULL;
+    }
+    else
+    {
+        NodeBase * n = i->second;
+        GN_ASSERT( n );
+        return n;
+    }
 }
 
 //
@@ -63,9 +105,35 @@ NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType )
 // -----------------------------------------------------------------------------
 void GN::scene::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node )
 {
-    GN_UNUSED_PARAM( nodeType );
-    GN_UNUSED_PARAM( node );
-    GN_UNIMPL();
+    if( NULL == node )
+    {
+        GN_ERROR(sLogger)( "Fail to attach node to entity: NULl node pointer." );
+        return;
+    }
+
+    NodeMap::iterator i = mNodes.find( nodeType );
+
+    if( mNodes.end() != i )
+    {
+        NodeBase * oldnode = i->second;
+
+        GN_ASSERT( oldnode );
+
+        if( oldnode != node )
+        {
+            // TODO:
+            //  This will crash memory, if one node is attached to more than one
+            //  entities, or attach to single entity multiple times with different
+            //  node type.
+            //  Need a smart pointer here.
+            delete oldnode;
+            i->second = node;
+        }
+    }
+    else
+    {
+        mNodes[nodeType] = node;
+    }
 }
 
 // *****************************************************************************

@@ -13,6 +13,8 @@ TODO
   - skin mesh test case: porting DXSDK sample.
 
 - p1
+  - an boost style smart pointer template that do not require inheritence form
+    GN::RefCounter.
   - renderer unit test framework
   - Enable ETW in profiler
   - D3D11 renderer

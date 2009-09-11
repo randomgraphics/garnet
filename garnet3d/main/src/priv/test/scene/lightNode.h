@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "scene.h"
+#include <list>
 
 namespace GN { namespace scene
 {
@@ -21,14 +22,18 @@ namespace GN { namespace scene
 
         //@{
 
-        Impl( LightNode & owner, VisualGraph & graph ) : mOwner(owner), mGraph(graph) {}
+        Impl( LightNode & owner, VisualGraph & graph );
 
-        virtual ~Impl() {}
+        virtual ~Impl();
 
         //@}
 
         // methods from LightNode
         //@{
+
+        LightNode       & owner() const { return mOwner; }
+        const LightDesc & getDesc() const { return mDesc; }
+        void              setDesc( const LightDesc & desc ) { mDesc = desc; }
 
         //@}
 
@@ -38,8 +43,11 @@ namespace GN { namespace scene
 
     private:
 
-        LightNode   & mOwner;
-        VisualGraph & mGraph;
+        LightNode                & mOwner;
+        VisualGraph              & mGraph;
+        std::list<Impl*>::iterator mGraphIter;
+
+        LightDesc                  mDesc;
 
         // *****************************
         // private methods

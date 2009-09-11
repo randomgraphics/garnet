@@ -212,18 +212,6 @@ namespace GN
     };
 
     ///
-    /// GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
-    ///
-    struct GuidStr
-    {
-        /// The GUID as fixed size string
-        char str[1+8+1+4+1+4+1+4+1+12+1];
-
-        /// operator to convert to const char *
-        operator const char *() const { return str; }
-    };
-
-    ///
     /// GUID class
     ///
     struct Guid
@@ -239,7 +227,7 @@ namespace GN
         /// \name public methods
         //@{
 
-        GuidStr toStr() const;
+        const char * toStr() const; // Note: this function is not thread safe
 
         //@}
 

@@ -6,7 +6,9 @@ sources = [
 	'lightNode.cpp',
 	'main.cpp',
 	'spatialNode.cpp',
+	'visualGraph.cpp',
 	'visualNode.cpp',
+	'visualNodeLoader.cpp',
 	'world.cpp',
 	]
 

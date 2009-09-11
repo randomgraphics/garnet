@@ -21,13 +21,14 @@ namespace GN { namespace scene
         Impl( World::Impl & w, Entity & o, int id ) : mWorld(w), mOwner(o), mID(id) {}
 
         /// destructor
-        ~Impl() {}
+        ~Impl();
 
         /// methods from Entity
         //@{
 
         World             & world() const;
         int                 id() const { return mID; }
+        const Guid        & type() const;
         const char        * name() const;
 
         bool                hasNode( const Guid & nodeType ) const;
@@ -39,9 +40,12 @@ namespace GN { namespace scene
 
     private:
 
+        typedef std::map<Guid, NodeBase*> NodeMap;
+
         World::Impl & mWorld;
         Entity      & mOwner;
         const int     mID;
+        NodeMap       mNodes;
     };
 }}
 

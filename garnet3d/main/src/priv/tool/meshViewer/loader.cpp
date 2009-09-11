@@ -295,7 +295,7 @@ loadGeometryFromXpr( Scene & sc, File & file )
 static GN::scene::GeometryNode *
 loadGeometryFromAse( Scene & sc, File & file )
 {
-    GN_SCOPE_PROFILER( loadGeometryFromAse );
+    GN_SCOPE_PROFILER( loadGeometryFromAse, "Load GeometryNode from ASE" );
 
     // load ASE scene
     AseScene ase;
@@ -306,7 +306,7 @@ loadGeometryFromAse( Scene & sc, File & file )
     // create mesh list
     DynaArray<AutoRef<MeshResource> > meshes;
     {
-        GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList );
+        GN_SCOPE_PROFILER( loadGeometryFromAse_GenerateMeshList, "Load GeometryNode from ASE: generating material list" );
         meshes.resize( ase.meshes.size() );
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
@@ -363,7 +363,7 @@ loadGeometryFromAse( Scene & sc, File & file )
 
         // bind textures to effect
         {
-            GN_SCOPE_PROFILER( loadGeometryFromAse_LoadTextures );
+            GN_SCOPE_PROFILER( loadGeometryFromAse_LoadTextures, "Load GeometryNode from ASE: load textures" );
 
             AutoRef<EffectResource> e = clone->getEffectResource();
 
@@ -411,7 +411,7 @@ loadGeometryFromAse( Scene & sc, File & file )
 GN::scene::GeometryNode *
 loadGeometryFromFile( Scene & sc, const char * filename )
 {
-    GN_SCOPE_PROFILER( loadGeometryFromFile );
+    GN_SCOPE_PROFILER( loadGeometryFromFile, "Load GeometryNode from file" );
 
     // open file
     DiskFile file;
