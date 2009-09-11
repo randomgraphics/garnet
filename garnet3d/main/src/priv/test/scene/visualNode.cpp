@@ -235,7 +235,6 @@ VisualGraph & GN::scene::VisualNode::graph() const { return mImpl->graph(); }
 int           GN::scene::VisualNode::addModel( gfx::GpuResource * model ) { return mImpl->addModel( model ); }
 void          GN::scene::VisualNode::removeAllModels() { return mImpl->removeAllModels(); }
 bool          GN::scene::VisualNode::loadModelsFromFile( GpuResourceDatabase & db, const char * filename ) { return mImpl->loadModelsFromFile( db, filename ); }
-bool          GN::scene::VisualNode::loadModelsFromFile( GpuResourceDatabase & db, File & fp ) { return mImpl->loadModelsFromFile( db, fp ); }
 
 // *****************************************************************************
 // VisualNode factory

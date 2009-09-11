@@ -35,24 +35,21 @@ bool init( Scene & sc )
     // robot stays at the origin.
     robot = sc.world.createEntity( VISUAL_ENTITY );
     robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/model/R.F.R01/a01.ase" );
+    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
 
     const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
 
-    // light is right above the origin
+    Vector3f eye( 0, 0, bs.radius * 2.0f );
+
+    // light is where eyes are
     light = sc.world.createEntity( LIGHT_ENTITY, "light" );
     light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-    light->getNode<SpatialNode>()->setPosition( Vector3f( 0, bs.radius * 2.0f, 0 ) );
-
-    // box is attached to the light
-    box = sc.world.createEntity( VISUAL_ENTITY );
-    box->getNode<SpatialNode>()->setParent( light->getNode<SpatialNode>() );
-    box->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/boxes/boxes.ase" );
+    light->getNode<SpatialNode>()->setPosition( eye );
 
     // setup camera
     Matrix44f proj, view;
     sc.gpu.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
-    view.lookAtRh( Vector3f( 0, 0, bs.radius * 2.0f ), Vector3f(0,0,0), Vector3f(0,1,0) );
+    view.lookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
     camera.setProjectionMatrix( proj );
     camera.setViewMatrix( view );
 
@@ -70,7 +67,7 @@ void update()
 
 void draw( Scene & )
 {
-    box->getNode<VisualNode>()->graph().draw( camera );
+    robot->getNode<VisualNode>()->graph().draw( camera );
 }
 
 struct InputInitiator

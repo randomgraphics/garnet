@@ -23,7 +23,7 @@ namespace GN { namespace scene
 
         //@{
 
-        Impl( SpatialNode & owner, SpatialGraph & graph ) : mOwner(owner), mGraph(graph) {}
+        Impl( SpatialNode & owner, SpatialGraph & graph );
 
         virtual ~Impl() {}
 

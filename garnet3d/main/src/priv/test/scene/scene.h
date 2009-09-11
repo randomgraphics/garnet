@@ -317,9 +317,6 @@ namespace GN { namespace scene
         /// load models from file, and attach them to the visual node
         bool loadModelsFromFile( gfx::GpuResourceDatabase & db, const char * filename );
 
-        /// load models from file, and attach them to the visual node
-        bool loadModelsFromFile( gfx::GpuResourceDatabase & db, File & fp );
-
         /// the VisualNode implementation class
         class Impl;
 

@@ -2501,6 +2501,7 @@ namespace GN
     public :
         //@{
         Sphere() {}
+        Sphere( T x, T y, T z, T r ) : center(x,y,z), radius(r) {}
         Sphere( const Vector3<T> & c, T r ) : center(c), radius(r) {}
         Sphere( const Sphere & s ) : center(s.center), radius(s.radius) {}
         ///
