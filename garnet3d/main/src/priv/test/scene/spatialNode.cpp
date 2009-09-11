@@ -17,7 +17,6 @@ GN::scene::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
     : mOwner(owner)
     , mGraph(graph)
     , mPosition(0,0,0)
-    , mPivot(0,0,0)
     , mRotation( 0, 0, 1, 0 )
     , mBoundingSphere( 0, 0, 0, 0 )
     , mLocal2Parent( Matrix44f::sIdentity() )
@@ -52,18 +51,6 @@ void GN::scene::SpatialNode::Impl::setPosition( const Vector3f & p )
     if( p != mPosition )
     {
         mPosition = p;
-        mTransformDirty = true;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setPivot( const Vector3f & p )
-{
-    if( p != mPivot )
-    {
-        mPivot = p;
         mTransformDirty = true;
     }
 }
@@ -113,19 +100,15 @@ void GN::scene::SpatialNode::Impl::calcTransform()
 
     // object will be:
     //
-    //  1. moved to "position", in parent space
-    //  2. rotated around "pivot" point in parent space, which includes 3 sub steps:
-    //     a) moved -"pivot" points, in parent space
-    //     b) rotated, in parent space
-    //     c) moved +"pivot" points, in parent space
+    //  1. rotated around its local origin
+    //  2. moved to localtion defined "position" in parent space
 
     mRotation.toMatrix33( r33 );
     r44.set( r33 );
 
-    t1.translate( mPosition - mPivot );
-    t2.translate( mPivot );
+    t1.translate( mPosition );
 
-    mLocal2Parent = t2 * r44 * t1;
+    mLocal2Parent = t1 * r44;
     mParent2Local = Matrix44f::sInverse( mLocal2Parent );
 
     Impl * parent = (Impl*)( TreeNodeClass::getParent() );
@@ -184,7 +167,6 @@ const Guid & GN::scene::SpatialNode::guid()
 SpatialGraph      & GN::scene::SpatialNode::graph() const { return mImpl->graph(); }
 void                GN::scene::SpatialNode::setParent( SpatialNode * parent, SpatialNode * prevSibling ) { return mImpl->setParent( parent, prevSibling ); }
 void                GN::scene::SpatialNode::setPosition( const Vector3f & position ) { return mImpl->setPosition( position ); }
-void                GN::scene::SpatialNode::setPivot( const Vector3f & pivot ) { return mImpl->setPivot( pivot ); }
 void                GN::scene::SpatialNode::setRotation( const Quaternionf & rotation ) { return mImpl->setRotation( rotation ); }
 void                GN::scene::SpatialNode::setBoundingSphere( const Spheref & sphere ) { return mImpl->setBoundingSphere( sphere ); }
 
@@ -195,7 +177,6 @@ SpatialNode       * GN::scene::SpatialNode::getFirstChild() const { return mImpl
 SpatialNode       * GN::scene::SpatialNode::getLastChild() const { return mImpl->getLastChild(); }
 
 const Vector3f    & GN::scene::SpatialNode::getPosition() const { return mImpl->getPosition(); }
-const Vector3f    & GN::scene::SpatialNode::getPivot() const { return mImpl->getPivot(); }
 const Quaternionf & GN::scene::SpatialNode::getRotation() const { return mImpl->getRotation(); }
 const Spheref     & GN::scene::SpatialNode::getBoundingSphere() const { return mImpl->getBoundingSphere(); }
 const Matrix44f   & GN::scene::SpatialNode::getLocal2Parent() const { return mImpl->getLocal2Parent(); }

@@ -36,7 +36,6 @@ namespace GN { namespace scene
 
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling );
         void                setPosition( const Vector3f & );
-        void                setPivot( const Vector3f  & );
         void                setRotation( const Quaternionf & );
         void                setBoundingSphere( const Spheref & s );
 
@@ -47,7 +46,6 @@ namespace GN { namespace scene
         SpatialNode       * getLastChild() const;
 
         const Vector3f    & getPosition() const       { return mPosition; }
-        const Vector3f    & getPivot() const          { return mPivot; }
         const Quaternionf & getRotation() const       { return mRotation; }
         const Spheref     & getBoundingSphere() const { return mBoundingSphere; }
         const Matrix44f   & getLocal2Parent() const   { if( mTransformDirty ) { const_cast<Impl*>(this)->calcTransform(); } return mLocal2Parent; }
@@ -66,7 +64,6 @@ namespace GN { namespace scene
 
         /// transformation
         Vector3f    mPosition;       ///< position in parent space
-        Vector3f    mPivot;          ///< pivot (origin of the rotation) in parent space
         Quaternionf mRotation;       ///< rotation in parent space
         Spheref     mBoundingSphere; ///< bounding sphere, in local space
         Matrix44f   mLocal2Parent;   ///< local->parent space transformation
