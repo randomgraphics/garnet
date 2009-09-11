@@ -61,7 +61,7 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : fread() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fread() failed!", name() );
         return false;
     }
 
@@ -95,7 +95,7 @@ bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
     size_t r = ::fwrite( buffer, 1, size, mFile );
     if ( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s: fwrite() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s: fwrite() failed!", name() );
         return false;
     }
 
@@ -143,7 +143,7 @@ bool GN::StdFile::seek( int offset, FileSeekMode origin )
     // check parameter
     if( origin >= NUM_FILE_SEEK_MODES )
     {
-        GN_ERROR(sLogger)( "%s: invalid seek origin!", name().cptr() );
+        GN_ERROR(sLogger)( "%s: invalid seek origin!", name() );
         return false;
     }
 
@@ -155,7 +155,7 @@ bool GN::StdFile::seek( int offset, FileSeekMode origin )
 
     if( 0 != ::fseek( mFile, offset, seek_table[origin] ) )
     {
-        GN_ERROR(sLogger)( "%s : fseek() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fseek() failed!", name() );
         return false;
     }
 
@@ -182,7 +182,7 @@ size_t GN::StdFile::tell() const
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : ftell() failed!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : ftell() failed!", name() );
     }
 
     return r;
@@ -207,14 +207,14 @@ size_t GN::StdFile::size() const
     long oldPos = ::ftell( mFile );
     if( -1 == oldPos )
     {
-        GN_ERROR(sLogger)( "%s : fail to get current file position!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to get current file position!", name() );
         return 0;
     }
 
     // seek to the end of the file
     if( 0 == ::fseek( mFile, SEEK_END, 0 ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name() );
         return 0;
     }
 
@@ -224,7 +224,7 @@ size_t GN::StdFile::size() const
     // restore file position
     if( 0 == ::fseek( mFile, SEEK_SET, oldPos ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to restore file position!", name().cptr() );
+        GN_ERROR(sLogger)( "%s : fail to restore file position!", name() );
         return 0;
     }
 

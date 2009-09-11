@@ -13,6 +13,24 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
+GN::scene::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
+    : mOwner(owner)
+    , mGraph(graph)
+    , mPosition(0,0,0)
+    , mPivot(0,0,0)
+    , mRotation( 0, 0, 1, 0 )
+    , mBoundingSphere( 0, 0, 0, 0 )
+    , mLocal2Parent( Matrix44f::sIdentity() )
+    , mParent2Local( Matrix44f::sIdentity() )
+    , mLocal2Root( Matrix44f::sIdentity() )
+    , mRoot2Local( Matrix44f::sIdentity() )
+    , mTransformDirty( true )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::scene::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode * prevSibling )
 {
     // only nodes belong to same graph can be linked with each other.

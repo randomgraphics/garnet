@@ -309,7 +309,8 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
-            StrA meshname = strFormat( "%s.%d", file.name(), i );
+            char meshname[1024];
+            strPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
 
             meshes[i] = db.findResource<MeshResource>( meshname );
             if( meshes[i] ) continue; // use exising mesh directly.
@@ -444,22 +445,4 @@ bool GN::scene::VisualNode::Impl::loadModelsFromFile(
         GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
         return NULL;
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::scene::VisualNode::Impl::loadModelsFromFile(
-    GpuResourceDatabase & db,
-    File                & fp )
-{
-    GN_SCOPE_PROFILER( loadModelsFromFile, "Load models from file into VisualNode" );
-
-    removeAllModels();
-
-    GN_UNUSED_PARAM( db );
-    GN_UNUSED_PARAM( fp );
-    GN_UNIMPL();
-
-    return false;
 }
