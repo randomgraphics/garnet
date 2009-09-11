@@ -231,7 +231,8 @@ namespace GN { namespace scene
 
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
-        void                setRotation( const Quaternionf & );     ///< set node rotation around it's local origin.
+        void                setRotation( const Quaternionf & );     ///< set rotation around it's local origin.
+        void                setScale( const Vector3f & );         ///< set scaling for each axis.
         void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere, in local space.
 
         SpatialNode       * getParent() const;
@@ -242,6 +243,7 @@ namespace GN { namespace scene
 
         const Vector3f    & getPosition() const;       ///< get position in parent space
         const Quaternionf & getRotation() const;       ///< get orientation, in parent space
+        const Vector3f    & getScale() const;        ///< get scaling for each axis.
         const Spheref     & getBoundingSphere() const; ///< get bounding sphere, in local space
         const Matrix44f   & getLocal2Parent() const;   ///< get local space to parent space transformation matrix
         const Matrix44f   & getLocal2Root() const;     ///< get local space to root space transformation matrix
