@@ -37,6 +37,7 @@ namespace GN { namespace scene
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling );
         void                setPosition( const Vector3f & );
         void                setRotation( const Quaternionf & );
+        void                setScale( const Vector3f & );
         void                setBoundingSphere( const Spheref & s );
 
         SpatialNode       * getParent() const      { return toNodePtr( TreeNodeClass::getParent() ); }
@@ -47,6 +48,7 @@ namespace GN { namespace scene
 
         const Vector3f    & getPosition() const       { return mPosition; }
         const Quaternionf & getRotation() const       { return mRotation; }
+        const Vector3f    & getScale() const          { return mScale; }
         const Spheref     & getBoundingSphere() const { return mBoundingSphere; }
         const Matrix44f   & getLocal2Parent() const   { if( mTransformDirty ) { const_cast<Impl*>(this)->calcTransform(); } return mLocal2Parent; }
         const Matrix44f   & getLocal2Root() const     { if( mTransformDirty ) { const_cast<Impl*>(this)->calcTransform(); } return mLocal2Root; }
@@ -65,6 +67,7 @@ namespace GN { namespace scene
         /// transformation
         Vector3f    mPosition;       ///< position in parent space
         Quaternionf mRotation;       ///< rotation in parent space
+        Vector3f    mScale;          ///< scaling for each axis
         Spheref     mBoundingSphere; ///< bounding sphere, in local space
         Matrix44f   mLocal2Parent;   ///< local->parent space transformation
         Matrix44f   mParent2Local;   ///< parent->local space transformation
