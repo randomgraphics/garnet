@@ -5,9 +5,9 @@
 #include "lightNode.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // EntityInternal class
@@ -26,9 +26,9 @@ public:
 // Build-in entity types
 // *****************************************************************************
 
-const Guid GN::scene::SPATIAL_ENTITY = { 0x2a28d02a, 0x64c1, 0x4e6e, { 0xb1, 0x9c, 0xdc, 0x5a, 0x78, 0xad, 0x30, 0x96 } };
-const Guid GN::scene::VISUAL_ENTITY  = { 0x44125e51, 0x7037, 0x499d, { 0x8d, 0x15, 0x16, 0x01, 0x5a, 0xfd, 0xc3, 0xf3 } };
-const Guid GN::scene::LIGHT_ENTITY   = { 0x64c543ac, 0x6c7c, 0x4781, { 0xbb, 0x28, 0x37, 0x56, 0x00, 0xba, 0xa6, 0xf5 } };
+const Guid GN::util::SPATIAL_ENTITY = { 0x2a28d02a, 0x64c1, 0x4e6e, { 0xb1, 0x9c, 0xdc, 0x5a, 0x78, 0xad, 0x30, 0x96 } };
+const Guid GN::util::VISUAL_ENTITY  = { 0x44125e51, 0x7037, 0x499d, { 0x8d, 0x15, 0x16, 0x01, 0x5a, 0xfd, 0xc3, 0xf3 } };
+const Guid GN::util::LIGHT_ENTITY   = { 0x64c543ac, 0x6c7c, 0x4781, { 0xbb, 0x28, 0x37, 0x56, 0x00, 0xba, 0xa6, 0xf5 } };
 
 // *****************************************************************************
 // World::Impl public methods
@@ -37,7 +37,7 @@ const Guid GN::scene::LIGHT_ENTITY   = { 0x64c543ac, 0x6c7c, 0x4781, { 0xbb, 0x2
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::clear()
+void GN::util::World::Impl::clear()
 {
     // delete all entities
     deleteAllEntities();
@@ -57,7 +57,7 @@ void GN::scene::World::Impl::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::World::Impl::hasEntityFactory( const Guid & type )
+bool GN::util::World::Impl::hasEntityFactory( const Guid & type )
 {
     return NULL != getManager( type );
 }
@@ -65,7 +65,7 @@ bool GN::scene::World::Impl::hasEntityFactory( const Guid & type )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::World::Impl::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter )
+bool GN::util::World::Impl::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter )
 {
     if( hasEntityFactory( type ) )
     {
@@ -102,7 +102,7 @@ bool GN::scene::World::Impl::registerEntityFactory( const Guid & type, const cha
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::unregisterEntityFactory( const Guid & )
+void GN::util::World::Impl::unregisterEntityFactory( const Guid & )
 {
     GN_UNIMPL_WARNING();
 }
@@ -110,7 +110,7 @@ void GN::scene::World::Impl::unregisterEntityFactory( const Guid & )
 //
 //
 // -----------------------------------------------------------------------------
-EntityFactory GN::scene::World::Impl::getEntityFactory( const Guid & type )
+EntityFactory GN::util::World::Impl::getEntityFactory( const Guid & type )
 {
     EntityManager * mgr = getManager( type );
 
@@ -129,7 +129,7 @@ EntityFactory GN::scene::World::Impl::getEntityFactory( const Guid & type )
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::scene::World::Impl::createEntity( const Guid & type, const char * name )
+Entity * GN::util::World::Impl::createEntity( const Guid & type, const char * name )
 {
     EntityManager * mgr = getManager( type );
 
@@ -178,7 +178,7 @@ Entity * GN::scene::World::Impl::createEntity( const Guid & type, const char * n
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::deleteEntity( const Guid & type, const char * name )
+void GN::util::World::Impl::deleteEntity( const Guid & type, const char * name )
 {
     EntityManager * mgr = getManager( type );
 
@@ -204,7 +204,7 @@ void GN::scene::World::Impl::deleteEntity( const Guid & type, const char * name 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::deleteEntity( int id32 )
+void GN::util::World::Impl::deleteEntity( int id32 )
 {
     EntityID id( id32 );
 
@@ -230,7 +230,7 @@ void GN::scene::World::Impl::deleteEntity( int id32 )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::World::Impl::deleteEntity( Entity * entity )
+void GN::util::World::Impl::deleteEntity( Entity * entity )
 {
     if( NULL == entity ) return;
 
@@ -246,7 +246,7 @@ void GN::scene::World::Impl::deleteEntity( Entity * entity )
 //
 //
 // -----------------------------------------------------------------------------;
-void GN::scene::World::Impl::deleteAllEntities()
+void GN::util::World::Impl::deleteAllEntities()
 {
     for( size_t i = 0; i < mManagers.size(); ++i )
     {
@@ -264,7 +264,7 @@ void GN::scene::World::Impl::deleteAllEntities()
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * name )
+Entity * GN::util::World::Impl::findEntity( const Guid & type, const char * name )
 {
     EntityManager * mgr = getManager( type );
 
@@ -278,7 +278,7 @@ Entity * GN::scene::World::Impl::findEntity( const Guid & type, const char * nam
 //
 //
 // -----------------------------------------------------------------------------
-Entity * GN::scene::World::Impl::findEntity( int id32 )
+Entity * GN::util::World::Impl::findEntity( int id32 )
 {
     EntityID id( id32 );
 
@@ -294,7 +294,7 @@ Entity * GN::scene::World::Impl::findEntity( int id32 )
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::scene::World::Impl::getEntityType( int id32 ) const
+const Guid & GN::util::World::Impl::getEntityType( int id32 ) const
 {
     EntityID id( id32 );
 
@@ -311,7 +311,7 @@ const Guid & GN::scene::World::Impl::getEntityType( int id32 ) const
 //
 //
 // -----------------------------------------------------------------------------
-const char  * GN::scene::World::Impl::getEntityName( int id32 ) const
+const char  * GN::util::World::Impl::getEntityName( int id32 ) const
 {
     EntityID id( id32 );
 
@@ -340,8 +340,8 @@ const char  * GN::scene::World::Impl::getEntityName( int id32 ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::World::Impl::EntityManager *
-GN::scene::World::Impl::getManager( const Guid & type ) const
+GN::util::World::Impl::EntityManager *
+GN::util::World::Impl::getManager( const Guid & type ) const
 {
     for( size_t i = 0; i < mManagers.size(); ++i )
     {
@@ -358,7 +358,7 @@ GN::scene::World::Impl::getManager( const Guid & type ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::World::Impl::sInitSpatialEntity( Entity & entity, const void * parameters )
+bool GN::util::World::Impl::sInitSpatialEntity( Entity & entity, const void * parameters )
 {
     GN_ASSERT( parameters );
 
@@ -375,7 +375,7 @@ bool GN::scene::World::Impl::sInitSpatialEntity( Entity & entity, const void * p
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::World::Impl::sInitVisualEntity( Entity & entity, const void * parameters )
+bool GN::util::World::Impl::sInitVisualEntity( Entity & entity, const void * parameters )
 {
     GN_ASSERT( parameters );
 
@@ -396,7 +396,7 @@ bool GN::scene::World::Impl::sInitVisualEntity( Entity & entity, const void * pa
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::World::Impl::sInitLightEntity( Entity & entity, const void * parameters )
+bool GN::util::World::Impl::sInitLightEntity( Entity & entity, const void * parameters )
 {
     GN_ASSERT( parameters );
 
@@ -421,7 +421,7 @@ bool GN::scene::World::Impl::sInitLightEntity( Entity & entity, const void * par
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
+GN::util::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
 {
     mImpl = new Impl( *this, gdb );
 
@@ -432,7 +432,7 @@ GN::scene::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::World::~World()
+GN::util::World::~World()
 {
     delete mImpl;
 }
@@ -440,18 +440,18 @@ GN::scene::World::~World()
 //
 //
 // -----------------------------------------------------------------------------
-gfx::GpuResourceDatabase & GN::scene::World::gdb() const { return mImpl->gdb(); }
-void                       GN::scene::World::clear() { return mImpl->clear(); }
+gfx::GpuResourceDatabase & GN::util::World::gdb() const { return mImpl->gdb(); }
+void                       GN::util::World::clear() { return mImpl->clear(); }
 
-bool                       GN::scene::World::hasEntityFactory( const Guid & type ) { return mImpl->hasEntityFactory( type ); }
-bool                       GN::scene::World::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter ) { return mImpl->registerEntityFactory( type, desc, factory, factoryParameter ); }
-void                       GN::scene::World::unregisterEntityFactory( const Guid & type ) { return mImpl->unregisterEntityFactory( type ); }
-EntityFactory              GN::scene::World::getEntityFactory( const Guid & type ) { return mImpl->getEntityFactory( type ); }
+bool                       GN::util::World::hasEntityFactory( const Guid & type ) { return mImpl->hasEntityFactory( type ); }
+bool                       GN::util::World::registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter ) { return mImpl->registerEntityFactory( type, desc, factory, factoryParameter ); }
+void                       GN::util::World::unregisterEntityFactory( const Guid & type ) { return mImpl->unregisterEntityFactory( type ); }
+EntityFactory              GN::util::World::getEntityFactory( const Guid & type ) { return mImpl->getEntityFactory( type ); }
 
-Entity                   * GN::scene::World::createEntity( const Guid & type, const char * name ) { return mImpl->createEntity( type, name ); }
-void                       GN::scene::World::deleteEntity( const Guid & type, const char * name ) { return mImpl->deleteEntity( type, name ); }
-void                       GN::scene::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }
-void                       GN::scene::World::deleteEntity( Entity * entity ) { return mImpl->deleteEntity( entity ); }
-void                       GN::scene::World::deleteAllEntities() { return mImpl->deleteAllEntities(); }
-Entity                   * GN::scene::World::findEntity( const Guid & type, const char * name ) { return mImpl->findEntity( type, name ); }
-Entity                   * GN::scene::World::findEntity( int id ) { return mImpl->findEntity( id ); }
+Entity                   * GN::util::World::createEntity( const Guid & type, const char * name ) { return mImpl->createEntity( type, name ); }
+void                       GN::util::World::deleteEntity( const Guid & type, const char * name ) { return mImpl->deleteEntity( type, name ); }
+void                       GN::util::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }
+void                       GN::util::World::deleteEntity( Entity * entity ) { return mImpl->deleteEntity( entity ); }
+void                       GN::util::World::deleteAllEntities() { return mImpl->deleteAllEntities(); }
+Entity                   * GN::util::World::findEntity( const Guid & type, const char * name ) { return mImpl->findEntity( type, name ); }
+Entity                   * GN::util::World::findEntity( int id ) { return mImpl->findEntity( id ); }

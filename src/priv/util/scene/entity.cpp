@@ -3,9 +3,9 @@
 #include "world.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Entity::Impl public methods
@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Entity::Impl::~Impl()
+GN::util::Entity::Impl::~Impl()
 {
     for( NodeMap::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
     {
@@ -31,7 +31,7 @@ GN::scene::Entity::Impl::~Impl()
 //
 //
 // -----------------------------------------------------------------------------
-World & GN::scene::Entity::Impl::world() const
+World & GN::util::Entity::Impl::world() const
 {
     return mWorld.owner();
 }
@@ -39,7 +39,7 @@ World & GN::scene::Entity::Impl::world() const
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::scene::Entity::Impl::type() const
+const Guid & GN::util::Entity::Impl::type() const
 {
     return mWorld.getEntityType( mID );
 }
@@ -47,7 +47,7 @@ const Guid & GN::scene::Entity::Impl::type() const
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::scene::Entity::Impl::name() const
+const char * GN::util::Entity::Impl::name() const
 {
     return mWorld.getEntityName( mID );
 }
@@ -55,7 +55,7 @@ const char * GN::scene::Entity::Impl::name() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::Entity::Impl::hasNode( const Guid & nodeType ) const
+bool GN::util::Entity::Impl::hasNode( const Guid & nodeType ) const
 {
     return mNodes.find( nodeType ) != mNodes.end();
 }
@@ -63,7 +63,7 @@ bool GN::scene::Entity::Impl::hasNode( const Guid & nodeType ) const
 //
 //
 // -----------------------------------------------------------------------------
-const NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType ) const
+const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 {
     NodeMap::const_iterator i = mNodes.find( nodeType );
 
@@ -83,7 +83,7 @@ const NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType ) const
 //
 //
 // -----------------------------------------------------------------------------
-NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType )
+NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType )
 {
     NodeMap::iterator i = mNodes.find( nodeType );
 
@@ -103,7 +103,7 @@ NodeBase * GN::scene::Entity::Impl::getNode( const Guid & nodeType )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node )
+void GN::util::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node )
 {
     if( NULL == node )
     {
@@ -151,7 +151,7 @@ void GN::scene::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Entity::Entity( World & w, int id )
+GN::util::Entity::Entity( World & w, int id )
     : mImpl(NULL)
 {
     mImpl = new Impl( *w.mImpl, *this, id );
@@ -160,7 +160,7 @@ GN::scene::Entity::Entity( World & w, int id )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Entity::~Entity()
+GN::util::Entity::~Entity()
 {
     delete mImpl;
 }
@@ -168,11 +168,11 @@ GN::scene::Entity::~Entity()
 //
 //
 // -----------------------------------------------------------------------------
-World             & GN::scene::Entity::world() const { return mImpl->world(); }
-int                 GN::scene::Entity::id() const { return mImpl->id(); }
-const char        * GN::scene::Entity::name() const { return mImpl->name(); }
+World             & GN::util::Entity::world() const { return mImpl->world(); }
+int                 GN::util::Entity::id() const { return mImpl->id(); }
+const char        * GN::util::Entity::name() const { return mImpl->name(); }
 
-bool                GN::scene::Entity::hasNode( const Guid & nodeType ) const { return mImpl->hasNode( nodeType ); }
-const NodeBase    * GN::scene::Entity::getNode( const Guid & nodeType ) const { return mImpl->getNode( nodeType ); }
-NodeBase          * GN::scene::Entity::getNode( const Guid & nodeType ) { return mImpl->getNode( nodeType ); }
-void                GN::scene::Entity::attachNode( const Guid & nodeType, NodeBase * node ) { return mImpl->attachNode( nodeType, node ); }
+bool                GN::util::Entity::hasNode( const Guid & nodeType ) const { return mImpl->hasNode( nodeType ); }
+const NodeBase    * GN::util::Entity::getNode( const Guid & nodeType ) const { return mImpl->getNode( nodeType ); }
+NodeBase          * GN::util::Entity::getNode( const Guid & nodeType ) { return mImpl->getNode( nodeType ); }
+void                GN::util::Entity::attachNode( const Guid & nodeType, NodeBase * node ) { return mImpl->attachNode( nodeType, node ); }

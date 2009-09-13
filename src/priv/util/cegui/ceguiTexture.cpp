@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ceguiTexture.h"
-#include "garnet/GNscene.h"
+#include "garnet/GNutil.h"
 
 #ifdef HAS_CEGUI
 

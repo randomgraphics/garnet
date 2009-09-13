@@ -2,8 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::scene;
+using namespace GN::util;
 
 static const Vector4f WATER_COLOR( 0.0f, 0.25f, 0.5f, 1.0f );
 
@@ -11,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 
 class TestScene
 {
-    GN::app::SampleApp & mApp;
+    GN::util::SampleApp & mApp;
 
     Entity * mCaustics[32];
 
@@ -19,7 +18,7 @@ class TestScene
 
 public:
 
-     TestScene( GN::app::SampleApp & app ) : mApp(app) {}
+     TestScene( GN::util::SampleApp & app ) : mApp(app) {}
 
     ~TestScene() { }
 
@@ -105,7 +104,7 @@ public:
     }
 };
 
-class Dolphin : public GN::app::SampleApp
+class Dolphin : public GN::util::SampleApp
 {
     TestScene * scene;
 
@@ -167,7 +166,7 @@ public:
 
     void onKeyPress( input::KeyEvent key )
     {
-        GN::app::SampleApp::onKeyPress( key );
+        GN::util::SampleApp::onKeyPress( key );
 
         if( input::KEY_SPACEBAR == key.code && key.status.down )
         {

@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "garnet/GNapp.h"
+#include "garnet/GNutil.h"
 
 #ifdef HAS_CEGUI
 #include "ceguiApp.h"
 #else
-class GuiTest : public GN::app::SampleApp
+class GuiTest : public GN::util::SampleApp
 {
 public:
     bool onInit() { return true; }

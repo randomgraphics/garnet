@@ -6,9 +6,7 @@
 /// \author  chenli@@REDMOND (2009.9.9)
 // *****************************************************************************
 
-#include "scene.h"
-
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     /// Camera implementation class
     class Camera::Impl

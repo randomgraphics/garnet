@@ -4,7 +4,6 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
-using namespace GN::scene;
 
 struct BezierVertex
 {
@@ -26,51 +25,9 @@ struct BezierVertex
     }
 };
 
-static GN::Logger          * sLogger = GN::getLogger("GN.sample.Bezier");
-Gpu                        * gpu = NULL;
-GpuResourceDatabase        * gpuresdb = NULL;
-ArcBall                      arcball; // arcball camera
-float                        radius;  // distance from camera to object
-Matrix44f                    proj, view;
-AutoObjPtr<Scene>            rootScene;
-AutoObjPtr<GeometryNode>     geomNode;
-SpriteRenderer             * sr = NULL;
-BitmapFont                   font;
+static GN::Logger * sLogger = GN::getLogger("GN.sample.Bezier");
 
-void updateRadius()
-{
-    const DispDesc & dd = gpu->getDispDesc();
-
-    view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-    gpu->composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
-
-    float h = tan( 0.5f ) * radius * 2.0f;
-    arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
-    arcball.setViewMatrix( view );
-    arcball.setTranslationSpeed( h / dd.height );
-
-    rootScene->setDefaultLight0Position( Vector3f(0,0,radius) ); // head light: same location as camera.
-
-    // calculate move speed
-}
-
-void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
-{
-    arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
-}
-
-void onAxisMove( Axis a, int d )
-{
-    if( Axis::MOUSE_WHEEL_0 == a )
-    {
-        float speed = radius / 100.0f;
-        radius -= speed * d;
-        if( radius < 0.1f ) radius = 0.1f;
-        updateRadius();
-    }
-}
-
-MeshResource * createMesh()
+MeshResource * createMesh( GpuResourceDatabase & gdb )
 {
     MeshResourceDesc md;
 
@@ -160,14 +117,14 @@ MeshResource * createMesh()
     md.indices = indices;
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
-    AutoRef<MeshResource> mesh( gpuresdb->createResource<MeshResource>(NULL) );
+    AutoRef<MeshResource> mesh( gdb.createResource<MeshResource>(NULL) );
     if( !mesh || !mesh->reset(&md) ) return 0;
 
     return mesh.detach();
 }
 
 EffectResource *
-createEffect()
+createEffect( GpuResourceDatabase & gdb )
 {
     const char * glslvscode =
 
@@ -322,187 +279,150 @@ createEffect()
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";
 
-    AutoRef<EffectResource> e = gpuresdb->createResource<EffectResource>(NULL);
+    AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);
     if( !e || !e->reset( &ed ) ) return NULL;
 
     return e.detach();
 }
 
-bool init()
+class BezierApp : public SampleApp
 {
-    gpu->getSignals().rendererWindowSizeMove.connect( &onRenderWindowResize );
+    ArcBall  arcball; // arcball camera
+    float    radius;  // distance from camera to object
+    Camera   camera;
+    Entity * light;
+    Entity * bezier;
 
-    AutoRef<MeshResource>   mesh;
-    AutoRef<EffectResource> effect;
-    AutoRef<ModelResource> model;
-
-    // create scene
-    rootScene.attach( createScene( *gpuresdb ) );
-    if( !rootScene ) return false;
-
-    // initialize effect
-    effect.attach( createEffect() );
-    if( !effect ) return false;
-
-    // load meshes
-    mesh.attach( createMesh() );
-    if( !mesh ) return false;
-
-    // initialize model
-    model = gpuresdb->createResource<ModelResource>(NULL);
-    model->setEffectResource( effect );
-    model->setMeshResource( mesh );
-    model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( *gpuresdb, "media::texture/earth.jpg" ) );
-
-    // create geomNode
-    geomNode.attach( new GeometryNode(*rootScene) );
-    geomNode->addModel( model );
-    geomNode->setPivot( Vector3f(0,0,0) );
-
-    // update camera stuff
-    radius = 3.0f;
-    updateRadius();
-
-    // initialize arcball
-    arcball.setHandness( util::RIGHT_HAND );
-    arcball.setViewMatrix( view );
-    arcball.connectToInput();
-
-    // load font
-    sr = new SpriteRenderer( *gpu );
-    if( !sr->init() ) return false;
-    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
-    if( !ff ) return false;
-    if( !font.init( sr, ff ) ) return false;
-
-    // connect to input device
-    gInput.sigAxisMove.connect( onAxisMove );
-
-    // success
-    return true;
-}
-
-void quit()
-{
-    geomNode.clear();
-    rootScene.clear();
-    font.quit();
-    safeDelete( sr );
-}
-
-void draw( const wchar_t * fps )
-{
-    const Vector3f & position = arcball.getTranslation();
-
-    rootScene->setProj( proj );
-    rootScene->setView( view );
-    geomNode->setPosition( position );
-    geomNode->setRotation( arcball.getRotation() );
-    rootScene->renderNodeHierarchy( geomNode );
-
-    font.drawText( fps, 0, 0 );
-    font.drawText(
-        strFormat(
-            L"position : %f, %f, %f\n"
-            L"radius   : %f",
-            position.x, position.y, position.z,
-            radius ).cptr(),
-        0, 20 );
-}
-
-void drawCoords()
-{
-    static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
-    static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
-    static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-
-    const Matrix44f & world = arcball.getRotationMatrix44();
-    gpu->drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
-    gpu->drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
-    gpu->drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
-}
-
-int run()
-{
-    if( !init() ) { quit(); return -1; }
-
-    bool gogogo = true;
-
-    FpsCalculator fps;
-
-    printf( "Press ESC to exit...\n" );
-    while( gogogo )
+    void updateRadius()
     {
-        // handle inputs
-        gpu->processRenderWindowMessages( false );
-        Input & in = gInput;
-        in.processInputEvents();
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        Gpu            & gpu = getGpu();
+        const DispDesc & dd  = gpu.getDispDesc();
+
+        Matrix44f view, proj;
+        view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        camera.setViewMatrix( view );
+        camera.setProjectionMatrix( proj );
+
+        float h = tan( 0.5f ) * radius * 2.0f;
+        arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
+        arcball.setViewMatrix( view );
+        arcball.setTranslationSpeed( h / dd.height );
+
+        // setup light
+        light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) ); // head light: same location as camera.
+    }
+
+    bool onPostInit()
+    {
+        GpuResourceDatabase & gdb = getGdb();
+        World               & world = getWorld();
+
+        AutoRef<MeshResource>   mesh;
+        AutoRef<EffectResource> effect;
+        AutoRef<ModelResource>  model;
+
+        // initialize effect
+        effect.attach( createEffect( gdb ) );
+        if( !effect ) return false;
+
+        // load meshes
+        mesh.attach( createMesh( gdb ) );
+        if( !mesh ) return false;
+
+        // initialize model
+        model = gdb.createResource<ModelResource>(NULL);
+        model->setEffectResource( effect );
+        model->setMeshResource( mesh );
+        model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( gdb, "media::texture/earth.jpg" ) );
+
+        // create entity
+        light  = world.createEntity( LIGHT_ENTITY, NULL );
+        bezier = world.createEntity( VISUAL_ENTITY, NULL );
+        bezier->getNode<VisualNode>()->addModel( model );
+
+        // initialize arcball
+        arcball.setHandness( util::RIGHT_HAND );
+        arcball.connectToInput();
+
+        // update radius related stuff
+        radius = 3.0f;
+        updateRadius();
+
+        // success
+        return true;
+    }
+
+    void onQuit()
+    {
+    }
+
+    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    {
+        arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
+    }
+
+    void onAxisMove( Axis a, int d )
+    {
+        if( Axis::MOUSE_WHEEL_0 == a )
         {
-            gogogo = false;
+            float speed = radius / 100.0f;
+            radius -= speed * d;
+            if( radius < 0.1f ) radius = 0.1f;
+            updateRadius();
         }
+    }
 
-        // render
-        gpu->clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( fps.getFpsString() );
+    void GN::util::SampleApp::onUpdate()
+    {
+        SpatialNode * spatialNode = bezier->getNode<SpatialNode>();
+        const Vector3f & position = arcball.getTranslation();
+        spatialNode->setPosition( position );
+        spatialNode->setRotation( arcball.getRotation() );
+    }
+
+    void onRender()
+    {
+        getGpu().clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+
+        const Vector3f & position = arcball.getTranslation();
+
+        bezier->getNode<VisualNode>()->graph().draw( camera );
+
         drawCoords();
-        gpu->present();
 
-        fps.onFrame();
+        getFont().drawText(
+            strFormat(
+                L"position : %f, %f, %f\n"
+                L"radius   : %f",
+                position.x, position.y, position.z,
+                radius ).cptr(),
+            0, 20 );
     }
 
-    quit();
-
-    return 0;
-}
-
-void printHelp( const char * exepath )
-{
-    StrA exefilename = fs::baseName( exepath ) + fs::extName( exepath );
-
-    printf( "\nUsage: %s <meshfile>\n", exefilename.cptr() );
-}
-
-struct InputInitiator
-{
-    InputInitiator( Gpu & r )
+    void drawCoords()
     {
-        initializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
-    }
+        static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
+        static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
+        static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
-    ~InputInitiator()
-    {
-        shutdownInputSystem();
+        Gpu & gpu = getGpu();
+
+        const Matrix44f & world = arcball.getRotationMatrix44();
+        const Matrix44f & view  = camera.getViewMatrix();
+        const Matrix44f & proj  = camera.getProjectionMatrix();
+        gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
+        gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
+        gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
     }
 };
 
-int main()
+int main( int argc, const char * argv[] )
 {
     printf( "\nBezier triangle sample.\n" );
 
-    enableCRTMemoryCheck();
+    BezierApp app;
 
-    // create GPU
-    GpuOptions o;
-    o.api = GpuAPI::OGL;
-    //gpu = createMultiThreadGpu( o );
-    gpu = createSingleThreadGpu( o );
-    if( NULL == gpu ) return -1;
-
-    // initialize input device
-    InputInitiator ii(*gpu);
-
-    gpuresdb = new GpuResourceDatabase( *gpu );
-    if( NULL == gpuresdb ) { deleteGpu(gpu); return -1; }
-
-    // enter main loop
-    int result = run();
-
-    // done
-    delete gpuresdb;
-    deleteGpu( gpu );
-    return result;
+    return app.run( argc, argv );
 }
 

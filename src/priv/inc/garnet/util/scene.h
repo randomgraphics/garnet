@@ -1,14 +1,14 @@
-#ifndef __GN_SCENE_H__
-#define __GN_SCENE_H__
+#ifndef __GN_UTIL_SCENE_H__
+#define __GN_UTIL_SCENE_H__
 // *****************************************************************************
 /// \file
-/// \brief   Main header for scene management
+/// \brief   Scene management utilites
 /// \author  chen@@chenli-homepc (2009.9.6)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
 
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     class NodeBase;
 
@@ -314,7 +314,7 @@ namespace GN { namespace scene
         void removeAllModels();
 
         /// load models from file, and attach them to the visual node
-        bool loadModelsFromFile( gfx::GpuResourceDatabase & db, const char * filename );
+        bool loadModelsFromFile( const char * filename );
 
         /// the VisualNode implementation class
         class Impl;
@@ -431,4 +431,4 @@ namespace GN { namespace scene
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_SCENE_SCENE_H__
+#endif // __GN_UTIL_SCENE_H__

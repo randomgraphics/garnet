@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
-using namespace GN::app;
+using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 

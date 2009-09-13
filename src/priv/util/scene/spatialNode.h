@@ -6,9 +6,7 @@
 /// \author  chenli@@REDMOND (2009.9.9)
 // *****************************************************************************
 
-#include "scene.h"
-
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     /// Spatial node implementation class
     class SpatialNode::Impl : public TreeNode<SpatialNode::Impl>

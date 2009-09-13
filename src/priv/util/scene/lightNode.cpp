@@ -3,9 +3,9 @@
 #include "visualGraph.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // LightNode::Impl public methods
@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::LightNode::Impl::Impl( LightNode & owner, VisualGraph & graph )
+GN::util::LightNode::Impl::Impl( LightNode & owner, VisualGraph & graph )
     : mOwner(owner)
     , mGraph(graph)
 {
@@ -24,7 +24,7 @@ GN::scene::LightNode::Impl::Impl( LightNode & owner, VisualGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::LightNode::Impl::~Impl()
+GN::util::LightNode::Impl::~Impl()
 {
     mGraph.impl().removeLightNode( mGraphIter );
 }
@@ -44,7 +44,7 @@ GN::scene::LightNode::Impl::~Impl()
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::LightNode::LightNode( Entity & entity, VisualGraph & graph )
+GN::util::LightNode::LightNode( Entity & entity, VisualGraph & graph )
     : NodeBase(entity)
     , mImpl(NULL)
 {
@@ -54,7 +54,7 @@ GN::scene::LightNode::LightNode( Entity & entity, VisualGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::LightNode::~LightNode()
+GN::util::LightNode::~LightNode()
 {
     delete mImpl;
 }
@@ -62,7 +62,7 @@ GN::scene::LightNode::~LightNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::scene::LightNode::guid()
+const Guid & GN::util::LightNode::guid()
 {
     static const Guid MY_GUID = { 0x5cd50f8d, 0x69fc, 0x4836, { 0xb3, 0x28, 0xea, 0x60, 0xef, 0xcb, 0x21, 0xa8 } };
     return MY_GUID;
@@ -71,8 +71,8 @@ const Guid & GN::scene::LightNode::guid()
 //
 //
 // -----------------------------------------------------------------------------
-const LightDesc & GN::scene::LightNode::getDesc() const { return mImpl->getDesc(); }
-void              GN::scene::LightNode::setDesc( const LightDesc & desc ) { return mImpl->setDesc( desc ); }
+const LightDesc & GN::util::LightNode::getDesc() const { return mImpl->getDesc(); }
+void              GN::util::LightNode::setDesc( const LightDesc & desc ) { return mImpl->setDesc( desc ); }
 
 // *****************************************************************************
 // LightNode factory
@@ -91,7 +91,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-LightNode * GN::scene::newLightNode( Entity & entity, VisualGraph & graph )
+LightNode * GN::util::newLightNode( Entity & entity, VisualGraph & graph )
 {
     return new LightNodeInternal( entity, graph );
 }

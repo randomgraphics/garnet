@@ -5,9 +5,9 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff
@@ -24,7 +24,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gdb )
+GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gdb )
     : mOwner(owner)
     , mGdb(gdb)
 {
@@ -49,7 +49,7 @@ GN::scene::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & g
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::Impl::~Impl()
+GN::util::VisualGraph::Impl::~Impl()
 {
     for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
@@ -61,7 +61,7 @@ GN::scene::VisualGraph::Impl::~Impl()
 //
 // -----------------------------------------------------------------------------
 UniformResource *
-GN::scene::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
+GN::util::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
 {
     if( type >= StandardUniformType::NUM_STANDARD_UNIFORMS )
     {
@@ -82,7 +82,7 @@ GN::scene::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::Impl::draw( Camera & camera )
+void GN::util::VisualGraph::Impl::draw( Camera & camera )
 {
     updateTransformation( camera );
     updateDefaultLighting();
@@ -99,7 +99,7 @@ void GN::scene::VisualGraph::Impl::draw( Camera & camera )
 //
 // -----------------------------------------------------------------------------std:list<VisualNode>::iterator
 std::list<VisualNode::Impl*>::iterator
-GN::scene::VisualGraph::Impl::insertVisualNode( VisualNode::Impl * node )
+GN::util::VisualGraph::Impl::insertVisualNode( VisualNode::Impl * node )
 {
     GN_ASSERT( node );
     return mVisualNodes.insert( mVisualNodes.end(), node );
@@ -108,7 +108,7 @@ GN::scene::VisualGraph::Impl::insertVisualNode( VisualNode::Impl * node )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::Impl::removeVisualNode( std::list<VisualNode::Impl*>::iterator iter )
+void GN::util::VisualGraph::Impl::removeVisualNode( std::list<VisualNode::Impl*>::iterator iter )
 {
     mVisualNodes.erase( iter );
 }
@@ -117,7 +117,7 @@ void GN::scene::VisualGraph::Impl::removeVisualNode( std::list<VisualNode::Impl*
 //
 // -----------------------------------------------------------------------------
 std::list<LightNode::Impl*>::iterator
-GN::scene::VisualGraph::Impl::insertLightNode( LightNode::Impl * node )
+GN::util::VisualGraph::Impl::insertLightNode( LightNode::Impl * node )
 {
     GN_ASSERT( node );
     return mLightNodes.insert( mLightNodes.end(), node );
@@ -126,7 +126,7 @@ GN::scene::VisualGraph::Impl::insertLightNode( LightNode::Impl * node )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::Impl::removeLightNode( std::list<LightNode::Impl*>::iterator iter )
+void GN::util::VisualGraph::Impl::removeLightNode( std::list<LightNode::Impl*>::iterator iter )
 {
     mLightNodes.erase( iter );
 }
@@ -138,7 +138,7 @@ void GN::scene::VisualGraph::Impl::removeLightNode( std::list<LightNode::Impl*>:
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::Impl::updateTransformation( Camera & c )
+void GN::util::VisualGraph::Impl::updateTransformation( Camera & c )
 {
     const Matrix44f & proj = c.getProjectionMatrix();
     const Matrix44f & view = c.getViewMatrix();
@@ -169,7 +169,7 @@ void GN::scene::VisualGraph::Impl::updateTransformation( Camera & c )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::Impl::updateDefaultLighting()
+void GN::util::VisualGraph::Impl::updateDefaultLighting()
 {
     if( mLightNodes.empty() )
     {
@@ -208,7 +208,7 @@ void GN::scene::VisualGraph::Impl::updateDefaultLighting()
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::VisualGraph( GpuResourceDatabase & gdb )
+GN::util::VisualGraph::VisualGraph( GpuResourceDatabase & gdb )
 {
     mImpl = new Impl( *this, gdb );
 }
@@ -216,7 +216,7 @@ GN::scene::VisualGraph::VisualGraph( GpuResourceDatabase & gdb )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualGraph::~VisualGraph()
+GN::util::VisualGraph::~VisualGraph()
 {
     delete mImpl;
 }
@@ -224,7 +224,7 @@ GN::scene::VisualGraph::~VisualGraph()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceDatabase & GN::scene::VisualGraph::gdb() const
+GpuResourceDatabase & GN::util::VisualGraph::gdb() const
 {
     return mImpl->gdb();
 }
@@ -232,7 +232,7 @@ GpuResourceDatabase & GN::scene::VisualGraph::gdb() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualGraph::draw( Camera & camera )
+void GN::util::VisualGraph::draw( Camera & camera )
 {
     mImpl->draw( camera );
 }

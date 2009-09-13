@@ -3,9 +3,9 @@
 #include "visualGraph.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Camera::Impl public methods
@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Camera::Impl::setViewMatrix( const Matrix44f & m )
+void GN::util::Camera::Impl::setViewMatrix( const Matrix44f & m )
 {
     mView = m;
 }
@@ -22,7 +22,7 @@ void GN::scene::Camera::Impl::setViewMatrix( const Matrix44f & m )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Camera::Impl::setProjectionMatrix( const Matrix44f & m )
+void GN::util::Camera::Impl::setProjectionMatrix( const Matrix44f & m )
 {
     mProj = m;
 }
@@ -30,7 +30,7 @@ void GN::scene::Camera::Impl::setProjectionMatrix( const Matrix44f & m )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Camera::Impl::setViewport( const Rect<UInt32> & v )
+void GN::util::Camera::Impl::setViewport( const Rect<UInt32> & v )
 {
     mViewport = v;
 }
@@ -50,7 +50,7 @@ void GN::scene::Camera::Impl::setViewport( const Rect<UInt32> & v )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Camera::Camera()
+GN::util::Camera::Camera()
 {
     mImpl = new Impl( *this );
 }
@@ -58,7 +58,7 @@ GN::scene::Camera::Camera()
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::Camera::~Camera()
+GN::util::Camera::~Camera()
 {
     delete mImpl;
 }
@@ -66,9 +66,9 @@ GN::scene::Camera::~Camera()
 //
 //
 // -----------------------------------------------------------------------------
-void                 GN::scene::Camera::setViewMatrix( const Matrix44f & m ) { return mImpl->setViewMatrix( m ); }
-const Matrix44f    & GN::scene::Camera::getViewMatrix() const { return mImpl->getViewMatrix(); }
-void                 GN::scene::Camera::setProjectionMatrix( const Matrix44f & m ) { return mImpl->setProjectionMatrix( m ); }
-const Matrix44f    & GN::scene::Camera::getProjectionMatrix() const { return mImpl->getProjectionMatrix(); }
-void                 GN::scene::Camera::setViewport( const Rect<UInt32> & v ) { return mImpl->setViewport( v ); }
-const Rect<UInt32> & GN::scene::Camera::getViewport() const { return mImpl->getViewport(); }
+void                 GN::util::Camera::setViewMatrix( const Matrix44f & m ) { return mImpl->setViewMatrix( m ); }
+const Matrix44f    & GN::util::Camera::getViewMatrix() const { return mImpl->getViewMatrix(); }
+void                 GN::util::Camera::setProjectionMatrix( const Matrix44f & m ) { return mImpl->setProjectionMatrix( m ); }
+const Matrix44f    & GN::util::Camera::getProjectionMatrix() const { return mImpl->getProjectionMatrix(); }
+void                 GN::util::Camera::setViewport( const Rect<UInt32> & v ) { return mImpl->setViewport( v ); }
+const Rect<UInt32> & GN::util::Camera::getViewport() const { return mImpl->getViewport(); }

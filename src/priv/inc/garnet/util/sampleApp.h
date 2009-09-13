@@ -1,5 +1,5 @@
-#ifndef __GN_APP_SAMPLEAPP_H__
-#define __GN_APP_SAMPLEAPP_H__
+#ifndef __GN_UTIL_SAMPLEAPP_H__
+#define __GN_UTIL_SAMPLEAPP_H__
 // *****************************************************************************
 /// \file
 /// \brief   Sample application framework
@@ -10,7 +10,7 @@
 #include "garnet/GNinput.h"
 #include "garnet/GNutil.h"
 
-namespace GN { namespace app
+namespace GN { namespace util
 {
     ///
     /// Sample application framework
@@ -71,21 +71,6 @@ namespace GN { namespace app
         void printStandardCommandLineOptions();
 
         ///
-        /// Return seconds since application starts
-        ///
-        double getCurrentTime() const { return mFps.getCurrentTime(); }
-
-        ///
-        /// Return seconds of last frame
-        ///
-        double getLastFrameTime() const { return mLastFrameTime; }
-
-        ///
-        /// Return time since last update
-        ///
-        double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
-
-        ///
         /// post exit event. Application will exit at the beginning of next frame.
         ///
         void postExitEvent() { mDone = true; }
@@ -94,6 +79,21 @@ namespace GN { namespace app
 		/// show HUD or not?
 		///
 		void showHUD( bool show ) { mShowHUD = show; }
+
+        ///
+        /// Return time in seconds since application starts
+        ///
+        double getCurrentTime() const { return mFps.getCurrentTime(); }
+
+        ///
+        /// Return time in seconds of the last frame
+        ///
+        double getLastFrameTime() const { return mLastFrameTime; }
+
+        ///
+        /// Return time in seconds since last call to onUpdate()
+        ///
+        double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
         ///
         /// get the FPS
@@ -108,7 +108,12 @@ namespace GN { namespace app
         ///
         /// get reference to GPU resource database
         ///
-        gfx::GpuResourceDatabase & getGpuResourceDatabase() const { return *mGpuResourceDatabase; }
+        gfx::GpuResourceDatabase & getGdb() const { GN_ASSERT(mGpuResourceDatabase); return *mGpuResourceDatabase; }
+
+        ///
+        /// get refernece to the world
+        ///
+        util::World & getWorld() const { GN_ASSERT(mWorld); return *mWorld; }
 
         ///
         /// get font renderer
@@ -125,9 +130,10 @@ namespace GN { namespace app
         InitParam                  mInitParam;
 
         gfx::Gpu                 * mGpu;
-        gfx::GpuResourceDatabase * mGpuResourceDatabase;
         gfx::SpriteRenderer      * mSpriteRenderer;
         gfx::LineRenderer        * mLineRenderer;
+        gfx::GpuResourceDatabase * mGpuResourceDatabase;
+        util::World              * mWorld;
         util::BitmapFont           mFont;
 
         // time stuff
@@ -162,4 +168,4 @@ namespace GN { namespace app
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_APP_SAMPLEAPP_H__
+#endif // __GN_UTIL_SAMPLEAPP_H__

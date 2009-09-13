@@ -11,7 +11,7 @@ using namespace GN;
 ///
 /// CEGUI test application
 ///
-class GuiTest : public GN::app::SampleApp
+class GuiTest : public GN::util::SampleApp
 {
 public:
 

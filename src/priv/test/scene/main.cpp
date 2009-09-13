@@ -1,12 +1,10 @@
 #include "pch.h"
-#include "scene.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::win;
 using namespace GN::util;
-using namespace GN::scene;
 
 struct Scene
 {
@@ -35,7 +33,7 @@ bool init( Scene & sc )
     // robot stays at the origin.
     robot = sc.world.createEntity( VISUAL_ENTITY );
     robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-    robot->getNode<VisualNode>()->loadModelsFromFile( sc.gdb, "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
+    robot->getNode<VisualNode>()->loadModelsFromFile( "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
 
     const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
 

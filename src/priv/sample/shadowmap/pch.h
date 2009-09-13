@@ -6,11 +6,7 @@
 // \author  chenlee (2006.1.7)
 // *****************************************************************************
 
-#include "garnet/GNengine.h"
-#include "garnet/GNinput.h"
 #include "garnet/GNutil.h"
-#include "garnet/GNscene.h"
-#include "garnet/GNapp.h"
 
 // *****************************************************************************
 //                                     EOF

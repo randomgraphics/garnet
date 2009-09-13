@@ -1,7 +1,6 @@
 Import( 'GN' )
 
 sources = [
-	'loader.cpp',
 	'main.cpp'
 ]
 
