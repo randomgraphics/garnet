@@ -2,9 +2,9 @@
 #include "spatialNode.h"
 
 using namespace GN;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // SpatialNode::Impl public methods
@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
+GN::util::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
     : mOwner( owner )
     , mGraph( graph )
     , mPosition( 0, 0, 0 )
@@ -31,7 +31,7 @@ GN::scene::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode * prevSibling )
+void GN::util::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode * prevSibling )
 {
     // only nodes belong to same graph can be linked with each other.
     GN_ASSERT( NULL == parent || &parent->graph() == &mOwner.graph() );
@@ -47,7 +47,7 @@ void GN::scene::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setPosition( const Vector3f & p )
+void GN::util::SpatialNode::Impl::setPosition( const Vector3f & p )
 {
     if( p != mPosition )
     {
@@ -59,7 +59,7 @@ void GN::scene::SpatialNode::Impl::setPosition( const Vector3f & p )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setRotation( const Quaternionf & q )
+void GN::util::SpatialNode::Impl::setRotation( const Quaternionf & q )
 {
     if( q != mRotation )
     {
@@ -71,7 +71,7 @@ void GN::scene::SpatialNode::Impl::setRotation( const Quaternionf & q )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setScale( const Vector3f & s )
+void GN::util::SpatialNode::Impl::setScale( const Vector3f & s )
 {
     if( s != mScale )
     {
@@ -83,7 +83,7 @@ void GN::scene::SpatialNode::Impl::setScale( const Vector3f & s )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::setBoundingSphere( const Spheref & s )
+void GN::util::SpatialNode::Impl::setBoundingSphere( const Spheref & s )
 {
     mBoundingSphere = s;
 }
@@ -91,7 +91,7 @@ void GN::scene::SpatialNode::Impl::setBoundingSphere( const Spheref & s )
 //
 //
 // -----------------------------------------------------------------------------
-SpatialNode * GN::scene::SpatialNode::Impl::getLastChild() const
+SpatialNode * GN::util::SpatialNode::Impl::getLastChild() const
 {
     GN_UNIMPL();
     return NULL;
@@ -104,7 +104,7 @@ SpatialNode * GN::scene::SpatialNode::Impl::getLastChild() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::SpatialNode::Impl::calcTransform()
+void GN::util::SpatialNode::Impl::calcTransform()
 {
     GN_ASSERT( mTransformDirty );
 
@@ -152,7 +152,7 @@ void GN::scene::SpatialNode::Impl::calcTransform()
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::SpatialNode::SpatialNode( Entity & entity, SpatialGraph & graph )
+GN::util::SpatialNode::SpatialNode( Entity & entity, SpatialGraph & graph )
     : NodeBase(entity)
     , mImpl(NULL)
 {
@@ -162,7 +162,7 @@ GN::scene::SpatialNode::SpatialNode( Entity & entity, SpatialGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::SpatialNode::~SpatialNode()
+GN::util::SpatialNode::~SpatialNode()
 {
     delete mImpl;
 }
@@ -170,7 +170,7 @@ GN::scene::SpatialNode::~SpatialNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::scene::SpatialNode::guid()
+const Guid & GN::util::SpatialNode::guid()
 {
     static const Guid SPATIAL_NODE_GUID =
     {
@@ -183,25 +183,25 @@ const Guid & GN::scene::SpatialNode::guid()
 //
 //
 // -----------------------------------------------------------------------------
-SpatialGraph      & GN::scene::SpatialNode::graph() const { return mImpl->graph(); }
-void                GN::scene::SpatialNode::setParent( SpatialNode * parent, SpatialNode * prevSibling ) { return mImpl->setParent( parent, prevSibling ); }
-void                GN::scene::SpatialNode::setPosition( const Vector3f & position ) { return mImpl->setPosition( position ); }
-void                GN::scene::SpatialNode::setRotation( const Quaternionf & rotation ) { return mImpl->setRotation( rotation ); }
-void                GN::scene::SpatialNode::setScale( const Vector3f & scale ) { return mImpl->setScale( scale ); }
-void                GN::scene::SpatialNode::setBoundingSphere( const Spheref & sphere ) { return mImpl->setBoundingSphere( sphere ); }
+SpatialGraph      & GN::util::SpatialNode::graph() const { return mImpl->graph(); }
+void                GN::util::SpatialNode::setParent( SpatialNode * parent, SpatialNode * prevSibling ) { return mImpl->setParent( parent, prevSibling ); }
+void                GN::util::SpatialNode::setPosition( const Vector3f & position ) { return mImpl->setPosition( position ); }
+void                GN::util::SpatialNode::setRotation( const Quaternionf & rotation ) { return mImpl->setRotation( rotation ); }
+void                GN::util::SpatialNode::setScale( const Vector3f & scale ) { return mImpl->setScale( scale ); }
+void                GN::util::SpatialNode::setBoundingSphere( const Spheref & sphere ) { return mImpl->setBoundingSphere( sphere ); }
 
-SpatialNode       * GN::scene::SpatialNode::getParent() const { return mImpl->getParent(); }
-SpatialNode       * GN::scene::SpatialNode::getPrevSibling() const { return mImpl->getPrevSibling(); }
-SpatialNode       * GN::scene::SpatialNode::getNextSibling() const { return mImpl->getNextSibling(); }
-SpatialNode       * GN::scene::SpatialNode::getFirstChild() const { return mImpl->getFirstChild(); }
-SpatialNode       * GN::scene::SpatialNode::getLastChild() const { return mImpl->getLastChild(); }
+SpatialNode       * GN::util::SpatialNode::getParent() const { return mImpl->getParent(); }
+SpatialNode       * GN::util::SpatialNode::getPrevSibling() const { return mImpl->getPrevSibling(); }
+SpatialNode       * GN::util::SpatialNode::getNextSibling() const { return mImpl->getNextSibling(); }
+SpatialNode       * GN::util::SpatialNode::getFirstChild() const { return mImpl->getFirstChild(); }
+SpatialNode       * GN::util::SpatialNode::getLastChild() const { return mImpl->getLastChild(); }
 
-const Vector3f    & GN::scene::SpatialNode::getPosition() const { return mImpl->getPosition(); }
-const Quaternionf & GN::scene::SpatialNode::getRotation() const { return mImpl->getRotation(); }
-const Vector3f    & GN::scene::SpatialNode::getScale() const { return mImpl->getScale(); }
-const Spheref     & GN::scene::SpatialNode::getBoundingSphere() const { return mImpl->getBoundingSphere(); }
-const Matrix44f   & GN::scene::SpatialNode::getLocal2Parent() const { return mImpl->getLocal2Parent(); }
-const Matrix44f   & GN::scene::SpatialNode::getLocal2Root() const { return mImpl->getLocal2Root(); }
+const Vector3f    & GN::util::SpatialNode::getPosition() const { return mImpl->getPosition(); }
+const Quaternionf & GN::util::SpatialNode::getRotation() const { return mImpl->getRotation(); }
+const Vector3f    & GN::util::SpatialNode::getScale() const { return mImpl->getScale(); }
+const Spheref     & GN::util::SpatialNode::getBoundingSphere() const { return mImpl->getBoundingSphere(); }
+const Matrix44f   & GN::util::SpatialNode::getLocal2Parent() const { return mImpl->getLocal2Parent(); }
+const Matrix44f   & GN::util::SpatialNode::getLocal2Root() const { return mImpl->getLocal2Root(); }
 
 // *****************************************************************************
 // SpatialNode factory
@@ -220,7 +220,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-SpatialNode * GN::scene::newSpatialNode( Entity & entity, SpatialGraph & graph )
+SpatialNode * GN::util::newSpatialNode( Entity & entity, SpatialGraph & graph )
 {
     return new SpatialNodeInternal( entity, graph );
 }

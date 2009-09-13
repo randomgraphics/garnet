@@ -2,15 +2,15 @@
 // This is script generated header. DO NOT EDIT.
 // *********************************************
 
-#ifndef __GN_SCENE_STANDARUNIFORMS_H__
-#define __GN_SCENE_STANDARUNIFORMS_H__
+#ifndef __GN_UTIL_STANDARUNIFORMS_H__
+#define __GN_UTIL_STANDARUNIFORMS_H__
 // *****************************************************************************
 /// \file
 /// \brief   Define standard scene parameters
-/// \author  chenli@@REDMOND (Thu 09/10/2009)
+/// \author  chenli@@REDMOND (Fri 09/11/2009)
 // *****************************************************************************
 
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     /// standard uniform description
     struct StandardUniformDesc
@@ -106,4 +106,4 @@ namespace GN { namespace scene
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_SCENE_STANDARUNIFORMS_H__
+#endif // __GN_UTIL_STANDARUNIFORMS_H__

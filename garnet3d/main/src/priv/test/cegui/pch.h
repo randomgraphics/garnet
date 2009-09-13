@@ -8,8 +8,7 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNgfx.h"
-#include "garnet/GNscene.h"
-#include "garnet/GNapp.h"
+#include "garnet/GNutil.h"
 #include "../util/cegui/ceguiRenderer.h"
 
 // *****************************************************************************

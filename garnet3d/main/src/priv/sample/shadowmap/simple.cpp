@@ -2,8 +2,7 @@
 #include "simple.h"
 
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::scene;
+using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
 

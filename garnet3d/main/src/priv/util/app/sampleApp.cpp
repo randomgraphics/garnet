@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNapp.h"
 #define SO_ASSERT GN_ASSERT
 #include <SimpleOpt.h>
 
@@ -7,9 +6,9 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
+float GN::util::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 
-static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // command line parser
@@ -126,11 +125,12 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-GN::app::SampleApp::SampleApp()
+GN::util::SampleApp::SampleApp()
     : mGpu(NULL)
-    , mGpuResourceDatabase( NULL )
     , mSpriteRenderer(NULL)
     , mLineRenderer(NULL)
+    , mGpuResourceDatabase( NULL )
+    , mWorld(NULL)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
     , mShowHUD(true)
     , mShowHelp(false)
@@ -142,7 +142,7 @@ GN::app::SampleApp::SampleApp()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::app::SampleApp::run( int argc, const char * const argv[] )
+int GN::util::SampleApp::run( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
@@ -202,7 +202,7 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * const argv[] )
+bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * const argv[] )
 {
     if( argc > 0 )
     {
@@ -221,7 +221,7 @@ bool GN::app::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * co
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::onPrintHelpScreen( const char * executableName )
+void GN::util::SampleApp::onPrintHelpScreen( const char * executableName )
 {
     // show default help screen
     printf( "Usage: %s [options]\n", executableName );
@@ -231,7 +231,7 @@ void GN::app::SampleApp::onPrintHelpScreen( const char * executableName )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
+void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KeyCode::XB360_X == ke.code && ke.status.down )
     {
@@ -262,7 +262,7 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld )
+void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld )
 {
     static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
     static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
@@ -276,7 +276,7 @@ void GN::app::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::printStandardCommandLineOptions()
+void GN::util::SampleApp::printStandardCommandLineOptions()
 {
     printf(
         "Standard command line options:\n"
@@ -324,7 +324,7 @@ void GN::app::SampleApp::printStandardCommandLineOptions()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::init( int argc, const char * const argv[] )
+bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
@@ -360,7 +360,7 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::quit()
+void GN::util::SampleApp::quit()
 {
     GN_GUARD_ALWAYS;
 
@@ -375,7 +375,7 @@ void GN::app::SampleApp::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
+bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
@@ -515,7 +515,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initGpu()
+bool GN::util::SampleApp::initGpu()
 {
     GN_GUARD;
 
@@ -525,9 +525,6 @@ bool GN::app::SampleApp::initGpu()
     else
         mGpu = createSingleThreadGpu( mInitParam.ro );
     if( NULL == mGpu ) return false;
-
-    // create GPU resource database
-    mGpuResourceDatabase = new GpuResourceDatabase( *mGpu );
 
     // connect to renderer signal: post quit event, if render window is closed.
     mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
@@ -541,6 +538,12 @@ bool GN::app::SampleApp::initGpu()
     mLineRenderer = new LineRenderer( *mGpu );
     if( !mLineRenderer->init() ) return false;
 
+    // create GPU resource database
+    mGpuResourceDatabase = new GpuResourceDatabase( *mGpu );
+
+    // create the world
+    mWorld = new World( *mGpuResourceDatabase );
+
     // create renderer
     return true;
 
@@ -550,15 +553,15 @@ bool GN::app::SampleApp::initGpu()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitGpu()
+void GN::util::SampleApp::quitGpu()
 {
     GN_GUARD;
 
+    safeDelete( mWorld );
+    safeDelete( mGpuResourceDatabase );
     safeDelete( mLineRenderer );
     safeDelete( mSpriteRenderer );
-    safeDelete( mGpuResourceDatabase );
-    deleteGpu( mGpu );
-    mGpu = NULL;
+    deleteGpu( mGpu ); mGpu = NULL;
 
     GN_UNGUARD;
 }
@@ -566,7 +569,7 @@ void GN::app::SampleApp::quitGpu()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initInput()
+bool GN::util::SampleApp::initInput()
 {
     GN_GUARD;
 
@@ -589,7 +592,7 @@ bool GN::app::SampleApp::initInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitInput()
+void GN::util::SampleApp::quitInput()
 {
     GN_GUARD;
 
@@ -608,7 +611,7 @@ void GN::app::SampleApp::quitInput()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initFont()
+bool GN::util::SampleApp::initFont()
 {
     GN_GUARD;
 
@@ -631,7 +634,7 @@ bool GN::app::SampleApp::initFont()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitFont()
+void GN::util::SampleApp::quitFont()
 {
     GN_GUARD;
 
@@ -643,7 +646,7 @@ void GN::app::SampleApp::quitFont()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::app::SampleApp::drawHUD()
+void GN::util::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 

@@ -1,23 +1,20 @@
 #include "pch.h"
-#include "loader.h"
 
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
-using namespace GN::scene;
-using namespace GN::app;
 
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
 class MyApp : public SampleApp
 {
-    const char                 * filename;
-    ArcBall                      arcball; // arcball camera
-    float                        radius;  // distance from camera to object
-    Matrix44f                    proj, view;
-    AutoObjPtr<Scene>            rootScene;
-    AutoObjPtr<GeometryNode>     model;
+    const char * filename;
+    ArcBall      arcball; // arcball camera
+    float        radius;  // distance from camera to object
+    Camera       camera;
+    Entity     * light;
+    Entity     * scene;
 
 public:
 
@@ -27,50 +24,50 @@ public:
 
         const DispDesc & dd = gpu.getDispDesc();
 
+        // setup camera
+        Matrix44f view, proj;
         view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
         gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        camera.setViewMatrix( view );
+        camera.setProjectionMatrix( proj );
 
+        // setup arcball
         float h = tan( 0.5f ) * radius * 2.0f;
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
         arcball.setViewMatrix( view );
         arcball.setTranslationSpeed( h / dd.height );
 
-        rootScene->setDefaultLight0Position( Vector3f(0,0,radius) ); // head light: same location as camera.
-
-        // calculate move speed
+        // setup light as a head light that is in same location as camera.
+        light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) );
     }
 
     bool onPostInit()
     {
-        GpuResourceDatabase & db = getGpuResourceDatabase();
+        World & w = getWorld();
 
-        // create scene
-        rootScene.attach( createScene( db ) );
-        if( !rootScene ) return false;
+        light = w.createEntity( LIGHT_ENTITY, NULL );
+        scene = w.createEntity( VISUAL_ENTITY, NULL );
+        if( !light || !scene ) return false;
 
-        // load model
-        model.attach( loadGeometryFromFile( *rootScene, filename ) );
-        if( !model ) return false;
+        // load models form file
+        if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
 
         // update camera stuff
-        const Spheref & bs = model->getBoundingSphere();
+        const Spheref & bs = scene->getNode<SpatialNode>()->getBoundingSphere();
         radius = bs.radius * 1.5f;
-        updateRadius();
 
         // initialize arcball
         arcball.setHandness( util::RIGHT_HAND );
-        arcball.setViewMatrix( view );
         arcball.setTranslation( -bs.center );
         arcball.connectToInput();
 
         // success
+        updateRadius();
         return true;
     }
 
     void onQuit()
     {
-        model.clear();
-        rootScene.clear();
     }
 
     void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
@@ -91,6 +88,10 @@ public:
 
     void onUpdate()
     {
+        SpatialNode * sceneSpatial = scene->getNode<SpatialNode>();
+        const Vector3f & position = arcball.getTranslation();
+        sceneSpatial->setPosition( position );
+        sceneSpatial->setRotation( arcball.getRotation() );
     }
 
     void onRender()
@@ -99,13 +100,9 @@ public:
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
-        const Vector3f & position = arcball.getTranslation();
+        scene->getNode<VisualNode>()->graph().draw( camera );
 
-        rootScene->setProj( proj );
-        rootScene->setView( view );
-        model->setPosition( position );
-        model->setRotation( arcball.getRotation() );
-        rootScene->renderNodeHierarchy( model );
+        const Vector3f & position = arcball.getTranslation();
 
         getFont().drawText(
             strFormat(
@@ -117,7 +114,7 @@ public:
                 radius ).cptr(),
             320, 40 );
 
-        drawXYZCoordinateAxes( proj * view * arcball.getRotationMatrix44() );
+        drawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );
     }
 
     bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )

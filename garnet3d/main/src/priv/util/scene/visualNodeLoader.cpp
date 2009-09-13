@@ -4,10 +4,9 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::scene;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff
@@ -415,9 +414,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::VisualNode::Impl::loadModelsFromFile(
-    GpuResourceDatabase & db,
-    const char          * filename )
+bool GN::util::VisualNode::Impl::loadModelsFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( loadModelsFromFile, "Load models from file into VisualNode" );
 
@@ -429,6 +426,8 @@ bool GN::scene::VisualNode::Impl::loadModelsFromFile(
 
     // get file extension
     StrA ext = fs::extName( filename );
+
+    GpuResourceDatabase & db = mGraph.gdb();
 
     // do loading
     if( 0 == strCmpI( ".ase", ext.cptr() ) )

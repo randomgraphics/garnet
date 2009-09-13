@@ -3,10 +3,9 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::engine;
-using namespace GN::scene;
 using namespace GN::util;
 
-class MyApp : public app::SampleApp
+class MyApp : public SampleApp
 {
     Scene   mScene;
     Actor   mActor;

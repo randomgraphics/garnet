@@ -3,9 +3,9 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::scene;
+using namespace GN::util;
 
-class ShadowMap : public GN::app::SampleApp
+class ShadowMap : public SampleApp
 {
     SimpleShadowMap * mSimple;
 

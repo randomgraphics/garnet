@@ -2,8 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::scene;
+using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.gpuBenchmark");
 

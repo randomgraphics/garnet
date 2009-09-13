@@ -6,11 +6,10 @@
 /// \author  chenli@@REDMOND (2009.9.9)
 // *****************************************************************************
 
-#include "scene.h"
 #include "standardUniforms.h"
 #include <list>
 
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     /// VisualNode implementation class
     class VisualNode::Impl
@@ -35,7 +34,7 @@ namespace GN { namespace scene
         VisualGraph & graph() const { return mGraph; }
         int           addModel( gfx::GpuResource * model );
         void          removeAllModels();
-        bool          loadModelsFromFile( gfx::GpuResourceDatabase & db, const char * filename );
+        bool          loadModelsFromFile( const char * filename );
         void          draw() const;
 
         //@}

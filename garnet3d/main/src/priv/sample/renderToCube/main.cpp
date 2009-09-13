@@ -2,11 +2,9 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::app;
-using namespace GN::scene;
+using namespace GN::util;
 
-class RenderToTexture : public GN::app::SampleApp
+class RenderToTexture : public GN::util::SampleApp
 {
     GraphicsResource * faces[6];
 

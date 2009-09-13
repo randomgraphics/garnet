@@ -16,10 +16,12 @@ namespace GN
     namespace util {}
 }
 
+#include "util/scene.h"
 #include "util/font.h"
 #include "util/camera.h"
 #include "util/fps.h"
 #include "util/ase.h"
+#include "util/sampleApp.h"
 
 // *****************************************************************************
 //                                     EOF

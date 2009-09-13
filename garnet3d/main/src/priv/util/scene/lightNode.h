@@ -6,10 +6,9 @@
 /// \author  chenli@@REDMOND (2009.9.9)
 // *****************************************************************************
 
-#include "scene.h"
 #include <list>
 
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     /// LightNode implementation class
     class LightNode::Impl

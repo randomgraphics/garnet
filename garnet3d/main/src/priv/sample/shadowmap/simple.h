@@ -7,18 +7,13 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
-#include "garnet/GNscene.h"
 #include "garnet/GNutil.h"
-#include "garnet/GNapp.h"
 
 using namespace GN::gfx;
-using namespace GN::engine;
-using namespace GN::scene;
 using namespace GN::util;
-using namespace GN::app;
 
 namespace GN
-{    
+{
     ///
     /// The most primitive shadow map implementation.
     ///

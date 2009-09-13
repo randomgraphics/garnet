@@ -4,9 +4,9 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::scene;
+using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.scene");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // VisualNode::Impl public methods
@@ -15,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene");
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualNode::Impl::Impl( VisualNode & owner, VisualGraph & graph )
+GN::util::VisualNode::Impl::Impl( VisualNode & owner, VisualGraph & graph )
     : mOwner(owner)
     , mGraph(graph)
 {
@@ -25,7 +25,7 @@ GN::scene::VisualNode::Impl::Impl( VisualNode & owner, VisualGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualNode::Impl::~Impl()
+GN::util::VisualNode::Impl::~Impl()
 {
     removeAllModels();
 
@@ -40,7 +40,7 @@ GN::scene::VisualNode::Impl::~Impl()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::scene::VisualNode::Impl::addModel( GpuResource * model )
+int GN::util::VisualNode::Impl::addModel( GpuResource * model )
 {
     if( NULL == model )
     {
@@ -93,7 +93,7 @@ int GN::scene::VisualNode::Impl::addModel( GpuResource * model )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualNode::Impl::removeAllModels()
+void GN::util::VisualNode::Impl::removeAllModels()
 {
     mModels.clear();
 }
@@ -101,7 +101,7 @@ void GN::scene::VisualNode::Impl::removeAllModels()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::VisualNode::Impl::draw() const
+void GN::util::VisualNode::Impl::draw() const
 {
     // update standard transfomration uniforms
     SpatialNode * sn = mOwner.entity().getNode<SpatialNode>();
@@ -174,7 +174,7 @@ void GN::scene::VisualNode::Impl::draw() const
 //
 // -----------------------------------------------------------------------------
 UniformResource *
-GN::scene::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
+GN::util::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 {
     AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
 
@@ -200,7 +200,7 @@ GN::scene::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualNode::VisualNode( Entity & entity, VisualGraph & graph )
+GN::util::VisualNode::VisualNode( Entity & entity, VisualGraph & graph )
     : NodeBase(entity)
     , mImpl(NULL)
 {
@@ -210,7 +210,7 @@ GN::scene::VisualNode::VisualNode( Entity & entity, VisualGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-GN::scene::VisualNode::~VisualNode()
+GN::util::VisualNode::~VisualNode()
 {
     delete mImpl;
 }
@@ -218,7 +218,7 @@ GN::scene::VisualNode::~VisualNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::scene::VisualNode::guid()
+const Guid & GN::util::VisualNode::guid()
 {
     static const Guid MY_GUID =
     {
@@ -231,10 +231,10 @@ const Guid & GN::scene::VisualNode::guid()
 //
 //
 // -----------------------------------------------------------------------------
-VisualGraph & GN::scene::VisualNode::graph() const { return mImpl->graph(); }
-int           GN::scene::VisualNode::addModel( gfx::GpuResource * model ) { return mImpl->addModel( model ); }
-void          GN::scene::VisualNode::removeAllModels() { return mImpl->removeAllModels(); }
-bool          GN::scene::VisualNode::loadModelsFromFile( GpuResourceDatabase & db, const char * filename ) { return mImpl->loadModelsFromFile( db, filename ); }
+VisualGraph & GN::util::VisualNode::graph() const { return mImpl->graph(); }
+int           GN::util::VisualNode::addModel( gfx::GpuResource * model ) { return mImpl->addModel( model ); }
+void          GN::util::VisualNode::removeAllModels() { return mImpl->removeAllModels(); }
+bool          GN::util::VisualNode::loadModelsFromFile( const char * filename ) { return mImpl->loadModelsFromFile( filename ); }
 
 // *****************************************************************************
 // VisualNode factory
@@ -253,7 +253,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-VisualNode * GN::scene::newVisualNode( Entity & entity, VisualGraph & graph )
+VisualNode * GN::util::newVisualNode( Entity & entity, VisualGraph & graph )
 {
     return new VisualNodeInternal( entity, graph );
 }

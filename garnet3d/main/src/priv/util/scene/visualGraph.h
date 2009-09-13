@@ -6,11 +6,10 @@
 /// \author  chenli@@REDMOND (2009.9.10)
 // *****************************************************************************
 
-#include "scene.h"
 #include "standardUniforms.h"
 #include <list>
 
-namespace GN { namespace scene
+namespace GN { namespace util
 {
     ///
     /// VisualGraph implementation class
