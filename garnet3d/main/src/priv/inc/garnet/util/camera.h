@@ -170,11 +170,6 @@ namespace GN { namespace util
 
         void setHandness( Handness h ) { mHandness = (LEFT_HAND==h) ? -1.0f : 1.0f ; }
 
-        ///
-        /// rotate the arcball. dx and dy are in screen space.
-        ///
-        void rotate( float dx, float dy );
-
         //@}
 
         /// \name get arcball properties
