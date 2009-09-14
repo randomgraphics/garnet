@@ -57,30 +57,6 @@ GN::util::ArcBall::ArcBall( Handness h )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::rotate( float dx, float dy )
-{
-    if( .0f == dx && .0f == dy ) return;
-
-    dx /= mWindowHalfSize.x;
-    dy /= mWindowHalfSize.y;
-
-    Vector3f v1, v2;
-    sWindowPosition2UnitVector( v1, 0, 0, mHandness );
-    sWindowPosition2UnitVector( v2, dx, dy, mHandness );
-    v1 = mTransView.transformVector( v1 );
-    v2 = mTransView.transformVector( v2 );
-
-    Quaternionf q;
-    q.fromArc( v1, v2 );
-    mQuat = q * mQuat;
-
-    mQuat.toMatrix33( mRotation3x3 );
-    mRotation4x4.set( mRotation3x3 );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput()
 {
     if( gInputPtr )
@@ -124,6 +100,8 @@ void GN::util::ArcBall::beginRotation( int x, int y )
     mRollBase = mTransView.transformVector( mRollBase );
 
     mQuatBase = mQuat;
+
+    mTranslationBase = mTranslation;
 }
 
 //
@@ -157,6 +135,8 @@ void GN::util::ArcBall::onRotation( int x, int y )
 
     mQuat.toMatrix33( mRotation3x3 );
     mRotation4x4.set( mRotation3x3 );
+
+    mTranslation = q.toMatrix44().transformPoint( mTranslationBase );
 
     GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.print().cptr() );
 }
@@ -192,11 +172,7 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 
     Vector3f v( (float)( x - mMoveBase.x ), (float)( mMoveBase.y - y ), 0 );
 
-    Matrix44f transWorld; // invtrans( inv(world) ), transform vector from world space to object space
-    transWorld = Matrix44f::sTranspose( mRotation4x4 );
-
     v = mTransView.transformVector( v * mMoveSpeed ); // view space -> world space
-    v = transWorld.transformVector( v ); // world space -> model space
 
     mTranslation = mTranslationBase + v;
 }
