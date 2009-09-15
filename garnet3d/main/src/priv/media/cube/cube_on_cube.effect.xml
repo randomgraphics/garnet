@@ -7,20 +7,17 @@
 
 	<!--
 	============================================================================
-		Shaders
+	GPU Programs
 	============================================================================
 	-->
 
-	<shaders>
-		<!-- D3D HLSL shaders -->
-		<shader name="d3dvs" type="VS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="vs_1_1"/>
-				</token>
-			</prerequisites>
-			<uniref ref="pvw" binding="pvw"/>
-			<code lang="D3D_HLSL" hints="...">
+	<gpuprograms>
+
+		<!-- D3D HLSL9 shaders -->
+		<gpuprogram name="d3d9" lang="HLSL9">
+			<uniref uniform="pvw" shaderParameter="pvw"/>
+			<texref texture="cube" shaderParameter="s0"/>
+			<vs entry="main">
 <![CDATA[
 uniform float4x4 pvw : register(c0);
 void main(
@@ -32,17 +29,8 @@ void main(
 	otex = sign( ipos.xyz );
 }
 ]]>
-			</code>
-		</shader>
-
-		<shader name="d3dps" type="PS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="ps_1_1"/>
-				</token>
-			</prerequisites>
-			<texref ref="cube" stage="0"/>
-			<code lang="D3D_HLSL" hints="...">
+			</vs>
+			<ps entry="main">
 <![CDATA[
 sampler s0 : register(s0);
 float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
@@ -50,18 +38,14 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 	return texCUBE( s0, itex );
 }
 ]]>
-			</code>
-		</shader>
+			</ps>
+		</gpuprogram>
 
 		<!-- Cg shaders -->
-		<shader name="cgvs" type="VS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgvs"/>
-				</token>
-			</prerequisites>
-			<uniref ref="pvw" binding="pvw"/>
-			<code lang="CG" hints="...">
+		<gpuprogram name="cg" lang="CG">
+			<uniref uniform="pvw" shaderParameter="pvw"/>
+			<texref texture="cube" shaderParameter="s0"/>
+			<vs entry="main">
 <![CDATA[
 uniform float4x4 pvw : register(c0);
 void main(
@@ -73,17 +57,9 @@ void main(
 	otex = sign( ipos.xyz ); // Note: Cg 1.5 has bug to compile this statement to vs_3_0 assembly.
 }
 ]]>
-			</code>
-		</shader>
+			</vs>
 
-		<shader name="cgps" type="PS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgps"/>
-				</token>
-			</prerequisites>
-			<texref ref="cube" stage="0"/>
-			<code lang="CG" hints="...">
+			<ps>
 <![CDATA[
 sampler s0 : register(s0);
 float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
@@ -91,15 +67,10 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 	return texCUBE( s0, itex );
 }
 ]]>
-			</code>
-		</shader>
+			</ps>
+		</gpuprogram>
 
-		<!-- TODO: OpenGL ARB program -->
-
-		<!-- fixed pipeline -->
-		<shader name="fixgs" type="GS"/>
-
-	</shaders>
+	</gpuprograms>
 
 	<!--
 	============================================================================
@@ -108,14 +79,14 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 	-->
 
 	<techniques>
-        <!--rsb
+        <RenderStates
             CULL_MODE="CULL_NONE"
-        /-->
+        />
 		<technique name="d3d">
-			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+			<pass gpuprogram="d3d"/>
 		</technique>
 		<technique name="cg">
-			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+			<pass gpuprogram="cg"/>
 		</technique>
 	</techniques>
 </effect>
