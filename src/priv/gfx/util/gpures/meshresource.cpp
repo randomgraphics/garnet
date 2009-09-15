@@ -240,6 +240,9 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     VertexFormatProperties vfp;
     if( !vfp.analyze( desc.vtxfmt ) ) return false;
 
+    // store descriptor
+    mDesc = desc;
+
     Gpu & gpu = database().gpu();
 
     // initialize vertex buffers
@@ -249,21 +252,26 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
         {
             if( !vfp.used[i] ) continue; // ignore unused vertex buffer
 
-            // calculate vertex buffer size in bytes
-            size_t vbsize;
+            // calculate vertex stride
+            size_t stride;
             if( 0 == desc.strides[i] )
             {
-                vbsize = vfp.minStrides[i] * desc.numvtx;
+                stride = vfp.minStrides[i];
             }
             else if( desc.strides[i] >= vfp.minStrides[i] )
             {
-                vbsize = desc.strides[i] * desc.numvtx;
+                stride = desc.strides[i];
             }
             else
             {
                 GN_ERROR(sLogger)( "stride for stream %u is too small.", i );
                 return false;
             }
+            mDesc.strides[i] = stride;
+
+            // calculate vertex buffer size
+            size_t vbsize;
+            vbsize = stride * desc.numvtx;
 
             // create GPU vertex buffer
             VtxBufDesc vbdesc = { vbsize, desc.dynavb };
@@ -286,8 +294,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
         if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );
     }
 
-    // store descriptor, but clear data pointers
-    mDesc = desc;
+    // clear data pointers in stored decriptor
     memset( mDesc.vertices, 0, sizeof(mDesc.vertices) );
     mDesc.indices = NULL;
 

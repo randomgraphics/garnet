@@ -275,9 +275,9 @@ GN::gfx::XenonGpu::bindContextRenderStates(
     // fill mode
 
     // cull and face
-    if( skipDirtyCheck || newContext.frontFace != mContext.frontFace || newContext.cullMode != mContext.cullMode )
+    if( skipDirtyCheck || newContext.rs.frontFace != mContext.rs.frontFace || newContext.rs.cullMode != mContext.rs.cullMode )
     {
-        D3DCULL cullMode = CULL_TO_D3D[newContext.frontFace*GpuContext::NUM_CULL_MODES + newContext.cullMode];
+        D3DCULL cullMode = CULL_TO_D3D[newContext.rs.frontFace*GpuContext::NUM_CULL_MODES + newContext.rs.cullMode];
         mDevice->SetRenderState( D3DRS_CULLMODE, cullMode );
     }
 
@@ -288,24 +288,24 @@ GN::gfx::XenonGpu::bindContextRenderStates(
     // stencil
 
     // blend
-    if( skipDirtyCheck || newContext.blendFlags != mContext.blendFlags )
+    if( skipDirtyCheck || newContext.rs.blendingFlags != mContext.rs.blendingFlags )
     {
-        mDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, newContext.blendEnabled );
+        mDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, newContext.rs.blendEnabled );
         mDevice->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, true );
-        mDevice->SetRenderState( D3DRS_BLENDOP, BLEND_OP_TO_D3D[newContext.blendOp] );
-        mDevice->SetRenderState( D3DRS_SRCBLEND, BLEND_ARG_TO_D3D[newContext.blendSrc] );
-        mDevice->SetRenderState( D3DRS_DESTBLEND, BLEND_ARG_TO_D3D[newContext.blendDst] );
-        mDevice->SetRenderState( D3DRS_BLENDOPALPHA, BLEND_OP_TO_D3D[newContext.blendAlphaOp] );
-        mDevice->SetRenderState( D3DRS_SRCBLENDALPHA, BLEND_ARG_TO_D3D[newContext.blendAlphaSrc] );
-        mDevice->SetRenderState( D3DRS_DESTBLENDALPHA, BLEND_ARG_TO_D3D[newContext.blendAlphaDst] );
+        mDevice->SetRenderState( D3DRS_BLENDOP, BLEND_OP_TO_D3D[newContext.rs.blendOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLEND, BLEND_ARG_TO_D3D[newContext.rs.blendSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLEND, BLEND_ARG_TO_D3D[newContext.rs.blendDst] );
+        mDevice->SetRenderState( D3DRS_BLENDOPALPHA, BLEND_OP_TO_D3D[newContext.rs.blendAlphaOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.blendAlphaSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.blendAlphaDst] );
     }
-    if( skipDirtyCheck || newContext.blendFactors != mContext.blendFactors )
+    if( skipDirtyCheck || newContext.rs.blendFactors != mContext.rs.blendFactors )
     {
         DWORD bgra32 = GN_BGRA32(
-            newContext.blendFactors.r * 255.0f,
-            newContext.blendFactors.g * 255.0f,
-            newContext.blendFactors.b * 255.0f,
-            newContext.blendFactors.a * 255.0f );
+            newContext.rs.blendFactors.r * 255.0f,
+            newContext.rs.blendFactors.g * 255.0f,
+            newContext.rs.blendFactors.b * 255.0f,
+            newContext.rs.blendFactors.a * 255.0f );
         mDevice->SetRenderState( D3DRS_BLENDFACTOR, bgra32 );
     }
 
@@ -359,7 +359,7 @@ GN::gfx::XenonGpu::bindContextResources(
     //
     // bind vertex format
     //
-    if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
+    //if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
     {
         AutoComPtr<IDirect3DVertexDeclaration9> & decl = mVertexFormats[newContext.vtxfmt];
         if( !decl )

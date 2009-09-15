@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="GNtestGpuResDB"
+	ProjectGUID="{7115ADA1-1C6D-464C-97BC-956403EE15A7}"
+	RootNamespace="GNtestGpuResDB"
+	Keyword="MakeFileProj"
+	TargetFrameworkVersion="0"
+	>
+	<Platforms>
+		<Platform
+			Name="Xbox 360"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Xbox 360"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			UseOfMFC="-1"
+			UseOfATL="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="dir"
+				ReBuildCommandLine="dir"
+				CleanCommandLine="dir"
+				Output="GNtestGpuResDB.xex"
+				PreprocessorDefinitions="_DEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+			<Tool
+				Name="VCX360DeploymentTool"
+				DeploymentFiles=""
+				DeploymentType="0"
+			/>
+			<DebuggerTool
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Xbox 360"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			UseOfMFC="-1"
+			UseOfATL="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="dir"
+				ReBuildCommandLine="dir"
+				CleanCommandLine="dir"
+				Output="GNtestGpuResDB.xex"
+				PreprocessorDefinitions="NDEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+			<Tool
+				Name="VCX360DeploymentTool"
+				DeploymentType="0"
+			/>
+			<DebuggerTool
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

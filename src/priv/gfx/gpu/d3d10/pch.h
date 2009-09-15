@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <d3d10.h>
 #include <d3dx10.h>
-#include <dxerr.h>
 
 extern bool gD3D10EnablePixPerf; // global variable to switch on/off PIX perf calls.
 

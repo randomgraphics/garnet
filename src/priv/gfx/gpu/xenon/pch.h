@@ -21,7 +21,6 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <dxerr9.h>
 
 #if GN_BUILD_RETAIL // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )

@@ -25,7 +25,6 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <dxerr.h>
 
 // Check d3d version
 #if DIRECT3D_VERSION < 0x0900
