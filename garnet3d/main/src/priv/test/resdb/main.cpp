@@ -31,14 +31,13 @@ static const char * hlslvscode =
 
 static const char * hlslpscode =
     "sampler s0; \n"
-    "Texture2D<float4> t0; \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
     "   float2 texcoords : TEXCOORD; \n"
     "}; \n"
     "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
-    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   float4  tex  = tex2D( s0, i.texcoords ); \n"
     "   return tex; \n"
     "}";
 
@@ -75,7 +74,7 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
     ed.shaders["hlsl"].gpd.ps.entry = "main";
     ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.shaders["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
 
     ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].shader = "glsl";

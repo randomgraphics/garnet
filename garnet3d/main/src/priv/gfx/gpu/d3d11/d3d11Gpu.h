@@ -25,7 +25,6 @@ namespace GN { namespace gfx
     public:
 
         AutoComPtr<ID3D11InputLayout> il; ///< D3D11 input layout
-        UInt32                        defaultStrides[GpuContext::MAX_VERTEX_BUFFERS];
 
     public:
 
@@ -35,9 +34,7 @@ namespace GN { namespace gfx
         /// less operator
         bool operator<( const D3D11VertexLayout & rhs ) const
         {
-            if( il < rhs.il ) return true;
-            if( rhs.il < il ) return false;
-            return memcmp( defaultStrides, rhs.defaultStrides, sizeof(defaultStrides) ) < 0;
+            return il < rhs.il;
         }
     };
 

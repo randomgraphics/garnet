@@ -114,7 +114,6 @@ namespace GN { namespace gfx
 
         VertexFormat               mFormat;
         const OGLBasicGpuProgram * mProgram;
-        size_t                     mDefaultStrides[GpuContext::MAX_VERTEX_BUFFERS];
         bool                       mValid;
         DynaArray<AttribBinding>   mAttribBindings;
         DynaArray<StateBinding>    mStateBindings;

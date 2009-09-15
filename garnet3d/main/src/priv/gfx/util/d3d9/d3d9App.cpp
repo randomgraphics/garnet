@@ -9,7 +9,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )
 #pragma comment( lib, "d3dx9.lib" )
-#pragma comment( lib, "dxerr.lib" )
 #endif
 
 // *****************************************************************************

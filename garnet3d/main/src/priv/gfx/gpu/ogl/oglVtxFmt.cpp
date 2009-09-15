@@ -42,21 +42,6 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuPro
     mFormat = format;
     mProgram = program;
 
-    // calculate default strides
-    memset( mDefaultStrides, 0, sizeof(mDefaultStrides) );
-    for( size_t i = 0; i < format.numElements; ++i )
-    {
-        const VertexElement & e = format.elements[i];
-
-        GN_ASSERT( e.format.getBytesPerBlock() > 0 );
-        size_t elementsize = e.offset + e.format.getBytesPerBlock();
-
-        if( mDefaultStrides[e.stream] < elementsize )
-        {
-            mDefaultStrides[e.stream] = elementsize;
-        }
-    }
-
     mValid = setupStateBindings();
 
     // success
@@ -136,7 +121,6 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;
         size_t       offset  = b.offset;
-        if( 0 == stride ) stride = mDefaultStrides[stream];
 
         ab.bind( vtxdata + (startvtx+offset) * stride, stride );
     }
@@ -165,8 +149,6 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
                 ab.info.stream+1 );
             return false;
         }
-
-        if( 0 == stride ) stride = mDefaultStrides[0];
 
         ab.bind( (const UInt8*)data, stride );
     }

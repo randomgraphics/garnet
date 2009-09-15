@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestRndr", "GNtestRndr.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestSprite", "GNtestSprite.vcproj", "{2C9C8AD1-2098-440E-87AC-7374A026FB84}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestGpuResDB", "GNtestGpuResDB.vcproj", "{7115ADA1-1C6D-464C-97BC-956403EE15A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Xbox 360 = Debug|Xbox 360
@@ -19,6 +21,10 @@ Global
 		{2C9C8AD1-2098-440E-87AC-7374A026FB84}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
 		{2C9C8AD1-2098-440E-87AC-7374A026FB84}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{2C9C8AD1-2098-440E-87AC-7374A026FB84}.Release|Xbox 360.Build.0 = Release|Xbox 360
+		{7115ADA1-1C6D-464C-97BC-956403EE15A7}.Debug|Xbox 360.ActiveCfg = Debug|Xbox 360
+		{7115ADA1-1C6D-464C-97BC-956403EE15A7}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
+		{7115ADA1-1C6D-464C-97BC-956403EE15A7}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
+		{7115ADA1-1C6D-464C-97BC-956403EE15A7}.Release|Xbox 360.Build.0 = Release|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

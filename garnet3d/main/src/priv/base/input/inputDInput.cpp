@@ -6,7 +6,6 @@
 #if GN_MSVC
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dinput8.lib")
-#pragma comment(lib, "dxerr.lib" )
 #endif
 
 #define IDX_INPUT_BUFFER_SIZE  128
@@ -186,7 +185,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", DXGetErrorStringA(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", getDXErrorInfo(rval) );
             return false;
         }
     }
@@ -195,7 +194,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", DXGetErrorStringA(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", getDXErrorInfo(rval) );
             return false;
         }
     }
@@ -217,7 +216,7 @@ void GN::input::InputDInput::pollKeyboard()
     UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
     GN_DX_CHECK_DO(
         mKeyboard->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
-        mLost = (DIERR_INPUTLOST==rr||DIERR_NOTACQUIRED==rr); return; );
+        mLost = (DIERR_INPUTLOST==hr||DIERR_NOTACQUIRED==hr); return; );
 
     for( UInt32 i = 0; i < elementCount; ++i )
     {
@@ -250,7 +249,7 @@ void GN::input::InputDInput::pollMouse()
     UInt32 elementCount = IDX_INPUT_BUFFER_SIZE;
     GN_DX_CHECK_DO(
         mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), od, (LPDWORD)&elementCount, 0),
-        mLost = (DIERR_INPUTLOST==rr||DIERR_NOTACQUIRED==rr); return; );
+        mLost = (DIERR_INPUTLOST==hr||DIERR_NOTACQUIRED==hr); return; );
 
     for( i = 0; i < elementCount; ++i )
     {

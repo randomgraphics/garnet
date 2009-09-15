@@ -628,7 +628,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
 
         if( up.bindings.empty() )
         {
-            GN_WARN(sLogger)( "Non used uniform parameter '%s' in effect '%s'.",
+            GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
                 up.parameterName.cptr(),
                 effectName() );
         }

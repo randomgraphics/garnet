@@ -1,5 +1,23 @@
 #include "pch.h"
 
+#if GN_BUILD_GPU_API_HAS_XENON
+#define DXERR_H   "dxerr9.h"
+#define DXERR_LIB "dxerr9.lib"
+#define DXERR_FUNC DXGetErrorDescription9A
+#elif GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
+#define DXERR_H   "dxerr.h"
+#define DXERR_LIB "dxerr.lib"
+#define DXERR_FUNC DXGetErrorDescriptionA
+#else
+static const char * DXERR_FUNC( SInt32 hr ) { return "unknown error code."; }
+#endif
+
+#include DXERR_H
+
+#if GN_MSVC
+#pragma comment( lib, DXERR_LIB )
+#endif
+
 namespace GN
 {
     // Global runtime assert behavior flag. Implemented in core module.
@@ -117,6 +135,16 @@ GN::getOSErrorInfo() throw()
     return info;
 }
 #endif
+
+
+//
+//
+// -----------------------------------------------------------------------------
+const char *
+GN::getDXErrorInfo( SInt32 hr ) throw()
+{
+    return DXERR_FUNC( hr );
+}
 
 //
 //

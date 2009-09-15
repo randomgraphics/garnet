@@ -180,12 +180,17 @@ def UTIL_newEnv( compiler, variant ):
 			MSVS_VERSION   = "8.0",
 			MSVS8_PLATFORM = 'Xbox 360',
 			ENV            = {
-			                 	'PATH'     : UTIL_getenv('PATH'),
-			                 	'LANG'     : UTIL_getenv('LANG'),
-			                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
-			                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
-			                 	'LIB'      : UTIL_getenv('LIB'),
-			                 }
+			                 	'PATH'        : UTIL_getenv('PATH'),
+			                 	'LANG'        : UTIL_getenv('LANG'),
+			                 	'LANGUAGE'    : UTIL_getenv('LANGUAGE'),
+			                 	'INCLUDE'     : UTIL_getenv('INCLUDE'),
+			                 	'LIB'         : UTIL_getenv('LIB'),
+
+			                 	# Required by Xenon C++ compiler version 15.00.8153.
+			                 	# Or else the compiler will report error D8037
+								'SystemDrive' : UTIL_getenv('SystemDrive'),
+								'SystemRoot'  : UTIL_getenv('SystemRoot'),
+				}
 			)
 
 		# attach xenon builds to the environment
@@ -426,11 +431,13 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# 是否支持XTL
 	# ============
 	conf['has_xtl'] = c.CheckCHeader( 'xtl.h' )
-    
+
+	has_dxerr_h = c.CheckCXXHeader( ['windows.h','dxerr.h'] )
+
 	# ============
 	# 是否支持D3D9
 	# ============
-	conf['has_d3d9'] = conf['has_xtl'] or c.CheckCXXHeader( ['d3d9.h','d3dx9.h'] )
+	conf['has_d3d9'] = conf['has_xtl'] or ( has_dxerr_h and c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' ) )
 
 	# =============
 	# 是否支持D3D10
@@ -446,18 +453,18 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 		vista = string.find( str, "6.0" ) >= 0
 		win7  = string.find( str, "6.1" ) >= 0
 		return  vista or win7
-	conf['has_d3d10'] = c.CheckCXXHeader( ['d3d10.h','d3dx10.h','dxerr.h'] ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
+	conf['has_d3d10'] = has_dxerr_h and conf['has_d3d9'] and c.CheckCXXHeader( 'd3d10.h' ) and c.CheckCXXHeader( 'd3dx10.h' ) and ( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
 
 	# =============
 	# 是否支持D3D11
 	# =============
 	#conf['has_d3d11'] = c.CheckCXXHeader( ['d3d11.h','dxerr.h'] ) and c.CheckLibrary( 'd3d11.lib' )( isVistaOrWin7(env) or not UTIL_staticBuild( variant ) )
-	conf['has_d3d11'] = c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
+	conf['has_d3d11'] = has_dxerr_h and conf['has_d3d9'] and c.CheckLibWithHeader( 'd3d11.lib', 'd3d11.h', 'C++' ) and isVistaOrWin7(env);
 
 	# ===================
 	# 是否支持DirectInput
 	# ===================
-	conf['has_dinput'] = c.CheckCHeader( ['windows.h', 'dinput.h', 'dxerr.h'] )
+	conf['has_dinput'] = c.CheckCHeader( ['windows.h', 'dxerr.h', 'dinput.h'] )
 
 	# ==============
 	# 是否支持XInput

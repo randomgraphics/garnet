@@ -172,11 +172,11 @@
 #else
 #define GN_DX_CHECK_DO( func, something )                                   \
     if( true ) {                                                            \
-        HRESULT rr = func;                                                  \
-        if( FAILED(rr) )                                                    \
+        HRESULT hr = func;                                                  \
+        if( FAILED(hr) )                                                    \
         {                                                                   \
             static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
-            GN_ERROR(sLogger)( DXGetErrorStringA(rr) );                     \
+            GN_ERROR(sLogger)( GN::getDXErrorInfo(hr) );                    \
             something                                                       \
         }                                                                   \
     } else void(0)
@@ -194,7 +194,7 @@
 ///
 /// DX error check routine
 ///
-#define GN_DX_CHECK_RETURN_VOID( func )        GN_DX_CHECK_DO( func, return; )
+#define GN_DX_CHECK_RETURN_VOID( func )  GN_DX_CHECK_DO( func, return; )
 
 ///
 /// DX error check routine
@@ -287,6 +287,11 @@ namespace GN
     ///
     const char * getOSErrorInfo() throw();
 #endif
+
+    ///
+    /// get DX error string
+    ///
+    const char * getDXErrorInfo( SInt32 hr ) throw();
 
     ///
     /// convert errno value to string

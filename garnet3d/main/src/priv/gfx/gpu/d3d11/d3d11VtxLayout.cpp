@@ -149,20 +149,5 @@ bool GN::gfx::D3D11VertexLayout::init(
     il.attach( sCreateD3D11InputLayout( dev, format ) );
     if( !il ) return false;
 
-    // calculate default strides
-    memset( defaultStrides, 0, sizeof(defaultStrides) );
-    for( size_t i = 0; i < format.numElements; ++i )
-    {
-        const VertexElement & e = format.elements[i];
-
-        GN_ASSERT( e.format.getBytesPerBlock() > 0 );
-        UInt32 elementsize = e.offset + e.format.getBytesPerBlock();
-
-        if( defaultStrides[e.stream] < elementsize )
-        {
-            defaultStrides[e.stream] = elementsize;
-        }
-    }
-
     return true;
 }

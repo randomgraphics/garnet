@@ -377,7 +377,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
             buf[i]     = b.vtxbuf ? safeCastPtr<const D3D10VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
-            strides[i] = 0 == b.stride ? layout->defaultStrides[i] : b.stride;
+            strides[i] = b.stride;
             offsets[i] = b.offset;
         }
         mDevice->IASetVertexBuffers( 0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );

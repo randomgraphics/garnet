@@ -48,7 +48,10 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
 
     static const BindingMap sConvertTable;
 
-    std::map<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( binding );
+    StrA lowerCaseBinding( binding );
+    lowerCaseBinding.toLower();
+
+    std::map<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( lowerCaseBinding );
 
     return ( sConvertTable.map.end() == iter ) ? D3DDECLUSAGE_ERROR : iter->second;
 }
@@ -154,7 +157,7 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
 
         // set attrib semantic
         elem.Usage = (BYTE)sVertexBindingToXenon( ve.binding );
-        if( D3DDECLUSAGE_ERROR == elem.Usage ) return false;
+        if( (BYTE)D3DDECLUSAGE_ERROR == elem.Usage ) return false;
 
         elem.UsageIndex = ve.bindingIndex;
 

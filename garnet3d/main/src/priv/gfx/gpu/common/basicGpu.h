@@ -108,7 +108,7 @@ namespace GN { namespace gfx
 
     private:
 
-        void contextClear() { mContextOk = false; }
+        void contextClear() { mContextOk = false; mContext.clear(); }
 
     protected:
 
