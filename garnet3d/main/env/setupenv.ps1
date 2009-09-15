@@ -138,15 +138,18 @@ if( "vc80" -eq $env:GN_BUILD_COMPILER )
 
     # locate vsvarall.bat
     $vcvarbat=$false
-    if( $env:VS90COMNTOOLS )
+    if( $env:VS100COMNTOOLS )
+    {
+        $vcvarbat="$env:VS100COMNTOOLS..\..\VC\vcvarsall.bat"
+    }
+    elseif( $env:VS90COMNTOOLS )
     {
         $vcvarbat="$env:VS90COMNTOOLS..\..\VC\vcvarsall.bat"
     }
     else
     {
-        error "Environment variable VS90COMNTOOLS not found. Please install VS 2008"
+        error "Neither VS100COMNTOOLS nor VS90COMNTOOLS are found. Please install VS 2010 or VS 2008"
     }
-
 
     # run vsvarall.bat, catch all environments
     if( test-path -path $vcvarbat )
