@@ -333,7 +333,7 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
     if( !initGpu() ) return false;
     if( !initInput() ) return false;
     if( !initFont() ) return false;
-    if( !onPostInit() ) return false;
+    if( !onInit() ) return false;
 
     // convert help text to unicode
     static const char helpGBK[] =

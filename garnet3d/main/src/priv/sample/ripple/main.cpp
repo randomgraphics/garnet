@@ -26,7 +26,7 @@ public:
 
     MyApp() : mSprite(NULL) {}
 
-    bool onPostInit()
+    bool onInit()
     {
         Gpu & gpu = getGpu();
 
