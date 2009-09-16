@@ -41,7 +41,7 @@ public:
         light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) );
     }
 
-    bool onPostInit()
+    bool onInit()
     {
         World & w = getWorld();
 

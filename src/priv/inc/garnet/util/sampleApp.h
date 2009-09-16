@@ -51,7 +51,7 @@ namespace GN { namespace util
         virtual bool onCheckExtraCmdlineArguments( int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
         virtual void onPrintHelpScreen( const char * executableName );
         virtual bool onPreInit( InitParam & ) { return true; }
-        virtual bool onPostInit() = 0;
+        virtual bool onInit() = 0;
         virtual void onQuit() = 0;
         virtual void onUpdate() = 0;
         virtual void onRender() = 0;

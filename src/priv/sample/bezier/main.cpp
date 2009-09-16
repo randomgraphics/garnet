@@ -313,7 +313,7 @@ class BezierApp : public SampleApp
         light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) ); // head light: same location as camera.
     }
 
-    bool onPostInit()
+    bool onInit()
     {
         GpuResourceDatabase & gdb = getGdb();
         World               & world = getWorld();

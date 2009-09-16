@@ -4,19 +4,17 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-class RenderToTexture : public GN::util::SampleApp
+class RenderToTexture : public SampleApp
 {
-    GraphicsResource * faces[6];
+    AutoRef<TextureResource> faces[6];
 
-    GraphicsResource * cubemap;
+    AutoRef<Texture> cubemap;
 
-    Drawable box;
+    AutoRef<ModelResource> box;
 
     Matrix44f world, view, proj, pvw;
 
-    util::ArcBall arcball;
-
-    DrawContext ctx;
+    ArcBall arcball;
 
 public:
 
