@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         const UniformProperties     & getUniformProperties( size_t i ) const { return mUniforms[i]; }
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      getRenderState( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].rsdesc; }
+                                      getRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
 
         void                          applyToContext( size_t pass, GpuContext & gc ) const;
 
@@ -69,10 +69,10 @@ namespace GN { namespace gfx
         struct RenderPass
         {
             /// Index of GPU program used in this pass
-            size_t gpuProgramIndex;
+            size_t                                    gpuProgramIndex;
 
             /// render states
-            EffectResourceDesc::EffectRenderStateDesc rsdesc;
+            EffectResourceDesc::EffectRenderStateDesc renderstates;
         };
 
         // ********************************

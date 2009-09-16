@@ -130,7 +130,7 @@ namespace GN { namespace gfx
         struct RenderPass
         {
             mutable GpuContext                        gc;
-            EffectResourceDesc::EffectRenderStateDesc rsdesc;
+            EffectResourceDesc::EffectRenderStateDesc renderstates;
         };
 
         // ********************************

@@ -50,6 +50,17 @@ namespace GN { namespace gfx
             };
         }
 
+        /// convert string to from string
+        static GpuProgramLanguage sFromString( const char * s )
+        {
+            if( 0 == strCmpI( s, "HLSL9" ) )          return HLSL9;
+            else if( 0 == strCmpI( s, "HLSL10" ) )    return HLSL10;
+            else if( 0 == strCmpI( s, "MICROCODE" ) ) return MICROCODE;
+            else if( 0 == strCmpI( s, "GLSL" ) )      return GLSL;
+            else if( 0 == strCmpI( s, "ARB1" ) )      return ARB1;
+            else                                      return INVALID;
+        }
+
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuProgramLanguage, Enum )
     };
 
@@ -78,7 +89,7 @@ namespace GN { namespace gfx
         /// compile options
         //@{
         bool optimize; ///< generate optimized shader. Default is on.
-        bool debug;    ///< generate debug symbol. Default is off.
+        bool debug;    ///< generate debug symbol. Default is on.
         //@}
 
         ///
@@ -86,8 +97,8 @@ namespace GN { namespace gfx
         ///
         GpuProgramDesc()
             : lang(GpuProgramLanguage::INVALID)
-            , optimize(false)
-            , debug(false)
+            , optimize(true)
+            , debug(true)
         {
         }
     };
@@ -266,7 +277,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Contains platform dependent program data, which can be used for fast progra saving, loading and creation
+    /// Contains platform dependent program data, which can be used for fast program loading/saving/creation.
     ///
     struct CompiledGpuProgram : public RefCounter
     {
