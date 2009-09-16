@@ -268,16 +268,16 @@ createEffect( GpuResourceDatabase & gdb )
     ed.uniforms["MATRIX_WORLD_IT"]; // used to translate normal from local space into world space
     ed.uniforms["LIGHT0_POSITION"];
     ed.textures["DIFFUSE_TEXTURE"]; // create a texture parameter named "DIFFUSE_TEXTURE"
-    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.shaders["glsl"].gpd.vs.source = glslvscode;
-    ed.shaders["glsl"].gpd.ps.source = glslpscode;
-    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["glsl"].uniforms["world"] = "MATRIX_WORLD";
-    ed.shaders["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
-    ed.shaders["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
-    ed.shaders["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
+    ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.gpuprograms["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.gpuprograms["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
     ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].shader = "glsl";
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);
     if( !e || !e->reset( &ed ) ) return NULL;
@@ -397,7 +397,7 @@ class BezierApp : public SampleApp
                 L"radius   : %f",
                 position.x, position.y, position.z,
                 radius ).cptr(),
-            0, 20 );
+            0, 320 );
     }
 
     void drawCoords()

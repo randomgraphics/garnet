@@ -79,7 +79,7 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 	-->
 
 	<techniques>
-        <RenderStates
+        <renderstates
             CULL_MODE="CULL_NONE"
         />
 		<technique name="d3d">

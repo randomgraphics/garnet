@@ -316,12 +316,22 @@ namespace GN { namespace gfx
         ///
         /// Shader descriptor
         ///
-        struct EffectShaderDesc
+        struct EffectGpuProgramDesc
         {
             ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
             GpuProgramDesc      gpd;                ///< GPU Program descriptor
+            DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store shader source.
             std::map<StrA,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
             std::map<StrA,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
+
+            /// default constructor
+            EffectGpuProgramDesc() {}
+
+            /// copy constructor
+            EffectGpuProgramDesc( const EffectGpuProgramDesc & rhs );
+
+            /// copy operator
+            EffectGpuProgramDesc & operator=( const EffectGpuProgramDesc & rhs );
         };
 
         ///
@@ -393,8 +403,8 @@ namespace GN { namespace gfx
         ///
         struct EffectPassDesc
         {
-            StrA                  shader; ///< Name of shader used in this pass. Can't be empty
-            EffectRenderStateDesc rsdesc; ///< Pass specific render states
+            StrA                  gpuprogram;   ///< Name of gpuprogram used in this pass. Can't be empty
+            EffectRenderStateDesc renderstates; ///< Pass specific render states
         };
 
         ///
@@ -402,10 +412,10 @@ namespace GN { namespace gfx
         ///
         struct EffectTechniqueDesc
         {
-            int                       quality; ///< user defined rendering quality. Effect class uses
-                                               ///< the technique with the hightest quality as default technique.
-            DynaArray<EffectPassDesc> passes;  ///< pass list.
-            EffectRenderStateDesc     rsdesc;  ///< Technique specific render states
+            int                       quality;      ///< user defined rendering quality. Effect class uses
+                                                    ///< the technique with the hightest quality as default technique.
+            DynaArray<EffectPassDesc> passes;       ///< pass list.
+            EffectRenderStateDesc     renderstates; ///< Technique specific render states
 
             /// default ctor
             EffectTechniqueDesc() : quality(100) {}
@@ -417,9 +427,9 @@ namespace GN { namespace gfx
 
         std::map<StrA,EffectTextureDesc>      textures;     ///< Texture list
         std::map<StrA,EffectUniformDesc>      uniforms;     ///< Uniform list
-        std::map<StrA,EffectShaderDesc>       shaders;      ///< Shader list
+        std::map<StrA,EffectGpuProgramDesc>   gpuprograms;  ///< GPU program list
         std::map<StrA,EffectTechniqueDesc>    techniques;   ///< Technique list. Technique name must be unique.
-        EffectRenderStateDesc                 rsdesc;       ///< Root render state descriptor for the effect.
+        EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
 
         // *****************************
         // methods
@@ -438,12 +448,12 @@ namespace GN { namespace gfx
         ///
         /// setup the descriptor from XML
         ///
-        bool loadFromXmlNode( const XmlNode & root, const char * basedir );
+        bool loadFromXmlNode( const XmlNode & rootNode );
 
         ///
         /// write the descriptor to XML
         ///
-        void saveToXmlNode( const XmlNode & root );
+        void saveToXmlNode( const XmlNode & rootNode );
     };
 
     ///
@@ -524,7 +534,7 @@ namespace GN { namespace gfx
         const UniformProperties     & getUniformProperties( size_t i ) const;
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      getRenderState( size_t pass ) const;
+                                      getRenderStates( size_t pass ) const;
 
         void                          applyToContext( size_t pass, GpuContext & gc ) const;
 

@@ -62,25 +62,25 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.uniforms["MATRIX_PVW"];
     ed.textures["ALBEDO_TEXTURE"];
 
-    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.shaders["glsl"].gpd.vs.source = glslvscode;
-    ed.shaders["glsl"].gpd.ps.source = glslpscode;
-    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
+    ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
 
-    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
-    ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
-    ed.shaders["hlsl"].gpd.vs.entry = "main";
-    ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
-    ed.shaders["hlsl"].gpd.ps.entry = "main";
-    ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.source = hlslvscode;
+    ed.gpuprograms["hlsl"].gpd.vs.entry = "main";
+    ed.gpuprograms["hlsl"].gpd.ps.source = hlslpscode;
+    ed.gpuprograms["hlsl"].gpd.ps.entry = "main";
+    ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
 
     ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].shader = "glsl";
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.techniques["hlsl"].passes.resize( 1 );
-    ed.techniques["hlsl"].passes[0].shader = "hlsl";
+    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 }
 
 void initMeshDesc( MeshResourceDesc & md )

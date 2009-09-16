@@ -62,23 +62,23 @@ bool GN::gfx::SimpleWireframeModel::init()
     ed.uniforms["MATRIX_PVW"];
     ed.uniforms["COLOR"];
 
-    ed.shaders["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
-    ed.shaders["glsl"].gpd.vs.source = glslvscode;
-    ed.shaders["glsl"].gpd.ps.source = glslpscode;
-    ed.shaders["glsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["glsl"].uniforms["color"] = "COLOR";
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = glslvscode;
+    ed.gpuprograms["glsl"].gpd.ps.source = glslpscode;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].uniforms["color"] = "COLOR";
     ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].shader = "glsl";
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
-    ed.shaders["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
-    ed.shaders["hlsl"].gpd.vs.source = hlslvscode;
-    ed.shaders["hlsl"].gpd.vs.entry  = "main";
-    ed.shaders["hlsl"].gpd.ps.source = hlslpscode;
-    ed.shaders["hlsl"].gpd.ps.entry  = "main";
-    ed.shaders["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
-    ed.shaders["hlsl"].uniforms["color"] = "COLOR";
+    ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.source = hlslvscode;
+    ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
+    ed.gpuprograms["hlsl"].gpd.ps.source = hlslpscode;
+    ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
+    ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR";
     ed.techniques["hlsl"].passes.resize( 1 );
-    ed.techniques["hlsl"].passes[0].shader = "hlsl";
+    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->reset(&md) ) return failure();

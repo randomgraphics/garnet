@@ -25,12 +25,12 @@ sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
 //
 // -----------------------------------------------------------------------------
 static void
-sApplyRenderState(
+sApplyRenderStates(
     GN::gfx::GpuContext::RenderStates               & dst,
     const GN::gfx::GpuContext::RenderStates         & src,
-    const EffectResourceDesc::EffectRenderStateDesc & rsdesc )
+    const EffectResourceDesc::EffectRenderStateDesc & renderstates )
 {
-    #define MERGE_SINGLE_RENDER_STATE( state ) dst.state = ( rsdesc.state.overridden ? rsdesc.state.value : src.state )
+    #define MERGE_SINGLE_RENDER_STATE( state ) dst.state = ( renderstates.state.overridden ? renderstates.state.value : src.state )
 
     MERGE_SINGLE_RENDER_STATE( depthTestEnabled );
     MERGE_SINGLE_RENDER_STATE( depthWriteEnabled );
@@ -529,7 +529,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         pass.gc.clear();
         effect->applyToContext( i, pass.gc );
 
-        pass.rsdesc = effect->getRenderState( i );
+        pass.renderstates = effect->getRenderStates( i );
     }
 
     // reapply mesh
@@ -603,7 +603,7 @@ void GN::gfx::ModelResource::Impl::draw() const
         gc.depthstencil = currentContext.depthstencil;
 
         // TODO: copy render states from current context
-        sApplyRenderState( gc.rs, currentContext.rs, mPasses[i].rsdesc );
+        sApplyRenderStates( gc.rs, currentContext.rs, mPasses[i].renderstates );
     }
 
     // determine the subset

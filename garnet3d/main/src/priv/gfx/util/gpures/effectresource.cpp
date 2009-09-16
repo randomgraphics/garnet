@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 typedef GN::gfx::EffectResourceDesc::ShaderPrerequisites ShaderPrerequisites;
 typedef GN::gfx::EffectResourceDesc::EffectUniformDesc EffectUniformDesc;
 typedef GN::gfx::EffectResourceDesc::EffectTextureDesc EffectTextureDesc;
-typedef GN::gfx::EffectResourceDesc::EffectShaderDesc EffectShaderDesc;
+typedef GN::gfx::EffectResourceDesc::EffectGpuProgramDesc EffectGpuProgramDesc;
 typedef GN::gfx::EffectResourceDesc::EffectRenderStateDesc EffectRenderStateDesc;
 typedef GN::gfx::EffectResourceDesc::EffectPassDesc EffectPassDesc;
 typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
@@ -18,11 +18,11 @@ typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
 // Local stuff
 // *****************************************************************************
 
- //
+//
 //
 // -----------------------------------------------------------------------------
 static bool
-sCheckGpuCaps( Gpu & r, const EffectShaderDesc & desc )
+sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
 {
     const GpuCaps & caps = r.getCaps();
 
@@ -117,7 +117,7 @@ sMergeRenderStates(
 static bool
 sCheckShaderTextures(
     const EffectResourceDesc & effectDesc,
-    const EffectShaderDesc   & shaderDesc,
+    const EffectGpuProgramDesc   & shaderDesc,
     const char               * shaderName,
     const GpuProgram         & program )
 {
@@ -155,7 +155,7 @@ sCheckShaderTextures(
 static bool
 sCheckShaderUniforms(
     const EffectResourceDesc & effectDesc,
-    const EffectShaderDesc   & shaderDesc,
+    const EffectGpuProgramDesc   & shaderDesc,
     const char               * shaderName,
     const GpuProgram         & program )
 {
@@ -191,6 +191,69 @@ sCheckShaderUniforms(
 // GN::gfx::EffectResourceDesc
 // *****************************************************************************
 
+static void sCopyShaderSourcePtr(
+    const char          * & to,
+    const DynaArray<char> & tobuf,
+    const char            * from,
+    const DynaArray<char> & frombuf )
+{
+    GN_ASSERT( tobuf.size() == frombuf.size() );
+
+    const char * s = frombuf.cptr();
+    const char * e = s + frombuf.size();
+
+    if( s <= from && from < e )
+    {
+        to = tobuf.cptr() + ( from - s );
+    }
+    else
+    {
+        to = from;
+    }
+}
+
+static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDesc & from )
+{
+    to.shaderSourceBuffer = from.shaderSourceBuffer;
+
+    #define COPY_SHADER_PTR( x ) sCopyShaderSourcePtr( to.gpd.x, to.shaderSourceBuffer, from.gpd.x, from.shaderSourceBuffer );
+
+    COPY_SHADER_PTR( vs.source );
+    COPY_SHADER_PTR( vs.entry );
+
+    COPY_SHADER_PTR( gs.source );
+    COPY_SHADER_PTR( gs.entry );
+
+    COPY_SHADER_PTR( ps.source );
+    COPY_SHADER_PTR( ps.entry );
+
+    #undef COPY_SHADER_PTR
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::EffectGpuProgramDesc(
+    const EffectGpuProgramDesc & rhs )
+{
+    sCopyShaderDesc( *this, rhs );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+EffectGpuProgramDesc &
+GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
+    const EffectGpuProgramDesc & rhs )
+{
+    sCopyShaderDesc( *this, rhs );
+    return *this;
+}
+
+// *****************************************************************************
+// GN::gfx::EffectResourceDesc
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -198,68 +261,46 @@ void GN::gfx::EffectResourceDesc::clear()
 {
     textures.clear();
     uniforms.clear();
-    shaders.clear();
+    gpuprograms.clear();
     techniques.clear();
 
     GpuContext gc;
     gc.clearToDefaultRenderStates();
-    memset( &rsdesc, 0, sizeof(rsdesc) );
+    memset( &renderstates, 0, sizeof(renderstates) );
 
     // copy default render state values from GPU context
-    rsdesc.depthTestEnabled  = !!gc.rs.depthTestEnabled;
-    rsdesc.depthWriteEnabled = !!gc.rs.depthWriteEnabled;
-    rsdesc.depthFunc         = gc.rs.depthFunc;
+    renderstates.depthTestEnabled  = !!gc.rs.depthTestEnabled;
+    renderstates.depthWriteEnabled = !!gc.rs.depthWriteEnabled;
+    renderstates.depthFunc         = gc.rs.depthFunc;
 
-    rsdesc.stencilEnabled    = !!gc.rs.stencilEnabled;
-    rsdesc.stencilPassOp     = gc.rs.stencilPassOp;
-    rsdesc.stencilFailOp     = gc.rs.stencilFailOp;
-    rsdesc.stencilZFailOp    = gc.rs.stencilZFailOp;
+    renderstates.stencilEnabled    = !!gc.rs.stencilEnabled;
+    renderstates.stencilPassOp     = gc.rs.stencilPassOp;
+    renderstates.stencilFailOp     = gc.rs.stencilFailOp;
+    renderstates.stencilZFailOp    = gc.rs.stencilZFailOp;
 
-    rsdesc.blendEnabled      = !!gc.rs.blendEnabled;
-    rsdesc.blendSrc          = gc.rs.blendSrc;
-    rsdesc.blendDst          = gc.rs.blendDst;
-    rsdesc.blendOp           = gc.rs.blendOp;
-    rsdesc.blendAlphaSrc     = gc.rs.blendAlphaSrc;
-    rsdesc.blendAlphaDst     = gc.rs.blendAlphaDst;
-    rsdesc.blendAlphaOp      = gc.rs.blendAlphaOp;
+    renderstates.blendEnabled      = !!gc.rs.blendEnabled;
+    renderstates.blendSrc          = gc.rs.blendSrc;
+    renderstates.blendDst          = gc.rs.blendDst;
+    renderstates.blendOp           = gc.rs.blendOp;
+    renderstates.blendAlphaSrc     = gc.rs.blendAlphaSrc;
+    renderstates.blendAlphaDst     = gc.rs.blendAlphaDst;
+    renderstates.blendAlphaOp      = gc.rs.blendAlphaOp;
 
-    rsdesc.fillMode          = gc.rs.fillMode;
-    rsdesc.cullMode          = gc.rs.cullMode;
-    rsdesc.frontFace         = gc.rs.frontFace;
-    rsdesc.msaaEnabled       = !!gc.rs.msaaEnabled;
+    renderstates.fillMode          = gc.rs.fillMode;
+    renderstates.cullMode          = gc.rs.cullMode;
+    renderstates.frontFace         = gc.rs.frontFace;
+    renderstates.msaaEnabled       = !!gc.rs.msaaEnabled;
 
-    rsdesc.blendFactors      = gc.rs.blendFactors;
+    renderstates.blendFactors      = gc.rs.blendFactors;
 
     // exept these:
-    //rsdesc.colorWriteMask    = gc.rs.colorWriteMask;
-    //rsdesc.viewport          = gc.rs.viewport;
-    //rsdesc.scissorRect       = gc.rs.scissorRect;
+    //renderstates.colorWriteMask    = gc.rs.colorWriteMask;
+    //renderstates.viewport          = gc.rs.viewport;
+    //renderstates.scissorRect       = gc.rs.scissorRect;
 
 
 
 
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::EffectResourceDesc::loadFromXmlNode(
-    const XmlNode & root,
-    const char    * basedir )
-{
-    GN_UNIMPL();
-    GN_UNUSED_PARAM( root );
-    GN_UNUSED_PARAM( basedir );
-    return false;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root )
-{
-    GN_UNIMPL();
-    GN_UNUSED_PARAM( root );
 }
 
 // *****************************************************************************
@@ -381,12 +422,12 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
 {
     Gpu & gpu = database().gpu();
 
-    for( std::map<StrA,EffectShaderDesc>::const_iterator iter = effectDesc.shaders.begin();
-         iter != effectDesc.shaders.end();
+    for( std::map<StrA,EffectGpuProgramDesc>::const_iterator iter = effectDesc.gpuprograms.begin();
+         iter != effectDesc.gpuprograms.end();
          ++iter )
     {
         const StrA             & shaderName = iter->first;
-        const EffectShaderDesc & shaderDesc = iter->second;
+        const EffectGpuProgramDesc & shaderDesc = iter->second;
 
         // check shader requirements.
         // Note: it is expected scenario that some shaders are not supported by current hardware.
@@ -470,7 +511,7 @@ GN::gfx::EffectResource::Impl::initTech(
 
     // get common render state for the technique
     EffectRenderStateDesc commonRenderStates;
-    sMergeRenderStates( commonRenderStates, techDesc.rsdesc, effectDesc.rsdesc );
+    sMergeRenderStates( commonRenderStates, techDesc.renderstates, effectDesc.renderstates );
 
     Gpu & gpu = database().gpu();
 
@@ -479,7 +520,7 @@ GN::gfx::EffectResource::Impl::initTech(
     {
         const EffectPassDesc & passDesc = techDesc.passes[ipass];
 
-        const StrA & shaderName = passDesc.shader; // shader techName alias for easy referencing
+        const StrA & shaderName = passDesc.gpuprogram; // shader techName alias for easy referencing
 
         RenderPass & p = mPasses[ipass];
 
@@ -490,7 +531,7 @@ GN::gfx::EffectResource::Impl::initTech(
             // Shader is not found. Let's find out why. See if it is expected.
 
             // Look up GPU program description
-            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, shaderName );
+            const EffectGpuProgramDesc * shaderDesc = sFindNamedPtr( effectDesc.gpuprograms, shaderName );
             if( NULL == shaderDesc )
             {
                 GN_ERROR(sLogger)(
@@ -526,7 +567,7 @@ GN::gfx::EffectResource::Impl::initTech(
         }
 
         // get pass specific render states
-        sMergeRenderStates( p.rsdesc, commonRenderStates, passDesc.rsdesc );
+        sMergeRenderStates( p.renderstates, commonRenderStates, passDesc.renderstates );
     }
 
     return true;
@@ -553,7 +594,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         {
             const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
-            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpitem.name );
+            const EffectGpuProgramDesc * shaderDesc = sFindNamedPtr( effectDesc.gpuprograms, gpitem.name );
 
             for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->textures.begin();
                  iter != shaderDesc->textures.end();
@@ -604,9 +645,9 @@ GN::gfx::EffectResource::Impl::initUniforms(
         // setup uniform binding point array
         for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
         {
-            const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const GpuProgramItem          & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
-            const EffectShaderDesc * shaderDesc = sFindNamedPtr( effectDesc.shaders, gpitem.name );
+            const EffectGpuProgramDesc    * shaderDesc = sFindNamedPtr( effectDesc.gpuprograms, gpitem.name );
 
             for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->uniforms.begin();
                  iter != shaderDesc->uniforms.end();
@@ -743,6 +784,6 @@ size_t GN::gfx::EffectResource::getNumUniforms() const { return mImpl->getNumUni
 size_t GN::gfx::EffectResource::findUniform( const char * name ) const { return mImpl->findUniform( name ); }
 const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::getUniformProperties( size_t i ) const { return mImpl->getUniformProperties( i ); }
 
-const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::getRenderState( size_t pass ) const { return mImpl->getRenderState( pass ); }
+const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::getRenderStates( size_t pass ) const { return mImpl->getRenderStates( pass ); }
 
 void GN::gfx::EffectResource::applyToContext( size_t pass, GpuContext & gc ) const { return mImpl->applyToContext( pass, gc ); }

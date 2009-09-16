@@ -1,11 +1,12 @@
 Import( 'GN' )
 
 sources = [
+	'effectloader.cpp',
 	'effectresource.cpp',
 	'gpuresdb.cpp',
 	'meshresource.cpp',
 	'modelresource.cpp',
-    'simpleWireframeModel.cpp',
+	'simpleWireframeModel.cpp',
 	'simpleDiffuseModel.cpp',
 	'simpleNormalMapModel.cpp',
 	'textureresource.cpp',
