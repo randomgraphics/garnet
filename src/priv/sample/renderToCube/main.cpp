@@ -129,7 +129,6 @@ public:
     {
         Gpu            & gpu = getGpu();
         SpriteRenderer & sr = getSpriteRenderer();
-        const DispDesc & dd = gpu.getDispDesc();
 
         // draw to cubemap
         gc.colortargets.resize( 1 );
@@ -139,7 +138,7 @@ public:
         {
             gc.colortargets[0].face = i;
             gpu.bindContext( gc );
-            sr.drawSingleTexturedSprite( faces[i], 0, 0, 0, (float)dd.width, (float)dd.height );
+            sr.drawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
         }
 
         // draw the cube model to screen
