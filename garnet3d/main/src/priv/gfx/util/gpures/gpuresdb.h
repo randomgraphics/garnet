@@ -117,8 +117,6 @@ namespace GN { namespace gfx
         Impl( GpuResourceDatabase & db, Gpu & gpu );
         virtual ~Impl();
 
-        void clear();
-
         Gpu & gpu() const { return mGpu; }
 
         //@}

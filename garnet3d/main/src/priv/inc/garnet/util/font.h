@@ -163,9 +163,9 @@ namespace GN { namespace util
     {
         const wchar_t * text;       ///< text string
         size_t          len;        ///< text lengh. Set to 0 for NULL-terminated string.
-        float           x;          ///< position of top-left corner of the first character
-        float           y;          ///< position of top-left corner of the first character
-        float           z;          ///< position of top-left corner of the first character
+        float           x;          ///< pen position of the first character
+        float           y;          ///< pen position of the first character
+        float           z;          ///< pen position of the first character
         UInt32          rgba;       ///< text color in R-G-B-A format.
         UInt32          alignment;  ///< combination of TextAlignment flags
         bool            background; ///< draw background

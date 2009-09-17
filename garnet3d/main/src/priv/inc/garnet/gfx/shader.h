@@ -58,6 +58,7 @@ namespace GN { namespace gfx
             else if( 0 == strCmpI( s, "MICROCODE" ) ) return MICROCODE;
             else if( 0 == strCmpI( s, "GLSL" ) )      return GLSL;
             else if( 0 == strCmpI( s, "ARB1" ) )      return ARB1;
+            else if( 0 == strCmpI( s, "CG" ) )        return CG;
             else                                      return INVALID;
         }
 

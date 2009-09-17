@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<actor name="root">
+	<transform/>
+	<pivot x="0" y="0" z="0"/>
+	<bsphere x="0.000000" y="0.000000" z="0.000000" r="112.0f"/>
+	<model>
+		<effect ref="media::/effect/bump_textured.xml"/>
+		<mesh ref="cube.mesh.xml"/>
+		<texture effectParameter="texdiff" ref="media::/texture/rockwall.xml"/>
+		<texture effectParameter="texheight" ref="media::/texture/rockwall_height.jpg"/>
+		<texture effectParameter="texnormal" ref="media::/texture/rockwall_normal.xml"/>
+		<uniform effectParameter="diffuse" type="VECTOR4" count="1">1.0f, 1.0f, 1.0f, 1.0f</uniform>
+	</model>
+</actor>

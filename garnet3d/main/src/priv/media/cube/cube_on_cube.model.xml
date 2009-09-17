@@ -1,0 +1,5 @@
+<?xml version="1.0" standalone="yes"?>
+<model>
+	<effect ref="cube_on_cube.effect.xml" />
+	<mesh ref="cube.mesh.xml" />
+</model>

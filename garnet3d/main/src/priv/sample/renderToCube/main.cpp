@@ -6,15 +6,46 @@ using namespace GN::util;
 
 class RenderToTexture : public SampleApp
 {
-    AutoRef<TextureResource> faces[6];
+    AutoRef<Texture> faces[6];
 
-    AutoRef<Texture> cubemap;
+    AutoRef<TextureResource> cubemap;
 
     AutoRef<ModelResource> box;
 
     Matrix44f world, view, proj, pvw;
 
     ArcBall arcball;
+
+    GpuContext gc;
+
+    bool initMesh( MeshResource * m )
+    {
+        Vector3f vertices[24];
+        UInt16   indices[36];
+
+        createBox( 100, 100, 100,
+            (float*)vertices, sizeof(Vector3f),
+            NULL, 0, // texcoord
+            NULL, 0, // normal
+            NULL, 0, // tang
+            NULL, 0, // binormal
+            indices,
+            NULL     // quad list indices
+            );
+
+        MeshResourceDesc desc;
+        desc.clear();
+        desc.prim = PrimitiveType::TRIANGLE_LIST;
+        desc.numvtx = 24;
+        desc.numidx = 36;
+        desc.vtxfmt.numElements = 1;
+        desc.vtxfmt.elements[0].bindTo( "POSITION", 0 );
+        desc.vtxfmt.elements[0].format = ColorFormat::RGB_32_32_32_FLOAT;
+        desc.vertices[0] = vertices;
+        desc.indices = indices;
+
+        return m->reset( &desc );
+    }
 
 public:
 
@@ -27,64 +58,95 @@ public:
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 
-        RenderEngine & re = getRenderEngine();
+        Gpu                 & gpu = getGpu();
+        GpuResourceDatabase & gdb = getGdb();
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
         for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
-            faces[i] = loadTextureFromFile( re, name );
+            faces[i].attach( loadTextureFromFile( gpu, name ) );
             if( 0 == faces[i] ) return false;
         }
 
         // create cube render target
-        cubemap = re.createCubeRenderTargetTexture( "cube", 512, 512 );
-        if( 0 == cubemap ) return false;
+        cubemap = gdb.createResource<TextureResource>( NULL );
+        if( !cubemap ) return false;
+        TextureDesc texdesc;
+        texdesc.width = texdesc.height = 512;
+        texdesc.depth = 1;
+        texdesc.faces = 6;
+        texdesc.levels = 1;
+        texdesc.format = ColorFormat::RGBA32;
+        texdesc.usage = TextureUsage::COLOR_RENDER_TARGET;
+        if( !cubemap->reset( &texdesc ) ) return false;
 
-        // load box
-        if( !box.loadFromXmlFile( getEntityManager(), re, "media::cube/cube_on_cube.drawable.xml" ) ) return false;
-        box.textures["cube"].texture = cubemap;
+        // load cube texture rendering effect
+        AutoRef<EffectResource> cubefx = EffectResource::loadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );
+        if( !cubefx ) return false;
+
+        // load cube mesh
+        AutoRef<MeshResource> cubemesh = gdb.createResource<MeshResource>( NULL );
+        if( !cubemesh ) return false;
+        if( !initMesh( cubemesh ) ) return false;
+
+        // create cube model
+        box = gdb.createResource<ModelResource>( NULL );
+        if( !box ) return false;
+
+        // setup model effect and textures
+        box->setEffectResource( cubefx );
+        box->setMeshResource( cubemesh );
+        box->setTextureResource( "cube", cubemap );
 
         // initial arcball window
-        const DispDesc & dd = re.getDispDesc();
+        const DispDesc & dd = gpu.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
-        // setup context
-        ctx.resetToDefault();
+        // initialize GPU context
+        gc.clear();
 
         return true;
     }
 
     void onQuit()
     {
+        for( int i = 0; i < 6; ++i ) faces[i].clear();
+        cubemap.clear();
+        box.clear();
+        gc.clear();
     }
 
     void onUpdate()
     {
         world = arcball.getRotationMatrix44();
         pvw = proj * view * world;
-        box.uniforms["pvw"].value = pvw;
+        box->getUniformResource("pvw")->getUniform()->update( pvw );
     }
 
     void onRender()
     {
-        RenderEngine & re = getRenderEngine();
-        QuadRenderer & qr = getQuadRenderer();
+        Gpu            & gpu = getGpu();
+        SpriteRenderer & sr = getSpriteRenderer();
+        const DispDesc & dd = gpu.getDispDesc();
 
-        // draw to cube
+        // draw to cubemap
+        gc.colortargets.resize( 1 );
+        gc.colortargets[0].texture = cubemap->getTexture();
+        gc.colortargets[0].subsurface = 0;
         for( int i = 0; i < 6; ++i )
         {
-            ctx.setDrawToTextureWithoutDepth( cubemap, 0, i );
-            re.setContext( ctx );
-            qr.drawSingleTexturedQuad( faces[i], 0 );
+            gc.colortargets[0].face = i;
+            gpu.bindContext( gc );
+            sr.drawSingleTexturedSprite( faces[i], 0, 0, 0, (float)dd.width, (float)dd.height );
         }
 
-        // draw cube to screen
-        ctx.setDrawToBackBuf();
-        re.setContext( ctx );
-        re.clearScreen();
-        box.draw();
+        // draw the cube model to screen
+        gc.colortargets.clear();
+        gpu.bindContext( gc );
+        gpu.clearScreen();
+        box->draw();
     }
 };
 

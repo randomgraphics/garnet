@@ -396,7 +396,7 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
         vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
         vbd.index = bindingIndex;
     }
-    else if( 0 == strCmpI( "normal", bindingName ) && 0 == bindingIndex )
+    else if( (0 == strCmpI( "normal", bindingName ) || 0 == strCmpI( "nml", bindingName ) ) && 0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_NORMAL;
         vbd.index = 0;

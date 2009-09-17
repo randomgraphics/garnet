@@ -290,7 +290,7 @@ namespace GN
                 "    line   : %d\n"
                 "    column : %d\n"
                 "    error  : %s",
-                fp.name().cptr(),
+                fp.name(),
                 xpr.errLine,
                 xpr.errColumn,
                 xpr.errInfo.cptr() );

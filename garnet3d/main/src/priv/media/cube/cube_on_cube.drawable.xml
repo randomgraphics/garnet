@@ -1,7 +1,0 @@
-<?xml version="1.0" standalone="yes"?>
-<drawable>
-	<effect ref="cube_on_cube.effect.xml"/>
-	<mesh ref="cube.mesh.xml"/>
-	<texture binding="cube"/>
-	<uniform binding="pvw"/>
-</drawable>

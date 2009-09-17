@@ -224,6 +224,26 @@ namespace GN { namespace gfx
         {
             memset( this, 0, sizeof(*this) );
         }
+
+        ///
+        /// Load descriptor from file
+        ///
+        bool loadFromFile( File & );
+
+        ///
+        /// Load descriptor from file
+        ///
+        bool loadFromFile( const char * filename );
+
+        ///
+        /// Save descriptor to file
+        ///
+        bool saveToFile( File & ) const;
+
+        ///
+        /// Save descriptor to file
+        ///
+        bool saveToFile( const char * filename ) const;
     };
 
     ///
@@ -311,6 +331,9 @@ namespace GN { namespace gfx
         ///
         struct EffectUniformDesc
         {
+            size_t size; ///< uniform size in bytes
+
+            EffectUniformDesc() : size(0) {}
         };
 
         ///
@@ -453,7 +476,7 @@ namespace GN { namespace gfx
         ///
         /// write the descriptor to XML
         ///
-        void saveToXmlNode( const XmlNode & rootNode );
+        bool saveToXmlNode( const XmlNode & rootNode ) const;
     };
 
     ///
@@ -505,6 +528,7 @@ namespace GN { namespace gfx
 
         struct UniformProperties : public ParameterProperties
         {
+            size_t size; ///< uniform size in bytes
         };
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
@@ -623,7 +647,7 @@ namespace GN { namespace gfx
         ///
         /// write the descriptor to XML
         ///
-        void saveToXmlNode( const XmlNode & root );
+        bool saveToXmlNode( const XmlNode & root, const char * basedir ) const;
     };
 
     ///

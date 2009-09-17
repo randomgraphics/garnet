@@ -188,122 +188,6 @@ sCheckShaderUniforms(
 }
 
 // *****************************************************************************
-// GN::gfx::EffectResourceDesc
-// *****************************************************************************
-
-static void sCopyShaderSourcePtr(
-    const char          * & to,
-    const DynaArray<char> & tobuf,
-    const char            * from,
-    const DynaArray<char> & frombuf )
-{
-    GN_ASSERT( tobuf.size() == frombuf.size() );
-
-    const char * s = frombuf.cptr();
-    const char * e = s + frombuf.size();
-
-    if( s <= from && from < e )
-    {
-        to = tobuf.cptr() + ( from - s );
-    }
-    else
-    {
-        to = from;
-    }
-}
-
-static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDesc & from )
-{
-    to.shaderSourceBuffer = from.shaderSourceBuffer;
-
-    #define COPY_SHADER_PTR( x ) sCopyShaderSourcePtr( to.gpd.x, to.shaderSourceBuffer, from.gpd.x, from.shaderSourceBuffer );
-
-    COPY_SHADER_PTR( vs.source );
-    COPY_SHADER_PTR( vs.entry );
-
-    COPY_SHADER_PTR( gs.source );
-    COPY_SHADER_PTR( gs.entry );
-
-    COPY_SHADER_PTR( ps.source );
-    COPY_SHADER_PTR( ps.entry );
-
-    #undef COPY_SHADER_PTR
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::EffectGpuProgramDesc(
-    const EffectGpuProgramDesc & rhs )
-{
-    sCopyShaderDesc( *this, rhs );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-EffectGpuProgramDesc &
-GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
-    const EffectGpuProgramDesc & rhs )
-{
-    sCopyShaderDesc( *this, rhs );
-    return *this;
-}
-
-// *****************************************************************************
-// GN::gfx::EffectResourceDesc
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::EffectResourceDesc::clear()
-{
-    textures.clear();
-    uniforms.clear();
-    gpuprograms.clear();
-    techniques.clear();
-
-    GpuContext gc;
-    gc.clearToDefaultRenderStates();
-    memset( &renderstates, 0, sizeof(renderstates) );
-
-    // copy default render state values from GPU context
-    renderstates.depthTestEnabled  = !!gc.rs.depthTestEnabled;
-    renderstates.depthWriteEnabled = !!gc.rs.depthWriteEnabled;
-    renderstates.depthFunc         = gc.rs.depthFunc;
-
-    renderstates.stencilEnabled    = !!gc.rs.stencilEnabled;
-    renderstates.stencilPassOp     = gc.rs.stencilPassOp;
-    renderstates.stencilFailOp     = gc.rs.stencilFailOp;
-    renderstates.stencilZFailOp    = gc.rs.stencilZFailOp;
-
-    renderstates.blendEnabled      = !!gc.rs.blendEnabled;
-    renderstates.blendSrc          = gc.rs.blendSrc;
-    renderstates.blendDst          = gc.rs.blendDst;
-    renderstates.blendOp           = gc.rs.blendOp;
-    renderstates.blendAlphaSrc     = gc.rs.blendAlphaSrc;
-    renderstates.blendAlphaDst     = gc.rs.blendAlphaDst;
-    renderstates.blendAlphaOp      = gc.rs.blendAlphaOp;
-
-    renderstates.fillMode          = gc.rs.fillMode;
-    renderstates.cullMode          = gc.rs.cullMode;
-    renderstates.frontFace         = gc.rs.frontFace;
-    renderstates.msaaEnabled       = !!gc.rs.msaaEnabled;
-
-    renderstates.blendFactors      = gc.rs.blendFactors;
-
-    // exept these:
-    //renderstates.colorWriteMask    = gc.rs.colorWriteMask;
-    //renderstates.viewport          = gc.rs.viewport;
-    //renderstates.scissorRect       = gc.rs.scissorRect;
-
-
-
-
-}
-
-// *****************************************************************************
 // GN::gfx::EffectResource::Impl - public methods
 // *****************************************************************************
 
@@ -642,6 +526,9 @@ GN::gfx::EffectResource::Impl::initUniforms(
 
         up.parameterName = iter->first;
 
+        const EffectUniformDesc & eud = iter->second;
+        up.size = eud.size;
+
         // setup uniform binding point array
         for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
         {
@@ -762,11 +649,48 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    GN_UNUSED_PARAM( db );
-    GN_UNUSED_PARAM( filename );
-    GN_UNIMPL();
+    // convert to full (absolute) path
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = abspath;
 
-    return AutoRef<EffectResource>::NULLREF;
+    // Reuse existing resource, if possible
+    AutoRef<EffectResource> resource( db.findResource<EffectResource>( filename ) );
+    if( resource ) return resource;
+
+    // load new effect from file
+    GN_INFO(sLogger)( "Load effect from file: %s", filename );
+
+    // open XML file
+    AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
+    if( !fp ) return AutoRef<EffectResource>::NULLREF;
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, *fp ) )
+    {
+        GN_ERROR(sLogger)(
+            "Fail to parse XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp->name(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return AutoRef<EffectResource>::NULLREF;
+    }
+    fp.clear();
+    GN_ASSERT( xpr.root );
+
+    // load descriptor from file
+    EffectResourceDesc desc;
+    if( !desc.loadFromXmlNode( *xpr.root ) ) return AutoRef<EffectResource>::NULLREF;
+
+    // create new resource
+    resource = db.createResource<EffectResource>( filename );
+    if( 0 == resource || !resource->reset( &desc ) ) return AutoRef<EffectResource>::NULLREF;
+
+    // done
+    return resource;
 }
 
 //

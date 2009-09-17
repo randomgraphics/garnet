@@ -1,21 +1,25 @@
 <?xml version="1.0" standalone="yes"?>
 <mesh
 	primtype  = "TRIANGLE_LIST"
-	numprim   = "12"
-	startvtx  = "0"
-	minvtxidx = "0"
+	numidx    = "36"
 	numvtx    = "24"
-	startidx  = "0"
 	>
 
 	<vtxfmt>
-		<attrib stream="0" offset= "0" semantic="POS0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="12" semantic="NML0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="24" semantic="TANG" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="36" semantic="TEX0" format="FMT_FLOAT2"/>
+		<attrib stream="0" offset= "0" binding="POS" index="0" format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="12" binding="NML" index="0" format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="24" binding="TANG" index="0" format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="36" binding="TEX" index="0" format="FMT_FLOAT2"/>
 	</vtxfmt>
 
-	<vtxbuf stream="0" offset="0" stride="64" ref="cube.vb.bin"/>
+	<vtxbuf
+		stream="0"
+		offset="0"
+		stride="64"
+		ref="cube.vb.bin"
+	/>
 
-	<idxbuf ref="cube.ib.bin"/>
+	<idxbuf
+		ref="cube.ib.bin"
+	/>
 </mesh>
