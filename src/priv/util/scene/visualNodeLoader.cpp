@@ -371,17 +371,17 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 
             const AseMaterial & am = ase.materials[subset.matid];
 
-            AutoRef<Texture> t;
+            AutoRef<TextureResource> t;
 
             if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
             {
-                t.attach( GN::gfx::loadTextureFromFile( db.gpu(), am.mapdiff.bitmap ) );
-                clone->getTextureResource( "ALBEDO_TEXTURE" )->setTexture( t );
+                t = TextureResource::loadFromFile( db, am.mapdiff.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
             }
             if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
             {
-                t.attach( GN::gfx::loadTextureFromFile( db.gpu(), am.mapbump.bitmap ) );
-                clone->getTextureResource( "NORMAL_TEXTURE" )->setTexture( t );
+                t = TextureResource::loadFromFile( db, am.mapbump.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
             }
         }
 

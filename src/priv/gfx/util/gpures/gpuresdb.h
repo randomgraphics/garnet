@@ -102,9 +102,10 @@ namespace GN { namespace gfx
 
     private:
 
-        GpuResourceDatabase & mDatabase;
-        Gpu                 & mGpu;
-        ManagerArray          mManagers;
+        GpuResourceDatabase            & mDatabase;
+        Gpu                            & mGpu;
+        ManagerArray                     mManagers;
+        DynaArray<AutoRef<GpuResource> > mBuiltInResources;
 
         // *********************************************************************
         //
@@ -137,6 +138,7 @@ namespace GN { namespace gfx
 
         //@{
         void                 onResourceDelete( GpuResourceHandle handle );
+        bool                 setupBuiltInResources();
         //@}
 
     private:

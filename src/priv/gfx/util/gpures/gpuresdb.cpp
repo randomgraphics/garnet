@@ -283,6 +283,23 @@ void GpuResourceDatabase::Impl::onResourceDelete( GpuResourceHandle handle )
     mgr.resources.remove( handle.internalHandle() );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GpuResourceDatabase::Impl::setupBuiltInResources()
+{
+    // register built-in resource factories
+    if( !registerTextureResourceFactory( mDatabase ) ) return false;
+    if( !registerUniformResourceFactory( mDatabase ) ) return false;
+    if( !registerMeshResourceFactory( mDatabase ) ) return false;
+    if( !registerEffectResourceFactory( mDatabase ) ) return false;
+    if( !registerModelResourceFactory( mDatabase ) ) return false;
+
+    // TODO: create some built-in resources
+
+    return true;
+}
+
 // *****************************************************************************
 // GpuResourceDatabase::Impl private methods
 // *****************************************************************************
@@ -361,12 +378,10 @@ GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL)
 {
     mImpl = new Impl(*this,g);
 
-    // register built-in resource factories
-    GN_VERIFY( registerTextureResourceFactory( *this ) );
-    GN_VERIFY( registerUniformResourceFactory( *this ) );
-    GN_VERIFY( registerMeshResourceFactory( *this ) );
-    GN_VERIFY( registerEffectResourceFactory( *this ) );
-    GN_VERIFY( registerModelResourceFactory( *this ) );
+    if( !mImpl->setupBuiltInResources() )
+    {
+        GN_THROW( "Fail to setup built-in resources." );
+    }
 }
 
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
