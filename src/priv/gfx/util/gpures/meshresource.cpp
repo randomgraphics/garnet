@@ -10,42 +10,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 // Local stuff
 // *****************************************************************************
 
-struct VertexFormatProperties
-{
-    /// minimal strides for each stream
-    size_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
-
-    /// true means that stream is referenced by the vertex format.
-    bool used[GpuContext::MAX_VERTEX_BUFFERS];
-
-    /// analyze vertex format
-    bool analyze( const VertexFormat & vf )
-    {
-        memset( this, 0, sizeof(*this) );
-
-        for( size_t i = 0; i < vf.numElements; ++i )
-        {
-            const VertexElement & e = vf.elements[i];
-
-            if( e.stream > GpuContext::MAX_VERTEX_BUFFERS )
-            {
-                GN_ERROR(sLogger)( "Invalid stream ID: %d", e.stream );
-                return false;
-            }
-
-            used[e.stream] = true;
-
-            size_t currentStride = minStrides[e.stream];
-
-            size_t newStride = e.offset + e.format.getBytesPerBlock();
-
-            if( newStride > currentStride ) minStrides[e.stream] = newStride;
-        }
-
-        return true;
-    }
-};
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -67,6 +31,40 @@ const VertexElement * sFindPositionElement( const VertexFormat & vf )
 
     GN_ERROR(sLogger)( "Position semantice is not found in vertex format." );
     return NULL;
+}
+
+
+// *****************************************************************************
+// GN::gfx::VertexFormatProperties - public methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
+{
+    memset( this, 0, sizeof(*this) );
+
+    for( size_t i = 0; i < vf.numElements; ++i )
+    {
+        const VertexElement & e = vf.elements[i];
+
+        if( e.stream > GpuContext::MAX_VERTEX_BUFFERS )
+        {
+            GN_ERROR(sLogger)( "Invalid stream ID: %d", e.stream );
+            return false;
+        }
+
+        used[e.stream] = true;
+
+        size_t currentStride = minStrides[e.stream];
+
+        size_t newStride = e.offset + e.format.getBytesPerBlock();
+
+        if( newStride > currentStride ) minStrides[e.stream] = newStride;
+    }
+
+    return true;
 }
 
 // *****************************************************************************
