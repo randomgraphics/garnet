@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "effectresource.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -61,6 +60,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defaultValue )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a ) return defaultValue;
 
     if( 0 == strCmpI( "1", a->value.cptr() ) ||
         0 == strCmpI( "true", a->value.cptr() ) )
@@ -115,7 +115,38 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
     const char * name = sGetItemName( node, "uniform" );
     if( !name ) return;
 
-    desc.uniforms[name];
+    EffectResourceDesc::EffectUniformDesc & ud = desc.uniforms[name];
+
+    const char * type = sGetAttrib( node, "type" );
+    if( NULL == type )
+    {
+        ud.size = sGetIntAttrib<size_t>( node, "size", 0 );
+    }
+    else
+    {
+        if( 0 == strCmpI( "matrix", type ) ||
+            0 == strCmpI( "matrix4x4", type ) ||
+            0 == strCmpI( "matrix44", type ) ||
+            0 == strCmpI( "matrix4", type ) ||
+            0 == strCmpI( "mat4", type ) ||
+            0 == strCmpI( "float4x4", type ) )
+        {
+            ud.size = sizeof(Matrix44f);
+        }
+        else if(
+            0 == strCmpI( "vector", type ) ||
+            0 == strCmpI( "vec4", type ) ||
+            0 == strCmpI( "vector4", type ) ||
+            0 == strCmpI( "float4", type ) )
+        {
+            ud.size = sizeof(float)*4;
+        }
+        else
+        {
+            sPostError( node, strFormat( "Unrecognized uniform type: %s", type ) );
+            ud.size = 0;
+        }
+    }
 }
 
 //
@@ -196,7 +227,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
     if( entry )
     {
         size_t offset = sd.shaderSourceBuffer.size();
-        sd.shaderSourceBuffer.append( entry, strLen(entry) );
+        sd.shaderSourceBuffer.append( entry, strLen(entry) + 1 );
         code.entry = (const char *)offset;
     }
     else
@@ -217,6 +248,10 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     if( !name ) return;
 
     EffectResourceDesc::EffectGpuProgramDesc sd;
+
+    // Add some dummy data into shader source buffer,
+    // to ensure that any valid shader source offset won't be zero.
+    sd.shaderSourceBuffer.append( "ABCD", 4 );
 
     // get shading language
     const char * lang = sGetAttrib( node, "lang" );
@@ -363,9 +398,128 @@ static void sParseTechniques( EffectResourceDesc & desc, const XmlElement & node
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void sCopyShaderSourcePtr(
+    const char          * & to,
+    const DynaArray<char> & tobuf,
+    const char            * from,
+    const DynaArray<char> & frombuf )
+{
+    GN_ASSERT( tobuf.size() == frombuf.size() );
+
+    const char * s = frombuf.cptr();
+    const char * e = s + frombuf.size();
+
+    if( s <= from && from < e )
+    {
+        to = tobuf.cptr() + ( from - s );
+    }
+    else
+    {
+        to = from;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDesc & from )
+{
+    to.shaderSourceBuffer = from.shaderSourceBuffer;
+
+    #define COPY_SHADER_PTR( x ) sCopyShaderSourcePtr( to.gpd.x, to.shaderSourceBuffer, from.gpd.x, from.shaderSourceBuffer );
+
+    COPY_SHADER_PTR( vs.source );
+    COPY_SHADER_PTR( vs.entry );
+
+    COPY_SHADER_PTR( gs.source );
+    COPY_SHADER_PTR( gs.entry );
+
+    COPY_SHADER_PTR( ps.source );
+    COPY_SHADER_PTR( ps.entry );
+
+    #undef COPY_SHADER_PTR
+}
+
 // *****************************************************************************
 // Public methods
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::EffectGpuProgramDesc(
+    const EffectGpuProgramDesc & rhs )
+{
+    prerequisites = rhs.prerequisites;
+    gpd = rhs.gpd;
+    textures = rhs.textures;
+    uniforms = rhs.uniforms;
+    sCopyShaderDesc( *this, rhs );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::EffectResourceDesc::EffectGpuProgramDesc &
+GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
+    const EffectGpuProgramDesc & rhs )
+{
+    prerequisites = rhs.prerequisites;
+    gpd = rhs.gpd;
+    textures = rhs.textures;
+    uniforms = rhs.uniforms;
+    sCopyShaderDesc( *this, rhs );
+    return *this;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectResourceDesc::clear()
+{
+    textures.clear();
+    uniforms.clear();
+    gpuprograms.clear();
+    techniques.clear();
+
+    GpuContext::RenderStates rs;
+    rs.clear();
+
+    memset( &renderstates, 0, sizeof(renderstates) );
+
+    // copy default render state values from GPU context
+    renderstates.depthTestEnabled  = !!rs.depthTestEnabled;
+    renderstates.depthWriteEnabled = !!rs.depthWriteEnabled;
+    renderstates.depthFunc         = rs.depthFunc;
+
+    renderstates.stencilEnabled    = !!rs.stencilEnabled;
+    renderstates.stencilPassOp     = rs.stencilPassOp;
+    renderstates.stencilFailOp     = rs.stencilFailOp;
+    renderstates.stencilZFailOp    = rs.stencilZFailOp;
+
+    renderstates.blendEnabled      = !!rs.blendEnabled;
+    renderstates.blendSrc          = rs.blendSrc;
+    renderstates.blendDst          = rs.blendDst;
+    renderstates.blendOp           = rs.blendOp;
+    renderstates.blendAlphaSrc     = rs.blendAlphaSrc;
+    renderstates.blendAlphaDst     = rs.blendAlphaDst;
+    renderstates.blendAlphaOp      = rs.blendAlphaOp;
+
+    renderstates.fillMode          = rs.fillMode;
+    renderstates.cullMode          = rs.cullMode;
+    renderstates.frontFace         = rs.frontFace;
+    renderstates.msaaEnabled       = !!rs.msaaEnabled;
+
+    renderstates.blendFactors      = rs.blendFactors;
+
+    // exept these:
+    //renderstates.colorWriteMask    = rs.colorWriteMask;
+    //renderstates.viewport          = rs.viewport;
+    //renderstates.scissorRect       = rs.scissorRect;
+}
 
 //
 //
@@ -399,8 +553,9 @@ bool GN::gfx::EffectResourceDesc::loadFromXmlNode( const XmlNode & root )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root )
+bool GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root ) const
 {
     GN_UNUSED_PARAM( root );
     GN_UNIMPL();
+    return false;
 }

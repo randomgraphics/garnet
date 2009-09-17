@@ -116,6 +116,11 @@ namespace GN { namespace util
         util::World & getWorld() const { GN_ASSERT(mWorld); return *mWorld; }
 
         ///
+        /// get sprite renderer
+        ///
+        gfx::SpriteRenderer & getSpriteRenderer() const { GN_ASSERT( mSpriteRenderer ); return *mSpriteRenderer; }
+
+        ///
         /// get font renderer
         ///
         util::BitmapFont & getFont() { return mFont; }

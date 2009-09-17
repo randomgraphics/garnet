@@ -9,7 +9,13 @@
 namespace GN { namespace gfx
 {
     ///
-    /// 2D sprite renderer
+    /// 2D sprite renderer.
+    ///
+    /// 2D sprite coordinate system:
+    ///     - left-top corner is (0,0)
+    ///     - X is leftward
+    ///     - Y is downward
+    ///     - length unit is pixel
     ///
     class SpriteRenderer : public StdClass
     {

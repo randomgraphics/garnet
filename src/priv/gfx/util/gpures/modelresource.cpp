@@ -97,10 +97,12 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root )
+bool GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root, const char * basedir ) const
 {
     GN_UNUSED_PARAM( root );
+    GN_UNUSED_PARAM( basedir );
     GN_UNIMPL_WARNING();
+    return false;
 }
 
 // *****************************************************************************
@@ -422,15 +424,30 @@ GN::gfx::ModelResource::Impl::getUniformResource( const char * effectParameterNa
     EffectResource * effect = mEffect.resource;
     if( NULL == effect )
     {
-        GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
-        return AutoRef<UniformResource>::NULLREF;
+        AutoRef<UniformResource> & dummy = mDummyUniforms["NULL_EFFECT"];
+        if( !dummy )
+        {
+            GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
+            dummy = database().createResource<UniformResource>( NULL );
+            AutoRef<Uniform> u( database().gpu().createUniform( sizeof(float) ) );
+            dummy->setUniform( u );
+        }
+
+        return dummy;
     }
 
     size_t parameterIndex = effect->findUniform( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
-        GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
-        return AutoRef<UniformResource>::NULLREF;
+        AutoRef<UniformResource> & dummy = mDummyUniforms[effectParameterName?effectParameterName:"NULL_PARAMETER"];
+        if( !dummy )
+        {
+            GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName?effectParameterName:"<NULL name>", modelName() );
+            dummy = database().createResource<UniformResource>( NULL );
+            AutoRef<Uniform> u( database().gpu().createUniform( sizeof(float) ) );
+            dummy->setUniform( u );
+        }
+        return dummy;
     }
 
     return mUniforms[parameterIndex].getResource();
@@ -540,9 +557,9 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     mTextures.resize( numtextures );
     for( size_t i = 0; i < numtextures; ++i )
     {
-        TextureItem & t = mTextures[i];
+        TextureItem & ti = mTextures[i];
 
-        AutoRef<TextureResource> texres = t.getResource();
+        AutoRef<TextureResource> texres = ti.getResource();
 
         if( !texres )
         {
@@ -552,8 +569,8 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
             if( !texres ) return false;
         }
 
-        t.setResource( *this, i, NULL );
-        t.setResource( *this, i, texres );
+        ti.setResource( *this, i, NULL );
+        ti.setResource( *this, i, texres );
     }
 
     // reapply uniforms
@@ -561,9 +578,9 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     mUniforms.resize( numuniforms );
     for( size_t i = 0; i < numuniforms; ++i )
     {
-        UniformItem & u = mUniforms[i];
+        UniformItem & ui = mUniforms[i];
 
-        AutoRef<UniformResource> unires = u.getResource();
+        AutoRef<UniformResource> unires = ui.getResource();
 
         if( !unires )
         {
@@ -571,10 +588,17 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
             StrA uniname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
             unires = database().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
+            AutoRef<Uniform> u = unires->getUniform();
+            if( !u && up.size > 0 )
+            {
+                u.attach( database().gpu().createUniform( up.size ) );
+                if( !u ) return false;
+            }
+            unires->setUniform( u );
         }
 
-        u.setResource( *this, i, NULL );
-        u.setResource( *this, i, unires );
+        ui.setResource( *this, i, NULL );
+        ui.setResource( *this, i, unires );
     }
 
     return true;
@@ -811,6 +835,7 @@ void GN::gfx::ModelResource::Impl::clear()
     mPasses.clear();
     mTextures.clear();
     mUniforms.clear();
+    mDummyUniforms.clear();
 }
 
 //

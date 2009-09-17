@@ -824,6 +824,42 @@ namespace GN { namespace gfx
 
             /// Scissor rect. (0,0,0,0) is used to represent current size of the render target.
             Rect<UInt32> scissorRect;
+
+            /// clear to default render states
+            void clear()
+            {
+                bitFlags = 0;
+
+                fillMode = FILL_SOLID;
+                cullMode = CULL_BACK;
+                frontFace = FRONT_CCW;
+                msaaEnabled = false;
+
+                depthTestEnabled = true;
+                depthWriteEnabled = true;
+                depthFunc = CMP_LESS;
+
+                stencilEnabled = false;
+                stencilPassOp = STENCIL_KEEP;
+                stencilFailOp = STENCIL_KEEP;
+                stencilZFailOp = STENCIL_KEEP;
+
+                blendEnabled = false;
+                blendSrc = BLEND_SRC_ALPHA;
+                blendDst = BLEND_INV_SRC_ALPHA;
+                blendOp  = BLEND_OP_ADD;
+                blendAlphaSrc = BLEND_SRC_ALPHA;
+                blendAlphaDst = BLEND_INV_SRC_ALPHA;
+                blendAlphaOp  = BLEND_OP_ADD;
+
+                blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
+
+                colorWriteMask = 0xFFFFFFFF;
+
+                viewport.set( 0, 0, 0, 0 );
+
+                scissorRect.set( 0, 0, 0, 0 );
+            }
         };
         GN_CASSERT( GN_FIELD_OFFSET( RenderStates, blendFactors ) == 8 );
 
@@ -860,45 +896,6 @@ namespace GN { namespace gfx
         GpuContext() { clear(); }
 
         //
-        // clear all render states to default value (nothing is inherited)
-        //
-        void clearToDefaultRenderStates()
-        {
-            // clear all render states first
-            rs.bitFlags = 0;
-
-            rs.fillMode = FILL_SOLID;
-            rs.cullMode = CULL_BACK;
-            rs.frontFace = FRONT_CCW;
-            rs.msaaEnabled = false;
-
-            rs.depthTestEnabled = true;
-            rs.depthWriteEnabled = true;
-            rs.depthFunc = CMP_LESS;
-
-            rs.stencilEnabled = false;
-            rs.stencilPassOp = STENCIL_KEEP;
-            rs.stencilFailOp = STENCIL_KEEP;
-            rs.stencilZFailOp = STENCIL_KEEP;
-
-            rs.blendEnabled = false;
-            rs.blendSrc = BLEND_SRC_ALPHA;
-            rs.blendDst = BLEND_INV_SRC_ALPHA;
-            rs.blendOp  = BLEND_OP_ADD;
-            rs.blendAlphaSrc = BLEND_SRC_ALPHA;
-            rs.blendAlphaDst = BLEND_INV_SRC_ALPHA;
-            rs.blendAlphaOp  = BLEND_OP_ADD;
-
-            rs.blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
-
-            rs.colorWriteMask = 0xFFFFFFFF;
-
-            rs.viewport.set( 0, 0, 0, 0 );
-
-            rs.scissorRect.set( 0, 0, 0, 0 );
-        }
-
-        //
         // clear all resources binded to the context
         //
         void clearResources()
@@ -927,7 +924,7 @@ namespace GN { namespace gfx
         ///
         void clear()
         {
-            clearToDefaultRenderStates();
+            rs.clear();
 
             gpuProgram.clear();
 

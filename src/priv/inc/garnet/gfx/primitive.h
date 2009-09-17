@@ -22,7 +22,8 @@ namespace GN { namespace gfx
             TRIANGLE_STRIP, ///< triangle strip
             QUAD_LIST     , ///< quad list. D3D9 does not support this primitive.
             RECT_LIST     , ///< rect list. This is xenon special primitive.
-            NUM_PRIMITIVES  ///< number of available primitive types
+            NUM_PRIMITIVES, ///< number of available primitive types
+            INVALID  = NUM_PRIMITIVES, // use to indicate invalid primitive type.
         };
 
         /// conver to string
@@ -45,54 +46,24 @@ namespace GN { namespace gfx
             else return "INVALID_PRIMITIVE_TYPE";
         }
 
+        /// convert from string
+        static PrimitiveType sFromString( const char * s )
+        {
+            if( 0 == strCmpI( "PrimitiveType::POINT_LIST", s ) ) return PrimitiveType::POINT_LIST;
+            else if( 0 == strCmpI( "PrimitiveType::LINE_LIST", s ) ) return PrimitiveType::LINE_LIST;
+            else if( 0 == strCmpI( "PrimitiveType::LINE_STRIP", s ) ) return PrimitiveType::LINE_STRIP;
+            else if( 0 == strCmpI( "PrimitiveType::TRIANGLE_LIST", s ) ) return PrimitiveType::TRIANGLE_LIST;
+            else if( 0 == strCmpI( "PrimitiveType::TRIANGLE_STRIP", s ) ) return PrimitiveType::TRIANGLE_STRIP;
+            else if( 0 == strCmpI( "PrimitiveType::QUAD_LIST", s ) ) return PrimitiveType::QUAD_LIST;
+            else if( 0 == strCmpI( "PrimitiveType::RECT_LIST", s ) ) return PrimitiveType::RECT_LIST;
+            else return PrimitiveType::INVALID;
+        }
+
         GN_DEFINE_ENUM_CLASS_HELPERS(PrimitiveType, Enum)
     };
 
     /// \name Primitive utils
     //@{
-
-    ///
-    /// convert primitive type to string
-    ///
-    inline StrA primitiveType2Str( PrimitiveType pt )
-    {
-        GN_GUARD_SLOW;
-        switch( pt )
-        {
-            case PrimitiveType::POINT_LIST     : return "PrimitiveType::POINT_LIST";
-            case PrimitiveType::LINE_LIST      : return "PrimitiveType::LINE_LIST";
-            case PrimitiveType::LINE_STRIP     : return "PrimitiveType::LINE_STRIP";
-            case PrimitiveType::TRIANGLE_LIST  : return "PrimitiveType::TRIANGLE_LIST";
-            case PrimitiveType::TRIANGLE_STRIP : return "PrimitiveType::TRIANGLE_STRIP";
-            case PrimitiveType::QUAD_LIST      : return "PrimitiveType::QUAD_LIST";
-            case PrimitiveType::RECT_LIST      : return "PrimitiveType::RECT_LIST";
-            default             : return "Invalid primitive type!";
-        }
-        GN_UNGUARD_SLOW;
-    }
-
-    ///
-    /// convert string to primitive
-    ///
-    inline PrimitiveType str2PrimitiveType( const StrA & str )
-    {
-        GN_GUARD_SLOW;
-        if( "PrimitiveType::POINT_LIST" == str ) return PrimitiveType::POINT_LIST;
-        else if( "PrimitiveType::LINE_LIST" == str ) return PrimitiveType::LINE_LIST;
-        else if( "PrimitiveType::LINE_STRIP" == str ) return PrimitiveType::LINE_STRIP;
-        else if( "PrimitiveType::TRIANGLE_LIST" == str ) return PrimitiveType::TRIANGLE_LIST;
-        else if( "PrimitiveType::TRIANGLE_STRIP" == str ) return PrimitiveType::TRIANGLE_STRIP;
-        else if( "PrimitiveType::QUAD_LIST" == str ) return PrimitiveType::QUAD_LIST;
-        else if( "PrimitiveType::RECT_LIST" == str ) return PrimitiveType::RECT_LIST;
-        else
-        {
-            // failed
-            static Logger * sLogger = getLogger("GN.gfx.misc");
-            GN_ERROR(sLogger)( "invalid primitive string : '%s'!", str.cptr() );
-            return PrimitiveType::NUM_PRIMITIVES;
-        }
-        GN_UNGUARD_SLOW;
-    }
 
     ///
     /// calculate primitive count from vertex count

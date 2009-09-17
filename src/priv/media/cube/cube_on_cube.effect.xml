@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <effect>
 	<parameters>
-		<uniform name="pvw"/>
+		<uniform name="pvw" type="matrix"/>
 		<texture name="cube"/>
 	</parameters>
 
@@ -14,7 +14,7 @@
 	<gpuprograms>
 
 		<!-- D3D HLSL9 shaders -->
-		<gpuprogram name="d3d9" lang="HLSL9">
+		<gpuprogram name="d3d" lang="HLSL9">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
 			<texref texture="cube" shaderParameter="s0"/>
 			<vs entry="main">
@@ -33,7 +33,7 @@ void main(
 			<ps entry="main">
 <![CDATA[
 sampler s0 : register(s0);
-float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
+float4 main( in float4 ipos: POSITION0, in float3 itex : TEXCOORD0 ) : COLOR0
 {
 	return texCUBE( s0, itex );
 }
