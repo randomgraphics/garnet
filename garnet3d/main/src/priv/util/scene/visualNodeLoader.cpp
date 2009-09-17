@@ -299,7 +299,6 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
     if( !loadAseSceneFromFile( ase, file) ) return false;
 
     // create mesh list
-    // TODO: reuse existing mehses
     DynaArray<AutoRef<MeshResource> > meshes;
     {
         GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualNode: generating mesh list" );

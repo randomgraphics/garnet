@@ -228,12 +228,12 @@ namespace GN { namespace gfx
         ///
         /// Load descriptor from file
         ///
-        bool loadFromFile( File & );
+        bool loadFromFile( File &, DynaArray<UInt8> & meshdata );
 
         ///
         /// Load descriptor from file
         ///
-        bool loadFromFile( const char * filename );
+        bool loadFromFile( const char * filename, DynaArray<UInt8> & meshdata );
 
         ///
         /// Save descriptor to file
@@ -648,6 +648,11 @@ namespace GN { namespace gfx
         /// write the descriptor to XML
         ///
         bool saveToXmlNode( const XmlNode & root, const char * basedir ) const;
+
+        ///
+        /// write the descriptor to XML file
+        ///
+        bool saveToXmlFile( const char * filename ) const;
     };
 
     ///

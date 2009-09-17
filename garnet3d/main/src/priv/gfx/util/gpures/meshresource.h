@@ -11,6 +11,21 @@
 namespace GN { namespace gfx
 {
     ///
+    /// Vertex format analyzer.
+    ///
+    struct VertexFormatProperties
+    {
+        /// minimal strides for each stream
+        size_t minStrides[GpuContext::MAX_VERTEX_BUFFERS];
+
+        /// true means that stream is referenced by the vertex format.
+        bool used[GpuContext::MAX_VERTEX_BUFFERS];
+
+        /// analyze vertex format
+        bool analyze( const VertexFormat & vf );
+    };
+
+    ///
     /// Mesh resource implementation class
     ///
     class MeshResource::Impl
