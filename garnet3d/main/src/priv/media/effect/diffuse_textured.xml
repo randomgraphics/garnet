@@ -8,20 +8,17 @@
         <texture name="texdiff"/>
         <texture name="texbump"/>
     </parameters>
-    <shaders>
+    <gpuprograms>
 
-        <!-- D3D shaders -->
+        <!-- D3D gpuprograms -->
 
-        <shader name="d3dvs" type="VS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="vs_1_1"/>
-                </token>
-            </prerequisites>
-            <uniref binding="pvw" ref="pvw"/>
-            <uniref binding="invworld" ref="invworld"/>
-            <uniref binding="light0_pos" ref="light0_pos"/>
-            <code lang="D3D_HLSL" hints="...">
+        <gpuprogram lang="HLSL9">
+            <prerequisites/>
+            <uniref shaderParameter="pvw" uniform="pvw"/>
+            <uniref shaderParameter="invworld" uniform="invworld"/>
+            <uniref shaderParameter="light0_pos" uniform="light0_pos"/>
+            <texref shaderParameter="texdiff" texture="texdiff"/>
+            <vs entry="main">
 <![CDATA[
 struct vsinput
 {
@@ -55,17 +52,8 @@ vsoutput main( vsinput vi )
 	return vo;
 }
 ]]>
-            </code>
-        </shader>
-
-        <shader name="d3dps" type="PS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="ps_1_4"/>
-                </token>
-            </prerequisites>
-            <texref stage="0" ref="texdiff"/>
-            <code lang="D3D_HLSL">
+            </vs>
+            <ps entry="main">
 <![CDATA[
 struct vsoutput
 {
@@ -82,21 +70,18 @@ float4 main( vsoutput vi ) : COLOR0
 	return tex * lighting;
 }
 ]]>
-            </code>
-        </shader>
+            </ps>
+        </gpuprogram>
 
-        <!-- Cg shaders -->
+        <!-- Cg gpuprograms -->
 
-        <shader name="cgvs" type="VS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="cgvs"/>
-                </token>
-            </prerequisites>
-            <uniref binding="pvw" ref="pvw"/>
-            <uniref binding="invworld" ref="invworld"/>
-            <uniref binding="light0_pos" ref="light0_pos"/>
-            <code lang="CG" hints="...">
+        <gpuprogram name="cg">
+            <prerequisites/>
+            <uniref shaderParameter="pvw" uniform="pvw"/>
+            <uniref shaderParameter="invworld" uniform="invworld"/>
+            <uniref shaderParameter="light0_pos" uniform="light0_pos"/>
+            <texref shaderParameter="texdiff" texture="texdiff"/>
+            <vs entry="main">
 <![CDATA[
 struct vsinput
 {
@@ -130,17 +115,8 @@ vsoutput main( vsinput vi )
 	return vo;
 }
 ]]>
-            </code>
-        </shader>
-
-        <shader name="cgps" type="PS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="cgps"/>
-                </token>
-            </prerequisites>
-            <texref stage="0" ref="texdiff"/>
-            <code lang="CG">
+            </vs>
+            <ps entry="main">
 <![CDATA[
 struct vsoutput
 {
@@ -157,25 +133,16 @@ float4 main( vsoutput vi ) : COLOR0
 	return tex * lighting;
 }
 ]]>
-            </code>
-        </shader>
-
-        <!-- Fixed functional pipeline -->
-        <shader name="fixvs" type="VS"/>
-        <shader name="fixps" type="PS"/>
-        <shader name="fixgs" type="GS"/>
-
-    </shaders>
+            </ps>
+        </gpuprogram>
+    </gpuprograms>
 
     <techniques>
         <technique name="d3d">
-            <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+            <pass gpuprogram="d3d"/>
         </technique>
         <technique name="cg">
-            <pass vs="cgvs" ps="cgps" gs="fixgs"/>
-        </technique>
-        <technique name="ffp">
-            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
+            <pass gpuprogram="cg"/>
         </technique>
     </techniques>
 </effect>
