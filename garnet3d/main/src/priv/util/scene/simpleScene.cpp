@@ -298,9 +298,15 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
             if( vbsize > 0 )
             {
                 desc.meshdata.resize( desc.meshdata.size() + 1 );
-                desc.meshdata.back().resize( vbsize );
-                memcpy( desc.meshdata.back().cptr(), src.vertices[i], vbsize );
-                dst.vertices[i] = desc.meshdata.back().cptr();
+                desc.meshdata.back().size = vbsize;
+                desc.meshdata.back().data = heapAlloc( vbsize );
+                if( !desc.meshdata.back().data )
+                {
+                    GN_ERROR(sLogger)( "Out of memory." );
+                    return false;
+                }
+                memcpy( desc.meshdata.back().data, src.vertices[i], vbsize );
+                dst.vertices[i] = desc.meshdata.back().data;
             }
             else
             {
@@ -312,9 +318,15 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
         if( ibsize > 0 )
         {
             desc.meshdata.resize( desc.meshdata.size() + 1 );
-            desc.meshdata.back().resize( ibsize );
-            memcpy( desc.meshdata.back().cptr(), src.indices, ibsize );
-            dst.indices = desc.meshdata.back().cptr();
+            desc.meshdata.back().size = ibsize;
+            desc.meshdata.back().data = heapAlloc( ibsize );
+            if( !desc.meshdata.back().data )
+            {
+                GN_ERROR(sLogger)( "Out of memory." );
+                return false;
+            }
+            memcpy( desc.meshdata.back().data, src.indices, ibsize );
+            dst.indices = desc.meshdata.back().data;
         }
         else
         {
@@ -338,9 +350,9 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
         // setup uniforms
         model.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
         model.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
-        model.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
+        model.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f);
         model.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
-        model.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
+        model.uniforms["LIGHT0_DIFFUSE"].size = sizeof(Vector4f);
         model.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
         model.uniforms["ALBEDO_COLOR"].initialValue.resize(sizeof(Vector4f));
         Vector4f WHITE(1,1,1,1);
@@ -384,6 +396,9 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
     entity.spatial.bbox = ase.bbox;
     entity.visual = 0;
 
+    // setup bounding box of the whole scene
+    desc.bbox = ase.bbox;
+
     return true;
 }
 
@@ -396,8 +411,13 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleWorldDesc::clear()
 {
-    meshes.clear();
+    for( size_t i = 0; i < meshdata.size(); ++i )
+    {
+        safeHeapFree( meshdata[i].data );
+    }
     meshdata.clear();
+
+    meshes.clear();
     models.clear();
     visuals.clear();
     entities.clear();
@@ -439,8 +459,12 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
+Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
 {
+    // create root spatial entity of the whole world
+    Entity * root = world.createSpatialEntity( NULL );
+    if( NULL == root ) return NULL;
+
     for( std::map<StrA,EntityDesc>::const_iterator i = entities.begin();
          i != entities.end();
          ++i )
@@ -451,11 +475,13 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
         Entity * e = world.createVisualEntity( entityName );
         if( !e ) continue;
 
+        // attach the entity to root entity
+        e->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
+
         // calculate bounding sphere
         const Boxf & bbox = entityDesc.spatial.bbox;
         Spheref bs;
-        bs.center = bbox.center();
-        bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
+        calculateBoundingSphereFromBoundingBox( bs, bbox );
         e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
         if( entityDesc.visual != (size_t)-1 )
@@ -502,5 +528,5 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
         }
     }
 
-    return true;
+    return root;
 }

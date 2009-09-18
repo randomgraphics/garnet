@@ -17,14 +17,14 @@ GN::util::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
     : mOwner( owner )
     , mGraph( graph )
     , mPosition( 0, 0, 0 )
-    , mRotation( 0, 0, 1, 0 )
+    , mRotation( 0, 0, 0, 1 )
     , mScale( 1, 1, 1 )
     , mBoundingSphere( 0, 0, 0, 0 )
     , mLocal2Parent( Matrix44f::sIdentity() )
     , mParent2Local( Matrix44f::sIdentity() )
     , mLocal2Root( Matrix44f::sIdentity() )
     , mRoot2Local( Matrix44f::sIdentity() )
-    , mTransformDirty( true )
+    , mTransformDirty( false )
 {
 }
 
@@ -40,7 +40,7 @@ void GN::util::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode *
     if( parent != getParent() || prevSibling != getPrevSibling() )
     {
         TreeNodeClass::setParent( toImplPtr(parent), toImplPtr(prevSibling) );
-        mTransformDirty = true;
+        invalidateTransformation();
     }
 }
 
@@ -52,7 +52,7 @@ void GN::util::SpatialNode::Impl::setPosition( const Vector3f & p )
     if( p != mPosition )
     {
         mPosition = p;
-        mTransformDirty = true;
+        invalidateTransformation();
     }
 }
 
@@ -64,7 +64,7 @@ void GN::util::SpatialNode::Impl::setRotation( const Quaternionf & q )
     if( q != mRotation )
     {
         mRotation = q;
-        mTransformDirty = true;
+        invalidateTransformation();
     }
 }
 
@@ -76,7 +76,7 @@ void GN::util::SpatialNode::Impl::setScale( const Vector3f & s )
     if( s != mScale )
     {
         mScale = s;
-        mTransformDirty = true;
+        invalidateTransformation();
     }
 }
 
@@ -100,6 +100,21 @@ SpatialNode * GN::util::SpatialNode::Impl::getLastChild() const
 // *****************************************************************************
 // SpatialNode::Impl private methods
 // *****************************************************************************
+
+//
+// Invalidate transformation of all nodes in subtree
+// -----------------------------------------------------------------------------
+void GN::util::SpatialNode::Impl::invalidateTransformation()
+{
+    if( mTransformDirty ) return;
+
+    mTransformDirty = true;
+
+    for( SpatialNode * child = getFirstChild(); child; child = child->getNextSibling() )
+    {
+        toImplPtr( child )->invalidateTransformation();
+    }
+}
 
 //
 //

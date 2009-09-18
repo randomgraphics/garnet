@@ -46,18 +46,20 @@ public:
         World & w = getWorld();
 
         light = w.createLightEntity( NULL );
-        scene = w.createVisualEntity( NULL );
-        if( !light || !scene ) return false;
+        if( !light ) return false;
 
         // load scene from file
-        if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
-        //SimpleWorldDesc swd;
-        //if( !swd.loadFromFile( filename ) ) return false;
-        //if( !swd.populateTheWorld( w ) ) return false;
+        //if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
+        SimpleWorldDesc swd;
+        if( !swd.loadFromFile( filename ) ) return false;
+        scene = swd.populateTheWorld( w );
+        if( !scene ) return false;
 
         // update camera stuff
-        const Spheref & bs = scene->getNode<SpatialNode>()->getBoundingSphere();
-        radius = bs.radius * 1.5f;
+        Spheref bs;
+        calculateBoundingSphereFromBoundingBox( bs, swd.bbox );
+        radius = bs.radius * 2.0f;
+        if( 0.0f == radius ) radius = 1.0f;
 
         // initialize arcball
         arcball.setHandness( util::RIGHT_HAND );
@@ -103,7 +105,7 @@ public:
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
-        scene->getNode<VisualNode>()->graph().draw( camera );
+        getWorld().visualGraph().draw( camera );
 
         const Vector3f & position = arcball.getTranslation();
 

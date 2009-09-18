@@ -419,7 +419,7 @@ namespace GN { namespace util
     ///
     /// A simple world descriptor
     ///
-    struct SimpleWorldDesc
+    struct SimpleWorldDesc : public NoCopy
     {
         //@{
         struct SpatialDesc
@@ -441,11 +441,18 @@ namespace GN { namespace util
             size_t      visual;  ///< -1 means no visual for this entity
         };
 
+        struct MeshDataBuffer
+        {
+            void * data;
+            size_t size;
+        };
+
         std::map<StrA,gfx::MeshResourceDesc>  meshes;
-        DynaArray<DynaArray<UInt8> >          meshdata;
+        DynaArray<MeshDataBuffer>             meshdata;
         DynaArray<gfx::ModelResourceDesc>     models;
         DynaArray<VisualDesc>                 visuals;
         std::map<StrA,EntityDesc>             entities;
+        Boxf                                  bbox;
         //@}
 
         ///
@@ -459,7 +466,8 @@ namespace GN { namespace util
         bool loadFromFile( const char * file );
 
         /// create entities in the world according to the descriptor.
-        bool populateTheWorld( World & world ) const;
+        /// Return the root spatial node represent the whole world.
+        Entity * populateTheWorld( World & world ) const;
     };
 }}
 
