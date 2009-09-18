@@ -649,6 +649,12 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
+    if( NULL == filename )
+    {
+        GN_INFO(sLogger)( "Null filename string." );
+        return AutoRef<EffectResource>::NULLREF;
+    }
+
     // convert to full (absolute) path
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
