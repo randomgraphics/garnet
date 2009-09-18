@@ -19,9 +19,9 @@ GN::util::Entity::gdb() const
 //
 // -----------------------------------------------------------------------------
 inline GN::util::Entity *
-GN::util::World::findOrCreateEntity( const Guid & type, const char * name )
+GN::util::World::findOrCreateEntity( const char * name )
 {
-    Entity * e = findEntity( type, name );
-    if( !e ) e = createEntity( type, name );
+    Entity * e = findEntity( name );
+    if( !e ) e = createEntity( name );
     return e;
 }

@@ -28,10 +28,10 @@ Camera   camera;
 
 bool init( Scene & sc )
 {
-    root = sc.world.createEntity( SPATIAL_ENTITY, "root" );
+    root = sc.world.createSpatialEntity( "root" );
 
     // robot stays at the origin.
-    robot = sc.world.createEntity( VISUAL_ENTITY );
+    robot = sc.world.createVisualEntity();
     robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     robot->getNode<VisualNode>()->loadModelsFromFile( "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
 
@@ -40,7 +40,7 @@ bool init( Scene & sc )
     Vector3f eye( 0, 0, bs.radius * 2.0f );
 
     // light is where eyes are
-    light = sc.world.createEntity( LIGHT_ENTITY, "light" );
+    light = sc.world.createLightEntity( "light" );
     light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     light->getNode<SpatialNode>()->setPosition( eye );
 

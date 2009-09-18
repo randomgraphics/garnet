@@ -36,7 +36,6 @@ namespace GN { namespace util
         gfx::GpuResourceDatabase  & gdb() const;
 
         int                         id() const;
-        const Guid                & type() const;
         const char                * name() const;
 
         bool                        hasNode( const Guid & nodeType ) const;
@@ -69,15 +68,6 @@ namespace GN { namespace util
     };
 
     ///
-    /// entity factory
-    ///
-    struct EntityFactory
-    {
-        /// initialize a newly created entity
-        bool (*initializeEntity)( Entity &, const void * factoryParameter );
-    };
-
-    ///
     /// world class that manages instance of all entities
     ///
     class World
@@ -99,23 +89,29 @@ namespace GN { namespace util
 
         //@}
 
-        /// delete all entities, unregister all non-built-in factories
         void          clear();
 
-        bool          hasEntityFactory( const Guid & type );
-        bool          registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter );
-        void          unregisterEntityFactory( const Guid & type );
-        EntityFactory getEntityFactory( const Guid & type );
-
-        Entity      * createEntity( const Guid & type, const char * name = NULL );
-        void          deleteEntity( const Guid & type, const char * name );
+        Entity      * createEntity( const char * name = NULL );
+        void          deleteEntity( const char * name );
         void          deleteEntity( int id );
         void          deleteEntity( Entity * entity );
         void          deleteAllEntities();
-        Entity      * findEntity( const Guid & type, const char * name );
+        Entity      * findEntity( const char * name );
         Entity      * findEntity( int id );
-        Entity      * findOrCreateEntity( const Guid & type, const char * name );
+        Entity      * findOrCreateEntity( const char * name );
 
+        //@}
+
+        //@{
+
+        /// Create entity that has spatial node only
+        Entity * createSpatialEntity( const char * name = NULL );
+
+        /// Create entity that has spatial and visual node
+        Entity * createVisualEntity( const char * name = NULL );
+
+        /// Create entity that has spatial and light node
+        Entity * createLightEntity( const char * name = NULL );
         //@}
 
     private:
@@ -159,15 +155,6 @@ namespace GN { namespace util
 
         Entity & mEntity;
     };
-
-    /// build-in entity types
-    //@{
-
-    extern const Guid SPATIAL_ENTITY; ///< entity that has spatial node only
-    extern const Guid VISUAL_ENTITY;  ///< entity that has spatial and visual node
-    extern const Guid LIGHT_ENTITY;   ///< entity that has spatial and light node
-
-    //@}
 
     // *************************************************************************
     // Camera class

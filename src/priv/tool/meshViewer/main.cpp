@@ -45,8 +45,8 @@ public:
     {
         World & w = getWorld();
 
-        light = w.createEntity( LIGHT_ENTITY, NULL );
-        scene = w.createEntity( VISUAL_ENTITY, NULL );
+        light = w.createLightEntity( NULL );
+        scene = w.createVisualEntity( NULL );
         if( !light || !scene ) return false;
 
         // load models form file
