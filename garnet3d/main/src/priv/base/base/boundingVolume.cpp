@@ -26,7 +26,7 @@ void GN::calculateBoundingSphere(
 {
     Boxf box;
 
-    calculateAABB( box, x, strideX, y, strideY, z, strideZ, count );
+    calculateBoundingBox( box, x, strideX, y, strideY, z, strideZ, count );
 
     result.center = box.center();
     result.radius = Vector3f::sDistance( result.center, box.pos() );
@@ -48,7 +48,7 @@ void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateAABB(
+void GN::calculateBoundingBox(
     Boxf & result,
     const float * valueX, size_t strideX,
     const float * valueY, size_t strideY,
@@ -94,9 +94,9 @@ void GN::calculateAABB(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateAABB( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count )
+void GN::calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count )
 {
-    return calculateAABB(
+    return calculateBoundingBox(
         result,
         positions ? &positions[0].x : NULL, strideInBytes,
         positions ? &positions[0].y : NULL, strideInBytes,

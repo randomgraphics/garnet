@@ -120,7 +120,7 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::calculateAABB( Box<float> & box ) const
+GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
 {
     box.x = box.y = box.w = box.h = 0.0f;
 
@@ -167,7 +167,7 @@ GN::gfx::MeshResource::Impl::calculateAABB( Box<float> & box ) const
         return;
     }
 
-    GN::calculateAABB( box, x, stride, y, stride, z, stride, mDesc.numvtx );
+    GN::calculateBoundingBox( box, x, stride, y, stride, z, stride, mDesc.numvtx );
 }
 
 //
@@ -423,9 +423,9 @@ GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::calculateAABB( Box<float> & box ) const
+GN::gfx::MeshResource::calculateBoundingBox( Box<float> & box ) const
 {
-    return mImpl->calculateAABB( box );
+    return mImpl->calculateBoundingBox( box );
 }
 
 //

@@ -2609,7 +2609,7 @@ namespace GN
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void calculateAABB(
+    void calculateBoundingBox(
         Boxf & result,
         const float * x, size_t strideX,
         const float * y, size_t strideY,
@@ -2619,7 +2619,7 @@ namespace GN
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void calculateAABB( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
+    void calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 }
 
 // *****************************************************************************

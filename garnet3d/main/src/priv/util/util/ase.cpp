@@ -50,7 +50,7 @@ struct AseVertex
 ///
 struct AseFace
 {
-    UInt32   v[3];   ///< vertices (index into AseMesh.vertices)
+    UInt32   v[3];   ///< vertices (index into AseMeshInternal.vertices)
     UInt32   t[3];   ///< texcoords (index into AseVertex.t)
     UInt32   vn[3];  ///< normal (index into AseVertex.n)
     Vector3f fn;     ///< face normal
@@ -64,13 +64,13 @@ struct AseFace
 struct AseFaceChunk
 {
     UInt32            submat; ///< submaterial ID
-    DynaArray<UInt32> faces;  ///< indices into AseMesh.faces
+    DynaArray<UInt32> faces;  ///< indices into AseMeshInternal.faces
 };
 
 ///
 /// ASE mesh object
 ///
-struct AseMesh
+struct AseMeshInternal
 {
     ///
     /// this group is loaded directly from ASE file.
@@ -98,7 +98,8 @@ struct AseNode
     Vector3f  rotaxis;
     float     rotangle; // rotation angle in radian
     Vector3f  scale;
-    Boxf      bbox;   ///< bounding box of the node itself and its descendants.
+    Boxf      selfbbox;  ///< bounding box of myself
+    Boxf      treebbox;  ///< bounding box of myself and my children.
 };
 
 ///
@@ -106,9 +107,9 @@ struct AseNode
 ///
 struct AseGeoObject : public GN::TreeNode<AseGeoObject>
 {
-    AseNode node;
-    AseMesh mesh;
-    UInt32  matid; ///< material ID into global material array
+    AseNode         node;
+    AseMeshInternal mesh;
+    UInt32          matid; ///< material ID into global material array
 };
 
 ///
@@ -759,7 +760,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadMesh( AseMesh & m, const Matrix44f & transform, AseFile & ase )
+static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile & ase )
 {
     GN_GUARD;
 
@@ -786,7 +787,7 @@ static bool sReadMesh( AseMesh & m, const Matrix44f & transform, AseFile & ase )
     // calculate mesh bounding box
     if( m.vertices.size() > 0 )
     {
-        calculateAABB( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
+        calculateBoundingBox( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
     }
     else
     {
@@ -1066,7 +1067,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         {
             // end of the block. do some post processing.
 
-            AseMesh & m = o.mesh;
+            AseMeshInternal & m = o.mesh;
 
             if( !hasMaterial )
             {
@@ -1302,13 +1303,14 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     while( n )
     {
         // copy mesh bbox to node
-        n->node.bbox = n->mesh.bbox;
+        n->node.selfbbox = n->mesh.bbox;
+        n->node.treebbox = n->mesh.bbox;
 
         // then merge with all childrens' bbox
         AseGeoObject * c = safeCastPtr<AseGeoObject>( n->getFirstChild() );
         while( c )
         {
-            Boxf::sGetUnion( n->node.bbox, n->node.bbox, c->node.bbox );
+            Boxf::sGetUnion( n->node.treebbox, n->node.treebbox, c->node.treebbox );
 
             c = safeCastPtr<AseGeoObject>( c->getNextSibling() );
         }
@@ -1329,12 +1331,12 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         s += strFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
             n->node.name.cptr(),
-            n->node.bbox.pos().x,
-            n->node.bbox.pos().y,
-            n->node.bbox.pos().z,
-            n->node.bbox.size().x,
-            n->node.bbox.size().y,
-            n->node.bbox.size().z );
+            n->node.selfbbox.pos().x,
+            n->node.selfbbox.pos().y,
+            n->node.selfbbox.pos().z,
+            n->node.selfbbox.size().x,
+            n->node.selfbbox.size().y,
+            n->node.selfbbox.size().z );
 
         GN_VERBOSE(sLogger)( s.cptr() );
 
@@ -1351,7 +1353,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
 /// unique vertex selector
 struct VertexSelector
 {
-    UInt32 p; ///< position (index into AseMesh.vertices)
+    UInt32 p; ///< position (index into AseMeshInternal.vertices)
     UInt32 t; ///< texcoord (index into AseVertex.t)
     UInt32 n; ///< normal   (index into AseVertex.n)
 
@@ -1482,7 +1484,18 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
     dst.meshes.resize( dst.meshes.size() + 1 );
 
-    gfx::MeshResourceDesc & dstmesh = dst.meshes.back();
+    AseMesh & dstmesh = dst.meshes.back();
+
+    // setup hierarchy and transformation properties
+    dstmesh.parent = obj.node.parent;
+    dstmesh.name = obj.node.name;
+    dstmesh.transform = obj.node.transform;
+    dstmesh.pos = obj.node.pos;
+    dstmesh.rotaxis = obj.node.rotaxis;
+    dstmesh.rotangle = obj.node.rotangle;
+    dstmesh.scale = obj.node.scale;
+    dstmesh.selfbbox = obj.node.selfbbox;
+    dstmesh.treebbox = obj.node.treebbox;
 
     // setup constant mesh properties
     dstmesh.vtxfmt.numElements = 3;
@@ -1606,7 +1619,7 @@ static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
         sWriteGeoObject( dst, src, src.objects[i] );
     }
 
-    dst.bbox = src.root.node.bbox;
+    dst.bbox = src.root.node.treebbox;
 
     // success
     return true;
