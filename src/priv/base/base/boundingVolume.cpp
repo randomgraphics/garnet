@@ -48,6 +48,15 @@ void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, 
 //
 //
 // -----------------------------------------------------------------------------
+void GN::calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox )
+{
+    result.center = bbox.center();
+    result.radius = Vector3f::sDistance( result.center, bbox.pos() );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::calculateBoundingBox(
     Boxf & result,
     const float * valueX, size_t strideX,

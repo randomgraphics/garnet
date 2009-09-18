@@ -5,7 +5,7 @@
         <uniform name="MATRIX_WORLD" type="MATRIX44" count="1"/>
         <uniform name="MATRIX_WORLD_IT" type="MATRIX44" count="1" desc="inverse world matrix"/>
         <uniform name="LIGHT0_POSITION" type="VECTOR4" count="1" desc="light position in world space"/>
-        <uniform name="LIGHT0_COLOR" type="VECTOR4" count="1" desc="light color"/>
+        <uniform name="LIGHT0_DIFFUSE" type="VECTOR4" count="1" desc="light color"/>
         <uniform name="ALBEDO_COLOR" type="VECTOR4" count="1"/>
         <texture name="ALBEDO_TEXTURE"/>
     </parameters>
@@ -19,7 +19,7 @@
             <uniref shaderParameter="world" uniform="MATRIX_WORLD"/>
             <uniref shaderParameter="wit" uniform="MATRIX_WORLD_IT"/>
             <uniref shaderParameter="lightpos" uniform="LIGHT0_POSITION"/>
-            <uniref shaderParameter="lightColor" uniform="LIGHT0_COLOR"/>
+            <uniref shaderParameter="lightColor" uniform="LIGHT0_DIFFUSE"/>
             <uniref shaderParameter="albedoColor" uniform="ALBEDO_COLOR"/>
             <texref shaderParameter="t0" texture="ALBEDO_TEXTURE"/>
             <vs entry="main">
@@ -68,7 +68,7 @@ void main()
             <uniref shaderParameter="world" uniform="MATRIX_WORLD"/>
             <uniref shaderParameter="wit" uniform="MATRIX_WORLD_IT"/>
             <uniref shaderParameter="lightpos" uniform="LIGHT0_POSITION"/>
-            <uniref shaderParameter="lightColor" uniform="LIGHT0_COLOR"/>
+            <uniref shaderParameter="lightColor" uniform="LIGHT0_DIFFUSE"/>
             <uniref shaderParameter="albedoColor" uniform="ALBEDO_COLOR"/>
             <texref shaderParameter="t0" texture="ALBEDO_TEXTURE"/>
             <vs entry="main">

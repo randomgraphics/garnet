@@ -88,6 +88,7 @@ namespace GN { namespace util
         static inline const SpatialNode       * toNodePtr( const TreeNodeClass * p ) { return p ? &((Impl*)p)->mOwner : NULL; }
         static inline       SpatialNode       * toNodePtr(       TreeNodeClass * p ) { return p ? &((Impl*)p)->mOwner : NULL; }
 
+        void invalidateTransformation();
         void calcTransform();
     };
 

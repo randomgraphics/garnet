@@ -119,7 +119,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     md.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
     md.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
     md.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
-    md.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
+    md.uniforms["LIGHT0_DIFFUSE"].size = sizeof(Vector4f);
     md.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
 
     // TODO: should not creat texture at all.
@@ -131,7 +131,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     ed.uniforms["MATRIX_WORLD"];
     ed.uniforms["MATRIX_WORLD_IT"];
     ed.uniforms["LIGHT0_POSITION"];
-    ed.uniforms["LIGHT0_COLOR"];
+    ed.uniforms["LIGHT0_DIFFUSE"];
     ed.uniforms["ALBEDO_COLOR"];
     ed.textures["ALBEDO_TEXTURE"];
     ed.textures["NORMAL_TEXTURE"];
@@ -143,7 +143,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     ed.gpuprograms["glsl"].uniforms["world"] = "MATRIX_WORLD";
     ed.gpuprograms["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
-    ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
+    ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
@@ -159,7 +159,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     ed.gpuprograms["hlsl"].uniforms["world"] = "MATRIX_WORLD";
     ed.gpuprograms["hlsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.gpuprograms["hlsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
-    ed.gpuprograms["hlsl"].uniforms["lightColor"] = "LIGHT0_COLOR";
+    ed.gpuprograms["hlsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
@@ -179,7 +179,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     INIT_UNIFORM( mMatrixWorld   , "MATRIX_WORLD"    , Matrix44f::sIdentity() );
     INIT_UNIFORM( mMatrixWorldIT , "MATRIX_WORLD_IT" , Matrix44f::sIdentity() );
     INIT_UNIFORM( mLightPos      , "LIGHT0_POSITION" , Vector4f(0,0,0,0) );
-    INIT_UNIFORM( mLightColor    , "LIGHT0_COLOR"    , Vector4f(1,1,1,1) );
+    INIT_UNIFORM( mLightColor    , "LIGHT0_DIFFUSE"    , Vector4f(1,1,1,1) );
     INIT_UNIFORM( mAlbedoColor   , "ALBEDO_COLOR"    , Vector4f(1,1,1,1) );
 
     // setup default texture

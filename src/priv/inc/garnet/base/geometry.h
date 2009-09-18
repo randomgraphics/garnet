@@ -2615,6 +2615,11 @@ namespace GN
     void calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 
     ///
+    /// Calculate bounding sphere.
+    ///
+    void calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox );
+
+    ///
     /// Calculate axis aligned bounding box.
     ///
     void calculateBoundingBox(

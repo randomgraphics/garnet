@@ -4,8 +4,9 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - scene framework refactor:
-    - separate spatial and rendering management
+  - scene framework:
+    - better way to referencing standard uniforms and textures in effect.
+    - add light entity to SimpleWorldDesc
     - experiment with scene framework that supports ultra large world
       - spatial management
       - resource streaming
