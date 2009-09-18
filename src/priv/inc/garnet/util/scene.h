@@ -427,11 +427,11 @@ namespace GN { namespace util
             StrA        parent;
             Vector3f    position;
             Quaternionf orientation;
+            Boxf        bbox;
         };
 
         struct VisualDesc
         {
-            Boxf              bbox;
             DynaArray<size_t> models;
         };
 

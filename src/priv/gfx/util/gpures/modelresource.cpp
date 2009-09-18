@@ -688,7 +688,11 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
         effect = db.findResource<EffectResource>( desc.effectResourceName );
         if( 0 == effect )
         {
-            GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effectResourceName.cptr() );
+            effect = EffectResource::loadFromFile( db, desc.effectResourceName );
+            if( 0 == effect )
+            {
+                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effectResourceName.cptr() );
+            }
         }
     }
     else
@@ -705,7 +709,11 @@ bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
         mesh = db.findResource<MeshResource>( desc.meshResourceName );
         if( 0 == mesh )
         {
-            GN_ERROR(sLogger)( "%s is not a valid mesh name.", desc.meshResourceName.cptr() );
+            mesh = MeshResource::loadFromFile( db, desc.meshResourceName );
+            if( 0 == mesh )
+            {
+                GN_ERROR(sLogger)( "%s is not a valid mesh name.", desc.meshResourceName.cptr() );
+            }
         }
     }
     else

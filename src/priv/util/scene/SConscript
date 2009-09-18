@@ -3,7 +3,7 @@ sources = [
 	'camera.cpp',
 	'entity.cpp',
 	'lightNode.cpp',
-#	'simpleScene.cpp',
+	'simpleScene.cpp',
 	'spatialNode.cpp',
 	'visualGraph.cpp',
 	'visualNode.cpp',

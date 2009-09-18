@@ -63,23 +63,23 @@ static const char * sDetermineBestEffect( const MeshResourceDesc & m )
     if( !sHasNormal( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no normal." );
-        return ModelType::WIREFRAME;
+        return "media::/effect/wireframe.effect.xml";
     }
 
     if( !sHasTex0( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no texture coordinate." );
-        return ModelType::WIREFRAME;
+        return "media::/effect/diffuse.effect.xml";
     }
 
     // use normal map, if the mesh has both normal and tangent.
     if( sHasTangent( vf ) )
     {
-        return ModelType::NORMAL_MAP;
+        return "media::/effect/normalmap.effect.xml";
     }
     else
     {
-        return ModelType::DIFFUSE;
+        return "media::/effect/diffuse.effect.xml";
     }
 }
 
@@ -246,23 +246,13 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadModelsFromXPR( VisualNode & node, GpuResourceDatabase & db, File & file )
+sLoadModelsFromXPR( SimpleWorldDesc & desc, File & file )
 {
     // load XPR file
     XPRScene xpr;
     if( !loadXprSceneFromFile( xpr, file ) ) return NULL;
 
-    // create mesh list
-    DynaArray<AutoRef<MeshResource> > meshes;
-    meshes.resize( xpr.meshes.size() );
-    for( size_t i = 0; i < xpr.meshes.size(); ++i )
-    {
-        meshes[i] = db.createResource<MeshResource>( NULL );
-        if( !meshes[i] ) return false;
-        if( !meshes[i]->reset( &xpr.meshes[i] ) ) return false;
-    }
-
-    GN_UNUSED_PARAM( node );
+    GN_UNUSED_PARAM( desc );
     GN_UNIMPL_WARNING();
     return false;
 }
@@ -283,14 +273,15 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
     AseScene ase;
     if( !loadAseSceneFromFile( ase, file) ) return false;
 
-    StrA filename = fs::resolvePath( fs::getCurrentDir(), file.name );
+    StrA filename = file.name();
     if( filename.empty() )
     {
         GN_WARN(sLogger)( "Can not get filename" );
         return false;
     }
+    filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) strFormat("%s.%s",filename,n)
+#define FULL_MESH_NAME( n ) strFormat("%s.%s",filename.cptr(),n.cptr())
 
     // copy mesh to simple world descriptor
     for( size_t i = 0; i < ase.meshes.size(); ++i )
@@ -306,7 +297,7 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
             size_t vbsize = src.getVtxBufSize( i );
             if( vbsize > 0 )
             {
-                desc.meshdata.resize( desc.meshedata.size() + 1 );
+                desc.meshdata.resize( desc.meshdata.size() + 1 );
                 desc.meshdata.back().resize( vbsize );
                 memcpy( desc.meshdata.back().cptr(), src.vertices[i], vbsize );
                 dst.vertices[i] = desc.meshdata.back().cptr();
@@ -320,7 +311,7 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
         size_t ibsize = src.getIdxBufSize();
         if( ibsize > 0 )
         {
-            desc.meshdata.resize( desc.meshedata.size() + 1 );
+            desc.meshdata.resize( desc.meshdata.size() + 1 );
             desc.meshdata.back().resize( ibsize );
             memcpy( desc.meshdata.back().cptr(), src.indices, ibsize );
             dst.indices = desc.meshdata.back().cptr();
@@ -336,7 +327,7 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
     {
         const AseMeshSubset & subset = ase.subsets[i];
 
-        const AseMesh & asemesh = asemesh[subset.meshid];
+        const AseMesh & asemesh = ase.meshes[subset.meshid];
 
         ModelResourceDesc model;
 
@@ -344,14 +335,24 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
         model.effectResourceName = sDetermineBestEffect( asemesh );
         if( model.effectResourceName.empty() ) continue;
 
-        // bind textures to effect
-        const AseMaterial & am = ase.materials[subset.matid];
+        // setup uniforms
+        model.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
+        model.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
+        model.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f); // used to translate normal from local space into world space
+        model.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
+        model.uniforms["LIGHT0_COLOR"].size = sizeof(Vector4f);
+        model.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
+        model.uniforms["ALBEDO_COLOR"].initialValue.resize(sizeof(Vector4f));
+        Vector4f WHITE(1,1,1,1);
+        memcpy( model.uniforms["ALBEDO_COLOR"].initialValue.cptr(), &WHITE, sizeof(WHITE) );
 
-        if( am.mapdiff.bitmap.empty() )
+        // bind color and texture to effect
+        const AseMaterial & am = ase.materials[subset.matid];
+        if( !am.mapdiff.bitmap.empty() )
         {
             model.textures["ALBEDO_TEXTURE"].resourceName = am.mapdiff.bitmap;
         }
-        if( am.mapbump.bitmap.empty() )
+        if( !am.mapbump.bitmap.empty() )
         {
             model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap;
         }
@@ -375,26 +376,13 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
     {
         desc.visuals[0].models[i] = i;
     }
-    desc.visual[0].bbox = ase.bbox;
 
     // create an entity
     SimpleWorldDesc::EntityDesc & entity = desc.entities[filename];
     entity.spatial.position.set( 0, 0, 0 );
     entity.spatial.orientation.set( 0, 0, 0, 1 );
+    entity.spatial.bbox = ase.bbox;
     entity.visual = 0;
-
-    /* calculate bounding sphere
-    SpatialNode * sn = node.entity().getNode<SpatialNode>();
-    if( sn )
-    {
-        const Boxf & bbox = ase.bbox;
-
-        Spheref bs;
-        bs.center = bbox.center();
-        bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
-
-        sn->setBoundingSphere( bs );
-    }*/
 
     return true;
 }
@@ -453,7 +441,7 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 // -----------------------------------------------------------------------------
 bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
 {
-    for( std::map<StrA,EntityDesc>::const_iter i = entities.begin();
+    for( std::map<StrA,EntityDesc>::const_iterator i = entities.begin();
          i != entities.end();
          ++i )
     {
@@ -462,6 +450,13 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
 
         Entity * e = world.createVisualEntity( entityName );
         if( !e ) continue;
+
+        // calculate bounding sphere
+        const Boxf & bbox = entityDesc.spatial.bbox;
+        Spheref bs;
+        bs.center = bbox.center();
+        bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
+        e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
         if( entityDesc.visual != (size_t)-1 )
         {
@@ -480,7 +475,7 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
                     mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
                     if( !mesh )
                     {
-                        std::map<StrA,gfx::MeshResourceDesc>::iterator meshIter = meshes.find(modelDesc.meshResourceName);
+                        std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = meshes.find(modelDesc.meshResourceName);
 
                         if( meshes.end() == meshIter )
                         {
@@ -495,12 +490,12 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
 
                         // create new mesh
                         mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
-                        if( !mesh || !mesh->reset( meshDesc ) ) continue;
+                        if( !mesh || !mesh->reset( &meshDesc ) ) continue;
                     }
                 }
 
-                AutoRef<ModelResource> model = world.gdb().createResource<MeshResource>( NULL );
-                if( !model->reset( modelDesc ) ) continue;
+                AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
+                if( !model->reset( &modelDesc ) ) continue;
 
                 e->getNode<VisualNode>()->addModel( model );
             }

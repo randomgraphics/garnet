@@ -1728,13 +1728,21 @@ namespace GN
         // ********************************
     public:
 
-        ///
+        template<typename T2>
+        void set( T2 x_, T2 y_, T2 z_, T2 w_ )
+        {
+            v.x = (T)x_;
+            v.y = (T)y_;
+            v.z = (T)z_;
+            w   = (T)w_;
+        }
+
         /// πÈ“ªªØ
-        ///
         Quaternion & identity()
         {
             w = ((T)1.0); v.set(0, 0, 0); return *this;
         }
+
         /// identity quaternion
         static Quaternion sIdentity()
         {

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+    <parameters>
+        <uniform name="MATRIX_PVW" type="MATRIX44" count="1"/>
+        <uniform name="MATRIX_WORLD" type="MATRIX44" count="1"/>
+        <uniform name="MATRIX_WORLD_IT" type="MATRIX44" count="1" desc="inverse world matrix"/>
+        <uniform name="LIGHT0_POSITION" type="VECTOR4" count="1" desc="light position in world space"/>
+        <uniform name="LIGHT0_COLOR" type="VECTOR4" count="1" desc="light color"/>
+        <uniform name="ALBEDO_COLOR" type="VECTOR4" count="1"/>
+        <texture name="ALBEDO_TEXTURE"/>
+    </parameters>
+    <gpuprograms>
+
+        <!-- D3D gpuprograms -->
+
+        <gpuprogram name="glsl" lang="GLSL">
+            <prerequisites/>
+            <uniref shaderParameter="pvw" uniform="MATRIX_PVW"/>
+            <uniref shaderParameter="world" uniform="MATRIX_WORLD"/>
+            <uniref shaderParameter="wit" uniform="MATRIX_WORLD_IT"/>
+            <uniref shaderParameter="lightpos" uniform="LIGHT0_POSITION"/>
+            <uniref shaderParameter="lightColor" uniform="LIGHT0_COLOR"/>
+            <uniref shaderParameter="albedoColor" uniform="ALBEDO_COLOR"/>
+            <texref shaderParameter="t0" texture="ALBEDO_TEXTURE"/>
+            <vs entry="main">
+<![CDATA[
+uniform mat4 pvw;
+uniform mat4 world;
+uniform mat4 wit;
+varying vec4 pos_world; // vertex position in world space
+varying vec3 nml_world; // vertex normal in world space
+varying vec2 texcoords;
+void main()
+{
+   gl_Position = pvw * gl_Vertex;
+   pos_world   = world * gl_Vertex;
+   nml_world   = (wit * vec4(gl_Normal,0)).xyz;
+   texcoords   = gl_MultiTexCoord0.xy;
+}
+]]>
+            </vs>
+            <ps entry="main">
+<![CDATA[
+uniform vec4 lightpos; // light positin in world space
+uniform vec4 lightColor;
+uniform vec4 albedoColor;
+uniform sampler2D t0;
+varying vec4 pos_world; // position in world space
+varying vec3 nml_world; // normal in world space
+varying vec2 texcoords;
+void main()
+{
+   vec3  L      = normalize( (lightpos - pos_world).xyz );
+   vec3  N      = normalize( nml_world );
+   float diff   = clamp( dot( L, N ), 0.0, 1.0 );
+   vec4  tex    = texture2D( t0, texcoords );
+   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex;
+}
+]]>
+            </ps>
+        </gpuprogram>
+
+        <!-- HLSL9 gpuprograms -->
+
+        <gpuprogram name="hlsl9" lang="HLSL9">
+            <prerequisites/>
+            <uniref shaderParameter="pvw" uniform="MATRIX_PVW"/>
+            <uniref shaderParameter="world" uniform="MATRIX_WORLD"/>
+            <uniref shaderParameter="wit" uniform="MATRIX_WORLD_IT"/>
+            <uniref shaderParameter="lightpos" uniform="LIGHT0_POSITION"/>
+            <uniref shaderParameter="lightColor" uniform="LIGHT0_COLOR"/>
+            <uniref shaderParameter="albedoColor" uniform="ALBEDO_COLOR"/>
+            <texref shaderParameter="t0" texture="ALBEDO_TEXTURE"/>
+            <vs entry="main">
+<![CDATA[
+uniform float4x4 pvw;
+uniform float4x4 world;
+uniform float4x4 wit;
+
+struct VSOUTPUT
+{
+   float4 hpos      : POSITION0;  // vertex position in homogenous space
+   float4 pos_world : POS_WORLD;    // vertex position in world space
+   float3 nml_world : NORMAL_WORLD; // vertex normal in world space
+   float2 texcoords : TEXCOORD;
+};
+
+struct VSINPUT
+{
+   float4 position  : POSITION;
+   float3 normal    : NORMAL;
+   float2 texcoords : TEXCOORD;
+};
+
+VSOUTPUT main( in VSINPUT i )
+{
+   VSOUTPUT o;
+   o.hpos      = mul( pvw, i.position );
+   o.pos_world = mul( world, i.position );
+   o.nml_world = mul( wit, float4(i.normal,0) ).xyz;
+   o.texcoords = i.texcoords;
+   return o;
+}
+]]>
+            </vs>
+            <ps entry="main">
+<![CDATA[
+uniform float4 lightpos; // light positin in world space
+uniform float4 lightColor;
+uniform float4 albedoColor;
+sampler s0;
+Texture2D<float4> t0;
+
+struct VSOUTPUT
+{
+   float4 hpos      : POSITION0;  // vertex position in homogenous space
+   float4 pos_world : POS_WORLD;    // vertex position in world space
+   float3 nml_world : NORMAL_WORLD; // vertex normal in world space
+   float2 texcoords : TEXCOORD;
+};
+
+float4 main( in VSOUTPUT i ) : COLOR0
+{
+   float3  L    = normalize( (lightpos - i.pos_world).xyz );
+   float3  N    = normalize( i.nml_world );
+   float diff   = clamp( dot( L, N ), 0.0, 1.0 );
+   float4  tex  = t0.Sample( s0, i.texcoords );
+   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex;
+}
+]]>
+            </ps>
+        </gpuprogram>
+    </gpuprograms>
+
+    <techniques>
+        <technique name="glsl">
+            <pass gpuprogram="glsl"/>
+        </technique>
+        <technique name="hlsl9">
+            <pass gpuprogram="hlsl9"/>
+        </technique>
+    </techniques>
+</effect>
+

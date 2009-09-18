@@ -49,8 +49,11 @@ public:
         scene = w.createVisualEntity( NULL );
         if( !light || !scene ) return false;
 
-        // load models form file
+        // load scene from file
         if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
+        //SimpleWorldDesc swd;
+        //if( !swd.loadFromFile( filename ) ) return false;
+        //if( !swd.populateTheWorld( w ) ) return false;
 
         // update camera stuff
         const Spheref & bs = scene->getNode<SpatialNode>()->getBoundingSphere();
