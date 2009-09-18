@@ -226,6 +226,16 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// get vertex buffer size in bytes
+        ///
+        size_t getVtxBufSize( size_t stream ) const;
+
+        ///
+        /// get indices buffer size in bytes
+        ///
+        size_t getIdxBufSize() const;
+
+        ///
         /// Load descriptor from file
         ///
         bool loadFromFile( File &, DynaArray<UInt8> & meshdata );
@@ -268,7 +278,7 @@ namespace GN { namespace gfx
         bool                     reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
         void                     applyToContext( GpuContext & context ) const;
-        void                     calculateAABB( Box<float> & ) const; // AABB: axis aligned bounding box
+        void                     calculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
         void                     calculateBoundingSphere( Sphere<float> & ) const;
         //@}
 

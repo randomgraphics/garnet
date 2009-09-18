@@ -143,6 +143,36 @@ bool sLoadFromMeshXMLFile( File & fp, DynaArray<UInt8> & meshdata, MeshResourceD
 //
 //
 // -----------------------------------------------------------------------------
+size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
+{
+    if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
+    {
+        GN_ERROR(sLogger)( "invalid stream index." );
+        return 0;
+    }
+
+    VertexFormatProperties vfp;
+    if( !vfp.analyze( vtxfmt ) ) return 0;
+
+    if( !vfp.used[stream] ) return 0;
+
+    size_t stride = strides[stream];
+    if( 0 == stride ) stride = vfp.minStrides[stream];
+
+    return numvtx * stride;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
+{
+    return numidx * (idx32?4:2);
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::MeshResourceDesc::loadFromFile( File & fp, DynaArray<UInt8> & meshdata )
 {
     clear();

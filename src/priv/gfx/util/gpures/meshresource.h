@@ -48,7 +48,7 @@ namespace GN { namespace gfx
         bool  reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const { return mDesc; }
         void  applyToContext( GpuContext & context ) const;
-        void  calculateAABB( Box<float> & ) const;
+        void  calculateBoundingBox( Box<float> & ) const;
         void  calculateBoundingSphere( Sphere<float> & ) const;
 
         // ********************************

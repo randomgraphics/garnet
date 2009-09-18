@@ -10,16 +10,14 @@
 
 namespace GN { namespace util
 {
+    class Entity;
+    class World;
     class NodeBase;
-
     class SpatialNode;
     class SpatialGraph;
-
     class VisualNode;
     class LightNode;
     class VisualGraph;
-
-    class World;
 
     // *************************************************************************
     // Entity and World
@@ -91,7 +89,15 @@ namespace GN { namespace util
         World( gfx::GpuResourceDatabase & gdb );
         virtual ~World();
 
+        //@}
+
+        //@{
+
         gfx::GpuResourceDatabase & gdb() const;
+        SpatialGraph             & spatialGraph() const;
+        VisualGraph              & visualGraph() const;
+
+        //@}
 
         /// delete all entities, unregister all non-built-in factories
         void          clear();
@@ -243,7 +249,7 @@ namespace GN { namespace util
 
         const Vector3f    & getPosition() const;       ///< get position in parent space
         const Quaternionf & getRotation() const;       ///< get orientation, in parent space
-        const Vector3f    & getScale() const;        ///< get scaling for each axis.
+        const Vector3f    & getScale() const;          ///< get scaling for each axis.
         const Spheref     & getBoundingSphere() const; ///< get bounding sphere, in local space
         const Matrix44f   & getLocal2Parent() const;   ///< get local space to parent space transformation matrix
         const Matrix44f   & getLocal2Root() const;     ///< get local space to root space transformation matrix
@@ -407,22 +413,66 @@ namespace GN { namespace util
 
         //@{
 
-        VisualGraph( gfx::GpuResourceDatabase & gdb );
+        class Impl;
 
+        VisualGraph( gfx::GpuResourceDatabase & gdb );
         virtual ~VisualGraph();
 
         gfx::GpuResourceDatabase & gdb() const;
-
-        void draw( Camera & camera );
-
-        class Impl;
-        Impl & impl() const { GN_ASSERT(mImpl); return *mImpl; }
+        Impl                     & impl() const { GN_ASSERT(mImpl); return *mImpl; }
+        void                       draw( Camera & camera );
 
         //@}
 
     private:
 
         Impl * mImpl;
+    };
+
+    ///
+    /// A simple world descriptor
+    ///
+    struct SimpleWorldDesc
+    {
+        //@{
+        struct SpatialDesc
+        {
+            StrA        parent;
+            Vector3f    position;
+            Quaternionf orientation;
+        };
+
+        struct VisualDesc
+        {
+            Boxf              bbox;
+            DynaArray<size_t> models;
+        };
+
+        struct EntityDesc
+        {
+            SpatialDesc spatial;
+            size_t      visual;  ///< -1 means no visual for this entity
+        };
+
+        std::map<StrA,gfx::MeshResourceDesc>  meshes;
+        DynaArray<DynaArray<UInt8> >          meshdata;
+        DynaArray<gfx::ModelResourceDesc>     models;
+        DynaArray<VisualDesc>                 visuals;
+        std::map<StrA,EntityDesc>             entities;
+        //@}
+
+        ///
+        /// clear the description
+        ///
+        void clear();
+
+        ///
+        /// load world description from external file
+        ///
+        bool loadFromFile( const char * file );
+
+        /// create entities in the world according to the descriptor.
+        bool populateTheWorld( World & world ) const;
     };
 }}
 

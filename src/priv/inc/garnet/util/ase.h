@@ -52,6 +52,19 @@ namespace GN { namespace util
         AseMap   mapbump;
     };
 
+    struct AseMesh : public gfx::MeshResourceDesc
+    {
+        StrA      parent;    ///< parent mesh
+        StrA      name;      ///< mesh name
+        Matrix44f transform; ///< transformation
+        Vector3f  pos;       ///< position
+        Vector3f  rotaxis;   ///< rotate axis
+        float     rotangle;  ///< rotation angle in radian
+        Vector3f  scale;     ///< scale factors
+        Boxf      selfbbox;  ///< bounding box of myself
+        Boxf      treebbox;  ///< bounding box of myself and my children.
+    };
+
     ///
     /// ase mesh subset
     ///
@@ -66,11 +79,11 @@ namespace GN { namespace util
     ///
     struct AseScene : public NoCopy
     {
-        DynaArray<AseMaterial>              materials;
-        DynaArray<gfx::MeshResourceDesc>    meshes;
-        DynaArray<AseMeshSubset>            subsets;
-        DynaArray<void*>                    meshdata; ///< store all vertex and index buffers
-        Boxf                                bbox;     ///< bounding box of the whole scene
+        DynaArray<AseMaterial>   materials;
+        DynaArray<AseMesh>       meshes;
+        DynaArray<AseMeshSubset> subsets;
+        DynaArray<void*>         meshdata; ///< store all vertex and index buffers
+        Boxf                     bbox;     ///< bounding box of the whole scene
 
         /// clear the scene
         void clear();
