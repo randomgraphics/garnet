@@ -26,7 +26,6 @@ namespace GN { namespace util
 
         World             & world() const;
         int                 id() const { return mID; }
-        const Guid        & type() const;
         const char        * name() const;
 
         bool                hasNode( const Guid & nodeType ) const;

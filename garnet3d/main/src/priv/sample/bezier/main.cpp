@@ -337,8 +337,8 @@ class BezierApp : public SampleApp
         model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( gdb, "media::texture/earth.jpg" ) );
 
         // create entity
-        light  = world.createEntity( LIGHT_ENTITY, NULL );
-        bezier = world.createEntity( VISUAL_ENTITY, NULL );
+        light  = world.createLightEntity( NULL );
+        bezier = world.createVisualEntity( NULL );
         bezier->getNode<VisualNode>()->addModel( model );
 
         // initialize arcball

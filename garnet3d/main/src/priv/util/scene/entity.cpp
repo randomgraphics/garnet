@@ -39,14 +39,6 @@ World & GN::util::Entity::Impl::world() const
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::util::Entity::Impl::type() const
-{
-    return mWorld.getEntityType( mID );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 const char * GN::util::Entity::Impl::name() const
 {
     return mWorld.getEntityName( mID );

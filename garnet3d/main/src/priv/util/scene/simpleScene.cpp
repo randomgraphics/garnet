@@ -460,7 +460,7 @@ bool GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
         const StrA & entityName = i->first;
         const EntityDesc & entityDesc = i->second;
 
-        Entity * e = world.createEntity( VISUAL_ENTITY, entityName );
+        Entity * e = world.createVisualEntity( entityName );
         if( !e ) continue;
 
         if( entityDesc.visual != (size_t)-1 )

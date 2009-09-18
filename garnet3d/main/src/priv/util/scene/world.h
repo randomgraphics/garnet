@@ -9,51 +9,6 @@
 namespace GN { namespace util
 {
     ///
-    /// Entity ID class
-    ///
-    class EntityID
-    {
-        union
-        {
-            SInt32     mI32;
-            struct
-            {
-                UInt32 mIndexPlusOne   : 8;
-                UInt32 mInternalHandle : 24;
-            };
-        };
-
-    public:
-
-        //@{
-
-        enum { MAX_TYPES = 2^8-1 };
-
-        explicit EntityID( SInt32 i32 )
-            : mI32( i32 )
-        {
-        }
-
-        EntityID( size_t managerIndex, UInt32 internalHandle )
-        {
-            mIndexPlusOne = managerIndex + 1;
-            mInternalHandle = internalHandle;
-        }
-
-        void  set( UInt32 managerIndex, UInt32 internalHandle )
-        {
-            mIndexPlusOne = managerIndex + 1;
-            mInternalHandle = internalHandle;
-        }
-
-        SInt32 i32()            const { return mI32; }
-        UInt32 managerIndex()   const { return mIndexPlusOne - 1; }
-        UInt32 internalHandle() const { return mInternalHandle; }
-
-        //@}
-    };
-
-    ///
     /// World implementation class
     ///
     class World::Impl
@@ -86,22 +41,17 @@ namespace GN { namespace util
         //@{
 
         gfx::GpuResourceDatabase & gdb() const { return mGpuResourceDatabase; }
+        SpatialGraph             & spatialGraph() const { return mSpatialGraph; }
+        VisualGraph              & visualGraph() const { return mVisualGraph; }
 
         void          clear();
-
-        bool          hasEntityFactory( const Guid & type );
-        bool          registerEntityFactory( const Guid & type, const char * desc, EntityFactory factory, const void * factoryParameter );
-        void          unregisterEntityFactory( const Guid & type );
-        EntityFactory getEntityFactory( const Guid & type );
-
-        Entity      * createEntity( const Guid & type, const char * name = NULL );
-        void          deleteEntity( const Guid & type, const char * name );
+        Entity      * createEntity( const char * name = NULL );
+        void          deleteEntity( const char * name );
         void          deleteEntity( int id );
         void          deleteEntity( Entity * entity );
         void          deleteAllEntities();
-        Entity      * findEntity( const Guid & type, const char * name );
+        Entity      * findEntity( const char * name );
         Entity      * findEntity( int id );
-        const Guid  & getEntityType( int id ) const;
         const char  * getEntityName( int id ) const;
 
         //@}
@@ -112,19 +62,7 @@ namespace GN { namespace util
 
     private:
 
-        typedef NamedHandleManager<Entity*,UInt32> EntityMap;
-
-        struct EntityManager
-        {
-            Guid          guid;
-            StrA          desc;
-            size_t        index; // index into manager array
-            EntityFactory factory;
-            const void *  param;
-            EntityMap     entities;
-        };
-
-        typedef StackArray<EntityManager, EntityID::MAX_TYPES> EntityArray;
+        typedef NamedHandleManager<Entity*,int> EntityMap;
 
         // *****************************
         // private data
@@ -136,9 +74,9 @@ namespace GN { namespace util
 
         World                    & mOwner;
         gfx::GpuResourceDatabase & mGpuResourceDatabase;
-        EntityArray                mManagers;
-        SpatialGraph               mSpatialGraph;
-        VisualGraph                mVisualGraph;
+        EntityMap                  mEntities;
+        mutable SpatialGraph       mSpatialGraph;
+        mutable VisualGraph        mVisualGraph;
 
         //@}
 
@@ -147,12 +85,6 @@ namespace GN { namespace util
         // *****************************
 
     private:
-
-        EntityManager * getManager( const Guid & type ) const;
-
-        static bool sInitSpatialEntity( Entity & entity, const void * parameters );
-        static bool sInitVisualEntity( Entity & entity, const void * parameters );
-        static bool sInitLightEntity( Entity & entity, const void * parameters );
     };
 }}
 
