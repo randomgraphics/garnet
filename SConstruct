@@ -909,6 +909,7 @@ TARGET_tools = [
     'GNtoolD3D9DumpViewer',
     'GNtoolD3D9Wrapper',
     'GNtoolGPUBenchmark',
+    'GNtoolMeshConverter',
     'GNtoolMeshViewer',
     'GNtoolOGLInfo',
     ]
