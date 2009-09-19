@@ -225,8 +225,8 @@ namespace GN { namespace util
         void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
         void                setRotation( const Quaternionf & );     ///< set rotation around it's local origin.
-        void                setScale( const Vector3f & );         ///< set scaling for each axis.
-        void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere, in local space.
+        void                setScale( const Vector3f & );           ///< set scaling for each axis.
+        void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere for the node itself, in local space.
 
         SpatialNode       * getParent() const;
         SpatialNode       * getPrevSibling() const;
@@ -237,7 +237,7 @@ namespace GN { namespace util
         const Vector3f    & getPosition() const;       ///< get position in parent space
         const Quaternionf & getRotation() const;       ///< get orientation, in parent space
         const Vector3f    & getScale() const;          ///< get scaling for each axis.
-        const Spheref     & getBoundingSphere() const; ///< get bounding sphere, in local space
+        const Spheref     & getBoundingSphere() const; ///< get bounding sphere for the node itself, in local space
         const Matrix44f   & getLocal2Parent() const;   ///< get local space to parent space transformation matrix
         const Matrix44f   & getLocal2Root() const;     ///< get local space to root space transformation matrix
 
@@ -427,18 +427,13 @@ namespace GN { namespace util
             StrA        parent;
             Vector3f    position;
             Quaternionf orientation;
-            Boxf        bbox;
-        };
-
-        struct VisualDesc
-        {
-            DynaArray<size_t> models;
+            Boxf        bbox; // bounding box of this spatial node itself (children are not included)
         };
 
         struct EntityDesc
         {
-            SpatialDesc spatial;
-            size_t      visual;  ///< -1 means no visual for this entity
+            SpatialDesc       spatial;
+            DynaArray<size_t> models;
         };
 
         struct MeshDataBuffer
@@ -450,9 +445,8 @@ namespace GN { namespace util
         std::map<StrA,gfx::MeshResourceDesc>  meshes;
         DynaArray<MeshDataBuffer>             meshdata;
         DynaArray<gfx::ModelResourceDesc>     models;
-        DynaArray<VisualDesc>                 visuals;
         std::map<StrA,EntityDesc>             entities;
-        Boxf                                  bbox;
+        Boxf                                  bbox;     ///< bounding box of the whole world.
         //@}
 
         ///
