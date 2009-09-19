@@ -284,12 +284,14 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
 
 #define FULL_MESH_NAME( n ) strFormat("%s.%s",filename.cptr(),n.cptr())
 
-    // copy mesh to simple world descriptor
+    // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.size(); ++i )
     {
         const AseMesh    & src = ase.meshes[i];
 
-        MeshResourceDesc & dst = desc.meshes[FULL_MESH_NAME(src.name)];
+        const StrA       & meshname = FULL_MESH_NAME(src.name);
+
+        MeshResourceDesc & dst = desc.meshes[meshname];
 
         dst = src;
 
@@ -333,6 +335,13 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
         {
             dst.indices = 0;
         }
+
+        // create the entity
+        SimpleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
+        entityDesc.spatial.parent = src.parent.empty() ? "" : FULL_MESH_NAME(src.parent);
+        entityDesc.spatial.position = src.pos;
+        entityDesc.spatial.orientation.fromRotation( src.rotaxis, src.rotangle );
+        entityDesc.spatial.bbox = src.selfbbox;
     }
 
     // create models
@@ -362,29 +371,102 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
             model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap;
         }
 
-        // add model to model list
+        // add the model to model list
         desc.models.append( model );
-    }
 
-    // add add models into single visual node
-    desc.visuals.resize( 1 );
-    desc.visuals[0].models.resize( desc.models.size() );
-    for( size_t i = 0; i < desc.models.size(); ++i )
-    {
-        desc.visuals[0].models[i] = i;
+        // add the model to appropriate entity
+        GN_ASSERT( desc.entities.end() != desc.entities.find(model.meshResourceName) );
+        desc.entities[model.meshResourceName].models.append( desc.models.size() - 1 );
     }
-
-    // create an entity
-    SimpleWorldDesc::EntityDesc & entity = desc.entities[filename];
-    entity.spatial.position.set( 0, 0, 0 );
-    entity.spatial.orientation.set( 0, 0, 0, 1 );
-    entity.spatial.bbox = ase.bbox;
-    entity.visual = 0;
 
     // setup bounding box of the whole scene
     desc.bbox = ase.bbox;
 
     return true;
+}
+
+// *****************************************************************************
+// Common local functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
+{
+    GN_ASSERT( desc.entities.end() != desc.entities.find( entityName ) );
+
+    const SimpleWorldDesc::EntityDesc & entityDesc = desc.entities.find(entityName)->second;
+
+    // recursively populate parent entities
+    Entity * parent = NULL;
+    if( !entityDesc.spatial.parent.empty() )
+    {
+        if( desc.entities.end() == desc.entities.find( entityDesc.spatial.parent ) )
+        {
+            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.spatial.parent.cptr() );
+        }
+        else
+        {
+            parent = sPopulateEntity( world, root, desc, entityDesc.spatial.parent );
+        }
+    }
+
+    // create a new entity instance
+    Entity * e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
+    if( !e ) return NULL;
+
+    // attach the entity to parent node or root node
+    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
+
+    // calculate bounding sphere
+    const Boxf & bbox = entityDesc.spatial.bbox;
+    Spheref bs;
+    calculateBoundingSphereFromBoundingBox( bs, bbox );
+    e->getNode<SpatialNode>()->setBoundingSphere( bs );
+
+    if( !entityDesc.models.empty() )
+    {
+        for( size_t i = 0; i < entityDesc.models.size(); ++i )
+        {
+            const ModelResourceDesc & modelDesc = desc.models[entityDesc.models[i]];
+
+            // this variable is used to keep a reference to mesh resource,
+            // to prevent it from being deleted, until the model is created.
+            AutoRef<MeshResource> mesh;
+
+            if( !modelDesc.meshResourceName.empty() )
+            {
+                mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
+                if( !mesh )
+                {
+                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.meshResourceName);
+
+                    if( desc.meshes.end() == meshIter )
+                    {
+                        GN_ERROR(sLogger)(
+                            "Model %d references a mesh '%s' that does not belong to this scene.",
+                            i,
+                            modelDesc.meshResourceName.cptr() );
+                        continue; // ignore the model
+                    }
+
+                    const MeshResourceDesc & meshDesc = meshIter->second;
+
+                    // create new mesh
+                    mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
+                    if( !mesh || !mesh->reset( &meshDesc ) ) continue;
+                }
+            }
+
+            AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
+            if( !model->reset( &modelDesc ) ) continue;
+
+            e->getNode<VisualNode>()->addModel( model );
+        }
+    }
+
+    return e;
 }
 
 // *****************************************************************************
@@ -404,7 +486,6 @@ void GN::util::SimpleWorldDesc::clear()
 
     meshes.clear();
     models.clear();
-    visuals.clear();
     entities.clear();
 }
 
@@ -455,61 +536,14 @@ Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
          ++i )
     {
         const StrA & entityName = i->first;
-        const EntityDesc & entityDesc = i->second;
 
-        Entity * e = world.createVisualEntity( entityName );
-        if( !e ) continue;
-
-        // attach the entity to root entity
-        e->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
-
-        // calculate bounding sphere
-        const Boxf & bbox = entityDesc.spatial.bbox;
-        Spheref bs;
-        calculateBoundingSphereFromBoundingBox( bs, bbox );
-        e->getNode<SpatialNode>()->setBoundingSphere( bs );
-
-        if( entityDesc.visual != (size_t)-1 )
+        if( !world.findEntity( entityName ) )
         {
-            const VisualDesc & visual = visuals[entityDesc.visual];
-
-            for( size_t i = 0; i < visual.models.size(); ++i )
-            {
-                const ModelResourceDesc & modelDesc = models[visual.models[i]];
-
-                // this variable is used to keep a reference to mesh resource,
-                // to prevent it from being deleted, until the model is created.
-                AutoRef<MeshResource> mesh;
-
-                if( !modelDesc.meshResourceName.empty() )
-                {
-                    mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
-                    if( !mesh )
-                    {
-                        std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = meshes.find(modelDesc.meshResourceName);
-
-                        if( meshes.end() == meshIter )
-                        {
-                            GN_ERROR(sLogger)(
-                                "Model %d references a mesh '%s' that does not belong to this scene.",
-                                i,
-                                modelDesc.meshResourceName.cptr() );
-                            continue; // ignore the model
-                        }
-
-                        const MeshResourceDesc & meshDesc = meshIter->second;
-
-                        // create new mesh
-                        mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
-                        if( !mesh || !mesh->reset( &meshDesc ) ) continue;
-                    }
-                }
-
-                AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
-                if( !model->reset( &modelDesc ) ) continue;
-
-                e->getNode<VisualNode>()->addModel( model );
-            }
+            sPopulateEntity( world, root, *this, entityName );
+        }
+        else
+        {
+            // The entity has been initialized, just skip it
         }
     }
 
