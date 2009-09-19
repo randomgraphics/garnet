@@ -1,22 +1,27 @@
 #include "pch.h"
 
 #if GN_BUILD_GPU_API_HAS_XENON
-#define DXERR_H   "dxerr9.h"
-#define DXERR_LIB "dxerr9.lib"
-#define DXERR_FUNC DXGetErrorDescription9A
-#elif GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
-#define DXERR_H   "dxerr.h"
-#define DXERR_LIB "dxerr.lib"
-#define DXERR_FUNC DXGetErrorDescriptionA
-#else
-static const char * DXERR_FUNC( SInt32 hr ) { return "unknown error code."; }
-#endif
 
-#include DXERR_H
-
+#include "dxerr9.h"
 #if GN_MSVC
-#pragma comment( lib, DXERR_LIB )
+#pragma comment( lib, "dxerr9.lib" )
 #endif
+#define DXERR_FUNC DXGetErrorDescription9A
+
+#elif GN_BUILD_GPU_API_HAS_D3D10 || GN_BUILD_GPU_API_HAS_D3D11
+
+#include "dxerr.h"
+#if GN_MSVC
+#pragma comment( lib, "dxerr9lib" )
+#endif
+#define DXERR_FUNC DXGetErrorDescriptionA
+
+#else
+
+static const char * DXERR_FUNC( SInt32 ) { return "unknown error code."; }
+
+#endif
+
 
 namespace GN
 {
