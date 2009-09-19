@@ -12,7 +12,7 @@
 
 #include "dxerr.h"
 #if GN_MSVC
-#pragma comment( lib, "dxerr9lib" )
+#pragma comment( lib, "dxerr.lib" )
 #endif
 #define DXERR_FUNC DXGetErrorDescriptionA
 
