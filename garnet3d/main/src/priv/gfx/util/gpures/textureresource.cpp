@@ -31,12 +31,22 @@ GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
+    if( NULL == filename )
+    {
+        GN_INFO(sLogger)( "Null filename string." );
+        return AutoRef<TextureResource>::NULLREF;
+    }
+
+    // Reuse existing resource, if possible
+    AutoRef<TextureResource> texres( db.findResource<TextureResource>( filename ) );
+    if( texres ) return texres;
+
     // convert to full (absolute) path
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
-    // Reuse existing resource, if possible
-    AutoRef<TextureResource> texres( db.findResource<TextureResource>( filename ) );
+    // Try search for existing resource again with full path
+    texres = db.findResource<TextureResource>( filename );
     if( texres ) return texres;
 
     // load new texture from file

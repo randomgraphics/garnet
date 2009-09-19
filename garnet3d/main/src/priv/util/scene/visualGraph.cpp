@@ -10,14 +10,6 @@ using namespace GN::util;
 static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
-// Local stuff
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-
-// *****************************************************************************
 // VisualGraph::Impl public methods
 // *****************************************************************************
 
@@ -28,20 +20,16 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
     : mOwner(owner)
     , mGdb(gdb)
 {
+    // initialize standard global uniforms
     for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
         AutoRef<UniformResource> & ur = mUniforms[type];
 
         if( type.desc().global )
         {
-            StrA fullname = strFormat( "GN.scene.visualgraph.stduniform.%s", type.desc().name );
-
-            ur = gdb.findOrCreateResource<UniformResource>( fullname );
-            if( ur && !ur->getUniform() )
-            {
-                AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
-                ur->setUniform( u );
-            }
+            ur = gdb.findOrCreateResource<UniformResource>( type.desc().name );
+            AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
+            ur->setUniform( u );
         }
     }
 }

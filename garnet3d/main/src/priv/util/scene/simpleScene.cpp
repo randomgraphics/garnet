@@ -47,9 +47,9 @@ static bool sHasTangent( const VertexFormat & vf )
 }
 
 ///
-/// Determine the best effect that can show the mesh, return NULL for failure
+/// Determine the best model template that can show the mesh, return NULL for failure
 ///
-static const char * sDetermineBestEffect( const MeshResourceDesc & m )
+static const ModelResourceDesc * sDetermineBestModelTemplate( const MeshResourceDesc & m )
 {
     const VertexFormat & vf = m.vtxfmt;
 
@@ -63,23 +63,24 @@ static const char * sDetermineBestEffect( const MeshResourceDesc & m )
     if( !sHasNormal( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no normal." );
-        return "media::/effect/wireframe.effect.xml";
+        return &SimpleWireframeModel::DESC;
     }
 
     if( !sHasTex0( vf ) )
     {
         GN_WARN(sLogger)( "The mesh has no texture coordinate." );
-        return "media::/effect/diffuse.effect.xml";
+        return &SimpleDiffuseModel::DESC;
     }
 
-    // use normal map, if the mesh has both normal and tangent.
+    // Program reaches here, means that the mesh has position, norml and texcoord.
+
     if( sHasTangent( vf ) )
     {
-        return "media::/effect/normalmap.effect.xml";
+        return &SimpleNormalMapModel::DESC;
     }
     else
     {
-        return "media::/effect/diffuse.effect.xml";
+        return &SimpleDiffuseModel::DESC;
     }
 }
 
@@ -341,41 +342,25 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
 
         const AseMesh & asemesh = ase.meshes[subset.meshid];
 
-        ModelResourceDesc model;
+        // determine the model template
+        const ModelResourceDesc * modelTemplate = sDetermineBestModelTemplate( asemesh );
+        if( NULL == modelTemplate ) continue;
 
-        // determine the effect
-        model.effectResourceName = sDetermineBestEffect( asemesh );
-        if( model.effectResourceName.empty() ) continue;
+        // initialize the model descriptor based on the template
+        ModelResourceDesc model = *modelTemplate;
+        model.meshResourceName = FULL_MESH_NAME(asemesh.name);
+        model.subset = subset;
 
-        // setup uniforms
-        model.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
-        model.uniforms["MATRIX_WORLD"].size = sizeof(Matrix44f);
-        model.uniforms["MATRIX_WORLD_IT"].size = sizeof(Matrix44f);
-        model.uniforms["LIGHT0_POSITION"].size = sizeof(Vector4f);
-        model.uniforms["LIGHT0_DIFFUSE"].size = sizeof(Vector4f);
-        model.uniforms["ALBEDO_COLOR"].size = sizeof(Vector4f);
-        model.uniforms["ALBEDO_COLOR"].initialValue.resize(sizeof(Vector4f));
-        Vector4f WHITE(1,1,1,1);
-        memcpy( model.uniforms["ALBEDO_COLOR"].initialValue.cptr(), &WHITE, sizeof(WHITE) );
-
-        // bind color and texture to effect
+        // associate texture to the model
         const AseMaterial & am = ase.materials[subset.matid];
-        if( !am.mapdiff.bitmap.empty() )
+        if( model.hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
         {
             model.textures["ALBEDO_TEXTURE"].resourceName = am.mapdiff.bitmap;
         }
-        if( !am.mapbump.bitmap.empty() )
+        if( model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty() )
         {
             model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap;
         }
-
-        // TODO: setup uniforms
-
-        // attach mesh
-        model.meshResourceName = FULL_MESH_NAME(asemesh.name);
-
-        // setup subset
-        model.subset = subset;
 
         // add model to model list
         desc.models.append( model );

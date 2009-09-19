@@ -89,7 +89,7 @@ namespace GN { namespace util
 
         //@}
 
-        void          clear();
+        void          reset(); ///< reset the world to its initial state
 
         Entity      * createEntity( const char * name = NULL );
         void          deleteEntity( const char * name );

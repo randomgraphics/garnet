@@ -655,12 +655,16 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
         return AutoRef<EffectResource>::NULLREF;
     }
 
+    // Reuse existing resource, if possible
+    AutoRef<EffectResource> resource( db.findResource<EffectResource>( filename ) );
+    if( resource ) return resource;
+
     // convert to full (absolute) path
     StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
-    // Reuse existing resource, if possible
-    AutoRef<EffectResource> resource( db.findResource<EffectResource>( filename ) );
+    // Try search for existing resource again with full path
+    resource = db.findResource<EffectResource>( filename );
     if( resource ) return resource;
 
     // load new effect from file

@@ -12,6 +12,394 @@ using namespace GN::gfx;
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
+// Diffuse effect
+// *****************************************************************************
+
+static const char * DIFFUSE_VS_HLSL9 =
+    "uniform float4x4 pvw; \n"
+    "uniform float4x4 world; \n"
+    "uniform float4x4 wit; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "struct VSINPUT \n"
+    "{ \n"
+    "   float4 position  : POSITION; \n"
+    "   float3 normal    : NORMAL; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "VSOUTPUT main( in VSINPUT i ) { \n"
+    "   VSOUTPUT o; \n"
+    "   o.hpos      = mul( pvw, i.position ); \n"
+    "   o.pos_world = mul( world, i.position ); \n"
+    "   o.nml_world = mul( wit, float4(i.normal,0) ).xyz; \n"
+    "   o.texcoords = i.texcoords; \n"
+    "   return o; \n"
+    "}";
+
+static const char * DIFFUSE_PS_HLSL9 =
+    "uniform float4 lightpos; // light positin in world space \n"
+    "uniform float4 lightColor; \n"
+    "uniform float4 albedoColor; \n"
+    "sampler s0; \n"
+    "Texture2D<float4> t0; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
+    "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
+    "   float3  N    = normalize( i.nml_world ); \n"
+    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+    "}";
+
+static const char * DIFFUSE_VS_GLSL =
+    "uniform mat4 pvw; \n"
+    "uniform mat4 world; \n"
+    "uniform mat4 wit; \n"
+    "varying vec4 pos_world; // vertex position in world space \n"
+    "varying vec3 nml_world; // vertex normal in world space \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   gl_Position = pvw * gl_Vertex; \n"
+    "   pos_world   = world * gl_Vertex; \n"
+    "   nml_world   = (wit * vec4(gl_Normal,0)).xyz; \n"
+    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "}";
+
+static const char * DIFFUSE_PS_GLSL =
+    "uniform vec4 lightpos; // light positin in world space \n"
+    "uniform vec4 lightColor; \n"
+    "uniform vec4 albedoColor; \n"
+    "uniform sampler2D t0; \n"
+    "varying vec4 pos_world; // position in world space \n"
+    "varying vec3 nml_world; // normal in world space \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
+    "   vec3  N      = normalize( nml_world ); \n"
+    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   vec4  tex    = texture2D( t0, texcoords ); \n"
+    "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+    "}";
+
+//
+//
+// -----------------------------------------------------------------------------
+static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb )
+{
+    EffectResourceDesc ed;
+
+    ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["MATRIX_WORLD"];
+    ed.uniforms["MATRIX_WORLD_IT"];
+    ed.uniforms["LIGHT0_POSITION"];
+    ed.uniforms["LIGHT0_DIFFUSE"];
+    ed.uniforms["ALBEDO_COLOR"];
+    ed.textures["ALBEDO_TEXTURE"];
+
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = DIFFUSE_VS_GLSL;
+    ed.gpuprograms["glsl"].gpd.ps.source = DIFFUSE_PS_GLSL;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.gpuprograms["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
+    ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
+
+    ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.vs.source = DIFFUSE_VS_HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.vs.entry  = "main";
+    ed.gpuprograms["hlsl9"].gpd.ps.source = DIFFUSE_PS_HLSL9;
+    ed.gpuprograms["hlsl9"].gpd.ps.entry  = "main";
+    ed.gpuprograms["hlsl9"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["hlsl9"].uniforms["world"] = "MATRIX_WORLD";
+    ed.gpuprograms["hlsl9"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.gpuprograms["hlsl9"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.gpuprograms["hlsl9"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
+    ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.techniques["hlsl9"].passes.resize( 1 );
+    ed.techniques["hlsl9"].passes[0].gpuprogram = "hlsl9";
+
+    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@DIFFUSE" );
+
+    e->reset( &ed );
+
+    return e;
+}
+
+// *****************************************************************************
+// Wireframe effect
+// *****************************************************************************
+
+static const char * WIREFRAME_VS_HLSL9 =
+    "uniform float4x4 pvw; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "}; \n"
+    "struct VSINPUT \n"
+    "{ \n"
+    "   float4 position  : POSITION; \n"
+    "}; \n"
+    "VSOUTPUT main( in VSINPUT i ) { \n"
+    "   VSOUTPUT o; \n"
+    "   o.hpos      = mul( pvw, i.position ); \n"
+    "   return o; \n"
+    "}";
+
+static const char * WIREFRAME_PS_HLSL9 =
+    "uniform float4 color; \n"
+    "float4 main() : COLOR0 { \n"
+    "   return color; \n"
+    "}";
+
+static const char * WIREFRAME_VS_GLSL =
+    "uniform mat4 pvw; \n"
+    "void main() { \n"
+    "   gl_Position = pvw * gl_Vertex; \n"
+    "}";
+
+static const char * WIREFRAME_PS_GLSL =
+    "uniform vec4 color; \n"
+    "void main() { \n"
+    "   gl_FragColor = color; \n"
+    "}";
+
+//
+//
+// -----------------------------------------------------------------------------
+static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & gdb )
+{
+    EffectResourceDesc ed;
+
+    ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["COLOR"];
+
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = WIREFRAME_VS_GLSL;
+    ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].uniforms["color"] = "COLOR";
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
+
+    ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.source = WIREFRAME_VS_HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
+    ed.gpuprograms["hlsl"].gpd.ps.source = WIREFRAME_PS_HLSL9;
+    ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
+    ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR";
+    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
+
+    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
+
+    e->reset( &ed );
+
+    return e;
+}
+
+// *****************************************************************************
+// Normalmap effect
+// *****************************************************************************
+
+static const char * NORMALMAP_VS_HLSL9 =
+    "uniform float4x4 pvw; \n"
+    "uniform float4x4 world; \n"
+    "uniform float4x4 wit; \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float3 tan_world : TANGENT_WORLD; // vertex tangent in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "struct VSINPUT \n"
+    "{ \n"
+    "   float4 position  : POSITION; \n"
+    "   float3 normal    : NORMAL; \n"
+    "   float3 tangent   : TANGENT; \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "VSOUTPUT main( in VSINPUT i ) { \n"
+    "   VSOUTPUT o; \n"
+    "   o.hpos      = mul( pvw, i.position ); \n"
+    "   o.pos_world = mul( world, i.position ); \n"
+    "   o.nml_world = mul( wit, float4(i.normal,0) ).xyz; \n"
+    "   o.tan_world = mul( wit, float4(i.tangent,0) ).xyz; \n"
+    "   o.texcoords = i.texcoords; \n"
+    "   return o; \n"
+    "}";
+
+static const char * NORMALMAP_PS_HLSL9 =
+    "uniform float4 lightpos; // light positin in world space \n"
+    "uniform float4 lightColor; \n"
+    "uniform float4 albedoColor; \n"
+    "sampler s0; \n"
+    "Texture2D<float4> t0; // albedo texture \n"
+    "Texture2D<float2> t1; // normal texture \n"
+    "struct VSOUTPUT \n"
+    "{ \n"
+    "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
+    "   float4 pos_world : POS_WORLD;    // vertex position in world space \n"
+    "   float3 nml_world : NORMAL_WORLD; // vertex normal in world space \n"
+    "   float3 tan_world : TANGENT_WORLD; // vertex tangent in world space \n"
+    "   float2 texcoords : TEXCOORD; \n"
+    "}; \n"
+    "float4 main( in VSOUTPUT i ) : COLOR0 { \n"
+    "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
+    "   float3  N    = normalize( i.nml_world ); \n"
+    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   float4  tex  = t0.Sample( s0, i.texcoords ) + t1.Sample( s0, i.texcoords ).xyyy; \n"
+    "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+    "}";
+
+static const char * NORMALMAP_VS_GLSL =
+    "uniform mat4 pvw; \n"
+    "uniform mat4 world; \n"
+    "uniform mat4 wit; \n"
+    "varying vec4 pos_world; // vertex position in world space \n"
+    "varying vec3 nml_world; // vertex normal in world space \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   gl_Position = pvw * gl_Vertex; \n"
+    "   pos_world   = world * gl_Vertex; \n"
+    "   nml_world   = (wit * vec4(gl_Normal,0)).xyz; \n"
+    "   texcoords   = gl_MultiTexCoord0.xy; \n"
+    "}";
+
+static const char * NORMALMAP_PS_GLSL =
+    "uniform vec4 lightpos; // light positin in world space \n"
+    "uniform vec4 lightColor; \n"
+    "uniform vec4 albedoColor; \n"
+    "uniform sampler2D t0; // albedo texture \n"
+    "uniform sampler2D t1; // normal texture \n"
+    "varying vec4 pos_world; // position in world space \n"
+    "varying vec3 nml_world; // normal in world space \n"
+    "varying vec2 texcoords; \n"
+    "void main() { \n"
+    "   vec3  L      = normalize( (lightpos - pos_world).xyz ); \n"
+    "   vec3  N      = normalize( nml_world ); \n"
+    "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
+    "   vec4  tex    = texture2D( t0, texcoords ) + texture2D( t1, texcoords ); \n"
+    "   gl_FragColor = vec4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
+    "}";
+
+//
+//
+// -----------------------------------------------------------------------------
+static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & gdb )
+{
+    EffectResourceDesc ed;
+
+    ed.uniforms["MATRIX_PVW"];
+    ed.uniforms["MATRIX_WORLD"];
+    ed.uniforms["MATRIX_WORLD_IT"];
+    ed.uniforms["LIGHT0_POSITION"];
+    ed.uniforms["LIGHT0_DIFFUSE"];
+    ed.uniforms["ALBEDO_COLOR"];
+    ed.textures["ALBEDO_TEXTURE"];
+    ed.textures["NORMAL_TEXTURE"];
+
+    ed.gpuprograms["glsl"].gpd.lang = GpuProgramLanguage::GLSL;
+    ed.gpuprograms["glsl"].gpd.vs.source = NORMALMAP_VS_GLSL;
+    ed.gpuprograms["glsl"].gpd.ps.source = NORMALMAP_PS_GLSL;
+    ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["glsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.gpuprograms["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
+    ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
+    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
+
+    ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.source = NORMALMAP_VS_HLSL9;
+    ed.gpuprograms["hlsl"].gpd.vs.entry  = "main";
+    ed.gpuprograms["hlsl"].gpd.ps.source = NORMALMAP_PS_HLSL9;
+    ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
+    ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
+    ed.gpuprograms["hlsl"].uniforms["world"] = "MATRIX_WORLD";
+    ed.gpuprograms["hlsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
+    ed.gpuprograms["hlsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
+    ed.gpuprograms["hlsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
+    ed.gpuprograms["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
+    ed.gpuprograms["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
+    ed.gpuprograms["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
+    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
+
+    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@NORMAL_MAP" );
+
+    e->reset( &ed );
+
+    return e;
+}
+
+// *****************************************************************************
+// Default Textures
+// *****************************************************************************
+
+//
+// create a pure white 2x2 texture
+// -----------------------------------------------------------------------------
+static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb )
+{
+    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@WHITE" );
+    AutoRef<Texture> t( gdb.gpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
+    tr->setTexture( t );
+    return tr;
+}
+
+//
+// create a pure black 2x2 texture
+// -----------------------------------------------------------------------------
+static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb )
+{
+    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@BLACK" );
+    AutoRef<Texture> t( gdb.gpu().create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    UInt32 black[4] = { 0, 0, 0, 0 };
+    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, black, SurfaceUpdateFlag::DEFAULT );
+    tr->setTexture( t );
+    return tr;
+}
+
+//
+// create a normal map texture for flat surface
+// -----------------------------------------------------------------------------
+static AutoRef<TextureResource> sRegisterFlatNormalMap( GpuResourceDatabase & gdb )
+{
+    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@FLAT_NORMAL_MAP" );
+    AutoRef<Texture> t(  gdb.gpu().create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM ) );
+    UInt32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
+    t->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, up, SurfaceUpdateFlag::DEFAULT );
+    tr->setTexture( t );
+    return tr;
+}
+
+
+// *****************************************************************************
 // GpuResource::Impl public methods
 // *****************************************************************************
 
@@ -295,7 +683,13 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
     if( !registerEffectResourceFactory( mDatabase ) ) return false;
     if( !registerModelResourceFactory( mDatabase ) ) return false;
 
-    // TODO: create some built-in resources
+    // create some built-in resources
+    mBuiltInResources.append( sRegisterDiffuseEffect( mDatabase ) );
+    mBuiltInResources.append( sRegisterWireframeEffect( mDatabase ) );
+    mBuiltInResources.append( sRegisterNormalMapEffect( mDatabase ) );
+    mBuiltInResources.append( sRegisterWhiteTexture( mDatabase ) );
+    mBuiltInResources.append( sRegisterBlackTexture( mDatabase ) );
+    mBuiltInResources.append( sRegisterFlatNormalMap( mDatabase ) );
 
     return true;
 }
