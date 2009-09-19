@@ -29,7 +29,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::World::Impl::clear()
+void GN::util::World::Impl::reset()
 {
     deleteAllEntities();
 }
@@ -185,9 +185,7 @@ const char  * GN::util::World::Impl::getEntityName( int id ) const
 GN::util::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
 {
     mImpl = new Impl( *this, gdb );
-
-    // this will register all built-in factories
-    mImpl->clear();
+    mImpl->reset();
 }
 
 //
@@ -260,7 +258,7 @@ Entity * GN::util::World::createLightEntity( const char * name )
 gfx::GpuResourceDatabase & GN::util::World::gdb() const { return mImpl->gdb(); }
 SpatialGraph             & GN::util::World::spatialGraph() const { return mImpl->spatialGraph(); }
 VisualGraph              & GN::util::World::visualGraph() const { return mImpl->visualGraph(); }
-void                       GN::util::World::clear() { return mImpl->clear(); }
+void                       GN::util::World::reset() { return mImpl->reset(); }
 Entity                   * GN::util::World::createEntity( const char * name ) { return mImpl->createEntity( name ); }
 void                       GN::util::World::deleteEntity( const char * name ) { return mImpl->deleteEntity( name ); }
 void                       GN::util::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }

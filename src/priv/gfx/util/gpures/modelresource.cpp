@@ -957,15 +957,27 @@ GN::gfx::ModelResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
-    filename = abspath;
+    if( NULL == filename )
+    {
+        GN_INFO(sLogger)( "Null filename string." );
+        return AutoRef<ModelResource>::NULLREF;
+    }
 
+    // Reuse existing resource, if possible
     AutoRef<ModelResource> m( db.findResource<ModelResource>( filename ) );
     if( m ) return m;
 
+    // convert to full (absolute) path
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = abspath;
+
+    // Try search for existing resource again with full path
+    m = db.findResource<ModelResource>( filename );
+    if( m ) return m;
+
     ModelResourceDesc desc;
-    desc.clear();
     //if( !loadFromXmlFile( desc, filename ) ) return 0;
+    GN_UNIMPL_WARNING();
 
     m = db.createResource<ModelResource>( abspath );
     if( m ) m->reset( &desc );

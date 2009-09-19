@@ -28,7 +28,7 @@ namespace GN { namespace util
         {
         }
 
-        ~Impl() { clear(); }
+        ~Impl() { reset(); }
 
         //@}
 
@@ -44,7 +44,7 @@ namespace GN { namespace util
         SpatialGraph             & spatialGraph() const { return mSpatialGraph; }
         VisualGraph              & visualGraph() const { return mVisualGraph; }
 
-        void          clear();
+        void          reset();
         Entity      * createEntity( const char * name = NULL );
         void          deleteEntity( const char * name );
         void          deleteEntity( int id );

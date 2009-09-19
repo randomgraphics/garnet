@@ -650,6 +650,16 @@ namespace GN { namespace gfx
         void clear();
 
         ///
+        /// check if the model has a texture parameter with specific name
+        ///
+        bool hasTexture( const char * name ) const { return textures.end() != textures.find( name ); }
+
+        ///
+        /// check if the model has a uniform parameter with specific name
+        ///
+        bool hasUniform( const char * name ) const { return uniforms.end() != uniforms.find( name ); }
+
+        ///
         /// setup the descriptor from XML
         ///
         bool loadFromXmlNode( const XmlNode & root, const char * basedir );

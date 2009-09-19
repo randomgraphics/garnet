@@ -44,6 +44,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        /// The descriptor that is used to initialize this model
+        static const ModelResourceDesc DESC;
+
         //@{
         const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
         ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
@@ -107,6 +110,10 @@ namespace GN { namespace gfx
     public:
 
         //@{
+
+        /// The descriptor that is used to initialize this model
+        static const ModelResourceDesc DESC;
+
         const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
         ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
@@ -175,6 +182,10 @@ namespace GN { namespace gfx
     public:
 
         //@{
+
+        /// The descriptor that is used to initialize this model
+        static const ModelResourceDesc DESC;
+
         const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
         ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
         void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
