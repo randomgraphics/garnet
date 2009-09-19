@@ -31,17 +31,27 @@ static bool sSaveToDirectory( const SimpleWorldDesc & desc, const char * dirname
     dirname = fulldir;
 
     // write meshes
+    int meshindex = 0;
+    std::map<StrA,StrA> meshNameMapping;
     for( std::map<StrA,MeshResourceDesc>::const_iterator i = desc.meshes.begin();
         i != desc.meshes.end();
         ++i )
     {
-        const StrA & meshName = i->first;
+        const StrA & oldMeshName = i->first;
         const MeshResourceDesc & mesh = i->second;
 
-        StrA fullMeshName = strFormat( "%s\\%s.mesh.bin", dirname, meshName.cptr() );
+        StrA newMeshName = strFormat( "%d.mesh.bin", meshindex );
 
-        if( !mesh.saveToFile( fullMeshName ) ) return false;
+        if( !mesh.saveToFile( fulldir + "\\" + newMeshName ) ) return false;
+
+        meshNameMapping[oldMeshName] = newMeshName;
+
+        ++meshindex;
     }
+
+    // write models
+
+    // write entities
 
     return true;
 }
