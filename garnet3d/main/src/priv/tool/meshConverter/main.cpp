@@ -7,28 +7,32 @@ using namespace GN::util;
 static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 
 static const char * inputFile = "media::\\boxes\\boxes.ase";
-static const char * outputDir = "app::";
+static const char * outputFile = "app::boxes.scene.xml";
 
 ///
 /// write world description to file
 // -----------------------------------------------------------------------------
-static bool sSaveToDirectory( const SimpleWorldDesc & desc, const char * dirname )
+bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
 {
     // check dirname
-    if( NULL == dirname )
+    if( NULL == filename )
     {
         GN_ERROR(sLogger)( "NULL directory name" );
         return false;
     }
+
+    // convert to full path
+    StrA fullpath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = fullpath;
+    StrA dirname = fs::dirName( fullpath );
+
     if( !fs::isDir( dirname ) )
     {
-        GN_ERROR(sLogger)( "%s is not a directory", dirname );
+        GN_ERROR(sLogger)( "%s is not a directory", dirname.cptr() );
         return false;
     }
 
-    // convert to full path
-    StrA fulldir = fs::resolvePath( fs::getCurrentDir(), dirname );
-    dirname = fulldir;
+    const SimpleWorldDesc & desc = *this;
 
     // write meshes
     int meshindex = 0;
@@ -42,18 +46,37 @@ static bool sSaveToDirectory( const SimpleWorldDesc & desc, const char * dirname
 
         StrA newMeshName = strFormat( "%d.mesh.bin", meshindex );
 
-        if( !mesh.saveToFile( fulldir + "\\" + newMeshName ) ) return false;
+        if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
 
         meshNameMapping[oldMeshName] = newMeshName;
 
         ++meshindex;
     }
 
+    // create a new XML document
+    XmlDocument xmldoc;
+    XmlNode * root = xmldoc.createNode(XML_ELEMENT);
+
     // write models
+    for( size_t i = 0; i < desc.models.size(); ++i )
+    {
+        ModelResourceDesc model = desc.models[i];
 
-    // write entities
+        std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.meshResourceName );
+        if( iter != meshNameMapping.end() )
+        {
+            model.meshResourceName = iter->second;
+        }
 
-    return true;
+        if( !model.saveToXmlNode( *root, dirname ) ) return false;
+    }
+
+    // TODO: write entities
+
+    // write XML document
+    AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
+    if( !fp ) return false;
+    return xmldoc.writeToFile( *fp, *root, false );
 }
 
 //
@@ -71,8 +94,8 @@ int main( int argc, const char * argv[] )
     GN_INFO(sLogger)( "Load from file     : %s", inputFile );
     if( !swd.loadFromFile( inputFile ) ) return -1;
 
-    GN_INFO(sLogger)( "Write to directory : %s", outputDir );
-    if( !sSaveToDirectory( swd, outputDir ) ) return -1;
+    GN_INFO(sLogger)( "Write to directory : %s", outputFile );
+    if( !swd.saveToFile( outputFile ) ) return -1;
 
     GN_INFO(sLogger)( "Conversion done successfully." );
     return 0;

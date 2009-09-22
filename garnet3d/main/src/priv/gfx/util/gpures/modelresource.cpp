@@ -99,9 +99,79 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
 // -----------------------------------------------------------------------------
 bool GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root, const char * basedir ) const
 {
-    GN_UNUSED_PARAM( root );
-    GN_UNUSED_PARAM( basedir );
-    GN_UNIMPL_WARNING();
+    XmlElement * rootElement = root.toElement();
+    if( !rootElement )
+    {
+        GN_ERROR(sLogger)( "Root node must be a XML element." );
+        return false;
+    }
+
+    if( NULL == basedir )
+    {
+        GN_ERROR(sLogger)( "NULL basedir pointer." );
+        return false;
+    }
+
+    XmlDocument & doc = rootElement->doc;
+
+    XmlElement * modelNode = doc.createNode(XML_ELEMENT)->toElement();
+
+    // create effect node
+    XmlElement * effectNode = doc.createNode(XML_ELEMENT)->toElement();
+    effectNode->name = "effect";
+    effectNode->parent = modelNode;
+    effectNode->sibling = modelNode->child;
+    modelNode->child = effectNode;
+    if( effectResourceName.empty() )
+    {
+        if( !effectResourceDesc.saveToXmlNode( *effectNode ) ) return false;
+    }
+    else
+    {
+        XmlAttrib * a = doc.createAttrib();
+        a->name = "ref";
+        a->value = fs::relPath( effectResourceName, basedir );
+        a->node = effectNode;
+        a->next = effectNode->attrib;
+        effectNode->attrib = a;
+    }
+
+    // create mesh node
+    XmlElement * meshNode = doc.createNode(XML_ELEMENT)->toElement();
+    meshNode->name = "mesh";
+    meshNode->parent = modelNode;
+    meshNode->sibling = modelNode->child;
+    modelNode->child = meshNode;
+    if( meshResourceName.empty() )
+    {
+        if( !meshResourceDesc.saveToXmlNode( *effectNode ) ) return false;
+    }
+    else
+    {
+        XmlAttrib * a = doc.createAttrib();
+        a->name = "ref";
+        a->value = fs::relPath( meshResourceName, basedir );
+        a->node = meshNode;
+        a->next = meshNode->attrib;
+        meshNode->attrib = a;
+    }
+
+    // create texture nodes
+    for( std::map<StrA,ModelTextureDesc>::const_iterator i = textures.begin();
+         i != textures.end();
+         ++i )
+    {
+        const StrA             & name    = i->first;
+        const ModelTextureDesc & texdesc = i->second;
+
+        XmlElement * textureNode = doc.createNode(XML_ELEMENT)->toElement();
+        textureNode->name = "texture";
+        textureNode->parent = modelNode;
+        textureNode->sibling = modelNode->child;
+        modelNode->child = textureNode;
+        GN_UNIMPL();
+    }
+
     return false;
 }
 
