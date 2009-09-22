@@ -457,7 +457,12 @@ namespace GN { namespace util
         ///
         /// load world description from external file
         ///
-        bool loadFromFile( const char * file );
+        bool loadFromFile( const char * filename );
+
+        ///
+        /// Save the world to specific directory
+        ///
+        bool saveToFile( const char * filename );
 
         /// create entities in the world according to the descriptor.
         /// Return the root spatial node represent the whole world.
