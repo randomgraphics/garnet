@@ -1,28 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <effect>
-	<!-- Shadow mapping -->
     <parameters>
-        <uniform name="pvw" type="MATRIX44" count="1"/>
-        <uniform name="invworld" type="MATRIX44" count="1" desc="inverse world matrix"/>
-        <uniform name="light0_pos" type="VECTOR4" count="1" desc="light position in world space"/>
-        <uniform name="light0_pvw" type="MATRIX44" count="1"/> <!-- transform from object space to light space -->
+        <uniform name="MATRIX_PVW" type="MATRIX44" count="1"/>
+        <uniform name="MATRIX_WORLD_INV" type="MATRIX44" count="1" desc="inverse world matrix"/>
+        <uniform name="LIGHT0_POS" type="VECTOR4" count="1" desc="light position in world space"/>
+        <uniform name="LIGHT0_PVW" type="MATRIX44" count="1"/> <!-- transform from object space to light space -->
         <texture name="shadowmap"/>
     </parameters>
-    <shaders>
-
-        <!-- D3D shaders -->
-
-        <shader name="d3dvs" type="VS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="vs_1_1"/>
-                </token>
-            </prerequisites>
-            <uniref binding="pvw" ref="pvw"/>
-            <uniref binding="invworld" ref="invworld"/>
-            <uniref binding="light0_pos" ref="light0_pos"/>
-            <uniref binding="light0_pvw" ref="light0_pvw"/>
-            <code lang="D3D_HLSL" hints="...">
+    <gpuprograms>
+        <gpuprogram name="d3d" lang="HLSL9">
+            <uniref shaderParameter="pvw" effectParameter="MATRIX_PVW"/>
+            <uniref shaderParameter="invworld" effectParameter="MATRIX_WORLD_INV"/>
+            <uniref shaderParameter="light0_pos" effectParameter="LIGHT0_POS"/>
+            <uniref shaderParameter="light0_pvw" effectParameter="LIGHT0_PVW"/>
+            <texref shaderParameter="shadowmap" effectParameter="shadowmap"/>
+            <vs entry="main">
 <![CDATA[
 struct vsinput
 {
@@ -48,7 +40,7 @@ vsoutput main( vsinput vi )
 	// get light direction in object space
 	float3 lightpos_os = mul( invworld, light0_pos );
 	float3 lightdir_os = lightpos_os - vi.pos.xyz;
-    
+
 	vo.pos    = mul( pvw, vi.pos );
 	vo.shadow = mul( light0_pvw, vi.pos );
 	vo.nrm.xyz  = vi.nrm;
@@ -60,24 +52,16 @@ vsoutput main( vsinput vi )
 }
 ]]>
             </code>
-        </shader>
-
-        <shader name="d3dps" type="PS">
-            <prerequisites>
-                <token type="opcode" value="CHECK_SHADER_PROFILE">
-                    <token type="values" value="ps_1_1"/>
-                </token>
-            </prerequisites>
-            <texref stage="0" ref="shadowmap"/>
-            <code lang="D3D_HLSL">
+            <ps entry="main">
 <![CDATA[
 struct vsoutput
 {
+	float4 pos    : POSITION;
 	float4 shadow : TEXCOORD0; // shadow texture cooridnate
 	float4 nrm    : TEXCOORD1; // xyz: normal in object space;         w : texcoord.u
 	float4 lpos   : TEXCOORD2; // xyz: light position in object space; w : texcoord.v
 };
-sampler shadowmap : register(s0);
+sampler shadowmap;
 float4 main( vsoutput vi ) : COLOR0
 {
 	float shadow = tex2Dproj( shadowmap, vi.shadow );
@@ -87,20 +71,10 @@ float4 main( vsoutput vi ) : COLOR0
 ]]>
             </code>
         </shader>
-
-        <!-- Fixed functional pipeline -->
-        <shader name="fixvs" type="VS"/>
-        <shader name="fixps" type="PS"/>
-        <shader name="fixgs" type="GS"/>
-
-    </shaders>
-
+    </gpuprograms>
     <techniques>
         <technique name="d3d">
-            <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
-        </technique>
-        <technique name="ffp">
-            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
+            <pass gpuprogram="d3d"/>
         </technique>
     </techniques>
 </effect>
