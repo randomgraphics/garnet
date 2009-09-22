@@ -202,7 +202,7 @@ static void sParseFail( ParseTracer * tracer, const char * errInfo )
 
 static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
 {
-    GN::XmlNode * n = tracer->doc->createNode( type );
+    GN::XmlNode * n = tracer->doc->createNode( type, NULL );
     if( 0 == n )
     {
         sParseFail(
@@ -212,20 +212,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     }
 
     // update tree links
-    n->parent = tracer->parent;
-    n->prev = tracer->prev;
-    n->next = NULL;
-    n->child = NULL;
-    if( n->prev )
-    {
-        // this is not the first node in this level. Let its previous next points to this.
-        n->prev->next = n;
-    }
-    else if( n->parent )
-    {
-        // this is the first node in this level. Let the parent node points to this.
-        n->parent->child = n;
-    }
+    n->setParent( tracer->parent, tracer->prev );
 
     // update tracer
     tracer->parent = n;
@@ -285,31 +272,18 @@ void XMLCALL sStartElementHandler(
     e->name = name;
 
     // create attribute list
-    GN::XmlAttrib * lastAttrib = NULL;
     while( *atts )
     {
-        GN::XmlAttrib * a = tracer->doc->createAttrib();
+        GN::XmlAttrib * a = tracer->doc->createAttrib( e );
+
         if( 0 == a )
         {
             sParseFail( tracer, "Fail to create attribute." );
             return;
         }
 
-        a->node = e;
-        a->prev = lastAttrib;
-        a->next = NULL;
         a->name = atts[0];
         a->value = atts[1];
-
-        if( lastAttrib )
-        {
-            lastAttrib->next = a;
-        }
-        else
-        {
-            e->attrib = a;
-        }
-        lastAttrib = a;
 
         atts += 2;
     }
@@ -437,6 +411,7 @@ void GN::XmlAttrib::setOwner( XmlElement * newOwner )
         {
             newOwner->attrib->prev = this;
         }
+        newOwner->attrib = this;
     }
 }
 
@@ -447,13 +422,19 @@ void GN::XmlAttrib::setOwner( XmlElement * newOwner )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlNode::setParent( XmlNode * newParent )
+void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
 {
     if( parent == newParent ) return;
 
-    if( &parent->doc != &this->doc )
+    if( newParent && &newParent->doc != &this->doc )
     {
         GN_ERROR(sLogger)( "Can not link nodes belong to different document." );
+        return;
+    }
+
+    if( newPrev && newPrev->parent != newParent )
+    {
+        GN_ERROR(sLogger)( "New previous node does not belong to the new parent node." );
         return;
     }
 
@@ -472,11 +453,25 @@ void GN::XmlNode::setParent( XmlNode * newParent )
     if( newParent )
     {
         this->parent = newParent;
-        this->next = newParent->child;
 
-        if( newParent->child )
+        if( newPrev )
         {
-            newParent->child->prev = this;
+            this->prev = newPrev;
+            this->next = newPrev->next;
+            if( newPrev->next )
+            {
+                newPrev->next->prev = this;
+            }
+            newPrev->next = this;
+        }
+        else
+        {
+            this->next = newParent->child;
+            if( newParent->child )
+            {
+                newParent->child->prev = this;
+            }
+            newParent->child = this;
         }
     }
 }

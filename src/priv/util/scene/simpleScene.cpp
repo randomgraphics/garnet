@@ -522,6 +522,159 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
     }
 }
 
+///
+/// write world description to file
+// -----------------------------------------------------------------------------
+bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
+{
+    // check dirname
+    if( NULL == filename )
+    {
+        GN_ERROR(sLogger)( "NULL directory name" );
+        return false;
+    }
+
+    // convert to full path
+    StrA fullpath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = fullpath;
+    StrA dirname = fs::dirName( fullpath );
+
+    if( !fs::isDir( dirname ) )
+    {
+        GN_ERROR(sLogger)( "%s is not a directory", dirname.cptr() );
+        return false;
+    }
+
+    const SimpleWorldDesc & desc = *this;
+
+    // write meshes
+    int meshindex = 0;
+    std::map<StrA,StrA> meshNameMapping;
+    for( std::map<StrA,MeshResourceDesc>::const_iterator i = desc.meshes.begin();
+        i != desc.meshes.end();
+        ++i )
+    {
+        const StrA & oldMeshName = i->first;
+        const MeshResourceDesc & mesh = i->second;
+
+        StrA newMeshName = strFormat( "%d.mesh.bin", meshindex );
+
+        if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
+
+        meshNameMapping[oldMeshName] = newMeshName;
+
+        ++meshindex;
+    }
+
+    // create a new XML document
+    XmlDocument xmldoc;
+    XmlNode * root = xmldoc.createNode(XML_ELEMENT, NULL);
+    root->toElement()->name = "simpleWorld";
+
+    // write models
+    XmlElement * models = xmldoc.createNode( XML_ELEMENT, root )->toElement();
+    models->name = "models";
+    for( size_t i = 0; i < desc.models.size(); ++i )
+    {
+        ModelResourceDesc model = desc.models[i];
+
+        std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.meshResourceName );
+        if( iter != meshNameMapping.end() )
+        {
+            model.meshResourceName = iter->second;
+        }
+
+        if( !model.saveToXmlNode( *models, dirname ) ) return false;
+    }
+
+    // rename entities
+    int entityIndex = 0;
+    std::map<StrA,StrA> entityNameMap;
+    for( std::map<StrA,EntityDesc>::const_iterator i = desc.entities.begin();
+        i != desc.entities.end();
+        ++i )
+    {
+        const StrA & entityName = i->first;
+
+        entityNameMap[entityName] = strFormat( "%d", ++entityIndex );
+    }
+
+    // write entities
+    XmlElement * entities = xmldoc.createNode( XML_ELEMENT, root )->toElement();
+    entities->name = "entities";
+    for( std::map<StrA,EntityDesc>::const_iterator i = desc.entities.begin();
+        i != desc.entities.end();
+        ++i )
+    {
+        const StrA       & entityName = entityNameMap.find(i->first)->second;
+        const EntityDesc & entityDesc = i->second;
+
+        XmlElement * entity = xmldoc.createNode( XML_ELEMENT, entities )->toElement();
+        entity->name = "entity";
+
+        XmlAttrib * a = xmldoc.createAttrib( entity );
+        a->name  = "name";
+        a->value = entityName;
+
+        XmlElement * spatial = xmldoc.createNode( XML_ELEMENT, entity )->toElement();
+        spatial->name = "spatial";
+
+        a = xmldoc.createAttrib( spatial );
+        a->name  = "parent";
+        std::map<StrA,StrA>::iterator parentIter = entityNameMap.find(entityDesc.spatial.parent);
+        if( entityNameMap.end() != parentIter )
+        {
+            a->value = parentIter->second;
+        }
+        else if( !entityDesc.spatial.parent.empty() )
+        {
+            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->first.cptr(), entityDesc.spatial.parent.cptr() );
+        }
+
+        a = xmldoc.createAttrib( spatial );
+        a->name  = "position";
+        a->value = strFormat( "%f,%f,%f",
+            entityDesc.spatial.position.x,
+            entityDesc.spatial.position.y,
+            entityDesc.spatial.position.z );
+
+        a = xmldoc.createAttrib( spatial );
+        a->name  = "orientation";
+        a->value = strFormat( "%f,%f,%f,%f",
+            entityDesc.spatial.orientation.v.x,
+            entityDesc.spatial.orientation.v.y,
+            entityDesc.spatial.orientation.v.x,
+            entityDesc.spatial.orientation.w );
+
+        a = xmldoc.createAttrib( spatial );
+        a->name  = "bbox";
+        a->value = strFormat( "%f,%f,%f,%f,%f,%f",
+            entityDesc.spatial.bbox.x,
+            entityDesc.spatial.bbox.y,
+            entityDesc.spatial.bbox.z,
+            entityDesc.spatial.bbox.w,
+            entityDesc.spatial.bbox.h,
+            entityDesc.spatial.bbox.d );
+
+        XmlElement * visual = xmldoc.createNode( XML_ELEMENT, entity )->toElement();
+        visual->name  = "visual";
+        for( size_t i = 0; i < entityDesc.models.size(); ++i )
+        {
+            XmlElement * modelref = xmldoc.createNode( XML_ELEMENT, visual )->toElement();
+            modelref->name = "model";
+
+            XmlAttrib * a = xmldoc.createAttrib( modelref );
+            a->name = "ref";
+            a->value = strFormat( "%u", entityDesc.models[i] );
+        }
+    }
+
+    // write XML document
+    AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
+    if( !fp ) return false;
+    return xmldoc.writeToFile( *fp, *root, false );
+}
+
 //
 //
 // -----------------------------------------------------------------------------
