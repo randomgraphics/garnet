@@ -114,7 +114,7 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
     };
 
     // print brothers
-    return root->sibling ? sFormatNodes( fp, root->sibling, ident ) : true;
+    return root->next ? sFormatNodes( fp, root->next, ident ) : true;
 }
 
 static void sCompactAttributes( GN::File & fp, const GN::XmlAttrib * att )
@@ -186,7 +186,7 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
 
     do{
         if( !sCompactNodeAndChildren( fp, root ) ) return false;
-        root = root->sibling;
+        root = root->next;
     } while( root );
 
     return true;
@@ -210,21 +210,24 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
             GN::strFormat( "Fail to create node with type of '%d'", type ).cptr() );
         return NULL;
     }
-    n->parent = tracer->parent;
-    n->sibling = NULL;
-    n->child = NULL;
 
-    // update tracer
-    if( tracer->prev )
+    // update tree links
+    n->parent = tracer->parent;
+    n->prev = tracer->prev;
+    n->next = NULL;
+    n->child = NULL;
+    if( n->prev )
     {
-        // this is not the first node in this level. Let its previous sibling points to this.
-        tracer->prev->sibling = n;
+        // this is not the first node in this level. Let its previous next points to this.
+        n->prev->next = n;
     }
-    else if( tracer->parent )
+    else if( n->parent )
     {
         // this is the first node in this level. Let the parent node points to this.
-        tracer->parent->child = n;
+        n->parent->child = n;
     }
+
+    // update tracer
     tracer->parent = n;
     tracer->prev = NULL;
 
@@ -252,7 +255,7 @@ static GN::StrA sMangleText( const char * s, int len )
     if( 0 == len ) return "";
 
     GN_TODO( "convert special characters" );
-    
+
     return GN::StrA( s, len );
 }
 
@@ -269,7 +272,7 @@ void XMLCALL sStartElementHandler(
     const XML_Char ** atts )
 {
     GN_ASSERT( userData && name );
-    
+
     ParseTracer * tracer = (ParseTracer*)userData;
 
     // create new node
@@ -293,6 +296,7 @@ void XMLCALL sStartElementHandler(
         }
 
         a->node = e;
+        a->prev = lastAttrib;
         a->next = NULL;
         a->name = atts[0];
         a->value = atts[1];
@@ -397,7 +401,88 @@ static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
 }
 
 // *****************************************************************************
-// public functions
+// XmlAttrib class
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::XmlAttrib::setOwner( XmlElement * newOwner )
+{
+    if( node == newOwner ) return;
+
+    if( newOwner && &newOwner->doc != &this->doc )
+    {
+        GN_ERROR(sLogger)( "Cannot attach attribute to node that belongs to different XML document." );
+        return;
+    }
+
+    // detach from old owner
+    if( node && node->attrib == this )
+    {
+        node->attrib = this->next;
+    }
+    if( this->next ) this->next->prev = this->prev;
+    if( this->prev ) this->prev->next = this->next;
+    this->node = NULL;
+    this->prev = NULL;
+    this->next = NULL;
+
+    // attach to new node
+    if( newOwner )
+    {
+        this->node = newOwner;
+        this->next = newOwner->attrib;
+        if( newOwner->attrib )
+        {
+            newOwner->attrib->prev = this;
+        }
+    }
+}
+
+// *****************************************************************************
+// XmlNode class
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::XmlNode::setParent( XmlNode * newParent )
+{
+    if( parent == newParent ) return;
+
+    if( &parent->doc != &this->doc )
+    {
+        GN_ERROR(sLogger)( "Can not link nodes belong to different document." );
+        return;
+    }
+
+    // detach from old parent
+    if( parent && parent->child == this )
+    {
+        parent->child = this->next;
+    }
+    if( this->next ) this->next->prev = this->prev;
+    if( this->prev ) this->prev->next = this->next;
+    this->parent = NULL;
+    this->prev = NULL;
+    this->next = NULL;
+
+    // attach to new parent
+    if( newParent )
+    {
+        this->parent = newParent;
+        this->next = newParent->child;
+
+        if( newParent->child )
+        {
+            newParent->child->prev = this;
+        }
+    }
+}
+
+// *****************************************************************************
+// XmlDocument class
 // *****************************************************************************
 
 //
@@ -515,7 +600,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
+GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
 {
     XmlNode * p;
     switch( type )
@@ -526,16 +611,21 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
         default          : GN_ERROR(sLogger)( "invalid node type : %d", type ); return NULL;
     }
     mNodes.push_back( p );
+    p->setParent( parent );
     return p;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlAttrib * GN::XmlDocument::createAttrib()
+GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
 {
-    PooledAttrib * a = new PooledAttrib;
+    PooledAttrib * a = new PooledAttrib( *this );
+
     mAttribs.push_back( a );
+
+    a->setOwner( owner );
+
     return a;
 }
 

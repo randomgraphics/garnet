@@ -154,10 +154,10 @@ sCheckShaderTextures(
 // -----------------------------------------------------------------------------
 static bool
 sCheckShaderUniforms(
-    const EffectResourceDesc & effectDesc,
-    const EffectGpuProgramDesc   & shaderDesc,
-    const char               * shaderName,
-    const GpuProgram         & program )
+    const EffectResourceDesc   & effectDesc,
+    const EffectGpuProgramDesc & shaderDesc,
+    const char                 * shaderName,
+    const GpuProgram           & program )
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 

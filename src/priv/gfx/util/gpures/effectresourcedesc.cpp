@@ -154,7 +154,7 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
 // -----------------------------------------------------------------------------
 static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 {
-    for( const XmlNode * n = root.child; n; n = n->sibling )
+    for( const XmlNode * n = root.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -210,7 +210,7 @@ static void sParsePrerequisites( EffectResourceDesc::ShaderPrerequisites& sp, co
 static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlElement & node )
 {
     // get shader code
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlCdata * c = n->toCdata();
         if( c )
@@ -266,7 +266,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     sd.gpd.debug    = sGetBoolAttrib( node, "debug", true );
 
     // parse children
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -300,7 +300,7 @@ static void sParseGpuPrograms( EffectResourceDesc & desc, const XmlElement & nod
 {
     GN_ASSERT( "gpuprograms" == node.name );
 
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -340,7 +340,7 @@ static void sParsePass( EffectResourceDesc::EffectTechniqueDesc & td, const XmlE
 
     pd.gpuprogram = gpname;
 
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -367,7 +367,7 @@ static void sParseTechnique( EffectResourceDesc & desc, const XmlElement & node 
     td.quality = sGetIntAttrib( node, "quality", 100 );
 
     // parse children
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -387,7 +387,7 @@ static void sParseTechniques( EffectResourceDesc & desc, const XmlElement & node
 {
     GN_ASSERT( "techniques" == node.name );
 
-    for( const XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->next )
     {
         const XmlElement * e = n->toElement();
         if( !e ) continue;
@@ -536,7 +536,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXmlNode( const XmlNode & root )
         return false;
     }
 
-    for( const XmlNode * n = e->child; n; n = n->sibling )
+    for( const XmlNode * n = e->child; n; n = n->next )
     {
         e = n->toElement();
         if( !e ) continue;
@@ -553,7 +553,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXmlNode( const XmlNode & root )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResourceDesc::saveToXmlNode( const XmlNode & root ) const
+bool GN::gfx::EffectResourceDesc::saveToXmlNode( XmlNode & root ) const
 {
     GN_UNUSED_PARAM( root );
     GN_UNIMPL();

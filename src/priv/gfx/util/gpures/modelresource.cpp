@@ -97,7 +97,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root, const char * basedir ) const
+bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * basedir ) const
 {
     XmlElement * rootElement = root.toElement();
     if( !rootElement )
@@ -114,46 +114,36 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root, const char
 
     XmlDocument & doc = rootElement->doc;
 
-    XmlElement * modelNode = doc.createNode(XML_ELEMENT)->toElement();
+    XmlElement * modelNode = doc.createNode(XML_ELEMENT,NULL)->toElement();
 
     // create effect node
-    XmlElement * effectNode = doc.createNode(XML_ELEMENT)->toElement();
+    XmlElement * effectNode = doc.createNode(XML_ELEMENT,modelNode)->toElement();
     effectNode->name = "effect";
-    effectNode->parent = modelNode;
-    effectNode->sibling = modelNode->child;
-    modelNode->child = effectNode;
     if( effectResourceName.empty() )
     {
         if( !effectResourceDesc.saveToXmlNode( *effectNode ) ) return false;
     }
     else
     {
-        XmlAttrib * a = doc.createAttrib();
+        XmlAttrib * a = doc.createAttrib( effectNode );
         a->name = "ref";
         a->value = fs::relPath( effectResourceName, basedir );
-        a->node = effectNode;
-        a->next = effectNode->attrib;
-        effectNode->attrib = a;
     }
 
     // create mesh node
-    XmlElement * meshNode = doc.createNode(XML_ELEMENT)->toElement();
+    XmlElement * meshNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
     meshNode->name = "mesh";
-    meshNode->parent = modelNode;
-    meshNode->sibling = modelNode->child;
-    modelNode->child = meshNode;
     if( meshResourceName.empty() )
     {
-        if( !meshResourceDesc.saveToXmlNode( *effectNode ) ) return false;
+        //if( !meshResourceDesc.saveToXmlNode( *effectNode ) ) return false;
+        GN_UNIMPL();
+        return false;
     }
     else
     {
-        XmlAttrib * a = doc.createAttrib();
+        XmlAttrib * a = doc.createAttrib( meshNode );
         a->name = "ref";
         a->value = fs::relPath( meshResourceName, basedir );
-        a->node = meshNode;
-        a->next = meshNode->attrib;
-        meshNode->attrib = a;
     }
 
     // create texture nodes
@@ -161,18 +151,61 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( const XmlNode & root, const char
          i != textures.end();
          ++i )
     {
-        const StrA             & name    = i->first;
+        const StrA             & texname    = i->first;
         const ModelTextureDesc & texdesc = i->second;
 
-        XmlElement * textureNode = doc.createNode(XML_ELEMENT)->toElement();
+        XmlElement * textureNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
         textureNode->name = "texture";
-        textureNode->parent = modelNode;
-        textureNode->sibling = modelNode->child;
-        modelNode->child = textureNode;
-        GN_UNIMPL();
+
+        XmlAttrib * a = doc.createAttrib( textureNode );
+        a->name = "name";
+        a->value = texname;
+        if( texdesc.resourceName.empty() )
+        {
+            //texdesc.desc.saveToXmlNode( basedir );
+            GN_UNIMPL();
+            return false;
+        }
+        else
+        {
+            a = doc.createAttrib( textureNode );
+            a->name = "ref";
+            a->value = fs::relPath( texdesc.resourceName, basedir );
+        }
     }
 
-    return false;
+    // create uniform nodes
+    for( std::map<StrA,ModelUniformDesc>::const_iterator i = uniforms.begin();
+         i != uniforms.end();
+         ++i )
+    {
+        const StrA             & uniname = i->first;
+        const ModelUniformDesc & unidesc = i->second;
+
+        XmlElement * uniformNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
+        uniformNode->name = "uniform";
+
+        XmlAttrib * a = doc.createAttrib( uniformNode );
+        a->name = "name";
+        a->value = uniname;
+
+        if( unidesc.resourceName.empty() )
+        {
+            //unidesc.desc.saveToXmlNode( basedir );
+            GN_UNIMPL();
+            return false;
+        }
+        else
+        {
+            a = doc.createAttrib( uniformNode );
+            a->name = "ref";
+            a->value = fs::relPath( unidesc.resourceName, basedir );
+        }
+    }
+
+    // done
+    modelNode->setParent( &root );
+    return true;
 }
 
 // *****************************************************************************

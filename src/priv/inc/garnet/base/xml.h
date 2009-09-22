@@ -18,16 +18,23 @@ namespace GN
     ///
     struct XmlAttrib
     {
-        XmlElement * node;  ///< pointer to the element that this attribute belongs to.
-        XmlAttrib  * next;  ///< pointer to next attribute
-        StrA         name;  ///< attribute name
-        StrA         value; ///< attribute value
+        XmlDocument & doc;   ///< The document that this attribute belongs to.
+        XmlElement  * node;  ///< pointer to the element that this attribute belongs to.
+        XmlAttrib   * prev;  ///< pointer to previous attribute
+        XmlAttrib   * next;  ///< pointer to next attribute
+        StrA          name;  ///< attribute name
+        StrA          value; ///< attribute value
+
+        ///
+        /// attach attribute to specific element
+        ///
+        void setOwner( XmlElement * element );
 
     protected:
 
         /// \name protected ctor/dtor to prevent user from creatiing/deleting this class.
         //@{
-        XmlAttrib() : node(0), next(0) {}
+        XmlAttrib( XmlDocument & d ) : doc(d), node(0), prev(0), next(0) {}
         virtual ~XmlAttrib() {}
         //@}
     };
@@ -51,15 +58,22 @@ namespace GN
         XmlDocument     & doc;     ///< reference to the owner document
         const XmlNodeType type;    ///< node type. can't be modified.
         XmlNode         * parent;  ///< pointer to parent node
-        XmlNode         * sibling; ///< pointer to next brother node
+        XmlNode         * prev;    ///< pointer to previous brother node
+        XmlNode         * next;    ///< pointer to next brother node
         XmlNode         * child;   ///< pointer to first child
 
         /// \name method required by traversal class
         //@{
         XmlNode * getParent() const { return parent; }
-        XmlNode * getNextSibling() const { return sibling; }
+        XmlNode * getPrevSibling() const { return prev; }
+        XmlNode * getNextSibling() const { return next; }
         XmlNode * getFirstChild() const { return child; }
         //@}
+
+        ///
+        /// Change node parent
+        ///
+        void setParent( XmlNode * parent );
 
         ///
         /// return location of this node in the document (unimplemented)
@@ -110,7 +124,8 @@ namespace GN
             : doc(d)
             , type(t)
             , parent(0)
-            , sibling(0)
+            , prev(0)
+            , next(0)
             , child(0)
         {
             GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES );
@@ -177,7 +192,7 @@ namespace GN
         ///
         XmlElement * findChildElement( const StrA & name ) const
         {
-            for( XmlNode * n = child; n; n = n->sibling )
+            for( XmlNode * n = child; n; n = n->next )
             {
                 XmlElement * e = n->toElement();
                 if( !e ) continue;
@@ -219,7 +234,10 @@ namespace GN
         {
             PooledNode( XmlDocument & d ) : T(d) {}
         };
-        struct PooledAttrib : public XmlAttrib {};
+        struct PooledAttrib : public XmlAttrib
+        {
+            PooledAttrib( XmlDocument & d ) : XmlAttrib(d) {}
+        };
 
         std::vector<XmlNode*>      mNodes;
         std::vector<PooledAttrib*> mAttribs;
@@ -256,13 +274,13 @@ namespace GN
         /// to release them. They will be release automatically, when the
         /// XML document is deleted.
         ///
-        XmlNode * createNode( XmlNodeType );
+        XmlNode * createNode( XmlNodeType type, XmlNode * parent );
 
         ///
         /// Create new attribute. Attributes are created in pooled memory also,
         /// just like XmlNode.
         ///
-        XmlAttrib * createAttrib();
+        XmlAttrib * createAttrib( XmlElement * owner );
 
     private:
 

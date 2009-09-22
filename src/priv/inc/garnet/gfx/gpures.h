@@ -486,7 +486,7 @@ namespace GN { namespace gfx
         ///
         /// write the descriptor to XML
         ///
-        bool saveToXmlNode( const XmlNode & rootNode ) const;
+        bool saveToXmlNode( XmlNode & rootNode ) const;
     };
 
     ///
@@ -667,7 +667,7 @@ namespace GN { namespace gfx
         ///
         /// write the descriptor to XML
         ///
-        bool saveToXmlNode( const XmlNode & root, const char * basedir ) const;
+        bool saveToXmlNode( XmlNode & root, const char * basedir ) const;
 
         ///
         /// write the descriptor to XML file
