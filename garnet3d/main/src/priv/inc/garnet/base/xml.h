@@ -73,7 +73,7 @@ namespace GN
         ///
         /// Change node parent
         ///
-        void setParent( XmlNode * parent );
+        void setParent( XmlNode * parent, XmlNode * prev = NULL );
 
         ///
         /// return location of this node in the document (unimplemented)

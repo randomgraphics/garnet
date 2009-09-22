@@ -115,6 +115,7 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
     XmlDocument & doc = rootElement->doc;
 
     XmlElement * modelNode = doc.createNode(XML_ELEMENT,NULL)->toElement();
+    modelNode->name = "model";
 
     // create effect node
     XmlElement * effectNode = doc.createNode(XML_ELEMENT,modelNode)->toElement();
@@ -158,7 +159,7 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
         textureNode->name = "texture";
 
         XmlAttrib * a = doc.createAttrib( textureNode );
-        a->name = "name";
+        a->name = "shaderParemeterName";
         a->value = texname;
         if( texdesc.resourceName.empty() )
         {
@@ -186,14 +187,19 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
         uniformNode->name = "uniform";
 
         XmlAttrib * a = doc.createAttrib( uniformNode );
-        a->name = "name";
+        a->name = "shaderParemeterName";
         a->value = uniname;
 
         if( unidesc.resourceName.empty() )
         {
-            //unidesc.desc.saveToXmlNode( basedir );
-            GN_UNIMPL();
-            return false;
+            a = doc.createAttrib( uniformNode );
+            a->name = "size";
+            a->value = strFormat( "%u", unidesc.size );
+
+            if( !unidesc.initialValue.empty() )
+            {
+                GN_UNIMPL_WARNING();
+            }
         }
         else
         {
