@@ -247,7 +247,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadModelsFromXPR( SimpleWorldDesc & desc, File & file )
+sLoadFromXPR( SimpleWorldDesc & desc, File & file )
 {
     // load XPR file
     XPRScene xpr;
@@ -268,7 +268,7 @@ sLoadModelsFromXPR( SimpleWorldDesc & desc, File & file )
 //
 // -----------------------------------------------------------------------------
 static bool
-sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
+sLoadFromASE( SimpleWorldDesc & desc, File & file )
 {
     // load ASE scene
     AseScene ase;
@@ -386,146 +386,40 @@ sLoadModelsFromASE( SimpleWorldDesc & desc, File & file )
 }
 
 // *****************************************************************************
-// Common local functions
+// XML loader
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
+static bool
+sLoadFromXML( SimpleWorldDesc & desc, File & file )
 {
-    GN_ASSERT( desc.entities.end() != desc.entities.find( entityName ) );
-
-    const SimpleWorldDesc::EntityDesc & entityDesc = desc.entities.find(entityName)->second;
-
-    // recursively populate parent entities
-    Entity * parent = NULL;
-    if( !entityDesc.spatial.parent.empty() )
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, fp ) )
     {
-        if( desc.entities.end() == desc.entities.find( entityDesc.spatial.parent ) )
-        {
-            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.spatial.parent.cptr() );
-        }
-        else
-        {
-            parent = sPopulateEntity( world, root, desc, entityDesc.spatial.parent );
-        }
-    }
-
-    // create a new entity instance
-    Entity * e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
-    if( !e ) return NULL;
-
-    // attach the entity to parent node or root node
-    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
-
-    // calculate bounding sphere
-    const Boxf & bbox = entityDesc.spatial.bbox;
-    Spheref bs;
-    calculateBoundingSphereFromBoundingBox( bs, bbox );
-    e->getNode<SpatialNode>()->setBoundingSphere( bs );
-
-    if( !entityDesc.models.empty() )
-    {
-        for( size_t i = 0; i < entityDesc.models.size(); ++i )
-        {
-            const ModelResourceDesc & modelDesc = desc.models[entityDesc.models[i]];
-
-            // this variable is used to keep a reference to mesh resource,
-            // to prevent it from being deleted, until the model is created.
-            AutoRef<MeshResource> mesh;
-
-            if( !modelDesc.meshResourceName.empty() )
-            {
-                mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
-                if( !mesh )
-                {
-                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.meshResourceName);
-
-                    if( desc.meshes.end() == meshIter )
-                    {
-                        GN_ERROR(sLogger)(
-                            "Model %d references a mesh '%s' that does not belong to this scene.",
-                            i,
-                            modelDesc.meshResourceName.cptr() );
-                        continue; // ignore the model
-                    }
-
-                    const MeshResourceDesc & meshDesc = meshIter->second;
-
-                    // create new mesh
-                    mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
-                    if( !mesh || !mesh->reset( &meshDesc ) ) continue;
-                }
-            }
-
-            AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
-            if( !model->reset( &modelDesc ) ) continue;
-
-            e->getNode<VisualNode>()->addModel( model );
-        }
-    }
-
-    return e;
-}
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::SimpleWorldDesc::clear()
-{
-    for( size_t i = 0; i < meshdata.size(); ++i )
-    {
-        safeHeapFree( meshdata[i].data );
-    }
-    meshdata.clear();
-
-    meshes.clear();
-    models.clear();
-    entities.clear();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
-{
-    GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
-
-    clear();
-
-    // open file
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
-    if( !fp ) return false;
-
-    // get file extension
-    StrA ext = fs::extName( filename );
-
-    // do loading
-    if( 0 == strCmpI( ".ase", ext.cptr() ) )
-    {
-        return sLoadModelsFromASE( *this, *fp );
-    }
-    else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
-             0 == strCmpI( ".tpr", ext.cptr() ))
-    {
-        return sLoadModelsFromXPR( *this, *fp );
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
+        static Logger * sLogger = getLogger( "GN.base.xml" );
+        GN_ERROR(sLogger)(
+            "Fail to parse XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp.name(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
         return false;
     }
+    GN_ASSERT( xpr.root );
+    return t.loadFromXmlNode( *xpr.root, basedir );
 }
 
-///
-/// write world description to file
+//
+//
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
+static bool
+sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 {
     // check dirname
     if( NULL == filename )
@@ -544,8 +438,6 @@ bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
         GN_ERROR(sLogger)( "%s is not a directory", dirname.cptr() );
         return false;
     }
-
-    const SimpleWorldDesc & desc = *this;
 
     // write meshes
     int meshindex = 0;
@@ -673,6 +565,155 @@ bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
     AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
     if( !fp ) return false;
     return xmldoc.writeToFile( *fp, *root, false );
+}
+
+// *****************************************************************************
+// Common local functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
+{
+    GN_ASSERT( desc.entities.end() != desc.entities.find( entityName ) );
+
+    const SimpleWorldDesc::EntityDesc & entityDesc = desc.entities.find(entityName)->second;
+
+    // recursively populate parent entities
+    Entity * parent = NULL;
+    if( !entityDesc.spatial.parent.empty() )
+    {
+        if( desc.entities.end() == desc.entities.find( entityDesc.spatial.parent ) )
+        {
+            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.spatial.parent.cptr() );
+        }
+        else
+        {
+            parent = sPopulateEntity( world, root, desc, entityDesc.spatial.parent );
+        }
+    }
+
+    // create a new entity instance
+    Entity * e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
+    if( !e ) return NULL;
+
+    // attach the entity to parent node or root node
+    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
+
+    // calculate bounding sphere
+    const Boxf & bbox = entityDesc.spatial.bbox;
+    Spheref bs;
+    calculateBoundingSphereFromBoundingBox( bs, bbox );
+    e->getNode<SpatialNode>()->setBoundingSphere( bs );
+
+    if( !entityDesc.models.empty() )
+    {
+        for( size_t i = 0; i < entityDesc.models.size(); ++i )
+        {
+            const ModelResourceDesc & modelDesc = desc.models[entityDesc.models[i]];
+
+            // this variable is used to keep a reference to mesh resource,
+            // to prevent it from being deleted, until the model is created.
+            AutoRef<MeshResource> mesh;
+
+            if( !modelDesc.meshResourceName.empty() )
+            {
+                mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
+                if( !mesh )
+                {
+                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.meshResourceName);
+
+                    if( desc.meshes.end() == meshIter )
+                    {
+                        GN_ERROR(sLogger)(
+                            "Model %d references a mesh '%s' that does not belong to this scene.",
+                            i,
+                            modelDesc.meshResourceName.cptr() );
+                        continue; // ignore the model
+                    }
+
+                    const MeshResourceDesc & meshDesc = meshIter->second;
+
+                    // create new mesh
+                    mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
+                    if( !mesh || !mesh->reset( &meshDesc ) ) continue;
+                }
+            }
+
+            AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
+            if( !model->reset( &modelDesc ) ) continue;
+
+            e->getNode<VisualNode>()->addModel( model );
+        }
+    }
+
+    return e;
+}
+
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::SimpleWorldDesc::clear()
+{
+    for( size_t i = 0; i < meshdata.size(); ++i )
+    {
+        safeHeapFree( meshdata[i].data );
+    }
+    meshdata.clear();
+
+    meshes.clear();
+    models.clear();
+    entities.clear();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
+{
+    GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
+
+    clear();
+
+    // open file
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    if( !fp ) return false;
+
+    // get file extension
+    StrA ext = fs::extName( filename );
+
+    // do loading
+    if( 0 == strCmpI( ".xml", ext.cptr() ) )
+    {
+        return sLoadFromXML( *this, *fp );
+    }
+    else if( 0 == strCmpI( ".ase", ext.cptr() ) )
+    {
+        return sLoadFromASE( *this, *fp );
+    }
+    else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
+             0 == strCmpI( ".tpr", ext.cptr() ))
+    {
+        return sLoadFromXPR( *this, *fp );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
+        return false;
+    }
+}
+
+///
+/// write world description to file
+// -----------------------------------------------------------------------------
+bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
+{
+    return sSaveToXML( *this, filename );
 }
 
 //
