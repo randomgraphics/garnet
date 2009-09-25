@@ -201,6 +201,7 @@ namespace GN
 
 // misc.
 #include "base/refCounter.h"
+#include "base/blob.h"
 #include "base/stdClass.h"
 #include "base/singleton.h"
 #include "base/sharedLib.h"

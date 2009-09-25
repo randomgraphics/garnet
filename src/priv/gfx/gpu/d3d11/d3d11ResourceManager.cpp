@@ -60,7 +60,7 @@ void GN::gfx::D3D11Gpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::CompiledGpuProgram *
+GN::Blob *
 GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );

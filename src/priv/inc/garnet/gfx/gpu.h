@@ -1084,7 +1084,7 @@ namespace GN { namespace gfx
         ///
         /// Compile shader into platform dependant format
         ///
-        virtual CompiledGpuProgram *
+        virtual Blob *
         compileGpuProgram( const GpuProgramDesc & desc ) = 0;
 
         ///
@@ -1099,7 +1099,7 @@ namespace GN { namespace gfx
         GpuProgram *
         createGpuProgram( const GpuProgramDesc & desc )
         {
-            AutoRef<CompiledGpuProgram> bin( compileGpuProgram( desc ) );
+            AutoRef<Blob> bin( compileGpuProgram( desc ) );
             if( !bin ) return NULL;
             return createGpuProgram( bin->data(), bin->size() );
         }

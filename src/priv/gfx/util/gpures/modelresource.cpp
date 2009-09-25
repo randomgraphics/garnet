@@ -71,12 +71,10 @@ sApplyRenderStates(
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResourceDesc::clear()
 {
-    effectResourceName.clear();
-    effectResourceDesc.clear();
+    effect.clear();
     textures.clear();
     uniforms.clear();
-    meshResourceName.clear();
-    meshResourceDesc.clear();
+    mesh.clear();
     subset.clear();
 }
 
@@ -120,31 +118,31 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
     // create effect node
     XmlElement * effectNode = doc.createNode(XML_ELEMENT,modelNode)->toElement();
     effectNode->name = "effect";
-    if( effectResourceName.empty() )
+    if( effect.empty() )
     {
-        if( !effectResourceDesc.saveToXmlNode( *effectNode ) ) return false;
+        GN_ERROR(sLogger)( "Effect name can not be empty." );
+        return false;
     }
     else
     {
         XmlAttrib * a = doc.createAttrib( effectNode );
         a->name = "ref";
-        a->value = fs::relPath( effectResourceName, basedir );
+        a->value = fs::relPath( effect, basedir );
     }
 
     // create mesh node
     XmlElement * meshNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
     meshNode->name = "mesh";
-    if( meshResourceName.empty() )
+    if( mesh.empty() )
     {
-        //if( !meshResourceDesc.saveToXmlNode( *effectNode ) ) return false;
-        GN_UNIMPL();
+        GN_ERROR(sLogger)( "Mesh name can not be empty." );
         return false;
     }
     else
     {
         XmlAttrib * a = doc.createAttrib( meshNode );
         a->name = "ref";
-        a->value = fs::relPath( meshResourceName, basedir );
+        a->value = fs::relPath( mesh, basedir );
     }
 
     // create texture nodes
@@ -417,7 +415,7 @@ bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
 {
     clear();
 
-    if( desc && !init( *desc ) )
+    if( desc && !fromDesc( *desc ) )
     {
         clear();
         return false;
@@ -786,51 +784,45 @@ void GN::gfx::ModelResource::Impl::draw() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::init( const ModelResourceDesc & desc )
+bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 {
     GpuResourceDatabase & db = database();
 
     // initialize effect
-    AutoRef<EffectResource> effect;
-    if( !desc.effectResourceName.empty() )
+    if( desc.effect.empty() )
     {
-        effect = db.findResource<EffectResource>( desc.effectResourceName );
+        GN_ERROR(sLogger)( "Effect name cannot be empty." );
+        return false;
+    }
+    AutoRef<EffectResource> effect = db.findResource<EffectResource>( desc.effect );
+    if( 0 == effect )
+    {
+        effect = EffectResource::loadFromFile( db, desc.effect );
         if( 0 == effect )
         {
-            effect = EffectResource::loadFromFile( db, desc.effectResourceName );
-            if( 0 == effect )
-            {
-                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effectResourceName.cptr() );
-            }
+            GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
+            return false;
         }
     }
-    else
-    {
-        effect = db.findOrCreateResource<EffectResource>( strFormat("%s.effect", modelName()) );
-        if( effect ) effect->reset( &desc.effectResourceDesc );
-    }
-    if( !effect || !setEffectResource( effect ) ) return false;
+    if( !setEffectResource( effect ) ) return false;
 
     // initialize mesh
-    AutoRef<MeshResource> mesh;
-    if( !desc.meshResourceName.empty() )
+    if( desc.mesh.empty() )
     {
-        mesh = db.findResource<MeshResource>( desc.meshResourceName );
+        GN_ERROR(sLogger)( "Mesh name cannot be empty." );
+        return false;
+    }
+    AutoRef<MeshResource> mesh = db.findResource<MeshResource>( desc.mesh );
+    if( 0 == mesh )
+    {
+        mesh = MeshResource::loadFromFile( db, desc.mesh );
         if( 0 == mesh )
         {
-            mesh = MeshResource::loadFromFile( db, desc.meshResourceName );
-            if( 0 == mesh )
-            {
-                GN_ERROR(sLogger)( "%s is not a valid mesh name.", desc.meshResourceName.cptr() );
-            }
+            GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
+            return false;
         }
     }
-    else
-    {
-        mesh = db.findOrCreateResource<MeshResource>( strFormat("%s.model", modelName()) );
-        if( mesh ) mesh->reset( &desc.meshResourceDesc );
-    }
-    if( !mesh || !setMeshResource( mesh, &desc.subset ) ) return false;
+    if( !setMeshResource( mesh, &desc.subset ) ) return false;
 
     // setup textures
     GN_ASSERT( mTextures.size() == (mEffect.resource?mEffect.resource->getNumTextures() : 0) );

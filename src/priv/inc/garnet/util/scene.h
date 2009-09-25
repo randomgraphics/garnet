@@ -436,14 +436,8 @@ namespace GN { namespace util
             DynaArray<size_t> models;
         };
 
-        struct MeshDataBuffer
-        {
-            void * data;
-            size_t size;
-        };
-
         std::map<StrA,gfx::MeshResourceDesc>  meshes;
-        DynaArray<MeshDataBuffer>             meshdata;
+        DynaArray<AutoRef<Blob> >             meshdata;
         DynaArray<gfx::ModelResourceDesc>     models;
         std::map<StrA,EntityDesc>             entities;
         Boxf                                  bbox;     ///< bounding box of the whole world.

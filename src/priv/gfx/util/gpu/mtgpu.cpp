@@ -247,9 +247,9 @@ ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usage
 //
 //
 // -----------------------------------------------------------------------------
-CompiledGpuProgram * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
+Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
-    CompiledGpuProgram * cgp;
+    Blob * cgp;
     postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
     waitForIdle();
     return cgp;
@@ -700,7 +700,7 @@ namespace GN { namespace gfx
     {
         struct CompileGpuProgramParam
         {
-            CompiledGpuProgram  ** cgp;
+            Blob                ** cgp;
             const GpuProgramDesc * desc;
         };
         CompileGpuProgramParam * cgpp = (CompileGpuProgramParam*)p;

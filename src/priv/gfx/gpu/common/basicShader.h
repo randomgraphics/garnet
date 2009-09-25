@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// Self-contained GPU program description: all string pointers point to internal data buffer
     ///
-    class SelfContainedGpuProgramDesc : public GN::gfx::CompiledGpuProgram
+    class SelfContainedGpuProgramDesc : public Blob
     {
         DynaArray<UInt8> mBuffer;
 
@@ -131,7 +131,7 @@ namespace GN { namespace gfx
 
         const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.cptr(); }
 
-        virtual const void   * data() const { return mBuffer.cptr(); }
+        virtual void         * data() const { return (void*)mBuffer.cptr(); }
         virtual size_t         size() const { return mBuffer.size(); }
     };
 

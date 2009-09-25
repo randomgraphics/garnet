@@ -79,11 +79,11 @@ namespace GN { namespace util
     ///
     struct AseScene : public NoCopy
     {
-        DynaArray<AseMaterial>   materials;
-        DynaArray<AseMesh>       meshes;
-        DynaArray<AseMeshSubset> subsets;
-        DynaArray<void*>         meshdata; ///< store all vertex and index buffers
-        Boxf                     bbox;     ///< bounding box of the whole scene
+        DynaArray<AseMaterial>    materials;
+        DynaArray<AseMesh>        meshes;
+        DynaArray<AutoRef<Blob> > meshdata; ///< store mesh data
+        DynaArray<AseMeshSubset>  subsets;
+        Boxf                      bbox;     ///< bounding box of the whole scene
 
         /// clear the scene
         void clear();

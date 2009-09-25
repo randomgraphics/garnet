@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 static ModelResourceDesc sDiffuseModelDesc()
 {
     ModelResourceDesc md;
-    md.effectResourceName = "@DIFFUSE";
+    md.effect = "@DIFFUSE";
 
     md.textures["ALBEDO_TEXTURE"].resourceName = "@WHITE";
 
