@@ -226,6 +226,16 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// calculate bounding box
+        ///
+        void calculateBoundingBox( Box<float> & ) const;
+
+        ///
+        /// calculate bounding sphere
+        ///
+        void calculateBoundingSphere( Sphere<float> & ) const;
+
+        ///
         /// get vertex buffer size in bytes
         ///
         size_t getVtxBufSize( size_t stream ) const;

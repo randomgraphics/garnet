@@ -413,21 +413,21 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
         XmlAttrib * a = spatialNode->findAttrib( "parent" );
         if( a ) entity.spatial.parent = a->value;
 
-        a = root.findAttrib( "position" );
+        a = spatialNode->findAttrib( "position" );
         if( !a || 3 != str2Floats( (float*)&entity.spatial.position, 3, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid position" );
             entity.spatial.position.set( 0, 0, 0 );
         }
 
-        a = root.findAttrib( "orientation" );
+        a = spatialNode->findAttrib( "orientation" );
         if( !a || 4 != str2Floats( (float*)&entity.spatial.orientation, 4, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid orientation" );
             entity.spatial.orientation.set( 0, 0, 0, 1 );
         }
 
-        a = root.findAttrib( "bbox" );
+        a = spatialNode->findAttrib( "bbox" );
         if( !a || 6 != str2Floats( (float*)&entity.spatial.bbox, 6, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid bounding box" );
@@ -471,6 +471,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     }
 
     // done
+    desc.entities[entityName->value] = entity;
     return true;
 }
 
@@ -504,6 +505,13 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     if( !root || "simpleWorld" != root->name )
     {
         sPostXMLError( *root, "Root element name must be \"<simpleWorld>\"." );
+        return false;
+    }
+
+    XmlAttrib * bboxAttr = root->findAttrib( "bbox" );
+    if( !bboxAttr || 6 != str2Floats( (float*)&desc.bbox, 6, bboxAttr->value ) )
+    {
+        sPostXMLError( *root, "Invalid bbox attribute." );
         return false;
     }
 
@@ -600,11 +608,11 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // create a new XML document
     XmlDocument xmldoc;
-    XmlNode * root = xmldoc.createNode(XML_ELEMENT, NULL);
-    root->toElement()->name = "simpleWorld";
+    XmlElement * root = xmldoc.createElement(NULL);
+    root->name = "simpleWorld";
 
     // write models
-    XmlElement * models = xmldoc.createNode( XML_ELEMENT, root )->toElement();
+    XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
     for( size_t i = 0; i < desc.models.size(); ++i )
     {
@@ -632,7 +640,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     }
 
     // write entities
-    XmlElement * entities = xmldoc.createNode( XML_ELEMENT, root )->toElement();
+    XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
     for( std::map<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
         i != desc.entities.end();
@@ -641,14 +649,14 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         const StrA                        & entityName = entityNameMap.find(i->first)->second;
         const SimpleWorldDesc::EntityDesc & entityDesc = i->second;
 
-        XmlElement * entity = xmldoc.createNode( XML_ELEMENT, entities )->toElement();
+        XmlElement * entity = xmldoc.createElement( entities );
         entity->name = "entity";
 
         XmlAttrib * a = xmldoc.createAttrib( entity );
         a->name  = "name";
         a->value = entityName;
 
-        XmlElement * spatial = xmldoc.createNode( XML_ELEMENT, entity )->toElement();
+        XmlElement * spatial = xmldoc.createElement( entity );
         spatial->name = "spatial";
 
         a = xmldoc.createAttrib( spatial );
@@ -688,11 +696,11 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             entityDesc.spatial.bbox.h,
             entityDesc.spatial.bbox.d );
 
-        XmlElement * visual = xmldoc.createNode( XML_ELEMENT, entity )->toElement();
+        XmlElement * visual = xmldoc.createElement( entity );
         visual->name  = "visual";
         for( size_t i = 0; i < entityDesc.models.size(); ++i )
         {
-            XmlElement * modelref = xmldoc.createNode( XML_ELEMENT, visual )->toElement();
+            XmlElement * modelref = xmldoc.createElement( visual );
             modelref->name = "model";
 
             XmlAttrib * a = xmldoc.createAttrib( modelref );
@@ -701,10 +709,63 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         }
     }
 
+    // write scene bounding box
+    XmlAttrib * a = xmldoc.createAttrib( root->toElement() );
+    a->name  = "bbox";
+    a->value = strFormat( "%f,%f,%f,%f,%f,%f",
+            desc.bbox.x,
+            desc.bbox.y,
+            desc.bbox.z,
+            desc.bbox.w,
+            desc.bbox.h,
+            desc.bbox.d );
+
     // write XML document
     AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
     if( !fp ) return false;
     return xmldoc.writeToFile( *fp, *root, false );
+}
+
+// *****************************************************************************
+// Load from garnet mesh binary
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
+{
+    desc.clear();
+
+    const StrA & meshname = fp.name();
+
+    MeshResourceDesc mesh;
+    AutoRef<Blob> blob = mesh.loadFromFile( fp );
+    if( !blob ) return false;
+
+    // determine the model template
+    const ModelResourceDesc * modelTemplate = sDetermineBestModelTemplate( mesh );
+    if( NULL == modelTemplate ) return false;
+
+    // initialize the model descriptor based on the template
+    ModelResourceDesc model = *modelTemplate;
+    model.mesh = meshname;
+
+    // add mesh and model to scene
+    desc.meshes[meshname] = mesh;
+    desc.meshdata.append( blob );
+    desc.models.append( model );
+
+    // create a entity for the model
+    SimpleWorldDesc::EntityDesc & ed = desc.entities[meshname];
+    ed.spatial.position.set( 0, 0, 0 );
+    ed.spatial.orientation.set( 0, 0, 0, 1 );
+    mesh.calculateBoundingBox( ed.spatial.bbox );
+    ed.models.append( 0 );
+
+    // done
+    desc.bbox = ed.spatial.bbox;
+    return true;
 }
 
 // *****************************************************************************
@@ -791,6 +852,24 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     return e;
 }
 
+//
+// Check if the string is end with specific suffix
+// -----------------------------------------------------------------------------
+static bool sStrEndWithI( const char * string, const char * suffix )
+{
+    if( NULL == suffix ) return true;
+    if( NULL == string ) return false;
+
+    size_t n1 = strlen( string );
+    size_t n2 = strlen( suffix );
+
+    if( n1 < n2 ) return false;
+
+    string = string + n1 - n2;
+
+    return 0 == strCmpI( string, suffix );
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -813,6 +892,8 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
 
+    GN_INFO(sLogger)( "Load scene from file: %s", filename?filename:"<NULL>" );
+
     clear();
 
     // open file
@@ -823,18 +904,22 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
     StrA ext = fs::extName( filename );
 
     // do loading
-    if( 0 == strCmpI( ".xml", ext.cptr() ) )
+    if( sStrEndWithI( filename, ".xml" ) )
     {
         return sLoadFromXML( *this, *fp );
     }
-    else if( 0 == strCmpI( ".ase", ext.cptr() ) )
+    else if( sStrEndWithI( filename, ".ase" ) )
     {
         return sLoadFromASE( *this, *fp );
     }
-    else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
-             0 == strCmpI( ".tpr", ext.cptr() ))
+    else if( sStrEndWithI( filename, ".xpr" ) ||
+             sStrEndWithI( filename, ".tpr" ) )
     {
         return sLoadFromXPR( *this, *fp );
+    }
+    else if( sStrEndWithI( filename, ".mesh.bin" ) )
+    {
+        return sLoadFromMeshBinary( *this, *fp );
     }
     else
     {

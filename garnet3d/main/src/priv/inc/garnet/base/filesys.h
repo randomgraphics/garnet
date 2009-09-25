@@ -39,7 +39,9 @@ namespace GN
             virtual bool isAbsPath( const StrA & path ) = 0;
 
             ///
-            /// Conver path to platform native format.
+            /// Conver to disk file path in platform native format.
+            /// If the path has no corresponding disk file. Return empty path.
+            /// It does:
             ///   - normalize path separator:
             ///     - convert path separators to platform specific format.
             ///     - Remove redundant path separators, such as "c:\\path\" will be
@@ -48,15 +50,15 @@ namespace GN
             ///   - Resolve embbed environment variable, like this:
             ///     "${windir}/system32" -> "c:\\windows\\system32"
             ///
-            virtual void toNative( StrA & result, const StrA & path ) = 0;
+            virtual void toNativeDiskFilePath( StrA & result, const StrA & path ) = 0;
 
             ///
             /// Conver path to platform native format.
             ///
-            inline StrA toNative( const StrA & path )
+            inline StrA toNativeDiskFilePath( const StrA & path )
             {
                 StrA ret;
-                toNative( ret, path );
+                toNativeDiskFilePath( ret, path );
                 return ret;
             }
 
@@ -287,18 +289,18 @@ namespace GN
             return getFileSystem(sys)->isFile( child );
         }
 
-        inline void toNativePath( StrA & result, const StrA & path )
+        inline void toNativeDiskFilePath( StrA & result, const StrA & path )
         {
             StrA sys, child;
             splitPath( path, sys, child );
-            getFileSystem(sys)->toNative( result, child );
+            getFileSystem(sys)->toNativeDiskFilePath( result, child );
         }
 
-        inline StrA toNativePath( const StrA & path )
+        inline StrA toNativeDiskFilePath( const StrA & path )
         {
             StrA sys, child;
             splitPath( path, sys, child );
-            return getFileSystem(sys)->toNative( child );
+            return getFileSystem(sys)->toNativeDiskFilePath( child );
         }
 
         inline bool isAbsPath( const StrA & path )

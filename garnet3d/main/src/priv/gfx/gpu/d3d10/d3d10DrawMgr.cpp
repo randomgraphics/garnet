@@ -3,16 +3,27 @@
 #include "d3d10RenderTargetMgr.h"
 
 // static primitive map
-static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline D3D10_PRIMITIVE_TOPOLOGY
+sPrimType2D3D10( GN::gfx::PrimitiveType prim )
 {
-    D3D10_PRIMITIVE_TOPOLOGY_POINTLIST,
-    D3D10_PRIMITIVE_TOPOLOGY_LINELIST,
-    D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP,
-    D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-    D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
-    D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED, // no quad list
-    D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED, // no rect list
-};
+    static D3D10_PRIMITIVE_TOPOLOGY sD3D10PrimMap[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
+    {
+        D3D10_PRIMITIVE_TOPOLOGY_POINTLIST,
+        D3D10_PRIMITIVE_TOPOLOGY_LINELIST,
+        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP,
+        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+        D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED, // no quad list
+        D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED, // no rect list
+    };
+
+    GN_ASSERT( prim <= GN_ARRAY_COUNT(sD3D10PrimMap) );
+    return sD3D10PrimMap[prim];
+}
 
 //
 //
@@ -169,7 +180,7 @@ void GN::gfx::D3D10Gpu::drawIndexed(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
+    mDevice->IASetPrimitiveTopology( sPrimType2D3D10( prim ) );
     mDevice->DrawIndexed(
         (UINT)numidx,
         (UINT)startidx,
@@ -186,7 +197,7 @@ void GN::gfx::D3D10Gpu::draw(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
+    mDevice->IASetPrimitiveTopology( sPrimType2D3D10( prim ) );
     mDevice->Draw( (UINT)numvtx, (UINT)startvtx );
 }
 
@@ -233,7 +244,7 @@ void GN::gfx::D3D10Gpu::drawIndexedUp(
     mDevice->IASetIndexBuffer( mUserIB, DXGI_FORMAT_R16_UINT, 0 );
 
     // do rendering
-    mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
+    mDevice->IASetPrimitiveTopology( sPrimType2D3D10( prim ) );
     mDevice->DrawIndexed( (UINT)numidx, 0, 0 );
 }
 
@@ -267,7 +278,7 @@ void GN::gfx::D3D10Gpu::drawUp(
     mDevice->IASetVertexBuffers( 0, 1, &mUserVB, &stride, &offset );
 
     // do rendering
-    mDevice->IASetPrimitiveTopology( sD3D10PrimMap[prim] );
+    mDevice->IASetPrimitiveTopology( sPrimType2D3D10( prim ) );
     mDevice->Draw( (UINT)numvtx, 0 );
 }
 

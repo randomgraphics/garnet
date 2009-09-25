@@ -62,6 +62,86 @@ sApplyRenderStates(
     #undef MERGE_SINGLE_RENDER_STATE
 }
 
+static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
+{
+    static const char TABLE[] =
+    {
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    };
+
+    result.clear();
+    result.setCaps( size * 2 );
+
+    for( size_t i = 0; i < size; ++i, ++data )
+    {
+        UInt8 u8 = *data;
+
+        result.append( TABLE[u8>>4] );
+        result.append( TABLE[u8&0xF] );
+    }
+}
+
+static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
+{
+    static UInt8 TABLE[] =
+    {
+
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    };
+
+    data.clear();
+
+    if( 0 != (s.size() % 2) )
+    {
+        GN_ERROR(sLogger)( "Invalid binary string." );
+        return false;
+    }
+
+    data.resize( s.size() / 2 );
+
+    for( size_t i = 0; i < data.size(); ++i )
+    {
+        char hi = s[i*2];
+        char lo = s[i*2+1];
+
+        UInt8 u8 = 0;
+
+        if( '0' <= hi && hi <= '9' )
+        {
+            u8 = (hi-'0')<<4;
+        }
+        else if( 'A' <= hi && hi <= 'F' )
+        {
+            u8 = (hi-'A'+10)<<4;
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Invalid character in binary string: %d", hi );
+            return false;
+        }
+
+        if( '0' <= lo && lo <= '9' )
+        {
+            u8 += (lo-'0');
+        }
+        else if( 'A' <= lo && lo <= 'F' )
+        {
+            u8 += (lo-'A'+10);
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Invalid character in binary string: %d", lo );
+            return false;
+        }
+
+        data[i] = u8;
+    }
+
+    return true;
+}
+
 // *****************************************************************************
 // local classes and functions
 // *****************************************************************************
@@ -83,12 +163,131 @@ void GN::gfx::ModelResourceDesc::clear()
 // -----------------------------------------------------------------------------
 bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const char * basedir )
 {
-    GN_UNUSED_PARAM( root );
-    GN_UNUSED_PARAM( basedir );
-    GN_UNIMPL_WARNING();
-
     clear();
 
+    const XmlElement * rootElement = root.toElement();
+    if( !rootElement || rootElement->name != "model" )
+    {
+        GN_ERROR(sLogger)( "Root node must be a XML element named <model>." );
+        return false;
+    }
+
+    bool effectFound = false;
+    bool meshFound = false;
+    for( const XmlNode * n = rootElement->child; n != NULL; n = n->next )
+    {
+        const XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "effect" == e->name )
+        {
+            if( effectFound )
+            {
+                GN_WARN(sLogger)( "Extra <effect> elements are ignored." );
+            }
+            else
+            {
+                const XmlAttrib * a = e->findAttrib( "ref" );
+                if( !a )
+                {
+                    GN_ERROR(sLogger)( "\"ref\" attribute of <effect> element is missing." );
+                    return false;
+                }
+                if( a->value.size() > 0 && '@' == a->value[0] )
+                {
+                    effect = a->value;
+                }
+                else
+                {
+                    effect = fs::resolvePath( basedir, a->value );
+                }
+
+                effectFound = true;
+            }
+        }
+        else if( "mesh" == e->name )
+        {
+            if( meshFound )
+            {
+                GN_WARN(sLogger)( "Extra <mesh> elements are ignored." );
+            }
+            else
+            {
+                const XmlAttrib * a = e->findAttrib( "ref" );
+                if( !a )
+                {
+                    GN_ERROR(sLogger)( "\"ref\" attribute of <mesh> element is missing." );
+                    return false;
+                }
+                mesh = fs::resolvePath( basedir, a->value );
+
+                meshFound = true;
+            }
+        }
+        else if( "texture" == e->name )
+        {
+            const XmlAttrib * a = e->findAttrib( "shaderParameterName" );
+            if( !a )
+            {
+                GN_ERROR(sLogger)( "\"shaderParameterName\" attribute of <texture> element is missing." );
+                return false;
+            }
+
+            ModelTextureDesc & td = textures[a->value];
+
+            a = e->findAttrib( "ref" );
+            if( a )
+            {
+                td.resourceName = fs::resolvePath( basedir, a->value );
+            }
+            else
+            {
+                GN_TODO( "read texture descriptor" );
+            }
+        }
+        else if( "uniform" == e->name )
+        {
+            const XmlAttrib * a = e->findAttrib( "shaderParameterName" );
+            if( !a )
+            {
+                GN_ERROR(sLogger)( "\"shaderParameterName\" attribute of <uniform> element is missing." );
+                return false;
+            }
+
+            ModelUniformDesc & ud = uniforms[a->value];
+
+            a = e->findAttrib( "size" );
+            if( !a )
+            {
+                GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
+                return false;
+            }
+            if( !str2Int( ud.size, a->value ) )
+            {
+                GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is not a valid integer." );
+                return false;
+            }
+
+            const XmlElement * binnode = e->findChildElement( "initialValue" );
+            if( binnode && !sBinaryDecode( ud.initialValue, binnode->text ) )
+            {
+                GN_ERROR(sLogger)( "Invalid uniform initial data." );
+                return false;
+            }
+        }
+        else
+        {
+            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.cptr() );
+        }
+    }
+
+    if( !effectFound || !meshFound )
+    {
+        GN_ERROR(sLogger)( "<effect> and <mesh> element are required." );
+        return false;
+    }
+
+    // done
     return true;
 }
 
@@ -112,11 +311,11 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
 
     XmlDocument & doc = rootElement->doc;
 
-    XmlElement * modelNode = doc.createNode(XML_ELEMENT,NULL)->toElement();
+    XmlElement * modelNode = doc.createElement(NULL);
     modelNode->name = "model";
 
     // create effect node
-    XmlElement * effectNode = doc.createNode(XML_ELEMENT,modelNode)->toElement();
+    XmlElement * effectNode = doc.createElement(modelNode);
     effectNode->name = "effect";
     if( effect.empty() )
     {
@@ -131,7 +330,7 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
     }
 
     // create mesh node
-    XmlElement * meshNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
+    XmlElement * meshNode = doc.createElement(modelNode);
     meshNode->name = "mesh";
     if( mesh.empty() )
     {
@@ -153,11 +352,11 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
         const StrA             & texname    = i->first;
         const ModelTextureDesc & texdesc = i->second;
 
-        XmlElement * textureNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
+        XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name = "texture";
 
         XmlAttrib * a = doc.createAttrib( textureNode );
-        a->name = "shaderParemeterName";
+        a->name = "shaderParameterName";
         a->value = texname;
         if( texdesc.resourceName.empty() )
         {
@@ -181,11 +380,11 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
         const StrA             & uniname = i->first;
         const ModelUniformDesc & unidesc = i->second;
 
-        XmlElement * uniformNode = doc.createNode(XML_ELEMENT, modelNode)->toElement();
+        XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name = "uniform";
 
         XmlAttrib * a = doc.createAttrib( uniformNode );
-        a->name = "shaderParemeterName";
+        a->name = "shaderParameterName";
         a->value = uniname;
 
         if( unidesc.resourceName.empty() )
@@ -196,7 +395,9 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
 
             if( !unidesc.initialValue.empty() )
             {
-                GN_UNIMPL_WARNING();
+                XmlElement * bin = doc.createElement( uniformNode );
+                bin->name = "initialValue";
+                sBinaryEncode( bin->text, unidesc.initialValue.cptr(), unidesc.initialValue.size() );
             }
         }
         else

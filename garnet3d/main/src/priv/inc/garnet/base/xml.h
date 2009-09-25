@@ -277,6 +277,15 @@ namespace GN
         XmlNode * createNode( XmlNodeType type, XmlNode * parent );
 
         ///
+        /// Create element
+        ///
+        XmlElement * createElement( XmlNode * parent )
+        {
+            XmlNode * n = createNode( XML_ELEMENT, parent );
+            return n ? n->toElement() : NULL;
+        }
+
+        ///
         /// Create new attribute. Attributes are created in pooled memory also,
         /// just like XmlNode.
         ///

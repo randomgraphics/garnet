@@ -188,17 +188,17 @@ public:
 
     bool exist( const StrA & path )
     {
-        return sNativeExist( FileSystem::toNative( path ) );
+        return sNativeExist( FileSystem::toNativeDiskFilePath( path ) );
     }
 
     bool isDir( const StrA & path  )
     {
-        return sNativeIsDir( FileSystem::toNative( path ) );
+        return sNativeIsDir( FileSystem::toNativeDiskFilePath( path ) );
     }
 
     bool isFile( const StrA & path )
     {
-        return sNativeIsFile( FileSystem::toNative( path ) );
+        return sNativeIsFile( FileSystem::toNativeDiskFilePath( path ) );
     }
 
     bool isAbsPath( const StrA & path )
@@ -206,7 +206,7 @@ public:
         return sIsAbsPath( path );
     }
 
-    void toNative( StrA & result, const StrA & path )
+    void toNativeDiskFilePath( StrA & result, const StrA & path )
     {
         StrA tmp;
 
@@ -292,7 +292,7 @@ public:
      File * openFile( const StrA & name, const StrA & mode )
      {
         StrA nativeName;
-        toNative( nativeName, name );
+        toNativeDiskFilePath( nativeName, name );
         AutoObjPtr<DiskFile> fp( new DiskFile );
         if( !fp->open( nativeName, mode ) ) return false;
         return fp.detach();
@@ -316,7 +316,7 @@ private:
         // validate dirName
         GN_ASSERT( exist(dirName) && isDir(dirName) );
 
-        StrA curDir = FileSystem::toNative( dirName );
+        StrA curDir = FileSystem::toNativeDiskFilePath( dirName );
 
         // search in sub-directories
         if( recursive )
@@ -405,9 +405,9 @@ public:
         return !path.empty() && '/' == path[0];
     }
 
-    void toNative( StrA & result, const StrA & path )
+    void toNativeDiskFilePath( StrA & result, const StrA & path )
     {
-        mNativeFs.toNative( result, joinPath( mRootDir, path ) );
+        mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
     }
 
     std::vector<StrA> &
@@ -469,9 +469,9 @@ public:
         return !path.empty() && '/' == path[0];
     }
 
-    void toNative( StrA & result, const StrA & path )
+    void toNativeDiskFilePath( StrA & result, const StrA & path )
     {
-        mNativeFs.toNative( result, joinPath( mRootDir, path ) );
+        mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
     }
 
     std::vector<StrA> &
@@ -545,12 +545,12 @@ public:
         return !path.empty() && '/' == path[0];
     }
 
-    void toNative( StrA & result, const StrA & path )
+    void toNativeDiskFilePath( StrA & result, const StrA & path )
     {
         result.clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
-        GN::fs::toNativePath( result, joinPath( *root, path ) );
+        GN::fs::toNativeDiskFilePath( result, joinPath( *root, path ) );
     }
 
     std::vector<StrA> &
@@ -666,7 +666,7 @@ public:
     bool exist( const StrA & ) { return false; }
     bool isDir( const StrA & ) { return false; }
     bool isFile( const StrA & ) { return false; }
-    void toNative( StrA & result, const StrA & path ) { result = path; }
+    void toNativeDiskFilePath( StrA & result, const StrA & path ) { result = path; }
     bool isAbsPath( const StrA & ) { return true; }
     std::vector<StrA> & glob( std::vector<StrA> & result, const StrA &, const StrA &, bool, bool )
     {

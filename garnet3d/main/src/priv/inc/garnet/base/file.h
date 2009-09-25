@@ -14,12 +14,17 @@ namespace GN
     ///
     /// 文件定位模式
     ///
-    enum FileSeekMode
+    struct FileSeek
     {
-        FILE_SEEK_CUR,       ///< same as standard SEEK_CUR
-        FILE_SEEK_END,       ///< same as standard SEEK_END
-        FILE_SEEK_SET,       ///< same as standard SEEK_SET
-        NUM_FILE_SEEK_MODES, ///< number of avaliable seeking modes
+        enum ENUM
+        {
+            CUR,       ///< same as standard SEEK_CUR
+            END,       ///< same as standard SEEK_END
+            SET,       ///< same as standard SEEK_SET
+            NUM_MODES, ///< number of avaliable seeking modes
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( FileSeek, ENUM );
     };
 
     ///
@@ -93,7 +98,7 @@ namespace GN
         ///
         /// \return   return false if error
         ///
-        virtual bool seek( int /*offset*/, FileSeekMode /*origin*/ ) = 0;
+        virtual bool seek( int /*offset*/, FileSeek /*origin*/ ) = 0;
 
         ///
         /// 返回当前文件读写游标的位置. Return -1 if something goes wrong.
@@ -247,7 +252,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const;
-        bool seek( int, FileSeekMode );
+        bool seek( int, FileSeek );
         size_t tell() const;
         size_t size() const;
         void * map( size_t, size_t, bool ) { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); return 0; }
@@ -362,7 +367,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const { return (mStart+mSize) == mPtr; }
-        bool seek( int offset, FileSeekMode origin );
+        bool seek( int offset, FileSeek origin );
         size_t tell() const { return mPtr - mStart; }
         size_t size() const { return mSize; }
         void * map( size_t offset, size_t length, bool )
@@ -406,7 +411,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const { return mBuffer.size() == mCursor; }
-        bool seek( int offset, FileSeekMode origin );
+        bool seek( int offset, FileSeek origin );
         size_t tell() const { return mCursor; }
         size_t size() const { return mBuffer.size(); }
         void * map( size_t offset, size_t length, bool )

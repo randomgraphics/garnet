@@ -243,7 +243,7 @@ struct D3D9StateDump
 
             if( td.ref.empty() ) continue;
 
-            StrA filename = fs::toNativePath( td.ref );
+            StrA filename = fs::toNativeDiskFilePath( td.ref );
 
             D3DXIMAGE_INFO info;
 

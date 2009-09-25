@@ -9,7 +9,7 @@ bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
     DiskFile fp;
 
-    if( !fp.open( fs::toNativePath(filename), "rt" ) ) return false;
+    if( !fp.open( fs::toNativeDiskFilePath(filename), "rt" ) ) return false;
 
     if( !doc.parse( xpr, fp ) )
     {

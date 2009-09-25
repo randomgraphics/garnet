@@ -104,7 +104,7 @@ private:
     {
         File * fp = (File*)stream->descriptor.pointer;
 
-        fp->seek( offset, FILE_SEEK_SET );
+        fp->seek( offset, FileSeek::SET );
 
         size_t readen;
 
