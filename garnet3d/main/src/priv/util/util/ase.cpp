@@ -1553,7 +1553,8 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
 
     // copy vertices into destination scene
-    OutputVertex * vertices = (OutputVertex*)heapAlloc( sizeof(OutputVertex) * vc.size() );
+    AutoRef<Blob> blob( new SimpleBlob(sizeof(OutputVertex) * vc.size()) );
+    OutputVertex * vertices = (OutputVertex*)blob->data();
     if( NULL == vertices ) return false;
     for( size_t i = 0; i < vc.size(); ++i )
     {
@@ -1571,32 +1572,32 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
     dstmesh.numvtx = vc.size();
     dstmesh.vertices[0] = vertices;
-    dst.meshdata.append( vertices );
+    dst.meshdata.append( blob );
 
     // copy index data into destination scene
     dstmesh.numidx = ib.size();
     if( vc.size() > 0x10000 )
     {
         // 32bit index buffer
-        void * indices = heapAlloc( sizeof(UInt32) * ib.size() );
-        if( NULL == indices ) return false;
-        memcpy( indices, ib.cptr(), sizeof(UInt32) * ib.size() );
+        blob.attach( new SimpleBlob(sizeof(UInt32) * ib.size()) );
+        memcpy( blob->data(), ib.cptr(), blob->size() );
         dstmesh.idx32 = true;
-        dstmesh.indices = indices;
-        dst.meshdata.append( indices );
+        dstmesh.indices = blob->data();
+        dst.meshdata.append( blob );
     }
     else
     {
         // 16bit index buffer
-        UInt16 * indices = (UInt16*)heapAlloc( sizeof(UInt16) * ib.size() );
+        blob.attach( new SimpleBlob(sizeof(UInt16) * ib.size()) );
+        UInt16 * idx16 = (UInt16*)blob->data();
         for( size_t i = 0; i < ib.size(); ++i )
         {
             GN_ASSERT( ib[i] < 0x10000 );
-            indices[i] = (UInt16)ib[i];
+            idx16[i] = (UInt16)ib[i];
         }
         dstmesh.idx32 = false;
-        dstmesh.indices = indices;
-        dst.meshdata.append( indices );
+        dstmesh.indices = idx16;
+        dst.meshdata.append( blob );
     }
 
     // success
@@ -1639,11 +1640,6 @@ void GN::util::AseScene::clear()
     materials.clear();
     meshes.clear();
     subsets.clear();
-
-    for( size_t i = 0; i < meshdata.size(); ++i )
-    {
-        heapFree( meshdata[i] );
-    }
     meshdata.clear();
 }
 

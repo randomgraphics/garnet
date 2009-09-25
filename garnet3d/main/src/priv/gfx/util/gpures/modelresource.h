@@ -155,7 +155,7 @@ namespace GN { namespace gfx
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          modelName() const { return mOwner.database().getResourceName( &mOwner ); }
 
-        bool init( const ModelResourceDesc & desc );
+        bool fromDesc( const ModelResourceDesc & desc );
         void clear();
 
         void copyFrom( const Impl & other );

@@ -236,14 +236,14 @@ namespace GN { namespace gfx
         size_t getIdxBufSize() const;
 
         ///
-        /// Load descriptor from file
+        /// Load descriptor from file, return the mesh data. Return a NULL blob for failure.
         ///
-        bool loadFromFile( File &, DynaArray<UInt8> & meshdata );
+        AutoRef<Blob> loadFromFile( File & );
 
         ///
         /// Load descriptor from file
         ///
-        bool loadFromFile( const char * filename, DynaArray<UInt8> & meshdata );
+        AutoRef<Blob> loadFromFile( const char * filename );
 
         ///
         /// Save descriptor to file
@@ -628,14 +628,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        StrA                            effectResourceName; ///< effect resource name. If empty, then create a new effect using effectDesc
-        EffectResourceDesc              effectResourceDesc; ///< Used to create new effect, if effect resource name is empty.
-        std::map<StrA,ModelTextureDesc> textures;           ///< key is effect parameter name
-        std::map<StrA,ModelUniformDesc> uniforms;           ///< key is effect parameter name
+        StrA                            effect;   ///< effect resource name.
+        std::map<StrA,ModelTextureDesc> textures; ///< key is effect parameter name
+        std::map<StrA,ModelUniformDesc> uniforms; ///< key is effect parameter name
 
-        StrA                            meshResourceName; ///< if empty, then create a new mesh using meshDesc
-        MeshResourceDesc                meshResourceDesc; ///< Used to create new mesh, if mesh resource name is empty
-        MeshResourceSubset              subset;           ///< Mesh subset information.
+        StrA                            mesh;     ///< Mesh resource name.
+        MeshResourceSubset              subset;   ///< Mesh subset information.
 
         //@}
 

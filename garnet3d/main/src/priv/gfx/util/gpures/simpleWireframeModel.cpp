@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 static ModelResourceDesc sWireframeModelDesc()
 {
     ModelResourceDesc md;
-    md.effectResourceName = "@WIREFRAME";
+    md.effect = "@WIREFRAME";
 
 #define INIT_UNIFORM( name, type, defval ) \
     if( 1 ) { \

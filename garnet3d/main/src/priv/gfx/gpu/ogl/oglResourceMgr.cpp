@@ -69,7 +69,7 @@ void GN::gfx::OGLGpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::CompiledGpuProgram *
+Blob *
 GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;

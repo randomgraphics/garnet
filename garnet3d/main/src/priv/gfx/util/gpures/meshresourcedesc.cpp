@@ -51,45 +51,45 @@ MeshFileType sDetermineMeshFileType( File & )
 //
 //
 // -----------------------------------------------------------------------------
-bool sLoadFromMeshBinaryFile( File & fp, DynaArray<UInt8> & meshdata, MeshResourceDesc & desc )
+AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 {
     MeshBinaryFileHeader header;
 
     if( !fp.read( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read mesh header." );
-        return false;
+        return AutoRef<Blob>::NULLREF;
     }
 
     // verify header
     if( 0 == memcmp( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
     {
         GN_ERROR(sLogger)( "Not a garnet mesh binary." );
-        return false;
+        return AutoRef<Blob>::NULLREF;
     }
     if( 0x04030201 != header.endian )
     {
         GN_ERROR(sLogger)( "Unsupported endian." );
-        return false;
+        return AutoRef<Blob>::NULLREF;
     }
     if( 0x00010000 != header.version )
     {
         GN_ERROR(sLogger)( "Unsupported mesh version." );
-        return false;
+        return AutoRef<Blob>::NULLREF;
     }
 
     // analyze vertex format
     VertexFormatProperties vfp;
-    if( !vfp.analyze( header.vtxfmt ) ) return false;
+    if( !vfp.analyze( header.vtxfmt ) ) return AutoRef<Blob>::NULLREF;
 
     // read mesh data
-    meshdata.resize( header.bytes );
-    if( !fp.read( meshdata.cptr(), header.bytes, NULL ) )
+    AutoRef<Blob> blob( new SimpleBlob(header.bytes) );
+    if( !fp.read( blob->data(), header.bytes, NULL ) )
     {
         GN_ERROR(sLogger)( "fail to read mesh data." );
-        return false;
+        return AutoRef<Blob>::NULLREF;
     }
-    const UInt8 * start = meshdata.cptr();
+    const UInt8 * start = (const UInt8*)blob->data();
 
     desc.prim   = (PrimitiveType)header.prim;
     desc.numvtx = header.numvtx;
@@ -121,19 +121,18 @@ bool sLoadFromMeshBinaryFile( File & fp, DynaArray<UInt8> & meshdata, MeshResour
         desc.indices = NULL;
     }
 
-    return true;
+    return blob;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool sLoadFromMeshXMLFile( File & fp, DynaArray<UInt8> & meshdata, MeshResourceDesc & desc )
+AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
     GN_UNUSED_PARAM( fp );
-    GN_UNUSED_PARAM( meshdata );
     GN_UNUSED_PARAM( desc );
     GN_UNIMPL();
-    return false;
+    return AutoRef<Blob>::NULLREF;
 }
 
 // *****************************************************************************
@@ -173,39 +172,37 @@ size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::loadFromFile( File & fp, DynaArray<UInt8> & meshdata )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
 {
     clear();
-    meshdata.clear();
 
     switch( sDetermineMeshFileType( fp ) )
     {
         case MESH_FILE_XML:
-            return sLoadFromMeshXMLFile( fp, meshdata, *this );
+            return sLoadFromMeshXMLFile( fp, *this );
 
         case MESH_FILE_BIN:
-            return sLoadFromMeshBinaryFile( fp, meshdata, *this );
+            return sLoadFromMeshBinaryFile( fp, *this );
 
         case MESH_FILE_UNKNOWN:
         default:
-            return false;
+            return AutoRef<Blob>::NULLREF;
     };
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::loadFromFile( const char * filename, DynaArray<UInt8> & meshdata )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
 {
     GN_INFO(sLogger)( "Load mesh from file: %s", filename?filename:"<null filename>" );
 
     clear();
-    meshdata.clear();
 
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
-    if( !fp ) return false;
+    if( !fp ) return AutoRef<Blob>::NULLREF;
 
-    return loadFromFile( *fp, meshdata );
+    return loadFromFile( *fp );
 }
 
 //

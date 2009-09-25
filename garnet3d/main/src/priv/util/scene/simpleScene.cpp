@@ -287,54 +287,12 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.size(); ++i )
     {
-        const AseMesh    & src = ase.meshes[i];
+        const AseMesh & src = ase.meshes[i];
 
-        const StrA       & meshname = FULL_MESH_NAME(src.name);
+        const StrA    & meshname = FULL_MESH_NAME(src.name);
 
-        MeshResourceDesc & dst = desc.meshes[meshname];
-
-        dst = src;
-
-        for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
-        {
-            size_t vbsize = src.getVtxBufSize( i );
-            if( vbsize > 0 )
-            {
-                desc.meshdata.resize( desc.meshdata.size() + 1 );
-                desc.meshdata.back().size = vbsize;
-                desc.meshdata.back().data = heapAlloc( vbsize );
-                if( !desc.meshdata.back().data )
-                {
-                    GN_ERROR(sLogger)( "Out of memory." );
-                    return false;
-                }
-                memcpy( desc.meshdata.back().data, src.vertices[i], vbsize );
-                dst.vertices[i] = desc.meshdata.back().data;
-            }
-            else
-            {
-                dst.vertices[i] = 0;
-            }
-        }
-
-        size_t ibsize = src.getIdxBufSize();
-        if( ibsize > 0 )
-        {
-            desc.meshdata.resize( desc.meshdata.size() + 1 );
-            desc.meshdata.back().size = ibsize;
-            desc.meshdata.back().data = heapAlloc( ibsize );
-            if( !desc.meshdata.back().data )
-            {
-                GN_ERROR(sLogger)( "Out of memory." );
-                return false;
-            }
-            memcpy( desc.meshdata.back().data, src.indices, ibsize );
-            dst.indices = desc.meshdata.back().data;
-        }
-        else
-        {
-            dst.indices = 0;
-        }
+        // copy mesh
+        desc.meshes[meshname] = src;
 
         // create the entity
         SimpleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
@@ -343,6 +301,9 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         entityDesc.spatial.orientation.fromRotation( src.rotaxis, src.rotangle );
         entityDesc.spatial.bbox = src.selfbbox;
     }
+
+    // copy mesh data
+    desc.meshdata = ase.meshdata;
 
     // create models
     for( size_t i = 0; i < ase.subsets.size(); ++i )
@@ -357,7 +318,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // initialize the model descriptor based on the template
         ModelResourceDesc model = *modelTemplate;
-        model.meshResourceName = FULL_MESH_NAME(asemesh.name);
+        model.mesh = FULL_MESH_NAME(asemesh.name);
         model.subset = subset;
 
         // associate texture to the model
@@ -375,8 +336,8 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         desc.models.append( model );
 
         // add the model to appropriate entity
-        GN_ASSERT( desc.entities.end() != desc.entities.find(model.meshResourceName) );
-        desc.entities[model.meshResourceName].models.append( desc.models.size() - 1 );
+        GN_ASSERT( desc.entities.end() != desc.entities.find(model.mesh) );
+        desc.entities[model.mesh].models.append( desc.models.size() - 1 );
     }
 
     // setup bounding box of the whole scene
@@ -390,6 +351,130 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 // *****************************************************************************
 
 //
+// post error message
+// -----------------------------------------------------------------------------
+static void sPostXMLError( const XmlNode & node, const StrA & msg )
+{
+    GN_UNUSED_PARAM( node );
+    GN_ERROR(sLogger)( "%s", msg.cptr() );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
+{
+    ModelResourceDesc md;
+
+    if( !md.loadFromXmlNode( root, basedir ) ) return false;
+
+    if( desc.meshes.end() == desc.meshes.find( md.mesh ) )
+    {
+        MeshResourceDesc mesh;
+        AutoRef<Blob> blob = mesh.loadFromFile( fs::resolvePath( basedir, md.mesh ) );
+        if( !blob ) return false;
+
+        desc.meshes[md.mesh] = mesh;
+        desc.meshdata.append( blob );
+    }
+
+    desc.models.append( md );
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool
+sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
+{
+    GN_ASSERT( root.name == "entity" );
+
+    XmlAttrib * entityName = root.findAttrib( "name" );
+    if( NULL == entityName )
+    {
+        sPostXMLError( root, "Entity name attribute is missing." );
+        return false;
+    }
+
+    SimpleWorldDesc::EntityDesc entity;
+
+    // parse spatial
+    XmlElement * spatialNode = root.findChildElement( "spatial" );
+    if( !spatialNode )
+    {
+        sPostXMLError( root, "<spatial> element is missing." );
+        return false;
+    }
+    else
+    {
+        XmlAttrib * a = spatialNode->findAttrib( "parent" );
+        if( a ) entity.spatial.parent = a->value;
+
+        a = root.findAttrib( "position" );
+        if( !a || 3 != str2Floats( (float*)&entity.spatial.position, 3, a->value ) )
+        {
+            sPostXMLError( *spatialNode, "Invalid position" );
+            entity.spatial.position.set( 0, 0, 0 );
+        }
+
+        a = root.findAttrib( "orientation" );
+        if( !a || 4 != str2Floats( (float*)&entity.spatial.orientation, 4, a->value ) )
+        {
+            sPostXMLError( *spatialNode, "Invalid orientation" );
+            entity.spatial.orientation.set( 0, 0, 0, 1 );
+        }
+
+        a = root.findAttrib( "bbox" );
+        if( !a || 6 != str2Floats( (float*)&entity.spatial.bbox, 6, a->value ) )
+        {
+            sPostXMLError( *spatialNode, "Invalid bounding box" );
+            entity.spatial.bbox = Boxf( 0, 0, 0, 0, 0, 0 );
+        }
+    }
+
+    // parse visual
+    XmlElement * visualNode = root.findChildElement( "visual" );
+    if( visualNode )
+    {
+        for( XmlNode * n = visualNode->child; n != NULL; n = n->next )
+        {
+            XmlElement * e = n->toElement();
+            if( !e ) continue;
+
+            if( "model" == e->name )
+            {
+                XmlAttrib * a = e->findAttrib( "ref" );
+                if( !a )
+                {
+                    sPostXMLError( *e, "ref attribute is missing." );
+                    return false;
+                }
+
+                size_t modelIndex;
+                if( !str2Int<size_t>( modelIndex, a->value ) ||
+                    modelIndex > desc.models.size() )
+                {
+                    sPostXMLError( *e, "ref attribute is missing." );
+                    return false;
+                }
+
+                entity.models.append( modelIndex );
+            }
+            else
+            {
+                sPostXMLError( *e, strFormat( "Unknown element: <%s>", e->name.cptr() ) );
+            }
+        }
+    }
+
+    // done
+    return true;
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 static bool
@@ -397,7 +482,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
 {
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.parse( xpr, fp ) )
+    if( !doc.parse( xpr, file ) )
     {
         static Logger * sLogger = getLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
@@ -405,14 +490,69 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp.name(),
+            file.name(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.cptr() );
         return false;
     }
     GN_ASSERT( xpr.root );
-    return t.loadFromXmlNode( *xpr.root, basedir );
+
+    StrA basedir = fs::dirName( file.name() );
+
+    XmlElement * root = xpr.root->toElement();
+    if( !root || "simpleWorld" != root->name )
+    {
+        sPostXMLError( *root, "Root element name must be \"<simpleWorld>\"." );
+        return false;
+    }
+
+    // parse models
+    XmlElement * modelsNode = root->findChildElement( "models" );
+    if( NULL == modelsNode )
+    {
+        sPostXMLError( *root, "Element <models> is missing." );
+        return false;
+    }
+    for( XmlNode * n = modelsNode->child; n != NULL; n = n->next )
+    {
+        XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "model" == e->name )
+        {
+            if( !sParseModel( desc, *e, basedir ) ) return false;
+        }
+        else
+        {
+            sPostXMLError( *e, strFormat( "Ignore unknowned element: <%s>", e->name.cptr() ) );
+        }
+    }
+
+    // parse entities
+    XmlElement * entitiesNode = root->findChildElement( "entities" );
+    if( NULL == entitiesNode )
+    {
+        sPostXMLError( *root, "Element <entities> is missing." );
+        return false;
+    }
+    for( XmlNode * n = entitiesNode->child; n != NULL; n = n->next )
+    {
+        XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "entity" == e->name )
+        {
+            if( !sParseEntity( desc, *e ) ) return false;
+        }
+        else
+        {
+            sPostXMLError( *e, strFormat( "Ignore unknowned element: <%s>", e->name.cptr() ) );
+        }
+    }
+
+    // done
+    return true;
 }
 
 //
@@ -470,10 +610,10 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     {
         ModelResourceDesc model = desc.models[i];
 
-        std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.meshResourceName );
+        std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.mesh );
         if( iter != meshNameMapping.end() )
         {
-            model.meshResourceName = iter->second;
+            model.mesh = iter->second;
         }
 
         if( !model.saveToXmlNode( *models, dirname ) ) return false;
@@ -482,7 +622,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // rename entities
     int entityIndex = 0;
     std::map<StrA,StrA> entityNameMap;
-    for( std::map<StrA,EntityDesc>::const_iterator i = desc.entities.begin();
+    for( std::map<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
         i != desc.entities.end();
         ++i )
     {
@@ -494,12 +634,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write entities
     XmlElement * entities = xmldoc.createNode( XML_ELEMENT, root )->toElement();
     entities->name = "entities";
-    for( std::map<StrA,EntityDesc>::const_iterator i = desc.entities.begin();
+    for( std::map<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
         i != desc.entities.end();
         ++i )
     {
-        const StrA       & entityName = entityNameMap.find(i->first)->second;
-        const EntityDesc & entityDesc = i->second;
+        const StrA                        & entityName = entityNameMap.find(i->first)->second;
+        const SimpleWorldDesc::EntityDesc & entityDesc = i->second;
 
         XmlElement * entity = xmldoc.createNode( XML_ELEMENT, entities )->toElement();
         entity->name = "entity";
@@ -617,26 +757,26 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
             // to prevent it from being deleted, until the model is created.
             AutoRef<MeshResource> mesh;
 
-            if( !modelDesc.meshResourceName.empty() )
+            if( !modelDesc.mesh.empty() )
             {
-                mesh = world.gdb().findResource<MeshResource>( modelDesc.meshResourceName );
+                mesh = world.gdb().findResource<MeshResource>( modelDesc.mesh );
                 if( !mesh )
                 {
-                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.meshResourceName);
+                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
 
                     if( desc.meshes.end() == meshIter )
                     {
                         GN_ERROR(sLogger)(
                             "Model %d references a mesh '%s' that does not belong to this scene.",
                             i,
-                            modelDesc.meshResourceName.cptr() );
+                            modelDesc.mesh.cptr() );
                         continue; // ignore the model
                     }
 
                     const MeshResourceDesc & meshDesc = meshIter->second;
 
                     // create new mesh
-                    mesh = world.gdb().createResource<MeshResource>( modelDesc.meshResourceName );
+                    mesh = world.gdb().createResource<MeshResource>( modelDesc.mesh );
                     if( !mesh || !mesh->reset( &meshDesc ) ) continue;
                 }
             }
@@ -660,13 +800,8 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
 // -----------------------------------------------------------------------------
 void GN::util::SimpleWorldDesc::clear()
 {
-    for( size_t i = 0; i < meshdata.size(); ++i )
-    {
-        safeHeapFree( meshdata[i].data );
-    }
-    meshdata.clear();
-
     meshes.clear();
+    meshdata.clear();
     models.clear();
     entities.clear();
 }

@@ -62,7 +62,7 @@ void GN::gfx::D3D10Gpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::CompiledGpuProgram *
+GN::Blob *
 GN::gfx::D3D10Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;

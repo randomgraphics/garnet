@@ -224,7 +224,7 @@ namespace GN { namespace gfx
         virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
         virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const;
 
-        virtual CompiledGpuProgram * compileGpuProgram( const GpuProgramDesc & desc );
+        virtual Blob * compileGpuProgram( const GpuProgramDesc & desc );
         virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
         virtual Uniform * createUniform( size_t size );
         virtual Texture * createTexture( const TextureDesc & desc );

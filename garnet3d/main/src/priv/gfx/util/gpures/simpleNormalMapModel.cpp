@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 static ModelResourceDesc sNormalMapModelDesc()
 {
     ModelResourceDesc md;
-    md.effectResourceName = "@NORMAL_MAP";
+    md.effect = "@NORMAL_MAP";
 
     md.textures["ALBEDO_TEXTURE"].resourceName = "@WHITE";
     md.textures["NORMAL_TEXTURE"].resourceName = "@FLAT_NORMAL_MAP";

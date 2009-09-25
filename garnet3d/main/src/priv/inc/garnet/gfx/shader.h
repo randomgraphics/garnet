@@ -278,15 +278,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Contains platform dependent program data, which can be used for fast program loading/saving/creation.
-    ///
-    struct CompiledGpuProgram : public RefCounter
-    {
-        virtual const void * data() const = 0;
-        virtual size_t       size() const = 0;
-    };
-
-    ///
     /// Graphics shader interface
     ///
     struct GpuProgram : public RefCounter
