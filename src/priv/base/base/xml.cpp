@@ -349,8 +349,11 @@ static void XMLCALL sCharacterDataHandler(
         GN::StrA text = sMangleText( s, len );
         if( !text.empty() && tracer->parent->type == GN::XML_ELEMENT )
         {
-            tracer->parent->toElement()->text += ' ';
-            tracer->parent->toElement()->text += text;
+            GN::StrA & currentText = tracer->parent->toElement()->text;
+
+            if( !currentText.empty() ) currentText += ' ';
+
+            currentText += text;
         }
     }
 }
@@ -554,8 +557,6 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
     std::vector<char> buf( fp.size() );
 
     size_t sz;
-
-    GN_TODO( "use memory-mapped file to avoid extra data copy" );
 
     if( !fp.read( &buf[0], fp.size(), &sz ) )
     {

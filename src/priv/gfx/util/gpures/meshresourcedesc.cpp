@@ -40,12 +40,118 @@ struct MeshBinaryFileHeader
 static const char MESH_BINARY_TAG[] = "GARNET MESH BIN";
 GN_CASSERT( sizeof(MESH_BINARY_TAG) == 16 );
 
+struct MeshVertexPosition
+{
+    const float * x;
+    size_t        strideX;
+    const float * y;
+    size_t        strideY;
+    const float * z;
+    size_t        strideZ;
+};
+
 //
 //
 // -----------------------------------------------------------------------------
-MeshFileType sDetermineMeshFileType( File & )
+const VertexElement * sFindPositionElement( const VertexFormat & vf )
 {
-    return MESH_FILE_UNKNOWN;
+    for( size_t i = 0; i < vf.numElements; ++i )
+    {
+        const VertexElement & e = vf.elements[i];
+
+        if( ( 0 == strCmpI( "position", e.binding ) ||
+              0 == strCmpI( "pos", e.binding ) ||
+              0 == strCmpI( "gl_vertex", e.binding ) )
+            &&
+            0 == e.bindingIndex )
+        {
+            return &e;
+        }
+    }
+
+    GN_ERROR(sLogger)( "Position semantice is not found in vertex format." );
+    return NULL;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc & desc )
+{
+    const VertexElement * positionElement = sFindPositionElement( desc.vtxfmt );
+    if( NULL == positionElement ) return false;
+
+    const float * vertices = (const float*)( ((const UInt8*)desc.vertices[positionElement->stream]) + positionElement->offset );
+
+    if( ColorFormat::FLOAT1 == positionElement->format )
+    {
+        pos.x = vertices;
+        pos.y = 0;
+        pos.z = 0;
+    }
+    else if( ColorFormat::FLOAT2 == positionElement->format )
+    {
+        pos.x = vertices;
+        pos.y = vertices + 1;
+        pos.z = 0;
+    }
+    else if( ColorFormat::FLOAT3 == positionElement->format )
+    {
+        pos.x = vertices;
+        pos.y = vertices + 1;
+        pos.z = vertices + 2;
+    }
+    else if( ColorFormat::FLOAT4 == positionElement->format )
+    {
+        pos.x = vertices;
+        pos.y = vertices + 1;
+        pos.z = vertices + 2;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().cptr() );
+        return false;
+    }
+    pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+MeshFileType sDetermineMeshFileType( File & fp )
+{
+    size_t currentPos = fp.tell();
+
+    char buf[16];
+
+    size_t readen;
+    if( !fp.read( buf, 16, &readen ) )
+    {
+        GN_ERROR(sLogger)( "Fail to read mesh file header." );
+        return MESH_FILE_UNKNOWN;
+    }
+
+    if( !fp.seek( currentPos, FileSeek::SET ) )
+    {
+        GN_ERROR(sLogger)( "Fail to seek mesh file reading cursor back." );
+        return MESH_FILE_UNKNOWN;
+    }
+
+    if( 0 == memcmp( buf, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
+    {
+        return MESH_FILE_BIN;
+    }
+    else if( 0 == strCmpI( buf, "<xml" ) )
+    {
+        return MESH_FILE_XML;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Unknown mesh file type." );
+        return MESH_FILE_UNKNOWN;
+    }
 }
 
 //
@@ -62,9 +168,9 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
     }
 
     // verify header
-    if( 0 == memcmp( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
+    if( 0 != memcmp( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
     {
-        GN_ERROR(sLogger)( "Not a garnet mesh binary." );
+        GN_ERROR(sLogger)( "Unrecognized binary tag" );
         return AutoRef<Blob>::NULLREF;
     }
     if( 0x04030201 != header.endian )
@@ -97,6 +203,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
     desc.idx32  = !!header.idx32;
     desc.dynavb = !!header.dynavb;
     desc.dynaib = !!header.dynaib;
+    desc.vtxfmt = header.vtxfmt;
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( vfp.used[i] )
@@ -138,6 +245,37 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 // *****************************************************************************
 // public methods
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResourceDesc::calculateBoundingBox( Box<float> & box ) const
+{
+    box.x = box.y = box.w = box.h = 0.0f;
+
+    MeshVertexPosition positions;
+
+    if( !sGetMeshVertexPositions( positions, *this ) ) return;
+
+    GN::calculateBoundingBox( box, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) const
+{
+    sphere.center.set( 0, 0, 0 );
+    sphere.radius = 0;
+
+    MeshVertexPosition positions;
+
+    if( !sGetMeshVertexPositions( positions, *this ) ) return;
+
+    GN::calculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+}
 
 //
 //
@@ -217,6 +355,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     memcpy( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) );
     header.endian = 0x04030201;
     header.version = 0x00010000;
+    header.prim   = this->prim;
     header.numvtx = this->numvtx;
     header.numidx = this->numidx;
     header.idx32  = this->idx32;
@@ -238,6 +377,8 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
             header.vertices[i] = header.bytes;
             header.bytes += vbsizes[i];
         }
+        header.strides[i] = this->strides[i];
+        header.offsets[i] = this->offsets[i];
     }
     size_t ibsize;
     if( numidx > 0 )

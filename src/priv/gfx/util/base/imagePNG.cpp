@@ -81,7 +81,7 @@ bool PNGReader::checkFormat( GN::File & fp )
 
     unsigned char buf[8];
 
-    if( !fp.seek( 0, GN::FILE_SEEK_SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
     if( !fp.read( buf, 8, &sz ) || 8 != sz ) return false;

@@ -24,29 +24,29 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        StrA pwd = toNativePath( getCurrentDir() );
+        StrA pwd = toNativeDiskFilePath( getCurrentDir() );
         StrA d = getCurrentDrive();
 
-        TS_ASSERT_EQUALS( d+PSS, toNativePath("/") );
-        TS_ASSERT_EQUALS( d+PSS, toNativePath("\\") );
+        TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("/") );
+        TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("\\") );
 
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativePath("/a//b/") );
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativePath("\\a\\\\b\\") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("/a//b/") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("\\a\\\\b\\") );
 
 #if GN_MSWIN
-        TS_ASSERT_EQUALS( "A:"PSS"b", toNativePath("a:b") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:/") );
-        TS_ASSERT_EQUALS( "A:"PSS, toNativePath("a:\\") );
+        TS_ASSERT_EQUALS( "A:"PSS"b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:\\") );
 #elif GN_POSIX
-        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNativePath("a:b") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:/") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativePath("a:\\") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:\\") );
 #endif
 
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativePath("a/:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativePath("a\\:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a/:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a\\:") );
     }
 
     void testJoin()
@@ -70,8 +70,8 @@ public:
         using namespace GN::fs;
 
         StrA s[2] ={
-            toNativePath("app::"),
-            toNativePath("startup::"),
+            toNativeDiskFilePath("app::"),
+            toNativeDiskFilePath("startup::"),
         };
 
         GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );

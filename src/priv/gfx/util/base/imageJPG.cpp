@@ -30,7 +30,7 @@ bool JPGReader::checkFormat( GN::File & fp )
 
     char buf[11];
 
-    if( !fp.seek( 0, GN::FILE_SEEK_SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
     if( !fp.read( buf, 11, &sz ) || 11 != sz ) return false;
