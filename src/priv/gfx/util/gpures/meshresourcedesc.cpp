@@ -232,13 +232,187 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 }
 
 //
+// get value of integer attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    return a && str2Int<T>( result, a->value.cptr() );
+}
+
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defaultValue )
+{
+    T result;
+
+    if( !sGetIntAttrib<T>( result, attribName ) )
+        return defaultValue;
+    else
+        return result;
+}
+
+//
+// get value of boolean attribute
+// -----------------------------------------------------------------------------
+static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defaultValue )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a ) return defaultValue;
+
+    if( 0 == strCmpI( "1", a->value.cptr() ) ||
+        0 == strCmpI( "true", a->value.cptr() ) )
+    {
+        return true;
+    }
+    else if( 0 == strCmpI( "0", a->value.cptr() ) ||
+             0 == strCmpI( "false", a->value.cptr() ) )
+    {
+        return false;
+    }
+    else
+    {
+        return defaultValue;
+    }
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
-    GN_UNUSED_PARAM( fp );
-    GN_UNUSED_PARAM( desc );
-    GN_UNIMPL();
+    desc.clear();
+
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, fp ) )
+    {
+        GN_ERROR(sLogger)(
+            "Fail to parse XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp.name(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return AutoRef<Blob>::NULLREF;
+    }
+    GN_ASSERT( xpr.root );
+
+    XmlElement * root = xpr.root->toElement();
+    if( !root || root->name != "mesh" )
+    {
+        GN_ERROR(sLogger)( "Invalid root element." );
+        return AutoRef<Blob>::NULLREF;
+    }
+
+    XmlAttrib * a = root->findAttrib( "primtype" );
+    if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
+    {
+        GN_ERROR(sLogger)( "Missing or invalid primitive attribute." );
+        return AutoRef<Blob>::NULLREF;
+    }
+
+    if( !sGetIntAttrib( desc.numvtx, *root, "numvtx" ) )
+    {
+        GN_ERROR(sLogger)( "Missing or invalid numvtx attribute." );
+        return AutoRef<Blob>::NULLREF;
+    }
+
+    if( !sGetIntAttrib( desc.numidx, *root, "numidx" ) )
+    {
+        GN_ERROR(sLogger)( "Missing or invalid numidx attribute." );
+        return AutoRef<Blob>::NULLREF;
+    }
+
+    desc.idx32  = sGetBoolAttrib( *root, "idx32", false );
+    desc.dynavb = sGetBoolAttrib( *root, "dynavb", false );
+    desc.dynaib = sGetBoolAttrib( *root, "dynaib", false );
+
+    // get vertex format
+    XmlElement * vtxfmtNode = root->findChildElement( "vtxfmt" );
+    if( !vtxfmtNode )
+    {
+        GN_ERROR(sLogger)( "<vtxfmt> element is missing." );
+        return AutoRef<Blob>::NULLREF;
+    }
+    for( XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
+    {
+        XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "attrib" != e->name )
+        {
+            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.cptr() );
+            continue;
+        }
+
+        VertexElement ve;
+
+        if( !sGetIntAttrib( ve.stream, *e, "stream" ) )
+        {
+            GN_ERROR(sLogger)( "Missing or invalid stream attribute." );
+            return AutoRef<Blob>::NULLREF;
+        }
+
+        if( !sGetIntAttrib( ve.offset, *e, "offset" ) )
+        {
+            GN_ERROR(sLogger)( "Missing or invalid offset attribute." );
+            return AutoRef<Blob>::NULLREF;
+        }
+
+        a = e->findAttrib( "binding" );
+        if( !a )
+        {
+            GN_ERROR(sLogger)( "Missing binding attribute." );
+            return AutoRef<Blob>::NULLREF;
+        }
+
+        UInt8 bidx;
+        if( !sGetIntAttrib( bidx, *e, "bindingIndex" ) )
+        {
+            GN_ERROR(sLogger)( "Missing or invalid bindingIndex attribute." );
+            return AutoRef<Blob>::NULLREF;
+        }
+
+        ve.bindTo( a->value, bidx );
+
+        a = e->findAttrib( "format" );
+        if( !a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)) ) )
+        {
+            GN_ERROR(sLogger)( "Missing or invalid format attribute." );
+            return AutoRef<Blob>::NULLREF;
+        }
+    }
+
+    // parse vtxbuf and idxbuf elements
+    for( XmlNode * n = root->child; n != NULL; n = n->next )
+    {
+        XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "vtxbuf" == e->name )
+        {
+            GN_UNIMPL();
+        }
+        else if( "idxbuf" == e->name )
+        {
+            GN_UNIMPL();
+        }
+        else if( "vtxfmt" == e->name )
+        {
+            // silently ignored, since it is handled already.
+        }
+        else
+        {
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
+        }
+    }
+
     return AutoRef<Blob>::NULLREF;
 }
 
