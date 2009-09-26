@@ -255,6 +255,56 @@ const GN::gfx::ColorLayoutDesc GN::gfx::ALL_COLOR_LAYOUTS[] =
 //GN_CASSERT( GN_ARRAY_COUNT(GN::gfx::ALL_COLOR_LAYOUTS) == GN::gfx::NUM_COLOR_LAYOUTS );
 
 // *****************************************************************************
+// ColorFormat methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::ColorFormat::sFromString( ColorFormat & result, const char * str )
+{
+    struct ColorFormatName
+    {
+        ColorFormat  format;
+        const char * name;
+    };
+
+    static const ColorFormatName TABLE[] =
+    {
+        { FLOAT1, "float1" },
+        { FLOAT2, "float2" },
+        { FLOAT3, "float3" },
+        { FLOAT4, "float4" },
+    };
+
+    if( 0 == str || 0 == *str ) return false;
+
+    for( size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
+    {
+        const ColorFormatName & n = TABLE[i];
+
+        if( 0 == strCmpI( n.name, str ) )
+        {
+            result = n.format;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ColorFormat
+GN::gfx::ColorFormat::sFromString( const char * str )
+{
+    ColorFormat result;
+    return sFromString( result, str ) ? result : UNKNOWN;
+}
+
+// *****************************************************************************
 // public functions
 // *****************************************************************************
 

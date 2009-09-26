@@ -1,23 +1,20 @@
 <?xml version="1.0" standalone="yes"?>
 <mesh
-	primtype  = "TRIANGLE_LIST"
-	numprim   = "564"
-	startvtx  = "0"
-	minvtxidx = "0"
-	numvtx    = "284"
-	startidx  = "0"
+	primtype = "TRIANGLE_LIST"
+	numidx   = "1692"
+	numvtx   = "284"
 	>
 
 	<vtxfmt>
-		<attrib stream = "0" offset =  "0" semantic = "POS0" format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "12" semantic = "NML0" format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "24" semantic = "TEX0" format = "FMT_FLOAT2"/>
-		<attrib stream = "1" offset =  "0" semantic = "TEX1" format = "FMT_FLOAT3"/>
-		<attrib stream = "1" offset = "12" semantic = "TEX2" format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset =  "0" semantic = "TANG" format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset = "12" semantic = "BNML" format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset =  "0" binding = "POS" bindingIndex="0", format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset = "12" binding = "NML" bindingIndex="0", format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset = "24" binding = "TEX" bindingIndex="0", format = "FMT_FLOAT2"/>
+		<attrib stream = "1" offset =  "0" binding = "TEX" bindingIndex="1", format = "FMT_FLOAT3"/>
+		<attrib stream = "1" offset = "12" binding = "TEX" bindingIndex="2", format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset =  "0" binding = "TAN" bindingIndex="0", format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset = "12" binding = "NML" bindingIndex="1", format = "FMT_FLOAT3"/>
 	</vtxfmt>
-	
+
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="dolphin_1.vb"/>
 	<vtxbuf stream = "1" offset = "0" stride = "32" ref="dolphin_2.vb"/>
 	<vtxbuf stream = "2" offset = "0" stride = "32" ref="dolphin_3.vb"/>

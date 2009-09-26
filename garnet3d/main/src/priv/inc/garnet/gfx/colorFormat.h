@@ -460,6 +460,16 @@ namespace GN { namespace gfx
         inline StrA toString() const { StrA s; toString(s); return s; }
 
         ///
+        /// convert from string
+        ///
+        static bool sFromString( ColorFormat & result, const char * str );
+
+        ///
+        /// Convert from string, return ColorFormat::UNKNOWN for invalid string.
+        ///
+        static ColorFormat sFromString( const char * str );
+
+        ///
         /// equality check
         ///
         bool operator==( const ColorFormat & c ) const { return u32 == c.u32; }
