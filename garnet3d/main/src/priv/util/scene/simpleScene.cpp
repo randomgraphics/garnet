@@ -933,6 +933,10 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 // -----------------------------------------------------------------------------
 bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
 {
+    GN_SCOPE_PROFILER( profiler, "Save simple world to file" );
+
+    GN_INFO(sLogger)( "Write scene to : %s", filename );
+
     return sSaveToXML( *this, filename );
 }
 

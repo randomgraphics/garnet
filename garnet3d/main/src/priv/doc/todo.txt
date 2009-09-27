@@ -4,16 +4,28 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - scene framework and gpu resource database:
+    - better way to resolve standard/built-in effects and textures (instead of
+      using "@")
+      - create a utility function to do it. Or,
+      - create a file system for build-in resources
+  - mesh converter/loader
+    - prefix exported mesh name with scene name
+    - reference model by name, instead of index
+    - load and view specific model, instead of the whole scene
+    - fix viewer bug when viewing "TeraiYuki" model
+  - support chinese in XML parser
+  - skin mesh test case: porting DXSDK sample.
+
+- p1
   - scene framework:
-    - better way to referencing standard uniforms and textures in effect.
     - add light entity to SimpleWorldDesc
     - experiment with scene framework that supports ultra large world
       - spatial management
       - resource streaming
   - a coordinate basis renderer (like Maya)
   - skin mesh test case: porting DXSDK sample.
-
-- p1
+  - support chinese in XML parser
   - an boost style smart pointer template that do not require inheritence form
     GN::RefCounter.
   - renderer unit test framework
