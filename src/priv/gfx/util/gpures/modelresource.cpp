@@ -236,9 +236,16 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
             ModelTextureDesc & td = textures[a->value];
 
             a = e->findAttrib( "ref" );
-            if( a )
+            if( a && !a->value.empty() )
             {
-                td.resourceName = fs::resolvePath( basedir, a->value );
+                if( '@' == a->value[0] )
+                {
+                    td.resourceName = a->value;;
+                }
+                else
+                {
+                    td.resourceName = fs::resolvePath( basedir, a->value );
+                }
             }
             else
             {
