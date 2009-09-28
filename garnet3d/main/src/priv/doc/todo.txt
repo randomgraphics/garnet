@@ -10,10 +10,10 @@ TODO
       - create a utility function to do it. Or,
       - create a file system for build-in resources
   - mesh converter/loader
-    - prefix exported mesh name with scene name
-    - reference model by name, instead of index
     - load and view specific model, instead of the whole scene
-    - fix viewer bug when viewing "TeraiYuki" model
+    - better ASE support:
+      - opacity map (teraiyuki\woman.ase)
+      - non-geometry node (games\swordman\1.ase)
   - support chinese in XML parser
   - skin mesh test case: porting DXSDK sample.
 

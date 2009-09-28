@@ -324,7 +324,7 @@ namespace GN
             return false;
         }
         GN_ASSERT( xpr.root );
-        return t.loadFromXmlNode( *xpr.root, basedir );
+        return t.loadFromXml( *xpr.root, basedir );
 
         GN_UNGUARD;
     }

@@ -53,7 +53,7 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
 
     if( mEntities.validName( name ) )
     {
-        GN_ERROR(sLogger)( "Entity creation failed: entity named '%s' exists already." );
+        GN_ERROR(sLogger)( "Entity creation failed: entity named '%s' exists already.", name );
         return NULL;
     }
 

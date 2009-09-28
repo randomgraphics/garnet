@@ -432,7 +432,7 @@ struct D3D9StateDump
         operation.draw( dev );
     }
 
-    bool loadFromXmlNode( const XmlNode & root, const StrA & basedir )
+    bool loadFromXml( const XmlNode & root, const StrA & basedir )
     {
         // check root name
         const XmlElement * e = root.toElement();

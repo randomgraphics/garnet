@@ -282,7 +282,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     }
     filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) strFormat("%s.%s",filename.cptr(),n.cptr())
+#define FULL_MESH_NAME( n ) (n) // strFormat("%s.%s",filename.cptr(),n.cptr())
 
     // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.size(); ++i )
@@ -333,11 +333,13 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         }
 
         // add the model to model list
-        desc.models.append( model );
+        StrA modelname = strFormat( "%s.%u", asemesh.name.cptr(), i );
+        GN_ASSERT( desc.models.find( modelname ) == desc.models.end() );
+        desc.models[modelname] = model;
 
         // add the model to appropriate entity
         GN_ASSERT( desc.entities.end() != desc.entities.find(model.mesh) );
-        desc.entities[model.mesh].models.append( desc.models.size() - 1 );
+        desc.entities[model.mesh].models.append( modelname );
     }
 
     // setup bounding box of the whole scene
@@ -367,7 +369,14 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 {
     ModelResourceDesc md;
 
-    if( !md.loadFromXmlNode( root, basedir ) ) return false;
+    if( !md.loadFromXml( root, basedir ) ) return false;
+
+    XmlAttrib * modelName = root.findAttrib( "name" );
+    if( !modelName || modelName->value.empty() )
+    {
+        GN_ERROR(sLogger)( "Model name attribute is missing." );
+        return false;
+    }
 
     if( desc.meshes.end() == desc.meshes.find( md.mesh ) )
     {
@@ -379,7 +388,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
         desc.meshdata.append( blob );
     }
 
-    desc.models.append( md );
+    desc.models[modelName->value] = md;
 
     return true;
 }
@@ -453,15 +462,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
                     return false;
                 }
 
-                size_t modelIndex;
-                if( !str2Int<size_t>( modelIndex, a->value ) ||
-                    modelIndex > desc.models.size() )
-                {
-                    sPostXMLError( *e, "ref attribute is missing." );
-                    return false;
-                }
-
-                entity.models.append( modelIndex );
+                entity.models.append( a->value );
             }
             else
             {
@@ -580,6 +581,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     StrA fullpath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = fullpath;
     StrA dirname = fs::dirName( fullpath );
+    StrA basename = fs::baseName( fullpath );
 
     if( !fs::isDir( dirname ) )
     {
@@ -597,7 +599,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         const StrA & oldMeshName = i->first;
         const MeshResourceDesc & mesh = i->second;
 
-        StrA newMeshName = strFormat( "%d.mesh.bin", meshindex );
+        StrA newMeshName = strFormat( "%s.%d.mesh.bin", basename.cptr(), meshindex );
 
         if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
 
@@ -614,9 +616,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write models
     XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
-    for( size_t i = 0; i < desc.models.size(); ++i )
+    for( std::map<StrA,gfx::ModelResourceDesc>::const_iterator i = desc.models.begin();
+         i != desc.models.end();
+         ++i )
     {
-        ModelResourceDesc model = desc.models[i];
+        const StrA & modelName  = i->first;
+        ModelResourceDesc model = i->second;
 
         std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.mesh );
         if( iter != meshNameMapping.end() )
@@ -624,7 +629,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             model.mesh = iter->second;
         }
 
-        if( !model.saveToXmlNode( *models, dirname ) ) return false;
+        XmlElement * modelNode = model.saveToXml( *models, dirname );
+        if( !modelNode ) return false;
+
+        XmlAttrib * a = xmldoc.createAttrib( modelNode );
+        a->name = "name";
+        a->value = modelName;
     }
 
     // rename entities
@@ -705,7 +715,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
             XmlAttrib * a = xmldoc.createAttrib( modelref );
             a->name = "ref";
-            a->value = strFormat( "%u", entityDesc.models[i] );
+            a->value = entityDesc.models[i];
         }
     }
 
@@ -754,14 +764,14 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
     desc.meshdata.append( blob );
-    desc.models.append( model );
+    desc.models[meshname] = model;
 
     // create a entity for the model
     SimpleWorldDesc::EntityDesc & ed = desc.entities[meshname];
     ed.spatial.position.set( 0, 0, 0 );
     ed.spatial.orientation.set( 0, 0, 0, 1 );
     mesh.calculateBoundingBox( ed.spatial.bbox );
-    ed.models.append( 0 );
+    ed.models.append( meshname );
 
     // done
     desc.bbox = ed.spatial.bbox;
@@ -808,45 +818,55 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     calculateBoundingSphereFromBoundingBox( bs, bbox );
     e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
-    if( !entityDesc.models.empty() )
+    for( size_t i = 0; i < entityDesc.models.size(); ++i )
     {
-        for( size_t i = 0; i < entityDesc.models.size(); ++i )
+        const StrA & modelName = entityDesc.models[i];
+
+        std::map<StrA,gfx::ModelResourceDesc>::const_iterator modelIter;
+        modelIter = desc.models.find( modelName );
+        if( modelIter == desc.models.end() )
         {
-            const ModelResourceDesc & modelDesc = desc.models[entityDesc.models[i]];
-
-            // this variable is used to keep a reference to mesh resource,
-            // to prevent it from being deleted, until the model is created.
-            AutoRef<MeshResource> mesh;
-
-            if( !modelDesc.mesh.empty() )
-            {
-                mesh = world.gdb().findResource<MeshResource>( modelDesc.mesh );
-                if( !mesh )
-                {
-                    std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
-
-                    if( desc.meshes.end() == meshIter )
-                    {
-                        GN_ERROR(sLogger)(
-                            "Model %d references a mesh '%s' that does not belong to this scene.",
-                            i,
-                            modelDesc.mesh.cptr() );
-                        continue; // ignore the model
-                    }
-
-                    const MeshResourceDesc & meshDesc = meshIter->second;
-
-                    // create new mesh
-                    mesh = world.gdb().createResource<MeshResource>( modelDesc.mesh );
-                    if( !mesh || !mesh->reset( &meshDesc ) ) continue;
-                }
-            }
-
-            AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
-            if( !model->reset( &modelDesc ) ) continue;
-
-            e->getNode<VisualNode>()->addModel( model );
+            GN_ERROR(sLogger)(
+                "Entity %s references invalid model named \"%s\".",
+                entityName.cptr(),
+                modelName.cptr() );
+            continue;
         }
+
+        const ModelResourceDesc & modelDesc = modelIter->second;
+
+        // this variable is used to keep a reference to mesh resource,
+        // to prevent it from being deleted, until the model is created.
+        AutoRef<MeshResource> mesh;
+
+        if( !modelDesc.mesh.empty() )
+        {
+            mesh = world.gdb().findResource<MeshResource>( modelDesc.mesh );
+            if( !mesh )
+            {
+                std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
+
+                if( desc.meshes.end() == meshIter )
+                {
+                    GN_ERROR(sLogger)(
+                        "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.",
+                        modelName.cptr(),
+                        modelDesc.mesh.cptr() );
+                    continue; // ignore the model
+                }
+
+                const MeshResourceDesc & meshDesc = meshIter->second;
+
+                // create new mesh
+                mesh = world.gdb().createResource<MeshResource>( modelDesc.mesh );
+                if( !mesh || !mesh->reset( &meshDesc ) ) continue;
+            }
+        }
+
+        AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
+        if( !model->reset( &modelDesc ) ) continue;
+
+        e->getNode<VisualNode>()->addModel( model );
     }
 
     return e;

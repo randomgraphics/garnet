@@ -693,7 +693,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
 
     // load descriptor from file
     EffectResourceDesc desc;
-    if( !desc.loadFromXmlNode( *xpr.root ) ) return AutoRef<EffectResource>::NULLREF;
+    if( !desc.loadFromXml( *xpr.root ) ) return AutoRef<EffectResource>::NULLREF;
 
     // create new resource
     resource = db.createResource<EffectResource>( filename );

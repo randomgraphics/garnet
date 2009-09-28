@@ -432,13 +432,13 @@ namespace GN { namespace util
 
         struct EntityDesc
         {
-            SpatialDesc       spatial;
-            DynaArray<size_t> models;
+            SpatialDesc     spatial;
+            DynaArray<StrA> models;
         };
 
         std::map<StrA,gfx::MeshResourceDesc>  meshes;
         DynaArray<AutoRef<Blob> >             meshdata;
-        DynaArray<gfx::ModelResourceDesc>     models;
+        std::map<StrA,gfx::ModelResourceDesc> models;
         std::map<StrA,EntityDesc>             entities;
         Boxf                                  bbox;     ///< bounding box of the whole world.
         //@}

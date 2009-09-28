@@ -184,4 +184,15 @@ public:
         TS_ASSERT_EQUALS( "c", relPath( "c:/a/b/c", "c:/a/b" ) );
         TS_ASSERT_EQUALS( "c:/a/b", relPath( "c:/a/b", "d:/a" ) );
     }
+
+    void testBaseName()
+    {
+        using namespace GN;
+        using namespace GN::fs;
+
+        TS_ASSERT_EQUALS( "a.b", baseName( "a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "media::a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "\\a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "c:\\a.b.c" ) );
+    }
 };

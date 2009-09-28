@@ -491,12 +491,12 @@ namespace GN { namespace gfx
         ///
         /// setup the descriptor from XML
         ///
-        bool loadFromXmlNode( const XmlNode & rootNode );
+        bool loadFromXml( const XmlNode & rootNode );
 
         ///
         /// write the descriptor to XML
         ///
-        bool saveToXmlNode( XmlNode & rootNode ) const;
+        XmlElement * saveToXml( XmlNode & rootNode ) const;
     };
 
     ///
@@ -609,6 +609,14 @@ namespace GN { namespace gfx
         /// methods
         //@{
 
+        bool isWholeMesh() const
+        {
+            return 0 == basevtx
+                && 0 == numvtx
+                && 0 == startidx
+                && 0 == numidx;
+        }
+
         void clear() { basevtx = numvtx = startidx = numidx = 0; }
 
         //@}
@@ -670,12 +678,12 @@ namespace GN { namespace gfx
         ///
         /// setup the descriptor from XML
         ///
-        bool loadFromXmlNode( const XmlNode & root, const char * basedir );
+        bool loadFromXml( const XmlNode & root, const char * basedir );
 
         ///
         /// write the descriptor to XML
         ///
-        bool saveToXmlNode( XmlNode & root, const char * basedir ) const;
+        XmlElement * saveToXml( XmlNode & root, const char * basedir ) const;
 
         ///
         /// write the descriptor to XML file
