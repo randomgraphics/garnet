@@ -92,15 +92,18 @@ void GN::fs::extName( StrA & result, const StrA & path )
 // -----------------------------------------------------------------------------
 void GN::fs::baseName( StrA & result, const StrA & path )
 {
+    StrA tmp;
+    normalizePathSeparator( tmp, path );
+
     StrA dir, ext;
 
-    dirName( dir, path );
-    extName( ext, path );
+    dirName( dir, tmp );
+    extName( ext, tmp );
 
-    size_t n1 = dir.size() ? dir.size()+1 : 0;
-    size_t n2 = path.size() - n1 - ext.size();
+    size_t n1 = ( dir.size() < tmp.size() && '/' == tmp[dir.size()] ) ? dir.size()+1 : dir.size();
+    size_t n2 = tmp.size() - n1 - ext.size();
 
-    result.assign( path.cptr() + n1, n2 );
+    result.assign( tmp.cptr() + n1, n2 );
 }
 
 //

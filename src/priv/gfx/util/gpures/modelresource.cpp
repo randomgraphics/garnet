@@ -24,6 +24,21 @@ sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
+static StrA sResolveResourcePath( const StrA & basedir, const StrA & path )
+{
+    if( path.size() > 1 && path[0] == '@' )
+    {
+        return path;
+    }
+    else
+    {
+        return fs::resolvePath( basedir, path );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static void
 sApplyRenderStates(
     GN::gfx::GpuContext::RenderStates               & dst,
@@ -62,6 +77,27 @@ sApplyRenderStates(
     #undef MERGE_SINGLE_RENDER_STATE
 }
 
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a || !str2Int<T>( result, a->value.cptr() ) )
+    {
+        GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid." );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
 static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
 {
     static const char TABLE[] =
@@ -82,6 +118,9 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
     }
 }
 
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
 static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 {
     static UInt8 TABLE[] =
@@ -161,7 +200,7 @@ void GN::gfx::ModelResourceDesc::clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const char * basedir )
+bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char * basedir )
 {
     clear();
 
@@ -174,6 +213,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
 
     bool effectFound = false;
     bool meshFound = false;
+    bool subsetFound = false;
     for( const XmlNode * n = rootElement->child; n != NULL; n = n->next )
     {
         const XmlElement * e = n->toElement();
@@ -193,14 +233,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
                     GN_ERROR(sLogger)( "\"ref\" attribute of <effect> element is missing." );
                     return false;
                 }
-                if( a->value.size() > 0 && '@' == a->value[0] )
-                {
-                    effect = a->value;
-                }
-                else
-                {
-                    effect = fs::resolvePath( basedir, a->value );
-                }
+                effect = sResolveResourcePath( basedir, a->value );
 
                 effectFound = true;
             }
@@ -219,9 +252,27 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
                     GN_ERROR(sLogger)( "\"ref\" attribute of <mesh> element is missing." );
                     return false;
                 }
-                mesh = fs::resolvePath( basedir, a->value );
+                mesh = sResolveResourcePath( basedir, a->value );
 
                 meshFound = true;
+            }
+        }
+        else if( "subset" == e->name )
+        {
+            if( subsetFound )
+            {
+                GN_WARN(sLogger)( "Redundant <subset> elements are ignored." );
+            }
+            else
+            {
+                if( !sGetRequiredIntAttrib( subset.basevtx, *e, "basevtx" ) ||
+                    !sGetRequiredIntAttrib( subset.numvtx, *e, "numvtx" ) ||
+                    !sGetRequiredIntAttrib( subset.startidx, *e, "startidx" ) ||
+                    !sGetRequiredIntAttrib( subset.numidx, *e, "numidx" ) )
+                {
+                    GN_ERROR(sLogger)( "Invalid <subset> element." );
+                    return false;
+                }
             }
         }
         else if( "texture" == e->name )
@@ -236,16 +287,9 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
             ModelTextureDesc & td = textures[a->value];
 
             a = e->findAttrib( "ref" );
-            if( a && !a->value.empty() )
+            if( a )
             {
-                if( '@' == a->value[0] )
-                {
-                    td.resourceName = a->value;;
-                }
-                else
-                {
-                    td.resourceName = fs::resolvePath( basedir, a->value );
-                }
+                td.resourceName = sResolveResourcePath( basedir, a->value );
             }
             else
             {
@@ -301,19 +345,19 @@ bool GN::gfx::ModelResourceDesc::loadFromXmlNode( const XmlNode & root, const ch
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * basedir ) const
+XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char * basedir ) const
 {
     XmlElement * rootElement = root.toElement();
     if( !rootElement )
     {
         GN_ERROR(sLogger)( "Root node must be a XML element." );
-        return false;
+        return NULL;
     }
 
     if( NULL == basedir )
     {
         GN_ERROR(sLogger)( "NULL basedir pointer." );
-        return false;
+        return NULL;
     }
 
     XmlDocument & doc = rootElement->doc;
@@ -327,7 +371,7 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
     if( effect.empty() )
     {
         GN_ERROR(sLogger)( "Effect name can not be empty." );
-        return false;
+        return NULL;
     }
     else
     {
@@ -342,13 +386,35 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
     if( mesh.empty() )
     {
         GN_ERROR(sLogger)( "Mesh name can not be empty." );
-        return false;
+        return NULL;
     }
     else
     {
         XmlAttrib * a = doc.createAttrib( meshNode );
         a->name = "ref";
         a->value = fs::relPath( mesh, basedir );
+    }
+
+    // create subset node
+    XmlElement * subsetNode = doc.createElement(modelNode);
+    subsetNode->name = "subset";
+    if( !subset.isWholeMesh() )
+    {
+        XmlAttrib * a = doc.createAttrib( subsetNode );
+        a->name = "basevtx";
+        a->value = strFormat( "%u", subset.basevtx );
+
+        a = doc.createAttrib( subsetNode );
+        a->name = "numvtx";
+        a->value = strFormat( "%u", subset.numvtx );
+
+        a = doc.createAttrib( subsetNode );
+        a->name = "startidx";
+        a->value = strFormat( "%u", subset.startidx );
+
+        a = doc.createAttrib( subsetNode );
+        a->name = "numidx";
+        a->value = strFormat( "%u", subset.numidx );
     }
 
     // create texture nodes
@@ -367,9 +433,9 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
         a->value = texname;
         if( texdesc.resourceName.empty() )
         {
-            //texdesc.desc.saveToXmlNode( basedir );
+            //texdesc.desc.saveToXml( basedir );
             GN_UNIMPL();
-            return false;
+            return NULL;
         }
         else
         {
@@ -417,7 +483,7 @@ bool GN::gfx::ModelResourceDesc::saveToXmlNode( XmlNode & root, const char * bas
 
     // done
     modelNode->setParent( &root );
-    return true;
+    return modelNode;
 }
 
 // *****************************************************************************

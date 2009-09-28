@@ -673,7 +673,7 @@ struct D3D10StateDump
 
     //@{
 
-    bool loadFromXmlNode( const XmlNode & root, const StrA & basedir )
+    bool loadFromXml( const XmlNode & root, const StrA & basedir )
     {
         GN_GUARD;
 
