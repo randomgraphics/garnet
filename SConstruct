@@ -205,7 +205,7 @@ def UTIL_newEnv( compiler, variant ):
 		else:
 			tools = ['default']
 
-		msvs_version = '8.0'
+		# determine msvs platform
 		msvs_platform = 'x86'
 		if 'icl' == compiler.name :
 			tools += ['intelc']
@@ -216,9 +216,11 @@ def UTIL_newEnv( compiler, variant ):
 			msvs_platform = 'x64'
 		elif 'mingw' == compiler.name :
 			tools = ['mingw']
+
+		# create new environment
 		env = Environment(
 			tools          = tools,
-			MSVS_VERSION   = msvs_version,
+			MSVS_VERSION   = "8.0",
 			MSVS8_PLATFORM = msvs_platform,
 			ENV            = {
 			                 	'PATH'     : UTIL_getenv('PATH'),
@@ -327,12 +329,11 @@ def UTIL_newEnv( compiler, variant ):
 			ccflags['profile'] += ['/MD']
 			ccflags['retail']  += ['/MD']
 
-		if float(env['MSVS_VERSION']) >= 8.0:
-			linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
-		linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
-		linkflags['profile'] += ['/OPT:REF']
+		linkflags['common']  += ['/NODEFAULTLIB:libcp.lib', '/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+		linkflags['debug']   += ['/MANIFEST']
+		linkflags['profile'] += ['/OPT:REF', '/MANIFEST']
 		linkflags['stprof']  += ['/OPT:REF']
-		linkflags['retail']  += ['/OPT:REF','/LTCG:STATUS']
+		linkflags['retail']  += ['/OPT:REF','/LTCG:STATUS', '/MANIFEST']
 		linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 
 	elif 'icl' == env['CC']:
@@ -1093,12 +1094,10 @@ def BUILD_addDependencies( env, name, deps ):
 			GN.warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
 
 #
-# does compiler produce manifest file?
+# handle compiler generated manifest file.
 #
 def BUILD_handleManifest( env, target ):
-	if ( float(env.get('MSVS_VERSION',0)) >= 8.0
-	   and ('cl' == env['CC'] or 'icl' == env['CC'] )
-	   and not UTIL_staticBuild( BUILD_variant ) ) :
+	if ( not UTIL_staticBuild( BUILD_variant ) ) and ( 'cl' == env['CC'] or 'icl' == env['CC'] ) :
 		manifest = File( '%s.manifest'%target[0] )
 		env.SideEffect( manifest, target )
 		target += [manifest]
