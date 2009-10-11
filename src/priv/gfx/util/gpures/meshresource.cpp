@@ -293,11 +293,32 @@ GN::gfx::MeshResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
-    GN_UNUSED_PARAM( db );
-    GN_UNUSED_PARAM( filename );
-    GN_UNIMPL();
+    if( NULL == filename )
+    {
+        GN_INFO(sLogger)( "Null filename string." );
+        return AutoRef<MeshResource>::NULLREF;
+    }
 
-    return AutoRef<MeshResource>::NULLREF;
+    // Reuse existing resource, if possible
+    AutoRef<MeshResource> m( db.findResource<MeshResource>( filename ) );
+    if( m ) return m;
+
+    // convert to full (absolute) path
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = abspath;
+
+    // Try search for existing resource again with full path
+    m = db.findResource<MeshResource>( filename );
+    if( m ) return m;
+
+    MeshResourceDesc desc;
+    AutoRef<Blob> blob = desc.loadFromFile( filename );
+    if( !blob ) return AutoRef<MeshResource>::NULLREF;
+
+    m = db.createResource<MeshResource>( abspath );
+    if( !m || !m->reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
+
+    return m;
 }
 
 //

@@ -1,5 +1,6 @@
 SConscript( dirs=[
-	'Bezier',
+	'bezier',
+	'dolphin',
 	'ripple',
 	'renderToCube',
 	] )

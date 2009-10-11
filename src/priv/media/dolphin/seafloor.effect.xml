@@ -10,22 +10,18 @@
 
 	<!--
 	============================================================================
-		Shaders
+		gpuprograms
 	============================================================================
 	-->
 
-	<shaders>
-		<!-- Cg shaders -->
-		<shader name="cgvs" type="VS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgvs"/>
-				</token>
-			</prerequisites>
-			<uniref ref="view" binding="view"/>
-			<uniref ref="proj" binding="proj"/>
-			<uniref ref="caustic" binding="caustic"/>
-			<code lang="CG" hints="...">
+	<gpuprograms>
+		<gpuprogram name="hlsl9" lang="hlsl9">
+			<uniref uniform="view" shaderParameter="view"/>
+			<uniref uniform="proj" shaderParameter="proj"/>
+			<uniref uniform="caustic" shaderParameter="caustic"/>
+			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
+			<texref texture="caustic" shaderParameter="CausticsSampler"/>
+		<vs entry="main">
 <![CDATA[
 uniform float4x4 view;
 uniform float4x4 proj;
@@ -73,18 +69,8 @@ VSOUT main(
 	return o;
 }
 ]]>
-			</code>
-		</shader>
-
-		<shader name="cgps" type="PS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgps"/>
-				</token>
-			</prerequisites>
-			<texref ref="seafloor" stage="0"/>
-			<texref ref="caustic" stage="1"/>
-			<code lang="CG" hints="...">
+			</vs>
+      <ps entry="main">
 <![CDATA[
 
 struct VSOUT
@@ -118,7 +104,7 @@ void main(
     // Combine lighting, base texture and water caustics texture
     float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient, 1 );
     float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
-    
+
     // Return color blended with fog
     oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
 
@@ -126,13 +112,9 @@ void main(
     oC1 = Input.vMisc.z / Input.vMisc.w;
 }
 ]]>
-			</code>
-		</shader>
-
-		<!-- fixed pipeline -->
-		<shader name="fixgs" type="GS"/>
-
-	</shaders>
+			</ps>
+		</gpuprogram>
+	</gpuprograms>
 
 	<!--
 	============================================================================
@@ -141,11 +123,11 @@ void main(
 	-->
 
 	<techniques>
-        <rsb
+        <renderstates
 			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="cg">
-			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+		<technique name="hlsl9">
+			<pass gpuprogram="hlsl9"/>
 		</technique>
 	</techniques>
 </effect>

@@ -12,9 +12,9 @@ class TestScene
 {
     GN::util::SampleApp & mApp;
 
-    Entity * mCaustics[32];
+    AutoRef<TextureResource> mCaustics[32];
 
-    Drawable mDolphin, mSeafloor;
+    AutoRef<ModelResource> mDolphin, mSeafloor;
 
 public:
 
@@ -24,19 +24,19 @@ public:
 
     bool create()
     {
-        EntityManager & em = mApp.getEntityManager();
-        RenderEngine & re = mApp.getRenderEngine();
+        GpuResourceDatabase & gdb = mApp.getGdb();
 
         // load caustic textures
         for( int i = 0; i < 32; ++i )
         {
-            mCaustics[i] = loadTextureEntityFromFile( em, re, strFormat( "media::dolphin/caust%02d.tga", i ) );
+            mCaustics[i] = TextureResource::loadFromFile( gdb, strFormat("media::dolphin/caust%02d.tga",i) );
             if( 0 == mCaustics[i] ) return false;
         }
 
         // load dolphin and seafloor
-        if( !mDolphin.loadFromXmlFile( em, re, "media::dolphin/dolphin.drawable.xml" ) ) return false;
-        if( !mSeafloor.loadFromXmlFile(  em, re, "media::dolphin/seafloor.drawable.xml" ) ) return false;
+        mDolphin = ModelResource::loadFromFile( gdb, "media::dolphin/dolphin.model.xml" );
+        mSeafloor = ModelResource::loadFromFile( gdb, "media::dolphin/seafloor.model.xml" );
+        if( !mDolphin || !mSeafloor ) return false;
 
         // success
         return true;
@@ -49,10 +49,10 @@ public:
         UInt32 causticTex = ((UInt32)(time*32))%32;
 
         // update seafloor effect parameters
-        mSeafloor.uniforms["view"].value = view;
-        mSeafloor.uniforms["proj"].value = proj;
-        mSeafloor.uniforms["caustic"].value = caustics;
-        mSeafloor.textures["caustic"].texture = entity2Texture( mCaustics[causticTex], 0 );
+        mSeafloor->getUniformResource("view")->getUniform()->update( view );
+        mSeafloor->getUniformResource("proj")->getUniform()->update( proj );
+        mSeafloor->getUniformResource("caustic")->getUniform()->update( caustics );
+        mSeafloor->setTextureResource( "caustic", mCaustics[causticTex] );
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -87,20 +87,16 @@ public:
         Vector4f vWeight( fWeight1, fWeight2, fWeight3, 0.0f );
 
         // update dolphin effect parameters
-        mDolphin.uniforms["pvw"].value = proj * view * world;
-        mDolphin.uniforms["viewworld"].value = view * world;
-        mDolphin.uniforms["weights"].value = vWeight;
-        mDolphin.textures["caustic"].texture = entity2Texture( mCaustics[causticTex], 0 );
+        mDolphin->getUniformResource("pvw")->getUniform()->update( proj * view * world );
+        mDolphin->getUniformResource("viewworld")->getUniform()->update( view * world );
+        mDolphin->getUniformResource("weights")->getUniform()->update( vWeight );
+        mDolphin->setTextureResource( "caustic", mCaustics[causticTex] );
     }
 
     void render()
     {
-        RenderEngine & re = mApp.getRenderEngine();
-
-        re.clearScreen( WATER_COLOR );
-
-        mSeafloor.draw();
-        mDolphin.draw();
+        mSeafloor->draw();
+        mDolphin->draw();
     }
 };
 
@@ -112,9 +108,6 @@ class Dolphin : public GN::util::SampleApp
     bool swimming;
 
     Matrix44f world, view, proj;
-
-    AutoGraphicsResource rt[2];
-    DrawContext::RenderTargetDesc rtdesc;
 
 public:
 
@@ -134,23 +127,13 @@ public:
 
     bool onInit()
     {
-        RenderEngine & re = getRenderEngine();
+        Gpu & g = getGpu();
 
-        UInt32 width = 1024;
-        UInt32 height = 720;
+        UInt32 width = g.getDispDesc().width;
+        UInt32 height = g.getDispDesc().height;
 
         float aspect = (float)width / height;
-        re.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
-
-        // create render targets
-        rt[0].attach( re.create2DTexture( "rt0", width, height, 1, FMT_FLOAT16_4, TEXUSAGE_RENDER_TARGET ) );
-        rt[1].attach( re.create2DTexture( "rt1", width, height, 1, FMT_RG_32_32_FLOAT, TEXUSAGE_RENDER_TARGET ) );
-
-        rtdesc.count = 2;
-        rtdesc.aa = MsaaType::NONE;
-        rtdesc.setcbuf( 0, rt[0] );
-        rtdesc.setcbuf( 1, rt[1] );
-        rtdesc.setzbuf( 0 ); // use automatic z buffer.
+        g.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
 
         // create scene
         scene = new TestScene(*this);
@@ -160,15 +143,13 @@ public:
     void onQuit()
     {
         safeDelete( scene );
-        rt[0].clear();
-        rt[1].clear();
     }
 
     void onKeyPress( input::KeyEvent key )
     {
         GN::util::SampleApp::onKeyPress( key );
 
-        if( input::KEY_SPACEBAR == key.code && key.status.down )
+        if( input::KeyCode::SPACEBAR == key.code && key.status.down )
         {
             swimming = !swimming;
         }
@@ -177,24 +158,13 @@ public:
     void onUpdate()
     {
         if( swimming ) time += 1.0f/60.0f;
-        Matrix44f pvw = proj * view;
-        scene->update( time, view, pvw );
+        scene->update( time, view, proj );
     }
 
     void onRender()
     {
         GN_ASSERT( scene );
-
-        //Gpu & r = gGpu;
-
-        // draw to textures
-        //r.setRenderTargets( rtdesc );
         scene->render();
-
-        // draw texture to screen
-        //r.setDrawToBackBuf();
-        //r.setTexture( 0, rt[0] );
-        //r.draw2DTexturedQuad( 0 );
     }
 };
 

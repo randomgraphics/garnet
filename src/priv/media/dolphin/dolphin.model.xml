@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<model>
+	<effect ref="dolphin.effect.xml"/>
+	<mesh ref="dolphin.mesh.xml"/>
+	<texture shaderParameter="skin" ref="dolphin.bmp"/>
+	<texture shaderParameter="caustic" ref="caust00.tga"/>
+	<uniform shaderParameter="pvw" size="64"/>
+	<uniform shaderParameter="viewworld" size="64"/>
+	<uniform shaderParameter="weights" size="16"/>
+</model>

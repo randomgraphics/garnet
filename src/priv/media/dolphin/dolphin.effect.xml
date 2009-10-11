@@ -10,24 +10,19 @@
 
 	<!--
 	============================================================================
-		Shaders
+		GPU programs
 	============================================================================
 	-->
 
-	<shaders>
+	<gpuprograms>
 
-		<!-- Cg shaders -->
-
-		<shader name="cgvs" type="VS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgvs"/>
-				</token>
-			</prerequisites>
-			<uniref ref="pvw"       binding="g_matWorldViewProj"/>
-			<uniref ref="viewworld" binding="g_matWorldView"/>
-			<uniref ref="weights"   binding="g_vBlendWeights"/>
-			<code lang="CG" hints="">
+		<gpuprogram name="hlsl9" lang="HLSL9">
+			<uniref uniform="pvw"       shaderParameter="g_matWorldViewProj"/>
+			<uniref uniform="viewworld" shaderParameter="g_matWorldView"/>
+			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
+      <texref texture="skin"      shaderParameter="DiffuseSampler"/>
+      <texref texture="caustic"   shaderParameter="CausticsSampler"/>
+      <vs entry="main">
 <![CDATA[
 uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
 uniform float4x4 g_matWorldViewProj  ;  // world-view-projection matrix
@@ -87,18 +82,8 @@ VSOUT main(
 	return Output;
 }
 ]]>
-			</code>
-		</shader>
-
-		<shader name="cgps" type="PS">
-			<prerequisites>
-				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="cgps"/>
-				</token>
-			</prerequisites>
-			<texref ref="skin" stage="0"/>
-			<texref ref="caustic" stage="1"/>
-			<code lang="CG" hints="...">
+			</vs>
+			<ps entry="main">
 <![CDATA[
 
 struct VSOUT
@@ -140,13 +125,9 @@ void main(
 	oC1 = Input.vMisc.z / Input.vMisc.w;
 }
 ]]>
-			</code>
-		</shader>
-
-		<!-- fixed pipeline -->
-		<shader name="fixgs" type="GS"/>
-
-	</shaders>
+			</ps>
+		</gpuprogram>
+	</gpuprograms>
 
 	<!--
 	============================================================================
@@ -155,11 +136,11 @@ void main(
 	-->
 
 	<techniques>
-        <rsb
-			CULL_MODE="CULL_NONE"
+    <renderstates
+      CULL_MODE="CULL_NONE"
 		/>
-		<technique name="cg">
-			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+		<technique name="hlsl9">
+			<pass gpuprogram="hlsl9"/>
 		</technique>
 	</techniques>
 </effect>

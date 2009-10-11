@@ -16,6 +16,7 @@ TODO
       - non-geometry node (games\swordman\1.ase)
   - support chinese in XML parser
   - skin mesh test case: porting DXSDK sample.
+  - Cg shader
 
 - p1
   - scene framework:

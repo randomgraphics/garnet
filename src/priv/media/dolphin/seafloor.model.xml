@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<model>
+	<effect ref="seafloor.effect.xml"/>
+	<mesh ref="seafloor.mesh.xml"/>
+	<texture shaderParameter="seafloor" ref="seafloor.bmp"/>
+	<texture shaderParameter="caustic" ref="caust00.tga"/>
+	<uniform shaderParameter="view" size="64"/>
+	<uniform shaderParameter="proj" size="64"/>
+	<uniform shaderParameter="caustic" size="16"/>
+</model>

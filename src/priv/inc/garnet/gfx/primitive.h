@@ -49,14 +49,14 @@ namespace GN { namespace gfx
         /// convert from string
         static PrimitiveType sFromString( const char * s )
         {
-            if( 0 == strCmpI( "PrimitiveType::POINT_LIST", s ) ) return PrimitiveType::POINT_LIST;
-            else if( 0 == strCmpI( "PrimitiveType::LINE_LIST", s ) ) return PrimitiveType::LINE_LIST;
-            else if( 0 == strCmpI( "PrimitiveType::LINE_STRIP", s ) ) return PrimitiveType::LINE_STRIP;
-            else if( 0 == strCmpI( "PrimitiveType::TRIANGLE_LIST", s ) ) return PrimitiveType::TRIANGLE_LIST;
-            else if( 0 == strCmpI( "PrimitiveType::TRIANGLE_STRIP", s ) ) return PrimitiveType::TRIANGLE_STRIP;
-            else if( 0 == strCmpI( "PrimitiveType::QUAD_LIST", s ) ) return PrimitiveType::QUAD_LIST;
-            else if( 0 == strCmpI( "PrimitiveType::RECT_LIST", s ) ) return PrimitiveType::RECT_LIST;
-            else return PrimitiveType::INVALID;
+            if( 0 == strCmpI( "POINT_LIST", s ) ) return POINT_LIST;
+            else if( 0 == strCmpI( "LINE_LIST", s ) ) return LINE_LIST;
+            else if( 0 == strCmpI( "LINE_STRIP", s ) ) return LINE_STRIP;
+            else if( 0 == strCmpI( "TRIANGLE_LIST", s ) ) return TRIANGLE_LIST;
+            else if( 0 == strCmpI( "TRIANGLE_STRIP", s ) ) return TRIANGLE_STRIP;
+            else if( 0 == strCmpI( "QUAD_LIST", s ) ) return QUAD_LIST;
+            else if( 0 == strCmpI( "RECT_LIST", s ) ) return RECT_LIST;
+            else return INVALID;
         }
 
         GN_DEFINE_ENUM_CLASS_HELPERS(PrimitiveType, Enum)

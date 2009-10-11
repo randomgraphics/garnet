@@ -22,8 +22,15 @@ typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
 // -----------------------------------------------------------------------------
 static void sPostError( const XmlNode & node, const StrA & msg )
 {
-    GN_UNUSED_PARAM( node );
-    GN_ERROR(sLogger)( "%s", msg.cptr() );
+    const XmlElement * e = node.toElement();
+    if( e )
+    {
+        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.cptr(), msg.cptr() );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Effect XML error: %s", msg.cptr() );
+    }
 }
 
 //
