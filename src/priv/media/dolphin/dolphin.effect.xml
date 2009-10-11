@@ -88,6 +88,7 @@ VSOUT main(
 
 struct VSOUT
 {
+    float4 vPosition         : POSITION;
     float4 vMisc             : TEXCOORD0; // x = light, y = fog, zw = pos.zw
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;

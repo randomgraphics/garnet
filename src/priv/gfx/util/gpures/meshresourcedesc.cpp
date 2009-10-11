@@ -499,6 +499,9 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             UInt32 stream = sGetIntAttrib<UInt32>( *e, "stream", 0xFFFFFFFF );
             GN_ASSERT( stream < GpuContext::MAX_VERTEX_BUFFERS );
 
+            a = sGetRequiredAttrib( *e, "ref" );
+            GN_ASSERT( a );
+
             size_t vbsize = desc.strides[stream] * desc.numvtx;
 
             UInt8 * vb = meshData.subrange( offset, vbsize );
@@ -514,7 +517,10 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else if( "idxbuf" == e->name )
         {
-            size_t ibsize = desc.numidx * desc.idx32;
+            a = sGetRequiredAttrib( *e, "ref" );
+            GN_ASSERT( a );
+
+            size_t ibsize = desc.numidx * (desc.idx32?4:2);
 
             UInt8 * ib = meshData.subrange( offset, ibsize );
 

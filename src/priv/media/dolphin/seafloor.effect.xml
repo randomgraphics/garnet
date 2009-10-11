@@ -75,6 +75,7 @@ VSOUT main(
 
 struct VSOUT
 {
+    float4 vPosition         : POSITION;
     float4 vMisc             : TEXCOORD0;     // COLOR0.x = light, COLOR0.y = fog
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;
