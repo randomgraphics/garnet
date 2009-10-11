@@ -113,6 +113,35 @@ namespace GN
     }
 
     ///
+    /// string comparison (case insensitive), with limited length
+    ///
+    template<typename CHAR>
+    inline int strCmpI( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    {
+        if( s1 == s2 ) return 0;
+        if( 0 == s1 ) return -1;
+        if( 0 == s2 ) return 1;
+        size_t len = 0;
+        int a, b;
+        while( *s1 && *s2 && len < maxLength )
+        {
+            a = (int)*s1;
+            b = (int)*s2;
+            if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
+            if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
+            if( a < b ) return -1;
+            if( a > b ) return 1;
+            ++s1;
+            ++s2;
+            ++len;
+        }
+        if( len == maxLength ) return 0;
+        if( 0 != *s1 ) return 1;
+        if( 0 != *s2 ) return -1;
+        return 0;
+    }
+
+    ///
     /// check for empty string, including NULL.
     ///
     template<typename CHAR>

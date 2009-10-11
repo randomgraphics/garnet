@@ -41,8 +41,8 @@ namespace GN
         virtual size_t size() const { return mBuffer.size(); }
         //@}
 
-        /// allocate the buffer
-        void alloc( size_t newSize ) { mBuffer.resize( newSize ); }
+        /// resize the buffer
+        void resize( size_t newSize ) { mBuffer.resize( newSize ); }
     };
 };
 

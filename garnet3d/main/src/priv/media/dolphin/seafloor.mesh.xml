@@ -1,19 +1,16 @@
 <?xml version="1.0" standalone="yes"?>
 <mesh
 	primtype  = "TRIANGLE_LIST"
-	numprim   = "2830"
-	startvtx  = "0"
-	minvtxidx = "0"
 	numvtx    = "1490"
-	startidx  = "0"
+	numidx    = "8490"
 	>
 
 	<vtxfmt>
-		<attrib stream = "0" offset =  "0" semantic = "POS0" format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "12" semantic = "NML0" format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "24" semantic = "TEX0" format = "FMT_FLOAT2"/>
+		<attrib stream = "0" offset =  "0" binding = "POS" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "12" binding = "NML" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "24" binding = "TEX" bindingIndex="0" format = "FLOAT2"/>
 	</vtxfmt>
-	
+
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="seafloor.vb"/>
 
 	<idxbuf ref="seafloor.ib"/>

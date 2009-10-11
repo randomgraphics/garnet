@@ -6,13 +6,13 @@
 	>
 
 	<vtxfmt>
-		<attrib stream = "0" offset =  "0" binding = "POS" bindingIndex="0", format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "12" binding = "NML" bindingIndex="0", format = "FMT_FLOAT3"/>
-		<attrib stream = "0" offset = "24" binding = "TEX" bindingIndex="0", format = "FMT_FLOAT2"/>
-		<attrib stream = "1" offset =  "0" binding = "TEX" bindingIndex="1", format = "FMT_FLOAT3"/>
-		<attrib stream = "1" offset = "12" binding = "TEX" bindingIndex="2", format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset =  "0" binding = "TAN" bindingIndex="0", format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset = "12" binding = "NML" bindingIndex="1", format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset =  "0" binding = "POS" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "12" binding = "NML" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "24" binding = "TEX" bindingIndex="0" format = "FLOAT2"/>
+		<attrib stream = "1" offset =  "0" binding = "TEX" bindingIndex="1" format = "FLOAT3"/>
+		<attrib stream = "1" offset = "12" binding = "TEX" bindingIndex="2" format = "FLOAT3"/>
+		<attrib stream = "2" offset =  "0" binding = "TAN" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "2" offset = "12" binding = "NML" bindingIndex="1" format = "FLOAT3"/>
 	</vtxfmt>
 
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="dolphin_1.vb"/>

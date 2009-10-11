@@ -143,7 +143,7 @@ MeshFileType sDetermineMeshFileType( File & fp )
     {
         return MESH_FILE_BIN;
     }
-    else if( 0 == strCmpI( buf, "<xml" ) )
+    else if( 0 == strCmpI( buf, "<?xml", 5 ) )
     {
         return MESH_FILE_XML;
     }
@@ -178,7 +178,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
         GN_ERROR(sLogger)( "Unsupported endian." );
         return AutoRef<Blob>::NULLREF;
     }
-    if( 0x00010000 != header.version )
+    if( 0x00010000 != header.version ) // version must be 1.0
     {
         GN_ERROR(sLogger)( "Unsupported mesh version." );
         return AutoRef<Blob>::NULLREF;
@@ -234,6 +234,24 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 //
 // get value of integer attribute
 // -----------------------------------------------------------------------------
+static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char * attribName )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+
+    if( !a )
+    {
+        GN_ERROR(sLogger)(
+            "Element <%s>: attribute \"%s\" is missing.",
+            node.name.cptr(),
+            attribName ? attribName : "!!!NULLPTR!!!" );
+    }
+
+    return a;
+}
+
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
 template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
@@ -249,10 +267,31 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 {
     T result;
 
-    if( !sGetIntAttrib<T>( result, attribName ) )
+    if( !sGetIntAttrib<T>( result, node, attribName ) )
         return defaultValue;
     else
         return result;
+}
+
+//
+// get value of integer attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a || !str2Int<T>( result, a->value.cptr() ) )
+    {
+        GN_ERROR(sLogger)(
+            "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",
+            node.name.cptr(),
+            attribName ? attribName : "!!!NULLPTR!!!" );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 //
@@ -282,6 +321,30 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 //
 //
 // -----------------------------------------------------------------------------
+static bool sReadBinaryFile( UInt8 * dst, size_t length, const char * filename )
+{
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    if( !fp ) return false;
+
+    // skip binary file header
+    if( !fp->seek( 32, FileSeek::SET ) )
+    {
+        GN_ERROR(sLogger)( "Fail to by-pass garnet binary file header: %s", filename );
+        return false;
+    }
+
+    if( !fp->read( dst, length, NULL ) )
+    {
+        GN_ERROR(sLogger)( "Fail to read binary data from file: %s", filename );
+        return false;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
     desc.clear();
@@ -303,29 +366,27 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     }
     GN_ASSERT( xpr.root );
 
-    XmlElement * root = xpr.root->toElement();
+    const XmlElement * root = xpr.root->toElement();
     if( !root || root->name != "mesh" )
     {
         GN_ERROR(sLogger)( "Invalid root element." );
         return AutoRef<Blob>::NULLREF;
     }
 
-    XmlAttrib * a = root->findAttrib( "primtype" );
+    const XmlAttrib * a = root->findAttrib( "primtype" );
     if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
     {
-        GN_ERROR(sLogger)( "Missing or invalid primitive attribute." );
+        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.cptr(), "primtype" );
         return AutoRef<Blob>::NULLREF;
     }
 
-    if( !sGetIntAttrib( desc.numvtx, *root, "numvtx" ) )
+    if( !sGetRequiredIntAttrib( desc.numvtx, *root, "numvtx" ) )
     {
-        GN_ERROR(sLogger)( "Missing or invalid numvtx attribute." );
         return AutoRef<Blob>::NULLREF;
     }
 
-    if( !sGetIntAttrib( desc.numidx, *root, "numidx" ) )
+    if( !sGetRequiredIntAttrib( desc.numidx, *root, "numidx" ) )
     {
-        GN_ERROR(sLogger)( "Missing or invalid numidx attribute." );
         return AutoRef<Blob>::NULLREF;
     }
 
@@ -334,15 +395,15 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     desc.dynaib = sGetBoolAttrib( *root, "dynaib", false );
 
     // get vertex format
-    XmlElement * vtxfmtNode = root->findChildElement( "vtxfmt" );
+    const XmlElement * vtxfmtNode = root->findChildElement( "vtxfmt" );
     if( !vtxfmtNode )
     {
         GN_ERROR(sLogger)( "<vtxfmt> element is missing." );
         return AutoRef<Blob>::NULLREF;
     }
-    for( XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
+    for( const XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "attrib" != e->name )
@@ -353,29 +414,13 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         VertexElement ve;
 
-        if( !sGetIntAttrib( ve.stream, *e, "stream" ) )
-        {
-            GN_ERROR(sLogger)( "Missing or invalid stream attribute." );
-            return AutoRef<Blob>::NULLREF;
-        }
-
-        if( !sGetIntAttrib( ve.offset, *e, "offset" ) )
-        {
-            GN_ERROR(sLogger)( "Missing or invalid offset attribute." );
-            return AutoRef<Blob>::NULLREF;
-        }
-
-        a = e->findAttrib( "binding" );
-        if( !a )
-        {
-            GN_ERROR(sLogger)( "Missing binding attribute." );
-            return AutoRef<Blob>::NULLREF;
-        }
-
         UInt8 bidx;
-        if( !sGetIntAttrib( bidx, *e, "bindingIndex" ) )
+
+        if( !sGetRequiredIntAttrib( ve.stream, *e, "stream" ) ||
+            !sGetRequiredIntAttrib( ve.offset, *e, "offset" ) ||
+            NULL == ( a = sGetRequiredAttrib( *e, "binding" ) ) ||
+            !sGetRequiredIntAttrib( bidx, *e, "bindingIndex" ) )
         {
-            GN_ERROR(sLogger)( "Missing or invalid bindingIndex attribute." );
             return AutoRef<Blob>::NULLREF;
         }
 
@@ -389,19 +434,38 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
     }
 
-    // parse vtxbuf and idxbuf elements
-    for( XmlNode * n = root->child; n != NULL; n = n->next )
+    // parse vtxbuf and idxbuf elements, calculate mesh data size
+    size_t meshDataSize = 0;
+    for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "vtxbuf" == e->name )
         {
-            GN_UNIMPL();
+            UInt32 stream, offset, stride;
+            if( !sGetRequiredIntAttrib( stream, *e, "stream" ) ||
+                !sGetRequiredIntAttrib( offset, *e, "offset" ) ||
+                !sGetRequiredIntAttrib( stride, *e, "stride" ) ||
+                NULL == (a = sGetRequiredAttrib( *e, "ref" ) ) )
+            {
+                return AutoRef<Blob>::NULLREF;
+            }
+
+            if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
+            {
+                GN_WARN(sLogger)( "vtxbuf stream is too large." );
+                return AutoRef<Blob>::NULLREF;
+            }
+
+            desc.offsets[stream] = offset;
+            desc.strides[stream] = stride;
+
+            meshDataSize += stride * desc.numvtx;
         }
         else if( "idxbuf" == e->name )
         {
-            GN_UNIMPL();
+            meshDataSize += desc.numidx * (desc.idx32?4:2);
         }
         else if( "vtxfmt" == e->name )
         {
@@ -413,7 +477,67 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
     }
 
-    return AutoRef<Blob>::NULLREF;
+    AutoRef<SimpleBlob> blob( new SimpleBlob(meshDataSize) );
+    if( !blob )
+    {
+        GN_ERROR(sLogger)( "Out of memory" );
+        return AutoRef<Blob>::NULLREF;
+    }
+
+    StrA basedir = fs::dirName( fp.name() );
+
+    // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
+    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->size() );
+    size_t offset = 0;
+    for( const XmlNode * n = root->child; n != NULL; n = n->next )
+    {
+        const XmlElement * e = n->toElement();
+        if( !e ) continue;
+
+        if( "vtxbuf" == e->name )
+        {
+            UInt32 stream = sGetIntAttrib<UInt32>( *e, "stream", 0xFFFFFFFF );
+            GN_ASSERT( stream < GpuContext::MAX_VERTEX_BUFFERS );
+
+            size_t vbsize = desc.strides[stream] * desc.numvtx;
+
+            UInt8 * vb = meshData.subrange( offset, vbsize );
+
+            if( !sReadBinaryFile( vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
+            {
+                return AutoRef<Blob>::NULLREF;
+            }
+
+            desc.vertices[stream] = vb;
+
+            offset += vbsize;
+        }
+        else if( "idxbuf" == e->name )
+        {
+            size_t ibsize = desc.numidx * desc.idx32;
+
+            UInt8 * ib = meshData.subrange( offset, ibsize );
+
+            if( !sReadBinaryFile( ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
+            {
+                return AutoRef<Blob>::NULLREF;
+            }
+
+            desc.indices = ib;
+
+            offset += ibsize;
+        }
+        else if( "vtxfmt" == e->name )
+        {
+            // silently ignored, since it is handled already.
+        }
+        else
+        {
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
+        }
+    }
+
+    return blob;
 }
 
 // *****************************************************************************

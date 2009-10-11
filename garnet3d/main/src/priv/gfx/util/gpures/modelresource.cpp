@@ -277,10 +277,10 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else if( "texture" == e->name )
         {
-            const XmlAttrib * a = e->findAttrib( "shaderParameterName" );
+            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
             if( !a )
             {
-                GN_ERROR(sLogger)( "\"shaderParameterName\" attribute of <texture> element is missing." );
+                GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <texture> element is missing." );
                 return false;
             }
 
@@ -298,10 +298,10 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else if( "uniform" == e->name )
         {
-            const XmlAttrib * a = e->findAttrib( "shaderParameterName" );
+            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
             if( !a )
             {
-                GN_ERROR(sLogger)( "\"shaderParameterName\" attribute of <uniform> element is missing." );
+                GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <uniform> element is missing." );
                 return false;
             }
 
@@ -429,7 +429,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         textureNode->name = "texture";
 
         XmlAttrib * a = doc.createAttrib( textureNode );
-        a->name = "shaderParameterName";
+        a->name = "shaderParameter";
         a->value = texname;
         if( texdesc.resourceName.empty() )
         {
@@ -457,7 +457,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         uniformNode->name = "uniform";
 
         XmlAttrib * a = doc.createAttrib( uniformNode );
-        a->name = "shaderParameterName";
+        a->name = "shaderParameter";
         a->value = uniname;
 
         if( unidesc.resourceName.empty() )
@@ -1351,11 +1351,10 @@ GN::gfx::ModelResource::loadFromFile(
     if( m ) return m;
 
     ModelResourceDesc desc;
-    //if( !loadFromXmlFile( desc, filename ) ) return 0;
-    GN_UNIMPL_WARNING();
+    if( !loadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
 
     m = db.createResource<ModelResource>( abspath );
-    if( m ) m->reset( &desc );
+    if( !m || !m->reset( &desc ) ) AutoRef<ModelResource>::NULLREF;
 
     return m;
 }
