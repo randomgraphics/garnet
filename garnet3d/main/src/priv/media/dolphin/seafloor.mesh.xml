@@ -6,9 +6,9 @@
 	>
 
 	<vtxfmt>
-		<attrib stream = "0" offset =  "0" binding = "POS" bindingIndex="0" format = "FLOAT3"/>
-		<attrib stream = "0" offset = "12" binding = "NML" bindingIndex="0" format = "FLOAT3"/>
-		<attrib stream = "0" offset = "24" binding = "TEX" bindingIndex="0" format = "FLOAT2"/>
+		<attrib stream = "0" offset =  "0" binding = "POSITION" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "12" binding = "NORMAL" bindingIndex="0" format = "FLOAT3"/>
+		<attrib stream = "0" offset = "24" binding = "TEXCOORD" bindingIndex="0" format = "FLOAT2"/>
 	</vtxfmt>
 
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="seafloor.vb"/>

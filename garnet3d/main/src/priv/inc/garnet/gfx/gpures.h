@@ -393,9 +393,10 @@ namespace GN { namespace gfx
                 OverridableVariable() : overridden(false) {}
 
                 /// set value
-                OverridableVariable & operator=( const T & rhs )
+                template<typename T2>
+                OverridableVariable & operator=( const T2 & rhs )
                 {
-                    value      = rhs;
+                    value      = (T)rhs;
                     overridden = true;
                     return *this;
                 }

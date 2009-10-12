@@ -95,6 +95,7 @@ public:
 
     void render()
     {
+        mApp.getGpu().clearScreen( WATER_COLOR );
         mSeafloor->draw();
         mDolphin->draw();
     }

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "d3d10StateObject.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
+
 // *****************************************************************************
 // public methods
 // *****************************************************************************
@@ -12,6 +14,7 @@ GN::gfx::D3D10StateObjectManager::D3D10StateObjectManager( ID3D10Device & dev )
     : mRasterStates( dev )
     , mBlendStates( dev )
     , mDepthStates( dev )
+    , mSamplerStates( dev )
 {
     /* setup default rasterization states
     mRasterDirty = false;
@@ -174,3 +177,61 @@ bool GN::gfx::D3D10StateObjectManager::setDS(
 
     return true;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setVSSampler(
+    const D3D10_SAMPLER_DESC & desc,
+    UInt32                     stage,
+    bool                       skipDirtyCheck )
+{
+    GN_UNIMPL();
+    GN_UNUSED_PARAM( desc );
+    GN_UNUSED_PARAM( stage );
+    GN_UNUSED_PARAM( skipDirtyCheck );
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setGSSampler(
+    const D3D10_SAMPLER_DESC & desc,
+    UInt32                     stage,
+    bool                       skipDirtyCheck )
+{
+    GN_UNIMPL();
+    GN_UNUSED_PARAM( desc );
+    GN_UNUSED_PARAM( stage );
+    GN_UNUSED_PARAM( skipDirtyCheck );
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D10StateObjectManager::setPSSampler(
+    const D3D10_SAMPLER_DESC & desc,
+    UInt32                     stage,
+    bool                       skipDirtyCheck )
+{
+    ID3D10SamplerState * ss = mSamplerStates[desc];
+    if( NULL == ss ) return false;
+
+    if( stage >= GN_ARRAY_COUNT(mCurrentPSSamplers) )
+    {
+        GN_ERROR(sLogger)( "PS sampler state is too large." );
+        return false;
+    }
+    if( skipDirtyCheck ||
+        ss != mCurrentPSSamplers[stage] )
+    {
+        mDepthStates.dev().PSSetSamplers( stage, 1, &ss );
+
+        mCurrentPSSamplers[stage] = ss;
+    }
+
+    return true;
+}
+

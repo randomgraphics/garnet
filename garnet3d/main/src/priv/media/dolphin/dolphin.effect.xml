@@ -40,10 +40,10 @@ VSOUT main(
 	const float3 vPosition0     : POSITION0,
 	const float3 vNormal0       : NORMAL0,
 	const float2 vBaseTexCoords : TEXCOORD0,
-	const float3 vPosition1     : TEXCOORD1,
-	const float3 vNormal1       : TEXCOORD2,
-	const float3 vPosition2     : TANGENT,
-	const float3 vNormal2       : BINORMAL )
+	const float3 vPosition1     : POSITION1,
+	const float3 vNormal1       : NORMAL1,
+	const float3 vPosition2     : POSITION2,
+	const float3 vNormal2       : NORMAL2 )
 {
 	const   float4   g_vZero = {0,0,0,0};
 	const   float4   g_vConstants = { 1, 0.5, 0, 0 };

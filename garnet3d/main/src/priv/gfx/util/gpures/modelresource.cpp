@@ -1007,7 +1007,7 @@ void GN::gfx::ModelResource::Impl::draw() const
         gc.colortargets = currentContext.colortargets;
         gc.depthstencil = currentContext.depthstencil;
 
-        // TODO: copy render states from current context
+        // apply render states
         sApplyRenderStates( gc.rs, currentContext.rs, mPasses[i].renderstates );
     }
 
@@ -1354,7 +1354,7 @@ GN::gfx::ModelResource::loadFromFile(
     if( !loadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
 
     m = db.createResource<ModelResource>( abspath );
-    if( !m || !m->reset( &desc ) ) AutoRef<ModelResource>::NULLREF;
+    if( !m || !m->reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;
 
     return m;
 }

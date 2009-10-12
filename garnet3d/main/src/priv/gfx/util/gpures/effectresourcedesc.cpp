@@ -18,6 +18,59 @@ typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
 // *****************************************************************************
 
 //
+//
+// -----------------------------------------------------------------------------
+struct EnumNames
+{
+    int          value;
+    const char * name;
+};
+#define ENUM_TABLE_BEGIN( name ) { -1, name }
+#define ENUM_TABLE_END { -1, NULL }
+
+template<class RESULT_TYPE>
+static bool sParseEnum(
+    RESULT_TYPE     & result,
+    const char      * name,
+    const EnumNames * table )
+{
+    const EnumNames * header = table;
+
+    ++table;
+
+    while( table->name )
+    {
+        if( 0 == strCmpI( name, table->name ) )
+        {
+            result = (RESULT_TYPE)table->value;
+            return true;
+        }
+
+        ++table;
+    }
+
+    GN_ERROR(sLogger)( "Invalid %s value: %s", header->name, name );
+    return false;
+}
+
+template<class RESULT_TYPE>
+static RESULT_TYPE sParseEnum(
+    const char        * name,
+    const EnumNames   * table,
+    const RESULT_TYPE & defaultValue )
+{
+    RESULT_TYPE result;
+    if( sParseEnum( result, name, table ) )
+    {
+        return result;
+    }
+    else
+    {
+        return defaultValue;
+    }
+}
+
+//
 // post error message
 // -----------------------------------------------------------------------------
 static void sPostError( const XmlNode & node, const StrA & msg )
@@ -104,14 +157,38 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
 // -----------------------------------------------------------------------------
 static void sParseTexture( EffectResourceDesc & desc, const XmlElement & node )
 {
+    static const EnumNames ADDRESS_MODE_TABLE[] =
+    {
+        ENUM_TABLE_BEGIN( "address mode" ),
+
+        { SamplerDesc::ADDRESS_REPEAT,       "REPEAT" },
+        { SamplerDesc::ADDRESS_REPEAT,       "WRAP" },
+        { SamplerDesc::ADDRESS_CLAMP,        "CLAMP" },
+        { SamplerDesc::ADDRESS_CLAMP_BORDER, "CLAMP_BOORDER" },
+        { SamplerDesc::ADDRESS_MIRROR,       "MIRROR" },
+
+        ENUM_TABLE_END
+    };
+
     GN_ASSERT( "texture" == node.name );
 
     const char * name = sGetItemName( node, "texture" );
     if( !name ) return;
 
-    desc.textures[name];
+    EffectTextureDesc & texdesc = desc.textures[name];
 
-    GN_TODO( "load samplers." );
+    SamplerDesc & sampler = texdesc.sampler;
+
+    const XmlAttrib * a = node.findAttrib( "addressU", StringCompare::CASE_INSENSITIVE );
+    if( a ) sampler.addressU = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
+
+    a = node.findAttrib( "addressV", StringCompare::CASE_INSENSITIVE );
+    if( a ) sampler.addressV = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
+
+    a = node.findAttrib( "addressW", StringCompare::CASE_INSENSITIVE );
+    if( a ) sampler.addressW = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
+
+    GN_TODO( "more samplers fields." );
 }
 
 //
@@ -322,10 +399,30 @@ static void sParseGpuPrograms( EffectResourceDesc & desc, const XmlElement & nod
 // -----------------------------------------------------------------------------
 static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsdesc, const XmlElement & node )
 {
-    GN_UNUSED_PARAM( rsdesc );
-    GN_UNIMPL_WARNING();
+    static const EnumNames CULL_MODE_TABLE[] =
+    {
+        ENUM_TABLE_BEGIN( "CULL_MODE" ),
+
+        { GpuContext::CULL_NONE,  "CULL_NONE" },
+        { GpuContext::CULL_FRONT, "CULL_FRONT" },
+        { GpuContext::CULL_BACK,  "CULL_BACK" },
+
+        ENUM_TABLE_END
+    };
+
     for( const XmlAttrib * a = node.attrib; a; a = a->next )
     {
+        const char * rsname = a->name.cptr();
+        const char * rsvalue = a->value.cptr();
+
+        if( 0 == strCmpI( "CULL_MODE", rsname ) )
+        {
+            rsdesc.cullMode = sParseEnum( rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK );
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Unknow render state name: %s.", rsname );
+        }
     }
 }
 
