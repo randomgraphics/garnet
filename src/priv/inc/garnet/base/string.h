@@ -12,6 +12,18 @@
 #include <string.h>
 namespace GN
 {
+    /// define enumerations for string compare
+    struct StringCompare
+    {
+        enum ENUM
+        {
+            CASE_INSENSITIVE, // case insensitive comparision
+            CASE_SENSITIVE,   // case sensitive comparision
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( StringCompare, ENUM );
+    };
+
     ///
     /// Get string length.
     ///

@@ -412,7 +412,12 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             continue;
         }
 
-        VertexElement ve;
+        if( desc.vtxfmt.numElements >= VertexFormat::MAX_VERTEX_ELEMENTS )
+        {
+            GN_ERROR(sLogger)( "Too many vertex elements." );
+            return AutoRef<Blob>::NULLREF;
+        }
+        VertexElement & ve = desc.vtxfmt.elements[desc.vtxfmt.numElements];
 
         UInt8 bidx;
 
@@ -432,6 +437,8 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             GN_ERROR(sLogger)( "Missing or invalid format attribute." );
             return AutoRef<Blob>::NULLREF;
         }
+
+        desc.vtxfmt.numElements++;
     }
 
     // parse vtxbuf and idxbuf elements, calculate mesh data size

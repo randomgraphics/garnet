@@ -4,8 +4,8 @@
 		<uniform name="view" type="MATRIX44"/>   <!-- view matrix -->
 		<uniform name="proj" type="MATRIX44"/>   <!-- projection matrix -->
 		<uniform name="caustic" type="VECTOR4"/> <!-- caustic coordinate (scale_x, scale_y, offset_x, offset_y) -->
-		<texture name="seafloor"/>               <!-- seafloor texture -->
-		<texture name="caustic"/>                <!-- caustic texture -->
+		<texture name="seafloor" addressu="WRAP" addressv="WRAP"/> <!-- seafloor texture -->
+		<texture name="caustic" addressu="WRAP" addressv="WRAP"/>  <!-- caustic texture -->
 	</parameters>
 
 	<!--

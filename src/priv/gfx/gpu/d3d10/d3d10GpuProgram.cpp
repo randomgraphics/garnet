@@ -2,11 +2,33 @@
 #include "d3d10Shader.h"
 #include "d3d10Gpu.h"
 #include "d3d10Texture.h"
+#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 using namespace GN;
 using namespace GN::gfx;
+
+D3D10_TEXTURE_ADDRESS_MODE sAdressModeToD3D10( unsigned short addr )
+{
+    static D3D10_TEXTURE_ADDRESS_MODE mapping[SamplerDesc::NUM_ADDRESS_MODES] =
+    {
+        D3D10_TEXTURE_ADDRESS_WRAP,
+        D3D10_TEXTURE_ADDRESS_CLAMP,
+        D3D10_TEXTURE_ADDRESS_BORDER,
+        D3D10_TEXTURE_ADDRESS_MIRROR
+    };
+
+    if( addr < GN_ARRAY_COUNT(mapping) )
+    {
+        return mapping[addr];
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Invalid garnet texture address mode: %d", addr );
+        return D3D10_TEXTURE_ADDRESS_CLAMP;
+    }
+}
 
 // *****************************************************************************
 // D3D10GpuProgramParameterDesc
@@ -348,7 +370,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
 void GN::gfx::D3D10GpuProgram::applyTextures(
     const TextureBinding * bindings,
     size_t                 count,
-    bool                   /*skipDirtyCheck*/ ) const
+    bool                   skipDirtyCheck ) const
 {
     const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
 
@@ -363,6 +385,11 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
         count = mParamDesc.textures.count();
     }
     GN_ASSERT( count <= NUM_STAGES );
+
+    D3D10Gpu & gpu = getGpu();
+
+    D3D10_SAMPLER_DESC sd;
+    GN::d3d10::constructDefaultSamplerDesc( sd );
 
     // iterate textures
     for( size_t i = 0; i < count; ++i )
@@ -381,6 +408,13 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
                     size_t srvidx = NUM_STAGES * i + texParam.ssp[i].stage;
 
                     srvArray[srvidx] = tex->getSRView();
+
+                    // apply sampler
+                    sd.AddressU = sAdressModeToD3D10( tb.sampler.addressU );
+                    sd.AddressV = sAdressModeToD3D10( tb.sampler.addressV );
+                    sd.AddressW = sAdressModeToD3D10( tb.sampler.addressW );
+                    GN_TODO( "more sampler fields" );
+                    gpu.setSampler( i, texParam.ssp[i].stage,  sd, skipDirtyCheck );
                 }
             }
         }

@@ -119,7 +119,7 @@ void GN::gfx::D3D10Gpu::contextQuit()
 }
 
 // *****************************************************************************
-// from BasicGpu
+// public functions
 // *****************************************************************************
 
 //
@@ -144,6 +144,25 @@ bool GN::gfx::D3D10Gpu::bindContextImpl( const GpuContext & newContext, bool ski
     if( !bindContextResource( newContext, skipDirtyCheck ) ) return false;
 
     return true;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D10Gpu::setSampler(
+    int                        shaderStage,  // 0: VS, 1: GS: 2: PS
+    int                        samplerStage, // sampler stage
+    const D3D10_SAMPLER_DESC & ssdesc,
+    bool                       skipDirtyCheck )
+{
+    switch( shaderStage )
+    {
+        case 0: mSOMgr->setVSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 1: mSOMgr->setGSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 2: mSOMgr->setPSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 3: GN_UNEXPECTED();
+    }
 }
 
 // *****************************************************************************

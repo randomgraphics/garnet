@@ -178,11 +178,18 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const StrA & name ) const
+        XmlAttrib * findAttrib( const StrA & name, StringCompare sc = StringCompare::CASE_SENSITIVE ) const
         {
             for( XmlAttrib * a = attrib; a; a = a->next )
             {
-                if( name == a->name ) return a;
+                if( StringCompare::CASE_SENSITIVE == sc )
+                {
+                    if( name == a->name ) return a;
+                }
+                else
+                {
+                    if( 0 == strCmpI( name.cptr(), a->name.cptr() ) ) return a;
+                }
             }
             return NULL;
         }
@@ -190,13 +197,21 @@ namespace GN
         ///
         /// find specific child of element
         ///
-        XmlElement * findChildElement( const StrA & name ) const
+        XmlElement * findChildElement( const StrA & name, StringCompare sc = StringCompare::CASE_SENSITIVE ) const
         {
             for( XmlNode * n = child; n; n = n->next )
             {
                 XmlElement * e = n->toElement();
                 if( !e ) continue;
-                if( name == e->name ) return e;
+
+                if( StringCompare::CASE_SENSITIVE == sc )
+                {
+                    if( name == e->name ) return e;
+                }
+                else
+                {
+                    if( 0 == strCmpI( name.cptr(), e->name.cptr() ) ) return e;
+                }
             }
             return NULL;
         }
