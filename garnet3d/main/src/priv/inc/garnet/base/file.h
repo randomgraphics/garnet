@@ -51,6 +51,9 @@ namespace GN
     /// basic file interface used throughout of the garnet system
     ///
     /// 用户实现该文件类时，不一定要实现下面的所有操作。
+    ///
+    /// TODO: replace size_t with UInt64 or SInt64, to support large file on x86 system
+    ///
     struct File : public NoCopy
     {
         ///
@@ -98,7 +101,7 @@ namespace GN
         ///
         /// \return   return false if error
         ///
-        virtual bool seek( int /*offset*/, FileSeek /*origin*/ ) = 0;
+        virtual bool seek( size_t /*offset*/, FileSeek /*origin*/ ) = 0;
 
         ///
         /// 返回当前文件读写游标的位置. Return -1 if something goes wrong.
@@ -252,7 +255,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const;
-        bool seek( int, FileSeek );
+        bool seek( size_t, FileSeek );
         size_t tell() const;
         size_t size() const;
         void * map( size_t, size_t, bool ) { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); return 0; }
@@ -367,7 +370,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const { return (mStart+mSize) == mPtr; }
-        bool seek( int offset, FileSeek origin );
+        bool seek( size_t offset, FileSeek origin );
         size_t tell() const { return mPtr - mStart; }
         size_t size() const { return mSize; }
         void * map( size_t offset, size_t length, bool )
@@ -411,7 +414,7 @@ namespace GN
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
         bool eof() const { return mBuffer.size() == mCursor; }
-        bool seek( int offset, FileSeek origin );
+        bool seek( size_t offset, FileSeek origin );
         size_t tell() const { return mCursor; }
         size_t size() const { return mBuffer.size(); }
         void * map( size_t offset, size_t length, bool )
