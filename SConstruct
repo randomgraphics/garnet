@@ -903,6 +903,7 @@ TARGET_samples = [
     'GNsampleRenderToCube',
     'GNsampleRipple',
     'GNsampleShadowMap',
+    'GNsampleThickLine',
     ]
 
 TARGET_tools = [
