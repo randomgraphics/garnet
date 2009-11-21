@@ -41,7 +41,7 @@ public:
 
     ThickLineDemo()
     {
-        //GN::input::initializeInputSystem();
+        GN::input::initializeInputSystem();
         //gInput.sigKeyPress.connect( this, &ThickLineDemo::onKeyPress );
         //gInput.sigAxisMove.connect( this, &ThickLineDemo::onAxisMove );
 
@@ -64,7 +64,7 @@ public:
 
     ~ThickLineDemo()
     {
-        //GN::input::shutdownInputSystem();
+        GN::input::shutdownInputSystem();
     }
 
     bool onCreate()
@@ -134,26 +134,31 @@ public:
 
         dev.Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0, 1.0f, 0 );
 
-        //Matrix44f r = arcball.getRotationMatrix44();
-        //Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
-        //Matrix44f world = r * t;
-
-        ThickLineParameters p;
-        p.transformation = view * proj;
-        p.width = 100.0f;
-        if( rndr.DrawBegin( p ) )
+        if( SUCCEEDED( dev.BeginScene() ) )
         {
-            dev.SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
-            dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
-            dev.SetRenderState( D3DRS_ZENABLE, FALSE );
-            /*for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
+            //Matrix44f r = arcball.getRotationMatrix44();
+            //Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
+            //Matrix44f world = r * t;
+
+            ThickLineParameters p;
+            p.transformation = view * proj;
+            p.width = 100.0f;
+            if( rndr.DrawBegin( p ) )
             {
-                rndr.Line( m_Box[i*3+0], m_Box[i*3+1] );
-                rndr.Line( m_Box[i*3+1], m_Box[i*3+2] );
-                rndr.Line( m_Box[i*3+2], m_Box[i*3+0] );
-            }*/
-            rndr.Line( m_Box[0], m_Box[1] );
-            rndr.DrawEnd();
+                dev.SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+                dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
+                dev.SetRenderState( D3DRS_ZENABLE, FALSE );
+                /*for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
+                {
+                    rndr.Line( m_Box[i*3+0], m_Box[i*3+1] );
+                    rndr.Line( m_Box[i*3+1], m_Box[i*3+2] );
+                    rndr.Line( m_Box[i*3+2], m_Box[i*3+0] );
+                }*/
+                rndr.Line( m_Box[0], m_Box[1] );
+                rndr.DrawEnd();
+            }
+
+            dev.EndScene();
         }
 
         dev.Present( 0, 0, 0, 0 );
@@ -163,7 +168,7 @@ public:
 int main()
 {
     D3D9AppOption opt;
-    opt.refdev = true;
+    //opt.refdev = true;
 
     ThickLineDemo app;
     return app.run( &opt );
