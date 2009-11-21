@@ -234,6 +234,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         D3D9AppOption()
             : parent(0)
             , monitor(0)
+            , refdev(false)
             , vsync(false)
             , fullscreen(false)
             , fsWidth(0)
@@ -258,6 +259,11 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         /// - Default is 0.
         ///
         HMONITOR monitor;
+
+        ///
+        /// use ref device. Default is false.
+        ///
+        bool refdev;
 
         ///
         /// V-SYNC enable or not. Default is false.
