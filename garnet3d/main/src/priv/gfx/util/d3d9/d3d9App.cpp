@@ -346,7 +346,7 @@ bool GN::d3d9::D3D9Application::createDevice()
     // Initiate adapter ID
     mAdapter = 0;
 
-    mDeviceType = D3DDEVTYPE_HAL;
+    mDeviceType = mOption.refdev ? D3DDEVTYPE_REF : D3DDEVTYPE_HAL;
 
 	// Look for nvidia adapter
     UINT nAdapter = mD3D->GetAdapterCount();
