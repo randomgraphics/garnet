@@ -45,7 +45,7 @@ static const char * pscode =
 "   float4 clr : COLOR0;    \n"
 "}; \n"
 "float4 main( VSIO i ) : COLOR0 { \n"
-"   return 1.0; \n"
+"   return i.clr; \n"
 "}";
 
 // *****************************************************************************
@@ -238,9 +238,9 @@ void D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const ThickLineVer
 
     PrivateVertex * v = NewPolygon6();
 
-    if( e0.post < e1.post )
+    if( e0.post * e1.posw < e1.post * e0.posw )
     {
-        if( e0.posl < e1.posl )
+        if( e0.posl * e1.posw < e1.posl * e0.posw )
         {
             // e1 in quadrant 1
 
@@ -281,7 +281,7 @@ void D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const ThickLineVer
     }
     else
     {
-        if( e0.posl < e1.posl )
+        if( e0.posl * e1.posw < e1.posl * e0.posw )
         {
             // e1 in quadrant 4
 

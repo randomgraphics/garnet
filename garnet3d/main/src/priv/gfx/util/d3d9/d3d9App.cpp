@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/GNinput.h"
 
 #if !GN_XENON
 
@@ -215,6 +216,7 @@ GN::d3d9::D3D9Application::D3D9Application()
     , mD3D(0)
     , mDevice(0)
     , mRunning(false)
+    , mShutdownInputSystem(false)
 {
 }
 
@@ -258,6 +260,8 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
         else
         {
             // Idle time, do rendering and update
+            if( gInputPtr ) gInput.processInputEvents();
+            onUpdate();
             onDraw();
         }
     }
@@ -296,6 +300,7 @@ bool GN::d3d9::D3D9Application::init()
     POINT pt = { LONG_MIN, LONG_MIN };
     mOption.monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
 
+    // create window
     mWindow = sCreateWindow(
             mOption.parent,
             mOption.monitor,
@@ -304,6 +309,18 @@ bool GN::d3d9::D3D9Application::init()
             mOption.fullscreen );
     if( 0 == mWindow ) return false;
 
+    // initialize input system
+    if( NULL == gInputPtr )
+    {
+        if( !input::initializeInputSystem() ) return false;
+        mShutdownInputSystem = true;
+    }
+    if( !gInput.attachToWindow( 0, mWindow ) ) return false;
+    gInput.sigKeyPress.connect( this, &D3D9Application::onKeyPress );
+    gInput.sigCharPress.connect( this, &D3D9Application::onCharPress );
+    gInput.sigAxisMove.connect( this, &D3D9Application::onAxisMove );
+
+    // create D3D object
     mD3D = Direct3DCreate9( D3D_SDK_VERSION );
     if( 0 == mD3D )
     {
@@ -330,7 +347,30 @@ void GN::d3d9::D3D9Application::quit()
 
     safeRelease( mD3D );
 
+    if( gInputPtr )
+    {
+        gInput.sigKeyPress.disconnect( this );
+        gInput.sigCharPress.disconnect( this );
+        gInput.sigAxisMove.disconnect( this );
+
+        if( mShutdownInputSystem )
+        {
+            input::shutdownInputSystem();
+        }
+    }
+
     sDestroyWindow( mWindow ); mWindow = 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
+{
+    if( input::KeyCode::ESCAPE == ke.code && !ke.status.down )
+    {
+        ::PostQuitMessage( 0 );
+    }
 }
 
 //
