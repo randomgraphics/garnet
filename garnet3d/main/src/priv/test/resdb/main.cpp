@@ -108,16 +108,26 @@ bool init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
-    ModelResourceDesc md;
-    initEffectDesc( md.effectResourceDesc );
-    initMeshDesc( md.meshResourceDesc );
-    md.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
-    md.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
+    EffectResourceDesc ed;
+    initEffectDesc( ed );
+    AutoRef<EffectResource> e = db->createResource<EffectResource>( "e0" );
+    if( !e || !e->reset( &ed ) ) return false;
+
+    MeshResourceDesc med;
+    initMeshDesc( med );
+    AutoRef<MeshResource> mesh = db->createResource<MeshResource>( "m0" );
+    if( !mesh || !mesh->reset( &med ) ) return false;
+
+    ModelResourceDesc mod;
+    mod.effect = "e0";
+    mod.mesh = "m0";
+    mod.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
+    mod.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
     model = db->createResource<ModelResource>( "m0" ).detach();
     if( 0 == model ) return false;
 
-    if( !model->reset( &md ) ) return false;
+    if( !model->reset( &mod ) ) return false;
 
     tex[0].attach( loadTextureFromFile( db->gpu(), "media::/texture/rabit.png" ) );
     tex[1].attach( loadTextureFromFile( db->gpu(), "media::/texture/earth.jpg" ) );
