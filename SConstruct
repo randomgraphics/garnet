@@ -1333,7 +1333,7 @@ ALIAS_add_non_default( 'msvc', '#msvc' )
 
 def HELP_generateAliasList():
 	s = ''
-	for a in ALL_aliases.iteritems():
+	for a in sorted(ALL_aliases.items()):
 		if a[1]: d = '(default)'
 		else   : d = '(non defualt)'
  		s += '\n    ' + a[0] + ('%' + str(24-len(a[0])) +'s')%' ' + d

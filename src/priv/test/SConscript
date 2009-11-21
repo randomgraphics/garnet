@@ -6,7 +6,7 @@ SConscript( dirs=[
 	'input',
 	'pcre',
 	'renderToTexture',
-#	'resdb',
+	'resdb',
 	'scene',
 	'sprite',
 	'ut',
