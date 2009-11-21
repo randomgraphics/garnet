@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "GNbase.h"
+#include "GNinput.h"
 
 #if GN_BUILD_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
@@ -306,7 +307,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     ///
     /// D3D9 application framework
     ///
-    class D3D9Application
+    class D3D9Application : public SlotBase
     {
     public:
 
@@ -315,6 +316,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         D3D9Application();
         ~D3D9Application();
 
+        HWND               window() const { return mWindow; }
         IDirect3DDevice9 & d3d9dev() const { GN_ASSERT( mDevice ); return *mDevice; }
 
         int run( const D3D9AppOption * = 0 );
@@ -336,6 +338,9 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         virtual void onDraw() {}
         virtual void onUpdate() {}
+        virtual void onKeyPress( input::KeyEvent );
+        virtual void onCharPress( wchar_t ) {}
+        virtual void onAxisMove( input::Axis, int ) {}
 
         //@}
 
@@ -360,6 +365,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         IDirect3D9          * mD3D;
         IDirect3DDevice9    * mDevice;
         bool                  mRunning;
+        bool                  mShutdownInputSystem;
     };
 
 #endif // !GN_XENON

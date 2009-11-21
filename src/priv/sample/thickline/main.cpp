@@ -9,14 +9,14 @@ using namespace GN::d3d9;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
-/*static XMMATRIX ToXMMatrix( const Matrix44f & m )
+static XMMATRIX ToXMMatrix( const Matrix44f & m )
 {
     return XMMatrixSet(
         m[0][0], m[0][1], m[0][2], m[0][3],
         m[1][0], m[1][1], m[1][2], m[1][3],
         m[2][0], m[2][1], m[2][2], m[2][3],
         m[3][0], m[3][1], m[3][2], m[3][3] );
-}*/
+}
 
 static Matrix44f ToMatrix44f( const XMMATRIX & m )
 {
@@ -27,7 +27,7 @@ static Matrix44f ToMatrix44f( const XMMATRIX & m )
         m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3] );
 }
 
-class ThickLineDemo : public D3D9Application, public GN::SlotBase
+class ThickLineDemo : public D3D9Application
 {
     D3D9ThickLineRenderer rndr;
 
@@ -41,10 +41,6 @@ public:
 
     ThickLineDemo()
     {
-        GN::input::initializeInputSystem();
-        //gInput.sigKeyPress.connect( this, &ThickLineDemo::onKeyPress );
-        //gInput.sigAxisMove.connect( this, &ThickLineDemo::onAxisMove );
-
         // create box geometry
         createBox(
             10.0f, 10.0f, 10.0f,
@@ -64,7 +60,6 @@ public:
 
     ~ThickLineDemo()
     {
-        GN::input::shutdownInputSystem();
     }
 
     bool onCreate()
@@ -88,7 +83,7 @@ public:
 
         // setup transformation matrices
         view = XMMatrixLookAtLH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
-        proj = XMMatrixPerspectiveFovLH( GN_PI/4.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
+        proj = XMMatrixPerspectiveFovLH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
 
         // setup arcball
         float h = tan( 0.5f ) * radius * 2.0f;
@@ -111,23 +106,6 @@ public:
         rndr.OnDeviceDelete();
     }
 
-    void onKeyPress( input::KeyEvent ke )
-    {
-        if( input::KeyCode::ESCAPE == ke.code && !ke.status.down )
-        {
-            ::PostQuitMessage( 0 );
-        }
-    }
-
-    void onAxisMove( input::Axis, int )
-    {
-    }
-
-    void onUpdate()
-    {
-        gInput.processInputEvents();
-    }
-
     void onDraw()
     {
         IDirect3DDevice9 & dev = d3d9dev();
@@ -136,25 +114,24 @@ public:
 
         if( SUCCEEDED( dev.BeginScene() ) )
         {
-            //Matrix44f r = arcball.getRotationMatrix44();
-            //Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
-            //Matrix44f world = r * t;
+            Matrix44f r = arcball.getRotationMatrix44();
+            Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
+            Matrix44f world = t * r;
 
             ThickLineParameters p;
-            p.transformation = view * proj;
-            p.width = 100.0f;
+            p.transformation = XMMatrixTranspose( ToXMMatrix(world) ) * view * proj;
+            p.width = 4.0f;
             if( rndr.DrawBegin( p ) )
             {
-                dev.SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
                 dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
-                dev.SetRenderState( D3DRS_ZENABLE, FALSE );
-                /*for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
+
+                for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
                 {
-                    rndr.Line( m_Box[i*3+0], m_Box[i*3+1] );
-                    rndr.Line( m_Box[i*3+1], m_Box[i*3+2] );
-                    rndr.Line( m_Box[i*3+2], m_Box[i*3+0] );
-                }*/
-                rndr.Line( m_Box[0], m_Box[1] );
+                    rndr.Line( m_Box[m_BoxIndices[i*3+0]], m_Box[m_BoxIndices[i*3+1]] );
+                    rndr.Line( m_Box[m_BoxIndices[i*3+1]], m_Box[m_BoxIndices[i*3+2]] );
+                    rndr.Line( m_Box[m_BoxIndices[i*3+2]], m_Box[m_BoxIndices[i*3+0]] );
+                }
+
                 rndr.DrawEnd();
             }
 
