@@ -3,4 +3,5 @@ SConscript( dirs=[
 	'dolphin',
 	'ripple',
 	'renderToCube',
+	'thickline',
 	] )
