@@ -667,8 +667,8 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     header.endian = 0x04030201;
     header.version = 0x00010000;
     header.prim   = this->prim;
-    header.numvtx = this->numvtx;
-    header.numidx = this->numidx;
+    header.numvtx = (UInt32)this->numvtx;
+    header.numidx = (UInt32)this->numidx;
     header.idx32  = this->idx32;
     header.dynavb = this->dynavb;
     header.dynaib = this->dynaib;
@@ -686,17 +686,17 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
             vbsizes[i] = numvtx * stride;
 
             header.vertices[i] = header.bytes;
-            header.bytes += vbsizes[i];
+            header.bytes += (UInt32)vbsizes[i];
         }
-        header.strides[i] = this->strides[i];
-        header.offsets[i] = this->offsets[i];
+        header.strides[i] = (UInt32)this->strides[i];
+        header.offsets[i] = (UInt32)this->offsets[i];
     }
     size_t ibsize;
     if( numidx > 0 )
     {
         ibsize = numidx * (this->idx32?4:2);
         header.indices = header.bytes;
-        header.bytes  += ibsize;
+        header.bytes  += (UInt32)ibsize;
     }
     else
     {

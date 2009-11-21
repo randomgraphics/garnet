@@ -127,7 +127,7 @@ bool GN::StdFile::eof() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::seek( int offset, FileSeek origin )
+bool GN::StdFile::seek( size_t offset, FileSeek origin )
 {
     GN_GUARD;
 
@@ -153,7 +153,7 @@ bool GN::StdFile::seek( int offset, FileSeek origin )
         return false;
     }
 
-    if( 0 != ::fseek( mFile, offset, seek_table[origin] ) )
+    if( 0 != ::fseek( mFile, (int)offset, seek_table[origin] ) )
     {
         GN_ERROR(sLogger)( "%s : fseek() failed!", name() );
         return false;

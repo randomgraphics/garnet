@@ -63,8 +63,14 @@ $env:GARNET_ROOT=$GARNET_ROOT
 
 # detect host CPU type
 $current_cpu="x86"
-if( ("amd64" -eq $env:PROCESSOR_ARCHITECTURE) -or ("amd64" -eq $env:PROCESSOR_ARCHITEWOW64) ) { $current_cpu="x64" }
-elseif( "ia64" -eq $env:PROCESSOR_ARCHITECTURE ) { $current_cpu="ia64" }
+if( ("amd64" -ieq $env:PROCESSOR_ARCHITECTURE) -or ("AMD64" -ieq $env:PROCESSOR_ARCHITEWOW64) )
+{
+    $current_cpu="x64"
+}
+elseif( "ia64" -ieq $env:PROCESSOR_ARCHITECTURE )
+{
+    $current_cpu="ia64"
+}
 
 # ==============================================================================
 # setup build variant
@@ -72,9 +78,9 @@ elseif( "ia64" -eq $env:PROCESSOR_ARCHITECTURE ) { $current_cpu="ia64" }
 
 # setup default build variants
 $env:GN_BUILD_COMPILER="vc80"
-$env:GN_BUILD_VARIANT="debug"
+$env:GN_BUILD_VARIANT="stdbg"
 $env:GN_BUILD_TARGET_OS="mswin"
-$env:GN_BUILD_TARGET_CPU="x86"
+$env:GN_BUILD_TARGET_CPU=$current_cpu
 
 # TODO: Parse command line (modify build variant according to command line)
 foreach( $a in $args )
@@ -154,17 +160,31 @@ if( "vc80" -eq $env:GN_BUILD_COMPILER )
     # run vsvarall.bat, catch all environments
     if( test-path -path $vcvarbat )
     {
-        "Run Visual Studio build environment setup script: $vcvarbat"
-        ""
+        $target = ""
         if( "x86" -eq $current_cpu )
         {
             if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
             {
-                catch_batch_env $vcvarbat "x86"
+                $target = "x86"
             }
             elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
             {
-                catch_batch_env $vcvarbat "x86_amd64"
+                $target = "x86_amd64"
+            }
+            else
+            {
+                error "Unsupport GN_BUILD_TARGET_CPU: $env:GN_BUILD_TARGET_CPU"
+            }
+        }
+        elseif( "x64" -eq $current_cpu )
+        {
+            if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                $target = "x86"
+            }
+            elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                $target = "amd64"
             }
             else
             {
@@ -175,6 +195,10 @@ if( "vc80" -eq $env:GN_BUILD_COMPILER )
         {
             error "Unsupport current_cpu: $current_cpu"
         }
+
+        "Run Visual Studio build environment setup script: $vcvarbat $target"
+        ""
+        catch_batch_env $vcvarbat $target
     }
     else
     {
@@ -216,6 +240,21 @@ if( "icl" -eq $env:GN_BUILD_COMPILER )
                 error "Unsupport GN_BUILD_TARGET_CPU: $env:GN_BUILD_TARGET_CPU"
             }
         }
+        elseif( "x64" -eq $current_cpu )
+        {
+            if( "x86" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                catch_batch_env $batch ia32
+            }
+            elseif( "x64" -eq $env:GN_BUILD_TARGET_CPU )
+            {
+                catch_batch_env $batch intel64
+            }
+            else
+            {
+                error "Unsupport GN_BUILD_TARGET_CPU: $env:GN_BUILD_TARGET_CPU"
+            }
+        }
         else
         {
             error "Unsupport current_cpu: $current_cpu"
@@ -245,17 +284,21 @@ if( "mswin" -eq $env:GN_BUILD_TARGET_OS )
 
         if( test-path -path $batch )
         {
-        	"Run DirectX SDK setup script: $batch"
-            ""
+            $target = ""
 
             if( "x64" -eq $env:GN_BUILD_TARGET_CPU )
             {
-                catch_batch_env $batch "amd64"
+                $target = "amd64"
             }
             else
             {
-                catch_batch_env $batch $env.GN_BUILD_TARGET_CPU
+                $target = $env:GN_BUILD_TARGET_CPU
             }
+
+        	"Run DirectX SDK setup script: $batch $target"
+            ""
+            
+            catch_batch_env $batch $target
         }
         else
         {

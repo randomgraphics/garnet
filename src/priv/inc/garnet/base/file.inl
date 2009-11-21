@@ -110,7 +110,7 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::seek( int offset, FileSeek origin )
+GN::MemFile<T>::seek( size_t offset, FileSeek origin )
 {
     UInt8 * end = mStart + mSize;
     UInt8 * ptr;
@@ -209,7 +209,7 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::seek( int offset, FileSeek origin )
+inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
 {
     size_t cur;
     if( FileSeek::CUR == origin )
