@@ -198,6 +198,7 @@ bool D3D9ThickLineRenderer::DrawBegin( const ThickLineParameters & parameters )
     (ThickLineParameters&)m_Parameters = parameters;
     D3DVIEWPORT9 vp;
     m_Device->GetViewport( &vp );
+    m_Parameters.wvp = parameters.worldview * parameters.proj;
     m_Parameters.screenWidth = (float)vp.Width;
     m_Parameters.screenHeight = (float)vp.Height;
     m_Parameters.endPointHalfWidth = (float)m_Parameters.width / vp.Width;
@@ -427,28 +428,51 @@ void D3D9ThickLineRenderer::CalcEndPoint(
     EndPoint              & endpoint,
     const ThickLineVertex & vertex )
 {
-    // translate vertex into clip space
-    XMVECTOR v = XMVectorSet( vertex.x, vertex.y, vertex.z, 1.0f );
-    v = XMVector4Transform( v, m_Parameters.transformation );
+    // determine center position and end point size
+    XMVECTOR center;
+    float half_w;
+    float half_h;
+    if( m_Parameters.widthInScreenSpace )
+    {
+        // translate vertex into clip space
+        center = XMVectorSet( vertex.x, vertex.y, vertex.z, 1.0f );
+        center = XMVector4Transform( center, m_Parameters.wvp );
 
-    // get end point positions in clip space
-    endpoint.posz = XMVectorGetZ( v );
-    endpoint.posw = XMVectorGetW( v );
-#if 1
-    float half_w = m_Parameters.endPointHalfWidth * endpoint.posw;
-    float half_h = m_Parameters.endPointHalfHeight * endpoint.posw;
-#else
-    float min_half_w = 1.0f / m_Parameters.screenWidth * endpoint.posw;
-    float min_half_h = 1.0f / m_Parameters.screenHeight * endpoint.posw;
-    float half_w = m_Parameters.width / 80.0f;
-    float half_h = m_Parameters.width / 60.0f;
-    if( half_w < min_half_w ) half_w = min_half_w;
-    if( half_h < min_half_h ) half_h = min_half_h;
-#endif
-    endpoint.posl = XMVectorGetX( v ) - half_w;
-    endpoint.posr = XMVectorGetX( v ) + half_w;
-    endpoint.post = XMVectorGetY( v ) + half_h;
-    endpoint.posb = XMVectorGetY( v ) - half_h;
+        // get end point positions in clip space
+        float w = XMVectorGetW( center );
+        half_w = m_Parameters.endPointHalfWidth * w;
+        half_h = m_Parameters.endPointHalfHeight * w;
+    }
+    else
+    {
+        // translate vertex into view space
+        center = XMVectorSet( vertex.x, vertex.y, vertex.z, 1.0f );
+        center = XMVector4Transform( center, m_Parameters.worldview );
+
+        // get position of left-top corner in view space
+        float half_size = m_Parameters.width / 2.0f * XMVectorGetW( center );
+        XMVECTOR topleft = center + XMVectorSet( -half_size, half_size, 0.0f, 0.0f );
+
+        // translate both center and left top into clip space
+        center = XMVector4Transform( center, m_Parameters.proj );
+        topleft = XMVector4Transform( topleft, m_Parameters.proj );
+
+        half_w = fabs( XMVectorGetX( topleft ) - XMVectorGetX( center ) );
+        half_h = fabs( XMVectorGetY( topleft ) - XMVectorGetY( center ) );
+
+        float w = XMVectorGetW( center );
+        float min_half_w = 1.0f / m_Parameters.screenWidth * w;
+        float min_half_h = 1.0f / m_Parameters.screenHeight * w;
+        if( half_w < min_half_w ) half_w = min_half_w;
+        if( half_h < min_half_h ) half_h = min_half_h;
+    }
+
+    endpoint.posl = XMVectorGetX( center ) - half_w;
+    endpoint.posr = XMVectorGetX( center ) + half_w;
+    endpoint.post = XMVectorGetY( center ) + half_h;
+    endpoint.posb = XMVectorGetY( center ) - half_h;
+    endpoint.posz = XMVectorGetZ( center );
+    endpoint.posw = XMVectorGetW( center );
 
     // TODO: interpolate end point texcoord for each corner
     endpoint.texl = vertex.u;
