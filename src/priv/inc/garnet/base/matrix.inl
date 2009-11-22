@@ -775,8 +775,8 @@ namespace GN
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
         T h = tan( fovy/2.0f ) * znear * 2.0f,
-                  w = h * ratio,
-                  d = zfar - znear;
+        w = h * ratio,
+        d = zfar - znear;
 
         identity();
         rows[0][0] = 2.0f * znear / w;

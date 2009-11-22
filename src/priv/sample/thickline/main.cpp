@@ -31,11 +31,29 @@ class ThickLineDemo : public D3D9Application
 {
     D3D9ThickLineRenderer rndr;
 
-    ArcBall arcball;
+    float    radius;
+    ArcBall  arcball;
     XMMATRIX proj, view;
 
     ThickLineVertex m_Box[24];
     UInt16          m_BoxIndices[36];
+
+    void updateRadius()
+    {
+        IDirect3DDevice9 & dev = d3d9dev();
+        D3DVIEWPORT9 vp;
+        dev.GetViewport( &vp );
+
+        // setup transformation matrices
+        view = XMMatrixLookAtLH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
+        proj = XMMatrixPerspectiveFovLH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
+
+        // setup arcball
+        float h = tan( 0.5f ) * radius * 2.0f;
+        arcball.setMouseMoveWindow( 0, 0, (int)vp.Width, (int)vp.Height );
+        arcball.setViewMatrix( ToMatrix44f(XMMatrixTranspose(view)) );
+        arcball.setTranslationSpeed( h / vp.Height );
+    }
 
 public:
 
@@ -68,6 +86,10 @@ public:
 
         if( !rndr.OnDeviceCreate( &dev ) ) return false;
 
+        // setup arcball
+        arcball.setHandness( util::LEFT_HAND );
+        arcball.connectToInput();
+
         return true;
     }
 
@@ -79,19 +101,8 @@ public:
         D3DVIEWPORT9 vp;
         dev.GetViewport( &vp );
 
-        float radius = 15.0f;
-
-        // setup transformation matrices
-        view = XMMatrixLookAtLH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
-        proj = XMMatrixPerspectiveFovLH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
-
-        // setup arcball
-        float h = tan( 0.5f ) * radius * 2.0f;
-        arcball.setMouseMoveWindow( 0, 0, (int)vp.Width, (int)vp.Height );
-        arcball.setViewMatrix( ToMatrix44f(XMMatrixTranspose(view)) );
-        arcball.setTranslationSpeed( h / vp.Height );
-        arcball.setHandness( util::LEFT_HAND );
-        arcball.connectToInput();
+        radius = 15.0f;
+        updateRadius();
 
         return true;
     }
@@ -104,6 +115,17 @@ public:
     void onDestroy()
     {
         rndr.OnDeviceDelete();
+    }
+
+    void onAxisMove( GN::input::Axis a, int d )
+    {
+        if( GN::input::Axis::MOUSE_WHEEL_0 == a )
+        {
+            float speed = radius / 100.0f;
+            radius -= speed * d;
+            if( radius < 0.1f ) radius = 0.1f;
+            updateRadius();
+        }
     }
 
     void onDraw()
