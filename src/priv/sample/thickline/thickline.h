@@ -98,3 +98,39 @@ private:
 
     void Flush();
 };
+
+/*struct PointSpriteParameters
+{
+    XMMATRIX worldview;
+    XMMATRIV proj;
+    bool  sizeInScreenSpace; // true: width and height are in screen space
+                             // false: width and height are in view space
+};
+
+struct PointSprite
+{
+    float    x, y, z, w, h;
+    float    u, v, uw, wh;
+    D3DCOLOR color;
+};
+
+class D3D9PointSpriteRenderer
+{
+public:
+
+    D3D9PointSpriteRenderer();
+    ~D3D9PointSpriteRenderer() { OnDeviceDispose(); OnDeviceDelete(); }
+
+    bool OnDeviceCreate( IDirect3DDevice9 * dev );
+    bool OnDeviceRestore();
+    void OnDeviceDispose();
+    void OnDeviceDelete();
+
+    bool DrawBegin( const PointSpriteParameters & parameters );
+    void DrawEnd();
+
+    void Point( const PointSprite & );
+    void Point( float x, float y, float z, float w, float h, D3DCOLOR color );
+    void Point( float x, float y, float z, float w, float h, float u, float v, float uw, float uh, D3DCOLOR color );
+    void PointList( const PointSprite * points, size_t count );
+};*/
