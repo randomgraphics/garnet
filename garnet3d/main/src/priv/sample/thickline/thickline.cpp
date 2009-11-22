@@ -198,6 +198,8 @@ bool D3D9ThickLineRenderer::DrawBegin( const ThickLineParameters & parameters )
     (ThickLineParameters&)m_Parameters = parameters;
     D3DVIEWPORT9 vp;
     m_Device->GetViewport( &vp );
+    m_Parameters.screenWidth = (float)vp.Width;
+    m_Parameters.screenHeight = (float)vp.Height;
     m_Parameters.endPointHalfWidth = (float)m_Parameters.width / vp.Width;
     m_Parameters.endPointHalfHeight = (float)m_Parameters.width / vp.Height;
 
@@ -432,8 +434,17 @@ void D3D9ThickLineRenderer::CalcEndPoint(
     // get end point positions in clip space
     endpoint.posz = XMVectorGetZ( v );
     endpoint.posw = XMVectorGetW( v );
+#if 1
     float half_w = m_Parameters.endPointHalfWidth * endpoint.posw;
     float half_h = m_Parameters.endPointHalfHeight * endpoint.posw;
+#else
+    float min_half_w = 1.0f / m_Parameters.screenWidth * endpoint.posw;
+    float min_half_h = 1.0f / m_Parameters.screenHeight * endpoint.posw;
+    float half_w = m_Parameters.width / 80.0f;
+    float half_h = m_Parameters.width / 60.0f;
+    if( half_w < min_half_w ) half_w = min_half_w;
+    if( half_h < min_half_h ) half_h = min_half_h;
+#endif
     endpoint.posl = XMVectorGetX( v ) - half_w;
     endpoint.posr = XMVectorGetX( v ) + half_w;
     endpoint.post = XMVectorGetY( v ) + half_h;

@@ -40,6 +40,7 @@ private:
 
     struct PrivateParameters : public ThickLineParameters
     {
+        float screenWidth, screenHeight; // screen size in pixels
         float endPointHalfWidth, endPointHalfHeight; // size of line end point in clip space.
     };
 
