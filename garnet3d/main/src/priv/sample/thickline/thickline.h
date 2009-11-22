@@ -12,8 +12,11 @@ struct ThickLineVertex
 
 struct ThickLineParameters
 {
-    XMMATRIX transformation; // matrix that transform vertex into clip space
-    float    width; // line width in pixels in screen space
+    XMMATRIX worldview;          // matrix that transform vertex from object space to view space
+    XMMATRIX proj;               // matrix that transform vertex from view space to clip space
+    float    width;              // line width
+    bool     widthInScreenSpace; // true  : line width is in pixels in screen space
+                                 // false : line width is in view space
 };
 
 class D3D9ThickLineRenderer
@@ -40,6 +43,7 @@ private:
 
     struct PrivateParameters : public ThickLineParameters
     {
+        XMMATRIX wvp; // world * view * proj
         float screenWidth, screenHeight; // screen size in pixels
         float endPointHalfWidth, endPointHalfHeight; // size of line end point in clip space.
     };

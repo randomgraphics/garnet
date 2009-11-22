@@ -140,9 +140,12 @@ public:
             Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
             Matrix44f world = t * r;
 
+            // draw box frame
             ThickLineParameters p;
-            p.transformation = XMMatrixTranspose( ToXMMatrix(world) ) * view * proj;
-            p.width = 4.0f;
+            p.worldview = XMMatrixTranspose( ToXMMatrix(world) ) * view;
+            p.proj = proj;
+            p.width = 0.1f;
+            p.widthInScreenSpace = false;
             if( rndr.DrawBegin( p ) )
             {
                 dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
