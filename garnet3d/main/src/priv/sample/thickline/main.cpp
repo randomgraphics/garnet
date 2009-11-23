@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "garnet/GNd3d9.h"
 #include "thickline.h"
+#include "orientationBox.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -30,6 +31,7 @@ static Matrix44f ToMatrix44f( const XMMATRIX & m )
 class ThickLineDemo : public D3D9Application
 {
     D3D9ThickLineRenderer rndr;
+    D3D9OrientationBox orientation;
 
     float    radius;
     ArcBall  arcball;
@@ -45,8 +47,8 @@ class ThickLineDemo : public D3D9Application
         dev.GetViewport( &vp );
 
         // setup transformation matrices
-        view = XMMatrixLookAtLH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
-        proj = XMMatrixPerspectiveFovLH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
+        view = XMMatrixLookAtRH( XMVectorSet(0,0,radius,1), XMVectorSet(0,0,0,1), XMVectorSet(0,1,0,0) );
+        proj = XMMatrixPerspectiveFovRH( GN_PI/3.0f, (float)vp.Width/vp.Height, radius / 100.0f, radius * 2.0f );
 
         // setup arcball
         float h = tan( 0.5f ) * radius * 2.0f;
@@ -57,7 +59,7 @@ class ThickLineDemo : public D3D9Application
 
 public:
 
-    ThickLineDemo()
+    ThickLineDemo() : orientation(64.0f)
     {
         // create box geometry
         createBox(
@@ -85,9 +87,10 @@ public:
         IDirect3DDevice9 & dev = d3d9dev();
 
         if( !rndr.OnDeviceCreate( &dev ) ) return false;
+        if( !orientation.OnDeviceCreate( &dev ) ) return false;
 
         // setup arcball
-        arcball.setHandness( util::LEFT_HAND );
+        arcball.setHandness( util::RIGHT_HAND );
         arcball.connectToInput();
 
         return true;
@@ -96,6 +99,7 @@ public:
     bool onRestore()
     {
         if( !rndr.OnDeviceRestore() ) return false;
+        if( !orientation.OnDeviceRestore() ) return false;
 
         IDirect3DDevice9 & dev = d3d9dev();
         D3DVIEWPORT9 vp;
@@ -110,11 +114,13 @@ public:
     void onDispose()
     {
         rndr.OnDeviceDispose();
+        orientation.OnDeviceDispose();
     }
 
     void onDestroy()
     {
         rndr.OnDeviceDelete();
+        orientation.OnDeviceDelete();
     }
 
     void onAxisMove( GN::input::Axis a, int d )
@@ -159,6 +165,9 @@ public:
 
                 rndr.DrawEnd();
             }
+
+            // draw orientation box
+            orientation.Draw( 32, 32, XMMatrixTranspose(ToXMMatrix(r)) );
 
             dev.EndScene();
         }
