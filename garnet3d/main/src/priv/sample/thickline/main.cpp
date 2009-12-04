@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNd3d9.h"
-#include "thickline.h"
 #include "orientationBox.h"
+#include "viewfrustum.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -19,7 +19,7 @@ static XMMATRIX ToXMMatrix( const Matrix44f & m )
         m[3][0], m[3][1], m[3][2], m[3][3] );
 }
 
-static Matrix44f ToMatrix44f( const XMMATRIX & m )
+static Matrix44f ToMatrix44f( CXMMATRIX m )
 {
     return Matrix44f(
         m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
@@ -37,8 +37,14 @@ class ThickLineDemo : public D3D9Application
     ArcBall  arcball;
     XMMATRIX proj, view;
 
+    int activeScene;
+
+    // box scene
     ThickLineVertex m_Box[24];
     UInt16          m_BoxIndices[36];
+
+    // view frustum scene
+    D3D9ViewFrustum viewFrustum;
 
     void updateRadius()
     {
@@ -61,6 +67,8 @@ public:
 
     ThickLineDemo() : orientation(64.0f)
     {
+        activeScene = 1;
+
         // create box geometry
         createBox(
             10.0f, 10.0f, 10.0f,
@@ -76,6 +84,16 @@ public:
         {
             m_Box[i].color = 0xFFFFFFFF;
         }
+
+        // create viewfrustum geometry
+        viewFrustum.UpdateViewFrustumRH(
+            XMVectorSet( 5, 0, 0, 1 ), // eye
+            XMVectorSet( 0, 0, 0, 1 ), // at
+            XMVectorSet( 0, 1, 0, 0 ), // up
+            XM_PI / 3.0f, // fovy
+            4.0f / 3.0f, // ratio
+            1.0f, // near
+            10.0f ); // far
     }
 
     ~ThickLineDemo()
@@ -88,6 +106,7 @@ public:
 
         if( !rndr.OnDeviceCreate( &dev ) ) return false;
         if( !orientation.OnDeviceCreate( &dev ) ) return false;
+        if( !viewFrustum.OnDeviceCreate( &dev ) ) return false;
 
         // setup arcball
         arcball.setHandness( util::RIGHT_HAND );
@@ -100,6 +119,7 @@ public:
     {
         if( !rndr.OnDeviceRestore() ) return false;
         if( !orientation.OnDeviceRestore() ) return false;
+        if( !viewFrustum.OnDeviceRestore() ) return false;
 
         IDirect3DDevice9 & dev = d3d9dev();
         D3DVIEWPORT9 vp;
@@ -115,12 +135,23 @@ public:
     {
         rndr.OnDeviceDispose();
         orientation.OnDeviceDispose();
+        viewFrustum.OnDeviceDispose();
     }
 
     void onDestroy()
     {
         rndr.OnDeviceDelete();
         orientation.OnDeviceDelete();
+        viewFrustum.OnDeviceDelete();
+    }
+
+    void onKeyPress( input::KeyEvent ke )
+    {
+        if( input::KeyCode::SPACEBAR == ke.code && ke.status.down )
+        {
+            const int NUM_SCENES = 2;
+            activeScene = (activeScene + 1) % NUM_SCENES;
+        }
     }
 
     void onAxisMove( GN::input::Axis a, int d )
@@ -134,6 +165,35 @@ public:
         }
     }
 
+    void DrawBoxScene( CXMMATRIX world )
+    {
+        IDirect3DDevice9 & dev = d3d9dev();
+
+        ThickLineParameters p;
+        p.worldview = world * view;
+        p.proj = proj;
+        p.width = 0.1f;
+        p.widthInScreenSpace = false;
+        if( rndr.DrawBegin( p ) )
+        {
+            dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
+            {
+                rndr.Line( m_Box[m_BoxIndices[i*3+0]], m_Box[m_BoxIndices[i*3+1]] );
+                rndr.Line( m_Box[m_BoxIndices[i*3+1]], m_Box[m_BoxIndices[i*3+2]] );
+                rndr.Line( m_Box[m_BoxIndices[i*3+2]], m_Box[m_BoxIndices[i*3+0]] );
+            }
+
+            rndr.DrawEnd();
+        }
+    }
+
+    void DrawViewFrustumScene( CXMMATRIX world )
+    {
+        viewFrustum.DrawRH( world * view, proj );
+    }
+
     void onDraw()
     {
         IDirect3DDevice9 & dev = d3d9dev();
@@ -144,26 +204,13 @@ public:
         {
             Matrix44f r = arcball.getRotationMatrix44();
             Matrix44f t = Matrix44f::sTranslate( arcball.getTranslation() );
-            Matrix44f world = t * r;
+            XMMATRIX world = XMMatrixTranspose( ToXMMatrix(t * r) );
 
             // draw box frame
-            ThickLineParameters p;
-            p.worldview = XMMatrixTranspose( ToXMMatrix(world) ) * view;
-            p.proj = proj;
-            p.width = 0.1f;
-            p.widthInScreenSpace = false;
-            if( rndr.DrawBegin( p ) )
+            switch( activeScene )
             {
-                dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
-
-                for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
-                {
-                    rndr.Line( m_Box[m_BoxIndices[i*3+0]], m_Box[m_BoxIndices[i*3+1]] );
-                    rndr.Line( m_Box[m_BoxIndices[i*3+1]], m_Box[m_BoxIndices[i*3+2]] );
-                    rndr.Line( m_Box[m_BoxIndices[i*3+2]], m_Box[m_BoxIndices[i*3+0]] );
-                }
-
-                rndr.DrawEnd();
+                case 0: DrawBoxScene( world ); break;
+                case 1: DrawViewFrustumScene( world ); break;
             }
 
             // draw orientation box

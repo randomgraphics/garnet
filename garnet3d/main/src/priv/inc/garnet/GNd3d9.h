@@ -16,7 +16,6 @@
 #if GN_XENON
 #include <xtl.h>
 #include <xgraphics.h>
-#include <xboxmath.h>
 #elif GN_PC
 #ifndef NOMINMAX
 #define NOMINMAX ///< This is to disable windows min/max macros
@@ -26,6 +25,7 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <xnamath.h>
 
 // Check d3d version
 #if DIRECT3D_VERSION < 0x0900
@@ -220,6 +220,144 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             : Vector2<UInt32>( 0, 0 );
         GN_UNGUARD_SLOW;
     }
+
+    class D3D9RenderStateSaver
+    {
+        IDirect3DDevice9                  * m_Device;
+        std::map<D3DRENDERSTATETYPE, DWORD> m_Values;
+
+    public:
+
+        D3D9RenderStateSaver( IDirect3DDevice9 * dev )
+            : m_Device(dev)
+        {
+        }
+
+        ~D3D9RenderStateSaver()
+        {
+            RestoreAllRenderStates();
+        }
+
+        void StoreRenderState( D3DRENDERSTATETYPE type )
+        {
+            if( m_Device && m_Values.find(type) == m_Values.end() )
+            {
+                DWORD value;
+                if( SUCCEEDED( m_Device->GetRenderState( type, &value ) ) )
+                {
+                    m_Values[type] = value;
+                }
+            }
+        }
+
+        void RestoreAllRenderStates()
+        {
+            std::map<D3DRENDERSTATETYPE, DWORD>::const_iterator i;
+            for( i = m_Values.begin(); i != m_Values.end(); ++i )
+            {
+                D3DRENDERSTATETYPE type = i->first;
+                DWORD              value = i->second;
+                m_Device->SetRenderState( type, value );
+            }
+            m_Values.clear();
+        }
+    };
+
+    struct ThickLineVertex
+    {
+        float    x, y, z;
+        float    u, v;
+        D3DCOLOR color;
+    };
+
+    struct ThickLineParameters
+    {
+        XMMATRIX worldview;          // matrix that transform vertex from object space to view space
+        XMMATRIX proj;               // matrix that transform vertex from view space to clip space
+        float    width;              // line width
+        bool     widthInScreenSpace; // true  : line width is in pixels in screen space
+                                     // false : line width is in view space
+    };
+
+    class D3D9ThickLineRenderer
+    {
+
+    public:
+
+        D3D9ThickLineRenderer();
+        ~D3D9ThickLineRenderer() { OnDeviceDispose(); OnDeviceDelete(); }
+
+        bool OnDeviceCreate( IDirect3DDevice9 * dev );
+        bool OnDeviceRestore();
+        void OnDeviceDispose();
+        void OnDeviceDelete();
+
+        bool DrawBegin( const ThickLineParameters & parameters );
+        void DrawEnd();
+
+        void Line( const ThickLineVertex & v0, const ThickLineVertex & v1 );
+        void Line( float x1, float y1, float z1, float x2, float y2, float z2, D3DCOLOR color );
+        void LineList( const ThickLineVertex * vertices, size_t numverts );
+
+    private:
+
+        struct PrivateParameters : public ThickLineParameters
+        {
+            XMMATRIX wvp; // world * view * proj
+            float screenWidth, screenHeight; // screen size in pixels
+            float endPointHalfWidth, endPointHalfHeight; // size of line end point in clip space.
+        };
+
+        struct PrivateVertex
+        {
+            XMVECTOR position; // position in clip space
+            D3DCOLOR color;
+            float    u, v;
+            UInt32   _; // padding
+        };
+
+        struct EndPoint
+        {
+            float posl, posr, post, posb, posz, posw;
+            float texl, texr, text, texb;
+            D3DCOLOR color;
+
+            PrivateVertex * TopLeft( PrivateVertex * v );
+            PrivateVertex * TopRight( PrivateVertex * v );
+            PrivateVertex * BottomLeft( PrivateVertex * v );
+            PrivateVertex * BottomRight( PrivateVertex * v );
+        };
+
+    private:
+
+        IDirect3DDevice9 * m_Device;
+        IDirect3DVertexShader9 * m_Vs;
+        IDirect3DPixelShader9 * m_Ps;
+        IDirect3DVertexDeclaration9 * m_Decl;
+        IDirect3DVertexBuffer9 * m_Vb;
+        IDirect3DIndexBuffer9 * m_Ib;
+
+        bool m_Drawing;
+        PrivateParameters m_Parameters;
+
+        static const size_t MAX_VERTICES = 1024;
+        PrivateVertex m_Vertices[MAX_VERTICES];
+        UInt16        m_Indices[MAX_VERTICES/6*12]; // 12 indices (4 triangles ) per 6 verices
+        UInt32        m_NumVertices;
+
+
+    private:
+
+        void Clear();
+
+        void CalcEndPoint(
+            EndPoint              & endpoint,
+            const ThickLineVertex & vertex );
+
+        PrivateVertex * NewPolygon6();
+
+        void Flush();
+    };
 
 // Note: D3DApplication is not available on Xenon platform yet.
 #if !GN_XENON

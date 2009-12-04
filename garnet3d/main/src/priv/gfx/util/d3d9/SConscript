@@ -2,6 +2,7 @@ Import( 'GN' )
 sources = [
     'd3d9App.cpp',
     'd3d9ShaderUtils.cpp',
+    'd3d9ThickLine.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'cluster' )
