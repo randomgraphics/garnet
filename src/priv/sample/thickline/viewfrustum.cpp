@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "viewfrustum.h"
 
+using namespace GN;
+using namespace GN::d3d9;
+
 // *****************************************************************************
 // utilities
 // *****************************************************************************
@@ -27,33 +30,50 @@ static void LOG_ERROR(const char * format, ...)
 // *****************************************************************************
 
 static const char * vscode =
-"struct VSIO { \n"
+"uniform float4x4 u_wvp    : register(c0); \n"
+"uniform float4x4 u_inv_wv : register(c4); \n"
+"struct VSI { \n"
 "   float4 pos : POSITION0; \n"
-"   float2 tex : TEXCOORD0; \n"
 "   float4 clr : COLOR0;    \n"
+"   float3 nml : NORMAL0; \n"
 "}; \n"
-"VSIO main( VSIO i ) { \n"
-"   VSIO o = i; \n"
+"struct VSO { \n"
+"   float4 pos    : POSITION0; \n"
+"   float4 clr    : COLOR0;    \n"
+"   float3 normal : TEXCOORD0; \n"
+"   float3 light  : TEXCOORD1; \n"
+"}; \n"
+"VSO main( VSI i ) { \n"
+"   VSO o; \n"
+"   o.pos = mul( u_wvp, i.pos ); \n"
+"   o.clr = i.clr; \n"
+"   o.normal = i.nml; \n"
+"   float4 eye = mul( u_inv_wv, float4(0,0,0,1) ); \n"
+"   o.light = (eye - i.pos).xyz; \n"
 "   return o; \n"
 "}";
 
 static const char * pscode =
-"struct VSIO { \n"
-"   float4 pos : POSITION0; \n"
-"   float2 tex : TEXCOORD0; \n"
-"   float4 clr : COLOR0;    \n"
+"struct VSO { \n"
+"   float4 pos    : POSITION0; \n"
+"   float4 clr    : COLOR0;    \n"
+"   float3 normal : TEXCOORD0; \n"
+"   float3 light  : TEXCOORD1; \n"
 "}; \n"
-"float4 main( VSIO i ) : COLOR0 { \n"
-"   return i.clr; \n"
+"float4 main( VSO i ) : COLOR0 { \n"
+"   float3 N = normalize( i.normal ); \n"
+"   float3 L = normalize( i.light ); \n"
+"   float  d = dot( N, L ); \n"
+"   return i.clr * d; \n"
 "}";
 
 static const D3DCOLOR SIDE_COLORS[4] =
 {
     //A R G B
-    0xFFFF0000; // left   : red
-    0xFFFFFF00; // bottom : yellow
-    0xFF00FF00; // right  : green
-    0xFF0000FF; // top    : blue
+    0xFFFF0000, // left   : red
+    0xFFFFFF00, // bottom : yellow
+    0xFF00FF00, // right  : green
+    0xFF0000FF, // top    : blue
 };
 
 static const D3DCOLOR FAR_END_COLOR = 0xFFFFFFFF; // white
@@ -69,7 +89,8 @@ D3D9ViewFrustum::D3D9ViewFrustum()
     : m_Device(0)
     , m_Vs(0)
     , m_Ps(0)
-    , m_Vb(0)
+    , m_VbSolid(0)
+    , m_VbTrans(0)
 {
     memset( &m_Sides, 0, sizeof(m_Sides) );
     memset( &m_FarEnd, 0, sizeof(m_FarEnd) );
@@ -107,7 +128,8 @@ bool D3D9ViewFrustum::OnDeviceRestore()
     }
 
     // create vertex buffer
-    if( FAILED( dev->CreateVertexBuffer( VIEW_FRUSTUM_VB_SIZE, D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &m_VbSolid, NULL ) ) )
+    if( FAILED( m_Device->CreateVertexBuffer( VIEW_FRUSTUM_VB_SIZE, D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &m_VbSolid, NULL ) ) ||
+        FAILED( m_Device->CreateVertexBuffer( VIEW_FRUSTUM_VB_SIZE, D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &m_VbTrans, NULL ) ) )
     {
         LOG_ERROR( "Fail to create vertex buffer." );
         return false;
@@ -122,7 +144,8 @@ bool D3D9ViewFrustum::OnDeviceRestore()
 void D3D9ViewFrustum::OnDeviceDispose()
 {
     m_LineRenderer.OnDeviceDispose();
-    SAFE_RELEASE( m_Vb );
+    SAFE_RELEASE( m_VbSolid );
+    SAFE_RELEASE( m_VbTrans );
 }
 
 //
@@ -142,19 +165,19 @@ void D3D9ViewFrustum::OnDeviceDelete()
 void D3D9ViewFrustum::UpdateViewFrustumRH(
     const XMVECTOR & eye,
     const XMVECTOR & at,
-    const XMVECTOR & upVector,
+    const XMVECTOR & unalignedUp,
     float            fovy,
     float            ratio,
     float            near,
-    float            far )
+    float            far_ )
 {
     XMVECTOR forward = XMVector3Normalize( at - eye );
-    XMVECTOR right   = XNVector3Normalize( XMVector3Cross( forward, up ) );
-    XMVECTOR up      = XNVector3Normalize( XMVector3Cross( right, forward ) );
+    XMVECTOR right   = XMVector3Normalize( XMVector3Cross( forward, unalignedUp ) );
+    XMVECTOR up      = XMVector3Normalize( XMVector3Cross( right, forward ) );
 
-    float    farend_H  = tan( fovy / 2.0f ) * far;
+    float    farend_H  = tan( fovy / 2.0f ) * far_;
     float    farend_W  = farend_H * ratio;
-    XMVECTOR farend_C  = eye + ( forward * far );
+    XMVECTOR farend_C  = eye + ( forward * far_ );
     XMVECTOR farend_R  = right * farend_W;
     XMVECTOR farend_U  = up * farend_H;
     XMVECTOR farend_TL = farend_C - farend_R + farend_U;
@@ -166,45 +189,130 @@ void D3D9ViewFrustum::UpdateViewFrustumRH(
     m_Sides[1].Set( eye, farend_BL, farend_BR ); // bottom
     m_Sides[2].Set( eye, farend_BR, farend_TR ); // right
     m_Sides[3].Set( eye, farend_TR, farend_TL ); // top
-    m_FarEnd.Set( eye, farend_TL, farend_TR, farend_BR, farend_BL );
-
-    // rebuild vertex buffer
-    Vertex * v = m_Vertices;
-    BuildTriangleFaceVertices( v, m_Sides[0] );
-    BuildQuadFaceVertices( v, m_FarEnd );
+    m_FarEnd.Set( farend_TL, farend_TR, farend_BR, farend_BL );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void D3D9ViewFrustum::DrawRH( const XMMATRIX & viewRH, const XMMATRIX & projRH )
+void D3D9ViewFrustum::DrawRH( const XMMATRIX & worldViewRH, const XMMATRIX & projRH )
 {
-    if( NULL == m_Device || NULL == m_Vb ) return;
+    if( NULL == m_Device || NULL == m_VbSolid || NULL == m_VbTrans ) return;
 
-    /*ViewFrustumVertex * solidVertices;
+    // get eye position in world space
+    XMVECTOR det;
+    XMMATRIX invWV = XMMatrixInverse( &det, worldViewRH );
+    XMVECTOR eye = XMVector3Transform( XMVectorSet( 0, 0, 0, 1 ), invWV );
+
+    UINT     numSolidVertices = 0;
+    Vertex * solidVertices;
     if( FAILED( m_VbSolid->Lock( 0, 0, (void**)&solidVertices, D3DLOCK_DISCARD ) ) )
     {
         return;
     }
 
-    ViewFrustumVertex * transVertices;
+    UINT     numTransVertices = 0;
+    Vertex * transVertices;
     if( FAILED( m_VbTrans->Lock( 0, 0, (void**)&transVertices, D3DLOCK_DISCARD ) ) )
     {
         m_VbSolid->Unlock();
         return;
-    }*/
+    }
 
-    XMVECTOR forward = -viewRH.r[2];
+    // for each side faces:
     for( size_t i = 0; i < ARRAYSIZE(m_Sides); ++i )
     {
-        D3DCOLOR c = SIDE_COLORS[i];
-        if( XMVector3Dot( m_Sides[i].outterNormal, forward ) > 0 )
+        XMVECTOR lookAt = m_Sides[i].vertices[0] - eye;
+        XMVECTOR dot = XMVector3Dot( m_Sides[i].outterNormal, lookAt );
+        if( XMVectorGetX( dot ) > 0 )
         {
-            // show transparent color
+            // show solid color
+            D3DCOLOR c = SIDE_COLORS[i];
+
+            numSolidVertices += BuildTriangleFaceVertices(
+                solidVertices + numSolidVertices,
+                m_Sides[i],
+                true, // flip the face, since we are looking from its back side
+                c );
         }
         else
         {
+            // show transparency
+            D3DCOLOR c = (SIDE_COLORS[i] & 0x00FFFFFF) | 0x40000000;
+            numTransVertices += BuildTriangleFaceVertices(
+                transVertices + numTransVertices,
+                m_Sides[i],
+                false, // do not flip the face
+                c );
         }
+    }
+
+    // for end faces:
+    if( XMVectorGetX( XMVector3Dot( m_FarEnd.outterNormal, m_FarEnd.vertices[0] - eye ) ) > 0 )
+    {
+        // show solid color
+        D3DCOLOR c = FAR_END_COLOR;
+        numSolidVertices += BuildQuadFaceVertices(
+            solidVertices + numSolidVertices,
+            m_FarEnd,
+            true, // flip the face, since we are looking from its back side
+            c );
+    }
+    else
+    {
+        // show transparency
+        D3DCOLOR c = (FAR_END_COLOR & 0x00FFFFFF) | 0x40000000;
+        numTransVertices += BuildQuadFaceVertices(
+            transVertices + numTransVertices,
+            m_FarEnd,
+            false, // do not flip the face
+            c );
+    }
+
+    GN_ASSERT( numSolidVertices <= NUM_VIEW_FRUSTUM_VERTICES );
+    GN_ASSERT( numTransVertices <= NUM_VIEW_FRUSTUM_VERTICES );
+
+    // unlock the vertex buffers
+    m_VbSolid->Unlock();
+    m_VbTrans->Unlock();
+
+    // store render states
+    D3D9RenderStateSaver rss( m_Device );
+    rss.StoreRenderState( D3DRS_ALPHABLENDENABLE );
+    rss.StoreRenderState( D3DRS_BLENDOP );
+    rss.StoreRenderState( D3DRS_SRCBLEND );
+    rss.StoreRenderState( D3DRS_DESTBLEND );
+    rss.StoreRenderState( D3DRS_SEPARATEALPHABLENDENABLE );
+    rss.StoreRenderState( D3DRS_ZWRITEENABLE );
+    rss.StoreRenderState( D3DRS_CULLMODE );
+
+    // setup common states
+    XMMATRIX wvp = worldViewRH * projRH;
+    m_Device->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+    m_Device->SetFVF( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE );
+    m_Device->SetVertexShaderConstantF( 0, (const float*)&wvp, 4 );
+    m_Device->SetVertexShaderConstantF( 4, (const float*)&invWV, 4 );
+    m_Device->SetVertexShader( m_Vs );
+    m_Device->SetPixelShader( m_Ps );
+
+    // draw solid faces
+    if( numSolidVertices > 0 )
+    {
+        m_Device->SetStreamSource( 0, m_VbSolid, 0, sizeof(Vertex) );
+        m_Device->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numSolidVertices / 3 );
+    }
+
+    // draw transparent faces
+    if( numTransVertices > 0 )
+    {
+        m_Device->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
+        m_Device->SetRenderState( D3DRS_BLENDOP, D3DBLENDOP_ADD );
+        m_Device->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
+        m_Device->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+        m_Device->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, FALSE );
+        m_Device->SetRenderState( D3DRS_ZWRITEENABLE, FALSE );
+        m_Device->SetStreamSource( 0, m_VbTrans, 0, sizeof(Vertex) );
+        m_Device->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numTransVertices / 3 );
     }
 }
 
@@ -218,7 +326,7 @@ void D3D9ViewFrustum::DrawRH( const XMMATRIX & viewRH, const XMMATRIX & projRH )
 void D3D9ViewFrustum::TriangleFace::Set(
     const XMVECTOR & v0, const XMVECTOR & v1, const XMVECTOR & v2 )
 {
-    outterNormal = XNVector3Normalize( XMVector3Cross( (v0 - v1), (v2 - v1) ) );
+    outterNormal = XMVector3Normalize( XMVector3Cross( (v2 - v1), (v0 - v1) ) );
     vertices[0] = v0;
     vertices[1] = v1;
     vertices[2] = v2;
@@ -230,9 +338,64 @@ void D3D9ViewFrustum::TriangleFace::Set(
 void D3D9ViewFrustum::QuadFace::Set(
     const XMVECTOR & v0, const XMVECTOR & v1, const XMVECTOR & v2, const XMVECTOR & v3 )
 {
-    outterNormal = XNVector3Normalize( XMVector3Cross( (v0 - v1), (v2 - v1) ) );
+    outterNormal = XMVector3Normalize( XMVector3Cross( (v2 - v1), (v0 - v1) ) );
     vertices[0] = v0;
     vertices[1] = v1;
     vertices[2] = v2;
     vertices[3] = v3;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+UINT D3D9ViewFrustum::BuildTriangleFaceVertices(
+    Vertex * vertices, const TriangleFace & face, bool flip, D3DCOLOR c )
+{
+    if( flip )
+    {
+        XMVECTOR n = -face.outterNormal;
+        vertices[0].Set( face.vertices[2], n, c );
+        vertices[1].Set( face.vertices[1], n, c );
+        vertices[2].Set( face.vertices[0], n, c );
+    }
+    else
+    {
+        vertices[0].Set( face.vertices[0], face.outterNormal, c );
+        vertices[1].Set( face.vertices[1], face.outterNormal, c );
+        vertices[2].Set( face.vertices[2], face.outterNormal, c );
+    }
+
+    return 3;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+UINT D3D9ViewFrustum::BuildQuadFaceVertices(
+    Vertex * vertices, const QuadFace & face, bool flip, D3DCOLOR c )
+{
+    if( flip )
+    {
+        XMVECTOR n = -face.outterNormal;
+
+        vertices[0].Set( face.vertices[2], n, c );
+        vertices[1].Set( face.vertices[1], n, c );
+        vertices[2].Set( face.vertices[0], n, c );
+
+        vertices[3].Set( face.vertices[3], n, c );
+        vertices[4].Set( face.vertices[2], n, c );
+        vertices[5].Set( face.vertices[0], n, c );
+    }
+    else
+    {
+        vertices[0].Set( face.vertices[0], face.outterNormal, c );
+        vertices[1].Set( face.vertices[1], face.outterNormal, c );
+        vertices[2].Set( face.vertices[2], face.outterNormal, c );
+
+        vertices[3].Set( face.vertices[0], face.outterNormal, c );
+        vertices[4].Set( face.vertices[2], face.outterNormal, c );
+        vertices[5].Set( face.vertices[3], face.outterNormal, c );
+    }
+
+    return 6;
 }

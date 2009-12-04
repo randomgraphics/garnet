@@ -3,6 +3,7 @@
 #include "garnet/GNd3d9.h"
 
 using namespace GN;
+using namespace GN::d3d9;
 
 // *****************************************************************************
 // utilities
@@ -33,48 +34,6 @@ struct SpriteVertex
 {
     float x, y, z, w;
     float u, v;
-};
-
-class D3D9RenderStateSaver
-{
-    IDirect3DDevice9                  * m_Device;
-    std::map<D3DRENDERSTATETYPE, DWORD> m_Values;
-
-public:
-
-    D3D9RenderStateSaver( IDirect3DDevice9 * dev )
-        : m_Device(dev)
-    {
-    }
-
-    ~D3D9RenderStateSaver()
-    {
-        RestoreAllRenderStates();
-    }
-
-    void StoreRenderState( D3DRENDERSTATETYPE type )
-    {
-        if( m_Device && m_Values.find(type) == m_Values.end() )
-        {
-            DWORD value;
-            if( SUCCEEDED( m_Device->GetRenderState( type, &value ) ) )
-            {
-                m_Values[type] = value;
-            }
-        }
-    }
-
-    void RestoreAllRenderStates()
-    {
-        std::map<D3DRENDERSTATETYPE, DWORD>::const_iterator i;
-        for( i = m_Values.begin(); i != m_Values.end(); ++i )
-        {
-            D3DRENDERSTATETYPE type = i->first;
-            DWORD              value = i->second;
-            m_Device->SetRenderState( type, value );
-        }
-        m_Values.clear();
-    }
 };
 
 static const char * vscode =
