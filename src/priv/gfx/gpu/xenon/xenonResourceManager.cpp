@@ -58,7 +58,7 @@ void GN::gfx::XenonGpu::resourceQuit()
 //
 //
 // -----------------------------------------------------------------------------
-Blob *
+GN::Blob *
 GN::gfx::XenonGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
     GN_GUARD;
