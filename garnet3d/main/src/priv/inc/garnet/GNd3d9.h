@@ -32,6 +32,14 @@
 #error "directx 9.0 or higher is required!"
 #endif
 
+
+// Define constants and types that are missing on Xenon platform.
+#if GN_XENON
+
+#define D3DLOCK_DISCARD 0
+#define D3DUSAGE_DYNAMIC 0
+#endif
+
 namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 {
     ///
@@ -359,9 +367,6 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         void Flush();
     };
 
-// Note: D3DApplication is not available on Xenon platform yet.
-#if !GN_XENON
-
     ///
     /// D3D9 application framework
     ///
@@ -505,9 +510,6 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         bool                  mRunning;
         bool                  mShutdownInputSystem;
     };
-
-#endif // !GN_XENON
-
 }}
 
 // *****************************************************************************

@@ -1,20 +1,33 @@
 #include "pch.h"
 #include "garnet/GNinput.h"
 
-#if !GN_XENON
-
 using namespace GN;
 
 static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
 
 #if GN_MSVC
-#pragma comment( lib, "d3d9.lib" )
-#pragma comment( lib, "d3dx9.lib" )
+# if GN_XENON
+#  if GN_BUILD_DEBUG
+#   pragma comment(lib, "d3d9d.lib")
+#   pragma comment(lib, "d3dx9d.lib")
+#  elif GN_BUILD_PROFILE
+#   pragma comment(lib, "d3d9i.lib")
+#   pragma comment(lib, "d3dx9i.lib")
+#  else
+#   pragma comment(lib, "d3d9.lib")
+#   pragma comment(lib, "d3dx9.lib")
+#  endif
+# else
+#  pragma comment(lib, "d3d9.lib")
+#  pragma comment(lib, "d3dx9.lib")
+# endif
 #endif
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
+
+#if !GN_XENON
 
 //
 //
@@ -155,6 +168,8 @@ static void sDestroyWindow( HWND hwnd )
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
 }
 
+#endif
+
 //
 //
 // ------------------------------------------------------------------------
@@ -215,7 +230,6 @@ GN::d3d9::D3D9Application::D3D9Application()
     : mWindow(0)
     , mD3D(0)
     , mDevice(0)
-    , mRunning(false)
     , mShutdownInputSystem(false)
 {
 }
@@ -238,17 +252,25 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 
     if( !changeOption(mOption) ) { quit(); return -1; }
 
-    // message loop
+    mRunning = true;
+
+#if GN_XENON
+
+    while( mRunning )
+    {
+        if( gInputPtr ) gInput.processInputEvents();
+        onUpdate();
+        onDraw();
+    }
+
+#else
+
     MSG msg;
-    while( true )
+    while( mRunning )
     {
         if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
         {
-            if( WM_QUIT == msg.message )
-            {
-                quit();
-                return 0;
-            }
+            if( WM_QUIT == msg.message ) break;
             ::TranslateMessage( &msg );
             ::DispatchMessage(&msg);
         }
@@ -265,6 +287,7 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
             onDraw();
         }
     }
+#endif
 
     // done
     quit();
@@ -296,6 +319,7 @@ bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 // -----------------------------------------------------------------------------
 bool GN::d3d9::D3D9Application::init()
 {
+#if !GN_XENON
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
     mOption.monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
@@ -308,6 +332,7 @@ bool GN::d3d9::D3D9Application::init()
             mOption.windowedHeight,
             mOption.fullscreen );
     if( 0 == mWindow ) return false;
+#endif
 
     // initialize input system
     if( NULL == gInputPtr )
@@ -329,7 +354,6 @@ bool GN::d3d9::D3D9Application::init()
     }
 
     // success
-    mRunning = true;
     return onInit( mOption );
 }
 
@@ -338,8 +362,6 @@ bool GN::d3d9::D3D9Application::init()
 // -----------------------------------------------------------------------------
 void GN::d3d9::D3D9Application::quit()
 {
-    mRunning = false;
-
     disposeDevice();
     destroyDevice();
 
@@ -359,7 +381,9 @@ void GN::d3d9::D3D9Application::quit()
         }
     }
 
+#if !GN_XENON
     sDestroyWindow( mWindow ); mWindow = 0;
+#endif
 }
 
 //
@@ -367,10 +391,14 @@ void GN::d3d9::D3D9Application::quit()
 // -----------------------------------------------------------------------------
 void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
 {
+#if GN_XENON
+    GN_UNUSED_PARAM( ke );
+#else
     if( input::KeyCode::ESCAPE == ke.code && !ke.status.down )
     {
-        ::PostQuitMessage( 0 );
+        mRunning = false;
     }
+#endif
 }
 
 //
@@ -380,14 +408,17 @@ bool GN::d3d9::D3D9Application::createDevice()
 {
     PixPerfScopeEvent pixevent( 0, "Create" );
 
-    GN_ASSERT( IsWindow(mWindow) );
     GN_ASSERT( 0 == mDevice );
 
     // Initiate adapter ID
     mAdapter = 0;
 
+    mDeviceType = D3DDEVTYPE_HAL;
+    #if !GN_XENON
     mDeviceType = mOption.refdev ? D3DDEVTYPE_REF : D3DDEVTYPE_HAL;
+    #endif
 
+#if !GN_XENON
 	// Look for nvidia adapter
     UINT nAdapter = mD3D->GetAdapterCount();
     GN_ASSERT( nAdapter );
@@ -417,6 +448,7 @@ bool GN::d3d9::D3D9Application::createDevice()
             }
         }
     }
+#endif
 
     // init d3d present parameters
     if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
@@ -446,12 +478,13 @@ bool GN::d3d9::D3D9Application::restoreDevice()
 {
     PixPerfScopeEvent pixevent( 0, "Restore" );
 
-    GN_ASSERT( mWindow );
     GN_ASSERT( mDevice );
 
+#if !GN_XENON
     UInt32 w = mOption.fullscreen ? mOption.fsWidth : mOption.windowedWidth;
     UInt32 h = mOption.fullscreen ? mOption.fsHeight : mOption.windowedHeight;
     sAdjustWindow( mWindow, w, h, mOption.fullscreen );
+#endif
 
     if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
     GN_DX_CHECK_RETURN( mDevice->Reset( &mPresentParameters ), false );
@@ -483,5 +516,3 @@ void GN::d3d9::D3D9Application::destroyDevice()
         mDevice = 0;
     }
 }
-
-#endif

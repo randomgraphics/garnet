@@ -97,6 +97,9 @@ IDirect3DTexture9 * CreateAxisTexture(
     tex->UnlockRect( 0 );
 
     // write text to texture
+#if GN_XENON
+    GN_UNIMPL_WARNING();
+#else
     AutoComPtr<IDirect3DSurface9> surf;
     tex->GetSurfaceLevel( 0, &surf );
     HDC dc;
@@ -108,6 +111,7 @@ IDirect3DTexture9 * CreateAxisTexture(
     RECT rc = { 0, 0, (INT)TEXW, (INT)TEXH };
     DrawTextA( dc, text, -1, &rc, DT_CENTER | DT_VCENTER );
     surf->ReleaseDC( dc );
+#endif
 
     // done
     return tex.detach();
@@ -333,6 +337,31 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
             sizeof(BoxVertex) );
     }
 
+    // draw the render target texture to original render target
+    m_Device->SetRenderTarget( 0, oldrt );
+    m_Device->SetDepthStencilSurface( oldz );
+    m_Device->SetViewport( &oldvp );
+
+    m_Device->SetRenderState( D3DRS_ZENABLE, FALSE );
+    m_Device->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
+    m_Device->SetRenderState( D3DRS_BLENDOP, D3DBLENDOP_ADD );
+    m_Device->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
+    m_Device->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+
+#if GN_XENON
+    GN_UNIMPL_WARNING();
+#else
+    m_Device->SetFVF( D3DFVF_XYZRHW | D3DFVF_TEX1 );
+    m_Device->SetVertexShader( NULL );
+
+    m_Device->SetTexture( 0, m_RtTexture );
+    m_Device->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+    m_Device->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+    m_Device->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
+    m_Device->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
+    m_Device->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+    m_Device->SetPixelShader( NULL );
+
     // compose sprite vertex buffer
     float centerX = x;
     float centerY = y;
@@ -347,33 +376,12 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
         { centerX + halfSpriteW - 0.5f, centerY + halfSpriteH + 0.5f, 0.0f, 1.0f, 1.0f, 1.0f }, // right bottoom
     };
 
-    // draw the render target texture to original render target
-    m_Device->SetRenderTarget( 0, oldrt );
-    m_Device->SetDepthStencilSurface( oldz );
-    m_Device->SetViewport( &oldvp );
-
-    m_Device->SetRenderState( D3DRS_ZENABLE, FALSE );
-    m_Device->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
-    m_Device->SetRenderState( D3DRS_BLENDOP, D3DBLENDOP_ADD );
-    m_Device->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-    m_Device->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-
-    m_Device->SetFVF( D3DFVF_XYZRHW | D3DFVF_TEX1 );
-    m_Device->SetVertexShader( NULL );
-
-    m_Device->SetTexture( 0, m_RtTexture );
-    m_Device->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
-    m_Device->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
-    m_Device->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
-    m_Device->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
-    m_Device->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-    m_Device->SetPixelShader( NULL );
-
     m_Device->DrawPrimitiveUP(
             D3DPT_TRIANGLESTRIP,
             2, // primitive count
             sprite,
             sizeof(SpriteVertex) );
+#endif
 }
 
 // *****************************************************************************
