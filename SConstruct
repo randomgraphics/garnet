@@ -166,6 +166,12 @@ def UTIL_buildDir( compiler, variant ) :
 # Create new build environment
 #
 def UTIL_newEnv( compiler, variant ):
+	return UTIL_newEnvEx( compiler, variant, False )
+
+#
+# Create new build environment
+#
+def UTIL_newEnvEx( compiler, variant, batch ):
 
 	if not isinstance( compiler, Compiler ):
 		assert( isinstance(compiler,int) )
@@ -220,8 +226,8 @@ def UTIL_newEnv( compiler, variant ):
 		# create new environment
 		env = Environment(
 			tools          = tools,
-			MSVS_VERSION   = "8.0",
 			MSVS8_PLATFORM = msvs_platform,
+			MSVC_BATCH     = batch,
 			ENV            = {
 			                 	'PATH'     : UTIL_getenv('PATH'),
 			                 	'LANG'     : UTIL_getenv('LANG'),
@@ -392,7 +398,11 @@ def UTIL_newEnv( compiler, variant ):
 # Check sysem configuration
 #
 def UTIL_checkConfig( conf, confDir, compiler, variant ):
-	env = UTIL_newEnv( compiler, variant )
+
+	# Create config environment with "batch" mode disabled,
+	# since batch mode triggers scons 1.2.0.d20091224 config
+	# code bug.
+	env = UTIL_newEnvEx( compiler, variant, None )
 
 	# Do NOT treat warning as error
 	ccflags = str(env.Dictionary('CCFLAGS'))
@@ -566,6 +576,7 @@ class GarnetEnv :
 	# UTIL functions
 	def buildDir( self, compiler, variant ) : return UTIL_buildDir( compiler, variant )
 	def newEnv( self, compiler, variant ) : return UTIL_newEnv( compiler, variant )
+	def newEnvEx( self, compiler, variant, batch ) : return UTIL_newEnvEx( compiler, variant, batch )
 	def trace( self, level, msg ): UTIL_trace( level, msg )
 	def info( self, msg ): UTIL_info( msg )
 	def warn( self, msg ): UTIL_warn( msg )

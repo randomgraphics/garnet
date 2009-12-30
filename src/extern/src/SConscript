@@ -32,7 +32,12 @@ elif 'xenon' == GN.compiler.name:
 # generate configurations
 # ========================
 import os.path
-conf_env = GN.newEnv( GN.compiler, GN.variant )
+
+# Create config environment with "batch" mode disabled,
+# since batch mode triggers scons 1.2.0.d20091224 config
+# code bug.
+conf_env = GN.newEnvEx( GN.compiler, GN.variant, None )
+
 conf_env.Replace( CCFLAGS = Split( ccflags ) )
 conf_env.BuildDir( build_dir='#build.tmp', src_dir='#' )
 conf_dir = os.path.join( GN.buildDir( GN.compiler, GN.variant ), 'config', 'extern' )
