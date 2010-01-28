@@ -183,7 +183,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		# construct empty environment for xenon platform
 		env = Environment(
 			tools          = [],
-			MSVS_VERSION   = "8.0",
+			MSVC_VERSION   = "8.0",
 			MSVS8_PLATFORM = 'Xbox 360',
 			ENV            = {
 			                 	'PATH'        : UTIL_getenv('PATH'),

@@ -157,7 +157,9 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     {
         XGGetTextureDesc( mD3DTexture, i, &xdesc );
 
-        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, xdesc.Depth) );
+        DWORD depth = ( D3DRTYPE_VOLUMETEXTURE == xdesc.ResourceType ) ? xdesc.Depth : 1;
+
+        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
     }
 
     // success
