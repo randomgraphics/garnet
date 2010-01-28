@@ -442,7 +442,7 @@ struct D3D9StateDump
             return false;
         }
 
-        for( XmlNode * n = root.child; n; n = n->sibling )
+        for( XmlNode * n = root.child; n; n = n->next )
         {
             e = n->toElement();
             if( !e ) continue;
@@ -558,7 +558,7 @@ private:
 
     static bool sGetCdata( StrA & result, const XmlNode & node )
     {
-        for( const XmlNode * n = node.child; n; n = n->sibling )
+        for( const XmlNode * n = node.child; n; n = n->next )
         {
             const XmlCdata * c = n->toCdata();
             if( c )
@@ -608,7 +608,7 @@ private:
 
     static bool sLoadConstF( float * result, size_t count, const XmlElement & node )
     {
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             const XmlElement * e = n->toElement();
             if( !e ) continue;
@@ -639,7 +639,7 @@ private:
 
     static bool sLoadConstI( int * result, size_t dim, size_t count, const XmlElement & node )
     {
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             const XmlElement * e = n->toElement();
             if( !e ) continue;
@@ -701,7 +701,7 @@ private:
     bool loadVtxDecl( const XmlElement & node )
     {
         size_t count = 0;
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             XmlElement * e = n->toElement();
 
@@ -818,7 +818,7 @@ private:
     bool loadRenderStates( const XmlElement & node )
     {
         size_t count = 0;
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             XmlElement * e = n->toElement();
             if( !e ) continue;
@@ -854,7 +854,7 @@ private:
 
     bool loadSamplerStates( const XmlElement & node )
     {
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             XmlElement * e = n->toElement();
             if( !e ) continue;
