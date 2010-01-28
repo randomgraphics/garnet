@@ -194,7 +194,7 @@ struct D3D10InputLayoutDump
 
         D3D10_INPUT_ELEMENT_DESC desc;
 
-        for( XmlNode * n = node.child; n; n = n->sibling )
+        for( XmlNode * n = node.child; n; n = n->next )
         {
             e = n->toElement();
 
@@ -685,7 +685,7 @@ struct D3D10StateDump
             return false;
         }
 
-        for( XmlNode * n = root.child; n; n = n->sibling )
+        for( XmlNode * n = root.child; n; n = n->next )
         {
             e = n->toElement();
 
