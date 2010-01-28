@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding="gb2312"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GNtestGpuResDB"
-	ProjectGUID="{7115ADA1-1C6D-464C-97BC-956403EE15A7}"
-	RootNamespace="GNtestGpuResDB"
+	Name="GNsampleDolphin"
+	ProjectGUID="{1AC6CB6A-157F-450C-99D8-69F1466C0D6D}"
+	RootNamespace="GNsampleDolphin"
 	Keyword="MakeFileProj"
 	TargetFrameworkVersion="0"
 	>
@@ -40,7 +40,6 @@
 			<Tool
 				Name="VCX360DeploymentTool"
 				RemoteRoot="devkit:\garnet3d\$(GN_BUILD_VARIANT)"
-				DeploymentFiles="$(RemoteRoot)=$(TargetPath)"
 				DeploymentType="0"
 			/>
 			<DebuggerTool

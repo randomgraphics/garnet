@@ -45,6 +45,7 @@ void GN::gfx::XenonGpu::contextQuit()
 
     // reset context
     mContext.clear();
+    bindContextImpl( mContext, true );
 
     // delete all vertex formats
     mVertexFormats.clear();
@@ -63,7 +64,7 @@ void GN::gfx::XenonGpu::contextQuit()
 // -----------------------------------------------------------------------------
 bool GN::gfx::XenonGpu::bindContextImpl(
     const GpuContext & context,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     GN_GUARD_SLOW;
 
@@ -342,6 +343,12 @@ GN::gfx::XenonGpu::bindContextShaders(
             // or last GPU program is not NULL.
             mDevice->SetVertexShader( NULL );
             mDevice->SetPixelShader( NULL );
+
+            // clear all textures
+            for( DWORD i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
+            {
+                mDevice->SetTexture( i, 0 );
+            }
         }
     }
 
@@ -354,18 +361,24 @@ GN::gfx::XenonGpu::bindContextShaders(
 inline bool
 GN::gfx::XenonGpu::bindContextResources(
     const GpuContext & newContext,
-    bool                    skipDirtyCheck )
+    bool               skipDirtyCheck )
 {
     //
     // bind vertex format
     //
     //if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt )
     {
-        AutoComPtr<IDirect3DVertexDeclaration9> & decl = mVertexFormats[newContext.vtxfmt];
-        if( !decl )
+        IDirect3DVertexDeclaration9 * decl = NULL;
+        if( newContext.vtxfmt.numElements > 0 )
         {
-            decl.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
-            if( !decl ) return false;
+            AutoComPtr<IDirect3DVertexDeclaration9> & declAutoPtr = mVertexFormats[newContext.vtxfmt];
+            if( !declAutoPtr )
+            {
+                declAutoPtr.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
+                if( !declAutoPtr ) return false;
+            }
+
+            decl = declAutoPtr;
         }
 
         // apply to D3D device

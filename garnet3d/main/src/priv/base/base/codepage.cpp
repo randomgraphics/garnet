@@ -14,7 +14,7 @@ using namespace GN;
 
 typedef GN::CECImplICONV CECImpl;
 
-#elif GN_MSWIN
+#elif GN_MSWIN && !GN_XENON
 
 typedef GN::CECImplMSWIN CECImpl;
 

@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "imageTGA.h"
 
+// TODO: move to endian.h
+#define GN_SWAP_ENDIAN_8IN16(x) ((((x)&0xFF)<<8) | (((x)&0xFF00)>>8))
+
+
+#define INPLACE_SWAP_ENDIAN_8IN16(x) (x) = GN_SWAP_ENDIAN_8IN16(x)
+
 //
 // TGA image header
 //
@@ -21,6 +27,19 @@ struct TGA_HEADER
     UInt16 height;             ///< image height in pixels
     UInt8  bits;               ///< image bits per pixel 8,16,24,32
     UInt8  descriptor;         ///< image descriptor bits (vh flip bits)
+
+
+    void SwapEndian()
+    {
+        INPLACE_SWAP_ENDIAN_8IN16( colourmapstart );
+        INPLACE_SWAP_ENDIAN_8IN16( colourmaplength );
+        INPLACE_SWAP_ENDIAN_8IN16( colourmaplength );
+
+        INPLACE_SWAP_ENDIAN_8IN16( xstart );
+        INPLACE_SWAP_ENDIAN_8IN16( ystart );
+        INPLACE_SWAP_ENDIAN_8IN16( width );
+        INPLACE_SWAP_ENDIAN_8IN16( height );
+    }
 };
 #pragma pack(pop)
 GN_CASSERT( sizeof(TGA_HEADER) == 18 );
@@ -43,7 +62,11 @@ static inline void sCopyPixel5551( const UInt8 * src, size_t srcStride, UInt8 * 
     {
         s = (const UInt16 *)src;
         d = (UInt16 *)dst;
+#if GN_BIG_ENDIAN
+        *d = GN_SWAP_ENDIAN_8IN16(*s);
+#else
         *d = *s;
+#endif
         src += srcStride;
         dst += dstStride;
     }
@@ -192,6 +215,11 @@ bool TGAReader::checkFormat( GN::File & fp )
     size_t sz;
     if( !fp.read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
 
+    // do endian swap (TGA file is always little endian)
+#if GN_BIG_ENDIAN
+    header.SwapEndian();
+#endif
+
     // check header fields
     return (  0 == header.colourmaptype
           ||  1 == header.colourmaptype )
@@ -226,14 +254,18 @@ bool TGAReader::readHeader(
 
     GN_ASSERT( i_buf && i_size );
 
-    const TGA_HEADER & header = *(const TGA_HEADER*)i_buf;
-
-    // copy TGA header
+    // check buffer size against TGA header size
     if( i_size <= sizeof(TGA_HEADER) )
     {
         GN_ERROR(sLogger)( "File size is too small to hold TGA file header." );
         return false;
     }
+
+    // make a local copy of the header
+    TGA_HEADER header = *(const TGA_HEADER*)i_buf;
+#if GN_BIG_ENDIAN
+    header.SwapEndian(); // do endian swap (TGA file is always little endian)
+#endif
 
     // What can we handle
     if( header.imagetype != 2 && header.imagetype != 3 && header.imagetype != 10 )
@@ -318,7 +350,11 @@ bool TGAReader::readImage( void * o_data )
 
     GN_ASSERT( mImageSrc );
 
-    const TGA_HEADER & header = *(const TGA_HEADER*)mImageSrc;
+    TGA_HEADER header = *(const TGA_HEADER*)mImageSrc;
+#if GN_BIG_ENDIAN
+    header.SwapEndian(); // do endian swap (TGA file is always little endian)
+#endif
+
     size_t skipOver = sizeof(TGA_HEADER)
                    + header.identsize
                    + header.colourmaptype * header.colourmaplength * header.colourmapbits / 8;
