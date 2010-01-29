@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "codepageICONV.h"
 #include "codepageMSWIN.h"
+#include "codepageXenon.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
@@ -14,7 +15,11 @@ using namespace GN;
 
 typedef GN::CECImplICONV CECImpl;
 
-#elif GN_MSWIN && !GN_XENON
+#elif GN_XENON
+
+typedef GN::CECImplXenon CECImpl;
+
+#elif GN_MSWIN
 
 typedef GN::CECImplMSWIN CECImpl;
 

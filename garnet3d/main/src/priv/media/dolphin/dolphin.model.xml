@@ -6,5 +6,5 @@
 	<texture shaderParameter="caustic" ref="caust00.tga"/>
 	<uniform shaderParameter="pvw" size="64"/>
 	<uniform shaderParameter="viewworld" size="64"/>
-	<uniform shaderParameter="weights" size="16"/>
+	<uniform shaderParameter="weights" size="12"/>
 </model>
