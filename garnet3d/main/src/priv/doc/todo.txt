@@ -17,6 +17,9 @@ TODO
   - support chinese in XML parser
   - skin mesh test case: porting DXSDK sample.
   - Cg shader
+  - Endian swap:
+    - Swap vertex buffer endian based on vertex format
+    - Swap index buffer endian based on index format.
 
 - p1
   - scene framework:
