@@ -123,6 +123,25 @@ GN::gfx::XenonVtxBuf::update(
 
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
+    // check if the vertex buffer is binding to the device.
+    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)getGpu().getD3DDevice();
+    const DWORD NUM_VB = 16;
+    bool bindingFlags[NUM_VB];
+    UINT offsets[NUM_VB];
+    UINT strides[NUM_VB];
+    for( DWORD i = 0; i < NUM_VB; ++i )
+    {
+        AutoComPtr<IDirect3DVertexBuffer9> vb;
+        dev->GetStreamSource( i, &vb, &offsets[i], &strides[i] );
+
+        bindingFlags[i] = vb == mVb;
+
+        if( bindingFlags[i] )
+        {
+            dev->SetStreamSource( i, 0, 0, 0 );
+        }
+    }
+
     // Note: XDK does not support range locking on vertex buffer
     UInt8 * buf;
     GN_DX_CHECK_DO(
@@ -133,6 +152,15 @@ GN::gfx::XenonVtxBuf::update(
     ::memcpy( buf, data, length );
 
     GN_DX_CHECK( mVb->Unlock() );
+
+    // restore vertex buffer bindings
+    for( DWORD i = 0; i < NUM_VB; ++i )
+    {
+        if( bindingFlags[i] )
+        {
+            dev->SetStreamSource( i, mVb, offsets[i], strides[i] );
+        }
+    }
 
     GN_UNGUARD_SLOW;
 }

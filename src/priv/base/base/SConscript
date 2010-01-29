@@ -5,6 +5,7 @@ sources = [
 	'codepage.cpp',
 	'codepageICONV.cpp',
 	'codepageMSWIN.cpp',
+	'codepageXenon.cpp',
 	'debug.cpp',
 	'endian.cpp',
 	'file.cpp',

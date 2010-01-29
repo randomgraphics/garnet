@@ -84,7 +84,7 @@ public:
             fWeight2 = 1.0f - fabsf(fBlendWeight);
             fWeight3 = fabsf(fBlendWeight);
         }
-        Vector4f vWeight( fWeight1, fWeight2, fWeight3, 0.0f );
+        Vector3f vWeight( fWeight1, fWeight2, fWeight3 );
 
         // update dolphin effect parameters
         mDolphin->getUniformResource("pvw")->getUniform()->update( proj * view * world );
@@ -124,6 +124,11 @@ public:
         view.lookAtLh( eye, at, up );
 
         world.identity();
+    }
+
+    bool onPreInit( InitParam & )
+    {
+        return true;
     }
 
     bool onInit()
