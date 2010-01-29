@@ -26,9 +26,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="dir&gt;nul"
-				ReBuildCommandLine="dir&gt;nul"
-				CleanCommandLine="dir&gt;nul"
+				BuildCommandLine="scons $(ProjectName)"
+				ReBuildCommandLine="scons $(ProjectName)"
+				CleanCommandLine="scons -c $(ProjectName)"
 				Output="$(GARNET_ROOT)\build.tmp\xenon.ppc.xenon.$(GN_BUILD_VARIANT)\bin\$(ProjectName).xex"
 				PreprocessorDefinitions="_DEBUG"
 				IncludeSearchPath=""

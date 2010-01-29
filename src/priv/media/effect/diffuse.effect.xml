@@ -80,8 +80,8 @@ uniform float4x4 wit;
 struct VSOUTPUT
 {
    float4 hpos      : POSITION0;  // vertex position in homogenous space
-   float4 pos_world : POS_WORLD;    // vertex position in world space
-   float3 nml_world : NORMAL_WORLD; // vertex normal in world space
+   float4 pos_world : POSITION1;  // vertex position in world space
+   float3 nml_world : NORMAL;     // vertex normal in world space
    float2 texcoords : TEXCOORD;
 };
 
@@ -114,8 +114,8 @@ Texture2D<float4> t0;
 struct VSOUTPUT
 {
    float4 hpos      : POSITION0;  // vertex position in homogenous space
-   float4 pos_world : POS_WORLD;    // vertex position in world space
-   float3 nml_world : NORMAL_WORLD; // vertex normal in world space
+   float4 pos_world : POSITION1;  // vertex position in world space
+   float3 nml_world : NORMAL;     // vertex normal in world space
    float2 texcoords : TEXCOORD;
 };
 
