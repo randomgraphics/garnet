@@ -128,6 +128,30 @@ static inline GN::StrA sLevel2Str( int level )
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static GN::StrA sFormatPath( const char * path )
+{
+    GN::StrA s;
+
+    if( NULL == path ) return s;
+
+    for( ; *path != 0; ++path )
+    {
+        char c = *path;
+
+    #if GN_MSWIN
+        s.append( '/' == c ? '\\' : c );
+    #else
+        s.append( '\\' == c ? '/' : c );
+    #endif
+    }
+
+    return s;
+}
+
+
 template<class T>
 class LoggerTreeNode
 {
@@ -254,7 +278,8 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%s\n\n",
-                    desc.file, desc.line,
+                    sFormatPath(desc.file).cptr(),
+                    desc.line,
                     logger.getName().cptr(),
                     sLevel2Str(desc.level).cptr(),
                     msg.cptr() );
@@ -275,7 +300,8 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%S\n\n",
-                    desc.file, desc.line,
+                    sFormatPath(desc.file).cptr(),
+                    desc.line,
                     logger.getName().cptr(),
                     sLevel2Str(desc.level).cptr(),
                     msg.cptr() );
@@ -335,7 +361,7 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
-                desc.file,
+                sFormatPath(desc.file).cptr(),
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
@@ -348,7 +374,7 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
-                desc.file,
+                sFormatPath(desc.file).cptr(),
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
@@ -369,7 +395,7 @@ namespace GN
                 buf,
                 16384,
                 "%s(%d) : name(%s), level(%s) : %s\n",
-                desc.file,
+                sFormatPath(desc.file).cptr(),
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
@@ -385,7 +411,7 @@ namespace GN
                 buf,
                 16384,
                 L"%S(%d) : name(%S), level(%S) : %s\n",
-                desc.file,
+                sFormatPath(desc.file).cptr(),
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
