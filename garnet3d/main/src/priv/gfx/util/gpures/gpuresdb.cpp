@@ -45,8 +45,7 @@ static const char * DIFFUSE_PS_HLSL9 =
     "uniform float4 lightpos; // light positin in world space \n"
     "uniform float4 lightColor; \n"
     "uniform float4 albedoColor; \n"
-    "sampler s0; \n"
-    "Texture2D<float4> t0; \n"
+    "sampler t0; \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0;  // vertex position in homogenous space \n"
@@ -58,7 +57,7 @@ static const char * DIFFUSE_PS_HLSL9 =
     "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   float4  tex  = t0.Sample( s0, i.texcoords ); \n"
+    "   float4  tex  = tex2D( t0, i.texcoords ); \n"
     "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
@@ -252,9 +251,8 @@ static const char * NORMALMAP_PS_HLSL9 =
     "uniform float4 lightpos; // light positin in world space \n"
     "uniform float4 lightColor; \n"
     "uniform float4 albedoColor; \n"
-    "sampler s0; \n"
-    "Texture2D<float4> t0; // albedo texture \n"
-    "Texture2D<float2> t1; // normal texture \n"
+    "sampler t0; // albedo texture \n"
+    "sampler t1; // normal texture \n"
     "struct VSOUTPUT \n"
     "{ \n"
     "   float4 hpos      : POSITION0; // vertex position in homogenous space \n"
@@ -267,7 +265,7 @@ static const char * NORMALMAP_PS_HLSL9 =
     "   float3  L    = normalize( (lightpos - i.pos_world).xyz ); \n"
     "   float3  N    = normalize( i.nml_world ); \n"
     "   float diff   = clamp( dot( L, N ), 0.0, 1.0 ); \n"
-    "   float4  tex  = t0.Sample( s0, i.texcoords ) + t1.Sample( s0, i.texcoords ).xyyy; \n"
+    "   float4  tex  = tex2D( t0, i.texcoords ) + tex2D( t1, i.texcoords ).xyyy; \n"
     "   return float4( diff, diff, diff, 1.0 ) * lightColor * albedoColor * tex; \n"
     "}";
 
