@@ -16,12 +16,17 @@ namespace GN { namespace gfx
         enum Enum
         {
             INVALID       = 0,    ///< Indicate invalid language
+
             HLSL9         = 1<<0, ///< HLSL for D3D9 and Xenon
             HLSL10        = 1<<1, ///< HLSL for D3D10
-            MICROCODE     = 1<<2, ///< Xenon microcode shader
-            GLSL          = 1<<3, ///< OpenGL Shading language
-            ARB1          = 1<<4, ///< OpenGL ARB1 shading language
-            CG            = 1<<5, ///< Nvidia Cg
+            HLSL11        = 1<<2, ///< HLSL for D3D11
+
+            MICROCODE     = 1<<3, ///< Xenon microcode shader
+
+            GLSL          = 1<<4, ///< OpenGL Shading language
+            ARB1          = 1<<5, ///< OpenGL ARB1 shading language
+
+            CG            = 1<<6, ///< Nvidia Cg
         };
 
         /// check for validity
@@ -29,6 +34,7 @@ namespace GN { namespace gfx
         {
             return HLSL9 == *this
                 || HLSL10 == *this
+                || HLSL11 == *this
                 || MICROCODE == *this
                 || GLSL == *this
                 || ARB1 == *this
@@ -42,6 +48,7 @@ namespace GN { namespace gfx
             {
                 case HLSL9     : return "HLSL9";
                 case HLSL10    : return "HLSL10";
+                case HLSL11    : return "HLSL11";
                 case MICROCODE : return "MICROCODE";
                 case GLSL      : return "GLSL";
                 case ARB1      : return "ARB1";
@@ -55,6 +62,7 @@ namespace GN { namespace gfx
         {
             if( 0 == strCmpI( s, "HLSL9" ) )          return HLSL9;
             else if( 0 == strCmpI( s, "HLSL10" ) )    return HLSL10;
+            else if( 0 == strCmpI( s, "HLSL11" ) )    return HLSL11;
             else if( 0 == strCmpI( s, "MICROCODE" ) ) return MICROCODE;
             else if( 0 == strCmpI( s, "GLSL" ) )      return GLSL;
             else if( 0 == strCmpI( s, "ARB1" ) )      return ARB1;

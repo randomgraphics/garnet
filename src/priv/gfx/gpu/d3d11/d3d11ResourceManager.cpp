@@ -2,7 +2,7 @@
 #include "d3d11Gpu.h"
 #include "d3d11Resource.h"
 #include "../common/basicShader.h"
-//#include "d3d11Shader.h"
+#include "d3d11Shader.h"
 #include "d3d11Texture.h"
 #include "d3d11Buffer.h"
 
@@ -76,27 +76,24 @@ GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 GN::gfx::GpuProgram *
 GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 {
-    GN_UNIMPL();
-    return NULL;
-
-    /*AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
+    AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->init( data, length ) ) return NULL;
 
     const GpuProgramDesc & desc = s->desc();
 
-    if( GpuProgramLanguage::HLSL10 == desc.lang ||
+    if( GpuProgramLanguage::HLSL11 == desc.lang ||
+        GpuProgramLanguage::HLSL10 == desc.lang ||
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
-        bool hlsl9 = GpuProgramLanguage::HLSL9 == desc.lang;
         AutoRef<D3D11GpuProgram> prog( new D3D11GpuProgram(*this) );
-        if( !prog->init( desc, hlsl9 ) ) return NULL;
+        if( !prog->init( desc ) ) return NULL;
         return prog.detach();
     }
     else
     {
         GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang.toRawEnum() );
         return NULL;
-    }*/
+    }
 }
 
 //

@@ -252,7 +252,7 @@ sUpdateConstData(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
+bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -264,7 +264,7 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
     options.compileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
     if( !desc.optimize ) options.compileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
     if( !desc.debug ) options.compileFlags |= D3D10_SHADER_DEBUG;
-    if( hlsl9 )
+    if( GpuProgramLanguage::HLSL9 == desc.lang )
         options.compileFlags |= D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
     else
         options.compileFlags |= D3D10_SHADER_ENABLE_STRICTNESS;

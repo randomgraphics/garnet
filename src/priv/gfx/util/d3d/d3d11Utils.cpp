@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d10.utils");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d11.utils");
 
 // *****************************************************************************
 // public functions
@@ -9,8 +9,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d10.utils");
 //
 //
 // -----------------------------------------------------------------------------
-DXGI_SAMPLE_DESC GN::d3d10::constructDXGISampleDesc(
-    ID3D10Device       & device,
+DXGI_SAMPLE_DESC GN::d3d11::constructDXGISampleDesc(
+    ID3D11Device       & device,
     MultiSampleAntiAlias msaa,
     DXGI_FORMAT          format )
 {

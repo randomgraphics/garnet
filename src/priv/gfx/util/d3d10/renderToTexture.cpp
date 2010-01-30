@@ -37,7 +37,7 @@ bool GN::d3d10::RenderToTexture::init(
         1,
         1,
         options.format,
-        constructSampleDesc( *device, options.msaa, options.format ),
+        constructDXGISampleDesc( *device, options.msaa, options.format ),
         D3D10_USAGE_DEFAULT,
         D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE,
         0, // CPU access flags

@@ -201,6 +201,15 @@ sUpdateConstData(
     // do nothing, if the uniform is not used by the shader
     if( !ssp.used ) return;
 
+    if( desc.size != uniform.size() )
+    {
+        GN_WARN(sLogger)(
+            "parameter %s: value size(%d) differs from size defined in shader code(%d).",
+            desc.name,
+            uniform.size(),
+            desc.size );
+    }
+
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
     SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
@@ -220,7 +229,7 @@ sUpdateConstData(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
+bool GN::gfx::D3D11GpuProgram::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -232,7 +241,7 @@ bool GN::gfx::D3D11GpuProgram::init( const GpuProgramDesc & desc, bool hlsl9 )
     options.compileFlags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR; // use row major matrix all the time.
     if( !desc.optimize ) options.compileFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
     if( !desc.debug ) options.compileFlags |= D3D10_SHADER_DEBUG;
-    if( hlsl9 )
+    if( GpuProgramLanguage::HLSL9 == desc.lang )
         options.compileFlags |= D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
     else
         options.compileFlags |= D3D10_SHADER_ENABLE_STRICTNESS;
@@ -387,7 +396,7 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
 
     ID3D11DeviceContext & cxt = getDeviceContextRef();
 
-    cxt.VSSetShaderResources( 0, NUM_STAGES, srvArray );
-    cxt.GSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES );
-    cxt.PSSetShaderResources( 0, NUM_STAGES, srvArray + NUM_STAGES * 2 );
+    cxt.VSSetShaderResources( 0, (UINT)NUM_STAGES, srvArray );
+    cxt.GSSetShaderResources( 0, (UINT)NUM_STAGES, srvArray + NUM_STAGES );
+    cxt.PSSetShaderResources( 0, (UINT)NUM_STAGES, srvArray + NUM_STAGES * 2 );
 }
