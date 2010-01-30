@@ -65,7 +65,7 @@ bool GN::gfx::D3D11Gpu::capsInit()
     GN_INFO(sLogger)(
         "\n\n"
         "===================================================\n"
-        "          D3D Implementation Informations\n"
+        "         D3D11 Implementation Informations\n"
         "---------------------------------------------------\n"
         "   Feature Level   : %u.%u\n"
         "===================================================\n"

@@ -410,6 +410,17 @@ namespace GN { namespace gfx
                 }
             };
 
+            struct RenderTargetAlphaBlend
+            {
+                OverridableVariable<bool>  blendEnabled;
+                OverridableVariable<UInt8> blendSrc;
+                OverridableVariable<UInt8> blendDst;
+                OverridableVariable<UInt8> blendOp;
+                OverridableVariable<UInt8> blendAlphaSrc;
+                OverridableVariable<UInt8> blendAlphaDst;
+                OverridableVariable<UInt8> blendAlphaOp;
+            };
+
             //@{
 
             OverridableVariable<bool>          depthTestEnabled;
@@ -420,21 +431,17 @@ namespace GN { namespace gfx
             OverridableVariable<UInt8>         stencilPassOp;
             OverridableVariable<UInt8>         stencilFailOp;
             OverridableVariable<UInt8>         stencilZFailOp;
-
-            OverridableVariable<bool>          blendEnabled;
-            OverridableVariable<UInt8>         blendSrc;
-            OverridableVariable<UInt8>         blendDst;
-            OverridableVariable<UInt8>         blendOp;
-            OverridableVariable<UInt8>         blendAlphaSrc;
-            OverridableVariable<UInt8>         blendAlphaDst;
-            OverridableVariable<UInt8>         blendAlphaOp;
+            OverridableVariable<UInt8>         stencilFunc;
 
             OverridableVariable<UInt8>         fillMode;
             OverridableVariable<UInt8>         cullMode;
             OverridableVariable<UInt8>         frontFace;
             OverridableVariable<bool>          msaaEnabled;
 
+            OverridableVariable<bool>          independentAlphaBlending;
+            RenderTargetAlphaBlend             alphaBlend[GpuContext::MAX_COLOR_RENDER_TARGETS];
             OverridableVariable<Vector4f>      blendFactors;
+
             OverridableVariable<UInt32>        colorWriteMask;
             OverridableVariable<Rect<UInt32> > viewport;
             OverridableVariable<Rect<UInt32> > scissorRect;

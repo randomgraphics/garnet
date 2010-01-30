@@ -787,6 +787,19 @@ namespace GN { namespace gfx
             //@}
         };
 
+        /// Alpha blend flags for one color render target
+        struct RenderTargetAlphaBlend
+        {
+            UInt8 blendSrc          : 4;
+            UInt8 blendDst          : 4;
+            UInt8 blendAlphaSrc     : 4;
+            UInt8 blendAlphaDst     : 4;
+            UInt8 blendOp           : 3;
+            UInt8 blendAlphaOp      : 3;
+            UInt8 blendEnabled      : 2;
+        };
+        GN_CASSERT( sizeof(RenderTargetAlphaBlend) == 3 );
+
         /// Render state bit flags
         //@{
 
@@ -805,22 +818,14 @@ namespace GN { namespace gfx
             UInt64 depthWriteEnabled : 2;
             UInt64 depthFunc         : 4;
 
-            // stencil flags ( 2 bytes )
+            // stencil flags ( 3 bytes )
             // TODO: stencil function
             UInt64 stencilEnabled    : 2;
             UInt64 stencilPassOp     : 4; ///< pass both stencil and Z
             UInt64 stencilFailOp     : 4; ///< fail stencil (no z test at all)
             UInt64 stencilZFailOp    : 4; ///< pass stencil but fail Z
-            UInt64 _reserved0        : 2; ///< reserved bits. keep them zero.
-
-            // alpha blending flags (3 bytes)
-            UInt64 blendEnabled      : 2;
-            UInt64 blendSrc          : 4;
-            UInt64 blendDst          : 4;
-            UInt64 blendOp           : 3;
-            UInt64 blendAlphaSrc     : 4;
-            UInt64 blendAlphaDst     : 4;
-            UInt64 blendAlphaOp      : 3;
+            UInt64 stencilFunc       : 4; ///< Stencil function
+            UInt64 _reserved0        : 6; ///< reserved bits. keep them zero.
 
             // misc. flags (1 byte)
             UInt64 fillMode          : 2;
@@ -828,8 +833,8 @@ namespace GN { namespace gfx
             UInt64 frontFace         : 2;
             UInt64 msaaEnabled       : 2;
 
-            // reserved (1 byte)
-            UInt64 _reserved1        : 8; ///< reserved bits. keep them zero.
+            // reserved (3 byte)
+            UInt64 _reserved1        : 24; ///< reserved bits. keep them zero.
 
             };
 
@@ -837,15 +842,26 @@ namespace GN { namespace gfx
             {
 
             UInt64 depthFlags    :  8;
-            UInt64 stencilFlags  : 16;
-            UInt64 blendingFlags : 24;
+            UInt64 stencilFlags  : 24;
             UInt64 miscFlags     :  8;
 
             };
 
             };
 
-            /// blend factors for RGBA
+            /// Set to TRUE to enable independent blending in simultaneous render targets.
+            ///
+            /// If set to FALSE, only the alphaBlendFlags[0] members are used.
+            ///  alphaBlendFlags[1..7] are ignored.
+            ///
+            /// The value of this flag is ignored (treated as FALSE always),
+            /// when lacking hardware support.
+            bool independentAlphaBlending;
+
+            /// Alpha blending flags. One for each color render target
+            RenderTargetAlphaBlend alphaBlend[MAX_COLOR_RENDER_TARGETS];
+
+            /// blend factors in RGBA format
             Vector4f blendFactors;
 
             /// 4 bits x 8 render targets.
@@ -875,15 +891,19 @@ namespace GN { namespace gfx
                 stencilPassOp = STENCIL_KEEP;
                 stencilFailOp = STENCIL_KEEP;
                 stencilZFailOp = STENCIL_KEEP;
+                stencilFunc = CMP_ALWAYS;
 
-                blendEnabled = false;
-                blendSrc = BLEND_SRC_ALPHA;
-                blendDst = BLEND_INV_SRC_ALPHA;
-                blendOp  = BLEND_OP_ADD;
-                blendAlphaSrc = BLEND_SRC_ALPHA;
-                blendAlphaDst = BLEND_INV_SRC_ALPHA;
-                blendAlphaOp  = BLEND_OP_ADD;
-
+                independentAlphaBlending = false;
+                for( int i = 0; i < MAX_COLOR_RENDER_TARGETS; ++i )
+                {
+                    alphaBlend[i].blendEnabled = false;
+                    alphaBlend[i].blendSrc = BLEND_SRC_ALPHA;
+                    alphaBlend[i].blendDst = BLEND_INV_SRC_ALPHA;
+                    alphaBlend[i].blendOp  = BLEND_OP_ADD;
+                    alphaBlend[i].blendAlphaSrc = BLEND_SRC_ALPHA;
+                    alphaBlend[i].blendAlphaDst = BLEND_INV_SRC_ALPHA;
+                    alphaBlend[i].blendAlphaOp  = BLEND_OP_ADD;
+                }
                 blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
 
                 colorWriteMask = 0xFFFFFFFF;
@@ -893,7 +913,7 @@ namespace GN { namespace gfx
                 scissorRect.set( 0, 0, 0, 0 );
             }
         };
-        GN_CASSERT( GN_FIELD_OFFSET( RenderStates, blendFactors ) == 8 );
+        GN_CASSERT( GN_FIELD_OFFSET( RenderStates, independentAlphaBlending ) == 8 );
 
         /// render state bit flags
         RenderStates rs;

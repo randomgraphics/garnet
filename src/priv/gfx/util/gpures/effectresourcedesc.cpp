@@ -424,6 +424,8 @@ static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsde
             GN_ERROR(sLogger)( "Unknow render state name: %s.", rsname );
         }
     }
+
+    GN_TODO( "Load other render states from XML file" );
 }
 
 //
@@ -604,19 +606,22 @@ void GN::gfx::EffectResourceDesc::clear()
     renderstates.stencilFailOp     = rs.stencilFailOp;
     renderstates.stencilZFailOp    = rs.stencilZFailOp;
 
-    renderstates.blendEnabled      = !!rs.blendEnabled;
-    renderstates.blendSrc          = rs.blendSrc;
-    renderstates.blendDst          = rs.blendDst;
-    renderstates.blendOp           = rs.blendOp;
-    renderstates.blendAlphaSrc     = rs.blendAlphaSrc;
-    renderstates.blendAlphaDst     = rs.blendAlphaDst;
-    renderstates.blendAlphaOp      = rs.blendAlphaOp;
-
     renderstates.fillMode          = rs.fillMode;
     renderstates.cullMode          = rs.cullMode;
     renderstates.frontFace         = rs.frontFace;
     renderstates.msaaEnabled       = !!rs.msaaEnabled;
 
+    renderstates.independentAlphaBlending = rs.independentAlphaBlending;
+    for( size_t i = 0; i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
+    {
+        renderstates.alphaBlend[i].blendEnabled  = !!rs.alphaBlend[i].blendEnabled;
+        renderstates.alphaBlend[i].blendSrc      = rs.alphaBlend[i].blendSrc;
+        renderstates.alphaBlend[i].blendDst      = rs.alphaBlend[i].blendDst;
+        renderstates.alphaBlend[i].blendOp       = rs.alphaBlend[i].blendOp;
+        renderstates.alphaBlend[i].blendAlphaSrc = rs.alphaBlend[i].blendAlphaSrc;
+        renderstates.alphaBlend[i].blendAlphaDst = rs.alphaBlend[i].blendAlphaDst;
+        renderstates.alphaBlend[i].blendAlphaOp  = rs.alphaBlend[i].blendAlphaOp;
+    }
     renderstates.blendFactors      = rs.blendFactors;
 
     // exept these:

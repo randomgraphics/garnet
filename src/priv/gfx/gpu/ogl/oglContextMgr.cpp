@@ -14,27 +14,27 @@ using namespace GN::gfx;
 // local function
 // *****************************************************************************
 
-static const GLenum CONVERT_FILL_MODES[] =
+static const GLenum FILL_MODE_TO_OGL[] =
 {
     GL_FILL,   // FILL_SOLID
     GL_LINE,   // FILL_WIREFRAME
     GL_POINT,  // FILL_POINT
 };
 
-static const GLenum CONVERT_CULL_MODES[] =
+static const GLenum CULL_MODE_TO_OGL[] =
 {
     GL_FALSE, // CULL_NONE
     GL_FRONT, // CULL_FRONT
     GL_BACK,  // CULL_BACK
 };
 
-static const GLenum CONVERT_FRONT_FACE[] =
+static const GLenum FRONT_FACE_TO_OGL[] =
 {
     GL_CCW, // FRONT_CCW
     GL_CW,  // FRONT_CW
 };
 
-static const GLenum CONVERT_CMP[] =
+static const GLenum CMP_TO_OGL[] =
 {
     GL_NEVER    , // CMP_NEVER
     GL_LESS     , // CMP_LESS
@@ -46,7 +46,7 @@ static const GLenum CONVERT_CMP[] =
     GL_ALWAYS   , // CMP_ALWAYS
 };
 
-static const GLenum CONVERT_STENCIL_OP[] =
+static const GLenum STENCIL_OP_TO_OGL[] =
 {
     GL_KEEP,          // STENCIL_KEEP = 0,
     GL_ZERO,          // STENCIL_ZERO,
@@ -58,7 +58,7 @@ static const GLenum CONVERT_STENCIL_OP[] =
     GL_DECR           // STENCIL_DEC,
 };
 
-static const GLenum CONVERT_BLEND_ARG[] =
+static const GLenum BLEND_ARG_TO_OGL[] =
 {
     GL_ZERO                , // BLEND_ZERO = 0,
     GL_ONE                 , // BLEND_ONE,
@@ -73,7 +73,7 @@ static const GLenum CONVERT_BLEND_ARG[] =
     GL_SRC_ALPHA_SATURATE  , // BLEND_BLEND_FACTOR,
 };
 
-static const GLenum CONVERT_BLEND_OP[] =
+static const GLenum BLEND_OP_TO_OGL[] =
 {
     GL_FUNC_ADD_EXT              , // BLEND_OP_ADD = 0,
     GL_FUNC_SUBTRACT_EXT         , // BLEND_OP_SUB,
@@ -249,13 +249,13 @@ GN::gfx::OGLGpu::bindContextRenderStates(
     if( skipDirtyCheck || newContext.rs.miscFlags != mContext.rs.miscFlags )
     {
         // fill mode
-        glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.rs.fillMode] );
+        glPolygonMode( GL_FRONT_AND_BACK, FILL_MODE_TO_OGL[newContext.rs.fillMode] );
 
         // cull mode
-        glPolygonMode( GL_FRONT_AND_BACK, CONVERT_FILL_MODES[newContext.rs.fillMode] );
+        glPolygonMode( GL_FRONT_AND_BACK, CULL_MODE_TO_OGL[newContext.rs.cullMode] );
 
         // front face
-        glFrontFace( CONVERT_FRONT_FACE[newContext.rs.frontFace] );
+        glFrontFace( FRONT_FACE_TO_OGL[newContext.rs.frontFace] );
 
         // TODO: msaa flag
         if( newContext.rs.msaaEnabled != mContext.rs.msaaEnabled )
@@ -269,7 +269,7 @@ GN::gfx::OGLGpu::bindContextRenderStates(
     {
         if( newContext.rs.depthTestEnabled ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
         glDepthMask( newContext.rs.depthWriteEnabled );
-        glDepthFunc( CONVERT_CMP[newContext.rs.depthFunc] );
+        glDepthFunc( CMP_TO_OGL[newContext.rs.depthFunc] );
     };
 
     // stencil
@@ -297,53 +297,57 @@ GN::gfx::OGLGpu::bindContextRenderStates(
             }
         }
         glStencilOp(
-            CONVERT_STENCIL_OP[failop],
-            CONVERT_STENCIL_OP[zfailop],
-            CONVERT_STENCIL_OP[zpassop] );
+            STENCIL_OP_TO_OGL[failop],
+            STENCIL_OP_TO_OGL[zfailop],
+            STENCIL_OP_TO_OGL[zpassop] );
     }
 
     // alpha blending
-    if( skipDirtyCheck || newContext.rs.blendingFlags != mContext.rs.blendingFlags )
+    if( newContext.rs.independentAlphaBlending )
     {
-        // blending enable bit
-        if( newContext.rs.blendEnabled ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
+        GN_TODO( "Implement independent alpha blending for OGL GPU." );
+    }
 
-        if( GLEW_EXT_blend_minmax &&
-            GLEW_EXT_blend_subtract &&
-            GLEW_EXT_blend_func_separate &&
-            GLEW_EXT_blend_equation_separate )
+    if( newContext.rs.alphaBlend[0].blendEnabled )
+        glEnable( GL_BLEND );
+    else
+        glDisable( GL_BLEND );
+
+    if( GLEW_EXT_blend_minmax &&
+        GLEW_EXT_blend_subtract &&
+        GLEW_EXT_blend_func_separate &&
+        GLEW_EXT_blend_equation_separate )
+    {
+        glBlendFuncSeparateEXT(
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendSrc],
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendDst],
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendAlphaSrc],
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendAlphaDst] );
+
+        glBlendEquationSeparateEXT(
+            BLEND_OP_TO_OGL[newContext.rs.alphaBlend[0].blendOp],
+            BLEND_OP_TO_OGL[newContext.rs.alphaBlend[0].blendAlphaOp] );
+    }
+    else
+    {
+        glBlendFunc(
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendSrc],
+            BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendDst] );
+
+        if( newContext.rs.alphaBlend[0].blendOp != GpuContext::BLEND_OP_ADD )
         {
-            glBlendFuncSeparateEXT(
-                CONVERT_BLEND_ARG[newContext.rs.blendSrc],
-                CONVERT_BLEND_ARG[newContext.rs.blendDst],
-                CONVERT_BLEND_ARG[newContext.rs.blendAlphaSrc],
-                CONVERT_BLEND_ARG[newContext.rs.blendAlphaDst] );
-
-            glBlendEquationSeparateEXT(
-                CONVERT_BLEND_OP[newContext.rs.blendOp],
-                CONVERT_BLEND_OP[newContext.rs.blendAlphaOp] );
+            GN_ERROR(sLogger)(
+                "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
+                "required to implement extended alpha blending operation other than ADD." );
         }
-        else
+
+        if( newContext.rs.alphaBlend[0].blendAlphaOp  != newContext.rs.alphaBlend[0].blendOp ||
+            newContext.rs.alphaBlend[0].blendAlphaSrc != newContext.rs.alphaBlend[0].blendSrc ||
+            newContext.rs.alphaBlend[0].blendAlphaDst != newContext.rs.alphaBlend[0].blendDst )
         {
-            glBlendFunc(
-                CONVERT_BLEND_ARG[newContext.rs.blendSrc],
-                CONVERT_BLEND_ARG[newContext.rs.blendDst] );
-
-            if( newContext.rs.blendOp != GpuContext::BLEND_OP_ADD )
-            {
-                GN_ERROR(sLogger)(
-                    "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
-                    "required to implement extended alpha blending operation other than ADD." );
-            }
-
-            if( newContext.rs.blendAlphaOp  != newContext.rs.blendOp ||
-                newContext.rs.blendAlphaSrc != newContext.rs.blendSrc ||
-                newContext.rs.blendAlphaDst != newContext.rs.blendDst )
-            {
-                GN_ERROR(sLogger)(
-                    "EXT_blend_func_separate is missing that is support "
-                    "different blend function for alpha channel." );
-            }
+            GN_ERROR(sLogger)(
+                "EXT_blend_func_separate is missing that is support "
+                "different blend function for alpha channel." );
         }
     }
 

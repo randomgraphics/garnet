@@ -229,17 +229,17 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
             GN_WARN(sLogger)( "FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!" );
         }
 
-        mContext.rs.blendEnabled  = true;
-        mContext.rs.blendSrc      = GpuContext::BLEND_SRC_ALPHA;
-        mContext.rs.blendDst      = GpuContext::BLEND_INV_SRC_ALPHA;
-        mContext.rs.blendOp       = GpuContext::BLEND_OP_ADD;
-        mContext.rs.blendAlphaSrc = GpuContext::BLEND_SRC_ALPHA;
-        mContext.rs.blendAlphaDst = GpuContext::BLEND_INV_SRC_ALPHA;
-        mContext.rs.blendAlphaOp  = GpuContext::BLEND_OP_ADD;
+        mContext.rs.alphaBlend[0].blendEnabled  = true;
+        mContext.rs.alphaBlend[0].blendSrc      = GpuContext::BLEND_SRC_ALPHA;
+        mContext.rs.alphaBlend[0].blendDst      = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.rs.alphaBlend[0].blendOp       = GpuContext::BLEND_OP_ADD;
+        mContext.rs.alphaBlend[0].blendAlphaSrc = GpuContext::BLEND_SRC_ALPHA;
+        mContext.rs.alphaBlend[0].blendAlphaDst = GpuContext::BLEND_INV_SRC_ALPHA;
+        mContext.rs.alphaBlend[0].blendAlphaOp  = GpuContext::BLEND_OP_ADD;
     }
     else if( options & FORCE_ALPHA_BLENDING_DISABLED )
     {
-        mContext.rs.blendEnabled = false;
+        mContext.rs.alphaBlend[0].blendEnabled = false;
     }
 
     // setup depth test

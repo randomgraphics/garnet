@@ -67,6 +67,19 @@ static const D3D10_COMPARISON_FUNC CMP_TO_D3D10[] =
 };
 GN_CASSERT( GN_ARRAY_COUNT(CMP_TO_D3D10) == GN::gfx::GpuContext::NUM_CMP_FUNCTIONS );
 
+static const D3D10_STENCIL_OP STENCIL_OP_TO_D3D10[] =
+{
+    D3D10_STENCIL_OP_KEEP,     // STENCIL_KEEP = 0,
+    D3D10_STENCIL_OP_ZERO,     // STENCIL_ZERO,
+    D3D10_STENCIL_OP_REPLACE,  // STENCIL_REPLACE,
+    D3D10_STENCIL_OP_INCR_SAT, // STENCIL_INC_SAT,
+    D3D10_STENCIL_OP_DECR_SAT, // STENCIL_DEC_SAT,
+    D3D10_STENCIL_OP_INVERT,   // STENCIL_INVERT,
+    D3D10_STENCIL_OP_INCR,     // STENCIL_INC,
+    D3D10_STENCIL_OP_DECR,     // STENCIL_DEC,
+};
+GN_CASSERT( GN_ARRAY_COUNT(STENCIL_OP_TO_D3D10) == GN::gfx::GpuContext::NUM_STENCIL_OPERATIONS );
+
 // *****************************************************************************
 // init/shutdown
 // *****************************************************************************
@@ -321,10 +334,10 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     dsdesc.StencilEnable = newContext.rs.stencilEnabled;
     dsdesc.StencilReadMask = 0xFF;
     dsdesc.StencilWriteMask = 0xFF;
-    dsdesc.FrontFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
-    dsdesc.FrontFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
-    dsdesc.FrontFace.StencilFailOp = D3D10_STENCIL_OP_KEEP;
-    dsdesc.FrontFace.StencilDepthFailOp = D3D10_STENCIL_OP_KEEP;
+    dsdesc.FrontFace.StencilFunc = CMP_TO_D3D10[newContext.rs.stencilFunc];
+    dsdesc.FrontFace.StencilPassOp = STENCIL_OP_TO_D3D10[newContext.rs.stencilPassOp];
+    dsdesc.FrontFace.StencilFailOp = STENCIL_OP_TO_D3D10[newContext.rs.stencilFailOp];
+    dsdesc.FrontFace.StencilDepthFailOp = STENCIL_OP_TO_D3D10[newContext.rs.stencilZFailOp];
     dsdesc.BackFace = dsdesc.FrontFace;
     UInt32 stencilRef = 0;
     if( !mSOMgr->setDS( dsdesc, stencilRef, skipDirtyCheck ) ) return false;
@@ -333,20 +346,30 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     D3D10_BLEND_DESC bsdesc;
     memset( &bsdesc, 0, sizeof(bsdesc) );
     bsdesc.AlphaToCoverageEnable    = false;
-    bsdesc.BlendEnable[0]           =
-    bsdesc.BlendEnable[1]           =
-    bsdesc.BlendEnable[2]           =
-    bsdesc.BlendEnable[3]           =
-    bsdesc.BlendEnable[4]           =
-    bsdesc.BlendEnable[5]           =
-    bsdesc.BlendEnable[6]           =
-    bsdesc.BlendEnable[7]           = newContext.rs.blendEnabled;
-    bsdesc.SrcBlend                 = BLEND_TO_D3D10[newContext.rs.blendSrc];
-    bsdesc.DestBlend                = BLEND_TO_D3D10[newContext.rs.blendDst];
-    bsdesc.BlendOp                  = BLEND_OP_TO_D3D10[newContext.rs.blendOp];
-    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D10[newContext.rs.blendAlphaSrc];
-    bsdesc.DestBlendAlpha           = BLEND_TO_D3D10[newContext.rs.blendAlphaDst];
-    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D10[newContext.rs.blendAlphaOp];
+    if( newContext.rs.independentAlphaBlending )
+    {
+        for( int i = 0; i < 8; ++i )
+        {
+            bsdesc.BlendEnable[0]   = newContext.rs.alphaBlend[i].blendEnabled;
+        }
+    }
+    else
+    {
+        bsdesc.BlendEnable[0]       =
+        bsdesc.BlendEnable[1]       =
+        bsdesc.BlendEnable[2]       =
+        bsdesc.BlendEnable[3]       =
+        bsdesc.BlendEnable[4]       =
+        bsdesc.BlendEnable[5]       =
+        bsdesc.BlendEnable[6]       =
+        bsdesc.BlendEnable[7]       = newContext.rs.alphaBlend[0].blendEnabled;
+    }
+    bsdesc.SrcBlend                 = BLEND_TO_D3D10[newContext.rs.alphaBlend[0].blendSrc];
+    bsdesc.DestBlend                = BLEND_TO_D3D10[newContext.rs.alphaBlend[0].blendDst];
+    bsdesc.BlendOp                  = BLEND_OP_TO_D3D10[newContext.rs.alphaBlend[0].blendOp];
+    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D10[newContext.rs.alphaBlend[0].blendAlphaSrc];
+    bsdesc.DestBlendAlpha           = BLEND_TO_D3D10[newContext.rs.alphaBlend[0].blendAlphaDst];
+    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D10[newContext.rs.alphaBlend[0].blendAlphaOp];
     bsdesc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[1] = D3D10_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTargetWriteMask[2] = D3D10_COLOR_WRITE_ENABLE_ALL;
