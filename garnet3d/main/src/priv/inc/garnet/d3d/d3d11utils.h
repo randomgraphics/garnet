@@ -1,25 +1,22 @@
-#ifndef __GN_D3D10_H__
-#define __GN_D3D10_H__
+#ifndef __GN_D3D_D3D11UTILS_H__
+#define __GN_D3D_D3D11UTILS_H__
 // *****************************************************************************
 /// \file
-/// \brief   interface of d3d10 utils
+/// \brief   interface of d3d11 utils
 /// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
-
-#include "GNbase.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <d3d9.h>
-#include <d3d10.h>
-#include <d3dx10.h>
+#include <d3d9.h> // for PIX routines
+#include <d3d10_1.h>
+#include <d3d11.h>
+#include <d3dx11.h>
 #include <map>
 
-#include "d3d/dxgi.h"
-
-namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
+namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
 {
     enum MultiSampleAntiAlias
     {
@@ -30,20 +27,20 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     ///
     /// construct sample descriptor based on MSAA flags
     ///
-    DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D10Device & device, GN::d3d10::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
+    DXGI_SAMPLE_DESC constructDXGISampleDesc( ID3D11Device & device, GN::d3d11::MultiSampleAntiAlias msaa, DXGI_FORMAT format );
 
     ///
     /// construct default sampler descriptor
-    inline void constructDefaultSamplerDesc( D3D10_SAMPLER_DESC & desc )
+    inline void constructDefaultSamplerDesc( D3D11_SAMPLER_DESC & desc )
     {
         memset( &desc, 0, sizeof(desc) );
-        desc.Filter = D3D10_FILTER_MIN_MAG_MIP_POINT;
-        desc.AddressU = D3D10_TEXTURE_ADDRESS_CLAMP;
-        desc.AddressV = D3D10_TEXTURE_ADDRESS_CLAMP;
-        desc.AddressW = D3D10_TEXTURE_ADDRESS_CLAMP;
+        desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+        desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         desc.MipLODBias = 0.0f;
-        desc.MaxAnisotropy = D3D10_MAX_MAXANISOTROPY;
-        desc.ComparisonFunc = D3D10_COMPARISON_NEVER;
+        desc.MaxAnisotropy = D3D11_MAX_MAXANISOTROPY;
+        desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
         desc.BorderColor[0] = 0.0f;
         desc.BorderColor[1] = 0.0f;
         desc.BorderColor[2] = 0.0f;
@@ -72,19 +69,19 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     /// \name state dumper
     //@{
 
-    ID3D10VertexShader   * createDumpableVS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10GeometryShader * createDumpableGS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10PixelShader    * createDumpablePS( ID3D10Device & device, const void * binary, size_t bytes );
-    ID3D10InputLayout    * createDumpableIL(
-        ID3D10Device                   & device,
-        const D3D10_INPUT_ELEMENT_DESC * elements,
+    ID3D11VertexShader   * createDumpableVS( ID3D11Device & device, const void * binary, size_t bytes );
+    ID3D11GeometryShader * createDumpableGS( ID3D11Device & device, const void * binary, size_t bytes );
+    ID3D11PixelShader    * createDumpablePS( ID3D11Device & device, const void * binary, size_t bytes );
+    ID3D11InputLayout    * createDumpableIL(
+        ID3D11Device                   & device,
+        const D3D11_INPUT_ELEMENT_DESC * elements,
         size_t                           count,
         const void                     * signature,
         size_t                           bytes );
 
     void setDumpFilePrefix( const StrA & );
-    void dumpDraw( ID3D10Device & device, UInt32 vertexCount, UInt32 startVertex );
-    void dumpDrawIndexed( ID3D10Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
+    void dumpDraw( ID3D11Device & device, UInt32 vertexCount, UInt32 startVertex );
+    void dumpDrawIndexed( ID3D11Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
 
     //@}
 
@@ -98,8 +95,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         UInt32         flags = 0,
         const char   * entry = "main" );
 
-    ID3D10VertexShader * compileAndCreateVS(
-        ID3D10Device & dev,
+    ID3D11VertexShader * compileAndCreateVS(
+        ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,
         UInt32         flags = 0,
@@ -107,8 +104,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "vs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D10GeometryShader * compileAndCreateGS(
-        ID3D10Device & dev,
+    ID3D11GeometryShader * compileAndCreateGS(
+        ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,
         UInt32         flags = 0,
@@ -116,8 +113,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         const char   * profile = "gs_4_0",
         ID3D10Blob  ** binary = 0 );
 
-    ID3D10PixelShader * compileAndCreatePS(
-        ID3D10Device & dev,
+    ID3D11PixelShader * compileAndCreatePS(
+        ID3D11Device & dev,
         const char   * source,
         size_t         len = 0,
         UInt32         flags = 0,
@@ -127,7 +124,9 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
     //@}
 
-    /// D3D10 resource pool
+    /*
+
+    /// D3D11 resource pool
     class ResourcePool : public StdClass
     {
         GN_DECLARE_STDCLASS( ResourcePool, StdClass );
@@ -148,7 +147,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * pDevice );
+        bool init( ID3D11Device * pDevice );
         void quit();
     private:
         void clear() { m_device = NULL; }
@@ -160,39 +159,39 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     public:
 
         /// create buffer resource
-        ID3D10Buffer * createBuffer( const D3D10_BUFFER_DESC & desc, const D3D10_SUBRESOURCE_DATA * data = NULL );
+        ID3D11Buffer * createBuffer( const D3D11_BUFFER_DESC & desc, const D3D11_SUBRESOURCE_DATA * data = NULL );
 
         /// create buffer resource
-        ID3D10Texture2D * createTexture2D( const D3D10_TEXTURE2D_DESC & desc, const D3D10_SUBRESOURCE_DATA * data = NULL );
+        ID3D11Texture2D * createTexture2D( const D3D11_TEXTURE2D_DESC & desc, const D3D11_SUBRESOURCE_DATA * data = NULL );
 
         /// return resource back to pool
-        void returnResource( ID3D10Resource * resource );
+        void returnResource( ID3D11Resource * resource );
 
         // ********************************
         // private types
         // ********************************
     private:
 
-        /// D3D10 pooled resource description
+        /// D3D11 pooled resource description
         struct PooledResourceDesc
         {
-            D3D10_RESOURCE_DIMENSION dim;
+            D3D11_RESOURCE_DIMENSION dim;
             union
             {
-                D3D10_BUFFER_DESC    buf;
-                D3D10_TEXTURE1D_DESC tex1d;
-                D3D10_TEXTURE2D_DESC tex2d;
-                D3D10_TEXTURE3D_DESC tex3d;
+                D3D11_BUFFER_DESC    buf;
+                D3D11_TEXTURE1D_DESC tex1d;
+                D3D11_TEXTURE2D_DESC tex2d;
+                D3D11_TEXTURE3D_DESC tex3d;
             };
 
             /// default ctor. Does nothing
             PooledResourceDesc() {}
 
-            /// Construct from D3D10_BUFFER_DESC
-            PooledResourceDesc( const D3D10_BUFFER_DESC & desc )
+            /// Construct from D3D11_BUFFER_DESC
+            PooledResourceDesc( const D3D11_BUFFER_DESC & desc )
             {
                 ::memset( this, 0, sizeof(*this) );
-                dim = D3D10_RESOURCE_DIMENSION_BUFFER;
+                dim = D3D11_RESOURCE_DIMENSION_BUFFER;
                 buf = desc;
             }
 
@@ -206,14 +205,14 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             inline bool isImmutable() const;
         };
 
-        typedef std::map<PooledResourceDesc,ID3D10Resource*> ResourceMap;
+        typedef std::map<PooledResourceDesc,ID3D11Resource*> ResourceMap;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        ID3D10Device * m_device;
+        ID3D11Device * m_device;
 
         ResourceMap m_resources;
 
@@ -223,10 +222,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     private:
 
         /// find or create new resource from pool
-        ID3D10Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        ID3D11Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
 
-        /// create new D3D10 resource instance
-        ID3D10Resource * createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        /// create new D3D11 resource instance
+        ID3D11Resource * createResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
     };
 
     ///
@@ -268,7 +267,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * dev );
+        bool init( ID3D11Device * dev );
         void quit();
     private:
         void clear()
@@ -314,10 +313,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         // ********************************
     private:
 
-        ID3D10Device           * mDevice;
-        ID3D10InputLayout      * mLayout;
-        ID3D10Buffer           * mVtxBuf;
-        ID3D10Buffer           * mIdxBuf;
+        ID3D11Device           * mDevice;
+        ID3D11InputLayout      * mLayout;
+        ID3D11Buffer           * mVtxBuf;
+        ID3D11Buffer           * mIdxBuf;
 
         DynaArray<Vertex>        mVertices;
         Vertex                   mNewVertex;
@@ -340,10 +339,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     struct RenderTargetTexture
     {
         //@{
-        ID3D10Resource           * res;
-        ID3D10RenderTargetView   * rtv;
-        ID3D10DepthStencilView   * dsv;
-        ID3D10ShaderResourceView * srv;
+        ID3D11Resource           * res;
+        ID3D11RenderTargetView   * rtv;
+        ID3D11DepthStencilView   * dsv;
+        ID3D11ShaderResourceView * srv;
         //@}
 
         //@{
@@ -401,7 +400,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * device, const RenderToTextureOption & options );
+        bool init( ID3D11Device * device, const RenderToTextureOption & options );
         void quit();
     private:
         void clear() {}
@@ -425,9 +424,9 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         // ********************************
     private:
 
-        ID3D10Device                        * mDevice;
+        ID3D11Device                        * mDevice;
         StackArray<RenderTargetTexture,8>     mColors;
-        FixedArray<ID3D10RenderTargetView*,8> mColorViews;
+        FixedArray<ID3D11RenderTargetView*,8> mColorViews;
         RenderTargetTexture                   mDepth;
 
         // ********************************
@@ -446,8 +445,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         float u1, v1;
         float u2, v2;
         float z;
-        D3D10_DEPTH_WRITE_MASK depthWriteMask;
-        D3D10_COMPARISON_FUNC  depthFunc;
+        D3D11_DEPTH_WRITE_MASK depthWriteMask;
+        D3D11_COMPARISON_FUNC  depthFunc;
 
         void makeDefault()
         {
@@ -458,8 +457,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             u2 = 1.0f;
             v2 = 0.0f;
             z = .0f;
-            depthWriteMask = D3D10_DEPTH_WRITE_MASK_ZERO;
-            depthFunc = D3D10_COMPARISON_ALWAYS;
+            depthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+            depthFunc = D3D11_COMPARISON_ALWAYS;
         }
     };
 
@@ -486,7 +485,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
+        bool init( ID3D11Device * device, const ScreenAlignedQuadDesc & desc );
         void quit();
     private:
         void clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
@@ -501,18 +500,18 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ///
         ///  \note Does not support multisampled texture
         ///
-        void drawTexed( ID3D10ShaderResourceView * srv );
+        void drawTexed( ID3D11ShaderResourceView * srv );
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        ID3D10Device            * mDevice;
-        ID3D10DepthStencilState * mDepthStencilState;
-        ID3D10VertexShader      * mVs;
-        ID3D10PixelShader       * mPsTexed;
-        ID3D10PixelShader       * mPsSolid;
+        ID3D11Device            * mDevice;
+        ID3D11DepthStencilState * mDepthStencilState;
+        ID3D11VertexShader      * mVs;
+        ID3D11PixelShader       * mPsTexed;
+        ID3D11PixelShader       * mPsSolid;
         SimpleMesh                mMesh;
 
         // ********************************
@@ -522,14 +521,14 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     };
 
     ///
-    /// D3D10 application framework
+    /// D3D11 application framework
     ///
-    struct D3D10AppOption
+    struct D3D11AppOption
     {
         ///
         /// ctor
         ///
-        D3D10AppOption()
+        D3D11AppOption()
             : parent(0)
             , monitor(0)
             , ref(false)
@@ -591,29 +590,29 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     };
 
     ///
-    /// D3D10 application framework
+    /// D3D11 application framework
     ///
-    class D3D10Application
+    class D3D11Application
     {
     public:
 
         //@{
 
-        D3D10Application();
-        ~D3D10Application();
+        D3D11Application();
+        ~D3D11Application();
 
-        ID3D10Device & device() const { GN_ASSERT( mDevice ); return *mDevice; }
+        ID3D11Device & device() const { GN_ASSERT( mDevice ); return *mDevice; }
         IDXGISwapChain & swapChain() const { GN_ASSERT( mSwapChain ); return *mSwapChain; }
 
-        ID3D10Texture2D        * backbuf() const { return mBackBuf; }
-        ID3D10RenderTargetView * backrtv() const { return mBackRTV; }
-        ID3D10DepthStencilView * depthrtv() const { return mDepthDSV; }
+        ID3D11Texture2D        * backbuf() const { return mBackBuf; }
+        ID3D11RenderTargetView * backrtv() const { return mBackRTV; }
+        ID3D11DepthStencilView * depthrtv() const { return mDepthDSV; }
 
-        int run( const D3D10AppOption & );
+        int run( const D3D11AppOption & );
 
-        bool changeOption( const D3D10AppOption & );
+        bool changeOption( const D3D11AppOption & );
 
-        const D3D10AppOption & getOption() const { return mOption; }
+        const D3D11AppOption & getOption() const { return mOption; }
 
         void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
 
@@ -625,7 +624,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
 
-        virtual bool onInit( D3D10AppOption & ) { return true; }
+        virtual bool onInit( D3D11AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual void onDestroy() {}
         virtual void onQuit() {}
@@ -645,21 +644,23 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
     private:
 
-        D3D10AppOption           mOption;
+        D3D11AppOption           mOption;
         HWND                     mWindow;
         IDXGIAdapter           * mAdapter;
-        ID3D10Device           * mDevice;
+        ID3D11Device           * mDevice;
         IDXGISwapChain         * mSwapChain;
-        ID3D10Texture2D        * mBackBuf;  // default back buffer
-        ID3D10RenderTargetView * mBackRTV;
-        ID3D10Texture2D        * mDepthBuf; // default depth buffer
-        ID3D10DepthStencilView * mDepthDSV;
-        ID3D10Debug            * mDebug;
-        ID3D10InfoQueue        * mInfoQueue;
+        ID3D11Texture2D        * mBackBuf;  // default back buffer
+        ID3D11RenderTargetView * mBackRTV;
+        ID3D11Texture2D        * mDepthBuf; // default depth buffer
+        ID3D11DepthStencilView * mDepthDSV;
+        ID3D11Debug            * mDebug;
+        ID3D11InfoQueue        * mInfoQueue;
     };
+
+    */
 }}
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_D3D10_H__
+#endif // __GN_D3D_D3D11UTILS_H__

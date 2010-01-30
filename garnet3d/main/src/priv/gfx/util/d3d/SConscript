@@ -1,7 +1,25 @@
 Import( 'GN' )
 
-dxgi_sources =[
+dxgi_sources = [
     'dxgiTextureFormat.cpp'
+]
+
+d3d9_sources = [
+	'd3d9App.cpp',
+	'd3d9ShaderUtils.cpp',
+	'd3d9ThickLine.cpp',
+]
+
+d3d10_sources = [
+	'd3d10App.cpp',
+	'd3d10RenderToTexture.cpp',
+	'd3d10ResourcePool.cpp',
+	'd3d10ScreenAlignedQuad.cpp',
+	'd3d10ShaderUtils.cpp',
+	'd3d10SimpleMesh.cpp',
+	'd3d10StateDumper.cpp',
+	'd3d10TextureFormat.cpp',
+	'd3d10Utils.cpp',
 ]
 
 d3d11_sources = [
@@ -11,6 +29,8 @@ d3d11_sources = [
 
 sources = []
 if GN.conf['has_d3d10'] or GN.conf['has_d3d11'] : sources += dxgi_sources
+if GN.conf['has_d3d9'] or GN.conf['has_xtl'] : sources += d3d9_sources
+if GN.conf['has_d3d10'] : sources += d3d10_sources
 if GN.conf['has_d3d11']: sources += d3d11_sources
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

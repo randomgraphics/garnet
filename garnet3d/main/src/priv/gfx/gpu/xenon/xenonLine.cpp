@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "xenonLine.h"
 #include "xenonGpu.h"
-#include "garnet/GNd3d9.h"
+#include "garnet/GNd3d.h"
 
 struct XenonLineVertex
 {

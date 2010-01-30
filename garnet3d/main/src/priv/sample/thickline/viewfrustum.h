@@ -1,6 +1,6 @@
 #pragma once
 
-#include "garnet/GNd3d9.h"
+#include "garnet/GNd3d.h"
 
 class D3D9ViewFrustum
 {

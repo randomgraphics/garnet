@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d10Gpu.h"
 #include "d3d10Texture.h"
-#include "garnet/GNd3d10.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 

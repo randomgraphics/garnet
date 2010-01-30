@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d10Shader.h"
 #include "d3d10Gpu.h"
-#include "garnet/GNd3d10.h"
 
 using namespace GN;
 using namespace GN::gfx;

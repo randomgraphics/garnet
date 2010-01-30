@@ -6,7 +6,6 @@
 #include "d3d10Texture.h"
 #include "d3d10VtxLayout.h"
 #include "d3d10Buffer.h"
-#include "garnet/GNd3d10.h"
 
 // *****************************************************************************
 // local data and functions

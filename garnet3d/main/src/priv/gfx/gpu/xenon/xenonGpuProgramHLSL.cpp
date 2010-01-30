@@ -2,7 +2,7 @@
 #include "xenonShader.h"
 #include "xenonTexture.h"
 #include "xenonGpu.h"
-#include "garnet/GNd3d9.h"
+#include "garnet/GNd3d.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 

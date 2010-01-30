@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNd3d11.h"
 
 #if GN_MSVC
 #pragma comment( lib, "d3d11.lib" )
