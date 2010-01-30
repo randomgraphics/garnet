@@ -222,6 +222,78 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// D3D11_SAMPLER_DESC creator
+    template<>
+    struct D3D11StateObjectCreator<D3D11_SAMPLER_DESC>
+    {
+        static ID3D11SamplerState *
+        create( ID3D11Device & dev, const D3D11_SAMPLER_DESC & desc )
+        {
+            ID3D11SamplerState * obj;
+            GN_DX_CHECK_RETURN( dev.CreateSamplerState( &desc, &obj ), NULL );
+            return obj;
+        }
+
+        union CompactDesc
+        {
+            UInt64           u64;
+            struct
+            {
+            UInt64 filter      :  8;
+            UInt64 addressU    :  3;
+            UInt64 addressV    :  3;
+            UInt64 addressW    :  3;
+            UInt64 lodbias     :  4;
+            UInt64 maxaniso    :  3;
+            UInt64 compare     :  3;
+            UInt64 bordercolor : 32;
+            UInt64 lod         :  5;
+            };
+        };
+        GN_CASSERT( 8 == sizeof(CompactDesc) );
+
+        static inline UInt64
+        hash( const D3D11_SAMPLER_DESC & desc )
+        {
+            CompactDesc cd;
+
+///
+/// compose BGRA32 color constant
+///
+#define GN_RGBA32_FROM_FLOAT4( r, g, b, a )   \
+        ( ( (((UInt32)(r*255.0f))&0xFF) <<  0 ) | \
+          ( (((UInt32)(g*255.0f))&0xFF) <<  8 ) | \
+          ( (((UInt32)(b*255.0f))&0xFF) << 16 ) | \
+          ( (((UInt32)(a*255.0f))&0xFF) << 24 ) )
+
+            cd.filter      = desc.Filter;
+            cd.addressU    = desc.AddressU;
+            cd.addressV    = desc.AddressV;
+            cd.addressW    = desc.AddressW;
+            cd.lodbias     = (UInt64)desc.MipLODBias;
+            cd.maxaniso    = (UInt64)desc.MaxAnisotropy;
+            cd.compare     = desc.ComparisonFunc;
+            cd.bordercolor = GN_RGBA32_FROM_FLOAT4( desc.BorderColor[0],
+                                                    desc.BorderColor[1],
+                                                    desc.BorderColor[2],
+                                                    desc.BorderColor[3] );
+            cd.lod         = (UInt32)( desc.MinLOD + desc.MaxLOD );
+
+            return cd.u64;
+        }
+
+        ///
+        /// rasterize state equality check
+        ///
+        static inline bool equal(
+            const D3D11_SAMPLER_DESC & a,
+            const D3D11_SAMPLER_DESC & b )
+        {
+            return 0 == ::memcmp( &a, &b, sizeof(a) );
+        }
+    };
+
+    ///
     /// generic state object cache.
     ///
     template<
@@ -509,6 +581,7 @@ namespace GN { namespace gfx
     typedef D3D11StateObjectCache<ID3D11RasterizerState,D3D11_RASTERIZER_DESC>      RasterStateCache;
     typedef D3D11StateObjectCache<ID3D11BlendState,D3D11_BLEND_DESC>                BlendStateCache;
     typedef D3D11StateObjectCache<ID3D11DepthStencilState,D3D11_DEPTH_STENCIL_DESC> DepthStencilStateCache;
+    typedef D3D11StateObjectCache<ID3D11SamplerState,D3D11_SAMPLER_DESC>            SamplerStateCache;
     //@}
 
     ///
@@ -529,6 +602,11 @@ namespace GN { namespace gfx
         ID3D11DepthStencilState * mCurrentDS;
         UInt32                    mCurrentStencilRef;
 
+        SamplerStateCache         mSamplerStates;
+        ID3D11SamplerState      * mCurrentVSSamplers[D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT];
+        ID3D11SamplerState      * mCurrentGSSamplers[D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT];
+        ID3D11SamplerState      * mCurrentPSSamplers[D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT];
+
     public:
 
         /// constructor
@@ -545,6 +623,11 @@ namespace GN { namespace gfx
 
             mDepthStates.clear();
             mCurrentDS = NULL;
+
+            mSamplerStates.clear();
+            memset( mCurrentVSSamplers, 0, sizeof(mCurrentVSSamplers) );
+            memset( mCurrentGSSamplers, 0, sizeof(mCurrentGSSamplers) );
+            memset( mCurrentPSSamplers, 0, sizeof(mCurrentPSSamplers) );
         }
 
         /// set rasterization state
@@ -564,6 +647,24 @@ namespace GN { namespace gfx
             const D3D11_DEPTH_STENCIL_DESC & desc,
             UInt32                           stencilRef,
             bool                             skipDirtyCheck );
+
+        /// set VS samplers
+        bool setVSSampler(
+            const D3D11_SAMPLER_DESC & desc,
+            UInt32                     stage,
+            bool                       skipDirtyCheck );
+
+        /// set VS samplers
+        bool setGSSampler(
+            const D3D11_SAMPLER_DESC & desc,
+            UInt32                     stage,
+            bool                       skipDirtyCheck );
+
+        /// set VS samplers
+        bool setPSSampler(
+            const D3D11_SAMPLER_DESC & desc,
+            UInt32                     stage,
+            bool                       skipDirtyCheck );
     };
 }}
 

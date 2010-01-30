@@ -8,6 +8,27 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 using namespace GN;
 using namespace GN::gfx;
 
+D3D11_TEXTURE_ADDRESS_MODE sAdressModeToD3D11( unsigned short addr )
+{
+    static D3D11_TEXTURE_ADDRESS_MODE mapping[SamplerDesc::NUM_ADDRESS_MODES] =
+    {
+        D3D11_TEXTURE_ADDRESS_WRAP,
+        D3D11_TEXTURE_ADDRESS_CLAMP,
+        D3D11_TEXTURE_ADDRESS_BORDER,
+        D3D11_TEXTURE_ADDRESS_MIRROR
+    };
+
+    if( addr < GN_ARRAY_COUNT(mapping) )
+    {
+        return mapping[addr];
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Invalid garnet texture address mode: %d", addr );
+        return D3D11_TEXTURE_ADDRESS_CLAMP;
+    }
+}
+
 // *****************************************************************************
 // D3D11GpuProgramParameterDesc
 // *****************************************************************************
@@ -356,7 +377,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
 void GN::gfx::D3D11GpuProgram::applyTextures(
     const TextureBinding * bindings,
     size_t                 count,
-    bool                   /*skipDirtyCheck*/ ) const
+    bool                   skipDirtyCheck ) const
 {
     const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
 
@@ -371,6 +392,11 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
         count = mParamDesc.textures.count();
     }
     GN_ASSERT( count <= NUM_STAGES );
+
+    D3D11Gpu & gpu = getGpu();
+
+    D3D11_SAMPLER_DESC sd;
+    GN::d3d11::constructDefaultSamplerDesc( sd );
 
     // iterate textures
     for( size_t i = 0; i < count; ++i )
@@ -389,6 +415,13 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
                     size_t srvidx = NUM_STAGES * i + texParam.ssp[i].stage;
 
                     srvArray[srvidx] = tex->getSRView();
+
+                    // apply sampler
+                    sd.AddressU = sAdressModeToD3D11( tb.sampler.addressU );
+                    sd.AddressV = sAdressModeToD3D11( tb.sampler.addressV );
+                    sd.AddressW = sAdressModeToD3D11( tb.sampler.addressW );
+                    GN_TODO( "more sampler fields" );
+                    gpu.setSampler( i, texParam.ssp[i].stage,  sd, skipDirtyCheck );
                 }
             }
         }
