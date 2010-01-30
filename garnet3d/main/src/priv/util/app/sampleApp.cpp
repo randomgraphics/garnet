@@ -137,8 +137,6 @@ GN::util::SampleApp::SampleApp()
 // -----------------------------------------------------------------------------
 int GN::util::SampleApp::run( int argc, const char * const argv[] )
 {
-    GN_GUARD_ALWAYS;
-
     if( !init( argc, argv ) ) { quit(); return -1; }
 
     mDone = false;
@@ -185,11 +183,6 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     // success
     quit();
     return 0;
-
-    // failed
-    GN_UNGUARD_ALWAYS_NO_THROW;
-    quit();
-    return -1;
 }
 
 //
@@ -319,8 +312,6 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
 // -----------------------------------------------------------------------------
 bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 {
-    GN_GUARD_ALWAYS;
-
     if( !checkCmdLine(argc,argv) ) return false;
     if( !onPreInit( mInitParam ) ) return false;
     if( !initGpu() ) return false;
@@ -344,10 +335,6 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 
     // success
     return true;
-
-    // failed
-    GN_UNGUARD_ALWAYS_NO_THROW;
-    return false;
 }
 
 //

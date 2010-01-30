@@ -115,7 +115,10 @@ void GN::gfx::D3D10Gpu::contextQuit()
 {
     GN_GUARD;
 
-    mDevice->ClearState();
+    if( mDevice )
+    {
+        mDevice->ClearState();
+    }
 
     mContext.clear();
 

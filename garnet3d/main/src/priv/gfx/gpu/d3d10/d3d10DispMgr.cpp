@@ -53,7 +53,13 @@ bool GN::gfx::D3D10Gpu::dispInit()
     AutoComPtr<ID3D10InfoQueue> iq;
     if( S_OK == mDevice->QueryInterface( IID_ID3D10InfoQueue, (void**)&iq ) )
     {
-        // ignore some warnings
+        // Break into debugger on D3D errors
+		iq->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_CORRUPTION, true );
+		iq->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_ERROR, true );
+		iq->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_WARNING, false );
+		iq->SetBreakOnSeverity( D3D10_MESSAGE_SEVERITY_INFO, false );
+
+        // ignore some expected errors
         D3D10_MESSAGE_ID disabledWarnings[] =
         {
             D3D10_MESSAGE_ID_DEVICE_OMSETRENDERTARGETS_HAZARD,

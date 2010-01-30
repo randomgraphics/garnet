@@ -59,15 +59,23 @@ bool GN::gfx::D3D11Gpu::dispInit()
             &sd,
             &mSwapChain,
             &mDevice,
-            NULL,
+            NULL, // feature level
             &mDeviceContext ),
         false );
 
-    /* customize D3D11 debug output
+    mDevice->QueryInterface( IID_ID3D11Debug, (void**)&mD3D11Debug );
+
+    // customize D3D11 debug output
     AutoComPtr<ID3D11InfoQueue> iq;
     if( S_OK == mDevice->QueryInterface( IID_ID3D11InfoQueue, (void**)&iq ) )
     {
-        // ignore some warnings
+        // Break into debugger on D3D errors
+		iq->SetBreakOnSeverity( D3D11_MESSAGE_SEVERITY_CORRUPTION, true );
+		iq->SetBreakOnSeverity( D3D11_MESSAGE_SEVERITY_ERROR, true );
+		iq->SetBreakOnSeverity( D3D11_MESSAGE_SEVERITY_WARNING, false );
+		iq->SetBreakOnSeverity( D3D11_MESSAGE_SEVERITY_INFO, false );
+
+        // ignore some expected errors
         D3D11_MESSAGE_ID disabledWarnings[] =
         {
             D3D11_MESSAGE_ID_DEVICE_OMSETRENDERTARGETS_HAZARD,
@@ -78,7 +86,7 @@ bool GN::gfx::D3D11Gpu::dispInit()
         filter.DenyList.NumIDs  = GN_ARRAY_COUNT( disabledWarnings );
         filter.DenyList.pIDList = disabledWarnings;
         iq->AddStorageFilterEntries( &filter );
-    }*/
+    }
 
     // success
     return true;
@@ -99,6 +107,8 @@ void GN::gfx::D3D11Gpu::dispQuit()
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
 
+    safeRelease( mD3D11Debug );
+    safeRelease( mDeviceContext );
     safeRelease( mSwapChain );
     safeRelease( mDevice );
     safeRelease( mAdapter );

@@ -178,6 +178,18 @@ void GN::gfx::D3D11Texture::updateMipmap(
     }
     else
     {
+        const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
+
+        // area must be aligned to texel blocks
+        if( 0 != (clippedArea.x % fmtdesc.blockWidth) ||
+            0 != (clippedArea.y % fmtdesc.blockHeight) )
+        {
+            GN_ERROR(sLogger)( "For block-compressed texture, \"area\" parameter must be aligned to texel block boundary." );
+            return;
+        }
+        clippedArea.w = math::align( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::align( clippedArea.h, fmtdesc.blockHeight );
+
         D3D11_BOX box =
         {
             clippedArea.x,
@@ -187,8 +199,6 @@ void GN::gfx::D3D11Texture::updateMipmap(
             clippedArea.y + clippedArea.h,
             clippedArea.z + clippedArea.d,
         };
-
-        const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
 
         getDeviceContextRef().UpdateSubresource(
             mTexture,

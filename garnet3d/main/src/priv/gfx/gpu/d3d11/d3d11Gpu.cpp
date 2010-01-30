@@ -54,11 +54,11 @@ bool GN::gfx::D3D11Gpu::init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::D3D11Gpu, ( o ) );
 
     // init sub-components
-    if( !dispInit()        ) return failure();
-    if( !capsInit()         ) return failure();
-    if( !resourceInit()     ) return failure();
-    if( !contextInit()      ) return failure();
-    if( !drawInit()         ) return failure();
+    if( !dispInit()     ) return failure();
+    if( !capsInit()     ) return failure();
+    if( !resourceInit() ) return failure();
+    if( !contextInit()  ) return failure();
+    if( !drawInit()     ) return failure();
 
     // successful
     return success();
@@ -82,4 +82,15 @@ void GN::gfx::D3D11Gpu::quit()
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::ReportLiveDeviceObjects()
+{
+    if( NULL == mD3D11Debug ) return;
+
+    mD3D11Debug->ReportLiveDeviceObjects( D3D11_RLDO_DETAIL );
+    mD3D11Debug->ReportLiveDeviceObjects( D3D11_RLDO_SUMMARY );
 }
