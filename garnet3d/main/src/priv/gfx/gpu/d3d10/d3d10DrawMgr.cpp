@@ -95,7 +95,10 @@ class D3D10RestoreVB0AndIB
 
 public:
 
-    D3D10RestoreVB0AndIB( ID3D10Device & dev ) : mDevice( dev )
+    D3D10RestoreVB0AndIB( ID3D10Device & dev )
+        : mDevice( dev )
+        , mOldVB(0)
+        , mOldIB(0)
     {
         mDevice.IAGetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IAGetIndexBuffer( &mOldIB, &mOldFormat, &mOldIBOffset );
@@ -105,6 +108,9 @@ public:
     {
         mDevice.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
         mDevice.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
+
+        GN::safeRelease( mOldVB );
+        GN::safeRelease( mOldIB );
     }
 };
 

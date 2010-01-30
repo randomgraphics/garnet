@@ -50,7 +50,9 @@ namespace GN { namespace gfx
 
         //@{
 
+        // Get D3D11 buffer pointer (no reference couter change).
         ID3D11Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
+
         void           update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
         void           readback( std::vector<UInt8> & data );
 
