@@ -66,6 +66,19 @@ static const D3D11_COMPARISON_FUNC CMP_TO_D3D11[] =
 };
 GN_CASSERT( GN_ARRAY_COUNT(CMP_TO_D3D11) == GN::gfx::GpuContext::NUM_CMP_FUNCTIONS );
 
+static const D3D11_STENCIL_OP STENCIL_OP_TO_D3D11[] =
+{
+    D3D11_STENCIL_OP_KEEP,     // STENCIL_KEEP = 0,
+    D3D11_STENCIL_OP_ZERO,     // STENCIL_ZERO,
+    D3D11_STENCIL_OP_REPLACE,  // STENCIL_REPLACE,
+    D3D11_STENCIL_OP_INCR_SAT, // STENCIL_INC_SAT,
+    D3D11_STENCIL_OP_DECR_SAT, // STENCIL_DEC_SAT,
+    D3D11_STENCIL_OP_INVERT,   // STENCIL_INVERT,
+    D3D11_STENCIL_OP_INCR,     // STENCIL_INC,
+    D3D11_STENCIL_OP_DECR,     // STENCIL_DEC,
+};
+GN_CASSERT( GN_ARRAY_COUNT(STENCIL_OP_TO_D3D11) == GN::gfx::GpuContext::NUM_STENCIL_OPERATIONS );
+
 // *****************************************************************************
 // init/shutdown
 // *****************************************************************************
@@ -315,10 +328,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
     dsdesc.StencilEnable = newContext.rs.stencilEnabled;
     dsdesc.StencilReadMask = 0xFF;
     dsdesc.StencilWriteMask = 0xFF;
-    dsdesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-    dsdesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    dsdesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    dsdesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    dsdesc.FrontFace.StencilFunc = CMP_TO_D3D11[newContext.rs.stencilFunc];
+    dsdesc.FrontFace.StencilPassOp = STENCIL_OP_TO_D3D11[newContext.rs.stencilPassOp];
+    dsdesc.FrontFace.StencilFailOp = STENCIL_OP_TO_D3D11[newContext.rs.stencilFailOp];
+    dsdesc.FrontFace.StencilDepthFailOp = STENCIL_OP_TO_D3D11[newContext.rs.stencilZFailOp];
     dsdesc.BackFace = dsdesc.FrontFace;
     UInt32 stencilRef = 0;
     if( !mSOMgr->setDS( dsdesc, stencilRef, skipDirtyCheck ) ) return false;
@@ -327,14 +340,19 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
     D3D11_BLEND_DESC bsdesc;
     memset( &bsdesc, 0, sizeof(bsdesc) );
     bsdesc.AlphaToCoverageEnable                 = false;
-    bsdesc.IndependentBlendEnable                = false;
-    bsdesc.RenderTarget[0].BlendEnable           = newContext.rs.blendEnabled;
-    bsdesc.RenderTarget[0].SrcBlend              = BLEND_TO_D3D11[newContext.rs.blendSrc];
-    bsdesc.RenderTarget[0].DestBlend             = BLEND_TO_D3D11[newContext.rs.blendDst];
-    bsdesc.RenderTarget[0].BlendOp               = BLEND_OP_TO_D3D11[newContext.rs.blendOp];
-    bsdesc.RenderTarget[0].SrcBlendAlpha         = BLEND_TO_D3D11[newContext.rs.blendAlphaSrc];
-    bsdesc.RenderTarget[0].DestBlendAlpha        = BLEND_TO_D3D11[newContext.rs.blendAlphaDst];
-    bsdesc.RenderTarget[0].BlendOpAlpha          = BLEND_OP_TO_D3D11[newContext.rs.blendAlphaOp];
+    bsdesc.IndependentBlendEnable                = newContext.rs.independentAlphaBlending;
+    for( size_t i = 0;
+         i < (newContext.rs.independentAlphaBlending?1:GN_ARRAY_COUNT(newContext.rs.alphaBlend));
+         ++i )
+    {
+        bsdesc.RenderTarget[i].BlendEnable           = newContext.rs.alphaBlend[i].blendEnabled;
+        bsdesc.RenderTarget[i].SrcBlend              = BLEND_TO_D3D11[newContext.rs.alphaBlend[i].blendSrc];
+        bsdesc.RenderTarget[i].DestBlend             = BLEND_TO_D3D11[newContext.rs.alphaBlend[i].blendDst];
+        bsdesc.RenderTarget[i].BlendOp               = BLEND_OP_TO_D3D11[newContext.rs.alphaBlend[i].blendOp];
+        bsdesc.RenderTarget[i].SrcBlendAlpha         = BLEND_TO_D3D11[newContext.rs.alphaBlend[i].blendAlphaSrc];
+        bsdesc.RenderTarget[i].DestBlendAlpha        = BLEND_TO_D3D11[newContext.rs.alphaBlend[i].blendAlphaDst];
+        bsdesc.RenderTarget[i].BlendOpAlpha          = BLEND_OP_TO_D3D11[newContext.rs.alphaBlend[i].blendAlphaOp];
+    }
     bsdesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTarget[1].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     bsdesc.RenderTarget[2].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;

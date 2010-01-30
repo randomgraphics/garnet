@@ -20,9 +20,6 @@ TODO
   - Endian swap:
     - Swap vertex buffer endian based on vertex format
     - Swap index buffer endian based on index format.
-  - Refine render state flags:
-  	- stencil function
-  	- Independent alpha blending
 
 - p1
   - Runtime option managers that could be modified by environment varialbes and
