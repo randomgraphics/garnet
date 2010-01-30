@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
 	SConscript( 'base/SConscript' ),
+	SConscript( 'd3d/SConscript' ),
 	SConscript( 'gpu/SConscript' ),
 	SConscript( 'gpures/SConscript' ),
 	SConscript( 'misc/SConscript' )

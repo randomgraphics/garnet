@@ -6,6 +6,8 @@
 #include "d3d11Texture.h"
 #include "d3d11Buffer.h"
 
+#include "garnet/GNd3d11.h"
+
 // *****************************************************************************
 // local data and functions
 // *****************************************************************************
@@ -49,7 +51,7 @@ bool GN::gfx::D3D11Gpu::contextInit()
 {
     GN_GUARD;
 
-    /* create default sampler, then bind to D3D device
+    // create default samplers, then bind to D3D device
     D3D11_SAMPLER_DESC sd;
     GN::d3d11::constructDefaultSamplerDesc( sd );
     GN_DX_CHECK_RETURN( mDevice->CreateSamplerState( &sd, &mDefaultSampler ), false );
@@ -58,11 +60,13 @@ bool GN::gfx::D3D11Gpu::contextInit()
     {
         samplers[i] = mDefaultSampler;
     }
-    mDeviceContext->VSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
-    mDeviceContext->GSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
-    mDeviceContext->PSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_REGISTER_COUNT, samplers );
+    mDeviceContext->HSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
+    mDeviceContext->VSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
+    mDeviceContext->DSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
+    mDeviceContext->GSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
+    mDeviceContext->PSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
 
-    // create state object manager
+    /* create state object manager
     mSOMgr = new D3D11StateObjectManager( *mDevice );
     if( 0 == mSOMgr ) return false;
 

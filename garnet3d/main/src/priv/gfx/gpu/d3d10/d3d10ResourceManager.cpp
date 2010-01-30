@@ -92,9 +92,8 @@ GN::gfx::D3D10Gpu::createGpuProgram( const void * data, size_t length )
     if( GpuProgramLanguage::HLSL10 == desc.lang ||
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
-        bool hlsl9 = GpuProgramLanguage::HLSL9 == desc.lang;
         AutoRef<D3D10GpuProgram> prog( new D3D10GpuProgram(*this) );
-        if( !prog->init( desc, hlsl9 ) ) return NULL;
+        if( !prog->init( desc ) ) return NULL;
         return prog.detach();
     }
     else

@@ -56,7 +56,7 @@ sGetDepthReadingFormat( DXGI_FORMAT format )
         case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_R16_UNORM;
         default:
             GN_ERROR(sLogger)( "Format %s is not a valid typeless depth buffer format.",
-                d3d10::getDXGIFormatDesc( format ).name );
+                dxgi::getDXGIFormatDesc( format ).name );
             return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -75,7 +75,7 @@ sGetDepthWritingFormat( DXGI_FORMAT format )
         case DXGI_FORMAT_R16_TYPELESS      : return DXGI_FORMAT_D16_UNORM;
         default:
             GN_ERROR(sLogger)( "Format %s is not a valid depth buffer format.",
-                d3d10::getDXGIFormatDesc( format ).name );
+                dxgi::getDXGIFormatDesc( format ).name );
             return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -181,7 +181,7 @@ void GN::gfx::D3D10Texture::updateMipmap(
     {
         ID3D10Device & dev = getDeviceRef();
 
-        const d3d10::DXGI_FORMAT_DESCRIPTION & fmtdesc = d3d10::getDXGIFormatDesc( mTextureFormat );
+        const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
 
         // align width and heigh to texel block boundary
         clippedArea.w = math::align<UInt32>( clippedArea.w, fmtdesc.blockWidth );
@@ -516,7 +516,7 @@ bool GN::gfx::D3D10Texture::createTexture()
     {
         // special case for depth texture
 
-        mTextureFormat = d3d10::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
+        mTextureFormat = dxgi::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
         mWritingFormat = sGetDepthWritingFormat( mTextureFormat );
         if( DXGI_FORMAT_UNKNOWN == mTextureFormat ||

@@ -416,7 +416,7 @@ bool GN::d3d10::D3D10Application::createDevice()
     sd.BufferDesc.RefreshRate.Denominator = 1;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.OutputWindow = mWindow;
-    sd.SampleDesc = constructSampleDesc( *mDevice, mOption.msaa, DXGI_FORMAT_R8G8B8A8_UNORM );
+    sd.SampleDesc = constructDXGISampleDesc( *mDevice, mOption.msaa, DXGI_FORMAT_R8G8B8A8_UNORM );
     sd.Windowed = !mOption.fullscreen;
 
     // create swap chain

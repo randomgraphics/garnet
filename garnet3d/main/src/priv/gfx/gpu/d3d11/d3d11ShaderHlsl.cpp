@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d11Shader.h"
 #include "d3d11Gpu.h"
-#include "garnet/GNd3d10.h"
+#include "garnet/GNd3d11.h"
 #include <d3d11shader.h>
 
 using namespace GN;
@@ -59,7 +59,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         const char   * profile,
         ID3D10Blob  ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11VertexShader * shader;
@@ -105,7 +105,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         const char   * profile,
         ID3D10Blob  ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11GeometryShader * shader;
@@ -151,7 +151,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         const char   * profile,
         ID3D10Blob  ** signature )
     {
-        AutoComPtr<ID3D10Blob> bin( GN::d3d10::compileShader( profile, source, len, flags, entry ) );
+        AutoComPtr<ID3D10Blob> bin( GN::d3d11::compileShader( profile, source, len, flags, entry ) );
         if( !bin ) return NULL;
 
         ID3D11PixelShader * shader;
@@ -331,7 +331,7 @@ sInitTextures(
         reflection.GetResourceBindingDesc( i, &sibdesc );
 
         // ignore non-texture inputs
-        if( D3D11_SIT_TEXTURE != sibdesc.Type ) continue;
+        if( D3D10_SIT_TEXTURE != sibdesc.Type ) continue;
 
         // find uniform with same name
         D3D11TextureParameterDesc * existingTexture = paramDesc.findTexture( sibdesc.Name );
@@ -394,10 +394,11 @@ sInitShader(
 
     // get shader reflection interface
     AutoComPtr<ID3D11ShaderReflection> reflection;
-    if( FAILED( D3D11ReflectShader(
+    if( FAILED( D3DReflect(
         binary->GetBufferPointer(),
         binary->GetBufferSize(),
-        &reflection ) ) )
+        IID_ID3D11ShaderReflection,
+        (void**)&reflection ) ) )
     {
         GN_ERROR(sLogger)( "fail to get shader refelection interface" );
         return false;

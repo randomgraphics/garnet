@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <d3dx11.h>
+#include <d3dcompiler.h>
 
 extern bool gD3D11EnablePixPerf; // global variable to switch on/off PIX perf calls.
 
