@@ -195,15 +195,14 @@ sInitConstBuffers(
         cb->GetDesc( &cbdesc );
         GN_ASSERT( D3D10_CT_CBUFFER == cbdesc.Type );
 
-        ID3D10Buffer * buf;
         D3D10_BUFFER_DESC bufdesc;
         bufdesc.ByteWidth      = cbdesc.Size;
         bufdesc.Usage          = D3D10_USAGE_DYNAMIC;
         bufdesc.BindFlags      = D3D10_BIND_CONSTANT_BUFFER;
         bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
         bufdesc.MiscFlags      = 0;
-        GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &buf ), false );
-        constBufs[i] = buf;
+        GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &constBufs[i] ), false );
+
         constData[i].resize( cbdesc.Size );
     }
 

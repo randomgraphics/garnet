@@ -75,7 +75,7 @@ sSetupUserD3D11Buffer(
 ///
 class D3D11RestoreVB0AndIB
 {
-    ID3D11DeviceContext & mDevice;
+    ID3D11DeviceContext & mDevcxt;
     ID3D11Buffer        * mOldVB;
     UInt32                mOldStride;
     UInt32                mOldVBOffset;
@@ -85,16 +85,22 @@ class D3D11RestoreVB0AndIB
 
 public:
 
-    D3D11RestoreVB0AndIB( ID3D11DeviceContext & dev ) : mDevice( dev )
+    D3D11RestoreVB0AndIB( ID3D11DeviceContext & devcxt )
+        : mDevcxt( devcxt )
+        , mOldVB(0)
+        , mOldIB(0)
     {
-        mDevice.IAGetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
-        mDevice.IAGetIndexBuffer( &mOldIB, &mOldFormat, &mOldIBOffset );
+        mDevcxt.IAGetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
+        mDevcxt.IAGetIndexBuffer( &mOldIB, &mOldFormat, &mOldIBOffset );
     }
 
     ~D3D11RestoreVB0AndIB()
     {
-        mDevice.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
-        mDevice.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
+        mDevcxt.IASetVertexBuffers( 0, 1, &mOldVB, &mOldStride, &mOldVBOffset );
+        mDevcxt.IASetIndexBuffer( mOldIB, mOldFormat, mOldIBOffset );
+
+        GN::safeRelease( mOldVB );
+        GN::safeRelease( mOldIB );
     }
 };
 

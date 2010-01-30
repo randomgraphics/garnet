@@ -133,7 +133,11 @@ namespace GN { namespace gfx
     ///
     /// array of D3D11 constant buffer
     ///
-    typedef StackArray<ID3D11Buffer*,16> D3D11ConstBufferArray;
+    typedef StackArray<AutoComPtr<ID3D11Buffer>,16> D3D11ConstBufferArray;
+
+    // We'll cast this auto-ptr array to raw pointer array. So
+    // they must be the same size.
+    GN_CASSERT( sizeof(AutoComPtr<ID3D11Buffer>) == sizeof(ID3D11Buffer*) );
 
     ///
     /// array of constant buffer in system memory
@@ -263,7 +267,7 @@ namespace GN { namespace gfx
                 cxt.VSSetConstantBuffers(
                     0,
                     (UInt32)mVs.constBufs.size(),
-                    mVs.constBufs.cptr() );
+                    &mVs.constBufs[0] );
             }
 
             if( mGs.constBufs.size() )
@@ -271,7 +275,7 @@ namespace GN { namespace gfx
                 cxt.GSSetConstantBuffers(
                     0,
                     (UInt32)mGs.constBufs.size(),
-                    mGs.constBufs.cptr() );
+                    &mGs.constBufs[0] );
             }
 
             if( mPs.constBufs.size() )
@@ -279,7 +283,7 @@ namespace GN { namespace gfx
                 cxt.PSSetConstantBuffers(
                     0,
                     (UInt32)mPs.constBufs.size(),
-                    mPs.constBufs.cptr() );
+                    &mPs.constBufs[0] );
             }
         }
 
