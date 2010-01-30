@@ -1063,43 +1063,39 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     GpuResourceDatabase & db = database();
 
     // initialize effect
-    if( desc.effect.empty() )
+    if( !desc.effect.empty() )
     {
-        GN_ERROR(sLogger)( "Effect name cannot be empty." );
-        return false;
-    }
-    AutoRef<EffectResource> effect = db.findResource<EffectResource>( desc.effect );
-    if( 0 == effect )
-    {
-        effect = EffectResource::loadFromFile( db, desc.effect );
+        AutoRef<EffectResource> effect = db.findResource<EffectResource>( desc.effect );
         if( 0 == effect )
         {
-            GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
-            return false;
+            effect = EffectResource::loadFromFile( db, desc.effect );
+            if( 0 == effect )
+            {
+                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
+                return false;
+            }
         }
+        if( !setEffectResource( effect ) ) return false;
     }
-    if( !setEffectResource( effect ) ) return false;
 
     // initialize mesh
-    if( desc.mesh.empty() )
+    if( !desc.mesh.empty() )
     {
-        GN_ERROR(sLogger)( "Mesh name cannot be empty." );
-        return false;
-    }
-    AutoRef<MeshResource> mesh = db.findResource<MeshResource>( desc.mesh );
-    if( 0 == mesh )
-    {
-        mesh = MeshResource::loadFromFile( db, desc.mesh );
+        AutoRef<MeshResource> mesh = db.findResource<MeshResource>( desc.mesh );
         if( 0 == mesh )
         {
-            GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
-            return false;
+            mesh = MeshResource::loadFromFile( db, desc.mesh );
+            if( 0 == mesh )
+            {
+                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
+                return false;
+            }
         }
+        if( !setMeshResource( mesh, &desc.subset ) ) return false;
     }
-    if( !setMeshResource( mesh, &desc.subset ) ) return false;
 
     // setup textures
-    GN_ASSERT( mTextures.size() == (mEffect.resource?mEffect.resource->getNumTextures() : 0) );
+    GN_ASSERT( mTextures.size() == (mEffect.resource ? mEffect.resource->getNumTextures() : 0) );
     for( size_t i = 0; i < mTextures.size(); ++i )
     {
         TextureItem & t = mTextures[i];
@@ -1128,7 +1124,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
                 tp.parameterName.cptr(),
-                effect->name(),
+                mEffect.resource->name(),
                 modelName() );
 
             return false;
@@ -1184,7 +1180,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
                 up.parameterName.cptr(),
-                effect->name(),
+                mEffect.resource->name(),
                 modelName() );
 
             return false;
