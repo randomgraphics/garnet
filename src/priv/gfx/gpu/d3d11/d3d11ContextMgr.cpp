@@ -116,7 +116,11 @@ void GN::gfx::D3D11Gpu::contextQuit()
 {
     GN_GUARD;
 
-    mDeviceContext->ClearState();
+    if( NULL != mDeviceContext )
+    {
+        mDeviceContext->ClearState();
+        mDeviceContext->Flush();
+    }
 
     mContext.clear();
 

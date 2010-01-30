@@ -25,6 +25,8 @@ TODO
   	- Independent alpha blending
 
 - p1
+  - Runtime option managers that could be modified by environment varialbes and
+    optionally by command line arguments.
   - scene framework:
     - add light entity to SimpleWorldDesc
     - experiment with scene framework that supports ultra large world

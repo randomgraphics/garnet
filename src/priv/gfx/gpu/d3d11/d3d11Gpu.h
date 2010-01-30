@@ -93,6 +93,8 @@ namespace GN { namespace gfx
         ID3D11DeviceContext & getDeviceContextRefInlined() const { GN_ASSERT(mDeviceContext); return *mDeviceContext; }
         IDXGISwapChain      & getSwapChainRef() const { GN_ASSERT(mSwapChain); return *mSwapChain; }
 
+        void                  ReportLiveDeviceObjects();
+
     private :
 
         bool dispInit();
@@ -103,6 +105,7 @@ namespace GN { namespace gfx
             mSwapChain = 0;
             mDevice = 0;
             mDeviceContext = 0;
+            mD3D11Debug = 0;
         }
 
     private :
@@ -111,6 +114,7 @@ namespace GN { namespace gfx
         IDXGISwapChain      * mSwapChain;
         ID3D11Device        * mDevice;
         ID3D11DeviceContext * mDeviceContext;
+        ID3D11Debug         * mD3D11Debug;
 
         //@}
 

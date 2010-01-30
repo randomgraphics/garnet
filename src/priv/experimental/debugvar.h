@@ -14,7 +14,7 @@ namespace GN
     ///
     /// Unique debug varialbe ID
     ///
-    UInt32 DebugVariableId;
+    typedef UInt32 DebugVariableId;
 
     ///
     /// base class of debug variable
@@ -22,20 +22,16 @@ namespace GN
     class BasicDebugVariable
     {
         DebugVarManager & mManager;
-
-        DebugVariableId mId;
-
-        const StrA mType;
-
-        const StrA mName;
-
-        StrA       mValue;
+        DebugVariableId   mId; // unique ID of the variable
+        const StrA        mName;
+        const StrA        mType;
+        DynaArray<UInt8>  mValue;
 
     public:
 
         //@{
 
-        BasicDebugVariable( const StrA & type, const StrA & name );
+        BasicDebugVariable( size_t size, const StrA & name, const StrA & type );
 
         BasicDebugVariable( const BasicDebugVariable & );
 
@@ -45,16 +41,13 @@ namespace GN
 
         DebugVariableId getId() const { return mId; }
 
-        const StrA & getType() const { return mType; }
+        size_t       getSize() const { return mValue.size(); }
+
+        const void * getValue() const { return mValue.cptr(); }
 
         const StrA & getName() const { return mName; }
 
-        //@}
-
-        //@{
-
-        virtual void toString( StrA & ) const = 0; ///< get variable value as string
-        virtual bool fromString( StrA & ) = 0; ///< set variable value as string.
+        const StrA & getType() const { return mType; }
 
         //@}
     };
@@ -65,7 +58,7 @@ namespace GN
     template<typename T>
     class DebugVar : public BasicDebugVariable
     {
-        T mValue;
+        T & mValue;
 
     public:
 
@@ -85,6 +78,11 @@ namespace GN
 
         //@}
     };
+
+    DebugVar<bool>     b;
+    DebugVar<int>      i;
+    DebugVar<float>    f;
+    DebugVar<Vector3f> v;
 
     ///
     /// debug variable manager (singleton)

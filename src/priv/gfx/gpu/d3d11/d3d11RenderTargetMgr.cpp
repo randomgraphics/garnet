@@ -48,6 +48,7 @@ bool GN::gfx::D3D11RTMgr::init()
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
     dsvd.Format             = td.Format;
     dsvd.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvd.Flags              = 0;
     dsvd.Texture2D.MipSlice = 0;
     GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
 
