@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNd3d10.h"
 
 #if GN_MSVC
 #if GN_BUILD_DEBUG

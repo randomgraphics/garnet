@@ -1,13 +1,12 @@
-#ifndef __GN_D3D9_H__
-#define __GN_D3D9_H__
+#ifndef __GN_D3D_D3D9UTILS_H__
+#define __GN_D3D_D3D9UTILS_H__
 // *****************************************************************************
 /// \file
 /// \brief   d3d9 utils
 /// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
 
-#include "GNbase.h"
-#include "GNinput.h"
+#include "../GNinput.h"
 
 #if GN_BUILD_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
@@ -515,4 +514,4 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_D3D9_H__
+#endif // __GN_D3D_D3D9UTILS_H__
