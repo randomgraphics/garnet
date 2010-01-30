@@ -10,6 +10,22 @@
 // local data and functions
 // *****************************************************************************
 
+static const D3D11_FILL_MODE FILL_MODE_TO_D3D11[] =
+{
+    D3D11_FILL_SOLID,     // FILL_SOLID = 0,
+    D3D11_FILL_WIREFRAME, // FILL_WIREFRAME,
+    D3D11_FILL_SOLID,     // FILL_POINT,
+};
+GN_CASSERT( GN_ARRAY_COUNT(FILL_MODE_TO_D3D11) == GN::gfx::GpuContext::NUM_FILL_MODES );
+
+static const D3D11_CULL_MODE CULL_MODE_TO_D3D11[] =
+{
+    D3D11_CULL_NONE,    // CULL_NONE = 0,
+    D3D11_CULL_FRONT,   // CULL_FRONT,
+    D3D11_CULL_BACK,    // CULL_BACK,
+};
+GN_CASSERT( GN_ARRAY_COUNT(CULL_MODE_TO_D3D11) == GN::gfx::GpuContext::NUM_CULL_MODES );
+
 static const D3D11_BLEND_OP BLEND_OP_TO_D3D11[] =
 {
     D3D11_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
@@ -133,6 +149,28 @@ bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool ski
 }
 
 // *****************************************************************************
+// public methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D11Gpu::setSampler(
+    int                        shaderStage,  // 0: VS, 1: GS: 2: PS
+    int                        samplerStage, // sampler stage
+    const D3D11_SAMPLER_DESC & ssdesc,
+    bool                       skipDirtyCheck )
+{
+    switch( shaderStage )
+    {
+        case 0: mSOMgr->setVSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 1: mSOMgr->setGSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 2: mSOMgr->setPSSampler( ssdesc, samplerStage, skipDirtyCheck ); break;
+        case 3: GN_UNEXPECTED();
+    }
+}
+
+// *****************************************************************************
 // private functions
 // *****************************************************************************
 
@@ -252,15 +290,15 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
     // rasterization states
     D3D11_RASTERIZER_DESC rsdesc;
     memset( &rsdesc, 0, sizeof(rsdesc) );
-    rsdesc.FillMode              = D3D11_FILL_SOLID;
-    rsdesc.CullMode              = D3D11_CULL_BACK;
-    rsdesc.FrontCounterClockwise = true;
+    rsdesc.FillMode              = FILL_MODE_TO_D3D11[newContext.rs.fillMode];
+    rsdesc.CullMode              = CULL_MODE_TO_D3D11[newContext.rs.cullMode];
+    rsdesc.FrontCounterClockwise = GpuContext::FRONT_CCW == newContext.rs.frontFace;
     rsdesc.DepthBias             = 0;
     rsdesc.DepthBiasClamp        = 0.0f;
     rsdesc.SlopeScaledDepthBias  = 0.0f;
     rsdesc.DepthClipEnable       = false;
     rsdesc.ScissorEnable         = true;
-    rsdesc.MultisampleEnable     = true;
+    rsdesc.MultisampleEnable     = 0 != newContext.rs.msaaEnabled;
     rsdesc.AntialiasedLineEnable = false;
     if( !mSOMgr->setRS( rsdesc, skipDirtyCheck ) ) return false;
 

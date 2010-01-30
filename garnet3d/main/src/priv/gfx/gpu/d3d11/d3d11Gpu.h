@@ -202,6 +202,12 @@ namespace GN { namespace gfx
 
         virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
+        void setSampler(
+            int                        shaderStage,  // 0: VS, 1: GS: 2: PS
+            int                        samplerStage, // sampler stage
+            const D3D11_SAMPLER_DESC & ssdesc,
+            bool                       skipDirtyCheck );
+
     private :
 
         bool contextInit();
