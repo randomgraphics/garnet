@@ -17,6 +17,8 @@ bool GN::gfx::D3D11Gpu::capsInit()
     // clear all caps
     memset( &mCaps, 0, sizeof(mCaps) );
 
+    D3D_FEATURE_LEVEL feature = mDevice->GetFeatureLevel();
+
     // max texture size
     mCaps.maxTex1DSize[0] = D3D11_REQ_TEXTURE1D_U_DIMENSION;
     mCaps.maxTex1DSize[1] = D3D11_REQ_TEXTURE1D_ARRAY_AXIS_DIMENSION;
@@ -36,11 +38,29 @@ bool GN::gfx::D3D11Gpu::capsInit()
     mCaps.maxColorRenderTargets = math::getmin<UInt32>( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
-    mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
-    mCaps.gsLanguages = GpuProgramLanguage::HLSL10;
-    mCaps.psLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
+    mCaps.vsLanguages = 0;
+    mCaps.gsLanguages = 0;
+    mCaps.psLanguages = 0;
+    switch( feature )
+    {
+        case D3D_FEATURE_LEVEL_11_0:
+            mCaps.vsLanguages |= GpuProgramLanguage::HLSL11;
+            mCaps.gsLanguages |= GpuProgramLanguage::HLSL11;
+            mCaps.psLanguages |= GpuProgramLanguage::HLSL11;
+            // fallthrough
 
-    D3D_FEATURE_LEVEL feature = mDevice->GetFeatureLevel();
+        case D3D_FEATURE_LEVEL_10_1:
+        case D3D_FEATURE_LEVEL_10_0:
+            mCaps.vsLanguages |= GpuProgramLanguage::HLSL10;
+            mCaps.gsLanguages |= GpuProgramLanguage::HLSL10;
+            mCaps.psLanguages |= GpuProgramLanguage::HLSL10;
+            // fallthrough
+
+        default:
+            mCaps.vsLanguages |= GpuProgramLanguage::HLSL9;
+            mCaps.psLanguages |= GpuProgramLanguage::HLSL9;
+            break;
+    }
 
     GN_INFO(sLogger)(
         "\n\n"

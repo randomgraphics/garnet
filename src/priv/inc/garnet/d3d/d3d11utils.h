@@ -80,8 +80,8 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         size_t                           bytes );
 
     void setDumpFilePrefix( const StrA & );
-    void dumpDraw( ID3D11Device & device, UInt32 vertexCount, UInt32 startVertex );
-    void dumpDrawIndexed( ID3D11Device & device, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
+    void dumpDraw( ID3D11DeviceContext & devcxt, UInt32 vertexCount, UInt32 startVertex );
+    void dumpDrawIndexed( ID3D11DeviceContext & devcxt, UInt32 indexCount, UInt32 startIndex, UInt32 startVertex );
 
     //@}
 

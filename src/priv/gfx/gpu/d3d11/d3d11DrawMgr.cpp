@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
-//#include "d3d11RenderTargetMgr.h"
+#include "d3d11RenderTargetMgr.h"
 
 // static primitive map
 static D3D11_PRIMITIVE_TOPOLOGY sD3D11PrimMap[GN::gfx::PrimitiveType::NUM_PRIMITIVES] =
@@ -115,8 +115,8 @@ bool GN::gfx::D3D11Gpu::drawInit()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11Gpu::drawQuit()
 {
-    //safeRelease( mUserVB );
-    //safeRelease( mUserIB );
+    safeRelease( mUserVB );
+    safeRelease( mUserIB );
 }
 
 // *****************************************************************************
@@ -139,11 +139,11 @@ void GN::gfx::D3D11Gpu::clearScreen(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    /*if( CLEAR_C & flags )
+    if( CLEAR_C & flags )
     {
         for( UInt32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i )
         {
-            mDevice->ClearRenderTargetView( mRTMgr->getRenderTargetView( i ) , c );
+            mDeviceContext->ClearRenderTargetView( mRTMgr->getRenderTargetView( i ) , c );
         }
     }
 
@@ -153,8 +153,8 @@ void GN::gfx::D3D11Gpu::clearScreen(
     if( CLEAR_S ) d3dflag |= D3D11_CLEAR_STENCIL;
     if( d3dflag && dsview )
     {
-        mDevice->ClearDepthStencilView( dsview, d3dflag, z, s );
-    }*/
+        mDeviceContext->ClearDepthStencilView( dsview, d3dflag, z, s );
+    }
 }
 
 //

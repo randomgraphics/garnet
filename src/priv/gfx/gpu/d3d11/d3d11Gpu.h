@@ -8,7 +8,7 @@
 
 #include "../common/basicGpuMsw.h"
 
-#pragma warning(disable:4100)
+#pragma warning(disable:4100) // unreferenced formal parameters
 
 namespace GN { namespace gfx
 {

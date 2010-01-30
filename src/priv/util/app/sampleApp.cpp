@@ -95,19 +95,12 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
     using namespace GN;
     using namespace GN::gfx;
 
-    if( 0 == strCmpI( "auto", value ) )
-    {
-        result = GpuAPI::AUTO;
-    }
-    else if( 0 == strCmpI( "ogl", value ) )
-    {
-        result = GpuAPI::OGL;
-    }
-    else if( 0 == strCmpI( "d3d10", value ) )
-    {
-        result = GpuAPI::D3D10;
-    }
-    else
+    StrA upperCase(value);
+    upperCase.toUpper();
+
+    result = GpuAPI::sFromString( upperCase );
+
+    if( GpuAPI::INVALID == result )
     {
         GN_ERROR(sLogger)( "invalid renderer API: %s", value );
         return false;

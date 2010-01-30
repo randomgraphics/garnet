@@ -98,15 +98,16 @@ namespace GN { namespace gfx
             UInt64 u64;
             struct
             {
-                UInt64 be   :  8;
                 UInt64 a2c  :  1;
+                UInt64 ibe  :  1;
+                UInt64 be   :  8;
                 UInt64 sb   :  5;
                 UInt64 db   :  5;
                 UInt64 bo   :  3;
                 UInt64 sba  :  5;
                 UInt64 dba  :  5;
                 UInt64 boa  :  3;
-                UInt64 mask : 29;
+                UInt64 mask : 28;
             };
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
@@ -116,20 +117,21 @@ namespace GN { namespace gfx
         {
             CompactDesc cd;
 
-            cd.be = desc.BlendEnable[0];
-            cd.a2c = desc.AlphaToCoverageEnable;
-            cd.sb  = desc.SrcBlend;
-            cd.db  = desc.DestBlend;
-            cd.bo  = desc.BlendOp;
-            cd.sba = desc.SrcBlendAlpha;
-            cd.dba = desc.DestBlendAlpha;
-            cd.boa = desc.BlendOpAlpha;
-            cd.mask = desc.RenderTargetWriteMask[0];
+            cd.a2c  = desc.AlphaToCoverageEnable;
+            cd.ibe  = desc.IndependentBlendEnable;
+            cd.be   = desc.RenderTarget[0].BlendEnable;
+            cd.sb   = desc.RenderTarget[0].SrcBlend;
+            cd.db   = desc.RenderTarget[0].DestBlend;
+            cd.bo   = desc.RenderTarget[0].BlendOp;
+            cd.sba  = desc.RenderTarget[0].SrcBlendAlpha;
+            cd.dba  = desc.RenderTarget[0].DestBlendAlpha;
+            cd.boa  = desc.RenderTarget[0].BlendOpAlpha;
+            cd.mask = desc.RenderTarget[0].RenderTargetWriteMask;
 
             for( int i = 1; i < 8; ++i )
             {
-                cd.be |= desc.BlendEnable[1] << i;
-                cd.mask += desc.RenderTargetWriteMask[i];
+                cd.be |= desc.RenderTarget[i].BlendEnable << i;
+                cd.mask += desc.RenderTarget[i].RenderTargetWriteMask;
             }
 
             return cd.u64;
@@ -243,8 +245,9 @@ namespace GN { namespace gfx
 
         //@{
 
-        D3D11StateObjectCache( ID3D11Device & dev )
+        D3D11StateObjectCache( ID3D11Device & dev, ID3D11DeviceContext & cxt )
             : mDevice( dev )
+            , mDeviceContext( cxt )
         {
             mHead = &mTail;
             mTail.prev = NULL;
@@ -268,7 +271,7 @@ namespace GN { namespace gfx
         }
 
         /// get the D3D11 device
-        ID3D11Device & dev() const { return mDevice; }
+        ID3D11DeviceContext & devcxt() const { return mDeviceContext; }
 
         /// get number of objects in cache
         size_t size() const { return mCount; }
@@ -422,22 +425,23 @@ namespace GN { namespace gfx
         // *************************************************
     private:
 
-        ID3D11Device    & mDevice;
+        ID3D11Device        & mDevice;
+        ID3D11DeviceContext & mDeviceContext;
 
         // pool
-        StateObjectItem   mPool[CACHE_SIZE]; ///< pre-allocated item pool, to avoid runtime memory allocation
-        StateObjectItem * mNextFreeItem;
+        StateObjectItem       mPool[CACHE_SIZE]; ///< pre-allocated item pool, to avoid runtime memory allocation
+        StateObjectItem     * mNextFreeItem;
 
         // hash
-        ObjectHashMap     mHashTable;
+        ObjectHashMap         mHashTable;
 
         // LRU
-        StateObjectItem   mTail; ///< the end of LRU list.
-        StateObjectItem * mHead; ///< point to the most recently used item
-        size_t            mCount;
+        StateObjectItem       mTail; ///< the end of LRU list.
+        StateObjectItem     * mHead; ///< point to the most recently used item
+        size_t                mCount;
 
         // misc.
-        Logger          * mLogger;
+        Logger              * mLogger;
 
         // *************************************************
         // private functions
@@ -528,7 +532,7 @@ namespace GN { namespace gfx
     public:
 
         /// constructor
-        D3D11StateObjectManager( ID3D11Device & dev );
+        D3D11StateObjectManager( ID3D11Device & dev, ID3D11DeviceContext & cxt );
 
         /// clear all
         void clear()
