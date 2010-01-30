@@ -1,18 +1,16 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
-//#include "d3d11RenderTargetMgr.h"
-//#include "d3d11StateObject.h"
-//#include "d3d11Shader.h"
+#include "d3d11RenderTargetMgr.h"
+#include "d3d11StateObject.h"
+#include "d3d11Shader.h"
 #include "d3d11Texture.h"
 #include "d3d11Buffer.h"
-
-#include "garnet/GNd3d11.h"
 
 // *****************************************************************************
 // local data and functions
 // *****************************************************************************
 
-/*static const D3D11_BLEND_OP BLEND_OP_TO_D3D11[] =
+static const D3D11_BLEND_OP BLEND_OP_TO_D3D11[] =
 {
     D3D11_BLEND_OP_ADD,          // BLEND_OP_ADD = 0,
     D3D11_BLEND_OP_SUBTRACT,     // BLEND_OP_SUB,
@@ -38,7 +36,19 @@ static const D3D11_BLEND BLEND_TO_D3D11[] =
     D3D11_BLEND_INV_BLEND_FACTOR, // BLEND_INV_BLEND_FACTOR,
 };
 GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D11) == GN::gfx::GpuContext::NUM_BLEND_ARGUMENTS );
-*/
+
+static const D3D11_COMPARISON_FUNC CMP_TO_D3D11[] =
+{
+    D3D11_COMPARISON_NEVER,         // CMP_NEVER = 0,
+    D3D11_COMPARISON_LESS,          // CMP_LESS,
+    D3D11_COMPARISON_LESS_EQUAL,    // CMP_LESS_EQUAL,
+    D3D11_COMPARISON_EQUAL,         // CMP_EQUAL,
+    D3D11_COMPARISON_GREATER_EQUAL, // CMP_GREATER_EQUAL,
+    D3D11_COMPARISON_GREATER,       // CMP_GREATER,
+    D3D11_COMPARISON_NOT_EQUAL,     // CMP_NOT_EQUAL,
+    D3D11_COMPARISON_ALWAYS,        // CMP_ALWAYS,
+};
+GN_CASSERT( GN_ARRAY_COUNT(CMP_TO_D3D11) == GN::gfx::GpuContext::NUM_CMP_FUNCTIONS );
 
 // *****************************************************************************
 // init/shutdown
@@ -66,13 +76,13 @@ bool GN::gfx::D3D11Gpu::contextInit()
     mDeviceContext->GSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
     mDeviceContext->PSSetSamplers( 0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT , samplers );
 
-    /* create state object manager
-    mSOMgr = new D3D11StateObjectManager( *mDevice );
+    // create state object manager
+    mSOMgr = new D3D11StateObjectManager( *mDevice, *mDeviceContext );
     if( 0 == mSOMgr ) return false;
 
     // create render target manager
     mRTMgr = new D3D11RTMgr( *this );
-    if( !mRTMgr->init() ) return false;*/
+    if( !mRTMgr->init() ) return false;
 
     // bind default context
     rebindContext();
@@ -94,8 +104,8 @@ void GN::gfx::D3D11Gpu::contextQuit()
 
     mContext.clear();
 
-    //safeDelete( mRTMgr );
-    //safeDelete( mSOMgr );
+    safeDelete( mRTMgr );
+    safeDelete( mSOMgr );
 
     mDefaultSampler.clear();
     mVertexLayouts.clear();
@@ -130,10 +140,10 @@ bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool ski
 //
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
-    const GpuContext & ,//newContext,
-    bool                    )//skipDirtyCheck )
+    const GpuContext & newContext,
+    bool               skipDirtyCheck )
 {
-    /*
+    //
     // bind render targets
     //
     bool renderTargetSizeChanged = false;
@@ -148,7 +158,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
 
     // bind viewport
     const Vector2<UInt32> & rtsize = mRTMgr->getRenderTargetSize();
-    const Rect<UInt32> & newvp = newContext.viewport;
+    const Rect<UInt32> & newvp = newContext.rs.viewport;
     D3D11_VIEWPORT d3dvp;
     d3dvp.MinDepth = 0.0f;
     d3dvp.MaxDepth = 1.0f;
@@ -156,8 +166,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
     {
         d3dvp.TopLeftX = 0;
         d3dvp.TopLeftY = 0;
-        d3dvp.Width    = rtsize.x;
-        d3dvp.Height   = rtsize.y;
+        d3dvp.Width    = (float)rtsize.x;
+        d3dvp.Height   = (float)rtsize.y;
     }
     else
     {
@@ -171,12 +181,12 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
         math::clamp<UInt32>( r, 0, rtsize.width );
         math::clamp<UInt32>( b, 0, rtsize.height );
 
-        d3dvp.TopLeftX = l;
-        d3dvp.TopLeftY = t;
-        d3dvp.Width    = r - l;
-        d3dvp.Height   = b - t;
+        d3dvp.TopLeftX = (float)l;
+        d3dvp.TopLeftY = (float)t;
+        d3dvp.Width    = (float)(r - l);
+        d3dvp.Height   = (float)(b - t);
     }
-    mDevice->RSSetViewports( 1, &d3dvp );
+    mDeviceContext->RSSetViewports( 1, &d3dvp );
 
     // update scissor (always same as viewport)
     D3D11_RECT scissor = {
@@ -185,7 +195,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
         (long)( d3dvp.TopLeftX+d3dvp.Width ),
         (long)( d3dvp.TopLeftY+d3dvp.Height ),
     };
-    mDevice->RSSetScissorRects( 1, &scissor );*/
+    mDeviceContext->RSSetScissorRects( 1, &scissor );
 
     return true;
 }
@@ -194,10 +204,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
 //
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D11Gpu::bindContextShader(
-    const GpuContext & ,//newContext,
-    bool                    )//skipDirtyCheck )
+    const GpuContext & newContext,
+    bool               skipDirtyCheck )
 {
-    /*
+    //
     // bind shaders
     //
     if( newContext.gpuProgram )
@@ -220,14 +230,14 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
-        mDevice->VSSetShader( NULL );
-        mDevice->GSSetShader( NULL );
-        mDevice->PSSetShader( NULL );
+        mDeviceContext->VSSetShader( NULL, NULL, 0 );
+        mDeviceContext->GSSetShader( NULL, NULL, 0 );
+        mDeviceContext->PSSetShader( NULL, NULL, 0 );
     }
     else
     {
         // Both old and new program are NULL. Do nothing
-    }*/
+    }
 
     return true;
 }
@@ -236,10 +246,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
 //
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D11Gpu::bindContextState(
-    const GpuContext & ,//newContext,
-    bool                    )//skipDirtyCheck )
+    const GpuContext & newContext,
+    bool               skipDirtyCheck )
 {
-    /* rasterization states
+    // rasterization states
     D3D11_RASTERIZER_DESC rsdesc;
     memset( &rsdesc, 0, sizeof(rsdesc) );
     rsdesc.FillMode              = D3D11_FILL_SOLID;
@@ -257,10 +267,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
     // depth stencil states
     D3D11_DEPTH_STENCIL_DESC dsdesc;
     memset( &dsdesc, 0, sizeof(dsdesc) );
-    dsdesc.DepthEnable = newContext.depthTest;
-    dsdesc.DepthWriteMask = newContext.depthWrite ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-    dsdesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-    dsdesc.StencilEnable = newContext.stencilEnabled;
+    dsdesc.DepthEnable = newContext.rs.depthTestEnabled;
+    dsdesc.DepthWriteMask = newContext.rs.depthWriteEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+    dsdesc.DepthFunc = CMP_TO_D3D11[newContext.rs.depthFunc];
+    dsdesc.StencilEnable = newContext.rs.stencilEnabled;
     dsdesc.StencilReadMask = 0xFF;
     dsdesc.StencilWriteMask = 0xFF;
     dsdesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
@@ -274,33 +284,27 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
     // blend states
     D3D11_BLEND_DESC bsdesc;
     memset( &bsdesc, 0, sizeof(bsdesc) );
-    bsdesc.AlphaToCoverageEnable    = false;
-    bsdesc.BlendEnable[0]           =
-    bsdesc.BlendEnable[1]           =
-    bsdesc.BlendEnable[2]           =
-    bsdesc.BlendEnable[3]           =
-    bsdesc.BlendEnable[4]           =
-    bsdesc.BlendEnable[5]           =
-    bsdesc.BlendEnable[6]           =
-    bsdesc.BlendEnable[7]           = newContext.blendEnabled;
-    bsdesc.SrcBlend                 = BLEND_TO_D3D11[newContext.blendSrc];
-    bsdesc.DestBlend                = BLEND_TO_D3D11[newContext.blendDst];
-    bsdesc.BlendOp                  = BLEND_OP_TO_D3D11[newContext.blendOp];
-    bsdesc.SrcBlendAlpha            = BLEND_TO_D3D11[newContext.blendAlphaSrc];
-    bsdesc.DestBlendAlpha           = BLEND_TO_D3D11[newContext.blendAlphaDst];
-    bsdesc.BlendOpAlpha             = BLEND_OP_TO_D3D11[newContext.blendAlphaOp];
-    bsdesc.RenderTargetWriteMask[0] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[1] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[2] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[3] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[4] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[5] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[6] = D3D11_COLOR_WRITE_ENABLE_ALL;
-    bsdesc.RenderTargetWriteMask[7] = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.AlphaToCoverageEnable                 = false;
+    bsdesc.IndependentBlendEnable                = false;
+    bsdesc.RenderTarget[0].BlendEnable           = newContext.rs.blendEnabled;
+    bsdesc.RenderTarget[0].SrcBlend              = BLEND_TO_D3D11[newContext.rs.blendSrc];
+    bsdesc.RenderTarget[0].DestBlend             = BLEND_TO_D3D11[newContext.rs.blendDst];
+    bsdesc.RenderTarget[0].BlendOp               = BLEND_OP_TO_D3D11[newContext.rs.blendOp];
+    bsdesc.RenderTarget[0].SrcBlendAlpha         = BLEND_TO_D3D11[newContext.rs.blendAlphaSrc];
+    bsdesc.RenderTarget[0].DestBlendAlpha        = BLEND_TO_D3D11[newContext.rs.blendAlphaDst];
+    bsdesc.RenderTarget[0].BlendOpAlpha          = BLEND_OP_TO_D3D11[newContext.rs.blendAlphaOp];
+    bsdesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[1].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[2].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[3].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[4].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[5].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[6].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bsdesc.RenderTarget[7].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     UInt32 sampleMask = 0xFFFFFFFF;
-    if( !mSOMgr->setBS( bsdesc, newContext.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
+    if( !mSOMgr->setBS( bsdesc, newContext.rs.blendFactors, sampleMask, skipDirtyCheck ) ) return false;
 
-    // Note: input and sampler states are handled in bindContextResource()*/
+    // Note: input and sampler states are handled in bindContextResource()
 
     return true;
 }
@@ -309,10 +313,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextState(
 //
 // -----------------------------------------------------------------------------
 inline bool GN::gfx::D3D11Gpu::bindContextResource(
-    const GpuContext & ,//newContext,
-    bool                    )//skipDirtyCheck )
+    const GpuContext & newContext,
+    bool               skipDirtyCheck )
 {
-    /*
+    //
     // bind vertex format
     //
     D3D11VertexLayout * layout;
@@ -320,7 +324,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     {
         if( 0 == newContext.vtxfmt.numElements )
         {
-            mDevice->IASetInputLayout( NULL );
+            mDeviceContext->IASetInputLayout( NULL );
             layout = NULL;
         }
         else
@@ -332,7 +336,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
                 if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
             }
 
-            mDevice->IASetInputLayout( layout->il );
+            mDeviceContext->IASetInputLayout( layout->il );
         }
     }
     else
@@ -356,7 +360,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
-        mDevice->IASetVertexBuffers( 0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
+        mDeviceContext->IASetVertexBuffers( 0, GpuContext::MAX_VERTEX_BUFFERS, buf, strides, offsets );
     }
 
     //
@@ -370,16 +374,16 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
 
             const IdxBufDesc & ibdesc = ib->getDesc();
 
-            mDevice->IASetIndexBuffer(
+            mDeviceContext->IASetIndexBuffer(
                 ib->getD3DBuffer(),
                 ibdesc.bits32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT,
                 0 );
         }
         else
         {
-            mDevice->IASetIndexBuffer( NULL, DXGI_FORMAT_R16_UINT, 0 );
+            mDeviceContext->IASetIndexBuffer( NULL, DXGI_FORMAT_R16_UINT, 0 );
         }
-    }*/
+    }
 
     return true;
 }

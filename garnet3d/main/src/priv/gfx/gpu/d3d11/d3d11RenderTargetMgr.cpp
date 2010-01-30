@@ -20,6 +20,7 @@ bool GN::gfx::D3D11RTMgr::init()
     GN_STDCLASS_INIT( GN::gfx::D3D11RTMgr, () );
 
     ID3D11Device & dev = mGpu.getDeviceRefInlined();
+    ID3D11DeviceContext & cxt = mGpu.getDeviceContextRefInlined();
 
     // create default rener target view
     AutoComPtr<ID3D11Texture2D> backBuffer;
@@ -51,7 +52,7 @@ bool GN::gfx::D3D11RTMgr::init()
     GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
 
     // bind these views to device.
-    dev.OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );
+    cxt.OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );
 
     // success
     return success();
@@ -154,8 +155,8 @@ bool GN::gfx::D3D11RTMgr::bind(
         }
     }
 
-    // bind to D3D device
-    mGpu.getDeviceRefInlined().OMSetRenderTargets(
+    // bind to D3D device context
+    mGpu.getDeviceContextRefInlined().OMSetRenderTargets(
         (UINT)GpuContext::MAX_COLOR_RENDER_TARGETS,
         mColors,
         mDepth );

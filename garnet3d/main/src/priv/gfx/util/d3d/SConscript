@@ -18,12 +18,12 @@ d3d10_sources = [
 	'd3d10ShaderUtils.cpp',
 	'd3d10SimpleMesh.cpp',
 	'd3d10StateDumper.cpp',
-	'd3d10TextureFormat.cpp',
 	'd3d10Utils.cpp',
 ]
 
 d3d11_sources = [
     'd3d11ShaderUtils.cpp',
+	'd3d11StateDumper.cpp',
     'd3d11Utils.cpp',
 ]
 

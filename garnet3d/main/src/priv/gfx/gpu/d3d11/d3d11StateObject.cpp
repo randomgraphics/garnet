@@ -8,10 +8,10 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager( ID3D11Device & dev )
-    : mRasterStates( dev )
-    , mBlendStates( dev )
-    , mDepthStates( dev )
+GN::gfx::D3D11StateObjectManager::D3D11StateObjectManager( ID3D11Device & dev, ID3D11DeviceContext & cxt )
+    : mRasterStates( dev, cxt )
+    , mBlendStates( dev, cxt )
+    , mDepthStates( dev, cxt )
 {
     /* setup default rasterization states
     mRasterDirty = false;
@@ -116,7 +116,7 @@ bool GN::gfx::D3D11StateObjectManager::setRS(
 
     if( skipDirtyCheck || stateObject != mCurrentRS )
     {
-        mRasterStates.dev().RSSetState( stateObject );
+        mRasterStates.devcxt().RSSetState( stateObject );
 
         mCurrentRS = stateObject;
     }
@@ -141,7 +141,7 @@ bool GN::gfx::D3D11StateObjectManager::setBS(
         blendFactors != mCurrentBlendFactors ||
         sampleMask != mCurrentSampleMask )
     {
-        mBlendStates.dev().OMSetBlendState( stateObject, blendFactors, sampleMask );
+        mBlendStates.devcxt().OMSetBlendState( stateObject, blendFactors, sampleMask );
 
         mCurrentBS = stateObject;
         mCurrentBlendFactors = blendFactors;
@@ -166,7 +166,7 @@ bool GN::gfx::D3D11StateObjectManager::setDS(
         stateObject != mCurrentDS ||
         stencilRef != mCurrentStencilRef )
     {
-        mDepthStates.dev().OMSetDepthStencilState( stateObject, stencilRef );
+        mDepthStates.devcxt().OMSetDepthStencilState( stateObject, stencilRef );
 
         mCurrentDS = stateObject;
         mCurrentStencilRef = stencilRef;

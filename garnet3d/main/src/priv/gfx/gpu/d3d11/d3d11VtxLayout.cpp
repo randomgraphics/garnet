@@ -90,7 +90,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
     code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
 
     // return compiled shader binary
-    return d3d10::compileShader( "vs_4_0", code.cptr(), code.size() );
+    return d3d11::compileShader( "vs_4_0", code.cptr(), code.size() );
 
     GN_UNGUARD;
 }

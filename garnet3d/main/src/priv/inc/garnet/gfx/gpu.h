@@ -59,6 +59,7 @@ namespace GN { namespace gfx
             FAKE,     ///< Fake API
             NUM_APIs, ///< Number of avaliable APIs.
             AUTO,     ///< determine rendering API automatically.
+            INVALID,  ///< Indicate invalid API.
         };
 
         /// convert enum to string
@@ -67,18 +68,48 @@ namespace GN { namespace gfx
             static const char * TABLE[] =
             {
                 "OGL",
-                "D3D9",
                 "D3D10",
+                "D3D11",
                 "XENON",
                 "FAKE",
-                "INVALID_RENDERING_API",
+                "INVALID_GPU_API",
                 "AUTO"
+                "INVALID_GPU_API"
             };
 
             const Enum & e = *this;
 
             if( 0 <= e && e <= AUTO ) return TABLE[e];
-            else return "INVALID_RENDERING_API";
+            else return "INVALID_GPU_API";
+        }
+
+        static GpuAPI sFromString( const char * s )
+        {
+            struct EnumName
+            {
+                Enum         value;
+                const char * name;
+            };
+
+            static const EnumName TABLE[] =
+            {
+                { OGL, "OGL" },
+                { D3D10, "D3D10" },
+                { D3D11, "D3D11" },
+                { XENON, "XENON" },
+                { FAKE, "FAKE" },
+                { AUTO, "AUTO" },
+            };
+
+            for( size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
+            {
+                if( 0 == strCmp( s, TABLE[i].name ) )
+                {
+                    return TABLE[i].value;
+                }
+            }
+
+            return INVALID;
         }
 
         GN_DEFINE_ENUM_CLASS_HELPERS( GpuAPI, Enum );
@@ -708,7 +739,7 @@ namespace GN { namespace gfx
             FRONT_CW,
             NUM_FRONT_FACE_MODES,
 
-            // comparison flags (4bits)
+            // comparison function (4bits)
             CMP_NEVER = 0,
             CMP_LESS,
             CMP_LESS_EQUAL,
@@ -719,7 +750,7 @@ namespace GN { namespace gfx
             CMP_ALWAYS,
             NUM_CMP_FUNCTIONS,
 
-            // stencil flags (4bits)
+            // stencil operation (4bits)
             STENCIL_KEEP = 0,
             STENCIL_ZERO,
             STENCIL_REPLACE,
@@ -775,6 +806,7 @@ namespace GN { namespace gfx
             UInt64 depthFunc         : 4;
 
             // stencil flags ( 2 bytes )
+            // TODO: stencil function
             UInt64 stencilEnabled    : 2;
             UInt64 stencilPassOp     : 4; ///< pass both stencil and Z
             UInt64 stencilFailOp     : 4; ///< fail stencil (no z test at all)

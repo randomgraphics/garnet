@@ -54,6 +54,19 @@ static const D3D10_BLEND BLEND_TO_D3D10[] =
 };
 GN_CASSERT( GN_ARRAY_COUNT(BLEND_TO_D3D10) == GN::gfx::GpuContext::NUM_BLEND_ARGUMENTS );
 
+static const D3D10_COMPARISON_FUNC CMP_TO_D3D10[] =
+{
+    D3D10_COMPARISON_NEVER,         // CMP_NEVER = 0,
+    D3D10_COMPARISON_LESS,          // CMP_LESS,
+    D3D10_COMPARISON_LESS_EQUAL,    // CMP_LESS_EQUAL,
+    D3D10_COMPARISON_EQUAL,         // CMP_EQUAL,
+    D3D10_COMPARISON_GREATER_EQUAL, // CMP_GREATER_EQUAL,
+    D3D10_COMPARISON_GREATER,       // CMP_GREATER,
+    D3D10_COMPARISON_NOT_EQUAL,     // CMP_NOT_EQUAL,
+    D3D10_COMPARISON_ALWAYS,        // CMP_ALWAYS,
+};
+GN_CASSERT( GN_ARRAY_COUNT(CMP_TO_D3D10) == GN::gfx::GpuContext::NUM_CMP_FUNCTIONS );
+
 // *****************************************************************************
 // init/shutdown
 // *****************************************************************************
@@ -301,7 +314,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextState(
     memset( &dsdesc, 0, sizeof(dsdesc) );
     dsdesc.DepthEnable = newContext.rs.depthTestEnabled;
     dsdesc.DepthWriteMask = newContext.rs.depthWriteEnabled ? D3D10_DEPTH_WRITE_MASK_ALL : D3D10_DEPTH_WRITE_MASK_ZERO;
-    dsdesc.DepthFunc = D3D10_COMPARISON_LESS_EQUAL;
+    dsdesc.DepthFunc = CMP_TO_D3D10[newContext.rs.depthFunc];
     dsdesc.StencilEnable = newContext.rs.stencilEnabled;
     dsdesc.StencilReadMask = 0xFF;
     dsdesc.StencilWriteMask = 0xFF;
