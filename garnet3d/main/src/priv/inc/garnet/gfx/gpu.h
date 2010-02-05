@@ -788,17 +788,38 @@ namespace GN { namespace gfx
         };
 
         /// Alpha blend flags for one color render target
-        struct RenderTargetAlphaBlend
+        union RenderTargetAlphaBlend
         {
-            UInt8 blendSrc          : 4;
-            UInt8 blendDst          : 4;
-            UInt8 blendAlphaSrc     : 4;
-            UInt8 blendAlphaDst     : 4;
-            UInt8 blendOp           : 3;
-            UInt8 blendAlphaOp      : 3;
-            UInt8 blendEnabled      : 2;
+            struct
+            {
+                UInt8 blendSrc          : 4;
+                UInt8 blendDst          : 4;
+                UInt8 blendAlphaSrc     : 4;
+                UInt8 blendAlphaDst     : 4;
+                UInt8 blendOp           : 3;
+                UInt8 blendAlphaOp      : 3;
+                UInt8 blendEnabled      : 2;
+                UInt8 _reserved         : 8;
+            };
+
+            UInt32 u32;
+
+            bool operator==( const RenderTargetAlphaBlend & rhs ) const
+            {
+                return u32 == rhs.u32;
+            }
+
+            bool operator!=( const RenderTargetAlphaBlend & rhs ) const
+            {
+                return u32 != rhs.u32;
+            }
+
+            bool operator<( const RenderTargetAlphaBlend & rhs ) const
+            {
+                return u32 < rhs.u32;
+            }
         };
-        GN_CASSERT( sizeof(RenderTargetAlphaBlend) == 3 );
+        GN_CASSERT( sizeof(RenderTargetAlphaBlend) == sizeof(UInt32) );
 
         /// Render state bit flags
         //@{
@@ -896,6 +917,7 @@ namespace GN { namespace gfx
                 independentAlphaBlending = false;
                 for( int i = 0; i < MAX_COLOR_RENDER_TARGETS; ++i )
                 {
+                    alphaBlend[i].u32 = 0;
                     alphaBlend[i].blendEnabled = false;
                     alphaBlend[i].blendSrc = BLEND_SRC_ALPHA;
                     alphaBlend[i].blendDst = BLEND_INV_SRC_ALPHA;

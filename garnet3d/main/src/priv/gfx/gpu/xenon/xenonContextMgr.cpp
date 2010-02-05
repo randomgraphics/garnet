@@ -43,11 +43,11 @@ void GN::gfx::XenonGpu::contextQuit()
 {
     GN_GUARD;
 
-    // reset context
-    mContext.clear();
-    bindContextImpl( mContext, true );
+    // Reset context.
+    GpuContext emptyContext;
+    bindContext( emptyContext );
 
-    // delete all vertex formats
+    // Delete all vertex formats
     mVertexFormats.clear();
 
     //safeDelete( mRTMgr );
@@ -289,16 +289,16 @@ GN::gfx::XenonGpu::bindContextRenderStates(
     // stencil
 
     // blend
-    if( skipDirtyCheck || newContext.rs.blendingFlags != mContext.rs.blendingFlags )
+    if( skipDirtyCheck || newContext.rs.alphaBlend[0] != mContext.rs.alphaBlend[0] )
     {
-        mDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, newContext.rs.blendEnabled );
+        mDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, newContext.rs.alphaBlend[0].blendEnabled);
         mDevice->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, true );
-        mDevice->SetRenderState( D3DRS_BLENDOP, BLEND_OP_TO_D3D[newContext.rs.blendOp] );
-        mDevice->SetRenderState( D3DRS_SRCBLEND, BLEND_ARG_TO_D3D[newContext.rs.blendSrc] );
-        mDevice->SetRenderState( D3DRS_DESTBLEND, BLEND_ARG_TO_D3D[newContext.rs.blendDst] );
-        mDevice->SetRenderState( D3DRS_BLENDOPALPHA, BLEND_OP_TO_D3D[newContext.rs.blendAlphaOp] );
-        mDevice->SetRenderState( D3DRS_SRCBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.blendAlphaSrc] );
-        mDevice->SetRenderState( D3DRS_DESTBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.blendAlphaDst] );
+        mDevice->SetRenderState( D3DRS_BLENDOP, BLEND_OP_TO_D3D[newContext.rs.alphaBlend[0].blendOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLEND, BLEND_ARG_TO_D3D[newContext.rs.alphaBlend[0].blendSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLEND, BLEND_ARG_TO_D3D[newContext.rs.alphaBlend[0].blendDst] );
+        mDevice->SetRenderState( D3DRS_BLENDOPALPHA, BLEND_OP_TO_D3D[newContext.rs.alphaBlend[0].blendAlphaOp] );
+        mDevice->SetRenderState( D3DRS_SRCBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.alphaBlend[0].blendAlphaSrc] );
+        mDevice->SetRenderState( D3DRS_DESTBLENDALPHA, BLEND_ARG_TO_D3D[newContext.rs.alphaBlend[0].blendAlphaDst] );
     }
     if( skipDirtyCheck || newContext.rs.blendFactors != mContext.rs.blendFactors )
     {
@@ -335,20 +335,17 @@ GN::gfx::XenonGpu::bindContextShaders(
         prog->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
         prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
     }
-    else
+    else if( skipDirtyCheck || mContext.gpuProgram )
     {
-        if( skipDirtyCheck || mContext.gpuProgram )
-        {
-            // re-apply shader pointer to NULL, only when dirty check is disabled,
-            // or last GPU program is not NULL.
-            mDevice->SetVertexShader( NULL );
-            mDevice->SetPixelShader( NULL );
+        // re-apply shader pointer to NULL, only when dirty check is disabled,
+        // or last GPU program is not NULL.
+        mDevice->SetVertexShader( NULL );
+        mDevice->SetPixelShader( NULL );
 
-            // clear all textures
-            for( DWORD i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
-            {
-                mDevice->SetTexture( i, 0 );
-            }
+        // clear all textures
+        for( DWORD i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
+        {
+            mDevice->SetTexture( i, 0 );
         }
     }
 
