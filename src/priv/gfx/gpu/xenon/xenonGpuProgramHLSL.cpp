@@ -218,6 +218,9 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         count = mParamDesc.textures.count();
     }
 
+    bool usedStages[GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT];
+    memset( &usedStages, 0, sizeof(usedStages) );
+
     for( size_t i = 0; i < count; ++i )
     {
         const TextureBinding & tb = bindings[i];
@@ -230,6 +233,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         {
             UINT stage = mVsConsts->GetSamplerIndex( param.vshandle );
             dev.SetTexture( stage, d3dtex );
+            usedStages[stage] = true;
 
             if( tb.sampler != param.vssampler )
             {
@@ -242,12 +246,22 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         {
             UINT stage = mPsConsts->GetSamplerIndex( param.pshandle );
             dev.SetTexture( stage, d3dtex );
+            usedStages[stage] = true;
 
             if( tb.sampler != param.pssampler )
             {
                 sSetSampler( dev, stage, tb.sampler );
                 param.pssampler = tb.sampler;
             }
+        }
+    }
+
+    // clear unused texture stages
+    for( UINT i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
+    {
+        if( !usedStages[i] )
+        {
+            dev.SetTexture( i, NULL );
         }
     }
 }

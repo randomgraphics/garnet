@@ -306,10 +306,18 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
         {
             size_t s = y * fbm.width + x;
             size_t d = ( y * slot.w + x ) * 4;
+
+            #if GN_BIG_ENDIAN
+            tmpbuf[d+0] = fbm.buffer[s];
+            tmpbuf[d+1] = 0xFF;
+            tmpbuf[d+2] = 0xFF;
+            tmpbuf[d+3] = 0xFF;
+            #else
             tmpbuf[d+0] = 0xFF;
             tmpbuf[d+1] = 0xFF;
             tmpbuf[d+2] = 0xFF;
             tmpbuf[d+3] = fbm.buffer[s];
+            #endif
         }
     }
 
