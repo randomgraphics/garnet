@@ -118,7 +118,7 @@ namespace GN { namespace gfx
             case GpuAPI::D3D11 : return GNgfxCreateD3D11Gpu( ro );
             case GpuAPI::XENON : return GNgfxCreateXenonGpu( ro );
             case GpuAPI::FAKE  : GN_UNIMPL(); return 0;
-            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
+            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.ToRawEnum() ); return 0;
         }
 #else
         const char * dllName;
@@ -130,7 +130,7 @@ namespace GN { namespace gfx
             case GpuAPI::D3D11 : dllName = "GNgpuD3D11"; break;
             case GpuAPI::XENON : dllName = "GNgpuXenon"; break;
             case GpuAPI::FAKE  : GN_UNIMPL(); return 0;
-            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
+            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.ToRawEnum() ); return 0;
         }
         AutoObjPtr<SharedLib> dll( new SharedLib );
         if( !dll->load( dllName ) ) return 0;

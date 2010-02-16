@@ -198,7 +198,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
+                SwapEndian8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
                 xpr.vbDescs.append( vbdesc );
                 break;
             }
@@ -211,7 +211,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
+                SwapEndian8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
                 xpr.ibDescs.append( ibdesc );
                 break;
             }
@@ -224,7 +224,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                swap8in32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
+                SwapEndian8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
                 xpr.texDescs.append( texdesc );
                 break;
             }

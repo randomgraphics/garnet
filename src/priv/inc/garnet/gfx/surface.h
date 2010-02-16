@@ -95,7 +95,7 @@ namespace GN { namespace gfx
             if( usage < 0 && usage >= TextureUsage::NUM_USAGES )
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture usage: %d", usage.toRawEnum() );
+                GN_ERROR(sLogger)( "invalid texture usage: %d", usage.ToRawEnum() );
                 return false;
             }
 

@@ -260,7 +260,7 @@
         ENUM_CLASS() {} \
         template<typename T> \
         ENUM_CLASS( T t ) : mValue( (ENUM_TYPE)t ) {} \
-        const ENUM_TYPE & toRawEnum() const { return mValue; } \
+        const ENUM_TYPE & ToRawEnum() const { return mValue; } \
         operator const ENUM_TYPE &() const { return mValue; } \
         ENUM_CLASS & operator++() { mValue = (ENUM_TYPE)(mValue + 1); return *this; } \
         ENUM_CLASS & operator--() { mValue = (ENUM_TYPE)(mValue - 1); return *this; }

@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - coding style: capital initial for function name.
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of
       using "@")
@@ -22,23 +23,23 @@ TODO
     - Swap index buffer endian based on index format.
 
 - p1
-  - Runtime option managers that could be modified by environment varialbes and
-    optionally by command line arguments.
-  - scene framework:
+  - Runtime option managers that could be modified by:
+    - Environment variable
+    - Registry
+    - Config file
+    - Command line arguments
+  - A tweakable variable template for easy parameter tuning.
+  - Scene framework:
     - add light entity to SimpleWorldDesc
     - experiment with scene framework that supports ultra large world
       - spatial management
       - resource streaming
-  - a coordinate basis renderer (like Maya)
-  - skin mesh test case: porting DXSDK sample.
-  - support chinese in XML parser
-  - an boost style smart pointer template that do not require inheritence form
+  - A coordinate basis renderer (like Maya)
+  - A boost style smart pointer template that do not require inheritence form
     GN::RefCounter.
-  - renderer unit test framework
+  - Renderer unit test framework
   - Enable ETW in profiler
-  - D3D11 renderer
   - GPU resouce aliasing
-  - A tweakable variable template for easy parameter tuning.
 
 - p2
   - mesh classes
@@ -49,9 +50,9 @@ TODO
     - model beautifier
       - add bump map and tessellation to PS2 model if possible.
       - implement a CPU based prototype first.
-  - effect and mesh loader/exporter (from/to XML)
   - FBX loader
   - 3DS loader
+  - COLLADA loader
   - DDS viewer plugin
   	- don't write full viewer from scratch.
   	- just provide a plugin for existing picture viewers like acdsee or something.
@@ -61,7 +62,6 @@ TODO
   - memory-mapped IO.
 
 - p3
-  - XML: pointer from parent to last child, for constant time child appending.
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
@@ -70,11 +70,8 @@ TODO
     - use wxWidgets?
   - runtime call-stack dump
   - in game GUI:
-  - debug variable registry
-    - debug variable viewer and modifier
-  - COLLADA loader
   - make sure OGL resource creation/deletion do not affect renderer states
-    - depends on renderer state dumper
+    - depends on OGL renderer state dumper
 
 - p?
   - script layer
@@ -89,7 +86,7 @@ ISSUES
 ======
 
 - Could mesh be a first class parameter of GPU, like texture?
-  - RESOLVED: No, since that would make resource aliasing impossible.
+  - RESOLVED: No, since that would make resource aliasing very hard, if not impossible.
 
 - Unified interface for different APIs is too difficult, and maybe pointless.
   How about a higher level abstraction: material/effect system?

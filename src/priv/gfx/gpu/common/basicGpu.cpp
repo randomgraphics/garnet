@@ -34,7 +34,7 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
         }
         else
         {
-            GN_ERROR(sLogger)( "Invalid API: %d", o.api.toRawEnum() );
+            GN_ERROR(sLogger)( "Invalid API: %d", o.api.ToRawEnum() );
         }
 
         return failure();
