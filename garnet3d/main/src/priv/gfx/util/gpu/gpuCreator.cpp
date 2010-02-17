@@ -5,7 +5,7 @@
 // local functions
 // *************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu");
 
 ///
 /// Function type to create renderer.

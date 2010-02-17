@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshConverter");
 
 static const char * outputFile = "app::boxes.scene.xml";
 

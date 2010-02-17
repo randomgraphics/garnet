@@ -5,7 +5,7 @@
 
 std::map<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.MSW");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown

@@ -98,7 +98,7 @@ namespace GN
             T       * dst = GetRawPtr();
             const T * src = other.GetRawPtr();
 
-            size_t mincount = math::getmin<size_t>( mCount, other.mCount );
+            size_t mincount = math::GetMin<size_t>( mCount, other.mCount );
             for( size_t i = 0; i < mincount; ++i )
             {
                 dst[i] = src[i];
@@ -125,13 +125,13 @@ namespace GN
 
             if( N == mCount )
             {
-                GN_ERROR(getLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
                 return;
             }
 
             if( position > mCount )
             {
-                GN_ERROR(getLogger("GN.base.StackArray"))( "invalid insert position." );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "invalid insert position." );
                 return;
             }
 
@@ -156,7 +156,7 @@ namespace GN
         {
             if( position >= mCount )
             {
-                GN_ERROR(getLogger("GN.base.StackArray"))( "Invalid erase position" );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "Invalid erase position" );
                 return;
             }
 
@@ -180,7 +180,7 @@ namespace GN
 
             if( count > N )
             {
-                GN_ERROR(getLogger("GN.base.StackArray"))("count is too large!");
+                GN_ERROR(GetLogger("GN.base.StackArray"))("count is too large!");
                 return;
             }
 
@@ -306,7 +306,7 @@ namespace GN
 
             if( 0 == p )
             {
-                GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+                GN_ERROR(GetLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
                 return;
             }
 
@@ -338,7 +338,7 @@ namespace GN
         {
             doReserve( other.mCount );
 
-            size_t mincount = math::getmin<size_t>( mCount, other.mCount );
+            size_t mincount = math::GetMin<size_t>( mCount, other.mCount );
 
             for( size_t i = 0; i < mincount; ++i )
             {
@@ -364,7 +364,7 @@ namespace GN
         {
             if( position > mCount )
             {
-                GN_WARN(getLogger("GN.base.DynaArray"))("invalid insert position");
+                GN_WARN(GetLogger("GN.base.DynaArray"))("invalid insert position");
                 return;
             }
 
@@ -382,7 +382,7 @@ namespace GN
         {
             if( position >= mCount )
             {
-                GN_ERROR(getLogger("GN.base.DynaArray"))("invalid erase position");
+                GN_ERROR(GetLogger("GN.base.DynaArray"))("invalid erase position");
                 return;
             }
 

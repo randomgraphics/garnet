@@ -2,7 +2,7 @@
 #include "mttexture.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mttexture");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mttexture");
 
 using namespace GN;
 using namespace GN::gfx;

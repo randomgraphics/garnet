@@ -96,7 +96,7 @@ namespace GN
         {
             if( MAX_ITEMS > 0 && mItemCount == MAX_ITEMS )
             {
-                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
+                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
                 return 0;
             }
 
@@ -106,13 +106,13 @@ namespace GN
                 Block * b = (Block*)HeapAlloc( sizeof(Block) );
                 if( 0 == b )
                 {
-                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
                 b->items = (Item*)HeapAlloc( sizeof(Item) * mNewBlockSize );
                 if( 0 == b )
                 {
-                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     HeapFree( b );
                     return 0;
                 }
@@ -157,13 +157,13 @@ namespace GN
             Item * i = (Item*)p;
             if( !check(p) )
             {
-                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
+                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
                 return;
             }
 
             if( 0 == mItemCount )
             {
-                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
+                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
                 return;
             }
 

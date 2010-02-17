@@ -221,7 +221,7 @@ namespace GN { namespace gfx
                     return i;
                 }
             }
-            GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
+            GN_ERROR(GetLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
                 "Invalid uniform name: %s", name?name:"<NULLPTR>" );
             return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }

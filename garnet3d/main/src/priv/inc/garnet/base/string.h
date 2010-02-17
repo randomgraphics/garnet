@@ -27,7 +27,7 @@ namespace GN
     ///
     /// Get string length.
     ///
-    /// if maxLen > 0, then return math::getmin(maxLen,realLength).
+    /// if maxLen > 0, then return math::GetMin(maxLen,realLength).
     ///
     template<typename CHAR>
     inline size_t StringLength( const CHAR * s, size_t maxLen = 0 )
@@ -1014,10 +1014,10 @@ namespace GN
             a.deallocate( ptr, count + 1 );
         }
 
-        friend Str<char> wcs2mbs( const wchar_t *, size_t );
-        friend void wcs2mbs( Str<char> &, const wchar_t *, size_t );
-        friend Str<wchar_t> mbs2wcs( const char *, size_t );
-        friend void mbs2wcs( Str<wchar_t> &, const char *, size_t );
+        friend Str<char> Wcs2Mbs( const wchar_t *, size_t );
+        friend void Wcs2Mbs( Str<char> &, const wchar_t *, size_t );
+        friend Str<wchar_t> Mbs2Wcs( const char *, size_t );
+        friend void Mbs2Wcs( Str<wchar_t> &, const char *, size_t );
     };
 
     // Implement static data member

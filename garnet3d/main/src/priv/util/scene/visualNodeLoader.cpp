@@ -6,7 +6,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::GetLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff

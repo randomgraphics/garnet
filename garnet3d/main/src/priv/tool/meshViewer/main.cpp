@@ -5,7 +5,7 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshViewer");
 
 class MyApp : public SampleApp
 {

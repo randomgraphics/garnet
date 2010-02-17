@@ -75,13 +75,13 @@ namespace GN
         {
             if( this == p )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
+                static Logger * sLogger = GetLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't set itself as parent" );
                 return false;
             }
             if( isDescendant( p ) )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
+                static Logger * sLogger = GetLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't descendant as parent" );
                 return false;
             }
@@ -98,7 +98,7 @@ namespace GN
 
             if( this == prev )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
+                static Logger * sLogger = GetLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't set itself as prev node" );
                 return false;
             }
@@ -107,7 +107,7 @@ namespace GN
 
             if( prev->mParent != parent )
             {
-                static Logger * sLogger = getLogger("GN.base.TreeNode");
+                static Logger * sLogger = GetLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "prev node belongs to another parent." );
                 return false;
             }
@@ -146,7 +146,7 @@ namespace GN
                     }
                     if( 0 == c )
                     {
-                        static Logger * sLogger = getLogger("GN.base.TreeNode");
+                        static Logger * sLogger = GetLogger("GN.base.TreeNode");
                         GN_ERROR(sLogger)( "newPrev is not direct child of newParent!" );
                         GN_UNEXPECTED();
                     }

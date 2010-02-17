@@ -9,7 +9,7 @@
 //                        local functions
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Clock");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.Clock");
 
 ///
 /// 获得计数器的主频

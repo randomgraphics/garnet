@@ -8,7 +8,7 @@ using namespace GN::gfx;
 using namespace GN::util;
 using namespace GN::d3d9;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
+static GN::Logger * sLogger = GN::GetLogger("GN.sample.thickline");
 
 static XMMATRIX ToXMMatrix( const Matrix44f & m )
 {

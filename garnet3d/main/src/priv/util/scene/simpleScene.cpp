@@ -5,7 +5,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::GetLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff
@@ -486,7 +486,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     XmlParseResult xpr;
     if( !doc.parse( xpr, file ) )
     {
-        static Logger * sLogger = getLogger( "GN.base.xml" );
+        static Logger * sLogger = GetLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
             "    line   : %d\n"

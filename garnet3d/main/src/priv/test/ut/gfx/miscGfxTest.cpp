@@ -57,18 +57,18 @@ namespace GN { namespace gfx
             size_t len = StringLength( name );
             if( 0 == len )
             {
-                GN_ERROR(getLogger("GN.gfx.GpuProgramResourceBinding"))( "Empty binding string is not allowed." );
+                GN_ERROR(GetLogger("GN.gfx.GpuProgramResourceBinding"))( "Empty binding string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(mBindingName) )
             {
-                GN_ERROR(getLogger("GN.gfx.GpuProgramResourceBinding"))(
+                GN_ERROR(GetLogger("GN.gfx.GpuProgramResourceBinding"))(
                     "GPU program parameter name (%s) is too long. Maxinum length is %d characters including ending zero.",
                     name,
                     GN_ARRAY_COUNT(mBindingName) );
             }
-            len = math::getmin<size_t>( GN_ARRAY_COUNT(mBindingName), len+1 );
+            len = math::GetMin<size_t>( GN_ARRAY_COUNT(mBindingName), len+1 );
             memcpy( mBindingName, name, len );
             mBindBy = NAME;
         }

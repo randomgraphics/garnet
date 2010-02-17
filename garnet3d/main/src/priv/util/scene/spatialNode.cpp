@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::GetLogger("GN.util");
 
 // *****************************************************************************
 // SpatialNode::Impl public methods

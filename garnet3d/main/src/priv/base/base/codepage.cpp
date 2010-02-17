@@ -3,7 +3,7 @@
 #include "codepageMSWIN.h"
 #include "codepageXenon.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -77,7 +77,7 @@ GN::CharacterEncodingConverter::~CharacterEncodingConverter()
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::CharacterEncodingConverter::convert(
+size_t GN::CharacterEncodingConverter::Convert(
     void            * destBuffer,
     size_t            destBufferSizeInBytes,
     const void      * sourceBuffer,
@@ -105,15 +105,16 @@ size_t GN::CharacterEncodingConverter::convert(
 //
 //
 // -----------------------------------------------------------------------------
-GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
+GN::CharacterEncodingConverter::Encoding GN::GetCurrentSystemEncoding()
 {
+    GN_UNIMPL();
     return CharacterEncodingConverter::ISO_8859_1;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
+void GN::Wcs2Mbs( StrA & o, const wchar_t * i, size_t l )
 {
     if ( 0 == i ) { o.Clear(); return; }
     if ( 0 == l ) l = StringLength(i);
@@ -140,10 +141,10 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
+size_t GN::Mbs2Wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
     StrW wcs;
-    mbs2wcs( wcs, i, is );
+    Mbs2Wcs( wcs, i, is );
 
     size_t n = wcs.Size() + 1;
 
@@ -175,7 +176,7 @@ size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::mbs2wcs( StrW & o, const char * i, size_t l )
+void GN::Mbs2Wcs( StrW & o, const char * i, size_t l )
 {
     if ( 0 == i ) { o.Clear(); return; }
     if ( 0 == l ) l = StringLength(i);

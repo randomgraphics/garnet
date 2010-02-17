@@ -9,7 +9,7 @@ using namespace GN::d3d10;
 /// else, render to offscreen render target, then copy to back buffer.
 ///
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D10DumpViewer");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.D3D10DumpViewer");
 
 static StrA sDumpFileName;
 

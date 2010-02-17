@@ -18,7 +18,7 @@
 #include <windows.h>
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.UT");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.UT");
 
 ///
 /// namespace of CxxTest framework
@@ -120,7 +120,7 @@ namespace CxxTest
         GN::StrA s;
     public:
         /** ctor */
-        ValueTraits( const GN::StrW & t ) : s(GN::wcs2mbs(t)) {}
+        ValueTraits( const GN::StrW & t ) : s(GN::Wcs2Mbs(t)) {}
         /** convert to string */
         const char *asString() const { return s.GetRawPtr(); }
     };
@@ -134,7 +134,7 @@ namespace CxxTest
         GN::StrA s;
     public:
         /** ctor */
-        ValueTraits( const wchar_t * t ) : s(GN::wcs2mbs(t,0)) {}
+        ValueTraits( const wchar_t * t ) : s(GN::Wcs2Mbs(t,0)) {}
         /** convert to string */
         const char *asString() const { return s.GetRawPtr(); }
     };

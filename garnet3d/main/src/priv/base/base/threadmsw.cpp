@@ -4,7 +4,7 @@
 
 #include <process.h>
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.Thread");
 
 using namespace GN;
 

@@ -8,7 +8,7 @@ using namespace GN::util;
 
 float GN::util::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+static GN::Logger * sLogger = GN::GetLogger("GN.util");
 
 // *****************************************************************************
 // command line parser
@@ -439,7 +439,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     int level;
                     if( !name.Empty() && String2SInt32( level, leveltok.GetRawPtr() ) )
                     {
-                        getLogger( name.GetRawPtr() )->setLevel( level );
+                        GetLogger( name.GetRawPtr() )->SetLevel( level );
                     }
                     else
                     {

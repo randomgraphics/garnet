@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.d3d10app");
 
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )

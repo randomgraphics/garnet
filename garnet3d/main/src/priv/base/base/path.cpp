@@ -150,7 +150,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
     b.split( base );
 
     // find the commen prefix between path and base.
-    size_t n = math::getmin( p.parts.size(), b.parts.size() );
+    size_t n = math::GetMin( p.parts.size(), b.parts.size() );
     size_t i;
     for( i = 0; i < n; ++i )
     {
@@ -281,7 +281,7 @@ void GN::fs::getCurrentDir( StrA & result )
     char buf[PATH_MAX+1];
     if( NULL == getcwd( buf, PATH_MAX ) )
     {
-        static Logger * sLogger = getLogger( "GN.base.path" );
+        static Logger * sLogger = GetLogger( "GN.base.path" );
         GN_ERROR(sLogger)( "getcwd() failed: fail to get current directory." );
         result = "";
     }

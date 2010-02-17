@@ -9,7 +9,7 @@ static const int INTERESTED_EVENTS = PointerMotionMask | ButtonMotionMask // | P
 
 static const int UNINTERESTED_EVENTS = PointerMotionHintMask;
 
-static GN::Logger * sLogger = GN::getLogger("GN.input.X11");
+static GN::Logger * sLogger = GN::GetLogger("GN.input.X11");
 
 // *****************************************************************************
 // Initialize and shutdown

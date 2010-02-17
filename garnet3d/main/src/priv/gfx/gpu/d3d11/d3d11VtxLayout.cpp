@@ -2,7 +2,7 @@
 #include "d3d11Gpu.h"
 #include "d3d11VtxLayout.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11.VtxLayout");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11.VtxLayout");
 
 // *****************************************************************************
 // local functions

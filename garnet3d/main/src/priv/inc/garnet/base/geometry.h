@@ -1575,7 +1575,7 @@ namespace GN
                 }
                 else
                 {
-                    static Logger * sLogger = getLogger("GN.base.Matrix44");
+                    static Logger * sLogger = GetLogger("GN.base.Matrix44");
                     GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
                 }
             }
@@ -2470,12 +2470,12 @@ namespace GN
                 Box a(b1), b(b2);
                 a.normalize();
                 b.normalize();
-                result.x = math::getmin( a.x, b.x );
-                result.y = math::getmin( a.y, b.y );
-                result.z = math::getmin( a.z, b.z );
-                result.w = math::getmax( a.x+a.w, b.x+b.w ) - result.x;
-                result.h = math::getmax( a.y+a.h, b.y+b.h ) - result.y;
-                result.d = math::getmax( a.z+a.d, b.z+b.d ) - result.z;
+                result.x = math::GetMin( a.x, b.x );
+                result.y = math::GetMin( a.y, b.y );
+                result.z = math::GetMin( a.z, b.z );
+                result.w = math::GetMax( a.x+a.w, b.x+b.w ) - result.x;
+                result.h = math::GetMax( a.y+a.h, b.y+b.h ) - result.y;
+                result.d = math::GetMax( a.z+a.d, b.z+b.d ) - result.z;
             }
         }
     };

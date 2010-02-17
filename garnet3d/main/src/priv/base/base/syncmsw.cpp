@@ -4,7 +4,7 @@
 
 float const GN::INFINITE_TIME = 1e38f;
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.Sync");
 
 using namespace GN;
 

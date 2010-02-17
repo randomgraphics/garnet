@@ -13,22 +13,22 @@ public:
         const char * mbs = "abc";
         wchar_t wcs[6] = { L'\0', L'\0', L'\0', L'\0', L'5', L'\0' };
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 1, mbs, 0 ), 1 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 1, mbs, 0 ), 1 );
         TS_ASSERT_EQUALS( wcs, L"" );
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 2, mbs, 0 ), 2 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 2, mbs, 0 ), 2 );
         TS_ASSERT_EQUALS( wcs, L"a" );
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 3, mbs, 0 ), 3 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 3, mbs, 0 ), 3 );
         TS_ASSERT_EQUALS( wcs, L"ab" );
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 4, mbs, 0 ), 4 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 4, mbs, 0 ), 4 );
         TS_ASSERT_EQUALS( wcs, L"abc" );
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 5, mbs, 0 ), 4 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 5, mbs, 0 ), 4 );
         TS_ASSERT_EQUALS( wcs, L"abc" );
 
-        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 5, mbs, 100 ), 4 );
+        TS_ASSERT_EQUALS( GN::Mbs2Wcs( wcs, 5, mbs, 100 ), 4 );
         TS_ASSERT_EQUALS( wcs, L"abc" );
     }
 
@@ -325,17 +325,17 @@ public:
         GN::StrA s1("abcd");
         GN::StrW s2;
 
-        s2 = GN::mbs2wcs(s1);
+        s2 = GN::Mbs2Wcs(s1);
         TS_ASSERT_EQUALS( s2, L"abcd" );
         s1 = "xyzw";
-        GN::mbs2wcs( s2, s1 );
+        GN::Mbs2Wcs( s2, s1 );
         TS_ASSERT_EQUALS( s2, L"xyzw" );
 
         s2 = L"bcda";
-        s1 = GN::wcs2mbs(s2);
+        s1 = GN::Wcs2Mbs(s2);
         TS_ASSERT_EQUALS( s1, "bcda" );
         s2 = L"wzyx";;
-        s1 = GN::wcs2mbs(s2);
+        s1 = GN::Wcs2Mbs(s2);
         TS_ASSERT_EQUALS( s1, "wzyx" );
     }
 };

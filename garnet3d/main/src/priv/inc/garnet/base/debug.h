@@ -72,12 +72,12 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
 
 ///
 /// Output a todo message.
 ///
-#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
+#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
 // *****************************************************************************
 /// \name error check macros
@@ -91,7 +91,7 @@
         GLenum err = glGetError();                                          \
         if( GL_NO_ERROR != err )                                            \
         {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.OGLError"); \
+            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.OGLError"); \
             GN_ERROR(sLogger)( "%s%s!", errDesc,                            \
                 (const char*)::gluErrorString(err) );                       \
             GN_UNEXPECTED();                                                \
@@ -124,7 +124,7 @@
         intptr_t rr = (intptr_t)(func);                                      \
         if( 0 == rr )                                                        \
         {                                                                    \
-            static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
+            static GN::Logger * sLogger = GN::GetLogger("GN.base.MSWError"); \
             GN_ERROR(sLogger)( ::GN::GetWin32LastErrorInfo() );                     \
             something                                                        \
         }                                                                    \
@@ -160,7 +160,7 @@
         HRESULT hr = func;                                                  \
         if( FAILED(hr) )                                                    \
         {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
+            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.DXError");  \
             GN_ERROR(sLogger)( GN::GetDirectXErrorInfo(hr) );                    \
             something                                                       \
         }                                                                   \
@@ -196,7 +196,7 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.XLibError"); \
+            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.XLibError"); \
             GN_ERROR(sLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 ///
 /// 根据显示模式和option设定present parameters

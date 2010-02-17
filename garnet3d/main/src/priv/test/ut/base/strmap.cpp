@@ -256,7 +256,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap finding warning: NULL text!" );
                 return iter;
             }
@@ -300,7 +300,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap insertion warning: NULL text!" );
                 if( iter ) iter->setNode( NULL );
                 return false;
@@ -349,7 +349,7 @@ namespace GN
                 *p = allocNode();
                 if( NULL == *p )
                 {
-                    static Logger * sLogger = getLogger("GN.base.StringMap");
+                    static Logger * sLogger = GetLogger("GN.base.StringMap");
                     GN_ERROR(sLogger)( "StringMap insertion warning: out of memory!" );
                     if( iter ) iter->setNode( NULL );
                     return false;
@@ -426,7 +426,7 @@ namespace GN
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = getLogger("GN.base.StringMap");
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap erasing warning: NULL text!" );
                 return;
             }

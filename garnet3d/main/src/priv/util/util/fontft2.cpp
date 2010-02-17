@@ -6,7 +6,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.FontFt2");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.FontFt2");
 
 // *****************************************************************************
 // local functions

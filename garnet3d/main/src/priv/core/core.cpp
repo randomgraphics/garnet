@@ -9,7 +9,7 @@ namespace GN
     // Global runtime assert behavior flag.
     GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
-    static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
+    static Logger * sHeapLogger = GetLogger("GN.core.heapAllocation");
 
     //
     //

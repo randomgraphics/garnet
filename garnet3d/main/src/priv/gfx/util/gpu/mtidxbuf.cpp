@@ -2,7 +2,7 @@
 #include "mtidxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtidxbuf");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtidxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown

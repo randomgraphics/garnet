@@ -67,7 +67,7 @@ class GpuTest
             return rtp;
         }
         const UInt8 * src = &md.data[srcOffset];
-        size_t copiedBytes = math::getmin( md.data.size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::GetMin( md.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;
@@ -99,7 +99,7 @@ class GpuTest
         TS_ASSERT( srcOffset < bc.data.size() );
         if( srcOffset >= bc.data.size() ) return rtp;
         const UInt8 * src = &bc.data[srcOffset];
-        size_t copiedBytes = math::getmin( bc.data.size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::GetMin( bc.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;

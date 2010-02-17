@@ -2,7 +2,7 @@
 #include "mtshader.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtshader");
 
 using namespace GN::gfx;
 
@@ -85,12 +85,12 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
 {
     if( offset >= mSize || (offset+length) > mSize )
     {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
+        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
         return;
     }
     if( NULL == data )
     {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
+        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
         return;
     }
 

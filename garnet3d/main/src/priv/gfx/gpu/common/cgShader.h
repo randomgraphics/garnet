@@ -15,7 +15,7 @@
         const char * str = cgGetLastErrorString( &error );                  \
         if( str )                                                           \
         {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");  \
+            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");  \
             GN_ERROR(sLogger)( "Cg error : %s", str );                      \
             something                                                       \
         }                                                                   \
@@ -46,7 +46,7 @@ namespace GN { namespace gfx
 
         static void sCgErrorHandler( CGcontext ctx, CGerror err, void * )
         {
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
+            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
 
             GN_ERROR(sLogger)( "Cg error: %s", cgGetErrorString(err) );
             const char * listing = cgGetLastListing(ctx);
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             mContext = cgCreateContext();
             if( !mContext )
             {
-                static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
+                static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
                 GN_FATAL(sLogger)( "Fail to create Cg context!" );
                 return false;
             }
