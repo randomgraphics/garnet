@@ -659,7 +659,7 @@ namespace GN { namespace gfx
     void func_GET_CAPS( Gpu & r, void * p, size_t )
     {
         GpuCaps ** caps = (GpuCaps**)p;
-        memcpy( *caps, &r.getCaps(), sizeof(**caps) );
+        memcpy( *caps, &r.GetCaps(), sizeof(**caps) );
     }
 
     //

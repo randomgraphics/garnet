@@ -68,7 +68,7 @@ GN::AssertFunc(
 
 #if GN_MSWIN && GN_PC
     char buf[1024];
-    strPrintf( buf, 1024,
+    StringPrintf( buf, 1024,
         "%s(%d)\n"
         "%s\n\n"
         "Break into debugger?\n"
@@ -129,7 +129,7 @@ GN::GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
     info[4095] = 0;
 
     // 除去信息末尾多余的回车符
-    size_t n = strLen(info);
+    size_t n = StringLength(info);
     while( n > 0 && '\n' != info[n-1] )
     {
         --n;

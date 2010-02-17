@@ -137,14 +137,14 @@ struct AseFile
         // read ASE file
         buf.resize( file.size() + 1 );
         size_t readen;
-        if( !file.read( buf.cptr(), file.size(), &readen ) )
+        if( !file.read( buf.GetRawPtr(), file.size(), &readen ) )
         {
             return false;
         }
         GN_ASSERT( readen <= file.size() );
         buf[readen] = 0;
 
-        str = buf.cptr();
+        str = buf.GetRawPtr();
         line = 0;
 
         // get file dir
@@ -154,9 +154,9 @@ struct AseFile
         return true;
     }
 
-    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
-    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.cptr() ); }
-    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.cptr() ); }
+    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
+    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
+    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
 
     enum ScanOptionEnum
     {
@@ -235,11 +235,11 @@ struct AseFile
                 ++str;
             }
 
-            if( expectedValue && 0 != strCmp( expectedValue, r ) )
+            if( expectedValue && 0 != StringCompare( expectedValue, r ) )
             {
                 if( !option.silence )
                 {
-                    err( strFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                    err( StringFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
                 }
                 return 0;
             }
@@ -261,11 +261,11 @@ struct AseFile
 
             if( 0 != *str ) *str = 0, ++str; // point to start of next token
 
-            if( expectedValue && 0 != strCmp( expectedValue, r ) )
+            if( expectedValue && 0 != StringCompare( expectedValue, r ) )
             {
                 if( !option.silence )
                 {
-                    err( strFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                    err( StringFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
                 }
                 return 0;
             }
@@ -279,7 +279,7 @@ struct AseFile
     ///
     bool skipUntil( const char * endtoken, ScanOption option = 0 )
     {
-        GN_ASSERT( !strEmpty( endtoken ) );
+        GN_ASSERT( !IsStringEmpty( endtoken ) );
 
         const char * token;
         int level = 0;
@@ -287,24 +287,24 @@ struct AseFile
         {
             token = next();
 
-            if( 0 == strCmp( "{", token ) ) ++level;
-            else if( 0 == strCmp( "}", token ) ) --level;
+            if( 0 == StringCompare( "{", token ) ) ++level;
+            else if( 0 == StringCompare( "}", token ) ) --level;
 
             if( IN_CURRENT_BLOCK == option.scope && level > 0 ) continue; // skip sub levels
 
             if( IN_CURRENT_AND_CHILD_BLOCKS == option.scope && level < 0 )
             {
-                if( !option.silence ) err( strFormat( "token '%s' not found inside current block!", endtoken ) );
+                if( !option.silence ) err( StringFormat( "token '%s' not found inside current block!", endtoken ) );
                 return false;
             }
 
             if( 0 == token )
             {
-                if( !option.silence ) err( strFormat( "token '%s' not found!", endtoken ) );
+                if( !option.silence ) err( StringFormat( "token '%s' not found!", endtoken ) );
                 return false;
             }
 
-            if( 0 == strCmp( endtoken, token ) ) return true;
+            if( 0 == StringCompare( endtoken, token ) ) return true;
         }
     }
 
@@ -347,7 +347,7 @@ struct AseFile
     {
         const char * token = next( 0, option );
         if( !token ) return false;
-        GN_ASSERT( !strEmpty( token ) );
+        GN_ASSERT( !IsStringEmpty( token ) );
 
         if( '*' != *token )
         {
@@ -366,7 +366,7 @@ struct AseFile
     {
         char * token = const_cast<char*>( next( 0, option ) );
         if( !token ) return false;
-        GN_ASSERT( !strEmpty( token ) );
+        GN_ASSERT( !IsStringEmpty( token ) );
 
         if( '"' != *token )
         {
@@ -420,7 +420,7 @@ struct AseFile
         }
         else
         {
-            err( strFormat( "Expect a symbol (start with [_a-zA-Z]), but met: %s", s ) );
+            err( StringFormat( "Expect a symbol (start with [_a-zA-Z]), but met: %s", s ) );
             return false;
         }
     }
@@ -432,12 +432,12 @@ struct AseFile
     {
         const char * token = next( 0, option );
 
-        if( str2Float( result, token ) ) return true;
-        else if( 0 == strCmp( "1.#QNB", token ) ) { result = 1.0f; return true; }
-        else if( 0 == strCmp( "-1.#QNB", token ) ) { result = -1.0f; return true; }
+        if( String2Float( result, token ) ) return true;
+        else if( 0 == StringCompare( "1.#QNB", token ) ) { result = 1.0f; return true; }
+        else if( 0 == StringCompare( "-1.#QNB", token ) ) { result = -1.0f; return true; }
         else
         {
-            if( !option.silence ) err( strFormat( "Not valid float : %s", token ) );
+            if( !option.silence ) err( StringFormat( "Not valid float : %s", token ) );
             return false;
         }
     }
@@ -451,9 +451,9 @@ struct AseFile
         const char * token = next( 0, option );
         if( 0 == token ) return false;
 
-        if( !str2Int<INT_TYPE>( result, token ) )
+        if( !String2Integer<INT_TYPE>( result, token ) )
         {
-            if( !option.silence ) err( strFormat( "Not valid integer : %s", token ) );
+            if( !option.silence ) err( StringFormat( "Not valid integer : %s", token ) );
             return false;
         }
 
@@ -485,9 +485,9 @@ struct AseFile
     // -----------------------------------------------------------------------------
     bool readIndexedVector3Node( const char * nodename, UInt32 index, Vector3f & result, ScanOption option = 0  )
     {
-        GN_ASSERT( !strEmpty(nodename) );
+        GN_ASSERT( !IsStringEmpty(nodename) );
         return next( nodename, option )
-            && next( strFormat( "%d", index ).cptr(), option )
+            && next( StringFormat( "%d", index ).GetRawPtr(), option )
             && readVector3( result, option );
     }
 };
@@ -505,92 +505,92 @@ static bool sReadMap( AseMap & m, AseFile & ase )
 
     while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == strCmp( token, "*MAP_NAME" ) )
+        if( 0 == StringCompare( token, "*MAP_NAME" ) )
         {
             if( !ase.readString( m.name ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MAP_CLASS" ) )
+        else if( 0 == StringCompare( token, "*MAP_CLASS" ) )
         {
             if( !ase.readString( m.class_ ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MAP_SUBNO" ) )
+        else if( 0 == StringCompare( token, "*MAP_SUBNO" ) )
         {
             if( !ase.readInt( m.subno ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MAP_AMOUNT" ) )
+        else if( 0 == StringCompare( token, "*MAP_AMOUNT" ) )
         {
             if( !ase.readFloat( m.amount ) ) return false;
         }
-        else if( 0 == strCmp( token, "*BITMAP" ) )
+        else if( 0 == StringCompare( token, "*BITMAP" ) )
         {
             if( !ase.readAndResolveRelativePath( m.bitmap ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MAP_TYPE" ) )
+        else if( 0 == StringCompare( token, "*MAP_TYPE" ) )
         {
             if( !ase.readSymbol( m.type ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_U_OFFSET" ) )
+        else if( 0 == StringCompare( token, "*UVW_U_OFFSET" ) )
         {
             if( !ase.readFloat( m.offset.u ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_V_OFFSET" ) )
+        else if( 0 == StringCompare( token, "*UVW_V_OFFSET" ) )
         {
             if( !ase.readFloat( m.offset.v ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_U_TILING" ) )
+        else if( 0 == StringCompare( token, "*UVW_U_TILING" ) )
         {
             if( !ase.readFloat( m.tiling.u ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_V_TILING" ) )
+        else if( 0 == StringCompare( token, "*UVW_V_TILING" ) )
         {
             if( !ase.readFloat( m.tiling.v ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_ANGLE" ) )
+        else if( 0 == StringCompare( token, "*UVW_ANGLE" ) )
         {
             if( !ase.readFloat( m.angle ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_BLUR" ) )
+        else if( 0 == StringCompare( token, "*UVW_BLUR" ) )
         {
             if( !ase.readFloat( m.blur ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_BLUR_OFFSET" ) )
+        else if( 0 == StringCompare( token, "*UVW_BLUR_OFFSET" ) )
         {
             if( !ase.readFloat( m.blur_offset ) ) return false;
         }
         // Note: this is 3dsmax ASE exporter bug. Should be MAP_NOISE_AMT
-        else if( 0 == strCmp( token, "*UVW_NOUSE_AMT" ) )
+        else if( 0 == StringCompare( token, "*UVW_NOUSE_AMT" ) )
         {
             if( !ase.readFloat( m.noise_amt ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_NOISE_SIZE" ) )
+        else if( 0 == StringCompare( token, "*UVW_NOISE_SIZE" ) )
         {
             if( !ase.readFloat( m.noise_size ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_NOISE_LEVEL" ) )
+        else if( 0 == StringCompare( token, "*UVW_NOISE_LEVEL" ) )
         {
             if( !ase.readInt( m.noise_level ) ) return false;
         }
-        else if( 0 == strCmp( token, "*UVW_NOISE_PHASE" ) )
+        else if( 0 == StringCompare( token, "*UVW_NOISE_PHASE" ) )
         {
             if( !ase.readFloat( m.noise_phase ) ) return false;
         }
-        else if( 0 == strCmp( token, "*BITMAP_FILTER" ) )
+        else if( 0 == StringCompare( token, "*BITMAP_FILTER" ) )
         {
             if( !ase.readSymbol( m.filter ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == strCmp( token, "}" ) )
+        else if( 0 == StringCompare( token, "}" ) )
         {
             // end of the block
             return true;
         }
         else
         {
-            ase.err( strFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
             return false;
         }
     }
@@ -614,82 +614,82 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
 
     while( 0 != ( token = ase.next() ) )
     {
-        GN_ASSERT( !strEmpty( token ) );
+        GN_ASSERT( !IsStringEmpty( token ) );
 
-        if( 0 == strCmp( token, "*MATERIAL_NAME" ) )
+        if( 0 == StringCompare( token, "*MATERIAL_NAME" ) )
         {
             if( !ase.readString( m.name ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_CLASS" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_CLASS" ) )
         {
             if( !ase.readString( m.class_ ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_AMBIENT" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_AMBIENT" ) )
         {
             if( !ase.readVector3( m.ambient ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_DIFFUSE" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_DIFFUSE" ) )
         {
             if( !ase.readVector3( m.diffuse ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_SPECULAR" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_SPECULAR" ) )
         {
             if( !ase.readVector3( m.specular ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_SHINE" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_SHINE" ) )
         {
             if( !ase.readFloat( m.shine ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_SHINESTRENGTH" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_SHINESTRENGTH" ) )
         {
             if( !ase.readFloat( m.shinestrength ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_TRANSPARENCY" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_TRANSPARENCY" ) )
         {
             if( !ase.readFloat( m.transparency ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_WIRESIZE" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_WIRESIZE" ) )
         {
             if( !ase.readFloat( m.wiresize ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_SHADING" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_SHADING" ) )
         {
             if( !ase.readSymbol( m.shading ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_XP_FALLOFF" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_XP_FALLOFF" ) )
         {
             if( !ase.readFloat( m.xp_falloff ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_SELFILLUM" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_SELFILLUM" ) )
         {
             if( !ase.readFloat( m.selfillum ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_FALLOFF" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_FALLOFF" ) )
         {
             if( !ase.readSymbol( m.falloff ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_XP_TYPE" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_XP_TYPE" ) )
         {
             if( !ase.readSymbol( m.xp_type ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MAP_", 5 ) )
+        else if( 0 == StringCompare( token, "*MAP_", 5 ) )
         {
             const char * map = token + 5;
-            if( 0 == strCmp( map, "DIFFUSE" ) )
+            if( 0 == StringCompare( map, "DIFFUSE" ) )
             {
                 if( !sReadMap( m.mapdiff, ase ) ) return false;
             }
-            else if( 0 == strCmp( map, "BUMP" ) )
+            else if( 0 == StringCompare( map, "BUMP" ) )
             {
                 if( !sReadMap( m.mapbump, ase ) ) return false;
             }
             else
             {
-                ase.verbose( strFormat( "skip unsupport map %s", token ) );
+                ase.verbose( StringFormat( "skip unsupport map %s", token ) );
                 if( !ase.skipNode() ) return false;
             }
         }
-        else if( 0 == strCmp( token, "*NUMSUBMTLS" ) )
+        else if( 0 == StringCompare( token, "*NUMSUBMTLS" ) )
         {
             UInt32 count;
             if( !ase.readInt( count ) ) return false;
@@ -699,23 +699,23 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             for( UInt32 i = 0; i < count; ++i )
             {
                 if( !ase.next( "*SUBMATERIAL" ) ) return false;
-                if( !ase.next( strFormat("%d",i).cptr() ) ) return false;
+                if( !ase.next( StringFormat("%d",i).GetRawPtr() ) ) return false;
                 if( !sReadMaterial( m.submaterials[i], ase ) ) return false;
             }
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == strCmp( token, "}" ) )
+        else if( 0 == StringCompare( token, "}" ) )
         {
             // end of the block
             return true;
         }
         else
         {
-            ase.err( strFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
             return false;
         }
     }
@@ -747,7 +747,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     for( UInt32 i = 0; i < matcount; ++i )
     {
         if( !ase.next( "*MATERIAL" ) ) return false;
-        if( !ase.next( strFormat("%d",i).cptr() ) ) return false;
+        if( !ase.next( StringFormat("%d",i).GetRawPtr() ) ) return false;
         if( !sReadMaterial( scene.materials[i], ase ) ) return false;
     }
 
@@ -801,7 +801,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         AseFace & f = m.faces[i];
         int dummy;
         if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( strFormat( "%d:", i ).cptr() ) ) return false;
+        if( !ase.next( StringFormat( "%d:", i ).GetRawPtr() ) ) return false;
         if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
         if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
         if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
@@ -843,14 +843,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         if( !ase.readBlockEnd() ) return false;
 
         // read tface list
-        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( strFormat( "%d", numface ).cptr() ) ) return false;
+        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( StringFormat( "%d", numface ).GetRawPtr() ) ) return false;
         if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
         for( UInt32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
             if( !ase.next( "*MESH_TFACE" ) ) return false;
-            if( !ase.next( strFormat( "%d", i ).cptr() ) ) return false;
+            if( !ase.next( StringFormat( "%d", i ).GetRawPtr() ) ) return false;
 
             // for each vertex in the face
             for( UInt32 i = 0; i < 3; ++i )
@@ -942,7 +942,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        else if( 0 == strCmp( "*TM_ROW0", token ) )
+        else if( 0 == StringCompare( "*TM_ROW0", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -950,7 +950,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][0] = v.y;
             n.transform[2][0] = v.z;
         }
-        else if( 0 == strCmp( "*TM_ROW1", token ) )
+        else if( 0 == StringCompare( "*TM_ROW1", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -958,7 +958,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][1] = v.y;
             n.transform[2][1] = v.z;
         }
-        else if( 0 == strCmp( "*TM_ROW2", token ) )
+        else if( 0 == StringCompare( "*TM_ROW2", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -966,7 +966,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][2] = v.y;
             n.transform[2][2] = v.z;
         }
-        else if( 0 == strCmp( "*TM_ROW3", token ) )
+        else if( 0 == StringCompare( "*TM_ROW3", token ) )
         {
             Vector3f v;
             if( !ase.readVector3( v ) ) return false;
@@ -974,28 +974,28 @@ static bool sReadNode( AseNode & n, AseFile & ase )
             n.transform[1][3] = v.y;
             n.transform[2][3] = v.z;
         }
-        else if( 0 == strCmp( "*TM_POS", token ) )
+        else if( 0 == StringCompare( "*TM_POS", token ) )
         {
             if( !ase.readVector3( n.pos ) ) return false;
         }
-        else if( 0 == strCmp( "*TM_ROTAXIS", token ) )
+        else if( 0 == StringCompare( "*TM_ROTAXIS", token ) )
         {
             if( !ase.readVector3( n.rotaxis ) ) return false;
         }
-        else if( 0 == strCmp( "*TM_ROTANGLE", token ) )
+        else if( 0 == StringCompare( "*TM_ROTANGLE", token ) )
         {
             if( !ase.readFloat( n.rotangle ) ) return false;
         }
-        else if( 0 == strCmp( "*TM_SCALE", token ) )
+        else if( 0 == StringCompare( "*TM_SCALE", token ) )
         {
             if( !ase.readVector3( n.scale ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == strCmp( token, "}" ) )
+        else if( 0 == StringCompare( token, "}" ) )
         {
             // end of the block. done.
             return true;
@@ -1026,29 +1026,29 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
     const char * token;
     while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == strCmp( token, "*NODE_NAME" ) )
+        if( 0 == StringCompare( token, "*NODE_NAME" ) )
         {
             o.node.name = ase.readString();
-            if( o.node.name.empty() )
+            if( o.node.name.Empty() )
             {
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.verbose( strFormat( "read geometry object '%s' ...", o.node.name.cptr() ) );
+            ase.verbose( StringFormat( "read geometry object '%s' ...", o.node.name.GetRawPtr() ) );
         }
-        else if( 0 == strCmp( token, "*NODE_PARENT" ) )
+        else if( 0 == StringCompare( token, "*NODE_PARENT" ) )
         {
             o.node.parent = ase.readString();
         }
-        else if( 0 == strCmp( token, "*NODE_TM" ) )
+        else if( 0 == StringCompare( token, "*NODE_TM" ) )
         {
             if( !sReadNode( o.node, ase ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MESH" ) )
+        else if( 0 == StringCompare( token, "*MESH" ) )
         {
             if( !sReadMesh( o.mesh, o.node.transform, ase ) ) return false;
         }
-        else if( 0 == strCmp( token, "*MATERIAL_REF" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_REF" ) )
         {
             if( !ase.readInt( o.matid ) ) return false;
             if( o.matid >= scene.materials.size() )
@@ -1060,10 +1060,10 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == strCmp( token, "}" ) )
+        else if( 0 == StringCompare( token, "}" ) )
         {
             // end of the block. do some post processing.
 
@@ -1071,7 +1071,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 
             if( !hasMaterial )
             {
-                ase.warn( strFormat( "object '%s' has no material. Using default one.", o.node.name.cptr() ) );
+                ase.warn( StringFormat( "object '%s' has no material. Using default one.", o.node.name.GetRawPtr() ) );
                 o.matid = 0;
             }
 
@@ -1122,7 +1122,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else
         {
-            ase.err( strFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
             return false;
         }
     }
@@ -1148,27 +1148,27 @@ static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        //else if( 0 == strCmp( token, "*SCENE" ) )
+        //else if( 0 == StringCompare( token, "*SCENE" ) )
         //{
         //    ...
         //}
-        else if( 0 == strCmp( token, "*GEOMOBJECT" ) )
+        else if( 0 == StringCompare( token, "*GEOMOBJECT" ) )
         {
             if( !sReadGeomObject( scene, ase ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
-        else if( 0 == strCmp( token, "}" ) )
+        else if( 0 == StringCompare( token, "}" ) )
         {
             // end of the block.
             return true;
         }
         else
         {
-            ase.err( strFormat( "expecting node token, but met '%s'.", token ) );
+            ase.err( StringFormat( "expecting node token, but met '%s'.", token ) );
             return false;
         }
     }
@@ -1205,31 +1205,31 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
     while( 0 != ( token = ase.next() ) )
     {
         if( 0 ) {}
-        //else if( 0 == strCmp( token, "*SCENE" ) )
+        //else if( 0 == StringCompare( token, "*SCENE" ) )
         //{
         //    ...
         //}
-        else if( 0 == strCmp( token, "*MATERIAL_LIST" ) )
+        else if( 0 == StringCompare( token, "*MATERIAL_LIST" ) )
         {
             if( !sReadMaterials( scene, ase ) ) return false;
         }
-        else if( 0 == strCmp( token, "*GROUP" ) )
+        else if( 0 == StringCompare( token, "*GROUP" ) )
         {
             if( !ase.readString() ) return false; // skip group name
             if( !sReadGroup( scene, ase ) ) return false;
         }
-        else if( 0 == strCmp( token, "*GEOMOBJECT" ) )
+        else if( 0 == StringCompare( token, "*GEOMOBJECT" ) )
         {
             if( !sReadGeomObject( scene, ase ) ) return false;
         }
         else if( '*' == *token )
         {
-            ase.verbose( strFormat( "skip node %s", token ) );
+            ase.verbose( StringFormat( "skip node %s", token ) );
             if( !ase.skipNode() ) return false;
         }
         else
         {
-            ase.err( strFormat( "expecting node token, but met '%s'.", token ) );
+            ase.err( StringFormat( "expecting node token, but met '%s'.", token ) );
             return false;
         }
     }
@@ -1245,7 +1245,7 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
 // -----------------------------------------------------------------------------
 static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & name )
 {
-    if( name.empty() ) return &scene.root;
+    if( name.Empty() ) return &scene.root;
     for( AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o )
     {
         if( name == o->node.name ) return o;
@@ -1281,7 +1281,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         if( 0 == p )
         {
             GN_ERROR(sLogger)( "Object %s has invalid parent: %s. Replace it with \"root\".",
-                o.node.name.cptr(), o.node.parent.cptr() );
+                o.node.name.GetRawPtr(), o.node.parent.GetRawPtr() );
             p = &scene.root;
         }
 
@@ -1291,8 +1291,8 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     // make sure all objects are linked into the tree.
     GN_ASSERT_EX(
         scene.root.calcChildrenCount() == scene.objects.size(),
-        strFormat( "numchildren=%d, numobjects=%d",
-            scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
+        StringFormat( "numchildren=%d, numobjects=%d",
+            scene.root.calcChildrenCount(), scene.objects.size() ).GetRawPtr() );
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
@@ -1328,9 +1328,9 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         StrA s( "    " );
 
         for( int i = 0; i < level; ++i ) s += "- ";
-        s += strFormat(
+        s += StringFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
-            n->node.name.cptr(),
+            n->node.name.GetRawPtr(),
             n->node.selfbbox.pos().x,
             n->node.selfbbox.pos().y,
             n->node.selfbbox.pos().z,
@@ -1338,7 +1338,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             n->node.selfbbox.size().y,
             n->node.selfbbox.size().z );
 
-        GN_VERBOSE(sLogger)( s.cptr() );
+        GN_VERBOSE(sLogger)( s.GetRawPtr() );
 
         // next node
         n = ttpre.next( n, &level );
@@ -1580,7 +1580,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     {
         // 32bit index buffer
         blob.attach( new SimpleBlob(sizeof(UInt32) * ib.size()) );
-        memcpy( blob->data(), ib.cptr(), blob->size() );
+        memcpy( blob->data(), ib.GetRawPtr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
         dst.meshdata.append( blob );

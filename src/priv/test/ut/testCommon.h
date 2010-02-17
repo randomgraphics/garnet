@@ -31,7 +31,7 @@ namespace CxxTest
     ///
     bool equals<const char *, const char *>( const char * x, const char * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -40,7 +40,7 @@ namespace CxxTest
     ///
     bool equals<const char *, char *>( const char * x, char * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -49,7 +49,7 @@ namespace CxxTest
     ///
     bool equals<char *, const char *>( char * x, const char * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -58,7 +58,7 @@ namespace CxxTest
     ///
     bool equals<char *, char *>( char * x, char * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -67,7 +67,7 @@ namespace CxxTest
     ///
     bool equals<const wchar_t *, const wchar_t *>( const wchar_t * x, const wchar_t * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -76,7 +76,7 @@ namespace CxxTest
     ///
     bool equals<wchar_t *, const wchar_t *>( wchar_t * x, const wchar_t * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -85,7 +85,7 @@ namespace CxxTest
     ///
     bool equals<const wchar_t *, wchar_t *>( const wchar_t * x, wchar_t * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -94,7 +94,7 @@ namespace CxxTest
     ///
     bool equals<wchar_t *, wchar_t *>( wchar_t * x, wchar_t * y )
     {
-        return 0 == ::GN::strCmp(x,y);
+        return 0 == ::GN::StringCompare(x,y);
     }
 
     ///
@@ -108,7 +108,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrA & t ) : s(t) {}
         /** convert to string */
-        const char *asString() const { return s.cptr(); }
+        const char *asString() const { return s.GetRawPtr(); }
     };
 
     ///
@@ -122,7 +122,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrW & t ) : s(GN::wcs2mbs(t)) {}
         /** convert to string */
-        const char *asString() const { return s.cptr(); }
+        const char *asString() const { return s.GetRawPtr(); }
     };
 
     ///
@@ -136,7 +136,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const wchar_t * t ) : s(GN::wcs2mbs(t,0)) {}
         /** convert to string */
-        const char *asString() const { return s.cptr(); }
+        const char *asString() const { return s.GetRawPtr(); }
     };
 }
 

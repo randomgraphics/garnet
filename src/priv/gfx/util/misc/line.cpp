@@ -62,7 +62,7 @@ bool GN::gfx::LineRenderer::init()
     GN_STDCLASS_INIT( GN::gfx::LineRenderer, () );
 
     // create GPU program
-    const GpuCaps & caps = mGpu.getCaps();
+    const GpuCaps & caps = mGpu.GetCaps();
     GpuProgramDesc gpd;
     if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
         caps.psLanguages & GpuProgramLanguage::GLSL )

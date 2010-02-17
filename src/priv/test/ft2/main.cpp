@@ -138,7 +138,7 @@ GN::StrW g_text(
     L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
     L"   glEnable(GL_BLEND);\n"
     L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" );
-const wchar_t * g_UnicodeString = g_text.cptr();
+const wchar_t * g_UnicodeString = g_text.GetRawPtr();
 
 void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 {
@@ -267,8 +267,8 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     if( argc > 3 )
     {
         font_face = argv[1];
-        font_width = GN::str2Int( argv[2], font_width );
-        font_height = GN::str2Int( argv[3], font_height );
+        font_width = GN::String2Integer( argv[2], font_width );
+        font_height = GN::String2Integer( argv[3], font_height );
     }
 
     glutInit            ( &argc, argv ); // Erm Just Write It =)

@@ -13,15 +13,15 @@
 namespace GN
 {
     /// define enumerations for string compare
-    struct StringCompare
+    struct StringCompareCase
     {
         enum ENUM
         {
-            CASE_INSENSITIVE, // case insensitive comparision
-            CASE_SENSITIVE,   // case sensitive comparision
+            INSENSITIVE, // case insensitive comparision
+            SENSITIVE,   // case sensitive comparision
         };
 
-        GN_DEFINE_ENUM_CLASS_HELPERS( StringCompare, ENUM );
+        GN_DEFINE_ENUM_CLASS_HELPERS( StringCompareCase, ENUM );
     };
 
     ///
@@ -30,7 +30,7 @@ namespace GN
     /// if maxLen > 0, then return math::getmin(maxLen,realLength).
     ///
     template<typename CHAR>
-    inline size_t strLen( const CHAR * s, size_t maxLen = 0 )
+    inline size_t StringLength( const CHAR * s, size_t maxLen = 0 )
     {
         if( 0 == s ) return 0;
         size_t l = 0;
@@ -57,7 +57,7 @@ namespace GN
     /// string comparison (case sensitive)
     ///
     template<typename CHAR>
-    inline int strCmp( const CHAR * s1, const CHAR * s2 )
+    inline int StringCompare( const CHAR * s1, const CHAR * s2 )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -78,7 +78,7 @@ namespace GN
     /// string comparison, case sensitive, with limited length
     ///
     template<typename CHAR>
-    inline int strCmp( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    inline int StringCompare( const CHAR * s1, const CHAR * s2, size_t maxLength )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -102,7 +102,7 @@ namespace GN
     /// string comparison (case insensitive)
     ///
     template<typename CHAR>
-    inline int strCmpI( const CHAR * s1, const CHAR * s2 )
+    inline int StringCompareI( const CHAR * s1, const CHAR * s2 )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -128,7 +128,7 @@ namespace GN
     /// string comparison (case insensitive), with limited length
     ///
     template<typename CHAR>
-    inline int strCmpI( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    inline int StringCompareI( const CHAR * s1, const CHAR * s2, size_t maxLength )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -157,7 +157,7 @@ namespace GN
     /// check for empty string, including NULL.
     ///
     template<typename CHAR>
-    inline bool strEmpty( const CHAR * s )
+    inline bool IsStringEmpty( const CHAR * s )
     {
         return 0 == s || 0 == s[0];
     }
@@ -167,7 +167,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    strPrintf(
+    StringPrintf(
         char *       buf,
         size_t       bufSizeInChar,
         const char * fmt,
@@ -178,7 +178,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    strPrintf(
+    StringPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
         const wchar_t * fmt,
@@ -189,7 +189,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    strVarPrintf(
+    StringVarPrintf(
         char *       buf,
         size_t       bufSizeInChar,
         const char * fmt,
@@ -199,7 +199,7 @@ namespace GN
     /// printf-like format string (wide-char)
     ///
     void
-    strVarPrintf(
+    StringVarPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
         const wchar_t * fmt,
@@ -211,7 +211,7 @@ namespace GN
     /// set to length to 0 to hash NULL terminated string.
     ///
     template<typename CHAR>
-    inline UInt64 strHash( const CHAR * s, size_t length = 0 )
+    inline UInt64 StringHash( const CHAR * s, size_t length = 0 )
     {
         unsigned long hash = 5381;
 
@@ -246,13 +246,13 @@ namespace GN
         typedef ALLOCATOR AllocatorType;
 
         CharType * mPtr;   ///< string buffer pointer.
-        size_t     mCount; ///< How many charecters in the string, not including null end.
-        size_t     mCaps;  ///< How many characters can we hold, not including null end?
+        size_t     mCount; ///< How many charecters in the string, not including null End.
+        size_t     mCaps;  ///< How many characters can we hold, not including null End?
 
     public:
 
         ///
-        /// Instance of empty string
+        /// Instance of Empty string
         ///
         static Str EMPTYSTR;
 
@@ -273,7 +273,7 @@ namespace GN
         ///
         /// copy constructor
         ///
-        Str( const Str & s ) : mCount(s.mCount), mCaps(calcCaps(s.mCount))
+        Str( const Str & s ) : mCount(s.mCount), mCaps(CalculateCaps(s.mCount))
         {
             mPtr = alloc(mCaps);
             ::memcpy( mPtr, s.mPtr, (mCount+1)*sizeof(CharType) );
@@ -293,8 +293,8 @@ namespace GN
             }
             else
             {
-                l = strLen<CharType>(s,l);
-                mCaps = calcCaps(l);
+                l = StringLength<CharType>(s,l);
+                mCaps = CalculateCaps(l);
                 mPtr = alloc(mCaps);
                 mCount = l;
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
@@ -311,47 +311,47 @@ namespace GN
         }
 
         ///
-        /// append to this string
+        /// Append to this string
         ///
-        void append( const CharType * s, size_t l = 0 )
+        void Append( const CharType * s, size_t l = 0 )
         {
             if( 0 == s ) return;
-            l = strLen<CharType>(s,l);
-            setCaps( mCount + l );
+            l = StringLength<CharType>(s,l);
+            SetCaps( mCount + l );
             ::memcpy( mPtr+mCount, s, l*sizeof(CharType) );
             mCount += l;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// append to this string
+        /// Append to this string
         ///
-        void append( const Str & s )
+        void Append( const Str & s )
         {
-            if( s.empty() ) return;
-            size_t l = s.size();
-            setCaps( mCount + l );
-            ::memcpy( mPtr+mCount, s.cptr(), l*sizeof(CharType) );
+            if( s.Empty() ) return;
+            size_t l = s.Size();
+            SetCaps( mCount + l );
+            ::memcpy( mPtr+mCount, s.GetRawPtr(), l*sizeof(CharType) );
             mCount += l;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// append to this string
+        /// Append to this string
         ///
-        void append( CharType ch )
+        void Append( CharType ch )
         {
             if( 0 == ch ) return;
-            setCaps( mCount + 1 );
+            SetCaps( mCount + 1 );
             mPtr[mCount] = ch;
             ++mCount;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// assign value to string class
+        /// Assign value to string class
         ///
-        void assign( const CharType * s, size_t l = 0 )
+        void Assign( const CharType * s, size_t l = 0 )
         {
             if( 0 == s )
             {
@@ -360,8 +360,8 @@ namespace GN
             }
             else
             {
-                l = strLen<CharType>(s,l);
-                setCaps(l);
+                l = StringLength<CharType>(s,l);
+                SetCaps(l);
                 mCount = l;
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
@@ -369,19 +369,19 @@ namespace GN
         }
 
         ///
-        /// begin iterator(1)
+        /// Begin iterator(1)
         ///
-        CharType * begin() { return mPtr; }
+        CharType * Begin() { return mPtr; }
 
         ///
-        /// begin iterator(2)
+        /// Begin iterator(2)
         ///
-        const CharType * begin() const { return mPtr; }
+        const CharType * Begin() const { return mPtr; }
 
         ///
-        /// Clear to empty string
+        /// Clear to Empty string
         ///
-        void clear()
+        void Clear()
         {
             mPtr[0] = 0;
             mCount = 0;
@@ -390,34 +390,34 @@ namespace GN
         ///
         /// return c-style const char pointer
         ///
-        const CharType * cptr() const { return mPtr; }
+        const CharType * GetRawPtr() const { return mPtr; }
 
         ///
-        /// empty string or not?
+        /// Empty string or not?
         ///
-        bool empty() const { return 0 == mCount; }
+        bool Empty() const { return 0 == mCount; }
 
         ///
-        /// begin iterator(1)
+        /// Begin iterator(1)
         ///
-        CharType * end() { return mPtr+mCount; }
+        CharType * End() { return mPtr+mCount; }
 
         ///
-        /// begin iterator(2)
+        /// Begin iterator(2)
         ///
-        const CharType * end() const { return mPtr+mCount; }
+        const CharType * End() const { return mPtr+mCount; }
 
         ///
-        /// Searches through a string for the first character that matches any elements in user specified string
+        /// Searches through a string for the GetFirst character that matches any elements in user specified string
         ///
         /// \param s
         ///     User specified search pattern
         /// \param offset, count
-        ///     Range of the search. (count==0) means to the end of input string.
+        ///     Range of the search. (count==0) means to the End of input string.
         /// \return
-        ///     Return index of the character of first occurance or NOT_FOUND.
+        ///     Return index of the character of GetFirst occurance or NOT_FOUND.
         ///
-        size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t FindFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -436,9 +436,9 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the first character that not any elements of user specifed string.
+        /// Searches through a string for the GetFirst character that not any elements of user specifed string.
         ///
-        size_t findFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t FindFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -457,10 +457,10 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the first character that matches users predication
+        /// Searches through a string for the GetFirst character that matches users predication
         ///
         template<typename PRED>
-        size_t findFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
+        size_t FindFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
         {
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
@@ -475,9 +475,9 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the last character that matches any elements in user specified string
+        /// Searches through a string for the GetLast character that matches any elements in user specified string
         ///
-        size_t findLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t FindLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -497,18 +497,13 @@ namespace GN
         }
 
         ///
-        /// get first character of the string. If string is empty, return 0.
-        ///
-        CharType first() const { return mPtr[0]; }
-
-        ///
         /// printf-like string formatting
         ///
-        const CharType * format( const CharType * fmt, ... )
+        const CharType * Format( const CharType * fmt, ... )
         {
             va_list arglist;
             va_start( arglist, fmt );
-            formatv( fmt, arglist );
+            FormatV( fmt, arglist );
             va_end( arglist );
             return mPtr;
         }
@@ -516,18 +511,18 @@ namespace GN
         ///
         /// printf-like string formatting(2)
         ///
-        const CharType * formatv( const CharType * fmt, va_list args )
+        const CharType * FormatV( const CharType * fmt, va_list args )
         {
-            if( strEmpty(fmt) )
+            if( IsStringEmpty(fmt) )
             {
-                clear();
+                Clear();
             }
             else
             {
                 CharType buf[16384];  // 16k should be enough in most cases
-                strVarPrintf( buf, 16384, fmt, args );
+                StringVarPrintf( buf, 16384, fmt, args );
                 buf[16383] = 0;
-                assign( buf );
+                Assign( buf );
             }
             return mPtr;
         }
@@ -535,26 +530,36 @@ namespace GN
         ///
         /// get string caps
         ///
-        size_t getCaps() const { return mCaps; }
+        size_t GetCaps() const { return mCaps; }
 
         ///
-        /// string hash
+        /// get GetFirst character of the string. If string is Empty, return 0.
         ///
-        UInt64 hash() const { return strHash( mPtr, mCount ); }
+        CharType GetFirst() const { return mPtr[0]; }
+
+        ///
+        /// get GetLast character of the string. If string is Empty, return 0.
+        ///
+        CharType GetLast() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
+
+        ///
+        /// string Hash
+        ///
+        UInt64 Hash() const { return StringHash( mPtr, mCount ); }
 
         ///
         /// Insert a character at specific position
         ///
-        void insert( size_t pos, CharType ch )
+        void Insert( size_t pos, CharType ch )
         {
             if( 0 == ch ) return;
             if( pos >= mCount )
             {
-                append( ch );
+                Append( ch );
             }
             else
             {
-                setCaps( mCount + 1 );
+                SetCaps( mCount + 1 );
                 for( size_t i = mCount+1; i > pos; --i )
                 {
                     mPtr[i] = mPtr[i-1];
@@ -565,14 +570,9 @@ namespace GN
         }
 
         ///
-        /// get last character of the string. If string is empty, return 0.
+        /// pop GetLast charater
         ///
-        CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
-
-        ///
-        /// pop last charater
-        ///
-        void popback()
+        void PopBack()
         {
             if( mCount > 0 )
             {
@@ -584,7 +584,7 @@ namespace GN
         ///
         /// Replace specific character with another
         ///
-        void replace( CharType from, CharType to )
+        void Replace( CharType from, CharType to )
         {
             CharType * p = mPtr;
             for( size_t i = 0; i < mCount; ++i, ++p )
@@ -594,9 +594,9 @@ namespace GN
         }
 
         ///
-        /// remove specific charactor at specific location
+        /// Remove specific charactor at specific location
         ///
-        void remove( size_t pos )
+        void Remove( size_t pos )
         {
             for( size_t i = pos; i < mCount; ++i )
             {
@@ -608,11 +608,11 @@ namespace GN
         ///
         /// set string caps
         ///
-        void setCaps( size_t newCaps )
+        void SetCaps( size_t newCaps )
         {
             if( mCaps >= newCaps ) return;
             size_t oldCaps = mCaps;
-            mCaps = calcCaps( newCaps );
+            mCaps = CalculateCaps( newCaps );
             CharType * newPtr = alloc( mCaps );
             ::memcpy( newPtr, mPtr, sizeof(CharType)*(mCount+1) );
             dealloc( mPtr, oldCaps );
@@ -622,33 +622,33 @@ namespace GN
         ///
         /// return string length in character, not including ending zero
         ///
-        size_t size() const { return mCount; }
+        size_t Size() const { return mCount; }
 
         ///
-        /// Get sub string. (0==length) means to the end of original string.
+        /// Get sub string. (0==length) means to the End of original string.
         ///
-        void subString( Str & result, size_t offset, size_t length ) const
+        void SubString( Str & result, size_t offset, size_t length ) const
         {
-            if( offset >= mCount ) { result.clear(); return; }
+            if( offset >= mCount ) { result.Clear(); return; }
             if( 0 == length ) length = mCount;
             if( offset + length > mCount ) length = mCount - offset;
-            result.assign( mPtr+offset, length );
+            result.Assign( mPtr+offset, length );
         }
 
         ///
         /// Return sub string
         ///
-        Str subString( size_t offset, size_t length ) const
+        Str SubString( size_t offset, size_t length ) const
         {
             Str ret;
-            subString( ret, offset, length );
+            SubString( ret, offset, length );
             return ret;
         }
 
         ///
         /// convert to all lower case
         ///
-        void toLower()
+        void ToLowerCase()
         {
             CHAR * p = mPtr;
             CHAR * e = mPtr + mCount;
@@ -661,7 +661,7 @@ namespace GN
         ///
         /// convert to STL string(1)
         ///
-        void toSTL( std::basic_string<CharType> & s ) const
+        void ToSTL( std::basic_string<CharType> & s ) const
         {
             s.assign( mPtr, mCount );
         }
@@ -669,7 +669,7 @@ namespace GN
         ///
         /// convert to STL string(2)
         ///
-        std::basic_string<CharType> toSTL() const
+        std::basic_string<CharType> ToSTL() const
         {
             return std::basic_string<CharType>(mPtr,mCount);
         }
@@ -677,7 +677,7 @@ namespace GN
         ///
         /// convert to all upper case
         ///
-        void toUpper()
+        void ToUpperCase()
         {
             CHAR * p = mPtr;
             CHAR * e = mPtr + mCount;
@@ -690,26 +690,26 @@ namespace GN
         ///
         /// Trim characters for both side
         ///
-        void trim( const CharType * ch, size_t len = 0 )
+        void Trim( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = strLen( ch );
-            trimRight( ch, len );
-            trimLeft( ch, len );
+            if( 0 == len ) len = StringLength( ch );
+            TrimRight( ch, len );
+            TrimLeft( ch, len );
         }
 
         ///
         /// Trim characters for both side
         ///
-        void trim( CharType ch ) { trim( &ch, 1 ); }
+        void Trim( CharType ch ) { Trim( &ch, 1 ); }
 
         ///
         /// Trim left characters
         ///
-        void trimLeft( const CharType * ch, size_t len = 0 )
+        void TrimLeft( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = strLen( ch );
+            if( 0 == len ) len = StringLength( ch );
             if( 0 == len ) return;
             CharType * p = mPtr;
             CharType * e = mPtr+mCount;
@@ -738,16 +738,16 @@ namespace GN
         ///
         /// Trim left characters
         ///
-        void trimLeft( CharType ch ) { trimLeft( &ch, 1 ); }
+        void TrimLeft( CharType ch ) { TrimLeft( &ch, 1 ); }
 
         ///
         /// Trim right characters
         ///
-        void trimRight( const CharType * ch, size_t len = 0 )
+        void TrimRight( const CharType * ch, size_t len = 0 )
         {
             if( 0 == mCount ) return;
             if( 0 == ch ) return;
-            if( 0 == len ) len = strLen( ch );
+            if( 0 == len ) len = StringLength( ch );
             if( 0 == len ) return;
             CharType * p = mPtr + mCount - 1;
             while( p >= mPtr )
@@ -771,13 +771,13 @@ namespace GN
         ///
         /// Trim right characters
         ///
-        void trimRight( CharType ch ) { trimRight( &ch, 1 ); }
+        void TrimRight( CharType ch ) { TrimRight( &ch, 1 ); }
 
         ///
         /// Trim right characters until meet the predication condition.
         ///
         template<typename PRED>
-        void trimRightUntil( PRED pred )
+        void TrimRightUntil( PRED pred )
         {
             if( 0 == mCount ) return;
             CharType * p = mPtr + mCount - 1;
@@ -800,20 +800,20 @@ namespace GN
         operator CharType *() { return mPtr; }
 
         ///
-        /// assign operator
+        /// Assign operator
         ///
         Str & operator = ( const Str & s )
         {
-            assign( s.mPtr, s.mCount );
+            Assign( s.mPtr, s.mCount );
             return *this;
         }
 
         ///
-        /// assign operator
+        /// Assign operator
         ///
         Str & operator = ( const CharType * s )
         {
-            assign( s, strLen<CharType>(s) );
+            Assign( s, StringLength<CharType>(s) );
             return *this;
         }
 
@@ -822,7 +822,7 @@ namespace GN
         ///
         Str & operator += ( const Str & s )
         {
-            append( s );
+            Append( s );
             return *this;
         }
 
@@ -831,7 +831,7 @@ namespace GN
         ///
         Str & operator += ( const CharType * s )
         {
-            append( s, 0 );
+            Append( s, 0 );
             return *this;
         }
 
@@ -840,7 +840,7 @@ namespace GN
         ///
         Str & operator += ( CharType ch )
         {
-            append( ch );
+            Append( ch );
             return *this;
         }
 
@@ -849,7 +849,7 @@ namespace GN
         ///
         Str & operator += ( std::basic_string<CharType> & s )
         {
-            append( s.c_str(), 0 );
+            Append( s.c_str(), 0 );
             return *this;
         }
 
@@ -858,7 +858,7 @@ namespace GN
         ///
         friend bool operator == ( const CharType * s1, const Str & s2 )
         {
-            return 0 == strCmp( s1, s2.mPtr );
+            return 0 == StringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -866,7 +866,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const CharType * s2 )
         {
-            return 0 == strCmp( s1.mPtr, s2 );
+            return 0 == StringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -874,7 +874,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
-            return 0 == strCmp( s1.mPtr, s2.mPtr );
+            return 0 == StringCompare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -882,7 +882,7 @@ namespace GN
         ///
         friend bool operator != ( const CharType * s1, const Str & s2 )
         {
-            return 0 != strCmp( s1, s2.mPtr );
+            return 0 != StringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -890,7 +890,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const CharType * s2 )
         {
-            return 0 != strCmp( s1.mPtr, s2 );
+            return 0 != StringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -898,7 +898,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
-            return 0 != strCmp( s1.mPtr, s2.mPtr );
+            return 0 != StringCompare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -906,7 +906,7 @@ namespace GN
         ///
         friend bool operator < ( const CharType * s1, const Str & s2 )
         {
-            return -1 == strCmp( s1, s2.mPtr );
+            return -1 == StringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -914,7 +914,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const CharType * s2 )
         {
-            return -1 == strCmp( s1.mPtr, s2 );
+            return -1 == StringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -922,7 +922,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const Str & s2 )
         {
-            return -1 == strCmp( s1.mPtr, s2.mPtr );
+            return -1 == StringCompare( s1.mPtr, s2.mPtr );
         }
 
 
@@ -932,7 +932,7 @@ namespace GN
         friend Str operator + ( const CharType * s1, const Str & s2 )
         {
             Str r(s1);
-            r.append(s2);
+            r.Append(s2);
             return r;
         }
 
@@ -942,7 +942,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const CharType * s2 )
         {
             Str r(s1);
-            r.append(s2);
+            r.Append(s2);
             return r;
         }
 
@@ -952,7 +952,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const Str & s2 )
         {
             Str r(s1);
-            r.append(s2);
+            r.Append(s2);
             return r;
         }
 
@@ -962,7 +962,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const std::basic_string<CharType> & s2 )
         {
             Str r(s1);
-            r.append( s2.c_str() );
+            r.Append( s2.c_str() );
             return r;
         }
 
@@ -972,7 +972,7 @@ namespace GN
         friend Str operator + ( const std::basic_string<CharType> & s1, const Str & s2 )
         {
             Str r(s2);
-            r.append( s1.c_str() );
+            r.Append( s1.c_str() );
             return r;
         }
 
@@ -981,14 +981,14 @@ namespace GN
         ///
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
-            os << str.cptr();
+            os << str.GetRawPtr();
             return os;
         }
 
     private:
 
         // align caps to 2^n-1
-        size_t calcCaps( size_t count )
+        size_t CalculateCaps( size_t count )
         {
             #if GN_X64
             count |= count >> 32;
@@ -1060,7 +1060,7 @@ namespace GN
             }
             else
             {
-                if( 0 == l ) l = strLen( s );
+                if( 0 == l ) l = StringLength( s );
                 memcpy( mBuf, s, sValidateLength(l) * sizeof(CHAR) );
             }
         }
@@ -1070,7 +1070,7 @@ namespace GN
         }
         StackStr( const Str<CHAR> & s )
         {
-            memcpy( mBuf, s.cptr(), sizeof(CHAR) * sValidateLength(s.size()) );
+            memcpy( mBuf, s.GetRawPtr(), sizeof(CHAR) * sValidateLength(s.Size()) );
         }
         //@}
     };
@@ -1078,50 +1078,50 @@ namespace GN
     /// \name string -> number conversion
     //@{
 
-    bool str2SInt8( SInt8 &, const char * );
-    bool str2UInt8( UInt8 &, const char * );
-    bool str2SInt16( SInt16 &, const char * );
-    bool str2UInt16( UInt16 &, const char * );
-    bool str2SInt32( SInt32 &, const char * );
-    bool str2UInt32( UInt32 &, const char * );
-    bool str2SInt64( SInt64 &, const char * );
-    bool str2UInt64( UInt64 &, const char * );
-    bool str2Float( float &, const char * );
-    bool str2Double( double &, const char *  );
+    bool String2SInt8( SInt8 &, const char * );
+    bool String2UInt8( UInt8 &, const char * );
+    bool String2SInt16( SInt16 &, const char * );
+    bool String2UInt16( UInt16 &, const char * );
+    bool String2SInt32( SInt32 &, const char * );
+    bool String2UInt32( UInt32 &, const char * );
+    bool String2SInt64( SInt64 &, const char * );
+    bool String2UInt64( UInt64 &, const char * );
+    bool String2Float( float &, const char * );
+    bool String2Double( double &, const char *  );
 
-    template<typename T> bool str2Int( T & i, const char * s )
+    template<typename T> bool String2Integer( T & i, const char * s )
     {
         // Compiler should never reach here!
         GN_CASSERT( sizeof(T) == 0 );
         return false;
     }
 
-    template<> inline bool str2Int<SInt8>( SInt8 & i, const char * s ) { return str2SInt8( i, s ); }
-    template<> inline bool str2Int<UInt8>( UInt8 & i, const char * s ) { return str2UInt8( i, s ); }
-    template<> inline bool str2Int<SInt16>( SInt16 & i, const char * s ) { return str2SInt16( i, s ); }
-    template<> inline bool str2Int<UInt16>( UInt16 & i, const char * s ) { return str2UInt16( i, s ); }
-    template<> inline bool str2Int<SInt32>( SInt32 & i, const char * s ) { return str2SInt32( i, s ); }
-    template<> inline bool str2Int<UInt32>( UInt32 & i, const char * s ) { return str2UInt32( i, s ); }
-    template<> inline bool str2Int<SInt64>( SInt64 & i, const char * s ) { return str2SInt64( i, s ); }
-    template<> inline bool str2Int<UInt64>( UInt64 & i, const char * s ) { return str2UInt64( i, s ); }
+    template<> inline bool String2Integer<SInt8>( SInt8 & i, const char * s ) { return String2SInt8( i, s ); }
+    template<> inline bool String2Integer<UInt8>( UInt8 & i, const char * s ) { return String2UInt8( i, s ); }
+    template<> inline bool String2Integer<SInt16>( SInt16 & i, const char * s ) { return String2SInt16( i, s ); }
+    template<> inline bool String2Integer<UInt16>( UInt16 & i, const char * s ) { return String2UInt16( i, s ); }
+    template<> inline bool String2Integer<SInt32>( SInt32 & i, const char * s ) { return String2SInt32( i, s ); }
+    template<> inline bool String2Integer<UInt32>( UInt32 & i, const char * s ) { return String2UInt32( i, s ); }
+    template<> inline bool String2Integer<SInt64>( SInt64 & i, const char * s ) { return String2SInt64( i, s ); }
+    template<> inline bool String2Integer<UInt64>( UInt64 & i, const char * s ) { return String2UInt64( i, s ); }
 
 #if 0
-    template<> inline bool str2Int<int>( int & i, const char * s ) { return str2SInt32( *(SInt32*)&i, s ); }
-    template<> inline bool str2Int<unsigned int>( unsigned int & i, const char * s ) { return str2UInt32( *(UInt32*)&i, s ); }
+    template<> inline bool String2Integer<int>( int & i, const char * s ) { return String2SInt32( *(SInt32*)&i, s ); }
+    template<> inline bool String2Integer<unsigned int>( unsigned int & i, const char * s ) { return String2UInt32( *(UInt32*)&i, s ); }
 #endif
 
-    template<typename T> T str2Int( const char * s, T defaultValue )
+    template<typename T> T String2Integer( const char * s, T defaultValue )
     {
         T result;
-        if( str2Int( result, s ) )
+        if( String2Integer( result, s ) )
             return result;
         else
             return defaultValue;
     }
 
-    template<typename T> bool str2Number( T & i, const char * s ) { return str2Int<T>( i, s ); }
-    template<> inline bool str2Number<float>( float & i, const char * s ) { return str2Float( i, s ); }
-    template<> inline bool str2Number<double>( double & i, const char * s ) { return str2Double( i, s ); }
+    template<typename T> bool String2Number( T & i, const char * s ) { return String2Integer<T>( i, s ); }
+    template<> inline bool String2Number<float>( float & i, const char * s ) { return String2Float( i, s ); }
+    template<> inline bool String2Number<double>( double & i, const char * s ) { return String2Double( i, s ); }
 
     ///
     /// Convert string to float array. String should be in format like:
@@ -1132,21 +1132,21 @@ namespace GN
     /// \return
     ///     Return count of floating filled into target buffer.
     ///
-    size_t str2Floats( float * buffer, size_t count, const char * str, size_t stringLength = 0 );
+    size_t String2FloatArray( float * buffer, size_t count, const char * str, size_t stringLength = 0 );
 
     //@}
 
     ///
     /// printf-like string format function.
     ///
-    /// Similar as strPrintf(...), but returns a string object
+    /// Similar as StringPrintf(...), but returns a string object
     ///
-    inline StrA strFormat( const char * fmt, ... )
+    inline StrA StringFormat( const char * fmt, ... )
     {
         StrA s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.formatv( fmt, arglist );
+        s.FormatV( fmt, arglist );
         va_end( arglist );
         return s;
     }
@@ -1154,14 +1154,14 @@ namespace GN
     ///
     /// printf-like string format function (wide-char version)
     ///
-    /// Similar as strPrintf(...), but returns a string object
+    /// Similar as StringPrintf(...), but returns a string object
     ///
-    inline StrW strFormat( const wchar_t * fmt, ... )
+    inline StrW StringFormat( const wchar_t * fmt, ... )
     {
         StrW s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.formatv( fmt, arglist );
+        s.FormatV( fmt, arglist );
         va_end( arglist );
         return s;
     }

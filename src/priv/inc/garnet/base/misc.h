@@ -133,8 +133,8 @@ namespace GN
         StrA result;
         getEnv( result, name );
         return "1" == result ||
-               0 == strCmpI( "yes", result.cptr() ) ||
-               0 == strCmpI( "true", result.cptr() );
+               0 == StringCompareI( "yes", result.GetRawPtr() ) ||
+               0 == StringCompareI( "true", result.GetRawPtr() );
     }
 
     ///

@@ -203,7 +203,7 @@ struct InputInitiator
 void showHelp( CommandLineArguments & ca )
 {
     StrA executableName = fs::baseName( ca.applicationName ) + fs::extName( ca.applicationName );
-    GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.cptr() );
+    GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.GetRawPtr() );
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)(
             "  -b                       Draw blank screen only. Do not create any graphics resources.\n" );
@@ -234,7 +234,7 @@ int main( int argc, const char * argv[] )
 
     for( size_t i = 0; i < cmdargs.extraArgc; ++i )
     {
-        if( 0 == strCmpI( "-b", cmdargs.extraArgv[i] ) )
+        if( 0 == StringCompareI( "-b", cmdargs.extraArgv[i] ) )
         {
             blankScreen = true;
         }

@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 static void
 sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
 {
-    if( GN::strEmpty(str) ) return;
+    if( GN::IsStringEmpty(str) ) return;
     const char * p1 = str;
     const char * p2 = p1;
 
@@ -116,7 +116,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
     const char * version  = (const char *)glGetString(GL_VERSION);
     const char * renderer = (const char *)glGetString(GL_RENDERER);
 
-    info = GN::strFormat(
+    info = GN::StringFormat(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations\n"
@@ -133,14 +133,14 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
-    info += GN::strFormat(
+    info += GN::StringFormat(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
         "    Max number of texture stages    :    %d\n"
         "===================================================\n"
         "\n\n",
         ts,tu );
-    GN_INFO(sLogger)( info.cptr() );
+    GN_INFO(sLogger)( info.GetRawPtr() );
 
     // extension info.
     info =
@@ -156,7 +156,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "\n\n";
 
-    GN_VERBOSE(sLogger)( info.cptr() );
+    GN_VERBOSE(sLogger)( info.GetRawPtr() );
 
     GN_UNGUARD;
 }

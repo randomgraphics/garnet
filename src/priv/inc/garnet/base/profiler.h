@@ -135,7 +135,7 @@ namespace GN
         ///
         ProfileTimer & getTimer( const StrA & name )
         {
-            GN_ASSERT( !name.empty() );
+            GN_ASSERT( !name.Empty() );
 
             ScopeMutex<SpinLoop> lock( mMutex );
 

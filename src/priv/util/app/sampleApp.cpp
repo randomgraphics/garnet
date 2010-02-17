@@ -39,19 +39,19 @@ sParseBool( bool & result, const char * option, const char * value )
 {
     using namespace GN;
 
-    if( 0 == strCmpI( "on", value ) ||
-        0 == strCmpI( "yes", value ) ||
-        0 == strCmpI( "true", value ) ||
-        0 == strCmpI( "1", value ) )
+    if( 0 == StringCompareI( "on", value ) ||
+        0 == StringCompareI( "yes", value ) ||
+        0 == StringCompareI( "true", value ) ||
+        0 == StringCompareI( "1", value ) )
     {
         result = true;
         return true;
     }
     else if(
-        0 == strCmpI( "off", value ) ||
-        0 == strCmpI( "no", value ) ||
-        0 == strCmpI( "false", value ) ||
-        0 == strCmpI( "0", value ) )
+        0 == StringCompareI( "off", value ) ||
+        0 == StringCompareI( "no", value ) ||
+        0 == StringCompareI( "false", value ) ||
+        0 == StringCompareI( "0", value ) )
     {
         result = false;
         return true;
@@ -74,7 +74,7 @@ sParseInteger( T & result, const char * option, const char * value )
 {
     using namespace GN;
 
-    if( str2Int( result, value ) )
+    if( String2Integer( result, value ) )
     {
         return true;
     }
@@ -96,7 +96,7 @@ static bool sParseGpuAPI( GN::gfx::GpuAPI & result, const char * value )
     using namespace GN::gfx;
 
     StrA upperCase(value);
-    upperCase.toUpper();
+    upperCase.ToUpperCase();
 
     result = GpuAPI::sFromString( upperCase );
 
@@ -198,7 +198,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * c
             s += " ";
             s += argv[i];
         }
-        GN_WARN(sLogger)( s.cptr() );
+        GN_WARN(sLogger)( s.GetRawPtr() );
     }
 
     return true;
@@ -381,12 +381,12 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     {
         const char * a = argv[i];
 
-        if( 0 == strCmpI( "-h", a ) ||
-            0 == strCmpI( "-?", a ) ||
-            0 == strCmpI( "--help", a ) ||
-            0 == strCmpI( "/help", a ) ||
-            0 == strCmpI( "/h", a ) ||
-            0 == strCmpI( "/?", a ) )
+        if( 0 == StringCompareI( "-h", a ) ||
+            0 == StringCompareI( "-?", a ) ||
+            0 == StringCompareI( "--help", a ) ||
+            0 == StringCompareI( "/help", a ) ||
+            0 == StringCompareI( "/h", a ) ||
+            0 == StringCompareI( "/?", a ) )
         {
             StrA executableName = fs::baseName( argv[0] ) + fs::extName( argv[0] );
             onPrintHelpScreen( executableName );
@@ -398,7 +398,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             #endif
             )
         {
-            if( 0 == strCmpI( "fs", a+1 ) )
+            if( 0 == StringCompareI( "fs", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -406,7 +406,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseBool( mInitParam.ro.fullscreen, a, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "mt", a+1 ) )
+            else if( 0 == StringCompareI( "mt", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -414,7 +414,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseBool( mInitParam.useMultithreadGpu, a, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "gapi", a+1 ) )
+            else if( 0 == StringCompareI( "gapi", a+1 ) )
             {
                 const char * value = sGetOptionValue( argc, argv, i );
                 if( NULL == value ) return false;
@@ -422,24 +422,24 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 if( !sParseGpuAPI( mInitParam.ro.api, value ) )
                     return false;
             }
-            else if( 0 == strCmpI( "ll", a+1 ) )
+            else if( 0 == StringCompareI( "ll", a+1 ) )
             {
                 StrA value =sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if( value.Empty() ) return false;
 
-                size_t k = value.findFirstOf( ":" );
+                size_t k = value.FindFirstOf( ":" );
                 if( StrA::NOT_FOUND == k )
                 {
                     GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
                 }
                 else
                 {
-                    StrA name( value.subString( 0, k ) );
-                    StrA leveltok( value.subString( k+1, 0 ) );
+                    StrA name( value.SubString( 0, k ) );
+                    StrA leveltok( value.SubString( k+1, 0 ) );
                     int level;
-                    if( !name.empty() && str2SInt32( level, leveltok.cptr() ) )
+                    if( !name.Empty() && String2SInt32( level, leveltok.GetRawPtr() ) )
                     {
-                        getLogger( name.cptr() )->setLevel( level );
+                        getLogger( name.GetRawPtr() )->setLevel( level );
                     }
                     else
                     {
@@ -447,24 +447,24 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     }
                 }
             }
-            else if( 0 == strCmpI( "ww", a+1 ) )
+            else if( 0 == StringCompareI( "ww", a+1 ) )
             {
                 StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if( value.Empty() ) return false;
 
                 if( !sParseInteger( mInitParam.ro.windowedWidth, a, value ) ) return false;
             }
-            else if( 0 == strCmpI( "wh", a+1 ) )
+            else if( 0 == StringCompareI( "wh", a+1 ) )
             {
                 StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if( value.Empty() ) return false;
 
                 if( !sParseInteger( mInitParam.ro.windowedHeight, a, value ) ) return false;
             }
-            else if( 0 == strCmpI( "vsync", a+1 ) )
+            else if( 0 == StringCompareI( "vsync", a+1 ) )
             {
                 StrA value = sGetOptionValue( argc, argv, i );
-                if( value.empty() ) return false;
+                if( value.Empty() ) return false;
 
                 if( !sParseBool( mInitParam.ro.vsync, a, value ) ) return false;
             }
@@ -482,7 +482,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
+    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.size(), unknownArgs.GetRawPtr() ) ) return false;
 
 #endif
 
@@ -632,7 +632,7 @@ void GN::util::SampleApp::drawHUD()
 
     if( mShowHUD )
     {
-        mFont.drawText( mFps.getFpsString().cptr(), 40, 40 );
+        mFont.drawText( mFps.getFpsString().GetRawPtr(), 40, 40 );
 
         if( mShowHelp )
         {

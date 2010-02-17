@@ -262,7 +262,7 @@ namespace GN
     template < typename T >
     void Matrix33<T>::print( StrA & s ) const
     {
-        s.format(
+        s.Format(
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n",
@@ -820,7 +820,7 @@ namespace GN
     template < typename T >
     void Matrix44<T>::print( StrA & s ) const
     {
-		s.format(
+		s.Format(
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"

@@ -42,7 +42,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 {
     GN_GUARD;
 
-    if( code.empty() )
+    if( code.Empty() )
     {
         GN_ERROR(sLogger)( "shader code can't be empty!" );
         return false;
@@ -59,8 +59,8 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
     ARBAutoDel autodel( program );
 
     // trim leading spaces in shader code
-    const char * ptr = code.cptr();
-    GLsizei      len = (GLsizei)code.size();
+    const char * ptr = code.GetRawPtr();
+    GLsizei      len = (GLsizei)code.Size();
     while( len > 0 &&
         ( ' '==*ptr || '\t' == *ptr || '\n' == *ptr ) )
     {
@@ -85,7 +85,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
             "character(%d)\n"
             "%s\n"
             "=========================================================\n",
-            code.cptr(), errPos, errStr );
+            code.GetRawPtr(), errPos, errStr );
         return false;
     }
 
@@ -372,11 +372,11 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
 {
     GN_GUARD;
 
-    GN_ASSERT( !strEmpty(name) );
+    GN_ASSERT( !IsStringEmpty(name) );
 
     // get uniform index
     unsigned int index;
-    if( !str2Int<unsigned int>( index, name+1 ) )
+    if( !String2Integer<unsigned int>( index, name+1 ) )
     {
         GN_ERROR(sLogger)(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"

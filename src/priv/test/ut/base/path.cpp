@@ -74,15 +74,15 @@ public:
             toNativeDiskFilePath("startup::"),
         };
 
-        GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );
-        GN_INFO(sLogger)( "startup = %s", s[1].cptr() );
+        GN_INFO(sLogger)( "appDir = %s", s[0].GetRawPtr() );
+        GN_INFO(sLogger)( "startup = %s", s[1].GetRawPtr() );
 
         for( size_t i = 0; i < 2; ++i )
         {
-            TS_ASSERT( !s[i].empty() );
-            if( s[i].size() > 1 )
+            TS_ASSERT( !s[i].Empty() );
+            if( s[i].Size() > 1 )
             {
-                TS_ASSERT_DIFFERS( PSC, s[i].last() );
+                TS_ASSERT_DIFFERS( PSC, s[i].GetLast() );
             }
             else
             {

@@ -110,13 +110,13 @@ public:
         const Vector3f & position = arcball.getTranslation();
 
         getFont().drawText(
-            strFormat(
+            StringFormat(
                 L"position : %f,\n"
                 L"           %f,\n"
                 L"           %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).cptr(),
+                radius ).GetRawPtr(),
             320, 40 );
 
         drawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );

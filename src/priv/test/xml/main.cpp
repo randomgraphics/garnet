@@ -13,7 +13,7 @@ bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 
     if( !doc.parse( xpr, fp ) )
     {
-        GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
+        GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.GetRawPtr() );
         return false;
     }
 

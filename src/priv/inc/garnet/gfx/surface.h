@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             if( !format.valid() )
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().cptr() );
+                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().GetRawPtr() );
                 return false;
             }
 

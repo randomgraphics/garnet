@@ -151,7 +151,7 @@ namespace GN
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline void
-    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cptr(), i.size() ); }
+    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.GetRawPtr(), i.Size() ); }
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
@@ -163,7 +163,7 @@ namespace GN
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
-    wcs2mbs( const StrW & i ) { return wcs2mbs( i.cptr(), i.size() ); }
+    wcs2mbs( const StrW & i ) { return wcs2mbs( i.GetRawPtr(), i.Size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string.
@@ -195,7 +195,7 @@ namespace GN
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline void
-    mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.cptr(), i.size() ); }
+    mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.GetRawPtr(), i.Size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string
@@ -207,7 +207,7 @@ namespace GN
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline StrW
-    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cptr(), i.size() ); }
+    mbs2wcs( const StrA & i ) { return mbs2wcs( i.GetRawPtr(), i.Size() ); }
 }
 
 // *****************************************************************************

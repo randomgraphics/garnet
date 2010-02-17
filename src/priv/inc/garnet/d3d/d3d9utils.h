@@ -52,7 +52,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 #if GN_XENON
             PIXBeginNamedEvent( color, name );
 #else
-            D3DPERF_BeginEvent( color, mbs2wcs(name).cptr() );
+            D3DPERF_BeginEvent( color, mbs2wcs(name).GetRawPtr() );
 #endif
         }
         ~PixPerfScopeEvent()

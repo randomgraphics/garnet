@@ -178,7 +178,7 @@ GN::util::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 {
     AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
 
-    StrA fullname = strFormat( "GN.scene.visualnode.stduniform.%s", type.name() );
+    StrA fullname = StringFormat( "GN.scene.visualnode.stduniform.%s", type.name() );
 
     GpuResourceDatabase & gdb = mGraph.gdb();
 

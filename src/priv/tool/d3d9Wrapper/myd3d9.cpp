@@ -47,9 +47,9 @@ bool sLoadD3D9Dll()
     using namespace GN;
 
     // load library
-    StrA dllname = strFormat( "%s\\system32\\d3d9.dll", getEnv("windir").cptr() );
-    GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.cptr() );
-    gD3D9Dll = LoadLibraryA( dllname.cptr() );
+    StrA dllname = StringFormat( "%s\\system32\\d3d9.dll", getEnv("windir").GetRawPtr() );
+    GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.GetRawPtr() );
+    gD3D9Dll = LoadLibraryA( dllname.GetRawPtr() );
     if( 0 == gD3D9Dll )
     {
         GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", GetWin32LastErrorInfo() );

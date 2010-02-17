@@ -23,7 +23,7 @@ class InputTest
 
     bool createInput( const char * api )
     {
-        if( !GN::input::initializeInputSystem( 0 == GN::strCmp("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
+        if( !GN::input::initializeInputSystem( 0 == GN::StringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
             return false;
         if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
             return false;
@@ -53,14 +53,14 @@ class InputTest
                         mLastKeyEvent.status.altDown()?"ALT-":"",
                         GN::input::kc2str(mLastKeyEvent.code),
                         mLastKeyEvent.status.down?"DOWN":"UP" );
-                    TextOutA( dc, 0, 0, txt.cptr(), (INT)txt.size() );
+                    TextOutA( dc, 0, 0, txt.GetRawPtr(), (INT)txt.size() );
 
                     if( gInputPtr )
                     {
                         int x, y;
                         gInputPtr->getMousePosition( x, y );
                         txt.format( "Mouse: %d, %d", x, y );
-                        TextOutA( dc, 0, 20, txt.cptr(), (INT)txt.size() );
+                        TextOutA( dc, 0, 20, txt.GetRawPtr(), (INT)txt.size() );
                     }
 
                     EndPaint( hwnd, &ps );

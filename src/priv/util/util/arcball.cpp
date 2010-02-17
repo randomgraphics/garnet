@@ -138,7 +138,7 @@ void GN::util::ArcBall::onRotation( int x, int y )
 
     mTranslation = q.toMatrix44().transformPoint( mTranslationBase );
 
-    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.print().cptr() );
+    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.print().GetRawPtr() );
 }
 
 //

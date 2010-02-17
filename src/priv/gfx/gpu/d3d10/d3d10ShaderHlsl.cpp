@@ -141,7 +141,7 @@ static const char * sCloneString( const char * str )
 {
     if( NULL == str ) return NULL;
 
-    size_t n = GN::strLen( str ) + 1;
+    size_t n = GN::StringLength( str ) + 1;
 
     char * clone = (char*)GN::HeapAlloc( n );
     if( NULL == clone )
@@ -345,7 +345,7 @@ sInitShader(
     GN_GUARD;
 
     // do nothing for empty shader code
-    if( strEmpty( code.source ) ) return true;
+    if( IsStringEmpty( code.source ) ) return true;
 
     // initialize shader type template
     D3D10ShaderTypeTemplate<SHADER_TYPE> templ;
@@ -512,7 +512,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         cb,
         0, // sub resource
         0, // box
-        syscopy.cptr(),
+        syscopy.GetRawPtr(),
         0,   // row pitch
         0 ); // slice pitch
 
@@ -523,7 +523,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         GN_ERROR(sLogger)( "fail to map constant buffer." );
         return;
     }
-    memcpy( data, syscopy.cptr(), syscopy.size() );
+    memcpy( data, syscopy.GetRawPtr(), syscopy.size() );
     cb->Unmap();
 #endif
 

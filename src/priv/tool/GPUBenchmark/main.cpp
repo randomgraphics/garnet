@@ -122,7 +122,7 @@ struct ManyManyQuads
         }
 
         // create index buffer
-        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.cptr() );
+        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.GetRawPtr() );
         if( !idxbuf ) return false;
 
         // success
@@ -253,7 +253,7 @@ struct TexturedEffect : public BasicEffect
         if( !vs ) return false;
 
         // create PS
-        const StrA pscode = strFormat(
+        const StrA pscode = StringFormat(
             "#define TEX_COUNT %d                                \n"
             "sampler ss[TEX_COUNT] : register(s0);               \n"
             "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"
@@ -330,7 +330,7 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
+        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().GetRawPtr(), cd.theCase->printResult().GetRawPtr() );
         cd.theCase->destroy();
         delete cd.theCase;
         mTestCases.pop_back();

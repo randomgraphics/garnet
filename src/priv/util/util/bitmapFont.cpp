@@ -28,9 +28,9 @@ sDetermineTextureSizeAndCount(
     size_t     maxchars )
 {
     // determine texture size
-    size_t maxw = gpu.getCaps().maxTex2DSize[0];
-    size_t maxh = gpu.getCaps().maxTex2DSize[1];
-    size_t maxc = gpu.getCaps().maxTextures;
+    size_t maxw = gpu.GetCaps().maxTex2DSize[0];
+    size_t maxh = gpu.GetCaps().maxTex2DSize[1];
+    size_t maxc = gpu.GetCaps().maxTextures;
 
     for( texcount = 1; texcount <= maxc; ++texcount )
     {
@@ -128,7 +128,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 {
     GN_GUARD_SLOW;
 
-    if( strEmpty(td.text) ) return; // skip empty text.
+    if( IsStringEmpty(td.text) ) return; // skip empty text.
 
     GN_ASSERT( mFont );
 
@@ -323,7 +323,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 
     // update texture
     Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
-    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.cptr() );
+    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.GetRawPtr() );
 
     // success
     return &slot;
@@ -411,7 +411,7 @@ GN::util::BitmapFont::slotInit(
 
     // create font textures
     TextureDesc td = { (UInt32)texwidth, (UInt32)texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
-    GN_ASSERT( texcount <= gpu.getCaps().maxTextures );
+    GN_ASSERT( texcount <= gpu.GetCaps().maxTextures );
     mTextures.resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
@@ -424,7 +424,7 @@ GN::util::BitmapFont::slotInit(
         }
 
         // clear texture to pure black
-        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.cptr() );
+        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.GetRawPtr() );
     }
 
     // success

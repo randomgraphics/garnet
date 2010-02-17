@@ -49,7 +49,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     static const BindingMap sConvertTable;
 
     StrA lowerCaseBinding( binding );
-    lowerCaseBinding.toLower();
+    lowerCaseBinding.ToLowerCase();
 
     std::map<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( lowerCaseBinding );
 

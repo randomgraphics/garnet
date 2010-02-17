@@ -54,7 +54,7 @@ namespace GN { namespace gfx
 
         void doBindByName( const char * name )
         {
-            size_t len = strLen( name );
+            size_t len = StringLength( name );
             if( 0 == len )
             {
                 GN_ERROR(getLogger("GN.gfx.GpuProgramResourceBinding"))( "Empty binding string is not allowed." );

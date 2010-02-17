@@ -45,7 +45,7 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
     {
         static int i = 0;
         ++i;
-        strPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed entity #%d", i );
+        StringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed entity #%d", i );
         name = unnamed;
 
         GN_ASSERT( !mEntities.validName( name ) );

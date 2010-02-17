@@ -392,11 +392,11 @@ class BezierApp : public SampleApp
         drawCoords();
 
         getFont().drawText(
-            strFormat(
+            StringFormat(
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).cptr(),
+                radius ).GetRawPtr(),
             0, 320 );
     }
 

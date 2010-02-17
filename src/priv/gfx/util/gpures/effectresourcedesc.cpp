@@ -40,7 +40,7 @@ static bool sParseEnum(
 
     while( table->name )
     {
-        if( 0 == strCmpI( name, table->name ) )
+        if( 0 == StringCompareI( name, table->name ) )
         {
             result = (RESULT_TYPE)table->value;
             return true;
@@ -78,11 +78,11 @@ static void sPostError( const XmlNode & node, const StrA & msg )
     const XmlElement * e = node.toElement();
     if( e )
     {
-        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.cptr(), msg.cptr() );
+        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.GetRawPtr(), msg.GetRawPtr() );
     }
     else
     {
-        GN_ERROR(sLogger)( "Effect XML error: %s", msg.cptr() );
+        GN_ERROR(sLogger)( "Effect XML error: %s", msg.GetRawPtr() );
     }
 }
 
@@ -95,7 +95,7 @@ static const char * sGetAttrib(
     const char * defaultValue = NULL )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a ? a->value.cptr() : defaultValue;
+    return a ? a->value.GetRawPtr() : defaultValue;
 }
 
 //
@@ -108,7 +108,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 
     T result;
 
-    if( !a || !str2Int<T>( result, a->value.cptr() ) )
+    if( !a || !String2Integer<T>( result, a->value.GetRawPtr() ) )
         return defaultValue;
     else
         return result;
@@ -122,13 +122,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == strCmpI( "1", a->value.cptr() ) ||
-        0 == strCmpI( "true", a->value.cptr() ) )
+    if( 0 == StringCompareI( "1", a->value.GetRawPtr() ) ||
+        0 == StringCompareI( "true", a->value.GetRawPtr() ) )
     {
         return true;
     }
-    else if( 0 == strCmpI( "0", a->value.cptr() ) ||
-             0 == strCmpI( "false", a->value.cptr() ) )
+    else if( 0 == StringCompareI( "0", a->value.GetRawPtr() ) ||
+             0 == StringCompareI( "false", a->value.GetRawPtr() ) )
     {
         return false;
     }
@@ -146,10 +146,10 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
     XmlAttrib * a = node.findAttrib( "name" );
     if( !a )
     {
-        sPostError( node, strFormat("Unnamed %s node. Ignored.", nodeType) );
+        sPostError( node, StringFormat("Unnamed %s node. Ignored.", nodeType) );
         return 0;
     }
-    return a->value.cptr();
+    return a->value.GetRawPtr();
 }
 
 //
@@ -179,13 +179,13 @@ static void sParseTexture( EffectResourceDesc & desc, const XmlElement & node )
 
     SamplerDesc & sampler = texdesc.sampler;
 
-    const XmlAttrib * a = node.findAttrib( "addressU", StringCompare::CASE_INSENSITIVE );
+    const XmlAttrib * a = node.findAttrib( "addressU", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressU = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressV", StringCompare::CASE_INSENSITIVE );
+    a = node.findAttrib( "addressV", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressV = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressW", StringCompare::CASE_INSENSITIVE );
+    a = node.findAttrib( "addressW", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressW = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
     GN_TODO( "more samplers fields." );
@@ -208,26 +208,26 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
     }
     else
     {
-        if( 0 == strCmpI( "matrix", type ) ||
-            0 == strCmpI( "matrix4x4", type ) ||
-            0 == strCmpI( "matrix44", type ) ||
-            0 == strCmpI( "matrix4", type ) ||
-            0 == strCmpI( "mat4", type ) ||
-            0 == strCmpI( "float4x4", type ) )
+        if( 0 == StringCompareI( "matrix", type ) ||
+            0 == StringCompareI( "matrix4x4", type ) ||
+            0 == StringCompareI( "matrix44", type ) ||
+            0 == StringCompareI( "matrix4", type ) ||
+            0 == StringCompareI( "mat4", type ) ||
+            0 == StringCompareI( "float4x4", type ) )
         {
             ud.size = sizeof(Matrix44f);
         }
         else if(
-            0 == strCmpI( "vector", type ) ||
-            0 == strCmpI( "vec4", type ) ||
-            0 == strCmpI( "vector4", type ) ||
-            0 == strCmpI( "float4", type ) )
+            0 == StringCompareI( "vector", type ) ||
+            0 == StringCompareI( "vec4", type ) ||
+            0 == StringCompareI( "vector4", type ) ||
+            0 == StringCompareI( "float4", type ) )
         {
             ud.size = sizeof(float)*4;
         }
         else
         {
-            sPostError( node, strFormat( "Unrecognized uniform type: %s", type ) );
+            sPostError( node, StringFormat( "Unrecognized uniform type: %s", type ) );
             ud.size = 0;
         }
     }
@@ -245,7 +245,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
-        else sPostError( *e, strFormat( "Unknown parameter '%s'. Ignored", e->name.cptr() ) );
+        else sPostError( *e, StringFormat( "Unknown parameter '%s'. Ignored", e->name.GetRawPtr() ) );
     }
 }
 
@@ -300,7 +300,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
         if( c )
         {
             size_t offset = sd.shaderSourceBuffer.size();
-            sd.shaderSourceBuffer.append( c->text.cptr(), c->text.size() + 1 );
+            sd.shaderSourceBuffer.append( c->text.GetRawPtr(), c->text.Size() + 1 );
             code.source = (const char*)offset;
             break;
         }
@@ -311,7 +311,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
     if( entry )
     {
         size_t offset = sd.shaderSourceBuffer.size();
-        sd.shaderSourceBuffer.append( entry, strLen(entry) + 1 );
+        sd.shaderSourceBuffer.append( entry, StringLength(entry) + 1 );
         code.entry = (const char *)offset;
     }
     else
@@ -342,7 +342,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     sd.gpd.lang = GpuProgramLanguage::sFromString( lang );
     if( GpuProgramLanguage::INVALID == sd.gpd.lang )
     {
-        sPostError( node, strFormat("invalid shading language: %s",lang?lang:"<NULL>") );
+        sPostError( node, StringFormat("invalid shading language: %s",lang?lang:"<NULL>") );
         return;
     }
 
@@ -365,7 +365,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     }
 
     // convert all shader source offsets to pointers
-    const char * start = sd.shaderSourceBuffer.cptr();
+    const char * start = sd.shaderSourceBuffer.GetRawPtr();
     if( sd.gpd.vs.source ) sd.gpd.vs.source += (size_t)start;
     if( sd.gpd.vs.entry  ) sd.gpd.vs.entry  += (size_t)start;
     if( sd.gpd.gs.source ) sd.gpd.gs.source += (size_t)start;
@@ -412,10 +412,10 @@ static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsde
 
     for( const XmlAttrib * a = node.attrib; a; a = a->next )
     {
-        const char * rsname = a->name.cptr();
-        const char * rsvalue = a->value.cptr();
+        const char * rsname = a->name.GetRawPtr();
+        const char * rsvalue = a->value.GetRawPtr();
 
-        if( 0 == strCmpI( "CULL_MODE", rsname ) )
+        if( 0 == StringCompareI( "CULL_MODE", rsname ) )
         {
             rsdesc.cullMode = sParseEnum( rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK );
         }
@@ -515,12 +515,12 @@ static void sCopyShaderSourcePtr(
 {
     GN_ASSERT( tobuf.size() == frombuf.size() );
 
-    const char * s = frombuf.cptr();
+    const char * s = frombuf.GetRawPtr();
     const char * e = s + frombuf.size();
 
     if( s <= from && from < e )
     {
-        to = tobuf.cptr() + ( from - s );
+        to = tobuf.GetRawPtr() + ( from - s );
     }
     else
     {

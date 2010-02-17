@@ -24,7 +24,7 @@ typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
 static bool
 sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
 {
-    const GpuCaps & caps = r.getCaps();
+    const GpuCaps & caps = r.GetCaps();
 
     // check vertex shader
     if( desc.gpd.vs.source && (UInt32)desc.gpd.lang != (caps.vsLanguages & desc.gpd.lang) )
@@ -137,14 +137,14 @@ sCheckShaderTextures(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.GetRawPtr(),
                 shaderName );
             return false;
         }
         else if( effectDesc.textures.end() == effectDesc.textures.find( textureName ) )
         {
             GN_ERROR(sLogger)( "Invalid texture named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.GetRawPtr(),
                 shaderName );
             return false;
         }
@@ -175,14 +175,14 @@ sCheckShaderUniforms(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.uniforms[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.GetRawPtr(),
                 shaderName );
             return false;
         }
         else if( effectDesc.uniforms.end() == effectDesc.uniforms.find( uniformName ) )
         {
             GN_ERROR(sLogger)( "Invalid uniform named '%s' is referenced in shader '%s'.",
-                shaderParameterName.cptr(),
+                shaderParameterName.GetRawPtr(),
                 shaderName );
             return false;
         }
@@ -424,8 +424,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Technique '%s' referencs non-exist shader name '%s' in pass %u",
-                    techName.cptr(),
-                    shaderName.cptr(),
+                    techName.GetRawPtr(),
+                    shaderName.GetRawPtr(),
                     ipass );
             }
 
@@ -437,8 +437,8 @@ GN::gfx::EffectResource::Impl::initTech(
                 GN_VERBOSE(sLogger)(
                     "Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
                     "is not supported by current graphics hardware.",
-                    techName.cptr(),
-                    shaderName.cptr(),
+                    techName.GetRawPtr(),
+                    shaderName.GetRawPtr(),
                     ipass );
                 return false;
             }
@@ -446,8 +446,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Shader '%s' referenced by technique '%s' in pass %u is not properly initialized",
-                    shaderName.cptr(),
-                    techName.cptr(),
+                    shaderName.GetRawPtr(),
+                    techName.GetRawPtr(),
                     ipass );
             }
 
@@ -505,7 +505,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         if( tp.bindings.empty() )
         {
             GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
-                tp.parameterName.cptr(),
+                tp.parameterName.GetRawPtr(),
                 effectName() );
         }
 
@@ -561,7 +561,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
         if( up.bindings.empty() )
         {
             GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
-                up.parameterName.cptr(),
+                up.parameterName.GetRawPtr(),
                 effectName() );
         }
 
@@ -689,7 +689,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
             fp->name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.cptr() );
+            xpr.errInfo.GetRawPtr() );
         return AutoRef<EffectResource>::NULLREF;
     }
     fp.clear();

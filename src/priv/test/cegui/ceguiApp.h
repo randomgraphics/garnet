@@ -36,7 +36,7 @@ public:
                 }
 
                 StrA name;
-                name.format( "d:/software/green/cegui/datafiles/%s", filename.c_str() );
+                name.Format( "d:/software/green/cegui/datafiles/%s", filename.c_str() );
 
                 DiskFile fp;
                 if( !fp.open( name, "rb" ) )

@@ -254,7 +254,7 @@ def startSuite( name, file, line, generated ):
     closeSuite()
     suite = { 'name'         : name,
               'file'         : file,
-              'cfile'        : cptr(file),
+              'cfile'        : GetRawPtr(file),
               'line'         : line,
               'generated'    : generated,
               'object'       : 'suite_%s' % name,
@@ -313,7 +313,7 @@ def scanLineForDestroy( suite, lineNo, line ):
     if destroy_re.search( line ):
         addSuiteCreateDestroy( suite, 'destroy', lineNo )
 
-def cptr( str ):
+def GetRawPtr( str ):
     '''Convert a string to its C representation'''
     return '"' + string.replace( str, '\\', '\\\\' ) + '"'
 

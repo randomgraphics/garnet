@@ -6,7 +6,7 @@ GN::PluginManager::getPluginTypeID( const StrA & type ) const
 {
     GN_GUARD_SLOW;
     PluginTypeID id = mTypes.findIf( TypeEqual(type) );
-    if ( 0 == id ) GN_ERROR(sLogger)( "Invalid plugin type '%s'!", type.cptr() );
+    if ( 0 == id ) GN_ERROR(sLogger)( "Invalid plugin type '%s'!", type.GetRawPtr() );
     return id;
     GN_UNGUARD_SLOW;
 }

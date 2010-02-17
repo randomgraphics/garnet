@@ -175,7 +175,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
 
         const XenonUniformParamDesc & d = mUniforms[i];
 
-        GN_ASSERT( !d.name.empty() && (d.vshandle || d.pshandle) && d.size );
+        GN_ASSERT( !d.name.Empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
         if( getGpu().paramCheckEnabled() )
@@ -184,7 +184,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.name.cptr(),
+                    d.name.GetRawPtr(),
                     u->size(),
                     d.size );
             }
@@ -405,7 +405,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mUniformArray       = mUniforms.cptr();
+        mParamDesc.mUniformArray       = mUniforms.GetRawPtr();
         mParamDesc.mUniformCount       = mUniforms.size();
         mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
@@ -414,7 +414,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonUniformParamDesc          & u1 = mUniforms[i];
             GpuProgramUniformParameterDesc & u2 = mUniforms[i];
-            u2.name = u1.name.cptr();
+            u2.name = u1.name.GetRawPtr();
         }
     }
 
@@ -424,7 +424,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mTextureArray       = mTextures.cptr();
+        mParamDesc.mTextureArray       = mTextures.GetRawPtr();
         mParamDesc.mTextureCount       = mTextures.size();
         mParamDesc.mTextureArrayStride = sizeof(mTextures[0]);
 
@@ -433,7 +433,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonTextureParamDesc          & t1 = mTextures[i];
             GpuProgramTextureParameterDesc & t2 = mTextures[i];
-            t2.name = t1.name.cptr();
+            t2.name = t1.name.GetRawPtr();
         }
     }
 }

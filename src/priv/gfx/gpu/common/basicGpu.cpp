@@ -129,7 +129,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
         if( NULL != data && length > 0 )
         {
             userData.resize( length );
-            memcpy( userData.cptr(), data, length );
+            memcpy( userData.GetRawPtr(), data, length );
         }
         else
         {
@@ -144,7 +144,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
         if( NULL != data && length > 0 )
         {
             userData.resize( length );
-            memcpy( userData.cptr(), data, length );
+            memcpy( userData.GetRawPtr(), data, length );
         }
     }
 }
@@ -162,7 +162,7 @@ const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) 
 
         if( length ) *length = userData.size();
 
-        return userData.empty() ? NULL : userData.cptr();
+        return userData.empty() ? NULL : userData.GetRawPtr();
     }
     else
     {

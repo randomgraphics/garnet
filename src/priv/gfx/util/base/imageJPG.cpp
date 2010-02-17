@@ -40,7 +40,7 @@ bool JPGReader::checkFormat( GN::File & fp )
     return
         0xFF == (unsigned char)buf[0] &&
         0xD8 == (unsigned char)buf[1] &&
-        ( 0 == GN::strCmp( buf+6, "JFIF" ) || 0 == GN::strCmp( buf+6, "Exif" ) );
+        ( 0 == GN::StringCompare( buf+6, "JFIF" ) || 0 == GN::StringCompare( buf+6, "Exif" ) );
 
     GN_UNGUARD;
 }

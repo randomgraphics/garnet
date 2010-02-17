@@ -81,7 +81,7 @@ bool GN::gfx::SpriteRenderer::init()
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
 
     // create GPU program
-    const GpuCaps & caps = mGpu.getCaps();
+    const GpuCaps & caps = mGpu.GetCaps();
     GpuProgramDesc gpd;
     if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
         caps.psLanguages & GpuProgramLanguage::GLSL )
@@ -139,7 +139,7 @@ bool GN::gfx::SpriteRenderer::init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mIndexBuffer->update( 0, MAX_INDICES, indices.cptr() );
+    mIndexBuffer->update( 0, MAX_INDICES, indices.GetRawPtr() );
 
 
     // create pending vertex buffer

@@ -178,17 +178,17 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const StrA & name, StringCompare sc = StringCompare::CASE_SENSITIVE ) const
+        XmlAttrib * findAttrib( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlAttrib * a = attrib; a; a = a->next )
             {
-                if( StringCompare::CASE_SENSITIVE == sc )
+                if( StringCompareCase::SENSITIVE == sc )
                 {
                     if( name == a->name ) return a;
                 }
                 else
                 {
-                    if( 0 == strCmpI( name.cptr(), a->name.cptr() ) ) return a;
+                    if( 0 == StringCompareI( name.GetRawPtr(), a->name.GetRawPtr() ) ) return a;
                 }
             }
             return NULL;
@@ -197,20 +197,20 @@ namespace GN
         ///
         /// find specific child of element
         ///
-        XmlElement * findChildElement( const StrA & name, StringCompare sc = StringCompare::CASE_SENSITIVE ) const
+        XmlElement * findChildElement( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlNode * n = child; n; n = n->next )
             {
                 XmlElement * e = n->toElement();
                 if( !e ) continue;
 
-                if( StringCompare::CASE_SENSITIVE == sc )
+                if( StringCompareCase::SENSITIVE == sc )
                 {
                     if( name == e->name ) return e;
                 }
                 else
                 {
-                    if( 0 == strCmpI( name.cptr(), e->name.cptr() ) ) return e;
+                    if( 0 == StringCompareI( name.GetRawPtr(), e->name.GetRawPtr() ) ) return e;
                 }
             }
             return NULL;
@@ -335,7 +335,7 @@ namespace GN
                 fp.name(),
                 xpr.errLine,
                 xpr.errColumn,
-                xpr.errInfo.cptr() );
+                xpr.errInfo.GetRawPtr() );
             return false;
         }
         GN_ASSERT( xpr.root );
@@ -353,7 +353,7 @@ namespace GN
         GN_GUARD;
 
         static Logger * sLogger = getLogger( "GN.base.xml" );
-        GN_INFO(sLogger)( "Load '%s'", filename.cptr() );
+        GN_INFO(sLogger)( "Load '%s'", filename.GetRawPtr() );
 
         AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;

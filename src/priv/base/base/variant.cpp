@@ -16,13 +16,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 // set value
 // -----------------------------------------------------------------------------
 void GN::Variant::setb( bool b ) { mValue = b ? "1" : "0"; }
-void GN::Variant::seti( int i ) { mValue.format( "%d", i ); }
-void GN::Variant::setf( float f ) { mValue.format( "%f", f ); }
-void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.format( "%p", p ); }
-void GN::Variant::setv( const Vector4f & v ) { mValue.format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
+void GN::Variant::seti( int i ) { mValue.Format( "%d", i ); }
+void GN::Variant::setf( float f ) { mValue.Format( "%f", f ); }
+void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.Format( "%p", p ); }
+void GN::Variant::setv( const Vector4f & v ) { mValue.Format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
 void GN::Variant::setm( const Matrix44f & m )
 {
-    mValue.format(
+    mValue.Format(
         "%f,%f,%f,%f,\n"
         "%f,%f,%f,%f,\n"
         "%f,%f,%f,%f,\n"
@@ -40,19 +40,19 @@ bool GN::Variant::getb( bool & b ) const
 {
     int i;
     float f;
-    if( 0 == GN::strCmpI( "yes", mValue.cptr() ) ||
-        0 == GN::strCmpI( "true", mValue.cptr() ) ||
-        0 == GN::strCmpI( "on", mValue.cptr() ) ||
-        0 == GN::strCmp( "1", mValue.cptr() ) )
+    if( 0 == GN::StringCompareI( "yes", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompareI( "true", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompareI( "on", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompare( "1", mValue.GetRawPtr() ) )
     {
         b = true;
         return true;
     }
     else if(
-        0 == GN::strCmpI( "no", mValue.cptr() ) ||
-        0 == GN::strCmpI( "false", mValue.cptr() ) ||
-        0 == GN::strCmpI( "off", mValue.cptr() ) ||
-        0 == GN::strCmp( "0", mValue.cptr() ) )
+        0 == GN::StringCompareI( "no", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompareI( "false", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompareI( "off", mValue.GetRawPtr() ) ||
+        0 == GN::StringCompare( "0", mValue.GetRawPtr() ) )
     {
         b = false;
         return true;
@@ -69,37 +69,37 @@ bool GN::Variant::getb( bool & b ) const
     }
     else
     {
-        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.cptr() );
+        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.GetRawPtr() );
         return false;
     }
 }
 //
 bool GN::Variant::geti( int & i ) const
 {
-    return GN::str2Int<int>( i, mValue.cptr() );
+    return GN::String2Integer<int>( i, mValue.GetRawPtr() );
 }
 //
 bool GN::Variant::getf( float & f ) const
 {
-    return GN::str2Float( f, mValue.cptr() );
+    return GN::String2Float( f, mValue.GetRawPtr() );
 }
 //
 bool GN::Variant::getp( void * & p ) const
 {
     size_t i;
-    bool r = GN::str2Int<size_t>( i, mValue.cptr() );
+    bool r = GN::String2Integer<size_t>( i, mValue.GetRawPtr() );
     if( r ) p = (void*)i;
     return r;
 }
 //
 bool GN::Variant::getv( Vector4f & v ) const
 {
-    return 4 == GN::str2Floats( v, 4, mValue.cptr(), mValue.size() );
+    return 4 == GN::String2FloatArray( v, 4, mValue.GetRawPtr(), mValue.Size() );
 }
 //
 bool GN::Variant::getm( Matrix44f & m ) const
 {
-    return 16 == GN::str2Floats( m[0], 16, mValue.cptr(), mValue.size() );
+    return 16 == GN::String2FloatArray( m[0], 16, mValue.GetRawPtr(), mValue.Size() );
 }
 
 // *****************************************************************************

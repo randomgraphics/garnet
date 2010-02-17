@@ -60,13 +60,13 @@ namespace GN { namespace gfx
         /// convert string to from string
         static GpuProgramLanguage sFromString( const char * s )
         {
-            if( 0 == strCmpI( s, "HLSL9" ) )          return HLSL9;
-            else if( 0 == strCmpI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == strCmpI( s, "HLSL11" ) )    return HLSL11;
-            else if( 0 == strCmpI( s, "MICROCODE" ) ) return MICROCODE;
-            else if( 0 == strCmpI( s, "GLSL" ) )      return GLSL;
-            else if( 0 == strCmpI( s, "ARB1" ) )      return ARB1;
-            else if( 0 == strCmpI( s, "CG" ) )        return CG;
+            if( 0 == StringCompareI( s, "HLSL9" ) )          return HLSL9;
+            else if( 0 == StringCompareI( s, "HLSL10" ) )    return HLSL10;
+            else if( 0 == StringCompareI( s, "HLSL11" ) )    return HLSL11;
+            else if( 0 == StringCompareI( s, "MICROCODE" ) ) return MICROCODE;
+            else if( 0 == StringCompareI( s, "GLSL" ) )      return GLSL;
+            else if( 0 == StringCompareI( s, "ARB1" ) )      return ARB1;
+            else if( 0 == StringCompareI( s, "CG" ) )        return CG;
             else                                      return INVALID;
         }
 
@@ -215,7 +215,7 @@ namespace GN { namespace gfx
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
                 const char * paramName = *(const char * const *)p;
 
-                if( 0 == strCmp( name, paramName ) )
+                if( 0 == StringCompare( name, paramName ) )
                 {
                     // got you!
                     return i;
