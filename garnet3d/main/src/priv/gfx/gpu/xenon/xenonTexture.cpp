@@ -175,7 +175,7 @@ void GN::gfx::XenonTexture::quit()
 {
     GN_GUARD;
 
-    safeRelease( mD3DTexture );
+    SafeRelease( mD3DTexture );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

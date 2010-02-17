@@ -48,7 +48,7 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
 
     mUniform = uni;
     mSize    = uni->size();
-    mFrontEndData = (UInt8*)heapAlloc(mSize);
+    mFrontEndData = (UInt8*)HeapAlloc(mSize);
     if( NULL == mFrontEndData ) return failure();
 
     // success
@@ -70,7 +70,7 @@ void GN::gfx::MultiThreadUniform::quit()
         mUniform = NULL;
     }
 
-    safeHeapFree( mFrontEndData );
+    SafeHeapFree( mFrontEndData );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

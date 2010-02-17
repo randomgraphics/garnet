@@ -331,7 +331,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks( HWND hwnd )
         threadID );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
-        GN_ERROR(sLogger)( getOSErrorInfo() );
+        GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
         return false;
     }
 

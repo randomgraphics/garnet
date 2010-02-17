@@ -335,7 +335,7 @@ bool DDSReader::readHeader(
     if( 0 == levels ) levels = 1;
 
     // grok mipmaps
-    mImgDesc.setFaceAndLevel( faces, levels );
+    mImgDesc.SetFaceAndLevel( faces, levels );
     for( size_t l = 0; l < mImgDesc.numLevels; ++l )
     {
         for( size_t f = 0; f < mImgDesc.numFaces; ++f )

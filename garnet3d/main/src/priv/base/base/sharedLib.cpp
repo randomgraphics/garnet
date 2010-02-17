@@ -5,7 +5,7 @@
 #define SHLIB_LOAD( libName )          ((void*)LoadLibraryA(libName))
 #define SHLIB_FREE( lib )              (!!FreeLibrary(HMODULE(lib)))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)GetProcAddress(HMODULE(lib), symb))
-#define SHLIB_ERROR()                  ::GN::getOSErrorInfo()
+#define SHLIB_ERROR()                  ::GN::GetWin32LastErrorInfo()
 #define SHLIB_EXT                      ".dll"
 #elif GN_POSIX
 #include <dlfcn.h>

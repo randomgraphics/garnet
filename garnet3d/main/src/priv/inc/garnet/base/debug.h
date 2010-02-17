@@ -7,29 +7,14 @@
 // *****************************************************************************
 
 ///
-/// µ÷ÊÔÆ÷¶Ïµã
-///
-#if GN_X86
-#if GN_GCC
-#define GN_DEBUG_BREAK() asm("int $3")
-#elif GN_MSVC
-#define GN_DEBUG_BREAK() __asm { int 3 }
-#else
-#error "Unsupport compiler!"
-#endif
-#else
-#define GN_DEBUG_BREAK() ::GN::debugBreak()
-#endif
-
-///
 /// Assert failture
 ///
 #define GN_ASSERT_FAILURE( desc )                                \
     {                                                            \
         static bool sIgnoreFromNowOn = false;                    \
-        if( !sIgnoreFromNowOn && GN::assertFunc( desc, __FILE__, \
+        if( !sIgnoreFromNowOn && GN::AssertFunc( desc, __FILE__, \
             __LINE__, &sIgnoreFromNowOn ) )                      \
-        { GN_DEBUG_BREAK(); }                                    \
+        { ::GN::BreakIntoDebugger(); }                                    \
     }
 
 ///
@@ -140,7 +125,7 @@
         if( 0 == rr )                                                        \
         {                                                                    \
             static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
-            GN_ERROR(sLogger)( ::GN::getOSErrorInfo() );                     \
+            GN_ERROR(sLogger)( ::GN::GetWin32LastErrorInfo() );                     \
             something                                                        \
         }                                                                    \
     } else void(0)
@@ -176,7 +161,7 @@
         if( FAILED(hr) )                                                    \
         {                                                                   \
             static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
-            GN_ERROR(sLogger)( GN::getDXErrorInfo(hr) );                    \
+            GN_ERROR(sLogger)( GN::GetDirectXErrorInfo(hr) );                    \
             something                                                       \
         }                                                                   \
     } else void(0)
@@ -262,41 +247,46 @@ namespace GN
     /// \return
     ///     Return old behavior.
     ///
-    RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
+    RuntimeAssertBehavior SetRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     ///
-    /// break into debugger ( ASCII version )
+    /// Return true to break into debugger ( ASCII version )
     ///
     bool
-    assertFunc(
+    AssertFunc(
         const char * msg,
         const char * file,
         int          line,
         bool *       ignore ) throw();
 
-#if !GN_X86
 	///
 	/// Debug break function
 	///
-	void debugBreak();
-#endif
+	void BreakIntoDebugger();
 
 #ifdef GN_MSWIN
+
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * getOSErrorInfo() throw();
+    const char * GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw();
+
+    ///
+    /// get OS error info (Windows specific)
+    ///
+    const char * GetWin32LastErrorInfo() throw();
+
 #endif
 
     ///
     /// get DX error string
     ///
-    const char * getDXErrorInfo( SInt32 hr ) throw();
+    const char * GetDirectXErrorInfo( SInt32 hr ) throw();
 
     ///
     /// convert errno value to string
     ///
-    const char * errno2str( int );
+    const char * Errno2Str( int );
 
     //@}
 }

@@ -120,10 +120,10 @@ void GN::gfx::XenonGpuProgramHLSL::quit()
 {
     GN_GUARD;
 
-    safeRelease( mVs );
-    safeRelease( mVsConsts );
-    safeRelease( mPs );
-    safeRelease( mPsConsts );
+    SafeRelease( mVs );
+    SafeRelease( mVsConsts );
+    SafeRelease( mPs );
+    SafeRelease( mPsConsts );
 
     mUniforms.clear();
 

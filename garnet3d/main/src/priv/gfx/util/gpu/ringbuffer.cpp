@@ -18,7 +18,7 @@ bool GN::gfx::RingBuffer::init( size_t ringBufferSize )
     GN_STDCLASS_INIT( GN::gfx::RingBuffer, () );
 
     mSize  = ringBufferSize;
-    mBegin = (UInt8*)heapAlloc( mSize * 2 ); // Note: allocate doulbe sized buffer, to handle rewind issue
+    mBegin = (UInt8*)HeapAlloc( mSize * 2 ); // Note: allocate doulbe sized buffer, to handle rewind issue
     if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
     mEnd = mBegin + mSize;
     mReadPtr = mWritePtr = mBegin;
@@ -46,7 +46,7 @@ void GN::gfx::RingBuffer::quit()
 
     delete mNotFull;
     delete mNotEmpty;
-    heapFree( mBegin );
+    HeapFree( mBegin );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -99,11 +99,11 @@ void GN::util::BitmapFont::quit()
     // delete character array
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        safeDeleteArray( mCharList[i] );
+        SafeDeleteArray( mCharList[i] );
     }
 
     // delete font map array
-    safeDeleteArray( mFontSlots );
+    SafeDeleteArray( mFontSlots );
 
     // delete per-texture resources
     mTextures.clear();

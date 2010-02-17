@@ -54,7 +54,7 @@ void GN::gfx::D3D10Buffer::quit()
 {
     GN_GUARD;
 
-    safeRelease( mD3DBuffer );
+    SafeRelease( mD3DBuffer );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

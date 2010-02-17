@@ -98,7 +98,7 @@ void GN::gfx::XenonIdxBuf::quit()
 {
     GN_GUARD;
 
-    safeRelease( mIb );
+    SafeRelease( mIb );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

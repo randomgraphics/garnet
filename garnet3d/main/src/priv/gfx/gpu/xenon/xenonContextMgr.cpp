@@ -50,7 +50,7 @@ void GN::gfx::XenonGpu::contextQuit()
     // Delete all vertex formats
     mVertexFormats.clear();
 
-    //safeDelete( mRTMgr );
+    //SafeDelete( mRTMgr );
 
     GN_UNGUARD;
 }

@@ -107,7 +107,7 @@ public:
 
         ImageDesc id;
 
-        id.format.alias = ColorFormat.RGBA_8_8_8_8_UNORM;
+        id.format.alias = ColorFormat::RGBA_8_8_8_8_UNORM;
         id.SetFaceAndLevel( 1, 1 );
 
         MipmapDesc & md = id.mipmaps[0];

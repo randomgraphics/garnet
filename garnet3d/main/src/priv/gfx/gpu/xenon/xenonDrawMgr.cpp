@@ -57,7 +57,7 @@ void GN::gfx::XenonGpu::drawQuit()
         mSceneBegun = false;
     }
 
-    safeDelete( mLine );
+    SafeDelete( mLine );
 }
 
 // *****************************************************************************

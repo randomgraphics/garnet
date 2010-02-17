@@ -176,7 +176,7 @@ namespace GN
     };
 
     ///
-    /// Automatic C-style array created by heapAlloc. Can NOT be used in STL containers.
+    /// Automatic C-style array created by HeapAlloc. Can NOT be used in STL containers.
     ///
     template<typename T>
     class AutoTypePtr : public detail::BaseAutoPtr< T, AutoTypePtr<T> >
@@ -190,7 +190,7 @@ namespace GN
 
         static void sDoRelease( T * p )
         {
-            if( p ) heapFree((void*)p);
+            if( p ) HeapFree((void*)p);
         }
 
     public:

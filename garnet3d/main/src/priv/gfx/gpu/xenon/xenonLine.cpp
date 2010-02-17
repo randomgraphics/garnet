@@ -89,10 +89,10 @@ void GN::gfx::XenonLine::quit()
 {
     GN_GUARD;
 
-    safeRelease( mVtxBuf );
-    safeRelease( mDecl );
-    safeRelease( mVtxShader );
-    safeRelease( mPxlShader );
+    SafeRelease( mVtxBuf );
+    SafeRelease( mDecl );
+    SafeRelease( mVtxShader );
+    SafeRelease( mPxlShader );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

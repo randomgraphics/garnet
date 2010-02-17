@@ -67,7 +67,7 @@ void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const voi
         length = maxlen - offset;
     }
 
-    void * tmpbuf = heapAlloc( length );
+    void * tmpbuf = HeapAlloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -119,7 +119,7 @@ namespace GN { namespace gfx
 
         vbup->idxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        heapFree( vbup->data );
+        HeapFree( vbup->data );
     }
 
     //

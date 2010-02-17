@@ -350,10 +350,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         void clear()
         {
-            safeRelease( res );
-            safeRelease( rtv );
-            safeRelease( dsv );
-            safeRelease( srv );
+            SafeRelease( res );
+            SafeRelease( rtv );
+            SafeRelease( dsv );
+            SafeRelease( srv );
         }
 
         //@}

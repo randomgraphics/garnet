@@ -59,7 +59,7 @@ namespace GN
 
         pointer allocate( size_type count )
         {
-            void * p = heapAlloc( count * sizeof(T) );
+            void * p = HeapAlloc( count * sizeof(T) );
             if( NULL == p )
             {
                 throw std::bad_alloc();
@@ -69,7 +69,7 @@ namespace GN
 
         void deallocate( pointer ptr, size_type )
         {
-            heapFree( ptr );
+            HeapFree( ptr );
         }
 
         void construct( pointer ptr, const_reference x )

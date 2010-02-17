@@ -148,7 +148,7 @@ public:
 
     void onQuit()
     {
-        safeDelete( scene );
+        SafeDelete( scene );
     }
 
     void onKeyPress( input::KeyEvent key )

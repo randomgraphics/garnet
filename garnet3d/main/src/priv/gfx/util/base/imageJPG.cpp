@@ -89,7 +89,7 @@ bool JPGReader::readHeader(
     }
 
     // fill image descriptor
-    o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
     GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width         = (UInt16)mCInfo.image_width;
     m.height        = (UInt16)mCInfo.image_height;

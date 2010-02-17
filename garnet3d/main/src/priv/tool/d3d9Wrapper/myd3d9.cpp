@@ -52,7 +52,7 @@ bool sLoadD3D9Dll()
     gD3D9Dll = LoadLibraryA( dllname.cptr() );
     if( 0 == gD3D9Dll )
     {
-        GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", GetWin32LastErrorInfo() );
         return false;
     }
 

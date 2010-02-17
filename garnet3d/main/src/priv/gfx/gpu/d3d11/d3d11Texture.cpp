@@ -143,7 +143,7 @@ void GN::gfx::D3D11Texture::quit()
     mSRViews.clear();
     mRTViews.clear();
     mDSViews.clear();
-    safeRelease( mTexture );
+    SafeRelease( mTexture );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

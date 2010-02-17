@@ -135,9 +135,9 @@ void GN::gfx::D3D10Gpu::contextQuit()
 
     mContext.clear();
 
-    safeDelete( mRTMgr );
+    SafeDelete( mRTMgr );
 
-    safeDelete( mSOMgr );
+    SafeDelete( mSOMgr );
 
     mDefaultSampler.clear();
 

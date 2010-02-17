@@ -51,8 +51,8 @@ void GN::gfx::XenonGpuProgramASM::quit()
 {
     GN_GUARD;
 
-    safeRelease( mVs );
-    safeRelease( mPs );
+    SafeRelease( mVs );
+    SafeRelease( mPs );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

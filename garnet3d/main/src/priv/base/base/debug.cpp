@@ -31,7 +31,7 @@ namespace GN
 //
 //
 // -----------------------------------------------------------------------------
-GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior rab )
+GN::RuntimeAssertBehavior GN::SetRuntimeAssertBehavior( RuntimeAssertBehavior rab )
 {
     RuntimeAssertBehavior old = gRuntimeAssertBehavior;
     gRuntimeAssertBehavior = rab;
@@ -42,7 +42,7 @@ GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior ra
 //
 // -----------------------------------------------------------------------------
 bool
-GN::assertFunc(
+GN::AssertFunc(
     const char * msg,
     const char * file,
     int          line,
@@ -89,26 +89,27 @@ GN::assertFunc(
 #endif
 }
 
-#if !GN_X86
 //
 //
 // -----------------------------------------------------------------------------
-void GN::debugBreak()
+void GN::BreakIntoDebugger()
 {
 #if GN_MSVC
 	::DebugBreak();
+#elif GN_GCC
+    asm("int $3");
 #else
-#error "Debug break unimplemented!"
+#error "Unsupport compiler!"
 #endif
 }
-#endif
+
+#if GN_MSWIN
 
 //
 //
 // -----------------------------------------------------------------------------
-#if GN_MSWIN
 const char *
-GN::getOSErrorInfo() throw()
+GN::GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
 {
     static char info[4096];
 
@@ -120,7 +121,7 @@ GN::getOSErrorInfo() throw()
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
-        ::GetLastError(),
+        win32ErrorCode,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
         info,
         4096,
@@ -139,6 +140,16 @@ GN::getOSErrorInfo() throw()
     // success
     return info;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+const char *
+GN::GetWin32LastErrorInfo() throw()
+{
+    return GetWin32ErrorInfo( ::GetLastError() );
+}
+
 #endif
 
 
@@ -146,7 +157,7 @@ GN::getOSErrorInfo() throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::getDXErrorInfo( SInt32 hr ) throw()
+GN::GetDirectXErrorInfo( SInt32 hr ) throw()
 {
     return DXERR_FUNC( hr );
 }
@@ -155,7 +166,7 @@ GN::getDXErrorInfo( SInt32 hr ) throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::errno2str( int err )
+GN::Errno2Str( int err )
 {
     switch( err )
     {
