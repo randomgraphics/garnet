@@ -7,7 +7,7 @@
 #include "glew.h"
 #include "glxew.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.X11");
 
 // *****************************************************************************
 // local functions

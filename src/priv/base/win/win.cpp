@@ -3,7 +3,7 @@
 
 namespace GN { namespace win
 {
-    static GN::Logger * sLogger = GN::getLogger("GN.win");
+    static GN::Logger * sLogger = GN::GetLogger("GN.win");
 
     // *************************************************************************
     // Fake Window

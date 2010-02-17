@@ -5,7 +5,7 @@
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.PNG");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.PNG");
 
 // *****************************************************************************
 // local functions

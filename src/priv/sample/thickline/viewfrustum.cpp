@@ -8,7 +8,7 @@ using namespace GN::d3d9;
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.thickline");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.thickline");
 
 //
 //

@@ -2,7 +2,7 @@
 #include "d3d10Gpu.h"
 #include "d3d10Texture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // local functions
@@ -183,8 +183,8 @@ void GN::gfx::D3D10Texture::updateMipmap(
         const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
 
         // align width and heigh to texel block boundary
-        clippedArea.w = math::align<UInt32>( clippedArea.w, fmtdesc.blockWidth );
-        clippedArea.h = math::align<UInt32>( clippedArea.h, fmtdesc.blockHeight );
+        clippedArea.w = math::AlignToPowerOf2<UInt32>( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::AlignToPowerOf2<UInt32>( clippedArea.h, fmtdesc.blockHeight );
 
         D3D10_BOX box =
         {

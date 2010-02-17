@@ -25,7 +25,7 @@ struct BezierVertex
     }
 };
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.Bezier");
+static GN::Logger * sLogger = GN::GetLogger("GN.sample.Bezier");
 
 MeshResource * createMesh( GpuResourceDatabase & gdb )
 {

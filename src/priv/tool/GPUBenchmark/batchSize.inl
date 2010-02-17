@@ -77,7 +77,7 @@ public:
         , mGeometry( 1, 32768 ) // 65536 triangles
     {
         // align batch size to 2^N
-        BATCH_SIZE = ceilPowerOf2( initialBatchSize );
+        BATCH_SIZE = CeilPowerOf2( initialBatchSize );
 
         // clamp to 8 to 32768
         clamp<UInt32>( BATCH_SIZE, 8, 32768 );

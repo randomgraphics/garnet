@@ -326,7 +326,7 @@ namespace GN
         XmlParseResult xpr;
         if( !doc.parse( xpr, fp ) )
         {
-            static Logger * sLogger = getLogger( "GN.base.xml" );
+            static Logger * sLogger = GetLogger( "GN.base.xml" );
             GN_ERROR(sLogger)(
                 "Fail to parse XML file (%s):\n"
                 "    line   : %d\n"
@@ -352,7 +352,7 @@ namespace GN
     {
         GN_GUARD;
 
-        static Logger * sLogger = getLogger( "GN.base.xml" );
+        static Logger * sLogger = GetLogger( "GN.base.xml" );
         GN_INFO(sLogger)( "Load '%s'", filename.GetRawPtr() );
 
         AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );

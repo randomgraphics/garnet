@@ -111,7 +111,7 @@ namespace GN
         {
             if( StdClass::ok() )
             {
-                GN_ERROR(getLogger("GN.base.StdClass"))( "u call init() twice!" );
+                GN_ERROR(GetLogger("GN.base.StdClass"))( "u call init() twice!" );
                 return failure();
             }
 

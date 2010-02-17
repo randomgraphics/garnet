@@ -3,7 +3,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
+static GN::Logger * sLogger = GN::GetLogger("GN.input.BasicInputMsw");
 
 // *****************************************************************************
 //    init / quit functions

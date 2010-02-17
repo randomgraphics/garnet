@@ -85,13 +85,13 @@ void GN::calculateBoundingBox(
         y = sGetNextValue( valueY, strideY );
         z = sGetNextValue( valueZ, strideZ );
 
-        vMin.x = math::getmin( vMin.x, x );
-        vMin.y = math::getmin( vMin.y, y );
-        vMin.z = math::getmin( vMin.z, z );
+        vMin.x = math::GetMin( vMin.x, x );
+        vMin.y = math::GetMin( vMin.y, y );
+        vMin.z = math::GetMin( vMin.z, z );
 
-        vMax.x = math::getmax( vMax.x, x );
-        vMax.y = math::getmax( vMax.y, y );
-        vMax.z = math::getmax( vMax.z, z );
+        vMax.x = math::GetMax( vMax.x, x );
+        vMax.y = math::GetMax( vMax.y, y );
+        vMax.z = math::GetMax( vMax.z, z );
     }
 
     result.pos() = vMin;

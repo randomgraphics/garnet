@@ -52,7 +52,7 @@
 - 2006.5.6
   - remove security warnings of vs8
   - String2Integer() functions.
-  - new mbs2wcs() functiont to write to wchar_t buffer directly. (with UT)
+  - new Mbs2Wcs() functiont to write to wchar_t buffer directly. (with UT)
 
 - 2006.5.5
   - refine interface of File class:

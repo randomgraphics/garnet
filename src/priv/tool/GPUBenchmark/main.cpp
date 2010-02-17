@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.gpuBenchmark");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.tool.gpuBenchmark");
 
 // *****************************************************************************
 // Utils

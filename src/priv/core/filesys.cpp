@@ -24,7 +24,7 @@
 using namespace GN;
 using namespace GN::fs;
 
-static Logger * sLogger = getLogger("GN.base.filesys");
+static Logger * sLogger = GetLogger("GN.base.filesys");
 
 // *****************************************************************************
 // local functions for posix platform

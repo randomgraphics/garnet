@@ -326,7 +326,7 @@ namespace GN { namespace gfx
             mTail.next = NULL;
             mTail.object = 0;
             mCount = 0;
-            mLogger = getLogger( "GN.gfx.gpu.D3D11.D3D11StateObjectCache" );
+            mLogger = GetLogger( "GN.gfx.gpu.D3D11.D3D11StateObjectCache" );
 
             // initialize free item list
             mNextFreeItem = &mPool[0];

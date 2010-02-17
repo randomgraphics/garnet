@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 void GN::putEnv( const char * name, const char * value )
 {
-    static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
+    static GN::Logger * sLogger = GN::GetLogger("GN.base.putEnv");
 
 #if GN_XENON
     // Xenon does not support putenv()

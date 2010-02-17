@@ -237,10 +237,10 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
         UInt32 r = newvp.x + newvp.w;
         UInt32 b = newvp.y + newvp.h;
 
-        math::clamp<UInt32>( l, 0, rtsize.width );
-        math::clamp<UInt32>( t, 0, rtsize.height );
-        math::clamp<UInt32>( r, 0, rtsize.width );
-        math::clamp<UInt32>( b, 0, rtsize.height );
+        math::ClampMinMax<UInt32>( l, 0, rtsize.width );
+        math::ClampMinMax<UInt32>( t, 0, rtsize.height );
+        math::ClampMinMax<UInt32>( r, 0, rtsize.width );
+        math::ClampMinMax<UInt32>( b, 0, rtsize.height );
 
         d3dvp.TopLeftX = l;
         d3dvp.TopLeftY = t;

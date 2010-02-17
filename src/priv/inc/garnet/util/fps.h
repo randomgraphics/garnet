@@ -71,7 +71,7 @@ namespace GN { namespace util
                 mFpsString.Format( mFormatString.GetRawPtr(), mFpsValue );
                 mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
-                static Logger * sLogger = getLogger("GN.util.fps");
+                static Logger * sLogger = GetLogger("GN.util.fps");
                 GN_VERBOSE(sLogger)( mFpsString.GetRawPtr() );
             }
             else if( mBeforeFirstUpdate )

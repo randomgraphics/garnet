@@ -337,22 +337,22 @@ namespace GN { namespace gfx
             size_t len = StringLength( variableName );
             if( 0 == len )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
+                GN_ERROR(GetLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(binding) )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(GetLogger("GN.gfx.VertexElement"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
                     variableName );
             }
-            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
+            len = math::GetMin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
             memcpy( binding, variableName, len );
 
             if( index > 255 )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(GetLogger("GN.gfx.VertexElement"))(
                     "Binding index (%d) is too large. Maxinum value is 255.",
                     index );
                 bindingIndex = 0;

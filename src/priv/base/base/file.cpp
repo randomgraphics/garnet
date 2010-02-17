@@ -2,7 +2,7 @@
 
 using namespace GN;
 
-static Logger * sLogger = getLogger("GN.base.File");
+static Logger * sLogger = GetLogger("GN.base.File");
 
 static FILE * sOpenFile( const char * filename, const char * mode )
 {

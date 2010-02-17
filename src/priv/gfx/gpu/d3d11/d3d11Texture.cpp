@@ -2,7 +2,7 @@
 #include "d3d11Gpu.h"
 #include "d3d11Texture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // local functions
@@ -187,8 +187,8 @@ void GN::gfx::D3D11Texture::updateMipmap(
             GN_ERROR(sLogger)( "For block-compressed texture, \"area\" parameter must be aligned to texel block boundary." );
             return;
         }
-        clippedArea.w = math::align( clippedArea.w, fmtdesc.blockWidth );
-        clippedArea.h = math::align( clippedArea.h, fmtdesc.blockHeight );
+        clippedArea.w = math::AlignToPowerOf2( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::AlignToPowerOf2( clippedArea.h, fmtdesc.blockHeight );
 
         D3D11_BOX box =
         {

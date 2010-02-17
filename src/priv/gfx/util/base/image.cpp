@@ -5,7 +5,7 @@
 #include "imageJPG.h"
 #include "imageTGA.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // ImageDesc
@@ -46,8 +46,8 @@ bool GN::gfx::ImageDesc::valid() const
         }
 
         // check pitches
-        UInt32 w = math::align<UInt32>( m.width, cld.blockWidth );
-        UInt32 h = math::align<UInt32>( m.height, cld.blockHeight );
+        UInt32 w = math::AlignToPowerOf2<UInt32>( m.width, cld.blockWidth );
+        UInt32 h = math::AlignToPowerOf2<UInt32>( m.height, cld.blockHeight );
         if( m.rowPitch < w * cld.bits / 8 )
         {
             GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is too small!", f, l );

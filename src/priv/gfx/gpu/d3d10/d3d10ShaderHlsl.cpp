@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
 
 ///
 /// D3D10 shader type
@@ -492,7 +492,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
             break;
 
         default:
-            GN_ERROR(GN::getLogger("GN.gfx.gpu.D3D9"))( "unitialized/invalid uniform!" );
+            GN_ERROR(GN::GetLogger("GN.gfx.gpu.D3D9"))( "unitialized/invalid uniform!" );
             break;
 
     }

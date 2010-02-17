@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.tool.oglInfo");
 
 ///
 /// Split a string into token list

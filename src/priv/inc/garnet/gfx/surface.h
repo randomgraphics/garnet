@@ -79,14 +79,14 @@ namespace GN { namespace gfx
             maxLevels = depth;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
 
-            maxLevels = math::getmax( nx, ny, nz );
+            maxLevels = math::GetMax( nx, ny, nz );
 
-            levels = ( 0 == levels ) ? maxLevels : math::getmin( maxLevels, levels );
+            levels = ( 0 == levels ) ? maxLevels : math::GetMin( maxLevels, levels );
 
             // check format
             if( !format.valid() )
             {
-                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().GetRawPtr() );
                 return false;
             }
@@ -94,7 +94,7 @@ namespace GN { namespace gfx
             // check usage
             if( usage < 0 && usage >= TextureUsage::NUM_USAGES )
             {
-                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture usage: %d", usage.ToRawEnum() );
                 return false;
             }

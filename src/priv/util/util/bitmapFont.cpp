@@ -12,7 +12,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.BitmapFont");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.BitmapFont");
 
 //
 //
@@ -192,7 +192,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
             penx += fs->advx;
 
             // adjust bounding box
-            bbox.w = math::getmax( penx - td.x, bbox.w );
+            bbox.w = math::GetMax( penx - td.x, bbox.w );
         }
     }
 

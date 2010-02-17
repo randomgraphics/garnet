@@ -150,7 +150,7 @@ namespace GN
                 Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
-                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
+                    GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
                 newItem->occupied = false;
@@ -178,7 +178,7 @@ namespace GN
                 Item * newItem = (Item*)mPool.alloc();
                 if( 0 == newItem )
                 {
-                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
+                    GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
                     return 0;
                 }
                 newItem->occupied = false;
@@ -203,7 +203,7 @@ namespace GN
         {
             if( !validHandle(h) )
             {
-                GN_ERROR(getLogger("GN.base.HandleManager"))( "Invalid handle!" );
+                GN_ERROR(GetLogger("GN.base.HandleManager"))( "Invalid handle!" );
             }
             else
             {
@@ -355,7 +355,7 @@ namespace GN
 
             if( mNames.end() != mNames.find( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
                 return 0;
             }
 
@@ -387,7 +387,7 @@ namespace GN
 
             if( mNames.end() != mNames.find( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
                 return 0;
             }
 
@@ -410,7 +410,7 @@ namespace GN
         {
             if( !validHandle( h ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
                 return;
             }
 
@@ -433,7 +433,7 @@ namespace GN
 
             if( !validName( name ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.GetRawPtr() );
                 return;
             }
 

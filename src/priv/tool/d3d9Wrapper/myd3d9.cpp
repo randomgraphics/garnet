@@ -6,7 +6,7 @@
 #pragma comment(lib, "dxguid.lib")
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyD3D9");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyD3D9");
 
 // *****************************************************************************
 // Local function Pointers

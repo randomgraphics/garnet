@@ -5,7 +5,7 @@
 
 std::map<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
+static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -259,7 +259,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     mWindow = ::CreateWindowExW(
         exStyle,
         mClassName.GetRawPtr(),
-        mbs2wcs(wcp.caption).GetRawPtr(),
+        Mbs2Wcs(wcp.caption).GetRawPtr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,

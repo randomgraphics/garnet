@@ -22,7 +22,7 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     D3DDECL_END()
 };
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown

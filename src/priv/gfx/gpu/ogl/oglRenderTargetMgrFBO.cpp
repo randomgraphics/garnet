@@ -3,7 +3,7 @@
 #include "oglTexture.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -217,8 +217,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             //
             // Current auto-z buffer is smaller than color render targets. Need to enlarge it.
             //
-            UInt32 newWidth  = math::getmax( mRenderTargetSize.x, mAutoZSize.x );
-            UInt32 newHeight = math::getmax( mRenderTargetSize.y, mAutoZSize.y );
+            UInt32 newWidth  = math::GetMax( mRenderTargetSize.x, mAutoZSize.x );
+            UInt32 newHeight = math::GetMax( mRenderTargetSize.y, mAutoZSize.y );
 
             // delete old z buffer
             if( mAutoZ )

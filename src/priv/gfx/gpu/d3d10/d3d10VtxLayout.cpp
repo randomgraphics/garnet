@@ -2,7 +2,7 @@
 #include "d3d10Gpu.h"
 #include "d3d10VtxLayout.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10.VtxLayout");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10.VtxLayout");
 
 // *****************************************************************************
 // local functions

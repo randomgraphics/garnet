@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.LineRenderer");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.LineRenderer");
 
 static const char * glslvscode=
     "varying vec4 color; \n"

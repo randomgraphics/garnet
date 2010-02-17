@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Logger::LogHelper::doLog( const char * fmt, ... )
+void GN::Logger::LogHelper::DoLog( const char * fmt, ... )
 {
     GN_ASSERT( mLogger );
     StrA s;
@@ -11,13 +11,13 @@ void GN::Logger::LogHelper::doLog( const char * fmt, ... )
     va_start( arglist, fmt );
     s.FormatV( fmt, arglist );
     va_end( arglist );
-    mLogger->doLog( mDesc, s );
+    mLogger->DoLog( mDesc, s );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Logger::LogHelper::doLog( const wchar_t * fmt, ... )
+void GN::Logger::LogHelper::DoLog( const wchar_t * fmt, ... )
 {
     GN_ASSERT( mLogger );
     StrW s;
@@ -25,5 +25,5 @@ void GN::Logger::LogHelper::doLog( const wchar_t * fmt, ... )
     va_start( arglist, fmt );
     s.FormatV( fmt, arglist );
     va_end( arglist );
-    mLogger->doLog( mDesc, s );
+    mLogger->DoLog( mDesc, s );
 }

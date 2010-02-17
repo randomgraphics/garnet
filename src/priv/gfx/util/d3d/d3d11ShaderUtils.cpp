@@ -6,7 +6,7 @@
 #endif // GN_MSVC
 
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d11.d3d11ShaderUtils");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d11.d3d11ShaderUtils");
 
 // *****************************************************************************
 // local function

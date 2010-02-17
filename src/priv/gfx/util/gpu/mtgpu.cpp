@@ -6,7 +6,7 @@
 #include "mtidxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtgpu");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtgpu");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -142,7 +142,7 @@ void GN::gfx::MultiThreadGpu::waitForFence( UInt32 fence )
 UInt8 * GN::gfx::MultiThreadGpu::beginPostCommand( UInt32 cmd, size_t length )
 {
     // align data size to command header size
-    size_t paramsize = math::align( length, sizeof(CommandHeader) );
+    size_t paramsize = math::AlignToPowerOf2( length, sizeof(CommandHeader) );
 
     // push command header
     CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( sizeof(CommandHeader) );

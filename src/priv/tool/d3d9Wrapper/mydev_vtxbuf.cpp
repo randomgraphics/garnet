@@ -2,7 +2,7 @@
 #include "mydevice9.h"
 #include "myvtxbuf9.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyDevice9.VtxBuf");
+static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyDevice9.VtxBuf");
 
 using namespace GN;
 

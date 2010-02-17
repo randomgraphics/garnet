@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglGpu.h"
 
-GN::Logger * GN::gfx::OGLGpu::sLogger = GN::getLogger("GN.gfx.gpu.OGL");
+GN::Logger * GN::gfx::OGLGpu::sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Global functions

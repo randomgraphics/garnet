@@ -23,7 +23,7 @@
 #error "Unknown platform!"
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.SharedLib");
+static GN::Logger * sLogger = GN::GetLogger("GN.base.SharedLib");
 
 //
 //

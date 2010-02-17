@@ -158,7 +158,7 @@ namespace GN
         ///
         /// File logger
         ///
-        static inline Logger * myLogger() { static Logger * logger = getLogger("GN.base.File"); return logger; }
+        static inline Logger * myLogger() { static Logger * logger = GetLogger("GN.base.File"); return logger; }
 
     private:
 

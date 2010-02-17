@@ -7,7 +7,7 @@
 
 UInt8 JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.JPG");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.JPG");
 
 //
 //

@@ -10,7 +10,7 @@
 
 #define IDX_INPUT_BUFFER_SIZE  128
 
-static GN::Logger * sLogger = GN::getLogger("GN.input.DI");
+static GN::Logger * sLogger = GN::GetLogger("GN.input.DI");
 
 // *****************************************************************************
 // Initialize and shutdown

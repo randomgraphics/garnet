@@ -9,8 +9,8 @@
 /// General log macros, with user specified source code location
 //@{
 #if GN_BUILD_ENABLE_LOG
-#define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).doLog
-#define GN_LOG_BEGIN( logger, level )                if( logger->isOn( level ) ) {
+#define GN_LOG_EX( logger, level, func, file, line ) if( logger->IsOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).DoLog
+#define GN_LOG_BEGIN( logger, level )                if( logger->IsOn( level ) ) {
 #define GN_LOG_END()                                 }
 #else
 #define GN_LOG_EX( logger, level, func, file, line ) if( 1 ) {} else GN::Logger::sFakeLog
@@ -20,7 +20,7 @@
 //@}
 
 ///
-/// General doLog macro, with automatic source code location
+/// General DoLog macro, with automatic source code location
 ///
 #define GN_LOG( logger, level ) GN_LOG_EX( logger, level, GN_FUNCTION, __FILE__, __LINE__ )
 
@@ -107,7 +107,7 @@ namespace GN
             LogDesc() {}
 
             ///
-            /// Construct doLog descriptor
+            /// Construct DoLog descriptor
             ///
             LogDesc(
                 int          lvl_,
@@ -122,7 +122,7 @@ namespace GN
         };
 
         ///
-        /// doLog helper
+        /// DoLog helper
         ///
         struct LogHelper
         {
@@ -132,7 +132,7 @@ namespace GN
         public:
 
             ///
-            /// Construct doLog helper
+            /// Construct DoLog helper
             ///
             LogHelper( Logger * logger, int level, const char * func, const char * file, int line )
                 : mLogger(logger), mDesc(level,func,file,line)
@@ -141,14 +141,14 @@ namespace GN
             }
 
             ///
-            /// Do doLog
+            /// Do DoLog
             ///
-            void doLog( const char * fmt, ... );
+            void DoLog( const char * fmt, ... );
 
             ///
-            /// Do doLog (UNICODE)
+            /// Do DoLog (UNICODE)
             ///
-            void doLog( const wchar_t * fmt, ... );
+            void DoLog( const wchar_t * fmt, ... );
         };
 
         ///
@@ -164,12 +164,12 @@ namespace GN
             ///
             /// deal with incoming log message
             ///
-            virtual void onLog( Logger &, const LogDesc &, const StrA & ) = 0;
+            virtual void OnLog( Logger &, const LogDesc &, const StrA & ) = 0;
 
             ///
             /// deal with incoming UNICODE log message
             ///
-            virtual void onLog( Logger &, const LogDesc &, const StrW & ) = 0;
+            virtual void OnLog( Logger &, const LogDesc &, const StrW & ) = 0;
         };
 
         ///
@@ -180,12 +180,12 @@ namespace GN
         ///
         /// Do log
         ///
-        virtual void doLog( const LogDesc & desc, const StrA & msg ) = 0;
+        virtual void DoLog( const LogDesc & desc, const StrA & msg ) = 0;
 
         ///
         /// Do log (UNICODE)
         ///
-        virtual void doLog( const LogDesc & desc, const StrW & msg ) = 0;
+        virtual void DoLog( const LogDesc & desc, const StrW & msg ) = 0;
 
         ///
         /// change logger level.
@@ -195,29 +195,29 @@ namespace GN
         ///     - level=0 : muted
         ///     - level<0 : output log messge with level == -(this value)
         ///
-        virtual void setLevel( int level ) = 0;
+        virtual void SetLevel( int level ) = 0;
 
         ///
         /// enable or disable this logger
         ///
-        virtual void setEnabled( bool ) = 0;
+        virtual void SetEnabled( bool ) = 0;
 
         /// \name receiver management
         //@{
-        virtual void addReceiver( Receiver * r ) = 0;
-        virtual void removeReceiver( Receiver * r ) = 0;
-        virtual void removeAllReceivers() = 0;
+        virtual void AddReceiver( Receiver * r ) = 0;
+        virtual void RemoveReceiver( Receiver * r ) = 0;
+        virtual void RemoveAllReceivers() = 0;
         //@}
 
         ///
         /// get logger name
         ///
-        const StrA & getName() const { return mName; }
+        const StrA & GetName() const { return mName; }
 
         ///
         /// get logger level
         ///
-        int getLevel() const { return mLevel; }
+        int GetLevel() const { return mLevel; }
 
         ///
         /// get logger enable/disable status
@@ -227,7 +227,7 @@ namespace GN
         ///
         /// is logging in effective?
         ///
-        bool isOn( int level ) const
+        bool IsOn( int level ) const
         {
             GN_ASSERT( level > 0 );
             return
@@ -239,7 +239,7 @@ namespace GN
         ///
         /// is logging muted?
         ///
-        bool isOff( int level ) const
+        bool IsOff( int level ) const
         {
             GN_ASSERT( level > 0 );
             return
@@ -260,14 +260,14 @@ namespace GN
         ///
         Logger( const StrA & name ) : mName(name) {}
 
-        int  mLevel;   ///< doLog level
+        int  mLevel;   ///< DoLog level
         bool mEnabled; ///< logger enabled or not.
 
     private:
         StrA mName;
     };
 
-    /// \name Global doLog functions
+    /// \name Global DoLog functions
     //@{
 
     ///
@@ -276,12 +276,12 @@ namespace GN
     /// \param name
     ///     Logger name (case insensitive)
     ///
-    GN_PUBLIC Logger * getLogger( const char * name );
+    GN_PUBLIC Logger * GetLogger( const char * name );
 
     ///
     /// Get root logger
     ///
-    inline Logger * getRootLogger() { return getLogger( 0 ); }
+    inline Logger * GetRootLogger() { return GetLogger( 0 ); }
 
     //@}
 } // end of namespace GN

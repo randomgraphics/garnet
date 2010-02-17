@@ -3,7 +3,7 @@
 #include "d3d11Gpu.h"
 #include "d3d11Texture.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -314,7 +314,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
     size_t                  count,
     bool                    skipDirtyCheck ) const
 {
-    count = math::getmin( count, mParamDesc.uniforms.count() );
+    count = math::GetMin( count, mParamDesc.uniforms.count() );
 
     // dirty flags
     bool vscDirty[D3D11ConstBufferArray::MAX_SIZE];

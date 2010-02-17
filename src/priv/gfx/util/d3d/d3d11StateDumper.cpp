@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.d3d11.statedumper");
+static GN::Logger * sLogger = GN::GetLogger("GN.d3d11.statedumper");
 
 using namespace GN;
 
@@ -730,7 +730,7 @@ void sDumpD3D11States( ID3D11DeviceContext & devcxt, FILE * fp )
 
 void GN::d3d11::setDumpFilePrefix( const StrA & prefix )
 {
-    size_t n = math::getmin<size_t>( prefix.Size(), _MAX_PATH );
+    size_t n = math::GetMin<size_t>( prefix.Size(), _MAX_PATH );
     memcpy( sDumpFilePrefix, prefix.GetRawPtr(), n );
     sDumpFilePrefix[_MAX_PATH-1] = 0;
 }

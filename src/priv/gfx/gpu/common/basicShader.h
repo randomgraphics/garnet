@@ -24,14 +24,14 @@ namespace GN { namespace gfx
         {
             if( 0 != sc.source && ( sc.source < begin || sc.source >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader source pointer.", type );
                 return false;
             }
 
             if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
                 return false;
             }
@@ -111,7 +111,7 @@ namespace GN { namespace gfx
             // check GPU program language
             if( !desc.lang.valid() )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.ToRawEnum() );
                 return false;
             }
@@ -121,7 +121,7 @@ namespace GN { namespace gfx
                 !sCheckShaderCode( "geometry", desc.gs, start, end ) ||
                 !sCheckShaderCode( "pixel", desc.ps, start, end ) )
             {
-                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "Invalid shader binary." );
                 return false;
             }
@@ -168,12 +168,12 @@ namespace GN { namespace gfx
         {
             if( offset >= mSize || (offset+length) > mSize )
             {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
+                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
                 return;
             }
             if( NULL == data )
             {
-                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
+                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
                 return;
             }
             memcpy( (UInt8*)mData + offset, data, length );

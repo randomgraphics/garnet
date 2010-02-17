@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
+static GN::Logger * sLogger = GN::GetLogger("GN.util.AsciiFont");
 
 // *****************************************************************************
 // ascii font face class
