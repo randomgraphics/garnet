@@ -116,8 +116,8 @@ void GN::gfx::XenonGpu::dispQuit()
 
     PIXPERF_FUNCTION_EVENT();
 
-    safeRelease( mDevice );
-    safeRelease( mD3D );
+    SafeRelease( mDevice );
+    SafeRelease( mD3D );
 
     GN_UNGUARD;
 }

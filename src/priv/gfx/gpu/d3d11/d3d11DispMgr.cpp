@@ -107,11 +107,11 @@ void GN::gfx::D3D11Gpu::dispQuit()
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
 
-    safeRelease( mD3D11Debug );
-    safeRelease( mDeviceContext );
-    safeRelease( mSwapChain );
-    safeRelease( mDevice );
-    safeRelease( mAdapter );
+    SafeRelease( mD3D11Debug );
+    SafeRelease( mDeviceContext );
+    SafeRelease( mSwapChain );
+    SafeRelease( mDevice );
+    SafeRelease( mAdapter );
 
     GN_UNGUARD;
 }

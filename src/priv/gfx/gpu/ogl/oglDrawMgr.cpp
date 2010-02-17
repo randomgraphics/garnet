@@ -64,7 +64,7 @@ void GN::gfx::OGLGpu::drawQuit()
 {
     GN_GUARD;
 
-    safeDelete( mLine );
+    SafeDelete( mLine );
 
     GN_UNGUARD
 }

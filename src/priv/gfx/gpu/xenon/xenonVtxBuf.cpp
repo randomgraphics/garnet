@@ -95,7 +95,7 @@ void GN::gfx::XenonVtxBuf::quit()
 {
     GN_GUARD;
 
-    safeRelease( mVb );
+    SafeRelease( mVb );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

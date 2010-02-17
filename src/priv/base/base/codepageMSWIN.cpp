@@ -102,8 +102,8 @@ void GN::CECImplMSWIN::quit()
 {
     GN_GUARD;
 
-    safeDelete( mLocaleFrom );
-    safeDelete( mLocaleTo );
+    SafeDelete( mLocaleFrom );
+    SafeDelete( mLocaleTo );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

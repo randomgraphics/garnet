@@ -20,7 +20,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
             "fopen() fail to open file '%s' with mode '%s' : %s.",
             filename,
             mode,
-            GN::errno2str( errno ) );
+            GN::Errno2Str( errno ) );
     }
 
     return fp;
@@ -345,7 +345,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s' : %s",
-            fileNameTempl.cptr(), mode.cptr(), errno2str( errno ) );
+            fileNameTempl.cptr(), mode.cptr(), Errno2Str( errno ) );
         close();
         return false;
     }

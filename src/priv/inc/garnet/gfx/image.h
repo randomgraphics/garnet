@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         //@{
 
         ImageDesc() : mipmaps(0) {}
-        ~ImageDesc() { safeHeapFree( mipmaps ); }
+        ~ImageDesc() { SafeHeapFree( mipmaps ); }
 
         //@}
 
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
         {
             if( d.mipmaps > 0 )
             {
-                setFaceAndLevel( numFaces, numLevels );
+                SetFaceAndLevel( numFaces, numLevels );
                 size_t mipCount = numFaces * numLevels;
                 memcpy( mipmaps, d.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
             numLevels = rhs.numLevels;
             if( rhs.mipmaps > 0 )
             {
-                setFaceAndLevel( numFaces, numLevels );
+                SetFaceAndLevel( numFaces, numLevels );
                 size_t mipCount = numFaces * numLevels;
                 memcpy( mipmaps, rhs.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
@@ -131,7 +131,7 @@ namespace GN { namespace gfx
         ///
         /// set image face count and level count, allocate mipmap array as well.
         ///
-        bool setFaceAndLevel( size_t faces, size_t levels );
+        bool SetFaceAndLevel( size_t faces, size_t levels );
 
         ///
         /// return descriptor of specific mipmap

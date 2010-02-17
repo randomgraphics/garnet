@@ -173,9 +173,9 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     }
 
     // swap header to little endian
-    header.size1 = swap8in32( header.size1 );
-    header.size2 = swap8in32( header.size2 );
-    header.numObjects = swap8in32( header.numObjects );
+    header.size1 = SwapEndian8In32( header.size1 );
+    header.size2 = SwapEndian8In32( header.size2 );
+    header.numObjects = SwapEndian8In32( header.numObjects );
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
@@ -193,9 +193,9 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
         XPRObjectHeader & o = objects[i];
 
         // do endian swap
-        o.offset = swap8in32( o.offset );
-        o.size   = swap8in32( o.size );
-        o.unknown = swap8in32( o.unknown );
+        o.offset = SwapEndian8In32( o.offset );
+        o.size   = SwapEndian8In32( o.size );
+        o.unknown = SwapEndian8In32( o.unknown );
 
         size_t offset = o.offset - sizeof(header) + 12;
         void * desc   = &xpr.sceneData[offset];

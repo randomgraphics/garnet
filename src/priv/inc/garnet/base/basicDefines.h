@@ -69,9 +69,6 @@
 #define GN_XBOX1 0  ///< If 1, means Xbox1
 #define GN_XENON 0  ///< if 1, means Xbox360
 
-/// \def GN_OS
-/// Indicate current OS
-
 // Windows platform
 #if defined( _WIN32 )
 

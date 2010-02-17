@@ -477,7 +477,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     size_t vbsize = numvtx * strideInBytes;
     size_t ibsize = numidx * 2;
 
-    void * tmpvb = heapAlloc( vbsize );
+    void * tmpvb = HeapAlloc( vbsize );
     if( NULL == tmpvb )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary vertex buffer." );
@@ -485,11 +485,11 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     }
     memcpy( tmpvb, vertexData, vbsize );
 
-    void * tmpib = heapAlloc( ibsize );
+    void * tmpib = HeapAlloc( ibsize );
     if( NULL == tmpib )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary index buffer." );
-        heapFree( tmpvb );
+        HeapFree( tmpvb );
         return;
     }
     memcpy( tmpib, indexData, ibsize );
@@ -507,7 +507,7 @@ void GN::gfx::MultiThreadGpu::drawUp(
     size_t        strideInBytes )
 {
     size_t sz = strideInBytes * numvtx;
-    void * vb = heapAlloc( sz );
+    void * vb = HeapAlloc( sz );
     if( NULL == vb )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary vertex buffer." );
@@ -533,7 +533,7 @@ GN::gfx::MultiThreadGpu::drawLines(
 {
     size_t length = stride * numpoints;
 
-    void * tmpbuf = heapAlloc( length );
+    void * tmpbuf = HeapAlloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -899,8 +899,8 @@ namespace GN { namespace gfx
 
         r.drawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
 
-        heapFree( diup->vertexData );
-        heapFree( diup->indexData );
+        HeapFree( diup->vertexData );
+        HeapFree( diup->indexData );
     }
 
     //
@@ -917,7 +917,7 @@ namespace GN { namespace gfx
         };
         DrawUpParam * dup = (DrawUpParam*)p;
         r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
-        heapFree( dup->vertexData );
+        HeapFree( dup->vertexData );
     }
 
     //
@@ -937,7 +937,7 @@ namespace GN { namespace gfx
             dlp->view,
             dlp->proj );
 
-        heapFree( dlp->positions );
+        HeapFree( dlp->positions );
     }
 
     //

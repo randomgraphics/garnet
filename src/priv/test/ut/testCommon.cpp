@@ -17,7 +17,7 @@ static void sPrintUsage()
 //
 int myInit( int argc, const char * argv[] )
 {
-    GN::enableCRTMemoryCheck();
+    GN::EnableCRTMemoryCheck();
 
     // parse command line arguments
     bool verbose = false;

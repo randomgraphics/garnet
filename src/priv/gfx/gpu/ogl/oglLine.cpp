@@ -40,7 +40,7 @@ void GN::gfx::OGLLine::quit()
 {
     GN_GUARD;
 
-    safeHeapFree( mVtxBuf );
+    SafeHeapFree( mVtxBuf );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -85,7 +85,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return 0;
     }
 
@@ -116,7 +116,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
         0 );
     if( 0 == hwnd )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
         return false;
     }
 
@@ -367,7 +367,7 @@ void GN::d3d9::D3D9Application::quit()
 
     onQuit();
 
-    safeRelease( mD3D );
+    SafeRelease( mD3D );
 
     if( gInputPtr )
     {

@@ -124,7 +124,7 @@ int run( Gpu & gpu )
 
 int main( int argc, const char * argv[] )
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

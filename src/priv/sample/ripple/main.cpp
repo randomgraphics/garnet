@@ -126,7 +126,7 @@ public:
 
     void onQuit()
     {
-        safeDelete( mSprite );
+        SafeDelete( mSprite );
         mContext.clear();
     }
 

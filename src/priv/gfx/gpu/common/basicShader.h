@@ -149,13 +149,13 @@ namespace GN { namespace gfx
         /// ctor
         SysMemUniform( size_t sz )
             : mSize(0==sz?1:sz)
-            , mData( heapAlloc(mSize) )
+            , mData( HeapAlloc(mSize) )
             , mTimeStamp(0)
         {
         }
 
         /// dtor
-        ~SysMemUniform() { heapFree(mData); }
+        ~SysMemUniform() { HeapFree(mData); }
 
         /// get parameter size
         virtual size_t size() const { return mSize; }

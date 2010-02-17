@@ -1,14 +1,14 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline bool GN::gfx::ImageDesc::setFaceAndLevel( size_t faces, size_t levels )
+inline bool GN::gfx::ImageDesc::SetFaceAndLevel( size_t faces, size_t levels )
 {
-    safeHeapFree( mipmaps );
+    SafeHeapFree( mipmaps );
     numFaces = (UInt32)faces;
     numLevels = (UInt32)levels;
     if( numFaces > 0 && numLevels > 0 )
     {
-        mipmaps = (MipmapDesc*)heapAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
+        mipmaps = (MipmapDesc*)HeapAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
         if( 0 == mipmaps ) return false;
     }
     return true;

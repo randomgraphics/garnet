@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     // store descriptor
     setDesc( desc );
 
-    mBuffer = (UInt8*)heapAlloc( desc.length );
+    mBuffer = (UInt8*)HeapAlloc( desc.length );
 
     // success
     return success();
@@ -41,7 +41,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 {
     GN_GUARD;
 
-    safeHeapFree( mBuffer );
+    SafeHeapFree( mBuffer );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

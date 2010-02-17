@@ -357,7 +357,7 @@ namespace GN { namespace gfx
             StateObjectItem * item = mHead;
             while( item != &mTail )
             {
-                safeRelease( item->object );
+                SafeRelease( item->object );
                 item = item->next;
             }
 
@@ -409,7 +409,7 @@ namespace GN { namespace gfx
                     GN_ASSERT( item && item != mHead );
 
                     // delete the state object object
-                    safeRelease( item->object );
+                    SafeRelease( item->object );
 
                     // remove from hash
                     mHashTable.remove( item->desc );

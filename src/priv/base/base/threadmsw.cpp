@@ -179,12 +179,12 @@ public:
 #if GN_XENON
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
         }
 #else
         if( (DWORD)-1 == SetThreadIdealProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
         }
 #endif
     }
@@ -198,7 +198,7 @@ public:
     {
         if( (DWORD)-1 == ::SuspendThread( mHandle ) )
         {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
+            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
         }
     }
 
@@ -206,7 +206,7 @@ public:
     {
         if( (DWORD)-1 == ::ResumeThread( mHandle ) )
         {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
+            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
         }
     }
 
@@ -232,7 +232,7 @@ public:
         }
         else
         {
-            GN_ERROR(sLogger)( getOSErrorInfo() );
+            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
             return false;
         }
     }

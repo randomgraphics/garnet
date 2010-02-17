@@ -119,7 +119,7 @@ public:
     void destroy()
     {
         mGeometry.destroy();
-        safeDelete( mEffect );
+        SafeDelete( mEffect );
         for( UInt i = 0; i < 16; ++i ) mTextures[i].clear();
     }
 

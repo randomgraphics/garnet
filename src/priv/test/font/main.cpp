@@ -46,7 +46,7 @@ void quit( Gpu & )
 {
     ascii.quit();
     ttf.quit();
-    safeDelete( sr );
+    SafeDelete( sr );
 }
 
 void onKeyPress( KeyEvent ke )
@@ -155,7 +155,7 @@ struct InputInitiator
 
 int main( int argc, const char * argv[] )
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )

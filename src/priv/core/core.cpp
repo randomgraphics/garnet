@@ -23,7 +23,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * heapAlloc( size_t sz )
+    GN_PUBLIC void * HeapAlloc( size_t sz )
     {
         //#if GN_MSWIN
         //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
@@ -40,7 +40,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * heapRealloc( void * ptr, size_t sz )
+    GN_PUBLIC void * HeapRealloc( void * ptr, size_t sz )
     {
         //#if GN_MSWIN
         //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
@@ -54,7 +54,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void heapFree( void * ptr )
+    GN_PUBLIC void HeapFree( void * ptr )
     {
         //#if GN_MSWIN
         //::HeapFree( ::GetProcessHeap(), 0, ptr );

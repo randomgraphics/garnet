@@ -44,7 +44,7 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
     mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
     if( 0 == mHook )
     {
-        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", GetWin32LastErrorInfo() );
         return failure();
     }
 
@@ -256,7 +256,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return false;
     }
 
@@ -287,7 +287,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
         return false;
     }
 

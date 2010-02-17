@@ -68,9 +68,9 @@ void GN::gfx::D3D11RTMgr::quit()
 {
     GN_GUARD;
 
-    safeRelease( mAutoColor0 );
-    safeRelease( mAutoDepthTexture );
-    safeRelease( mAutoDepth );
+    SafeRelease( mAutoColor0 );
+    SafeRelease( mAutoDepthTexture );
+    SafeRelease( mAutoDepth );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

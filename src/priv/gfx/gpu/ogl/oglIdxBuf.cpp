@@ -27,7 +27,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (UInt8*)heapAlloc( desc.numidx * mBytesPerIndex );
+    mBuffer = (UInt8*)HeapAlloc( desc.numidx * mBytesPerIndex );
 
     // success
     return success();
@@ -42,7 +42,7 @@ void GN::gfx::OGLIdxBuf::quit()
 {
     GN_GUARD;
 
-    safeHeapFree(mBuffer);
+    SafeHeapFree(mBuffer);
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

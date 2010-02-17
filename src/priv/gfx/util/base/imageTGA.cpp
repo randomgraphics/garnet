@@ -317,7 +317,7 @@ bool TGAReader::readHeader(
     }
 
     // update o_desc
-	o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+	o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
     GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width      = header.width;
     m.height     = header.height;

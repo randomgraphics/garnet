@@ -185,7 +185,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", getDXErrorInfo(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", GetDirectXErrorInfo(rval) );
             return false;
         }
     }
@@ -194,7 +194,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", getDXErrorInfo(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", GetDirectXErrorInfo(rval) );
             return false;
         }
     }
@@ -335,9 +335,9 @@ void GN::input::InputDInput::diQuit()
     GN_GUARD;
 
     // release dinput stuff
-    safeRelease(mMouse);
-    safeRelease(mKeyboard);
-    safeRelease(mDInput);
+    SafeRelease(mMouse);
+    SafeRelease(mKeyboard);
+    SafeRelease(mDInput);
     if( mLibrary ) ::FreeLibrary( mLibrary ), mLibrary = 0;
 
     GN_UNGUARD;

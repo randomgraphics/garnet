@@ -118,7 +118,7 @@ private:
     {
         GN_ASSERT( stream->descriptor.pointer );
         File * fp = (File*)stream->descriptor.pointer;
-        safeDelete( fp );
+        SafeDelete( fp );
         stream->descriptor.pointer = 0;
     }
 

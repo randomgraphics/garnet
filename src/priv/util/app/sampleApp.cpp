@@ -128,7 +128,7 @@ GN::util::SampleApp::SampleApp()
     , mShowHUD(true)
     , mShowHelp(false)
 {
-    enableCRTMemoryCheck();
+    EnableCRTMemoryCheck();
     mFps.reset();
 }
 
@@ -537,10 +537,10 @@ void GN::util::SampleApp::quitGpu()
 {
     GN_GUARD;
 
-    safeDelete( mWorld );
-    safeDelete( mGpuResourceDatabase );
-    safeDelete( mLineRenderer );
-    safeDelete( mSpriteRenderer );
+    SafeDelete( mWorld );
+    SafeDelete( mGpuResourceDatabase );
+    SafeDelete( mLineRenderer );
+    SafeDelete( mSpriteRenderer );
     deleteGpu( mGpu ); mGpu = NULL;
 
     GN_UNGUARD;

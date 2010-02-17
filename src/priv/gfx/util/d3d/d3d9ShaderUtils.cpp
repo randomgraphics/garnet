@@ -54,7 +54,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
         "%s\n"
         "\n=========================================================\n",
         code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
-        hr, GN::getDXErrorInfo(hr),
+        hr, GN::GetDirectXErrorInfo(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
