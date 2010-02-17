@@ -191,7 +191,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
         &mFace );
     if( err )
     {
-        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.cptr() );
+        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.GetRawPtr() );
         return failure();
     }
 
@@ -277,7 +277,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 
     //取道位图数据
     mBitmapBuffer.resize( width * height );
-    UInt8 * buf = mBitmapBuffer.cptr();
+    UInt8 * buf = mBitmapBuffer.GetRawPtr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -304,7 +304,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     // copy glyph data to result structure
     result.width        = width;
     result.height       = height;
-    result.buffer       = mBitmapBuffer.cptr();
+    result.buffer       = mBitmapBuffer.GetRawPtr();
     result.horiBearingX = (float)slot->bitmap_left;
     result.horiBearingY = (float)-slot->bitmap_top;
     result.horiAdvance  = slot->advance.x / 64.0f;

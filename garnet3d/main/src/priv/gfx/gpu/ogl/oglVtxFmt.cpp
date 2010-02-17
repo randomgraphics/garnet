@@ -168,7 +168,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     GN_GUARD;
 
     UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().getCaps().maxTextures;
+    UInt32 maxTextures = getGpu().GetCaps().maxTextures;
 
     bool hasVertex = false;
     bool hasNormal = false;
@@ -283,7 +283,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().cptr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().GetRawPtr() );
                 return false;
         }
 
@@ -377,31 +377,31 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     //
 
     UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().getCaps().maxTextures;
+    UInt32 maxTextures = getGpu().GetCaps().maxTextures;
 
-    if( ( 0 == strCmpI( "position", bindingName ) ||
-          0 == strCmpI( "pos", bindingName ) ||
-          0 == strCmpI( "gl_vertex", bindingName ) )
+    if( ( 0 == StringCompareI( "position", bindingName ) ||
+          0 == StringCompareI( "pos", bindingName ) ||
+          0 == StringCompareI( "gl_vertex", bindingName ) )
         &&
         0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_VERTEX;
         vbd.index = 0;
     }
-    else if( ( 0 == strCmpI( "attribute", bindingName ) ||
-               0 == strCmpI( "VertexArrribute", bindingName ) )
+    else if( ( 0 == StringCompareI( "attribute", bindingName ) ||
+               0 == StringCompareI( "VertexArrribute", bindingName ) )
              &&
              bindingIndex < maxAttributes )
     {
         vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
         vbd.index = bindingIndex;
     }
-    else if( (0 == strCmpI( "normal", bindingName ) || 0 == strCmpI( "nml", bindingName ) ) && 0 == bindingIndex )
+    else if( (0 == StringCompareI( "normal", bindingName ) || 0 == StringCompareI( "nml", bindingName ) ) && 0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_NORMAL;
         vbd.index = 0;
     }
-    else if( 0 == strCmpI( "color", bindingName ) )
+    else if( 0 == StringCompareI( "color", bindingName ) )
     {
         if( 0 == bindingIndex )
         {
@@ -418,12 +418,12 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
             return false;
         }
     }
-    else if( 0 == strCmpI( "fog", bindingName ) && GLEW_EXT_fog_coord )
+    else if( 0 == StringCompareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
     {
         vbd.semantic = VERTEX_SEMANTIC_FOG;
         vbd.index = 0;
     }
-    else if( 0 == strCmpI( "texcoord", bindingName ) && bindingIndex < maxTextures )
+    else if( 0 == StringCompareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
     {
         vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
         vbd.index = bindingIndex;

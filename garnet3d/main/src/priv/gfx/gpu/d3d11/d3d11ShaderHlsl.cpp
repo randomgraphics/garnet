@@ -169,7 +169,7 @@ static const char * sCloneString( const char * str )
 {
     if( NULL == str ) return NULL;
 
-    size_t n = GN::strLen( str ) + 1;
+    size_t n = GN::StringLength( str ) + 1;
 
     char * clone = (char*)GN::HeapAlloc( n );
     if( NULL == clone )
@@ -373,7 +373,7 @@ sInitShader(
     GN_GUARD;
 
     // do nothing for empty shader code
-    if( strEmpty( code.source ) ) return true;
+    if( IsStringEmpty( code.source ) ) return true;
 
     // initialize shader type template
     D3D11ShaderTypeTemplate<SHADER_TYPE> templ;

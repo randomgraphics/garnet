@@ -103,7 +103,7 @@ namespace GN { namespace gfx
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
             {
-                if( 0 == strCmp( s, TABLE[i].name ) )
+                if( 0 == StringCompare( s, TABLE[i].name ) )
                 {
                     return TABLE[i].value;
                 }
@@ -334,7 +334,7 @@ namespace GN { namespace gfx
         ///
         void bindTo( const char * variableName, size_t index = 0 )
         {
-            size_t len = strLen( variableName );
+            size_t len = StringLength( variableName );
             if( 0 == len )
             {
                 GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
@@ -370,7 +370,7 @@ namespace GN { namespace gfx
                 && stream == rhs.stream
                 && offset == rhs.offset
                 && bindingIndex == rhs.bindingIndex
-                && 0 == strCmp( binding, rhs.binding, sizeof(binding) );
+                && 0 == StringCompare( binding, rhs.binding, sizeof(binding) );
         }
 
         /// equality check
@@ -1126,7 +1126,7 @@ namespace GN { namespace gfx
         ///
         /// Get render device caps
         ///
-        virtual const GpuCaps & getCaps() const = 0;
+        virtual const GpuCaps & GetCaps() const = 0;
 
         ///
         /// Check texture format support

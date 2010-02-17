@@ -37,7 +37,7 @@ namespace GN
         explicit SimpleBlob( size_t sz = 0 ) : mBuffer(sz) {}
 
         //@{
-        virtual void * data() const { return (void*)mBuffer.cptr(); }
+        virtual void * data() const { return (void*)mBuffer.GetRawPtr(); }
         virtual size_t size() const { return mBuffer.size(); }
         //@}
 

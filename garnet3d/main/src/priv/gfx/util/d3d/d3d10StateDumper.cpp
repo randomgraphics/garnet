@@ -725,8 +725,8 @@ void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 
 void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 {
-    size_t n = math::getmin<size_t>( prefix.size(), _MAX_PATH );
-    memcpy( sDumpFilePrefix, prefix.cptr(), n );
+    size_t n = math::getmin<size_t>( prefix.Size(), _MAX_PATH );
+    memcpy( sDumpFilePrefix, prefix.GetRawPtr(), n );
     sDumpFilePrefix[_MAX_PATH-1] = 0;
 }
 

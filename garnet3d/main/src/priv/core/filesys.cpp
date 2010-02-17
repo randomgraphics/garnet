@@ -37,7 +37,7 @@ static Logger * sLogger = getLogger("GN.base.filesys");
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    DIR * d = opendir( path.cptr() );
+    DIR * d = opendir( path.GetRawPtr() );
     if( 0 == d ) return false;
     closedir( d );
     return true;
@@ -49,7 +49,7 @@ static bool sNativeIsDir( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     if( sNativeIsDir(path) ) return true;
-    FILE * fp = fopen( path.cptr(), "r" );
+    FILE * fp = fopen( path.GetRawPtr(), "r" );
     if( 0 == fp ) return false;
     fclose( fp );
     return true;
@@ -68,7 +68,7 @@ static bool sNativeIsFile( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sIsAbsPath( const StrA & path )
 {
-    return !path.empty() && '/' == path[0];
+    return !path.Empty() && '/' == path[0];
 }
 
 #endif
@@ -84,7 +84,7 @@ static bool sIsAbsPath( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeExist( const StrA & path )
 {
-    return !!::PathFileExistsA( path.cptr() );
+    return !!::PathFileExistsA( path.GetRawPtr() );
 }
 
 //
@@ -92,7 +92,7 @@ static bool sNativeExist( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    return !!::PathIsDirectoryA( path.cptr() );
+    return !!::PathIsDirectoryA( path.GetRawPtr() );
 }
 
 //
@@ -109,8 +109,8 @@ static bool sNativeIsFile( const StrA & path )
 static bool sIsAbsPath( const StrA & path )
 {
     return
-        ( path.size() > 0 && '/' == path[0] ) ||
-        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] );
+        ( path.Size() > 0 && '/' == path[0] ) ||
+        ( path.Size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] );
 }
 
 #endif
@@ -127,7 +127,7 @@ static bool sIsAbsPath( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.GetRawPtr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -145,7 +145,7 @@ static bool sNativeExist( const StrA & path )
 static bool sNativeIsDir( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.GetRawPtr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -171,9 +171,9 @@ static bool sNativeIsFile( const StrA & path )
 static bool sIsAbsPath( const StrA & path )
 {
     return
-        ( path.size() > 0 && '/' == path[0] ) ||
-        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] ) ||
-        ( path.size() > 4 && "game:" == path.subString( 0, 5 ) );
+        ( path.Size() > 0 && '/' == path[0] ) ||
+        ( path.Size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] ) ||
+        ( path.Size() > 4 && "game:" == path.SubString( 0, 5 ) );
 }
 
 #endif
@@ -216,7 +216,7 @@ public:
 #if GN_XENON
 
         // convert path separators to native format
-        for( size_t i = 0; i < tmp.size(); ++i )
+        for( size_t i = 0; i < tmp.Size(); ++i )
         {
             if( '/' == tmp[i] ) tmp[i] = '\\';
         }
@@ -226,27 +226,27 @@ public:
 
 #elif GN_MSWIN
         // convert path separators to native format
-        for( size_t i = 0; i < tmp.size(); ++i )
+        for( size_t i = 0; i < tmp.Size(); ++i )
         {
             if( '/' == tmp[i] ) tmp[i] = '\\';
         }
         // convert to full path
         char absPath[MAX_PATH+1];
-        if( 0 == _fullpath( absPath, tmp.cptr(), MAX_PATH ) )
+        if( 0 == _fullpath( absPath, tmp.GetRawPtr(), MAX_PATH ) )
         {
-            GN_ERROR(sLogger)( "invalid path '%s'.", path.cptr() );
-            result.clear();
+            GN_ERROR(sLogger)( "invalid path '%s'.", path.GetRawPtr() );
+            result.Clear();
             return;
         }
         result = absPath;
 #else
-        if( !tmp.empty() && '/' != tmp[0] )
+        if( !tmp.Empty() && '/' != tmp[0] )
         {
             char cwd[PATH_MAX+1];
             if( 0 == getcwd( cwd, PATH_MAX ) )
             {
                 GN_ERROR(sLogger)( "getcwd() failed!" );
-                result.clear();
+                result.Clear();
                 return;
             }
             joinPath2( result, cwd, tmp );
@@ -272,13 +272,13 @@ public:
 
         if( !exist(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.GetRawPtr() );
             return result;
         }
 
         if( !isDir(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.GetRawPtr() );
             return result;
         }
 
@@ -324,7 +324,7 @@ private:
             // TODO: ignore links/junctions
             CSimpleGlobA sg( SG_GLOB_ONLYDIR | SG_GLOB_NODOT );
             StrA p = joinPath( curDir, "*" );
-            sg.Add( p.cptr() );
+            sg.Add( p.GetRawPtr() );
             char ** dirs = sg.Files();
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
@@ -337,7 +337,7 @@ private:
         // search in current directory
         CSimpleGlobA sg( SG_GLOB_ONLYFILE );
         StrA p = joinPath( curDir, (useRegex ? "*.*" : pattern) );
-        sg.Add( p.cptr() );
+        sg.Add( p.GetRawPtr() );
         char ** files = sg.Files();
         int c = sg.FileCount();
         for( int i = 0; i < c; ++i, ++files )
@@ -371,7 +371,7 @@ public:
 #elif GN_POSIX
         char linkName[PATH_MAX+1];
         char realPath[PATH_MAX+1];
-        strPrintf( linkName, PATH_MAX, "/proc/%d/exe", getpid() );
+        StringPrintf( linkName, PATH_MAX, "/proc/%d/exe", getpid() );
         if( 0 == realpath( linkName, realPath) )
         {
             GN_ERROR(sLogger)( "Fail to get real path of file '%s'.", linkName );
@@ -402,7 +402,7 @@ public:
 
     bool isAbsPath( const StrA & path )
     {
-        return !path.empty() && '/' == path[0];
+        return !path.Empty() && '/' == path[0];
     }
 
     void toNativeDiskFilePath( StrA & result, const StrA & path )
@@ -466,7 +466,7 @@ public:
 
     bool isAbsPath( const StrA & path )
     {
-        return !path.empty() && '/' == path[0];
+        return !path.Empty() && '/' == path[0];
     }
 
     void toNativeDiskFilePath( StrA & result, const StrA & path )
@@ -542,12 +542,12 @@ public:
 
     bool isAbsPath( const StrA & path )
     {
-        return !path.empty() && '/' == path[0];
+        return !path.Empty() && '/' == path[0];
     }
 
     void toNativeDiskFilePath( StrA & result, const StrA & path )
     {
-        result.clear();
+        result.Clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
         GN::fs::toNativeDiskFilePath( result, joinPath( *root, path ) );
@@ -561,7 +561,7 @@ public:
         bool         recursive,
         bool         useRegex )
     {
-        if( dirName.empty() )
+        if( dirName.Empty() )
         {
             for( size_t i = 0; i < mRoots.size(); ++i )
             {
@@ -606,7 +606,7 @@ public:
         const StrA * root = findRoot( path );
         if( !root )
         {
-            GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
+            GN_ERROR(sLogger)( "file '%s' not found!", path.GetRawPtr() );
             return 0;
         }
         return GN::fs::openFile( joinPath( *root, path ), mode );
@@ -712,12 +712,12 @@ struct FileSystemContainer
     bool registerFs( const StrA & name, FileSystem * fs )
     {
         // check name
-        if( name.empty() )
+        if( name.Empty() )
         {
             GN_ERROR(sLogger)( "File system name can't be empty!" );
             return false;
         }
-        if( name.size() < 3 || ':' != name[name.size()-1] || ':' != name[name.size()-2] )
+        if( name.Size() < 3 || ':' != name[name.Size()-1] || ':' != name[name.Size()-2] )
         {
             GN_ERROR(sLogger)( "File system name must be in format like \"your_fs_name::\"!" );
             return false;
@@ -731,7 +731,7 @@ struct FileSystemContainer
 
         if( mFileSystems.end() != mFileSystems.find( name ) )
         {
-            GN_ERROR(sLogger)( "File system '%s' already exists!", name.cptr() );
+            GN_ERROR(sLogger)( "File system '%s' already exists!", name.GetRawPtr() );
             return false;
         }
 
@@ -751,7 +751,7 @@ struct FileSystemContainer
 
     FileSystem * getFs( const StrA & name )
     {
-        if( name.empty() ) return &mNativeFs;
+        if( name.Empty() ) return &mNativeFs;
         Container::const_iterator i = mFileSystems.find( name );
         return ( mFileSystems.end() != i ) ? i->second : &mFakeFs;
     }
@@ -797,7 +797,7 @@ GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
 GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
-    if( base.empty() || relpath.empty() )
+    if( base.Empty() || relpath.Empty() )
     {
         result = relpath;
         return;
@@ -807,7 +807,7 @@ GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA
     splitPath( base, basefs, basec );
     splitPath( relpath, relfs, relc );
 
-    if( !relfs.empty() && basefs != relfs )
+    if( !relfs.Empty() && basefs != relfs )
     {
         result = relpath;
         return;

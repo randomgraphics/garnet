@@ -26,7 +26,7 @@ sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
 // -----------------------------------------------------------------------------
 static StrA sResolveResourcePath( const StrA & basedir, const StrA & path )
 {
-    if( path.size() > 1 && path[0] == '@' )
+    if( path.Size() > 1 && path[0] == '@' )
     {
         return path;
     }
@@ -88,7 +88,7 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || !str2Int<T>( result, a->value.cptr() ) )
+    if( !a || !String2Integer<T>( result, a->value.GetRawPtr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid." );
         return false;
@@ -110,15 +110,15 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
 
-    result.clear();
-    result.setCaps( size * 2 );
+    result.Clear();
+    result.SetCaps( size * 2 );
 
     for( size_t i = 0; i < size; ++i, ++data )
     {
         UInt8 u8 = *data;
 
-        result.append( TABLE[u8>>4] );
-        result.append( TABLE[u8&0xF] );
+        result.Append( TABLE[u8>>4] );
+        result.Append( TABLE[u8&0xF] );
     }
 }
 
@@ -136,13 +136,13 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 
     data.clear();
 
-    if( 0 != (s.size() % 2) )
+    if( 0 != (s.Size() % 2) )
     {
         GN_ERROR(sLogger)( "Invalid binary string." );
         return false;
     }
 
-    data.resize( s.size() / 2 );
+    data.resize( s.Size() / 2 );
 
     for( size_t i = 0; i < data.size(); ++i )
     {
@@ -194,10 +194,10 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResourceDesc::clear()
 {
-    effect.clear();
+    effect.Clear();
     textures.clear();
     uniforms.clear();
-    mesh.clear();
+    mesh.Clear();
     subset.clear();
 }
 
@@ -317,7 +317,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
                 return false;
             }
-            if( !str2Int( ud.size, a->value ) )
+            if( !String2Integer( ud.size, a->value ) )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is not a valid integer." );
                 return false;
@@ -332,7 +332,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.GetRawPtr() );
         }
     }
 
@@ -372,7 +372,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     // create effect node
     XmlElement * effectNode = doc.createElement(modelNode);
     effectNode->name = "effect";
-    if( effect.empty() )
+    if( effect.Empty() )
     {
         GN_ERROR(sLogger)( "Effect name can not be empty." );
         return NULL;
@@ -387,7 +387,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     // create mesh node
     XmlElement * meshNode = doc.createElement(modelNode);
     meshNode->name = "mesh";
-    if( mesh.empty() )
+    if( mesh.Empty() )
     {
         GN_ERROR(sLogger)( "Mesh name can not be empty." );
         return NULL;
@@ -406,19 +406,19 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     {
         XmlAttrib * a = doc.createAttrib( subsetNode );
         a->name = "basevtx";
-        a->value = strFormat( "%u", subset.basevtx );
+        a->value = StringFormat( "%u", subset.basevtx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "numvtx";
-        a->value = strFormat( "%u", subset.numvtx );
+        a->value = StringFormat( "%u", subset.numvtx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "startidx";
-        a->value = strFormat( "%u", subset.startidx );
+        a->value = StringFormat( "%u", subset.startidx );
 
         a = doc.createAttrib( subsetNode );
         a->name = "numidx";
-        a->value = strFormat( "%u", subset.numidx );
+        a->value = StringFormat( "%u", subset.numidx );
     }
 
     // create texture nodes
@@ -435,7 +435,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         XmlAttrib * a = doc.createAttrib( textureNode );
         a->name = "shaderParameter";
         a->value = texname;
-        if( texdesc.resourceName.empty() )
+        if( texdesc.resourceName.Empty() )
         {
             //texdesc.desc.saveToXml( basedir );
             GN_UNIMPL();
@@ -464,17 +464,17 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         a->name = "shaderParameter";
         a->value = uniname;
 
-        if( unidesc.resourceName.empty() )
+        if( unidesc.resourceName.Empty() )
         {
             a = doc.createAttrib( uniformNode );
             a->name = "size";
-            a->value = strFormat( "%u", unidesc.size );
+            a->value = StringFormat( "%u", unidesc.size );
 
             if( !unidesc.initialValue.empty() )
             {
                 XmlElement * bin = doc.createElement( uniformNode );
                 bin->name = "initialValue";
-                sBinaryEncode( bin->text, unidesc.initialValue.cptr(), unidesc.initialValue.size() );
+                sBinaryEncode( bin->text, unidesc.initialValue.GetRawPtr(), unidesc.initialValue.size() );
             }
         }
         else
@@ -949,7 +949,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !texres )
         {
             const EffectResource::TextureProperties & tp = mEffect.resource->getTextureProperties( i );
-            StrA texname = strFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+            StrA texname = StringFormat( "%s.texture.%s", modelName(), tp.parameterName.GetRawPtr() );
             texres = database().findOrCreateResource<TextureResource>( texname );
             if( !texres ) return false;
         }
@@ -970,7 +970,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         if( !unires )
         {
             const EffectResource::UniformProperties & up = mEffect.resource->getUniformProperties( i );
-            StrA uniname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+            StrA uniname = StringFormat( "%s.uniform.%s", modelName(), up.parameterName.GetRawPtr() );
             unires = database().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
             AutoRef<Uniform> u = unires->getUniform();
@@ -1067,7 +1067,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     GpuResourceDatabase & db = database();
 
     // initialize effect
-    if( !desc.effect.empty() )
+    if( !desc.effect.Empty() )
     {
         AutoRef<EffectResource> effect = db.findResource<EffectResource>( desc.effect );
         if( 0 == effect )
@@ -1075,7 +1075,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             effect = EffectResource::loadFromFile( db, desc.effect );
             if( 0 == effect )
             {
-                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
+                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.GetRawPtr() );
                 return false;
             }
         }
@@ -1083,7 +1083,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // initialize mesh
-    if( !desc.mesh.empty() )
+    if( !desc.mesh.Empty() )
     {
         AutoRef<MeshResource> mesh = db.findResource<MeshResource>( desc.mesh );
         if( 0 == mesh )
@@ -1091,7 +1091,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             mesh = MeshResource::loadFromFile( db, desc.mesh );
             if( 0 == mesh )
             {
-                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
+                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.GetRawPtr() );
                 return false;
             }
         }
@@ -1112,13 +1112,13 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 
         if( td )
         {
-            if( !td->resourceName.empty() )
+            if( !td->resourceName.Empty() )
             {
                 texres = TextureResource::loadFromFile( db, td->resourceName );
             }
             else
             {
-                StrA texname = strFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+                StrA texname = StringFormat( "%s.texture.%s", modelName(), tp.parameterName.GetRawPtr() );
                 texres = db.findOrCreateResource<TextureResource>( texname );
                 if( texres ) texres->reset( &td->desc );
             }
@@ -1127,7 +1127,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
         {
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
-                tp.parameterName.cptr(),
+                tp.parameterName.GetRawPtr(),
                 mEffect.resource->name(),
                 modelName() );
 
@@ -1151,26 +1151,26 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
         AutoRef<UniformResource> unires;
         if( ud )
         {
-            if( !ud->resourceName.empty() )
+            if( !ud->resourceName.Empty() )
             {
                 unires = db.findResource<UniformResource>( ud->resourceName );
                 if( !unires )
                 {
                     GN_ERROR(sLogger)( "Invalid uniform resource name '%s' in model '%s'.",
-                        ud->resourceName.cptr(),
+                        ud->resourceName.GetRawPtr(),
                         modelName() );
                 }
             }
             else
             {
-                StrA uniname = strFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+                StrA uniname = StringFormat( "%s.uniform.%s", modelName(), up.parameterName.GetRawPtr() );
 
-                const void * initialValue = ud->initialValue.cptr();
+                const void * initialValue = ud->initialValue.GetRawPtr();
                 if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )
                 {
                     GN_ERROR(sLogger)(
                         "Incorrect initial data size of uniform '%s in model '%s'.",
-                        up.parameterName.cptr(),
+                        up.parameterName.GetRawPtr(),
                         modelName() );
                     initialValue = NULL;
                 }
@@ -1183,7 +1183,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
         {
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
-                up.parameterName.cptr(),
+                up.parameterName.GetRawPtr(),
                 mEffect.resource->name(),
                 modelName() );
 

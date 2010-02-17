@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
 static void
 sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
 {
-    if( GN::strEmpty(str) ) return;
+    if( GN::IsStringEmpty(str) ) return;
     const char * p1 = str;
     const char * p2 = p1;
 
@@ -78,7 +78,7 @@ void printOglInfo( GN::HandleType disp, int index )
 #endif
     const char * renderer = (const char *)glGetString(GL_RENDERER);
 
-    info = GN::strFormat(
+    info = GN::StringFormat(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations(%d)\n"
@@ -96,7 +96,7 @@ void printOglInfo( GN::HandleType disp, int index )
         GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
-    info += GN::strFormat(
+    info += GN::StringFormat(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
         "    Max number of texture stages    :    %d\n",
@@ -114,7 +114,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "===================================================\n"
         "\n\n";
 
-    GN_INFO(sLogger)( info.cptr() );
+    GN_INFO(sLogger)( info.GetRawPtr() );
 
     GN_UNGUARD;
 }

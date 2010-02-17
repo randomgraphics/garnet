@@ -12,15 +12,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.GetRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.append( strFormat( "\n(%3d) : ", ++line ) );
+            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.append( *s );
+            out.Append( *s );
         }
     }
 
@@ -47,7 +47,7 @@ bool GN::gfx::CgShader::init(
     GN_STDCLASS_INIT( GN::gfx::CgShader, () );
 
     // create program
-    mProgram = cgCreateProgram( context, CG_SOURCE, code.cptr(), profile, entry.cptr(), args );
+    mProgram = cgCreateProgram( context, CG_SOURCE, code.GetRawPtr(), profile, entry.GetRawPtr(), args );
     if( !mProgram )
     {
         CGerror err;
@@ -63,7 +63,7 @@ bool GN::gfx::CgShader::init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                sAddLineCount( code ).cptr(),
+                sAddLineCount( code ).GetRawPtr(),
                 cgGetLastListing(context) );
         }
         return failure();
@@ -80,8 +80,8 @@ bool GN::gfx::CgShader::init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        sAddLineCount( code ).cptr(),
-        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
+        sAddLineCount( code ).GetRawPtr(),
+        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).GetRawPtr() );
 
     // success
     mContext = context;

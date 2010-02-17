@@ -82,9 +82,9 @@ class TestTextureBandwidth : public BasicTestCase
         }
         double elapsed = c.getTimeD() - start;
 		StrA txt;
-		txt.format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
-		OutputDebugStringA( txt.cptr() );
-		GN_INFO(sLogger)( txt.cptr() );
+		txt.Format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
+		OutputDebugStringA( txt.GetRawPtr() );
+		GN_INFO(sLogger)( txt.GetRawPtr() );
 
         memFree( src );
         memFree( dst );
@@ -298,7 +298,7 @@ public:
 
         mBandwidth = bandwidth;
 
-        mInfo.format(
+        mInfo.Format(
             "%s\n"
             "bandwidth     = %f GB/sec\n"
             "fillrate      = %f Gpix/sec\n"
@@ -306,7 +306,7 @@ public:
             "texture count = %d\n"
             "bytes/tex     = %d Bytes\n"
             "quad count    = %d x %d x %d",
-            getName().cptr(),
+            getName().GetRawPtr(),
             bandwidth,
             fillrate,
             TEX_SIZE,
@@ -336,11 +336,11 @@ public:
         r.rebindContext( ff );
 
         // draw text
-        scene::gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mInfo.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return strFormat( "bandwidth(%f) format(%s) size(%dx%d)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT), TEX_SIZE, TEX_SIZE );
+        return StringFormat( "bandwidth(%f) format(%s) size(%dx%d)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT), TEX_SIZE, TEX_SIZE );
     }
 };

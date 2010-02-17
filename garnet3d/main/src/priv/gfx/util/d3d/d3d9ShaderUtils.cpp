@@ -12,15 +12,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.GetRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.append( strFormat( "\n(%3d) : ", ++line ) );
+            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.append( *s );
+            out.Append( *s );
         }
     }
 
@@ -53,7 +53,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCount(code).GetRawPtr() : "Shader code: <EMPTY>",
         hr, GN::GetDirectXErrorInfo(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
@@ -86,8 +86,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).cptr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCount(hlsl).GetRawPtr(),
+        sAddLineCount((const char*)asm_->GetBufferPointer()).GetRawPtr() );
 
     GN_UNGUARD;
 }
@@ -117,7 +117,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
         return StrA::EMPTYSTR;
     }
 
-    if( !fp->write( code, len ? len : strLen(code), 0 ) )
+    if( !fp->write( code, len ? len : StringLength(code), 0 ) )
     {
         GN_ERROR(sLogger)( "fail to write to temporary file." );
         return StrA::EMPTYSTR;
@@ -142,10 +142,10 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, con
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShader(
-            code, (UINT)( len ? len : strLen(code) ),
+            code, (UINT)( len ? len : StringLength(code) ),
             NULL, NULL, // no macros, no includes,
             entry,
-            strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
+            IsStringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
             sRefineFlags(flags),
             &bin,
             &err,
@@ -186,10 +186,10 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).GetRawPtr(),
             NULL, NULL, // no macros, no includes,
             entry,
-            strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
+            IsStringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
             sRefineFlags(flags),
             &bin,
             &err,
@@ -226,7 +226,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, co
     GN_ASSERT( dev );
 
     // trim leading spaces in shader code
-    if( 0 == len ) len = strLen( code );
+    if( 0 == len ) len = StringLength( code );
     while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
     {
         ++code;
@@ -276,7 +276,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).GetRawPtr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
@@ -314,10 +314,10 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, cons
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShader(
-            code, (UINT)( len ? len : strLen(code) ),
+            code, (UINT)( len ? len : StringLength(code) ),
             NULL, NULL, // no macros, no includes,
             entry,
-            strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
+            IsStringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
             sRefineFlags(flags),
             &bin,
             &err,
@@ -358,10 +358,10 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).GetRawPtr(),
             NULL, NULL, // no macros, no includes,
             entry,
-            strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
+            IsStringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
             sRefineFlags(flags),
             &bin,
             &err,
@@ -398,7 +398,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, con
     GN_ASSERT( dev );
 
     // trim leading spaces in shader code
-    if( 0 == len ) len = strLen( code );
+    if( 0 == len ) len = StringLength( code );
     while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
     {
         ++code;
@@ -448,7 +448,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).cptr(),
+            fs::toNativeDiskFilePath(file).GetRawPtr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
@@ -490,7 +490,7 @@ LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char
     HRESULT hr;
     if( FAILED(hr = D3DXCreateEffect(
             dev,
-            code, (UINT)(len?len:strLen(code)), //tmpfile.cptr(),
+            code, (UINT)(len?len:StringLength(code)), //tmpfile.GetRawPtr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             pool,

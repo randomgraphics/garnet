@@ -246,7 +246,7 @@ public:
         DynaArray<Element> a;
 
         TS_ASSERT( a.empty() );
-        TS_ASSERT_EQUALS( (Element*)NULL, a.cptr() );
+        TS_ASSERT_EQUALS( (Element*)NULL, a.GetRawPtr() );
         TS_ASSERT_EQUALS( 0, a.size() );
     }
 

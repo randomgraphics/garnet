@@ -81,7 +81,7 @@ struct DenseMesh
 
         // search media file
         StrA filename = app::SampleResourceManager::sGetNativeResourceFileName( "mesh\\knot.x" );
-        if( filename.empty() )
+        if( filename.Empty() )
         {
             GN_ERROR(sLogger)( "mesh file not found!" );
             return false;
@@ -91,7 +91,7 @@ struct DenseMesh
         AutoComPtr<ID3DXMesh> sysMesh;
         AutoComPtr<ID3DXBuffer> adjacency;
         GN_DX_CHECK_RETURN( D3DXLoadMeshFromXA(
-            filename.cptr(),
+            filename.GetRawPtr(),
             D3DXMESH_SYSTEMMEM,
             dev,
             &adjacency,
@@ -281,7 +281,7 @@ public:
         size_t triangles = mGeometry.DRAW_COUNT * mGeometry.PRIM_COUNT;
         float throughput = triangles / 1000000.0f * getApp().getFps();
         mThroughput = throughput;
-        mThroughputStr.format(
+        mThroughputStr.Format(
             "%s\n"
             "\n"
             "throughput = %f Mtri/sec\n"
@@ -291,7 +291,7 @@ public:
             "radius = %f\n"
             "euler  = %f, %f\n"
             "eye    = %f, %f, %f",
-            getName().cptr(),
+            getName().GetRawPtr(),
             throughput,
             mGeometry.DRAW_COUNT,
             triangles,
@@ -326,11 +326,11 @@ public:
         mGeometry.draw();
 
         // draw statistics
-        scene::gAsciiFont.drawText( mThroughputStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mThroughputStr.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return strFormat( "throughput(%f)", mThroughput.getAverageValue() );
+        return StringFormat( "throughput(%f)", mThroughput.getAverageValue() );
     }
 };

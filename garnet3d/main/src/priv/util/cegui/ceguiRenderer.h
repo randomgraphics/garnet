@@ -58,7 +58,7 @@ namespace CEGUI
     	virtual float          getHeight(void) const;
     	virtual Size           getSize(void) const;
     	virtual Rect           getRect(void) const;
-    	virtual	uint           getMaxTextureSize(void) const { return gRenderer.getCaps( GN::gfx::CAPS_MAX_2D_TEXTURE_SIZE ); }
+    	virtual	uint           getMaxTextureSize(void) const { return gRenderer.GetCaps( GN::gfx::CAPS_MAX_2D_TEXTURE_SIZE ); }
     	virtual	uint           getHorzScreenDPI(void) const { return 96; }
     	virtual	uint           getVertScreenDPI(void) const { return 96; }
 

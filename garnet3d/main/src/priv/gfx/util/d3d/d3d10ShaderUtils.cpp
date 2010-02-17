@@ -26,15 +26,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.GetRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.append( strFormat( "\n(%3d) : ", ++line ) );
+            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.append( *s );
+            out.Append( *s );
         }
     }
 
@@ -65,7 +65,7 @@ static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCount(code).GetRawPtr() : "Shader code: <EMPTY>",
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -98,8 +98,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).cptr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCount(hlsl).GetRawPtr(),
+        sAddLineCount((const char*)asm_->GetBufferPointer()).GetRawPtr() );
 
     GN_UNGUARD;
 }
@@ -127,7 +127,7 @@ ID3D10Blob * GN::d3d10::compileShader(
     }
 
     // determine source length
-    if( 0 == len ) len = strLen(source);
+    if( 0 == len ) len = StringLength(source);
 
     // generate temporary file to store shader source
     StrA filename;
@@ -148,7 +148,7 @@ ID3D10Blob * GN::d3d10::compileShader(
     if( FAILED( D3DX10CompileFromMemory(
         source,
         len,
-        filename.cptr(),
+        filename.GetRawPtr(),
         0, // defines
         0, // includes
         entry,

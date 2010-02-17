@@ -98,7 +98,7 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
     /*
 
     // bind color buffers
-    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.getCaps().maxRenderTargets ) );
+    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.GetCaps().maxRenderTargets ) );
     for( UInt32 i = 0; i < count; ++i )
     {
         const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;

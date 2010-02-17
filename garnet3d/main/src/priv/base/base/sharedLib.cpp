@@ -36,7 +36,7 @@ bool GN::SharedLib::load( const char * libName )
     free();
 
     // check parameter
-    if( strEmpty(libName) )
+    if( IsStringEmpty(libName) )
     {
         GN_ERROR(sLogger)( "Library name can't be empty!" );
         return false;
@@ -44,20 +44,20 @@ bool GN::SharedLib::load( const char * libName )
 
     // Handle libName
     StrA filename;
-    if( fs::extName(libName).empty() )
+    if( fs::extName(libName).Empty() )
         filename = StrA(libName) + SHLIB_EXT;
     else
         filename = libName;
 
     // load library
-    mHandle = SHLIB_LOAD( filename.cptr() );
+    mHandle = SHLIB_LOAD( filename.GetRawPtr() );
     if( 0 == mHandle )
     {
-        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.cptr(), SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.GetRawPtr(), SHLIB_ERROR() );
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load library '%s'.", filename.cptr() );
+    GN_TRACE(sLogger)( "Load library '%s'.", filename.GetRawPtr() );
 
     // success
     mFileName = filename;
@@ -77,7 +77,7 @@ void GN::SharedLib::free()
     {
         SHLIB_FREE( mHandle );
         mHandle = 0;
-        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.cptr() );
+        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.GetRawPtr() );
     }
 
     GN_UNGUARD;
@@ -96,7 +96,7 @@ void * GN::SharedLib::getSymbol( const char * symbol )
         return 0;
     }
 
-    if( strEmpty(symbol) )
+    if( IsStringEmpty(symbol) )
     {
         GN_ERROR(sLogger)( "Symbol name can't be empty!" );
         return 0;

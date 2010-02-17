@@ -280,8 +280,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
         GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
         // apply GPU program resources
-        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
-        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.size(), skipDirtyCheck );
+        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.GetRawPtr(), newContext.uniforms.size(), skipDirtyCheck );
+        newProg->applyTextures( newContext.textures.GetRawPtr(), newContext.textures.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {

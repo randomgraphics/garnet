@@ -38,15 +38,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.cptr(); *s; ++s )
+    for( const char * s = in.GetRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.append( strFormat( "\n(%3d) : ", ++line ) );
+            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.append( *s );
+            out.Append( *s );
         }
     }
 
@@ -61,7 +61,7 @@ sCreateShader( const StrA & code, GLenum usage )
 {
     GN_GUARD;
 
-    if( code.empty() )
+    if( code.Empty() )
     {
         GN_ERROR(sLogger)( "shader code cannot be empty string." );
         return 0;
@@ -100,8 +100,8 @@ sCreateShader( const StrA & code, GLenum usage )
     AutoARBObjectDel autodel( sh );
 
     // set shader code
-    const char * code_str = code.cptr();
-    GLint code_size = static_cast<GLint>( code.size() );
+    const char * code_str = code.GetRawPtr();
+    GLint code_size = static_cast<GLint>( code.Size() );
     GN_OGL_CHECK_RV(
         glShaderSourceARB( sh, 1, &code_str, &code_size ),
         0 );
@@ -121,7 +121,7 @@ sCreateShader( const StrA & code, GLenum usage )
             "\n========= compile error ========\n"
             "%s\n"
             "==================================\n",
-            sAddLineCount(code_str).cptr(), buf );
+            sAddLineCount(code_str).GetRawPtr(), buf );
         return false;
     }
 
@@ -308,7 +308,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     const char           * bindingName,
     UInt8                  bindingIndex ) const
 {
-    if( strEmpty(bindingName) )
+    if( IsStringEmpty(bindingName) )
     {
         GN_ERROR(sLogger)( "bindingName must not be empty." );
         return false;
@@ -331,7 +331,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     {
         // compose bindingName and bindingIndex into a single name, then look up again.
         // So for "position" and 12 become "position12"
-        size_t len = strLen( bindingName );
+        size_t len = StringLength( bindingName );
         char * nameWithSuffix = (char*)alloca( len+4 );
         memcpy( nameWithSuffix, bindingName, len+1 );
         if( bindingIndex >= 100 )
@@ -360,67 +360,67 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     {
         // this is conventional attribute
 
-        const char * conventionalAttribName = desc->name.cptr();
+        const char * conventionalAttribName = desc->name.GetRawPtr();
 
         // the index is 0 in most cases.
         result.index = 0;
 
-        if( 0 == strCmp( "gl_Vertex", conventionalAttribName ) )
+        if( 0 == StringCompare( "gl_Vertex", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_VERTEX;
         }
-        else if( 0 == strCmp( "gl_Normal", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_Normal", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_NORMAL;
         }
-        else if( 0 == strCmp( "gl_Color", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_Color", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
         }
-        else if( 0 == strCmp( "gl_SecondaryColor", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_SecondaryColor", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 1;
         }
-        else if( 0 == strCmp( "gl_FogCoord", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_FogCoord", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_FOG;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord0", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord0", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord1", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord1", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 1;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord2", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord2", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 2;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord3", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord3", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 3;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord4", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord4", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 4;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord5", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord5", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 5;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord6", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord6", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 6;
         }
-        else if( 0 == strCmp( "gl_MultiTexCoord7", conventionalAttribName ) )
+        else if( 0 == StringCompare( "gl_MultiTexCoord7", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 7;
@@ -489,7 +489,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    desc.name.cptr(),
+                    desc.name.GetRawPtr(),
                     uniform->size(),
                     desc.size );
             }
@@ -569,7 +569,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
     size_t                 count ) const
 {
     OGLGpu & r = getGpu();
-    size_t maxStages = r.getCaps().maxTextures;
+    size_t maxStages = r.GetCaps().maxTextures;
 
     // determine effective texture count
     if( count > mTextures.size() )
@@ -669,13 +669,13 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     for( size_t i = 0; i < mUniforms.size(); ++i )
     {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
-        u.uniformDesc.name = u.name.cptr();
+        u.uniformDesc.name = u.name.GetRawPtr();
         u.uniformDesc.size = u.size;
     }
     for( size_t i = 0; i < mTextures.size(); ++i )
     {
         GLSLUniformOrTextureDesc & t = mTextures[i];
-        t.textureDesc.name = t.name.cptr();
+        t.textureDesc.name = t.name.GetRawPtr();
     }
 
     // update parameter descriptor
@@ -696,7 +696,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
     // check for texture capability
     OGLGpu & r = getGpu();
-    if( mTextures.size() > r.getCaps().maxTextures )
+    if( mTextures.size() > r.GetCaps().maxTextures )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
         return false;
@@ -743,7 +743,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     for( size_t i = 0; i < mAttributes.size(); ++i )
     {
         GLSLAttributeDesc & a = mAttributes[i];
-        a.desc.name = a.name.cptr();
+        a.desc.name = a.name.GetRawPtr();
     }
 
     // update parameter descriptor
@@ -762,7 +762,7 @@ const GN::gfx::OGLGpuProgramGLSL::GLSLAttributeDesc *
 GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
 {
 
-    const GLSLAttributeDesc * attrib = mAttributes.cptr();
+    const GLSLAttributeDesc * attrib = mAttributes.GetRawPtr();
 
     for( size_t i = 0; i < mAttributes.size(); ++i, ++attrib )
     {

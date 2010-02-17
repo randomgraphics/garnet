@@ -211,8 +211,8 @@ GN::gfx::OGLGpu::bindContextShaders(
             // Make sure size of AutoRef<T> and T* are same. So we can safely convert AutoRef<T> * to T **
             GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
-            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.GetRawPtr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.GetRawPtr(), newContext.textures.size() );
         }
     }
     else
@@ -224,8 +224,8 @@ GN::gfx::OGLGpu::bindContextShaders(
         if( newProgram )
         {
             newProgram->enable();
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
-            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.GetRawPtr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.GetRawPtr(), newContext.textures.size() );
         }
     }
 

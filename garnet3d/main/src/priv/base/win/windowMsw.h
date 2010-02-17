@@ -36,7 +36,7 @@ namespace GN { namespace win
         bool init( const WindowCreationParams & );
         void quit();
     private:
-        void clear() { mClassName.clear(); mModuleInstance = 0; mWindow = 0; }
+        void clear() { mClassName.Clear(); mModuleInstance = 0; mWindow = 0; }
         //@}
 
         // ********************************

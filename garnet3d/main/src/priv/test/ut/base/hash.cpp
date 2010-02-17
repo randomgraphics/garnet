@@ -7,7 +7,7 @@ class StrHashTest : public CxxTest::TestSuite
         return a == b;
     }
 
-    static UInt64 hash( const GN::StrA & s ) { return s.hash(); }
+    static UInt64 hash( const GN::StrA & s ) { return s.Hash(); }
 
     typedef GN::HashMap< GN::StrA, int, hash, equal > StrHashMap;
 

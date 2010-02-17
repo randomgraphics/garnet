@@ -82,11 +82,11 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
                 sIdent( fp, ident );
             }
 
-            if( !e->text.empty() || e->child )
+            if( !e->text.Empty() || e->child )
             {
                 fp << ">\n";
 
-                if( !e->text.empty() )
+                if( !e->text.Empty() )
                 {
                     sIdent( fp, ident + 1 );
                     fp << e->text << "\n";
@@ -157,10 +157,10 @@ static bool sCompactNodeAndChildren( GN::File & fp, const GN::XmlNode * root )
             {
                 sCompactAttributes( fp, e->attrib );
             }
-            if( !e->text.empty() || e->child )
+            if( !e->text.Empty() || e->child )
             {
                 fp << ">\n";
-                if( !e->text.empty() ) fp << e->text;
+                if( !e->text.Empty() ) fp << e->text;
                 if( e->child ) sCompactNodes( fp, e->child );
                 fp << "</" << e->name << ">\n";
             }
@@ -207,7 +207,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     {
         sParseFail(
             tracer,
-            GN::strFormat( "Fail to create node with type of '%d'", type ).cptr() );
+            GN::StringFormat( "Fail to create node with type of '%d'", type ).GetRawPtr() );
         return NULL;
     }
 
@@ -342,16 +342,16 @@ static void XMLCALL sCharacterDataHandler(
     if( tracer->parent->type == GN::XML_CDATA )
     {
         GN::XmlCdata * t = tracer->parent->toCdata();
-        t->text.append( s, len );
+        t->text.Append( s, len );
     }
     else
     {
         GN::StrA text = sMangleText( s, len );
-        if( !text.empty() && tracer->parent->type == GN::XML_ELEMENT )
+        if( !text.Empty() && tracer->parent->type == GN::XML_ELEMENT )
         {
             GN::StrA & currentText = tracer->parent->toElement()->text;
 
-            if( !currentText.empty() ) currentText += ' ';
+            if( !currentText.Empty() ) currentText += ' ';
 
             currentText += text;
         }
@@ -369,7 +369,7 @@ static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
     GN::XmlNode * n = sNewNode( tracer, GN::XML_COMMENT );
     if( 0 == n ) return;
     GN::XmlComment * c = n->toComment();
-    c->text.assign( data );
+    c->text.Assign( data );
 
     // update tracer
     GN_ASSERT( c == tracer->parent );
@@ -491,7 +491,7 @@ bool GN::XmlDocument::parse(
 {
     GN_GUARD;
 
-    result.errInfo.clear();
+    result.errInfo.Clear();
     result.errLine = 0;
     result.errColumn = 0;
 
@@ -519,7 +519,7 @@ bool GN::XmlDocument::parse(
     XML_Status status = XML_Parse( parser, content, (int)length, XML_TRUE );
     if( XML_STATUS_OK != status )
     {
-        if( result.errInfo.empty() )
+        if( result.errInfo.Empty() )
         {
             result.errInfo = "XML_Parse() failed.";
             result.errLine = XML_GetCurrentLineNumber( parser );
@@ -544,7 +544,7 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
 {
     GN_GUARD;
 
-    result.errInfo.clear();
+    result.errInfo.Clear();
     result.errLine = 0;
     result.errColumn = 0;
 

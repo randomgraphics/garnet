@@ -28,7 +28,7 @@ static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t 
 {
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        if( 0 == strCmpI( vf.elements[i].binding, binding ) &&
+        if( 0 == StringCompareI( vf.elements[i].binding, binding ) &&
             index == vf.elements[i].bindingIndex )
         {
             return true;
@@ -180,14 +180,14 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.resize( dataSize );
-    if( !file.read( xpr.sceneData.cptr(), dataSize, &readen ) || dataSize != readen )
+    if( !file.read( xpr.sceneData.GetRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.cptr();
+    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.GetRawPtr();
     for( size_t i = 0; i < header.numObjects; ++i )
     {
         XPRObjectHeader & o = objects[i];
@@ -308,7 +308,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
             char meshname[1024];
-            strPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
+            StringPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
 
             meshes[i] = db.findResource<MeshResource>( meshname );
             if( meshes[i] ) continue; // use exising mesh directly.
@@ -373,12 +373,12 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 
             AutoRef<TextureResource> t;
 
-            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
+            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
             {
                 t = TextureResource::loadFromFile( db, am.mapdiff.bitmap );
                 clone->setTextureResource( "ALBEDO_TEXTURE", t );
             }
-            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
+            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.Empty() )
             {
                 t = TextureResource::loadFromFile( db, am.mapbump.bitmap );
                 clone->setTextureResource( "ALBEDO_TEXTURE", t );
@@ -429,18 +429,18 @@ bool GN::util::VisualNode::Impl::loadModelsFromFile( const char * filename )
     GpuResourceDatabase & db = mGraph.gdb();
 
     // do loading
-    if( 0 == strCmpI( ".ase", ext.cptr() ) )
+    if( 0 == StringCompareI( ".ase", ext.GetRawPtr() ) )
     {
         return sLoadModelsFromASE( mOwner, db, *fp );
     }
-    else if( 0 == strCmpI( ".xpr", ext.cptr() ) ||
-             0 == strCmpI( ".tpr", ext.cptr() ))
+    else if( 0 == StringCompareI( ".xpr", ext.GetRawPtr() ) ||
+             0 == StringCompareI( ".tpr", ext.GetRawPtr() ))
     {
         return sLoadModelsFromXPR( mOwner, db, *fp );
     }
     else
     {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.GetRawPtr() );
         return NULL;
     }
 }

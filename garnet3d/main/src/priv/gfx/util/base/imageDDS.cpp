@@ -255,7 +255,7 @@ bool DDSReader::checkFormat( GN::File & fp )
 
     buf[4] = 0;
 
-    return 0 == GN::strCmp( buf, "DDS " );
+    return 0 == GN::StringCompare( buf, "DDS " );
 
     GN_UNGUARD;
 }

@@ -118,7 +118,7 @@ public:
 
         mBatchesPerSecond.newValue( batchesPerSec );
 
-        mInfo.format(
+        mInfo.Format(
             "batch size      = %d\n"
             "batches/frame   = %d\n"
             "batches/sec     = %f\n"
@@ -152,7 +152,7 @@ public:
         }
 
         // draw text
-        gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        gAsciiFont.drawText( mInfo.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     void BasicTestCase::onkey( GN::input::KeyEvent key )
@@ -174,7 +174,7 @@ public:
 
     StrA BasicTestCase::printResult(void)
     {
-        return strFormat( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
+        return StringFormat( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
             BATCH_SIZE,
             mGeometry.PRIM_COUNT / BATCH_SIZE,
             mBatchesPerSecond.getAverageValue() );

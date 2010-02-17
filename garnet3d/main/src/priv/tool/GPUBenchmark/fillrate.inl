@@ -83,7 +83,7 @@ public:
         // create texture
         for( UInt i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].attach( re.create2DTexture( strFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
+            mTextures[i].attach( re.create2DTexture( StringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
             GraphicsResourceLoader * loader = new TexLoader;
             re.updateResource( mTextures[i], 0, loader );
@@ -152,13 +152,13 @@ public:
         float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
         float texfr = pixfr * mInitTexCount;
         float bandwidth = pixfr * dd.depth / 8;
-        mFillrateStr.format(
+        mFillrateStr.Format(
             "%s\n"
             "quads = %d x %d\n"
             "pixel fillrate = %f GB/sec\n"
             "texel fillrate = %f GB/sec\n"
             "EDRAM bandwidth = %f GB/sec",
-            getName().cptr(),
+            getName().GetRawPtr(),
             mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
             pixfr,
             texfr,
@@ -171,11 +171,11 @@ public:
         RenderEngine & re = getApp().getRenderEngine();
         re.setContext( mContext );
         mGeometry.draw();
-        getApp().asciiFont().drawText( mFillrateStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        getApp().asciiFont().drawText( mFillrateStr.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return strFormat( "fillrate(%f)", mFillrate.getAverageValue() );
+        return StringFormat( "fillrate(%f)", mFillrate.getAverageValue() );
     }
 };

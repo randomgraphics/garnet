@@ -59,7 +59,7 @@ namespace GN
         ///
         /// Get file operation caps
         ///
-        const FileOperationCaps & getCaps() const { return mCaps; }
+        const FileOperationCaps & GetCaps() const { return mCaps; }
 
         ///
         /// 读取size个字节到buffer中
@@ -81,7 +81,7 @@ namespace GN
         ///
         /// write string to file
         ///
-        inline bool print( const StrA & s ) { return write( s.cptr(), s.size(), 0 ); }
+        inline bool print( const StrA & s ) { return write( s.GetRawPtr(), s.Size(), 0 ); }
 
         ///
         /// write formatted string to file
@@ -91,7 +91,7 @@ namespace GN
             StrA s;
             va_list arglist;
             va_start( arglist, fmt );
-            s.formatv( fmt, arglist );
+            s.FormatV( fmt, arglist );
             va_end( arglist );
             return print( s );
         }
@@ -148,12 +148,12 @@ namespace GN
         ///
         /// Set operation caps
         ///
-        void setCaps( const FileOperationCaps & caps ) { mCaps = caps; }
+        void SetCaps( const FileOperationCaps & caps ) { mCaps = caps; }
 
         ///
         /// Set operation caps
         ///
-        void setCaps( int caps ) { mCaps.i8 = (signed char)caps; }
+        void SetCaps( int caps ) { mCaps.i8 = (signed char)caps; }
 
         ///
         /// File logger
@@ -172,8 +172,8 @@ namespace GN
     inline File & operator<<( File & fp, int i )
     {
         char buf[256];
-        strPrintf( buf, 256, "%d", i );
-        fp.write( buf, strLen(buf), 0 );
+        StringPrintf( buf, 256, "%d", i );
+        fp.write( buf, StringLength(buf), 0 );
         return fp;
     }
 
@@ -183,8 +183,8 @@ namespace GN
     inline File & operator<<( File & fp, size_t s )
     {
         char buf[256];
-        strPrintf( buf, 256, "%Iu", s );
-        fp.write( buf, strLen(buf), 0 );
+        StringPrintf( buf, 256, "%Iu", s );
+        fp.write( buf, StringLength(buf), 0 );
         return fp;
     }
 
@@ -194,7 +194,7 @@ namespace GN
     inline File & operator<<( File & fp, const char * s )
     {
         if( 0 == s ) return fp;
-        fp.write( s, strLen(s), 0 );
+        fp.write( s, StringLength(s), 0 );
         return fp;
     }
 
@@ -203,8 +203,8 @@ namespace GN
     ///
     inline File & operator<<( File & fp, const StrA & s )
     {
-        if( s.empty() ) return fp;
-        fp.write( s.cptr(), s.size(), 0 );
+        if( s.Empty() ) return fp;
+        fp.write( s.GetRawPtr(), s.Size(), 0 );
         return fp;
     }
 
@@ -226,7 +226,7 @@ namespace GN
             if( stdin == fp ) setName( "stdin" );
             else if( stdout == fp ) setName( "stdout" );
             else if( stderr == fp ) setName( "stderr" );
-            else setName( strFormat( "#%p", fp ) );
+            else setName( StringFormat( "#%p", fp ) );
         }
 
     public :
@@ -236,7 +236,7 @@ namespace GN
         ///
         StdFile( FILE * fp )
         {
-            setCaps( 0x3F ); // support all operations, except mapping
+            SetCaps( 0x3F ); // support all operations, except mapping
             setFile(fp);
         }
 
@@ -354,7 +354,7 @@ namespace GN
             , mPtr((UInt8*)buf)
             , mSize(size)
         {
-            setCaps( 0xFF ); // support all operations
+            SetCaps( 0xFF ); // support all operations
             setName(name);
         }
         ~MemFile() {}
@@ -401,7 +401,7 @@ namespace GN
         ///
         VectorFile() : mCursor(0)
         {
-            setCaps( 0xFF ); // support all operations
+            SetCaps( 0xFF ); // support all operations
         }
 
         ///

@@ -5,7 +5,7 @@ namespace GN { namespace input
     // ----------------------------------------------------------------------------
     inline KeyCode str2kc( const char * name )
     {
-        if( GN::strEmpty(name) ) return KeyCode::NONE;
+        if( GN::IsStringEmpty(name) ) return KeyCode::NONE;
 
         static const char * sTable[]=
         {
@@ -17,7 +17,7 @@ namespace GN { namespace input
 
         for( size_t i = 0; i < sizeof(sTable)/sizeof(sTable[0]); ++i )
         {
-            if( 0 == strCmp( name, sTable[i] ) ) return (KeyCode)i;
+            if( 0 == StringCompare( name, sTable[i] ) ) return (KeyCode)i;
         }
 
         return KeyCode::NONE;

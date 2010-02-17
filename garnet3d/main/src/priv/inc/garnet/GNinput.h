@@ -365,7 +365,7 @@ namespace GN
         /// convert keycode to string
         ///
         /// \return  失败时返回空字串（注意，是空字串""，不是NULL，
-        ///          你可以用 GN::strEmpty() 来检测返回值
+        ///          你可以用 GN::IsStringEmpty() 来检测返回值
         ///
         const char * kc2str( int );
 

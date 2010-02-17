@@ -7,9 +7,9 @@ public:
     void testGetEnv()
     {
 #if !GN_XENON
-        TS_ASSERT( GN::getEnv(0).empty() );
-        TS_ASSERT( GN::getEnv("asdfhasdf aslfjoursw").empty() );
-        TS_ASSERT( !GN::getEnv("PATH").empty() );
+        TS_ASSERT( GN::getEnv(0).Empty() );
+        TS_ASSERT( GN::getEnv("asdfhasdf aslfjoursw").Empty() );
+        TS_ASSERT( !GN::getEnv("PATH").Empty() );
 #endif
     }
 
@@ -25,7 +25,7 @@ public:
         const char * strangeEnv = "asdfhiarnsauraslascfh";
 
         // make sure strangeEnv do not exist
-        TS_ASSERT( GN::getEnv(strangeEnv).empty() );
+        TS_ASSERT( GN::getEnv(strangeEnv).Empty() );
 
         // set it to "1"
         GN::putEnv( strangeEnv, "1" );
@@ -33,7 +33,7 @@ public:
 
         // then clear it
         GN::putEnv( strangeEnv, 0 );
-        TS_ASSERT( GN::getEnv(strangeEnv).empty() );
+        TS_ASSERT( GN::getEnv(strangeEnv).Empty() );
 
         // set it to "2"
         GN::putEnv( strangeEnv, "2" );
@@ -41,7 +41,7 @@ public:
 
         // then clear it in another way.
         GN::putEnv( strangeEnv, "" );
-        TS_ASSERT( GN::getEnv(strangeEnv).empty() );
+        TS_ASSERT( GN::getEnv(strangeEnv).Empty() );
 #endif
     }
 
@@ -51,7 +51,7 @@ public:
         const char * strangeEnv = "testGetEnvBoolean_asdfyawnwauiynasiur";
 
         // make sure strangeEnv do not exist
-        TS_ASSERT( GN::getEnv(strangeEnv).empty() );
+        TS_ASSERT( GN::getEnv(strangeEnv).Empty() );
 
         const char * yes[] = {
             "1",

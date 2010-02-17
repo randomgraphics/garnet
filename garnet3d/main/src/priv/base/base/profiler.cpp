@@ -7,15 +7,15 @@ static GN::StrA sTime2Str( double time )
 
     if( time < 0.000001 )
     {
-        return strFormat( "%fus", time * 1000000 );
+        return StringFormat( "%fus", time * 1000000 );
     }
     else if( time < 0.001 )
     {
-        return strFormat( "%fms", time * 1000 );
+        return StringFormat( "%fms", time * 1000 );
     }
     else
     {
-        return strFormat( "%fs", time );
+        return StringFormat( "%fs", time );
     }
 }
 
@@ -80,7 +80,7 @@ GN::ProfilerManager::~ProfilerManager()
     // print profile result
     StrA s;
     toString( s );
-    printf( "%s\n", s.cptr() );
+    printf( "%s\n", s.GetRawPtr() );
 #endif
 }
 
@@ -103,16 +103,16 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
     for( i = mTimers.begin(); i != e; ++i )
     {
         const ProfilerTimerImpl & t = i->second;
-        rval += GN::strFormat(
+        rval += GN::StringFormat(
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
-            i->first.cptr(),
+            i->first.GetRawPtr(),
             t.count,
-            sTime2Str( t.timesum ).cptr(),
-            sTime2Str( t.timesum / t.count ).cptr(),
-            sTime2Str( t.timemin ).cptr(),
-            sTime2Str( t.timemax ).cptr() );
+            sTime2Str( t.timesum ).GetRawPtr(),
+            sTime2Str( t.timesum / t.count ).GetRawPtr(),
+            sTime2Str( t.timemin ).GetRawPtr(),
+            sTime2Str( t.timemax ).GetRawPtr() );
     }
     rval +=
         "=====================================================================\n"

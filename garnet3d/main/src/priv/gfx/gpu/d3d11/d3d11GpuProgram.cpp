@@ -52,7 +52,7 @@ public:
 
     bool operator()( const T & t ) const
     {
-        return 0 == strCmp( t.name, mName );
+        return 0 == StringCompare( t.name, mName );
     }
 };
 
@@ -79,15 +79,15 @@ GN::gfx::D3D11GpuProgramParameterDesc::~D3D11GpuProgramParameterDesc()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 {
-    mUniformArray       = mUniforms.cptr();
+    mUniformArray       = mUniforms.GetRawPtr();
     mUniformCount       = mUniforms.size();
     mUniformArrayStride = sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.cptr();
+    mTextureArray       = mTextures.GetRawPtr();
     mTextureCount       = mTextures.size();
     mTextureArrayStride = sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.cptr();
+    mAttributeArray       = mAttributes.GetRawPtr();
     mAttributeCount       = mAttributes.size();
     mAttributeArrayStride = sizeof(mAttributes[0]);
 }
@@ -233,7 +233,7 @@ sUpdateConstData(
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
+    SafeArrayAccessor<UInt8>       dst( cb.GetRawPtr(), cb.size() );
 
     // copy uniform data to system const buffer
     src.copyTo(
@@ -276,7 +276,7 @@ bool GN::gfx::D3D11GpuProgram::init( const GpuProgramDesc & desc )
     // build parameter array
     mParamDesc.buildParameterArrays();
 
-    const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
+    const size_t NUM_STAGES = getGpu().GetCaps().maxTextures;
     if( mParamDesc.textures.count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
@@ -344,7 +344,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mVs.constBufs[i];
             const DynaArray<UInt8> & data = mVs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
         }
     }
 
@@ -355,7 +355,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mGs.constBufs[i];
             const DynaArray<UInt8> & data = mGs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
         }
     }
 
@@ -366,7 +366,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mPs.constBufs[i];
             const DynaArray<UInt8> & data = mPs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.cptr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
         }
     }
 }
@@ -379,7 +379,7 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
     size_t                 count,
     bool                   skipDirtyCheck ) const
 {
-    const size_t NUM_STAGES = getGpu().getCaps().maxTextures;
+    const size_t NUM_STAGES = getGpu().GetCaps().maxTextures;
 
     // allocate SRV array on stack, clear to zero.
     const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;

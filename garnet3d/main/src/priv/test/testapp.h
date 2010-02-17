@@ -81,7 +81,7 @@ public:
         if( CONTINUE_EXECUTION == status )
         {
             extraArgc = mExtraArgs.size();
-            extraArgv = mExtraArgs.cptr();
+            extraArgv = mExtraArgs.GetRawPtr();
         }
     }
 #endif
@@ -110,7 +110,7 @@ public:
 
         StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
 
-        GN_INFO(logger)( "Usage: %s [options]\n", executableName.cptr() );
+        GN_INFO(logger)( "Usage: %s [options]\n", executableName.GetRawPtr() );
         showStandardCommandLineOptions();
     }
 
@@ -133,19 +133,19 @@ private:
     {
         using namespace GN;
 
-        if( 0 == strCmpI( "on", value ) ||
-            0 == strCmpI( "yes", value ) ||
-            0 == strCmpI( "true", value ) ||
-            0 == strCmpI( "1", value ) )
+        if( 0 == StringCompareI( "on", value ) ||
+            0 == StringCompareI( "yes", value ) ||
+            0 == StringCompareI( "true", value ) ||
+            0 == StringCompareI( "1", value ) )
         {
             result = true;
             return true;
         }
         else if(
-            0 == strCmpI( "off", value ) ||
-            0 == strCmpI( "no", value ) ||
-            0 == strCmpI( "false", value ) ||
-            0 == strCmpI( "0", value ) )
+            0 == StringCompareI( "off", value ) ||
+            0 == StringCompareI( "no", value ) ||
+            0 == StringCompareI( "false", value ) ||
+            0 == StringCompareI( "0", value ) )
         {
             result = false;
             return true;
@@ -164,19 +164,19 @@ private:
         using namespace GN;
         using namespace GN::gfx;
 
-        if( 0 == strCmpI( "auto", value ) )
+        if( 0 == StringCompareI( "auto", value ) )
         {
             result = GpuAPI::AUTO;
         }
-        else if( 0 == strCmpI( "ogl", value ) )
+        else if( 0 == StringCompareI( "ogl", value ) )
         {
             result = GpuAPI::OGL;
         }
-        else if( 0 == strCmpI( "d3d10", value ) )
+        else if( 0 == StringCompareI( "d3d10", value ) )
         {
             result = GpuAPI::D3D10;
         }
-        else if( 0 == strCmpI( "d3d11", value ) )
+        else if( 0 == StringCompareI( "d3d11", value ) )
         {
             result = GpuAPI::D3D11;
         }
@@ -208,11 +208,11 @@ private:
         {
             const char * a = argv[i];
 
-            if( 0 == strCmpI( "-h", a ) ||
-                0 == strCmpI( "/h", a ) ||
-                0 == strCmpI( "-?", a ) ||
-                0 == strCmpI( "/?", a ) ||
-                0 == strCmpI( "--help", a ) )
+            if( 0 == StringCompareI( "-h", a ) ||
+                0 == StringCompareI( "/h", a ) ||
+                0 == StringCompareI( "-?", a ) ||
+                0 == StringCompareI( "/?", a ) ||
+                0 == StringCompareI( "--help", a ) )
             {
                 return SHOW_HELP;
             }
@@ -224,7 +224,7 @@ private:
             {
                 // this is a command line option name
 
-                if( 0 == strCmpI( "fs", a+1 ) )
+                if( 0 == StringCompareI( "fs", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -232,7 +232,7 @@ private:
                     if( !parseBool( rendererOptions.fullscreen, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == strCmpI( "mt", a+1 ) )
+                else if( 0 == StringCompareI( "mt", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -240,7 +240,7 @@ private:
                     if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == strCmpI( "gapi", a+1 ) )
+                else if( 0 == StringCompareI( "gapi", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
