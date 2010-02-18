@@ -926,13 +926,13 @@ namespace GN { namespace gfx
                     alphaBlend[i].blendAlphaDst = BLEND_INV_SRC_ALPHA;
                     alphaBlend[i].blendAlphaOp  = BLEND_OP_ADD;
                 }
-                blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
+                blendFactors.Set( 0.0f, 0.0f, 0.0f, 1.0f );
 
                 colorWriteMask = 0xFFFFFFFF;
 
-                viewport.set( 0, 0, 0, 0 );
+                viewport.Set( 0, 0, 0, 0 );
 
-                scissorRect.set( 0, 0, 0, 0 );
+                scissorRect.Set( 0, 0, 0, 0 );
             }
         };
         GN_CASSERT( GN_FIELD_OFFSET( RenderStates, independentAlphaBlending ) == 8 );
@@ -1505,8 +1505,8 @@ namespace GN { namespace gfx
                                     float zfar ) const
         {
             return getD3DDevice()
-                ? result.perspectiveD3DLh( fovy, ratio, znear, zfar )
-                : result.perspectiveOGLLh( fovy, ratio, znear, zfar );
+                ? result.PerspectiveD3DLh( fovy, ratio, znear, zfar )
+                : result.PerspectiveOGLLh( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1521,8 +1521,8 @@ namespace GN { namespace gfx
                                     float zfar ) const
         {
             return getD3DDevice()
-                ? result.perspectiveD3DRh( fovy, ratio, znear, zfar )
-                : result.perspectiveOGLRh( fovy, ratio, znear, zfar );
+                ? result.PerspectiveD3DRh( fovy, ratio, znear, zfar )
+                : result.PerspectiveOGLRh( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1537,8 +1537,8 @@ namespace GN { namespace gfx
                                   float zfar ) const
         {
             return getD3DDevice()
-                ? result.perspectiveD3D( fovy, ratio, znear, zfar )
-                : result.perspectiveOGL( fovy, ratio, znear, zfar );
+                ? result.PerspectiveD3D( fovy, ratio, znear, zfar )
+                : result.PerspectiveOGL( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1555,8 +1555,8 @@ namespace GN { namespace gfx
                             float zfar ) const
         {
             return getD3DDevice()
-                ? result.orthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
-                : result.orthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
+                ? result.OrthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
+                : result.OrthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
         }
 
         ///

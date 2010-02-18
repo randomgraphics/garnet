@@ -92,7 +92,7 @@ GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResource::Impl::CalculateBoundingBox( Box<float> & box ) const
 {
     MeshResourceDesc desc = mDesc;
 
@@ -107,14 +107,14 @@ GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
         desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
     }
 
-    desc.calculateBoundingBox( box );
+    desc.CalculateBoundingBox( box );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResource::Impl::CalculateBoundingSphere( Sphere<float> & sphere ) const
 {
     MeshResourceDesc desc = mDesc;
 
@@ -129,7 +129,7 @@ GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) c
         desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
     }
 
-    desc.calculateBoundingSphere( sphere );
+    desc.CalculateBoundingSphere( sphere );
 }
 
 // *****************************************************************************
@@ -351,16 +351,16 @@ GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::calculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResource::CalculateBoundingBox( Box<float> & box ) const
 {
-    return mImpl->calculateBoundingBox( box );
+    return mImpl->CalculateBoundingBox( box );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::calculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResource::CalculateBoundingSphere( Sphere<float> & sphere ) const
 {
-    return mImpl->calculateBoundingSphere( sphere );
+    return mImpl->CalculateBoundingSphere( sphere );
 }

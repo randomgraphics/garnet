@@ -397,7 +397,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         const Boxf & bbox = ase.bbox;
 
         Spheref bs;
-        bs.center = bbox.center();
+        bs.center = bbox.Center();
         bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
 
         sn->setBoundingSphere( bs );

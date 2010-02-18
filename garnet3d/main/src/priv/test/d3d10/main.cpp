@@ -75,9 +75,9 @@ public:
             false );
 
         // initialize arcball
-        world.identity();
-        view.translate( 0, 0, 2 );
-        proj.perspectiveD3DLh( 1.0f, 4.0f/3.0f, 0.1f, 10.0f );
+        world.Identity();
+        view.Translate( 0, 0, 2 );
+        proj.PerspectiveD3DLh( 1.0f, 4.0f/3.0f, 0.1f, 10.0f );
         arcball.setHandness( util::LEFT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();

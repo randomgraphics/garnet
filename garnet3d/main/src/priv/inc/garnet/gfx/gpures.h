@@ -228,12 +228,12 @@ namespace GN { namespace gfx
         ///
         /// calculate bounding box
         ///
-        void calculateBoundingBox( Box<float> & ) const;
+        void CalculateBoundingBox( Box<float> & ) const;
 
         ///
         /// calculate bounding sphere
         ///
-        void calculateBoundingSphere( Sphere<float> & ) const;
+        void CalculateBoundingSphere( Sphere<float> & ) const;
 
         ///
         /// get vertex buffer size in bytes
@@ -288,8 +288,8 @@ namespace GN { namespace gfx
         bool                     reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
         void                     applyToContext( GpuContext & context ) const;
-        void                     calculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
-        void                     calculateBoundingSphere( Sphere<float> & ) const;
+        void                     CalculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
+        void                     CalculateBoundingSphere( Sphere<float> & ) const;
         //@}
 
     protected:

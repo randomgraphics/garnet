@@ -19,9 +19,9 @@ static inline void sEuler2Matrix( Matrix33f & m, const Vector3f & e )
 {
     Matrix33f rx, ry, rz;
 
-    rx.rotateX( e.x );
-    ry.rotateY( e.y );
-    rz.rotateZ( e.z );
+    rx.RotateX( e.x );
+    ry.RotateY( e.y );
+    rz.RotateZ( e.z );
 
     m = rz * rx * ry;
 }
@@ -101,7 +101,7 @@ void FirstPersonCamera::setPosition( const Vector3f & p )
 
     // update view matrix
     Matrix44f trans;
-    trans.translate( -mPosition );
+    trans.Translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 
@@ -120,11 +120,11 @@ void FirstPersonCamera::setAngle( const Vector3f & r )
 
     // update rotation
     sEuler2Matrix( mRotation3x3, -mAngle );
-    mRotation4x4.set( mRotation3x3 );
+    mRotation4x4.Set( mRotation3x3 );
 
     // update view matrix
     Matrix44f trans;
-    trans.translate( -mPosition );
+    trans.Translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 
@@ -165,7 +165,7 @@ void FirstPersonCamera::update( float timeslice )
     mTargetAngle.update( timeslice );
     mAngle = mTargetAngle.getValue();
     sEuler2Matrix( mRotation3x3, -mAngle );
-    mRotation4x4.set( mRotation3x3 );
+    mRotation4x4.Set( mRotation3x3 );
 
     // update position
     if( ZERO3 != delta_p )
@@ -177,7 +177,7 @@ void FirstPersonCamera::update( float timeslice )
 
     // update view matrix
     Matrix44f trans;
-    trans.translate( -mPosition );
+    trans.Translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 

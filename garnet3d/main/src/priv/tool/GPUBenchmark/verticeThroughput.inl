@@ -218,7 +218,7 @@ public:
         // initialize camera
         const Spheref & s = mGeometry.boundingSphere;
         mRadius = s.radius * 2.0f;
-        mEuler.set( 0, 0, 0 );
+        mEuler.Set( 0, 0, 0 );
 
         // success
         return true;
@@ -264,7 +264,7 @@ public:
         static const float MIN_SPEED = 0.000001f;
         float speed = max( MIN_SPEED, mRadius * 0.000001f );
         mMoveSpeed = speed * a[Axis::XB360_THUMB_LY];
-        mRollSpeed.set( speed * a[Axis::XB360_THUMB_RY], speed * a[Axis::XB360_THUMB_RX], 0 );
+        mRollSpeed.Set( speed * a[Axis::XB360_THUMB_RY], speed * a[Axis::XB360_THUMB_RX], 0 );
 
         // update radius and euler
         mRadius += mMoveSpeed;
@@ -311,14 +311,14 @@ public:
         const Spheref & s = mGeometry.boundingSphere;
         if( mRadius < s.radius * 2.0f )
         {
-            proj.perspectiveD3D( 1.0f, (float)dd.width/dd.height, s.radius / 10.0f, s.radius * 10.0f );
+            proj.PerspectiveD3D( 1.0f, (float)dd.width/dd.height, s.radius / 10.0f, s.radius * 10.0f );
         }
         else
         {
-            proj.perspectiveD3D( 1.0f, (float)dd.width/dd.height, mRadius - s.radius, mRadius + s.radius );
+            proj.PerspectiveD3D( 1.0f, (float)dd.width/dd.height, mRadius - s.radius, mRadius + s.radius );
         }
         static const Vector3f UP(0,1,0);
-        view.lookAt( mEye, s.center, UP );
+        view.LookAt( mEye, s.center, UP );
         mEffect.vs->setUniformByNameM( "gPVW", proj * view );
 
         // draw the mesh

@@ -85,7 +85,7 @@ void GN::d3d10::SimpleMesh::beginVertices()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 {
-    mNewVertex.pos.set( x, y, z );
+    mNewVertex.pos.Set( x, y, z );
     mVertices.append( mNewVertex );
 }
 
@@ -94,7 +94,7 @@ void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 {
-    mNewVertex.normal.set( x, y, z );
+    mNewVertex.normal.Set( x, y, z );
 }
 
 //
@@ -102,7 +102,7 @@ void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::tex( float x, float y )
 {
-    mNewVertex.tex.set( x, y );
+    mNewVertex.tex.Set( x, y );
 }
 
 //
@@ -110,7 +110,7 @@ void GN::d3d10::SimpleMesh::tex( float x, float y )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 {
-    mNewVertex.color.set( r, g, b, a );
+    mNewVertex.color.Set( r, g, b, a );
 }
 
 //

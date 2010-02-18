@@ -87,7 +87,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void clear() { mRenderTargetSize.set( 0, 0 ); }
+        void clear() { mRenderTargetSize.Set( 0, 0 ); }
         void quit() { clear(); }
     };
 
@@ -140,7 +140,7 @@ namespace GN { namespace gfx
     private:
 
         void quit();
-        void clear() { mFbo = 0; mAutoZ = 0; mAutoZSize.set(0,0); }
+        void clear() { mFbo = 0; mAutoZ = 0; mAutoZSize.Set(0,0); }
     };
 }}
 

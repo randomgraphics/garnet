@@ -99,7 +99,7 @@ void GN::gfx::OGLLine::drawLines(
     GN_ASSERT( mVtxBuf );
     for( size_t i = 0; i < numpoints; ++i )
     {
-        mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
+        mVtxBuf[i].p.Set( positions[0], positions[1], positions[2] );
         mVtxBuf[i].c = rgba;
         positions = (const float*)( ((const UInt8*)positions) + stride );
     }

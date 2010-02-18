@@ -51,9 +51,9 @@ public:
 
     bool onInit()
     {
-        world.identity();
-        view.translate( 0, 0, -200 );
-        proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 100.0f, 1000.0f );
+        world.Identity();
+        view.Translate( 0, 0, -200 );
+        proj.PerspectiveD3DRh( 1.0f, 4.0f/3.0f, 100.0f, 1000.0f );
         arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();

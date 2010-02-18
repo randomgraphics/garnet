@@ -90,7 +90,7 @@ public:
         if( !boxmesh->reset( &md ) ) return false;
 
         // setup transformation matrices
-        view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
+        view.LookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
         gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize the model
@@ -118,7 +118,7 @@ public:
         float angle = speed * fmod( timer.getTimef(), GN_TWO_PI );
 
         Matrix44f world;
-        world.rotateY( angle );
+        world.RotateY( angle );
 
         model.setTransformation( proj, view, world );
 

@@ -132,12 +132,12 @@ void GN::util::SpatialNode::Impl::calcTransform()
     //  2. rotated around its local origin
     //  3. moved to localtion defined "position" in parent space
 
-    mRotation.toMatrix33( r33 );
-    r.set( r33 );
+    mRotation.ToMatrix33( r33 );
+    r.Set( r33 );
 
-    t.translate( mPosition );
+    t.Translate( mPosition );
 
-    s.identity();
+    s.Identity();
     s[0][0] = mScale[0];
     s[1][1] = mScale[1];
     s[2][2] = mScale[2];

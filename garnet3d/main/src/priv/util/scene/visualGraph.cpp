@@ -183,7 +183,7 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
         position = sn->getPosition();
 
         GN_TODO( "rotate light direction accordingly" );
-        direction.set( 0, 0, 1.0f );
+        direction.Set( 0, 0, 1.0f );
     }
     mUniforms[StandardUniformType::LIGHT0_POSITION]->getUniform()->update( position );
     mUniforms[StandardUniformType::LIGHT0_DIRECTION]->getUniform()->update( direction );

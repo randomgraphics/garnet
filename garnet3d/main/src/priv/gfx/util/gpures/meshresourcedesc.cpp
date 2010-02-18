@@ -561,7 +561,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResourceDesc::calculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResourceDesc::CalculateBoundingBox( Box<float> & box ) const
 {
     box.x = box.y = box.w = box.h = 0.0f;
 
@@ -569,23 +569,23 @@ GN::gfx::MeshResourceDesc::calculateBoundingBox( Box<float> & box ) const
 
     if( !sGetMeshVertexPositions( positions, *this ) ) return;
 
-    GN::calculateBoundingBox( box, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+    GN::CalculateBoundingBox( box, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResourceDesc::CalculateBoundingSphere( Sphere<float> & sphere ) const
 {
-    sphere.center.set( 0, 0, 0 );
+    sphere.center.Set( 0, 0, 0 );
     sphere.radius = 0;
 
     MeshVertexPosition positions;
 
     if( !sGetMeshVertexPositions( positions, *this ) ) return;
 
-    GN::calculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+    GN::CalculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
 }
 
 //
