@@ -787,7 +787,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     // calculate mesh bounding box
     if( m.vertices.size() > 0 )
     {
-        calculateBoundingBox( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
+        CalculateBoundingBox( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
     }
     else
     {
@@ -898,7 +898,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     // read normals
     if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
-    Matrix44f it = Matrix44f::sInvtrans( transform ); // use to transform normal
+    Matrix44f it = Matrix44f::sInvTrans( transform ); // use to transform normal
     for( UInt32 i = 0; i < numface; ++i )
     {
         AseFace & f = m.faces[i];
@@ -916,7 +916,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
             Vector3f n;
             if( !ase.readVector3( n ) ) return false;
 
-            f.vn[i] = v.addNormal( it.transformVector( n ) );
+            f.vn[i] = v.addNormal( it.TransformVector( n ) );
         }
     }
     if( !ase.readBlockEnd() ) return false;
@@ -936,7 +936,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
 
     if( !ase.readBlockStart() ) return false;
 
-    n.transform.identity();
+    n.transform.Identity();
 
     const char * token;
     while( 0 != ( token = ase.next() ) )
@@ -1264,12 +1264,12 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
 
     // setup root node
     scene.root.node.name = "root";
-    scene.root.node.pos.set( 0, 0, 0 );
-    scene.root.node.rotaxis.set( 0, 0, 1 );
+    scene.root.node.pos.Set( 0, 0, 0 );
+    scene.root.node.rotaxis.Set( 0, 0, 1 );
     scene.root.node.rotangle = 0;
-    scene.root.node.scale.set( 1, 1, 1 );
-    scene.root.node.transform.identity();
-    scene.root.mesh.bbox.size().set( 0, 0, 0 );
+    scene.root.node.scale.Set( 1, 1, 1 );
+    scene.root.node.transform.Identity();
+    scene.root.mesh.bbox.Size().Set( 0, 0, 0 );
 
     // build node tree
     for( size_t i = 0; i < scene.objects.size(); ++i )
@@ -1331,12 +1331,12 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         s += StringFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
             n->node.name.GetRawPtr(),
-            n->node.selfbbox.pos().x,
-            n->node.selfbbox.pos().y,
-            n->node.selfbbox.pos().z,
-            n->node.selfbbox.size().x,
-            n->node.selfbbox.size().y,
-            n->node.selfbbox.size().z );
+            n->node.selfbbox.Pos().x,
+            n->node.selfbbox.Pos().y,
+            n->node.selfbbox.Pos().z,
+            n->node.selfbbox.Size().x,
+            n->node.selfbbox.Size().y,
+            n->node.selfbbox.Size().z );
 
         GN_VERBOSE(sLogger)( s.GetRawPtr() );
 

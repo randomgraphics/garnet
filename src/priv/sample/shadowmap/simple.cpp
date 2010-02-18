@@ -44,13 +44,13 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
 
     // setup light
     mScene.light(0).position.set( radius * 1.5f, radius * 1.5f, radius * 1.5f );
-    mLightView.lookAtRh( mScene.light(0).position, Vector3f(0,0,0), Vector3f(0,1,0) );
+    mLightView.LookAtRh( mScene.light(0).position, Vector3f(0,0,0), Vector3f(0,1,0) );
     re.composePerspectiveMatrixRh(
         mLightProj,
         1.0f,
         1.0f,
-        mScene.light(0).position.length() - radius,
-        mScene.light(0).position.length() + radius );
+        mScene.light(0).position.Length() - radius,
+        mScene.light(0).position.Length() + radius );
 
     // set light transform for shadow map look-up
     EffectItemID id = 0;
@@ -125,7 +125,7 @@ void GN::SimpleShadowMap::update()
     // update projection matrix
     const DispDesc & dd = re.getDispDesc();
     const Spheref & bs = mShadowProjectors->getBoundingSphere();
-    float d = mCamera.getPosition().length();
+    float d = mCamera.getPosition().Length();
     float n_min = bs.radius / 100.0f;
     float n = d - bs.radius;
     float f = d + bs.radius;
@@ -183,7 +183,7 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
 
     // place actor to screen center
     Quaternionf r;
-    r.fromRotation( Vector3f(1,0,0), -GN_HALF_PI );;
+    r.FromRotation( Vector3f(1,0,0), -GN_HALF_PI );;
     mShadowProjectors->setRotation( r );
     mShadowProjectors->setPosition( -mShadowProjectors->getBoundingSphere().center );
 

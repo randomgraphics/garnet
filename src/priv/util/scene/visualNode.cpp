@@ -135,7 +135,7 @@ void GN::util::VisualNode::Impl::draw() const
                     break;
 
                 case StandardUniformType::MATRIX_PVW_IT:
-                    u->update( Matrix44f::sInvtrans( pvw ) );
+                    u->update( Matrix44f::sInvTrans( pvw ) );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD :
@@ -147,7 +147,7 @@ void GN::util::VisualNode::Impl::draw() const
                     break;
 
                 case StandardUniformType::MATRIX_WORLD_IT:
-                    u->update( Matrix44f::sInvtrans(world) );
+                    u->update( Matrix44f::sInvTrans(world) );
                     break;
 
                 default:

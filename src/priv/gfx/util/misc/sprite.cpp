@@ -358,21 +358,21 @@ GN::gfx::SpriteRenderer::drawTextured(
     float v2 = v + th;
 
     // fill vertex buffer
-    mNextFreeSprite->v[0].pos.set( x1, y1, z );
+    mNextFreeSprite->v[0].pos.Set( x1, y1, z );
     mNextFreeSprite->v[0].clr = 0xFFFFFFFF;
-    mNextFreeSprite->v[0].tex.set( u, v );
+    mNextFreeSprite->v[0].tex.Set( u, v );
 
-    mNextFreeSprite->v[1].pos.set( x1, y2, z );
+    mNextFreeSprite->v[1].pos.Set( x1, y2, z );
     mNextFreeSprite->v[1].clr = 0xFFFFFFFF;
-    mNextFreeSprite->v[1].tex.set( u, v2 );
+    mNextFreeSprite->v[1].tex.Set( u, v2 );
 
-    mNextFreeSprite->v[2].pos.set( x2, y2, z );
+    mNextFreeSprite->v[2].pos.Set( x2, y2, z );
     mNextFreeSprite->v[2].clr = 0xFFFFFFFF;
-    mNextFreeSprite->v[2].tex.set( u2, v2 );
+    mNextFreeSprite->v[2].tex.Set( u2, v2 );
 
-    mNextFreeSprite->v[3].pos.set( x2, y1, z );
+    mNextFreeSprite->v[3].pos.Set( x2, y1, z );
     mNextFreeSprite->v[3].clr = 0xFFFFFFFF;
-    mNextFreeSprite->v[3].tex.set( u2, v );
+    mNextFreeSprite->v[3].tex.Set( u2, v );
 
     // prepare for next sprite
     ++mNextFreeSprite;
@@ -411,21 +411,21 @@ GN::gfx::SpriteRenderer::drawSolid(
     float x2 = (x + w) / dd.width;
     float y2 = (y + h) / dd.height;
 
-    mNextFreeSprite->v[0].pos.set( x1, y1, z );
+    mNextFreeSprite->v[0].pos.Set( x1, y1, z );
     mNextFreeSprite->v[0].clr = rgba;
-    mNextFreeSprite->v[0].tex.set( 0, 0 );
+    mNextFreeSprite->v[0].tex.Set( 0, 0 );
 
-    mNextFreeSprite->v[1].pos.set( x1, y2, z );
+    mNextFreeSprite->v[1].pos.Set( x1, y2, z );
     mNextFreeSprite->v[1].clr = rgba;
-    mNextFreeSprite->v[1].tex.set( 0, 0 );
+    mNextFreeSprite->v[1].tex.Set( 0, 0 );
 
-    mNextFreeSprite->v[2].pos.set( x2, y2, z );
+    mNextFreeSprite->v[2].pos.Set( x2, y2, z );
     mNextFreeSprite->v[2].clr = rgba;
-    mNextFreeSprite->v[2].tex.set( 0, 0 );
+    mNextFreeSprite->v[2].tex.Set( 0, 0 );
 
-    mNextFreeSprite->v[3].pos.set( x2, y1, z );
+    mNextFreeSprite->v[3].pos.Set( x2, y1, z );
     mNextFreeSprite->v[3].clr = rgba;
-    mNextFreeSprite->v[3].tex.set( 0, 0 );
+    mNextFreeSprite->v[3].tex.Set( 0, 0 );
 
     // prepare for next Sprite
     ++mNextFreeSprite;

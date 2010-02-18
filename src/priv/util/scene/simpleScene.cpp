@@ -298,7 +298,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         SimpleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
         entityDesc.spatial.parent = src.parent.Empty() ? "" : FULL_MESH_NAME(src.parent);
         entityDesc.spatial.position = src.pos;
-        entityDesc.spatial.orientation.fromRotation( src.rotaxis, src.rotangle );
+        entityDesc.spatial.orientation.FromRotation( src.rotaxis, src.rotangle );
         entityDesc.spatial.bbox = src.selfbbox;
     }
 
@@ -426,14 +426,14 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
         if( !a || 3 != String2FloatArray( (float*)&entity.spatial.position, 3, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid position" );
-            entity.spatial.position.set( 0, 0, 0 );
+            entity.spatial.position.Set( 0, 0, 0 );
         }
 
         a = spatialNode->findAttrib( "orientation" );
         if( !a || 4 != String2FloatArray( (float*)&entity.spatial.orientation, 4, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid orientation" );
-            entity.spatial.orientation.set( 0, 0, 0, 1 );
+            entity.spatial.orientation.Set( 0, 0, 0, 1 );
         }
 
         a = spatialNode->findAttrib( "bbox" );
@@ -768,9 +768,9 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 
     // create a entity for the model
     SimpleWorldDesc::EntityDesc & ed = desc.entities[meshname];
-    ed.spatial.position.set( 0, 0, 0 );
-    ed.spatial.orientation.set( 0, 0, 0, 1 );
-    mesh.calculateBoundingBox( ed.spatial.bbox );
+    ed.spatial.position.Set( 0, 0, 0 );
+    ed.spatial.orientation.Set( 0, 0, 0, 1 );
+    mesh.CalculateBoundingBox( ed.spatial.bbox );
     ed.models.append( meshname );
 
     // done
@@ -815,7 +815,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     // calculate bounding sphere
     const Boxf & bbox = entityDesc.spatial.bbox;
     Spheref bs;
-    calculateBoundingSphereFromBoundingBox( bs, bbox );
+    CalculateBoundingSphereFromBoundingBox( bs, bbox );
     e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
     for( size_t i = 0; i < entityDesc.models.size(); ++i )

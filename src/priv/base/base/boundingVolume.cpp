@@ -17,7 +17,7 @@ static float sGetNextValue( const float * & buffer, size_t stride )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphere(
+void GN::CalculateBoundingSphere(
     Spheref & result,
     const float * x, size_t strideX,
     const float * y, size_t strideY,
@@ -26,18 +26,18 @@ void GN::calculateBoundingSphere(
 {
     Boxf box;
 
-    calculateBoundingBox( box, x, strideX, y, strideY, z, strideZ, count );
+    CalculateBoundingBox( box, x, strideX, y, strideY, z, strideZ, count );
 
-    result.center = box.center();
-    result.radius = Vector3f::sDistance( result.center, box.pos() );
+    result.center = box.Center();
+    result.radius = Vector3f::sDistance( result.center, box.Pos() );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count )
+void GN::CalculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count )
 {
-    return calculateBoundingSphere(
+    return CalculateBoundingSphere(
         result,
         positions ? &positions[0].x : NULL, strideInBytes,
         positions ? &positions[0].y : NULL, strideInBytes,
@@ -48,16 +48,16 @@ void GN::calculateBoundingSphere( Spheref & result, const Vector3f * positions, 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox )
+void GN::CalculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox )
 {
-    result.center = bbox.center();
-    result.radius = Vector3f::sDistance( result.center, bbox.pos() );
+    result.center = bbox.Center();
+    result.radius = Vector3f::sDistance( result.center, bbox.Pos() );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingBox(
+void GN::CalculateBoundingBox(
     Boxf & result,
     const float * valueX, size_t strideX,
     const float * valueY, size_t strideY,
@@ -94,8 +94,8 @@ void GN::calculateBoundingBox(
         vMax.z = math::GetMax( vMax.z, z );
     }
 
-    result.pos() = vMin;
-    result.size() = vMax - vMin;
+    result.Pos() = vMin;
+    result.Size() = vMax - vMin;
 
     GN_UNGUARD;
 }
@@ -103,9 +103,9 @@ void GN::calculateBoundingBox(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count )
+void GN::CalculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count )
 {
-    return calculateBoundingBox(
+    return CalculateBoundingBox(
         result,
         positions ? &positions[0].x : NULL, strideInBytes,
         positions ? &positions[0].y : NULL, strideInBytes,

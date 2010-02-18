@@ -281,7 +281,7 @@ namespace GN { namespace gfx
                 ( sx == (T)mDesc.width &&
                   sy == (T)mDesc.height &&
                   sz == (T)mDesc.depth ) );
-            mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
+            mMipSize[level].Set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 
         ///

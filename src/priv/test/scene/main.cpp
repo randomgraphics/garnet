@@ -47,7 +47,7 @@ bool init( Scene & sc )
     // setup camera
     Matrix44f proj, view;
     sc.gpu.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
-    view.lookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
+    view.LookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
     camera.setProjectionMatrix( proj );
     camera.setViewMatrix( view );
 

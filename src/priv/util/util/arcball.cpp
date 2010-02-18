@@ -97,7 +97,7 @@ void GN::util::ArcBall::beginRotation( int x, int y )
 
     sWindowPosition2UnitVector( mRollBase, fx, fy, mHandness );
 
-    mRollBase = mTransView.transformVector( mRollBase );
+    mRollBase = mTransView.TransformVector( mRollBase );
 
     mQuatBase = mQuat;
 
@@ -127,18 +127,18 @@ void GN::util::ArcBall::onRotation( int x, int y )
 
     Vector3f v;
     sWindowPosition2UnitVector( v, fx, fy, mHandness );
-    v = mTransView.transformVector( v );
+    v = mTransView.TransformVector( v );
 
     Quaternionf q;
-    q.fromArc( mRollBase, v );
+    q.FromArc( mRollBase, v );
     mQuat = q * mQuatBase;
 
-    mQuat.toMatrix33( mRotation3x3 );
-    mRotation4x4.set( mRotation3x3 );
+    mQuat.ToMatrix33( mRotation3x3 );
+    mRotation4x4.Set( mRotation3x3 );
 
-    mTranslation = q.toMatrix44().transformPoint( mTranslationBase );
+    mTranslation = q.ToMatrix44().TransformPoint( mTranslationBase );
 
-    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.print().GetRawPtr() );
+    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.Print().GetRawPtr() );
 }
 
 //
@@ -149,7 +149,7 @@ void GN::util::ArcBall::beginTranslation( int x, int y )
     GN_VVTRACE(sLogger)( "ArcBall::beginTranslation()" );
     mMoving = true;
     mTranslationBase = mTranslation;
-    mMoveBase.set( x, y );
+    mMoveBase.Set( x, y );
 }
 
 //
@@ -172,7 +172,7 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 
     Vector3f v( (float)( x - mMoveBase.x ), (float)( mMoveBase.y - y ), 0 );
 
-    v = mTransView.transformVector( v * mMoveSpeed ); // view space -> world space
+    v = mTransView.TransformVector( v * mMoveSpeed ); // view space -> world space
 
     mTranslation = mTranslationBase + v;
 }

@@ -61,11 +61,11 @@ public:
 
         // Move dolphin in a circle
         Matrix44f scale, trans, rotate1, rotate2;
-        scale.identity(); scale *= 0.01f; scale[3][3] = 1.0f;
-        rotate1.rotateZ( -cosf(fKickFreq)/6 );
-        rotate2.rotateY( fPhase );
+        scale.Identity(); scale *= 0.01f; scale[3][3] = 1.0f;
+        rotate1.RotateZ( -cosf(fKickFreq)/6 );
+        rotate2.RotateY( fPhase );
         float radius = 5;
-        trans.translate( -radius*sinf(fPhase), sinf(fKickFreq)/2, (2*radius)-(2*radius)*cosf(fPhase) );
+        trans.Translate( -radius*sinf(fPhase), sinf(fKickFreq)/2, (2*radius)-(2*radius)*cosf(fPhase) );
         Matrix44f world = trans * rotate2 * rotate1 * scale;
 
         // calculate vertex blending weights
@@ -121,9 +121,9 @@ public:
         Vector3f eye(0,0,-2.0f);
         Vector3f at(0,0,0);
         Vector3f up(0,1,0);
-        view.lookAtLh( eye, at, up );
+        view.LookAtLh( eye, at, up );
 
-        world.identity();
+        world.Identity();
     }
 
     bool onPreInit( InitParam & )

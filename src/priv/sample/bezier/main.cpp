@@ -14,14 +14,14 @@ struct BezierVertex
 
     BezierVertex( float u, float v )
     {
-        p0.set( -1, -1, 0 ); p1.set(  1, -1, 0 ); p2.set(    0,  1, 0 );
-        n0.set( -1, -1, 1 ); n1.set(  1, -1, 1 ); n2.set(    0,  1, 1 );
-        t0.set(  0,  1 );    t1.set(  1,  1 );    t2.set( 0.5f,  0 );
-        bc.set(  u,  v );
+        p0.Set( -1, -1, 0 ); p1.Set(  1, -1, 0 ); p2.Set(    0,  1, 0 );
+        n0.Set( -1, -1, 1 ); n1.Set(  1, -1, 1 ); n2.Set(    0,  1, 1 );
+        t0.Set(  0,  1 );    t1.Set(  1,  1 );    t2.Set( 0.5f,  0 );
+        bc.Set(  u,  v );
 
-        n0.normalize();
-        n1.normalize();
-        n2.normalize();
+        n0.Normalize();
+        n1.Normalize();
+        n2.Normalize();
     }
 };
 
@@ -299,7 +299,7 @@ class BezierApp : public SampleApp
         const DispDesc & dd  = gpu.getDispDesc();
 
         Matrix44f view, proj;
-        view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+        view.LookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
         gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
         camera.setViewMatrix( view );
         camera.setProjectionMatrix( proj );

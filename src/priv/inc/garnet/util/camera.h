@@ -158,8 +158,8 @@ namespace GN { namespace util
         ///
         void setMouseMoveWindow( int l, int t, int w, int h )
         {
-            mWindowHalfSize.set( w / 2, h / 2 );
-            mWindowCenter.set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
+            mWindowHalfSize.Set( w / 2, h / 2 );
+            mWindowCenter.Set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
         }
 
         void setTranslation( const Vector3f & t ) { mTranslation = t; }

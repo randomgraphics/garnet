@@ -126,26 +126,26 @@ void draw( Gpu & r )
         1,1,0,1,
         0,1,0,1,
     };
-    m.translate( -1.0f, -0.0f, 0 );
+    m.Translate( -1.0f, -0.0f, 0 );
     rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
-    m.translate( -1.0f, -1.0f, 0 );
+    m.Translate( -1.0f, -1.0f, 0 );
     rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
-    m.identity();
+    m.Identity();
     rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
-    m.translate( 0.5f, -1.5f, 0 );
+    m.Translate( 0.5f, -1.5f, 0 );
     rc.uniforms[0]->update( m );
     r.bindContext( rc );
     r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );

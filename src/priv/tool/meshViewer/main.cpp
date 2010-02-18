@@ -26,7 +26,7 @@ public:
 
         // setup camera
         Matrix44f view, proj;
-        view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+        view.LookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
         gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
         camera.setViewMatrix( view );
         camera.setProjectionMatrix( proj );
@@ -57,7 +57,7 @@ public:
 
         // update camera stuff
         Spheref bs;
-        calculateBoundingSphereFromBoundingBox( bs, swd.bbox );
+        CalculateBoundingSphereFromBoundingBox( bs, swd.bbox );
         radius = bs.radius * 2.0f;
         if( 0.0f == radius ) radius = 1.0f;
 

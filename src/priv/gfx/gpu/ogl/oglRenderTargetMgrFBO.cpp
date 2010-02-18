@@ -224,7 +224,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             if( mAutoZ )
             {
                 GN_OGL_CHECK( glDeleteRenderbuffersEXT( 1, &mAutoZ ) );
-                mAutoZSize.set( 0, 0 );
+                mAutoZSize.Set( 0, 0 );
             }
 
             // create new z buffer
@@ -239,7 +239,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GN_OGL_CHECK( glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, newWidth, newHeight ) );
 
             // update size of auto z buffer
-            mAutoZSize.set( newWidth, newHeight );
+            mAutoZSize.Set( newWidth, newHeight );
         }
 
         // bind auto-Z buffer to OpenGL
