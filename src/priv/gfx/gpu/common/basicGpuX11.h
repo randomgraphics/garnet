@@ -26,7 +26,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicGpuX11() { clear(); }
+        BasicGpuX11() { Clear(); }
         virtual ~BasicGpuX11() {}
         //@}
 
@@ -36,10 +36,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & );
-        void quit();
+        bool Init( const GpuOptions & );
+        void Quit();
     private :
-        void clear()
+        void Clear()
         {
             dispClear();
         }

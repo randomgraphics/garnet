@@ -25,7 +25,7 @@ namespace GN { namespace gfx
     public:
 
         // clear to empty mesh
-        void clear();
+        void Clear();
     };
 }}
 

@@ -91,7 +91,7 @@
   - POSIX implementation
     - implement input module on POSIX platform
     - implement GNogl on POSIX platform
-  - UT for getEnv() and setEnv().
+  - UT for GetEnv() and setEnv().
   - convert input module to static library
   - SCons
     - EMT64 icl support

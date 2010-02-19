@@ -140,7 +140,7 @@ namespace GN { namespace gfx
         if( 0 == r ) return 0;
         SharedLib * dllptr = dll;
         r->setUserData( GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
-        dll.detach();
+        dll.Detach();
         return r;
 #endif
         GN_UNGUARD;
@@ -155,7 +155,7 @@ namespace GN { namespace gfx
 
         MultiThreadGpu * r = new MultiThreadGpu;
         MultiThreadGpuOptions mo; // use default multithread options
-        if( !r->init( ro, mo ) ) delete r, r = NULL;
+        if( !r->Init( ro, mo ) ) delete r, r = NULL;
         return r;
 
         GN_UNGUARD;

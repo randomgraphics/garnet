@@ -148,7 +148,7 @@ struct BinaryComDump
         return sLoadBinary( node, attr, basedir, binary );
     }
 
-    void clear() { comptr.clear(); }
+    void Clear() { comptr.Clear(); }
 };
 
 template<typename T>
@@ -228,7 +228,7 @@ struct D3D10InputLayoutDump
         return sLoadBinary( node, "signature", basedir, signature );
     }
 
-    void clear() { comptr.clear(); }
+    void Clear() { comptr.Clear(); }
 };
 
 struct D3D10VtxBufDump : public D3D10BufferDump
@@ -281,7 +281,7 @@ struct D3D10ViewDump
 
         GN_DX_CHECK_RETURN( dev.CreateBuffer( &bd, &sd, &buf ), false );
 
-        res.attach( buf );
+        res.Attach( buf );
         return true;
     }
 
@@ -349,13 +349,13 @@ struct D3D10ViewDump
                     ID3D10Texture2D * tex2d;
 
                     GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.GetRawPtr(), &tex2d ), false );
-                    original.attach( tex2d );
+                    original.Attach( tex2d );
 
                     desc2d.Usage = D3D10_USAGE_DEFAULT;
                     desc2d.BindFlags = bind;
                     desc2d.CPUAccessFlags = 0;
                     GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.GetRawPtr(), &tex2d ), false );
-                    res.attach( tex2d );
+                    res.Attach( tex2d );
 
                     break;
                 }
@@ -428,7 +428,7 @@ struct D3D10ViewDump
         }
     }
 
-    void clear() { view.clear(); res.clear(); }
+    void Clear() { view.Clear(); res.Clear(); }
 };
 
 struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
@@ -502,10 +502,10 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
         return true;
     }
 
-    void clear()
+    void Clear()
     {
-        D3D10ViewDump<ID3D10RenderTargetView>::clear();
-        srv.clear();
+        D3D10ViewDump<ID3D10RenderTargetView>::Clear();
+        srv.Clear();
     }
 };
 
@@ -535,9 +535,9 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
 
         // D3D10 does not support loading data to depth/stencil texture.
         // We'll have to delete and recreate.
-        view.clear();
-        original.clear();
-        res.clear();
+        view.Clear();
+        original.Clear();
+        res.Clear();
         create( dev );
     }
 };
@@ -965,35 +965,35 @@ struct D3D10StateDump
     {
         GN_GUARD;
 
-        vs.clear();
-        ps.clear();
-        gs.clear();
+        vs.Clear();
+        ps.Clear();
+        gs.Clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(vsc); ++i ) vsc[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(psc); ++i ) psc[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(gsc); ++i ) gsc[i].clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vsc); ++i ) vsc[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(psc); ++i ) psc[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(gsc); ++i ) gsc[i].Clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(vssrv); ++i ) vssrv[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(pssrv); ++i ) pssrv[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(gssrv); ++i ) gssrv[i].clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vssrv); ++i ) vssrv[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(pssrv); ++i ) pssrv[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(gssrv); ++i ) gssrv[i].Clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(vssamp); ++i ) vssamp[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(pssamp); ++i ) pssamp[i].clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(gssamp); ++i ) gssamp[i].clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vssamp); ++i ) vssamp[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(pssamp); ++i ) pssamp[i].Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(gssamp); ++i ) gssamp[i].Clear();
 
-        il.clear();
+        il.Clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].Clear();
 
-        idxbuf.clear();
+        idxbuf.Clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i ) rendertargets[i].clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i ) rendertargets[i].Clear();
 
-        depthstencil.clear();
+        depthstencil.Clear();
 
-        rs.clear();
-        bs.clear();
-        ds.clear();
+        rs.Clear();
+        bs.Clear();
+        ds.Clear();
 
         GN_UNGUARD;
     }
@@ -1177,7 +1177,7 @@ protected:
         GN_GUARD;
 
         mState.onDestroy();
-        mSprite.clear();
+        mSprite.Clear();
 
         GN_UNGUARD;
     }

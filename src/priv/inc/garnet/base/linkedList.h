@@ -39,13 +39,13 @@ namespace GN
 
         /// \name list operations
         //@{
-        void       append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
-        bool       empty() const { return 0 == mHead; };
-        ItemType * head() const { return mHead; }
-        void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
-        void       insertBefore( ItemType * where, ItemType * newItem ) { doInsertBefore( where, newItem ); }
-        void       remove( ItemType * item ) { doRemove( item ); }
-        ItemType * tail() const { return mTail; }
+        void       Append( ItemType * newItem ) { InsertAfter( mTail, newItem ); }
+        bool       Empty() const { return 0 == mHead; };
+        ItemType * GetHead() const { return mHead; }
+        void       InsertAfter( ItemType * where, ItemType * newItem ) { DoInsertAfter( where, newItem ); }
+        void       InsertBefore( ItemType * where, ItemType * newItem ) { DoInsertBefore( where, newItem ); }
+        void       Remove( ItemType * item ) { DoRemove( item ); }
+        ItemType * GetTail() const { return mTail; }
         //@}
 
     private:
@@ -58,7 +58,7 @@ namespace GN
         DoubleLinkedList( const DoubleLinkedList & );
         const DoubleLinkedList & operator = ( const DoubleLinkedList & );
 
-        void doInsertAfter( ItemType * where, ItemType * newItem )
+        void DoInsertAfter( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
 
@@ -100,7 +100,7 @@ namespace GN
 #endif
         }
 
-        void doInsertBefore( ItemType * where, ItemType * newItem )
+        void DoInsertBefore( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
 
@@ -143,7 +143,7 @@ namespace GN
 #endif
         }
 
-        void doRemove( ItemType * item )
+        void DoRemove( ItemType * item )
         {
             GN_ASSERT( item && this == item->owner );
 
@@ -189,11 +189,11 @@ namespace GN
 
         /// \name list operations
         //@{
-        void       append( ItemType * newItem ) { insertAfter( tail(), newItem ); }
-        ItemType * head() const { return mHead; }
-        void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
-        void       removeNextOf( ItemType * item ) { doRemoveNextOf( item ); }
-        ItemType * tail() const { return mTail; }
+        void       Append( ItemType * newItem ) { InsertAfter( GetTail(), newItem ); }
+        ItemType * GetHead() const { return mHead; }
+        void       InsertAfter( ItemType * where, ItemType * newItem ) { DoInsertAfter( where, newItem ); }
+        void       RemoveNextOf( ItemType * item ) { DoRemoveNextOf( item ); }
+        ItemType * GetTail() const { return mTail; }
         //@}
 
     private:
@@ -206,7 +206,7 @@ namespace GN
         SingleLinkedList( const SingleLinkedList & );
         const SingleLinkedList & operator = ( const SingleLinkedList & );
 
-        void doInsertAfter( ItemType * where, ItemType * newItem )
+        void DoInsertAfter( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
             if( where )
@@ -224,7 +224,7 @@ namespace GN
             if( mTail == where ) mTail = newItem;
         }
 
-        void doRemoveNextOf( ItemType * item )
+        void DoRemoveNextOf( ItemType * item )
         {
             if( item )
             {
@@ -239,7 +239,7 @@ namespace GN
             }
             else if( mHead )
             {
-                // remove head item
+                // remove GetHead item
                 mHead = mHead->next;
             }
         }

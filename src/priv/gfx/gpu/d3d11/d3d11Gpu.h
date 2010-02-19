@@ -29,7 +29,7 @@ namespace GN { namespace gfx
     public:
 
         /// initialize the layout
-        bool init( ID3D11Device & dev, const GN::gfx::VertexFormat & format );
+        bool Init( ID3D11Device & dev, const GN::gfx::VertexFormat & format );
 
         /// less operator
         bool operator<( const D3D11VertexLayout & rhs ) const
@@ -51,8 +51,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        D3D11Gpu()          { clear(); }
-        virtual ~D3D11Gpu() { quit(); }
+        D3D11Gpu()          { Clear(); }
+        virtual ~D3D11Gpu() { Quit(); }
         //@}
 
         // ********************************
@@ -61,10 +61,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & );
-        void quit();
+        bool Init( const GpuOptions & );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             dispClear();
             capsClear();
@@ -216,7 +216,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
+        void contextClear() { mContext.Clear(); mSOMgr = 0; mRTMgr = 0; }
 
         inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );

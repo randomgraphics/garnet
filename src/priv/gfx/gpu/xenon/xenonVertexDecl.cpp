@@ -138,7 +138,7 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
 {
     GN_GUARD;
 
-    elements.clear();
+    elements.Clear();
 
     for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {

@@ -63,7 +63,7 @@ public:
         TS_ASSERT( w1 == w2 );
         TS_ASSERT( w1 == w3 );
 
-        o1.clear();
+        o1.Clear();
 
         TS_ASSERT( !w1 );
         TS_ASSERT( !w2 );

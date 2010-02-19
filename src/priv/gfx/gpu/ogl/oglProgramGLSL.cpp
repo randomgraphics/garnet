@@ -243,7 +243,7 @@ sIsTextureUniform( GLenum type )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
+bool GN::gfx::OGLGpuProgramGLSL::Init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -255,22 +255,22 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
     GN_ASSERT( GpuProgramLanguage::GLSL == desc.lang );
 
     mVS = sCreateShader( desc.vs.source, GL_VERTEX_SHADER_ARB );
-    if( 0 == mVS ) return failure();
+    if( 0 == mVS ) return Failure();
 
     mPS = sCreateShader( desc.ps.source, GL_FRAGMENT_SHADER_ARB );
-    if( 0 == mPS ) return failure();
+    if( 0 == mPS ) return Failure();
 
     mProgram = sCreateProgram( mVS, mPS );
-    if( 0 == mProgram ) return failure();
+    if( 0 == mProgram ) return Failure();
 
     // enumerate parameters (textures and uniforms)
-    if( !enumParameters() ) return failure();
+    if( !enumParameters() ) return Failure();
 
     // enumerate attributes
-    if( !enumAttributes() ) return failure();
+    if( !enumAttributes() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -278,19 +278,19 @@ bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::quit()
+void GN::gfx::OGLGpuProgramGLSL::Quit()
 {
     GN_GUARD;
 
-    mUniforms.clear();
-    mTextures.clear();
-    mAttributes.clear();
+    mUniforms.Clear();
+    mTextures.Clear();
+    mAttributes.Clear();
 
     if( mProgram ) glDeleteObjectARB( mProgram ), mProgram = 0;
     if( mPS ) glDeleteObjectARB( mPS ), mPS = 0;
     if( mVS ) glDeleteObjectARB( mVS ), mVS = 0;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -591,7 +591,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
         {
             r.chooseTextureStage( i );
 
-            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.get());
+            const OGLTexture * ogltexture = SafeCastPtr<const OGLTexture>(b.texture.get());
 
             // bind sampler
             ogltexture->setSampler( b.sampler );
@@ -642,7 +642,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
     // enumerate all parameters
     char * nameptr = (char*)alloca( maxLength+1 );
-    mUniforms.clear();
+    mUniforms.Clear();
     for( GLint i = 0; i < numParameters; ++i )
     {
         GLSLUniformOrTextureDesc u;
@@ -724,7 +724,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 
     // enumerate all attributes
     char * nameptr = (char*)alloca( maxLength+1 );
-    mAttributes.clear();
+    mAttributes.Clear();
     for( GLint i = 0; i < numAttributes; ++i )
     {
         GLSLAttributeDesc a;

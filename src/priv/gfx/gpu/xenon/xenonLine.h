@@ -23,8 +23,8 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        XenonLine( XenonGpu & r ) : XenonResource(r) { clear(); }
-        virtual ~XenonLine() { quit(); }
+        XenonLine( XenonGpu & r ) : XenonResource(r) { Clear(); }
+        virtual ~XenonLine() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mDecl = 0;
             mVtxShader = 0;

@@ -1307,12 +1307,12 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         n->node.treebbox = n->mesh.bbox;
 
         // then merge with all childrens' bbox
-        AseGeoObject * c = safeCastPtr<AseGeoObject>( n->getFirstChild() );
+        AseGeoObject * c = SafeCastPtr<AseGeoObject>( n->getFirstChild() );
         while( c )
         {
             Boxf::sGetUnion( n->node.treebbox, n->node.treebbox, c->node.treebbox );
 
-            c = safeCastPtr<AseGeoObject>( c->getNextSibling() );
+            c = SafeCastPtr<AseGeoObject>( c->getNextSibling() );
         }
 
         // next node
@@ -1635,12 +1635,12 @@ static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::AseScene::clear()
+void GN::util::AseScene::Clear()
 {
-    materials.clear();
-    meshes.clear();
-    subsets.clear();
-    meshdata.clear();
+    materials.Clear();
+    meshes.Clear();
+    subsets.Clear();
+    meshdata.Clear();
 }
 
 //

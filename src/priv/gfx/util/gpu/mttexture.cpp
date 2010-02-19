@@ -30,14 +30,14 @@ struct UpdateMipmapParam
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadTexture::init( Texture * tex )
+bool GN::gfx::MultiThreadTexture::Init( Texture * tex )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadTexture, () );
 
-    if( NULL == tex ) return failure();
+    if( NULL == tex ) return Failure();
 
     mTexture = tex;
 
@@ -51,7 +51,7 @@ bool GN::gfx::MultiThreadTexture::init( Texture * tex )
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -59,7 +59,7 @@ bool GN::gfx::MultiThreadTexture::init( Texture * tex )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::quit()
+void GN::gfx::MultiThreadTexture::Quit()
 {
     GN_GUARD;
 
@@ -69,7 +69,7 @@ void GN::gfx::MultiThreadTexture::quit()
         mTexture = NULL;
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

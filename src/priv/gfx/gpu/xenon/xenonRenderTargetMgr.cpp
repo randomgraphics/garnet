@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderTargetManager::init()
+bool GN::gfx::XenonRenderTargetManager::Init()
 {
     GN_GUARD;
 
@@ -20,7 +20,7 @@ bool GN::gfx::XenonRenderTargetManager::init()
     GN_STDCLASS_INIT( GN::gfx::XenonRenderTargetManager, () );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -28,11 +28,11 @@ bool GN::gfx::XenonRenderTargetManager::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderTargetManager::quit()
+void GN::gfx::XenonRenderTargetManager::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

@@ -31,7 +31,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicGpu() { clear(); }
+        BasicGpu() { Clear(); }
         virtual ~BasicGpu() {}
         //@}
 
@@ -41,10 +41,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & );
-        void quit();
+        bool Init( const GpuOptions & );
+        void Quit();
     private :
-        void clear()
+        void Clear()
         {
             contextClear();
             miscClear();
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
 
     private:
 
-        void contextClear() { mContextOk = false; mContext.clear(); }
+        void contextClear() { mContextOk = false; mContext.Clear(); }
 
     protected:
 

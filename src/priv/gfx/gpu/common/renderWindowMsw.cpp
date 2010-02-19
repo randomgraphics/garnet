@@ -25,27 +25,27 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
     if( !gpu )
     {
         GN_ERROR(sLogger)( "Null renderer pointer." );
-        return failure();
+        return Failure();
     }
 
     if( !::IsWindow( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "External render window handle must be valid." );
-        return failure();
+        return Failure();
     }
 
     if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
-        return failure();
+        return Failure();
     }
 
     // register a message hook to render window.
-    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadIdentifier() );
     if( 0 == mHook )
     {
         GN_ERROR(sLogger)( "Fail to setup message hook : %s", GetWin32LastErrorInfo() );
-        return failure();
+        return Failure();
     }
 
     mGpu          = gpu;
@@ -53,10 +53,10 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
     mUseExternalWindow = true;
 
     // do post initialize tasks
-    if( !postInit() ) return failure();
+    if( !postInit() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -78,16 +78,16 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 
     GN_ASSERT( 0 != monitor && width > 0 && height > 0 );
 
-    if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return failure();
+    if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return Failure();
 
     mGpu = gpu;
     mUseExternalWindow = false;
 
     // success
-    if( !postInit() ) return failure();
+    if( !postInit() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -95,7 +95,7 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowMsw::quit()
+void GN::gfx::RenderWindowMsw::Quit()
 {
     GN_GUARD;
 
@@ -122,7 +122,7 @@ void GN::gfx::RenderWindowMsw::quit()
         mClassName.Clear();
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -209,7 +209,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
         this == msInstanceMap.find(mWindow)->second );
     msInstanceMap[mWindow] = this;
 
-    // clear all state flags
+    // Clear all state flags
     mInsideSizeMove = false;
 
     // success

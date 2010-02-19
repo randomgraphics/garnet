@@ -34,11 +34,11 @@ public:
         const D3D10AppOption & option = getOption();
 
         RenderToTextureOption rtto = { option.width, option.height, DXGI_FORMAT_R8G8B8A8_UNORM, 1, MSAA_DISABLE, false };
-        if( !rtt.init( &dev, rtto ) ) return false;
+        if( !rtt.Init( &dev, rtto ) ) return false;
 
         ScreenAlignedQuadDesc saqd;
         saqd.makeDefault();
-        if( !quad.init( &dev, saqd ) ) return false;
+        if( !quad.Init( &dev, saqd ) ) return false;
 
         // create mesh
         static SimpleMesh::Vertex vertices[24];
@@ -52,7 +52,7 @@ public:
             0, 0, // binormal
             indices,
             0 );  // quads
-        if( !mesh.init( &dev ) ) return false;
+        if( !mesh.Init( &dev ) ) return false;
         mesh.setVertices( vertices, GN_ARRAY_COUNT(vertices) );
         mesh.setTriangles( indices, GN_ARRAY_COUNT(indices)/3 );
 
@@ -91,10 +91,10 @@ public:
 
     void onDestroy()
     {
-        effect.clear();
-        mesh.quit();
-        quad.quit();
-        rtt.quit();
+        effect.Clear();
+        mesh.Quit();
+        quad.Quit();
+        rtt.Quit();
     }
 
     void onUpdate()

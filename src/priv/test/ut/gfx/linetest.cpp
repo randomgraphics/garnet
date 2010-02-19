@@ -19,7 +19,7 @@ class LineRendererTest : public CxxTest::TestSuite
             if( NULL == mGpu ) return;
 
             mLine = new GN::gfx::LineRenderer( *mGpu );
-            if( !mLine->init() ) delete mLine, mLine = NULL;
+            if( !mLine->Init() ) delete mLine, mLine = NULL;
         }
 
         ~LineRendererInitiator()

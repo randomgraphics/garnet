@@ -61,7 +61,7 @@ const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 
     if( i == mNodes.end() )
     {
-        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
         return NULL;
     }
     else
@@ -81,7 +81,7 @@ NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType )
 
     if( i == mNodes.end() )
     {
-        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
         return NULL;
     }
     else

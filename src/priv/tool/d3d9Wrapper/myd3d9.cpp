@@ -47,7 +47,7 @@ bool sLoadD3D9Dll()
     using namespace GN;
 
     // load library
-    StrA dllname = StringFormat( "%s\\system32\\d3d9.dll", getEnv("windir").GetRawPtr() );
+    StrA dllname = StringFormat( "%s\\system32\\d3d9.dll", GetEnv("windir").GetRawPtr() );
     GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.GetRawPtr() );
     gD3D9Dll = LoadLibraryA( dllname.GetRawPtr() );
     if( 0 == gD3D9Dll )
@@ -129,13 +129,13 @@ HRESULT STDMETHODCALLTYPE MyD3D9::CreateDevice(
     }
 
     GN::AutoComPtr<MyDevice9> dev;
-    dev.attach( new MyDevice9 );
+    dev.Attach( new MyDevice9 );
 
     HRESULT hr = dev->create( this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters );
     if( FAILED( hr ) ) return hr;
 
     // success
-    *ppReturnedDeviceInterface = (IDirect3DDevice9*)dev.detach();
+    *ppReturnedDeviceInterface = (IDirect3DDevice9*)dev.Detach();
     return D3D_OK;
 
     GN_UNGUARD;
@@ -175,12 +175,12 @@ MyD3D9 * WINAPI MyDirect3DCreate9( UINT sdkVersion )
     GN_GUARD;
 
     GN::AutoComPtr<MyD3D9> p;
-    p.attach( new MyD3D9 );
+    p.Attach( new MyD3D9 );
 
     if( !p->create( sdkVersion ) ) return NULL;
 
     // success
-    return p.detach();
+    return p.Detach();
 
     GN_UNGUARD;
 }

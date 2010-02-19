@@ -105,17 +105,17 @@ namespace GN
 
         public:
 
-            void addref() { ++mRef; }
+            void AddRef() { ++mRef; }
 
-            void release() { if( 0 == (--mRef) ) delete this; }
+            void Release() { if( 0 == (--mRef) ) delete this; }
 
-            ClosureType getType() const { return mType; }
+            ClosureType GetType() const { return mType; }
 
-            virtual bool isEqual( const CLOSUREBASE_NAME & other ) const = 0;
+            virtual bool IsEqual( const CLOSUREBASE_NAME & other ) const = 0;
 
-            virtual bool isLess( const CLOSUREBASE_NAME & other ) const = 0;
+            virtual bool IsLess( const CLOSUREBASE_NAME & other ) const = 0;
 
-            virtual R run(PARAM_LIST) const = 0;
+            virtual R Run(PARAM_LIST) const = 0;
         };
 
 #define DEFINE_FREECLOSURE( CALL_CONVENSION, DUMMY )                                                                    \
@@ -136,20 +136,20 @@ namespace GN
                 GN_ASSERT( f );                                                                                         \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isEqual( const BaseType & other ) const                                                        \
+            virtual bool IsEqual( const BaseType & other ) const                                                        \
             {                                                                                                           \
                 return                                                                                                  \
-                    BaseType::getType() == other.getType() &&                                                           \
+                    BaseType::GetType() == other.GetType() &&                                                           \
                     mFunc == ((ThisType&)other).mFunc;                                                                  \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isLess( const BaseType & other ) const                                                         \
+            virtual bool IsLess( const BaseType & other ) const                                                         \
             {                                                                                                           \
-                if ( BaseType::getType() != other.getType() ) return BaseType::getType() < other.getType();             \
+                if ( BaseType::GetType() != other.GetType() ) return BaseType::GetType() < other.GetType();             \
                 return mFunc < ((ThisType&)other).mFunc;                                                                \
             }                                                                                                           \
                                                                                                                         \
-            virtual R run( PARAM_LIST ) const                                                                           \
+            virtual R Run( PARAM_LIST ) const                                                                           \
             {                                                                                                           \
                 GN_ASSERT(  mFunc );                                                                                    \
                 return mFunc( PARAM_VALUES );                                                                           \
@@ -185,23 +185,23 @@ namespace GN
                 GN_ASSERT( x && f );                                                                                    \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isEqual( const BaseType & other ) const                                                        \
+            virtual bool IsEqual( const BaseType & other ) const                                                        \
             {                                                                                                           \
                 return                                                                                                  \
-                    BaseType::getType() == other.getType() &&                                                           \
+                    BaseType::GetType() == other.GetType() &&                                                           \
                     mClassPtr == ((ThisType&)other).mClassPtr &&                                                        \
                     mFunc == ((ThisType&)other).mFunc;                                                                  \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isLess( const BaseType & other ) const                                                         \
+            virtual bool IsLess( const BaseType & other ) const                                                         \
             {                                                                                                           \
-                if ( BaseType::getType() != other.getType() ) return BaseType::getType() < other.getType();             \
+                if ( BaseType::GetType() != other.GetType() ) return BaseType::GetType() < other.GetType();             \
                 const ThisType & o = (ThisType&)other;                                                                  \
                 if ( mClassPtr != o.mClassPtr ) return mClassPtr < o.mClassPtr;                                         \
                 return ::memcmp( &mFunc,&o.mFunc,sizeof(mFunc) ) < 0;                                                   \
             }                                                                                                           \
                                                                                                                         \
-            virtual R run( PARAM_LIST ) const                                                                           \
+            virtual R Run( PARAM_LIST ) const                                                                           \
             {                                                                                                           \
                 GN_ASSERT(  mFunc );                                                                                    \
                 return (mClassPtr->*mFunc)( PARAM_VALUES );                                                             \
@@ -240,19 +240,19 @@ namespace GN
             {
             }
 
-            virtual bool isEqual( const BaseType & other ) const
+            virtual bool IsEqual( const BaseType & other ) const
             {
                 return this == &other;
             }
 
-            virtual bool isLess( const BaseType & other ) const
+            virtual bool IsLess( const BaseType & other ) const
             {
-                if ( BaseType::getType() != other.getType() ) return BaseType::getType() < other.getType();
+                if ( BaseType::GetType() != other.GetType() ) return BaseType::GetType() < other.GetType();
                 const ThisType & o = (ThisType&)other;
                 return ::memcmp( &mFunc,&o.mFunc,sizeof(mFunc) ) < 0;
             }
 
-            virtual R run( PARAM_LIST ) const
+            virtual R Run( PARAM_LIST ) const
             {
                 return mFunc( PARAM_VALUES );
             }
@@ -275,21 +275,21 @@ namespace GN
                 GN_ASSERT(x);                                                                                           \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isEqual( const BaseType & other ) const                                                        \
+            virtual bool IsEqual( const BaseType & other ) const                                                        \
             {                                                                                                           \
                 return                                                                                                  \
-                    BaseType::getType() == other.getType() &&                                                           \
+                    BaseType::GetType() == other.GetType() &&                                                           \
                     mFunctor == ((ThisType&)other).mFunctor;                                                            \
             }                                                                                                           \
                                                                                                                         \
-            virtual bool isLess( const BaseType & other ) const                                                         \
+            virtual bool IsLess( const BaseType & other ) const                                                         \
             {                                                                                                           \
-                if ( BaseType::getType() != other.getType() ) return BaseType::getType() < other.getType();             \
+                if ( BaseType::GetType() != other.GetType() ) return BaseType::GetType() < other.GetType();             \
                 const ThisType & o = (ThisType&)other;                                                                  \
                 return mFunctor < o.mFunctor;                                                                           \
             }                                                                                                           \
                                                                                                                         \
-            virtual R run( PARAM_LIST ) const                                                                           \
+            virtual R Run( PARAM_LIST ) const                                                                           \
             {                                                                                                           \
                 return (*mFunctor)( PARAM_VALUES );                                                                     \
             }                                                                                                           \
@@ -328,7 +328,7 @@ namespace GN
         DELEGATE_NAME( const MyType & other )
             : mClosure(other.mClosure)
         {
-            if( mClosure ) mClosure->addref();
+            if( mClosure ) mClosure->AddRef();
         }
 
         ///
@@ -337,23 +337,23 @@ namespace GN
         DELEGATE_NAME( R(*f)(PARAM_TYPES) )
             : mClosure(0)
         {
-            bind( f );
+            Bind( f );
         }
 
         ///
         /// destructor
         ///
-        ~DELEGATE_NAME() { clear(); }
+        ~DELEGATE_NAME() { Clear(); }
 
 #define BIND_TO_FREEFUNC( CALL_CONVENSION, DUMMY )                                                                 \
-        void bind( R(CALL_CONVENSION *f)(PARAM_TYPES) )                                                            \
+        void Bind( R(CALL_CONVENSION *f)(PARAM_TYPES) )                                                            \
         {                                                                                                          \
             if( 0 == f )                                                                                           \
             {                                                                                                      \
-                GN_ERROR(sLogger)( "bind to null function pointer!" );                                                      \
+                GN_ERROR(sLogger)( "Bind to null function pointer!" );                                                      \
                 return;                                                                                            \
             }                                                                                                      \
-            clear();                                                                                               \
+            Clear();                                                                                               \
             mClosure = new detail::FREECLOSURE_NAME(CALL_CONVENSION,DUMMY)<R PARAM_COMMA PARAM_TYPES>( f );        \
         }
 
@@ -372,14 +372,14 @@ namespace GN
 
 #define BIND_TO_MEMFUNC( CALL_CONVENSION, CONSTNESS )                                                             \
         template<class X, class Y>                                                                                \
-        inline void bind( CONSTNESS Y * x,  R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS )                    \
+        inline void Bind( CONSTNESS Y * x,  R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS )                    \
         {                                                                                                         \
             if( 0 == x && 0 == f )                                                                                \
             {                                                                                                     \
-                GN_ERROR(sLogger)( "bind to null member function pointer!" );                                              \
+                GN_ERROR(sLogger)( "Bind to null member function pointer!" );                                              \
                 return;                                                                                           \
             }                                                                                                     \
-            clear();                                                                                              \
+            Clear();                                                                                              \
             mClosure = new detail::MEMCLOSURE_NAME(CALL_CONVENSION,CONSTNESS)<X, R PARAM_COMMA PARAM_TYPES>(x,f); \
         }
 
@@ -404,25 +404,25 @@ namespace GN
         //@}
 
         ///
-        /// bind to functor
+        /// Bind to functor
         ///
         template<class X>
-        inline void bind( const X & x )
+        inline void Bind( const X & x )
         {
-            clear();
+            Clear();
             mClosure = new detail::FTRCLOSURE_NAME<X, R PARAM_COMMA PARAM_TYPES>(x);
         }
 
 #define BIND_TO_FUNCTORPTR( DUMMY, CONSTNESS )                                                           \
         template<class X>                                                                                \
-        inline void bind( CONSTNESS X * x )                                                              \
+        inline void Bind( CONSTNESS X * x )                                                              \
         {                                                                                                \
             if( 0 == x )                                                                                 \
             {                                                                                            \
-                GN_ERROR(sLogger)( "bind to null functor pointer!" );                                             \
+                GN_ERROR(sLogger)( "Bind to null functor pointer!" );                                             \
                 return;                                                                                  \
             }                                                                                            \
-            clear();                                                                                     \
+            Clear();                                                                                     \
             mClosure = new detail::FTRPTRCLOSURE_NAME(DUMMY,CONSTNESS)<X, R PARAM_COMMA PARAM_TYPES>(x); \
         }
 
@@ -433,17 +433,17 @@ namespace GN
         //@}
 
         ///
-        /// clear the functor
+        /// Clear the functor
         ///
-        void clear()
+        void Clear()
         {
-            if( mClosure ) mClosure->release(), mClosure = 0;
+            if( mClosure ) mClosure->Release(), mClosure = 0;
         }
 
         ///
         /// Check emptiness of the functor
         ///
-        bool empty() const
+        bool Empty() const
         {
             return 0 == mClosure;
         }
@@ -458,8 +458,8 @@ namespace GN
         ///
         R operator()( PARAM_LIST ) const
         {
-            GN_ASSERT( !empty() );
-            return mClosure->run( PARAM_VALUES );
+            GN_ASSERT( !Empty() );
+            return mClosure->Run( PARAM_VALUES );
         }
 
         ///
@@ -467,9 +467,9 @@ namespace GN
         ///
         MyType & operator=( const MyType & other )
         {
-            if( mClosure ) mClosure->release();
+            if( mClosure ) mClosure->Release();
             mClosure = other.mClosure;
-            if( mClosure ) mClosure->addref();
+            if( mClosure ) mClosure->AddRef();
             return *this;
         }
 
@@ -488,7 +488,7 @@ namespace GN
             }
             else
             {
-                return mClosure->isEqual(*rhs.mClosure);
+                return mClosure->IsEqual(*rhs.mClosure);
             }
         }
 
@@ -507,7 +507,7 @@ namespace GN
             }
             else
             {
-                return !mClosure->isEqual(*rhs.mClosure);
+                return !mClosure->IsEqual(*rhs.mClosure);
             }
         }
 
@@ -526,7 +526,7 @@ namespace GN
             }
             else
             {
-                return mClosure->isLess(*rhs.mClosure);
+                return mClosure->IsLess(*rhs.mClosure);
             }
         }
 
@@ -545,7 +545,7 @@ namespace GN
             }
             else
             {
-                return rhs.mClosure->isLess(*mClosure);
+                return rhs.mClosure->IsLess(*mClosure);
             }
         }
     };
@@ -561,7 +561,7 @@ namespace GN
     makeDelegate( R(CALL_CONVENSION *f)(PARAM_TYPES) )    \
     {                                                     \
         DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> fn;      \
-        fn.bind(f);                                       \
+        fn.Bind(f);                                       \
         return fn;                                        \
     }                                                     \
 
@@ -585,7 +585,7 @@ namespace GN
     {                                                                                 \
         GN_CASSERT( !IsConst<Y>::value );                                             \
         DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES> fn;                                  \
-        fn.bind(x,f);                                                                 \
+        fn.Bind(x,f);                                                                 \
         return fn;                                                                    \
     }
 

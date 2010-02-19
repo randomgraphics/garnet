@@ -31,7 +31,7 @@ GN::util::VisualNode::Impl::~Impl()
 
     for( size_t i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
     {
-        mStandardPerObjectUniforms[i].clear();
+        mStandardPerObjectUniforms[i].Clear();
     }
 
     mGraph.impl().removeVisualNode( mGraphIter );
@@ -95,7 +95,7 @@ int GN::util::VisualNode::Impl::addModel( GpuResource * model )
 // -----------------------------------------------------------------------------
 void GN::util::VisualNode::Impl::removeAllModels()
 {
-    mModels.clear();
+    mModels.Clear();
 }
 
 //

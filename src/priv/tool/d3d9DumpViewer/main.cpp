@@ -148,7 +148,7 @@ struct D3D9StateDump
 
     //@{
 
-    void clear()
+    void Clear()
     {
         onDispose();
 
@@ -178,15 +178,15 @@ struct D3D9StateDump
         // vs
         if( !vs.source.Empty() )
         {
-            vs.vs.attach( assembleAndCreateVS( &dev, vs.source.GetRawPtr(), 0 ) );
-            if( vs.vs.empty() ) return false;
+            vs.vs.Attach( assembleAndCreateVS( &dev, vs.source.GetRawPtr(), 0 ) );
+            if( vs.vs.Empty() ) return false;
         }
 
         // ps
         if( !ps.source.Empty() )
         {
-            ps.ps.attach( assembleAndCreatePS( &dev, ps.source.GetRawPtr(), 0 ) );
-            if( ps.ps.empty() ) return false;
+            ps.ps.Attach( assembleAndCreatePS( &dev, ps.source.GetRawPtr(), 0 ) );
+            if( ps.ps.Empty() ) return false;
         }
 
         // decl
@@ -325,18 +325,18 @@ struct D3D9StateDump
 
     void onDispose()
     {
-        vs.vs.clear();
-        ps.ps.clear();
-        vtxdecl.decl.clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].vb.clear();
-        idxbuf.ib.clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].tex.clear();
+        vs.vs.Clear();
+        ps.ps.Clear();
+        vtxdecl.decl.Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].vb.Clear();
+        idxbuf.ib.Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].tex.Clear();
         for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
         {
-            rendertargets[i].surf.clear();
-            rendertargets[i].syscopy.clear();
+            rendertargets[i].surf.Clear();
+            rendertargets[i].syscopy.Clear();
         }
-        depthstencil.surf.clear();
+        depthstencil.surf.Clear();
     }
 
     void bind( IDirect3DDevice9 & dev ) const
@@ -897,7 +897,7 @@ protected:
 
     bool onInit( D3D9AppOption & o )
     {
-        mState.clear();
+        mState.Clear();
         if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if RENDER_TO_BACKBUF
@@ -922,7 +922,7 @@ protected:
     void onDispose()
     {
         mState.onDispose();
-        mBackBuf.clear();
+        mBackBuf.Clear();
     }
 
     void onDraw()

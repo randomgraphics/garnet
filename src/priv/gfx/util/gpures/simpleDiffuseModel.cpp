@@ -42,7 +42,7 @@ const ModelResourceDesc GN::gfx::SimpleDiffuseModel::DESC = sDiffuseModelDesc();
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SimpleDiffuseModel::init()
+bool GN::gfx::SimpleDiffuseModel::Init()
 {
     GN_GUARD;
 
@@ -50,7 +50,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     GN_STDCLASS_INIT( GN::gfx::SimpleDiffuseModel, () );
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->reset(&DESC) ) return failure();
+    if( 0 == mModel || !mModel->reset(&DESC) ) return Failure();
 
     // initialize uniforms
     mMatrixPvw     = mModel->getUniformResource( "MATRIX_PVW"      );
@@ -64,7 +64,7 @@ bool GN::gfx::SimpleDiffuseModel::init()
     mAlbedoTexture = mModel->getTextureResource( "ALBEDO_TEXTURE"  );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -72,21 +72,21 @@ bool GN::gfx::SimpleDiffuseModel::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::quit()
+void GN::gfx::SimpleDiffuseModel::Quit()
 {
     GN_GUARD;
 
-    mModel.clear();
-    mDefaultTexture.clear();
-    mMatrixPvw.clear();
-    mMatrixWorld.clear();
-    mMatrixWorldIT.clear();
-    mLightPos.clear();
-    mLightColor.clear();
-    mAlbedoColor.clear();
-    mAlbedoTexture.clear();
+    mModel.Clear();
+    mDefaultTexture.Clear();
+    mMatrixPvw.Clear();
+    mMatrixWorld.Clear();
+    mMatrixWorldIT.Clear();
+    mLightPos.Clear();
+    mLightColor.Clear();
+    mAlbedoColor.Clear();
+    mAlbedoTexture.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

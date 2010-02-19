@@ -65,14 +65,14 @@ static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
+bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonTexture, () );
 
-    if( !setDesc( inputDesc ) ) return failure();
+    if( !setDesc( inputDesc ) ) return Failure();
 
     // Note: always use descriptor returned by getDesc(), since it may differ with inputDesc.
     const TextureDesc & desc = getDesc();
@@ -82,7 +82,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     if( D3DFMT_UNKNOWN == mD3DFormat )
     {
         GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", desc.format.toString().GetRawPtr() );
-        return failure();
+        return Failure();
     }
 
     // determine dimension
@@ -100,7 +100,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
             IDirect3DLineTexture9 * tex1d;
             GN_DX_CHECK_RETURN(
                 dev.CreateLineTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &tex1d, NULL ),
-                failure() );
+                Failure() );
             mD3DTexture = tex1d;
             break;
         }
@@ -112,7 +112,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
                 IDirect3DTexture9 * tex2d;
                 GN_DX_CHECK_RETURN(
                     dev.CreateTexture( desc.width, desc.height, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
-                    failure() );
+                    Failure() );
                 mD3DTexture = tex2d;
             }
             else
@@ -120,7 +120,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
                 IDirect3DArrayTexture9 * tex2d;
                 GN_DX_CHECK_RETURN(
                     dev.CreateArrayTexture( desc.width, desc.height, desc.faces, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
-                    failure() );
+                    Failure() );
                 mD3DTexture = tex2d;
             }
             break;
@@ -131,7 +131,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
             IDirect3DVolumeTexture9 * tex3d;
             GN_DX_CHECK_RETURN(
                 dev.CreateVolumeTexture( desc.width, desc.height, desc.depth, desc.levels, mD3DUsage, mD3DFormat, 0, &tex3d, NULL ),
-                failure() );
+                Failure() );
             mD3DTexture = tex3d;
             break;
         }
@@ -141,14 +141,14 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
             IDirect3DCubeTexture9 * texcube;
             GN_DX_CHECK_RETURN(
                 dev.CreateCubeTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &texcube, NULL ),
-                failure() );
+                Failure() );
             mD3DTexture = texcube;
             break;
         }
 
         default:
             GN_UNEXPECTED(); // invalid dimension
-            return failure();
+            return Failure();
     }
 
     // calculate mipmap sizes
@@ -163,7 +163,7 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -171,13 +171,13 @@ bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonTexture::quit()
+void GN::gfx::XenonTexture::Quit()
 {
     GN_GUARD;
 
     SafeRelease( mD3DTexture );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

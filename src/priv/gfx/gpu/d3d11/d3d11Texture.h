@@ -26,8 +26,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11Texture( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
-        virtual ~D3D11Texture() { quit(); }
+        D3D11Texture( D3D11Gpu & r ) : D3D11Resource(r) { Clear(); }
+        virtual ~D3D11Texture() { Quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const TextureDesc & desc );
-        void quit();
+        bool Init( const TextureDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mTexture = 0;
         }

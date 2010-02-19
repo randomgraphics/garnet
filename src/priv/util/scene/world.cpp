@@ -71,7 +71,7 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
     mEntities[id] = newEntity;
 
     // done
-    return newEntity.detach();
+    return newEntity.Detach();
 }
 
 //
@@ -133,7 +133,7 @@ void GN::util::World::Impl::deleteAllEntities()
     {
         delete (EntityInternal*)mEntities[id];
     }
-    mEntities.clear();
+    mEntities.Clear();
 }
 
 //
@@ -207,7 +207,7 @@ Entity * GN::util::World::createSpatialEntity( const char * name )
     AutoObjPtr<SpatialNode> sn( newSpatialNode( *e, spatialGraph() ) );
     if( !sn ) return NULL;
 
-    e->attachNode<SpatialNode>( sn.detach() );
+    e->attachNode<SpatialNode>( sn.Detach() );
 
     return e;
 }
@@ -226,8 +226,8 @@ Entity * GN::util::World::createVisualEntity( const char * name )
     AutoObjPtr<VisualNode> vn( newVisualNode( *e, visualGraph() ) );
     if( !vn ) return false;
 
-    e->attachNode<SpatialNode>( sn.detach() );
-    e->attachNode<VisualNode>( vn.detach() );
+    e->attachNode<SpatialNode>( sn.Detach() );
+    e->attachNode<VisualNode>( vn.Detach() );
 
     return e;
 }
@@ -246,8 +246,8 @@ Entity * GN::util::World::createLightEntity( const char * name )
     AutoObjPtr<LightNode> ln( newLightNode( *e, visualGraph() ) );
     if( !ln ) return false;
 
-    e->attachNode<SpatialNode>( sn.detach() );
-    e->attachNode<LightNode>( ln.detach() );
+    e->attachNode<SpatialNode>( sn.Detach() );
+    e->attachNode<LightNode>( ln.Detach() );
 
     return e;
 }

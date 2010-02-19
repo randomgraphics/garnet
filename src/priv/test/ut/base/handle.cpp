@@ -88,7 +88,7 @@ public:
         h1 = hm.add(1);
         TS_ASSERT( h1 );
 
-        hm.clear();
+        hm.Clear();
         TS_ASSERT( hm.empty() );
         TS_ASSERT_EQUALS( hm.size(), 0 );
         TS_ASSERT_EQUALS( hm.first(), 0 );

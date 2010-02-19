@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 GN::input::InputMsw::InputMsw()
 {
-    // clear all fields to KeyCode::NONE
+    // Clear all fields to KeyCode::NONE
     memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map

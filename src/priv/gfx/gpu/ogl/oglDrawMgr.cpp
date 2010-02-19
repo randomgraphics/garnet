@@ -49,7 +49,7 @@ bool GN::gfx::OGLGpu::drawInit()
     // create line renderer
     GN_ASSERT( !mLine );
     mLine = new OGLLine(*this);
-    if( !mLine->init() ) return false;
+    if( !mLine->Init() ) return false;
 
     // success
     return true;
@@ -169,7 +169,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
+    const OGLIdxBuf * ib = SafeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
 
     // Verify index buffer
     if( paramCheckEnabled() )
@@ -403,8 +403,8 @@ void GN::gfx::OGLGpu::drawLines(
 
     // disable GPU program and resources
     GpuContext ctx = getContext();
-    ctx.gpuProgram.clear();
-    ctx.uniforms.clear();
+    ctx.gpuProgram.Clear();
+    ctx.uniforms.Clear();
     ctx.clearResources();
 
     bindContext( ctx );

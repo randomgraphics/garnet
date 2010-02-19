@@ -37,15 +37,15 @@ static GN::input::Input * sCreateNativeInputSystem()
 {
 #if GN_XENON
     GN::AutoObjPtr<GN::input::InputXenon> p( new GN::input::InputXenon );
-    return p.detach();
+    return p.Detach();
 #elif GN_MSWIN
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
-    if( !p->init() ) return 0;
-    return p.detach();
+    if( !p->Init() ) return 0;
+    return p.Detach();
 #else
     GN::AutoObjPtr<GN::input::InputX11> p( new GN::input::InputX11 );
-    if( !p->init() ) return 0;
-    return p.detach();
+    if( !p->Init() ) return 0;
+    return p.Detach();
 #endif
 }
 
@@ -72,7 +72,7 @@ bool GN::input::initializeInputSystem( InputAPI api )
         case InputAPI::DINPUT :
         {
             InputDInput * p = new InputDInput;
-            if( !p->init() ) return 0;
+            if( !p->Init() ) return 0;
             return true;
         }
 #endif

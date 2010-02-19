@@ -347,7 +347,7 @@ static bool sReadBinaryFile( UInt8 * dst, size_t length, const char * filename )
 // -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
-    desc.clear();
+    desc.Clear();
 
     XmlDocument doc;
     XmlParseResult xpr;
@@ -623,7 +623,7 @@ size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
 // -----------------------------------------------------------------------------
 AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
 {
-    clear();
+    Clear();
 
     switch( sDetermineMeshFileType( fp ) )
     {
@@ -646,7 +646,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
 {
     GN_INFO(sLogger)( "Load mesh from file: %s", filename?filename:"<null filename>" );
 
-    clear();
+    Clear();
 
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return AutoRef<Blob>::NULLREF;

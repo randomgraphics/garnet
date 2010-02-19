@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLIdxBuf()          { clear(); }
-        virtual ~OGLIdxBuf() { quit(); }
+        OGLIdxBuf()          { Clear(); }
+        virtual ~OGLIdxBuf() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const IdxBufDesc & desc );
-        void quit();
+        bool Init( const IdxBufDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mBuffer = 0;
         }

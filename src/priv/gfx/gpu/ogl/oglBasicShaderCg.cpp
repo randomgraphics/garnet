@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
+bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
@@ -25,7 +25,7 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     if( CG_PROFILE_UNKNOWN == mProfile )
     {
         GN_ERROR(sLogger)( "Fail to get the lastest profile!" );
-        return failure();
+        return Failure();
     }
 
     // parse hints
@@ -33,13 +33,13 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     StrA entry = reg.gets( "entry", "main" );
 
     // create the shader
-    if( !mShader.init( getGpu().getCgContext(), mProfile, code, entry ) ) return failure();
+    if( !mShader.Init( getGpu().getCgContext(), mProfile, code, entry ) ) return Failure();
 
     // load the program
-    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), failure() );
+    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), Failure() );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -47,11 +47,11 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::quit()
+void GN::gfx::OGLBasicShaderCg::Quit()
 {
     GN_GUARD;
 
-    mShader.quit();
+    mShader.Quit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -69,7 +69,7 @@ void GN::gfx::OGLBasicShaderCg::quit()
 void GN::gfx::OGLBasicShaderCg::disable() const
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
     GN_CG_CHECK( cgGLDisableProfile( mProfile ) );
     GN_UNGUARD_SLOW;
 }
@@ -81,7 +81,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     // enable the shader
     GN_CG_CHECK( cgGLEnableProfile( mProfile ) );

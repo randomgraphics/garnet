@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLLine( OGLGpu & r ) : mGpu(r) { clear(); }
-        virtual ~OGLLine() { quit(); }
+        OGLLine( OGLGpu & r ) : mGpu(r) { Clear(); }
+        virtual ~OGLLine() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mVtxBuf = 0;
             mNextLine = 0;

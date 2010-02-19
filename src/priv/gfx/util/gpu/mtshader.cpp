@@ -37,7 +37,7 @@ struct UniformUpdateParam
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
+bool GN::gfx::MultiThreadUniform::Init( Uniform * uni )
 {
     GN_GUARD;
 
@@ -49,10 +49,10 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
     mUniform = uni;
     mSize    = uni->size();
     mFrontEndData = (UInt8*)HeapAlloc(mSize);
-    if( NULL == mFrontEndData ) return failure();
+    if( NULL == mFrontEndData ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -60,7 +60,7 @@ bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::quit()
+void GN::gfx::MultiThreadUniform::Quit()
 {
     GN_GUARD;
 
@@ -72,7 +72,7 @@ void GN::gfx::MultiThreadUniform::quit()
 
     SafeHeapFree( mFrontEndData );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -123,7 +123,7 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
+bool GN::gfx::MultiThreadGpuProgram::Init( GpuProgram * gp )
 {
     GN_GUARD;
 
@@ -143,7 +143,7 @@ bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
     mParamDesc = gpip.params;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -151,7 +151,7 @@ bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpuProgram::quit()
+void GN::gfx::MultiThreadGpuProgram::Quit()
 {
     GN_GUARD;
 
@@ -160,7 +160,7 @@ void GN::gfx::MultiThreadGpuProgram::quit()
         mGpu.postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

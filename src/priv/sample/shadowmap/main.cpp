@@ -18,7 +18,7 @@ public:
     bool onInit()
     {
         mSimple = new SimpleShadowMap(*this);
-        if( !mSimple->init( "a/objects.actor.xml" ) ) return false;
+        if( !mSimple->Init( "a/objects.actor.xml" ) ) return false;
 
         // success
         return true;

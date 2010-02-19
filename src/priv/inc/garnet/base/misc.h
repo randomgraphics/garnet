@@ -57,7 +57,7 @@ namespace GN
     /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO & safeCastRef( FROM & from )
+    GN_FORCE_INLINE TO & SafeCastRef( FROM & from )
     {
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO&>(from);
@@ -72,7 +72,7 @@ namespace GN
     /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
+    GN_FORCE_INLINE TO * SafeCastPtr( FROM * from )
     {
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         TO * to = dynamic_cast<TO*>(from);
@@ -89,7 +89,7 @@ namespace GN
     /// vector to pointer
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE T * vec2ptr( std::vector<T> & vec )
+    GN_FORCE_INLINE T * Vec2Ptr( std::vector<T> & vec )
     {
         return vec.empty() ? 0 : &vec[0];
     }
@@ -98,7 +98,7 @@ namespace GN
     /// vector to pointer
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE const T * vec2ptr( const std::vector<T> & vec )
+    GN_FORCE_INLINE const T * Vec2Ptr( const std::vector<T> & vec )
     {
         return vec.empty() ? 0 : &vec[0];
     }
@@ -107,20 +107,20 @@ namespace GN
     /// Set environment variable. Set value to empty or NULL to delete
     /// that environment variable.
     ///
-    void putEnv( const char * name, const char * value );
+    void PutEnv( const char * name, const char * value );
 
     ///
     /// Get environment variable.
     ///
-    void getEnv( StrA & result, const char * name );
+    void GetEnv( StrA & result, const char * name );
 
     ///
     /// Get environment variable.
     ///
-    inline StrA getEnv( const char * name )
+    inline StrA GetEnv( const char * name )
     {
         StrA result;
-        getEnv( result, name );
+        GetEnv( result, name );
         return result;
     }
 
@@ -128,10 +128,10 @@ namespace GN
     /// Get environment variable as boolean variable. Return true only when the variable
     /// exists and the value is "1" or "yes" (case-insensitive).
     ///
-    inline bool getEnvBoolean( const char * name )
+    inline bool GetEnvBoolean( const char * name )
     {
         StrA result;
-        getEnv( result, name );
+        GetEnv( result, name );
         return "1" == result ||
                0 == StringCompareI( "yes", result.GetRawPtr() ) ||
                0 == StringCompareI( "true", result.GetRawPtr() );
@@ -150,7 +150,7 @@ namespace GN
         ///
         /// conver to string
         ///
-        const char * toStr() const
+        const char * ToStr() const
         {
             static char s[5];
             s[0] = c8[0];
@@ -164,7 +164,7 @@ namespace GN
         ///
         /// convert from string
         ///
-        void fromStr(const char * str )
+        void FromStr(const char * str )
         {
             u32 = 0;
             if( str )
@@ -185,7 +185,7 @@ namespace GN
         static FOURCC sMake( const char * str )
         {
             FOURCC r;
-            r.fromStr( str );
+            r.FromStr( str );
             return r;
         }
 
@@ -227,7 +227,7 @@ namespace GN
         /// \name public methods
         //@{
 
-        const char * toStr() const; // Note: this function is not thread safe
+        const char * ToStr() const; // Note: this function is not thread safe
 
         //@}
 
@@ -331,14 +331,14 @@ namespace GN
         AutoInitializer( const T & value ) : mValue(value) {}
 
         ///
-        /// get internal value
+        /// get internal Value
         ///
-        T & value() { return mValue; }
+        T & Value() { return mValue; }
 
         ///
-        /// get internal value
+        /// get internal Value
         ///
-        const T & value() const { return mValue; }
+        const T & Value() const { return mValue; }
 
         ///
         /// Convert to T
@@ -375,7 +375,7 @@ namespace GN
         ///
         /// Tell finalizer to _NOT_ run the function by the end of life scope.
         ///
-        void dismiss() { mDismissed = true; }
+        void Dismiss() { mDismissed = true; }
     };
 
     ///

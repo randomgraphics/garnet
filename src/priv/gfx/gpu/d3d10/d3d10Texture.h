@@ -26,8 +26,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10Texture( D3D10Gpu & r ) : D3D10Resource(r) { clear(); }
-        virtual ~D3D10Texture() { quit(); }
+        D3D10Texture( D3D10Gpu & r ) : D3D10Resource(r) { Clear(); }
+        virtual ~D3D10Texture() { Quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const TextureDesc & desc );
-        void quit();
+        bool Init( const TextureDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mTexture = 0;
         }

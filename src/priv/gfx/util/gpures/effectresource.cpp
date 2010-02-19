@@ -200,12 +200,12 @@ sCheckShaderUniforms(
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::reset( const EffectResourceDesc * desc )
 {
-    clear();
+    Clear();
 
     bool ok;
-    if( desc && !init( *desc ) )
+    if( desc && !Init( *desc ) )
     {
-        clear();
+        Clear();
         ok = false;
     }
     else
@@ -279,7 +279,7 @@ void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
+bool GN::gfx::EffectResource::Impl::Init( const EffectResourceDesc & desc )
 {
     if( !initGpuPrograms( desc ) ) return false;
     if( !initTechniques( desc ) ) return false;
@@ -293,12 +293,12 @@ bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::clear()
+void GN::gfx::EffectResource::Impl::Clear()
 {
-    mPrograms.clear();
-    mPasses.clear();
-    mTextures.clear();
-    mUniforms.clear();
+    mPrograms.Clear();
+    mPasses.Clear();
+    mTextures.Clear();
+    mUniforms.Clear();
 }
 
 //
@@ -366,7 +366,7 @@ GN::gfx::EffectResource::Impl::initTechniques(
         }
 
         DynaArray<RenderPass> passes = mPasses;
-        mPasses.clear();
+        mPasses.Clear();
 
         if( initTech( effectDesc, techName, techDesc ) )
         {
@@ -692,7 +692,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
             xpr.errInfo.GetRawPtr() );
         return AutoRef<EffectResource>::NULLREF;
     }
-    fp.clear();
+    fp.Clear();
     GN_ASSERT( xpr.root );
 
     // load descriptor from file

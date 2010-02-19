@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
+bool GN::gfx::OGLVtxBufVBO::Init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -23,7 +23,7 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
     if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        return failure();
+        return Failure();
     }
 
     // store properties
@@ -34,10 +34,10 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
     mOGLUsage = desc.fastCpuWrite ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
-    if( !createVBO() ) return failure();
+    if( !createVBO() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -45,7 +45,7 @@ bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::quit()
+void GN::gfx::OGLVtxBufVBO::Quit()
 {
     GN_GUARD;
 
@@ -57,7 +57,7 @@ void GN::gfx::OGLVtxBufVBO::quit()
         mOGLVertexBufferObject = 0;
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -74,7 +74,7 @@ void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * d
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 

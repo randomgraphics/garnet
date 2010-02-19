@@ -321,11 +321,11 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 
     // initialize model templates
     SimpleWireframeModel wireframeModel( db );
-    if( !wireframeModel.init() ) return false;
+    if( !wireframeModel.Init() ) return false;
     SimpleDiffuseModel diffuseModel( db );
-    if( !diffuseModel.init() ) return false;
+    if( !diffuseModel.Init() ) return false;
     SimpleNormalMapModel normalMapModel( db );
-    if( !normalMapModel.init() ) return false;
+    if( !normalMapModel.Init() ) return false;
 
     // create model
     for( size_t i = 0; i < ase.subsets.size(); ++i )

@@ -134,7 +134,7 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
 
-    data.clear();
+    data.Clear();
 
     if( 0 != (s.Size() % 2) )
     {
@@ -192,13 +192,13 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResourceDesc::clear()
+void GN::gfx::ModelResourceDesc::Clear()
 {
     effect.Clear();
     textures.clear();
     uniforms.clear();
     mesh.Clear();
-    subset.clear();
+    subset.Clear();
 }
 
 //
@@ -206,7 +206,7 @@ void GN::gfx::ModelResourceDesc::clear()
 // -----------------------------------------------------------------------------
 bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char * basedir )
 {
-    clear();
+    Clear();
 
     const XmlElement * rootElement = root.toElement();
     if( !rootElement || rootElement->name != "model" )
@@ -520,13 +520,13 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     if( mResource.get() == newTexture ) return;
 
     // disconnect from old handle
-    if( mResource ) mResource->sigTextureChanged.disconnect( this );
+    if( mResource ) mResource->sigTextureChanged.Disconnect( this );
 
     Texture * tex;
     if( newTexture )
     {
         // connect to new handle
-        newTexture->sigTextureChanged.connect( this, &TextureItem::onTextureChange );
+        newTexture->sigTextureChanged.Connect( this, &TextureItem::onTextureChange );
 
         tex = newTexture->getTexture();
     }
@@ -612,13 +612,13 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     if( mResource.get() == newUniform ) return;
 
     // disconnect from old handle
-    if( mResource ) mResource->sigUniformChanged.disconnect( this );
+    if( mResource ) mResource->sigUniformChanged.Disconnect( this );
 
     Uniform * uniform;
     if( newUniform )
     {
         // connect to new handle
-        newUniform->sigUniformChanged.connect( this, &UniformItem::onUniformChange );
+        newUniform->sigUniformChanged.Connect( this, &UniformItem::onUniformChange );
 
         uniform = newUniform->getUniform();
     }
@@ -691,11 +691,11 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 // -----------------------------------------------------------------------------
 bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
 {
-    clear();
+    Clear();
 
     if( desc && !fromDesc( *desc ) )
     {
-        clear();
+        Clear();
         return false;
     }
 
@@ -857,8 +857,8 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     // bind mesh signal with the old mesh
     if( mMesh.resource != mesh )
     {
-        if( mMesh.resource ) mMesh.resource->sigMeshChanged.disconnect( this );
-        if( mesh ) mesh->sigMeshChanged.connect( this, &Impl::onMeshChanged );
+        if( mMesh.resource ) mMesh.resource->sigMeshChanged.Disconnect( this );
+        if( mesh ) mesh->sigMeshChanged.Connect( this, &Impl::onMeshChanged );
     }
 
     // update mesh resource pointer
@@ -871,7 +871,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     }
     else
     {
-        mMesh.subset.clear();
+        mMesh.subset.Clear();
     }
 
     // update GPU contexts
@@ -914,8 +914,8 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     // rebind changing signal
     if( effect != mEffect.resource )
     {
-        if( mEffect.resource ) mEffect.resource->sigEffectChanged.disconnect( this );
-        if( effect ) effect->sigEffectChanged.connect( this, &Impl::onEffectChanged );
+        if( mEffect.resource ) mEffect.resource->sigEffectChanged.Disconnect( this );
+        if( effect ) effect->sigEffectChanged.Connect( this, &Impl::onEffectChanged );
     }
 
     // update effect resource pointer
@@ -928,7 +928,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     {
         RenderPass & pass = mPasses[i];
 
-        pass.gc.clear();
+        pass.gc.Clear();
         effect->applyToContext( i, pass.gc );
 
         pass.renderstates = effect->getRenderStates( i );
@@ -1201,23 +1201,23 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::clear()
+void GN::gfx::ModelResource::Impl::Clear()
 {
     if( mEffect.resource )
     {
-        mEffect.resource->sigEffectChanged.disconnect( this );
-        mEffect.resource.clear();
+        mEffect.resource->sigEffectChanged.Disconnect( this );
+        mEffect.resource.Clear();
     }
 
     if( mMesh.resource )
     {
-        mMesh.resource->sigMeshChanged.disconnect( this );
-        mMesh.resource.clear();
+        mMesh.resource->sigMeshChanged.Disconnect( this );
+        mMesh.resource.Clear();
     }
 
-    mPasses.clear();
-    mTextures.clear();
-    mUniforms.clear();
+    mPasses.Clear();
+    mTextures.Clear();
+    mUniforms.Clear();
     mDummyUniforms.clear();
 }
 
@@ -1226,7 +1226,7 @@ void GN::gfx::ModelResource::Impl::clear()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
 {
-    clear();
+    Clear();
 
     GN_VERIFY( setEffectResource( other.mEffect.resource ) );
     GN_ASSERT( mPasses.size() == other.mPasses.size() );

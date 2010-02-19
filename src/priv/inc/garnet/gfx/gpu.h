@@ -510,9 +510,9 @@ namespace GN { namespace gfx
         }
 
         /// clear the binding
-        void clear()
+        void Clear()
         {
-            vtxbuf.clear();
+            vtxbuf.Clear();
             stride = 0;
             offset = 0;
         }
@@ -591,7 +591,7 @@ namespace GN { namespace gfx
         float            minlod;    ///< Min mipmap level. Default is zero
         float            maxlod;    ///< Max mipmap level. Default is negative that means no limination
 
-        void clear()
+        void Clear()
         {
             filterMin    = filterMip = filterMag = FILTER_LINEAR;
             aniso        = 0;
@@ -626,10 +626,10 @@ namespace GN { namespace gfx
         SamplerDesc      sampler; ///< the sampler
 
         /// clear the binding
-        void clear()
+        void Clear()
         {
-            texture.clear();
-            sampler.clear();
+            texture.Clear();
+            sampler.Clear();
         }
     };
 
@@ -675,9 +675,9 @@ namespace GN { namespace gfx
         RenderTargetTextureTempl() : subsurface(0) {}
 
         /// clear to empty render target texture
-        void clear()
+        void Clear()
         {
-            texture.clear();
+            texture.Clear();
             subsurface = 0;
         }
 
@@ -895,7 +895,7 @@ namespace GN { namespace gfx
             Rect<UInt32> scissorRect;
 
             /// clear to default render states
-            void clear()
+            void Clear()
             {
                 bitFlags = 0;
 
@@ -967,40 +967,40 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        GpuContext() { clear(); }
+        GpuContext() { Clear(); }
 
         //
         // clear all resources binded to the context
         //
         void clearResources()
         {
-            uniforms.clear();
+            uniforms.Clear();
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
             {
-                textures[i].clear();
+                textures[i].Clear();
             }
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
             {
-                vtxbufs[i].clear();
+                vtxbufs[i].Clear();
             }
             vtxfmt.numElements = 0;
 
-            idxbuf.clear();
+            idxbuf.Clear();
 
-            colortargets.clear();
-            depthstencil.clear();
+            colortargets.Clear();
+            depthstencil.Clear();
         }
 
         ///
         /// reset context to default value
         ///
-        void clear()
+        void Clear()
         {
-            rs.clear();
+            rs.Clear();
 
-            gpuProgram.clear();
+            gpuProgram.Clear();
 
             clearResources();
         }

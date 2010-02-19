@@ -584,7 +584,7 @@ GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResourceDesc::clear()
+void GN::gfx::EffectResourceDesc::Clear()
 {
     textures.clear();
     uniforms.clear();
@@ -592,7 +592,7 @@ void GN::gfx::EffectResourceDesc::clear()
     techniques.clear();
 
     GpuContext::RenderStates rs;
-    rs.clear();
+    rs.Clear();
 
     memset( &renderstates, 0, sizeof(renderstates) );
 
@@ -635,7 +635,7 @@ void GN::gfx::EffectResourceDesc::clear()
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResourceDesc::loadFromXml( const XmlNode & root )
 {
-    clear();
+    Clear();
 
     const XmlElement * e = root.toElement();
 

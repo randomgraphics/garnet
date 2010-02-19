@@ -11,14 +11,14 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtvtxbuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadVtxBuf::init( VtxBuf * vb )
+bool GN::gfx::MultiThreadVtxBuf::Init( VtxBuf * vb )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadVtxBuf, () );
 
-    if( NULL == vb ) return failure();
+    if( NULL == vb ) return Failure();
 
     mVtxBuf = vb;
 
@@ -27,7 +27,7 @@ bool GN::gfx::MultiThreadVtxBuf::init( VtxBuf * vb )
     setDesc( desc );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -35,7 +35,7 @@ bool GN::gfx::MultiThreadVtxBuf::init( VtxBuf * vb )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::quit()
+void GN::gfx::MultiThreadVtxBuf::Quit()
 {
     GN_GUARD;
 
@@ -45,7 +45,7 @@ void GN::gfx::MultiThreadVtxBuf::quit()
         mVtxBuf = NULL;
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

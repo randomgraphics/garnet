@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.sample.ShadowMap");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SimpleShadowMap::init( const StrA & actorName )
+bool GN::SimpleShadowMap::Init( const StrA & actorName )
 {
     GN_GUARD;
 
@@ -26,10 +26,10 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     // initialize shadow textures
     mColorMap  = re.create2DRenderTargetTexture( "colormap", 1024, 1024, 1, FMT_R_32_FLOAT );
     mShadowMap = re.create2DDepthTexture( "shadowmap", 1024, 1024 );
-    if(0 == mColorMap || 0 == mShadowMap ) return failure();
+    if(0 == mColorMap || 0 == mShadowMap ) return Failure();
 
     // load actor
-    if( !loadActor( actorName ) ) return failure();
+    if( !loadActor( actorName ) ) return Failure();
 
     float radius = mShadowProjectors->getBoundingSphere().radius;
 
@@ -73,7 +73,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     mCtx.resetToDefault();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -81,7 +81,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SimpleShadowMap::quit()
+void GN::SimpleShadowMap::Quit()
 {
     GN_GUARD;
 
@@ -93,7 +93,7 @@ void GN::SimpleShadowMap::quit()
     mShadowProjectors = 0;
     mShadowReceivers = 0;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -102,7 +102,7 @@ void GN::SimpleShadowMap::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SimpleShadowMap::clear()
+void GN::SimpleShadowMap::Clear()
 {
     mShadowProjectors = 0;
     mShadowReceivers = 0;
@@ -203,8 +203,8 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
         {
             Drawable d = a->getDrawable( i );
             d.effect = effent;
-            d.textures.clear();
-            d.uniforms.clear();
+            d.textures.Clear();
+            d.uniforms.Clear();
             d.uniforms["pvw"].binding = eff->getUniformID( "pvw" );
             a->setDrawable( i, d );
         }
@@ -227,11 +227,11 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
         {
             Drawable d = a->getDrawable( i );
             d.effect = effent;
-            d.textures.clear();
+            d.textures.Clear();
             d.textures["shadowmap"].texture = mShadowMap;
             d.textures["shadowmap"].binding = eff->getTextureID( "shadowmap" );
 
-            d.uniforms.clear();
+            d.uniforms.Clear();
 
             a->setDrawable( i, d );
         }

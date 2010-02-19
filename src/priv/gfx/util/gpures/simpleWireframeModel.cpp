@@ -37,7 +37,7 @@ const ModelResourceDesc GN::gfx::SimpleWireframeModel::DESC = sWireframeModelDes
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SimpleWireframeModel::init()
+bool GN::gfx::SimpleWireframeModel::Init()
 {
     GN_GUARD;
 
@@ -45,14 +45,14 @@ bool GN::gfx::SimpleWireframeModel::init()
     GN_STDCLASS_INIT( GN::gfx::SimpleWireframeModel, () );
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->reset(&DESC) ) return failure();
+    if( 0 == mModel || !mModel->reset(&DESC) ) return Failure();
 
     // initialize uniforms
     mMatrixPvw = mModel->getUniformResource( "MATRIX_PVW" );
     mColor     = mModel->getUniformResource( "COLOR" );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -60,15 +60,15 @@ bool GN::gfx::SimpleWireframeModel::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::quit()
+void GN::gfx::SimpleWireframeModel::Quit()
 {
     GN_GUARD;
 
-    mModel.clear();
-    mMatrixPvw.clear();
-    mColor.clear();
+    mModel.Clear();
+    mMatrixPvw.Clear();
+    mColor.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

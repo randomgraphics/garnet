@@ -37,7 +37,7 @@ GN::Mutex::~Mutex()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::Mutex::trylock()
+bool GN::Mutex::TryLock()
 {
     return 0 == pthread_mutex_trylock( (pthread_mutex_t*)mInternal );
 }
@@ -45,7 +45,7 @@ bool GN::Mutex::trylock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::lock()
+void GN::Mutex::Lock()
 {
     pthread_mutex_lock( (pthread_mutex_t*)mInternal );
 }
@@ -53,7 +53,7 @@ void GN::Mutex::lock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::unlock()
+void GN::Mutex::Unlock()
 {
     pthread_mutex_unlock( (pthread_mutex_t*)mInternal );
 }
@@ -75,8 +75,8 @@ class SyncEventPOSIX : public SyncEvent, public StdClass
 
     //@{
 public:
-    SyncEventPOSIX()          { clear(); }
-    virtual ~SyncEventPOSIX() { quit(); }
+    SyncEventPOSIX()          { Clear(); }
+    virtual ~SyncEventPOSIX() { Quit(); }
     //@}
 
     // ********************************
@@ -85,7 +85,7 @@ public:
 
     //@{
 public:
-    bool init( bool initialSignaled, bool autoreset, const char * name )
+    bool Init( bool initialSignaled, bool autoreset, const char * name )
     {
         GN_GUARD;
 
@@ -95,23 +95,23 @@ public:
         GN_UNIMPL();
 
         // success
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
-    void quit()
+    void Quit()
     {
         GN_GUARD;
 
         GN_UNIMPL();
 
-        // standard quit procedure
+        // standard Quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 private:
-    void clear() {}
+    void Clear() {}
     //@}
 
     // ********************************
@@ -119,17 +119,17 @@ private:
     // ********************************
 public:
 
-    virtual void signal()
+    virtual void Signal()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual void unsignal()
+    virtual void Unsignal()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool wait( float seconds )
+    virtual bool Wait( float seconds )
     {
         GN_UNIMPL_WARNING();
         return true;
@@ -163,8 +163,8 @@ class SemaphorePOSIX : public Semaphore, public StdClass
 
     //@{
 public:
-    SemaphorePOSIX()          { clear(); }
-    virtual ~SemaphorePOSIX() { quit(); }
+    SemaphorePOSIX()          { Clear(); }
+    virtual ~SemaphorePOSIX() { Quit(); }
     //@}
 
     // ********************************
@@ -173,7 +173,7 @@ public:
 
     //@{
 public:
-    bool init( size_t maxcount, size_t initialcount, const char * name )
+    bool Init( size_t maxcount, size_t initialcount, const char * name )
     {
         GN_GUARD;
 
@@ -183,23 +183,23 @@ public:
         GN_UNIMPL();
 
         // success
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
-    void quit()
+    void Quit()
     {
         GN_GUARD;
 
         GN_UNIMPL();
 
-        // standard quit procedure
+        // standard Quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 private:
-    void clear() {}
+    void Clear() {}
     //@}
 
     // ********************************
@@ -207,13 +207,13 @@ private:
     // ********************************
 public:
 
-    virtual bool wait( float seconds )
+    virtual bool Wait( float seconds )
     {
         GN_UNIMPL_WARNING();
         return true;
     }
 
-    virtual void wake( size_t count )
+    virtual void Wake( size_t count )
     {
         GN_UNIMPL_WARNING();
     }
@@ -236,7 +236,7 @@ private:
 //
 //
 // -----------------------------------------------------------------------------
-GN::SyncEvent * GN::createSyncEvent(
+GN::SyncEvent * GN::NewSyncEvent(
     bool initialSignaled,
     bool autoreset,
     const char * name )
@@ -245,9 +245,9 @@ GN::SyncEvent * GN::createSyncEvent(
 
     AutoObjPtr<SyncEventPOSIX> s( new SyncEventPOSIX );
 
-    if( !s->init( initialSignaled, autoreset, name ) ) return 0;
+    if( !s->Init( initialSignaled, autoreset, name ) ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }
@@ -255,7 +255,7 @@ GN::SyncEvent * GN::createSyncEvent(
 //
 //
 // -----------------------------------------------------------------------------
-GN::Semaphore * GN::createSemaphore(
+GN::Semaphore * GN::NewSemaphore(
     size_t maxcount,
     size_t initialcount,
     const char * name )
@@ -264,9 +264,9 @@ GN::Semaphore * GN::createSemaphore(
 
     AutoObjPtr<SemaphorePOSIX> s( new SemaphorePOSIX );
 
-    if( !s->init( maxcount, initialcount, name ) ) return 0;
+    if( !s->Init( maxcount, initialcount, name ) ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }

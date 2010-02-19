@@ -14,7 +14,7 @@ bool GN::gfx::D3D10Gpu::capsInit()
 {
     GN_GUARD;
 
-    // clear all caps
+    // Clear all caps
     memset( &mCaps, 0, sizeof(mCaps) );
 
     // max texture size

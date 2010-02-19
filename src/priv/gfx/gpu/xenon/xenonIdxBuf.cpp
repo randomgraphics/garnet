@@ -52,7 +52,7 @@ sLockFlags2Xenon( GN::gfx::SurfaceUpdateFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
+bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
     if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "Index buffer size must be larger then zero." );
-        return failure();
+        return Failure();
     }
 
     setDesc( desc );
@@ -83,10 +83,10 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
             0, // POOL
             &mIb,
             0 ),
-        failure() );
+        Failure() );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -94,13 +94,13 @@ bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::quit()
+void GN::gfx::XenonIdxBuf::Quit()
 {
     GN_GUARD;
 
     SafeRelease( mIb );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -122,7 +122,7 @@ GN::gfx::XenonIdxBuf::update(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     // Note: this function may modify "numidx"
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
@@ -150,11 +150,11 @@ void GN::gfx::XenonIdxBuf::readback( std::vector<UInt8> & data )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     GN_UNIMPL();
 
-    data.clear();
+    data.Clear();
 
     GN_UNGUARD_SLOW;
 }

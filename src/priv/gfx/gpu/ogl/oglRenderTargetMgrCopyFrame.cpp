@@ -20,7 +20,7 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 
     GN_ASSERT( rtt.texture );
 
-    const OGLTexture * tex = safeCastPtr<const OGLTexture>( rtt.texture );
+    const OGLTexture * tex = SafeCastPtr<const OGLTexture>( rtt.texture );
 
     // get texture size
     UInt32 sx, sy;

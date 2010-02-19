@@ -372,9 +372,9 @@ public:
             mTestCases[i].theCase->destroy();
             delete mTestCases[i].theCase;
         }
-        mTestCases.clear();
+        mTestCases.Clear();
 
-        mAsciiFont.quit();
+        mAsciiFont.Quit();
 
         GN_UNGUARD;
     }
@@ -470,7 +470,7 @@ bool BenchmarkingApp::onInit()
     GN_GUARD;
 
     // create font
-    if( !mAsciiFont.init() ) return false;
+    if( !mAsciiFont.Init() ) return false;
 
     CaseDesc cd;
 

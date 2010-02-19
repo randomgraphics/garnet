@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleWireframeModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
-        virtual ~SimpleWireframeModel() { quit(); }
+        SimpleWireframeModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { Clear(); }
+        virtual ~SimpleWireframeModel() { Quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
         }
         //@}
@@ -86,8 +86,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleDiffuseModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
-        virtual ~SimpleDiffuseModel() { quit(); }
+        SimpleDiffuseModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { Clear(); }
+        virtual ~SimpleDiffuseModel() { Quit(); }
         //@}
 
         // ********************************
@@ -96,10 +96,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
         }
         //@}
@@ -158,8 +158,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SimpleNormalMapModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { clear(); }
-        virtual ~SimpleNormalMapModel() { quit(); }
+        SimpleNormalMapModel( GpuResourceDatabase & db ) : mDatabase(db), mModel(NULL) { Clear(); }
+        virtual ~SimpleNormalMapModel() { Quit(); }
         //@}
 
         // ********************************
@@ -168,10 +168,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
         }
         //@}

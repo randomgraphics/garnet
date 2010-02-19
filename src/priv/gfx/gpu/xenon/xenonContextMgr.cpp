@@ -25,7 +25,7 @@ bool GN::gfx::XenonGpu::contextInit()
     // initialize render target manager
     //GN_ASSERT( 0 == mRTMgr );
     //mRTMgr = new XenonRenderTargetMgr( *this );
-    //if( !mRTMgr->init() ) return false;
+    //if( !mRTMgr->Init() ) return false;
 
     // bind default context to device
     rebindContext();
@@ -48,7 +48,7 @@ void GN::gfx::XenonGpu::contextQuit()
     bindContext( emptyContext );
 
     // Delete all vertex formats
-    mVertexFormats.clear();
+    mVertexFormats.Clear();
 
     //SafeDelete( mRTMgr );
 
@@ -186,7 +186,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                 {
                     // release old depth surface
                     GN_DX_CHECK( mDevice->SetDepthStencilSurface( NULL ) );
-                    mAutoDepth.clear();
+                    mAutoDepth.Clear();
 
                     // create new depth buffer
                     GN_DX_CHECK_RETURN_VOID( mDevice->CreateDepthStencilSurface(
@@ -342,7 +342,7 @@ GN::gfx::XenonGpu::bindContextShaders(
         mDevice->SetVertexShader( NULL );
         mDevice->SetPixelShader( NULL );
 
-        // clear all textures
+        // Clear all textures
         for( DWORD i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
         {
             mDevice->SetTexture( i, 0 );
@@ -393,7 +393,7 @@ GN::gfx::XenonGpu::bindContextResources(
         {
             GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
-                vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
+                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
                 vbb.offset,
                 vbb.stride ) );
         }
@@ -405,7 +405,7 @@ GN::gfx::XenonGpu::bindContextResources(
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
+            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
             : NULL ) );
     }
 

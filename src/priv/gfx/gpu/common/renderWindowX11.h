@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         ///
         /// Delete render window
         ///
-        void quit();
+        void Quit();
 
         ///
         /// Get display handle

@@ -28,7 +28,7 @@ bool GN::gfx::OGLGpu::resourceInit()
     }
 
 #ifdef HAS_CG_OGL
-    if( !mCgContext.init() ) return false;
+    if( !mCgContext.Init() ) return false;
 #endif
 
     // success
@@ -56,7 +56,7 @@ void GN::gfx::OGLGpu::resourceQuit()
     }
 
 #ifdef HAS_CG_OGL
-    mCgContext.quit();
+    mCgContext.Quit();
 #endif
 
     GN_UNGUARD;
@@ -75,10 +75,10 @@ GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
     GN_GUARD;
 
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->init( gpd ) ) return NULL;
+    if( !s->Init( gpd ) ) return NULL;
 
     // success
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }
@@ -92,7 +92,7 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
     GN_GUARD;
 
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->init( data, length ) ) return NULL;
+    if( !s->Init( data, length ) ) return NULL;
 
     const GpuProgramDesc & desc = s->desc();
 
@@ -101,8 +101,8 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
         case GpuProgramLanguage::GLSL:
         {
             AutoRef<OGLGpuProgramGLSL> prog( new OGLGpuProgramGLSL(*this) );
-            if( !prog->init( desc ) ) return NULL;
-            return prog.detach();
+            if( !prog->Init( desc ) ) return NULL;
+            return prog.Detach();
         }
 
         default:
@@ -131,8 +131,8 @@ GN::gfx::OGLGpu::createTexture( const TextureDesc & desc )
     GN_GUARD;
 
     AutoRef<OGLTexture> p( new OGLTexture(*this) );
-    if( !p->init( desc ) ) return 0;
-    return p.detach();
+    if( !p->Init( desc ) ) return 0;
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -147,14 +147,14 @@ GN::gfx::VtxBuf * GN::gfx::OGLGpu::createVtxBuf( const VtxBufDesc & desc )
     if( GLEW_ARB_vertex_buffer_object )
     {
         AutoRef<OGLVtxBufVBO> p( new OGLVtxBufVBO(*this) );
-        if( !p->init( desc ) ) return 0;
-        return p.detach();
+        if( !p->Init( desc ) ) return 0;
+        return p.Detach();
     }
     else
     {
         AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal(*this) );
-        if( !p->init( desc ) ) return 0;
-        return p.detach();
+        if( !p->Init( desc ) ) return 0;
+        return p.Detach();
     }
 
     GN_UNGUARD;
@@ -168,9 +168,9 @@ GN::gfx::IdxBuf * GN::gfx::OGLGpu::createIdxBuf( const IdxBufDesc & desc )
     GN_GUARD;
 
     AutoRef<OGLIdxBuf> p( new OGLIdxBuf );
-    if( !p->init( desc ) ) return 0;
+    if( !p->Init( desc ) ) return 0;
 
-    return p.detach();
+    return p.Detach();
 
     GN_UNGUARD;
 }

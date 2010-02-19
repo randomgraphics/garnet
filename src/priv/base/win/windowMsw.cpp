@@ -14,17 +14,17 @@ static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::Init( const WindowCreationParams & wcp )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::win::WindowMsw, () );
 
-    if( !createWindow( wcp ) ) return failure();
+    if( !createWindow( wcp ) ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -32,7 +32,7 @@ bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::quit()
+void GN::win::WindowMsw::Quit()
 {
     GN_GUARD;
 
@@ -56,7 +56,7 @@ void GN::win::WindowMsw::quit()
         mClassName.Clear();
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

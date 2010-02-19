@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadUniform() { quit(); }
+        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
+        virtual ~MultiThreadUniform() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( Uniform * );
-        void quit();
+        bool Init( Uniform * );
+        void Quit();
     private:
-        void clear() { mUniform = NULL; mFrontEndData = NULL; }
+        void Clear() { mUniform = NULL; mFrontEndData = NULL; }
         //@}
 
         // ********************************
@@ -84,8 +84,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadGpuProgram() { quit(); }
+        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
+        virtual ~MultiThreadGpuProgram() { Quit(); }
         //@}
 
         // ********************************
@@ -94,10 +94,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( GpuProgram * );
-        void quit();
+        bool Init( GpuProgram * );
+        void Quit();
     private:
-        void clear() { mGpuProgram = NULL; }
+        void Clear() { mGpuProgram = NULL; }
         //@}
 
         // ********************************

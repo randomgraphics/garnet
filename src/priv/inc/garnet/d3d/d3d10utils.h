@@ -134,8 +134,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        ResourcePool()          { clear(); }
-        virtual ~ResourcePool() { quit(); }
+        ResourcePool()          { Clear(); }
+        virtual ~ResourcePool() { Quit(); }
         //@}
 
         // ********************************
@@ -144,10 +144,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * pDevice );
-        void quit();
+        bool Init( ID3D10Device * pDevice );
+        void Quit();
     private:
-        void clear() { m_device = NULL; }
+        void Clear() { m_device = NULL; }
         //@}
 
         // ********************************
@@ -254,8 +254,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        SimpleMesh()          { clear(); }
-        virtual ~SimpleMesh() { quit(); }
+        SimpleMesh()          { Clear(); }
+        virtual ~SimpleMesh() { Quit(); }
         //@}
 
         // ********************************
@@ -264,10 +264,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * dev );
-        void quit();
+        bool Init( ID3D10Device * dev );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mDevice = 0;
             mLayout = 0;
@@ -348,7 +348,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         {
         }
 
-        void clear()
+        void Clear()
         {
             SafeRelease( res );
             SafeRelease( rtv );
@@ -387,8 +387,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        RenderToTexture()          { clear(); }
-        virtual ~RenderToTexture() { quit(); }
+        RenderToTexture()          { Clear(); }
+        virtual ~RenderToTexture() { Quit(); }
         //@}
 
         // ********************************
@@ -397,10 +397,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * device, const RenderToTextureOption & options );
-        void quit();
+        bool Init( ID3D10Device * device, const RenderToTextureOption & options );
+        void Quit();
     private:
-        void clear() {}
+        void Clear() {}
         //@}
 
         // ********************************
@@ -472,8 +472,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        ScreenAlignedQuad()          { clear(); }
-        virtual ~ScreenAlignedQuad() { quit(); }
+        ScreenAlignedQuad()          { Clear(); }
+        virtual ~ScreenAlignedQuad() { Quit(); }
         //@}
 
         // ********************************
@@ -482,10 +482,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
-        void quit();
+        bool Init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
+        void Quit();
     private:
-        void clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
+        void Clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
         //@}
         //@}
 
@@ -633,8 +633,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
     private:
 
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
 
         bool createDevice();
         void destroyDevice();

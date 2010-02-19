@@ -154,14 +154,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
-        bool init(
+        bool Init(
             ID3D10Device                    & dev,
             const ShaderCode                & code,
             const D3D10ShaderCompileOptions & options,
             D3D10GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
     };
 
     ///
@@ -174,14 +174,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray   constData; ///< constant data
 
         /// initialize shader
-        bool init(
+        bool Init(
             ID3D10Device                    & dev,
             const ShaderCode                & code,
             const D3D10ShaderCompileOptions & options,
             D3D10GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
     };
 
     ///
@@ -194,14 +194,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
-        bool init(
+        bool Init(
             ID3D10Device                    & dev,
             const ShaderCode                & code,
             const D3D10ShaderCompileOptions & options,
             D3D10GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
+        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
     };
 
     ///
@@ -220,9 +220,9 @@ namespace GN { namespace gfx
         D3D10GpuProgram( D3D10Gpu & r )
             : D3D10Resource(r)
         {
-            clear();
+            Clear();
         }
-        virtual ~D3D10GpuProgram() { quit(); }
+        virtual ~D3D10GpuProgram() { Quit(); }
         //@}
 
         // ********************************
@@ -231,10 +231,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuProgramDesc & desc );
-        void quit();
+        bool Init( const GpuProgramDesc & desc );
+        void Quit();
     private:
-        void clear() {}
+        void Clear() {}
         //@}
 
         // ********************************

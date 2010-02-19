@@ -143,7 +143,7 @@ sDetermineWindowSize(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
+bool GN::gfx::BasicGpuMsw::Init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -151,10 +151,10 @@ bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuMsw, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return failure();
+    if( !dispInit(o) ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -162,14 +162,14 @@ bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuMsw::quit()
+void GN::gfx::BasicGpuMsw::Quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -264,7 +264,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
 // ----------------------------------------------------------------------------
 void GN::gfx::BasicGpuMsw::dispQuit()
 {
-    mWindow.quit();
+    mWindow.Quit();
 }
 
 #endif

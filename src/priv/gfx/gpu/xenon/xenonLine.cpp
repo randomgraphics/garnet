@@ -31,7 +31,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonLine::init()
+bool GN::gfx::XenonLine::Init()
 {
     GN_GUARD;
 
@@ -43,7 +43,7 @@ bool GN::gfx::XenonLine::init()
     IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // create vertex decl
-    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), Failure() );
 
     // create vertex shader
     static const char * vscode =
@@ -53,7 +53,7 @@ bool GN::gfx::XenonLine::init()
         "m4x4 oPos, v0, c0 \n"
         "mov oD0, v1 \n";
     mVtxShader = d3d9::assembleAndCreateVS( &dev, vscode );
-    if( 0 == mVtxShader ) return failure();
+    if( 0 == mVtxShader ) return Failure();
 
 
     // create pixel shader
@@ -61,7 +61,7 @@ bool GN::gfx::XenonLine::init()
         "ps.1.1 \n"
         "mov r0, v0 \n";
     mPxlShader = d3d9::assembleAndCreatePS( &dev, pscode );
-    if( 0 == mPxlShader ) return failure();
+    if( 0 == mPxlShader ) return Failure();
 
     // create vertex buffer
     GN_DX_CHECK_RETURN(
@@ -71,13 +71,13 @@ bool GN::gfx::XenonLine::init()
             0, // fvf
             0, // pool
             &mVtxBuf, 0 ),
-        failure() );
+        Failure() );
 
     // reset next line indicator
     mNextLine = 0;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -85,7 +85,7 @@ bool GN::gfx::XenonLine::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonLine::quit()
+void GN::gfx::XenonLine::Quit()
 {
     GN_GUARD;
 
@@ -94,7 +94,7 @@ void GN::gfx::XenonLine::quit()
     SafeRelease( mVtxShader );
     SafeRelease( mPxlShader );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

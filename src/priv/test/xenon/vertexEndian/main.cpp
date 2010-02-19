@@ -46,7 +46,7 @@ public:
         if( !mVs || !mPs ) return false;
 
         VtxFmtDesc vfd;
-        vfd.clear();
+        vfd.Clear();
         vfd.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT4 );
         vfd.addAttrib( 0, 16, VTXSEM_CLR0, FMT_USHORT4 );
         mVf = re.createVtxFmt( "vf", vfd );

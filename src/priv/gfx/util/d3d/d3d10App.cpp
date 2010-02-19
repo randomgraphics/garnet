@@ -231,9 +231,9 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 
     mOption = o;
 
-    if( !init() ) { quit(); return -1; }
+    if( !Init() ) { Quit(); return -1; }
 
-    if( !changeOption(mOption) ) { quit(); return -1; }
+    if( !changeOption(mOption) ) { Quit(); return -1; }
 
     // message loop
     MSG msg;
@@ -243,7 +243,7 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
         {
             if( WM_QUIT == msg.message )
             {
-                quit();
+                Quit();
                 return 0;
             }
             ::TranslateMessage( &msg );
@@ -272,13 +272,13 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
     }
 
     // done
-    quit();
+    Quit();
     return 0;
 
     GN_UNGUARD_ALWAYS_NO_THROW;
     printf( "Press ENTER key to continue..." );
     _getch();
-    quit();
+    Quit();
     return -1;
 }
 
@@ -309,7 +309,7 @@ void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::D3D10Application::init()
+bool GN::d3d10::D3D10Application::Init()
 {
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
@@ -335,7 +335,7 @@ bool GN::d3d10::D3D10Application::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::quit()
+void GN::d3d10::D3D10Application::Quit()
 {
     onQuit();
 

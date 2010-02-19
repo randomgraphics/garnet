@@ -17,7 +17,7 @@ namespace GN { namespace gfx
         }
 
         /// clear current binding
-        void clear()
+        void Clear()
         {
             mBindBy = NOTHING;
          }

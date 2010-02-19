@@ -55,7 +55,7 @@ sDetermineTextureSizeAndCount(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
+bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
 {
     GN_GUARD;
 
@@ -65,14 +65,14 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
     if( NULL == sr || NULL == ff )
     {
         GN_ERROR(sLogger)( "Null parameters." );
-        return failure();
+        return Failure();
     }
 
     Gpu & gpu = sr->getGpu();
     const FontFaceDesc & ffd = ff->getDesc();
 
     // initialize font slots
-    if( !slotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return failure();
+    if( !slotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return Failure();
 
     // create character list
     for( int i = 0; i < MAX_TEXTURES; ++i )
@@ -84,7 +84,7 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
     // success
     mSpriteRenderer = sr;
     mFont.set( ff );
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -92,7 +92,7 @@ bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxc
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::quit()
+void GN::util::BitmapFont::Quit()
 {
     GN_GUARD;
 
@@ -106,12 +106,12 @@ void GN::util::BitmapFont::quit()
     SafeDeleteArray( mFontSlots );
 
     // delete per-texture resources
-    mTextures.clear();
+    mTextures.Clear();
 
     // deref font face
-    mFont.clear();
+    mFont.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -420,10 +420,10 @@ GN::util::BitmapFont::slotInit(
         if( 0 == mTextures[i] )
         {
             GN_ERROR(sLogger)( "fail to create font texture #%d!", i );
-            return failure();
+            return Failure();
         }
 
-        // clear texture to pure black
+        // Clear texture to pure black
         //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.GetRawPtr() );
     }
 

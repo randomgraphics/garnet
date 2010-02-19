@@ -23,8 +23,8 @@ class ThreadX11 : public Thread, public StdClass
 
     //@{
 public:
-    ThreadX11()          { clear(); }
-    virtual ~ThreadX11() { quit(); }
+    ThreadX11()          { Clear(); }
+    virtual ~ThreadX11() { Quit(); }
     //@}
 
     // ********************************
@@ -49,14 +49,14 @@ public:
         if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority." );
-            return failure();
+            return Failure();
         }
 
         GN_UNIMPL_WARNING();
 
         // success
         mAttached = false;
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
@@ -72,12 +72,12 @@ public:
 
         // success
         mAttached = true;
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
 
-    void quit()
+    void Quit()
     {
         GN_GUARD;
 
@@ -86,19 +86,19 @@ public:
         if( !mAttached /*&& mHandle*/ )
         {
             // wait for thread termination
-            waitForTermination( INFINITE_TIME, 0 );
+            WaitForTermination( INFINITE_TIME, 0 );
 
             // TODO: close thread handle
         }
 
-        // standard quit procedure
+        // standard Quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 
 private:
-    void clear()
+    void Clear()
     {
         mAttached = false;
     }
@@ -109,12 +109,12 @@ private:
     // ********************************
 public:
 
-    virtual ThreadPriority getPriority() const
+    virtual ThreadPriority GetPriority() const
     {
         return mPriority;
     }
 
-    virtual void setPriority( ThreadPriority p )
+    virtual void SetPriority( ThreadPriority p )
     {
         if( p < 0 || p >= NUM_THREAD_PRIORITIES )
         {
@@ -127,31 +127,31 @@ public:
         mPriority = p;
     }
 
-    virtual void setAffinity( UInt32 hardwareThread )
+    virtual void SetAffinity( UInt32 hardwareThread )
     {
         GN_UNIMPL_WARNING();
     }
 
-    bool isCurrentThread() const
+    bool IsCurrentThread() const
     {
         GN_UNIMPL_WARNING();
         return true;
     }
 
-    virtual void suspend()
+    virtual void Suspend()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual void resume()
+    virtual void Resume()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
+    virtual bool WaitForTermination( float seconds, UInt32 * threadProcReturnValue )
     {
         // can't wait for self termination
-        GN_ASSERT( !isCurrentThread() );
+        GN_ASSERT( !IsCurrentThread() );
 
         GN_UNIMPL_WARNING();
 
@@ -204,7 +204,7 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::Thread *
-GN::createThread(
+GN::NewThread(
     const ThreadProcedure & proc,
     void                  * param,
     ThreadPriority          priority,
@@ -217,7 +217,7 @@ GN::createThread(
 
     if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }
@@ -225,7 +225,7 @@ GN::createThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleepCurrentThread( float seconds )
+void GN::SleepCurrentThread( float seconds )
 {
     GN_UNIMPL_WARNING();
 }
@@ -233,15 +233,15 @@ void GN::sleepCurrentThread( float seconds )
 //
 //
 // -----------------------------------------------------------------------------
-Thread * GN::generateCurrentThreadObject()
+Thread * GN::GenerateCurrentThreadObject()
 {
     GN_GUARD;
 
     AutoObjPtr<ThreadX11> s( new ThreadX11 );
 
-    if( !s->attach() ) return 0;
+    if( !s->Attach() ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }
@@ -249,7 +249,7 @@ Thread * GN::generateCurrentThreadObject()
 //
 //
 // -----------------------------------------------------------------------------
-SInt32 GN::getCurrentThreadId()
+SInt32 GN::GetCurrentThreadIdentifier()
 {
     GN_UNIMPL_WARNING();
     return 0;

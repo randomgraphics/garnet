@@ -33,48 +33,48 @@ namespace GN
     {
         /// \name thread properties
         //@{
-        virtual ThreadPriority getPriority() const = 0;
-        virtual void           setPriority( ThreadPriority ) = 0;
-        virtual void           setAffinity( UInt32 hardwareThread ) = 0;
-        virtual bool           isCurrentThread() const = 0;
+        virtual ThreadPriority GetPriority() const = 0;
+        virtual void           SetPriority( ThreadPriority ) = 0;
+        virtual void           SetAffinity( UInt32 hardwareThread ) = 0;
+        virtual bool           IsCurrentThread() const = 0;
         //@}
 
         /// \name thread operations
         //@{
-        virtual void suspend() = 0;
-        virtual void resume() = 0; //< resume suspended and sleeping thread.
+        virtual void Suspend() = 0;
+        virtual void Resume() = 0; //< Resume suspended and sleeping thread.
 
         ///
         /// wait for termination of the thread.
         ///
-        virtual bool waitForTermination( float seconds = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
+        virtual bool WaitForTermination( float seconds = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
 
         //@}
     };
 
     //@{
 
-    Thread * createThread(
+    Thread * NewThread(
         const ThreadProcedure & proc,
         void * param,
         ThreadPriority priority,
         bool initialSuspended = false,
         const char * name = 0 );
 
-    void sleepCurrentThread( float seconds );
+    void SleepCurrentThread( float seconds );
 
     ///
     /// Generate a thread object that represents the calling thread.
     /// Note that delete the pointer returned by this function won't stop running of the thread.
     ///
-    Thread * generateCurrentThreadObject();
+    Thread * GenerateCurrentThreadObject();
 
     ///
     /// Returns a platform dependent identifier of the current thread.
     ///
-    /// Note that this function is much fater then generateCurrentThreadObject().
+    /// Note that this function is much fater then GenerateCurrentThreadObject().
     ///
-    SInt32 getCurrentThreadId();
+    SInt32 GetCurrentThreadIdentifier();
 
     //@}
 }

@@ -38,7 +38,7 @@ inline bool GN::d3d10::ResourcePool::PooledResourceDesc::isImmutable() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
+bool GN::d3d10::ResourcePool::Init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -48,13 +48,13 @@ bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
     if( NULL == dev )
     {
         GN_ERROR(sLogger)( "NULL device pointer!" );
-        return failure();
+        return Failure();
     }
 
     m_device = dev;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -62,11 +62,11 @@ bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ResourcePool::quit()
+void GN::d3d10::ResourcePool::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

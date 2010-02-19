@@ -16,8 +16,8 @@ extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & 
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::OGLGpu> p( new GN::gfx::OGLGpu );
-    if( !p->init( o ) ) return 0;
-    return p.detach();
+    if( !p->Init( o ) ) return 0;
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -29,7 +29,7 @@ extern "C" GN_EXPORT GN::gfx::Gpu * GNgfxCreateGpu( const GN::gfx::GpuOptions & 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpu::init( const GpuOptions & o )
+bool GN::gfx::OGLGpu::Init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -37,14 +37,14 @@ bool GN::gfx::OGLGpu::init( const GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::OGLGpu, (o) );
 
     // init sub-components
-    if( !dispInit()     ) return failure();
-    if( !capsInit()     ) return failure();
-    if( !resourceInit() ) return failure();
-    if( !contextInit()  ) return failure();
-    if( !drawInit()     ) return failure();
+    if( !dispInit()     ) return Failure();
+    if( !capsInit()     ) return Failure();
+    if( !resourceInit() ) return Failure();
+    if( !contextInit()  ) return Failure();
+    if( !drawInit()     ) return Failure();
 
     // successful
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -52,7 +52,7 @@ bool GN::gfx::OGLGpu::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::quit()
+void GN::gfx::OGLGpu::Quit()
 {
     GN_GUARD;
 

@@ -157,9 +157,9 @@ protected :
         using namespace GN::gfx;
 
         GN::AutoObjPtr<win::Window> win;
-        win.attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
-        TS_ASSERT( !win.empty() );
-        if( win.empty() ) return;
+        win.Attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
+        TS_ASSERT( !win.Empty() );
+        if( win.Empty() ) return;
         win->setClientSize( 511, 236 );
         win->show();
 

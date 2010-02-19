@@ -70,7 +70,7 @@ namespace GN
         ///
         /// Clear to empty registry.
         ///
-        void clear() { mItems.clear(); mNames.clear(); }
+        void Clear() { mItems.Clear(); mNames.clear(); }
 
         ///
         /// Get item key by name

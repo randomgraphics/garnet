@@ -142,10 +142,10 @@ class TestTextureBandwidth : public BasicTestCase
     void destroyTexture( TextureDesc & desc )
     {
 #if GN_XENON
-        delete desc.texture.detach();
-        desc.texture.clear();
+        delete desc.texture.Detach();
+        desc.texture.Clear();
 #else
-        desc.texture.clear();
+        desc.texture.Clear();
 #endif
     }
 

@@ -32,8 +32,8 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::D3D10Gpu> p( new GN::gfx::D3D10Gpu );
-    if( !p->init( o ) ) return 0;
-    return p.detach();
+    if( !p->Init( o ) ) return 0;
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -45,7 +45,7 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::init( const GN::gfx::GpuOptions & o )
+bool GN::gfx::D3D10Gpu::Init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
@@ -53,14 +53,14 @@ bool GN::gfx::D3D10Gpu::init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::D3D10Gpu, ( o ) );
 
     // init sub-components
-    if( !dispInit()        ) return failure();
-    if( !capsInit()         ) return failure();
-    if( !resourceInit()     ) return failure();
-    if( !contextInit()      ) return failure();
-    if( !drawInit()         ) return failure();
+    if( !dispInit()        ) return Failure();
+    if( !capsInit()         ) return Failure();
+    if( !resourceInit()     ) return Failure();
+    if( !contextInit()      ) return Failure();
+    if( !drawInit()         ) return Failure();
 
     // successful
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -68,7 +68,7 @@ bool GN::gfx::D3D10Gpu::init( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Gpu::quit()
+void GN::gfx::D3D10Gpu::Quit()
 {
     GN_GUARD;
 
@@ -93,7 +93,7 @@ void GN::gfx::D3D10Gpu::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
 {
-    bc.data.clear();
+    bc.data.Clear();
     bc.format = ColorFormat::UNKNOWN;
     bc.width = 0;
     bc.height = 0;

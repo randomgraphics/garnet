@@ -188,7 +188,7 @@ void FirstPersonCamera::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigAxisMove.connect( this, &FirstPersonCamera::onAxisMove );
+        gInput.sigAxisMove.Connect( this, &FirstPersonCamera::onAxisMove );
     }
     else
     {
@@ -203,7 +203,7 @@ void FirstPersonCamera::disconnectFromInput()
 {
     if( gInputPtr )
     {
-        gInput.sigAxisMove.disconnect( this );
+        gInput.sigAxisMove.Disconnect( this );
     }
 }
 

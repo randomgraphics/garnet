@@ -109,8 +109,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { clear(); }
-        virtual ~OGLGpuProgramGLSL() { quit(); }
+        OGLGpuProgramGLSL( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::GLSL ) { Clear(); }
+        virtual ~OGLGpuProgramGLSL() { Quit(); }
         //@}
 
         // ********************************
@@ -119,10 +119,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuProgramDesc & desc );
-        void quit();
+        bool Init( const GpuProgramDesc & desc );
+        void Quit();
     private:
-        void clear() { mProgram = 0; mVS = 0; mPS = 0; }
+        void Clear() { mProgram = 0; mVS = 0; mPS = 0; }
         //@}
 
         // ********************************
@@ -273,8 +273,8 @@ namespace GN { namespace gfx
         OGLBasicShaderCg( OGLGpu & r, ShaderType t, CGGLenum profileClass )
             : OGLShader( t, LANG_CG )
             , OGLResource( r )
-            , mProfileClass( profileClass ) { clear(); }
-        virtual ~OGLBasicShaderCg() { quit(); }
+            , mProfileClass( profileClass ) { Clear(); }
+        virtual ~OGLBasicShaderCg() { Quit(); }
         //@}
 
         // ********************************
@@ -283,10 +283,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const StrA & code, const StrA & hints );
-        void quit();
+        bool Init( const StrA & code, const StrA & hints );
+        void Quit();
     private:
-        void clear() {}
+        void Clear() {}
         //@}
 
         // ********************************

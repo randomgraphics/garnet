@@ -43,7 +43,7 @@ const ModelResourceDesc GN::gfx::SimpleNormalMapModel::DESC = sNormalMapModelDes
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SimpleNormalMapModel::init()
+bool GN::gfx::SimpleNormalMapModel::Init()
 {
     GN_GUARD;
 
@@ -51,7 +51,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     GN_STDCLASS_INIT( GN::gfx::SimpleNormalMapModel, () );
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->reset(&DESC) ) return failure();
+    if( 0 == mModel || !mModel->reset(&DESC) ) return Failure();
 
     // initialize uniforms
     mMatrixPvw     = mModel->getUniformResource( "MATRIX_PVW"      );
@@ -67,7 +67,7 @@ bool GN::gfx::SimpleNormalMapModel::init()
     mNormalTexture = mModel->getTextureResource("NORMAL_TEXTURE");
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -75,23 +75,23 @@ bool GN::gfx::SimpleNormalMapModel::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::quit()
+void GN::gfx::SimpleNormalMapModel::Quit()
 {
     GN_GUARD;
 
-    mModel.clear();
-    mDefaultAlbedoTexture.clear();
-    mDefaultNormalTexture.clear();
-    mMatrixPvw.clear();
-    mMatrixWorld.clear();
-    mMatrixWorldIT.clear();
-    mLightPos.clear();
-    mLightColor.clear();
-    mAlbedoColor.clear();
-    mAlbedoTexture.clear();
-    mNormalTexture.clear();
+    mModel.Clear();
+    mDefaultAlbedoTexture.Clear();
+    mDefaultNormalTexture.Clear();
+    mMatrixPvw.Clear();
+    mMatrixWorld.Clear();
+    mMatrixWorldIT.Clear();
+    mLightPos.Clear();
+    mLightColor.Clear();
+    mAlbedoColor.Clear();
+    mAlbedoTexture.Clear();
+    mNormalTexture.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

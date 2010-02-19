@@ -24,32 +24,32 @@
 ///
 /// \param class_name 当前函数所属的类名
 /// \param param_list 形如：(param1, param2, param3,...)的，
-///                   且符合父类init()要求的参数列表（括号不能省略）
-/// \note 在所有基于stdclass类型的init函数中使用这个宏
+///                   且符合父类Init()要求的参数列表（括号不能省略）
+/// \note 在所有基于stdclass类型的Init函数中使用这个宏
 ///
 /// 例如：GN_STDCLASS_INIT( myobject_c, (param1, param2) );
 /// 更多信息参见下面的例子
 #if GN_BUILD_DEBUG
 #define GN_STDCLASS_INIT( class_name, param_list )                               \
-    /* call parent's init() */                                                   \
-    if( !MyParent::init param_list ) return failure();                           \
-    preInit();                                                                   \
-    /* define sanity checker to ensure calling either failure() or success(). */ \
+    /* call parent's Init() */                                                   \
+    if( !MyParent::Init param_list ) return Failure();                           \
+    PreInit();                                                                   \
+    /* define sanity checker to ensure calling either Failure() or success(). */ \
     SanityChecker __GN_sc(*this);
 #else
 #define GN_STDCLASS_INIT( class_name, param_list )     \
-    /* call parent's init() */                         \
-    if( !MyParent::init param_list ) return failure(); \
-    preInit();
+    /* call parent's Init() */                         \
+    if( !MyParent::Init param_list ) return Failure(); \
+    PreInit();
 #endif
 
 ///
 /// stdclass类型的标准退出过程
 ///
-/// \note 在所有基于stdclass类型的quit()函数中使用这个宏
+/// \note 在所有基于stdclass类型的Quit()函数中使用这个宏
 ///
 /// 使用方法参见下面的例子
-#define GN_STDCLASS_QUIT()  { clear(); MyParent::quit(); }
+#define GN_STDCLASS_QUIT()  { Clear(); MyParent::Quit(); }
 
 namespace GN
 {
@@ -64,27 +64,27 @@ namespace GN
     /// StdClass实现了标准的init/quit接口，这个接口包括6个标准函数：\n
     /// - StdClass()  : 构造函数。
     ///   - 通过clear()将私有变量清零
-    ///   - 一般情况下，除了 clear() 以外，构造函数中再不应包含其他代码，
-    ///   - 任何有可能失败的初始化代码都应放到 init() 中。
+    ///   - 一般情况下，除了 Clear() 以外，构造函数中再不应包含其他代码，
+    ///   - 任何有可能失败的初始化代码都应放到 Init() 中。
     /// \n
     /// - ~StdClass() : 虚析构函数。
-    ///   - 调用 quit() 释放资源。
+    ///   - 调用 Quit() 释放资源。
     /// \n
-    /// - init()      : 初始化函数。
+    /// - Init()      : 初始化函数。
     ///   - 成功则返回true，否则返回false。
     /// \n
-    /// - quit()      : 虚函数。
-    ///   - 释放所有的资源，同时将私有变量清零（通过调用 clear() ）。
-    ///   - 当类的实例被delete时，析构函数将自动调用 quit() 。
-    ///   - quit() 函数应当可以被安全的、多次的调用，也就是说，
+    /// - Quit()      : 虚函数。
+    ///   - 释放所有的资源，同时将私有变量清零（通过调用 Clear() ）。
+    ///   - 当类的实例被delete时，析构函数将自动调用 Quit() 。
+    ///   - Quit() 函数应当可以被安全的、多次的调用，也就是说，
     ///   - 在释放资源时必须首先检查资源的有效性。
     /// \n
-    /// - ok()        : 检测函数。
-    ///   - 用来检查是否已经初始化过。成功调用 init() 后返回true，
-    ///     调用 quit() 后返回false。
+    /// - Ok()        : 检测函数。
+    ///   - 用来检查是否已经初始化过。成功调用 Init() 后返回true，
+    ///     调用 Quit() 后返回false。
     /// \n
-    /// - clear()     : 私有函数。
-    ///   - 用于将私有成员变量清零，被构造函数和 quit() 调用
+    /// - Clear()     : 私有函数。
+    ///   - 用于将私有成员变量清零，被构造函数和 Quit() 调用
     ///
     class StdClass
     {
@@ -92,7 +92,7 @@ namespace GN
         ///
         /// ctor
         ///
-        StdClass() { clear(); }
+        StdClass() { Clear(); }
         ///
         /// copy ctor
         ///
@@ -100,33 +100,33 @@ namespace GN
         ///
         /// dtor
         ///
-        virtual ~StdClass() { quit(); }
+        virtual ~StdClass() { Quit(); }
 
     public :
 
         ///
         /// 初始化函数
         ///
-        bool init()
+        bool Init()
         {
-            if( StdClass::ok() )
+            if( StdClass::Ok() )
             {
-                GN_ERROR(GetLogger("GN.base.StdClass"))( "u call init() twice!" );
-                return failure();
+                GN_ERROR(GetLogger("GN.base.StdClass"))( "u call Init() twice!" );
+                return Failure();
             }
 
-            return success();
+            return Success();
         }
 
         ///
         /// 退出函数
         ///
-        virtual void quit() { clear(); }
+        virtual void Quit() { Clear(); }
 
         ///
         /// 是否初始化过？
         ///
-        bool ok() const { return IS_SUCCESS == mOK; }
+        bool Ok() const { return IS_SUCCESS == mOK; }
 
         ///
         /// assignment
@@ -137,12 +137,12 @@ namespace GN
 
 #if GN_BUILD_DEBUG
         ///
-        /// Sanity checker for calling either failure() or success() in init().
+        /// Sanity checker for calling either Failure() or Success() in Init().
         ///
         class SanityChecker
         {
             ///
-            /// Boolean value to indicate whether failure() or success() is called.
+            /// Boolean value to indicate whether Failure() or Success() is called.
             ///
             StdClass & theClass;
 
@@ -163,7 +163,7 @@ namespace GN
             {
                 GN_ASSERT_EX(
                     StdClass::IS_FAILURE == theClass.mOK || StdClass::IS_SUCCESS == theClass.mOK,
-                    "Neither failure() nor success() is called!" );
+                    "Neither Failure() nor Success() is called!" );
             }
         };
 #endif
@@ -171,22 +171,22 @@ namespace GN
         ///
         /// helper function called by macro GN_STDCLASS_INIT() to invalidate mOK.
         ///
-        void preInit() { GN_ASSERT(IS_SUCCESS == mOK); mOK = IS_UNDEFINED; }
+        void PreInit() { GN_ASSERT(IS_SUCCESS == mOK); mOK = IS_UNDEFINED; }
 
         ///
-        /// helper function called in init() to indicate initialization failure.
+        /// helper function called in Init() to indicate initialization failure.
         ///
-        bool failure()
+        bool Failure()
         {
-            quit();
+            Quit();
             mOK = IS_FAILURE;
             return false;
         }
 
         ///
-        /// helper function called in init() to indicate initialization success.
+        /// helper function called in Init() to indicate initialization success.
         ///
-        bool success()
+        bool Success()
         {
             mOK = IS_SUCCESS;
             return true;
@@ -201,9 +201,9 @@ namespace GN
         ///
         enum InitStatus
         {
-            IS_FAILURE   = 0, ///< init() failed.
-            IS_SUCCESS   = 1, ///< init() succedded.
-            IS_UNDEFINED = 2, ///< init() not called.
+            IS_FAILURE   = 0, ///< Init() failed.
+            IS_SUCCESS   = 1, ///< Init() succedded.
+            IS_UNDEFINED = 2, ///< Init() not called.
         };
 
         ///
@@ -214,7 +214,7 @@ namespace GN
         ///
         /// initialize data members
         ///
-        void clear() { mOK = IS_UNDEFINED; }
+        void Clear() { mOK = IS_UNDEFINED; }
     };
 }
 

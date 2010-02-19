@@ -65,7 +65,7 @@ public:
         {
             GN::AutoComPtr<IUnknown> obj;
             GN_ASSERT( E_NOINTERFACE == mRealObject->QueryInterface( riid, (void**)&obj ) );
-            obj.clear();
+            obj.Clear();
             return E_NOINTERFACE;
         }
         else

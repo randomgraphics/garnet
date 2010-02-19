@@ -744,7 +744,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVS(
 
     shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
 
-    return shader.detach();
+    return shader.Detach();
 }
 
 //
@@ -761,7 +761,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGS(
 
     shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
 
-    return shader.detach();
+    return shader.Detach();
 }
 
 //
@@ -778,7 +778,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePS(
 
     shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
 
-    return shader.detach();
+    return shader.Detach();
 }
 
 //

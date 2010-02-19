@@ -154,7 +154,7 @@ struct DenseMesh
 
     void destroy()
     {
-        mesh.clear();
+        mesh.Clear();
     }
 
     void draw()

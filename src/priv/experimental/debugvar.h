@@ -47,7 +47,7 @@ namespace GN
 
         const StrA & getName() const { return mName; }
 
-        const StrA & getType() const { return mType; }
+        const StrA & GetType() const { return mType; }
 
         //@}
     };

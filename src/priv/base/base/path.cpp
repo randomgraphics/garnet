@@ -121,7 +121,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 
         void split( const StrA & path )
         {
-            parts.clear();
+            parts.Clear();
             normalizePathSeparator( input, path );
             buf.resize( input.Size() + 1 );
             memcpy( buf.GetRawPtr(), input.GetRawPtr(), input.Size() + 1 );

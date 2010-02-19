@@ -102,8 +102,8 @@ namespace GN { namespace win
 #elif GN_MSWIN
 
         AutoObjPtr<WindowMsw> p( new WindowMsw );
-        if( !p->init( wcp ) ) return 0;
-        return p.detach();
+        if( !p->Init( wcp ) ) return 0;
+        return p.Detach();
 
 #else
 

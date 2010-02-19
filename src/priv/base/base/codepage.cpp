@@ -27,7 +27,7 @@ typedef GN::CECImplMSWIN CECImpl;
 
 struct CECImpl
 {
-    bool init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
+    bool Init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
     {
         GN_ERROR(sLogger)( "Character encoding class is not implemented on " GN_PLATFORM_NAME "." );
         return false;
@@ -59,7 +59,7 @@ GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encod
 {
     CECImpl * p = (CECImpl*)mImpl;
 
-    if( !p->init( from, to ) )
+    if( !p->Init( from, to ) )
     {
         delete p;
         mImpl = NULL;

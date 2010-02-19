@@ -77,7 +77,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(void)
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
     if( !p ) return 0;
     mTextures.push_back( p );
-    return p.detach();
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -94,7 +94,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(
     if( !p ) return 0;
     p->loadFromFile( filename, resourceGroup );
     mTextures.push_back( p );
-    return p.detach();
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -110,7 +110,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(float size)
     if( !p ) return 0;
     p->loadFromMemory( 0, (uint)size, (uint)size );
     mTextures.push_back( p );
-    return p.detach();
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -148,7 +148,7 @@ void CEGUI::GarnetRenderer::destroyAllTextures(void)
         GN_ASSERT( *i );
         delete *i;
     }
-    mTextures.clear();
+    mTextures.Clear();
 
     GN_UNGUARD;
 }

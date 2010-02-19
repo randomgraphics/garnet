@@ -215,12 +215,12 @@ namespace GN { namespace gfx
         ///
         /// constructor
         ///
-        MeshResourceDesc() { clear(); }
+        MeshResourceDesc() { Clear(); }
 
         ///
         /// clear to an empty descriptor
         ///
-        void clear()
+        void Clear()
         {
             memset( this, 0, sizeof(*this) );
         }
@@ -343,7 +343,7 @@ namespace GN { namespace gfx
             SamplerDesc sampler;
 
             /// default ctor
-            EffectTextureDesc() { sampler.clear(); }
+            EffectTextureDesc() { sampler.Clear(); }
         };
 
         ///
@@ -489,12 +489,12 @@ namespace GN { namespace gfx
         ///
         /// constructor
         ///
-        EffectResourceDesc() { clear(); }
+        EffectResourceDesc() { Clear(); }
 
         ///
         /// clear to a default descriptor
         ///
-        void clear();
+        void Clear();
 
         ///
         /// setup the descriptor from XML
@@ -625,7 +625,7 @@ namespace GN { namespace gfx
                 && 0 == numidx;
         }
 
-        void clear() { basevtx = numvtx = startidx = numidx = 0; }
+        void Clear() { basevtx = numvtx = startidx = numidx = 0; }
 
         //@}
     };
@@ -666,12 +666,12 @@ namespace GN { namespace gfx
         ///
         /// constructor
         ///
-        ModelResourceDesc() { clear(); }
+        ModelResourceDesc() { Clear(); }
 
         ///
         /// clear to an empty descriptor
         ///
-        void clear();
+        void Clear();
 
         ///
         /// check if the model has a texture parameter with specific name

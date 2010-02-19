@@ -745,7 +745,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 // -----------------------------------------------------------------------------
 bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 {
-    desc.clear();
+    desc.Clear();
 
     const StrA & meshname = fp.name();
 
@@ -897,10 +897,10 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWorldDesc::clear()
+void GN::util::SimpleWorldDesc::Clear()
 {
     meshes.clear();
-    meshdata.clear();
+    meshdata.Clear();
     models.clear();
     entities.clear();
 }
@@ -914,7 +914,7 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 
     GN_INFO(sLogger)( "Load scene from file: %s", filename?filename:"<NULL>" );
 
-    clear();
+    Clear();
 
     // open file
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );

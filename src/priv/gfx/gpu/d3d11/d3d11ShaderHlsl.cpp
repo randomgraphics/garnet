@@ -65,7 +65,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         GN_DX_CHECK_RETURN( dev.CreateVertexShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.detach();
+        if( signature ) *signature = bin.Detach();
         return shader;
     }
 };
@@ -111,7 +111,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         GN_DX_CHECK_RETURN( dev.CreateGeometryShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.detach();
+        if( signature ) *signature = bin.Detach();
         return shader;
     }
 };
@@ -157,7 +157,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         GN_DX_CHECK_RETURN( dev.CreatePixelShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.detach();
+        if( signature ) *signature = bin.Detach();
         return shader;
     }
 };
@@ -380,7 +380,7 @@ sInitShader(
 
     // compile shader
     AutoComPtr<ID3D10Blob> binary;
-    shader.attach( templ.create(
+    shader.Attach( templ.create(
         dev,
         code.source,
         0,
@@ -424,7 +424,7 @@ sInitShader(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11VertexShaderHLSL::init(
+bool GN::gfx::D3D11VertexShaderHLSL::Init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,
@@ -440,7 +440,7 @@ bool GN::gfx::D3D11VertexShaderHLSL::init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11GeometryShaderHLSL::init(
+bool GN::gfx::D3D11GeometryShaderHLSL::Init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,
@@ -456,7 +456,7 @@ bool GN::gfx::D3D11GeometryShaderHLSL::init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11PixelShaderHLSL::init(
+bool GN::gfx::D3D11PixelShaderHLSL::Init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,

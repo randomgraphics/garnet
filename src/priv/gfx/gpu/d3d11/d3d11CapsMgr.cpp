@@ -14,7 +14,7 @@ bool GN::gfx::D3D11Gpu::capsInit()
 {
     GN_GUARD;
 
-    // clear all caps
+    // Clear all caps
     memset( &mCaps, 0, sizeof(mCaps) );
 
     D3D_FEATURE_LEVEL feature = mDevice->GetFeatureLevel();

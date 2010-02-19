@@ -156,8 +156,8 @@ namespace GN { namespace util
         // ********************************
     private:
 
-        bool init( int argc, const char *  const argv[] );
-        void quit();
+        bool Init( int argc, const char *  const argv[] );
+        void Quit();
         bool checkCmdLine( int argc, const char * const argv[] );
         bool initGpu();
         void quitGpu();

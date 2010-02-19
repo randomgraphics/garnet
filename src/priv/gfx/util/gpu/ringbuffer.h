@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        RingBuffer()          { clear(); }
-        virtual ~RingBuffer() { quit(); }
+        RingBuffer()          { Clear(); }
+        virtual ~RingBuffer() { Quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t ringBufferSize );
-        void quit();
+        bool Init( size_t ringBufferSize );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mBegin    = NULL;
             mNotFull  = NULL;
@@ -50,11 +50,11 @@ namespace GN { namespace gfx
         /// get ring buffer size
         size_t size() const { return mSize; }
 
-        // post quit message to ring buffer, unblock any blocked threads.
+        // post Quit message to ring buffer, unblock any blocked threads.
         void   postQuitMessage();
 
-        // Block calling thread util ring buffer is not full, or the ring buffer is about to quit.
-        // Return NULL, if the ring buffer is about to quit.
+        // Block calling thread util ring buffer is not full, or the ring buffer is about to Quit.
+        // Return NULL, if the ring buffer is about to Quit.
         // Caller has to make sure that the size is no larger then the buffer size.
         void * beginProduce( size_t size );
 
@@ -62,8 +62,8 @@ namespace GN { namespace gfx
         // blocking consumer thread.
         void   endProduce();
 
-        // Block calling thread until there's not empty or the ring buffer is about to quit.
-        // Return NULL, if the ring buffer is about to quit.
+        // Block calling thread until there's not empty or the ring buffer is about to Quit.
+        // Return NULL, if the ring buffer is about to Quit.
         // Caller has to make sure that the size is no larger then the buffer size.
         void * beginConsume( size_t size );
 

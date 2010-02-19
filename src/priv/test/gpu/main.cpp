@@ -41,11 +41,11 @@ const char * glsl_pscode =
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
 
-bool init( Gpu & gpu )
+bool Init( Gpu & gpu )
 {
     if( blankScreen ) return true;
 
-    rc.clear();
+    rc.Clear();
 
     // create GPU program
     GpuProgramDesc gpd;
@@ -107,9 +107,9 @@ bool init( Gpu & gpu )
     return true;
 }
 
-void quit( Gpu & )
+void Quit( Gpu & )
 {
-    rc.clear();
+    rc.Clear();
 }
 
 void draw( Gpu & r )
@@ -153,7 +153,7 @@ void draw( Gpu & r )
 
 int run( Gpu & gpu )
 {
-    if( !init( gpu ) ) { quit( gpu ); return -1; }
+    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -180,7 +180,7 @@ int run( Gpu & gpu )
         fps.onFrame();
     }
 
-    quit( gpu );
+    Quit( gpu );
 
     return 0;
 }

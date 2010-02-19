@@ -162,7 +162,7 @@ ID3D10Blob * GN::d3d11::compileShader(
 
     sPrintShaderCompileInfo( source, bin );
 
-    return bin.detach();
+    return bin.Detach();
 }
 
 //
@@ -186,7 +186,7 @@ ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
     if( 0 == vs ) return NULL;
 
     // success
-    if( signature ) *signature = bin.detach();
+    if( signature ) *signature = bin.Detach();
     return vs;
 
     GN_UNGUARD;
@@ -213,7 +213,7 @@ ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
     if( 0 == gs ) return NULL;
 
     // success
-    if( signature ) *signature = bin.detach();
+    if( signature ) *signature = bin.Detach();
     return gs;
 
     GN_UNGUARD;
@@ -240,7 +240,7 @@ ID3D11PixelShader * GN::d3d11::compileAndCreatePS(
     if( 0 == ps ) return 0;
 
     // success
-    if( signature ) *signature = bin.detach();
+    if( signature ) *signature = bin.Detach();
     return ps;
 
     GN_UNGUARD;

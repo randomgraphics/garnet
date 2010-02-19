@@ -68,7 +68,7 @@ bool JPGReader::readHeader(
     jpeg_create_decompress( &mCInfo );
 
     // specify o_data source
-    mSrc.init( i_buf, i_size );
+    mSrc.Init( i_buf, i_size );
     mCInfo.src = &mSrc;
 
     // read jpeg header
@@ -144,7 +144,7 @@ bool JPGReader::readImage( void * o_data )
     if( !grayscale )
     {
         // create temporary RGB_8_8_8 buffer
-        rgbBuf.attach( new UInt8[rowPitch*height] );
+        rgbBuf.Attach( new UInt8[rowPitch*height] );
         decompressedBuf = rgbBuf;
     }
     else decompressedBuf = (UInt8*)o_data;

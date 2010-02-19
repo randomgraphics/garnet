@@ -36,8 +36,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        XenonGpu() : mThreadId(getCurrentThreadId()) { clear(); }
-        virtual ~XenonGpu() { quit(); }
+        XenonGpu() : mThreadId(GetCurrentThreadIdentifier()) { Clear(); }
+        virtual ~XenonGpu() { Quit(); }
         //@}
 
         // ********************************
@@ -46,10 +46,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & ro );
-        void quit();
+        bool Init( const GpuOptions & ro );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             dispClear();
             capsClear();
@@ -204,7 +204,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.clear(); mRTMgr = 0; }
+        void contextClear() { mContext.Clear(); mRTMgr = 0; }
 
         inline bool bindContextRenderTargetsAndViewport( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck  );

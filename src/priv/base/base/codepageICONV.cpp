@@ -71,7 +71,7 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplICONV::init(
+bool GN::CECImplICONV::Init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -82,7 +82,7 @@ bool GN::CECImplICONV::init(
 
     const char * fromstr = sEncodingToLocal( from );
     const char * tostr   = sEncodingToLocal( to );
-    if( NULL == fromstr || NULL == tostr  ) return failure();
+    if( NULL == fromstr || NULL == tostr  ) return Failure();
 
     mIconv = iconv_open( tostr, fromstr );
     if( (iconv_t)-1 == mIconv )
@@ -101,11 +101,11 @@ bool GN::CECImplICONV::init(
                 break;
         };
 
-        return failure();
+        return Failure();
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -113,13 +113,13 @@ bool GN::CECImplICONV::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplICONV::quit()
+void GN::CECImplICONV::Quit()
 {
     GN_GUARD;
 
     if( mIconv ) iconv_close( mIconv ), mIconv = 0;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

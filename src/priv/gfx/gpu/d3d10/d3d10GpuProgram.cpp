@@ -251,7 +251,7 @@ sUpdateConstData(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
+bool GN::gfx::D3D10GpuProgram::Init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -270,9 +270,9 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 
     // compile all shaders
     ID3D10Device & dev = getDeviceRef();
-    if( !mVs.init( dev, desc.vs, options, mParamDesc ) ) return failure();
-    if( !mGs.init( dev, desc.gs, options, mParamDesc ) ) return failure();
-    if( !mPs.init( dev, desc.ps, options, mParamDesc ) ) return failure();
+    if( !mVs.Init( dev, desc.vs, options, mParamDesc ) ) return Failure();
+    if( !mGs.Init( dev, desc.gs, options, mParamDesc ) ) return Failure();
+    if( !mPs.Init( dev, desc.ps, options, mParamDesc ) ) return Failure();
 
     // build parameter array
     mParamDesc.buildParameterArrays();
@@ -281,11 +281,11 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
     if( mParamDesc.textures.count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
-        return failure();
+        return Failure();
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -293,15 +293,15 @@ bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10GpuProgram::quit()
+void GN::gfx::D3D10GpuProgram::Quit()
 {
     GN_GUARD;
 
-    mVs.clear();
-    mGs.clear();
-    mPs.clear();
+    mVs.Clear();
+    mGs.Clear();
+    mPs.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -382,7 +382,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
 {
     const size_t NUM_STAGES = getGpu().GetCaps().maxTextures;
 
-    // allocate SRV array on stack, clear to zero.
+    // allocate SRV array on stack, Clear to zero.
     const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;
     ID3D10ShaderResourceView ** srvArray = (ID3D10ShaderResourceView **)alloca( SRV_ARRAY_SIZE );
     memset( srvArray, 0, SRV_ARRAY_SIZE );

@@ -31,5 +31,5 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
     }
 
     // success
-    return tex.detach();
+    return tex.Detach();
 }

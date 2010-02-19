@@ -24,7 +24,7 @@ namespace GN { namespace gfx
         //@{
     public:
         RenderWindowMsw() : mGpu(0), mWindow(0), mHook(0), mMonitor(0) {}
-        ~RenderWindowMsw() { quit(); }
+        ~RenderWindowMsw() { Quit(); }
         //@}
 
         // ********************************
@@ -37,9 +37,9 @@ namespace GN { namespace gfx
         bool initExternalWindow( Gpu * gpu, HandleType externalWindow );
         /// initialize render window to use internal widow.
         bool initInternalWindow( Gpu * gpu, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
-        void quit();
+        void Quit();
     private:
-        void clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
+        void Clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
         //@}
 
         // ********************************

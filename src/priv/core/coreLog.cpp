@@ -93,13 +93,13 @@ public:
     }
 
     /// acquire the lock
-    void lock()
+    void Lock()
     {
         pthread_mutex_lock( &mMutex );
     }
 
     /// release the lock
-    void unlock()
+    void Unlock()
     {
         pthread_mutex_unlock( &mMutex );
     }
@@ -265,7 +265,7 @@ namespace GN
     {
         virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
         {
-            if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
+            if( GetEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
@@ -287,7 +287,7 @@ namespace GN
         };
         virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
         {
-            if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
+            if( GetEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
@@ -338,7 +338,7 @@ namespace GN
 #if GN_XENON
             : mFileName( "game:\\garnet3d.log.xml" )
 #else
-            : mFileName( getEnv("GN_LOG_FILENAME") )
+            : mFileName( GetEnv("GN_LOG_FILENAME") )
 #endif
         {
             AutoFile af( mFileName, "wt" );
@@ -640,7 +640,7 @@ namespace GN
             parent->reapplyAttributes();
 
             // sucess
-            return newLogger.detach();
+            return newLogger.Detach();
         }
     };
 

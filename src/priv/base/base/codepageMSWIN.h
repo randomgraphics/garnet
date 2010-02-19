@@ -24,8 +24,8 @@ namespace GN
 
         //@{
     public:
-        CECImplMSWIN()          { clear(); }
-        virtual ~CECImplMSWIN() { quit(); }
+        CECImplMSWIN()          { Clear(); }
+        virtual ~CECImplMSWIN() { Quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN
 
         //@{
     public:
-        bool init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
-        void quit();
+        bool Init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
+        void Quit();
     private:
-        void clear() { mLocaleFrom = mLocaleTo = 0; }
+        void Clear() { mLocaleFrom = mLocaleTo = 0; }
         //@}
 
         // ********************************

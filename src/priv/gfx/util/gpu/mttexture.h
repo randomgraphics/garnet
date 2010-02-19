@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadTexture() { quit(); }
+        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
+        virtual ~MultiThreadTexture() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( Texture * );
-        void quit();
+        bool Init( Texture * );
+        void Quit();
     private:
-        void clear() { mTexture = NULL; }
+        void Clear() { mTexture = NULL; }
         //@}
 
         // ********************************
