@@ -9,7 +9,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10IdxBuf::init( const IdxBufDesc & desc )
+bool GN::gfx::D3D10IdxBuf::Init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -22,7 +22,7 @@ bool GN::gfx::D3D10IdxBuf::init( const IdxBufDesc & desc )
     setDesc( desc );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -30,11 +30,11 @@ bool GN::gfx::D3D10IdxBuf::init( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10IdxBuf::quit()
+void GN::gfx::D3D10IdxBuf::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

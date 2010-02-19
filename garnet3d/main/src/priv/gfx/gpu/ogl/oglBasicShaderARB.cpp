@@ -103,7 +103,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
+bool GN::gfx::OGLBasicShaderARB::Init( const StrA & code )
 {
     GN_GUARD;
 
@@ -115,10 +115,10 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
     // create shader
-    if( !createShader( code ) ) return failure();
+    if( !createShader( code ) ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -126,7 +126,7 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderARB::quit()
+void GN::gfx::OGLBasicShaderARB::Quit()
 {
     GN_GUARD;
 

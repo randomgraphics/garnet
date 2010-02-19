@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
+bool GN::gfx::XenonGpuProgramASM::Init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -26,20 +26,20 @@ bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
     if( desc.vs.source )
     {
         mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::assembleAndCreate( dev, desc.vs.source );
-        if( NULL == mVs ) return failure();
+        if( NULL == mVs ) return Failure();
     }
 
     if( desc.ps.source )
     {
         mPs = d3d9::ShaderCompiler<IDirect3DPixelShader9>::assembleAndCreate( dev, desc.ps.source );
-        if( NULL == mPs ) return failure();
+        if( NULL == mPs ) return Failure();
     }
 
     GN_TODO( "initialize parameter descriptor" );
     memset( &mParamDesc, 0, sizeof(mParamDesc) );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -47,14 +47,14 @@ bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpuProgramASM::quit()
+void GN::gfx::XenonGpuProgramASM::Quit()
 {
     GN_GUARD;
 
     SafeRelease( mVs );
     SafeRelease( mPs );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

@@ -521,7 +521,7 @@ GpuResourceDatabase::Impl::createResource(
     ResourceManager * mgr = getManager( type );
     if( NULL == mgr )
     {
-        GN_ERROR(sLogger)( "Invalid resouce type: %s", type.toStr() );
+        GN_ERROR(sLogger)( "Invalid resouce type: %s", type.ToStr() );
         return AutoRef<GpuResource>::NULLREF;
     }
 

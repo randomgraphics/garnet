@@ -446,7 +446,7 @@ namespace GN { namespace util
         ///
         /// clear the description
         ///
-        void clear();
+        void Clear();
 
         ///
         /// load world description from external file

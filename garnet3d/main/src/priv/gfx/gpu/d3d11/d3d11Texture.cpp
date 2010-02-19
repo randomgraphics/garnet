@@ -117,7 +117,7 @@ sDetermineTextureDimension( const GN::gfx::TextureDesc & desc )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D11Texture::init( const TextureDesc & desc )
+bool GN::gfx::D3D11Texture::Init( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -125,10 +125,10 @@ bool GN::gfx::D3D11Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D11Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !createTexture() ) return failure();
+    if( !setDesc( desc ) || !createTexture() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -136,7 +136,7 @@ bool GN::gfx::D3D11Texture::init( const TextureDesc & desc )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D11Texture::quit()
+void GN::gfx::D3D11Texture::Quit()
 {
     GN_GUARD;
 
@@ -145,7 +145,7 @@ void GN::gfx::D3D11Texture::quit()
     mDSViews.clear();
     SafeRelease( mTexture );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -300,7 +300,7 @@ GN::gfx::D3D11Texture::getSRView(
 
     AutoComPtr<ID3D11ShaderResourceView> & srv = mSRViews[srvdesc];
 
-    if( srv.empty() )
+    if( srv.Empty() )
     {
         ID3D11Device & dev = getDeviceRef();
 
@@ -399,7 +399,7 @@ GN::gfx::D3D11Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 
     AutoComPtr<ID3D11RenderTargetView> & rtv = mRTViews[rtvdesc];
 
-    if( rtv.empty() )
+    if( rtv.Empty() )
     {
         ID3D11Device & dev = getDeviceRef();
 
@@ -489,7 +489,7 @@ GN::gfx::D3D11Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 
     AutoComPtr<ID3D11DepthStencilView> & dsv = mDSViews[dsvdesc];
 
-    if( dsv.empty() )
+    if( dsv.Empty() )
     {
         ID3D11Device & dev = getDeviceRef();
 

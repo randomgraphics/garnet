@@ -231,7 +231,7 @@ public:
         TS_ASSERT( !(s2<s3) );
         TS_ASSERT( !(s3<s2) );
 
-        // size(),clear(),empty()
+        // size(),Clear(),empty()
         TS_ASSERT_EQUALS( 4, s1.Size() );
         TS_ASSERT( !s1.Empty() );
         s1.Clear(); s1.Clear();

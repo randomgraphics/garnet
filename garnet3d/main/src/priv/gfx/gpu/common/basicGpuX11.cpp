@@ -130,7 +130,7 @@ sDetermineWindowSize(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuX11::init( const GpuOptions & o )
+bool GN::gfx::BasicGpuX11::Init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -138,10 +138,10 @@ bool GN::gfx::BasicGpuX11::init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuX11, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return failure();
+    if( !dispInit(o) ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -149,14 +149,14 @@ bool GN::gfx::BasicGpuX11::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuX11::quit()
+void GN::gfx::BasicGpuX11::Quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -200,7 +200,7 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
     Display * disp;
     if( 0 == ro.displayHandle )
     {
-        StrA dispStr = getEnv("DISPLAY");
+        StrA dispStr = GetEnv("DISPLAY");
         mDefaultDisplay = XOpenDisplay( dispStr.GetRawPtr() );
         if( 0 == mDefaultDisplay )
         {
@@ -268,7 +268,7 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
 // ----------------------------------------------------------------------------
 void GN::gfx::BasicGpuX11::dispQuit()
 {
-    mWindow.quit();
+    mWindow.Quit();
 
     // close default display
     if( mDefaultDisplay )

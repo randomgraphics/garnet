@@ -47,8 +47,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        OGLGpu() { clear(); }
-        virtual ~OGLGpu() { quit(); }
+        OGLGpu() { Clear(); }
+        virtual ~OGLGpu() { Quit(); }
         //@}
 
         // ********************************
@@ -59,12 +59,12 @@ namespace GN { namespace gfx
 
     public:
 
-        bool init( const GpuOptions & );
-        void quit();
+        bool Init( const GpuOptions & );
+        void Quit();
 
     private:
 
-        void clear()
+        void Clear()
         {
             dispClear();
             capsClear();
@@ -230,7 +230,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
+        void contextClear() { mContext.Clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
         inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexFormat & vf, const OGLBasicGpuProgram * gpuProgram );
         inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );

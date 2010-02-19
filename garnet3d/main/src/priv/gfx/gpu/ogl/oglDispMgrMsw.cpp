@@ -243,7 +243,7 @@ bool GN::gfx::OGLGpu::dispInit()
     // setup message hook
     if( ro.autoRestore )
     {
-        getRenderWindow().sigMessage.connect( this, &OGLGpu::msgHook );
+        getRenderWindow().sigMessage.Connect( this, &OGLGpu::msgHook );
     }
 
     // set swap interval
@@ -269,7 +269,7 @@ void GN::gfx::OGLGpu::dispQuit()
     GN_GUARD;
 
     // remove message hook
-    getRenderWindow().sigMessage.disconnect( this );
+    getRenderWindow().sigMessage.Disconnect( this );
 
     // restore display mode
     restoreDisplayMode();

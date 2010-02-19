@@ -52,7 +52,7 @@ int myInit( int argc, const char * argv[] )
     // setup environment variables to control log behavior.
     if( !verbose )
     {
-        GN::putEnv( "GN_LOG_QUIET", "1" );
+        GN::PutEnv( "GN_LOG_QUIET", "1" );
     }
 
     return 0;

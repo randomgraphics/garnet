@@ -27,8 +27,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLTexture( OGLGpu & r ) :OGLResource(r) { clear(); }
-        virtual ~OGLTexture() { quit(); }
+        OGLTexture( OGLGpu & r ) :OGLResource(r) { Clear(); }
+        virtual ~OGLTexture() { Quit(); }
         //@}
 
         // ********************************
@@ -37,10 +37,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const TextureDesc & );
-        void quit();
+        bool Init( const TextureDesc & );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mOGLTexture = 0;
             mSamplerDirty = true;

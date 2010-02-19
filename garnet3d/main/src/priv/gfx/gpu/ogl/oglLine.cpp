@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLLine::init()
+bool GN::gfx::OGLLine::Init()
 {
     GN_GUARD;
 
@@ -24,11 +24,11 @@ bool GN::gfx::OGLLine::init()
     if( !mVtxBuf )
     {
         GN_ERROR(sLogger)( "out of memory!" );
-        return failure();
+        return Failure();
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -36,13 +36,13 @@ bool GN::gfx::OGLLine::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLLine::quit()
+void GN::gfx::OGLLine::Quit()
 {
     GN_GUARD;
 
     SafeHeapFree( mVtxBuf );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -67,7 +67,7 @@ void GN::gfx::OGLLine::drawLines(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     if( 0 == positions )
     {

@@ -120,7 +120,7 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     AutoRef<MeshResource> mesh( gdb.createResource<MeshResource>(NULL) );
     if( !mesh || !mesh->reset(&md) ) return 0;
 
-    return mesh.detach();
+    return mesh.Detach();
 }
 
 EffectResource *
@@ -282,7 +282,7 @@ createEffect( GpuResourceDatabase & gdb )
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);
     if( !e || !e->reset( &ed ) ) return NULL;
 
-    return e.detach();
+    return e.Detach();
 }
 
 class BezierApp : public SampleApp

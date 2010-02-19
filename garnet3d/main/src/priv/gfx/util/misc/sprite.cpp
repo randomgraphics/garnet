@@ -60,7 +60,7 @@ static const char * hlslpscode=
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SpriteRenderer::init()
+bool GN::gfx::SpriteRenderer::Init()
 {
     GN_GUARD;
 
@@ -76,7 +76,7 @@ bool GN::gfx::SpriteRenderer::init()
 
     // create a 2x2 pure white texture
     mPureWhiteTexture.attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
-    if( !mPureWhiteTexture ) return failure();
+    if( !mPureWhiteTexture ) return Failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
 
@@ -102,10 +102,10 @@ bool GN::gfx::SpriteRenderer::init()
     else
     {
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
-        return failure();
+        return Failure();
     }
     mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
-    if( !mGpuProgram ) return failure();
+    if( !mGpuProgram ) return Failure();
 
     // create vertex format
     mVertexFormat.numElements = 3;
@@ -124,11 +124,11 @@ bool GN::gfx::SpriteRenderer::init()
 
     // create vertex buffer
     mVertexBuffer.attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
-    if( !mVertexBuffer ) return failure();
+    if( !mVertexBuffer ) return Failure();
 
     // create index buffer
     mIndexBuffer.attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
-    if( !mIndexBuffer ) return failure();
+    if( !mIndexBuffer ) return Failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
     {
@@ -144,7 +144,7 @@ bool GN::gfx::SpriteRenderer::init()
 
     // create pending vertex buffer
     mSprites = (Sprite*)HeapAlloc( VTXBUF_SIZE );
-    if( NULL == mSprites ) return failure();
+    if( NULL == mSprites ) return Failure();
 
     // initialize other member variables
     mDrawBegun = false;
@@ -152,7 +152,7 @@ bool GN::gfx::SpriteRenderer::init()
     mNextFreeSprite = mSprites;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -160,18 +160,18 @@ bool GN::gfx::SpriteRenderer::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::quit()
+void GN::gfx::SpriteRenderer::Quit()
 {
     GN_GUARD;
 
     HeapFree( mSprites );
-    mContext.clear();
-    mIndexBuffer.clear();
-    mVertexBuffer.clear();
-    mGpuProgram.clear();
-    mPureWhiteTexture.clear();
+    mContext.Clear();
+    mIndexBuffer.Clear();
+    mVertexBuffer.Clear();
+    mGpuProgram.Clear();
+    mPureWhiteTexture.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -211,7 +211,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
         mContext.gpuProgram = mGpuProgram;
 
         // default shader has no uniform
-        mContext.uniforms.clear();
+        mContext.uniforms.Clear();
     }
     if( 0 == (options & USE_EXTERNAL_TEXTURE_FILTERS) )
     {

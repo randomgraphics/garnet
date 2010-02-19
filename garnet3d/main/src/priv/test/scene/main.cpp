@@ -26,7 +26,7 @@ Entity * box;
 Entity * robot;
 Camera   camera;
 
-bool init( Scene & sc )
+bool Init( Scene & sc )
 {
     root = sc.world.createSpatialEntity( "root" );
 
@@ -55,7 +55,7 @@ bool init( Scene & sc )
     return true;
 }
 
-void quit( Scene & )
+void Quit( Scene & )
 {
 }
 
@@ -89,7 +89,7 @@ int run( Gpu & gpu )
 
     Scene sc( gpu );
 
-    if( !init( sc ) ) { quit( sc ); return -1; }
+    if( !Init( sc ) ) { Quit( sc ); return -1; }
 
     bool gogogo = true;
 
@@ -117,7 +117,7 @@ int run( Gpu & gpu )
         fps.onFrame();
     }
 
-    quit( sc );
+    Quit( sc );
 
     return 0;
 }

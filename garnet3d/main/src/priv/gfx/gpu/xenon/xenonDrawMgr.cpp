@@ -36,7 +36,7 @@ bool GN::gfx::XenonGpu::drawInit()
 {
     // create line renderer
     mLine = new XenonLine( *this );
-    if( !mLine->init() ) return false;
+    if( !mLine->Init() ) return false;
 
     // begin scene
     mDevice->BeginScene();
@@ -69,7 +69,7 @@ void GN::gfx::XenonGpu::drawQuit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpu::present()
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     GN_ASSERT( mSceneBegun );
 
@@ -100,15 +100,15 @@ void GN::gfx::XenonGpu::present()
 void GN::gfx::XenonGpu::clearScreen(
     const Vector4f & c, float z, UInt8 s, BitFields flags )
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
-    // build d3d clear flag
+    // build d3d Clear flag
     int d3dflag =
         (flags & CLEAR_C ? D3DCLEAR_TARGET : 0) |
         (flags & CLEAR_Z ? D3DCLEAR_ZBUFFER : 0) |
         (flags & CLEAR_S ? D3DCLEAR_STENCIL : 0);
 
-    // do clear
+    // do Clear
     mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s );
 }
 
@@ -140,7 +140,7 @@ void GN::gfx::XenonGpu::drawIndexed(
 void GN::gfx::XenonGpu::draw(
     PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     mDevice->DrawVertices(
         PRIMITIVE_TO_XENON[prim],    // primitive type
@@ -163,7 +163,7 @@ void GN::gfx::XenonGpu::drawIndexedUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -201,7 +201,7 @@ void GN::gfx::XenonGpu::drawUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -236,7 +236,7 @@ void GN::gfx::XenonGpu::drawLines(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     mLine->drawLines(
         options,

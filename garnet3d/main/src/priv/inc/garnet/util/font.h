@@ -185,8 +185,8 @@ namespace GN { namespace util
 
         //@{
     public:
-        BitmapFont() { clear(); }
-        virtual ~BitmapFont() { quit(); }
+        BitmapFont() { Clear(); }
+        virtual ~BitmapFont() { Quit(); }
         //@}
 
         // ********************************
@@ -198,10 +198,10 @@ namespace GN { namespace util
         /// \param sr           Pointer to sprite renderer
         /// \param ff           Pointer to font face object. Its reference count will be increased by one after this function call.
         /// \param maxchars     Maxinum different characters allowed.
-        bool init( gfx::SpriteRenderer * sr, FontFace * ff, size_t maxchars = 4096 );
-        void quit();
+        bool Init( gfx::SpriteRenderer * sr, FontFace * ff, size_t maxchars = 4096 );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mFontSlots = NULL;
             for( size_t i = 0; i < MAX_TEXTURES; ++i )

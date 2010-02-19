@@ -35,7 +35,7 @@ class TestFillrate : public BasicTestCase
             TexLockedResult tlr;
             res.texture->lock( tlr, 0, 0, 0, LOCK_DISCARD );
             memset( tlr.data, 0xFF, tlr.sliceBytes );
-            res.texture->unlock();
+            res.texture->Unlock();
             return true;
         }
 
@@ -120,7 +120,7 @@ public:
     {
         mGeometry.destroy();
         SafeDelete( mEffect );
-        for( UInt i = 0; i < 16; ++i ) mTextures[i].clear();
+        for( UInt i = 0; i < 16; ++i ) mTextures[i].Clear();
     }
 
     void onkey( input::KeyEvent key )

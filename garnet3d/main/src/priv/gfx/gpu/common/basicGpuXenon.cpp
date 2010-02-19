@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuXenon::init( const GpuOptions & o )
+bool GN::gfx::BasicGpuXenon::Init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -20,10 +20,10 @@ bool GN::gfx::BasicGpuXenon::init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuXenon, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return failure();
+    if( !dispInit(o) ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -31,14 +31,14 @@ bool GN::gfx::BasicGpuXenon::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuXenon::quit()
+void GN::gfx::BasicGpuXenon::Quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

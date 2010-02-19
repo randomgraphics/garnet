@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonIdxBuf( XenonGpu & r ) : XenonResource(r) { clear(); }
-        virtual ~XenonIdxBuf() { quit(); }
+        XenonIdxBuf( XenonGpu & r ) : XenonResource(r) { Clear(); }
+        virtual ~XenonIdxBuf() { Quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const IdxBufDesc & desc );
-        void quit();
+        bool Init( const IdxBufDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mIb = 0;
         }

@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.IdxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
+bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -21,7 +21,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "invalid buffer length!" );
-        return failure();
+        return Failure();
     }
 
     setDesc( desc );
@@ -30,7 +30,7 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
     mBuffer = (UInt8*)HeapAlloc( desc.numidx * mBytesPerIndex );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -38,13 +38,13 @@ bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::quit()
+void GN::gfx::OGLIdxBuf::Quit()
 {
     GN_GUARD;
 
     SafeHeapFree(mBuffer);
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -61,7 +61,7 @@ void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * da
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 

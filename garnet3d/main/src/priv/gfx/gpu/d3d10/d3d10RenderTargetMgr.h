@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10RTMgr( D3D10Gpu & r ) : mGpu(r) { clear(); }
-        virtual ~D3D10RTMgr() { quit(); }
+        D3D10RTMgr( D3D10Gpu & r ) : mGpu(r) { Clear(); }
+        virtual ~D3D10RTMgr() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mAutoColor0 = 0;
             mAutoDepthTexture = 0;

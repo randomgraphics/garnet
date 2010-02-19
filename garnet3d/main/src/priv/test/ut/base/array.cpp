@@ -10,7 +10,7 @@ class StackArrayTest : public CxxTest::TestSuite
         static int cctor;  ///< number of calls to copy constructor
         static int cop;    ///< number of calls to copy operator
 
-        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
+        static void Clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
 
         bool constructed;
         int  i;
@@ -79,7 +79,7 @@ public:
         TS_ASSERT_EQUALS( 1, a.front() );
         TS_ASSERT_EQUALS( 2, a.back() );
 
-        Element::clear();
+        Element::Clear();
         StackArray<Element,2> b;
         TS_ASSERT_EQUALS( 0, Element::count );
 
@@ -192,7 +192,7 @@ class DynaArrayTest : public CxxTest::TestSuite
         static int cctor;  ///< number of calls to copy constructor
         static int cop;    ///< number of calls to copy operator
 
-        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
+        static void Clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
 
         bool constructed;
 
@@ -267,7 +267,7 @@ public:
     {
         using namespace GN;
 
-        Element::clear();
+        Element::Clear();
 
         Element e[2];
         TS_ASSERT_EQUALS( 2, Element::ctor );
@@ -288,7 +288,7 @@ public:
     {
         using namespace GN;
 
-        Element::clear();
+        Element::Clear();
 
         DynaArray<Element> a( 2 );
 
@@ -314,7 +314,7 @@ public:
     {
         using namespace GN;
 
-        Element::clear();
+        Element::Clear();
 
         DynaArray<Element> a( 1 );
         DynaArray<Element> b( 2 );
@@ -479,7 +479,7 @@ public:
 
         using namespace GN;
 
-        Element::clear();
+        Element::Clear();
 
         DynaArray<Element> a( 3 );
         TS_ASSERT_EQUALS( 3, Element::count );
@@ -510,7 +510,7 @@ public:
     {
         // make sure erased item is destructed
         using namespace GN;
-        Element::clear();
+        Element::Clear();
 
         DynaArray<Element> a( 2 );
         TS_ASSERT_EQUALS( 2, Element::count );
@@ -528,7 +528,7 @@ public:
     void testReserve()
     {
         using namespace GN;
-        Element::clear();
+        Element::Clear();
 
         {
 

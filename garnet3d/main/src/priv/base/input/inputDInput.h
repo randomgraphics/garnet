@@ -27,8 +27,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        InputDInput()          { clear(); buildKeyMap(); }
-        virtual ~InputDInput() { quit(); }
+        InputDInput()          { Clear(); buildKeyMap(); }
+        virtual ~InputDInput() { Quit(); }
         //@}
 
         // ********************************
@@ -37,10 +37,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mLibrary = 0;
             mDInput = 0;

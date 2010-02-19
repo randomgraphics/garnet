@@ -30,7 +30,7 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        SInt32 incref() const  throw() { return atomInc32(&mRef); }
+        SInt32 incref() const  throw() { return AtomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
@@ -39,7 +39,7 @@ namespace GN
         {
             GN_ASSERT( mRef > 0 );
 
-            SInt32 ref = atomDec32( &mRef ) ;
+            SInt32 ref = AtomDec32( &mRef ) ;
 
             if( 0 == ref )
             {
@@ -53,7 +53,7 @@ namespace GN
         ///
         /// get current reference counter value
         ///
-        SInt32 getref() const throw() { return atomGet32(&mRef); }
+        SInt32 getref() const throw() { return AtomGet32(&mRef); }
 
         // ********************************
         //    weak reference management
@@ -272,14 +272,14 @@ namespace GN
         ///
         /// Clear to empty. Same as set(NULL).
         ///
-        void clear()
+        void Clear()
         {
             MUTEX m;
-            m.lock();
+            m.Lock();
 
             if( mPtr ) mPtr->decref(); mPtr = 0;
 
-            m.unlock();
+            m.Unlock();
         }
 
         ///
@@ -291,13 +291,13 @@ namespace GN
         void set( XPTR p )
         {
             MUTEX m;
-            m.lock();
+            m.Lock();
 
             if( p ) p->incref();
             if( mPtr ) mPtr->decref();
             mPtr = p;
 
-            m.unlock();
+            m.Unlock();
         }
 
         ///
@@ -310,12 +310,12 @@ namespace GN
             if( ptr == mPtr ) return;
 
             MUTEX m;
-            m.lock();
+            m.Lock();
 
             if( mPtr ) mPtr->decref();
             mPtr = ptr;
 
-            m.unlock();
+            m.Unlock();
         }
 
         ///
@@ -323,15 +323,15 @@ namespace GN
         ///
         /// this function will not modify pointer's refcount
         ///
-        XPTR detach() throw()
+        XPTR Detach() throw()
         {
             MUTEX m;
-            m.lock();
+            m.Lock();
 
             XPTR tmp = mPtr;
             mPtr = 0;
 
-            m.unlock();
+            m.Unlock();
 
             return tmp;
         }
@@ -374,11 +374,11 @@ namespace GN
             /// destructor
             virtual ~WeakRefBase()
             {
-                clear();
+                Clear();
             }
 
             /// clear the reference
-            void clear()
+            void Clear()
             {
                 if( mPtr )
                 {
@@ -417,14 +417,14 @@ namespace GN
         bool empty() const { return NULL == mPtr; }
 
         /// clear the reference
-        void clear() { return detail::WeakRefBase::clear(); }
+        void Clear() { return detail::WeakRefBase::Clear(); }
 
         /// set/reset the pointer
         void set( const X * ptr )
         {
             if( mPtr == ptr ) return;
 
-            clear();
+            Clear();
 
             if( ptr )
             {
@@ -486,7 +486,7 @@ namespace GN
     inline void RefCounter::NullifyWeakRef( void * ptr )
     {
         detail::WeakRefBase * ref = (detail::WeakRefBase *)ptr;
-        ref->clear();
+        ref->Clear();
     }
 }
 

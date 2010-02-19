@@ -23,8 +23,8 @@ namespace GN { namespace win
 
         //@{
     public:
-        WindowMsw()          { clear(); }
-        virtual ~WindowMsw() { quit(); }
+        WindowMsw()          { Clear(); }
+        virtual ~WindowMsw() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace win
 
         //@{
     public:
-        bool init( const WindowCreationParams & );
-        void quit();
+        bool Init( const WindowCreationParams & );
+        void Quit();
     private:
-        void clear() { mClassName.Clear(); mModuleInstance = 0; mWindow = 0; }
+        void Clear() { mClassName.Clear(); mModuleInstance = 0; mWindow = 0; }
         //@}
 
         // ********************************

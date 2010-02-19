@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10Buffer( D3D10Gpu & r ) : D3D10Resource(r) { clear(); }
-        virtual ~D3D10Buffer() { quit(); }
+        D3D10Buffer( D3D10Gpu & r ) : D3D10Resource(r) { Clear(); }
+        virtual ~D3D10Buffer() { Quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags );
-        void quit();
+        bool Init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mD3DBuffer = 0;
         }
@@ -84,8 +84,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10VtxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { clear(); }
-        virtual ~D3D10VtxBuf() { quit(); }
+        D3D10VtxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { Clear(); }
+        virtual ~D3D10VtxBuf() { Quit(); }
         //@}
 
         // ********************************
@@ -94,10 +94,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
+        bool Init( const VtxBufDesc & desc );
+        void Quit();
     private:
-        void clear() {}
+        void Clear() {}
         //@}
 
         // ********************************
@@ -137,8 +137,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10IdxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { clear(); }
-        virtual ~D3D10IdxBuf() { quit(); }
+        D3D10IdxBuf( D3D10Gpu & r ) : D3D10Buffer(r) { Clear(); }
+        virtual ~D3D10IdxBuf() { Quit(); }
         //@}
 
         // ********************************
@@ -147,10 +147,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const IdxBufDesc & desc );
-        void quit();
+        bool Init( const IdxBufDesc & desc );
+        void Quit();
     private:
-        void clear() {}
+        void Clear() {}
         //@}
 
         // ********************************

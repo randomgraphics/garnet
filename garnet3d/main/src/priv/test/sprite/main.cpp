@@ -8,11 +8,11 @@ using namespace GN::util;
 SpriteRenderer * sr = NULL;
 AutoRef<Texture> tex;
 
-bool init( Gpu & gpu )
+bool Init( Gpu & gpu )
 {
     // create sprite renderer
     sr = new SpriteRenderer( gpu );
-    if( !sr->init() ) return false;
+    if( !sr->Init() ) return false;
 
     // create texture
     tex.attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
@@ -22,10 +22,10 @@ bool init( Gpu & gpu )
     return true;
 }
 
-void quit( Gpu & )
+void Quit( Gpu & )
 {
     SafeDelete( sr );
-    tex.clear();
+    tex.Clear();
 }
 
 static float pos_x;
@@ -67,7 +67,7 @@ void draw( Gpu & )
 
 int run( Gpu & gpu )
 {
-    if( !init( gpu ) ) { quit( gpu ); return -1; }
+    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -96,7 +96,7 @@ int run( Gpu & gpu )
         fps.onFrame();
     }
 
-    quit( gpu );
+    Quit( gpu );
 
     return 0;
 }

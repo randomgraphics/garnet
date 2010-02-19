@@ -92,7 +92,7 @@ bool GN::gfx::OGLGpu::contextInit()
 {
     // create render target manager
     mRTMgr = OGLRTMgrFBO::usable() ? (OGLBasicRTMgr*)new OGLRTMgrFBO(*this) : new OGLRTMgrCopyFrame(*this);
-    if( !mRTMgr->init() ) return false;
+    if( !mRTMgr->Init() ) return false;
 
     // bind default context to device
     rebindContext();
@@ -106,7 +106,7 @@ bool GN::gfx::OGLGpu::contextInit()
 void GN::gfx::OGLGpu::contextQuit()
 {
     // reset context
-    mContext.clear();
+    mContext.Clear();
 
     // delete all vertex formats
     for( std::map<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
@@ -179,11 +179,11 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
     if( i != mVertexFormats.end() ) return i->second;
 
     AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
-    if( !oglvf->init( vf, program ) ) return NULL;
+    if( !oglvf->Init( vf, program ) ) return NULL;
 
     mVertexFormats[key] = oglvf;
 
-    return oglvf.detach();
+    return oglvf.Detach();
 }
 
 //

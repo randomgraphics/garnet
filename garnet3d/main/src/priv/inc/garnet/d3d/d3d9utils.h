@@ -488,8 +488,8 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
     private:
 
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
 
         bool createDevice();
         bool restoreDevice();

@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadVtxBuf( MultiThreadGpu & r ) : mGpu(r) { clear(); }
-        virtual ~MultiThreadVtxBuf() { quit(); }
+        MultiThreadVtxBuf( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
+        virtual ~MultiThreadVtxBuf() { Quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( VtxBuf * );
-        void quit();
+        bool Init( VtxBuf * );
+        void Quit();
     private:
-        void clear() { mVtxBuf = NULL; }
+        void Clear() { mVtxBuf = NULL; }
         //@}
 
         // ********************************

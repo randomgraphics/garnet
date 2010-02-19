@@ -110,7 +110,7 @@ bool GN::gfx::D3D10Gpu::contextInit()
 
     // create render target manager
     mRTMgr = new D3D10RTMgr( *this );
-    if( !mRTMgr->init() ) return false;
+    if( !mRTMgr->Init() ) return false;
 
     // bind default context
     rebindContext();
@@ -133,13 +133,13 @@ void GN::gfx::D3D10Gpu::contextQuit()
         mDevice->ClearState();
     }
 
-    mContext.clear();
+    mContext.Clear();
 
     SafeDelete( mRTMgr );
 
     SafeDelete( mSOMgr );
 
-    mDefaultSampler.clear();
+    mDefaultSampler.Clear();
 
     mVertexLayouts.clear();
 
@@ -410,7 +410,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
 
             if( NULL == layout->il )
             {
-                if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
+                if( !layout->Init( *mDevice, newContext.vtxfmt ) ) return false;
             }
 
             mDevice->IASetInputLayout( layout->il );
@@ -433,7 +433,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D10VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D10VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }

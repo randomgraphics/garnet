@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------------------
 GN::input::KeyEvent GN::input::BasicInput::popLastKeyEvent()
 {
-    mKeyEventQueueMutex.lock();
+    mKeyEventQueueMutex.Lock();
 
     KeyEvent k;
 
@@ -25,7 +25,7 @@ GN::input::KeyEvent GN::input::BasicInput::popLastKeyEvent()
         mKeyEventQueue.pop();
     }
 
-    mKeyEventQueueMutex.unlock();
+    mKeyEventQueueMutex.Unlock();
 
     return k;
 }
@@ -61,13 +61,13 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     mKeyboardStatus[code] = k.status;
 
     //update last key event
-    mKeyEventQueueMutex.lock();
+    mKeyEventQueueMutex.Lock();
     if( mKeyEventQueue.size() >= 32 ) // buffer 32 key events
     {
         mKeyEventQueue.pop();
     }
     mKeyEventQueue.push( k );
-    mKeyEventQueueMutex.unlock();
+    mKeyEventQueueMutex.Unlock();
 
     // ´¥·¢°´¼üÐÅºÅ
     sigKeyPress( k );

@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
+bool GN::gfx::D3D11Buffer::Init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -22,7 +22,7 @@ bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
     if( 0 == bytes )
     {
         GN_ERROR(sLogger)( "Buffer length can not be zero!" );
-        return failure();
+        return Failure();
     }
 
     ID3D11Device & dev = getDeviceRef();
@@ -35,14 +35,14 @@ bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
     d3ddesc.MiscFlags      = 0;
 
     // create d3d ibuffer
-    GN_DX_CHECK_RETURN( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), Failure() );
 
     // store buffer parameters
     mBytes        = bytes;
     mFastCpuWrite = fastCpuWrite;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -50,13 +50,13 @@ bool GN::gfx::D3D11Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::quit()
+void GN::gfx::D3D11Buffer::Quit()
 {
     GN_GUARD;
 
     SafeRelease( mD3DBuffer );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

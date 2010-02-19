@@ -202,7 +202,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::quit()
+void GN::gfx::RenderWindowX11::Quit()
 {
     GN_GUARD;
 

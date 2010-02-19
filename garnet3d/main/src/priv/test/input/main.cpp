@@ -15,8 +15,8 @@ class InputTest
 
     bool createWindow()
     {
-        mWin.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
-        if( mWin.empty() ) return false;
+        mWin.Attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        if( mWin.Empty() ) return false;
         mWin->show();
         return true;
     }
@@ -29,9 +29,9 @@ class InputTest
             return false;
 
         // connect to input signals
-        gInput.sigKeyPress.connect( this, &InputTest::onKeyPress );
-        gInput.sigCharPress.connect( this, &InputTest::onCharPress );
-        gInput.sigAxisMove.connect( this, &InputTest::onAxisMove );
+        gInput.sigKeyPress.Connect( this, &InputTest::onKeyPress );
+        gInput.sigCharPress.Connect( this, &InputTest::onCharPress );
+        gInput.sigAxisMove.Connect( this, &InputTest::onAxisMove );
 
         return true;
     }
@@ -103,12 +103,12 @@ public:
     ///
     /// Destructor
     ///
-    ~InputTest() { quit(); }
+    ~InputTest() { Quit(); }
 
     ///
     /// Initialize test application
     ///
-    bool init( const char * api )
+    bool Init( const char * api )
     {
         if( !createWindow() || !createInput(api) ) return false;
 
@@ -121,10 +121,10 @@ public:
     ///
     /// Quit test application
     ///
-    void quit()
+    void Quit()
     {
         GN::input::shutdownInputSystem();
-        mWin.clear();
+        mWin.Clear();
     }
 
     ///
@@ -180,6 +180,6 @@ int main( int argc, const char * argv[] )
     }
 
     InputTest app;
-    if( !app.init( module ) ) return -1;
+    if( !app.Init( module ) ) return -1;
     return app.run();
 }

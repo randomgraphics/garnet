@@ -61,8 +61,8 @@ void GN::util::ArcBall::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigKeyPress.connect( this, &ArcBall::onKeyPress );
-        gInput.sigAxisMove.connect( this, &ArcBall::onAxisMove );
+        gInput.sigKeyPress.Connect( this, &ArcBall::onKeyPress );
+        gInput.sigAxisMove.Connect( this, &ArcBall::onAxisMove );
     }
     else
     {
@@ -78,8 +78,8 @@ void GN::util::ArcBall::disconnectFromInput()
 {
     if( gInputPtr )
     {
-        gInput.sigKeyPress.disconnect( this );
-        gInput.sigAxisMove.disconnect( this );
+        gInput.sigKeyPress.Disconnect( this );
+        gInput.sigAxisMove.Disconnect( this );
     }
 }
 

@@ -54,7 +54,7 @@ namespace CEGUI
         ///
         /// dispose the content
         ///
-        void dispose() { mGarnetTexture.clear(); }
+        void dispose() { mGarnetTexture.Clear(); }
 
         ///
         /// Get internal texture handle

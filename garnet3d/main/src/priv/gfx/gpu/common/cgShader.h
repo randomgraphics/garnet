@@ -70,13 +70,13 @@ namespace GN { namespace gfx
         ///
         ~CgContextWrapper()
         {
-            quit();
+            Quit();
         }
 
         ///
         /// initiate the context
         ///
-        bool init()
+        bool Init()
         {
             GN_ASSERT( 0 == mContext );
 
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         ///
         /// close the Cg context
         ///
-        void quit()
+        void Quit()
         {
             if( mContext )
             {
@@ -135,8 +135,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        CgShader()          { clear(); }
-        virtual ~CgShader() { quit(); }
+        CgShader()          { Clear(); }
+        virtual ~CgShader() { Quit(); }
         //@}
 
         // ********************************
@@ -145,15 +145,15 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init(
+        bool Init(
             CGcontext context,
             CGprofile profile,
             const StrA & code,
             const StrA & entry,
             const char ** args = NULL );
-        void quit();
+        void Quit();
     private:
-        void clear() { mProgram = 0; }
+        void Clear() { mProgram = 0; }
         //@}
 
         // ********************************

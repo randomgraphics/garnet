@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.BasicInputMsw");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::init()
+bool GN::input::BasicInputMsw::Init()
 {
     GN_GUARD;
 
@@ -20,15 +20,15 @@ bool GN::input::BasicInputMsw::init()
     GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
 
     // setup xinput function pointers
-    if( !setupXInputFunctionPointers() ) return failure();
+    if( !setupXInputFunctionPointers() ) return Failure();
 
     // initialize internal mouse position
     POINT pos;
-    GN_MSW_CHECK_RETURN( ::GetCursorPos( &pos ), failure() );
+    GN_MSW_CHECK_RETURN( ::GetCursorPos( &pos ), Failure() );
     updateMousePosition( pos.x, pos.y, false );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -36,7 +36,7 @@ bool GN::input::BasicInputMsw::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::quit()
+void GN::input::BasicInputMsw::Quit()
 {
     GN_GUARD;
 
@@ -46,7 +46,7 @@ void GN::input::BasicInputMsw::quit()
     // release xinput library
     if( mXInputLibrary ) ::FreeLibrary( mXInputLibrary ), mXInputLibrary = 0;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -400,7 +400,7 @@ GN::input::BasicInputMsw::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
+    BasicInputMsw * inst = SafeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const MSG * p = (const MSG*)lParam;
@@ -422,7 +422,7 @@ GN::input::BasicInputMsw::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
+    BasicInputMsw * inst = SafeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;

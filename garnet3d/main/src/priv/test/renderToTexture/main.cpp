@@ -38,13 +38,13 @@ public:
 
     ~RenderToTexture()
     {
-        quit();
+        Quit();
     }
 
-    bool init()
+    bool Init()
     {
         // create sprite renderer
-        if( !sr.init() ) return false;
+        if( !sr.Init() ) return false;
 
         Gpu & gpu = db.gpu();
 
@@ -94,7 +94,7 @@ public:
         gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize the model
-        if( !model.init() ) return false;
+        if( !model.Init() ) return false;
         model.modelResource().setMeshResource( boxmesh );
         model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
         model.setAlbedoTexture( tex1 );
@@ -102,15 +102,15 @@ public:
         return true;
     }
 
-    void quit()
+    void Quit()
     {
-        model.quit();
-        c0.clear();
-        ds.clear();
-        tex0.clear();
-        tex1.clear();
-        context.clear();
-        sr.quit();
+        model.Quit();
+        c0.Clear();
+        ds.Clear();
+        tex0.Clear();
+        tex1.Clear();
+        context.Clear();
+        sr.Quit();
     }
 
     void drawBox( float speed )
@@ -138,7 +138,7 @@ public:
     void drawToDepthTexture()
     {
         Gpu & gpu = db.gpu();
-        context.colortargets.clear();
+        context.colortargets.Clear();
         context.depthstencil.texture = ds;
         gpu.bindContext( context );
         gpu.clearScreen();
@@ -161,8 +161,8 @@ public:
     void drawToBackBuffer( Texture * tex, float x, float y )
     {
         Gpu & gpu = db.gpu();
-        context.colortargets.clear();
-        context.depthstencil.clear();
+        context.colortargets.Clear();
+        context.depthstencil.Clear();
         gpu.bindContext( context );
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }
@@ -187,7 +187,7 @@ int run( Gpu & gpu )
 
     RenderToTexture scene( db );
 
-    if( !scene.init() ) return -1;
+    if( !scene.Init() ) return -1;
 
     bool gogogo = true;
 

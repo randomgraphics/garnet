@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( MeshResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { clear(); }
+        virtual ~Impl() { Clear(); }
         //@}
 
         // ********************************
@@ -80,7 +80,7 @@ namespace GN { namespace gfx
         const char *          meshName() const { return mOwner.database().getResourceName( &mOwner ); }
 
         bool create( const MeshResourceDesc & desc );
-        void clear();
+        void Clear();
     };
 
     ///

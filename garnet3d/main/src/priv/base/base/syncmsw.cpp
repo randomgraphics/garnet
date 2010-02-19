@@ -48,7 +48,7 @@ GN::Mutex::~Mutex()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::Mutex::trylock()
+bool GN::Mutex::TryLock()
 {
     return !!TryEnterCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -56,7 +56,7 @@ bool GN::Mutex::trylock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::lock()
+void GN::Mutex::Lock()
 {
     EnterCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -64,7 +64,7 @@ void GN::Mutex::lock()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mutex::unlock()
+void GN::Mutex::Unlock()
 {
     LeaveCriticalSection( (CRITICAL_SECTION*)mInternal );
 }
@@ -86,8 +86,8 @@ class SyncEventMsw : public SyncEvent, public StdClass
 
     //@{
 public:
-    SyncEventMsw()          { clear(); }
-    virtual ~SyncEventMsw() { quit(); }
+    SyncEventMsw()          { Clear(); }
+    virtual ~SyncEventMsw() { Quit(); }
     //@}
 
     // ********************************
@@ -96,7 +96,7 @@ public:
 
     //@{
 public:
-    bool init( bool initialSignaled, bool autoreset, const char * name )
+    bool Init( bool initialSignaled, bool autoreset, const char * name )
     {
         GN_GUARD;
 
@@ -105,26 +105,26 @@ public:
 
         GN_MSW_CHECK_RETURN(
             mHandle = CreateEventA( 0, !autoreset, initialSignaled, name ),
-            failure() );
+            Failure() );
 
         // success
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
-    void quit()
+    void Quit()
     {
         GN_GUARD;
 
         if( mHandle ) CloseHandle( mHandle );
 
-        // standard quit procedure
+        // standard Quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 private:
-    void clear() { mHandle = 0; }
+    void Clear() { mHandle = 0; }
     //@}
 
     // ********************************
@@ -132,19 +132,19 @@ private:
     // ********************************
 public:
 
-    virtual void signal()
+    virtual void Signal()
     {
         GN_ASSERT( mHandle );
         GN_MSW_CHECK( SetEvent( mHandle ) );
     }
 
-    virtual void unsignal()
+    virtual void Unsignal()
     {
         GN_ASSERT( mHandle );
         GN_MSW_CHECK( ResetEvent( mHandle ) );
     }
 
-    virtual bool wait( float seconds )
+    virtual bool Wait( float seconds )
     {
         return WAIT_OBJECT_0 == WaitForSingleObject( mHandle, sec2usec( seconds ) );
     }
@@ -179,8 +179,8 @@ class SemaphoreMsw : public Semaphore, public StdClass
 
     //@{
 public:
-    SemaphoreMsw()          { clear(); }
-    virtual ~SemaphoreMsw() { quit(); }
+    SemaphoreMsw()          { Clear(); }
+    virtual ~SemaphoreMsw() { Quit(); }
     //@}
 
     // ********************************
@@ -189,7 +189,7 @@ public:
 
     //@{
 public:
-    bool init( size_t maxcount, size_t initialcount, const char * name )
+    bool Init( size_t maxcount, size_t initialcount, const char * name )
     {
         GN_GUARD;
 
@@ -198,26 +198,26 @@ public:
 
         GN_MSW_CHECK_RETURN(
             mHandle = CreateSemaphoreA( 0, (LONG)initialcount, (LONG)maxcount, name ),
-            failure() );
+            Failure() );
 
         // success
-        return success();
+        return Success();
 
         GN_UNGUARD;
     }
-    void quit()
+    void Quit()
     {
         GN_GUARD;
 
         if( mHandle ) CloseHandle( mHandle );
 
-        // standard quit procedure
+        // standard Quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 private:
-    void clear() { mHandle = 0; }
+    void Clear() { mHandle = 0; }
     //@}
 
     // ********************************
@@ -225,12 +225,12 @@ private:
     // ********************************
 public:
 
-    virtual bool wait( float seconds )
+    virtual bool Wait( float seconds )
     {
         return WAIT_OBJECT_0 == WaitForSingleObject( mHandle, sec2usec( seconds ) );
     }
 
-    virtual void wake( size_t count )
+    virtual void Wake( size_t count )
     {
         GN_ASSERT( mHandle );
         GN_MSW_CHECK( ReleaseSemaphore( mHandle, (LONG)count, 0 ) );
@@ -256,7 +256,7 @@ private:
 //
 //
 // -----------------------------------------------------------------------------
-GN::SyncEvent * GN::createSyncEvent(
+GN::SyncEvent * GN::NewSyncEvent(
     bool initialSignaled,
     bool autoreset,
     const char * name )
@@ -265,9 +265,9 @@ GN::SyncEvent * GN::createSyncEvent(
 
     AutoObjPtr<SyncEventMsw> s( new SyncEventMsw );
 
-    if( !s->init( initialSignaled, autoreset, name ) ) return 0;
+    if( !s->Init( initialSignaled, autoreset, name ) ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }
@@ -275,7 +275,7 @@ GN::SyncEvent * GN::createSyncEvent(
 //
 //
 // -----------------------------------------------------------------------------
-GN::Semaphore * GN::createSemaphore(
+GN::Semaphore * GN::NewSemaphore(
     size_t maxcount,
     size_t initialcount,
     const char * name )
@@ -284,9 +284,9 @@ GN::Semaphore * GN::createSemaphore(
 
     AutoObjPtr<SemaphoreMsw> s( new SemaphoreMsw );
 
-    if( !s->init( maxcount, initialcount, name ) ) return 0;
+    if( !s->Init( maxcount, initialcount, name ) ) return 0;
 
-    return s.detach();
+    return s.Detach();
 
     GN_UNGUARD;
 }

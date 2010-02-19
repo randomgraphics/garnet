@@ -40,8 +40,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufNormal( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
-        virtual ~OGLVtxBufNormal() { quit(); }
+        OGLVtxBufNormal( OGLGpu & r ) : OGLBasicVtxBuf(r) { Clear(); }
+        virtual ~OGLVtxBufNormal() { Quit(); }
         //@}
 
         // ********************************
@@ -50,10 +50,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
+        bool Init( const VtxBufDesc & desc );
+        void Quit();
     private:
-        void clear() { mBuffer = 0; }
+        void Clear() { mBuffer = 0; }
         //@}
 
         // ********************************
@@ -99,8 +99,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBufVBO( OGLGpu & r ) : OGLBasicVtxBuf(r) { clear(); }
-        virtual ~OGLVtxBufVBO() { quit(); }
+        OGLVtxBufVBO( OGLGpu & r ) : OGLBasicVtxBuf(r) { Clear(); }
+        virtual ~OGLVtxBufVBO() { Quit(); }
         //@}
 
         // ********************************
@@ -109,10 +109,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const VtxBufDesc & desc );
-        void quit();
+        bool Init( const VtxBufDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mOGLVertexBufferObject = 0;
             mOGLUsage = 0;

@@ -42,7 +42,7 @@ namespace GN { namespace gfx
     public:
 
         /// initialize from shader description
-        bool init( const GpuProgramDesc & desc )
+        bool Init( const GpuProgramDesc & desc )
         {
             // calculate buffer size
             size_t headerLen  = sizeof(desc);
@@ -88,7 +88,7 @@ namespace GN { namespace gfx
         }
 
         /// initialize from raw data buffer
-        bool init( const void * data, size_t length )
+        bool Init( const void * data, size_t length )
         {
             // copy input buffer
             mBuffer.resize( length );

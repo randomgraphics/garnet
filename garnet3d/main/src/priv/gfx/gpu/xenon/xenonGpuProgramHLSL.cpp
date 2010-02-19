@@ -62,7 +62,7 @@ sSetSampler( IDirect3DDevice9 & dev, UInt32 stage, const SamplerDesc & s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
+bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -84,7 +84,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
             0, // profile
             &mVsConsts );
 
-        if( NULL == mVs ) return failure();
+        if( NULL == mVs ) return Failure();
 
         enumerateConsts( mVsConsts, true );
     }
@@ -99,7 +99,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
             desc.ps.entry,
             0,
             &mPsConsts );
-        if( NULL == mPs ) return failure();
+        if( NULL == mPs ) return Failure();
 
         enumerateConsts( mPsConsts, false );
     }
@@ -108,7 +108,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
     buildUnformNameAndSizeArray();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -116,7 +116,7 @@ bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpuProgramHLSL::quit()
+void GN::gfx::XenonGpuProgramHLSL::Quit()
 {
     GN_GUARD;
 
@@ -125,9 +125,9 @@ void GN::gfx::XenonGpuProgramHLSL::quit()
     SafeRelease( mPs );
     SafeRelease( mPsConsts );
 
-    mUniforms.clear();
+    mUniforms.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -256,7 +256,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         }
     }
 
-    // clear unused texture stages
+    // Clear unused texture stages
     for( UINT i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
     {
         if( !usedStages[i] )

@@ -27,7 +27,7 @@ namespace GN { namespace input
         //@{
     public:
         InputX11();
-        virtual ~InputX11() { quit(); }
+        virtual ~InputX11() { Quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mDisplay = 0;
             mWindow = 0;

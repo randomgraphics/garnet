@@ -27,8 +27,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        SpriteRenderer( Gpu & r ) : mGpu(r) { clear(); }
-        virtual ~SpriteRenderer() { quit(); }
+        SpriteRenderer( Gpu & r ) : mGpu(r) { Clear(); }
+        virtual ~SpriteRenderer() { Quit(); }
         //@}
 
         // ********************************
@@ -37,10 +37,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear() { mSprites = NULL; }
+        void Clear() { mSprites = NULL; }
         //@}
 
         // ********************************

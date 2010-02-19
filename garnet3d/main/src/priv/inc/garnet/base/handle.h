@@ -67,18 +67,18 @@ namespace GN
         ///
         /// dtor
         ///
-        ~HandleManager() { clear(); }
+        ~HandleManager() { Clear(); }
 
         ///
         /// clear all handles
         ///
-        void clear()
+        void Clear()
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
                 GN_ASSERT( mItems[i] );
                 if( mItems[i]->occupied ) mItems[i]->dtor();
-                mPool.dealloc( mItems[i] );
+                mPool.Dealloc( mItems[i] );
             }
             mItems.clear();
             mFreeList.clear();
@@ -147,7 +147,7 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = (Item*)mPool.alloc();
+                Item * newItem = (Item*)mPool.Alloc();
                 if( 0 == newItem )
                 {
                     GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
@@ -175,7 +175,7 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                Item * newItem = (Item*)mPool.alloc();
+                Item * newItem = (Item*)mPool.Alloc();
                 if( 0 == newItem )
                 {
                     GN_ERROR(GetLogger("GN.base.HandleManager"))( "out of memory" );
@@ -300,18 +300,18 @@ namespace GN
         ///
         /// dtor
         ///
-        ~NamedHandleManager() { clear(); }
+        ~NamedHandleManager() { Clear(); }
 
         ///
         /// clear all handles
         ///
-        void clear()
+        void Clear()
         {
             for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
             {
-                mPool.deconstructAndFree( mItems[i] );
+                mPool.DeconstructAndFree( mItems[i] );
             }
-            mItems.clear();
+            mItems.Clear();
             mNames.clear();
         }
 
@@ -360,7 +360,7 @@ namespace GN
             }
 
             // create new item
-            NamedItem * p = mPool.allocUnconstructed();
+            NamedItem * p = mPool.AllocUnconstructed();
             if( 0 == p ) return 0;
 
             H handle = mItems.newItem();
@@ -391,7 +391,7 @@ namespace GN
                 return 0;
             }
 
-            NamedItem * p = mPool.allocUnconstructed();
+            NamedItem * p = mPool.AllocUnconstructed();
             if( 0 == p ) return 0;
 
             H handle = mItems.newItem();
@@ -421,7 +421,7 @@ namespace GN
 
             mItems.remove( item->handle );
 
-            mPool.deconstructAndFree( item );
+            mPool.DeconstructAndFree( item );
         }
 
         void remove( const StrA & name )
@@ -445,7 +445,7 @@ namespace GN
 
             mItems.remove( handle );
 
-            mPool.deconstructAndFree( item );
+            mPool.DeconstructAndFree( item );
         }
 
         bool validHandle( H h ) const

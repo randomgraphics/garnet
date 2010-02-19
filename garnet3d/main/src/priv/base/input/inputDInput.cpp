@@ -19,7 +19,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.DI");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputDInput::init()
+bool GN::input::InputDInput::Init()
 {
     GN_GUARD;
 
@@ -27,10 +27,10 @@ bool GN::input::InputDInput::init()
     GN_STDCLASS_INIT( GN::input::InputDInput, () );
 
     // init dinput stuff
-    if( !diInit() ) return failure();
+    if( !diInit() ) return Failure();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -38,14 +38,14 @@ bool GN::input::InputDInput::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputDInput::quit()
+void GN::input::InputDInput::Quit()
 {
     GN_GUARD;
 
     unacquire();
     diQuit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -154,7 +154,7 @@ bool GN::input::InputDInput::acquire()
 {
     GN_GUARD;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     mAcquired = false;
 
@@ -285,7 +285,7 @@ void GN::input::InputDInput::pollMouse()
 // ----------------------------------------------------------------------------
 void GN::input::InputDInput::buildKeyMap()
 {
-    // clear all field to KeyCode::NONE
+    // Clear all field to KeyCode::NONE
     memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map

@@ -47,7 +47,7 @@ static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadGpu::init(
+bool GN::gfx::MultiThreadGpu::Init(
     const GpuOptions            & ro,
     const MultiThreadGpuOptions & mo )
 {
@@ -57,7 +57,7 @@ bool GN::gfx::MultiThreadGpu::init(
     GN_STDCLASS_INIT( GN::gfx::MultiThreadGpu, () );
 
     // initialize ring buffer
-    if( !mRingBuffer.init( mo.commandBufferSize ) ) return failure();
+    if( !mRingBuffer.Init( mo.commandBufferSize ) ) return Failure();
 
     // initialize local variables
     mGpuCreationStatus = 2;
@@ -67,12 +67,12 @@ bool GN::gfx::MultiThreadGpu::init(
 
     // create thread
     ThreadProcedure proc = makeDelegate( this, &GN::gfx::MultiThreadGpu::threadProc );
-    mThread = createThread( proc, (void*)&ro, TP_NORMAL );
-    if( NULL == mThread ) return failure();
+    mThread = NewThread( proc, (void*)&ro, TP_NORMAL );
+    if( NULL == mThread ) return Failure();
 
     // wait for the GPU creation
-    while( 2 == mGpuCreationStatus ) sleepCurrentThread(0);
-    if( 1 != mGpuCreationStatus ) return failure();
+    while( 2 == mGpuCreationStatus ) SleepCurrentThread(0);
+    if( 1 != mGpuCreationStatus ) return Failure();
 
     // initialize front end variables
     mMultithreadOptions = mo;
@@ -85,7 +85,7 @@ bool GN::gfx::MultiThreadGpu::init(
     waitForIdle();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -93,29 +93,29 @@ bool GN::gfx::MultiThreadGpu::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::quit()
+void GN::gfx::MultiThreadGpu::Quit()
 {
     GN_GUARD;
 
-    // clear context
-    mGpuContext.clear();
+    // Clear context
+    mGpuContext.Clear();
 
     if( mThread )
     {
-        // When ring buffer receives quit message, it will
+        // When ring buffer receives Quit message, it will
         // ignore all existing messages in it, and return
-        // immediatly. So before posting quit message,
+        // immediatly. So before posting Quit message,
         // waitForIdle() must be called.
         waitForIdle();
         mRingBuffer.postQuitMessage();
-        mThread->waitForTermination();
+        mThread->WaitForTermination();
         delete mThread;
         mThread = NULL;
     }
 
-    mRingBuffer.quit();
+    mRingBuffer.Quit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -132,7 +132,7 @@ void GN::gfx::MultiThreadGpu::waitForFence( UInt32 fence )
 {
     while( (SInt32)(fence - mBackEndFence) > 0 )
     {
-        sleepCurrentThread( 0 );
+        SleepCurrentThread( 0 );
     }
 }
 
@@ -187,7 +187,7 @@ UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     {
         // get command header
         const void * headerptr = (const CommandHeader*)mRingBuffer.beginConsume( sizeof(CommandHeader) );
-        if( NULL == headerptr ) break; // receives quit message
+        if( NULL == headerptr ) break; // receives Quit message
         CommandHeader header;
         memcpy( &header, headerptr, sizeof(header) );
         mRingBuffer.endConsume();
@@ -197,7 +197,7 @@ UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
 
         // get command parameter
         void * param = mRingBuffer.beginConsume( header.size );
-        if( NULL == param ) break; // receives quit message
+        if( NULL == param ) break; // receives Quit message
 
         // execute the command
         g_gpuCommandHandlers[header.cid]( *mGpu, param, header.size );
@@ -266,9 +266,9 @@ GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpu
     if( NULL == gp ) return NULL;
 
     AutoRef<MultiThreadGpuProgram> mtgp( new MultiThreadGpuProgram(*this) );
-    if( !mtgp->init( gp ) ) return NULL;
+    if( !mtgp->Init( gp ) ) return NULL;
 
-    return mtgp.detach();
+    return mtgp.Detach();
 }
 
 //
@@ -282,9 +282,9 @@ Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
     if( NULL == uni ) return NULL;
 
     AutoRef<MultiThreadUniform> mu( new MultiThreadUniform(*this) );
-    if( !mu->init( uni ) ) return NULL;
+    if( !mu->Init( uni ) ) return NULL;
 
-    return mu.detach();
+    return mu.Detach();
 }
 
 //
@@ -298,9 +298,9 @@ Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
     if( NULL == tex ) return NULL;
 
     AutoRef<MultiThreadTexture> mtt( new MultiThreadTexture(*this) );
-    if( !mtt->init( tex ) ) return NULL;
+    if( !mtt->Init( tex ) ) return NULL;
 
-    return mtt.detach();
+    return mtt.Detach();
 }
 
 //
@@ -314,9 +314,9 @@ VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
     if( NULL == vb ) return NULL;
 
     AutoRef<MultiThreadVtxBuf> mtvb( new MultiThreadVtxBuf(*this) );
-    if( !mtvb->init( vb ) ) return NULL;
+    if( !mtvb->Init( vb ) ) return NULL;
 
-    return mtvb.detach();
+    return mtvb.Detach();
 }
 
 //
@@ -330,9 +330,9 @@ IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
     if( NULL == ib ) return NULL;
 
     AutoRef<MultiThreadIdxBuf> mtib( new MultiThreadIdxBuf(*this) );
-    if( !mtib->init( ib ) ) return NULL;
+    if( !mtib->Init( ib ) ) return NULL;
 
-    return mtib.detach();
+    return mtib.Detach();
 }
 
 

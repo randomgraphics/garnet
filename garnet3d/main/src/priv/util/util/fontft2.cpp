@@ -53,8 +53,8 @@ class FontFaceFt2 : public FontFace, public StdClass
 
     //@{
 public:
-    FontFaceFt2()          { clear(); sInitLib(); }
-    virtual ~FontFaceFt2() { quit();  sQuitLib(); }
+    FontFaceFt2()          { Clear(); sInitLib(); }
+    virtual ~FontFaceFt2() { Quit();  sQuitLib(); }
     //@}
 
     // ********************************
@@ -63,10 +63,10 @@ public:
 
     //@{
 public:
-    bool init( const FontFaceCreationDesc & desc );
-    void quit();
+    bool Init( const FontFaceCreationDesc & desc );
+    void Quit();
 private:
-    void clear() { mFace = 0; }
+    void Clear() { mFace = 0; }
     //@}
 
     // ********************************
@@ -151,7 +151,7 @@ Ft2Library * FontFaceFt2::sLib = 0;
 //
 //
 // -----------------------------------------------------------------------------
-bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
+bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
@@ -163,12 +163,12 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
     if( cd.quality < 0 || cd.quality >= NUM_FONT_QUALITIES )
     {
         GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", cd.quality );
-        return failure();
+        return Failure();
     }
 
     // open font file
     File * fp = fs::openFile( cd.fontname, "rb" );
-    if( !fp ) return failure();
+    if( !fp ) return Failure();
 
     // initialize FT2 stream
     mStream.base               = 0;
@@ -192,7 +192,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
     if( err )
     {
         GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.GetRawPtr() );
-        return failure();
+        return Failure();
     }
 
     // set font size
@@ -200,7 +200,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
     if( err )
     {
         GN_ERROR(sLogger)( "FT_Set_Pixel_Sizes() failed!" );
-        return failure();
+        return Failure();
     }
 
     double scalex  = (double)mFace->size->metrics.x_scale / 65536.0 / 64.0;
@@ -217,7 +217,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
     mDesc.linegap  = (float)(linegap * scaley);
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -225,7 +225,7 @@ bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
 //
 //
 // -----------------------------------------------------------------------------
-void FontFaceFt2::quit()
+void FontFaceFt2::Quit()
 {
     GN_GUARD;
 
@@ -235,7 +235,7 @@ void FontFaceFt2::quit()
         mFace = 0;
     }
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -360,10 +360,10 @@ GN::util::createFontFace( const FontFaceCreationDesc & cd )
 
     AutoRef<FontFaceFt2> font( new FontFaceFt2 );
 
-    if( !font->init( cd ) ) return 0;
+    if( !font->Init( cd ) ) return 0;
 
     // success
-    return font.detach();
+    return font.Detach();
 
     GN_UNGUARD;
 }

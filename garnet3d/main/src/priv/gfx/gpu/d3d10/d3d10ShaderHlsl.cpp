@@ -352,7 +352,7 @@ sInitShader(
 
     // compile shader
     AutoComPtr<ID3D10Blob> binary;
-    shader.attach( templ.compileAndCreateShader(
+    shader.Attach( templ.compileAndCreateShader(
         dev,
         code.source,
         0,
@@ -395,7 +395,7 @@ sInitShader(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10VertexShaderHLSL::init(
+bool GN::gfx::D3D10VertexShaderHLSL::Init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,
@@ -411,7 +411,7 @@ bool GN::gfx::D3D10VertexShaderHLSL::init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GeometryShaderHLSL::init(
+bool GN::gfx::D3D10GeometryShaderHLSL::Init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,
@@ -427,7 +427,7 @@ bool GN::gfx::D3D10GeometryShaderHLSL::init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10PixelShaderHLSL::init(
+bool GN::gfx::D3D10PixelShaderHLSL::Init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,

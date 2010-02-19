@@ -48,12 +48,12 @@ bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
 // -----------------------------------------------------------------------------
 bool GN::gfx::MeshResource::Impl::reset( const MeshResourceDesc * desc )
 {
-    clear();
+    Clear();
 
     bool ok;
     if( desc && !create( *desc ) )
     {
-        clear();
+        Clear();
         ok = false;
     }
     else
@@ -210,14 +210,14 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MeshResource::Impl::clear()
+void GN::gfx::MeshResource::Impl::Clear()
 {
     for( size_t i = 0; i < GN_ARRAY_COUNT(mVtxBufs); ++i )
     {
-        mVtxBufs[i].gpudata.clear();
+        mVtxBufs[i].gpudata.Clear();
     }
 
-    mIdxBuf.gpudata.clear();
+    mIdxBuf.gpudata.Clear();
 }
 
 // *****************************************************************************

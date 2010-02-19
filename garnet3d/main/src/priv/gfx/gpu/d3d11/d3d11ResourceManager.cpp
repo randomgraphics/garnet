@@ -64,10 +64,10 @@ GN::Blob *
 GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->init( gpd ) ) return NULL;
+    if( !s->Init( gpd ) ) return NULL;
 
     // success
-    return s.detach();
+    return s.Detach();
 }
 
 //
@@ -77,7 +77,7 @@ GN::gfx::GpuProgram *
 GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->init( data, length ) ) return NULL;
+    if( !s->Init( data, length ) ) return NULL;
 
     const GpuProgramDesc & desc = s->desc();
 
@@ -86,8 +86,8 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
         AutoRef<D3D11GpuProgram> prog( new D3D11GpuProgram(*this) );
-        if( !prog->init( desc ) ) return NULL;
-        return prog.detach();
+        if( !prog->Init( desc ) ) return NULL;
+        return prog.Detach();
     }
     else
     {
@@ -112,8 +112,8 @@ GN::gfx::Texture *
 GN::gfx::D3D11Gpu::createTexture( const TextureDesc & desc )
 {
     AutoRef<D3D11Texture> p( new D3D11Texture(*this) );
-    if( !p->init( desc ) ) return 0;
-    return p.detach();
+    if( !p->Init( desc ) ) return 0;
+    return p.Detach();
 }
 
 //
@@ -123,9 +123,9 @@ GN::gfx::VtxBuf * GN::gfx::D3D11Gpu::createVtxBuf( const VtxBufDesc & desc )
 {
     AutoRef<D3D11VtxBuf> buf( new D3D11VtxBuf(*this) );
 
-    if( !buf->init( desc ) ) return 0;
+    if( !buf->Init( desc ) ) return 0;
 
-    return buf.detach();
+    return buf.Detach();
 }
 
 //
@@ -135,7 +135,7 @@ GN::gfx::IdxBuf * GN::gfx::D3D11Gpu::createIdxBuf( const IdxBufDesc & desc )
 {
     AutoRef<D3D11IdxBuf> buf( new D3D11IdxBuf(*this) );
 
-    if( !buf->init( desc ) ) return 0;
+    if( !buf->Init( desc ) ) return 0;
 
-    return buf.detach();
+    return buf.Detach();
 }

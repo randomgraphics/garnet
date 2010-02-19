@@ -17,20 +17,20 @@ bool initTTF()
     if( !ff ) return false;
 
     // initialize bitmap font renderer
-    ttf.quit();
-    return ttf.init( sr, ff );
+    ttf.Quit();
+    return ttf.Init( sr, ff );
 }
 
-bool init( Gpu & gpu )
+bool Init( Gpu & gpu )
 {
     // create sprite renderer
     sr = new SpriteRenderer( gpu );
-    if( !sr->init() ) return false;
+    if( !sr->Init() ) return false;
 
     // initialize ascii font
     AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
     if( !ff ) return false;
-    if( !ascii.init( sr, ff ) ) return false;
+    if( !ascii.Init( sr, ff ) ) return false;
 
     // initialize TTF font
     if( !initTTF() ) return false;
@@ -42,10 +42,10 @@ bool init( Gpu & gpu )
     return true;
 }
 
-void quit( Gpu & )
+void Quit( Gpu & )
 {
-    ascii.quit();
-    ttf.quit();
+    ascii.Quit();
+    ttf.Quit();
     SafeDelete( sr );
 }
 
@@ -96,7 +96,7 @@ void draw( Gpu &, const wchar_t * fps )
 {
     ascii.drawText( fps, 10, 13 );
 
-    if( ttf.ok() )
+    if( ttf.Ok() )
     {
         ttf.drawText( textw, 100, 100 );
         ttf.drawText( L"Hello!", 200, 200 );
@@ -105,7 +105,7 @@ void draw( Gpu &, const wchar_t * fps )
 
 int run( Gpu & gpu )
 {
-    if( !init( gpu ) ) { quit( gpu ); return -1; }
+    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -132,7 +132,7 @@ int run( Gpu & gpu )
         fps.onFrame();
     }
 
-    quit( gpu );
+    Quit( gpu );
 
     return 0;
 }
@@ -144,7 +144,7 @@ struct InputInitiator
         initializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
         gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
-        gInput.sigKeyPress.connect( onKeyPress );
+        gInput.sigKeyPress.Connect( onKeyPress );
     }
 
     ~InputInitiator()

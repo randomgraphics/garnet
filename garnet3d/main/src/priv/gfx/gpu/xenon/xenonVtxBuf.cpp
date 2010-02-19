@@ -52,7 +52,7 @@ sLockFlags2Xenon( GN::gfx::SurfaceUpdateFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
+bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
     if( 0 == desc.length || desc.length > (64*1024*1024) )
     {
         GN_ERROR(sLogger)( "Vertex buffer size must be larger then zero and not greater than 64MB." );
-        return failure();
+        return Failure();
     }
 
     setDesc( desc );
@@ -80,10 +80,10 @@ bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
             0, // POOL
             &mVb,
             0 ),
-        failure() );
+        Failure() );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -91,13 +91,13 @@ bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonVtxBuf::quit()
+void GN::gfx::XenonVtxBuf::Quit()
 {
     GN_GUARD;
 
     SafeRelease( mVb );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -119,7 +119,7 @@ GN::gfx::XenonVtxBuf::update(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
@@ -172,11 +172,11 @@ void GN::gfx::XenonVtxBuf::readback( std::vector<UInt8> & data )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     GN_UNIMPL();
 
-    data.clear();
+    data.Clear();
 
     GN_UNGUARD_SLOW;
 }

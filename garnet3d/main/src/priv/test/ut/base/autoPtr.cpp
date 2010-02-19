@@ -30,13 +30,13 @@ public:
     {
         GN::AutoObjPtr<S1> p1;
 
-        p1.attach( new S1(1) );
+        p1.Attach( new S1(1) );
         TS_ASSERT_EQUALS( 1, p1->a );
 
-        p1.attach( new S1(2) );
+        p1.Attach( new S1(2) );
         TS_ASSERT_EQUALS( 2, p1->a );
 
-        p1.attach( 0 );
+        p1.Attach( 0 );
         TS_ASSERT_EQUALS( (S1*)0, p1.GetRawPtr() );
     }
 
@@ -47,7 +47,7 @@ public:
         GN::AutoObjPtr<S1> p2( p1 );
         TS_ASSERT_EQUALS( 1, p2->a );
 
-        S1 * p3 = p2.detach();
+        S1 * p3 = p2.Detach();
         delete p3;
         TS_ASSERT_EQUALS( p1, p3 );
         TS_ASSERT( !p2 );

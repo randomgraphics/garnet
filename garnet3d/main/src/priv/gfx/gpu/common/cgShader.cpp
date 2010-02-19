@@ -34,7 +34,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::CgShader::init(
+bool GN::gfx::CgShader::Init(
     CGcontext context,
     CGprofile profile,
     const StrA & code,
@@ -66,7 +66,7 @@ bool GN::gfx::CgShader::init(
                 sAddLineCount( code ).GetRawPtr(),
                 cgGetLastListing(context) );
         }
-        return failure();
+        return Failure();
     }
 
     GN_TRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
@@ -87,7 +87,7 @@ bool GN::gfx::CgShader::init(
     mContext = context;
     mProfile = profile;
     mCode = code;
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -95,11 +95,11 @@ bool GN::gfx::CgShader::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::CgShader::quit()
+void GN::gfx::CgShader::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

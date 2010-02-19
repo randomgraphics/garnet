@@ -295,7 +295,7 @@ public:
         toNativeDiskFilePath( nativeName, name );
         AutoObjPtr<DiskFile> fp( new DiskFile );
         if( !fp->open( nativeName, mode ) ) return false;
-        return fp.detach();
+        return fp.Detach();
      }
 
 private:

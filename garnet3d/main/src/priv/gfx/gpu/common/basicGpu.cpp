@@ -18,7 +18,7 @@ void GN::gfx::rip( const char * msg, ... )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpu::init( const GpuOptions & o )
+bool GN::gfx::BasicGpu::Init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -37,7 +37,7 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
             GN_ERROR(sLogger)( "Invalid API: %d", o.api.ToRawEnum() );
         }
 
-        return failure();
+        return Failure();
     }
 
     // sanity check: warning when render context size is larger than 2K bytes
@@ -47,7 +47,7 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
     }
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -55,11 +55,11 @@ bool GN::gfx::BasicGpu::init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::quit()
+void GN::gfx::BasicGpu::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -94,7 +94,7 @@ void GN::gfx::BasicGpu::rebindContext()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
 {
-    c.data.clear();
+    c.data.Clear();
     c.format = ColorFormat::UNKNOWN;
     c.width = 0;
     c.height = 0;
@@ -133,7 +133,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
         }
         else
         {
-            userData.clear();
+            userData.Clear();
         }
     }
     else

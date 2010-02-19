@@ -146,14 +146,14 @@ namespace GN
         /// destructor
         ~StringMap()
         {
-            clear();
+            Clear();
         }
 
         /// begin
         Iterator begin() { PrivateIterator iter; iter.setNode( mRoot ); return iter; }
 
         /// clear whole map
-        void clear() { return doClear(); }
+        void Clear() { return doClear(); }
 
         /// empty
         bool empty() const { return 0 == mCount; }
@@ -207,17 +207,17 @@ namespace GN
 
         Node * allocNode()
         {
-            return (Node*)mNodePool.alloc();
+            return (Node*)mNodePool.Alloc();
         }
 
         void freeNode( Node * n )
         {
-            mNodePool.dealloc( n );
+            mNodePool.Dealloc( n );
         }
 
         Leaf * allocLeaf( const CHAR * text, const T & value )
         {
-            Leaf * p = mLeafPool.allocUnconstructed();
+            Leaf * p = mLeafPool.AllocUnconstructed();
             if( p )
             {
                 // call in-place new to construct the leaf
@@ -228,7 +228,7 @@ namespace GN
 
         void freeLeaf( Leaf * l )
         {
-            mLeafPool.deconstructAndFree( l );
+            mLeafPool.DeconstructAndFree( l );
         }
 
         /// clear the whole map container
@@ -236,8 +236,8 @@ namespace GN
         {
             mRoot = NULL;
             mCount = 0;
-            mNodePool.freeAll();
-            mLeafPool.deconstructAndFreeAll();
+            mNodePool.FreeAll();
+            mLeafPool.DeconstructAndFreeAll();
         }
 
         /// make itself a clone of another map
@@ -527,7 +527,7 @@ namespace GN
         }
 
         /// clear the map
-        void clear() { delete [] mItems; mSize = 0; }
+        void Clear() { delete [] mItems; mSize = 0; }
 
         bool empty() const { return 0 == mSize; }
 

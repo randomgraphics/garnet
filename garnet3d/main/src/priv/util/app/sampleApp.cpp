@@ -137,7 +137,7 @@ GN::util::SampleApp::SampleApp()
 // -----------------------------------------------------------------------------
 int GN::util::SampleApp::run( int argc, const char * const argv[] )
 {
-    if( !init( argc, argv ) ) { quit(); return -1; }
+    if( !Init( argc, argv ) ) { Quit(); return -1; }
 
     mDone = false;
 
@@ -181,7 +181,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
     }
 
     // success
-    quit();
+    Quit();
     return 0;
 }
 
@@ -310,7 +310,7 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::init( int argc, const char * const argv[] )
+bool GN::util::SampleApp::Init( int argc, const char * const argv[] )
 {
     if( !checkCmdLine(argc,argv) ) return false;
     if( !onPreInit( mInitParam ) ) return false;
@@ -340,7 +340,7 @@ bool GN::util::SampleApp::init( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quit()
+void GN::util::SampleApp::Quit()
 {
     GN_GUARD_ALWAYS;
 
@@ -507,16 +507,16 @@ bool GN::util::SampleApp::initGpu()
     if( NULL == mGpu ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    mGpu->getSignals().rendererWindowClose.connect( this, &SampleApp::postExitEvent );
-    mGpu->getSignals().rendererWindowSizeMove.connect( this, &SampleApp::onRenderWindowResize );
+    mGpu->getSignals().rendererWindowClose.Connect( this, &SampleApp::postExitEvent );
+    mGpu->getSignals().rendererWindowSizeMove.Connect( this, &SampleApp::onRenderWindowResize );
 
     // create sprite renderer
     mSpriteRenderer = new SpriteRenderer( *mGpu );
-    if( !mSpriteRenderer->init() ) return false;
+    if( !mSpriteRenderer->Init() ) return false;
 
     // create line renderer
     mLineRenderer = new LineRenderer( *mGpu );
-    if( !mLineRenderer->init() ) return false;
+    if( !mLineRenderer->Init() ) return false;
 
     // create GPU resource database
     mGpuResourceDatabase = new GpuResourceDatabase( *mGpu );
@@ -559,9 +559,9 @@ bool GN::util::SampleApp::initInput()
     gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
 
     // connect to input signals
-    gInput.sigKeyPress.connect( this, &SampleApp::onKeyPress );
-    gInput.sigCharPress.connect( this, &SampleApp::onCharPress );
-    gInput.sigAxisMove.connect( this, &SampleApp::onAxisMove );
+    gInput.sigKeyPress.Connect( this, &SampleApp::onKeyPress );
+    gInput.sigCharPress.Connect( this, &SampleApp::onCharPress );
+    gInput.sigAxisMove.Connect( this, &SampleApp::onAxisMove );
 
     // success
     return true;
@@ -578,9 +578,9 @@ void GN::util::SampleApp::quitInput()
 
     if( gInputPtr )
     {
-        gInput.sigKeyPress.disconnect( this );
-        gInput.sigCharPress.disconnect( this );
-        gInput.sigAxisMove.disconnect( this );
+        gInput.sigKeyPress.Disconnect( this );
+        gInput.sigCharPress.Disconnect( this );
+        gInput.sigAxisMove.Disconnect( this );
     }
 
     shutdownInputSystem();
@@ -606,7 +606,7 @@ bool GN::util::SampleApp::initFont()
     }
 
     // create font
-    return mFont.init( mSpriteRenderer, ff );
+    return mFont.Init( mSpriteRenderer, ff );
 
     GN_UNGUARD;
 }
@@ -618,7 +618,7 @@ void GN::util::SampleApp::quitFont()
 {
     GN_GUARD;
 
-    mFont.quit();
+    mFont.Quit();
 
     GN_UNGUARD;
 }

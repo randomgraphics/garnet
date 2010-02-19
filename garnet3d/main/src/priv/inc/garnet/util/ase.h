@@ -86,10 +86,10 @@ namespace GN { namespace util
         Boxf                      bbox;     ///< bounding box of the whole scene
 
         /// clear the scene
-        void clear();
+        void Clear();
 
         /// dtor
-        ~AseScene() { clear(); }
+        ~AseScene() { Clear(); }
     };
 
     ///

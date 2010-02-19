@@ -113,7 +113,7 @@ bool CEGUI::GarnetTexture::reload()
         }
 
         // unlock texture
-        tex->unlock();
+        tex->Unlock();
 
         // done
         mGarnetTexture = tex;

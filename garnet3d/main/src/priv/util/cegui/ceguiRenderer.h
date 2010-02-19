@@ -27,13 +27,13 @@ namespace CEGUI
     public:
         GarnetRenderer() : mQueueEnabled(true)
         {
-            gSigRendererRestore.connect( this, &GarnetRenderer::onRendererRestore );
-            gSigRendererDispose.connect( this, &GarnetRenderer::onRendererDispose );
+            gSigRendererRestore.Connect( this, &GarnetRenderer::onRendererRestore );
+            gSigRendererDispose.Connect( this, &GarnetRenderer::onRendererDispose );
         }
         virtual ~GarnetRenderer()
         {
-            gSigRendererRestore.disconnect( this );
-            gSigRendererDispose.disconnect( this );
+            gSigRendererRestore.Disconnect( this );
+            gSigRendererDispose.Disconnect( this );
             destroyAllTextures();
         }
         //@}
@@ -46,7 +46,7 @@ namespace CEGUI
         virtual const String & getIdentifierString() const { static const String id("GarnetRenderer"); return id; }
     	virtual	void           addQuad(const Rect& dest_rect, float z, const Texture* tex, const Rect& texture_rect, const ColourRect& colours, QuadSplitMode quad_split_mode);
     	virtual	void           doRender(void);
-    	virtual	void           clearRenderList(void) { mQuads.clear(); }
+    	virtual	void           clearRenderList(void) { mQuads.Clear(); }
     	virtual void           setQueueingEnabled(bool setting) { mQueueEnabled = setting; }
     	virtual	Texture*       createTexture(void);
     	virtual	Texture*       createTexture(const String& filename, const String& resourceGroup);

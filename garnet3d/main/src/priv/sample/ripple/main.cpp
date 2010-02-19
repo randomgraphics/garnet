@@ -31,7 +31,7 @@ public:
         Gpu & gpu = getGpu();
 
         mSprite = new SpriteRenderer(gpu);
-        if( !mSprite->init() ) return false;
+        if( !mSprite->Init() ) return false;
 
         const char * rippleCode =
             "struct VSIO                                                                  \n"
@@ -98,7 +98,7 @@ public:
             }
         }
 
-        mContext.clear();
+        mContext.Clear();
 
         GpuProgramDesc gpd;
         gpd.lang = GpuProgramLanguage::HLSL9;
@@ -127,7 +127,7 @@ public:
     void onQuit()
     {
         SafeDelete( mSprite );
-        mContext.clear();
+        mContext.Clear();
     }
 
     void onKeyPress( input::KeyEvent key )

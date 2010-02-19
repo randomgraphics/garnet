@@ -80,7 +80,7 @@ public:
     ///
     /// Initialize JPEG data source
     ///
-    void init( const JOCTET * i_buf, size_t i_size )
+    void Init( const JOCTET * i_buf, size_t i_size )
     {
         GN_ASSERT( i_buf && i_size );
 

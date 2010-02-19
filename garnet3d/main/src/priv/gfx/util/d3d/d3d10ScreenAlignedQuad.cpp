@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ScreenAlignedQuad");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ScreenAlignedQuad::init(
+bool GN::d3d10::ScreenAlignedQuad::Init(
     ID3D10Device * device, const ScreenAlignedQuadDesc & desc )
 {
     GN_GUARD;
@@ -26,7 +26,7 @@ bool GN::d3d10::ScreenAlignedQuad::init(
     GN_STDCLASS_INIT( GN::d3d10::ScreenAlignedQuad, () );
 
     // initialize mesh
-    if( !mMesh.init( device ) ) return failure();
+    if( !mMesh.Init( device ) ) return Failure();
     mMesh.beginVertices();
         mMesh.tex( desc.u1, desc.v1 ); mMesh.pos( desc.x1, desc.y1, desc.z );
         mMesh.tex( desc.u1, desc.v2 ); mMesh.pos( desc.x1, desc.y2, desc.z );
@@ -59,7 +59,7 @@ bool GN::d3d10::ScreenAlignedQuad::init(
             D3D10_COMPARISON_ALWAYS
         },
     };
-    GN_DX_CHECK_RETURN( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), failure() );
+    GN_DX_CHECK_RETURN( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), Failure() );
 
     // create internal shaders
     static const char * vscode =
@@ -82,11 +82,11 @@ bool GN::d3d10::ScreenAlignedQuad::init(
     mVs      = compileAndCreateVS( *device, vscode );
     mPsTexed = compileAndCreatePS( *device, texedcode );
     mPsSolid = compileAndCreatePS( *device, solidcode );
-    if( 0 == mVs || 0 == mPsTexed || 0 == mPsSolid ) return failure();
+    if( 0 == mVs || 0 == mPsTexed || 0 == mPsSolid ) return Failure();
 
     // success
     mDevice = device;
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -94,7 +94,7 @@ bool GN::d3d10::ScreenAlignedQuad::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ScreenAlignedQuad::quit()
+void GN::d3d10::ScreenAlignedQuad::Quit()
 {
     GN_GUARD;
 
@@ -103,9 +103,9 @@ void GN::d3d10::ScreenAlignedQuad::quit()
     SafeRelease( mPsTexed );
     SafeRelease( mPsSolid );
 
-    mMesh.quit();
+    mMesh.Quit();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

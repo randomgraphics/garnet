@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( ModelResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { clear(); }
+        virtual ~Impl() { Clear(); }
         //@}
 
         // ********************************
@@ -156,7 +156,7 @@ namespace GN { namespace gfx
         const char *          modelName() const { return mOwner.database().getResourceName( &mOwner ); }
 
         bool fromDesc( const ModelResourceDesc & desc );
-        void clear();
+        void Clear();
 
         void copyFrom( const Impl & other );
 

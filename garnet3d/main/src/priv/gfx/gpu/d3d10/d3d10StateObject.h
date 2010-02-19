@@ -334,7 +334,7 @@ namespace GN { namespace gfx
 
         ~D3D10StateObjectCache()
         {
-            clear();
+            Clear();
         }
 
         /// get the D3D10 device
@@ -346,7 +346,7 @@ namespace GN { namespace gfx
         ///
         /// clear cache. Delete all state objects.
         ///
-        void clear()
+        void Clear()
         {
             // delete all state objects
             StateObjectItem * item = mHead;
@@ -608,18 +608,18 @@ namespace GN { namespace gfx
         D3D10StateObjectManager( ID3D10Device & dev );
 
         /// clear all
-        void clear()
+        void Clear()
         {
-            mRasterStates.clear();
+            mRasterStates.Clear();
             mCurrentRS = NULL;
 
-            mBlendStates.clear();
+            mBlendStates.Clear();
             mCurrentBS = NULL;
 
-            mDepthStates.clear();
+            mDepthStates.Clear();
             mCurrentDS = NULL;
 
-            mSamplerStates.clear();
+            mSamplerStates.Clear();
             memset( mCurrentVSSamplers, 0, sizeof(mCurrentVSSamplers) );
             memset( mCurrentGSSamplers, 0, sizeof(mCurrentGSSamplers) );
             memset( mCurrentPSSamplers, 0, sizeof(mCurrentPSSamplers) );

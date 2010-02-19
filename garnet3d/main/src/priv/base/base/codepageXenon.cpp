@@ -14,7 +14,7 @@ using namespace GN;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplXenon::init(
+bool GN::CECImplXenon::Init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -26,7 +26,7 @@ bool GN::CECImplXenon::init(
     // success
     mEncodingFrom = from;
     mEncodingTo   = to;
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -34,11 +34,11 @@ bool GN::CECImplXenon::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplXenon::quit()
+void GN::CECImplXenon::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

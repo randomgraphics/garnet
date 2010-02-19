@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        LineRenderer( Gpu & r ) : mGpu(r) { clear(); }
-        virtual ~LineRenderer() { quit(); }
+        LineRenderer( Gpu & r ) : mGpu(r) { Clear(); }
+        virtual ~LineRenderer() { Quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear() { mLines = 0; mBatchingModeEnabled = true; }
+        void Clear() { mLines = 0; mBatchingModeEnabled = true; }
         //@}
 
         // ********************************

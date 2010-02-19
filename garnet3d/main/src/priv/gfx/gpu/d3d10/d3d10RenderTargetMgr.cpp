@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10RTMgr::init()
+bool GN::gfx::D3D10RTMgr::Init()
 {
     GN_GUARD;
 
@@ -23,8 +23,8 @@ bool GN::gfx::D3D10RTMgr::init()
 
     // create default rener target view
     AutoComPtr<ID3D10Texture2D> backBuffer;
-    GN_DX_CHECK_RETURN( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), failure() );
-    GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
+    GN_DX_CHECK_RETURN( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), Failure() );
+    GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), Failure() );
     GN_ASSERT( mAutoColor0 );
 
     // create depth texture
@@ -41,20 +41,20 @@ bool GN::gfx::D3D10RTMgr::init()
     td.BindFlags          = D3D10_BIND_DEPTH_STENCIL;
     td.CPUAccessFlags     = 0;
     td.MiscFlags          = 0;
-    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), Failure() );
 
     // create depth stencil view
     D3D10_DEPTH_STENCIL_VIEW_DESC dsvd;
     dsvd.Format             = td.Format;
     dsvd.ViewDimension      = D3D10_DSV_DIMENSION_TEXTURE2D;
     dsvd.Texture2D.MipSlice = 0;
-    GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), Failure() );
 
     // bind these views to device.
     dev.OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -62,7 +62,7 @@ bool GN::gfx::D3D10RTMgr::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10RTMgr::quit()
+void GN::gfx::D3D10RTMgr::Quit()
 {
     GN_GUARD;
 
@@ -70,7 +70,7 @@ void GN::gfx::D3D10RTMgr::quit()
     SafeRelease( mAutoDepthTexture );
     SafeRelease( mAutoDepth );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.SimpleMesh");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
+bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -19,7 +19,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
     if( 0 == dev )
     {
         GN_ERROR(sLogger)( "NULL D3D10 device pointer!" );
-        return failure();
+        return Failure();
     }
 
     // create a mini-shader (for its signature)
@@ -28,8 +28,8 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
         "float4 main( VSInput i ) : SV_Position0 { return 0; }";
     AutoComPtr<ID3D10VertexShader> vs;
     AutoComPtr<ID3D10Blob>  signature;
-    vs.attach( compileAndCreateVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
-    if( vs.empty() ) return failure();
+    vs.Attach( compileAndCreateVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
+    if( vs.Empty() ) return Failure();
 
     // create input layout
     static const D3D10_INPUT_ELEMENT_DESC elements[] =
@@ -42,11 +42,11 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
     };
     GN_DX_CHECK_RETURN(
         dev->CreateInputLayout( elements, GN_ARRAY_COUNT(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout ),
-        failure() );
+        Failure() );
 
     // success
     mDevice = dev;
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -54,7 +54,7 @@ bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::quit()
+void GN::d3d10::SimpleMesh::Quit()
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ void GN::d3d10::SimpleMesh::quit()
     SafeRelease( mVtxBuf );
     SafeRelease( mIdxBuf );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -77,7 +77,7 @@ void GN::d3d10::SimpleMesh::quit()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::beginVertices()
 {
-    mVertices.clear();
+    mVertices.Clear();
 }
 
 //
@@ -165,7 +165,7 @@ void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::beginTriangles()
 {
-    mIndices.clear();
+    mIndices.Clear();
 }
 
 //

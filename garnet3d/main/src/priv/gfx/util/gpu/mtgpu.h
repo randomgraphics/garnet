@@ -46,8 +46,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadGpu()          { clear(); }
-        virtual ~MultiThreadGpu() { quit(); }
+        MultiThreadGpu()          { Clear(); }
+        virtual ~MultiThreadGpu() { Quit(); }
         //@}
 
         // ********************************
@@ -56,10 +56,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const GpuOptions & o, const MultiThreadGpuOptions & mo );
-        void quit();
+        bool Init( const GpuOptions & o, const MultiThreadGpuOptions & mo );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mThread   = NULL;
             mGpu = NULL;

@@ -32,7 +32,7 @@ static size_t inline sCalcNumStreams( const VertexFormat & vf )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuProgram * program )
+bool GN::gfx::OGLVtxFmt::Init( const VertexFormat & format, const OGLBasicGpuProgram * program )
 {
     GN_GUARD;
 
@@ -45,7 +45,7 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuPro
     mValid = setupStateBindings();
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -53,11 +53,11 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuPro
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::quit()
+void GN::gfx::OGLVtxFmt::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -116,7 +116,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         }
 
         const VertexBufferBinding & b = bindings[stream];
-        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
+        const OGLBasicVtxBuf * vb = SafeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
 
         const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;

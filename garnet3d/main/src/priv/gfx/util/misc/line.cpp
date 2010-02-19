@@ -54,7 +54,7 @@ static const char * hlslpscode=
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::LineRenderer::init()
+bool GN::gfx::LineRenderer::Init()
 {
     GN_GUARD;
 
@@ -83,10 +83,10 @@ bool GN::gfx::LineRenderer::init()
     else
     {
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
-        return failure();
+        return Failure();
     }
     mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
-    if( !mContext.gpuProgram ) return failure();
+    if( !mContext.gpuProgram ) return Failure();
 
     // create vertex format
     mContext.vtxfmt.numElements = 6;
@@ -117,17 +117,17 @@ bool GN::gfx::LineRenderer::init()
 
     // create vertex buffer
     mContext.vtxbufs[0].vtxbuf.attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
-    if( !mContext.vtxbufs[0].vtxbuf ) return failure();
+    if( !mContext.vtxbufs[0].vtxbuf ) return Failure();
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
     // create line buffer
     mLines = (Line*)HeapAlloc( MAX_LINES * sizeof(Line) );
-    if( NULL == mLines ) return failure();
+    if( NULL == mLines ) return Failure();
     mNextPendingLine = mLines;
     mNextFreeLine = mLines;
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -135,14 +135,14 @@ bool GN::gfx::LineRenderer::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::quit()
+void GN::gfx::LineRenderer::Quit()
 {
     GN_GUARD;
 
     HeapFree( mLines ); mLines = NULL;
-    mContext.clear();
+    mContext.Clear();
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

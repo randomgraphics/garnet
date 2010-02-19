@@ -31,8 +31,8 @@ namespace GN
             : mApp(app)
             , mCamera(RIGHT_HAND)
             , mScene( app.getEntityManager(), app.getRenderEngine() )
-        { clear(); mCamera.connectToInput(); }
-        virtual ~SimpleShadowMap() { quit(); mCamera.disconnectFromInput(); }
+        { Clear(); mCamera.connectToInput(); }
+        virtual ~SimpleShadowMap() { Quit(); mCamera.disconnectFromInput(); }
         //@}
 
         // ********************************
@@ -41,10 +41,10 @@ namespace GN
 
         //@{
     public:
-        bool init( const StrA & actorName );
-        void quit();
+        bool Init( const StrA & actorName );
+        void Quit();
     private:
-        void clear();
+        void Clear();
         //@}
 
         // ********************************

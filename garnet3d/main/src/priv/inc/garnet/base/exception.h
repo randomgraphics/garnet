@@ -78,7 +78,7 @@ namespace GN
     ///
     /// exception handler
     ///
-    inline void exceptionHandler(
+    inline void ExceptionHandler(
         const char * msg,
         const char * func,
         const char * file,
@@ -90,9 +90,9 @@ namespace GN
     ///
     /// exception handler
     ///
-    inline void exceptionHandler( const Exception & e )
+    inline void ExceptionHandler( const Exception & e )
     {
-        exceptionHandler( e.msg, e.func, e.file, e.line );
+        ExceptionHandler( e.msg, e.func, e.file, e.line );
     }
 }
 
@@ -139,16 +139,16 @@ namespace GN
 ///
 #define GN_UNGUARD_ALWAYS_DO( something )                                   \
     } GN_CATCH( const GN::Exception & e ) {                                 \
-        GN::exceptionHandler( e );                                          \
+        GN::ExceptionHandler( e );                                          \
         something                                                           \
     } GN_CATCH( const std::exception & e ) {                                \
-        GN::exceptionHandler( e.what(), GN_FUNCTION, __FILE__, __LINE__ );  \
+        GN::ExceptionHandler( e.what(), GN_FUNCTION, __FILE__, __LINE__ );  \
         something                                                           \
     } GN_CATCH( const char * e ) {                                          \
-        GN::exceptionHandler( e, GN_FUNCTION, __FILE__, __LINE__ );         \
+        GN::ExceptionHandler( e, GN_FUNCTION, __FILE__, __LINE__ );         \
         something                                                           \
     } GN_CATCH( ... ) {                                                     \
-        GN::exceptionHandler( "unknown exception!",                         \
+        GN::ExceptionHandler( "unknown exception!",                         \
                               GN_FUNCTION, __FILE__, __LINE__ );            \
         something                                                           \
     }

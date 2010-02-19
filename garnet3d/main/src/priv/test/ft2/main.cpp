@@ -187,7 +187,7 @@ void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 static const char * font_face   = "font::/simsun.ttc";
 static int          font_width  = 16;
 static int          font_height = 16;
-void init(void)
+void Init(void)
 {
    glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
    glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
@@ -276,7 +276,7 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     glutInitWindowPosition (0,0);
     glutInitWindowSize  ( 640, 480 ); // If glutFullScreen wasn't called this is the window size
     glutCreateWindow    ( "NeHe Lesson 6- Ported by Rustad" ); // Window Title (argv[0] for current directory as title)
-    init();
+    Init();
     //glutFullScreen      ( );          // Put Into Full Screen
     glutDisplayFunc     ( display );  // Matching Earlier Functions To Their Counterparts
     glutReshapeFunc     ( reshape );

@@ -74,13 +74,13 @@ namespace GN
         ///
         ~FixSizedRawMemoryPool()
         {
-            freeAll();
+            FreeAll();
         }
 
         ///
         /// make sure a valid pointer belongs to this pool
         ///
-        bool check( const void * p ) const
+        bool Check( const void * p ) const
         {
             if( 0 == p ) return false;
 
@@ -92,7 +92,7 @@ namespace GN
         ///
         /// Allocate raw memory for one item
         ///
-        void * alloc()
+        void * Alloc()
         {
             if( MAX_ITEMS > 0 && mItemCount == MAX_ITEMS )
             {
@@ -150,12 +150,12 @@ namespace GN
         ///
         /// Deallocate
         ///
-        void dealloc( void * p )
+        void Dealloc( void * p )
         {
             if( 0 == p ) return;
 
             Item * i = (Item*)p;
-            if( !check(p) )
+            if( !Check(p) )
             {
                 GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
                 return;
@@ -182,7 +182,7 @@ namespace GN
         ///
         /// free all items
         ///
-        void freeAll()
+        void FreeAll()
         {
             Block * p;
             while( mBlocks )
@@ -201,12 +201,12 @@ namespace GN
         ///
         /// get first item in allocator
         ///
-        void * getFirst() const { return mItems; }
+        void * GetFirst() const { return mItems; }
 
         ///
         /// get next item in allocator
         ///
-        void * getNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
+        void * GetNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
     };
 
     ///
@@ -220,9 +220,9 @@ namespace GN
         RAW_MEMORY_POOL mRawMem;
         Mutex           mMutex;
 
-        T * doAlloc()
+        T * DoAlloc()
         {
-            T * p = (T*)mRawMem.alloc();
+            T * p = (T*)mRawMem.Alloc();
             if( 0 == p ) return 0;
 
             // construct the object, using defualt constructor
@@ -232,7 +232,7 @@ namespace GN
             return p;
         }
 
-        void doDealloc( T * p )
+        void DoDealloc( T * p )
         {
             if( 0 == p ) return;
 
@@ -240,21 +240,21 @@ namespace GN
             p->T::~T();
 
             // free p
-            mRawMem.dealloc( p );
+            mRawMem.Dealloc( p );
         }
 
-        void doFreeAll()
+        void DoFreeAll()
         {
             ScopeMutex<Mutex> lock( mMutex );
 
             // destruct all objects
-            for( T * p = (T*)mRawMem.getFirst(); 0 != p; p = (T*)mRawMem.getNext(p) )
+            for( T * p = (T*)mRawMem.GetFirst(); 0 != p; p = (T*)mRawMem.GetNext(p) )
             {
                 p->T::~T();
             }
 
             // free memory
-            mRawMem.freeAll();
+            mRawMem.FreeAll();
         }
 
     public:
@@ -263,19 +263,19 @@ namespace GN
 
         ObjectPool() {}
 
-        ~ObjectPool() { deconstructAndFreeAll(); }
+        ~ObjectPool() { DeconstructAndFreeAll(); }
 
         //@}
 
         //@{
-        T  * allocConstructed() { return doAlloc(); }
-        T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
-        void deconstructAndFree( void * p ) { doDealloc( (T*)p ); }
-        void freeWithoutDeconstruct( void * p ) { mRawMem.dealloc( p ); }
-        void deconstructAndFreeAll() { doFreeAll(); }
-        bool check( const T * p ) const { return mRawMem.check( p ); }
-        T  * getFirst() const { return (T*)mRawMem.getFirst(); }
-        T  * getNext( const T * p ) const { return (T*)mRawMem.getNext(p); }
+        T  * AllocConstructed() { return DoAlloc(); }
+        T  * AllocUnconstructed() { return (T*)mRawMem.Alloc(); }
+        void DeconstructAndFree( void * p ) { DoDealloc( (T*)p ); }
+        void FreeWithoutDeconstruct( void * p ) { mRawMem.Dealloc( p ); }
+        void DeconstructAndFreeAll() { DoFreeAll(); }
+        bool Check( const T * p ) const { return mRawMem.Check( p ); }
+        T  * GetFirst() const { return (T*)mRawMem.GetFirst(); }
+        T  * GetNext( const T * p ) const { return (T*)mRawMem.GetNext(p); }
         //@}
     };
 }

@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( EffectResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { clear(); }
+        virtual ~Impl() { Clear(); }
         //@}
 
         // ********************************
@@ -94,8 +94,8 @@ namespace GN { namespace gfx
         GpuResourceDatabase & database() const { return mOwner.database(); }
         const char *          effectName() const { return mOwner.database().getResourceName( &mOwner ); }
 
-        bool init( const EffectResourceDesc & desc );
-        void clear();
+        bool Init( const EffectResourceDesc & desc );
+        void Clear();
 
         bool initGpuPrograms( const EffectResourceDesc & effectDesc );
 

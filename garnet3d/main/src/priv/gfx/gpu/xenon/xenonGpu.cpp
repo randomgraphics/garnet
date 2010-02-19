@@ -34,8 +34,8 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::XenonGpu> p( new GN::gfx::XenonGpu );
-    if( !p->init( o ) ) return 0;
-    return p.detach();
+    if( !p->Init( o ) ) return 0;
+    return p.Detach();
 
     GN_UNGUARD;
 }
@@ -47,11 +47,11 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
+bool GN::gfx::XenonGpu::Init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -59,14 +59,14 @@ bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::XenonGpu, (o) );
 
     // init sub-components
-    if( !dispInit()         ) return failure();
-    if( !capsInit()         ) return failure();
-    if( !resourceInit()     ) return failure();
-    if( !contextInit()      ) return failure();
-    if( !drawInit()         ) return failure();
+    if( !dispInit()         ) return Failure();
+    if( !capsInit()         ) return Failure();
+    if( !resourceInit()     ) return Failure();
+    if( !contextInit()      ) return Failure();
+    if( !drawInit()         ) return Failure();
 
     // successful
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -74,11 +74,11 @@ bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::quit()
+void GN::gfx::XenonGpu::Quit()
 {
     GN_GUARD;
 
-    GN_ASSERT( getCurrentThreadId() == mThreadId );
+    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 

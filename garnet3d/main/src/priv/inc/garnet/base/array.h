@@ -249,7 +249,7 @@ namespace GN
         T       & back() { GN_ASSERT( mCount > 0 ); return GetRawPtr()[mCount-1]; }
         const T * begin() const { return GetRawPtr(); }
         T       * begin() { return GetRawPtr(); }
-        void      clear() { doClear(); }
+        void      Clear() { doClear(); }
         const T * GetRawPtr() const { return (const T*)mBuffer; }
         T       * GetRawPtr() { return (T*)mBuffer; }
         bool      empty() const { return 0 == mCount; }
@@ -522,7 +522,7 @@ namespace GN
         T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         const T * begin() const { return mElements; }
         T       * begin() { return mElements; }
-        void      clear() { doClear(); }
+        void      Clear() { doClear(); }
         const T * GetRawPtr() const { return mElements; }
         T       * GetRawPtr() { return mElements; }
         bool      empty() const { return 0 == mCount; }

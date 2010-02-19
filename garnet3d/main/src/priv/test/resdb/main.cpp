@@ -104,7 +104,7 @@ void initMeshDesc( MeshResourceDesc & md )
     md.indices = indices;
 }
 
-bool init( Gpu & g )
+bool Init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
@@ -124,7 +124,7 @@ bool init( Gpu & g )
     mod.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
     mod.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
-    model = db->createResource<ModelResource>( "m0" ).detach();
+    model = db->createResource<ModelResource>( "m0" ).Detach();
     if( 0 == model ) return false;
 
     if( !model->reset( &mod ) ) return false;
@@ -136,10 +136,10 @@ bool init( Gpu & g )
     return true;
 }
 
-void quit( Gpu & )
+void Quit( Gpu & )
 {
-    tex[0].clear();
-    tex[1].clear();
+    tex[0].Clear();
+    tex[1].Clear();
     SafeDecref( model );
     SafeDelete( db );
 }
@@ -168,7 +168,7 @@ void draw( Gpu & )
 
 int run( Gpu & gpu )
 {
-    if( !init( gpu ) ) { quit( gpu ); return -1; }
+    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
     bool gogogo = true;
 
@@ -197,7 +197,7 @@ int run( Gpu & gpu )
         fps.onFrame();
     }
 
-    quit( gpu );
+    Quit( gpu );
 
     return 0;
 }

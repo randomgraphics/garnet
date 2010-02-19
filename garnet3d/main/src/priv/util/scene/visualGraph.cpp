@@ -41,7 +41,7 @@ GN::util::VisualGraph::Impl::~Impl()
 {
     for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
-        mUniforms[type].clear();
+        mUniforms[type].Clear();
     }
 }
 

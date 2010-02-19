@@ -33,8 +33,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonTexture( XenonGpu & r ) : XenonResource(r) { clear(); }
-        virtual ~XenonTexture() { quit(); }
+        XenonTexture( XenonGpu & r ) : XenonResource(r) { Clear(); }
+        virtual ~XenonTexture() { Quit(); }
         //@}
 
         // ********************************
@@ -43,10 +43,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const TextureDesc & desc );
-        void quit();
+        bool Init( const TextureDesc & desc );
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mD3DTexture = 0;
         }

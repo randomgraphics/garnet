@@ -114,7 +114,7 @@ IDirect3DTexture9 * CreateAxisTexture(
 #endif
 
     // done
-    return tex.detach();
+    return tex.Detach();
 }
 
 // *****************************************************************************

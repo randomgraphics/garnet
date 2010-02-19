@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
+bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -20,7 +20,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        return failure();
+        return Failure();
     }
 
     // store descriptor
@@ -29,7 +29,7 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
     mBuffer = (UInt8*)HeapAlloc( desc.length );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -37,13 +37,13 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::quit()
+void GN::gfx::OGLVtxBufNormal::Quit()
 {
     GN_GUARD;
 
     SafeHeapFree( mBuffer );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -60,7 +60,7 @@ void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void 
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( ok() );
+    GN_ASSERT( Ok() );
 
     GN_UNUSED_PARAM( flag );
 

@@ -52,7 +52,7 @@ public:
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
                 }
 
-                output.setData( buffer.detach() );
+                output.setData( buffer.Detach() );
                 output.setSize( fp.size() );
             }
             virtual void unloadRawDataContainer(RawDataContainer& data)

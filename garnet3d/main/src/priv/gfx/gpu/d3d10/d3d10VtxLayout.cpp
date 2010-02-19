@@ -13,15 +13,15 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10.VtxLayout");
 // -----------------------------------------------------------------------------
 static bool
 sVtxFmt2InputLayout(
-    std::vector<D3D10_INPUT_ELEMENT_DESC> & elements,
-    const GN::gfx::VertexFormat           & vtxfmt )
+    GN::DynaArray<D3D10_INPUT_ELEMENT_DESC> & elements,
+    const GN::gfx::VertexFormat             & vtxfmt )
 {
     GN_GUARD;
 
     using namespace GN;
     using namespace GN::gfx;
 
-    elements.clear();
+    elements.Clear();
 
     for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
@@ -52,7 +52,7 @@ sVtxFmt2InputLayout(
         elem.InstanceDataStepRate = 0;
 
         // add to element array
-        elements.push_back( elem );
+        elements.append( elem );
     }
 
     if( elements.empty() )
@@ -110,7 +110,7 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
     using namespace GN;
     using namespace GN::gfx;
 
-    std::vector<D3D10_INPUT_ELEMENT_DESC> elements;
+    DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
     GN_ASSERT( !elements.empty() );
 
@@ -140,12 +140,12 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10VertexLayout::init(
+bool GN::gfx::D3D10VertexLayout::Init(
     ID3D10Device                & dev,
     const GN::gfx::VertexFormat & format )
 {
     // create D3D10 input layout object
-    il.attach( sCreateD3D10InputLayout( dev, format ) );
+    il.Attach( sCreateD3D10InputLayout( dev, format ) );
     if( !il ) return false;
 
     return true;

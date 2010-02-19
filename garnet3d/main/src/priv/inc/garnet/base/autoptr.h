@@ -22,7 +22,7 @@ namespace GN
 
             typedef BaseAutoPtr<T,CLASS> MyType;
 
-            void release()
+            void Release()
             {
                 CLASS::sDoRelease(mPtr);
                 mPtr = 0;
@@ -38,12 +38,12 @@ namespace GN
             ///
             /// Destructor
             ///
-            ~BaseAutoPtr() { release(); }
+            ~BaseAutoPtr() { Release(); }
 
             ///
-            /// Is pointer empty or not.
+            /// Is pointer Empty or not.
             ///
-            bool empty() const { return 0 == mPtr; }
+            bool Empty() const { return 0 == mPtr; }
 
             ///
             /// Get internal C-style raw pointer
@@ -51,18 +51,18 @@ namespace GN
             T * GetRawPtr() const { return mPtr; }
 
             ///
-            /// clear internal pointer. Same as attach(0)
+            /// Clear internal pointer. Same as Attach(0)
             ///
-            void clear() { if( mPtr ) release(), mPtr = 0; }
+            void Clear() { if( mPtr ) Release(), mPtr = 0; }
 
             ///
-            /// attach to new pointer (release the old one)
+            /// Attach to new pointer (Release the old one)
             ///
-            void attach( T * p )
+            void Attach( T * p )
             {
                 if( p != mPtr )
                 {
-                    release();
+                    Release();
                     mPtr = p;
                 }
             }
@@ -70,7 +70,7 @@ namespace GN
             ///
             /// Release ownership of private pointer
             ///
-            T * detach() throw()
+            T * Detach() throw()
             {
                 T * tmp = mPtr;
                 mPtr = 0;
@@ -78,9 +78,9 @@ namespace GN
             }
 
             ///
-            /// dereference the pointer
+            /// Dereference the pointer
             ///
-            T & dereference() const { GN_ASSERT( mPtr ); return *mPtr; }
+            T & Dereference() const { GN_ASSERT( mPtr ); return *mPtr; }
 
             ///
             /// Convert to T *
@@ -88,7 +88,7 @@ namespace GN
             operator T*() const { return mPtr; }
 
             ///
-            /// dereference operator
+            /// Dereference operator
             ///
             T & operator*() const { GN_ASSERT( mPtr ); return *mPtr; }
 
@@ -267,7 +267,7 @@ namespace GN
         ///
         AutoComPtr & operator=( const AutoComPtr & rhs )
         {
-            set( rhs.mPtr );
+            Set( rhs.mPtr );
             return *this;
         }
 
@@ -343,19 +343,19 @@ namespace GN
         }
 
         ///
-        /// Is empty pointer?
+        /// Is Empty pointer?
         ///
-        bool empty() const { return 0 == mPtr; }
+        bool Empty() const { return 0 == mPtr; }
 
         ///
-        /// Clear to empty. Same as set(NULL).
+        /// Clear to Empty. Same as Set(NULL).
         ///
-        void clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
+        void Clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
 
         ///
         /// Release existing interface, then hold new interface
         ///
-        void set( T * p ) throw()
+        void Set( T * p ) throw()
         {
             if( p ) p->AddRef();
             if( mPtr ) mPtr->Release();
@@ -365,7 +365,7 @@ namespace GN
         ///
         /// Attach to an existing interface (does not AddRef)
         ///
-        void attach( T * p2 ) throw()
+        void Attach( T * p2 ) throw()
         {
             if (mPtr) mPtr->Release();
             mPtr = p2;
@@ -374,7 +374,7 @@ namespace GN
         ///
         /// Detach the interface (does not Release)
         ///
-        T * detach() throw()
+        T * Detach() throw()
         {
             T * pt = mPtr;
             mPtr = NULL;

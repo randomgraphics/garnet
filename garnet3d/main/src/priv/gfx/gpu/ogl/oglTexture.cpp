@@ -571,7 +571,7 @@ sNewCubeTexture(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
+bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
@@ -581,14 +581,14 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
     // store texture properties
-    if( !setDesc( inputDesc ) ) return failure();
+    if( !setDesc( inputDesc ) ) return Failure();
 
     // Note: this descriptor may differ with the input one.
     const TextureDesc & desc = getDesc();
 
     // determine texture dimension
     mTarget = sDetermineTextureDimension( desc.faces, desc.width, desc.height, desc.depth );
-    if( INVALID_DIMENSION == mTarget ) return failure();
+    if( INVALID_DIMENSION == mTarget ) return Failure();
 
     // convert format to opengl paramaters
     if( !sColorFormat2OGL( mOGLInternalFormat,
@@ -597,7 +597,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
                            mOGLCompressed,
                            desc.format,
                            desc.usage ) )
-        return failure();
+        return Failure();
 
     // create new opengl texture object
     switch( mTarget )
@@ -630,7 +630,7 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
             GN_UNEXPECTED();
             mOGLTexture = 0;
     }
-    if( 0 == mOGLTexture ) return failure();
+    if( 0 == mOGLTexture ) return Failure();
 
     // setup mipmap size array
     for( size_t i = 0; i < desc.levels; ++i )
@@ -672,18 +672,18 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
 
             default:
                 GN_UNEXPECTED();
-                return failure();
+                return Failure();
         }
 
         setMipSize( i, sx, sy, sz );
     }
 
     // setup default filters and wrap modes
-    mSampler.clear();
+    mSampler.Clear();
     setSampler( mSampler, true );
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -691,14 +691,14 @@ bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::quit()
+void GN::gfx::OGLTexture::Quit()
 {
     GN_GUARD;
 
     // delete opengl texture
     if (mOGLTexture) glDeleteTextures( 1, &mOGLTexture ), mOGLTexture = 0;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

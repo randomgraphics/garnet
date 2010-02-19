@@ -20,9 +20,9 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.X11");
 // -----------------------------------------------------------------------------
 GN::input::InputX11::InputX11()
 {
-    clear();
+    Clear();
 
-    // clear all fields to KeyCode::NONE
+    // Clear all fields to KeyCode::NONE
     memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map
@@ -36,7 +36,7 @@ GN::input::InputX11::InputX11()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputX11::init()
+bool GN::input::InputX11::Init()
 {
     GN_GUARD;
 
@@ -46,7 +46,7 @@ bool GN::input::InputX11::init()
     // Do custom init here
 
     // success
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -54,11 +54,11 @@ bool GN::input::InputX11::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::quit()
+void GN::input::InputX11::Quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

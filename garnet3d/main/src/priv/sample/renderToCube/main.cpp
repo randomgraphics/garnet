@@ -34,7 +34,7 @@ class RenderToTexture : public SampleApp
             );
 
         MeshResourceDesc desc;
-        desc.clear();
+        desc.Clear();
         desc.prim = PrimitiveType::TRIANGLE_LIST;
         desc.numvtx = 24;
         desc.numidx = 36;
@@ -105,17 +105,17 @@ public:
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
         // initialize GPU context
-        gc.clear();
+        gc.Clear();
 
         return true;
     }
 
     void onQuit()
     {
-        for( int i = 0; i < 6; ++i ) faces[i].clear();
-        cubemap.clear();
-        box.clear();
-        gc.clear();
+        for( int i = 0; i < 6; ++i ) faces[i].Clear();
+        cubemap.Clear();
+        box.Clear();
+        gc.Clear();
     }
 
     void onUpdate()
@@ -142,7 +142,7 @@ public:
         }
 
         // draw the cube model to screen
-        gc.colortargets.clear();
+        gc.colortargets.Clear();
         gpu.bindContext( gc );
         gpu.clearScreen();
         box->draw();

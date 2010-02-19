@@ -25,8 +25,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        BasicInputMsw()          { clear(); }
-        virtual ~BasicInputMsw() { quit(); }
+        BasicInputMsw()          { Clear(); }
+        virtual ~BasicInputMsw() { Quit(); }
         //@}
 
         // ********************************
@@ -35,10 +35,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool init();
-        void quit();
+        bool Init();
+        void Quit();
     private:
-        void clear()
+        void Clear()
         {
             mXInputLibrary = 0;
             mXInputGetState = 0;

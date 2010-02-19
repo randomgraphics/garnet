@@ -72,7 +72,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRTMgrFBO::init()
+bool GN::gfx::OGLRTMgrFBO::Init()
 {
     GN_ASSERT( usable() );
 
@@ -88,7 +88,7 @@ bool GN::gfx::OGLRTMgrFBO::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRTMgrFBO::quit()
+void GN::gfx::OGLRTMgrFBO::Quit()
 {
     if( mAutoZ )
     {
@@ -104,7 +104,7 @@ void GN::gfx::OGLRTMgrFBO::quit()
         mFbo = 0;
     }
 
-    clear();
+    Clear();
 }
 
 // *****************************************************************************

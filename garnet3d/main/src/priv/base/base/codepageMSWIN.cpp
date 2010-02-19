@@ -53,7 +53,7 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplMSWIN::init(
+bool GN::CECImplMSWIN::Init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -63,19 +63,19 @@ bool GN::CECImplMSWIN::init(
     GN_STDCLASS_INIT( GN::CECImplMSWIN, () );
 
     const char * fromstr = sEncodingToLocal( from );
-    if( NULL == fromstr ) return failure();
+    if( NULL == fromstr ) return Failure();
     if( 0 != *fromstr )
     {
         mLocaleFrom = new std::locale( fromstr );//_create_locale( LC_ALL, fromstr );
         if( !mLocaleFrom )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
-            return failure();
+            return Failure();
         }
     }
 
     const char * tostr = sEncodingToLocal( to );
-    if( NULL == tostr ) return failure();
+    if( NULL == tostr ) return Failure();
     if( 0 != *tostr )
     {
         //mLocaleTo = _create_locale( LC_ALL, tostr );
@@ -83,14 +83,14 @@ bool GN::CECImplMSWIN::init(
         if( !mLocaleTo )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
-            return failure();
+            return Failure();
         }
     }
 
     // success
     mEncodingFrom = from;
     mEncodingTo   = to;
-    return success();
+    return Success();
 
     GN_UNGUARD;
 }
@@ -98,14 +98,14 @@ bool GN::CECImplMSWIN::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplMSWIN::quit()
+void GN::CECImplMSWIN::Quit()
 {
     GN_GUARD;
 
     SafeDelete( mLocaleFrom );
     SafeDelete( mLocaleTo );
 
-    // standard quit procedure
+    // standard Quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

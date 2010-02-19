@@ -104,7 +104,7 @@ namespace GN
         ///
         /// Default destructor
         ///
-        ~ResourceManagerTempl() { clear(); }
+        ~ResourceManagerTempl() { Clear(); }
 
         ///
         /// Get global creator.
@@ -170,7 +170,7 @@ namespace GN
         ///
         /// Clear all resources.
         ///
-        void clear()
+        void Clear()
         {
             GN_GUARD;
 
@@ -187,7 +187,7 @@ namespace GN
             }
 
             // clear handles and names
-            mResHandles.clear();
+            mResHandles.Clear();
             mResNames.clear();
 
             GN_UNGUARD;
@@ -654,7 +654,7 @@ namespace GN
                 if( mNullDeletor )
                 {
                     mNullDeletor( *mNullInstance, 0 );
-                    mNullDeletor.clear();
+                    mNullDeletor.Clear();
                 }
                 delete mNullInstance;
                 mNullInstance = 0;
