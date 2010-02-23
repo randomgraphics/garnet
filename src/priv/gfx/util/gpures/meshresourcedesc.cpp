@@ -511,7 +511,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t vbsize = desc.strides[stream] * desc.numvtx;
 
-            UInt8 * vb = meshData.subrange( offset, vbsize );
+            UInt8 * vb = meshData.SubRange( offset, vbsize );
 
             if( !sReadBinaryFile( vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
             {
@@ -529,7 +529,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t ibsize = desc.numidx * (desc.idx32?4:2);
 
-            UInt8 * ib = meshData.subrange( offset, ibsize );
+            UInt8 * ib = meshData.SubRange( offset, ibsize );
 
             if( !sReadBinaryFile( ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
             {

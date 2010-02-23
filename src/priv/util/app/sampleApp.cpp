@@ -471,18 +471,18 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else
             {
                 // this is an extra option
-                unknownArgs.append( a );
+                unknownArgs.Append( a );
             }
         }
         else
         {
             // this is non-option argument
-            unknownArgs.append( a );
+            unknownArgs.Append( a );
         }
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.size(), unknownArgs.GetRawPtr() ) ) return false;
+    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.Size(), unknownArgs.GetRawPtr() ) ) return false;
 
 #endif
 

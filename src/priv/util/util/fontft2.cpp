@@ -276,7 +276,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     GN_ASSERT( height <= mDesc.maxGlyphHeight() );
 
     //取道位图数据
-    mBitmapBuffer.resize( width * height );
+    mBitmapBuffer.Resize( width * height );
     UInt8 * buf = mBitmapBuffer.GetRawPtr();
     switch( bitmap.pixel_mode )
     {

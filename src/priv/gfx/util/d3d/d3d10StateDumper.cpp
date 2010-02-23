@@ -162,7 +162,7 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
 
     if( !vs ) return;
 
-    std::vector<UInt8> binbuf;
+    DynaArray<UInt8> binbuf;
     UINT sz;
     vs->GetPrivateData( VSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -170,7 +170,7 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
         GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVS()." );
         return;
     }
-    binbuf.resize( sz );
+    binbuf.Resize( sz );
     vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "vs" );

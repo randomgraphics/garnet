@@ -86,7 +86,7 @@ void GN::d3d10::SimpleMesh::beginVertices()
 void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 {
     mNewVertex.pos.Set( x, y, z );
-    mVertices.append( mNewVertex );
+    mVertices.Append( mNewVertex );
 }
 
 //
@@ -118,11 +118,11 @@ void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::endVertices()
 {
-    if( mVertices.empty() ) return;
+    if( mVertices.Empty() ) return;
 
-    UINT bytes = (UINT)( mVertices.size() * sizeof(Vertex) );
+    UINT bytes = (UINT)( mVertices.Size() * sizeof(Vertex) );
 
-    if( mVtxBufCapacity < mVertices.size() )
+    if( mVtxBufCapacity < mVertices.Size() )
     {
         SafeRelease( mVtxBuf );
         mVtxBufCapacity = 0;
@@ -137,17 +137,17 @@ void GN::d3d10::SimpleMesh::endVertices()
 
         GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mVtxBuf ) );
 
-        mVtxBufCapacity = mVertices.size();
+        mVtxBufCapacity = mVertices.Size();
     }
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
     mDevice->UpdateSubresource( mVtxBuf, 0, &box, mVertices.GetRawPtr(), bytes, bytes );
 
-    mNumVertices = mVertices.size();
+    mNumVertices = mVertices.Size();
 
     // release memory allocated by mVertices.
-    mVertices.purge();
+    mVertices.Purge();
 }
 
 //
@@ -156,7 +156,7 @@ void GN::d3d10::SimpleMesh::endVertices()
 void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 {
     beginVertices();
-    mVertices.append( vertices, count );
+    mVertices.Append( vertices, count );
     endVertices();
 }
 
@@ -173,9 +173,9 @@ void GN::d3d10::SimpleMesh::beginTriangles()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 {
-    mIndices.append( (UInt16)i0 );
-    mIndices.append( (UInt16)i1 );
-    mIndices.append( (UInt16)i2 );
+    mIndices.Append( (UInt16)i0 );
+    mIndices.Append( (UInt16)i1 );
+    mIndices.Append( (UInt16)i2 );
 }
 
 
@@ -184,11 +184,11 @@ void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::endTriangles()
 {
-    if( mIndices.empty() ) return;
+    if( mIndices.Empty() ) return;
 
-    UINT bytes = (UINT)( mIndices.size() * sizeof(UInt16) );
+    UINT bytes = (UINT)( mIndices.Size() * sizeof(UInt16) );
 
-    if( mIdxBufCapacity < mIndices.size() )
+    if( mIdxBufCapacity < mIndices.Size() )
     {
         SafeRelease( mIdxBuf );
         mIdxBufCapacity = 0;
@@ -203,17 +203,17 @@ void GN::d3d10::SimpleMesh::endTriangles()
 
         GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mIdxBuf ) );
 
-        mIdxBufCapacity = mIndices.size();
+        mIdxBufCapacity = mIndices.Size();
     }
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
     mDevice->UpdateSubresource( mIdxBuf, 0, &box, mIndices.GetRawPtr(), bytes, bytes );
 
-    mNumIndices = mIndices.size();
+    mNumIndices = mIndices.Size();
 
     // release memory allocated by mIndices.
-    mIndices.purge();
+    mIndices.Purge();
 }
 
 //
@@ -222,7 +222,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
 void GN::d3d10::SimpleMesh::setTriangles( const UInt16 * triangles, size_t triangleCount )
 {
     beginTriangles();
-    mIndices.append( triangles, triangleCount * 3 );
+    mIndices.Append( triangles, triangleCount * 3 );
     endTriangles();
 }
 

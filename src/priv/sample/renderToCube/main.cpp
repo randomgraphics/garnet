@@ -131,7 +131,7 @@ public:
         SpriteRenderer & sr = getSpriteRenderer();
 
         // draw to cubemap
-        gc.colortargets.resize( 1 );
+        gc.colortargets.Resize( 1 );
         gc.colortargets[0].texture = cubemap->getTexture();
         gc.colortargets[0].subsurface = 0;
         for( int i = 0; i < 6; ++i )

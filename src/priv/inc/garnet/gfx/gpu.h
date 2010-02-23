@@ -1359,13 +1359,13 @@ namespace GN { namespace gfx
         void getCurrentRenderTargetSize( T * width, T * height ) const
         {
             const GpuContext & rc = getContext();
-            if( 0 == rc.colortargets.size() && 0 == rc.depthstencil.texture )
+            if( 0 == rc.colortargets.Size() && 0 == rc.depthstencil.texture )
             {
                 const DispDesc & dd = getDispDesc();
                 if( width ) *width = dd.width;
                 if( height ) *height = dd.height;
             }
-            else if( rc.colortargets.size() > 0 )
+            else if( rc.colortargets.Size() > 0 )
             {
                 rc.colortargets[0].texture->getMipSize( rc.colortargets[0].level, width, height );
             }

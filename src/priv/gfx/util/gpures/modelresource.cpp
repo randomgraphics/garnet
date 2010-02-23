@@ -142,9 +142,9 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
         return false;
     }
 
-    data.resize( s.Size() / 2 );
+    data.Resize( s.Size() / 2 );
 
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.Size(); ++i )
     {
         char hi = s[i*2];
         char lo = s[i*2+1];
@@ -470,11 +470,11 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
             a->name = "size";
             a->value = StringFormat( "%u", unidesc.size );
 
-            if( !unidesc.initialValue.empty() )
+            if( !unidesc.initialValue.Empty() )
             {
                 XmlElement * bin = doc.createElement( uniformNode );
                 bin->name = "initialValue";
-                sBinaryEncode( bin->text, unidesc.initialValue.GetRawPtr(), unidesc.initialValue.size() );
+                sBinaryEncode( bin->text, unidesc.initialValue.GetRawPtr(), unidesc.initialValue.Size() );
             }
         }
         else
@@ -564,15 +564,15 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 
     EffectResource * effect = mOwner->mEffect.resource;
 
-    GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
+    GN_ASSERT( mOwner->mPasses.Size() == effect->getNumPasses() );
 
     const EffectResource::TextureProperties & prop = effect->getTextureProperties( mEffectParameterIndex );
 
-    for( size_t i = 0; i < prop.bindings.size(); ++i )
+    for( size_t i = 0; i < prop.bindings.Size(); ++i )
     {
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
-        GN_ASSERT( location.pass < mOwner->mPasses.size() );
+        GN_ASSERT( location.pass < mOwner->mPasses.Size() );
         GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
         TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
@@ -656,22 +656,22 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 
     EffectResource * effect = mOwner->mEffect.resource;
 
-    GN_ASSERT( mOwner->mPasses.size() == effect->getNumPasses() );
+    GN_ASSERT( mOwner->mPasses.Size() == effect->getNumPasses() );
 
     const EffectResource::UniformProperties & prop = effect->getUniformProperties( mEffectParameterIndex );
 
-    for( size_t i = 0; i < prop.bindings.size(); ++i )
+    for( size_t i = 0; i < prop.bindings.Size(); ++i )
     {
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
-        GN_ASSERT( location.pass < mOwner->mPasses.size() );
+        GN_ASSERT( location.pass < mOwner->mPasses.Size() );
         GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
         GpuContext & gc = mOwner->mPasses[location.pass].gc;
 
-        if( location.stage >= gc.uniforms.size() )
+        if( location.stage >= gc.uniforms.Size() )
         {
-            gc.uniforms.resize( location.stage + 1 );
+            gc.uniforms.Resize( location.stage + 1 );
         }
 
         gc.uniforms[location.stage].set( uniform );
@@ -875,7 +875,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     }
 
     // update GPU contexts
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( size_t i = 0; i < mPasses.Size(); ++i )
     {
         RenderPass & pass = mPasses[i];
 
@@ -923,8 +923,8 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
     // initialize passes array
     size_t numpasses = effect ? effect->getNumPasses() : 0;
-    mPasses.resize( numpasses );
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    mPasses.Resize( numpasses );
+    for( size_t i = 0; i < mPasses.Size(); ++i )
     {
         RenderPass & pass = mPasses[i];
 
@@ -939,7 +939,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
     // reapply textures
     size_t numtextures = effect ? effect->getNumTextures() : 0;
-    mTextures.resize( numtextures );
+    mTextures.Resize( numtextures );
     for( size_t i = 0; i < numtextures; ++i )
     {
         TextureItem & ti = mTextures[i];
@@ -960,7 +960,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
     // reapply uniforms
     size_t numuniforms = effect ? effect->getNumUniforms() : 0;
-    mUniforms.resize( numuniforms );
+    mUniforms.Resize( numuniforms );
     for( size_t i = 0; i < numuniforms; ++i )
     {
         UniformItem & ui = mUniforms[i];
@@ -1003,7 +1003,7 @@ void GN::gfx::ModelResource::Impl::draw() const
 
     const GpuContext & currentContext = g.getContext();
 
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( size_t i = 0; i < mPasses.Size(); ++i )
     {
         GpuContext & gc = mPasses[i].gc;
 
@@ -1027,7 +1027,7 @@ void GN::gfx::ModelResource::Impl::draw() const
     }
 
     // draw
-    for( size_t i = 0; i < mPasses.size(); ++i )
+    for( size_t i = 0; i < mPasses.Size(); ++i )
     {
         const GpuContext & gc = mPasses[i].gc;
 
@@ -1099,8 +1099,8 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // setup textures
-    GN_ASSERT( mTextures.size() == (mEffect.resource ? mEffect.resource->getNumTextures() : 0) );
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    GN_ASSERT( mTextures.Size() == (mEffect.resource ? mEffect.resource->getNumTextures() : 0) );
+    for( size_t i = 0; i < mTextures.Size(); ++i )
     {
         TextureItem & t = mTextures[i];
 
@@ -1139,8 +1139,8 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // setup uniforms
-    GN_ASSERT( mUniforms.size() == (mEffect.resource?mEffect.resource->getNumUniforms() : 0) );
-    for( size_t i = 0; i < mUniforms.size(); ++i )
+    GN_ASSERT( mUniforms.Size() == (mEffect.resource?mEffect.resource->getNumUniforms() : 0) );
+    for( size_t i = 0; i < mUniforms.Size(); ++i )
     {
         UniformItem & u = mUniforms[i];
 
@@ -1166,7 +1166,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
                 StrA uniname = StringFormat( "%s.uniform.%s", modelName(), up.parameterName.GetRawPtr() );
 
                 const void * initialValue = ud->initialValue.GetRawPtr();
-                if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )
+                if( !ud->initialValue.Empty() && ud->initialValue.Size() != ud->size )
                 {
                     GN_ERROR(sLogger)(
                         "Incorrect initial data size of uniform '%s in model '%s'.",
@@ -1229,18 +1229,18 @@ void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
     Clear();
 
     GN_VERIFY( setEffectResource( other.mEffect.resource ) );
-    GN_ASSERT( mPasses.size() == other.mPasses.size() );
+    GN_ASSERT( mPasses.Size() == other.mPasses.Size() );
 
     GN_VERIFY( setMeshResource( other.mMesh.resource, &other.mMesh.subset ) );
 
-    GN_ASSERT( mTextures.size() == other.mTextures.size() );
-    for( size_t i = 0; i < other.mTextures.size(); ++i )
+    GN_ASSERT( mTextures.Size() == other.mTextures.Size() );
+    for( size_t i = 0; i < other.mTextures.Size(); ++i )
     {
         mTextures[i].setResource( *this, i, other.mTextures[i].getResource() );
     }
 
-    GN_ASSERT( mUniforms.size() == other.mUniforms.size() );
-    for( size_t i = 0; i < other.mUniforms.size(); ++i )
+    GN_ASSERT( mUniforms.Size() == other.mUniforms.Size() );
+    for( size_t i = 0; i < other.mUniforms.Size(); ++i )
     {
         mUniforms[i].setResource( *this, i, other.mUniforms[i].getResource() );
     }

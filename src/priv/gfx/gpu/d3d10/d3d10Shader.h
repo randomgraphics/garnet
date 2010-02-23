@@ -122,8 +122,8 @@ namespace GN { namespace gfx
 
         /// add new parameters
         //@{
-        void addUniform( const D3D10UniformParameterDesc & u ) { mUniforms.append( u ); }
-        void addTexture( const D3D10TextureParameterDesc & t ) { mTextures.append( t ); }
+        void addUniform( const D3D10UniformParameterDesc & u ) { mUniforms.Append( u ); }
+        void addTexture( const D3D10TextureParameterDesc & t ) { mTextures.Append( t ); }
         void addAttribute( const D3D10AttributeParameterDesc & );
         //@}
     };
@@ -262,27 +262,27 @@ namespace GN { namespace gfx
             dev.PSSetShader( mPs.shader );
 
             // bind constant buffers
-            if( mVs.constBufs.size() )
+            if( mVs.constBufs.Size() )
             {
                 dev.VSSetConstantBuffers(
                     0,
-                    (UInt32)mVs.constBufs.size(),
+                    (UInt32)mVs.constBufs.Size(),
                     &mVs.constBufs[0] );
             }
 
-            if( mGs.constBufs.size() )
+            if( mGs.constBufs.Size() )
             {
                 dev.GSSetConstantBuffers(
                     0,
-                    (UInt32)mGs.constBufs.size(),
+                    (UInt32)mGs.constBufs.Size(),
                     &mGs.constBufs[0] );
             }
 
-            if( mPs.constBufs.size() )
+            if( mPs.constBufs.Size() )
             {
                 dev.PSSetConstantBuffers(
                     0,
-                    (UInt32)mPs.constBufs.size(),
+                    (UInt32)mPs.constBufs.Size(),
                     &mPs.constBufs[0] );
             }
         }

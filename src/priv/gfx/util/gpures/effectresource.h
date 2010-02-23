@@ -40,18 +40,18 @@ namespace GN { namespace gfx
 
         bool                          reset( const EffectResourceDesc * desc );
 
-        size_t                        getNumPasses() const { return mPasses.size(); }
+        size_t                        getNumPasses() const { return mPasses.Size(); }
 
-        size_t                        getNumTextures() const { return mTextures.size(); }
+        size_t                        getNumTextures() const { return mTextures.Size(); }
         size_t                        findTexture( const char * name ) const;
         const TextureProperties     & getTextureProperties( size_t i ) const { return mTextures[i]; }
 
-        size_t                        getNumUniforms() const { return mUniforms.size(); }
+        size_t                        getNumUniforms() const { return mUniforms.Size(); }
         size_t                        findUniform( const char * name ) const;
         const UniformProperties     & getUniformProperties( size_t i ) const { return mUniforms[i]; }
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      getRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
+                                      getRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.Size() ); return mPasses[pass].renderstates; }
 
         void                          applyToContext( size_t pass, GpuContext & gc ) const;
 

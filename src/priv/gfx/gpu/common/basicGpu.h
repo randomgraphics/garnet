@@ -181,7 +181,7 @@ namespace GN { namespace gfx
         /// check for invalid description.
         bool valid() const
         {
-            for( size_t i = 0; i < colortargets.size(); ++i )
+            for( size_t i = 0; i < colortargets.Size(); ++i )
             {
                 if( !colortargets[i].texture )
                 {
@@ -197,8 +197,8 @@ namespace GN { namespace gfx
         /// equality check
         bool operator==( const RenderTargetDesc & rhs ) const
         {
-            if( colortargets.size() != rhs.colortargets.size() ) return false;
-            for( size_t i = 0; i < colortargets.size(); ++i )
+            if( colortargets.Size() != rhs.colortargets.Size() ) return false;
+            for( size_t i = 0; i < colortargets.Size(); ++i )
             {
                 if( colortargets[i] != rhs.colortargets[i] ) return false;
             }

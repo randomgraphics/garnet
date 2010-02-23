@@ -69,9 +69,9 @@ GN::gfx::D3D11GpuProgramParameterDesc::D3D11GpuProgramParameterDesc()
 GN::gfx::D3D11GpuProgramParameterDesc::~D3D11GpuProgramParameterDesc()
 {
     // delete all name string
-    std::for_each( mUniforms.begin(), mUniforms.end(), &sFreeNameString<D3D11UniformParameterDesc> );
-    std::for_each( mTextures.begin(), mTextures.end(), &sFreeNameString<D3D11TextureParameterDesc> );
-    std::for_each( mAttributes.begin(), mAttributes.end(), &sFreeNameString<D3D11AttributeParameterDesc> );
+    std::for_each( mUniforms.Begin(), mUniforms.End(), &sFreeNameString<D3D11UniformParameterDesc> );
+    std::for_each( mTextures.Begin(), mTextures.End(), &sFreeNameString<D3D11TextureParameterDesc> );
+    std::for_each( mAttributes.Begin(), mAttributes.End(), &sFreeNameString<D3D11AttributeParameterDesc> );
 }
 
 //
@@ -80,15 +80,15 @@ GN::gfx::D3D11GpuProgramParameterDesc::~D3D11GpuProgramParameterDesc()
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 {
     mUniformArray       = mUniforms.GetRawPtr();
-    mUniformCount       = mUniforms.size();
+    mUniformCount       = mUniforms.Size();
     mUniformArrayStride = sizeof(mUniforms[0]);
 
     mTextureArray       = mTextures.GetRawPtr();
-    mTextureCount       = mTextures.size();
+    mTextureCount       = mTextures.Size();
     mTextureArrayStride = sizeof(mTextures[0]);
 
     mAttributeArray       = mAttributes.GetRawPtr();
-    mAttributeCount       = mAttributes.size();
+    mAttributeCount       = mAttributes.Size();
     mAttributeArrayStride = sizeof(mAttributes[0]);
 }
 
@@ -99,11 +99,11 @@ const GN::gfx::D3D11UniformParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name ) const
 {
     const GN::gfx::D3D11UniformParameterDesc * p = std::find_if(
-        mUniforms.begin(),
-        mUniforms.end(),
+        mUniforms.Begin(),
+        mUniforms.End(),
         FindByName<D3D11UniformParameterDesc>(name) );
 
-    return ( p == mUniforms.end() ) ? NULL : p;
+    return ( p == mUniforms.End() ) ? NULL : p;
 }
 
 //
@@ -113,11 +113,11 @@ GN::gfx::D3D11UniformParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name )
 {
     GN::gfx::D3D11UniformParameterDesc * p = std::find_if(
-        mUniforms.begin(),
-        mUniforms.end(),
+        mUniforms.Begin(),
+        mUniforms.End(),
         FindByName<D3D11UniformParameterDesc>(name) );
 
-    return ( p == mUniforms.end() ) ? NULL : p;
+    return ( p == mUniforms.End() ) ? NULL : p;
 }
 
 //
@@ -127,11 +127,11 @@ const GN::gfx::D3D11TextureParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findTexture( const char * name ) const
 {
     const GN::gfx::D3D11TextureParameterDesc * p = std::find_if(
-        mTextures.begin(),
-        mTextures.end(),
+        mTextures.Begin(),
+        mTextures.End(),
         FindByName<D3D11TextureParameterDesc>(name) );
 
-    return ( p == mTextures.end() ) ? NULL : p;
+    return ( p == mTextures.End() ) ? NULL : p;
 }
 
 //
@@ -141,11 +141,11 @@ GN::gfx::D3D11TextureParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findTexture( const char * name )
 {
     GN::gfx::D3D11TextureParameterDesc * p = std::find_if(
-        mTextures.begin(),
-        mTextures.end(),
+        mTextures.Begin(),
+        mTextures.End(),
         FindByName<D3D11TextureParameterDesc>(name) );
 
-    return ( p == mTextures.end() ) ? NULL : p;
+    return ( p == mTextures.End() ) ? NULL : p;
 }
 
 //
@@ -155,11 +155,11 @@ const GN::gfx::D3D11AttributeParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findAttribute( const char * name ) const
 {
     const GN::gfx::D3D11AttributeParameterDesc * p = std::find_if(
-        mAttributes.begin(),
-        mAttributes.end(),
+        mAttributes.Begin(),
+        mAttributes.End(),
         FindByName<D3D11AttributeParameterDesc>(name) );
 
-    return ( p == mAttributes.end() ) ? NULL : p;
+    return ( p == mAttributes.End() ) ? NULL : p;
 }
 
 //
@@ -169,11 +169,11 @@ GN::gfx::D3D11AttributeParameterDesc *
 GN::gfx::D3D11GpuProgramParameterDesc::findAttribute( const char * name )
 {
     GN::gfx::D3D11AttributeParameterDesc * p = std::find_if(
-        mAttributes.begin(),
-        mAttributes.end(),
+        mAttributes.Begin(),
+        mAttributes.End(),
         FindByName<D3D11AttributeParameterDesc>(name) );
 
-    return ( p == mAttributes.end() ) ? NULL : p;
+    return ( p == mAttributes.End() ) ? NULL : p;
 }
 
 // *****************************************************************************
@@ -233,10 +233,10 @@ sUpdateConstData(
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<UInt8>       dst( cb.GetRawPtr(), cb.size() );
+    SafeArrayAccessor<UInt8>       dst( cb.GetRawPtr(), cb.Size() );
 
     // copy uniform data to system const buffer
-    src.copyTo(
+    src.CopyTo(
         0,          // src offset
         dst,        // dst buffer
         ssp.offset, // dst offset
@@ -338,35 +338,35 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
     ID3D11DeviceContext & cxt = getDeviceContextRef();
 
     // update vertex shader constant buffers
-    for( size_t i = 0; i < mVs.constBufs.size(); ++i )
+    for( size_t i = 0; i < mVs.constBufs.Size(); ++i )
     {
         if( skipDirtyCheck || vscDirty[i] )
         {
             ID3D11Buffer           & buf = *mVs.constBufs[i];
             const DynaArray<UInt8> & data = mVs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
         }
     }
 
     // update geometry shader constant buffers
-    for( size_t i = 0; i < mGs.constBufs.size(); ++i )
+    for( size_t i = 0; i < mGs.constBufs.Size(); ++i )
     {
         if( skipDirtyCheck || gscDirty[i] )
         {
             ID3D11Buffer           & buf = *mGs.constBufs[i];
             const DynaArray<UInt8> & data = mGs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
         }
     }
 
     // update pixel shader constant buffers
-    for( size_t i = 0; i < mPs.constBufs.size(); ++i )
+    for( size_t i = 0; i < mPs.constBufs.Size(); ++i )
     {
         if( skipDirtyCheck || pscDirty[i] )
         {
             ID3D11Buffer           & buf = *mPs.constBufs[i];
             const DynaArray<UInt8> & data = mPs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.size() );
+            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
         }
     }
 }

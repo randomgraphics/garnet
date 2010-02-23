@@ -276,7 +276,7 @@ createEffect( GpuResourceDatabase & gdb )
     ed.gpuprograms["glsl"].uniforms["wit"] = "MATRIX_WORLD_IT";
     ed.gpuprograms["glsl"].uniforms["lightpos"] = "LIGHT0_POSITION";
     ed.gpuprograms["glsl"].textures["t0"] = "DIFFUSE_TEXTURE";
-    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes.Resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);

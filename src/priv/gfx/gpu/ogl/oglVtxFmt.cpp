@@ -76,7 +76,7 @@ bool GN::gfx::OGLVtxFmt::bindStates() const
 
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mStateBindings.size(); ++i )
+    for( size_t i = 0; i < mStateBindings.Size(); ++i )
     {
         const StateBinding & sb = mStateBindings[i];
         GN_ASSERT( sb.func );
@@ -101,7 +101,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mAttribBindings.size(); ++i )
+    for( size_t i = 0; i < mAttribBindings.Size(); ++i )
     {
         const AttribBinding & ab = mAttribBindings[i];
 
@@ -138,7 +138,7 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
 {
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mAttribBindings.size(); ++i )
+    for( size_t i = 0; i < mAttribBindings.Size(); ++i )
     {
         const AttribBinding & ab = mAttribBindings[i];
 
@@ -180,7 +180,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
     OGLVertexBindingDesc vbd;
 
-    mAttribBindings.reserve( mFormat.numElements );
+    mAttribBindings.Reserve( mFormat.numElements );
 
     for( size_t i = 0; i < mFormat.numElements; ++i )
     {
@@ -289,7 +289,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
         GN_ASSERT( ab.func );
 
-        mAttribBindings.append( ab );
+        mAttribBindings.Append( ab );
     }
 
     // ===================
@@ -302,37 +302,37 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     // position
     sb.func = hasVertex ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_VERTEX_ARRAY;
-    mStateBindings.append( sb );
+    mStateBindings.Append( sb );
 
     // normal
     sb.func = hasNormal ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_NORMAL_ARRAY;
-    mStateBindings.append( sb );
+    mStateBindings.Append( sb );
 
     // color0
     sb.func = hasColor0 ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_COLOR_ARRAY;
-    mStateBindings.append( sb );
+    mStateBindings.Append( sb );
 
     // color1
     if( GLEW_EXT_secondary_color )
     {
         sb.func = hasColor1 ? &sEnableClientState : &sDisableClientState;
         sb.info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
-        mStateBindings.append( sb );
+        mStateBindings.Append( sb );
     }
 
     // has fog
     sb.func = hasFog ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
-    mStateBindings.append( sb );
+    mStateBindings.Append( sb );
 
     // vertex attributes
     for( UInt32 i = 0; i < maxAttributes; ++i )
     {
         sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
         sb.info.attribute = i;
-        mStateBindings.append( sb );
+        mStateBindings.Append( sb );
     }
 
     // texture coordinates
@@ -342,7 +342,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         sb.info.self     = this;
         sb.info.texStage = i;
         sb.info.semantic = GL_TEXTURE_COORD_ARRAY;
-        mStateBindings.append( sb );
+        mStateBindings.Append( sb );
     }
 
     // success

@@ -452,12 +452,12 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
     const Uniform * const * uniforms,
     size_t                  count ) const
 {
-    if( count != mUniforms.size() )
+    if( count != mUniforms.Size() )
     {
-        GN_ERROR(sLogger)( "Current GPU program requires %d uniforms. But %d are provided.", mUniforms.size(), count );
+        GN_ERROR(sLogger)( "Current GPU program requires %d uniforms. But %d are provided.", mUniforms.Size(), count );
     }
 
-    if( count > mUniforms.size() ) count = mUniforms.size();
+    if( count > mUniforms.Size() ) count = mUniforms.Size();
 
     for( size_t i = 0; i < count; ++i )
     {
@@ -572,9 +572,9 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
     size_t maxStages = r.GetCaps().maxTextures;
 
     // determine effective texture count
-    if( count > mTextures.size() )
+    if( count > mTextures.Size() )
     {
-        count = mTextures.size();
+        count = mTextures.Size();
     }
     GN_ASSERT( count <= maxStages );
 
@@ -656,47 +656,47 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
         if( sIsTextureUniform( u.type ) )
         {
-            mTextures.append( u );
+            mTextures.Append( u );
         }
         else
         {
             u.size = sGetUniformSize(u.type) * u.count;
-            mUniforms.append( u );
+            mUniforms.Append( u );
         }
     }
 
     // initialize name and size arrays
-    for( size_t i = 0; i < mUniforms.size(); ++i )
+    for( size_t i = 0; i < mUniforms.Size(); ++i )
     {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
         u.uniformDesc.name = u.name.GetRawPtr();
         u.uniformDesc.size = u.size;
     }
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    for( size_t i = 0; i < mTextures.Size(); ++i )
     {
         GLSLUniformOrTextureDesc & t = mTextures[i];
         t.textureDesc.name = t.name.GetRawPtr();
     }
 
     // update parameter descriptor
-    if( mUniforms.size() > 0 )
+    if( mUniforms.Size() > 0 )
     {
         mParamDesc.setUniformArray(
             &mUniforms[0].uniformDesc,
-            mUniforms.size(),
+            mUniforms.Size(),
             sizeof(GLSLUniformOrTextureDesc) );
     }
-    if( mTextures.size() > 0 )
+    if( mTextures.Size() > 0 )
     {
         mParamDesc.setTextureArray(
             &mTextures[0].textureDesc,
-            mTextures.size(),
+            mTextures.Size(),
             sizeof(GLSLUniformOrTextureDesc) );
     }
 
     // check for texture capability
     OGLGpu & r = getGpu();
-    if( mTextures.size() > r.GetCaps().maxTextures )
+    if( mTextures.Size() > r.GetCaps().maxTextures )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
         return false;
@@ -736,11 +736,11 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 
         a.name = nameptr;
 
-        mAttributes.append( a );
+        mAttributes.Append( a );
     }
 
     // initialize name and format arrays
-    for( size_t i = 0; i < mAttributes.size(); ++i )
+    for( size_t i = 0; i < mAttributes.Size(); ++i )
     {
         GLSLAttributeDesc & a = mAttributes[i];
         a.desc.name = a.name.GetRawPtr();
@@ -749,7 +749,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     // update parameter descriptor
     mParamDesc.setAttributeArray(
         &mAttributes[0].desc,
-        mAttributes.size(),
+        mAttributes.Size(),
         sizeof(GLSLAttributeDesc) );
 
     return true;
@@ -764,7 +764,7 @@ GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
 
     const GLSLAttributeDesc * attrib = mAttributes.GetRawPtr();
 
-    for( size_t i = 0; i < mAttributes.size(); ++i, ++attrib )
+    for( size_t i = 0; i < mAttributes.Size(); ++i, ++attrib )
     {
         if( name == attrib->name )
         {

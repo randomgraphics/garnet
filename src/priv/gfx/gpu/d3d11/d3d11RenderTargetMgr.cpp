@@ -103,7 +103,7 @@ bool GN::gfx::D3D11RTMgr::bind(
         return true;
     }
 
-    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
+    if( 0 == newrt.colortargets.Size() && 0 == newrt.depthstencil.texture )
     {
         // separate code path for rendering to back buffer
         memset( mColors, 0, sizeof(mColors) );
@@ -114,7 +114,7 @@ bool GN::gfx::D3D11RTMgr::bind(
     else
     {
         // build RTV array
-        for( size_t i = 0; i < newrt.colortargets.size(); ++i )
+        for( size_t i = 0; i < newrt.colortargets.Size(); ++i )
         {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
@@ -130,12 +130,12 @@ bool GN::gfx::D3D11RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( size_t i = newrt.colortargets.Size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }
 
-        mNumColors = newrt.colortargets.size();
+        mNumColors = newrt.colortargets.Size();
 
         // Get depth stencil view
         D3D11Texture * dstex = (D3D11Texture*)newrt.depthstencil.texture.get();
@@ -164,7 +164,7 @@ bool GN::gfx::D3D11RTMgr::bind(
 
     // update mRenderTargetSize
     Vector2<UInt32> newRtSize;
-    if( newrt.colortargets.size() > 0 )
+    if( newrt.colortargets.Size() > 0 )
     {
         newrt.colortargets[0].texture->getMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
     }

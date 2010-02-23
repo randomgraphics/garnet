@@ -19,7 +19,7 @@ static ModelResourceDesc sNormalMapModelDesc()
 #define INIT_UNIFORM( name, type, defval ) \
     if( 1 ) { \
         md.uniforms[name].size = sizeof(type); \
-        md.uniforms[name].initialValue.resize( sizeof(type) ); \
+        md.uniforms[name].initialValue.Resize( sizeof(type) ); \
         type default = (defval); \
         memcpy( md.uniforms[name].initialValue.GetRawPtr(), &default, sizeof(type) ); \
     } else void(0)

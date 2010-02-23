@@ -41,7 +41,7 @@ namespace GN
 
         DebugVariableId getId() const { return mId; }
 
-        size_t       getSize() const { return mValue.size(); }
+        size_t       getSize() const { return mValue.Size(); }
 
         const void * getValue() const { return mValue.GetRawPtr(); }
 

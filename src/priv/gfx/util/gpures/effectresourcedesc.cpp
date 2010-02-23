@@ -299,8 +299,8 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
         const XmlCdata * c = n->toCdata();
         if( c )
         {
-            size_t offset = sd.shaderSourceBuffer.size();
-            sd.shaderSourceBuffer.append( c->text.GetRawPtr(), c->text.Size() + 1 );
+            size_t offset = sd.shaderSourceBuffer.Size();
+            sd.shaderSourceBuffer.Append( c->text.GetRawPtr(), c->text.Size() + 1 );
             code.source = (const char*)offset;
             break;
         }
@@ -310,8 +310,8 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
     const char * entry = sGetAttrib( node, "entry", NULL );
     if( entry )
     {
-        size_t offset = sd.shaderSourceBuffer.size();
-        sd.shaderSourceBuffer.append( entry, StringLength(entry) + 1 );
+        size_t offset = sd.shaderSourceBuffer.Size();
+        sd.shaderSourceBuffer.Append( entry, StringLength(entry) + 1 );
         code.entry = (const char *)offset;
     }
     else
@@ -335,7 +335,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
 
     // Add some dummy data into shader source buffer,
     // to ensure that any valid shader source offset won't be zero.
-    sd.shaderSourceBuffer.append( "ABCD", 4 );
+    sd.shaderSourceBuffer.Append( "ABCD", 4 );
 
     // get shading language
     const char * lang = sGetAttrib( node, "lang" );
@@ -440,9 +440,9 @@ static void sParsePass( EffectResourceDesc::EffectTechniqueDesc & td, const XmlE
         return;
     }
 
-    td.passes.resize( td.passes.size() + 1 );
+    td.passes.Resize( td.passes.Size() + 1 );
 
-    EffectResourceDesc::EffectPassDesc & pd = td.passes.back();
+    EffectResourceDesc::EffectPassDesc & pd = td.passes.Back();
 
     pd.gpuprogram = gpname;
 
@@ -513,10 +513,10 @@ static void sCopyShaderSourcePtr(
     const char            * from,
     const DynaArray<char> & frombuf )
 {
-    GN_ASSERT( tobuf.size() == frombuf.size() );
+    GN_ASSERT( tobuf.Size() == frombuf.Size() );
 
     const char * s = frombuf.GetRawPtr();
-    const char * e = s + frombuf.size();
+    const char * e = s + frombuf.Size();
 
     if( s <= from && from < e )
     {

@@ -128,7 +128,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
 
         if( NULL != data && length > 0 )
         {
-            userData.resize( length );
+            userData.Resize( length );
             memcpy( userData.GetRawPtr(), data, length );
         }
         else
@@ -143,7 +143,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
 
         if( NULL != data && length > 0 )
         {
-            userData.resize( length );
+            userData.Resize( length );
             memcpy( userData.GetRawPtr(), data, length );
         }
     }
@@ -160,9 +160,9 @@ const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) 
     {
         const DynaArray<UInt8> & userData = iter->second;
 
-        if( length ) *length = userData.size();
+        if( length ) *length = userData.Size();
 
-        return userData.empty() ? NULL : userData.GetRawPtr();
+        return userData.Empty() ? NULL : userData.GetRawPtr();
     }
     else
     {

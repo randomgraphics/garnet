@@ -128,7 +128,7 @@ public:
     void drawToColorRenderTarget( Texture * tex )
     {
         Gpu & gpu = db.gpu();
-        context.colortargets.resize( 1 );
+        context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
         gpu.bindContext( context );
         gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
@@ -149,7 +149,7 @@ public:
     void drawToBothColorAndDepthTexture()
     {
         Gpu & gpu = db.gpu();
-        context.colortargets.resize( 1 );
+        context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
         gpu.bindContext( context );

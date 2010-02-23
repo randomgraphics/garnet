@@ -80,7 +80,7 @@ public:
 
         if( CONTINUE_EXECUTION == status )
         {
-            extraArgc = mExtraArgs.size();
+            extraArgc = mExtraArgs.Size();
             extraArgv = mExtraArgs.GetRawPtr();
         }
     }
@@ -251,13 +251,13 @@ private:
                 else
                 {
                     // this is an extra option
-                    mExtraArgs.append( a );
+                    mExtraArgs.Append( a );
                 }
             }
             else
             {
                 // this is an extra argument
-                mExtraArgs.append( a );
+                mExtraArgs.Append( a );
             }
         }
 
