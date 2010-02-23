@@ -38,7 +38,7 @@ class GpuTest
 
         const GpuContext & rc = r.getContext();
 
-        TS_ASSERT( rc.colortargets.size() > rtidx );
+        TS_ASSERT( rc.colortargets.Size() > rtidx );
         TS_ASSERT( rc.colortargets[rtidx].texture );
 
         const RenderTargetTexture & rtt = rc.colortargets[rtidx];
@@ -96,10 +96,10 @@ class GpuTest
 
         size_t bytesPerPixel = bc.format.getBytesPerBlock();
         size_t srcOffset = bc.pitch * y + x * bytesPerPixel;
-        TS_ASSERT( srcOffset < bc.data.size() );
-        if( srcOffset >= bc.data.size() ) return rtp;
+        TS_ASSERT( srcOffset < bc.data.Size() );
+        if( srcOffset >= bc.data.Size() ) return rtp;
         const UInt8 * src = &bc.data[srcOffset];
-        size_t copiedBytes = math::GetMin( bc.data.size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::GetMin( bc.data.Size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;

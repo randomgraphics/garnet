@@ -175,7 +175,6 @@ namespace GN
 
         void Clear()
         {
-            mValues.Clear();
             mValues.resize( HASH_MAP_PRIMARY_ARRAY[0] );
             mPrimIndex = 0;
             mCount = 0;

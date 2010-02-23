@@ -167,7 +167,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
-    xpr.sceneData.resize( dataSize );
+    xpr.sceneData.Resize( dataSize );
     if( !file.read( xpr.sceneData.GetRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
@@ -199,7 +199,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
-                xpr.vbDescs.append( vbdesc );
+                xpr.vbDescs.Append( vbdesc );
                 break;
             }
 
@@ -212,7 +212,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
-                xpr.ibDescs.append( ibdesc );
+                xpr.ibDescs.Append( ibdesc );
                 break;
             }
 
@@ -225,7 +225,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
-                xpr.texDescs.append( texdesc );
+                xpr.texDescs.Append( texdesc );
                 break;
             }
 
@@ -285,7 +285,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 #define FULL_MESH_NAME( n ) (n) // StringFormat("%s.%s",filename.GetRawPtr(),n.GetRawPtr())
 
     // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
-    for( size_t i = 0; i < ase.meshes.size(); ++i )
+    for( size_t i = 0; i < ase.meshes.Size(); ++i )
     {
         const AseMesh & src = ase.meshes[i];
 
@@ -306,7 +306,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     desc.meshdata = ase.meshdata;
 
     // create models
-    for( size_t i = 0; i < ase.subsets.size(); ++i )
+    for( size_t i = 0; i < ase.subsets.Size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
 
@@ -339,7 +339,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // add the model to appropriate entity
         GN_ASSERT( desc.entities.end() != desc.entities.find(model.mesh) );
-        desc.entities[model.mesh].models.append( modelname );
+        desc.entities[model.mesh].models.Append( modelname );
     }
 
     // setup bounding box of the whole scene
@@ -385,7 +385,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
         if( !blob ) return false;
 
         desc.meshes[md.mesh] = mesh;
-        desc.meshdata.append( blob );
+        desc.meshdata.Append( blob );
     }
 
     desc.models[modelName->value] = md;
@@ -462,7 +462,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
                     return false;
                 }
 
-                entity.models.append( a->value );
+                entity.models.Append( a->value );
             }
             else
             {
@@ -708,7 +708,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
         XmlElement * visual = xmldoc.createElement( entity );
         visual->name  = "visual";
-        for( size_t i = 0; i < entityDesc.models.size(); ++i )
+        for( size_t i = 0; i < entityDesc.models.Size(); ++i )
         {
             XmlElement * modelref = xmldoc.createElement( visual );
             modelref->name = "model";
@@ -763,7 +763,7 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
-    desc.meshdata.append( blob );
+    desc.meshdata.Append( blob );
     desc.models[meshname] = model;
 
     // create a entity for the model
@@ -771,7 +771,7 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
     ed.spatial.position.Set( 0, 0, 0 );
     ed.spatial.orientation.Set( 0, 0, 0, 1 );
     mesh.CalculateBoundingBox( ed.spatial.bbox );
-    ed.models.append( meshname );
+    ed.models.Append( meshname );
 
     // done
     desc.bbox = ed.spatial.bbox;
@@ -806,7 +806,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     }
 
     // create a new entity instance
-    Entity * e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
+    Entity * e = entityDesc.models.Empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
     if( !e ) return NULL;
 
     // attach the entity to parent node or root node
@@ -818,7 +818,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     CalculateBoundingSphereFromBoundingBox( bs, bbox );
     e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
-    for( size_t i = 0; i < entityDesc.models.size(); ++i )
+    for( size_t i = 0; i < entityDesc.models.Size(); ++i )
     {
         const StrA & modelName = entityDesc.models[i];
 

@@ -113,7 +113,7 @@ void GN::util::VisualNode::Impl::draw() const
 
         Matrix44f pvw = pv * world;
 
-        for( StandardUniformType type = 0; (size_t)type < mStandardPerObjectUniforms.size(); ++type )
+        for( StandardUniformType type = 0; (size_t)type < mStandardPerObjectUniforms.Size(); ++type )
         {
             UniformResource * ur = mStandardPerObjectUniforms[type];
             if( NULL == ur ) continue;

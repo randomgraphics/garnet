@@ -159,7 +159,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
 
     for( size_t i = 0; i < count; ++i )
     {
-        if( i >= mUniforms.size() )
+        if( i >= mUniforms.Size() )
         {
             GN_WARN(sLogger)( "there are more GPU parameters than the shader needs." );
             return;
@@ -337,7 +337,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                             u.pshandle = c;
                         }
                         u.size = cd.Bytes;
-                        mUniforms.append( u );
+                        mUniforms.Append( u );
                     }
                     break;
                 }
@@ -379,7 +379,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                         {
                             t.pshandle = c;
                         }
-                        mTextures.append( t );
+                        mTextures.Append( t );
                     }
                     break;
                 }
@@ -399,14 +399,14 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 {
-    if( !mUniforms.empty() )
+    if( !mUniforms.Empty() )
     {
-        size_t count = mUniforms.size();
+        size_t count = mUniforms.Size();
 
         GN_ASSERT( count > 0 );
 
         mParamDesc.mUniformArray       = mUniforms.GetRawPtr();
-        mParamDesc.mUniformCount       = mUniforms.size();
+        mParamDesc.mUniformCount       = mUniforms.Size();
         mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
         for( size_t i = 0; i < count; ++i )
@@ -418,14 +418,14 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
         }
     }
 
-    if( !mTextures.empty() )
+    if( !mTextures.Empty() )
     {
-        size_t count = mTextures.size();
+        size_t count = mTextures.Size();
 
         GN_ASSERT( count > 0 );
 
         mParamDesc.mTextureArray       = mTextures.GetRawPtr();
-        mParamDesc.mTextureCount       = mTextures.size();
+        mParamDesc.mTextureCount       = mTextures.Size();
         mParamDesc.mTextureArrayStride = sizeof(mTextures[0]);
 
         for( size_t i = 0; i < count; ++i )

@@ -109,7 +109,7 @@ public:
         mContext.gpuProgram.attach( gpu.createGpuProgram( gpd ) );
         if( !mContext.gpuProgram ) return false;
 
-        mContext.uniforms.resize( 1 );
+        mContext.uniforms.Resize( 1 );
         mContext.uniforms[0].attach( gpu.createUniform( sizeof(mRipples) ) );
         if( !mContext.uniforms[0] ) return false;
 

@@ -45,7 +45,7 @@ bool GN::d3d10::RenderToTexture::Init(
     };
 
     // create color buffers
-    mColors.resize( options.count );
+    mColors.Resize( options.count );
     for( size_t i = 0; i < options.count; ++i )
     {
         RenderTargetTexture & rtt = mColors[i];
@@ -133,7 +133,7 @@ void GN::d3d10::RenderToTexture::Quit()
 {
     GN_GUARD;
 
-    for( size_t i = 0; i < mColors.size(); ++i )
+    for( size_t i = 0; i < mColors.Size(); ++i )
     {
         mColors[i].Clear();
     }
@@ -156,7 +156,7 @@ void GN::d3d10::RenderToTexture::Quit()
 void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
 {
     float color[] = { r, g, b, a };
-    for( size_t i = 0; i < mColors.size(); ++i )
+    for( size_t i = 0; i < mColors.Size(); ++i )
     {
         mDevice->ClearRenderTargetView( mColors[i].rtv, color );
     }

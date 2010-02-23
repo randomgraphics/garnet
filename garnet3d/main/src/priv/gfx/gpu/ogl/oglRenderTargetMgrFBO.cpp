@@ -135,7 +135,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     }
 
     // special case for render to back buffer
-    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
+    if( 0 == newrt.colortargets.Size() && 0 == newrt.depthstencil.texture )
     {
         // disable FBO, render to back buffer
         GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ) );
@@ -153,7 +153,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ) );
 
     // setup color buffers
-    if( newrt.colortargets.size() > 0 )
+    if( newrt.colortargets.Size() > 0 )
     {
         // setup color buffer attachments
         static GLenum buffers[] =
@@ -175,11 +175,11 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GL_COLOR_ATTACHMENT14_EXT,
             GL_COLOR_ATTACHMENT15_EXT,
         };
-        GN_ASSERT( newrt.colortargets.size() <= 16 );
-        GN_OGL_CHECK( glDrawBuffersARB( (GLsizei)newrt.colortargets.size(), buffers ) );
+        GN_ASSERT( newrt.colortargets.Size() <= 16 );
+        GN_OGL_CHECK( glDrawBuffersARB( (GLsizei)newrt.colortargets.Size(), buffers ) );
 
         // bind color buffers
-        for( GLenum i = 0; i < newrt.colortargets.size(); ++i )
+        for( GLenum i = 0; i < newrt.colortargets.Size(); ++i )
         {
             sAttachRTT2FBO( newrt.colortargets[i], GL_COLOR_ATTACHMENT0_EXT + i );
         }

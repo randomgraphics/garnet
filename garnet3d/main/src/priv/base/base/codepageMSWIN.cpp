@@ -131,7 +131,7 @@ GN::CECImplMSWIN::convert(
     DynaArray<wchar_t> tempBuffer;
     if( NULL != mLocaleFrom )
     {
-        tempBuffer.resize( sourceBufferSizeInBytes );
+        tempBuffer.Resize( sourceBufferSizeInBytes );
 
         /*errno_t err = ::_mbstowcs_s_l(
             &converted,
@@ -149,7 +149,7 @@ GN::CECImplMSWIN::convert(
             ((const char *)sourceBuffer)+sourceBufferSizeInBytes,
             srcnext,
             tempBuffer.GetRawPtr(),
-            tempBuffer.GetRawPtr() + tempBuffer.size(),
+            tempBuffer.GetRawPtr() + tempBuffer.Size(),
             tempnext );
 
         if( std::codecvt_base::error == err )

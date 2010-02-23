@@ -67,7 +67,7 @@ bool Init( Gpu & gpu )
     if( !rc.gpuProgram ) return false;
 
     // create uniform
-    rc.uniforms.resize( 1 );
+    rc.uniforms.Resize( 1 );
     rc.uniforms[0].attach( gpu.createUniform( sizeof(Matrix44f) ) );
     if( !rc.uniforms[0] ) return false;
 

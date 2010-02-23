@@ -179,7 +179,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
-    xpr.sceneData.resize( dataSize );
+    xpr.sceneData.Resize( dataSize );
     if( !file.read( xpr.sceneData.GetRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
@@ -211,7 +211,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
-                xpr.vbDescs.append( vbdesc );
+                xpr.vbDescs.Append( vbdesc );
                 break;
             }
 
@@ -224,7 +224,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
-                xpr.ibDescs.append( ibdesc );
+                xpr.ibDescs.Append( ibdesc );
                 break;
             }
 
@@ -237,7 +237,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     return false;
                 }
                 SwapEndian8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
-                xpr.texDescs.append( texdesc );
+                xpr.texDescs.Append( texdesc );
                 break;
             }
 
@@ -267,8 +267,8 @@ sLoadModelsFromXPR( VisualNode & node, GpuResourceDatabase & db, File & file )
 
     // create mesh list
     DynaArray<AutoRef<MeshResource> > meshes;
-    meshes.resize( xpr.meshes.size() );
-    for( size_t i = 0; i < xpr.meshes.size(); ++i )
+    meshes.Resize( xpr.meshes.Size() );
+    for( size_t i = 0; i < xpr.meshes.Size(); ++i )
     {
         meshes[i] = db.createResource<MeshResource>( NULL );
         if( !meshes[i] ) return false;
@@ -303,9 +303,9 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
     {
         GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualNode: generating mesh list" );
 
-        meshes.resize( ase.meshes.size() );
+        meshes.Resize( ase.meshes.Size() );
 
-        for( size_t i = 0; i < ase.meshes.size(); ++i )
+        for( size_t i = 0; i < ase.meshes.Size(); ++i )
         {
             char meshname[1024];
             StringPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
@@ -328,7 +328,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
     if( !normalMapModel.Init() ) return false;
 
     // create model
-    for( size_t i = 0; i < ase.subsets.size(); ++i )
+    for( size_t i = 0; i < ase.subsets.Size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
 

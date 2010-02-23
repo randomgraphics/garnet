@@ -116,7 +116,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes.Resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
@@ -131,7 +131,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["hlsl9"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.techniques["hlsl9"].passes.resize( 1 );
+    ed.techniques["hlsl9"].passes.Resize( 1 );
     ed.techniques["hlsl9"].passes[0].gpuprogram = "hlsl9";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@DIFFUSE" );
@@ -194,7 +194,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["glsl"].uniforms["color"] = "COLOR";
-    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes.Resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
@@ -204,7 +204,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR";
-    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes.Resize( 1 );
     ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
@@ -327,7 +327,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
-    ed.techniques["glsl"].passes.resize( 1 );
+    ed.techniques["glsl"].passes.Resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
@@ -343,7 +343,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
-    ed.techniques["hlsl"].passes.resize( 1 );
+    ed.techniques["hlsl"].passes.Resize( 1 );
     ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@NORMAL_MAP" );
@@ -482,19 +482,19 @@ bool GpuResourceDatabase::Impl::registerResourceFactory(
         return false;
     }
 
-    if( mManagers.size() == mManagers.MAX_SIZE )
+    if( mManagers.Size() == mManagers.MAX_SIZE )
     {
         GN_ERROR(sLogger)( "Resource manager pool is full. Cannot register more resource types!" );
         return false;
     }
 
-    mManagers.resize( mManagers.size() + 1 );
+    mManagers.Resize( mManagers.Size() + 1 );
 
-    ResourceManager & mgr = mManagers.back();
+    ResourceManager & mgr = mManagers.Back();
 
     mgr.guid = type;
     mgr.desc = descriptiveName ? descriptiveName : "unnamed resource";
-    mgr.index = mManagers.size() - 1;
+    mgr.index = mManagers.Size() - 1;
     mgr.factory = factory;
     GN_ASSERT( mgr.resources.empty() );
 
@@ -607,7 +607,7 @@ bool GpuResourceDatabase::Impl::validResource( const GpuResource * resource ) co
 
     if( this != resource->database().mImpl ) return false;
 
-    for( size_t i = 0; i < mManagers.size(); ++i )
+    for( size_t i = 0; i < mManagers.Size(); ++i )
     {
         const ResourceManager & mgr = mManagers[i];
 
@@ -682,12 +682,12 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
     if( !registerModelResourceFactory( mDatabase ) ) return false;
 
     // create some built-in resources
-    mBuiltInResources.append( sRegisterDiffuseEffect( mDatabase ) );
-    mBuiltInResources.append( sRegisterWireframeEffect( mDatabase ) );
-    mBuiltInResources.append( sRegisterNormalMapEffect( mDatabase ) );
-    mBuiltInResources.append( sRegisterWhiteTexture( mDatabase ) );
-    mBuiltInResources.append( sRegisterBlackTexture( mDatabase ) );
-    mBuiltInResources.append( sRegisterFlatNormalMap( mDatabase ) );
+    mBuiltInResources.Append( sRegisterDiffuseEffect( mDatabase ) );
+    mBuiltInResources.Append( sRegisterWireframeEffect( mDatabase ) );
+    mBuiltInResources.Append( sRegisterNormalMapEffect( mDatabase ) );
+    mBuiltInResources.Append( sRegisterWhiteTexture( mDatabase ) );
+    mBuiltInResources.Append( sRegisterBlackTexture( mDatabase ) );
+    mBuiltInResources.Append( sRegisterFlatNormalMap( mDatabase ) );
 
     return true;
 }
@@ -702,7 +702,7 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources()
 inline const GpuResourceDatabase::Impl::ResourceManager *
 GpuResourceDatabase::Impl::getManager( const Guid & type ) const
 {
-    for( size_t i = 0; i < mManagers.size(); ++i )
+    for( size_t i = 0; i < mManagers.Size(); ++i )
     {
         const ResourceManager & m = mManagers[i];
         if( type == m.guid )
@@ -720,7 +720,7 @@ GpuResourceDatabase::Impl::getManager( const Guid & type ) const
 inline GpuResourceDatabase::Impl::ResourceManager *
 GpuResourceDatabase::Impl::getManager( const Guid & type )
 {
-    for( size_t i = 0; i < mManagers.size(); ++i )
+    for( size_t i = 0; i < mManagers.Size(); ++i )
     {
         ResourceManager & m = mManagers[i];
         if( type == m.guid )
@@ -753,7 +753,7 @@ GpuResourceDatabase::Impl::getResourceImpl( const GpuResource * resource ) const
     GpuResource::Impl * impl = resource->mImpl;
 
     GN_ASSERT( impl );
-    GN_ASSERT( impl->handle.managerIndex() < mManagers.size() );
+    GN_ASSERT( impl->handle.managerIndex() < mManagers.Size() );
     GN_ASSERT( mManagers[impl->handle.managerIndex()].resources.validHandle(impl->handle.internalHandle()) );
 
     return impl;

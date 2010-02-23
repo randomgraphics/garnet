@@ -123,15 +123,15 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
         {
             parts.Clear();
             normalizePathSeparator( input, path );
-            buf.resize( input.Size() + 1 );
+            buf.Resize( input.Size() + 1 );
             memcpy( buf.GetRawPtr(), input.GetRawPtr(), input.Size() + 1 );
-            parts.append( buf.GetRawPtr() );
-            for( size_t i = 0; i < buf.size() - 1; ++i )
+            parts.Append( buf.GetRawPtr() );
+            for( size_t i = 0; i < buf.Size() - 1; ++i )
             {
                 if( '/' == buf[i] )
                 {
                     buf[i] = 0;
-                    parts.append( buf.GetRawPtr() + i + 1 );
+                    parts.Append( buf.GetRawPtr() + i + 1 );
                 }
             }
         }
@@ -150,7 +150,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
     b.split( base );
 
     // find the commen prefix between path and base.
-    size_t n = math::GetMin( p.parts.size(), b.parts.size() );
+    size_t n = math::GetMin( p.parts.Size(), b.parts.Size() );
     size_t i;
     for( i = 0; i < n; ++i )
     {
@@ -166,12 +166,12 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 
     // compose result path
     result.Clear();
-    if( i > 0 ) for( size_t j = i; j < b.parts.size(); ++j )
+    if( i > 0 ) for( size_t j = i; j < b.parts.Size(); ++j )
     {
         result.Append( ".." );
         result.Append( '/' );
     }
-    for( size_t j = i; j < p.parts.size(); ++j )
+    for( size_t j = i; j < p.parts.Size(); ++j )
     {
         result.Append( p.parts[j] );
         result.Append( '/' );

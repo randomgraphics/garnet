@@ -225,7 +225,7 @@ size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 {
     if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
 
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    for( size_t i = 0; i < mTextures.Size(); ++i )
     {
         if( name == mTextures[i].parameterName )
         {
@@ -243,7 +243,7 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 {
     if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
 
-    for( size_t i = 0; i < mUniforms.size(); ++i )
+    for( size_t i = 0; i < mUniforms.Size(); ++i )
     {
         if( name == mUniforms[i].parameterName )
         {
@@ -259,7 +259,7 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 // -----------------------------------------------------------------------------
 void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext & gc ) const
 {
-    if( passIndex >= mPasses.size() )
+    if( passIndex >= mPasses.Size() )
     {
         GN_ERROR(sLogger)( "Pass index is too large: %u", passIndex );
         return;
@@ -337,7 +337,7 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
         if( !sCheckShaderUniforms( effectDesc, shaderDesc, shaderName, *gpitem.prog ) ) continue;
 
         // add to GPU program array
-        if( gpitem.prog ) mPrograms.append( gpitem );
+        if( gpitem.prog ) mPrograms.Append( gpitem );
     }
 
     return true;
@@ -395,7 +395,7 @@ GN::gfx::EffectResource::Impl::initTech(
     const StrA                & techName,
     const EffectTechniqueDesc & techDesc )
 {
-    mPasses.resize( techDesc.passes.size() );
+    mPasses.Resize( techDesc.passes.Size() );
 
     // get common render state for the technique
     EffectRenderStateDesc commonRenderStates;
@@ -404,7 +404,7 @@ GN::gfx::EffectResource::Impl::initTech(
     Gpu & gpu = database().gpu();
 
     // initialize each pass
-    for( size_t ipass = 0; ipass < techDesc.passes.size(); ++ipass )
+    for( size_t ipass = 0; ipass < techDesc.passes.Size(); ++ipass )
     {
         const EffectPassDesc & passDesc = techDesc.passes[ipass];
 
@@ -478,7 +478,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         tp.sampler = iter->second.sampler;
 
         // setup texture binding point array
-        for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
+        for( size_t ipass = 0; ipass < mPasses.Size(); ++ipass )
         {
             const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
@@ -497,19 +497,19 @@ GN::gfx::EffectResource::Impl::initTextures(
                 {
                     BindingLocation b = { ipass, gpparam.textures[shaderParameterName] };
                     GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
-                    tp.bindings.append( b );
+                    tp.bindings.Append( b );
                 }
             }
         }
 
-        if( tp.bindings.empty() )
+        if( tp.bindings.Empty() )
         {
             GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
                 tp.parameterName.GetRawPtr(),
                 effectName() );
         }
 
-        mTextures.append( tp );
+        mTextures.Append( tp );
     }
 
     return true;
@@ -534,7 +534,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
         up.size = eud.size;
 
         // setup uniform binding point array
-        for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
+        for( size_t ipass = 0; ipass < mPasses.Size(); ++ipass )
         {
             const GpuProgramItem          & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
@@ -553,19 +553,19 @@ GN::gfx::EffectResource::Impl::initUniforms(
                 {
                     BindingLocation b = { ipass, gpparam.uniforms[shaderParameterName] };
                     GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
-                    up.bindings.append( b );
+                    up.bindings.Append( b );
                 }
             }
         }
 
-        if( up.bindings.empty() )
+        if( up.bindings.Empty() )
         {
             GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
                 up.parameterName.GetRawPtr(),
                 effectName() );
         }
 
-        mUniforms.append( up );
+        mUniforms.Append( up );
     }
 
     return true;
@@ -576,7 +576,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
 // -----------------------------------------------------------------------------
 size_t GN::gfx::EffectResource::Impl::findGpuProgram( const StrA & shaderName ) const
 {
-    for( size_t i = 0; i < mPrograms.size(); ++i )
+    for( size_t i = 0; i < mPrograms.Size(); ++i )
     {
         if( mPrograms[i].name == shaderName ) return i;
     }

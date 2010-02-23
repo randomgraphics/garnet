@@ -120,7 +120,7 @@ void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
     bc.width  = desc.Width;
     bc.height = desc.Height;
     bc.pitch  = mt.RowPitch;
-    bc.data.append( (UInt8*)mt.pData, mt.RowPitch * desc.Height );
+    bc.data.Append( (UInt8*)mt.pData, mt.RowPitch * desc.Height );
 
     sysbuf->Unmap( 0 );
 }

@@ -210,7 +210,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
     }
 
     // draw all characters in character list
-    for( size_t i = 0; i < mTextures.size(); ++i )
+    for( size_t i = 0; i < mTextures.Size(); ++i )
     {
         size_t numchars = mNumChars[i];
         mNumChars[i] = 0;
@@ -299,7 +299,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     // copy font image into RGBA
     GN_ASSERT( fbm.width <= slot.w && fbm.height <= slot.h );
     DynaArray<UInt8> tmpbuf( slot.w * slot.h * 4 );
-    std::fill( tmpbuf.begin(), tmpbuf.end(), 0 );
+    std::fill( tmpbuf.Begin(), tmpbuf.End(), 0 );
     for( size_t y = 0; y < fbm.height; ++y )
     {
         for( size_t x = 0; x < fbm.width; ++x )
@@ -323,7 +323,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 
     // update texture
     Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
-    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.GetRawPtr() );
+    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.GetRawPtr() );
 
     // success
     return &slot;
@@ -412,7 +412,7 @@ GN::util::BitmapFont::slotInit(
     // create font textures
     TextureDesc td = { (UInt32)texwidth, (UInt32)texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
     GN_ASSERT( texcount <= gpu.GetCaps().maxTextures );
-    mTextures.resize( texcount );
+    mTextures.Resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
         mTextures[i].attach( gpu.createTexture( td ) );

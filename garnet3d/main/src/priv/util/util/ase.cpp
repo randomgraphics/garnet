@@ -26,22 +26,22 @@ struct AseVertex
 
     UInt32 addTexcoord( const Vector3f & v )
     {
-        for( UInt32 i = 0; i < t.size(); ++i )
+        for( UInt32 i = 0; i < t.Size(); ++i )
         {
             if( t[i] == v ) return i;
         }
-        t.append( v );
-        return (UInt32)( t.size() - 1 );
+        t.Append( v );
+        return (UInt32)( t.Size() - 1 );
     }
 
     UInt32 addNormal( const Vector3f & v )
     {
-        for( UInt32 i = 0; i < n.size(); ++i )
+        for( UInt32 i = 0; i < n.Size(); ++i )
         {
             if( n[i] == v ) return i;
         }
-        n.append( v );
-        return (UInt32)( n.size() - 1 );
+        n.Append( v );
+        return (UInt32)( n.Size() - 1 );
     }
 };
 
@@ -135,7 +135,7 @@ struct AseFile
     bool open( File & file )
     {
         // read ASE file
-        buf.resize( file.size() + 1 );
+        buf.Resize( file.size() + 1 );
         size_t readen;
         if( !file.read( buf.GetRawPtr(), file.size(), &readen ) )
         {
@@ -693,7 +693,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
         {
             UInt32 count;
             if( !ase.readInt( count ) ) return false;
-            m.submaterials.resize( count );
+            m.submaterials.Resize( count );
 
             // read sub-materials one by one
             for( UInt32 i = 0; i < count; ++i )
@@ -741,7 +741,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     UInt32 matcount;
     if( !ase.readInt( matcount ) ) return false;
 
-    scene.materials.resize( matcount );
+    scene.materials.Resize( matcount );
 
     // read materials one by one
     for( UInt32 i = 0; i < matcount; ++i )
@@ -772,8 +772,8 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     if( !ase.next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
     if( !ase.next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
 
-    m.vertices.resize( numvert );
-    m.faces.resize( numface );
+    m.vertices.Resize( numvert );
+    m.faces.Resize( numface );
 
     // read vertices
     if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
@@ -785,9 +785,9 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     if( !ase.readBlockEnd() ) return false;
 
     // calculate mesh bounding box
-    if( m.vertices.size() > 0 )
+    if( m.vertices.Size() > 0 )
     {
-        CalculateBoundingBox( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.size() );
+        CalculateBoundingBox( m.bbox, &m.vertices[0].p, sizeof(AseVertex), m.vertices.Size() );
     }
     else
     {
@@ -873,12 +873,12 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
         Vector3f zero(0,0,0);
 
-        for( UInt32 i = 0; i < m.vertices.size(); ++i )
+        for( UInt32 i = 0; i < m.vertices.Size(); ++i )
         {
             m.vertices[i].addTexcoord( zero );
         }
 
-        for( UInt32 i = 0; i < m.faces.size(); ++i )
+        for( UInt32 i = 0; i < m.faces.Size(); ++i )
         {
             AseFace & f = m.faces[i];
             f.t[0] = 0;
@@ -1016,8 +1016,8 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 {
     GN_GUARD;
 
-    scene.objects.resize( scene.objects.size() + 1 );
-    AseGeoObject & o = scene.objects.back();
+    scene.objects.Resize( scene.objects.Size() + 1 );
+    AseGeoObject & o = scene.objects.Back();
 
     if( !ase.readBlockStart() ) return false;
 
@@ -1051,7 +1051,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         else if( 0 == StringCompare( token, "*MATERIAL_REF" ) )
         {
             if( !ase.readInt( o.matid ) ) return false;
-            if( o.matid >= scene.materials.size() )
+            if( o.matid >= scene.materials.Size() )
             {
                 ase.err( "material ID is out of range!" );
                 return false;
@@ -1080,38 +1080,38 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
             // build face chunk array
             if( "Multi/Sub-Object" == mtl.class_ )
             {
-                m.chunks.reserve( mtl.submaterials.size() );
+                m.chunks.Reserve( mtl.submaterials.Size() );
 
-                for( UInt32 i = 0; i < m.faces.size(); ++i )
+                for( UInt32 i = 0; i < m.faces.Size(); ++i )
                 {
                     const AseFace & f = m.faces[i];
 
                     UInt32 cid;
-                    for( cid = 0; cid < m.chunks.size(); ++cid )
+                    for( cid = 0; cid < m.chunks.Size(); ++cid )
                     {
                         AseFaceChunk & c = m.chunks[cid];
 
                         if( c.submat == f.submat ) break;
                     }
-                    GN_ASSERT( cid <= m.chunks.size() );
+                    GN_ASSERT( cid <= m.chunks.Size() );
 
-                    if( cid == m.chunks.size() )
+                    if( cid == m.chunks.Size() )
                     {
-                        m.chunks.resize( m.chunks.size() + 1 );
-                        m.chunks.back().submat = f.submat;
+                        m.chunks.Resize( m.chunks.Size() + 1 );
+                        m.chunks.Back().submat = f.submat;
                     }
 
-                    m.chunks[cid].faces.append( i );
+                    m.chunks[cid].faces.Append( i );
 
 
                 }
             }
             else
             {
-                m.chunks.resize( 1 );
+                m.chunks.Resize( 1 );
                 m.chunks[0].submat = 0;
-                m.chunks[0].faces.resize( m.faces.size() );
-                for( UInt32 i = 0; i < m.faces.size(); ++i )
+                m.chunks[0].faces.Resize( m.faces.Size() );
+                for( UInt32 i = 0; i < m.faces.Size(); ++i )
                 {
                     m.chunks[0].faces[i] = i;
                 }
@@ -1246,7 +1246,7 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
 static AseGeoObject * sFindGeoObject( AseSceneInternal & scene, const StrA & name )
 {
     if( name.Empty() ) return &scene.root;
-    for( AseGeoObject * o = scene.objects.begin(); o != scene.objects.end(); ++o )
+    for( AseGeoObject * o = scene.objects.Begin(); o != scene.objects.End(); ++o )
     {
         if( name == o->node.name ) return o;
     }
@@ -1272,7 +1272,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     scene.root.mesh.bbox.Size().Set( 0, 0, 0 );
 
     // build node tree
-    for( size_t i = 0; i < scene.objects.size(); ++i )
+    for( size_t i = 0; i < scene.objects.Size(); ++i )
     {
         AseGeoObject & o = scene.objects[i];
 
@@ -1290,9 +1290,9 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
 
     // make sure all objects are linked into the tree.
     GN_ASSERT_EX(
-        scene.root.calcChildrenCount() == scene.objects.size(),
+        scene.root.calcChildrenCount() == scene.objects.Size(),
         StringFormat( "numchildren=%d, numobjects=%d",
-            scene.root.calcChildrenCount(), scene.objects.size() ).GetRawPtr() );
+            scene.root.calcChildrenCount(), scene.objects.Size() ).GetRawPtr() );
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
@@ -1387,11 +1387,11 @@ public:
         {
             // this is a new element
             GN_ASSERT( 0xbad == i.first->second );
-            GN_ASSERT( mBuffer.size() + 1 == mMap.size() );
+            GN_ASSERT( mBuffer.Size() + 1 == mMap.size() );
 
-            i.first->second = (UInt32)( mBuffer.size() );
+            i.first->second = (UInt32)( mBuffer.Size() );
 
-            mBuffer.append( element );
+            mBuffer.Append( element );
         }
 
         return i.first->second;
@@ -1400,14 +1400,14 @@ public:
     ///
     /// get number of vertices in buffer
     ///
-    size_t size() const { GN_ASSERT( mMap.size() == mBuffer.size() ); return mBuffer.size(); }
+    size_t size() const { GN_ASSERT( mMap.size() == mBuffer.Size() ); return mBuffer.Size(); }
 
     ///
     /// return specific element
     ///
     const T & operator[]( size_t idx ) const
     {
-        GN_ASSERT( idx < mBuffer.size() );
+        GN_ASSERT( idx < mBuffer.Size() );
         return mBuffer[idx];
     }
 
@@ -1416,7 +1416,7 @@ public:
     ///
     T & operator[]( size_t idx )
     {
-        GN_ASSERT( idx < mBuffer.size() );
+        GN_ASSERT( idx < mBuffer.Size() );
         return mBuffer[idx];
     }
 };
@@ -1452,7 +1452,7 @@ sGetFaceChunkMatID(
         mat = &src.materials[matid];
     }
 
-    for( UInt32 i = 0; i < dst.materials.size(); ++i )
+    for( UInt32 i = 0; i < dst.materials.Size(); ++i )
     {
         if( dst.materials[i] == *mat )
         {
@@ -1462,9 +1462,9 @@ sGetFaceChunkMatID(
     }
 
     // this is a new material
-    UInt32 newidx = (UInt32)dst.materials.size();
-    dst.materials.resize( dst.materials.size() + 1 );
-    dst.materials.back() = *mat;
+    UInt32 newidx = (UInt32)dst.materials.Size();
+    dst.materials.Resize( dst.materials.Size() + 1 );
+    dst.materials.Back() = *mat;
     return newidx;
 }
 
@@ -1482,9 +1482,9 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 {
     GN_GUARD;
 
-    dst.meshes.resize( dst.meshes.size() + 1 );
+    dst.meshes.Resize( dst.meshes.Size() + 1 );
 
-    AseMesh & dstmesh = dst.meshes.back();
+    AseMesh & dstmesh = dst.meshes.Back();
 
     // setup hierarchy and transformation properties
     dstmesh.parent = obj.node.parent;
@@ -1515,22 +1515,22 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     VertexCollection  vc;
     VertexSelector    vs;
     DynaArray<UInt32> ib; // index into vertex collection
-    for( size_t i = 0; i < obj.mesh.chunks.size(); ++i )
+    for( size_t i = 0; i < obj.mesh.chunks.Size(); ++i )
     {
         const AseFaceChunk & c = obj.mesh.chunks[i];
 
-        dst.subsets.resize( dst.subsets.size() + 1 );
-        AseMeshSubset & subset = dst.subsets.back();
+        dst.subsets.Resize( dst.subsets.Size() + 1 );
+        AseMeshSubset & subset = dst.subsets.Back();
 
         subset.matid    = sGetFaceChunkMatID( dst, src, obj.matid, c.submat );
-        subset.meshid   = dst.meshes.size() - 1;
-        subset.startidx = ib.size();
-        subset.numidx   = c.faces.size() * 3;
+        subset.meshid   = dst.meshes.Size() - 1;
+        subset.startidx = ib.Size();
+        subset.numidx   = c.faces.Size() * 3;
 
         UInt32 minidx = 0xFFFFFFFF;
         UInt32 maxidx = 0;
 
-        for( size_t i = 0; i < c.faces.size(); ++i )
+        for( size_t i = 0; i < c.faces.Size(); ++i )
         {
             const AseFace & f = obj.mesh.faces[c.faces[i]];
 
@@ -1541,7 +1541,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
                 vs.n = f.vn[i];
 
                 UInt32 idx = vc.add( vs );
-                ib.append( idx );
+                ib.Append( idx );
 
                 if( idx < minidx ) minidx = idx;
                 if( idx > maxidx ) maxidx = idx;
@@ -1572,32 +1572,32 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
     dstmesh.numvtx = vc.size();
     dstmesh.vertices[0] = vertices;
-    dst.meshdata.append( blob );
+    dst.meshdata.Append( blob );
 
     // copy index data into destination scene
-    dstmesh.numidx = ib.size();
+    dstmesh.numidx = ib.Size();
     if( vc.size() > 0x10000 )
     {
         // 32bit index buffer
-        blob.attach( new SimpleBlob(sizeof(UInt32) * ib.size()) );
+        blob.attach( new SimpleBlob(sizeof(UInt32) * ib.Size()) );
         memcpy( blob->data(), ib.GetRawPtr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
-        dst.meshdata.append( blob );
+        dst.meshdata.Append( blob );
     }
     else
     {
         // 16bit index buffer
-        blob.attach( new SimpleBlob(sizeof(UInt16) * ib.size()) );
+        blob.attach( new SimpleBlob(sizeof(UInt16) * ib.Size()) );
         UInt16 * idx16 = (UInt16*)blob->data();
-        for( size_t i = 0; i < ib.size(); ++i )
+        for( size_t i = 0; i < ib.Size(); ++i )
         {
             GN_ASSERT( ib[i] < 0x10000 );
             idx16[i] = (UInt16)ib[i];
         }
         dstmesh.idx32 = false;
         dstmesh.indices = idx16;
-        dst.meshdata.append( blob );
+        dst.meshdata.Append( blob );
     }
 
     // success
@@ -1615,7 +1615,7 @@ static bool sWriteScene( AseScene & dst, const AseSceneInternal & src )
 
     GN_GUARD;
 
-    for( size_t i = 0; i < src.objects.size(); ++i )
+    for( size_t i = 0; i < src.objects.Size(); ++i )
     {
         sWriteGeoObject( dst, src, src.objects[i] );
     }

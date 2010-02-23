@@ -353,7 +353,7 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     sReplaceAutoRefPtr( rc->gpuProgram, mtgp ? mtgp->getRealGpuProgram() : NULL );
 
     // uniforms
-    for( size_t i = 0; i < rc->uniforms.size(); ++i )
+    for( size_t i = 0; i < rc->uniforms.Size(); ++i )
     {
         MultiThreadUniform * mtu = (MultiThreadUniform*)rc->uniforms[i].get();
         sReplaceAutoRefPtr( rc->uniforms[i], mtu ? mtu->getRealUniform() : NULL );
@@ -378,7 +378,7 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
-    for( size_t i = 0; i < rc->colortargets.size(); ++i )
+    for( size_t i = 0; i < rc->colortargets.Size(); ++i )
     {
         MultiThreadTexture * mtt = (MultiThreadTexture*)rc->colortargets[i].texture.get();
         sReplaceAutoRefPtr( rc->colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );

@@ -52,10 +52,10 @@ sVtxFmt2InputLayout(
         elem.InstanceDataStepRate = 0;
 
         // add to element array
-        elements.append( elem );
+        elements.Append( elem );
     }
 
-    if( elements.empty() )
+    if( elements.Empty() )
     {
         GN_ERROR(sLogger)( "Empty input layout is not allowed." );
         return false;
@@ -112,7 +112,7 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
 
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
-    GN_ASSERT( !elements.empty() );
+    GN_ASSERT( !elements.Empty() );
 
     AutoComPtr<ID3D10Blob> bin( sVtxFmt2ShaderBinary( format ) );
     if( !bin ) return false;
@@ -121,7 +121,7 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
     GN_DX_CHECK_RETURN(
         dev.CreateInputLayout(
             &elements[0],
-            (UINT)elements.size(),
+            (UINT)elements.Size(),
             bin->GetBufferPointer(),
             bin->GetBufferSize(),
             &layout ),

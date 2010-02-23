@@ -64,7 +64,7 @@ GN::CECImplXenon::convert(
         mEncodingFrom != CharacterEncodingConverter::UTF16_BE &&
         mEncodingFrom != CharacterEncodingConverter::WIDECHAR )
     {
-        tempBuffer.resize( sourceBufferSizeInBytes );
+        tempBuffer.Resize( sourceBufferSizeInBytes );
 
         GN_MSW_CHECK_RETURN( MultiByteToWideChar(
                 CP_ACP,
@@ -76,7 +76,7 @@ GN::CECImplXenon::convert(
             0 );
 
         sourceBuffer = tempBuffer.GetRawPtr();
-        sourceBufferSizeInBytes = tempBuffer.size() * sizeof(wchar_t);
+        sourceBufferSizeInBytes = tempBuffer.Size() * sizeof(wchar_t);
     }
     else
     {

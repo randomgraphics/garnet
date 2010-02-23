@@ -38,11 +38,11 @@ namespace GN
 
         //@{
         virtual void * data() const { return (void*)mBuffer.GetRawPtr(); }
-        virtual size_t size() const { return mBuffer.size(); }
+        virtual size_t size() const { return mBuffer.Size(); }
         //@}
 
         /// resize the buffer
-        void resize( size_t newSize ) { mBuffer.resize( newSize ); }
+        void Resize( size_t newSize ) { mBuffer.Resize( newSize ); }
     };
 };
 

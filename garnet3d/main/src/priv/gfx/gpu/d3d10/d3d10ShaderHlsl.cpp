@@ -184,8 +184,8 @@ sInitConstBuffers(
     }
 
     // create constant buffers
-    constBufs.resize( desc.ConstantBuffers );
-    constData.resize( desc.ConstantBuffers );
+    constBufs.Resize( desc.ConstantBuffers );
+    constData.Resize( desc.ConstantBuffers );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
@@ -203,7 +203,7 @@ sInitConstBuffers(
         bufdesc.MiscFlags      = 0;
         GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &constBufs[i] ), false );
 
-        constData[i].resize( cbdesc.Size );
+        constData[i].Resize( cbdesc.Size );
     }
 
     return true;

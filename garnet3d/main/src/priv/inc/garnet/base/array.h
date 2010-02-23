@@ -34,9 +34,9 @@ namespace GN
         T* GetRawPtr() { return mElements; }
 
         ///
-        /// return size of the array (always be MAX_SIZE)
+        /// return Size of the array (always be MAX_SIZE)
         ///
-        size_t size() const { return MAX_SIZE; }
+        size_t Size() const { return MAX_SIZE; }
 
         ///
         /// at operator
@@ -62,7 +62,7 @@ namespace GN
         size_t mCount;
 
         /// default constructor
-        static inline void ctor( T * ptr, size_t count )
+        static inline void Ctor( T * ptr, size_t count )
         {
 
             for( size_t i = 0; i < count; ++i, ++ptr )
@@ -72,28 +72,28 @@ namespace GN
         }
 
         /// copy constructor
-        static inline void cctor( T * ptr, const T & src )
+        static inline void CCtor( T * ptr, const T & src )
         {
             new (ptr) T(src);
         }
 
         /// destructor
-        static inline void dtor( T * ptr )
+        static inline void Dtor( T * ptr )
         {
             ptr->T::~T();
         }
 
-        void doClear()
+        void DoClear()
         {
             T * p = GetRawPtr();
             for( size_t i = 0; i < mCount; ++i, ++p )
             {
-                dtor( p );
+                Dtor( p );
             }
             mCount = 0;
         }
 
-        void doClone( const StackArray & other )
+        void DoClone( const StackArray & other )
         {
             T       * dst = GetRawPtr();
             const T * src = other.GetRawPtr();
@@ -107,38 +107,38 @@ namespace GN
             // destruct extra objects, only when other.mCount < mCount
             for( size_t i = other.mCount; i < mCount; ++i )
             {
-                dtor( dst + i );
+                Dtor( dst + i );
             }
 
             // copy-construct new objects, only when mCount < other.mCount
             for( size_t i = mCount; i < other.mCount; ++i )
             {
-                cctor( dst + i, src[i] );
+                CCtor( dst + i, src[i] );
             }
 
             mCount = other.mCount;
         }
 
-        void doInsert( size_t position, const T & t )
+        void DoInsert( size_t position, const T & t )
         {
             GN_ASSERT( mCount <= N );
 
             if( N == mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "Can't insert more. Stack array is full already!" );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "Can't Insert more. Stack array is full already!" );
                 return;
             }
 
             if( position > mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "invalid insert position." );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "invalid Insert position." );
                 return;
             }
 
             T * p = GetRawPtr();
 
             // construct last element
-            ctor( p + mCount, 1 );
+            Ctor( p + mCount, 1 );
 
             // move elements
             for( size_t i = mCount; i > position; --i )
@@ -146,17 +146,17 @@ namespace GN
                 p[i] = p[i-1];
             }
 
-            // insert new elements
+            // Insert new elements
             p[position] = t;
 
             ++mCount;
         }
 
-        void doErase( size_t position )
+        void DoErase( size_t position )
         {
             if( position >= mCount )
             {
-                GN_ERROR(GetLogger("GN.base.StackArray"))( "Invalid erase position" );
+                GN_ERROR(GetLogger("GN.base.StackArray"))( "Invalid Erase position" );
                 return;
             }
 
@@ -171,10 +171,10 @@ namespace GN
             }
 
             // destruct last element
-            dtor( p + mCount );
+            Dtor( p + mCount );
         }
 
-        void doResize( size_t count )
+        void DoResize( size_t count )
         {
             if( count == mCount ) return; // shortcut for redundant call.
 
@@ -189,19 +189,19 @@ namespace GN
             // destruct extra objects, only when count < mCount
             for( size_t i = count; i < mCount; ++i )
             {
-                dtor( p + i );
+                Dtor( p + i );
             }
 
             // construct new objects, only when mCount < count
             for( size_t i = mCount; i < count; ++i )
             {
-                ctor( p + i, 1 );
+                Ctor( p + i, 1 );
             }
 
             mCount = count;
         }
 
-        bool equal( const StackArray & other ) const
+        bool Equal( const StackArray & other ) const
         {
             if( mCount != other.mCount ) return false;
 
@@ -219,7 +219,7 @@ namespace GN
 
         typedef T ElementType; ///< element type
 
-        static const size_t MAX_SIZE = N; ///< maximum size
+        static const size_t MAX_SIZE = N; ///< maximum Size
 
         ///
         /// default constructor
@@ -229,50 +229,50 @@ namespace GN
         ///
         /// constructor with user-defined count.
         ///
-        explicit StackArray( size_t count ) : mCount(count) { ctor( GetRawPtr(), count ); }
+        explicit StackArray( size_t count ) : mCount(count) { Ctor( GetRawPtr(), count ); }
 
         ///
         /// copy constructor
         ///
-        StackArray( const StackArray & other ) : mCount(0) { doClone( other ); }
+        StackArray( const StackArray & other ) : mCount(0) { DoClone( other ); }
 
         ///
-        /// dtor
+        /// Dtor
         ///
-        virtual ~StackArray() { doClear(); }
+        virtual ~StackArray() { DoClear(); }
 
         /// \name Common array operations.
         ///
         //@{
-        void      append( const T & t ) { doInsert( mCount, t ); }
-        const T & back() const { GN_ASSERT( mCount > 0 ); return GetRawPtr()[mCount-1]; }
-        T       & back() { GN_ASSERT( mCount > 0 ); return GetRawPtr()[mCount-1]; }
-        const T * begin() const { return GetRawPtr(); }
-        T       * begin() { return GetRawPtr(); }
-        void      Clear() { doClear(); }
+        void      Append( const T & t ) { DoInsert( mCount, t ); }
+        const T & Back() const { GN_ASSERT( mCount > 0 ); return GetRawPtr()[mCount-1]; }
+        T       & Back() { GN_ASSERT( mCount > 0 ); return GetRawPtr()[mCount-1]; }
+        const T * Begin() const { return GetRawPtr(); }
+        T       * Begin() { return GetRawPtr(); }
+        void      Clear() { DoClear(); }
         const T * GetRawPtr() const { return (const T*)mBuffer; }
         T       * GetRawPtr() { return (T*)mBuffer; }
-        bool      empty() const { return 0 == mCount; }
-        const T * end() const { return GetRawPtr() + mCount; }
-        T       * end() { return GetRawPtr() + mCount; }
-        /** do nothing if position is invalid or array is empty */
-        void      erase( size_t position ) { doErase( position ); }
-        const T & front() const { GN_ASSERT( mCount > 0 ); return GetRawPtr()[0]; }
-        T       & front() { GN_ASSERT( mCount > 0 ); return GetRawPtr()[0]; }
+        bool      Empty() const { return 0 == mCount; }
+        const T * End() const { return GetRawPtr() + mCount; }
+        T       * End() { return GetRawPtr() + mCount; }
+        /** do nothing if position is invalid or array is Empty */
+        void      Erase( size_t position ) { DoErase( position ); }
+        const T & Front() const { GN_ASSERT( mCount > 0 ); return GetRawPtr()[0]; }
+        T       & Front() { GN_ASSERT( mCount > 0 ); return GetRawPtr()[0]; }
         /** do nothing if position is invalid or array is full */
-        void      insert( size_t position, const T & t ) { doInsert( position, t ); }
-        void      resize( size_t count ) { doResize( count ); }
-        void      pushBack( const T & t ) { doInsert( size(), t ); }
-        void      popBack() { doErase( mCount - 1 ); }
-        size_t    size() const { return mCount; }
+        void      Insert( size_t position, const T & t ) { DoInsert( position, t ); }
+        void      Resize( size_t count ) { DoResize( count ); }
+        void      PushBack( const T & t ) { DoInsert( Size(), t ); }
+        void      PopBack() { DoErase( mCount - 1 ); }
+        size_t    Size() const { return mCount; }
         //@}
 
         /// \name common operators
         ///
         //@{
-        StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
-        bool         operator==( const StackArray & other ) const { return equal(other); }
-        bool         operator!=( const StackArray & other ) const { return !equal(other); }
+        StackArray & operator=( const StackArray & other ) { DoClone(other); return *this; }
+        bool         operator==( const StackArray & other ) const { return Equal(other); }
+        bool         operator!=( const StackArray & other ) const { return !Equal(other); }
         T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return GetRawPtr()[i]; }
         const T    & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return GetRawPtr()[i]; }
         //@}
@@ -290,7 +290,7 @@ namespace GN
         ALLOCATOR     mAlloc;
 
         /// destruct and free memory
-        void dealloc( T * ptr, size_t count, size_t capacity )
+        void Dealloc( T * ptr, size_t count, size_t capacity )
         {
             for( size_t i = 0; i < count; ++i )
             {
@@ -300,7 +300,7 @@ namespace GN
             mAlloc.deallocate( ptr, capacity );
         }
 
-        void doAppend( const T * p, size_t count )
+        void DoAppend( const T * p, size_t count )
         {
             if( 0 == count ) return;
 
@@ -310,8 +310,8 @@ namespace GN
                 return;
             }
 
-            // reserve memory
-            doReserve( mCount + count );
+            // Reserve memory
+            DoReserve( mCount + count );
 
             // copy-construct new elements
             T * dst = mElements + mCount;
@@ -324,7 +324,7 @@ namespace GN
             mCount += count;
         }
 
-        void doClear()
+        void DoClear()
         {
             T * p = mElements;
             for( size_t i = 0; i < mCount; ++i, ++p )
@@ -334,9 +334,9 @@ namespace GN
             mCount = 0;
         }
 
-        void doClone( const DynaArray & other )
+        void DoClone( const DynaArray & other )
         {
-            doReserve( other.mCount );
+            DoReserve( other.mCount );
 
             size_t mincount = math::GetMin<size_t>( mCount, other.mCount );
 
@@ -360,15 +360,15 @@ namespace GN
             mCount = other.mCount;
         }
 
-        void doInsert( size_t position, const T & t )
+        void DoInsert( size_t position, const T & t )
         {
             if( position > mCount )
             {
-                GN_WARN(GetLogger("GN.base.DynaArray"))("invalid insert position");
+                GN_WARN(GetLogger("GN.base.DynaArray"))("invalid Insert position");
                 return;
             }
 
-            doResize( mCount + 1 );
+            DoResize( mCount + 1 );
 
             for( size_t i = mCount-1; i > position; --i )
             {
@@ -378,11 +378,11 @@ namespace GN
             mElements[position] = t;
         }
 
-        void doErase( size_t position )
+        void DoErase( size_t position )
         {
             if( position >= mCount )
             {
-                GN_ERROR(GetLogger("GN.base.DynaArray"))("invalid erase position");
+                GN_ERROR(GetLogger("GN.base.DynaArray"))("invalid Erase position");
                 return;
             }
 
@@ -398,7 +398,7 @@ namespace GN
             mAlloc.destroy( mElements + mCount );
         }
 
-        void doReserve( size_t count )
+        void DoReserve( size_t count )
         {
             if( mCapacity >= count ) return;
 
@@ -426,18 +426,18 @@ namespace GN
             }
 
             // deallocate old buffer
-            dealloc( mElements, mCount, mCapacity );
+            Dealloc( mElements, mCount, mCapacity );
 
             mElements = newBuf;
             mCapacity = newCap;
         }
 
-        void doResize( size_t count )
+        void DoResize( size_t count )
         {
             if( count == mCount ) return; // shortcut for redundant call
 
-            // reserve memory
-            doReserve( count );
+            // Reserve memory
+            DoReserve( count );
 
             // destruct extra objects, only when count < mCount
             for( size_t i = count; i < mCount; ++i )
@@ -454,7 +454,7 @@ namespace GN
             mCount = count;
         }
 
-        void doSwap( DynaArray & another )
+        void DoSwap( DynaArray & another )
         {
             T *           p = mElements;
             size_t        n = mCount;
@@ -472,7 +472,7 @@ namespace GN
             another.mAlloc    = a;
         }
 
-        bool equal( const DynaArray & other ) const
+        bool Equal( const DynaArray & other ) const
         {
             if( mCount != other.mCount ) return false;
             for( size_t i = 0; i < mCount; ++i )
@@ -495,60 +495,60 @@ namespace GN
         ///
         /// constructor with user-defined count.
         ///
-        explicit DynaArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { resize( count ); }
+        explicit DynaArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { Resize( count ); }
 
         ///
         /// construct from conventional C array
         ///
-        DynaArray( const T * p, size_t count ) : mElements(0), mCount(0), mCapacity(0) { doAppend( p, count ); }
+        DynaArray( const T * p, size_t count ) : mElements(0), mCount(0), mCapacity(0) { DoAppend( p, count ); }
 
         ///
         /// copy constructor
         ///
-        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0), mAlloc(other.mAlloc) { doClone( other ); }
+        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0), mAlloc(other.mAlloc) { DoClone( other ); }
 
         ///
         /// destructor
         ///
-        ~DynaArray() { dealloc( mElements, mCount, mCapacity ); }
+        ~DynaArray() { Dealloc( mElements, mCount, mCapacity ); }
 
         /// \name Common array operations.
         ///
         //@{
-        void      append( const T & t ) { doAppend( &t, 1 ); }
-        void      append( const T * p, size_t count ) { doAppend( p, count ); }
-        void      append( const DynaArray & a ) { doAppend( a.mElements, a.mCount ); }
-        const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
-        T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
-        const T * begin() const { return mElements; }
-        T       * begin() { return mElements; }
-        void      Clear() { doClear(); }
+        void      Append( const T & t ) { DoAppend( &t, 1 ); }
+        void      Append( const T * p, size_t count ) { DoAppend( p, count ); }
+        void      Append( const DynaArray & a ) { DoAppend( a.mElements, a.mCount ); }
+        const T & Back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
+        T       & Back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
+        const T * Begin() const { return mElements; }
+        T       * Begin() { return mElements; }
+        void      Clear() { DoClear(); }
         const T * GetRawPtr() const { return mElements; }
         T       * GetRawPtr() { return mElements; }
-        bool      empty() const { return 0 == mCount; }
-        const T * end() const { return mElements + mCount; }
-        T       * end() { return mElements + mCount; }
+        bool      Empty() const { return 0 == mCount; }
+        const T * End() const { return mElements + mCount; }
+        T       * End() { return mElements + mCount; }
         /** do nothing if position is invalid */
-        void      erase( size_t position ) { return doErase( position ); }
-        const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
-        T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        void      Erase( size_t position ) { return DoErase( position ); }
+        const T & Front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        T       & Front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         /** do nothing if position is invalid */
-        void      insert( size_t position, const T & t ) { doInsert( position, t ); }
-        void      reserve( size_t count ) { doReserve( count ); }
-        void      resize( size_t count ) { doResize( count ); }
-        void      popBack() { doErase( mCount - 1 ); }
+        void      Insert( size_t position, const T & t ) { DoInsert( position, t ); }
+        void      Reserve( size_t count ) { DoReserve( count ); }
+        void      Resize( size_t count ) { DoResize( count ); }
+        void      PopBack() { DoErase( mCount - 1 ); }
         /** clear array as well as release memory */
-        void      purge() { dealloc( mElements, mCount, mCapacity ); mCount = 0; mCapacity = 0; mElements = 0; }
-        size_t    size() const { return mCount; }
-        void      swap( DynaArray & another ) { doSwap( another ); } ///< swap data with another array
+        void      Purge() { Dealloc( mElements, mCount, mCapacity ); mCount = 0; mCapacity = 0; mElements = 0; }
+        size_t    Size() const { return mCount; }
+        void      Swap( DynaArray & another ) { DoSwap( another ); } ///< Swap data with another array
         //@}
 
         /// \name common operators
         ///
         //@{
-        DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
-        bool        operator==( const DynaArray & other ) const { return equal(other); }
-        bool        operator!=( const DynaArray & other ) const { return !equal(other); }
+        DynaArray & operator=( const DynaArray & other ) { DoClone(other); return *this; }
+        bool        operator==( const DynaArray & other ) const { return Equal(other); }
+        bool        operator!=( const DynaArray & other ) const { return !Equal(other); }
         T         & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T   & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}
@@ -573,7 +573,7 @@ namespace GN
         {
         }
 
-        T * subrange( size_t index, size_t length ) const
+        T * SubRange( size_t index, size_t length ) const
         {
             GN_ASSERT( mBegin <= (mPtr+index) );
             GN_ASSERT( (mPtr+index) < mEnd );
@@ -583,10 +583,10 @@ namespace GN
         }
 
         template<typename T2>
-        void copyTo( size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes )
+        void CopyTo( size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t bytes )
         {
             GN_CASSERT( sizeof(T) == sizeof(T2) );
-            memcpy( dest.subrange( dstOffset, bytes ), subrange( srcOffset, bytes ), bytes );
+            memcpy( dest.SubRange( dstOffset, bytes ), SubRange( srcOffset, bytes ), bytes );
         }
 
         T * operator->() const
