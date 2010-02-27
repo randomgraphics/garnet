@@ -293,9 +293,9 @@ namespace GN { namespace gfx
         }
 
     private :
-        TextureDesc                    mDesc;    ///< descriptor
+        TextureDesc                  mDesc;    ///< descriptor
         DynaArray< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
-        StrA                           mName;    ///< texture name. Only for debug purpose.
+        StrA                         mName;    ///< texture name. Only for debug purpose.
     };
 
     ///

@@ -101,7 +101,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 
     size_t dataSize = slicePitch * mipsize.z;
 
-    void * tmpbuf = HeapAlloc( dataSize );
+    void * tmpbuf = HeapMemory::Alloc( dataSize );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary data buffer." );
@@ -203,7 +203,7 @@ namespace GN { namespace gfx
             ump->data,
             ump->flag );
 
-        HeapFree( ump->data );
+        HeapMemory::Free( ump->data );
     }
 
     //

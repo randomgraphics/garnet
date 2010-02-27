@@ -103,17 +103,17 @@ namespace GN
             if( 0 == mFreeItems )
             {
                 // no free items. create new block
-                Block * b = (Block*)HeapAlloc( sizeof(Block) );
+                Block * b = (Block*)HeapMemory::Alloc( sizeof(Block) );
                 if( 0 == b )
                 {
                     GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
-                b->items = (Item*)HeapAlloc( sizeof(Item) * mNewBlockSize );
+                b->items = (Item*)HeapMemory::Alloc( sizeof(Item) * mNewBlockSize );
                 if( 0 == b )
                 {
                     GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
-                    HeapFree( b );
+                    HeapMemory::Free( b );
                     return 0;
                 }
                 b->count = mNewBlockSize;
@@ -189,8 +189,8 @@ namespace GN
             {
                 p = mBlocks;
                 mBlocks = mBlocks->next;
-                HeapFree( p->items );
-                HeapFree( p );
+                HeapMemory::Free( p->items );
+                HeapMemory::Free( p );
             }
             mBlocks = 0;
             mItems = 0;

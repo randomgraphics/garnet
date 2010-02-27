@@ -30,11 +30,6 @@ namespace GN
     ///
     inline SInt32 AtomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
 
-    ///
-    /// memory barrier. currently implemented on MS Windows platform only.
-    ///
-    inline void MemoryBarrier();
-
     //@}
 
     ///

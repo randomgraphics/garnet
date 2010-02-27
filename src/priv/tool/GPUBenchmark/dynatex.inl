@@ -42,7 +42,7 @@ class TestTextureBandwidth : public BasicTestCase
 #endif
         return XPhysicalAlloc( count, MAXULONG_PTR, 0, flags );
 #else
-        return HeapAlloc( count );
+        return HeapMemory::Alloc( count );
 #endif
     }
 
@@ -52,7 +52,7 @@ class TestTextureBandwidth : public BasicTestCase
 #if GN_XENON
         XPhysicalFree( p );
 #else
-        HeapFree( p );
+        HeapMemory::Free( p );
 #endif
     }
 

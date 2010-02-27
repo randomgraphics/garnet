@@ -9,18 +9,6 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::MemoryBarrier()
-{
-#if GN_XENON
-    __lwsync();
-#else
-    _ReadWriteBarrier();
-#endif
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 inline SInt32 GN::AtomGet32( const SInt32 volatile * dest )
 {
     GN_ASSERT( dest );

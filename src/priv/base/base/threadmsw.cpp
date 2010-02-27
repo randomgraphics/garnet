@@ -110,8 +110,8 @@ public:
         // standard init procedure
         GN_STDCLASS_INIT( ThreadMsw, () );
 
-        mHandle = ::GetCurrentThread();
-        mId = ::GetCurrentThreadId();
+        mHandle = GetCurrentThread();
+        mId = GetCurrentThreadId();
 
         // TODO: get real priority value, then convert to TP_XXX enums.
         mPriority = TP_NORMAL;

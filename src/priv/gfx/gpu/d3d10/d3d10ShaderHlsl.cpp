@@ -143,7 +143,7 @@ static const char * sCloneString( const char * str )
 
     size_t n = GN::StringLength( str ) + 1;
 
-    char * clone = (char*)GN::HeapAlloc( n );
+    char * clone = (char*)GN::HeapMemory::Alloc( n );
     if( NULL == clone )
     {
         GN_GPU_RIP( "Out of memory!" );

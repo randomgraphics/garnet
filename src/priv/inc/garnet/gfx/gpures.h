@@ -207,10 +207,10 @@ namespace GN { namespace gfx
         bool          dynavb; ///< true for dynamic vertex buffer
         bool          dynaib; ///< trur for dynamic index buffer
         VertexFormat  vtxfmt; ///< vertex format
-        const void *  vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
+        void *        vertices[GpuContext::MAX_VERTEX_BUFFERS]; ///< NULL pointer means vertex data are undefined
         size_t        strides[GpuContext::MAX_VERTEX_BUFFERS];  ///< vertex buffer strides. 0 means using vertex size defined by vertex format.
         size_t        offsets[GpuContext::MAX_VERTEX_BUFFERS];
-        const void *  indices; ///< Null means index data are undefined.
+        void *        indices; ///< Null means index data are undefined.
 
         ///
         /// constructor

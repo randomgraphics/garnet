@@ -40,7 +40,7 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 
     // store memory buffer
     GN_ASSERT( 0 == mMemBuffer );
-    mMemBuffer = GN::HeapAlloc( buffWidth * buffHeight * 4 );
+    mMemBuffer = GN::HeapMemory::Alloc( buffWidth * buffHeight * 4 );
     if( 0 == mMemBuffer )
     {
 		GN_THROW_EX( RendererException(

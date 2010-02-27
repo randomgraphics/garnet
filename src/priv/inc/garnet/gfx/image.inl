@@ -8,7 +8,7 @@ inline bool GN::gfx::ImageDesc::SetFaceAndLevel( size_t faces, size_t levels )
     numLevels = (UInt32)levels;
     if( numFaces > 0 && numLevels > 0 )
     {
-        mipmaps = (MipmapDesc*)HeapAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
+        mipmaps = (MipmapDesc*)HeapMemory::Alloc( numFaces * numLevels * sizeof(MipmapDesc) );
         if( 0 == mipmaps ) return false;
     }
     return true;

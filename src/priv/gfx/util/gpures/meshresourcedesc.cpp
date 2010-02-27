@@ -195,7 +195,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
         GN_ERROR(sLogger)( "fail to read mesh data." );
         return AutoRef<Blob>::NULLREF;
     }
-    const UInt8 * start = (const UInt8*)blob->data();
+    UInt8 * start = (UInt8*)blob->data();
 
     desc.prim   = (PrimitiveType)header.prim;
     desc.numvtx = header.numvtx;

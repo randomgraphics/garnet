@@ -3,14 +3,6 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::MemoryBarrier()
-{
-     _GLIBCXX_READ_MEM_BARRIER;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 inline SInt32 GN::AtomGet32( const SInt32 volatile * dest )
 {
     return *dest;

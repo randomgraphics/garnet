@@ -477,7 +477,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     size_t vbsize = numvtx * strideInBytes;
     size_t ibsize = numidx * 2;
 
-    void * tmpvb = HeapAlloc( vbsize );
+    void * tmpvb = HeapMemory::Alloc( vbsize );
     if( NULL == tmpvb )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary vertex buffer." );
@@ -485,11 +485,11 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     }
     memcpy( tmpvb, vertexData, vbsize );
 
-    void * tmpib = HeapAlloc( ibsize );
+    void * tmpib = HeapMemory::Alloc( ibsize );
     if( NULL == tmpib )
     {
         GN_ERROR(sLogger)( "Fail to allocate temporary index buffer." );
-        HeapFree( tmpvb );
+        HeapMemory::Free( tmpvb );
         return;
     }
     memcpy( tmpib, indexData, ibsize );
@@ -507,7 +507,7 @@ void GN::gfx::MultiThreadGpu::drawUp(
     size_t        strideInBytes )
 {
     size_t sz = strideInBytes * numvtx;
-    void * vb = HeapAlloc( sz );
+    void * vb = HeapMemory::Alloc( sz );
     if( NULL == vb )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary vertex buffer." );
@@ -533,7 +533,7 @@ GN::gfx::MultiThreadGpu::drawLines(
 {
     size_t length = stride * numpoints;
 
-    void * tmpbuf = HeapAlloc( length );
+    void * tmpbuf = HeapMemory::Alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -899,8 +899,8 @@ namespace GN { namespace gfx
 
         r.drawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
 
-        HeapFree( diup->vertexData );
-        HeapFree( diup->indexData );
+        HeapMemory::Free( diup->vertexData );
+        HeapMemory::Free( diup->indexData );
     }
 
     //
@@ -917,7 +917,7 @@ namespace GN { namespace gfx
         };
         DrawUpParam * dup = (DrawUpParam*)p;
         r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
-        HeapFree( dup->vertexData );
+        HeapMemory::Free( dup->vertexData );
     }
 
     //
@@ -937,7 +937,7 @@ namespace GN { namespace gfx
             dlp->view,
             dlp->proj );
 
-        HeapFree( dlp->positions );
+        HeapMemory::Free( dlp->positions );
     }
 
     //
