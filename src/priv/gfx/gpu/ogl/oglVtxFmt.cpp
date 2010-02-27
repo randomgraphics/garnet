@@ -175,8 +175,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     bool hasColor0 = false;
     bool hasColor1 = false;
     bool hasFog = false;
-    std::vector<bool> hasAttrib( maxAttributes, false );
-    std::vector<bool> hasTexCoord( maxTextures, false );
+    DynaArray<bool> hasAttrib( maxAttributes, false );
+    DynaArray<bool> hasTexCoord( maxTextures, false );
 
     OGLVertexBindingDesc vbd;
 
@@ -283,7 +283,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().GetRawPtr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().ToRawPtr() );
                 return false;
         }
 

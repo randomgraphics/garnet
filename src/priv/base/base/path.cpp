@@ -103,7 +103,7 @@ void GN::fs::baseName( StrA & result, const StrA & path )
     size_t n1 = ( dir.Size() < tmp.Size() && '/' == tmp[dir.Size()] ) ? dir.Size()+1 : dir.Size();
     size_t n2 = tmp.Size() - n1 - ext.Size();
 
-    result.Assign( tmp.GetRawPtr() + n1, n2 );
+    result.Assign( tmp.ToRawPtr() + n1, n2 );
 }
 
 //
@@ -124,14 +124,14 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
             parts.Clear();
             normalizePathSeparator( input, path );
             buf.Resize( input.Size() + 1 );
-            memcpy( buf.GetRawPtr(), input.GetRawPtr(), input.Size() + 1 );
-            parts.Append( buf.GetRawPtr() );
+            memcpy( buf.ToRawPtr(), input.ToRawPtr(), input.Size() + 1 );
+            parts.Append( buf.ToRawPtr() );
             for( size_t i = 0; i < buf.Size() - 1; ++i )
             {
                 if( '/' == buf[i] )
                 {
                     buf[i] = 0;
-                    parts.Append( buf.GetRawPtr() + i + 1 );
+                    parts.Append( buf.ToRawPtr() + i + 1 );
                 }
             }
         }

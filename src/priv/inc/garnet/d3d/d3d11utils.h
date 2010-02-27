@@ -414,8 +414,8 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.size() ); return mColors[index]; }
         const RenderTargetTexture & getDepthBuffer() const { return mDepth; }
 
-        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.GetRawPtr(), 0 ); }
-        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.GetRawPtr(), mDepth.dsv ); }
+        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.ToRawPtr(), 0 ); }
+        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.ToRawPtr(), mDepth.dsv ); }
 
         void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
 

@@ -83,8 +83,8 @@ class TestTextureBandwidth : public BasicTestCase
         double elapsed = c.getTimeD() - start;
 		StrA txt;
 		txt.Format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
-		OutputDebugStringA( txt.GetRawPtr() );
-		GN_INFO(sLogger)( txt.GetRawPtr() );
+		OutputDebugStringA( txt.ToRawPtr() );
+		GN_INFO(sLogger)( txt.ToRawPtr() );
 
         memFree( src );
         memFree( dst );
@@ -306,7 +306,7 @@ public:
             "texture count = %d\n"
             "bytes/tex     = %d Bytes\n"
             "quad count    = %d x %d x %d",
-            getName().GetRawPtr(),
+            getName().ToRawPtr(),
             bandwidth,
             fillrate,
             TEX_SIZE,
@@ -336,7 +336,7 @@ public:
         r.rebindContext( ff );
 
         // draw text
-        scene::gAsciiFont.drawText( mInfo.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

@@ -16,7 +16,7 @@ static void LOG_ERROR(const char * format, ...)
     va_start( arglist, format );
     s.FormatV( format, arglist );
     va_end( arglist );
-    GN_ERROR(sLogger)( "%s\n", s.GetRawPtr() );
+    GN_ERROR(sLogger)( "%s\n", s.ToRawPtr() );
 }
 
 #define SAFE_RELEASE( x ) if(x) { (x)->Release(); (x) = NULL; } else void(0)

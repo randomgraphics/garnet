@@ -1,7 +1,7 @@
 #include "../testCommon.h"
 #include <stdio.h>
 #include <string.h>
-#include <vector>
+#include <string>
 #include <iostream>
 
 namespace GN
@@ -171,7 +171,7 @@ namespace GN
         bool insert( const CHAR * text, const T & value, Iterator * iter = NULL ) { return doInsert( text, value, (PrivateIterator*)iter ); }
 
         /// return number of items in map
-        size_t size() const { return mCount; }
+        size_t Size() const { return mCount; }
 
         // *****************************
         // public operators
@@ -456,11 +456,11 @@ namespace GN
 
         struct HashItem
         {
-            std::vector<KeyValuePair*> pairs;
+            DynaArray<KeyValuePair*> pairs;
 
             ~HashItem()
             {
-                for( size_t i = 0; i < pairs.size(); ++i )
+                for( size_t i = 0; i < pairs.Size(); ++i )
                 {
                     delete pairs[i];
                 }
@@ -495,7 +495,7 @@ namespace GN
 
             HashItem & item = mItems[hash];
 
-            for( size_t i = 0; i < item.pairs.size(); ++i )
+            for( size_t i = 0; i < item.pairs.Size(); ++i )
             {
                 KeyValuePair * p = item.pairs[i];
                 if( text == p->key )
@@ -545,8 +545,8 @@ namespace GN
             if( p )
             {
                 GN_ASSERT( pos < mMaxSize );
-                GN_ASSERT( idx < mItems[pos].pairs.size() );
-                mItems[pos].pairs.erase( mItems[pos].pairs.begin() + idx );
+                GN_ASSERT( idx < mItems[pos].pairs.Size() );
+                mItems[pos].pairs.EraseAt( idx );
                 delete p;
 
                 --mSize;
@@ -578,14 +578,14 @@ namespace GN
 
             p = new KeyValuePair( text, value );
 
-            mItems[pos].pairs.push_back( p );
+            mItems[pos].pairs.Append( p );
 
             ++mSize;
 
             return true;
         }
 
-        size_t size() const { return mSize; }
+        size_t Size() const { return mSize; }
     };
 }
 
@@ -637,8 +637,8 @@ class StringMapTest : public CxxTest::TestSuite
         printf( "HashMap   - insert : %llu\n", t );
 
         // generate random searching set
-        std::vector<std::string> strings( 10000 );
-        for( size_t i = 0; i < strings.size(); ++i )
+        DynaArray<std::string> strings( 10000 );
+        for( size_t i = 0; i < strings.Size(); ++i )
         {
             size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
             if( n >= d.count ) n = d.count - 1;
@@ -647,7 +647,7 @@ class StringMapTest : public CxxTest::TestSuite
 
         // std::map find
         t = c.getCycleCount();
-        for( size_t i = 0; i < strings.size(); ++i )
+        for( size_t i = 0; i < strings.Size(); ++i )
         {
             stlmap.find( strings[i] );
         }
@@ -656,7 +656,7 @@ class StringMapTest : public CxxTest::TestSuite
 
         // StringMap find
         t = c.getCycleCount();
-        for( size_t i = 0; i < strings.size(); ++i )
+        for( size_t i = 0; i < strings.Size(); ++i )
         {
             mymap.find( strings[i].c_str() );
         }
@@ -665,7 +665,7 @@ class StringMapTest : public CxxTest::TestSuite
 
         // StringHashMap find
         t = c.getCycleCount();
-        for( size_t i = 0; i < strings.size(); ++i )
+        for( size_t i = 0; i < strings.Size(); ++i )
         {
             hmap.find( strings[i].c_str() );
         }
@@ -705,12 +705,14 @@ class StringMapTest : public CxxTest::TestSuite
 
     void doPerfTestWithFixedNumberOfItems( size_t count )
     {
+        using namespace GN;
+
         printf( "num words = %d\n", count );
 
         Dictionary d = dict();
 
-        std::vector<const char *> strings( count );
-        for( size_t i = 0; i < strings.size(); ++i )
+        DynaArray<const char *> strings( count );
+        for( size_t i = 0; i < strings.Size(); ++i )
         {
             size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
             if( n >= count ) n = count - 1;
@@ -718,7 +720,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
 
         d.table = &strings[0];
-        d.count = strings.size();
+        d.count = strings.Size();
 
         doPerfTest( d );
     }
@@ -764,10 +766,10 @@ public:
 
         // erase
         m.erase( "abe" );
-        TS_ASSERT_EQUALS( m.size(), 2 ); // erase non-existing item should have no effect.
+        TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
         i = m.find( "abc" );
         m.erase( "abd" );
-        TS_ASSERT_EQUALS( m.size(), 1 ); // verify the one item is removed.
+        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one item is removed.
         TS_ASSERT_EQUALS( m.find( "abd" ), (int*)NULL ); // verify correct item is erased.
         TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
 
@@ -787,10 +789,10 @@ public:
         m["abd"] = 2;
 
         m.erase( "abe" );
-        TS_ASSERT_EQUALS( m.size(), 2 ); // erase non-existing item should have no effect.
+        TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
         StringMap<char,int>::Iterator i = m.find( "abc" );
         m.erase( "abd" );
-        TS_ASSERT_EQUALS( m.size(), 1 ); // verify the one item is removed.
+        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one item is removed.
         TS_ASSERT_EQUALS( m.find( "abd" ), m.end() ); // verify correct item is erased.
         TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
 
@@ -814,13 +816,13 @@ public:
         StringMap<char,int>::Iterator i;
         bool insertionDone;
         insertionDone = m.insert( NULL, 1, &i );
-        TS_ASSERT_EQUALS( 0, m.size() );
+        TS_ASSERT_EQUALS( 0, m.Size() );
         TS_ASSERT_EQUALS( m.end(), i );
         TS_ASSERT( !insertionDone );
 
         // insert empty string should work
         insertionDone = m.insert( "", 123, &i );
-        TS_ASSERT_EQUALS( 1, m.size() );
+        TS_ASSERT_EQUALS( 1, m.Size() );
         TS_ASSERT_DIFFERS( m.end(), i );
         TS_ASSERT( insertionDone );
         TS_ASSERT_EQUALS( i->first, "" );

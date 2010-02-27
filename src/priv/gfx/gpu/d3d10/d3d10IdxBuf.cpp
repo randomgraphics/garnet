@@ -63,7 +63,7 @@ void GN::gfx::D3D10IdxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10IdxBuf::readback( std::vector<UInt8> & data )
+void GN::gfx::D3D10IdxBuf::readback( DynaArray<UInt8> & data )
 {
     D3D10Buffer::readback( data );
 }

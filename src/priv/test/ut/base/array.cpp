@@ -246,7 +246,7 @@ public:
         DynaArray<Element> a;
 
         TS_ASSERT( a.Empty() );
-        TS_ASSERT_EQUALS( (Element*)NULL, a.GetRawPtr() );
+        TS_ASSERT_EQUALS( (Element*)NULL, a.ToRawPtr() );
         TS_ASSERT_EQUALS( 0, a.Size() );
     }
 
@@ -430,31 +430,33 @@ public:
         a.Append( 4 );
         a.Append( 5 );
 
-        a.Erase( 100 ); // should do nothing
+        a.EraseAt( 100 ); // should do nothing
         TS_ASSERT_EQUALS( 5, a.Size() );
         TS_ASSERT_EQUALS( 5, a[4] );
 
-        a.Erase( 4 ); // 1, 2, 3, 4
+        a.EraseAt( 4 ); // 1, 2, 3, 4
         TS_ASSERT_EQUALS( 4, a.Size() );
         TS_ASSERT_EQUALS( 4, a[3] );
 
-        a.Erase( 3 ); // 1, 2, 3
+        a.EraseAt( 3 ); // 1, 2, 3
         TS_ASSERT_EQUALS( 3, a.Size() );
         TS_ASSERT_EQUALS( 3, a[2] );
 
-        a.Erase( 1 ); // 1, 3
+        a.EraseAt( 1 ); // 1, 3
         TS_ASSERT_EQUALS( 2, a.Size() );
         TS_ASSERT_EQUALS( 1, a[0] );
         TS_ASSERT_EQUALS( 3, a[1] );
 
-        a.Erase( 0 ); // 3
+        a.EraseAt( 0 ); // 3
         TS_ASSERT_EQUALS( 1, a.Size() );
         TS_ASSERT_EQUALS( 3, a[0] );
 
-        a.Erase( 0 );
+        a.EraseAt( 0 );
         TS_ASSERT_EQUALS( 0, a.Size() );
 
-        a.Erase( 0 ); // this should do nothing
+        // Invalid erasing (should do nothing)
+        a.EraseAt( 0 );
+        a.EraseItem( NULL );
     }
 
     void testPopBack()
@@ -490,7 +492,7 @@ public:
 
         // 2 cop for moving a[1,2] to a[0,1]
         // 1 dtor for a[2]
-        a.Erase( 0 );
+        a.EraseAt( 0 );
         TS_ASSERT_EQUALS( 2, Element::count );
         TS_ASSERT_EQUALS( 3, Element::ctor );
         TS_ASSERT_EQUALS( 0, Element::cctor );

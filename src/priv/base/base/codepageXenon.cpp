@@ -75,7 +75,7 @@ GN::CECImplXenon::convert(
                 destBufferSizeInBytes / sizeof(wchar_t) ),
             0 );
 
-        sourceBuffer = tempBuffer.GetRawPtr();
+        sourceBuffer = tempBuffer.ToRawPtr();
         sourceBufferSizeInBytes = tempBuffer.Size() * sizeof(wchar_t);
     }
     else

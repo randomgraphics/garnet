@@ -36,9 +36,9 @@ void GN::PutEnv( const char * name, const char * value )
         s.Format( "%s=%s", name, value );
     }
 
-    if( 0 != _putenv( const_cast<char*>(s.GetRawPtr()) ) )
+    if( 0 != _putenv( const_cast<char*>(s.ToRawPtr()) ) )
     {
-        GN_ERROR(sLogger)( "fail to set environment '%s'.", s.GetRawPtr() );
+        GN_ERROR(sLogger)( "fail to set environment '%s'.", s.ToRawPtr() );
     }
 #endif
 #endif

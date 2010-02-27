@@ -85,7 +85,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
     if( (unsigned char)ch < 128 )
     {
         // ASCII character
-        //GN_TRACE( "Char press: %s", StrA(&ch,1).GetRawPtr() );
+        //GN_TRACE( "Char press: %s", StrA(&ch,1).ToRawPtr() );
         sigCharPress( ch );
     }
     else if( mHalfWideChar )
@@ -94,7 +94,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         wchar_t wch[2];
         Mbs2Wcs( wch, 2, mHalfBytes, 2 );
 
-        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).GetRawPtr() );
+        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).ToRawPtr() );
         sigCharPress( wch[0] );
 
         // Çå³ý¡°°ë×Ö·û¡±±êÖ¾

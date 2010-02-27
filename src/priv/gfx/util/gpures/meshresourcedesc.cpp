@@ -109,7 +109,7 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
     }
     else
     {
-        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().GetRawPtr() );
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().ToRawPtr() );
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -242,7 +242,7 @@ static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing.",
-            node.name.GetRawPtr(),
+            node.name.ToRawPtr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
     }
 
@@ -256,7 +256,7 @@ template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a && String2Integer<T>( result, a->value.GetRawPtr() );
+    return a && String2Integer<T>( result, a->value.ToRawPtr() );
 }
 
 //
@@ -280,11 +280,11 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || !String2Integer<T>( result, a->value.GetRawPtr() ) )
+    if( !a || !String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",
-            node.name.GetRawPtr(),
+            node.name.ToRawPtr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
         return false;
     }
@@ -302,13 +302,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == StringCompareI( "1", a->value.GetRawPtr() ) ||
-        0 == StringCompareI( "true", a->value.GetRawPtr() ) )
+    if( 0 == StringCompareI( "1", a->value.ToRawPtr() ) ||
+        0 == StringCompareI( "true", a->value.ToRawPtr() ) )
     {
         return true;
     }
-    else if( 0 == StringCompareI( "0", a->value.GetRawPtr() ) ||
-             0 == StringCompareI( "false", a->value.GetRawPtr() ) )
+    else if( 0 == StringCompareI( "0", a->value.ToRawPtr() ) ||
+             0 == StringCompareI( "false", a->value.ToRawPtr() ) )
     {
         return false;
     }
@@ -361,7 +361,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             fp.name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.GetRawPtr() );
+            xpr.errInfo.ToRawPtr() );
         return AutoRef<Blob>::NULLREF;
     }
     GN_ASSERT( xpr.root );
@@ -376,7 +376,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     const XmlAttrib * a = root->findAttrib( "primtype" );
     if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
     {
-        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.GetRawPtr(), "primtype" );
+        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.ToRawPtr(), "primtype" );
         return AutoRef<Blob>::NULLREF;
     }
 
@@ -408,7 +408,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         if( "attrib" != e->name )
         {
-            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.GetRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.ToRawPtr() );
             continue;
         }
 
@@ -480,7 +480,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.GetRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.ToRawPtr() );
         }
     }
 
@@ -546,7 +546,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.GetRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.ToRawPtr() );
         }
     }
 

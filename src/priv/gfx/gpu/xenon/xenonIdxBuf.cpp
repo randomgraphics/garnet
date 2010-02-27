@@ -146,7 +146,7 @@ GN::gfx::XenonIdxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::readback( std::vector<UInt8> & data )
+void GN::gfx::XenonIdxBuf::readback( DynaArray<UInt8> & data )
 {
     GN_GUARD_SLOW;
 

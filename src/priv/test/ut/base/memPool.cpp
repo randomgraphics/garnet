@@ -19,11 +19,11 @@ public:
 #if GN_GCC
         GN_TODO( "StlAllocator<> does not pass GCC build." );
 #else
-        typedef std::vector<char,GN::StlAllocator<char> > CharArray;
-        typedef std::vector<Test,GN::StlAllocator<GN::StrA> > TestArray;
+        typedef GN::DynaArray<char,GN::StlAllocator<char> > CharArray;
+        typedef GN::DynaArray<Test,GN::StlAllocator<GN::StrA> > TestArray;
         CharArray a1(10);
         TestArray a2(10);
-        TS_ASSERT_EQUALS( a1.size(), a2.size() );
+        TS_ASSERT_EQUALS( a1.Size(), a2.Size() );
 #endif
     }
 

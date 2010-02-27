@@ -6,7 +6,6 @@
 /// \author  chenlee (2005.7.25)
 // *****************************************************************************
 
-#include <vector>
 #include <map>
 
 namespace GN
@@ -54,8 +53,8 @@ namespace GN
         };
 
         FixSizedRawMemoryPool<sizeof(Item)> mPool;
-        std::vector<Item*>                  mItems;
-        std::vector<size_t>                 mFreeList;
+        DynaArray<Item*>                  mItems;
+        DynaArray<size_t>                 mFreeList;
 
 
         static inline size_t h2idx( HANDLE_TYPE h ) { return (UIntPtr)h - 1; }
@@ -74,22 +73,22 @@ namespace GN
         ///
         void Clear()
         {
-            for( size_t i = 0; i < mItems.size(); ++i )
+            for( size_t i = 0; i < mItems.Size(); ++i )
             {
                 GN_ASSERT( mItems[i] );
                 if( mItems[i]->occupied ) mItems[i]->dtor();
                 mPool.Dealloc( mItems[i] );
             }
-            mItems.clear();
-            mFreeList.clear();
+            mItems.Clear();
+            mFreeList.Clear();
         }
 
         ///
         /// Get number of handles
         ///
-        size_t size() const
+        size_t Size() const
         {
-            return mItems.size() - mFreeList.size();
+            return mItems.Size() - mFreeList.Size();
         }
 
         ///
@@ -97,18 +96,18 @@ namespace GN
         ///
         bool empty() const
         {
-            return mItems.size() == mFreeList.size();
+            return mItems.Size() == mFreeList.Size();
         }
 
         ///
         /// get current capacity
         ///
-        size_t capacity() const { return mItems.capacity(); }
+        size_t capacity() const { return mItems.Capacity(); }
 
         ///
         /// set capacity
         ///
-        void reserve( size_t n ) { mItems.reserve(n); mFreeList.reserve(n); }
+        void reserve( size_t n ) { mItems.Reserve(n); mFreeList.Reserve(n); }
 
         ///
         /// return first handle
@@ -119,7 +118,7 @@ namespace GN
             size_t idx = 0;
             while( !mItems[idx]->occupied )
             {
-                GN_ASSERT( idx < mItems.size() );
+                GN_ASSERT( idx < mItems.Size() );
                 ++idx;
             }
             return idx2h( idx );
@@ -132,12 +131,12 @@ namespace GN
         {
             if( !validHandle(h) ) return (HANDLE_TYPE)0;
             size_t idx = h2idx( h ) + 1;
-            while( idx < mItems.size() && !mItems[idx]->occupied )
+            while( idx < mItems.Size() && !mItems[idx]->occupied )
             {
-                GN_ASSERT( idx < mItems.size() );
+                GN_ASSERT( idx < mItems.Size() );
                 ++idx;
             }
-            return idx < mItems.size() ? idx2h( idx ) : (HANDLE_TYPE)0;
+            return idx < mItems.Size() ? idx2h( idx ) : (HANDLE_TYPE)0;
         }
 
         ///
@@ -145,7 +144,7 @@ namespace GN
         ///
         HANDLE_TYPE add( const T & val )
         {
-            if( mFreeList.empty() )
+            if( mFreeList.Empty() )
             {
                 Item * newItem = (Item*)mPool.Alloc();
                 if( 0 == newItem )
@@ -155,13 +154,13 @@ namespace GN
                 }
                 newItem->occupied = false;
                 newItem->ctor( val );
-                mItems.push_back( newItem );
-                return (HANDLE_TYPE)mItems.size();
+                mItems.Append( newItem );
+                return (HANDLE_TYPE)mItems.Size();
             }
             else
             {
-                size_t i = mFreeList.back();
-                mFreeList.pop_back();
+                size_t i = mFreeList.Back();
+                mFreeList.PopBack();
                 GN_ASSERT( mItems[i] );
                 mItems[i]->ctor( val );
                 return idx2h( i );
@@ -173,7 +172,7 @@ namespace GN
         ///
         HANDLE_TYPE newItem()
         {
-            if( mFreeList.empty() )
+            if( mFreeList.Empty() )
             {
                 Item * newItem = (Item*)mPool.Alloc();
                 if( 0 == newItem )
@@ -183,13 +182,13 @@ namespace GN
                 }
                 newItem->occupied = false;
                 newItem->ctor();
-                mItems.push_back( newItem );
-                return (HANDLE_TYPE)mItems.size();
+                mItems.Append( newItem );
+                return (HANDLE_TYPE)mItems.Size();
             }
             else
             {
-                size_t i = mFreeList.back();
-                mFreeList.pop_back();
+                size_t i = mFreeList.Back();
+                mFreeList.PopBack();
                 GN_ASSERT( mItems[i] );
                 mItems[i]->ctor();
                 return idx2h( i );
@@ -210,7 +209,7 @@ namespace GN
                 size_t idx = h2idx(h);
                 GN_ASSERT( mItems[idx] );
                 mItems[idx]->dtor();
-                mFreeList.push_back(idx);
+                mFreeList.Append(idx);
             }
         }
 
@@ -219,7 +218,7 @@ namespace GN
         ///
         HANDLE_TYPE find( const T & val ) const
         {
-            for( size_t i = 0; i < mItems.size(); ++i )
+            for( size_t i = 0; i < mItems.Size(); ++i )
             {
                 if( !mItems[i]->occupied ) continue;
                 if( mItems[i]->t() == val ) return idx2h( i ); // found!
@@ -233,7 +232,7 @@ namespace GN
         template<typename FUNC>
         HANDLE_TYPE findIf( const FUNC & fp ) const
         {
-            for( size_t i = 0; i < mItems.size(); ++i )
+            for( size_t i = 0; i < mItems.Size(); ++i )
             {
                 if( !mItems[i]->occupied ) continue;
                 if( fp( mItems[i]->t() ) ) return idx2h( i ); // found!
@@ -247,7 +246,7 @@ namespace GN
         bool validHandle( HANDLE_TYPE h ) const
         {
             size_t idx = h2idx(h);
-            return idx < mItems.size() && mItems[idx]->occupied;
+            return idx < mItems.Size() && mItems[idx]->occupied;
         }
 
         ///
@@ -318,10 +317,10 @@ namespace GN
         ///
         /// Get number of handles
         ///
-        size_t size() const
+        size_t Size() const
         {
-            GN_ASSERT( mItems.size() == mNames.size() );
-            return mItems.size();
+            GN_ASSERT( mItems.Size() == mNames.Size() );
+            return mItems.Size();
         }
 
         ///
@@ -329,7 +328,7 @@ namespace GN
         ///
         bool empty() const
         {
-            GN_ASSERT( mItems.size() == mNames.size() );
+            GN_ASSERT( mItems.Size() == mNames.size() );
             return mItems.empty();
         }
 
@@ -355,7 +354,7 @@ namespace GN
 
             if( mNames.end() != mNames.find( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.ToRawPtr() );
                 return 0;
             }
 
@@ -387,7 +386,7 @@ namespace GN
 
             if( mNames.end() != mNames.find( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.ToRawPtr() );
                 return 0;
             }
 
@@ -433,7 +432,7 @@ namespace GN
 
             if( !validName( name ) )
             {
-                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.GetRawPtr() );
+                GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.ToRawPtr() );
                 return;
             }
 

@@ -102,7 +102,7 @@ class GN::gfx::ImageReader::Impl
         DATA_READEN,
     };
 
-    std::vector<UInt8> mSrc;
+    DynaArray<UInt8> mSrc;
 
     BMPReader mBMPReader;
     DDSReader mDDSReader;
@@ -147,12 +147,12 @@ public:
         #undef CHECK_FORMAT
 
         // read whole file
-        size_t sz = i_file.size();
-        mSrc.resize( sz );
+        size_t sz = i_file.Size();
+        mSrc.Resize( sz );
         if( !i_file.seek( 0, FileSeek::SET ) ) return false;
-        if( !i_file.read( &mSrc[0], mSrc.size(), &sz ) ) return false;
-        GN_ASSERT( sz <= mSrc.size() );
-        if( sz < mSrc.size() ) mSrc.resize( sz );
+        if( !i_file.read( &mSrc[0], mSrc.Size(), &sz ) ) return false;
+        GN_ASSERT( sz <= mSrc.Size() );
+        if( sz < mSrc.Size() ) mSrc.Resize( sz );
 
         // success
         mState = INITIALIZED;
@@ -174,10 +174,10 @@ public:
             return false;
         }
 
-        GN_ASSERT( !mSrc.empty() );
+        GN_ASSERT( !mSrc.Empty() );
 
         #define READ_HEADER( reader ) \
-            if( !reader.readHeader( o_desc, &mSrc[0], mSrc.size() ) ) \
+            if( !reader.readHeader( o_desc, &mSrc[0], mSrc.Size() ) ) \
             { mState = INVALID; return false; }
 
         switch( mFileFormat )

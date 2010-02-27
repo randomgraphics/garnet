@@ -86,8 +86,8 @@ namespace CEGUI
         };
 
         bool mQueueEnabled;
-        std::vector<QuadDesc> mQuads;
-        std::vector<GarnetTexture*> mTextures;
+        DynaArray<QuadDesc> mQuads;
+        DynaArray<GarnetTexture*> mTextures;
 
         // ********************************
         // private functions

@@ -122,7 +122,7 @@ void CEGUI::GarnetRenderer::destroyTexture(Texture* texture)
 {
     GN_GUARD;
 
-    std::vector<GarnetTexture*>::iterator i = std::find(
+    DynaArray<GarnetTexture*>::iterator i = std::find(
         mTextures.begin(), mTextures.end(), texture );
 
     if( i != mTextures.end() )
@@ -142,7 +142,7 @@ void CEGUI::GarnetRenderer::destroyAllTextures(void)
 {
     GN_GUARD;
 
-    std::vector<GarnetTexture*>::iterator i;
+    DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );
@@ -215,7 +215,7 @@ CEGUI::Rect CEGUI::GarnetRenderer::getRect(void) const
 bool CEGUI::GarnetRenderer::onRendererRestore()
 {
     // reload textures
-    std::vector<GarnetTexture*>::iterator i;
+    DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );
@@ -239,7 +239,7 @@ bool CEGUI::GarnetRenderer::onRendererRestore()
 void CEGUI::GarnetRenderer::onRendererDispose()
 {
     // dispose textures
-    std::vector<GarnetTexture*>::iterator i;
+    DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );

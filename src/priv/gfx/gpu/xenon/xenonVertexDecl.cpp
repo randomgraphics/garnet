@@ -134,7 +134,7 @@ sElementSorting( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
 /// convert vertdecl structure to a D3D vertex declaration array
 // -----------------------------------------------------------------------------
 static bool
-sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::VertexFormat & vtxfmt )
+sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::VertexFormat & vtxfmt )
 {
     GN_GUARD;
 
@@ -194,7 +194,7 @@ GN::gfx::createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFor
 {
     GN_GUARD;
 
-    std::vector<D3DVERTEXELEMENT9> elements;
+    DynaArray<D3DVERTEXELEMENT9> elements;
     if( !sVtxFmtDesc2D3DDecl( elements, format ) ) return NULL;
     GN_ASSERT( !elements.empty() );
 

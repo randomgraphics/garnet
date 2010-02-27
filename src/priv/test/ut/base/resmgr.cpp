@@ -198,7 +198,7 @@ namespace GN
         ///
         bool empty() const
         {
-            GN_ASSERT( mResHandles.size() == mResNames.size() );
+            GN_ASSERT( mResHandles.Size() == mResNames.size() );
             return mResHandles.empty() && NULL == mNullInstance;
         }
 
@@ -250,7 +250,7 @@ namespace GN
             GN_GUARD_SLOW;
             StrA realname;
             HandleType h = getResourceHandle( resolveName(realname,name), autoAddNewName );
-            return getResourceImpl( result, h, realname.GetRawPtr() );
+            return getResourceImpl( result, h, realname.ToRawPtr() );
             GN_UNGUARD_SLOW;
         }
 
@@ -327,7 +327,7 @@ namespace GN
             {
                 if( !overrideExistingResource )
                 {
-                    GN_ERROR(sLogger)( "resource '%s' already exist!", realname.GetRawPtr() );
+                    GN_ERROR(sLogger)( "resource '%s' already exist!", realname.ToRawPtr() );
                     return 0;
                 }
                 GN_ASSERT( mResHandles.validHandle(ci->second) );
@@ -347,7 +347,7 @@ namespace GN
                 }
                 mResNames[realname] = h;
             }
-            GN_ASSERT( mResNames.size() == mResHandles.size() );
+            GN_ASSERT( mResNames.size() == mResHandles.Size() );
             GN_ASSERT( mResHandles.validHandle(h) && item );
             item->creator = creator;
             item->nullor = nullor;
@@ -384,7 +384,7 @@ namespace GN
             typename StringMap::iterator iter = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() == iter )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", realname.GetRawPtr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.ToRawPtr() );
                 return;
             }
 
@@ -439,7 +439,7 @@ namespace GN
             typename StringMap::const_iterator iter = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() == iter )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", realname.GetRawPtr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.ToRawPtr() );
                 return;
             }
             disposeResourceByHandle( iter->second );
@@ -599,7 +599,7 @@ namespace GN
 
                 if( !ok )
                 {
-                    GN_WARN(sLogger)( "Fall back to null instance for resource '%s'.", item->name.GetRawPtr() );
+                    GN_WARN(sLogger)( "Fall back to null instance for resource '%s'.", item->name.ToRawPtr() );
                     if( item->nullor )
                     {
                         ok = item->nullor( item->res, item->name, item->userData );
@@ -610,7 +610,7 @@ namespace GN
                     }
                     if( !ok )
                     {
-                        GN_ERROR(sLogger)( "Fail to create NULL instance for resource '%s'.", item->name.GetRawPtr() );
+                        GN_ERROR(sLogger)( "Fail to create NULL instance for resource '%s'.", item->name.ToRawPtr() );
                         return false;
                     }
                 }
@@ -672,7 +672,7 @@ typedef GN::ResourceManagerTempl<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
-    return GN::String2Integer<int>( res, name.GetRawPtr() );
+    return GN::String2Integer<int>( res, name.ToRawPtr() );
 }
 
 bool nullCreator( int & res, const GN::StrA &, void * )

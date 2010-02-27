@@ -61,13 +61,13 @@ class GpuTest
 
         size_t bytesPerPixel = rtt.texture->getDesc().format.getBytesPerBlock();
         size_t srcOffset = md.slicePitch * rtt.slice + md.rowPitch * y + x * bytesPerPixel;
-        if( srcOffset >= md.data.size() )
+        if( srcOffset >= md.data.Size() )
         {
             TS_ASSERT( 0 );
             return rtp;
         }
         const UInt8 * src = &md.data[srcOffset];
-        size_t copiedBytes = math::GetMin( md.data.size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::GetMin( md.data.Size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;

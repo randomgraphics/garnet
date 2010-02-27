@@ -43,7 +43,7 @@ namespace GN { namespace util
         {
             mCurrentTime = mClock.getTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
-            mFpsString.Format( mFormatString.GetRawPtr(), 0 );
+            mFpsString.Format( mFormatString.ToRawPtr(), 0 );
             mFrameCounter = 0;
             mLastFrameElapsed = 1.0f / mFpsValue;
             mLastFrameTime = mCurrentTime - mLastFrameElapsed;
@@ -68,16 +68,16 @@ namespace GN { namespace util
             {
                 mBeforeFirstUpdate = false;
                 mFpsValue = (float)( mFrameCounter / timeSinceLastCheckPoint );
-                mFpsString.Format( mFormatString.GetRawPtr(), mFpsValue );
+                mFpsString.Format( mFormatString.ToRawPtr(), mFpsValue );
                 mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
                 static Logger * sLogger = GetLogger("GN.util.fps");
-                GN_VERBOSE(sLogger)( mFpsString.GetRawPtr() );
+                GN_VERBOSE(sLogger)( mFpsString.ToRawPtr() );
             }
             else if( mBeforeFirstUpdate )
             {
                 mFpsValue = (float)( (mCurrentTime - mLastCheckPoint) / mFrameCounter );
-                mFpsString.Format( mFormatString.GetRawPtr(), mFpsValue );
+                mFpsString.Format( mFormatString.ToRawPtr(), mFpsValue );
             }
         }
 

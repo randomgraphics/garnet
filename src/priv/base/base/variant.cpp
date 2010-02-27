@@ -40,19 +40,19 @@ bool GN::Variant::getb( bool & b ) const
 {
     int i;
     float f;
-    if( 0 == GN::StringCompareI( "yes", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompareI( "true", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompareI( "on", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompare( "1", mValue.GetRawPtr() ) )
+    if( 0 == GN::StringCompareI( "yes", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompareI( "true", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompareI( "on", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompare( "1", mValue.ToRawPtr() ) )
     {
         b = true;
         return true;
     }
     else if(
-        0 == GN::StringCompareI( "no", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompareI( "false", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompareI( "off", mValue.GetRawPtr() ) ||
-        0 == GN::StringCompare( "0", mValue.GetRawPtr() ) )
+        0 == GN::StringCompareI( "no", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompareI( "false", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompareI( "off", mValue.ToRawPtr() ) ||
+        0 == GN::StringCompare( "0", mValue.ToRawPtr() ) )
     {
         b = false;
         return true;
@@ -69,37 +69,37 @@ bool GN::Variant::getb( bool & b ) const
     }
     else
     {
-        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.GetRawPtr() );
+        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.ToRawPtr() );
         return false;
     }
 }
 //
 bool GN::Variant::geti( int & i ) const
 {
-    return GN::String2Integer<int>( i, mValue.GetRawPtr() );
+    return GN::String2Integer<int>( i, mValue.ToRawPtr() );
 }
 //
 bool GN::Variant::getf( float & f ) const
 {
-    return GN::String2Float( f, mValue.GetRawPtr() );
+    return GN::String2Float( f, mValue.ToRawPtr() );
 }
 //
 bool GN::Variant::getp( void * & p ) const
 {
     size_t i;
-    bool r = GN::String2Integer<size_t>( i, mValue.GetRawPtr() );
+    bool r = GN::String2Integer<size_t>( i, mValue.ToRawPtr() );
     if( r ) p = (void*)i;
     return r;
 }
 //
 bool GN::Variant::getv( Vector4f & v ) const
 {
-    return 4 == GN::String2FloatArray( v, 4, mValue.GetRawPtr(), mValue.Size() );
+    return 4 == GN::String2FloatArray( v, 4, mValue.ToRawPtr(), mValue.Size() );
 }
 //
 bool GN::Variant::getm( Matrix44f & m ) const
 {
-    return 16 == GN::String2FloatArray( m[0], 16, mValue.GetRawPtr(), mValue.Size() );
+    return 16 == GN::String2FloatArray( m[0], 16, mValue.ToRawPtr(), mValue.Size() );
 }
 
 // *****************************************************************************

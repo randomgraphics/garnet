@@ -138,7 +138,7 @@ void GN::util::ArcBall::onRotation( int x, int y )
 
     mTranslation = q.ToMatrix44().TransformPoint( mTranslationBase );
 
-    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.Print().GetRawPtr() );
+    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.Print().ToRawPtr() );
 }
 
 //

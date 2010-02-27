@@ -164,7 +164,7 @@ static void sDumpVs( ID3D11DeviceContext & devcxt, FILE * fp )
 
     if( !vs ) return;
 
-    std::vector<UInt8> binbuf;
+    DynaArray<UInt8> binbuf;
     UINT sz;
     vs->GetPrivateData( VSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -172,7 +172,7 @@ static void sDumpVs( ID3D11DeviceContext & devcxt, FILE * fp )
         GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVS()." );
         return;
     }
-    binbuf.resize( sz );
+    binbuf.Resize( sz );
     vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "vs" );
@@ -191,7 +191,7 @@ static void sDumpGs( ID3D11DeviceContext & devcxt, FILE * fp )
 
     if( !gs ) return;
 
-    std::vector<UInt8> binbuf;
+    DynaArray<UInt8> binbuf;
     UINT sz;
     gs->GetPrivateData( GSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -199,7 +199,7 @@ static void sDumpGs( ID3D11DeviceContext & devcxt, FILE * fp )
         GN_ERROR(sLogger)( "Geometry shader is not dumpable. Please use createDumpableGS()." );
         return;
     }
-    binbuf.resize( sz );
+    binbuf.Resize( sz );
     gs->GetPrivateData( GSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "gs" );
@@ -218,7 +218,7 @@ static void sDumpPs( ID3D11DeviceContext & devcxt, FILE * fp )
 
     if( !ps ) return;
 
-    std::vector<UInt8> binbuf;
+    DynaArray<UInt8> binbuf;
     UINT sz;
     ps->GetPrivateData( PSGUID(), &sz, 0 );
     if( 0 == sz )
@@ -226,7 +226,7 @@ static void sDumpPs( ID3D11DeviceContext & devcxt, FILE * fp )
         GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePS()." );
         return;
     }
-    binbuf.resize( sz );
+    binbuf.Resize( sz );
     ps->GetPrivateData( PSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
@@ -361,7 +361,7 @@ static void sDumpInputLayout( ID3D11DeviceContext & devcxt, FILE * fp )
     UINT sz;
 
     // dump signature binary
-    std::vector<UInt8> signature;
+    DynaArray<UInt8> signature;
     char sname[_MAX_PATH];
     sprintf_s( sname, "%s_inputlayout_signature.bin", sDumpFilePrefix );
     il->GetPrivateData( IL1GUID(), &sz, 0 );
@@ -370,17 +370,17 @@ static void sDumpInputLayout( ID3D11DeviceContext & devcxt, FILE * fp )
         GN_ERROR(sLogger)( "InputLayout is not dumpable. Please use createDumpableIL()." );
         return;
     }
-    signature.resize( sz );
+    signature.Resize( sz );
     il->GetPrivateData( IL1GUID(), &sz, &signature[0] );
-    sDumpBinary( sname, &signature[0], signature.size() );
+    sDumpBinary( sname, &signature[0], signature.Size() );
 
     // write IL open tag
     fprintf( fp, "\t<il signature=\"%s\">\n", sname );
 
     // get element array
-    std::vector<D3D11_INPUT_ELEMENT_DESC> elements;
+    DynaArray<D3D11_INPUT_ELEMENT_DESC> elements;
     il->GetPrivateData( IL0GUID(), &sz, 0 );
-    elements.resize( sz / sizeof(D3D11_INPUT_ELEMENT_DESC) );
+    elements.Resize( sz / sizeof(D3D11_INPUT_ELEMENT_DESC) );
     il->GetPrivateData( IL0GUID(), &sz, &elements[0] );
 
     // write element one by one
@@ -731,7 +731,7 @@ void sDumpD3D11States( ID3D11DeviceContext & devcxt, FILE * fp )
 void GN::d3d11::setDumpFilePrefix( const StrA & prefix )
 {
     size_t n = math::GetMin<size_t>( prefix.Size(), _MAX_PATH );
-    memcpy( sDumpFilePrefix, prefix.GetRawPtr(), n );
+    memcpy( sDumpFilePrefix, prefix.ToRawPtr(), n );
     sDumpFilePrefix[_MAX_PATH-1] = 0;
 }
 

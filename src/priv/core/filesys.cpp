@@ -37,7 +37,7 @@ static Logger * sLogger = GetLogger("GN.base.filesys");
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    DIR * d = opendir( path.GetRawPtr() );
+    DIR * d = opendir( path.ToRawPtr() );
     if( 0 == d ) return false;
     closedir( d );
     return true;
@@ -49,7 +49,7 @@ static bool sNativeIsDir( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     if( sNativeIsDir(path) ) return true;
-    FILE * fp = fopen( path.GetRawPtr(), "r" );
+    FILE * fp = fopen( path.ToRawPtr(), "r" );
     if( 0 == fp ) return false;
     fclose( fp );
     return true;
@@ -84,7 +84,7 @@ static bool sIsAbsPath( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeExist( const StrA & path )
 {
-    return !!::PathFileExistsA( path.GetRawPtr() );
+    return !!::PathFileExistsA( path.ToRawPtr() );
 }
 
 //
@@ -92,7 +92,7 @@ static bool sNativeExist( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
-    return !!::PathIsDirectoryA( path.GetRawPtr() );
+    return !!::PathIsDirectoryA( path.ToRawPtr() );
 }
 
 //
@@ -127,7 +127,7 @@ static bool sIsAbsPath( const StrA & path )
 static bool sNativeExist( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.GetRawPtr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.ToRawPtr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -145,7 +145,7 @@ static bool sNativeExist( const StrA & path )
 static bool sNativeIsDir( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.GetRawPtr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( path.ToRawPtr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -232,9 +232,9 @@ public:
         }
         // convert to full path
         char absPath[MAX_PATH+1];
-        if( 0 == _fullpath( absPath, tmp.GetRawPtr(), MAX_PATH ) )
+        if( 0 == _fullpath( absPath, tmp.ToRawPtr(), MAX_PATH ) )
         {
-            GN_ERROR(sLogger)( "invalid path '%s'.", path.GetRawPtr() );
+            GN_ERROR(sLogger)( "invalid path '%s'.", path.ToRawPtr() );
             result.Clear();
             return;
         }
@@ -260,9 +260,9 @@ public:
         // TODO: resolve embbed environments
     }
 
-    std::vector<StrA> &
+    DynaArray<StrA> &
     glob(
-        std::vector<StrA> & result,
+        DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
@@ -272,13 +272,13 @@ public:
 
         if( !exist(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.GetRawPtr() );
+            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.ToRawPtr() );
             return result;
         }
 
         if( !isDir(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.GetRawPtr() );
+            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.ToRawPtr() );
             return result;
         }
 
@@ -303,7 +303,7 @@ private:
     //
     //
     // -----------------------------------------------------------------------------
-    void recursiveFind( std::vector<StrA> & result,
+    void recursiveFind( DynaArray<StrA> & result,
                         const StrA & dirName,
                         const StrA & pattern,
                         bool recursive,
@@ -324,7 +324,7 @@ private:
             // TODO: ignore links/junctions
             CSimpleGlobA sg( SG_GLOB_ONLYDIR | SG_GLOB_NODOT );
             StrA p = joinPath( curDir, "*" );
-            sg.Add( p.GetRawPtr() );
+            sg.Add( p.ToRawPtr() );
             char ** dirs = sg.Files();
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
@@ -337,12 +337,12 @@ private:
         // search in current directory
         CSimpleGlobA sg( SG_GLOB_ONLYFILE );
         StrA p = joinPath( curDir, (useRegex ? "*.*" : pattern) );
-        sg.Add( p.GetRawPtr() );
+        sg.Add( p.ToRawPtr() );
         char ** files = sg.Files();
         int c = sg.FileCount();
         for( int i = 0; i < c; ++i, ++files )
         {
-            result.push_back( joinPath( curDir, *files ) );
+            result.Append( joinPath( curDir, *files ) );
         }
 
         GN_UNGUARD;
@@ -410,9 +410,9 @@ public:
         mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
     }
 
-    std::vector<StrA> &
+    DynaArray<StrA> &
     glob(
-        std::vector<StrA> & result,
+        DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
@@ -474,9 +474,9 @@ public:
         mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
     }
 
-    std::vector<StrA> &
+    DynaArray<StrA> &
     glob(
-        std::vector<StrA> & result,
+        DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
@@ -502,11 +502,11 @@ public:
 
 class MultiRootsFileSystem : public FileSystem
 {
-    std::vector<StrA> mRoots;
+    DynaArray<StrA> mRoots;
 
     const StrA * findRoot( const StrA & path )
     {
-        for( size_t i = 0; i < mRoots.size(); ++i )
+        for( size_t i = 0; i < mRoots.Size(); ++i )
         {
             if( GN::fs::pathExist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
         }
@@ -519,7 +519,7 @@ public:
     {
     }
 
-    void addRoot( const StrA & root ) { mRoots.push_back( root ); }
+    void addRoot( const StrA & root ) { mRoots.Append( root ); }
 
     bool exist( const StrA & path )
     {
@@ -553,9 +553,9 @@ public:
         GN::fs::toNativeDiskFilePath( result, joinPath( *root, path ) );
     }
 
-    std::vector<StrA> &
+    DynaArray<StrA> &
     glob(
-        std::vector<StrA> & result,
+        DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
@@ -563,11 +563,11 @@ public:
     {
         if( dirName.Empty() )
         {
-            for( size_t i = 0; i < mRoots.size(); ++i )
+            for( size_t i = 0; i < mRoots.Size(); ++i )
             {
                 const StrA & root = mRoots[i];
 
-                std::vector<StrA> tmp;
+                DynaArray<StrA> tmp;
 
                 GN::fs::glob(
                     tmp,
@@ -576,11 +576,11 @@ public:
                     recursive,
                     useRegex );
 
-                for( size_t i = 0; i < tmp.size(); ++i )
+                for( size_t i = 0; i < tmp.Size(); ++i )
                 {
-                    if( result.end() == std::find( result.begin(), result.end(), tmp[i] ) )
+                    if( result.End() == std::find( result.Begin(), result.End(), tmp[i] ) )
                     {
-                        result.push_back( tmp[i] );
+                        result.Append( tmp[i] );
                     }
                 }
             }
@@ -606,7 +606,7 @@ public:
         const StrA * root = findRoot( path );
         if( !root )
         {
-            GN_ERROR(sLogger)( "file '%s' not found!", path.GetRawPtr() );
+            GN_ERROR(sLogger)( "file '%s' not found!", path.ToRawPtr() );
             return 0;
         }
         return GN::fs::openFile( joinPath( *root, path ), mode );
@@ -668,7 +668,7 @@ public:
     bool isFile( const StrA & ) { return false; }
     void toNativeDiskFilePath( StrA & result, const StrA & path ) { result = path; }
     bool isAbsPath( const StrA & ) { return true; }
-    std::vector<StrA> & glob( std::vector<StrA> & result, const StrA &, const StrA &, bool, bool )
+    DynaArray<StrA> & glob( DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool )
     {
         return result;
     }
@@ -731,7 +731,7 @@ struct FileSystemContainer
 
         if( mFileSystems.end() != mFileSystems.find( name ) )
         {
-            GN_ERROR(sLogger)( "File system '%s' already exists!", name.GetRawPtr() );
+            GN_ERROR(sLogger)( "File system '%s' already exists!", name.ToRawPtr() );
             return false;
         }
 

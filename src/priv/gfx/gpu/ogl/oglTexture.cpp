@@ -354,7 +354,7 @@ static inline bool sColorFormat2OGL(
     }
 
     // failed
-    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", clrfmt.toString().GetRawPtr() );
+    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", clrfmt.toString().ToRawPtr() );
     return false;
 }
 

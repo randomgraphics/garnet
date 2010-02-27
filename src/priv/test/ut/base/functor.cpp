@@ -1,10 +1,9 @@
 #include "../testCommon.h"
-#include <vector>
 #ifdef HAS_BOOST
 #include <boost/Bind.hpp>
 #endif
 
-std::vector<GN::StrA>   g_callSequence;
+GN::DynaArray<GN::StrA> g_callSequence;
 GN::StrA                g_funcName;
 int                     g_int1 = 0;
 int                     g_int2 = 0;
@@ -12,7 +11,7 @@ int                     g_int2 = 0;
 void foo1(int i1, int i2)
 {
     g_funcName = "foo1()";
-    g_callSequence.push_back( "foo1()" );
+    g_callSequence.Append( "foo1()" );
     g_int1 = i1;
     g_int2 = i2;
 }
@@ -20,7 +19,7 @@ void foo1(int i1, int i2)
 void foo2(int i1, int i2)
 {
     g_funcName = "foo2()";
-    g_callSequence.push_back( "foo2()" );
+    g_callSequence.Append( "foo2()" );
     g_int1 = i1;
     g_int2 = i2;
 }
@@ -28,7 +27,7 @@ void foo2(int i1, int i2)
 void GN_FASTCALL foo3(int i1, int i2)
 {
     g_funcName = "foo3()";
-    g_callSequence.push_back( "foo3()" );
+    g_callSequence.Append( "foo3()" );
     g_int1 = i1;
     g_int2 = i2;
 }
@@ -36,7 +35,7 @@ void GN_FASTCALL foo3(int i1, int i2)
 void GN_STDCALL foo4(int i1, int i2)
 {
     g_funcName = "foo4()";
-    g_callSequence.push_back( "foo4()" );
+    g_callSequence.Append( "foo4()" );
     g_int1 = i1;
     g_int2 = i2;
 }
@@ -44,7 +43,7 @@ void GN_STDCALL foo4(int i1, int i2)
 void GN_CDECL foo5(int i1, int i2)
 {
     g_funcName = "foo5()";
-    g_callSequence.push_back( "foo5()" );
+    g_callSequence.Append( "foo5()" );
     g_int1 = i1;
     g_int2 = i2;
 }
@@ -56,7 +55,7 @@ struct aaa
     void foo1(int a, int b)
     {
         g_funcName = "aaa::foo1()";
-        g_callSequence.push_back( "aaa::foo1()" );
+        g_callSequence.Append( "aaa::foo1()" );
         g_int1 = a;
         g_int2 = b;
     }
@@ -64,7 +63,7 @@ struct aaa
     void foo1(int a, int b) const
     {
         g_funcName = "aaa::foo1() const";
-        g_callSequence.push_back( "aaa::foo1() const" );
+        g_callSequence.Append( "aaa::foo1() const" );
         g_int1 = a;
         g_int2 = b;
     }
@@ -72,7 +71,7 @@ struct aaa
     void foo2(int a, int b)
     {
         g_funcName = "aaa::foo2()";
-        g_callSequence.push_back( "aaa::foo2()" );
+        g_callSequence.Append( "aaa::foo2()" );
         g_int1 = a;
         g_int2 = b;
     }
@@ -80,7 +79,7 @@ struct aaa
     void foo2(int a, int b) const
     {
         g_funcName = "aaa::foo2() const";
-        g_callSequence.push_back( "aaa::foo2() const" );
+        g_callSequence.Append( "aaa::foo2() const" );
         g_int1 = a;
         g_int2 = b;
     }
@@ -88,7 +87,7 @@ struct aaa
     int foo3(int a, int b) const
     {
         g_funcName = "aaa::foo3() const";
-        g_callSequence.push_back( "aaa::foo3()" );
+        g_callSequence.Append( "aaa::foo3()" );
         g_int1 = a;
         g_int2 = b;
         return 0;
@@ -102,7 +101,7 @@ struct bbb : public aaa, public GN::SlotBase
     void foo( int a, int b ) const
     {
         g_funcName = "bbb::foo()";
-        g_callSequence.push_back( "bbb::foo()" );
+        g_callSequence.Append( "bbb::foo()" );
         g_int1 = a;
         g_int2 = b;
     }
@@ -292,7 +291,7 @@ public:
         s1.Connect( &a, &aaa::foo1 );
         s1.Connect<aaa,aaa>( &b, &aaa::foo1 );
         TS_ASSERT_EQUALS( s1.GetNumSlots(), 2 );
-        g_callSequence.clear();
+        g_callSequence.Clear();
         s1(0,1);
         TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1() const" );
@@ -364,9 +363,9 @@ public:
         s1.Connect( &a, &aaa::foo1 ); // duplicate member function
         s1.Connect( &foo1 );          // duplicate free function
         TS_ASSERT_EQUALS( s1.GetNumSlots(), 3 );
-        g_callSequence.clear();
+        g_callSequence.Clear();
         s1.Emit(0,0);
-        TS_ASSERT_EQUALS( g_callSequence.size(), 3 );
+        TS_ASSERT_EQUALS( g_callSequence.Size(), 3 );
         TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
         TS_ASSERT_EQUALS( g_callSequence[2], "foo1()" );
@@ -379,9 +378,9 @@ public:
             TS_ASSERT_EQUALS( s1.GetNumSlots(), 5 );
             TS_ASSERT_EQUALS( b.GetNumSignals(), 2 );
 
-            g_callSequence.clear();
+            g_callSequence.Clear();
             s1.Emit(1,1);
-            TS_ASSERT_EQUALS( g_callSequence.size(), 5 );
+            TS_ASSERT_EQUALS( g_callSequence.Size(), 5 );
             TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
             TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
             TS_ASSERT_EQUALS( g_callSequence[4], "aaa::foo1()" );
@@ -396,9 +395,9 @@ public:
                 TS_ASSERT_EQUALS( s2.GetNumSlots(), 2 );
                 TS_ASSERT_EQUALS( b.GetNumSignals(), 3 );
 
-                g_callSequence.clear();
+                g_callSequence.Clear();
                 s2.Emit(5,5);
-                TS_ASSERT_EQUALS( g_callSequence.size(), 2 );
+                TS_ASSERT_EQUALS( g_callSequence.Size(), 2 );
                 TS_ASSERT_EQUALS( g_callSequence[0], "bbb::foo()" );
                 TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1()" );
             }
@@ -409,9 +408,9 @@ public:
 
         // connection to b should be released automatically.
         TS_ASSERT_EQUALS( s1.GetNumSlots(), 3 );
-        g_callSequence.clear();
+        g_callSequence.Clear();
         s1.Emit(0,0);
-        TS_ASSERT_EQUALS( g_callSequence.size(), 3 );
+        TS_ASSERT_EQUALS( g_callSequence.Size(), 3 );
         TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
         TS_ASSERT_EQUALS( g_callSequence[2], "foo1()" );

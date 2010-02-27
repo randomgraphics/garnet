@@ -172,7 +172,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
 
     // initialize FT2 stream
     mStream.base               = 0;
-    mStream.size               = (FT_ULong)fp->size();
+    mStream.size               = (FT_ULong)fp->Size();
     mStream.pos                = (FT_ULong)fp->tell();
     mStream.descriptor.pointer = fp;
     mStream.read               = sReadStream;
@@ -191,7 +191,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
         &mFace );
     if( err )
     {
-        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.GetRawPtr() );
+        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.ToRawPtr() );
         return Failure();
     }
 
@@ -277,7 +277,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
 
     //取道位图数据
     mBitmapBuffer.Resize( width * height );
-    UInt8 * buf = mBitmapBuffer.GetRawPtr();
+    UInt8 * buf = mBitmapBuffer.ToRawPtr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -304,7 +304,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     // copy glyph data to result structure
     result.width        = width;
     result.height       = height;
-    result.buffer       = mBitmapBuffer.GetRawPtr();
+    result.buffer       = mBitmapBuffer.ToRawPtr();
     result.horiBearingX = (float)slot->bitmap_left;
     result.horiBearingY = (float)-slot->bitmap_top;
     result.horiAdvance  = slot->advance.x / 64.0f;

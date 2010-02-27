@@ -139,7 +139,7 @@ bool GN::gfx::SpriteRenderer::Init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mIndexBuffer->update( 0, MAX_INDICES, indices.GetRawPtr() );
+    mIndexBuffer->update( 0, MAX_INDICES, indices.ToRawPtr() );
 
 
     // create pending vertex buffer

@@ -75,13 +75,13 @@ void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * da
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::readback( std::vector<UInt8> & data )
+void GN::gfx::OGLIdxBuf::readback( DynaArray<UInt8> & data )
 {
     const IdxBufDesc & desc = getDesc();
 
     size_t lengthInBytes = desc.numidx * mBytesPerIndex;
 
-    data.resize( lengthInBytes );
+    data.Resize( lengthInBytes );
 
     memcpy( &data[0], mBuffer, lengthInBytes );
 }

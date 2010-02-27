@@ -37,7 +37,7 @@ public:
         TS_ASSERT_EQUALS( 2, p1->a );
 
         p1.Attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1.GetRawPtr() );
+        TS_ASSERT_EQUALS( (S1*)0, p1.ToRawPtr() );
     }
 
     void testDetatch()

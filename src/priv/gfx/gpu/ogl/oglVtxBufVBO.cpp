@@ -104,10 +104,10 @@ void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * d
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::readback( std::vector<UInt8> & data )
+void GN::gfx::OGLVtxBufVBO::readback( DynaArray<UInt8> & data )
 {
     GN_UNIMPL_WARNING();
-    data.clear();
+    data.Clear();
 }
 
 // *****************************************************************************

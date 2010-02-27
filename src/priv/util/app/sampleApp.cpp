@@ -198,7 +198,7 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * c
             s += " ";
             s += argv[i];
         }
-        GN_WARN(sLogger)( s.GetRawPtr() );
+        GN_WARN(sLogger)( s.ToRawPtr() );
     }
 
     return true;
@@ -437,9 +437,9 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     StrA name( value.SubString( 0, k ) );
                     StrA leveltok( value.SubString( k+1, 0 ) );
                     int level;
-                    if( !name.Empty() && String2SInt32( level, leveltok.GetRawPtr() ) )
+                    if( !name.Empty() && String2SInt32( level, leveltok.ToRawPtr() ) )
                     {
-                        GetLogger( name.GetRawPtr() )->SetLevel( level );
+                        GetLogger( name.ToRawPtr() )->SetLevel( level );
                     }
                     else
                     {
@@ -482,7 +482,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.Size(), unknownArgs.GetRawPtr() ) ) return false;
+    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.Size(), unknownArgs.ToRawPtr() ) ) return false;
 
 #endif
 
@@ -632,7 +632,7 @@ void GN::util::SampleApp::drawHUD()
 
     if( mShowHUD )
     {
-        mFont.drawText( mFps.getFpsString().GetRawPtr(), 40, 40 );
+        mFont.drawText( mFps.getFpsString().ToRawPtr(), 40, 40 );
 
         if( mShowHelp )
         {

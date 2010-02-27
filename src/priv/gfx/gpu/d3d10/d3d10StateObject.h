@@ -407,7 +407,7 @@ namespace GN { namespace gfx
                     SafeRelease( item->object );
 
                     // remove from hash
-                    mHashTable.remove( item->desc );
+                    mHashTable.RemoveKey( item->desc );
 
                     // remove from LRU list
                     StateObjectItem * prev = item->prev;

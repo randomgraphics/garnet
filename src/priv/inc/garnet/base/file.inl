@@ -147,9 +147,9 @@ GN::MemFile<T>::seek( size_t offset, FileSeek origin )
 //  ----------------------------------------------------------------------------
 inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 {
-    GN_ASSERT( mCursor <= mBuffer.size() );
+    GN_ASSERT( mCursor <= mBuffer.Size() );
 
-    if( size + mCursor > mBuffer.size() ) size = mBuffer.size() - mCursor;
+    if( size + mCursor > mBuffer.Size() ) size = mBuffer.Size() - mCursor;
 
     if( 0 == size )
     {
@@ -166,7 +166,7 @@ inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
     memcpy( buf, &mBuffer[mCursor], size );
 
     mCursor += size;
-    GN_ASSERT( mCursor <= mBuffer.size() );
+    GN_ASSERT( mCursor <= mBuffer.Size() );
 
     if( readen ) *readen = size;
     return true;
@@ -177,7 +177,7 @@ inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 //  ----------------------------------------------------------------------------
 inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * written )
 {
-    GN_ASSERT( mCursor <= mBuffer.size() );
+    GN_ASSERT( mCursor <= mBuffer.Size() );
 
     if( 0 == size )
     {
@@ -192,15 +192,15 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
     }
 
     // resize the vector on demond
-    if( size + mCursor > mBuffer.size() )
+    if( size + mCursor > mBuffer.Size() )
     {
-        mBuffer.resize( size + mCursor );
+        mBuffer.Resize( size + mCursor );
     }
 
     memcpy( &mBuffer[mCursor], buf, size );
 
     mCursor += size;
-    GN_ASSERT( mCursor <= mBuffer.size() );
+    GN_ASSERT( mCursor <= mBuffer.Size() );
 
     if( written ) *written = size;
     return true;
@@ -218,7 +218,7 @@ inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
     }
     else if( FileSeek::END == origin )
     {
-        cur = mBuffer.size() + (size_t)offset;
+        cur = mBuffer.Size() + (size_t)offset;
     }
     else if( FileSeek::SET == origin )
     {
@@ -230,7 +230,7 @@ inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
         return false;
     }
 
-    if( cur > mBuffer.size() )
+    if( cur > mBuffer.Size() )
     {
         GN_ERROR(myLogger())( "out of range" );
         return false;

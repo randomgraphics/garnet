@@ -6,8 +6,6 @@
 /// \author  chenlee (2005.5.4)
 // *****************************************************************************
 
-#include <vector>
-
 ///
 /// Get element count of C-style array
 ///
@@ -86,24 +84,6 @@ namespace GN
     }
 
     ///
-    /// vector to pointer
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE T * Vec2Ptr( std::vector<T> & vec )
-    {
-        return vec.empty() ? 0 : &vec[0];
-    }
-
-    ///
-    /// vector to pointer
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE const T * Vec2Ptr( const std::vector<T> & vec )
-    {
-        return vec.empty() ? 0 : &vec[0];
-    }
-
-    ///
     /// Set environment variable. Set value to empty or NULL to delete
     /// that environment variable.
     ///
@@ -133,8 +113,8 @@ namespace GN
         StrA result;
         GetEnv( result, name );
         return "1" == result ||
-               0 == StringCompareI( "yes", result.GetRawPtr() ) ||
-               0 == StringCompareI( "true", result.GetRawPtr() );
+               0 == StringCompareI( "yes", result.ToRawPtr() ) ||
+               0 == StringCompareI( "true", result.ToRawPtr() );
     }
 
     ///

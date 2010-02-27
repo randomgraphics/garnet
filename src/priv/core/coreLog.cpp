@@ -269,7 +269,7 @@ namespace GN
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
-                ::fprintf( stdout, "%s\n", msg.GetRawPtr() );
+                ::fprintf( stdout, "%s\n", msg.ToRawPtr() );
             }
             else
             {
@@ -278,11 +278,11 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%s\n\n",
-                    sFormatPath(desc.file).GetRawPtr(),
+                    sFormatPath(desc.file).ToRawPtr(),
                     desc.line,
-                    logger.GetName().GetRawPtr(),
-                    sLevel2Str(desc.level).GetRawPtr(),
-                    msg.GetRawPtr() );
+                    logger.GetName().ToRawPtr(),
+                    sLevel2Str(desc.level).ToRawPtr(),
+                    msg.ToRawPtr() );
             }
         };
         virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
@@ -291,7 +291,7 @@ namespace GN
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
-                ::fprintf( stdout, "%S\n", msg.GetRawPtr() );
+                ::fprintf( stdout, "%S\n", msg.ToRawPtr() );
             }
             else
             {
@@ -300,11 +300,11 @@ namespace GN
                     "%s(%d)\n"
                     "\tname(%s), level(%s)\n"
                     "\t%S\n\n",
-                    sFormatPath(desc.file).GetRawPtr(),
+                    sFormatPath(desc.file).ToRawPtr(),
                     desc.line,
-                    logger.GetName().GetRawPtr(),
-                    sLevel2Str(desc.level).GetRawPtr(),
-                    msg.GetRawPtr() );
+                    logger.GetName().ToRawPtr(),
+                    sLevel2Str(desc.level).ToRawPtr(),
+                    msg.ToRawPtr() );
             }
         };
     };
@@ -323,9 +323,9 @@ namespace GN
             {
                 if( name.Empty() ) return;
 #if GN_MSVC8
-                if( 0 != ::fopen_s( &fp, name.GetRawPtr(), mode ) ) fp = 0;
+                if( 0 != ::fopen_s( &fp, name.ToRawPtr(), mode ) ) fp = 0;
 #else
-                fp = ::fopen( name.GetRawPtr(), mode );
+                fp = ::fopen( name.ToRawPtr(), mode );
 #endif
             }
             ~AutoFile()
@@ -361,11 +361,11 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
-                sFormatPath(desc.file).GetRawPtr(),
+                sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().GetRawPtr(),
-                sLevel2Str(desc.level).GetRawPtr(),
-                msg.GetRawPtr() );
+                logger.GetName().ToRawPtr(),
+                sLevel2Str(desc.level).ToRawPtr(),
+                msg.ToRawPtr() );
         }
         virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
         {
@@ -374,11 +374,11 @@ namespace GN
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
-                sFormatPath(desc.file).GetRawPtr(),
+                sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().GetRawPtr(),
-                sLevel2Str(desc.level).GetRawPtr(),
-                msg.GetRawPtr() );
+                logger.GetName().ToRawPtr(),
+                sLevel2Str(desc.level).ToRawPtr(),
+                msg.ToRawPtr() );
         }
     };
 
@@ -395,11 +395,11 @@ namespace GN
                 buf,
                 16384,
                 "%s(%d) : name(%s), level(%s) : %s\n",
-                sFormatPath(desc.file).GetRawPtr(),
+                sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().GetRawPtr(),
-                sLevel2Str(desc.level).GetRawPtr(),
-                msg.GetRawPtr() );
+                logger.GetName().ToRawPtr(),
+                sLevel2Str(desc.level).ToRawPtr(),
+                msg.ToRawPtr() );
             ::OutputDebugStringA( buf );
 #endif
         }
@@ -411,11 +411,11 @@ namespace GN
                 buf,
                 16384,
                 L"%S(%d) : name(%S), level(%S) : %s\n",
-                sFormatPath(desc.file).GetRawPtr(),
+                sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().GetRawPtr(),
-                sLevel2Str(desc.level).GetRawPtr(),
-                msg.GetRawPtr() );
+                logger.GetName().ToRawPtr(),
+                sLevel2Str(desc.level).ToRawPtr(),
+                msg.ToRawPtr() );
             ::OutputDebugStringW( buf );
 #endif
         }
@@ -556,14 +556,14 @@ namespace GN
             GN_ASSERT( n > 0 );
             StrA parent = name.SubString( 0, n );
 
-            return GetLogger( parent.GetRawPtr() );
+            return GetLogger( parent.ToRawPtr() );
         }
 
         void printLoggerTree( StrA & str, int level, LoggerImpl & logger )
         {
             // print itself
             for( int i = 0; i < level; ++i ) str.Append( "  " );
-            str.Append( StringFormat( "%s\n", logger.GetName().GetRawPtr() ) );
+            str.Append( StringFormat( "%s\n", logger.GetName().ToRawPtr() ) );
 
             // print children
             LoggerImpl * c = logger.firstChild();
@@ -584,7 +584,7 @@ namespace GN
 
 			inline bool operator()( const std::map<StrA,LoggerImpl*>::value_type & i )
 			{
-				return 0 == StringCompareI( mName.GetRawPtr(), i.first.GetRawPtr() );
+				return 0 == StringCompareI( mName.ToRawPtr(), i.first.ToRawPtr() );
 			}
 		};
 
@@ -607,7 +607,7 @@ namespace GN
             static Logger * sLogger = GetLogger("GN.core.LoggerContainer");
             StrA loggerTree;
             printLoggerTree( loggerTree, 0, mRootLogger );
-            GN_VERBOSE(sLogger)( "\n%s", loggerTree.GetRawPtr() );
+            GN_VERBOSE(sLogger)( "\n%s", loggerTree.ToRawPtr() );
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
@@ -620,7 +620,7 @@ namespace GN
             n.Trim( '.' );
 
             // shortcut for root logger
-            if( n.Empty() || 0 == StringCompareI( "ROOT", n.GetRawPtr() ) ) return &mRootLogger;
+            if( n.Empty() || 0 == StringCompareI( "ROOT", n.ToRawPtr() ) ) return &mRootLogger;
 
             // find for existing logger
             std::map<StrA,LoggerImpl*>::const_iterator i = std::find_if(

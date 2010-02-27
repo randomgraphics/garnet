@@ -37,7 +37,7 @@ sVtxFmt2InputLayout(
         elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
-            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().GetRawPtr() );
+            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().ToRawPtr() );
             return false;
         }
 
@@ -90,7 +90,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
     code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
 
     // return compiled shader binary
-    return d3d10::compileShader( "vs_4_0", code.GetRawPtr(), code.Size() );
+    return d3d10::compileShader( "vs_4_0", code.ToRawPtr(), code.Size() );
 
     GN_UNGUARD;
 }

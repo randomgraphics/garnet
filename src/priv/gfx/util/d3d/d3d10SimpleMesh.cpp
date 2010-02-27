@@ -142,7 +142,7 @@ void GN::d3d10::SimpleMesh::endVertices()
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
-    mDevice->UpdateSubresource( mVtxBuf, 0, &box, mVertices.GetRawPtr(), bytes, bytes );
+    mDevice->UpdateSubresource( mVtxBuf, 0, &box, mVertices.ToRawPtr(), bytes, bytes );
 
     mNumVertices = mVertices.Size();
 
@@ -208,7 +208,7 @@ void GN::d3d10::SimpleMesh::endTriangles()
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
-    mDevice->UpdateSubresource( mIdxBuf, 0, &box, mIndices.GetRawPtr(), bytes, bytes );
+    mDevice->UpdateSubresource( mIdxBuf, 0, &box, mIndices.ToRawPtr(), bytes, bytes );
 
     mNumIndices = mIndices.Size();
 

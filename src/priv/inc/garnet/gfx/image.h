@@ -212,7 +212,7 @@ namespace GN { namespace gfx
     /// load image from file
     ///
     inline bool
-    loadImageFromFile( ImageDesc & desc, std::vector<UInt8> & data, const char * filename )
+    loadImageFromFile( ImageDesc & desc, DynaArray<UInt8> & data, const char * filename )
     {
         AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
         if( NULL == fp ) return false;
@@ -222,7 +222,7 @@ namespace GN { namespace gfx
 
         if( !ir.readHeader( desc ) ) return false;
 
-        data.resize( desc.getTotalBytes() );
+        data.Resize( desc.getTotalBytes() );
 
         return ir.readImage( &data[0] );
     }

@@ -1,12 +1,14 @@
 #include "pch.h"
 
+using namespace GN;
+
 static GN::Logger * sLogger = GN::GetLogger("GN.gfx.tool.oglInfo");
 
 ///
 /// Split a string into token list
 // ------------------------------------------------------------------------
 static void
-sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
+sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
 {
     if( GN::IsStringEmpty(str) ) return;
     const char * p1 = str;
@@ -16,7 +18,7 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
     {
         while( *p2 && *p2 != ' ' ) ++p2;
 
-        tokens.push_back( GN::StrA(p1, p2-p1) );
+        tokens.Append( GN::StrA(p1, p2-p1) );
 
         while( *p2 && *p2 == ' ' ) ++p2;
 
@@ -28,14 +30,14 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
-bool sGetOGLExtensions( HDC hdc, std::vector<GN::StrA> & result )
+bool sGetOGLExtensions( HDC hdc, DynaArray<GN::StrA> & result )
 #else
-bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
+bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
 #endif
 {
     GN_GUARD;
 
-    result.clear();
+    result.Clear();
 
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
@@ -52,7 +54,7 @@ bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
 
-    std::sort( result.begin(), result.end() );
+    std::sort( result.Begin(), result.End() );
 
     // success;
     return true;
@@ -64,7 +66,7 @@ void printOglInfo( GN::HandleType disp, int index )
 {
     GN_GUARD;
 
-    std::vector<GN::StrA> glexts;
+    DynaArray<GN::StrA> glexts;
     GN::StrA info;
 
 #if GN_POSIX
@@ -105,7 +107,7 @@ void printOglInfo( GN::HandleType disp, int index )
     // extension info.
     info +=
         "---------------------------------------------------\n";
-    for ( size_t i = 0; i < glexts.size(); ++i )
+    for ( size_t i = 0; i < glexts.Size(); ++i )
     {
         info += glexts[i] + " ";
     }
@@ -114,7 +116,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "===================================================\n"
         "\n\n";
 
-    GN_INFO(sLogger)( info.GetRawPtr() );
+    GN_INFO(sLogger)( info.ToRawPtr() );
 
     GN_UNGUARD;
 }

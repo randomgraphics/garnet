@@ -207,7 +207,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     {
         sParseFail(
             tracer,
-            GN::StringFormat( "Fail to create node with type of '%d'", type ).GetRawPtr() );
+            GN::StringFormat( "Fail to create node with type of '%d'", type ).ToRawPtr() );
         return NULL;
     }
 
@@ -548,17 +548,17 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
     result.errLine = 0;
     result.errColumn = 0;
 
-    if( 0 == fp.size() )
+    if( 0 == fp.Size() )
     {
         result.errInfo = "File is empty!";
         return false;
     }
 
-    std::vector<char> buf( fp.size() );
+    DynaArray<char> buf( fp.Size() );
 
     size_t sz;
 
-    if( !fp.read( &buf[0], fp.size(), &sz ) )
+    if( !fp.read( &buf[0], fp.Size(), &sz ) )
     {
         result.errInfo = "Fail to read the file!";
         return false;
@@ -606,7 +606,7 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
         case XML_ELEMENT : p = new PooledNode<XmlElement>(*this); break;
         default          : GN_ERROR(sLogger)( "invalid node type : %d", type ); return NULL;
     }
-    mNodes.push_back( p );
+    mNodes.Append( p );
     p->setParent( parent );
     return p;
 }
@@ -618,7 +618,7 @@ GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
 {
     PooledAttrib * a = new PooledAttrib( *this );
 
-    mAttribs.push_back( a );
+    mAttribs.Append( a );
 
     a->setOwner( owner );
 
@@ -632,11 +632,11 @@ void GN::XmlDocument::releaseAllNodesAndAttribs()
 {
     GN_GUARD;
 
-    for( size_t i = 0; i < mNodes.size(); ++i ) delete mNodes[i];
-    mNodes.clear();
+    for( size_t i = 0; i < mNodes.Size(); ++i ) delete mNodes[i];
+    mNodes.Clear();
 
-    for( size_t i = 0; i < mAttribs.size(); ++i ) delete mAttribs[i];
-    mAttribs.clear();
+    for( size_t i = 0; i < mAttribs.Size(); ++i ) delete mAttribs[i];
+    mAttribs.Clear();
 
     GN_UNGUARD;
 }

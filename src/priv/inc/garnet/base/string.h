@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 #include <stdarg.h>
-#include <string>
 #include <ostream>
 #include <string.h>
 namespace GN
@@ -331,7 +330,7 @@ namespace GN
             if( s.Empty() ) return;
             size_t l = s.Size();
             SetCaps( mCount + l );
-            ::memcpy( mPtr+mCount, s.GetRawPtr(), l*sizeof(CharType) );
+            ::memcpy( mPtr+mCount, s.ToRawPtr(), l*sizeof(CharType) );
             mCount += l;
             mPtr[mCount] = 0;
         }
@@ -386,11 +385,6 @@ namespace GN
             mPtr[0] = 0;
             mCount = 0;
         }
-
-        ///
-        /// return c-style const char pointer
-        ///
-        const CharType * GetRawPtr() const { return mPtr; }
 
         ///
         /// Empty string or not?
@@ -659,20 +653,9 @@ namespace GN
         }
 
         ///
-        /// convert to STL string(1)
+        /// return c-style const char pointer
         ///
-        void ToSTL( std::basic_string<CharType> & s ) const
-        {
-            s.assign( mPtr, mCount );
-        }
-
-        ///
-        /// convert to STL string(2)
-        ///
-        std::basic_string<CharType> ToSTL() const
-        {
-            return std::basic_string<CharType>(mPtr,mCount);
-        }
+        const CharType * ToRawPtr() const { return mPtr; }
 
         ///
         /// convert to all upper case
@@ -981,7 +964,7 @@ namespace GN
         ///
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
-            os << str.GetRawPtr();
+            os << str.ToRawPtr();
             return os;
         }
 
@@ -1070,7 +1053,7 @@ namespace GN
         }
         StackStr( const Str<CHAR> & s )
         {
-            memcpy( mBuf, s.GetRawPtr(), sizeof(CHAR) * sValidateLength(s.Size()) );
+            memcpy( mBuf, s.ToRawPtr(), sizeof(CHAR) * sValidateLength(s.Size()) );
         }
         //@}
     };

@@ -74,8 +74,8 @@ public:
             toNativeDiskFilePath("startup::"),
         };
 
-        GN_INFO(sLogger)( "appDir = %s", s[0].GetRawPtr() );
-        GN_INFO(sLogger)( "startup = %s", s[1].GetRawPtr() );
+        GN_INFO(sLogger)( "appDir = %s", s[0].ToRawPtr() );
+        GN_INFO(sLogger)( "startup = %s", s[1].ToRawPtr() );
 
         for( size_t i = 0; i < 2; ++i )
         {

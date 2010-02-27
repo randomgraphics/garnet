@@ -158,7 +158,7 @@ public:
             "pixel fillrate = %f GB/sec\n"
             "texel fillrate = %f GB/sec\n"
             "EDRAM bandwidth = %f GB/sec",
-            getName().GetRawPtr(),
+            getName().ToRawPtr(),
             mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
             pixfr,
             texfr,
@@ -171,7 +171,7 @@ public:
         RenderEngine & re = getApp().getRenderEngine();
         re.setContext( mContext );
         mGeometry.draw();
-        getApp().asciiFont().drawText( mFillrateStr.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        getApp().asciiFont().drawText( mFillrateStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

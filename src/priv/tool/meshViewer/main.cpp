@@ -116,7 +116,7 @@ public:
                 L"           %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).GetRawPtr(),
+                radius ).ToRawPtr(),
             320, 40 );
 
         drawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );

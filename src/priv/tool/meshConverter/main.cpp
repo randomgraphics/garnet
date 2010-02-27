@@ -11,7 +11,7 @@ static const char * outputFile = "app::boxes.scene.xml";
 void printHelp( const char * exepath )
 {
     printf( "Usage: %s inputfile <outputfile>\n",
-        fs::baseName( exepath ).GetRawPtr() );
+        fs::baseName( exepath ).ToRawPtr() );
 }
 
 //
@@ -36,7 +36,7 @@ int main( int argc, const char * argv[] )
     }
     else
     {
-        outputFile = StringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).GetRawPtr() );
+        outputFile = StringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).ToRawPtr() );
     }
 
     SimpleWorldDesc swd;

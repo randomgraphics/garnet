@@ -2,6 +2,8 @@
 #include "oglGpu.h"
 #include <algorithm>
 
+using namespace GN;
+
 static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
@@ -12,7 +14,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 /// Split a string into token list
 // ------------------------------------------------------------------------
 static void
-sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
+sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
 {
     if( GN::IsStringEmpty(str) ) return;
     const char * p1 = str;
@@ -22,7 +24,7 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
     {
         while( *p2 && *p2 != ' ' ) ++p2;
 
-        tokens.push_back( GN::StrA(p1, p2-p1) );
+        tokens.Append( GN::StrA(p1, p2-p1) );
 
         while( *p2 && *p2 == ' ' ) ++p2;
 
@@ -34,14 +36,14 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
 /// function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
 static inline bool
-sFindExtension( const std::vector<GN::StrA> & glexts, const char * ext )
+sFindExtension( const DynaArray<GN::StrA> & glexts, const char * ext )
 {
-    return glexts.end() != std::find( glexts.begin(), glexts.end(), ext );
+    return glexts.End() != std::find( glexts.Begin(), glexts.End(), ext );
 }
 ///
 /// Check required extensions
 // ------------------------------------------------------------------------
-static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
+static bool sCheckRequiredExtensions( const DynaArray<GN::StrA> & extensions )
 {
     static const char * sRequiredExtensions[] =
     {
@@ -69,14 +71,14 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
-static bool sGetOGLExtensions( HDC hdc, std::vector<GN::StrA> & result )
+static bool sGetOGLExtensions( HDC hdc, DynaArray<GN::StrA> & result )
 #else
-static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
+static bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
 #endif
 {
     GN_GUARD;
 
-    result.clear();
+    result.Clear();
 
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
@@ -93,7 +95,7 @@ static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
 
-    std::sort( result.begin(), result.end() );
+    std::sort( result.Begin(), result.End() );
 
     // success;
     return true;
@@ -104,7 +106,7 @@ static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
 ///
 /// output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & glexts )
+static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & glexts )
 {
     GN_GUARD;
 
@@ -140,7 +142,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "\n\n",
         ts,tu );
-    GN_INFO(sLogger)( info.GetRawPtr() );
+    GN_INFO(sLogger)( info.ToRawPtr() );
 
     // extension info.
     info =
@@ -148,7 +150,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "              OpenGL Extension List\n"
         "---------------------------------------------------\n";
-    for ( size_t i = 0; i < glexts.size(); ++i )
+    for ( size_t i = 0; i < glexts.Size(); ++i )
     {
         info += "     " + glexts[i] + "\n";
     }
@@ -156,7 +158,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "\n\n";
 
-    GN_VERBOSE(sLogger)( info.GetRawPtr() );
+    GN_VERBOSE(sLogger)( info.ToRawPtr() );
 
     GN_UNGUARD;
 }
@@ -179,7 +181,7 @@ bool GN::gfx::OGLGpu::capsInit()
     GN_GUARD;
 
     // output opengl implementation info.
-    std::vector<StrA> glexts;
+    DynaArray<StrA> glexts;
 #if GN_MSWIN
     if( !sGetOGLExtensions( mDeviceContext, glexts ) )
 #else

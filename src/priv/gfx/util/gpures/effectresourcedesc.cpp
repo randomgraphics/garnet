@@ -78,11 +78,11 @@ static void sPostError( const XmlNode & node, const StrA & msg )
     const XmlElement * e = node.toElement();
     if( e )
     {
-        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.GetRawPtr(), msg.GetRawPtr() );
+        GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.ToRawPtr(), msg.ToRawPtr() );
     }
     else
     {
-        GN_ERROR(sLogger)( "Effect XML error: %s", msg.GetRawPtr() );
+        GN_ERROR(sLogger)( "Effect XML error: %s", msg.ToRawPtr() );
     }
 }
 
@@ -95,7 +95,7 @@ static const char * sGetAttrib(
     const char * defaultValue = NULL )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a ? a->value.GetRawPtr() : defaultValue;
+    return a ? a->value.ToRawPtr() : defaultValue;
 }
 
 //
@@ -108,7 +108,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 
     T result;
 
-    if( !a || !String2Integer<T>( result, a->value.GetRawPtr() ) )
+    if( !a || !String2Integer<T>( result, a->value.ToRawPtr() ) )
         return defaultValue;
     else
         return result;
@@ -122,13 +122,13 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
     const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == StringCompareI( "1", a->value.GetRawPtr() ) ||
-        0 == StringCompareI( "true", a->value.GetRawPtr() ) )
+    if( 0 == StringCompareI( "1", a->value.ToRawPtr() ) ||
+        0 == StringCompareI( "true", a->value.ToRawPtr() ) )
     {
         return true;
     }
-    else if( 0 == StringCompareI( "0", a->value.GetRawPtr() ) ||
-             0 == StringCompareI( "false", a->value.GetRawPtr() ) )
+    else if( 0 == StringCompareI( "0", a->value.ToRawPtr() ) ||
+             0 == StringCompareI( "false", a->value.ToRawPtr() ) )
     {
         return false;
     }
@@ -149,7 +149,7 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
         sPostError( node, StringFormat("Unnamed %s node. Ignored.", nodeType) );
         return 0;
     }
-    return a->value.GetRawPtr();
+    return a->value.ToRawPtr();
 }
 
 //
@@ -245,7 +245,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
-        else sPostError( *e, StringFormat( "Unknown parameter '%s'. Ignored", e->name.GetRawPtr() ) );
+        else sPostError( *e, StringFormat( "Unknown parameter '%s'. Ignored", e->name.ToRawPtr() ) );
     }
 }
 
@@ -300,7 +300,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
         if( c )
         {
             size_t offset = sd.shaderSourceBuffer.Size();
-            sd.shaderSourceBuffer.Append( c->text.GetRawPtr(), c->text.Size() + 1 );
+            sd.shaderSourceBuffer.Append( c->text.ToRawPtr(), c->text.Size() + 1 );
             code.source = (const char*)offset;
             break;
         }
@@ -365,7 +365,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     }
 
     // convert all shader source offsets to pointers
-    const char * start = sd.shaderSourceBuffer.GetRawPtr();
+    const char * start = sd.shaderSourceBuffer.ToRawPtr();
     if( sd.gpd.vs.source ) sd.gpd.vs.source += (size_t)start;
     if( sd.gpd.vs.entry  ) sd.gpd.vs.entry  += (size_t)start;
     if( sd.gpd.gs.source ) sd.gpd.gs.source += (size_t)start;
@@ -412,8 +412,8 @@ static void sParseRenderStates( EffectResourceDesc::EffectRenderStateDesc & rsde
 
     for( const XmlAttrib * a = node.attrib; a; a = a->next )
     {
-        const char * rsname = a->name.GetRawPtr();
-        const char * rsvalue = a->value.GetRawPtr();
+        const char * rsname = a->name.ToRawPtr();
+        const char * rsvalue = a->value.ToRawPtr();
 
         if( 0 == StringCompareI( "CULL_MODE", rsname ) )
         {
@@ -515,12 +515,12 @@ static void sCopyShaderSourcePtr(
 {
     GN_ASSERT( tobuf.Size() == frombuf.Size() );
 
-    const char * s = frombuf.GetRawPtr();
+    const char * s = frombuf.ToRawPtr();
     const char * e = s + frombuf.Size();
 
     if( s <= from && from < e )
     {
-        to = tobuf.GetRawPtr() + ( from - s );
+        to = tobuf.ToRawPtr() + ( from - s );
     }
     else
     {

@@ -39,7 +39,7 @@ public:
         GN::HandleManager<int> hm;
 
         TS_ASSERT( hm.empty() );
-        TS_ASSERT_EQUALS( hm.size(), 0 );
+        TS_ASSERT_EQUALS( hm.Size(), 0 );
         TS_ASSERT_EQUALS( hm.first(), 0 );
         TS_ASSERT_EQUALS( hm.next(0), 0 );
 
@@ -50,7 +50,7 @@ public:
         size_t h5 = hm.add( 5 );
 
         TS_ASSERT( !hm.empty() );
-        TS_ASSERT_EQUALS( hm.size(), 5 );
+        TS_ASSERT_EQUALS( hm.Size(), 5 );
 
         TS_ASSERT_EQUALS( hm.first(), h1 );
         TS_ASSERT_EQUALS( hm.next(h1), h2 );
@@ -67,17 +67,17 @@ public:
 
         hm.remove( 0 );
         hm.remove( h1 );
-        TS_ASSERT_EQUALS( hm.size(), 4 );
+        TS_ASSERT_EQUALS( hm.Size(), 4 );
         TS_ASSERT_EQUALS( hm.first(), h2 );
         TS_ASSERT_EQUALS( hm.next(h2), h3 );
 
         hm.remove( h3 );
-        TS_ASSERT_EQUALS( hm.size(), 3 );
+        TS_ASSERT_EQUALS( hm.Size(), 3 );
         TS_ASSERT_EQUALS( hm.next(h2), h4 );
         TS_ASSERT_EQUALS( hm.next(h4), h5 );
 
         hm.remove( h5 );
-        TS_ASSERT_EQUALS( hm.size(), 2 );
+        TS_ASSERT_EQUALS( hm.Size(), 2 );
         TS_ASSERT_EQUALS( hm.next(h4), 0 );
 
         // find
@@ -90,7 +90,7 @@ public:
 
         hm.Clear();
         TS_ASSERT( hm.empty() );
-        TS_ASSERT_EQUALS( hm.size(), 0 );
+        TS_ASSERT_EQUALS( hm.Size(), 0 );
         TS_ASSERT_EQUALS( hm.first(), 0 );
         TS_ASSERT_EQUALS( hm.next(0), 0 );
     }
