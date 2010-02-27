@@ -48,7 +48,7 @@ void GN::gfx::XenonGpu::contextQuit()
     bindContext( emptyContext );
 
     // Delete all vertex formats
-    mVertexFormats.Clear();
+    mVertexFormats.clear();
 
     //SafeDelete( mRTMgr );
 
@@ -371,7 +371,7 @@ GN::gfx::XenonGpu::bindContextResources(
             AutoComPtr<IDirect3DVertexDeclaration9> & declAutoPtr = mVertexFormats[newContext.vtxfmt];
             if( !declAutoPtr )
             {
-                declAutoPtr.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
+                declAutoPtr.Attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
                 if( !declAutoPtr ) return false;
             }
 

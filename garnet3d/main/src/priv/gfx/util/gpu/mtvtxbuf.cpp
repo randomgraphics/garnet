@@ -65,7 +65,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
         length = getDesc().length - offset;
     }
 
-    void * tmpbuf = HeapAlloc( length );
+    void * tmpbuf = HeapMemory::Alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -117,7 +117,7 @@ namespace GN { namespace gfx
 
         vbup->vtxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        HeapFree( vbup->data );
+        HeapMemory::Free( vbup->data );
     }
 
     //

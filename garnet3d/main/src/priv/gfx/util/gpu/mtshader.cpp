@@ -48,7 +48,7 @@ bool GN::gfx::MultiThreadUniform::Init( Uniform * uni )
 
     mUniform = uni;
     mSize    = uni->size();
-    mFrontEndData = (UInt8*)HeapAlloc(mSize);
+    mFrontEndData = (UInt8*)HeapMemory::Alloc(mSize);
     if( NULL == mFrontEndData ) return Failure();
 
     // success

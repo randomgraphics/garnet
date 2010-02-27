@@ -121,7 +121,7 @@ bool GN::gfx::LineRenderer::Init()
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
     // create line buffer
-    mLines = (Line*)HeapAlloc( MAX_LINES * sizeof(Line) );
+    mLines = (Line*)HeapMemory::Alloc( MAX_LINES * sizeof(Line) );
     if( NULL == mLines ) return Failure();
     mNextPendingLine = mLines;
     mNextFreeLine = mLines;
@@ -139,7 +139,7 @@ void GN::gfx::LineRenderer::Quit()
 {
     GN_GUARD;
 
-    HeapFree( mLines ); mLines = NULL;
+    HeapMemory::Free( mLines ); mLines = NULL;
     mContext.Clear();
 
     // standard Quit procedure

@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #if GN_MSVC
+#pragma comment( lib, "d3d10.lib" )
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "d3dcompiler.lib" )
 #endif // GN_MSVC

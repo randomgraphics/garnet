@@ -143,7 +143,7 @@ bool GN::gfx::SpriteRenderer::Init()
 
 
     // create pending vertex buffer
-    mSprites = (Sprite*)HeapAlloc( VTXBUF_SIZE );
+    mSprites = (Sprite*)HeapMemory::Alloc( VTXBUF_SIZE );
     if( NULL == mSprites ) return Failure();
 
     // initialize other member variables
@@ -164,7 +164,7 @@ void GN::gfx::SpriteRenderer::Quit()
 {
     GN_GUARD;
 
-    HeapFree( mSprites );
+    HeapMemory::Free( mSprites );
     mContext.Clear();
     mIndexBuffer.Clear();
     mVertexBuffer.Clear();

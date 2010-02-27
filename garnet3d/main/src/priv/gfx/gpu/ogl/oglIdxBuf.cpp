@@ -27,7 +27,7 @@ bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
     setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (UInt8*)HeapAlloc( desc.numidx * mBytesPerIndex );
+    mBuffer = (UInt8*)HeapMemory::Alloc( desc.numidx * mBytesPerIndex );
 
     // success
     return Success();

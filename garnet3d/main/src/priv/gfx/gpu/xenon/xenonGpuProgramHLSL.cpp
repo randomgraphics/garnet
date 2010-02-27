@@ -14,7 +14,7 @@ using namespace GN::gfx;
 template<class T, class ARRAY>
 static T * sFindParameter( ARRAY & array, const char * name )
 {
-    for( size_t i = 0; i < array.size(); ++i )
+    for( size_t i = 0; i < array.Size(); ++i )
     {
         T & t = array[i];
 

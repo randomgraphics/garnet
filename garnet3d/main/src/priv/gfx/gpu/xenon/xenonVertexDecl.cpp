@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "xenonVertexDecl.h"
 
+using namespace GN;
+
 static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
@@ -14,8 +16,6 @@ static const D3DDECLUSAGE D3DDECLUSAGE_ERROR = (D3DDECLUSAGE)-1;
 // -----------------------------------------------------------------------------
 static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
 {
-    using namespace GN;
-
     struct BindingMap
     {
         struct MapItem { const char * binding; D3DDECLUSAGE usage; };
@@ -166,15 +166,15 @@ sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::Ver
         if( D3DDECLTYPE_ERROR == elem.Type ) return false;
 
         // add to element array
-        elements.push_back( elem );
+        elements.Append( elem );
     }
 
     // sort elements by offset
-    std::sort( elements.begin(), elements.end(), &sElementSorting );
+    std::sort( elements.Begin(), elements.End(), &sElementSorting );
 
     // end tag
     D3DVERTEXELEMENT9 endtag = D3DDECL_END();
-    elements.push_back( endtag );
+    elements.Append( endtag );
 
     // success
     return true;
@@ -196,7 +196,7 @@ GN::gfx::createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFor
 
     DynaArray<D3DVERTEXELEMENT9> elements;
     if( !sVtxFmtDesc2D3DDecl( elements, format ) ) return NULL;
-    GN_ASSERT( !elements.empty() );
+    GN_ASSERT( !elements.Empty() );
 
     IDirect3DVertexDeclaration9 * decl;
     GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( &elements[0], &decl ), NULL );

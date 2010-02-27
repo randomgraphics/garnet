@@ -36,7 +36,7 @@ D3D10_TEXTURE_ADDRESS_MODE sAdressModeToD3D10( unsigned short addr )
 template<class T>
 static void sFreeNameString( T & t )
 {
-    HeapFree( (void*)t.name );
+    HeapMemory::Free( (void*)t.name );
 }
 
 template<class T>

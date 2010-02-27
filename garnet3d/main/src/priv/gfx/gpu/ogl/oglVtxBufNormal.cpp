@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
     // store descriptor
     setDesc( desc );
 
-    mBuffer = (UInt8*)HeapAlloc( desc.length );
+    mBuffer = (UInt8*)HeapMemory::Alloc( desc.length );
 
     // success
     return Success();

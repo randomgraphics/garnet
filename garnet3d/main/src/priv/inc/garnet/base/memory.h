@@ -25,20 +25,23 @@
 
 namespace GN
 {
-    ///
-    /// Allocate memory from heap. Can cross DLL boundary.
-    ///
-    GN_PUBLIC void * HeapAlloc( size_t sizeInBytes );
+    struct HeapMemory
+    {
+        ///
+        /// Allocate memory from heap. Can cross DLL boundary.
+        ///
+        GN_PUBLIC static void * Alloc( size_t sizeInBytes );
 
-    ///
-    /// Re-allocate memory from heap. Can cross DLL boundary.
-    ///
-    GN_PUBLIC void * HeapRealloc( void *, size_t sizeInBytes );
+        ///
+        /// Re-allocate memory from heap. Can cross DLL boundary.
+        ///
+        GN_PUBLIC static void * Realloc( void *, size_t sizeInBytes );
 
-    ///
-    /// Free heap-allocated memory. Can cross DLL boundary.
-    ///
-    GN_PUBLIC void HeapFree( void * );
+        ///
+        /// Free heap-allocated memory. Can cross DLL boundary.
+        ///
+        GN_PUBLIC static void Free( void * );
+    };
 }
 
 // *****************************************************************************
@@ -53,10 +56,10 @@ namespace GN
 /// \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
-inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapAlloc( s ); }
-inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapAlloc( s ); }
-inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapFree( p ); }
-inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapFree( p ); }
+inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
+inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
+inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Free( p ); }
+inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Free( p ); }
 //@}
 
 #if GN_ICL
@@ -96,7 +99,7 @@ namespace GN
     {
         if( ptr )
         {
-            HeapFree( ptr );
+            HeapMemory::Free( ptr );
             ptr = 0;
         }
     }

@@ -23,10 +23,10 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapAlloc( size_t sz )
+    GN_PUBLIC void * HeapMemory::Alloc( size_t sz )
     {
         //#if GN_MSWIN
-        //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
+        //void * ptr = ::HeapMemory::Alloc( ::GetProcessHeap(), 0, sz );
         //#else
         void * ptr = ::malloc( sz );
         //#endif
@@ -40,7 +40,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapRealloc( void * ptr, size_t sz )
+    GN_PUBLIC void * HeapMemory::Realloc( void * ptr, size_t sz )
     {
         //#if GN_MSWIN
         //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
@@ -54,10 +54,10 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void HeapFree( void * ptr )
+    GN_PUBLIC void HeapMemory::Free( void * ptr )
     {
         //#if GN_MSWIN
-        //::HeapFree( ::GetProcessHeap(), 0, ptr );
+        //::HeapMemory::Free( ::GetProcessHeap(), 0, ptr );
         //#else
         ::free( ptr );
         //#endif

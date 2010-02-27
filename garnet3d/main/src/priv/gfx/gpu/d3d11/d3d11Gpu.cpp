@@ -3,6 +3,7 @@
 
 #if GN_MSVC
 
+#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d9.lib") // for PIX routines.
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")

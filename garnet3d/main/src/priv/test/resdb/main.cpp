@@ -87,14 +87,14 @@ void initMeshDesc( MeshResourceDesc & md )
 {
     struct Vertex { float x, y, u, v; };
 
-    static const Vertex vertices[] = {
+    static Vertex vertices[] = {
         { -1.0f,  1.0f, 0.0f, 0.0f },
         { -1.0f, -1.0f, 0.0f, 1.0f },
         {  1.0f,  1.0f, 1.0f, 0.0f },
         {  1.0f, -1.0f, 1.0f, 1.0f },
     };
 
-    static const UInt16 indices[] = { 0, 1, 2, 2, 1, 3 };
+    static UInt16 indices[] = { 0, 1, 2, 2, 1, 3 };
 
     md.prim = PrimitiveType::TRIANGLE_LIST;
     md.numvtx = GN_ARRAY_COUNT( vertices );
