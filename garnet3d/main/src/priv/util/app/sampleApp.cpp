@@ -74,7 +74,7 @@ sParseInteger( T & result, const char * option, const char * value )
 {
     using namespace GN;
 
-    if( String2Integer( result, value ) )
+    if( 0 != String2Integer( result, value ) )
     {
         return true;
     }
@@ -437,7 +437,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     StrA name( value.SubString( 0, k ) );
                     StrA leveltok( value.SubString( k+1, 0 ) );
                     int level;
-                    if( !name.Empty() && String2SInt32( level, leveltok.ToRawPtr() ) )
+                    if( !name.Empty() && 0 != String2Integer( level, leveltok.ToRawPtr() ) )
                     {
                         GetLogger( name.ToRawPtr() )->SetLevel( level );
                     }

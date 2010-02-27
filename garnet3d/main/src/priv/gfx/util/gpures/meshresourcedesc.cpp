@@ -256,7 +256,7 @@ template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a && String2Integer<T>( result, a->value.ToRawPtr() );
+    return a && 0 != String2Integer<T>( result, a->value.ToRawPtr() );
 }
 
 //
@@ -280,7 +280,7 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || !String2Integer<T>( result, a->value.ToRawPtr() ) )
+    if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",

@@ -108,7 +108,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 
     T result;
 
-    if( !a || !String2Integer<T>( result, a->value.ToRawPtr() ) )
+    if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
         return defaultValue;
     else
         return result;

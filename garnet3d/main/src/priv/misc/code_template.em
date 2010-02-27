@@ -19,7 +19,7 @@ macro GN_HFileHeader()
 	ext_start = 0
 	ext_end = 0
 
-	len = StringLength(fullpath);
+	len = strlen(fullpath);
 	n = len
 	while( n > 0 )
 	{

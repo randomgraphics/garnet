@@ -43,17 +43,17 @@ namespace GN
 #endif
         };
 
-        template<typename T> struct GetNumberSign {};
-        template<> struct GetNumberSign<SInt8>{ static const bool value = true; };
-        template<> struct GetNumberSign<UInt8>{ static const bool value = false; };
-        template<> struct GetNumberSign<SInt16>{ static const bool value = true; };
-        template<> struct GetNumberSign<UInt16>{ static const bool value = false; };
-        template<> struct GetNumberSign<SInt32>{ static const bool value = true; };
-        template<> struct GetNumberSign<UInt32>{ static const bool value = false; };
-        template<> struct GetNumberSign<SInt64>{ static const bool value = true; };
-        template<> struct GetNumberSign<UInt64>{ static const bool value = false; };
-        template<> struct GetNumberSign<float>{ static const bool value = true; };
-        template<> struct GetNumberSign<double>{ static const bool value = true; };
+        template<typename T> struct NumericProperties {};
+        template<> struct NumericProperties<SInt8>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<UInt8>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<SInt16>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<UInt16>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<SInt32>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<UInt32>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<SInt64>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<UInt64>{ static const bool isSigned = false; };
+        template<> struct NumericProperties<float>{ static const bool isSigned = true; };
+        template<> struct NumericProperties<double>{ static const bool isSigned = true; };
     }
     /// \endcond
 
@@ -129,7 +129,7 @@ namespace GN
     ///
     template<typename T> struct SignedType
     {
-        static const bool value = detail::GetNumberSign<T>::value; ///< is signed or not?
+        static const bool value = detail::NumericProperties<T>::isSigned; ///< is signed or not?
     };
 }
 

@@ -21,6 +21,7 @@ TODO
   - Endian swap:
     - Swap vertex buffer endian based on vertex format
     - Swap index buffer endian based on index format.
+  - Dictionary template that replaces std::map
 
 - p1
   - Runtime option managers that could be modified by:
