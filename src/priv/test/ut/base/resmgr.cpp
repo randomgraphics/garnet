@@ -672,7 +672,7 @@ typedef GN::ResourceManagerTempl<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
-    return GN::String2Integer<int>( res, name.ToRawPtr() );
+    return 0 != GN::String2Integer<int>( res, name.ToRawPtr() );
 }
 
 bool nullCreator( int & res, const GN::StrA &, void * )

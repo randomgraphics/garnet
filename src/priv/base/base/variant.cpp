@@ -76,20 +76,17 @@ bool GN::Variant::getb( bool & b ) const
 //
 bool GN::Variant::geti( int & i ) const
 {
-    return GN::String2Integer<int>( i, mValue.ToRawPtr() );
+    return 0 != GN::String2Integer<int>( i, mValue.ToRawPtr() );
 }
 //
 bool GN::Variant::getf( float & f ) const
 {
-    return GN::String2Float( f, mValue.ToRawPtr() );
+    return 0 != GN::String2Float( f, mValue.ToRawPtr() );
 }
 //
 bool GN::Variant::getp( void * & p ) const
 {
-    size_t i;
-    bool r = GN::String2Integer<size_t>( i, mValue.ToRawPtr() );
-    if( r ) p = (void*)i;
-    return r;
+    return 0 != GN::String2Integer<size_t>( *(size_t*&)p, mValue.ToRawPtr() );
 }
 //
 bool GN::Variant::getv( Vector4f & v ) const

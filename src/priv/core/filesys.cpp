@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <pcrecpp.h>
 
 #if GN_MSVC8
 #pragma warning(disable:4996)

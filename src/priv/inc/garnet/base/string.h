@@ -1059,52 +1059,53 @@ namespace GN
     };
 
     /// \name string -> number conversion
+    ///
+    ///  Returns number of characters that are sucessfully scanned. Return 0 for failure.
     //@{
 
-    bool String2SInt8( SInt8 &, const char * );
-    bool String2UInt8( UInt8 &, const char * );
-    bool String2SInt16( SInt16 &, const char * );
-    bool String2UInt16( UInt16 &, const char * );
-    bool String2SInt32( SInt32 &, const char * );
-    bool String2UInt32( UInt32 &, const char * );
-    bool String2SInt64( SInt64 &, const char * );
-    bool String2UInt64( UInt64 &, const char * );
-    bool String2Float( float &, const char * );
-    bool String2Double( double &, const char *  );
+    size_t String2SignedInteger( SInt64 & result, int bits, int base, const char * s );
+    size_t String2UnsignedInteger( UInt64 & result, int bits, int base, const char * s );
 
-    template<typename T> bool String2Integer( T & i, const char * s )
+    template<typename T> size_t String2Integer( T & i, const char * s, int base = 10 )
     {
-        // Compiler should never reach here!
-        GN_CASSERT( sizeof(T) == 0 );
-        return false;
+        size_t n;
+
+        if( SignedType<T>::value )
+        {
+            SInt64 s64;
+            n = String2SignedInteger( s64, sizeof(T)*8, base, s );
+            if( n > 0 ) i = (T)s64;
+        }
+        else
+        {
+            UInt64 u64;
+            n = String2UnsignedInteger( u64, sizeof(T)*8, base, s );
+            if( n > 0 ) i = (T)u64;
+        }
+
+        return n;
     }
 
-    template<> inline bool String2Integer<SInt8>( SInt8 & i, const char * s ) { return String2SInt8( i, s ); }
-    template<> inline bool String2Integer<UInt8>( UInt8 & i, const char * s ) { return String2UInt8( i, s ); }
-    template<> inline bool String2Integer<SInt16>( SInt16 & i, const char * s ) { return String2SInt16( i, s ); }
-    template<> inline bool String2Integer<UInt16>( UInt16 & i, const char * s ) { return String2UInt16( i, s ); }
-    template<> inline bool String2Integer<SInt32>( SInt32 & i, const char * s ) { return String2SInt32( i, s ); }
-    template<> inline bool String2Integer<UInt32>( UInt32 & i, const char * s ) { return String2UInt32( i, s ); }
-    template<> inline bool String2Integer<SInt64>( SInt64 & i, const char * s ) { return String2SInt64( i, s ); }
-    template<> inline bool String2Integer<UInt64>( UInt64 & i, const char * s ) { return String2UInt64( i, s ); }
-
-#if 0
-    template<> inline bool String2Integer<int>( int & i, const char * s ) { return String2SInt32( *(SInt32*)&i, s ); }
-    template<> inline bool String2Integer<unsigned int>( unsigned int & i, const char * s ) { return String2UInt32( *(UInt32*)&i, s ); }
-#endif
-
-    template<typename T> T String2Integer( const char * s, T defaultValue )
+    template<typename T> T String2Integer( const char * s, T defaultValue, int base = 10 )
     {
         T result;
-        if( String2Integer( result, s ) )
-            return result;
-        else
+        if( 0 == String2Integer<T>( result, s, base ) )
+        {
             return defaultValue;
+        }
+        else
+        {
+            return result;
+        }
     }
 
-    template<typename T> bool String2Number( T & i, const char * s ) { return String2Integer<T>( i, s ); }
-    template<> inline bool String2Number<float>( float & i, const char * s ) { return String2Float( i, s ); }
-    template<> inline bool String2Number<double>( double & i, const char * s ) { return String2Double( i, s ); }
+    size_t String2Float( float & i, const char * s );
+
+    size_t String2Double( double & i, const char * s );
+
+    template<typename T> size_t String2Number( T & i, const char * s ) { return String2Integer<T>( i, s, 10 ); }
+    template<> inline size_t String2Number<float>( float & i, const char * s ) { return String2Float( i, s ); }
+    template<> inline size_t String2Number<double>( double & i, const char * s ) { return String2Double( i, s ); }
 
     ///
     /// Convert string to float array. String should be in format like:
@@ -1115,7 +1116,7 @@ namespace GN
     /// \return
     ///     Return count of floating filled into target buffer.
     ///
-    size_t String2FloatArray( float * buffer, size_t count, const char * str, size_t stringLength = 0 );
+    size_t String2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
 
     //@}
 

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <pcrecpp.h>
 
 //
 //
@@ -69,137 +68,121 @@ GN::StringVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list
 //
 // *****************************************************************************
 
-#if GN_MSVC8
-#define sscanf sscanf_s
-#endif
-
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::String2SInt8( SInt8 & i, const char * s )
+size_t GN::String2SignedInteger( SInt64 & result, int bits, int base, const char * s )
 {
-    if( IsStringEmpty(s) ) return false;
-    int ii;
-    if( 1 != sscanf( s, "%i", &ii ) ) return false;
-    i = (SInt8)ii;
-    return true;
-}
+    // check invalid parameters
+    if( bits < 2 && bits > 64 ) return 0;
+    if( base < 2 ) return 0;
+    if( IsStringEmpty(s) ) return 0;
 
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2UInt8( UInt8 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    unsigned int ii;
-    if( 1 != sscanf( s, "%u", &ii ) ) return false;
-    i = (UInt8)ii;
-    return true;
-}
+    char * e;
+    SInt64 s64 = _strtoi64( s, &e, base );
 
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2SInt16( SInt16 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%hi", &i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2UInt16( UInt16 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%hu", &i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2SInt32( SInt32 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%li", (long*)&i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2UInt32( UInt32 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%lu", (unsigned long*)&i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2SInt64( SInt64 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    long long int lli;
-    if( 1 != sscanf( s, "%lli", &lli ) ) return false;
-    i = lli;
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2UInt64( UInt64 & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    unsigned long long int llu;
-    if( 1 != sscanf( s, "%llu", &llu ) ) return false;
-    i = llu;
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2Float( float & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%f", &i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::String2Double( double & i, const char * s )
-{
-    if( IsStringEmpty(s) ) return false;
-    return 1 == sscanf( s, "%lf", &i );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-size_t GN::String2FloatArray( float * buffer, size_t count, const char * str, size_t stringLength )
-{
-    if( IsStringEmpty(str) ) return 0;
-
-    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)f?\\s*,?\\s*" );
-
-    if( 0 == stringLength ) stringLength = StringLength( str );
-    pcrecpp::StringPiece text( str, (int)stringLength );
-
-    std::string substring;
-    for( size_t i = 0; i < count; ++i )
+    if( 0 != errno || 0 == s64 && s == e )
     {
-        if( !re.Consume( &text, &substring ) ||
-            !String2Float( *buffer, substring.c_str() ) )
-        {
-            return i;
-        }
-
-        ++buffer; // next float
+        return 0;
     }
 
+    // check for overflow
+    SInt64 maxval = ( 1 << ( bits - 1 ) ) - 1;
+    SInt64 minval = ~maxval;
+    if( s64 < minval || s64 > maxval ) return 0;
+
     // success
-    return count;
+    result = s64;
+    return e - s;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::String2UnsignedInteger( UInt64 & result, int bits, int base, const char * s )
+{
+    // check invalid parameters
+    if( bits < 2 && bits > 64 ) return 0;
+    if( base < 2 ) return 0;
+    if( IsStringEmpty(s) ) return 0;
+
+    char * e;
+    UInt64 u64 = _strtoui64( s, &e, base );
+
+    if( 0 != errno || 0 == u64 && s == e )
+    {
+        return 0;
+    }
+
+    // check for overflow
+    UInt64 maxval = ( 1 << bits ) - 1;
+    if( u64 > maxval ) return 0;
+
+    // success
+    result = u64;
+    return e - s;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::String2Float( float & i, const char * s )
+{
+    double d;
+    size_t n = String2Double( d, s );
+
+    if( 0 == n ) return 0;
+
+    if( d < -FLT_MAX ) i = -FLT_MAX;
+    else if( d > FLT_MAX ) i = FLT_MAX;
+    else i = (float)d;
+
+    return n;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::String2Double( double & i, const char * s )
+{
+    if( IsStringEmpty(s) ) return 0;
+
+    char * e;
+    double d = strtod( s, &e );
+
+    if( 0 != errno || 0 == d && s == e )
+    {
+        return 0;
+    }
+    else
+    {
+        i = d;
+        return e - s;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::String2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength )
+{
+    if( NULL == buffer ) return 0;
+    if( IsStringEmpty(str) ) return 0;
+
+    float * bufbegin = buffer;
+    float * bufend = buffer + maxCount;
+    const char * strend = str + stringLength;
+
+    while( buffer < bufend && str < strend )
+    {
+        size_t n = String2Float( *buffer, str );
+
+        if( 0 == n ) break;
+
+        // next float
+        ++buffer;
+        str += n;
+    }
+
+    return buffer - bufbegin;
 }

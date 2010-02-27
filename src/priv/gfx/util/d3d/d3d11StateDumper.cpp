@@ -38,7 +38,7 @@ struct DumpFile
 /*
 // convert binary data to base64 string
 // -----------------------------------------------------------------------------
-static std::string sToBase64( const void * data, size_t bytes )
+static StrA sToBase64( const void * data, size_t bytes )
 {
     char base64_alphabet[]=
     {
@@ -53,7 +53,7 @@ static std::string sToBase64( const void * data, size_t bytes )
 
     char s[4];
 
-    std::string result;
+    StrA result;
 
     size_t n = bytes / 3;
     size_t k = bytes % 3;
@@ -470,7 +470,7 @@ void sDumpIdxBuf( ID3D11DeviceContext & devcxt, FILE * fp )
 //
 //
 // -----------------------------------------------------------------------------
-static std::string sDumpResource( ID3D11DeviceContext & devcxt, const char * prefix, ID3D11Resource * res )
+static StrA sDumpResource( ID3D11DeviceContext & devcxt, const char * prefix, ID3D11Resource * res )
 {
     D3D11_RESOURCE_DIMENSION dim;
 
@@ -521,9 +521,9 @@ static void sDumpShaderResources(
         srv[i]->GetResource( &res );
         sprintf_s( fname, "%s_%s_srv(%03d)",
             sDumpFilePrefix, tag, i );
-        std::string resname = sDumpResource( devcxt, fname, res );
+        StrA resname = sDumpResource( devcxt, fname, res );
 
-        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.c_str() );
+        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.ToRawPtr() );
     }
 }
 
@@ -596,11 +596,11 @@ static void sDumpRenderTargets( ID3D11DeviceContext & devcxt, FILE * fp )
         colors[i]->GetResource( &res );
         sprintf_s( fname, "%s_rendertarget(%d)",
             sDumpFilePrefix, i );
-        std::string resname = sDumpResource( devcxt, fname, res );
+        StrA resname = sDumpResource( devcxt, fname, res );
 
         fprintf( fp,
             "\t<rendertarget slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n",
-            i, descname, resname.c_str() );
+            i, descname, resname.ToRawPtr() );
 
         colors[i]->Release();
     }
@@ -616,11 +616,11 @@ static void sDumpRenderTargets( ID3D11DeviceContext & devcxt, FILE * fp )
         AutoComPtr<ID3D11Resource> res;
         depth->GetResource( &res );
         sprintf_s( fname, "%s_depthstencil", sDumpFilePrefix );
-        std::string resname = sDumpResource( devcxt, fname, res );
+        StrA resname = sDumpResource( devcxt, fname, res );
 
         fprintf( fp,
             "\t<depthstencil desc=\"%s\" res=\"%s\"/>\n",
-            descname, resname.c_str() );
+            descname, resname.ToRawPtr() );
 
         depth->Release();
     }

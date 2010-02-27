@@ -451,7 +451,7 @@ struct AseFile
         const char * token = next( 0, option );
         if( 0 == token ) return false;
 
-        if( !String2Integer<INT_TYPE>( result, token ) )
+        if( 0 == String2Integer<INT_TYPE>( result, token ) )
         {
             if( !option.silence ) err( StringFormat( "Not valid integer : %s", token ) );
             return false;

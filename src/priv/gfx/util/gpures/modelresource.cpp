@@ -88,7 +88,7 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || !String2Integer<T>( result, a->value.ToRawPtr() ) )
+    if( !a || 0 != String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid." );
         return false;
@@ -317,7 +317,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
                 return false;
             }
-            if( !String2Integer( ud.size, a->value ) )
+            if( 0 == String2Integer( ud.size, a->value ) )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is not a valid integer." );
                 return false;
