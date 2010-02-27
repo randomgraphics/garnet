@@ -48,7 +48,7 @@ namespace GN
             ///
             /// Get internal C-style raw pointer
             ///
-            T * GetRawPtr() const { return mPtr; }
+            T * ToRawPtr() const { return mPtr; }
 
             ///
             /// Clear internal pointer. Same as Attach(0)

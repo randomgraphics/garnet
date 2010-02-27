@@ -22,7 +22,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.GetRawPtr(); *s; ++s )
+    for( const char * s = in.ToRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -61,7 +61,7 @@ static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).GetRawPtr() : "Shader code: <EMPTY>",
+        code ? sAddLineCount(code).ToRawPtr() : "Shader code: <EMPTY>",
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -94,8 +94,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).GetRawPtr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).GetRawPtr() );
+        sAddLineCount(hlsl).ToRawPtr(),
+        sAddLineCount((const char*)asm_->GetBufferPointer()).ToRawPtr() );
 
     GN_UNGUARD;
 }
@@ -144,7 +144,7 @@ ID3D10Blob * GN::d3d11::compileShader(
     if( FAILED( D3DX11CompileFromMemory(
         source,
         len,
-        filename.GetRawPtr(),
+        filename.ToRawPtr(),
         0, // defines
         0, // includes
         entry,

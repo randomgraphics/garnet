@@ -89,7 +89,7 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
     const XmlAttrib * a = node.findAttrib( attr );
     if ( !a )
     {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.GetRawPtr() );
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.ToRawPtr() );
         return false;
     }
 
@@ -97,24 +97,24 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
 
     if( !fs::isFile( fullname ) )
     {
-        GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.GetRawPtr() );
+        GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.ToRawPtr() );
     }
 
     AutoObjPtr<File> fp( fs::openFile( fullname, "rb" ) );
     if( !fp ) return false;
 
-    result.Resize( fp->size() / sizeof(T) );
+    result.Resize( fp->Size() / sizeof(T) );
 
-    return fp->read( result.GetRawPtr(), result.Size() * sizeof(T), 0 );
+    return fp->read( result.ToRawPtr(), result.Size() * sizeof(T), 0 );
 }
 
 template<typename T>
 static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
 {
     const XmlAttrib * a = node.findAttrib( attrname );
-    if ( !a || !String2Number<T>( result, a->value.GetRawPtr() ) )
+    if ( !a || !String2Number<T>( result, a->value.ToRawPtr() ) )
     {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.GetRawPtr() );
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.ToRawPtr() );
         return false;
     }
     else
@@ -168,7 +168,7 @@ struct D3D10BufferDump : BinaryComDump<ID3D10Buffer>
             0  // no misc. flags
         };
         D3D10_SUBRESOURCE_DATA data = {
-            binary.GetRawPtr(),
+            binary.ToRawPtr(),
             (UINT)binary.Size(),
             (UINT)binary.Size()
         };
@@ -208,7 +208,7 @@ struct D3D10InputLayoutDump
                     return false;
                 }
                 semantics.Append( sem->value );
-                desc.SemanticName = semantics.Back().GetRawPtr();
+                desc.SemanticName = semantics.Back().ToRawPtr();
 
                 if( !sGetNumericAttr( *e, "index", desc.SemanticIndex ) ) return false;
                 if( !sGetNumericAttr( *e, "format", (INT&)desc.Format ) ) return false;
@@ -221,7 +221,7 @@ struct D3D10InputLayoutDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -275,7 +275,7 @@ struct D3D10ViewDump
             0,
         };
 
-		D3D10_SUBRESOURCE_DATA sd = { content.GetRawPtr(), width, width };
+		D3D10_SUBRESOURCE_DATA sd = { content.ToRawPtr(), width, width };
 
         ID3D10Buffer * buf;
 
@@ -289,7 +289,7 @@ struct D3D10ViewDump
     {
         // get image information
         D3DX10_IMAGE_INFO info;
-        GN_DX_CHECK_RETURN( D3DX10GetImageInfoFromMemory( content.GetRawPtr(), content.Size(), 0, &info, 0 ), false );
+        GN_DX_CHECK_RETURN( D3DX10GetImageInfoFromMemory( content.ToRawPtr(), content.Size(), 0, &info, 0 ), false );
         width  = info.Width;
         height = info.Height;
 
@@ -301,7 +301,7 @@ struct D3D10ViewDump
             // This is a depth format that is not supported by current D3D10X library.
             // We'll have to use our custom loader
 
-            MemFile<UInt8> file( content.GetRawPtr(), content.Size() );
+            MemFile<UInt8> file( content.ToRawPtr(), content.Size() );
 
             ImageReader      ir;
             ImageDesc        id;
@@ -310,7 +310,7 @@ struct D3D10ViewDump
             if( !ir.reset( file ) ) return false;
             if( !ir.readHeader( id ) ) return false;
             data.Resize( id.getTotalBytes() );
-            if( !ir.readImage( data.GetRawPtr() ) ) return false;
+            if( !ir.readImage( data.ToRawPtr() ) ) return false;
 
             switch( info.ResourceDimension )
             {
@@ -348,13 +348,13 @@ struct D3D10ViewDump
 
                     ID3D10Texture2D * tex2d;
 
-                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.GetRawPtr(), &tex2d ), false );
+                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.ToRawPtr(), &tex2d ), false );
                     original.Attach( tex2d );
 
                     desc2d.Usage = D3D10_USAGE_DEFAULT;
                     desc2d.BindFlags = bind;
                     desc2d.CPUAccessFlags = 0;
-                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.GetRawPtr(), &tex2d ), false );
+                    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &desc2d, subdata.ToRawPtr(), &tex2d ), false );
                     res.Attach( tex2d );
 
                     break;
@@ -391,7 +391,7 @@ struct D3D10ViewDump
             GN_DX_CHECK_RETURN(
                 D3DX10CreateTextureFromMemory(
                     &dev,
-                    content.GetRawPtr(),
+                    content.ToRawPtr(),
                     content.Size(),
                     &load,
                     0,
@@ -405,7 +405,7 @@ struct D3D10ViewDump
             GN_DX_CHECK_RETURN(
                 D3DX10CreateTextureFromMemory(
                     &dev,
-                    content.GetRawPtr(),
+                    content.ToRawPtr(),
                     content.Size(),
                     &load,
                     0,
@@ -437,7 +437,7 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
     {
         GN_ASSERT( sizeof(D3D10_SHADER_RESOURCE_VIEW_DESC) == desc.Size() );
 
-        const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC*)desc.GetRawPtr();
+        const D3D10_SHADER_RESOURCE_VIEW_DESC * srvdesc = (const D3D10_SHADER_RESOURCE_VIEW_DESC*)desc.ToRawPtr();
 
         if( D3D10_SRV_DIMENSION_BUFFER == srvdesc->ViewDimension )
         {
@@ -466,7 +466,7 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
     {
         GN_ASSERT( sizeof(D3D10_RENDER_TARGET_VIEW_DESC) == desc.Size() );
 
-        const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *)desc.GetRawPtr();
+        const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *)desc.ToRawPtr();
 
         if( !createTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format ) ) return false;
 
@@ -515,7 +515,7 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
     {
         GN_ASSERT( sizeof(D3D10_DEPTH_STENCIL_VIEW_DESC) == desc.Size() );
 
-        const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *)desc.GetRawPtr();
+        const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *)desc.ToRawPtr();
 
         if( !createTexture( dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format ) ) return false;
 
@@ -574,7 +574,7 @@ struct D3D10SamplerStateDump : BinaryComDump<ID3D10SamplerState>
             FLT_MAX
         };
 
-        const D3D10_SAMPLER_DESC * desc = binary.Empty() ? &DEFAULT_DESC : (const D3D10_SAMPLER_DESC *)binary.GetRawPtr();
+        const D3D10_SAMPLER_DESC * desc = binary.Empty() ? &DEFAULT_DESC : (const D3D10_SAMPLER_DESC *)binary.ToRawPtr();
 
         return S_OK == dev.CreateSamplerState( desc, &comptr );
     }
@@ -849,7 +849,7 @@ struct D3D10StateDump
 			}
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -866,19 +866,19 @@ struct D3D10StateDump
         // vs
         if( !vs.binary.Empty() )
         {
-            GN_DX_CHECK_RETURN( dev.CreateVertexShader( vs.binary.GetRawPtr(), vs.binary.Size(), &vs.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreateVertexShader( vs.binary.ToRawPtr(), vs.binary.Size(), &vs.comptr ), false );
         }
 
         // ps
         if( !ps.binary.Empty() )
         {
-            GN_DX_CHECK_RETURN( dev.CreatePixelShader( ps.binary.GetRawPtr(), ps.binary.Size(), &ps.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreatePixelShader( ps.binary.ToRawPtr(), ps.binary.Size(), &ps.comptr ), false );
         }
 
         // gs
         if( !gs.binary.Empty() )
         {
-            GN_DX_CHECK_RETURN( dev.CreateGeometryShader( gs.binary.GetRawPtr(), gs.binary.Size(), &gs.comptr ), false );
+            GN_DX_CHECK_RETURN( dev.CreateGeometryShader( gs.binary.ToRawPtr(), gs.binary.Size(), &gs.comptr ), false );
         }
 
         // const buffers
@@ -894,9 +894,9 @@ struct D3D10StateDump
         {
 	        GN_DX_CHECK_RETURN(
 	            dev.CreateInputLayout(
-	                il.elements.GetRawPtr(),
+	                il.elements.ToRawPtr(),
 	                (UINT)il.elements.Size(),
-	                il.signature.GetRawPtr(),
+	                il.signature.ToRawPtr(),
 	                (UINT)il.signature.Size(),
 	                &il.comptr ),
 	            false );
@@ -945,15 +945,15 @@ struct D3D10StateDump
 
         // rs
         GN_ASSERT( sizeof(D3D10_RASTERIZER_DESC) == rs.binary.Size() );
-        GN_DX_CHECK_RETURN( dev.CreateRasterizerState( (const D3D10_RASTERIZER_DESC *)rs.binary.GetRawPtr(), &rs.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateRasterizerState( (const D3D10_RASTERIZER_DESC *)rs.binary.ToRawPtr(), &rs.comptr ), false );
 
         // bs
         GN_ASSERT( sizeof(D3D10_BLEND_DESC) == bs.binary.Size() );
-        GN_DX_CHECK_RETURN( dev.CreateBlendState( (const D3D10_BLEND_DESC *)bs.binary.GetRawPtr(), &bs.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateBlendState( (const D3D10_BLEND_DESC *)bs.binary.ToRawPtr(), &bs.comptr ), false );
 
         // ds
         GN_ASSERT( sizeof(D3D10_DEPTH_STENCIL_DESC) == ds.binary.Size() );
-        GN_DX_CHECK_RETURN( dev.CreateDepthStencilState( (const D3D10_DEPTH_STENCIL_DESC *)ds.binary.GetRawPtr(), &ds.comptr ), false );
+        GN_DX_CHECK_RETURN( dev.CreateDepthStencilState( (const D3D10_DEPTH_STENCIL_DESC *)ds.binary.ToRawPtr(), &ds.comptr ), false );
 
         // success
         return true;
@@ -1205,7 +1205,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).GetRawPtr() );
+    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).ToRawPtr() );
 }
 
 int main( int argc, const char * argv [] )

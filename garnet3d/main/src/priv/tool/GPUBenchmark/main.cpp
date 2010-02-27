@@ -122,7 +122,7 @@ struct ManyManyQuads
         }
 
         // create index buffer
-        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.GetRawPtr() );
+        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.ToRawPtr() );
         if( !idxbuf ) return false;
 
         // success
@@ -318,7 +318,7 @@ class BenchmarkingApp : public app::SampleApp
 
     Clock                 mClock;
     AsciiFont             mAsciiFont;
-    std::vector<CaseDesc> mTestCases;
+    DynaArray<CaseDesc> mTestCases;
     bool                  mFirstFrame;
 
     // return false, if error and/or no more cases.
@@ -330,7 +330,7 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().GetRawPtr(), cd.theCase->printResult().GetRawPtr() );
+        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().ToRawPtr(), cd.theCase->printResult().ToRawPtr() );
         cd.theCase->destroy();
         delete cd.theCase;
         mTestCases.pop_back();

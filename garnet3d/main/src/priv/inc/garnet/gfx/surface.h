@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             if( !format.valid() )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().GetRawPtr() );
+                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().ToRawPtr() );
                 return false;
             }
 
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
     {
         size_t             rowPitch;
         size_t             slicePitch;
-        std::vector<UInt8> data;
+        DynaArray<UInt8> data;
     };
 
     ///
@@ -265,7 +265,7 @@ namespace GN { namespace gfx
             if( !mDesc.validate() ) return false;
 
             // allocate mipmap size array
-            mMipSize.resize( mDesc.levels );
+            mMipSize.Resize( mDesc.levels );
 
             return true;
         }
@@ -294,7 +294,7 @@ namespace GN { namespace gfx
 
     private :
         TextureDesc                    mDesc;    ///< descriptor
-        std::vector< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
+        DynaArray< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
         StrA                           mName;    ///< texture name. Only for debug purpose.
     };
 
@@ -325,7 +325,7 @@ namespace GN { namespace gfx
         ///
         /// Read buffer content.
         ///
-        virtual void readback( std::vector<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 
@@ -371,7 +371,7 @@ namespace GN { namespace gfx
         ///
         /// Read buffer content.
         ///
-        virtual void readback( std::vector<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 

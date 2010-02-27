@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "imagePNG.h"
 
+using namespace GN;
+
 #if GN_MSVC
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
@@ -160,8 +162,7 @@ bool PNGReader::readImage( void * o_data )
 
     GN_ASSERT( mPng && mInfo && mRowPitch > 0 );
 
-    std::vector<png_bytep> rows;
-    rows.resize( mInfo->height );
+    DynaArray<png_bytep> rows( mInfo->height );
     png_bytep ptr = (png_bytep) o_data;
     for( UInt32 y = 0; y < mInfo->height; ++y )
     {

@@ -50,9 +50,9 @@ void GN::win::WindowMsw::Quit()
     // unregister window class
     if( !mClassName.Empty() )
     {
-        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.GetRawPtr(), mModuleInstance );
+        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.GetRawPtr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.ToRawPtr(), mModuleInstance ) );
         mClassName.Clear();
     }
 
@@ -213,7 +213,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     do
     {
         mClassName.Format( L"GNwindowMsw_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.GetRawPtr(), &wcex ) );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.ToRawPtr(), &wcex ) );
 
     // register window class
     wcex.cbSize         = sizeof(WNDCLASSEXW);
@@ -226,14 +226,14 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.GetRawPtr();
+    wcex.lpszClassName  = mClassName.ToRawPtr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
         GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
         return false;
     }
-    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.GetRawPtr(), mModuleInstance );
+    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -258,8 +258,8 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.GetRawPtr(),
-        Mbs2Wcs(wcp.caption).GetRawPtr(),
+        mClassName.ToRawPtr(),
+        Mbs2Wcs(wcp.caption).ToRawPtr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,

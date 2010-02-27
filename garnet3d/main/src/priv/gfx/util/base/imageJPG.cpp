@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "imageJPG.h"
 
+using namespace GN;
+
 #if GN_MSVC
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
@@ -150,9 +152,9 @@ bool JPGReader::readImage( void * o_data )
     else decompressedBuf = (UInt8*)o_data;
 
     // read scanlines
-    std::vector<UInt8*> scanlines;
-    scanlines.resize( height );
-    for( size_t i = 0; i < scanlines.size(); ++i )
+    DynaArray<UInt8*> scanlines;
+    scanlines.Resize( height );
+    for( size_t i = 0; i < scanlines.Size(); ++i )
     {
         scanlines[i] = decompressedBuf + rowPitch * i;
     }
@@ -162,12 +164,12 @@ bool JPGReader::readImage( void * o_data )
     while( left_scanlines > 0 )
     {
         readen_scanlines = jpeg_read_scanlines(
-            &mCInfo, &scanlines[0], (JDIMENSION)scanlines.size() );
+            &mCInfo, &scanlines[0], (JDIMENSION)scanlines.Size() );
         GN_ASSERT( readen_scanlines <= left_scanlines );
         left_scanlines -= readen_scanlines;
 
         readen_bytes = readen_scanlines * rowPitch;
-        for( size_t i = 0; i < scanlines.size(); ++i )
+        for( size_t i = 0; i < scanlines.Size(); ++i )
         {
             scanlines[i] += readen_bytes;
         }

@@ -168,14 +168,14 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.Resize( dataSize );
-    if( !file.read( xpr.sceneData.GetRawPtr(), dataSize, &readen ) || dataSize != readen )
+    if( !file.read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.GetRawPtr();
+    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.ToRawPtr();
     for( size_t i = 0; i < header.numObjects; ++i )
     {
         XPRObjectHeader & o = objects[i];
@@ -282,7 +282,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     }
     filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) (n) // StringFormat("%s.%s",filename.GetRawPtr(),n.GetRawPtr())
+#define FULL_MESH_NAME( n ) (n) // StringFormat("%s.%s",filename.ToRawPtr(),n.ToRawPtr())
 
     // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
     for( size_t i = 0; i < ase.meshes.Size(); ++i )
@@ -333,7 +333,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         }
 
         // add the model to model list
-        StrA modelname = StringFormat( "%s.%u", asemesh.name.GetRawPtr(), i );
+        StrA modelname = StringFormat( "%s.%u", asemesh.name.ToRawPtr(), i );
         GN_ASSERT( desc.models.find( modelname ) == desc.models.end() );
         desc.models[modelname] = model;
 
@@ -358,7 +358,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 static void sPostXMLError( const XmlNode & node, const StrA & msg )
 {
     GN_UNUSED_PARAM( node );
-    GN_ERROR(sLogger)( "%s", msg.GetRawPtr() );
+    GN_ERROR(sLogger)( "%s", msg.ToRawPtr() );
 }
 
 //
@@ -466,7 +466,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
             }
             else
             {
-                sPostXMLError( *e, StringFormat( "Unknown element: <%s>", e->name.GetRawPtr() ) );
+                sPostXMLError( *e, StringFormat( "Unknown element: <%s>", e->name.ToRawPtr() ) );
             }
         }
     }
@@ -495,7 +495,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
             file.name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.GetRawPtr() );
+            xpr.errInfo.ToRawPtr() );
         return false;
     }
     GN_ASSERT( xpr.root );
@@ -534,7 +534,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.GetRawPtr() ) );
+            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.ToRawPtr() ) );
         }
     }
 
@@ -556,7 +556,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.GetRawPtr() ) );
+            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.ToRawPtr() ) );
         }
     }
 
@@ -585,7 +585,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     if( !fs::isDir( dirname ) )
     {
-        GN_ERROR(sLogger)( "%s is not a directory", dirname.GetRawPtr() );
+        GN_ERROR(sLogger)( "%s is not a directory", dirname.ToRawPtr() );
         return false;
     }
 
@@ -599,7 +599,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         const StrA & oldMeshName = i->first;
         const MeshResourceDesc & mesh = i->second;
 
-        StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.GetRawPtr(), meshindex );
+        StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.ToRawPtr(), meshindex );
 
         if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
 
@@ -678,7 +678,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         }
         else if( !entityDesc.spatial.parent.Empty() )
         {
-            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->first.GetRawPtr(), entityDesc.spatial.parent.GetRawPtr() );
+            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->first.ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
         }
 
         a = xmldoc.createAttrib( spatial );
@@ -797,7 +797,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     {
         if( desc.entities.end() == desc.entities.find( entityDesc.spatial.parent ) )
         {
-            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.GetRawPtr(), entityDesc.spatial.parent.GetRawPtr() );
+            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
         }
         else
         {
@@ -828,8 +828,8 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
         {
             GN_ERROR(sLogger)(
                 "Entity %s references invalid model named \"%s\".",
-                entityName.GetRawPtr(),
-                modelName.GetRawPtr() );
+                entityName.ToRawPtr(),
+                modelName.ToRawPtr() );
             continue;
         }
 
@@ -850,8 +850,8 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
                 {
                     GN_ERROR(sLogger)(
                         "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.",
-                        modelName.GetRawPtr(),
-                        modelDesc.mesh.GetRawPtr() );
+                        modelName.ToRawPtr(),
+                        modelDesc.mesh.ToRawPtr() );
                     continue; // ignore the model
                 }
 
@@ -943,7 +943,7 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
     }
     else
     {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.GetRawPtr() );
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.ToRawPtr() );
         return false;
     }
 }

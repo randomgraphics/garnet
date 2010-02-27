@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::readback( std::vector<UInt8> & data )
+void GN::gfx::MultiThreadIdxBuf::readback( DynaArray<UInt8> & data )
 {
     mGpu.postCommand2( CMD_IDXBUF_READBACK, mIdxBuf, &data );
 }
@@ -130,7 +130,7 @@ namespace GN { namespace gfx
         struct IdxBufReadBackParam
         {
             IdxBuf             * ib;
-            std::vector<UInt8> * buf;
+            DynaArray<UInt8> * buf;
         };
         IdxBufReadBackParam * vbrp = (IdxBufReadBackParam*)p;
 

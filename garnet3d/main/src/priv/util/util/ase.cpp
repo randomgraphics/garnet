@@ -135,16 +135,16 @@ struct AseFile
     bool open( File & file )
     {
         // read ASE file
-        buf.Resize( file.size() + 1 );
+        buf.Resize( file.Size() + 1 );
         size_t readen;
-        if( !file.read( buf.GetRawPtr(), file.size(), &readen ) )
+        if( !file.read( buf.ToRawPtr(), file.Size(), &readen ) )
         {
             return false;
         }
-        GN_ASSERT( readen <= file.size() );
+        GN_ASSERT( readen <= file.Size() );
         buf[readen] = 0;
 
-        str = buf.GetRawPtr();
+        str = buf.ToRawPtr();
         line = 0;
 
         // get file dir
@@ -154,9 +154,9 @@ struct AseFile
         return true;
     }
 
-    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
-    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
-    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.GetRawPtr() ); }
+    void err( const StrA & msg )     const { GN_ERROR(sLogger)  ( "ASEFILE: line %d : %s", line, msg.ToRawPtr() ); }
+    void warn( const StrA & msg )    const { GN_WARN(sLogger)   ( "ASEFILE: line %d : %s", line, msg.ToRawPtr() ); }
+    void verbose( const StrA & msg ) const { GN_VERBOSE(sLogger)( "ASEFILE: line %d : %s", line, msg.ToRawPtr() ); }
 
     enum ScanOptionEnum
     {
@@ -487,7 +487,7 @@ struct AseFile
     {
         GN_ASSERT( !IsStringEmpty(nodename) );
         return next( nodename, option )
-            && next( StringFormat( "%d", index ).GetRawPtr(), option )
+            && next( StringFormat( "%d", index ).ToRawPtr(), option )
             && readVector3( result, option );
     }
 };
@@ -590,7 +590,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
         }
         else
         {
-            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).ToRawPtr() );
             return false;
         }
     }
@@ -699,7 +699,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             for( UInt32 i = 0; i < count; ++i )
             {
                 if( !ase.next( "*SUBMATERIAL" ) ) return false;
-                if( !ase.next( StringFormat("%d",i).GetRawPtr() ) ) return false;
+                if( !ase.next( StringFormat("%d",i).ToRawPtr() ) ) return false;
                 if( !sReadMaterial( m.submaterials[i], ase ) ) return false;
             }
         }
@@ -715,7 +715,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
         }
         else
         {
-            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).ToRawPtr() );
             return false;
         }
     }
@@ -747,7 +747,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     for( UInt32 i = 0; i < matcount; ++i )
     {
         if( !ase.next( "*MATERIAL" ) ) return false;
-        if( !ase.next( StringFormat("%d",i).GetRawPtr() ) ) return false;
+        if( !ase.next( StringFormat("%d",i).ToRawPtr() ) ) return false;
         if( !sReadMaterial( scene.materials[i], ase ) ) return false;
     }
 
@@ -801,7 +801,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         AseFace & f = m.faces[i];
         int dummy;
         if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( StringFormat( "%d:", i ).GetRawPtr() ) ) return false;
+        if( !ase.next( StringFormat( "%d:", i ).ToRawPtr() ) ) return false;
         if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
         if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
         if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
@@ -843,14 +843,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         if( !ase.readBlockEnd() ) return false;
 
         // read tface list
-        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( StringFormat( "%d", numface ).GetRawPtr() ) ) return false;
+        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( StringFormat( "%d", numface ).ToRawPtr() ) ) return false;
         if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
         for( UInt32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
             if( !ase.next( "*MESH_TFACE" ) ) return false;
-            if( !ase.next( StringFormat( "%d", i ).GetRawPtr() ) ) return false;
+            if( !ase.next( StringFormat( "%d", i ).ToRawPtr() ) ) return false;
 
             // for each vertex in the face
             for( UInt32 i = 0; i < 3; ++i )
@@ -1034,7 +1034,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
                 ase.err( "Node name can't be empty!" );
                 return false;
             }
-            ase.verbose( StringFormat( "read geometry object '%s' ...", o.node.name.GetRawPtr() ) );
+            ase.verbose( StringFormat( "read geometry object '%s' ...", o.node.name.ToRawPtr() ) );
         }
         else if( 0 == StringCompare( token, "*NODE_PARENT" ) )
         {
@@ -1071,7 +1071,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
 
             if( !hasMaterial )
             {
-                ase.warn( StringFormat( "object '%s' has no material. Using default one.", o.node.name.GetRawPtr() ) );
+                ase.warn( StringFormat( "object '%s' has no material. Using default one.", o.node.name.ToRawPtr() ) );
                 o.matid = 0;
             }
 
@@ -1122,7 +1122,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
         }
         else
         {
-            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).GetRawPtr() );
+            ase.err( StringFormat( "expecting node or close-brace, but met '%s'!", token ).ToRawPtr() );
             return false;
         }
     }
@@ -1281,7 +1281,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         if( 0 == p )
         {
             GN_ERROR(sLogger)( "Object %s has invalid parent: %s. Replace it with \"root\".",
-                o.node.name.GetRawPtr(), o.node.parent.GetRawPtr() );
+                o.node.name.ToRawPtr(), o.node.parent.ToRawPtr() );
             p = &scene.root;
         }
 
@@ -1292,7 +1292,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
     GN_ASSERT_EX(
         scene.root.calcChildrenCount() == scene.objects.Size(),
         StringFormat( "numchildren=%d, numobjects=%d",
-            scene.root.calcChildrenCount(), scene.objects.Size() ).GetRawPtr() );
+            scene.root.calcChildrenCount(), scene.objects.Size() ).ToRawPtr() );
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
@@ -1330,7 +1330,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         for( int i = 0; i < level; ++i ) s += "- ";
         s += StringFormat(
             "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
-            n->node.name.GetRawPtr(),
+            n->node.name.ToRawPtr(),
             n->node.selfbbox.Pos().x,
             n->node.selfbbox.Pos().y,
             n->node.selfbbox.Pos().z,
@@ -1338,7 +1338,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             n->node.selfbbox.Size().y,
             n->node.selfbbox.Size().z );
 
-        GN_VERBOSE(sLogger)( s.GetRawPtr() );
+        GN_VERBOSE(sLogger)( s.ToRawPtr() );
 
         // next node
         n = ttpre.next( n, &level );
@@ -1580,7 +1580,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     {
         // 32bit index buffer
         blob.attach( new SimpleBlob(sizeof(UInt32) * ib.Size()) );
-        memcpy( blob->data(), ib.GetRawPtr(), blob->size() );
+        memcpy( blob->data(), ib.ToRawPtr(), blob->size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
         dst.meshdata.Append( blob );

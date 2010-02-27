@@ -323,7 +323,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 
     // update texture
     Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
-    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.GetRawPtr() );
+    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.ToRawPtr() );
 
     // success
     return &slot;
@@ -424,7 +424,7 @@ GN::util::BitmapFont::slotInit(
         }
 
         // Clear texture to pure black
-        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.GetRawPtr() );
+        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.ToRawPtr() );
     }
 
     // success

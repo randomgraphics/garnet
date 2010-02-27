@@ -178,14 +178,14 @@ struct D3D9StateDump
         // vs
         if( !vs.source.Empty() )
         {
-            vs.vs.Attach( assembleAndCreateVS( &dev, vs.source.GetRawPtr(), 0 ) );
+            vs.vs.Attach( assembleAndCreateVS( &dev, vs.source.ToRawPtr(), 0 ) );
             if( vs.vs.Empty() ) return false;
         }
 
         // ps
         if( !ps.source.Empty() )
         {
-            ps.ps.Attach( assembleAndCreatePS( &dev, ps.source.GetRawPtr(), 0 ) );
+            ps.ps.Attach( assembleAndCreatePS( &dev, ps.source.ToRawPtr(), 0 ) );
             if( ps.ps.Empty() ) return false;
         }
 
@@ -202,7 +202,7 @@ struct D3D9StateDump
             AutoObjPtr<File> fp( fs::openFile( vbd.ref, "rb" ) );
             if( !fp ) return false;
 
-            size_t bytes = fp->size();
+            size_t bytes = fp->Size();
 
             GN_DX_CHECK_RETURN( dev.CreateVertexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
 
@@ -222,7 +222,7 @@ struct D3D9StateDump
             AutoObjPtr<File> fp( fs::openFile( idxbuf.ref, "rb" ) );
             if( !fp ) return false;
 
-            size_t bytes = fp->size();
+            size_t bytes = fp->Size();
 
             GN_DX_CHECK_RETURN( dev.CreateIndexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
 
@@ -247,25 +247,25 @@ struct D3D9StateDump
 
             D3DXIMAGE_INFO info;
 
-            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.GetRawPtr(), &info ), false );
+            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.ToRawPtr(), &info ), false );
 
             switch( info.ResourceType )
             {
                 case D3DRTYPE_TEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateTextureFromFileA( &dev, filename.GetRawPtr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
+                        D3DXCreateTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_CUBETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateCubeTextureFromFileA( &dev, filename.GetRawPtr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
+                        D3DXCreateCubeTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_VOLUMETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateVolumeTextureFromFileA( &dev, filename.GetRawPtr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
+                        D3DXCreateVolumeTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
                         false );
                     break;
 
@@ -425,7 +425,7 @@ struct D3D9StateDump
                 D3D9RtDump & rtd = rendertargets[i];
                 if( !rtd.inuse ) continue;
 
-                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.GetRawPtr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
+                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.ToRawPtr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
             }
         }
 
@@ -544,7 +544,7 @@ struct D3D9StateDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -575,9 +575,9 @@ private:
     static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
         const XmlAttrib * a = node.findAttrib( attrname );
-        if ( !a || !String2Number<T>( result, a->value.GetRawPtr() ) )
+        if ( !a || !String2Number<T>( result, a->value.ToRawPtr() ) )
         {
-            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.GetRawPtr() );
+            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.ToRawPtr() );
             return false;
         }
         else
@@ -599,7 +599,7 @@ private:
 
         if( !fs::isFile( result ) )
         {
-            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.GetRawPtr() );
+            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.ToRawPtr() );
         }
 
         // success
@@ -614,7 +614,7 @@ private:
             if( !e ) continue;
             if( e->name != "f" )
             {
-                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -709,7 +709,7 @@ private:
 
             if( e->name != "element" )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -825,7 +825,7 @@ private:
 
             if( "rs" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -861,7 +861,7 @@ private:
 
             if( "ss" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.GetRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -968,7 +968,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).GetRawPtr() );
+    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).ToRawPtr() );
 }
 
 int main( int argc, const char * argv [] )

@@ -38,7 +38,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.GetRawPtr(); *s; ++s )
+    for( const char * s = in.ToRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -100,7 +100,7 @@ sCreateShader( const StrA & code, GLenum usage )
     AutoARBObjectDel autodel( sh );
 
     // set shader code
-    const char * code_str = code.GetRawPtr();
+    const char * code_str = code.ToRawPtr();
     GLint code_size = static_cast<GLint>( code.Size() );
     GN_OGL_CHECK_RV(
         glShaderSourceARB( sh, 1, &code_str, &code_size ),
@@ -121,7 +121,7 @@ sCreateShader( const StrA & code, GLenum usage )
             "\n========= compile error ========\n"
             "%s\n"
             "==================================\n",
-            sAddLineCount(code_str).GetRawPtr(), buf );
+            sAddLineCount(code_str).ToRawPtr(), buf );
         return false;
     }
 
@@ -360,7 +360,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     {
         // this is conventional attribute
 
-        const char * conventionalAttribName = desc->name.GetRawPtr();
+        const char * conventionalAttribName = desc->name.ToRawPtr();
 
         // the index is 0 in most cases.
         result.index = 0;
@@ -489,7 +489,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    desc.name.GetRawPtr(),
+                    desc.name.ToRawPtr(),
                     uniform->size(),
                     desc.size );
             }
@@ -669,13 +669,13 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     for( size_t i = 0; i < mUniforms.Size(); ++i )
     {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
-        u.uniformDesc.name = u.name.GetRawPtr();
+        u.uniformDesc.name = u.name.ToRawPtr();
         u.uniformDesc.size = u.size;
     }
     for( size_t i = 0; i < mTextures.Size(); ++i )
     {
         GLSLUniformOrTextureDesc & t = mTextures[i];
-        t.textureDesc.name = t.name.GetRawPtr();
+        t.textureDesc.name = t.name.ToRawPtr();
     }
 
     // update parameter descriptor
@@ -743,7 +743,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
     for( size_t i = 0; i < mAttributes.Size(); ++i )
     {
         GLSLAttributeDesc & a = mAttributes[i];
-        a.desc.name = a.name.GetRawPtr();
+        a.desc.name = a.name.ToRawPtr();
     }
 
     // update parameter descriptor
@@ -762,7 +762,7 @@ const GN::gfx::OGLGpuProgramGLSL::GLSLAttributeDesc *
 GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
 {
 
-    const GLSLAttributeDesc * attrib = mAttributes.GetRawPtr();
+    const GLSLAttributeDesc * attrib = mAttributes.ToRawPtr();
 
     for( size_t i = 0; i < mAttributes.Size(); ++i, ++attrib )
     {

@@ -160,7 +160,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.GetRawPtr(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.ToRawPtr(),
                                          mContext.vtxbufs.Size(),
                                          basevtx ) )
     {
@@ -237,7 +237,7 @@ void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.GetRawPtr(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.ToRawPtr(),
                                          mContext.vtxbufs.Size(),
                                          startvtx ) )
     {

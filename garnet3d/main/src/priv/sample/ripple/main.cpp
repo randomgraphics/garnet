@@ -82,16 +82,16 @@ public:
             "}                                                                            \n"
             ;
 
-        std::vector<char> rippleCodeFromFile;
+        DynaArray<char> rippleCodeFromFile;
         const char * filename = "media/ripple.ps";
         if( fs::pathExist( filename ) )
         {
             DiskFile f;
             if( f.open( filename, "rt" ) )
             {
-                rippleCodeFromFile.resize( f.size() + 1 );
-                rippleCodeFromFile[f.size()] = '\0';
-                if( f.read( &rippleCodeFromFile[0], f.size(), NULL ) )
+                rippleCodeFromFile.Resize( f.Size() + 1 );
+                rippleCodeFromFile[f.Size()] = '\0';
+                if( f.read( &rippleCodeFromFile[0], f.Size(), NULL ) )
                 {
                     rippleCode = &rippleCodeFromFile[0];
                 }

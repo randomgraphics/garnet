@@ -44,7 +44,7 @@ HRESULT MyVtxBuf9::Lock( UINT OffsetToLock, UINT SizeToLock, VOID ** ppbData, DW
     mLockBytes  = ( 0 == SizeToLock && 0 == OffsetToLock ) ? (UINT)mSysCopy.Size() : SizeToLock;
     mLockFlags  = Flags;
 
-    *ppbData = mSysCopy.GetRawPtr() + mLockOffset;
+    *ppbData = mSysCopy.ToRawPtr() + mLockOffset;
 
     return D3D_OK;
 }
@@ -62,7 +62,7 @@ HRESULT MyVtxBuf9::Unlock()
     HRESULT hr = realobj()->Lock( mLockOffset, mLockBytes, (void**)&data, mLockFlags );
     if( FAILED(hr) ) return hr;
 
-    memcpy( data + mLockOffset, mSysCopy.GetRawPtr() + mLockOffset, mLockBytes );
+    memcpy( data + mLockOffset, mSysCopy.ToRawPtr() + mLockOffset, mLockBytes );
 
     return realobj()->Unlock();
 }

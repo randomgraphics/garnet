@@ -27,7 +27,6 @@
 #include <math.h>
 #include <cwchar>
 #include <string>
-#include <vector>
 #include <exception>
 
 // *****************************************************************************

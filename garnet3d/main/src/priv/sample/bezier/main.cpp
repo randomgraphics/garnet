@@ -396,7 +396,7 @@ class BezierApp : public SampleApp
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).GetRawPtr(),
+                radius ).ToRawPtr(),
             0, 320 );
     }
 

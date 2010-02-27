@@ -102,7 +102,7 @@ namespace GN
 
         /// get registry value by name
         //@{
-        const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.GetRawPtr(), true ); }
+        const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.ToRawPtr(), true ); }
         //@}
 
         /// get registry value with default value, by key

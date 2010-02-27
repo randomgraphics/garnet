@@ -6,7 +6,6 @@
 /// \author  chenlee (2005.4.20)
 // *****************************************************************************
 
-#include <vector>
 #include <map>
 
 namespace GN
@@ -81,7 +80,7 @@ namespace GN
         ///
         /// write string to file
         ///
-        inline bool print( const StrA & s ) { return write( s.GetRawPtr(), s.Size(), 0 ); }
+        inline bool print( const StrA & s ) { return write( s.ToRawPtr(), s.Size(), 0 ); }
 
         ///
         /// write formatted string to file
@@ -111,7 +110,7 @@ namespace GN
         ///
         /// 返回文件的总长度. Return 0 if something goes wrong.
         ///
-        virtual size_t size() const = 0;
+        virtual size_t Size() const = 0;
 
         ///
         /// get memory mapping of the file content. Return NULL if failed.
@@ -204,7 +203,7 @@ namespace GN
     inline File & operator<<( File & fp, const StrA & s )
     {
         if( s.Empty() ) return fp;
-        fp.write( s.GetRawPtr(), s.Size(), 0 );
+        fp.write( s.ToRawPtr(), s.Size(), 0 );
         return fp;
     }
 
@@ -257,7 +256,7 @@ namespace GN
         bool eof() const;
         bool seek( size_t, FileSeek );
         size_t tell() const;
-        size_t size() const;
+        size_t Size() const;
         void * map( size_t, size_t, bool ) { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); return 0; }
         void unmap() { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); }
     };
@@ -293,7 +292,7 @@ namespace GN
 
         // from File
     public:
-        size_t size() const { return mSize; }
+        size_t Size() const { return mSize; }
     };
 
     ///
@@ -372,7 +371,7 @@ namespace GN
         bool eof() const { return (mStart+mSize) == mPtr; }
         bool seek( size_t offset, FileSeek origin );
         size_t tell() const { return mPtr - mStart; }
-        size_t size() const { return mSize; }
+        size_t Size() const { return mSize; }
         void * map( size_t offset, size_t length, bool )
         {
             if( offset >= mSize || (offset + length) > mSize )
@@ -391,7 +390,7 @@ namespace GN
     ///
     class VectorFile : public File
     {
-        std::vector<UInt8> mBuffer;
+        DynaArray<UInt8> mBuffer;
         size_t mCursor;
 
     public:
@@ -413,13 +412,13 @@ namespace GN
         //@{
         bool read( void *, size_t, size_t* );
         bool write( const void * buffer, size_t size, size_t* );
-        bool eof() const { return mBuffer.size() == mCursor; }
+        bool eof() const { return mBuffer.Size() == mCursor; }
         bool seek( size_t offset, FileSeek origin );
         size_t tell() const { return mCursor; }
-        size_t size() const { return mBuffer.size(); }
+        size_t Size() const { return mBuffer.Size(); }
         void * map( size_t offset, size_t length, bool )
         {
-            if( offset >= mBuffer.size() || (offset + length) > mBuffer.size() )
+            if( offset >= mBuffer.Size() || (offset + length) > mBuffer.Size() )
             {
                 GN_ERROR(myLogger())( "invalid mapping range!" );
                 return 0;

@@ -180,14 +180,14 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.Resize( dataSize );
-    if( !file.read( xpr.sceneData.GetRawPtr(), dataSize, &readen ) || dataSize != readen )
+    if( !file.read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.GetRawPtr();
+    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.ToRawPtr();
     for( size_t i = 0; i < header.numObjects; ++i )
     {
         XPRObjectHeader & o = objects[i];
@@ -429,18 +429,18 @@ bool GN::util::VisualNode::Impl::loadModelsFromFile( const char * filename )
     GpuResourceDatabase & db = mGraph.gdb();
 
     // do loading
-    if( 0 == StringCompareI( ".ase", ext.GetRawPtr() ) )
+    if( 0 == StringCompareI( ".ase", ext.ToRawPtr() ) )
     {
         return sLoadModelsFromASE( mOwner, db, *fp );
     }
-    else if( 0 == StringCompareI( ".xpr", ext.GetRawPtr() ) ||
-             0 == StringCompareI( ".tpr", ext.GetRawPtr() ))
+    else if( 0 == StringCompareI( ".xpr", ext.ToRawPtr() ) ||
+             0 == StringCompareI( ".tpr", ext.ToRawPtr() ))
     {
         return sLoadModelsFromXPR( mOwner, db, *fp );
     }
     else
     {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.GetRawPtr() );
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.ToRawPtr() );
         return NULL;
     }
 }

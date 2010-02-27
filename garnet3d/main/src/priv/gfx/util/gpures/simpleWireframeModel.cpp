@@ -18,7 +18,7 @@ static ModelResourceDesc sWireframeModelDesc()
         md.uniforms[name].size = sizeof(type); \
         md.uniforms[name].initialValue.Resize( sizeof(type) ); \
         type default = (defval); \
-        memcpy( md.uniforms[name].initialValue.GetRawPtr(), &default, sizeof(type) ); \
+        memcpy( md.uniforms[name].initialValue.ToRawPtr(), &default, sizeof(type) ); \
     } else void(0)
 
     INIT_UNIFORM( "MATRIX_PVW" , Matrix44f, Matrix44f::sIdentity() );

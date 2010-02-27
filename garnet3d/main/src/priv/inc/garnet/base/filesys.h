@@ -72,9 +72,9 @@ namespace GN
             /// \param useRegex   是否使用正则匹配
             /// \return           返回参数 result
             ///
-            virtual std::vector<StrA> &
+            virtual DynaArray<StrA> &
             glob(
-                std::vector<StrA> & result,
+                DynaArray<StrA> & result,
                 const StrA & dirName,
                 const StrA & pattern,
                 bool         recursive,
@@ -317,8 +317,8 @@ namespace GN
             return getFileSystem(sys)->openFile( child, mode );
         }
 
-        inline std::vector<StrA> & glob(
-            std::vector<StrA> & result,
+        inline DynaArray<StrA> & glob(
+            DynaArray<StrA> & result,
             const StrA & dirName,
             const StrA & pattern,
             bool         recursive,

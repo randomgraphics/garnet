@@ -96,7 +96,7 @@ GN::gfx::MeshResource::Impl::CalculateBoundingBox( Box<float> & box ) const
 {
     MeshResourceDesc desc = mDesc;
 
-    std::vector<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( mVtxBufs[i].gpudata )
@@ -104,7 +104,7 @@ GN::gfx::MeshResource::Impl::CalculateBoundingBox( Box<float> & box ) const
             mVtxBufs[i].gpudata->readback( buffers[i] );
         }
 
-        desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
+        desc.vertices[i] = buffers[i].ToRawPtr();
     }
 
     desc.CalculateBoundingBox( box );
@@ -118,7 +118,7 @@ GN::gfx::MeshResource::Impl::CalculateBoundingSphere( Sphere<float> & sphere ) c
 {
     MeshResourceDesc desc = mDesc;
 
-    std::vector<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
+    DynaArray<UInt8> buffers[GpuContext::MAX_VERTEX_BUFFERS];
     for( size_t i = 0; i < GpuContext::MAX_VERTEX_BUFFERS; ++i )
     {
         if( mVtxBufs[i].gpudata )
@@ -126,7 +126,7 @@ GN::gfx::MeshResource::Impl::CalculateBoundingSphere( Sphere<float> & sphere ) c
             mVtxBufs[i].gpudata->readback( buffers[i] );
         }
 
-        desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
+        desc.vertices[i] = buffers[i].Empty() ? NULL : &buffers[i][0];
     }
 
     desc.CalculateBoundingSphere( sphere );

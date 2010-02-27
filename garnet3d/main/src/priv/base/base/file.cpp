@@ -193,7 +193,7 @@ size_t GN::StdFile::tell() const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::StdFile::size() const
+size_t GN::StdFile::Size() const
 {
     GN_GUARD;
 
@@ -256,7 +256,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
     }
 
     // 打开文件
-    FILE * fp = sOpenFile( filename.GetRawPtr(), mode.GetRawPtr() );
+    FILE * fp = sOpenFile( filename.ToRawPtr(), mode.ToRawPtr() );
     if( 0 == fp )
     {
         close(); return false;
@@ -312,7 +312,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
     AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );
 
     // open the file
-    FILE * fp = sOpenFile( filename.GetRawPtr(), mode );
+    FILE * fp = sOpenFile( filename.ToRawPtr(), mode );
     if( 0 == fp )
     {
         close();
@@ -321,7 +321,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 
     // success
     setFile( fp );
-    setName( filename.GetRawPtr() );
+    setName( filename.ToRawPtr() );
     return true;
 
 #else
@@ -345,7 +345,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s' : %s",
-            fileNameTempl.GetRawPtr(), mode.GetRawPtr(), Errno2Str( errno ) );
+            fileNameTempl.ToRawPtr(), mode.ToRawPtr(), Errno2Str( errno ) );
         close();
         return false;
     }

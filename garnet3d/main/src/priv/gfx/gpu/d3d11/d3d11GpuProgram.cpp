@@ -79,15 +79,15 @@ GN::gfx::D3D11GpuProgramParameterDesc::~D3D11GpuProgramParameterDesc()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 {
-    mUniformArray       = mUniforms.GetRawPtr();
+    mUniformArray       = mUniforms.ToRawPtr();
     mUniformCount       = mUniforms.Size();
     mUniformArrayStride = sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.GetRawPtr();
+    mTextureArray       = mTextures.ToRawPtr();
     mTextureCount       = mTextures.Size();
     mTextureArrayStride = sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.GetRawPtr();
+    mAttributeArray       = mAttributes.ToRawPtr();
     mAttributeCount       = mAttributes.Size();
     mAttributeArrayStride = sizeof(mAttributes[0]);
 }
@@ -233,7 +233,7 @@ sUpdateConstData(
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
     SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
-    SafeArrayAccessor<UInt8>       dst( cb.GetRawPtr(), cb.Size() );
+    SafeArrayAccessor<UInt8>       dst( cb.ToRawPtr(), cb.Size() );
 
     // copy uniform data to system const buffer
     src.CopyTo(
@@ -344,7 +344,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mVs.constBufs[i];
             const DynaArray<UInt8> & data = mVs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
+            sUpdateConstBuffer( cxt, buf, data.ToRawPtr(), data.Size() );
         }
     }
 
@@ -355,7 +355,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mGs.constBufs[i];
             const DynaArray<UInt8> & data = mGs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
+            sUpdateConstBuffer( cxt, buf, data.ToRawPtr(), data.Size() );
         }
     }
 
@@ -366,7 +366,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
         {
             ID3D11Buffer           & buf = *mPs.constBufs[i];
             const DynaArray<UInt8> & data = mPs.constData[i];
-            sUpdateConstBuffer( cxt, buf, data.GetRawPtr(), data.Size() );
+            sUpdateConstBuffer( cxt, buf, data.ToRawPtr(), data.Size() );
         }
     }
 }

@@ -251,7 +251,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
-        StringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).GetRawPtr() );
+        StringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).ToRawPtr() );
 
     // success
     mOptions = ro;

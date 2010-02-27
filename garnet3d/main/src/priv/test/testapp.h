@@ -81,7 +81,7 @@ public:
         if( CONTINUE_EXECUTION == status )
         {
             extraArgc = mExtraArgs.Size();
-            extraArgv = mExtraArgs.GetRawPtr();
+            extraArgv = mExtraArgs.ToRawPtr();
         }
     }
 #endif
@@ -110,7 +110,7 @@ public:
 
         StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
 
-        GN_INFO(logger)( "Usage: %s [options]\n", executableName.GetRawPtr() );
+        GN_INFO(logger)( "Usage: %s [options]\n", executableName.ToRawPtr() );
         showStandardCommandLineOptions();
     }
 

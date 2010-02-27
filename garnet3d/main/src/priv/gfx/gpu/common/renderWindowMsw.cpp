@@ -116,9 +116,9 @@ void GN::gfx::RenderWindowMsw::Quit()
     // tru unregister window class
     if( !mClassName.Empty() )
     {
-        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.GetRawPtr(), mModuleInstance );
+        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.GetRawPtr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.ToRawPtr(), mModuleInstance ) );
         mClassName.Clear();
     }
 
@@ -238,10 +238,10 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     do
     {
         mClassName.Format( L"GNgfxRenderWindow_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.GetRawPtr(), &wcex ) );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.ToRawPtr(), &wcex ) );
 
     // register window class
-    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.GetRawPtr(), mModuleInstance );
+    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
     wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
@@ -252,7 +252,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.GetRawPtr();
+    wcex.lpszClassName  = mClassName.ToRawPtr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
@@ -276,7 +276,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 wi
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.GetRawPtr(),
+        mClassName.ToRawPtr(),
         L"Garnet Render Window",
         style,
         mi.rcWork.left, mi.rcWork.top,

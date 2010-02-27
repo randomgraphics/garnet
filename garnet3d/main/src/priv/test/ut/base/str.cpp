@@ -1,7 +1,6 @@
 #include "../testCommon.h"
 #include <stdio.h>
 #include <string.h>
-#include <vector>
 #include <iostream>
 
 class StringTest : public CxxTest::TestSuite
@@ -238,15 +237,6 @@ public:
         TS_ASSERT( s1.Empty() );
         TS_ASSERT_EQUALS( 0, s1.Size() );
 
-        // toStl
-#if !GN_CYGWIN // cygwin has no support to std::wstring
-        std::wstring ws;
-        s2.ToSTL( ws );
-        TS_ASSERT_EQUALS( s2, ws.c_str() );
-        ws = s3.ToSTL();
-        TS_ASSERT_EQUALS( s3, ws.c_str() );
-#endif
-
         // []
         TS_ASSERT_EQUALS( L'h', s2[0] );
         TS_ASSERT_EQUALS( L'\0', s2[4] );
@@ -303,20 +293,20 @@ public:
         TS_ASSERT_EQUALS(  1, GN::StringCompare(L"abc",L"ABC") );
         TS_ASSERT_EQUALS( -1, GN::StringCompare(L"abc",L"abcd") );
 
-        TS_ASSERT_EQUALS(  0, GN::StringCompare( s1.GetRawPtr(), s2.GetRawPtr(), 0 ) );
-        TS_ASSERT_EQUALS(  0, GN::StringCompare( s1.GetRawPtr(), s2.GetRawPtr(), 1 ) );
-        TS_ASSERT_EQUALS( -1, GN::StringCompare( s1.GetRawPtr(), s2.GetRawPtr(), 2 ) );
-        TS_ASSERT_EQUALS(  0, GN::StringCompare( s4.GetRawPtr(), s5.GetRawPtr(), 4 ) );
-        TS_ASSERT_EQUALS( -1, GN::StringCompare( s4.GetRawPtr(), s5.GetRawPtr(), 5 ) );
+        TS_ASSERT_EQUALS(  0, GN::StringCompare( s1.ToRawPtr(), s2.ToRawPtr(), 0 ) );
+        TS_ASSERT_EQUALS(  0, GN::StringCompare( s1.ToRawPtr(), s2.ToRawPtr(), 1 ) );
+        TS_ASSERT_EQUALS( -1, GN::StringCompare( s1.ToRawPtr(), s2.ToRawPtr(), 2 ) );
+        TS_ASSERT_EQUALS(  0, GN::StringCompare( s4.ToRawPtr(), s5.ToRawPtr(), 4 ) );
+        TS_ASSERT_EQUALS( -1, GN::StringCompare( s4.ToRawPtr(), s5.ToRawPtr(), 5 ) );
 
-        TS_ASSERT( -1 == GN::StringCompareI<wchar_t>( 0, s1.GetRawPtr() ) );
-        TS_ASSERT( 1 == GN::StringCompareI<wchar_t>( s1.GetRawPtr(), 0 ) );
-        TS_ASSERT( 1 == GN::StringCompareI( s5.GetRawPtr(), s3.GetRawPtr() ) );
-        TS_ASSERT( 0 == GN::StringCompareI( s4.GetRawPtr(), s4.GetRawPtr() ) );
-        TS_ASSERT( 0 == GN::StringCompareI( s2.GetRawPtr(), s4.GetRawPtr() ) );
-        TS_ASSERT( 0 == GN::StringCompareI( s4.GetRawPtr(), s2.GetRawPtr() ) );
-        TS_ASSERT( -1 == GN::StringCompareI( s1.GetRawPtr(), s4.GetRawPtr() ) );
-        TS_ASSERT( 1 == GN::StringCompareI( s4.GetRawPtr(), s1.GetRawPtr() ) );
+        TS_ASSERT( -1 == GN::StringCompareI<wchar_t>( 0, s1.ToRawPtr() ) );
+        TS_ASSERT( 1 == GN::StringCompareI<wchar_t>( s1.ToRawPtr(), 0 ) );
+        TS_ASSERT( 1 == GN::StringCompareI( s5.ToRawPtr(), s3.ToRawPtr() ) );
+        TS_ASSERT( 0 == GN::StringCompareI( s4.ToRawPtr(), s4.ToRawPtr() ) );
+        TS_ASSERT( 0 == GN::StringCompareI( s2.ToRawPtr(), s4.ToRawPtr() ) );
+        TS_ASSERT( 0 == GN::StringCompareI( s4.ToRawPtr(), s2.ToRawPtr() ) );
+        TS_ASSERT( -1 == GN::StringCompareI( s1.ToRawPtr(), s4.ToRawPtr() ) );
+        TS_ASSERT( 1 == GN::StringCompareI( s4.ToRawPtr(), s1.ToRawPtr() ) );
 
     }
 

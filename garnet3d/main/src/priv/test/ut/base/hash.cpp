@@ -20,7 +20,7 @@ public:
         StrHashMap m;
 
         TS_ASSERT( m.empty() );
-        TS_ASSERT_EQUALS( 0, m.size() );
+        TS_ASSERT_EQUALS( 0, m.Size() );
     }
 
     void testEmptyMapIteration()

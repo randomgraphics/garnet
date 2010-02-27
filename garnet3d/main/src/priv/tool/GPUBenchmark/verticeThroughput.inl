@@ -91,7 +91,7 @@ struct DenseMesh
         AutoComPtr<ID3DXMesh> sysMesh;
         AutoComPtr<ID3DXBuffer> adjacency;
         GN_DX_CHECK_RETURN( D3DXLoadMeshFromXA(
-            filename.GetRawPtr(),
+            filename.ToRawPtr(),
             D3DXMESH_SYSTEMMEM,
             dev,
             &adjacency,
@@ -291,7 +291,7 @@ public:
             "radius = %f\n"
             "euler  = %f, %f\n"
             "eye    = %f, %f, %f",
-            getName().GetRawPtr(),
+            getName().ToRawPtr(),
             throughput,
             mGeometry.DRAW_COUNT,
             triangles,
@@ -326,7 +326,7 @@ public:
         mGeometry.draw();
 
         // draw statistics
-        scene::gAsciiFont.drawText( mThroughputStr.GetRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mThroughputStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

@@ -137,14 +137,14 @@ sCheckShaderTextures(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.GetRawPtr(),
+                shaderParameterName.ToRawPtr(),
                 shaderName );
             return false;
         }
         else if( effectDesc.textures.end() == effectDesc.textures.find( textureName ) )
         {
             GN_ERROR(sLogger)( "Invalid texture named '%s' is referenced in shader '%s'.",
-                shaderParameterName.GetRawPtr(),
+                shaderParameterName.ToRawPtr(),
                 shaderName );
             return false;
         }
@@ -175,14 +175,14 @@ sCheckShaderUniforms(
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.uniforms[shaderParameterName] )
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
-                shaderParameterName.GetRawPtr(),
+                shaderParameterName.ToRawPtr(),
                 shaderName );
             return false;
         }
         else if( effectDesc.uniforms.end() == effectDesc.uniforms.find( uniformName ) )
         {
             GN_ERROR(sLogger)( "Invalid uniform named '%s' is referenced in shader '%s'.",
-                shaderParameterName.GetRawPtr(),
+                shaderParameterName.ToRawPtr(),
                 shaderName );
             return false;
         }
@@ -424,8 +424,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Technique '%s' referencs non-exist shader name '%s' in pass %u",
-                    techName.GetRawPtr(),
-                    shaderName.GetRawPtr(),
+                    techName.ToRawPtr(),
+                    shaderName.ToRawPtr(),
                     ipass );
             }
 
@@ -437,8 +437,8 @@ GN::gfx::EffectResource::Impl::initTech(
                 GN_VERBOSE(sLogger)(
                     "Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
                     "is not supported by current graphics hardware.",
-                    techName.GetRawPtr(),
-                    shaderName.GetRawPtr(),
+                    techName.ToRawPtr(),
+                    shaderName.ToRawPtr(),
                     ipass );
                 return false;
             }
@@ -446,8 +446,8 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Shader '%s' referenced by technique '%s' in pass %u is not properly initialized",
-                    shaderName.GetRawPtr(),
-                    techName.GetRawPtr(),
+                    shaderName.ToRawPtr(),
+                    techName.ToRawPtr(),
                     ipass );
             }
 
@@ -505,7 +505,7 @@ GN::gfx::EffectResource::Impl::initTextures(
         if( tp.bindings.Empty() )
         {
             GN_WARN(sLogger)( "Unused texture parameter '%s' in effect '%s'.",
-                tp.parameterName.GetRawPtr(),
+                tp.parameterName.ToRawPtr(),
                 effectName() );
         }
 
@@ -561,7 +561,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
         if( up.bindings.Empty() )
         {
             GN_WARN(sLogger)( "Unused uniform parameter '%s' in effect '%s'.",
-                up.parameterName.GetRawPtr(),
+                up.parameterName.ToRawPtr(),
                 effectName() );
         }
 
@@ -689,7 +689,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
             fp->name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.GetRawPtr() );
+            xpr.errInfo.ToRawPtr() );
         return AutoRef<EffectResource>::NULLREF;
     }
     fp.Clear();

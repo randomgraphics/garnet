@@ -32,10 +32,8 @@ int main( int argc, const char * argv[] )
     if( 0 == n ) return 0;
 
     // build argument array
-    std::vector<std::string> results;
-    std::vector<pcrecpp::Arg*> args;
-    results.resize( (size_t)n );
-    args.resize( n );
+    DynaArray<std::string> results( (size_t)n );
+    DynaArray<pcrecpp::Arg*> args( (size_t)n );
     for( int i = 0; i < n; ++i )
     {
         args[i] = new pcrecpp::Arg(&results[i]);

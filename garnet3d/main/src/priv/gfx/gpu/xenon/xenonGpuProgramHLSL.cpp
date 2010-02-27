@@ -184,7 +184,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.name.GetRawPtr(),
+                    d.name.ToRawPtr(),
                     u->size(),
                     d.size );
             }
@@ -405,7 +405,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mUniformArray       = mUniforms.GetRawPtr();
+        mParamDesc.mUniformArray       = mUniforms.ToRawPtr();
         mParamDesc.mUniformCount       = mUniforms.Size();
         mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
@@ -414,7 +414,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonUniformParamDesc          & u1 = mUniforms[i];
             GpuProgramUniformParameterDesc & u2 = mUniforms[i];
-            u2.name = u1.name.GetRawPtr();
+            u2.name = u1.name.ToRawPtr();
         }
     }
 
@@ -424,7 +424,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mTextureArray       = mTextures.GetRawPtr();
+        mParamDesc.mTextureArray       = mTextures.ToRawPtr();
         mParamDesc.mTextureCount       = mTextures.Size();
         mParamDesc.mTextureArrayStride = sizeof(mTextures[0]);
 
@@ -433,7 +433,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonTextureParamDesc          & t1 = mTextures[i];
             GpuProgramTextureParameterDesc & t2 = mTextures[i];
-            t2.name = t1.name.GetRawPtr();
+            t2.name = t1.name.ToRawPtr();
         }
     }
 }

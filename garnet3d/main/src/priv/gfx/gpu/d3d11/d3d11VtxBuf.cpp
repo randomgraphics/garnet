@@ -58,7 +58,7 @@ void GN::gfx::D3D11VtxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11VtxBuf::readback( std::vector<UInt8> & data )
+void GN::gfx::D3D11VtxBuf::readback( DynaArray<UInt8> & data )
 {
     D3D11Buffer::readback( data );
 }

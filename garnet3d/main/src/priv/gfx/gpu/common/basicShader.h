@@ -59,8 +59,8 @@ namespace GN { namespace gfx
 
             // allocate buffer
             mBuffer.Resize( length );
-            GpuProgramDesc & copy = *(GpuProgramDesc*)mBuffer.GetRawPtr();
-            UInt8 * start = mBuffer.GetRawPtr();
+            GpuProgramDesc & copy = *(GpuProgramDesc*)mBuffer.ToRawPtr();
+            UInt8 * start = mBuffer.ToRawPtr();
             UInt8 * ptr = start;
 
             // copy header
@@ -92,9 +92,9 @@ namespace GN { namespace gfx
         {
             // copy input buffer
             mBuffer.Resize( length );
-            memcpy( mBuffer.GetRawPtr(), data, length );
+            memcpy( mBuffer.ToRawPtr(), data, length );
 
-            const char     * start = (const char *)mBuffer.GetRawPtr();
+            const char     * start = (const char *)mBuffer.ToRawPtr();
             const char     * end   = start + length;
             GpuProgramDesc & desc  = *(GpuProgramDesc*)start;
 
@@ -129,9 +129,9 @@ namespace GN { namespace gfx
             return true;
         }
 
-        const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.GetRawPtr(); }
+        const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.ToRawPtr(); }
 
-        virtual void         * data() const { return (void*)mBuffer.GetRawPtr(); }
+        virtual void         * data() const { return (void*)mBuffer.ToRawPtr(); }
         virtual size_t         size() const { return mBuffer.Size(); }
     };
 

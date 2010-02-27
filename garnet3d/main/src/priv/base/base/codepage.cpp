@@ -152,13 +152,13 @@ size_t GN::Mbs2Wcs( wchar_t * o, size_t os, const char * i, size_t is )
     {
         if( os > n )
         {
-            memcpy( o, wcs.GetRawPtr(), n );
+            memcpy( o, wcs.ToRawPtr(), n );
             GN_ASSERT( 0 == o[n-1] );
             return n;
         }
         else if( os > 0 )
         {
-            memcpy( o, wcs.GetRawPtr(), sizeof(wchar_t) * (os-1) );
+            memcpy( o, wcs.ToRawPtr(), sizeof(wchar_t) * (os-1) );
             o[os-1] = 0;
             return os;
         }

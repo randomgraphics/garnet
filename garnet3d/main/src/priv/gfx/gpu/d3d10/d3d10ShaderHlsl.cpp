@@ -512,7 +512,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         cb,
         0, // sub resource
         0, // box
-        syscopy.GetRawPtr(),
+        syscopy.ToRawPtr(),
         0,   // row pitch
         0 ); // slice pitch
 
@@ -523,7 +523,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         GN_ERROR(sLogger)( "fail to map constant buffer." );
         return;
     }
-    memcpy( data, syscopy.GetRawPtr(), syscopy.size() );
+    memcpy( data, syscopy.ToRawPtr(), syscopy.size() );
     cb->Unmap();
 #endif
 

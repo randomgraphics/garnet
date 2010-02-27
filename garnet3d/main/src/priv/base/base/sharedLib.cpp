@@ -50,14 +50,14 @@ bool GN::SharedLib::load( const char * libName )
         filename = libName;
 
     // load library
-    mHandle = SHLIB_LOAD( filename.GetRawPtr() );
+    mHandle = SHLIB_LOAD( filename.ToRawPtr() );
     if( 0 == mHandle )
     {
-        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.GetRawPtr(), SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.ToRawPtr(), SHLIB_ERROR() );
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load library '%s'.", filename.GetRawPtr() );
+    GN_TRACE(sLogger)( "Load library '%s'.", filename.ToRawPtr() );
 
     // success
     mFileName = filename;
@@ -77,7 +77,7 @@ void GN::SharedLib::free()
     {
         SHLIB_FREE( mHandle );
         mHandle = 0;
-        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.GetRawPtr() );
+        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.ToRawPtr() );
     }
 
     GN_UNGUARD;

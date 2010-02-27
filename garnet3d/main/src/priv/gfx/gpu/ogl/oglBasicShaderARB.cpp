@@ -59,7 +59,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
     ARBAutoDel autodel( program );
 
     // trim leading spaces in shader code
-    const char * ptr = code.GetRawPtr();
+    const char * ptr = code.ToRawPtr();
     GLsizei      len = (GLsizei)code.Size();
     while( len > 0 &&
         ( ' '==*ptr || '\t' == *ptr || '\n' == *ptr ) )
@@ -85,7 +85,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
             "character(%d)\n"
             "%s\n"
             "=========================================================\n",
-            code.GetRawPtr(), errPos, errStr );
+            code.ToRawPtr(), errPos, errStr );
         return false;
     }
 

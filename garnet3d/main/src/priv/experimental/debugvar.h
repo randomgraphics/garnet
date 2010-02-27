@@ -43,7 +43,7 @@ namespace GN
 
         size_t       getSize() const { return mValue.Size(); }
 
-        const void * getValue() const { return mValue.GetRawPtr(); }
+        const void * getValue() const { return mValue.ToRawPtr(); }
 
         const StrA & getName() const { return mName; }
 

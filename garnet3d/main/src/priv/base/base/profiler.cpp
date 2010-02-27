@@ -80,7 +80,7 @@ GN::ProfilerManager::~ProfilerManager()
     // print profile result
     StrA s;
     toString( s );
-    printf( "%s\n", s.GetRawPtr() );
+    printf( "%s\n", s.ToRawPtr() );
 #endif
 }
 
@@ -107,12 +107,12 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
-            i->first.GetRawPtr(),
+            i->first.ToRawPtr(),
             t.count,
-            sTime2Str( t.timesum ).GetRawPtr(),
-            sTime2Str( t.timesum / t.count ).GetRawPtr(),
-            sTime2Str( t.timemin ).GetRawPtr(),
-            sTime2Str( t.timemax ).GetRawPtr() );
+            sTime2Str( t.timesum ).ToRawPtr(),
+            sTime2Str( t.timesum / t.count ).ToRawPtr(),
+            sTime2Str( t.timemin ).ToRawPtr(),
+            sTime2Str( t.timemax ).ToRawPtr() );
     }
     rval +=
         "=====================================================================\n"

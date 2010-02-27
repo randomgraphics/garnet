@@ -113,11 +113,11 @@ void GN::gfx::D3D11Buffer::update( size_t offset, size_t bytes, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Buffer::readback( std::vector<UInt8> & data )
+void GN::gfx::D3D11Buffer::readback( DynaArray<UInt8> & data )
 {
     PIXPERF_FUNCTION_EVENT();
 
-    data.clear();
+    data.Clear();
 
     GN_UNIMPL();
 }

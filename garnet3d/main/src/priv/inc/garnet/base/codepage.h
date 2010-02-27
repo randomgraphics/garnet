@@ -151,7 +151,7 @@ namespace GN
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline void
-    Wcs2Mbs( StrA & o, const StrW & i ) { return Wcs2Mbs( o, i.GetRawPtr(), i.Size() ); }
+    Wcs2Mbs( StrA & o, const StrW & i ) { return Wcs2Mbs( o, i.ToRawPtr(), i.Size() ); }
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
@@ -163,7 +163,7 @@ namespace GN
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
-    Wcs2Mbs( const StrW & i ) { return Wcs2Mbs( i.GetRawPtr(), i.Size() ); }
+    Wcs2Mbs( const StrW & i ) { return Wcs2Mbs( i.ToRawPtr(), i.Size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string.
@@ -195,7 +195,7 @@ namespace GN
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline void
-    Mbs2Wcs( StrW & o, const StrA & i ) { return Mbs2Wcs( o, i.GetRawPtr(), i.Size() ); }
+    Mbs2Wcs( StrW & o, const StrA & i ) { return Mbs2Wcs( o, i.ToRawPtr(), i.Size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string
@@ -207,7 +207,7 @@ namespace GN
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline StrW
-    Mbs2Wcs( const StrA & i ) { return Mbs2Wcs( i.GetRawPtr(), i.Size() ); }
+    Mbs2Wcs( const StrA & i ) { return Mbs2Wcs( i.ToRawPtr(), i.Size() ); }
 }
 
 // *****************************************************************************

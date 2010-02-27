@@ -188,7 +188,7 @@ namespace GN
                 }
                 else
                 {
-                    if( 0 == StringCompareI( name.GetRawPtr(), a->name.GetRawPtr() ) ) return a;
+                    if( 0 == StringCompareI( name.ToRawPtr(), a->name.ToRawPtr() ) ) return a;
                 }
             }
             return NULL;
@@ -210,7 +210,7 @@ namespace GN
                 }
                 else
                 {
-                    if( 0 == StringCompareI( name.GetRawPtr(), e->name.GetRawPtr() ) ) return e;
+                    if( 0 == StringCompareI( name.ToRawPtr(), e->name.ToRawPtr() ) ) return e;
                 }
             }
             return NULL;
@@ -254,15 +254,15 @@ namespace GN
             PooledAttrib( XmlDocument & d ) : XmlAttrib(d) {}
         };
 
-        std::vector<XmlNode*>      mNodes;
-        std::vector<PooledAttrib*> mAttribs;
+        DynaArray<XmlNode*>      mNodes;
+        DynaArray<PooledAttrib*> mAttribs;
 
     public:
 
         ///
         /// ctor
         ///
-        XmlDocument() { mNodes.reserve(256); mAttribs.reserve(256); }
+        XmlDocument() { mNodes.Reserve(256); mAttribs.Reserve(256); }
 
         ///
         /// dtor
@@ -335,7 +335,7 @@ namespace GN
                 fp.name(),
                 xpr.errLine,
                 xpr.errColumn,
-                xpr.errInfo.GetRawPtr() );
+                xpr.errInfo.ToRawPtr() );
             return false;
         }
         GN_ASSERT( xpr.root );
@@ -353,7 +353,7 @@ namespace GN
         GN_GUARD;
 
         static Logger * sLogger = GetLogger( "GN.base.xml" );
-        GN_INFO(sLogger)( "Load '%s'", filename.GetRawPtr() );
+        GN_INFO(sLogger)( "Load '%s'", filename.ToRawPtr() );
 
         AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;

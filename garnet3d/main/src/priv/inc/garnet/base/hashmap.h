@@ -61,16 +61,16 @@ namespace GN
 
             VALUE & operator->()
             {
-                GN_ASSERT( mIdx1 < mMap->mValues.size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
+                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].Size() );
 
                 mMap->mValues[mIdx1].values[mIdx2];
             }
 
             const VALUE & operator->() const
             {
-                GN_ASSERT( mIdx1 < mMap->mValues.size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
+                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].Size() );
                 mMap->mValues[mIdx1].values[mIdx2];
             }
 
@@ -106,22 +106,22 @@ namespace GN
             /// prefix plus operator
             const Iterator & operator++() const
             {
-                GN_ASSERT( mIdx1 < mMap->mValues.size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].values.size() );
+                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].values.Size() );
 
                 ++mIdx2;
-                if( mIdx2 < mMap->mValues[mIdx1].values.size() ) return *this;
+                if( mIdx2 < mMap->mValues[mIdx1].values.Size() ) return *this;
 
                 mIdx2 = 0;
                 do {
 
                     ++mIdx1;
 
-                    if( mIdx1 < mMap->mValues.size() && mIdx2 < mMap->mValues[mIdx1].values.size() )
+                    if( mIdx1 < mMap->mValues.Size() && mIdx2 < mMap->mValues[mIdx1].values.Size() )
                     {
                         return *this;
                     }
-                } while( mIdx1 < mMap->mValues.size() );
+                } while( mIdx1 < mMap->mValues.Size() );
 
                 // reach the end of the hash map
                  mMap = 0;
@@ -151,9 +151,9 @@ namespace GN
 
         Iterator begin()
         {
-            for( size_t idx1 = 0; idx1 < mValues.size(); ++idx1 )
+            for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
             {
-                if( mValues[idx1].values.size() > 0 )
+                if( mValues[idx1].values.Size() > 0 )
                 {
                     return Iterator( this, idx1, 0 );
                 }
@@ -163,9 +163,9 @@ namespace GN
 
         ConstIterator begin() const
         {
-            for( size_t idx1 = 0; idx1 < mValues.size(); ++idx1 )
+            for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
             {
-                if( mValues[idx1].values.size() > 0 )
+                if( mValues[idx1].values.Size() > 0 )
                 {
                     return Iterator( this, idx1, 0 );
                 }
@@ -175,7 +175,7 @@ namespace GN
 
         void Clear()
         {
-            mValues.resize( HASH_MAP_PRIMARY_ARRAY[0] );
+            mValues.Resize( HASH_MAP_PRIMARY_ARRAY[0] );
             mPrimIndex = 0;
             mCount = 0;
         }
@@ -196,22 +196,22 @@ namespace GN
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.size() );
+            GN_ASSERT( N == mValues.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
             const HashItem & hi = mValues[k];
 
             for(
-                typename std::vector<PairType>::const_iterator i = hi.values.begin();
-                i != hi.values.end();
-                ++i )
+                const PairType * p = hi.values.Begin();
+                p != hi.values.End();
+                ++p )
             {
-                if( EQUAL_FUNC( i->first, key ) )
+                if( EQUAL_FUNC( p->first, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
-                    return const_cast<VALUE*>(&i->second);
+                    return const_cast<VALUE*>(&p->second);
                 }
             }
 
@@ -223,18 +223,18 @@ namespace GN
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.size() );
+            GN_ASSERT( N == mValues.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
             for(
-                typename std::vector<PairType>::iterator i = hi.values.begin();
-                i != hi.values.end();
-                ++i )
+                const PairType * p = hi.values.Begin();
+                p != hi.values.End();
+                ++p )
             {
-                if( EQUAL_FUNC( i->first, key ) )
+                if( EQUAL_FUNC( p->first, key ) )
                 {
                     // redundent key
                     return false;
@@ -242,49 +242,49 @@ namespace GN
             }
 
             // insert new value
-            hi.values.push_back( PairType(key,value) );
+            hi.values.Append( PairType(key,value) );
             ++mCount;
             if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
-                mValues.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
+                mValues.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
             }
 
             return true;
         }
 
-        void remove( const KEY & key )
+        void RemoveKey( const KEY & key )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.size() );
+            GN_ASSERT( N == mValues.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
             for(
-                typename std::vector<PairType>::iterator i = hi.values.begin();
-                i != hi.values.end();
-                ++i )
+                PairType * p = hi.values.Begin();
+                p != hi.values.End();
+                ++p )
             {
-                if( EQUAL_FUNC( i->first, key ) )
+                if( EQUAL_FUNC( p->first, key ) )
                 {
                     // remove exisiting value
                     GN_ASSERT( mCount > 0 );
-                    hi.values.erase( i );
+                    hi.values.EraseItem( p );
                     --mCount;
                     return;
                 }
             }
         }
 
-        void remove( const VALUE & )
+        void RemoveValue( const VALUE & )
         {
             GN_UNIMPL();
         }
 
-        size_t size() const { return mCount; }
+        size_t Size() const { return mCount; }
 
         //@}
 
@@ -295,34 +295,34 @@ namespace GN
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.size() );
+            GN_ASSERT( N == mValues.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
             HashItem & hi = mValues[k];
 
             for(
-                typename std::vector<PairType>::iterator i = hi.values.begin();
-                i != hi.values.end();
-                ++i )
+                PairType * p = hi.values.Begin();
+                p != hi.values.End();
+                ++p )
             {
-                if( EQUAL_FUNC( i->first, key ) )
+                if( EQUAL_FUNC( p->first, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
-                    return i->second;
+                    return p->second;
                 }
             }
 
             // not found, insert new value
-            hi.values.push_back( PairType(key,VALUE()) );
+            hi.values.Append( PairType(key,VALUE()) );
             ++mCount;
             if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
-                mValues.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
+                mValues.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
             }
-            return hi.values.back().second;
+            return hi.values.Back().second;
         }
 
         //@}
@@ -333,12 +333,12 @@ namespace GN
 
         struct HashItem
         {
-            std::vector<PairType> values;
+            DynaArray<PairType> values;
         };
 
         size_t                mPrimIndex;
         size_t                mCount;
-        std::vector<HashItem> mValues;
+        DynaArray<HashItem> mValues;
 
     private:
 

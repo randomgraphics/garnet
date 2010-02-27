@@ -52,7 +52,7 @@ namespace GN { namespace gfx
 
         ID3D10Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
         void           update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        void           readback( std::vector<UInt8> & data );
+        void           readback( DynaArray<UInt8> & data );
 
         //@}
 
@@ -106,7 +106,7 @@ namespace GN { namespace gfx
     public:
 
         virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( std::vector<UInt8> & data );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions
@@ -159,7 +159,7 @@ namespace GN { namespace gfx
     public:
 
         virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( std::vector<UInt8> & data );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions

@@ -108,7 +108,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrA & t ) : s(t) {}
         /** convert to string */
-        const char *asString() const { return s.GetRawPtr(); }
+        const char *asString() const { return s.ToRawPtr(); }
     };
 
     ///
@@ -122,7 +122,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrW & t ) : s(GN::Wcs2Mbs(t)) {}
         /** convert to string */
-        const char *asString() const { return s.GetRawPtr(); }
+        const char *asString() const { return s.ToRawPtr(); }
     };
 
     ///
@@ -136,7 +136,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const wchar_t * t ) : s(GN::Wcs2Mbs(t,0)) {}
         /** convert to string */
-        const char *asString() const { return s.GetRawPtr(); }
+        const char *asString() const { return s.ToRawPtr(); }
     };
 }
 

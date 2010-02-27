@@ -12,7 +12,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.GetRawPtr(); *s; ++s )
+    for( const char * s = in.ToRawPtr(); *s; ++s )
     {
         if( '\n' == *s )
         {
@@ -47,7 +47,7 @@ bool GN::gfx::CgShader::Init(
     GN_STDCLASS_INIT( GN::gfx::CgShader, () );
 
     // create program
-    mProgram = cgCreateProgram( context, CG_SOURCE, code.GetRawPtr(), profile, entry.GetRawPtr(), args );
+    mProgram = cgCreateProgram( context, CG_SOURCE, code.ToRawPtr(), profile, entry.ToRawPtr(), args );
     if( !mProgram )
     {
         CGerror err;
@@ -63,7 +63,7 @@ bool GN::gfx::CgShader::Init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                sAddLineCount( code ).GetRawPtr(),
+                sAddLineCount( code ).ToRawPtr(),
                 cgGetLastListing(context) );
         }
         return Failure();
@@ -80,8 +80,8 @@ bool GN::gfx::CgShader::Init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        sAddLineCount( code ).GetRawPtr(),
-        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).GetRawPtr() );
+        sAddLineCount( code ).ToRawPtr(),
+        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).ToRawPtr() );
 
     // success
     mContext = context;

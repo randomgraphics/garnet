@@ -135,7 +135,7 @@ GN::CECImplMSWIN::convert(
 
         /*errno_t err = ::_mbstowcs_s_l(
             &converted,
-            tempBuffer.GetRawPtr(),
+            tempBuffer.ToRawPtr(),
             tempBuffer.size(),
             (const char *)sourceBuffer,
             sourceBufferSizeInBytes,
@@ -148,8 +148,8 @@ GN::CECImplMSWIN::convert(
             (const char *)sourceBuffer,
             ((const char *)sourceBuffer)+sourceBufferSizeInBytes,
             srcnext,
-            tempBuffer.GetRawPtr(),
-            tempBuffer.GetRawPtr() + tempBuffer.Size(),
+            tempBuffer.ToRawPtr(),
+            tempBuffer.ToRawPtr() + tempBuffer.Size(),
             tempnext );
 
         if( std::codecvt_base::error == err )
@@ -158,9 +158,9 @@ GN::CECImplMSWIN::convert(
             return 0;
         }
 
-        converted = tempnext - tempBuffer.GetRawPtr();
+        converted = tempnext - tempBuffer.ToRawPtr();
 
-        sourceBuffer = tempBuffer.GetRawPtr();
+        sourceBuffer = tempBuffer.ToRawPtr();
         sourceBufferSizeInBytes = converted * sizeof(wchar_t);
     }
     else if( mEncodingFrom == CharacterEncodingConverter::UTF16 ||

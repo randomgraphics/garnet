@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "imageTGA.h"
 
+using namespace GN;
+
 // TODO: move to endian.h
 #define GN_SWAP_ENDIAN_8IN16(x) ((((x)&0xFF)<<8) | (((x)&0xFF00)>>8))
 
@@ -386,10 +388,10 @@ bool TGAReader::readImage( void * o_data )
     id.u8 = header.descriptor;
 
     // read image to temporary buffer, if image is flipped and/or interleaved.
-    std::vector<UInt8> tempBuf;
+    DynaArray<UInt8> tempBuf;
     if( 0 != id.interleaved || 0 == id.flip )
     {
-        tempBuf.resize( numPixels * mOutputBytesPerPixel );
+        tempBuf.Resize( numPixels * mOutputBytesPerPixel );
         dst = &tempBuf[0];
     }
 

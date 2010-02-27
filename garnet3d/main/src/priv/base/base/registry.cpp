@@ -36,7 +36,7 @@ GN::Registry::ItemKey GN::Registry::set(
     }
     else
     {
-        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.GetRawPtr() );
+        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.ToRawPtr() );
         return 0;
     }
 
@@ -58,7 +58,7 @@ void GN::Registry::importFromStr( const StrA & s )
     static const char * pattern = "[\n\t ]*(\\w+)[\t ]*=[\t ]*(\\w*)";
     pcrecpp::RE re( pattern );
 
-    pcrecpp::StringPiece sp( s.GetRawPtr(), (int)s.Size() );
+    pcrecpp::StringPiece sp( s.ToRawPtr(), (int)s.Size() );
 
     std::string name, value;
     while( re.FindAndConsume( &sp, &name, &value ) )
