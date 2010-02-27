@@ -328,4 +328,36 @@ public:
         s1 = GN::Wcs2Mbs(s2);
         TS_ASSERT_EQUALS( s1, "wzyx" );
     }
+
+    void testStr2Int()
+    {
+        using namespace GN;
+
+        UInt8 u8;
+        TS_ASSERT( !String2Integer( u8, "-1" ) );
+        TS_ASSERT( String2Integer( u8, "0" ) ); TS_ASSERT_EQUALS( u8, 0 );
+        TS_ASSERT( String2Integer( u8, "255" ) ); TS_ASSERT_EQUALS( u8, 255 );
+        TS_ASSERT( !String2Integer( u8, "256" ) );
+
+        SInt8 s8;
+        TS_ASSERT( !String2Integer( s8, "-129" ) );
+        TS_ASSERT( String2Integer( s8, "-128" ) ); TS_ASSERT_EQUALS( s8, -128 );
+        TS_ASSERT( String2Integer( s8, "127" ) ); TS_ASSERT_EQUALS( s8, 127 );
+        TS_ASSERT( !String2Integer( s8, "128" ) );
+
+        UInt64 u64;
+        TS_ASSERT( !String2Integer( u64, "-1" ) );
+        TS_ASSERT( String2Integer( u64, "0" ) ); TS_ASSERT_EQUALS( u64, 0 );
+        TS_ASSERT( String2Integer( u64, "0xFFFFFFFFFFFFFFFF", 16 ) ); TS_ASSERT_EQUALS( u64, 0xFFFFFFFFFFFFFFFF );
+        TS_ASSERT( !String2Integer( u64, "0x10000000000000000", 16 ) );
+
+
+        const SInt64 i64min = (-0x7fffffffffffffff - 1);
+        const SInt64 i64max = 0x7fffffffffffffff; // Note: 0x7FFFFFFFFFFFFFFF = 9223372036854775807
+        SInt64 s64;
+        TS_ASSERT( !String2Integer( s64, "-9223372036854775809" ) );
+        TS_ASSERT( String2Integer( s64, "-9223372036854775808" ) ); TS_ASSERT_EQUALS( s64, i64min );
+        TS_ASSERT( String2Integer( s64, "9223372036854775807" ) ); TS_ASSERT_EQUALS( s64, i64max );
+        TS_ASSERT( !String2Integer( s64, "9223372036854775808" ) );
+    }
 };

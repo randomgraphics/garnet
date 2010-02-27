@@ -78,16 +78,16 @@ size_t GN::String2SignedInteger( SInt64 & result, int bits, int base, const char
     if( base < 2 ) return 0;
     if( IsStringEmpty(s) ) return 0;
 
+    errno = 0;
+
     char * e;
+
     SInt64 s64 = _strtoi64( s, &e, base );
 
-    if( 0 != errno || 0 == s64 && s == e )
-    {
-        return 0;
-    }
+    if( 0 != errno || 0 == s64 && s == e ) return 0;
 
     // check for overflow
-    SInt64 maxval = ( 1 << ( bits - 1 ) ) - 1;
+    SInt64 maxval = ( 1LL << ( bits - 1 ) ) - 1;
     SInt64 minval = ~maxval;
     if( s64 < minval || s64 > maxval ) return 0;
 
@@ -106,16 +106,20 @@ size_t GN::String2UnsignedInteger( UInt64 & result, int bits, int base, const ch
     if( base < 2 ) return 0;
     if( IsStringEmpty(s) ) return 0;
 
+    errno = 0;
+
     char * e;
     UInt64 u64 = _strtoui64( s, &e, base );
 
-    if( 0 != errno || 0 == u64 && s == e )
-    {
-        return 0;
-    }
+    if( 0 != errno || 0 == u64 && s == e ) return 0;
+
+    // Note: _strtoui64 has bug that parses -1 as max unsigned integer.
+    const char * ptr = s;
+    while( ptr < e && ( ' ' == *ptr || '\t' == *ptr ) ) ++ptr;
+    if( ptr < e && *ptr == '-' ) return 0;
 
     // check for overflow
-    UInt64 maxval = ( 1 << bits ) - 1;
+    UInt64 maxval = ( 0xFFFFFFFFFFFFFFFF << (64-bits) ) >> (64-bits);
     if( u64 > maxval ) return 0;
 
     // success
@@ -180,8 +184,11 @@ size_t GN::String2FloatArray( float * buffer, size_t maxCount, const char * str,
         if( 0 == n ) break;
 
         // next float
-        ++buffer;
         str += n;
+        ++buffer;
+
+        // skip float separators
+        while( '\n' == *str || '\t' == *str || ' ' == *str || ',' == *str ) ++str;
     }
 
     return buffer - bufbegin;
