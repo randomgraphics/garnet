@@ -86,7 +86,9 @@ bool GN::Variant::getf( float & f ) const
 //
 bool GN::Variant::getp( void * & p ) const
 {
-    return 0 != GN::String2Integer<size_t>( *(size_t*&)p, mValue.ToRawPtr() );
+    bool b = 0 != GN::String2Integer<size_t>( (size_t&)p, mValue.ToRawPtr() );
+    if( !b ) p = NULL;
+    return b;
 }
 //
 bool GN::Variant::getv( Vector4f & v ) const
