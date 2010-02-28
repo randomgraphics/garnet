@@ -4,7 +4,7 @@ import sys
 
 # build case list
 cases = []
-cases += GN.glob( 'base/*.cpp' )
+cases += GN.glob( 'base/dicttest.cpp' )
 cases += GN.glob( 'gfx/*.cpp' )
 
 # generate cxxtest glue file.
@@ -17,7 +17,7 @@ cxxtest = Command(
 Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
-cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
+cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp', 'dict.cpp'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )
 
 # disable signed compare with unsigned warning of GCC
