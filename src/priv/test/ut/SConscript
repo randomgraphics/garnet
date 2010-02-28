@@ -4,7 +4,7 @@ import sys
 
 # build case list
 cases = []
-cases += GN.glob( 'base/dicttest.cpp' )
+cases += GN.glob( 'base/*.cpp' )
 cases += GN.glob( 'gfx/*.cpp' )
 
 # generate cxxtest glue file.
