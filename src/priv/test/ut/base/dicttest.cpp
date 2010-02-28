@@ -1,4 +1,4 @@
-#include "../dict.h"
+#include "../testCommon.h"
 
 class TestDict : public CxxTest::TestSuite
 {

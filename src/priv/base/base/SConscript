@@ -7,6 +7,7 @@ sources = [
 	'codepageMSWIN.cpp',
 	'codepageXenon.cpp',
 	'debug.cpp',
+	'dict.cpp',
 	'endian.cpp',
 	'file.cpp',
 	'hashmap.cpp',

@@ -17,7 +17,7 @@ cxxtest = Command(
 Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
-cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp', 'dict.cpp'] )
+cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )
 
 # disable signed compare with unsigned warning of GCC

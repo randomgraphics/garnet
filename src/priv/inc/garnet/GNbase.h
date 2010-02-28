@@ -193,6 +193,9 @@ namespace GN
 // array types
 #include "base/array.h"
 
+// dictionary type
+#include "base/dict.h"
+
 // hash map
 #include "base/hashmap.h"
 
