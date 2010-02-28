@@ -1,5 +1,4 @@
-#include "garnet/GNbase.h"
-#include "dict.h"
+#include "pch.h"
 #include <map>
 
 using namespace GN;
@@ -185,14 +184,9 @@ public:
     {
     }
 
-    ConstIterator Begin() const
+    Iterator Begin() const
     {
         return sMakeIter( const_cast<MapType&>(mMap).begin() );
-    }
-
-    Iterator Begin()
-    {
-        return sMakeIter( mMap.begin() );
     }
 
     void Clear()
@@ -215,14 +209,9 @@ public:
         return mMap.empty();
     }
 
-    ConstIterator End() const
+    Iterator End() const
     {
         return sMakeIter( const_cast<MapType&>(mMap).end() );
-    }
-
-    Iterator End()
-    {
-        return sMakeIter( mMap.end() );
     }
 
     void * Find( const void * key )
@@ -309,15 +298,13 @@ GN::TypelessDict::~TypelessDict()
     delete mImpl;
 }
 
-GN::TypelessDict::ConstIterator   GN::TypelessDict::Begin() const { return mImpl->Begin(); }
-GN::TypelessDict::Iterator        GN::TypelessDict::Begin() { return mImpl->Begin(); }
-void                              GN::TypelessDict::Clear() { return mImpl->Clear(); }
-void                              GN::TypelessDict::CopyFrom( const TypelessDict & d ) { return mImpl->CopyFrom( d ); }
-bool                              GN::TypelessDict::Empty() const { return mImpl->Empty(); }
-GN::TypelessDict::ConstIterator   GN::TypelessDict::End() const { return mImpl->End(); }
-GN::TypelessDict::Iterator        GN::TypelessDict::End() { return mImpl->End(); }
-void *                            GN::TypelessDict::Find( const void * key ) const { return mImpl->Find( key ); }
-void *                            GN::TypelessDict::FindOrInsert( const void * key ) { return mImpl->FindOrInsert( key ); }
-bool                              GN::TypelessDict::Insert( const void * key, const void * value ) { return mImpl->Insert( key, value ); }
-void                              GN::TypelessDict::RemoveKey( const void * key ) { return mImpl->RemoveKey( key ); }
-size_t                            GN::TypelessDict::Size() const { return mImpl->Size(); }
+GN::TypelessDict::Iterator  GN::TypelessDict::Begin() const { return mImpl->Begin(); }
+void                        GN::TypelessDict::Clear() { return mImpl->Clear(); }
+void                        GN::TypelessDict::CopyFrom( const TypelessDict & d ) { return mImpl->CopyFrom( d ); }
+bool                        GN::TypelessDict::Empty() const { return mImpl->Empty(); }
+GN::TypelessDict::Iterator  GN::TypelessDict::End() const { return mImpl->End(); }
+void *                      GN::TypelessDict::Find( const void * key ) const { return mImpl->Find( key ); }
+void *                      GN::TypelessDict::FindOrInsert( const void * key ) { return mImpl->FindOrInsert( key ); }
+bool                        GN::TypelessDict::Insert( const void * key, const void * value ) { return mImpl->Insert( key, value ); }
+void                        GN::TypelessDict::RemoveKey( const void * key ) { return mImpl->RemoveKey( key ); }
+size_t                      GN::TypelessDict::Size() const { return mImpl->Size(); }

@@ -8,39 +8,43 @@
 
 namespace GN
 {
+    /// Typeless dictionary class.
     class TypelessDict
     {
     public:
 
+        /// Typeless iterator clas
         class Iterator
         {
             UInt8 mBuf[64];
 
         public:
 
-            Iterator();
-            Iterator( const Iterator & );
-            ~Iterator();
+            Iterator(); ///< ctor
+            Iterator( const Iterator & ); ///< copy ctor
+            ~Iterator(); ///< dtor
 
-            const void * Key() const;
-            void       * Value() const;
-            void         GoToNext();
-            bool         Equal( const Iterator & rhs ) const;
+            const void * Key() const;   ///< get pointer to key
+            void       * Value() const; ///< get pointer to value.
+            void         GoToNext(); ///< move iterator to next item
+            bool         Equal( const Iterator & rhs ) const; // check equality of 2 iterators
 
-            Iterator & operator=( const Iterator & rhs );
+            Iterator & operator=( const Iterator & rhs ); // assign operator
         };
 
-        typedef const Iterator ConstIterator;
-
+        /// Type traits
         struct TypeTraits
         {
+            ///@{
             typedef void (*CtorFunc)(void*);
             typedef void (*CopyCtorFunc)(void*, const void *);
             typedef void (*DtorFunc)(void*);
             typedef void (*AssignFunc)(void*, const void*);
             typedef bool (*EqualFunc)(const void*, const void*);
             typedef bool (*LessFunc)(const void*, const void*);
+            //@}
 
+            //@{
             size_t       size;
             CtorFunc     ctor;
             CopyCtorFunc cctor;
@@ -48,25 +52,27 @@ namespace GN
             AssignFunc   assign;
             EqualFunc    equal;
             LessFunc     less;
+            //@}
         };
+
+        //@{
 
         TypelessDict( TypeTraits key, TypeTraits value );
         TypelessDict( const TypelessDict & );
         ~TypelessDict();
 
-        ConstIterator   Begin() const;
-        Iterator        Begin();
+        Iterator        Begin() const;
         void            Clear();
         void            CopyFrom( const TypelessDict & );
         bool            Empty() const;
-        ConstIterator   End() const;
-        Iterator        End();
+        Iterator        End() const;
         void *          Find( const void * key ) const;
         void *          FindOrInsert( const void * key );
         bool            Insert( const void * key, const void * value );
         void            RemoveKey( const void * key );
         size_t          Size() const;
 
+        //@}
 
     private:
 
@@ -75,6 +81,7 @@ namespace GN
         Impl * mImpl;
     };
 
+    /// Dictionary template
     template<typename KEY_TYPE, typename VALUE_TYPE>
     class Dictionary
     {
@@ -86,6 +93,8 @@ namespace GN
             mutable TypelessDict::Iterator mTypelessIter;
 
         public:
+
+            //@{
 
             Iterator() {}
             Iterator( const Iterator & i ) : mTypelessIter(i.mTypelessIter) {}
@@ -104,6 +113,9 @@ namespace GN
 
             bool operator==( const Iterator & rhs ) const { return mTypelessIter.Equal( rhs.mTypelessIter ); }
             bool operator!=( const Iterator & rhs ) const { return !mTypelessIter.Equal( rhs.mTypelessIter ); }
+
+            //@}
+
         };
 
         /// ConstIterator class
@@ -113,9 +125,11 @@ namespace GN
 
         public:
 
+            //@{
+
             ConstIterator() {}
             ConstIterator( const ConstIterator & i ) : mTypelessIter(i.mTypelessIter) {}
-            ConstIterator( const TypelessDict::ConstIterator & i ) : mTypelessIter(i) {}
+            ConstIterator( const TypelessDict::Iterator & i ) : mTypelessIter(i) {}
 
             const KEY_TYPE   & Key() const { return *(const KEY_TYPE*)mTypelessIter.Key(); }
             const VALUE_TYPE & Value() const { return *(const VALUE_TYPE*)mTypelessIter.Value(); }
@@ -130,6 +144,8 @@ namespace GN
 
             bool operator==( const ConstIterator & rhs ) const { return mTypelessIter.Equal( rhs.mTypelessIter ); }
             bool operator!=( const ConstIterator & rhs ) const { return !mTypelessIter.Equql( rhs.mTypelessIter ); }
+
+            //@}
         };
 
         // public methods
