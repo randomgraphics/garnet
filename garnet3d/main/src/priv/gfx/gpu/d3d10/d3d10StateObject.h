@@ -341,7 +341,7 @@ namespace GN { namespace gfx
         ID3D10Device & dev() const { return mDevice; }
 
         /// get number of objects in cache
-        size_t size() const { return mCount; }
+        size_t Size() const { return mCount; }
 
         ///
         /// clear cache. Delete all state objects.
@@ -436,7 +436,7 @@ namespace GN { namespace gfx
             item->desc   = desc;
 
             // add to hash
-            mHashTable.insert( desc, item );
+            mHashTable.Insert( desc, item );
 
             // update LRU
             InsertToHead( item );

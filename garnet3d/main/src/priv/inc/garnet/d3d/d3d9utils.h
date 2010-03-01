@@ -231,7 +231,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     class D3D9RenderStateSaver
     {
         IDirect3DDevice9                  * m_Device;
-        std::map<D3DRENDERSTATETYPE, DWORD> m_Values;
+        GN::Dictionary<D3DRENDERSTATETYPE, DWORD> m_Values;
 
     public:
 
@@ -259,7 +259,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         void RestoreAllRenderStates()
         {
-            std::map<D3DRENDERSTATETYPE, DWORD>::const_iterator i;
+            GN::Dictionary<D3DRENDERSTATETYPE, DWORD>::const_iterator i;
             for( i = m_Values.begin(); i != m_Values.end(); ++i )
             {
                 D3DRENDERSTATETYPE type = i->first;

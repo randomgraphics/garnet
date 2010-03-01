@@ -15,9 +15,9 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
 // -----------------------------------------------------------------------------
 template<typename T>
 static inline const T *
-sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
+sFindNamedPtr( const GN::Dictionary<StrA,T> & container, const StrA & name )
 {
-    typename std::map<StrA,T>::const_iterator iter = container.find( name );
+    typename GN::Dictionary<StrA,T>::const_iterator iter = container.find( name );
     return ( container.end() == iter ) ? NULL : &iter->second;
 }
 
@@ -422,7 +422,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create texture nodes
-    for( std::map<StrA,ModelTextureDesc>::const_iterator i = textures.begin();
+    for( GN::Dictionary<StrA,ModelTextureDesc>::const_iterator i = textures.begin();
          i != textures.end();
          ++i )
     {
@@ -450,7 +450,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create uniform nodes
-    for( std::map<StrA,ModelUniformDesc>::const_iterator i = uniforms.begin();
+    for( GN::Dictionary<StrA,ModelUniformDesc>::const_iterator i = uniforms.begin();
          i != uniforms.end();
          ++i )
     {

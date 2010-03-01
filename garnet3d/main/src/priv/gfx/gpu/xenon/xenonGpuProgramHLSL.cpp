@@ -180,12 +180,12 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         // check parameter size
         if( getGpu().paramCheckEnabled() )
         {
-            if( u->size() != d.size )
+            if( u->Size() != d.size )
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
                     d.name.ToRawPtr(),
-                    u->size(),
+                    u->Size(),
                     d.size );
             }
         }

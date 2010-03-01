@@ -245,7 +245,7 @@ inline const GN::util::BitmapFont::FontSlot *
 GN::util::BitmapFont::getSlot( wchar_t ch )
 {
     // find font slot in slotmap
-    std::map<wchar_t,size_t>::iterator iter = mSlotMap.find(ch);
+    GN::Dictionary<wchar_t,size_t>::iterator iter = mSlotMap.find(ch);
     if( iter != mSlotMap.end() )
     {
         // found!
@@ -424,7 +424,7 @@ GN::util::BitmapFont::slotInit(
         }
 
         // Clear texture to pure black
-        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.ToRawPtr() );
+        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.Size(), texels.ToRawPtr() );
     }
 
     // success

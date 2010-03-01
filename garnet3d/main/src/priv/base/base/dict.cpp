@@ -68,7 +68,7 @@ struct TypeProxy
 
 typedef MapKeyValue<1> MapKey;
 typedef MapKeyValue<2> MapValue;
-typedef std::map<MapKey, MapValue> MapType;
+typedef GN::Dictionary<MapKey, MapValue> MapType;
 typedef TypeProxy<1> KeyProxy;
 typedef TypeProxy<2> ValueProxy;
 
@@ -249,7 +249,7 @@ public:
         return iter->second.Data();
     }
 
-    bool Insert( const void * key, const void * value )
+    bool Insert( const void * key, const void * value, Iterator * iter )
     {
         KeyProxy kp( mKeyTraits, key );
         ValueProxy vp( mValueTraits, value );
@@ -259,7 +259,12 @@ public:
 
         std::pair<MapType::iterator, bool> p = mMap.insert( std::make_pair(k, v) );
 
-        return p.second;
+        MapType::iterator & mi = p.first;
+        bool inserted = mi.second;
+
+        if( iter ) *iter = sMakeIter( mi );
+
+        return inserted;
     }
 
     void RemoveKey( const void * key )
@@ -271,7 +276,7 @@ public:
 
     size_t Size() const
     {
-        return mMap.size();
+        return mMap.Size();
     }
 };
 
@@ -305,6 +310,6 @@ bool                        GN::TypelessDict::Empty() const { return mImpl->Empt
 GN::TypelessDict::Iterator  GN::TypelessDict::End() const { return mImpl->End(); }
 void *                      GN::TypelessDict::Find( const void * key ) const { return mImpl->Find( key ); }
 void *                      GN::TypelessDict::FindOrInsert( const void * key ) { return mImpl->FindOrInsert( key ); }
-bool                        GN::TypelessDict::Insert( const void * key, const void * value ) { return mImpl->Insert( key, value ); }
+bool                        GN::TypelessDict::Insert( const void * key, const void * value, Iterator * iter ) { return mImpl->Insert( key, value, iter ); }
 void                        GN::TypelessDict::RemoveKey( const void * key ) { return mImpl->RemoveKey( key ); }
 size_t                      GN::TypelessDict::Size() const { return mImpl->Size(); }

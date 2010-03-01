@@ -21,7 +21,7 @@ namespace GN
         ///
         /// get binary size in bytes
         ///
-        virtual size_t size() const = 0;
+        virtual size_t Size() const = 0;
     };
 
     ///
@@ -38,7 +38,7 @@ namespace GN
 
         //@{
         virtual void * data() const { return (void*)mBuffer.ToRawPtr(); }
-        virtual size_t size() const { return mBuffer.Size(); }
+        virtual size_t Size() const { return mBuffer.Size(); }
         //@}
 
         /// resize the buffer

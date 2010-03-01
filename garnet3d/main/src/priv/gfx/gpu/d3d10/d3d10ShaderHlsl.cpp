@@ -454,7 +454,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_BOOL:
             if( !u.value.bools.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.bools.size() );
+                GN_ASSERT( uud.sizedw == u.value.bools.Size() );
                 src = &u.value.bools[0];
             }
             break;
@@ -462,7 +462,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_INT:
             if( !u.value.ints.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.ints.size() );
+                GN_ASSERT( uud.sizedw == u.value.ints.Size() );
                 src = &u.value.ints[0];
             }
             break;
@@ -470,7 +470,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_FLOAT:
             if( !u.value.floats.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.floats.size() );
+                GN_ASSERT( uud.sizedw == u.value.floats.Size() );
                 src = &u.value.floats[0];
             }
             break;
@@ -478,7 +478,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_VECTOR4:
             if( !u.value.vector4s.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.vector4s.size() * 4 );
+                GN_ASSERT( uud.sizedw == u.value.vector4s.Size() * 4 );
                 src = &u.value.vector4s[0];
             }
             break;
@@ -486,7 +486,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_MATRIX44:
             if( !u.value.matrix44s.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.matrix44s.size() * 16 );
+                GN_ASSERT( uud.sizedw == u.value.matrix44s.Size() * 16 );
                 src = &u.value.matrix44s[0];
             }
             break;
@@ -499,7 +499,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
 
     if( 0 == src ) return;
 
-    GN_ASSERT( uud.bufidx < constBufs.size() );
+    GN_ASSERT( uud.bufidx < constBufs.Size() );
     ID3D10Buffer * cb = constBufs[uud.bufidx];
     DynaArray<UInt8> & syscopy = constData[uud.bufidx];
 
@@ -523,7 +523,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         GN_ERROR(sLogger)( "fail to map constant buffer." );
         return;
     }
-    memcpy( data, syscopy.ToRawPtr(), syscopy.size() );
+    memcpy( data, syscopy.ToRawPtr(), syscopy.Size() );
     cb->Unmap();
 #endif
 

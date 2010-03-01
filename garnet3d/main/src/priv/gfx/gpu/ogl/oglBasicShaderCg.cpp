@@ -153,7 +153,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
     switch( u.value.type )
     {
         case UVT_VECTOR4 :
-            if( 1 == u.value.vector4s.size() )
+            if( 1 == u.value.vector4s.Size() )
             {
                 GN_CG_CHECK( cgGLSetParameter4fv(
                     param,
@@ -164,13 +164,13 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetParameterArray4f(
                     param,
                     0,
-                    (long)u.value.vector4s.size(),
+                    (long)u.value.vector4s.Size(),
                     u.value.vector4s[0] ) );
             }
             break;
 
         case UVT_MATRIX44 :
-            if( 1 == u.value.matrix44s.size() )
+            if( 1 == u.value.matrix44s.Size() )
             {
                 GN_CG_CHECK( cgGLSetMatrixParameterfr(
                     param,
@@ -181,13 +181,13 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetMatrixParameterArrayfr(
                     param,
                     0,
-                    (long)u.value.matrix44s.size(),
+                    (long)u.value.matrix44s.Size(),
                     u.value.matrix44s[0][0] ) );
             }
             break;
 
         case UVT_FLOAT :
-            if( 1 == u.value.floats.size() )
+            if( 1 == u.value.floats.Size() )
             {
                 GN_CG_CHECK( cgGLSetParameter1f(
                     param,
@@ -198,7 +198,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetParameterArray1f(
                     param,
                     0,
-                    (long)u.value.floats.size(),
+                    (long)u.value.floats.Size(),
                     &u.value.floats[0] ) );
             }
             break;

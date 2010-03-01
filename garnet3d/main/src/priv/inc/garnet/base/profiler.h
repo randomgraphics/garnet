@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 #include <float.h>
-#include <map>
 
 
 /// \name prof macros
@@ -139,12 +138,14 @@ namespace GN
 
             ScopeMutex<SpinLoop> lock( mMutex );
 
-            std::map<StrA,ProfilerTimerImpl>::iterator i = mTimers.find( name );
+            GN::Dictionary<StrA,ProfilerTimerImpl>::iterator i = mTimers.find( name );
             if( mTimers.end() != i ) return i->second;
 
             // create new timer
             ProfilerTimerImpl newTimer( mClock );
-            return mTimers.insert( std::make_pair( name, newTimer ) ).first->second;
+            TimerMap::Iterator iter;
+            mTimers.Insert( name, newTimer, &iter );
+            return iter.Value();
         }
 
         ///
@@ -174,9 +175,11 @@ namespace GN
             ~ProfilerTimerImpl() {}
         };
 
-        Clock                            mClock;
-        std::map<StrA,ProfilerTimerImpl> mTimers;
-        mutable SpinLoop                 mMutex;
+        typedef Dictionary<StrA,ProfilerTimerImpl> TimerMap;
+
+        Clock             mClock;
+        TimerMap          mTimers;
+        mutable SpinLoop  mMutex;
 
         // ********************************
         //   private functions

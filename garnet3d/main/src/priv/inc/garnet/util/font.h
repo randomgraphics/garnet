@@ -313,7 +313,7 @@ namespace GN { namespace util
         FontSlot                  * mFontSlots;
         size_t                      mMaxSlots;
         size_t                      mNumUsedSlots;  // number of used slots
-        std::map<wchar_t,size_t>    mSlotMap;       // map that convert charcode to slot index
+        GN::Dictionary<wchar_t,size_t>    mSlotMap;       // map that convert charcode to slot index
 
         // font textures
         TextureArray                mTextures;

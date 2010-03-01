@@ -494,7 +494,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     StrA basedir = fs::dirName( fp.name() );
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->size() );
+    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->Size() );
     size_t offset = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {

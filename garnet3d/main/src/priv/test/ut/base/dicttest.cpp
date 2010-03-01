@@ -19,8 +19,15 @@ public:
         d[1] = 2;
 
         // insert
-        TS_ASSERT( d.Insert( 2, 3 ) );
-        TS_ASSERT( !d.Insert( 2, 4 ) );
+        Dict::Iterator iter1, iter2;
+        TS_ASSERT( d.Insert( 2, 3, &iter1 ) );
+        TS_ASSERT( 2, iter1.Key() );
+        TS_ASSERT( 3, iter1.Value() );
+        TS_ASSERT( !d.Insert( 2, 4, &iter2 ) );
+        TS_ASSERT( 2, iter2.Key() );
+        TS_ASSERT( 3, iter2.Value() );
+        TS_ASSERT( iter1, iter2 );
+
         TS_ASSERT( !d.Empty() );
         TS_ASSERT_EQUALS( 3, d.Size() );
 

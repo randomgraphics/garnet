@@ -48,7 +48,7 @@ namespace GN { namespace gfx
     public:
 
         /// get ring buffer size
-        size_t size() const { return mSize; }
+        size_t Size() const { return mSize; }
 
         // post Quit message to ring buffer, unblock any blocked threads.
         void   postQuitMessage();

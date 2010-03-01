@@ -273,7 +273,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         switch( u.value.type )
         {
             case UVT_VECTOR4 :
-                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
+                for( size_t i = 0; i < u.value.vector4s.Size(); ++i )
                 {
                     GN_OGL_CHECK( glProgramEnvParameter4fvARB(
                         mTarget,
@@ -298,7 +298,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         switch( u.value.type )
         {
             case UVT_VECTOR4 :
-                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
+                for( size_t i = 0; i < u.value.vector4s.Size(); ++i )
                 {
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
                         mTarget,
@@ -308,7 +308,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
                 break;
 
             case UVT_MATRIX44 :
-                for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
+                for( size_t i = 0; i < u.value.matrix44s.Size(); ++i )
                 {
                     GLuint idx = (GLuint)( desc.index + i * 4 );
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
@@ -346,7 +346,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
         if( UVT_MATRIX44 == u.value.type )
         {
-            for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
+            for( size_t i = 0; i < u.value.matrix44s.Size(); ++i )
             {
                 GN_OGL_CHECK( glMatrixMode( (GLenum)(GL_MATRIX0_ARB+desc.index+i) ) );
                 GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(u.value.matrix44s[i])[0] ) );

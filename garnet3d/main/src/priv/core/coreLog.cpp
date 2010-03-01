@@ -544,9 +544,9 @@ namespace GN
         LoggerImpl      mRootLogger;
         LocalMutex      mMutex;
 
-        std::map<StrA,LoggerImpl*> mLoggers;
+        GN::Dictionary<StrA,LoggerImpl*> mLoggers;
 
-        static void sDeleteLogger( std::map<StrA,LoggerImpl*>::value_type & i ) { delete i.second; }
+        static void sDeleteLogger( GN::Dictionary<StrA,LoggerImpl*>::value_type & i ) { delete i.second; }
 
         LoggerImpl * findParent( const StrA & name )
         {
@@ -582,7 +582,7 @@ namespace GN
 			{
 			}
 
-			inline bool operator()( const std::map<StrA,LoggerImpl*>::value_type & i )
+			inline bool operator()( const GN::Dictionary<StrA,LoggerImpl*>::value_type & i )
 			{
 				return 0 == StringCompareI( mName.ToRawPtr(), i.first.ToRawPtr() );
 			}
@@ -623,7 +623,7 @@ namespace GN
             if( n.Empty() || 0 == StringCompareI( "ROOT", n.ToRawPtr() ) ) return &mRootLogger;
 
             // find for existing logger
-            std::map<StrA,LoggerImpl*>::const_iterator i = std::find_if(
+            GN::Dictionary<StrA,LoggerImpl*>::const_iterator i = std::find_if(
 				mLoggers.begin(),
 				mLoggers.end(),
 				CaseInsensitiveMatch(n) );

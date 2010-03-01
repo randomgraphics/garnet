@@ -3,7 +3,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-std::map<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
+GN::Dictionary<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
 
@@ -320,7 +320,7 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 
     //GN_TRACE(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    std::map<void*,WindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
+    GN::Dictionary<void*,WindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
 
     // call class specific window procedure
     if( msInstanceMap.end() == iter )

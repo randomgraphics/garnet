@@ -3,7 +3,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-std::map<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
+GN::Dictionary<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.MSW");
 
@@ -409,7 +409,7 @@ GN::gfx::RenderWindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARA
 
     //GN_TRACE( "GN::gfx::RenderWindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    std::map<void*,RenderWindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
+    GN::Dictionary<void*,RenderWindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
 
     // call class specific window procedure
     if( msInstanceMap.end() == iter )
@@ -435,7 +435,7 @@ GN::gfx::RenderWindowMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
 
     //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    std::map<void*,RenderWindowMsw*>::const_iterator iter =
+    GN::Dictionary<void*,RenderWindowMsw*>::const_iterator iter =
         msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
 
     if( msInstanceMap.end() != iter )

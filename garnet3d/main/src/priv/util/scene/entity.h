@@ -37,7 +37,7 @@ namespace GN { namespace util
 
     private:
 
-        typedef std::map<Guid, NodeBase*> NodeMap;
+        typedef GN::Dictionary<Guid, NodeBase*> NodeMap;
 
         World::Impl & mWorld;
         Entity      & mOwner;

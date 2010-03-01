@@ -681,7 +681,7 @@ public:
 
 struct FileSystemContainer
 {
-    typedef std::map<StrA,FileSystem*> Container;
+    typedef GN::Dictionary<StrA,FileSystem*> Container;
 
     Container mFileSystems;
 

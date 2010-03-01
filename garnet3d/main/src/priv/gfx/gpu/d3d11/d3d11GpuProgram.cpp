@@ -222,17 +222,17 @@ sUpdateConstData(
     // do nothing, if the uniform is not used by the shader
     if( !ssp.used ) return;
 
-    if( desc.size != uniform.size() )
+    if( desc.size != uniform.Size() )
     {
         GN_WARN(sLogger)(
             "parameter %s: value size(%d) differs from size defined in shader code(%d).",
             desc.name,
-            uniform.size(),
+            uniform.Size(),
             desc.size );
     }
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
+    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.Size() );
     SafeArrayAccessor<UInt8>       dst( cb.ToRawPtr(), cb.Size() );
 
     // copy uniform data to system const buffer

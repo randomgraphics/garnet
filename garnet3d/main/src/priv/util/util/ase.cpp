@@ -1369,7 +1369,7 @@ struct VertexSelector
 template<typename T>
 class ElementCollection
 {
-    typedef std::map<T,UInt32> TypeMap;
+    typedef GN::Dictionary<T,UInt32> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;
@@ -1381,26 +1381,28 @@ public:
     ///
     UInt32 add( const T & element )
     {
-        std::pair<typename TypeMap::iterator,bool> i = mMap.insert( typename TypeMap::value_type(element,0xbad) );
+        TypeMap::Iterator iter;
 
-        if( i.second )
+        bool inserted = mMap.Insert( element, 0xbad, &iter );
+
+        if( inserted )
         {
             // this is a new element
-            GN_ASSERT( 0xbad == i.first->second );
-            GN_ASSERT( mBuffer.Size() + 1 == mMap.size() );
+            GN_ASSERT( 0xbad == iter.Value() );
+            GN_ASSERT( mBuffer.Size() + 1 == mMap.Size() );
 
-            i.first->second = (UInt32)( mBuffer.Size() );
+            iter.Value() = (UInt32)( mBuffer.Size() );
 
             mBuffer.Append( element );
         }
 
-        return i.first->second;
+        return iter.Value();
     }
 
     ///
     /// get number of vertices in buffer
     ///
-    size_t size() const { GN_ASSERT( mMap.size() == mBuffer.Size() ); return mBuffer.Size(); }
+    size_t Size() const { GN_ASSERT( mMap.Size() == mBuffer.Size() ); return mBuffer.Size(); }
 
     ///
     /// return specific element
@@ -1553,10 +1555,10 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     }
 
     // copy vertices into destination scene
-    AutoRef<Blob> blob( new SimpleBlob(sizeof(OutputVertex) * vc.size()) );
+    AutoRef<Blob> blob( new SimpleBlob(sizeof(OutputVertex) * vc.Size()) );
     OutputVertex * vertices = (OutputVertex*)blob->data();
     if( NULL == vertices ) return false;
-    for( size_t i = 0; i < vc.size(); ++i )
+    for( size_t i = 0; i < vc.Size(); ++i )
     {
         const VertexSelector & vs = vc[i];
 
@@ -1570,17 +1572,17 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
         o.normal   = srcvert.n[vs.n];
         o.texcoord = Vector2f( srctexcoord.x, srctexcoord.y );
     }
-    dstmesh.numvtx = vc.size();
+    dstmesh.numvtx = vc.Size();
     dstmesh.vertices[0] = vertices;
     dst.meshdata.Append( blob );
 
     // copy index data into destination scene
     dstmesh.numidx = ib.Size();
-    if( vc.size() > 0x10000 )
+    if( vc.Size() > 0x10000 )
     {
         // 32bit index buffer
         blob.attach( new SimpleBlob(sizeof(UInt32) * ib.Size()) );
-        memcpy( blob->data(), ib.ToRawPtr(), blob->size() );
+        memcpy( blob->data(), ib.ToRawPtr(), blob->Size() );
         dstmesh.idx32 = true;
         dstmesh.indices = blob->data();
         dst.meshdata.Append( blob );

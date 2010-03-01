@@ -44,7 +44,7 @@ namespace GN { namespace gfx
         ///
         /// get basemap size
         ///
-        const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
+        const Vector3<UInt32> & Size() const { return *(Vector3<UInt32>*)&width; }
 
         ///
         /// compose texture descriptor from image descriptor
@@ -172,7 +172,7 @@ namespace GN { namespace gfx
         ///
         /// get size of base map
         ///
-        const Vector3<UInt32> & getBaseSize() const { return mDesc.size(); }
+        const Vector3<UInt32> & getBaseSize() const { return mDesc.Size(); }
 
         ///
         /// get size of base map

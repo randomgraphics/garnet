@@ -253,7 +253,7 @@ namespace GN { namespace gfx
             }
         };
 
-        std::map<VertexFormatKey,OGLVtxFmt*> mVertexFormats;
+        GN::Dictionary<VertexFormatKey,OGLVtxFmt*> mVertexFormats;
         OGLVtxFmt                          * mCurrentOGLVtxFmt;
         OGLBasicRTMgr                      * mRTMgr;
 

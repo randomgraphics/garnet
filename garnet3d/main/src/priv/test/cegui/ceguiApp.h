@@ -45,15 +45,15 @@ public:
                         "DefaultResourceProvider::load - " + filename + " does not exist");
                 }
 
-                AutoObjPtr<UInt8> buffer( new UInt8[fp.size()] );
-                if( !fp.read( buffer, fp.size(), NULL ) )
+                AutoObjPtr<UInt8> buffer( new UInt8[fp.Size()] );
+                if( !fp.read( buffer, fp.Size(), NULL ) )
                 {
                     throw GenericException((utf8*)
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
                 }
 
                 output.setData( buffer.Detach() );
-                output.setSize( fp.size() );
+                output.setSize( fp.Size() );
             }
             virtual void unloadRawDataContainer(RawDataContainer& data)
             {

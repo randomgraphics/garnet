@@ -136,7 +136,7 @@ GN::CECImplMSWIN::convert(
         /*errno_t err = ::_mbstowcs_s_l(
             &converted,
             tempBuffer.ToRawPtr(),
-            tempBuffer.size(),
+            tempBuffer.Size(),
             (const char *)sourceBuffer,
             sourceBufferSizeInBytes,
             (_locale_t)mLocaleFrom );*/

@@ -104,9 +104,9 @@ namespace GN { namespace gfx
     private:
 
         // mapping subresource index to render target view
-        typedef std::map<D3D11_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D11ShaderResourceView> > SRViewMap;
-        typedef std::map<D3D11_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D11RenderTargetView> > RTViewMap;
-        typedef std::map<D3D11_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D11DepthStencilView> > DSViewMap;
+        typedef GN::Dictionary<D3D11_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D11ShaderResourceView> > SRViewMap;
+        typedef GN::Dictionary<D3D11_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D11RenderTargetView> > RTViewMap;
+        typedef GN::Dictionary<D3D11_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D11DepthStencilView> > DSViewMap;
 
         D3D11_SRV_DIMENSION        mDimension;      ///< texture dimension
         DXGI_FORMAT                mTextureFormat;  ///< D3D11 texture format
