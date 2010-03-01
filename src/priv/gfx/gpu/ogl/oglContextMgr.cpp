@@ -109,7 +109,7 @@ void GN::gfx::OGLGpu::contextQuit()
     mContext.Clear();
 
     // delete all vertex formats
-    for( std::map<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
+    for( GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
          i != mVertexFormats.end();
          ++i )
     {
@@ -174,7 +174,7 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
 
     VertexFormatKey key = { vf, shaderID };
 
-    std::map<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.find( key );
+    GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.find( key );
 
     if( i != mVertexFormats.end() ) return i->second;
 

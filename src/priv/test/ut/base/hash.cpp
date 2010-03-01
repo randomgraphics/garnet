@@ -40,7 +40,7 @@ public:
     {
         StrHashMap m;
 
-        m.insert( "a", 1 );
+        m.Insert( "a", 1 );
 
         int count = 0;
         StrHashMap::ConstIterator e = m.end();
@@ -50,7 +50,7 @@ public:
         }
         TS_ASSERT( 1 == count );
 
-        m.insert( "b", 2 );
+        m.Insert( "b", 2 );
 
         TS_ASSERT( 2 == m["b"] );
 
@@ -71,9 +71,9 @@ public:
 
         StrHashMap m;
 
-        TS_ASSERT( m.insert( "a", 1 ) );
-        TS_ASSERT( !m.insert( "a", 2 ) );
-        TS_ASSERT( m.insert( "b", 2 ) );
+        TS_ASSERT( m.Insert( "a", 1 ) );
+        TS_ASSERT( !m.Insert( "a", 2 ) );
+        TS_ASSERT( m.Insert( "b", 2 ) );
 
         TS_ASSERT_EQUALS( 1, *m.find("a") );
         TS_ASSERT_EQUALS( 2, *m.find("b") );

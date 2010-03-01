@@ -158,7 +158,7 @@ namespace GN { namespace gfx
 
     private:
 
-        typedef std::map<Guid,DynaArray<UInt8> > UserDataMap;
+        typedef GN::Dictionary<Guid,DynaArray<UInt8> > UserDataMap;
 
         GpuSignals mSignals;
         bool            mParamCheckEnabled;

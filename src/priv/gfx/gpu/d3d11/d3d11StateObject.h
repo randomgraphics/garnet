@@ -346,7 +346,7 @@ namespace GN { namespace gfx
         ID3D11DeviceContext & devcxt() const { return mDeviceContext; }
 
         /// get number of objects in cache
-        size_t size() const { return mCount; }
+        size_t Size() const { return mCount; }
 
         ///
         /// clear cache. Delete all state objects.

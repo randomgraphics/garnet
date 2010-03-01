@@ -639,7 +639,7 @@ namespace GN { namespace gfx
     struct Uniform : public RefCounter
     {
         /// get parameter size
-        virtual size_t size() const = 0;
+        virtual size_t Size() const = 0;
 
         /// get current parameter value
         virtual const void * getval() const = 0;
@@ -1175,7 +1175,7 @@ namespace GN { namespace gfx
         {
             AutoRef<Blob> bin( compileGpuProgram( desc ) );
             if( !bin ) return NULL;
-            return createGpuProgram( bin->data(), bin->size() );
+            return createGpuProgram( bin->data(), bin->Size() );
         }
 
         ///

@@ -225,7 +225,7 @@ namespace GN { namespace gfx
 
     private:
 
-        std::map<VertexFormat,D3D11VertexLayout> mVertexLayouts;
+        GN::Dictionary<VertexFormat,D3D11VertexLayout> mVertexLayouts;
         AutoComPtr<ID3D11SamplerState>           mDefaultSampler;
         D3D11StateObjectManager * mSOMgr;
         D3D11RTMgr              * mRTMgr;

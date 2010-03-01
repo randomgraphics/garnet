@@ -14,7 +14,6 @@
 #include <d3d10_1.h>
 #include <d3d11.h>
 #include <d3dx11.h>
-#include <map>
 
 namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
 {
@@ -205,7 +204,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
             inline bool isImmutable() const;
         };
 
-        typedef std::map<PooledResourceDesc,ID3D11Resource*> ResourceMap;
+        typedef GN::Dictionary<PooledResourceDesc,ID3D11Resource*> ResourceMap;
 
         // ********************************
         // private variables
@@ -411,11 +410,11 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         // ********************************
     public:
 
-        const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.size() ); return mColors[index]; }
+        const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.Size() ); return mColors[index]; }
         const RenderTargetTexture & getDepthBuffer() const { return mDepth; }
 
-        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.ToRawPtr(), 0 ); }
-        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.ToRawPtr(), mDepth.dsv ); }
+        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), 0 ); }
+        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), mDepth.dsv ); }
 
         void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
 

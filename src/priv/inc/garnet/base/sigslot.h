@@ -228,7 +228,7 @@ namespace GN
             return e.Emit( mSlots PARAM_COMMA PARAM_VALUES );
         }
 
-        size_t GetNumSlots() const { return mSlots.size(); }
+        size_t GetNumSlots() const { return mSlots.Size(); }
 
         R operator()( PARAM_LIST ) const { return Emit( PARAM_VALUES ); }
 
@@ -386,7 +386,7 @@ namespace GN
     public:
 
         /** 返回与当前slot连接的信号数 */
-        size_t GetNumSignals() const { return mSignals.size(); }
+        size_t GetNumSignals() const { return mSignals.Size(); }
 
     private:
         friend class detail::SignalBase;

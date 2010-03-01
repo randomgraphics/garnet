@@ -68,7 +68,7 @@ namespace GN
         Iterator        End() const;
         void *          Find( const void * key ) const;
         void *          FindOrInsert( const void * key );
-        bool            Insert( const void * key, const void * value );
+        bool            Insert( const void * key, const void * value, Iterator * iter );
         void            RemoveKey( const void * key );
         size_t          Size() const;
 
@@ -163,7 +163,7 @@ namespace GN
         Iterator            End() { Iterator i( mTypelessDict.End() ); return i; }
         const VALUE_TYPE *  Find( const KEY_TYPE & key ) const { return (const VALUE_TYPE*)mTypelessDict.Find( &key ); }
         VALUE_TYPE *        Find( const KEY_TYPE & key ) { return (VALUE_TYPE*)mTypelessDict.Find( &key ); }
-        bool                Insert( const KEY_TYPE & key, const VALUE_TYPE & value ) { return mTypelessDict.Insert( &key, &value ); }
+        bool                Insert( const KEY_TYPE & key, const VALUE_TYPE & value, Iterator * iter = NULL ) { return mTypelessDict.Insert( &key, &value, (TypelessDict::Iterator*)iter ); }
         void                RemoveKey( const KEY_TYPE & key ) { mTypelessDict.RemoveKey( &key ); }
         size_t              Size() const { return mTypelessDict.Size(); }
 

@@ -41,7 +41,7 @@ GN::PluginManager::getPluginTypeDesc( PluginTypeID id ) const
 inline bool GN::PluginManager::validID( PluginID id ) const
 {
     GN_GUARD_SLOW;
-    std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
+    GN::Dictionary<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
     return ( mPlugins.end() != i );
     GN_UNGUARD_SLOW;
 }
@@ -53,7 +53,7 @@ inline const GN::StrA &
 GN::PluginManager::getPluginName( PluginID id ) const
 {
     GN_GUARD_SLOW;
-    std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
+    GN::Dictionary<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
     if ( mPlugins.end() == i ) return StrA::EMPTYSTR;
     GN_ASSERT(
         mNames.validHandle(id.name) &&
@@ -69,7 +69,7 @@ inline const GN::StrA &
 GN::PluginManager::getPluginDesc( PluginID id ) const
 {
     GN_GUARD_SLOW;
-    std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
+    GN::Dictionary<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
     if ( mPlugins.end() == i ) return StrA::EMPTYSTR;
     return i->second.desc;
     GN_UNGUARD_SLOW;

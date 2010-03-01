@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         void waitForFence( UInt32 fence );
         UInt32 getCurrentFence() const { return mFrontEndFence; }
 
-        size_t getRingBufferSize() const { return mRingBuffer.size(); }
+        size_t getRingBufferSize() const { return mRingBuffer.Size(); }
 
         UInt8 * beginPostCommand( UInt32 cmd, size_t length ); ///< always return non-NULL valid pointer.
         void    endPostCommand() { mRingBuffer.endProduce(); }

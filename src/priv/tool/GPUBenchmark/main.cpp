@@ -366,7 +366,7 @@ public:
     {
         GN_GUARD;
 
-        for( size_t i = 0; i < mTestCases.size(); ++i )
+        for( size_t i = 0; i < mTestCases.Size(); ++i )
         {
             GN_ASSERT( mTestCases[i].theCase );
             mTestCases[i].theCase->destroy();

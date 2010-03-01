@@ -64,9 +64,9 @@ sCheckGpuCaps( Gpu & r, const EffectGpuProgramDesc & desc )
 // -----------------------------------------------------------------------------
 template<typename T>
 static inline const T *
-sFindNamedPtr( const std::map<StrA,T> & container, const StrA & name )
+sFindNamedPtr( const GN::Dictionary<StrA,T> & container, const StrA & name )
 {
-    typename std::map<StrA,T>::const_iterator iter = container.find( name );
+    typename GN::Dictionary<StrA,T>::const_iterator iter = container.find( name );
     return ( container.end() == iter ) ? NULL : &iter->second;
 }
 
@@ -127,7 +127,7 @@ sCheckShaderTextures(
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( std::map<StrA,StrA>::const_iterator iter = shaderDesc.textures.begin();
+    for( GN::Dictionary<StrA,StrA>::const_iterator iter = shaderDesc.textures.begin();
          iter != shaderDesc.textures.end();
          ++iter )
     {
@@ -165,7 +165,7 @@ sCheckShaderUniforms(
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( std::map<StrA,StrA>::const_iterator iter = shaderDesc.uniforms.begin();
+    for( GN::Dictionary<StrA,StrA>::const_iterator iter = shaderDesc.uniforms.begin();
          iter != shaderDesc.uniforms.end();
          ++iter )
     {
@@ -310,7 +310,7 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
 {
     Gpu & gpu = database().gpu();
 
-    for( std::map<StrA,EffectGpuProgramDesc>::const_iterator iter = effectDesc.gpuprograms.begin();
+    for( GN::Dictionary<StrA,EffectGpuProgramDesc>::const_iterator iter = effectDesc.gpuprograms.begin();
          iter != effectDesc.gpuprograms.end();
          ++iter )
     {
@@ -352,7 +352,7 @@ GN::gfx::EffectResource::Impl::initTechniques(
 {
     int currentQuality = (int)0x80000000; // minimal signed integer
 
-    for( std::map<StrA,EffectTechniqueDesc>::const_iterator iter = effectDesc.techniques.begin();
+    for( GN::Dictionary<StrA,EffectTechniqueDesc>::const_iterator iter = effectDesc.techniques.begin();
          iter != effectDesc.techniques.end();
          ++iter )
     {
@@ -468,7 +468,7 @@ bool
 GN::gfx::EffectResource::Impl::initTextures(
     const EffectResourceDesc  & effectDesc )
 {
-    for( std::map<StrA,EffectTextureDesc>::const_iterator iter = effectDesc.textures.begin();
+    for( GN::Dictionary<StrA,EffectTextureDesc>::const_iterator iter = effectDesc.textures.begin();
          iter != effectDesc.textures.end();
          ++iter )
     {
@@ -484,7 +484,7 @@ GN::gfx::EffectResource::Impl::initTextures(
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc * shaderDesc = sFindNamedPtr( effectDesc.gpuprograms, gpitem.name );
 
-            for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->textures.begin();
+            for( GN::Dictionary<StrA,StrA>::const_iterator iter = shaderDesc->textures.begin();
                  iter != shaderDesc->textures.end();
                  ++iter )
             {
@@ -522,7 +522,7 @@ bool
 GN::gfx::EffectResource::Impl::initUniforms(
     const EffectResourceDesc  & effectDesc )
 {
-    for( std::map<StrA,EffectUniformDesc>::const_iterator iter = effectDesc.uniforms.begin();
+    for( GN::Dictionary<StrA,EffectUniformDesc>::const_iterator iter = effectDesc.uniforms.begin();
          iter != effectDesc.uniforms.end();
          ++iter )
     {
@@ -540,7 +540,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc    * shaderDesc = sFindNamedPtr( effectDesc.gpuprograms, gpitem.name );
 
-            for( std::map<StrA,StrA>::const_iterator iter = shaderDesc->uniforms.begin();
+            for( GN::Dictionary<StrA,StrA>::const_iterator iter = shaderDesc->uniforms.begin();
                  iter != shaderDesc->uniforms.end();
                  ++iter )
             {

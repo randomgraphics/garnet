@@ -62,7 +62,7 @@ void CEGUI::GarnetRenderer::doRender(void)
 {
     GN_GUARD_SLOW;
 
-    if( !mQuads.empty() ) drawQuads( &mQuads[0], mQuads.size() );
+    if( !mQuads.empty() ) drawQuads( &mQuads[0], mQuads.Size() );
 
     GN_UNGUARD_SLOW;
 }

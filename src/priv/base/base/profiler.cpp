@@ -99,7 +99,7 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
         "                         profile result\n"
         "---------------------------------------------------------------------\n"
         "\n";
-    std::map<StrA,ProfilerTimerImpl>::const_iterator i, e = mTimers.end();
+    GN::Dictionary<StrA,ProfilerTimerImpl>::const_iterator i, e = mTimers.end();
     for( i = mTimers.begin(); i != e; ++i )
     {
         const ProfilerTimerImpl & t = i->second;

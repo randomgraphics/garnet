@@ -58,7 +58,7 @@
   - refine interface of File class:
     - read() and write() now returns boolean, instead of size.
     - eof() will return true, if error happens.
-    - size() and tell() will return 0, if error happens.
+    - Size() and tell() will return 0, if error happens.
 
 - 2006.4.30
   - refine build script:

@@ -6,8 +6,6 @@
 /// \author  chenlee (2005.7.25)
 // *****************************************************************************
 
-#include <map>
-
 namespace GN
 {
     ///
@@ -270,7 +268,7 @@ namespace GN
     template< typename T, typename H, bool CASE_INSENSITIVE = false>
     class NamedHandleManager
     {
-        typedef std::map<StrA,H> NameMap;
+        typedef GN::Dictionary<StrA,H> NameMap;
 
         struct NamedItem
         {
@@ -328,7 +326,7 @@ namespace GN
         ///
         bool empty() const
         {
-            GN_ASSERT( mItems.Size() == mNames.size() );
+            GN_ASSERT( mItems.Size() == mNames.Size() );
             return mItems.empty();
         }
 
@@ -369,7 +367,7 @@ namespace GN
 
             mItems[handle] = p;
 
-            mNames.insert( std::make_pair(name,handle) );
+            mNames.Insert( name, handle );
 
             return handle;
         }
@@ -384,7 +382,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            if( mNames.end() != mNames.find( name ) )
+            if( NULL != mNames.Find( name ) )
             {
                 GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.ToRawPtr() );
                 return 0;
@@ -400,7 +398,7 @@ namespace GN
 
             mItems[handle] = p;
 
-            mNames.insert( std::make_pair(name,handle) );
+            mNames.Insert( name, handle );
 
             return handle;
         }
@@ -416,7 +414,7 @@ namespace GN
             NamedItem * item = mItems[h];
             GN_ASSERT( item && item->handle == h );
 
-            mNames.erase( item->name );
+            mNames.RemoveKey( item->name );
 
             mItems.remove( item->handle );
 
@@ -440,7 +438,7 @@ namespace GN
 
             NamedItem * item = mItems[handle];
 
-            mNames.erase( name );
+            mNames.RemoveKey( name );
 
             mItems.remove( handle );
 
@@ -459,7 +457,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            return mNames.end() != mNames.find( name );
+            return NULL != mNames.Find( name );
         }
 
         H name2handle( const StrA & name ) const
@@ -469,15 +467,9 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            typename NameMap::const_iterator i = mNames.find( name );
-            if( mNames.end() == i )
-            {
-                return (H)0;
-            }
-            else
-            {
-                return i->second;
-            }
+            H * h = mNames.Find( name );
+
+            return h ? *h : (H)0;
         }
 
         const char * handle2name( H h ) const
@@ -496,9 +488,7 @@ namespace GN
         T & get( const StrA & name ) const
         {
             GN_ASSERT( validName(name) );
-            typename NameMap::const_iterator i = mNames.find( name );
-            H handle = i->second;
-            return mItems[handle]->data;
+            return mItems[mNames[name]]->data;
         }
 
         T & operator[]( H h ) const { return get(h); }

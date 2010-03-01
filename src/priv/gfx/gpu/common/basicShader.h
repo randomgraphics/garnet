@@ -132,7 +132,7 @@ namespace GN { namespace gfx
         const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.ToRawPtr(); }
 
         virtual void         * data() const { return (void*)mBuffer.ToRawPtr(); }
-        virtual size_t         size() const { return mBuffer.Size(); }
+        virtual size_t         Size() const { return mBuffer.Size(); }
     };
 
     ///
@@ -158,7 +158,7 @@ namespace GN { namespace gfx
         ~SysMemUniform() { HeapMemory::Free(mData); }
 
         /// get parameter size
-        virtual size_t size() const { return mSize; }
+        virtual size_t Size() const { return mSize; }
 
         /// get current parameter value
         virtual const void * getval() const { return mData; }

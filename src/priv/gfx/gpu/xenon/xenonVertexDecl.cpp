@@ -20,7 +20,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     {
         struct MapItem { const char * binding; D3DDECLUSAGE usage; };
 
-        std::map<StrA,D3DDECLUSAGE> map;
+        GN::Dictionary<StrA,D3DDECLUSAGE> map;
 
         BindingMap()
         {
@@ -51,7 +51,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     StrA lowerCaseBinding( binding );
     lowerCaseBinding.ToLowerCase();
 
-    std::map<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( lowerCaseBinding );
+    GN::Dictionary<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( lowerCaseBinding );
 
     return ( sConvertTable.map.end() == iter ) ? D3DDECLUSAGE_ERROR : iter->second;
 }

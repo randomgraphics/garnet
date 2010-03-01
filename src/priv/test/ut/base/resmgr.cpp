@@ -198,7 +198,7 @@ namespace GN
         ///
         bool empty() const
         {
-            GN_ASSERT( mResHandles.Size() == mResNames.size() );
+            GN_ASSERT( mResHandles.Size() == mResNames.Size() );
             return mResHandles.empty() && NULL == mNullInstance;
         }
 
@@ -347,7 +347,7 @@ namespace GN
                 }
                 mResNames[realname] = h;
             }
-            GN_ASSERT( mResNames.size() == mResHandles.Size() );
+            GN_ASSERT( mResNames.Size() == mResHandles.Size() );
             GN_ASSERT( mResHandles.validHandle(h) && item );
             item->creator = creator;
             item->nullor = nullor;
@@ -515,7 +515,7 @@ namespace GN
             ResDesc() : userData(0), prev(0), next(0) {}
         };
 
-        typedef std::map<StrA,HandleType>          StringMap;
+        typedef GN::Dictionary<StrA,HandleType>          StringMap;
         typedef HandleManager<ResDesc*,HandleType> ResHandleMgr;
 
         ResHandleMgr mResHandles;

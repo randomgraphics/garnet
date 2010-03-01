@@ -6,8 +6,6 @@
 /// \author  chenlee (2005.6.15)
 // *****************************************************************************
 
-#include <map>
-
 namespace GN
 {
     ///
@@ -22,7 +20,7 @@ namespace GN
         };
 
         HandleManager<Item,UInt32> mItems;
-        std::map<StrA,UInt32> mNames;
+        GN::Dictionary<StrA,UInt32> mNames;
 
         static Logger * sLogger;
 
@@ -77,7 +75,7 @@ namespace GN
         ///
         ItemKey name2Key( const StrA & name ) const
         {
-            std::map<StrA,UInt32>::const_iterator i = mNames.find(name);
+            GN::Dictionary<StrA,UInt32>::const_iterator i = mNames.find(name);
             return ( mNames.end() == i ) ? 0 : (*i).second;
         }
 

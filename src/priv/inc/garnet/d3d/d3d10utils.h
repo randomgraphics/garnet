@@ -13,7 +13,6 @@
 #include <d3d9.h>
 #include <d3d10_1.h>
 #include <d3dx10.h>
-#include <map>
 
 namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 {
@@ -202,7 +201,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             inline bool isImmutable() const;
         };
 
-        typedef std::map<PooledResourceDesc,ID3D10Resource*> ResourceMap;
+        typedef GN::Dictionary<PooledResourceDesc,ID3D10Resource*> ResourceMap;
 
         // ********************************
         // private variables

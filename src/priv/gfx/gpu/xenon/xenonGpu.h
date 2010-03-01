@@ -214,7 +214,7 @@ namespace GN { namespace gfx
     private:
 
         XenonRenderTargetManager                                      * mRTMgr;
-        std::map<VertexFormat,AutoComPtr<IDirect3DVertexDeclaration9> > mVertexFormats;
+        GN::Dictionary<VertexFormat,AutoComPtr<IDirect3DVertexDeclaration9> > mVertexFormats;
 
         //@}
 

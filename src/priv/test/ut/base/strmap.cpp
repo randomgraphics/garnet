@@ -606,15 +606,15 @@ class StringMapTest : public CxxTest::TestSuite
         Clock c;
         Clock::CycleType t;
 
-        // std::map insertion
-        std::map<std::string,size_t> stlmap;
+        // GN::Dictionary insertion
+        GN::Dictionary<std::string,size_t> stlmap;
         t = c.getCycleCount();
         for( size_t i = 0; i < d.count; ++i )
         {
             stlmap.insert( std::make_pair(d.table[i], i) );
         }
         t = c.getCycleCount() - t;
-        printf( "std::map  - insert : %llu\n", t );
+        printf( "GN::Dictionary  - insert : %llu\n", t );
 
         // StringMap insertion
         StringMap<char,size_t> mymap;
@@ -645,14 +645,14 @@ class StringMapTest : public CxxTest::TestSuite
             strings[i] = d.table[n];
         }
 
-        // std::map find
+        // GN::Dictionary find
         t = c.getCycleCount();
         for( size_t i = 0; i < strings.Size(); ++i )
         {
             stlmap.find( strings[i] );
         }
         t = c.getCycleCount() - t;
-        printf( "std::map  - find   : %llu\n", t );
+        printf( "GN::Dictionary  - find   : %llu\n", t );
 
         // StringMap find
         t = c.getCycleCount();
@@ -672,7 +672,7 @@ class StringMapTest : public CxxTest::TestSuite
         t = c.getCycleCount() - t;
         printf( "HashMap   - find   : %llu\n", t );
 
-        // std::map erasing
+        // GN::Dictionary erasing
         t = c.getCycleCount();
         for( size_t i = 0; i < d.count; ++i )
         {
@@ -680,7 +680,7 @@ class StringMapTest : public CxxTest::TestSuite
         }
         t = c.getCycleCount() - t;
         TS_ASSERT( stlmap.empty() );
-        printf( "std::map  - erase  : %llu\n", t );
+        printf( "GN::Dictionary  - erase  : %llu\n", t );
 
         // StringMap erasing
         t = c.getCycleCount();

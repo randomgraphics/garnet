@@ -21,7 +21,8 @@ TODO
   - Endian swap:
     - Swap vertex buffer endian based on vertex format
     - Swap index buffer endian based on index format.
-  - Dictionary template that replaces std::map
+  - Dictionary template that replaces GN::Dictionary
+  - replce std::queue with DoubleLinkedList
 
 - p1
   - Runtime option managers that could be modified by:

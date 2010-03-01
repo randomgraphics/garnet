@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 ///
-/// less operator for IID class (required by std::map)
+/// less operator for IID class (required by GN::Dictionary)
 ///
 inline bool operator < ( const IID & lhs, const IID & rhs )
 {
@@ -22,7 +22,7 @@ class BasicInterface : public T
 {
     typedef BasicInterface<T> MyType;
 
-    typedef std::map<IID,MyType*> TypeTable;
+    typedef GN::Dictionary<IID,MyType*> TypeTable;
 
     TypeTable mRtti; ///< My runtime type information, used by query interface
 
@@ -38,7 +38,7 @@ protected:
     void addRuntimeType( const IID & iid, MyType * ptr )
     {
         GN_ASSERT( ptr );
-        GN_ASSERT( mRtti.find( iid ) == mRtti.end() );
+        GN_ASSERT( NULL == mRtti.Find( iid ) );
         mRtti[iid] = ptr;
     }
 

@@ -485,12 +485,12 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         // check parameter size
         if( getGpu().paramCheckEnabled() )
         {
-            if( uniform->size() != desc.size )
+            if( uniform->Size() != desc.size )
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
                     desc.name.ToRawPtr(),
-                    uniform->size(),
+                    uniform->Size(),
                     desc.size );
             }
         }

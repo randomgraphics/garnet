@@ -591,8 +591,8 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // write meshes
     int meshindex = 0;
-    std::map<StrA,StrA> meshNameMapping;
-    for( std::map<StrA,MeshResourceDesc>::const_iterator i = desc.meshes.begin();
+    GN::Dictionary<StrA,StrA> meshNameMapping;
+    for( GN::Dictionary<StrA,MeshResourceDesc>::const_iterator i = desc.meshes.begin();
         i != desc.meshes.end();
         ++i )
     {
@@ -616,14 +616,14 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write models
     XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
-    for( std::map<StrA,gfx::ModelResourceDesc>::const_iterator i = desc.models.begin();
+    for( GN::Dictionary<StrA,gfx::ModelResourceDesc>::const_iterator i = desc.models.begin();
          i != desc.models.end();
          ++i )
     {
         const StrA & modelName  = i->first;
         ModelResourceDesc model = i->second;
 
-        std::map<StrA,StrA>::iterator iter = meshNameMapping.find( model.mesh );
+        GN::Dictionary<StrA,StrA>::iterator iter = meshNameMapping.find( model.mesh );
         if( iter != meshNameMapping.end() )
         {
             model.mesh = iter->second;
@@ -639,8 +639,8 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // rename entities
     int entityIndex = 0;
-    std::map<StrA,StrA> entityNameMap;
-    for( std::map<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
+    GN::Dictionary<StrA,StrA> entityNameMap;
+    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
         i != desc.entities.end();
         ++i )
     {
@@ -652,7 +652,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write entities
     XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
-    for( std::map<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
+    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
         i != desc.entities.end();
         ++i )
     {
@@ -671,7 +671,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
         a = xmldoc.createAttrib( spatial );
         a->name  = "parent";
-        std::map<StrA,StrA>::iterator parentIter = entityNameMap.find(entityDesc.spatial.parent);
+        GN::Dictionary<StrA,StrA>::iterator parentIter = entityNameMap.find(entityDesc.spatial.parent);
         if( entityNameMap.end() != parentIter )
         {
             a->value = parentIter->second;
@@ -822,7 +822,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     {
         const StrA & modelName = entityDesc.models[i];
 
-        std::map<StrA,gfx::ModelResourceDesc>::const_iterator modelIter;
+        GN::Dictionary<StrA,gfx::ModelResourceDesc>::const_iterator modelIter;
         modelIter = desc.models.find( modelName );
         if( modelIter == desc.models.end() )
         {
@@ -844,7 +844,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
             mesh = world.gdb().findResource<MeshResource>( modelDesc.mesh );
             if( !mesh )
             {
-                std::map<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
+                GN::Dictionary<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
 
                 if( desc.meshes.end() == meshIter )
                 {
@@ -969,7 +969,7 @@ Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
     Entity * root = world.createSpatialEntity( NULL );
     if( NULL == root ) return NULL;
 
-    for( std::map<StrA,EntityDesc>::const_iterator i = entities.begin();
+    for( GN::Dictionary<StrA,EntityDesc>::const_iterator i = entities.begin();
          i != entities.end();
          ++i )
     {
