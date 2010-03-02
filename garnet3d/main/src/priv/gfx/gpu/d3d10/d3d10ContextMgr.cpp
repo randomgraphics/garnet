@@ -141,7 +141,7 @@ void GN::gfx::D3D10Gpu::contextQuit()
 
     mDefaultSampler.Clear();
 
-    mVertexLayouts.clear();
+    mVertexLayouts.Clear();
 
     GN_UNGUARD;
 }

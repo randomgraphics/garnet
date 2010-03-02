@@ -106,45 +106,43 @@ void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t length )
 {
-    UserDataMap::iterator iter = mUserData.find( id );
+    UserData * currentUserData = mUserData.Find( id );
 
     if( NULL == data && 0 == length )
     {
         // delete existing data
-        if( iter != mUserData.end() )
+        if( currentUserData )
         {
-            mUserData.erase( iter );
+            mUserData.Remove( id );
         }
         else
         {
             GN_ERROR(sLogger)( "Invalid user data GUID." );
         }
     }
-    else if( iter != mUserData.end() )
+    else if( currentUserData )
     {
         // overwrite existing data
 
-        DynaArray<UInt8> & userData = iter->second;
-
         if( NULL != data && length > 0 )
         {
-            userData.Resize( length );
-            memcpy( userData.ToRawPtr(), data, length );
+            currentUserData->Resize( length );
+            memcpy( currentUserData->ToRawPtr(), data, length );
         }
         else
         {
-            userData.Clear();
+            currentUserData->Clear();
         }
     }
     else
     {
         // adding new data
-        DynaArray<UInt8> & userData = mUserData[id];
+        DynaArray<UInt8> & newUserData = mUserData[id];
 
         if( NULL != data && length > 0 )
         {
-            userData.Resize( length );
-            memcpy( userData.ToRawPtr(), data, length );
+            newUserData.Resize( length );
+            memcpy( newUserData.ToRawPtr(), data, length );
         }
     }
 }
@@ -154,15 +152,13 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
 // -----------------------------------------------------------------------------
 const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) const
 {
-    UserDataMap::const_iterator iter = mUserData.find( id );
+    const UserData * currentUserData = mUserData.Find( id );
 
-    if( iter != mUserData.end() )
+    if( NULL != currentUserData )
     {
-        const DynaArray<UInt8> & userData = iter->second;
+        if( length ) *length = currentUserData->Size();
 
-        if( length ) *length = userData.Size();
-
-        return userData.Empty() ? NULL : userData.ToRawPtr();
+        return currentUserData->ToRawPtr();
     }
     else
     {
@@ -179,5 +175,5 @@ const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) 
 // -----------------------------------------------------------------------------
 bool GN::gfx::BasicGpu::hasUserData( const Guid & id ) const
 {
-    return mUserData.find( id ) != mUserData.end();
+    return NULL != mUserData.Find( id );
 }

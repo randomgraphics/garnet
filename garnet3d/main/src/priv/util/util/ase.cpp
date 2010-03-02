@@ -1388,15 +1388,15 @@ public:
         if( inserted )
         {
             // this is a new element
-            GN_ASSERT( 0xbad == iter.Value() );
+            GN_ASSERT( 0xbad == iter->Value() );
             GN_ASSERT( mBuffer.Size() + 1 == mMap.Size() );
 
-            iter.Value() = (UInt32)( mBuffer.Size() );
+            iter->Value() = (UInt32)( mBuffer.Size() );
 
             mBuffer.Append( element );
         }
 
-        return iter.Value();
+        return iter->Value();
     }
 
     ///

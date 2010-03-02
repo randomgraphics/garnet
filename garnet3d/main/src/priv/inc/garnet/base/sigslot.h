@@ -386,7 +386,7 @@ namespace GN
     public:
 
         /** 返回与当前slot连接的信号数 */
-        size_t GetNumSignals() const { return mSignals.Size(); }
+        size_t GetNumSignals() const { return mSignals.size(); }
 
     private:
         friend class detail::SignalBase;

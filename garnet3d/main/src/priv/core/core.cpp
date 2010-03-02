@@ -16,7 +16,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_PUBLIC ProfilerManager & ProfilerManager::sGetGlobalInstance()
     {
-        static GN::ProfilerManager sInstance;
+        static ProfilerManager sInstance = ProfilerManager();
         return sInstance;
     }
 

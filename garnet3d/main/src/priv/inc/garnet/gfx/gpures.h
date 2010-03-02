@@ -676,12 +676,12 @@ namespace GN { namespace gfx
         ///
         /// check if the model has a texture parameter with specific name
         ///
-        bool hasTexture( const char * name ) const { return textures.end() != textures.find( name ); }
+        bool hasTexture( const char * name ) const { return NULL != textures.Find( name ); }
 
         ///
         /// check if the model has a uniform parameter with specific name
         ///
-        bool hasUniform( const char * name ) const { return uniforms.end() != uniforms.find( name ); }
+        bool hasUniform( const char * name ) const { return NULL != uniforms.Find( name ); }
 
         ///
         /// setup the descriptor from XML

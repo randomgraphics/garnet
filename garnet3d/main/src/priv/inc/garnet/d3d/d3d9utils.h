@@ -230,8 +230,8 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
     class D3D9RenderStateSaver
     {
-        IDirect3DDevice9                  * m_Device;
-        GN::Dictionary<D3DRENDERSTATETYPE, DWORD> m_Values;
+        IDirect3DDevice9                    * m_Device;
+        Dictionary<D3DRENDERSTATETYPE, DWORD> m_Values;
 
     public:
 
@@ -247,7 +247,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         void StoreRenderState( D3DRENDERSTATETYPE type )
         {
-            if( m_Device && m_Values.find(type) == m_Values.end() )
+            if( m_Device && m_Values.Find(type) == NULL )
             {
                 DWORD value;
                 if( SUCCEEDED( m_Device->GetRenderState( type, &value ) ) )
@@ -259,14 +259,14 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         void RestoreAllRenderStates()
         {
-            GN::Dictionary<D3DRENDERSTATETYPE, DWORD>::const_iterator i;
-            for( i = m_Values.begin(); i != m_Values.end(); ++i )
+            Dictionary<D3DRENDERSTATETYPE, DWORD>::ConstIterator i;
+            for( i = m_Values.Begin(); i != m_Values.End(); ++i )
             {
-                D3DRENDERSTATETYPE type = i->first;
-                DWORD              value = i->second;
+                D3DRENDERSTATETYPE type = i->Key();
+                DWORD              value = i->Value();
                 m_Device->SetRenderState( type, value );
             }
-            m_Values.clear();
+            m_Values.Clear();
         }
     };
 

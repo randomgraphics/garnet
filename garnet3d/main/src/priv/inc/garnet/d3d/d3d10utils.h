@@ -146,7 +146,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         bool Init( ID3D10Device * pDevice );
         void Quit();
     private:
-        void Clear() { m_device = NULL; }
+        void Clear() { mDevice = NULL; }
         //@}
 
         // ********************************
@@ -201,16 +201,16 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
             inline bool isImmutable() const;
         };
 
-        typedef GN::Dictionary<PooledResourceDesc,ID3D10Resource*> ResourceMap;
+        typedef Dictionary<PooledResourceDesc,ID3D10Resource*> ResourceMap;
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        ID3D10Device * m_device;
+        ID3D10Device * mDevice;
 
-        ResourceMap m_resources;
+        ResourceMap    mResources;
 
         // ********************************
         // private functions

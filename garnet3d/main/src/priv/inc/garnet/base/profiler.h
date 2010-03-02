@@ -115,7 +115,7 @@ namespace GN
         void reset()
         {
             ScopeMutex<SpinLoop> lock( mMutex );
-            mTimers.clear();
+            mTimers.Clear();
             mClock.reset();
         }
 
@@ -138,14 +138,14 @@ namespace GN
 
             ScopeMutex<SpinLoop> lock( mMutex );
 
-            GN::Dictionary<StrA,ProfilerTimerImpl>::iterator i = mTimers.find( name );
-            if( mTimers.end() != i ) return i->second;
+            ProfilerTimerImpl * impl = mTimers.Find( name );
+            if( NULL != impl ) return *impl;
 
             // create new timer
             ProfilerTimerImpl newTimer( mClock );
             TimerMap::Iterator iter;
             mTimers.Insert( name, newTimer, &iter );
-            return iter.Value();
+            return iter->Value();
         }
 
         ///
