@@ -13,17 +13,6 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-template<typename T>
-static inline const T *
-sFindNamedPtr( const GN::Dictionary<StrA,T> & container, const StrA & name )
-{
-    typename GN::Dictionary<StrA,T>::const_iterator iter = container.find( name );
-    return ( container.end() == iter ) ? NULL : &iter->second;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static StrA sResolveResourcePath( const StrA & basedir, const StrA & path )
 {
     if( path.Size() > 1 && path[0] == '@' )
@@ -195,8 +184,8 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 void GN::gfx::ModelResourceDesc::Clear()
 {
     effect.Clear();
-    textures.clear();
-    uniforms.clear();
+    textures.Clear();
+    uniforms.Clear();
     mesh.Clear();
     subset.Clear();
 }
@@ -422,12 +411,12 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create texture nodes
-    for( GN::Dictionary<StrA,ModelTextureDesc>::const_iterator i = textures.begin();
-         i != textures.end();
+    for( Dictionary<StrA,ModelTextureDesc>::ConstIterator i = textures.Begin();
+         i != textures.End();
          ++i )
     {
-        const StrA             & texname    = i->first;
-        const ModelTextureDesc & texdesc = i->second;
+        const StrA             & texname = i->Key();
+        const ModelTextureDesc & texdesc = i->Value();
 
         XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name = "texture";
@@ -450,12 +439,12 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create uniform nodes
-    for( GN::Dictionary<StrA,ModelUniformDesc>::const_iterator i = uniforms.begin();
-         i != uniforms.end();
+    for( Dictionary<StrA,ModelUniformDesc>::ConstIterator i = uniforms.Begin();
+         i != uniforms.End();
          ++i )
     {
-        const StrA             & uniname = i->first;
-        const ModelUniformDesc & unidesc = i->second;
+        const StrA             & uniname = i->Key();
+        const ModelUniformDesc & unidesc = i->Value();
 
         XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name = "uniform";
@@ -1106,7 +1095,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 
         const EffectResource::TextureProperties & tp = mEffect.resource->getTextureProperties( i );
 
-        const ModelResourceDesc::ModelTextureDesc * td = sFindNamedPtr( desc.textures, tp.parameterName );
+        const ModelResourceDesc::ModelTextureDesc * td = desc.textures.Find( tp.parameterName );
 
         AutoRef<TextureResource> texres;
 
@@ -1146,7 +1135,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 
         const EffectResource::UniformProperties & up = mEffect.resource->getUniformProperties( i );
 
-        const ModelResourceDesc::ModelUniformDesc * ud = sFindNamedPtr( desc.uniforms, up.parameterName );
+        const ModelResourceDesc::ModelUniformDesc * ud = desc.uniforms.Find( up.parameterName );
 
         AutoRef<UniformResource> unires;
         if( ud )
@@ -1218,7 +1207,7 @@ void GN::gfx::ModelResource::Impl::Clear()
     mPasses.Clear();
     mTextures.Clear();
     mUniforms.Clear();
-    mDummyUniforms.clear();
+    mDummyUniforms.Clear();
 }
 
 //

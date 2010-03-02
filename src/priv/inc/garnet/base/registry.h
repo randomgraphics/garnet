@@ -20,7 +20,7 @@ namespace GN
         };
 
         HandleManager<Item,UInt32> mItems;
-        GN::Dictionary<StrA,UInt32> mNames;
+        Dictionary<StrA,UInt32> mNames;
 
         static Logger * sLogger;
 
@@ -68,15 +68,15 @@ namespace GN
         ///
         /// Clear to empty registry.
         ///
-        void Clear() { mItems.Clear(); mNames.clear(); }
+        void Clear() { mItems.Clear(); mNames.Clear(); }
 
         ///
         /// Get item key by name
         ///
         ItemKey name2Key( const StrA & name ) const
         {
-            GN::Dictionary<StrA,UInt32>::const_iterator i = mNames.find(name);
-            return ( mNames.end() == i ) ? 0 : (*i).second;
+            const ItemKey * key = mNames.Find(name);
+            return (NULL == key) ? 0 : *key;
         }
 
         ///

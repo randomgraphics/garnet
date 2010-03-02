@@ -496,7 +496,7 @@ bool GpuResourceDatabase::Impl::registerResourceFactory(
     mgr.desc = descriptiveName ? descriptiveName : "unnamed resource";
     mgr.index = mManagers.Size() - 1;
     mgr.factory = factory;
-    GN_ASSERT( mgr.resources.empty() );
+    GN_ASSERT( mgr.resources.Empty() );
 
     return true;
 }
@@ -666,7 +666,7 @@ void GpuResourceDatabase::Impl::onResourceDelete( GpuResourceHandle handle )
 
     ResourceManager & mgr = mManagers[handle.managerIndex()];
 
-    mgr.resources.remove( handle.internalHandle() );
+    mgr.resources.Remove( handle.internalHandle() );
 }
 
 //

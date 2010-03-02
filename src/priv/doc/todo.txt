@@ -22,7 +22,9 @@ TODO
     - Swap vertex buffer endian based on vertex format
     - Swap index buffer endian based on index format.
   - Dictionary template that replaces GN::Dictionary
-  - replce std::queue with DoubleLinkedList
+  - replace STL containers:
+  	- queue, list, set
+
 
 - p1
   - Runtime option managers that could be modified by:

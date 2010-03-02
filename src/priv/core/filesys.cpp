@@ -728,7 +728,7 @@ struct FileSystemContainer
             return false;
         }
 
-        if( mFileSystems.end() != mFileSystems.find( name ) )
+        if( NULL != mFileSystems.Find( name ) )
         {
             GN_ERROR(sLogger)( "File system '%s' already exists!", name.ToRawPtr() );
             return false;
@@ -741,18 +741,17 @@ struct FileSystemContainer
 
     void UnregisterFs( const StrA & name )
     {
-        Container::const_iterator i = mFileSystems.find( name );
-        if( mFileSystems.end() != i )
+        if( mFileSystems.Find( name ) )
         {
-            mFileSystems.erase( name );
+            mFileSystems.Remove( name );
         }
     }
 
     FileSystem * getFs( const StrA & name )
     {
         if( name.Empty() ) return &mNativeFs;
-        Container::const_iterator i = mFileSystems.find( name );
-        return ( mFileSystems.end() != i ) ? i->second : &mFakeFs;
+        FileSystem ** ppfs = mFileSystems.Find( name );
+        return ( NULL == ppfs ) ? *ppfs : &mFakeFs;
     }
 };
 

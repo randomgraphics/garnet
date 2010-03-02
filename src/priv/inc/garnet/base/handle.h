@@ -92,7 +92,7 @@ namespace GN
         ///
         /// Is the manager empty or not.
         ///
-        bool empty() const
+        bool Empty() const
         {
             return mItems.Size() == mFreeList.Size();
         }
@@ -112,7 +112,7 @@ namespace GN
         ///
         HANDLE_TYPE first() const
         {
-            if( empty() ) return (HANDLE_TYPE)0;
+            if( Empty() ) return (HANDLE_TYPE)0;
             size_t idx = 0;
             while( !mItems[idx]->occupied )
             {
@@ -196,7 +196,7 @@ namespace GN
         ///
         /// Remove item from manager
         ///
-        void remove( HANDLE_TYPE h )
+        void Remove( HANDLE_TYPE h )
         {
             if( !validHandle(h) )
             {
@@ -309,7 +309,7 @@ namespace GN
                 mPool.DeconstructAndFree( mItems[i] );
             }
             mItems.Clear();
-            mNames.clear();
+            mNames.Clear();
         }
 
         ///
@@ -324,10 +324,10 @@ namespace GN
         ///
         /// Is the manager empty or not.
         ///
-        bool empty() const
+        bool Empty() const
         {
             GN_ASSERT( mItems.Size() == mNames.Size() );
-            return mItems.empty();
+            return mItems.Empty();
         }
 
         ///
@@ -350,7 +350,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            if( mNames.end() != mNames.find( name ) )
+            if( NULL != mNames.Find( name ) )
             {
                 GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.ToRawPtr() );
                 return 0;
@@ -403,7 +403,7 @@ namespace GN
             return handle;
         }
 
-        void remove( H h )
+        void Remove( H h )
         {
             if( !validHandle( h ) )
             {
@@ -414,14 +414,14 @@ namespace GN
             NamedItem * item = mItems[h];
             GN_ASSERT( item && item->handle == h );
 
-            mNames.RemoveKey( item->name );
+            mNames.Remove( item->name );
 
-            mItems.remove( item->handle );
+            mItems.Remove( item->handle );
 
             mPool.DeconstructAndFree( item );
         }
 
-        void remove( const StrA & name )
+        void Remove( const StrA & name )
         {
             if( CASE_INSENSITIVE )
             {
@@ -438,9 +438,9 @@ namespace GN
 
             NamedItem * item = mItems[handle];
 
-            mNames.RemoveKey( name );
+            mNames.Remove( name );
 
-            mItems.remove( handle );
+            mItems.Remove( handle );
 
             mPool.DeconstructAndFree( item );
         }
@@ -467,7 +467,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            H * h = mNames.Find( name );
+            const H * h = mNames.Find( name );
 
             return h ? *h : (H)0;
         }

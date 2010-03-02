@@ -24,13 +24,13 @@ GN::Registry::ItemKey GN::Registry::set(
         i.value = value;
         key = mItems.add( i );
         if( 0 == key ) return 0;
-        GN_ASSERT( mNames.end() == mNames.find(name) );
+        GN_ASSERT( NULL == mNames.Find(name) );
         mNames[name] = key;
     }
     else if ( overwriteExisting )
     {
         // Override old value
-        GN_ASSERT( mItems[key].name == name && mNames.find(name)->second == key );
+        GN_ASSERT( mItems[key].name == name && *mNames.Find(name) == key );
         mItems[key].value = value;
     }
     else

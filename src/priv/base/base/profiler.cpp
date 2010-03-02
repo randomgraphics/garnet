@@ -91,7 +91,7 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 
-    if( mTimers.empty() ) { rval = ""; return; }
+    if( mTimers.Empty() ) { rval = ""; return; }
 
     rval =
         "\n"
@@ -99,15 +99,15 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
         "                         profile result\n"
         "---------------------------------------------------------------------\n"
         "\n";
-    GN::Dictionary<StrA,ProfilerTimerImpl>::const_iterator i, e = mTimers.end();
-    for( i = mTimers.begin(); i != e; ++i )
+    GN::Dictionary<StrA,ProfilerTimerImpl>::ConstIterator i, e = mTimers.End();
+    for( i = mTimers.Begin(); i != e; ++i )
     {
-        const ProfilerTimerImpl & t = i->second;
+        const ProfilerTimerImpl & t = i->Value();
         rval += GN::StringFormat(
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
-            i->first.ToRawPtr(),
+            i->Key().ToRawPtr(),
             t.count,
             sTime2Str( t.timesum ).ToRawPtr(),
             sTime2Str( t.timesum / t.count ).ToRawPtr(),

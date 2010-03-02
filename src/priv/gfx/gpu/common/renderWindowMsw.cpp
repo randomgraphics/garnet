@@ -34,7 +34,7 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
         return Failure();
     }
 
-    if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
+    if( NULL != msInstanceMap.Find( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
         return Failure();
@@ -48,7 +48,7 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
         return Failure();
     }
 
-    mGpu          = gpu;
+    mGpu               = gpu;
     mWindow            = (HWND)externalWindow;
     mUseExternalWindow = true;
 
@@ -107,8 +107,8 @@ void GN::gfx::RenderWindowMsw::Quit()
     {
         if( !mUseExternalWindow) ::DestroyWindow( mWindow );
 
-        GN_ASSERT( msInstanceMap.end() != msInstanceMap.find(mWindow) );
-        msInstanceMap.erase(mWindow);
+        GN_ASSERT( NULL != msInstanceMap.Find(mWindow) );
+        msInstanceMap.Remove(mWindow);
 
         mWindow = 0;
     }
@@ -205,8 +205,8 @@ bool GN::gfx::RenderWindowMsw::postInit()
 
     // add window handle to instance map
     GN_ASSERT(
-        msInstanceMap.end() == msInstanceMap.find(mWindow) ||
-        this == msInstanceMap.find(mWindow)->second );
+        NULL ==  msInstanceMap.Find(mWindow) ||
+        this == *msInstanceMap.Find(mWindow) );
     msInstanceMap[mWindow] = this;
 
     // Clear all state flags
@@ -409,17 +409,17 @@ GN::gfx::RenderWindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARA
 
     //GN_TRACE( "GN::gfx::RenderWindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    GN::Dictionary<void*,RenderWindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
+    RenderWindowMsw ** ppwnd = msInstanceMap.Find(wnd);
 
     // call class specific window procedure
-    if( msInstanceMap.end() == iter )
+    if( NULL == ppwnd )
     {
         return ::DefWindowProc( wnd, msg, wp, lp );
     }
     else
     {
-        GN_ASSERT( iter->second );
-        return iter->second->windowProc( wnd, msg, wp, lp );
+        GN_ASSERT( *ppwnd);
+        return (*ppwnd)->windowProc( wnd, msg, wp, lp );
     }
 
     GN_UNGUARD;
@@ -435,14 +435,13 @@ GN::gfx::RenderWindowMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
 
     //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    GN::Dictionary<void*,RenderWindowMsw*>::const_iterator iter =
-        msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
+    RenderWindowMsw ** ppwnd = msInstanceMap.Find( ((CWPSTRUCT*)lp)->hwnd );
 
-    if( msInstanceMap.end() != iter )
+    if( NULL != ppwnd )
     {
         // trigger render window message signal.
         CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
-        RenderWindowMsw * wnd = iter->second;
+        RenderWindowMsw * wnd = *ppwnd;
         GN_ASSERT( cwp && wnd );
         wnd->handleMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
     }

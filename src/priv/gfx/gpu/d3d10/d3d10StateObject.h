@@ -378,7 +378,7 @@ namespace GN { namespace gfx
         OBJECT_CLASS * operator[]( const OBJECT_DESC & desc )
         {
             // look up existing item first
-            StateObjectItem * * hashitem = mHashTable.find( desc );
+            StateObjectItem * * hashitem = mHashTable.Find( desc );
             if( hashitem )
             {
                 StateObjectItem * item = *hashitem;
@@ -407,7 +407,7 @@ namespace GN { namespace gfx
                     SafeRelease( item->object );
 
                     // remove from hash
-                    mHashTable.RemoveKey( item->desc );
+                    mHashTable.Remove( item->desc );
 
                     // remove from LRU list
                     StateObjectItem * prev = item->prev;

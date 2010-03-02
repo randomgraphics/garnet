@@ -586,10 +586,10 @@ GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
 // -----------------------------------------------------------------------------
 void GN::gfx::EffectResourceDesc::Clear()
 {
-    textures.clear();
-    uniforms.clear();
-    gpuprograms.clear();
-    techniques.clear();
+    textures.Clear();
+    uniforms.Clear();
+    gpuprograms.Clear();
+    techniques.Clear();
 
     GpuContext::RenderStates rs;
     rs.Clear();

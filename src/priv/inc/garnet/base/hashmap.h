@@ -149,7 +149,7 @@ namespace GN
         /// \name hash map operations
         //@{
 
-        Iterator begin()
+        Iterator Begin()
         {
             for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
             {
@@ -161,7 +161,7 @@ namespace GN
             return Iterator( 0, 0, 0 );
         }
 
-        ConstIterator begin() const
+        ConstIterator Begin() const
         {
             for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
             {
@@ -180,19 +180,19 @@ namespace GN
             mCount = 0;
         }
 
-        bool empty() const { return 0 == mCount; }
+        bool Empty() const { return 0 == mCount; }
 
-        Iterator end()
+        Iterator End()
         {
             return Iterator( 0, 0, 0 );
         }
 
-        ConstIterator end() const
+        ConstIterator End() const
         {
             return Iterator( 0, 0, 0 );
         }
 
-        VALUE * find( const KEY & key ) const
+        VALUE * Find( const KEY & key ) const
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
@@ -219,7 +219,7 @@ namespace GN
             return 0;
         }
 
-        bool insert( const KEY & key, const VALUE & value )
+        bool Insert( const KEY & key, const VALUE & value )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
@@ -253,7 +253,7 @@ namespace GN
             return true;
         }
 
-        void RemoveKey( const KEY & key )
+        void Remove( const KEY & key )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 

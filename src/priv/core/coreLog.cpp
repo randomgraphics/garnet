@@ -546,8 +546,6 @@ namespace GN
 
         GN::Dictionary<StrA,LoggerImpl*> mLoggers;
 
-        static void sDeleteLogger( GN::Dictionary<StrA,LoggerImpl*>::value_type & i ) { delete i.second; }
-
         LoggerImpl * findParent( const StrA & name )
         {
             // get parent name
@@ -582,9 +580,9 @@ namespace GN
 			{
 			}
 
-			inline bool operator()( const GN::Dictionary<StrA,LoggerImpl*>::value_type & i )
+			inline bool operator()( const GN::Dictionary<StrA,LoggerImpl*>::KeyValuePair & i )
 			{
-				return 0 == StringCompareI( mName.ToRawPtr(), i.first.ToRawPtr() );
+				return 0 == StringCompareI( mName.ToRawPtr(), i.Key().ToRawPtr() );
 			}
 		};
 
@@ -608,7 +606,10 @@ namespace GN
             StrA loggerTree;
             printLoggerTree( loggerTree, 0, mRootLogger );
             GN_VERBOSE(sLogger)( "\n%s", loggerTree.ToRawPtr() );
-            std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
+            for( Dictionary<StrA,LoggerImpl*>::Iterator i = mLoggers.Begin(); i != mLoggers.End(); ++i )
+            {
+                delete i->Value();
+            }
         }
 
         LoggerImpl * GetLogger( const char * name )
@@ -623,11 +624,11 @@ namespace GN
             if( n.Empty() || 0 == StringCompareI( "ROOT", n.ToRawPtr() ) ) return &mRootLogger;
 
             // find for existing logger
-            GN::Dictionary<StrA,LoggerImpl*>::const_iterator i = std::find_if(
-				mLoggers.begin(),
-				mLoggers.end(),
+            GN::Dictionary<StrA,LoggerImpl*>::ConstIterator i = std::find_if(
+				mLoggers.Begin(),
+				mLoggers.End(),
 				CaseInsensitiveMatch(n) );
-            if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return i->second; }
+            if( mLoggers.End() != i ) { GN_ASSERT( i->Value() ); return i->Value(); }
 
             // not found. create new one.
             AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n,mMutex) );

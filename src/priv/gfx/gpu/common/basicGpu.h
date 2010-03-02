@@ -153,16 +153,18 @@ namespace GN { namespace gfx
         void miscClear()
         {
             mParamCheckEnabled = GN_BUILD_DEBUG;
-            mUserData.clear();
+            mUserData.Clear();
         }
 
     private:
 
-        typedef GN::Dictionary<Guid,DynaArray<UInt8> > UserDataMap;
+        typedef DynaArray<UInt8> UserData;
 
-        GpuSignals mSignals;
-        bool            mParamCheckEnabled;
-        UserDataMap     mUserData;
+        typedef GN::Dictionary<Guid, UserData> UserDataMap;
+
+        GpuSignals  mSignals;
+        bool        mParamCheckEnabled;
+        UserDataMap mUserData;
 
         //@}
     };

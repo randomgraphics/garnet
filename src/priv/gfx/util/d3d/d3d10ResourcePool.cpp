@@ -51,7 +51,7 @@ bool GN::d3d10::ResourcePool::Init( ID3D10Device * dev )
         return Failure();
     }
 
-    m_device = dev;
+    mDevice = dev;
 
     // success
     return Success();
@@ -152,7 +152,7 @@ GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
     }
     else
     {
-        m_resources[desc] = resource;
+        mResources[desc] = resource;
     }
 }
 
@@ -171,12 +171,12 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
     // Note: there's no way to reuse immutable resource.
     if( !desc.isImmutable() )
     {
-        ResourceMap::iterator it = m_resources.find( desc );
+        ID3D10Resource ** ppres = mResources.Find( desc );
 
-        if( m_resources.end() != it )
+        if( NULL != ppres )
         {
             // found!
-            ID3D10Resource * res = it->second;
+            ID3D10Resource * res = *ppres;
             GN_ASSERT( res );
 
             // update resource data
@@ -203,7 +203,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
 
                 for( UINT i = 0; i < numSubresources; ++i )
                 {
-                    m_device->UpdateSubresource( res, i, NULL, data[i].pSysMem, data[i].SysMemPitch, data[i].SysMemSlicePitch );
+                    mDevice->UpdateSubresource( res, i, NULL, data[i].pSysMem, data[i].SysMemPitch, data[i].SysMemSlicePitch );
                 }
             }
 
@@ -219,7 +219,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
         return NULL;
     }
 
-    m_resources[desc] = newResource;
+    mResources[desc] = newResource;
 
     return newResource;
 
@@ -241,7 +241,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_BUFFER:
         {
             ID3D10Buffer * buf;
-            GN_DX_CHECK_RETURN( m_device->CreateBuffer( &desc.buf, data, &buf ), NULL );
+            GN_DX_CHECK_RETURN( mDevice->CreateBuffer( &desc.buf, data, &buf ), NULL );
             res = buf;
             break;
         }
@@ -249,7 +249,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE1D:
         {
             ID3D10Texture1D * tex;
-            GN_DX_CHECK_RETURN( m_device->CreateTexture1D( &desc.tex1d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( mDevice->CreateTexture1D( &desc.tex1d, data, &tex ), NULL );
             res = tex;
             break;
         }
@@ -257,7 +257,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE2D:
         {
             ID3D10Texture2D * tex;
-            GN_DX_CHECK_RETURN( m_device->CreateTexture2D( &desc.tex2d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( mDevice->CreateTexture2D( &desc.tex2d, data, &tex ), NULL );
             res = tex;
             break;
         }
@@ -265,7 +265,7 @@ GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const 
         case D3D10_RESOURCE_DIMENSION_TEXTURE3D:
         {
             ID3D10Texture3D * tex;
-            GN_DX_CHECK_RETURN( m_device->CreateTexture3D( &desc.tex3d, data, &tex ), NULL );
+            GN_DX_CHECK_RETURN( mDevice->CreateTexture3D( &desc.tex3d, data, &tex ), NULL );
             res = tex;
             break;
         }

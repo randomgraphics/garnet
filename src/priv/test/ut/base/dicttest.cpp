@@ -21,12 +21,12 @@ public:
         // insert
         Dict::Iterator iter1, iter2;
         TS_ASSERT( d.Insert( 2, 3, &iter1 ) );
-        TS_ASSERT( 2, iter1.Key() );
-        TS_ASSERT( 3, iter1.Value() );
+        TS_ASSERT_EQUALS( 2, iter1->Key() );
+        TS_ASSERT_EQUALS( 3, iter1->Value() );
         TS_ASSERT( !d.Insert( 2, 4, &iter2 ) );
-        TS_ASSERT( 2, iter2.Key() );
-        TS_ASSERT( 3, iter2.Value() );
-        TS_ASSERT( iter1, iter2 );
+        TS_ASSERT_EQUALS( 2, iter2->Key() );
+        TS_ASSERT_EQUALS( 3, iter2->Value() );
+        TS_ASSERT_EQUALS( iter1, iter2 );
 
         TS_ASSERT( !d.Empty() );
         TS_ASSERT_EQUALS( 3, d.Size() );
@@ -41,8 +41,8 @@ public:
         GN::DynaArray<int> values;
         for( Dict::Iterator i = d.Begin(); i != d.End(); ++i )
         {
-            keys.Append( i.Key() );
-            values.Append( i.Value() );
+            keys.Append( i->Key() );
+            values.Append( i->Value() );
         }
         for( int i = 0; i < 3; ++i )
         {
@@ -51,9 +51,9 @@ public:
         }
 
         // remove
-        d.RemoveKey( 1 );
+        d.Remove( 1 );
         TS_ASSERT( 2 == d.Size () );
-        d.RemoveKey( 4 );
+        d.Remove( 4 );
         TS_ASSERT( 2 == d.Size () );
 
         // clear

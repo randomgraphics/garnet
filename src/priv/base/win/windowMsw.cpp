@@ -43,8 +43,8 @@ void GN::win::WindowMsw::Quit()
         ::DestroyWindow( mWindow );
 
         // remove itself from instance map
-        GN_ASSERT( msInstanceMap.end() != msInstanceMap.find(mWindow) );
-        msInstanceMap.erase(mWindow);
+        GN_ASSERT( NULL != msInstanceMap.Find(mWindow) );
+        msInstanceMap.Remove(mWindow);
     }
 
     // unregister window class
@@ -277,8 +277,8 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
 
     // add window handle to instance map
     GN_ASSERT(
-        msInstanceMap.end() == msInstanceMap.find(mWindow) ||
-        this == msInstanceMap.find(mWindow)->second );
+        NULL == msInstanceMap.Find(mWindow) ||
+        this == *msInstanceMap.Find(mWindow) );
     msInstanceMap[mWindow] = this;
 
     // success
@@ -319,18 +319,17 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     GN_GUARD;
 
     //GN_TRACE(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
-
-    GN::Dictionary<void*,WindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
+    WindowMsw * * ppwindow = msInstanceMap.Find(wnd);
 
     // call class specific window procedure
-    if( msInstanceMap.end() == iter )
+    if( NULL == ppwindow )
     {
         return ::DefWindowProc( wnd, msg, wp, lp );
     }
     else
     {
-        GN_ASSERT( iter->second );
-        return iter->second->windowProc( wnd, msg, wp, lp );
+        GN_ASSERT( *ppwindow );
+        return (*ppwindow)->windowProc( wnd, msg, wp, lp );
     }
 
     GN_UNGUARD;
