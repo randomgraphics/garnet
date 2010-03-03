@@ -16,16 +16,16 @@ static GN::Logger * sLogger = GN::GetLogger("GN.util");
 // -----------------------------------------------------------------------------
 GN::util::Entity::Impl::~Impl()
 {
-    for( NodeMap::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
+    for( NodeMap::Iterator i = mNodes.Begin(); i != mNodes.End(); ++i )
     {
-        NodeBase * n = i->second;
+        NodeBase * n = i->Value();
 
         GN_ASSERT( n );
 
         delete n;
     }
 
-    mNodes.clear();
+    mNodes.Clear();
 }
 
 //
@@ -49,7 +49,7 @@ const char * GN::util::Entity::Impl::name() const
 // -----------------------------------------------------------------------------
 bool GN::util::Entity::Impl::hasNode( const Guid & nodeType ) const
 {
-    return mNodes.find( nodeType ) != mNodes.end();
+    return mNodes.Find( nodeType ) != NULL;
 }
 
 //
@@ -57,18 +57,17 @@ bool GN::util::Entity::Impl::hasNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 {
-    NodeMap::const_iterator i = mNodes.find( nodeType );
+    NodeBase * const * ppNode = mNodes.Find( nodeType );
 
-    if( i == mNodes.end() )
+    if( NULL == ppNode )
     {
         GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
         return NULL;
     }
     else
     {
-        const NodeBase * n = i->second;
-        GN_ASSERT( n );
-        return n;
+        GN_ASSERT( *ppNode );
+        return *ppNode;
     }
 }
 
@@ -77,18 +76,17 @@ const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType )
 {
-    NodeMap::iterator i = mNodes.find( nodeType );
+    NodeBase ** ppNode = mNodes.Find( nodeType );
 
-    if( i == mNodes.end() )
+    if( NULL == ppNode )
     {
         GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
         return NULL;
     }
     else
     {
-        NodeBase * n = i->second;
-        GN_ASSERT( n );
-        return n;
+        GN_ASSERT( *ppNode );
+        return *ppNode;
     }
 }
 
@@ -103,11 +101,11 @@ void GN::util::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node 
         return;
     }
 
-    NodeMap::iterator i = mNodes.find( nodeType );
+    NodeBase ** ppNode = mNodes.Find( nodeType );
 
-    if( mNodes.end() != i )
+    if( NULL != ppNode )
     {
-        NodeBase * oldnode = i->second;
+        NodeBase * oldnode = *ppNode;
 
         GN_ASSERT( oldnode );
 
@@ -119,7 +117,7 @@ void GN::util::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node 
             //  node type.
             //  Need a smart pointer here.
             delete oldnode;
-            i->second = node;
+            *ppNode = node;
         }
     }
     else

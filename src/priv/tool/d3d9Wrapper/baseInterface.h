@@ -60,8 +60,8 @@ public:
 
         if( 0 == ppvObj ) return E_INVALIDARG;
 
-        TypeTable::const_iterator i = mRtti.find( riid );
-        if( mRtti.end() == i )
+        MyType ** pptype = mRtti.Find( riid );
+        if( NULL == pptype )
         {
             GN::AutoComPtr<IUnknown> obj;
             GN_ASSERT( E_NOINTERFACE == mRealObject->QueryInterface( riid, (void**)&obj ) );
@@ -70,8 +70,8 @@ public:
         }
         else
         {
-            i->second->AddRef();
-            *ppvObj = i->second;
+            (*pptype)->AddRef();
+            *ppvObj = (*pptype);
             return S_OK;
         }
     }

@@ -751,7 +751,7 @@ struct FileSystemContainer
     {
         if( name.Empty() ) return &mNativeFs;
         FileSystem ** ppfs = mFileSystems.Find( name );
-        return ( NULL == ppfs ) ? *ppfs : &mFakeFs;
+        return ( NULL != ppfs ) ? *ppfs : &mFakeFs;
     }
 };
 

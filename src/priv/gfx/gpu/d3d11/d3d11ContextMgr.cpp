@@ -141,7 +141,7 @@ void GN::gfx::D3D11Gpu::contextQuit()
     SafeDelete( mSOMgr );
 
     mDefaultSampler.Clear();
-    mVertexLayouts.clear();
+    mVertexLayouts.Clear();
 
     GN_UNGUARD;
 }

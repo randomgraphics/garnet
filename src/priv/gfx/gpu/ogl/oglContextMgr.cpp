@@ -109,13 +109,13 @@ void GN::gfx::OGLGpu::contextQuit()
     mContext.Clear();
 
     // delete all vertex formats
-    for( GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.begin();
-         i != mVertexFormats.end();
+    for( GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::Iterator i = mVertexFormats.Begin();
+         i != mVertexFormats.End();
          ++i )
     {
-        delete i->second;
+        delete i->Value();
     }
-    mVertexFormats.clear();
+    mVertexFormats.Clear();
 
     // delete render target manager
     SafeDelete( mRTMgr );
@@ -174,9 +174,9 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
 
     VertexFormatKey key = { vf, shaderID };
 
-    GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::iterator i = mVertexFormats.find( key );
+    OGLVtxFmt ** ppFormat = mVertexFormats.Find( key );
 
-    if( i != mVertexFormats.end() ) return i->second;
+    if( NULL != ppFormat ) return *ppFormat;
 
     AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
     if( !oglvf->Init( vf, program ) ) return NULL;

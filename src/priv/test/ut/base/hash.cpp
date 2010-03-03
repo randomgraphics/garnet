@@ -19,7 +19,7 @@ public:
 
         StrHashMap m;
 
-        TS_ASSERT( m.empty() );
+        TS_ASSERT( m.Empty() );
         TS_ASSERT_EQUALS( 0, m.Size() );
     }
 
@@ -28,8 +28,8 @@ public:
         StrHashMap m;
 
         bool isempty = true;
-        StrHashMap::Iterator e = m.end();
-        for( StrHashMap::Iterator i = m.begin(); i != e; ++i )
+        StrHashMap::Iterator e = m.End();
+        for( StrHashMap::Iterator i = m.Begin(); i != e; ++i )
         {
             isempty = false;
         }
@@ -43,8 +43,8 @@ public:
         m.Insert( "a", 1 );
 
         int count = 0;
-        StrHashMap::ConstIterator e = m.end();
-        for( StrHashMap::ConstIterator i = m.begin(); i != e; ++i )
+        StrHashMap::ConstIterator e = m.End();
+        for( StrHashMap::ConstIterator i = m.Begin(); i != e; ++i )
         {
             ++count;
         }
@@ -57,8 +57,8 @@ public:
         m["c"] = 3;
 
         count = 0;
-        e = m.end();
-        for( StrHashMap::ConstIterator i = m.begin(); i != e; i++ )
+        e = m.End();
+        for( StrHashMap::ConstIterator i = m.Begin(); i != e; i++ )
         {
             ++count;
         }
@@ -75,8 +75,8 @@ public:
         TS_ASSERT( !m.Insert( "a", 2 ) );
         TS_ASSERT( m.Insert( "b", 2 ) );
 
-        TS_ASSERT_EQUALS( 1, *m.find("a") );
-        TS_ASSERT_EQUALS( 2, *m.find("b") );
-        TS_ASSERT( !m.find("c") );
+        TS_ASSERT_EQUALS( 1, *m.Find("a") );
+        TS_ASSERT_EQUALS( 2, *m.Find("b") );
+        TS_ASSERT( !m.Find("c") );
     }
 };

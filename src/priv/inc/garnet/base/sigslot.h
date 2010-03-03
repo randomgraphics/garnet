@@ -228,7 +228,7 @@ namespace GN
             return e.Emit( mSlots PARAM_COMMA PARAM_VALUES );
         }
 
-        size_t GetNumSlots() const { return mSlots.Size(); }
+        size_t GetNumSlots() const { return mSlots.size(); }
 
         R operator()( PARAM_LIST ) const { return Emit( PARAM_VALUES ); }
 

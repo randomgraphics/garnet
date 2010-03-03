@@ -611,7 +611,7 @@ class StringMapTest : public CxxTest::TestSuite
         t = c.getCycleCount();
         for( size_t i = 0; i < d.count; ++i )
         {
-            stlmap.insert( std::make_pair(d.table[i], i) );
+            stlmap.Insert( d.table[i], i );
         }
         t = c.getCycleCount() - t;
         printf( "GN::Dictionary  - insert : %llu\n", t );
@@ -649,7 +649,7 @@ class StringMapTest : public CxxTest::TestSuite
         t = c.getCycleCount();
         for( size_t i = 0; i < strings.Size(); ++i )
         {
-            stlmap.find( strings[i] );
+            stlmap.Find( strings[i] );
         }
         t = c.getCycleCount() - t;
         printf( "GN::Dictionary  - find   : %llu\n", t );
@@ -676,10 +676,10 @@ class StringMapTest : public CxxTest::TestSuite
         t = c.getCycleCount();
         for( size_t i = 0; i < d.count; ++i )
         {
-            stlmap.erase( d.table[i] );
+            stlmap.Remove( d.table[i] );
         }
         t = c.getCycleCount() - t;
-        TS_ASSERT( stlmap.empty() );
+        TS_ASSERT( stlmap.Empty() );
         printf( "GN::Dictionary  - erase  : %llu\n", t );
 
         // StringMap erasing

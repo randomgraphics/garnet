@@ -245,14 +245,16 @@ inline const GN::util::BitmapFont::FontSlot *
 GN::util::BitmapFont::getSlot( wchar_t ch )
 {
     // find font slot in slotmap
-    GN::Dictionary<wchar_t,size_t>::iterator iter = mSlotMap.find(ch);
-    if( iter != mSlotMap.end() )
+    size_t * slot = mSlotMap.Find( ch );
+    if( NULL != slot )
     {
         // found!
-        return &mFontSlots[iter->second];
+        return &mFontSlots[*slot];
     }
-
-    return createSlot( ch );
+    else
+    {
+        return createSlot( ch );
+    }
 }
 
 //
@@ -264,7 +266,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
     GN_GUARD_SLOW;
 
     // make sure that the slot does not exist.
-    GN_ASSERT( mSlotMap.end() == mSlotMap.find(ch) );
+    GN_ASSERT( NULL == mSlotMap.Find(ch) );
 
     if( mNumUsedSlots >= mMaxSlots )
     {
@@ -404,7 +406,7 @@ GN::util::BitmapFont::slotInit(
     mNumUsedSlots = 0;
 
     // and slot map is also empty
-    mSlotMap.clear();
+    mSlotMap.Clear();
 
     //DynaArray<UInt8> texels( texwidth * texheight * 4 );
     //std::fill( texels.begin(), texels.end(), 0 );

@@ -224,6 +224,8 @@ namespace GN
 
         VALUE_TYPE & operator[]( const KEY_TYPE & key ) { return FindOrCreate( key ); }
 
+        const VALUE_TYPE & operator[]( const KEY_TYPE & key ) const { return *Find( key ); }
+
         //@}
 
     private:

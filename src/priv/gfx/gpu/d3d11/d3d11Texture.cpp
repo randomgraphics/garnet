@@ -12,36 +12,6 @@ using namespace GN;
 using namespace GN::gfx;
 
 //
-// less operator for SRV descriptor
-// ----------------------------------------------------------------------------
-static inline bool operator<(
-    const D3D11_SHADER_RESOURCE_VIEW_DESC & a,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-//
-// less operator for RTV descriptor
-// ----------------------------------------------------------------------------
-static inline bool operator<(
-    const D3D11_RENDER_TARGET_VIEW_DESC & a,
-    const D3D11_RENDER_TARGET_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-//
-// less operator for RTV descriptor
-// ----------------------------------------------------------------------------
-static inline bool operator<(
-    const D3D11_DEPTH_STENCIL_VIEW_DESC & a,
-    const D3D11_DEPTH_STENCIL_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-//
 // Determine depth reading format from typeless format
 // ----------------------------------------------------------------------------
 static DXGI_FORMAT
@@ -140,9 +110,9 @@ void GN::gfx::D3D11Texture::Quit()
 {
     GN_GUARD;
 
-    mSRViews.clear();
-    mRTViews.clear();
-    mDSViews.clear();
+    mSRViews.Clear();
+    mRTViews.Clear();
+    mDSViews.Clear();
     SafeRelease( mTexture );
 
     // standard Quit procedure
