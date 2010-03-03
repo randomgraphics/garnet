@@ -188,7 +188,7 @@ namespace GN
 
             // clear handles and names
             mResHandles.Clear();
-            mResNames.clear();
+            mResNames.Clear();
 
             GN_UNGUARD;
         }
@@ -199,7 +199,7 @@ namespace GN
         bool empty() const
         {
             GN_ASSERT( mResHandles.Size() == mResNames.Size() );
-            return mResHandles.empty() && NULL == mNullInstance;
+            return mResHandles.Empty() && NULL == mNullInstance;
         }
 
         ///
@@ -285,8 +285,8 @@ namespace GN
         {
             GN_GUARD_SLOW;
             StrA realname;
-            typename StringMap::const_iterator iter = mResNames.find( resolveName(realname,name) );
-            if( mResNames.end() != iter ) return iter->second;
+            HandleType * handle = mResNames.Find( resolveName(realname,name) );
+            if( NULL != handle ) return *handle;
             if( autoAddNewName && ( !mNameChecker || mNameChecker(realname) ) ) return addResource( realname );
             return 0; // failed
             GN_UNGUARD_SLOW;
@@ -322,17 +322,17 @@ namespace GN
             HandleType h;
             ResDesc * item;
             StrA realname;
-            typename StringMap::const_iterator ci = mResNames.find( resolveName(realname,name) );
-            if( mResNames.end() != ci )
+            HandleType * handle = mResNames.Find( resolveName(realname,name) );
+            if( NULL != handle )
             {
                 if( !overrideExistingResource )
                 {
                     GN_ERROR(sLogger)( "resource '%s' already exist!", realname.ToRawPtr() );
                     return 0;
                 }
-                GN_ASSERT( mResHandles.validHandle(ci->second) );
-                h = ci->second;
-                item = mResHandles.get( h );
+                GN_ASSERT( mResHandles.validHandle(*handle) );
+                h = *handle;
+                item = mResHandles.get( *handle );
                 doDispose( item ); // dispose existing resource
             }
             else
@@ -381,15 +381,15 @@ namespace GN
 
             // find the resource
             StrA realname;
-            typename StringMap::iterator iter = mResNames.find( resolveName(realname,name) );
-            if( mResNames.end() == iter )
+            HandleType * handle = mResNames.Find( resolveName(realname,name) );
+            if( NULL == handle )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", realname.ToRawPtr() );
                 return;
             }
 
             // get the resource handle and pointer
-            HandleType h = iter->second;
+            HandleType h = *handle;
             ResDesc * r = mResHandles[h];
             GN_ASSERT( r );
 
@@ -397,8 +397,8 @@ namespace GN
             doDispose( r );
 
             // remove it from handle and name manager
-            mResHandles.remove( h );
-            mResNames.erase( iter );
+            mResHandles.Remove( h );
+            mResNames.Remove( realname );
 
             // remove it from LRU list
             if( r->prev )

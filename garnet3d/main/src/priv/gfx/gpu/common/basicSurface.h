@@ -241,6 +241,25 @@ namespace GN { namespace gfx
         // ********************************
     private:
     };
+
+    /// Add "<" operator, by memory compare, to any type that doesn't have one.
+    template<typename T>
+    struct MemCmpLessOperator
+    {
+        T value;
+
+        MemCmpLessOperator() {}
+
+        MemCmpLessOperator( T & t ) : value(t) {}
+
+        operator       T &()       { return value; }
+        operator const T &() const { return value; }
+
+        bool operator<( const MemCmpLessOperator & rhs ) const
+        {
+            return memcmp( &value, &rhs, sizeof(T) ) < 0;
+        }
+    };
 }}
 
 // *****************************************************************************

@@ -539,7 +539,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::onTextureChange( TextureResource
 {
     GN_ASSERT( &r == mResource );
 
-    updateContext( mResource->getTexture() );
+    updateContext( r.getTexture() );
 }
 
 //
@@ -631,7 +631,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( UniformResource
 {
     GN_ASSERT( &r == mResource );
 
-    updateContext( mResource->getUniform() );
+    updateContext( r.getUniform() );
 }
 
 //

@@ -9,39 +9,9 @@
 #include "../common/basicSurface.h"
 #include "d3d10Resource.h"
 
-namespace GN { namespace gfx
+namespace GN {namespace gfx
 {
     class D3D10Gpu;
-
-    //
-    // less operator for SRV descriptor
-    // ----------------------------------------------------------------------------
-    inline bool operator<(
-        const D3D10_SHADER_RESOURCE_VIEW_DESC & a,
-        const D3D10_SHADER_RESOURCE_VIEW_DESC & b )
-    {
-        return ::memcmp( &a, &b, sizeof(a) ) < 0;
-    }
-
-    //
-    // less operator for RTV descriptor
-    // ----------------------------------------------------------------------------
-    inline bool operator<(
-        const D3D10_RENDER_TARGET_VIEW_DESC & a,
-        const D3D10_RENDER_TARGET_VIEW_DESC & b )
-    {
-        return ::memcmp( &a, &b, sizeof(a) ) < 0;
-    }
-
-    //
-    // less operator for RTV descriptor
-    // ----------------------------------------------------------------------------
-    inline bool operator<(
-        const D3D10_DEPTH_STENCIL_VIEW_DESC & a,
-        const D3D10_DEPTH_STENCIL_VIEW_DESC & b )
-    {
-        return ::memcmp( &a, &b, sizeof(a) ) < 0;
-    }
 
     ///
     /// D3D texture
@@ -155,6 +125,27 @@ namespace GN { namespace gfx
         bool createTexture();
     };
 }}
+
+inline bool operator<(
+    const D3D10_SHADER_RESOURCE_VIEW_DESC & a,
+    const D3D10_SHADER_RESOURCE_VIEW_DESC & b )
+{
+    return memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+inline bool operator<(
+    const D3D10_RENDER_TARGET_VIEW_DESC & a,
+    const D3D10_RENDER_TARGET_VIEW_DESC & b )
+{
+    return memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+inline bool operator<(
+    const D3D10_DEPTH_STENCIL_VIEW_DESC & a,
+    const D3D10_DEPTH_STENCIL_VIEW_DESC & b )
+{
+    return memcmp( &a, &b, sizeof(a) ) < 0;
+}
 
 // *****************************************************************************
 //                                     EOF

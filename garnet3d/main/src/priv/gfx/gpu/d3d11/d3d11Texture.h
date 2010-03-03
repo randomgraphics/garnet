@@ -125,6 +125,37 @@ namespace GN { namespace gfx
     };
 }}
 
+//
+// less operator for SRV descriptor
+// ----------------------------------------------------------------------------
+inline bool operator<(
+    const D3D11_SHADER_RESOURCE_VIEW_DESC & a,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC & b )
+{
+    return ::memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+//
+// less operator for RTV descriptor
+// ----------------------------------------------------------------------------
+inline bool operator<(
+    const D3D11_RENDER_TARGET_VIEW_DESC & a,
+    const D3D11_RENDER_TARGET_VIEW_DESC & b )
+{
+    return ::memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+//
+// less operator for RTV descriptor
+// ----------------------------------------------------------------------------
+inline bool operator<(
+    const D3D11_DEPTH_STENCIL_VIEW_DESC & a,
+    const D3D11_DEPTH_STENCIL_VIEW_DESC & b )
+{
+    return ::memcmp( &a, &b, sizeof(a) ) < 0;
+}
+
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************

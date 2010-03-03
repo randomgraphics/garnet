@@ -65,7 +65,7 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
     AutoObjPtr<EntityInternal> newEntity( new EntityInternal( mOwner, id ) );
     if( !newEntity )
     {
-        mEntities.remove( id );
+        mEntities.Remove( id );
         return NULL;
     }
     mEntities[id] = newEntity;
@@ -89,7 +89,7 @@ void GN::util::World::Impl::deleteEntity( const char * name )
 
     delete (EntityInternal*)mEntities[id];
 
-    mEntities.remove( id );
+    mEntities.Remove( id );
 }
 
 //
@@ -105,7 +105,7 @@ void GN::util::World::Impl::deleteEntity( int id )
 
     delete (EntityInternal*)mEntities[id];
 
-    mEntities.remove( id );
+    mEntities.Remove( id );
 }
 
 //

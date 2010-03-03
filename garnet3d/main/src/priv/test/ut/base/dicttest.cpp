@@ -61,4 +61,100 @@ public:
         TS_ASSERT( d.Empty() );
         TS_ASSERT_EQUALS( 0, d.Size() );
     }
+
+    static int kc;
+    static int vc;
+
+    // key type needs no default constructor
+    struct KeyType
+    {
+        explicit KeyType( int )
+        {
+            ++kc;
+        }
+
+        KeyType( const KeyType & )
+        {
+            ++kc;
+        }
+
+        ~KeyType()
+        {
+            --kc;
+        }
+
+        bool operator<(const KeyType & ) const
+        {
+            return false;
+        }
+    };
+
+    /// value type w/o default contructor
+    struct ValueTypeNC
+    {
+        explicit ValueTypeNC( int )
+        {
+            ++vc;
+        }
+
+        ValueTypeNC( const ValueTypeNC & )
+        {
+            ++vc;
+        }
+
+        ~ValueTypeNC()
+        {
+            --vc;
+        }
+    };
+
+    struct ValueType : public ValueTypeNC
+    {
+        ValueType() : ValueTypeNC( 100 )
+        {
+            ++vc;
+        }
+
+        ValueType( const ValueType & ) : ValueTypeNC(100)
+        {
+            ++vc;
+        }
+
+        ~ValueType()
+        {
+            --vc;
+        }
+    };
+
+    void testObject()
+    {
+        using namespace GN;
+
+        typedef Dictionary<KeyType,ValueTypeNC> Dict1;
+        typedef Dictionary<KeyType,ValueType> Dict2;
+
+        {
+            Dict1 d1;
+            Dict2 d2;
+
+            KeyType k1(1);
+            KeyType k2(2);
+            ValueTypeNC v1(3);
+            ValueTypeNC v2(4);
+            ValueType v3;
+            ValueType v4;
+
+            d1.Insert( k1, v1 );
+            d1.Insert( k2, v2 );
+
+            d2.Insert( k1, v3 );
+            d2[k2] = v4;
+        }
+
+        TS_ASSERT_EQUALS( 0, kc );
+        TS_ASSERT_EQUALS( 0, vc );
+    }
 };
+
+int TestDict::kc = 0;
+int TestDict::vc = 0;

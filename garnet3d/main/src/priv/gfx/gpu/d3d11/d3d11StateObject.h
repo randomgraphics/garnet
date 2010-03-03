@@ -383,10 +383,10 @@ namespace GN { namespace gfx
         OBJECT_CLASS * operator[]( const OBJECT_DESC & desc )
         {
             // look up existing item first
-            StateObjectItem * * hashitem = mHashTable.find( desc );
-            if( hashitem )
+            StateObjectItem * * ppHashItem = mHashTable.Find( desc );
+            if( ppHashItem )
             {
-                StateObjectItem * item = *hashitem;
+                StateObjectItem * item = *ppHashItem;
 
                 GN_ASSERT( item );
 
@@ -441,7 +441,7 @@ namespace GN { namespace gfx
             item->desc   = desc;
 
             // add to hash
-            mHashTable.insert( desc, item );
+            mHashTable.Insert( desc, item );
 
             // update LRU
             InsertToHead( item );

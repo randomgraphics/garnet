@@ -334,11 +334,11 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // add the model to model list
         StrA modelname = StringFormat( "%s.%u", asemesh.name.ToRawPtr(), i );
-        GN_ASSERT( desc.models.find( modelname ) == desc.models.end() );
+        GN_ASSERT( NULL == desc.models.Find( modelname ) );
         desc.models[modelname] = model;
 
         // add the model to appropriate entity
-        GN_ASSERT( desc.entities.end() != desc.entities.find(model.mesh) );
+        GN_ASSERT( NULL != desc.entities.Find( model.mesh ) );
         desc.entities[model.mesh].models.Append( modelname );
     }
 
@@ -378,7 +378,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
         return false;
     }
 
-    if( desc.meshes.end() == desc.meshes.find( md.mesh ) )
+    if( NULL == desc.meshes.Find( md.mesh ) )
     {
         MeshResourceDesc mesh;
         AutoRef<Blob> blob = mesh.loadFromFile( fs::resolvePath( basedir, md.mesh ) );
@@ -592,12 +592,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write meshes
     int meshindex = 0;
     GN::Dictionary<StrA,StrA> meshNameMapping;
-    for( GN::Dictionary<StrA,MeshResourceDesc>::const_iterator i = desc.meshes.begin();
-        i != desc.meshes.end();
+    for( GN::Dictionary<StrA,MeshResourceDesc>::ConstIterator i = desc.meshes.Begin();
+        i != desc.meshes.End();
         ++i )
     {
-        const StrA & oldMeshName = i->first;
-        const MeshResourceDesc & mesh = i->second;
+        const StrA & oldMeshName = i->Key();
+        const MeshResourceDesc & mesh = i->Value();
 
         StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.ToRawPtr(), meshindex );
 
@@ -616,17 +616,17 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write models
     XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
-    for( GN::Dictionary<StrA,gfx::ModelResourceDesc>::const_iterator i = desc.models.begin();
-         i != desc.models.end();
+    for( GN::Dictionary<StrA,gfx::ModelResourceDesc>::ConstIterator i = desc.models.Begin();
+         i != desc.models.End();
          ++i )
     {
-        const StrA & modelName  = i->first;
-        ModelResourceDesc model = i->second;
+        const StrA & modelName  = i->Key();
+        ModelResourceDesc model = i->Value();
 
-        GN::Dictionary<StrA,StrA>::iterator iter = meshNameMapping.find( model.mesh );
-        if( iter != meshNameMapping.end() )
+        StrA * pNewMeshName = meshNameMapping.Find( model.mesh );
+        if( NULL != pNewMeshName )
         {
-            model.mesh = iter->second;
+            model.mesh = *pNewMeshName;
         }
 
         XmlElement * modelNode = model.saveToXml( *models, dirname );
@@ -640,11 +640,11 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // rename entities
     int entityIndex = 0;
     GN::Dictionary<StrA,StrA> entityNameMap;
-    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
-        i != desc.entities.end();
+    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::ConstIterator i = desc.entities.Begin();
+        i != desc.entities.End();
         ++i )
     {
-        const StrA & entityName = i->first;
+        const StrA & entityName = i->Key();
 
         entityNameMap[entityName] = StringFormat( "%d", ++entityIndex );
     }
@@ -652,12 +652,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write entities
     XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
-    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::const_iterator i = desc.entities.begin();
-        i != desc.entities.end();
+    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::ConstIterator i = desc.entities.Begin();
+        i != desc.entities.End();
         ++i )
     {
-        const StrA                        & entityName = entityNameMap.find(i->first)->second;
-        const SimpleWorldDesc::EntityDesc & entityDesc = i->second;
+        const StrA                        & entityName = *entityNameMap.Find(i->Key());
+        const SimpleWorldDesc::EntityDesc & entityDesc = i->Value();
 
         XmlElement * entity = xmldoc.createElement( entities );
         entity->name = "entity";
@@ -671,14 +671,14 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
         a = xmldoc.createAttrib( spatial );
         a->name  = "parent";
-        GN::Dictionary<StrA,StrA>::iterator parentIter = entityNameMap.find(entityDesc.spatial.parent);
-        if( entityNameMap.end() != parentIter )
+        StrA * pParentEntityName = entityNameMap.Find(entityDesc.spatial.parent);
+        if( NULL != pParentEntityName )
         {
-            a->value = parentIter->second;
+            a->value = *pParentEntityName;
         }
         else if( !entityDesc.spatial.parent.Empty() )
         {
-            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->first.ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
+            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->Key().ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
         }
 
         a = xmldoc.createAttrib( spatial );
@@ -787,15 +787,15 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 // -----------------------------------------------------------------------------
 static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
 {
-    GN_ASSERT( desc.entities.end() != desc.entities.find( entityName ) );
+    GN_ASSERT( NULL != desc.entities.Find( entityName ) );
 
-    const SimpleWorldDesc::EntityDesc & entityDesc = desc.entities.find(entityName)->second;
+    const SimpleWorldDesc::EntityDesc & entityDesc = *desc.entities.Find(entityName);
 
     // recursively populate parent entities
     Entity * parent = NULL;
     if( !entityDesc.spatial.parent.Empty() )
     {
-        if( desc.entities.end() == desc.entities.find( entityDesc.spatial.parent ) )
+        if( NULL == desc.entities.Find( entityDesc.spatial.parent ) )
         {
             GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
         }
@@ -822,9 +822,9 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     {
         const StrA & modelName = entityDesc.models[i];
 
-        GN::Dictionary<StrA,gfx::ModelResourceDesc>::const_iterator modelIter;
-        modelIter = desc.models.find( modelName );
-        if( modelIter == desc.models.end() )
+
+        const GN::gfx::ModelResourceDesc * pModelDesc = desc.models.Find( modelName );
+        if( NULL == pModelDesc )
         {
             GN_ERROR(sLogger)(
                 "Entity %s references invalid model named \"%s\".",
@@ -833,38 +833,35 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
             continue;
         }
 
-        const ModelResourceDesc & modelDesc = modelIter->second;
-
         // this variable is used to keep a reference to mesh resource,
         // to prevent it from being deleted, until the model is created.
         AutoRef<MeshResource> mesh;
 
-        if( !modelDesc.mesh.Empty() )
+        if( !pModelDesc->mesh.Empty() )
         {
-            mesh = world.gdb().findResource<MeshResource>( modelDesc.mesh );
+            mesh = world.gdb().findResource<MeshResource>( pModelDesc->mesh );
             if( !mesh )
             {
-                GN::Dictionary<StrA,gfx::MeshResourceDesc>::const_iterator meshIter = desc.meshes.find(modelDesc.mesh);
 
-                if( desc.meshes.end() == meshIter )
+                const GN::gfx::MeshResourceDesc * pMeshDesc = desc.meshes.Find(pModelDesc->mesh);
+
+                if( NULL == pMeshDesc )
                 {
                     GN_ERROR(sLogger)(
                         "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.",
                         modelName.ToRawPtr(),
-                        modelDesc.mesh.ToRawPtr() );
+                        pModelDesc->mesh.ToRawPtr() );
                     continue; // ignore the model
                 }
 
-                const MeshResourceDesc & meshDesc = meshIter->second;
-
                 // create new mesh
-                mesh = world.gdb().createResource<MeshResource>( modelDesc.mesh );
-                if( !mesh || !mesh->reset( &meshDesc ) ) continue;
+                mesh = world.gdb().createResource<MeshResource>( pModelDesc->mesh );
+                if( !mesh || !mesh->reset( pMeshDesc ) ) continue;
             }
         }
 
         AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
-        if( !model->reset( &modelDesc ) ) continue;
+        if( !model->reset( pModelDesc ) ) continue;
 
         e->getNode<VisualNode>()->addModel( model );
     }
@@ -899,10 +896,10 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 // -----------------------------------------------------------------------------
 void GN::util::SimpleWorldDesc::Clear()
 {
-    meshes.clear();
+    meshes.Clear();
     meshdata.Clear();
-    models.clear();
-    entities.clear();
+    models.Clear();
+    entities.Clear();
 }
 
 //
@@ -969,11 +966,11 @@ Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
     Entity * root = world.createSpatialEntity( NULL );
     if( NULL == root ) return NULL;
 
-    for( GN::Dictionary<StrA,EntityDesc>::const_iterator i = entities.begin();
-         i != entities.end();
+    for( Dictionary<StrA,EntityDesc>::ConstIterator i = entities.Begin();
+         i != entities.End();
          ++i )
     {
-        const StrA & entityName = i->first;
+        const StrA & entityName = i->Key();
 
         if( !world.findEntity( entityName ) )
         {
