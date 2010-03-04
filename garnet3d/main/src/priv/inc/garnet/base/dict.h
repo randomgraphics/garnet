@@ -142,7 +142,7 @@ namespace GN
             Iterator & operator=( const Iterator & rhs ) { mKeyValuePair.mTypelessIter = rhs.mKeyValuePair.mTypelessIter; return *this; }
 
             const Iterator & operator++() const { mKeyValuePair.mTypelessIter.GoToNext(); return *this; }
-            friend Iterator operator++( const Iterator & it, int ) { Iterator ret(it); ret.GotoNext(); return ret; }
+            friend Iterator operator++( const Iterator & it, int ) { Iterator ret(it); mKeyValuePair.mTypelessIter.GotoNext(); return ret; }
 
             bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
             bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
@@ -186,7 +186,7 @@ namespace GN
             const ConstIterator & operator++() const { mKeyValuePair.mTypelessIter.GoToNext(); return *this; }
 
             // i++
-            friend ConstIterator operator++( const ConstIterator & it, int ) { ConstIterator ret(it); ret.GotoNext(); return ret; }
+            friend ConstIterator operator++( const ConstIterator & it, int ) { ConstIterator ret(it); mKeyValuePair.mTypelessIter.GotoNext(); return ret; }
 
             bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
             bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
