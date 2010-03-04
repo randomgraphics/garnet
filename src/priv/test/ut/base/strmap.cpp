@@ -597,6 +597,39 @@ class StringMapTest : public CxxTest::TestSuite
         size_t               count;
     };
 
+    struct Perf
+    {
+        GN::Clock::CycleType insert;
+        GN::Clock::CycleType find;
+        GN::Clock::CycleType remove;
+    };
+
+    struct AllPerfs
+    {
+        Perf dict;
+        Perf stlmap;
+        Perf strmap;
+        Perf hashmap;
+
+        void print() const
+        {
+            printf( "GN::Dictionary  - insert : %llu\n", dict.insert );
+            printf( "std::map        - insert : %llu\n", stlmap.insert );
+            printf( "StringMap       - insert : %llu\n", strmap.insert );
+            printf( "HashMap         - insert : %llu\n", hashmap.insert );
+
+            printf( "GN::Dictionary  - find   : %llu\n", dict.find );
+            printf( "std::map        - find   : %llu\n", stlmap.find );
+            printf( "StringMap       - find   : %llu\n", strmap.find );
+            printf( "HashMap         - find   : %llu\n", hashmap.find );
+
+            printf( "GN::Dictionary  - remove : %llu\n", dict.remove );
+            printf( "std::map        - remove : %llu\n", stlmap.remove );
+            printf( "StringMap       - remove : %llu\n", strmap.remove );
+            printf( "HashMap         - remove : %llu\n", hashmap.remove );
+        }
+    };
+
     static Dictionary dict();
 
     void doPerfTest( const Dictionary & d )
@@ -606,101 +639,126 @@ class StringMapTest : public CxxTest::TestSuite
         Clock c;
         Clock::CycleType t;
 
-        // GN::Dictionary insertion
-        GN::Dictionary<std::string,size_t> stlmap;
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            stlmap.Insert( d.table[i], i );
-        }
-        t = c.getCycleCount() - t;
-        printf( "GN::Dictionary  - insert : %llu\n", t );
+        AllPerfs perfs;
+        memset( &perfs, 0, sizeof(perfs) );
 
-        // StringMap insertion
-        StringMap<char,size_t> mymap;
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
+        for( int i = 0; i < 10; ++i )
         {
-            mymap.insert( d.table[i], i );
-        }
-        t = c.getCycleCount() - t;
-        printf( "StringMap - insert : %llu\n", t );
+            // GN::Dictionary insertion
+            GN::Dictionary<std::string,size_t> dict;
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                dict.Insert( d.table[i], i );
+            }
+            perfs.dict.insert += c.getCycleCount() - t;
 
-        // HashMap insertion
-        StringHashMap<char,size_t> hmap(d.count);
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            hmap.insert( d.table[i], i );
-        }
-        t = c.getCycleCount() - t;
-        printf( "HashMap   - insert : %llu\n", t );
+            // std::map insersion
+            std::map<std::string,size_t> stlmap;
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                stlmap.insert( std::make_pair( d.table[i], i ) );
+            }
+            perfs.stlmap.insert += c.getCycleCount() - t;
 
-        // generate random searching set
-        DynaArray<std::string> strings( 10000 );
-        for( size_t i = 0; i < strings.Size(); ++i )
-        {
-            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
-            if( n >= d.count ) n = d.count - 1;
-            strings[i] = d.table[n];
+            // StringMap insertion
+            StringMap<char,size_t> mymap;
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                mymap.insert( d.table[i], i );
+            }
+            perfs.strmap.insert += c.getCycleCount() - t;
+
+            // HashMap insertion
+            StringHashMap<char,size_t> hmap(d.count);
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                hmap.insert( d.table[i], i );
+            }
+            perfs.hashmap.insert += c.getCycleCount() - t;
+
+            // generate random searching set
+            DynaArray<std::string> strings( 10000 );
+            for( size_t i = 0; i < strings.Size(); ++i )
+            {
+                size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
+                if( n >= d.count ) n = d.count - 1;
+                strings[i] = d.table[n];
+            }
+
+            // GN::Dictionary find
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.Size(); ++i )
+            {
+                dict.Find( strings[i] );
+            }
+            perfs.dict.find += c.getCycleCount() - t;
+
+            // std::map find
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.Size(); ++i )
+            {
+                stlmap.find( strings[i] );
+            }
+            perfs.stlmap.find += c.getCycleCount() - t;
+
+            // StringMap find
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.Size(); ++i )
+            {
+                mymap.find( strings[i].c_str() );
+            }
+            perfs.strmap.find += c.getCycleCount() - t;
+
+            // StringHashMap find
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.Size(); ++i )
+            {
+                hmap.find( strings[i].c_str() );
+            }
+            perfs.hashmap.find += c.getCycleCount() - t;
+
+            // GN::Dictionary erasing
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                dict.Remove( d.table[i] );
+            }
+            perfs.dict.remove += c.getCycleCount() - t;
+            TS_ASSERT( dict.Empty() );
+
+            // std::map erasing
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                stlmap.erase( d.table[i] );
+            }
+            perfs.stlmap.remove += c.getCycleCount() - t;
+            TS_ASSERT( stlmap.empty() );
+
+            // StringMap erasing
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                mymap.erase( d.table[i] );
+            }
+            perfs.strmap.remove += c.getCycleCount() - t;
+            TS_ASSERT( mymap.empty() );
+
+            // StringHashMap erasing
+            t = c.getCycleCount();
+            for( size_t i = 0; i < d.count; ++i )
+            {
+                hmap.erase( d.table[i] );
+            }
+            perfs.hashmap.remove += c.getCycleCount() - t;
+            TS_ASSERT( mymap.empty() );
         }
 
-        // GN::Dictionary find
-        t = c.getCycleCount();
-        for( size_t i = 0; i < strings.Size(); ++i )
-        {
-            stlmap.Find( strings[i] );
-        }
-        t = c.getCycleCount() - t;
-        printf( "GN::Dictionary  - find   : %llu\n", t );
-
-        // StringMap find
-        t = c.getCycleCount();
-        for( size_t i = 0; i < strings.Size(); ++i )
-        {
-            mymap.find( strings[i].c_str() );
-        }
-        t = c.getCycleCount() - t;
-        printf( "StringMap - find   : %llu\n", t );
-
-        // StringHashMap find
-        t = c.getCycleCount();
-        for( size_t i = 0; i < strings.Size(); ++i )
-        {
-            hmap.find( strings[i].c_str() );
-        }
-        t = c.getCycleCount() - t;
-        printf( "HashMap   - find   : %llu\n", t );
-
-        // GN::Dictionary erasing
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            stlmap.Remove( d.table[i] );
-        }
-        t = c.getCycleCount() - t;
-        TS_ASSERT( stlmap.Empty() );
-        printf( "GN::Dictionary  - erase  : %llu\n", t );
-
-        // StringMap erasing
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            mymap.erase( d.table[i] );
-        }
-        t = c.getCycleCount() - t;
-        TS_ASSERT( mymap.empty() );
-        printf( "StringMap - erase  : %llu\n", t );
-
-        // StringHashMap erasing
-        t = c.getCycleCount();
-        for( size_t i = 0; i < d.count; ++i )
-        {
-            hmap.erase( d.table[i] );
-        }
-        t = c.getCycleCount() - t;
-        TS_ASSERT( mymap.empty() );
-        printf( "HashMap   - erase  : %llu\n", t );
+        perfs.print();
     }
 
     void doPerfTestWithFixedNumberOfItems( size_t count )
