@@ -154,15 +154,21 @@ namespace GN
 // debug macros and functions
 #include "base/debug.h"
 
+// log functions and macros
+#include "base/log.h"
+
 // memory management
 #include "base/memory.h"
 #include "base/allocator.h"
 
+// memory pool
+#include "base/mempool.h"
+
+// single/double linked list
+#include "base/linkedList.h"
+
 // string types
 #include "base/string.h"
-
-// log functions and macros
-#include "base/log.h"
 
 // math library
 #include "base/math.h"
@@ -180,15 +186,9 @@ namespace GN
 // exceptions
 #include "base/exception.h"
 
-// memory pool
-#include "base/mempool.h"
-
 // delegate & callback
 #include "base/delegate.h"
 #include "base/sigslot.h"
-
-// single/double linked list
-#include "base/linkedList.h"
 
 // array types
 #include "base/array.h"

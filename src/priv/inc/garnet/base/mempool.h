@@ -214,11 +214,10 @@ namespace GN
     ///
     template<
         class  T,
-        class  RAW_MEMORY_POOL = FixSizedRawMemoryPool<sizeof(T)> >
+        class  RAW_MEMORY_POOL = FixSizedRawMemoryPool<sizeof(T)>>
     class ObjectPool
     {
         RAW_MEMORY_POOL mRawMem;
-        Mutex           mMutex;
 
         T * DoAlloc()
         {
@@ -245,8 +244,6 @@ namespace GN
 
         void DoFreeAll()
         {
-            ScopeMutex<Mutex> lock( mMutex );
-
             // destruct all objects
             for( T * p = (T*)mRawMem.GetFirst(); 0 != p; p = (T*)mRawMem.GetNext(p) )
             {
