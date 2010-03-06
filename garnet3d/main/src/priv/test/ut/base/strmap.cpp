@@ -19,112 +19,23 @@ namespace GN
     template<class CHAR, class T>
     class StringMap
     {
-        struct Leaf
-        {
-            const CHAR * key;
-            T            value;
-
-            Leaf( const CHAR * k, const T & v )
-                : key(k), value(v)
-            {
-            }
-        };
-
-        struct Node
-        {
-            CHAR   splitchar;
-            Node * lower;
-            Node * equal;
-            Node * higher;
-            Leaf * leaf;  // valid only when splitchar == 0 (leaf node)
-        };
-
         // *****************************
-        // public iterator types
+        // public types
         // *****************************
 
     public:
 
-        ///
-        /// key and value pair type
-        ///
-        typedef std::pair<const CHAR *, T> PairType;
-        typedef PairType       & PairTypeRef;
-        typedef const PairType & ConstPairTypeRef;
-
-        ///
-        /// Iterator type
-        ///
-        class Iterator
+        /// public key-value pair type.
+        struct KeyValuePair
         {
+            const CHAR * const key;   // Note: key is always an const.
+            T                  value;
+
         protected:
 
-            Node * mNode;
-
-        public:
-
-            Iterator() : mNode(NULL) {}
-
-            Iterator( const Iterator & iter ) : mNode( iter.mNode ) {}
-
-            ///
-            /// equality
-            ///
-            bool operator==( const Iterator & rhs ) const { return mNode == rhs.mNode; }
-
-            ///
-            /// equality
-            ///
-            bool operator!=( const Iterator & rhs ) const { return mNode != rhs.mNode; }
-
-            PairType & operator*() const
-            {
-                GN_ASSERT( mNode && mNode->leaf );
-                return *(PairType*)mNode->leaf;
-            }
-
-            PairType * operator->() const
-            {
-                GN_ASSERT( mNode && mNode->leaf );
-                return (PairType*)mNode->leaf;
-            }
-
-            ///
-            /// prefix plus operator
-            ///
-            Iterator & operator++()
-            {
-                GN_ASSERT( mNode && mNode->leaf );
-                GN_UNIMPL();
-                return *this;
-            }
-
-            ///
-            /// suffix plus operator
-            ///
-            friend Iterator operator++( const Iterator & it, int )
-            {
-                Iterator ret( it );
-                ++it;
-                return ret;
-            }
+            // default constructor
+            KeyValuePair(const char * k, const T & v) : key(k), value(v) {}
         };
-
-        // *****************************
-        // private iterator classes
-        // *****************************
-
-    private:
-
-        ///
-        /// private iterator type, used by StringMap class to update node pointer in iterater
-        ///
-        class PrivateIterator : public Iterator
-        {
-        public:
-            void setNode( Node * n ) { mNode = n; }
-        };
-
 
         // *****************************
         // public methods
@@ -140,7 +51,7 @@ namespace GN
         /// copy constructor
         StringMap( const StringMap & sm ) : mRoot(NULL), mCount(0)
         {
-            doCopy( sm );
+            DoClone( sm );
         }
 
         /// destructor
@@ -149,26 +60,41 @@ namespace GN
             Clear();
         }
 
-        /// begin
-        Iterator begin() { PrivateIterator iter; iter.setNode( mRoot ); return iter; }
+        /// get first element in the map
+        const KeyValuePair * First() const { return DoFirst(); }
+
+        /// get first element in the map
+        KeyValuePair * First() { return DoFirst(); }
 
         /// clear whole map
-        void Clear() { return doClear(); }
+        void Clear() { DoClear(); }
 
         /// empty
-        bool empty() const { return 0 == mCount; }
+        bool Empty() const { return 0 == mCount; }
 
-        /// end
-        Iterator end() { Iterator i; return i; }
+        /// Get next item
+        const KeyValuePair * Next( const KeyValuePair * p ) const { return DoNext( p ); }
+
+        /// Get next item
+        KeyValuePair * Next( const KeyValuePair * p ) { return DoNext( p ); }
 
         /// erase by key
-        void erase( const CHAR * text ) { doErase( text ); }
+        void Remove( const CHAR * text ) { DoRemove( text ); }
 
-        /// find
-        Iterator find( const CHAR * text ) const { return doFind( text ); }
+        /// Find
+        const T * Find( const CHAR * text ) const { return DoFind( text ); }
 
-        /// insert. Return value indicates whether insertion succedded.
-        bool insert( const CHAR * text, const T & value, Iterator * iter = NULL ) { return doInsert( text, value, (PrivateIterator*)iter ); }
+        /// Find
+        T * Find( const CHAR * text ) { return DoFind( text ); }
+
+        /// Find
+        KeyValuePair * FindPair( const CHAR * text ) { return DoFindPair( text ); }
+
+        /// Find
+        const KeyValuePair * FindPair( const CHAR * text ) const { return DoFindPair( text ); }
+
+        /// insert. Return the inserted key value pair or NULL.
+        KeyValuePair * Insert( const CHAR * text, const T & value ) { bool inserted; KeyValuePair * p = DoFindOrInsert( text, value, inserted ); return inserted ? p : NULL; }
 
         /// return number of items in map
         size_t Size() const { return mCount; }
@@ -180,13 +106,53 @@ namespace GN
     public:
 
         /// assignment
-        StringMap & operator=( const StringMap & rhs ) { doClone( rhs ); return *this; }
+        StringMap & operator=( const StringMap & rhs ) { DoClone( rhs ); return *this; }
 
         /// indexing operator
-        T & operator[]( const CHAR * text ) { PrivateIterator iter; doInsert( text, T(), &iter ); return iter->second; }
+        T & operator[]( const CHAR * text ) { bool inserted; KeyValuePair * p = DoFindOrInsert( text, T(), inserted ); GN_ASSERT(p); return p->value; }
 
-        /// less operator (NOT IMPLEMENTED)
-        bool operator<( const StringMap & ) { GN_UNIMPL(); return false; }
+        /// indexing operator
+        const T & operator[]( const CHAR * text ) const { const KeyValuePair * p = DoFindPair( text ); GN_ASSERT(p); return p->value; }
+
+        // *****************************
+        // private types
+        // *****************************
+
+    private:
+
+        struct Leaf : public KeyValuePair
+        {
+            // double linked list fields
+            Leaf * prev;
+            Leaf * next;
+            void * owner;
+
+            Leaf( const CHAR * text, size_t textlen, const T & v )
+                : KeyValuePair( (const char*)HeapMemory::Alloc(textlen+1), v )
+                , prev(NULL)
+                , next(NULL)
+                , owner(NULL)
+            {
+                if( NULL != key )
+                {
+                    memcpy( (char*)key, text, textlen+1 );
+                }
+            }
+
+            ~Leaf()
+            {
+                HeapMemory::Free( (void*)key );
+            }
+        };
+
+        struct Node
+        {
+            CHAR   splitchar;
+            Node * lower;
+            Node * equal;
+            Node * higher;
+            Leaf * leaf;  // valid only when splitchar == 0 (leaf node)
+        };
 
         // *****************************
         // private data
@@ -198,6 +164,7 @@ namespace GN
         size_t mCount; // number of items in map
         FixSizedRawMemoryPool<sizeof(Node)> mNodePool;
         ObjectPool<Leaf>                    mLeafPool;
+        DoubleLinkedList<Leaf>              mLeafs;
 
         // *****************************
         // private methods
@@ -205,60 +172,81 @@ namespace GN
 
     private:
 
-        Node * allocNode()
+        Node * AllocNode()
         {
             return (Node*)mNodePool.Alloc();
         }
 
-        void freeNode( Node * n )
+        void FreeNode( Node * n )
         {
             mNodePool.Dealloc( n );
         }
 
-        Leaf * allocLeaf( const CHAR * text, const T & value )
+        Leaf * AllocLeaf( const CHAR * text, size_t textlen, const T & value )
         {
             Leaf * p = mLeafPool.AllocUnconstructed();
-            if( p )
+            if( NULL == p ) return NULL;
+
+            // call in-place new to construct the leaf
+            new (p) Leaf( text, textlen, value );
+            if( NULL == p->key )
             {
-                // call in-place new to construct the leaf
-                new (p) Leaf( text, value );
+                mLeafPool.FreeWithoutDeconstruct( p );
+                return NULL;
             }
+
             return p;
         }
 
-        void freeLeaf( Leaf * l )
+        void FreeLeaf( Leaf * l )
         {
+            GN_ASSERT( l );
+            mLeafs.Remove( l );
             mLeafPool.DeconstructAndFree( l );
         }
 
         /// clear the whole map container
-        void doClear()
+        void DoClear()
         {
             mRoot = NULL;
             mCount = 0;
             mNodePool.FreeAll();
             mLeafPool.DeconstructAndFreeAll();
+
+            // I know this is hacky. But it works.
+            memset( &mLeafs, 0, sizeof(mLeafs) );
         }
 
         /// make itself a clone of another map
-        void doClone( const StringMap & anotherMap )
+        void DoClone( const StringMap & anotherMap )
         {
             // shortcut for cloning itself.
             if( this == &anotherMap ) return;
 
-            GN_UNIMPL();
+            // clear myself
+            Clear();
+
+            // insert all items in another map to this map.
+            for( const KeyValuePair * p = anotherMap.First(); NULL != p; p = anotherMap.Next(p) )
+            {
+                Insert( p->key, p->value );
+            }
         }
 
-        PrivateIterator doFind( const CHAR * text ) const
+        T * DoFind( const CHAR * text ) const
         {
-            PrivateIterator iter;
+            Leaf * p = DoFindPair( text );
+            return p ? &p->value : NULL;
+        }
 
+        Leaf * DoFindPair( const CHAR * text ) const
+        {
             // check for NULL text pointer
             if( NULL == text )
             {
                 static Logger * sLogger = GetLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap finding warning: NULL text!" );
-                return iter;
+                return NULL;
             }
 
             Node * p = mRoot;
@@ -271,8 +259,8 @@ namespace GN
                     if( 0 == *text )
                     {
                         // found!
-                        iter.setNode( p );
-                        return iter;
+                        GN_ASSERT( p->leaf );
+                        return p->leaf;
                     }
                     else
                     {
@@ -292,52 +280,53 @@ namespace GN
             }
 
             // not found
-            return iter;
+            return NULL;
         }
 
-        bool doInsert( const CHAR * text, const T & value, PrivateIterator * iter )
+        Leaf * DoFindOrInsert( const CHAR * text, const T & value, bool & inserted )
         {
+            inserted = false;
+
             // check for NULL text pointer
             if( NULL == text )
             {
                 static Logger * sLogger = GetLogger("GN.base.StringMap");
-                GN_WARN(sLogger)( "StringMap insertion warning: NULL text!" );
-                if( iter ) iter->setNode( NULL );
-                return false;
+                GN_WARN(sLogger)( "Null text is not allowed!" );
+                return NULL;
             }
 
             // store input text pointer
             const char * inputText = text;
 
             // search in existing nodes
-            Node * pp;
-            Node ** p = &mRoot;
-            while( NULL != (pp = *p) )
+            Node ** pp = &mRoot;
+            while( NULL != *pp )
             {
-                int d = *text - pp->splitchar;
+                int d = *text - (*pp)->splitchar;
 
                 if( 0 == d )
                 {
                     if( 0 == *text )
                     {
-                        // the text does exist. insertion failed.
-                        if( iter ) iter->setNode( pp );
-                        return false;
+                        // The text exists already. Insertion failed.
+                        GN_ASSERT( (*pp)->leaf );
+                        inserted = false;
+                        return (*pp)->leaf;
                     }
                     else
                     {
-                        p = &(pp->equal);
+                        pp = &((*pp)->equal);
                     }
 
                     ++text;
                 }
                 else if( d < 0 )
                 {
-                    p = &(pp->lower);
+                    pp = &((*pp)->lower);
                 }
                 else
                 {
-                    p = &(pp->higher);
+                    pp = &((*pp)->higher);
                 }
             }
 
@@ -346,38 +335,79 @@ namespace GN
             for(;;)
             {
                 // create new node
-                *p = allocNode();
-                if( NULL == *p )
+                Node * newNode = AllocNode();
+                if( NULL == newNode )
                 {
                     static Logger * sLogger = GetLogger("GN.base.StringMap");
-                    GN_ERROR(sLogger)( "StringMap insertion warning: out of memory!" );
-                    if( iter ) iter->setNode( NULL );
-                    return false;
+                    GN_ERROR(sLogger)( "out of memory!" );
+                    return NULL;
                 }
-                pp = *p;
-                pp->splitchar = *text;
-                pp->lower = pp->higher = pp->equal = 0;
 
+                // create new leaf if reaching the end of the text
                 if( 0 == *text )
                 {
                     // we reach the end of the text. Insertion is done.
-                    pp->leaf = allocLeaf( inputText, value );
+                    newNode->leaf = AllocLeaf( inputText, text - inputText, value );
+                    if( NULL == newNode->leaf )
+                    {
+                        static Logger * sLogger = GetLogger("GN.base.StringMap");
+                        GN_ERROR(sLogger)( "out of memory!" );
+                        return NULL;
+                    }
+
+                    // insert the new leaf into linked list
+                    // TODO: sort and insert
+                    mLeafs.InsertAfter( mLeafs.GetTail(), newNode->leaf );
+
                     ++mCount;
-                    if( iter ) iter->setNode( pp );
-                    return true;
+                    inserted = true;
                 }
                 else
                 {
-                    pp->leaf = 0;
+                    newNode->leaf = 0;
                 }
 
-                // continue with next character
-                p = &(pp->equal);
-                ++text;
+                // link new node into node tree
+                *pp = newNode;
+                (*pp)->splitchar = *text;
+                (*pp)->lower = (*pp)->higher = (*pp)->equal = 0;
+
+                // continue with next character or exit
+                if( 0 == *text )
+                {
+                    GN_ASSERT((*pp)->leaf);
+                    return (*pp)->leaf;
+                }
+                else
+                {
+                    pp = &((*pp)->equal);
+                    ++text;
+                }
             }
         }
 
-        Node * doRecursiveErase( Node * n, const CHAR * text )
+        Leaf * DoFirst() const
+        {
+            return mLeafs.GetHead();
+        }
+
+        Leaf * DoNext( const KeyValuePair * p ) const
+        {
+            if( NULL == p ) return NULL;
+
+            Leaf * leaf = (Leaf*)p;
+
+            if( leaf->owner != &mLeafs )
+            {
+                static Logger * sLogger = GetLogger("GN.base.StringMap");
+                GN_ERROR(sLogger)( "Input pointer does not belong to this string map." );
+                return NULL;
+            }
+
+            return leaf->next;
+        }
+
+        Node * DoRecursiveErase( Node * n, const CHAR * text )
         {
             GN_ASSERT( text );
 
@@ -387,11 +417,11 @@ namespace GN
 
             if( d < 0 )
             {
-                n->lower = doRecursiveErase( n->lower, text );
+                n->lower = DoRecursiveErase( n->lower, text );
             }
             else if( d > 0 )
             {
-                n->higher = doRecursiveErase( n->higher, text );
+                n->higher = DoRecursiveErase( n->higher, text );
             }
             else if( 0 == *text )
             {
@@ -399,20 +429,20 @@ namespace GN
                 GN_ASSERT( n->leaf );
 
                 // delete leaf node
-                freeLeaf( n->leaf );
+                FreeLeaf( n->leaf );
                 n->leaf = NULL;
 
                 --mCount;
             }
             else
             {
-                n->equal = doRecursiveErase( n->equal, text+1 );
+                n->equal = DoRecursiveErase( n->equal, text+1 );
             }
 
             // free the node if it contains neither children or leaf
             if( 0 == n->lower && 0 == n->higher && 0 == n->equal && 0 == n->leaf )
             {
-                freeNode( n );
+                FreeNode( n );
                 return NULL;
             }
             else
@@ -421,7 +451,7 @@ namespace GN
             }
         }
 
-        void doErase( const CHAR * text )
+        void DoRemove( const CHAR * text )
         {
             // check for NULL text pointer
             if( NULL == text )
@@ -431,10 +461,9 @@ namespace GN
                 return;
             }
 
-            mRoot = doRecursiveErase( mRoot, text );
+            mRoot = DoRecursiveErase( mRoot, text );
         }
     }; // End of StringMap class
-
 
     ///
     /// string hash map prototype
@@ -484,7 +513,7 @@ namespace GN
             return hash % mMaxSize;
         }
 
-        KeyValuePair * doFind( const CHAR * text, size_t * position = NULL, size_t * index = NULL ) const
+        KeyValuePair * DoFindPair( const CHAR * text, size_t * position = NULL, size_t * index = NULL ) const
         {
             GN_ASSERT( text );
 
@@ -540,7 +569,7 @@ namespace GN
             }
 
             size_t pos, idx;
-            KeyValuePair * p = doFind( text, &pos, &idx );
+            KeyValuePair * p = DoFindPair( text, &pos, &idx );
 
             if( p )
             {
@@ -558,7 +587,7 @@ namespace GN
         {
             if(NULL == text) return NULL;
 
-            KeyValuePair * p = doFind( text );
+            KeyValuePair * p = DoFindPair( text );
 
             return p ? &p->value : NULL;
         }
@@ -572,7 +601,7 @@ namespace GN
             }
 
             size_t pos;
-            KeyValuePair * p = doFind( text, &pos );
+            KeyValuePair * p = DoFindPair( text, &pos );
 
             if( p ) return false;
 
@@ -667,7 +696,7 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {
-                mymap.insert( d.table[i], i );
+                mymap.Insert( d.table[i], i );
             }
             perfs.strmap.insert += c.getCycleCount() - t;
 
@@ -709,7 +738,7 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < strings.Size(); ++i )
             {
-                mymap.find( strings[i].c_str() );
+                mymap.Find( strings[i].c_str() );
             }
             perfs.strmap.find += c.getCycleCount() - t;
 
@@ -743,10 +772,10 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {
-                mymap.erase( d.table[i] );
+                mymap.Remove( d.table[i] );
             }
             perfs.strmap.remove += c.getCycleCount() - t;
-            TS_ASSERT( mymap.empty() );
+            TS_ASSERT( mymap.Empty() );
 
             // StringHashMap erasing
             t = c.getCycleCount();
@@ -755,7 +784,7 @@ class StringMapTest : public CxxTest::TestSuite
                 hmap.erase( d.table[i] );
             }
             perfs.hashmap.remove += c.getCycleCount() - t;
-            TS_ASSERT( mymap.empty() );
+            TS_ASSERT( hmap.empty() );
         }
 
         perfs.print();
@@ -791,18 +820,70 @@ public:
 
         StringMap<char,int> m;
 
+        GN::StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
+
         // insert
         m["abc"] = 1;
         m["abd"] = 2;
 
-        // find
-        StringMap<char,int>::Iterator i;
-        i = m.find( "abc" );
-        TS_ASSERT_DIFFERS( i, m.end() );
-        TS_ASSERT_EQUALS( i->first, "abc" );
-        TS_ASSERT_EQUALS( i->second, 1 );
-        i = m.find( "abcd" );
-        TS_ASSERT_EQUALS( i, m.end() );
+        // FindIter
+        StringMap<char,int>::KeyValuePair * i;
+        i = m.FindPair( "abc" );
+        TS_ASSERT_DIFFERS( i, NULL_PAIR );
+        TS_ASSERT_EQUALS( i->key, "abc" );
+        TS_ASSERT_EQUALS( i->value, 1 );
+        i = m.FindPair( "abcd" );
+        TS_ASSERT_EQUALS( i, NULL_PAIR );
+
+        // Find
+        TS_ASSERT_EQUALS( *m.Find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *m.Find( "abd" ), 2 );
+        TS_ASSERT_EQUALS( m.Find( "abcd" ), (int*)NULL );
+
+        // Iteration
+        size_t count = 0;
+        for( i = m.First(); i != NULL; i = m.Next( i ) ) ++count;
+        TS_ASSERT_EQUALS( count, m.Size() );
+    }
+
+    void testClone()
+    {
+        using namespace GN;
+
+        StringMap<char,int> a;
+        a["abc"] = 1;
+        a["abd"] = 2;
+
+        StringMap<char,int> b;
+        b = a;
+        TS_ASSERT_EQUALS( 2, b.Size() );
+        TS_ASSERT_EQUALS( *b.Find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *b.Find( "abd" ), 2 );
+
+        StringMap<char,int> c( a );
+        TS_ASSERT_EQUALS( 2, c.Size() );
+        TS_ASSERT_EQUALS( *c.Find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *c.Find( "abd" ), 2 );
+    }
+
+    void testClear()
+    {
+        using namespace GN;
+
+        StringMap<char,int> a;
+
+        a["abc"] = 1;
+        a["abd"] = 2;
+        TS_ASSERT_EQUALS( 2, a.Size() );
+
+        a.Clear();
+        TS_ASSERT_EQUALS( 0, a.Size() );
+
+        a["abc"] = 3;
+        a["abd"] = 4;
+        TS_ASSERT_EQUALS( 2, a.Size() );
+        TS_ASSERT_EQUALS( *a.Find( "abc" ), 3 );
+        TS_ASSERT_EQUALS( *a.Find( "abd" ), 4 );
     }
 
     void testHashMapSmoke()
@@ -837,28 +918,30 @@ public:
         TS_ASSERT_EQUALS( m.find( "abc" ), (int*)NULL );
     }
 
-    void testErase()
+    void testrRemove()
     {
         using namespace GN;
 
         StringMap<char,int> m;
 
+        GN::StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
+
         m["abc"] = 1;
         m["abd"] = 2;
 
-        m.erase( "abe" );
+        m.Remove( "abe" );
         TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
-        StringMap<char,int>::Iterator i = m.find( "abc" );
-        m.erase( "abd" );
-        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one item is removed.
-        TS_ASSERT_EQUALS( m.find( "abd" ), m.end() ); // verify correct item is erased.
-        TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
+        int * i = m.Find( "abc" );
+        m.Remove( "abd" );
+        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one and only one item is removed.
+        TS_ASSERT_EQUALS( m.Find( "abd" ), (int*)NULL ); // verify correct item is erased.
+        TS_ASSERT_EQUALS( m.Find( "abc" ), i ); // verify that erase operation does not affect other iterators.
 
         // erase the very last item in string map, would leave the map empty.
-        m.erase( "abc" );
-        TS_ASSERT( m.empty() );
-        TS_ASSERT_EQUALS( m.find( "abc" ), m.end() );
-        TS_ASSERT_EQUALS( m.begin(), m.end() );
+        m.Remove( "abc" );
+        TS_ASSERT( m.Empty() );
+        TS_ASSERT_EQUALS( m.Find( "abc" ), (int*)NULL );
+        TS_ASSERT_EQUALS( m.First(), NULL_PAIR );
     }
 
     void testEmptyString()
@@ -867,24 +950,23 @@ public:
 
         StringMap<char,int> m;
 
-        TS_ASSERT_EQUALS( m.end(), m.find(NULL) );
-        TS_ASSERT_EQUALS( m.end(), m.find("") );
+        GN::StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
+
+        TS_ASSERT_EQUALS( (int*)NULL, m.Find(NULL) );
+        TS_ASSERT_EQUALS( (int*)NULL, m.Find("") );
 
         // try insert NULL string to string map (should do nothing)
-        StringMap<char,int>::Iterator i;
-        bool insertionDone;
-        insertionDone = m.insert( NULL, 1, &i );
+        StringMap<char,int>::KeyValuePair * i;
+        i = m.Insert( NULL, 1 );
         TS_ASSERT_EQUALS( 0, m.Size() );
-        TS_ASSERT_EQUALS( m.end(), i );
-        TS_ASSERT( !insertionDone );
+        TS_ASSERT_EQUALS( NULL_PAIR, i );
 
         // insert empty string should work
-        insertionDone = m.insert( "", 123, &i );
+        i = m.Insert( "", 123 );
         TS_ASSERT_EQUALS( 1, m.Size() );
-        TS_ASSERT_DIFFERS( m.end(), i );
-        TS_ASSERT( insertionDone );
-        TS_ASSERT_EQUALS( i->first, "" );
-        TS_ASSERT_EQUALS( i->second, 123 );
+        TS_ASSERT_EQUALS( i, m.First() );
+        TS_ASSERT_EQUALS( i->key, "" );
+        TS_ASSERT_EQUALS( i->value, 123 );
     }
 
     void testPerfWith_25000_Items()

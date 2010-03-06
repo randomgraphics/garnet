@@ -4,8 +4,8 @@ import sys
 
 # build case list
 cases = []
-cases += GN.glob( 'base/*.cpp' )
-cases += GN.glob( 'gfx/*.cpp' )
+cases += GN.glob( 'base/strmap.cpp' )
+#cases += GN.glob( 'gfx/*.cpp' )
 
 # generate cxxtest glue file.
 cxxtest = Command(
