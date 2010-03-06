@@ -14,15 +14,15 @@ namespace GN
     template<class T>
     struct DoubleLinkedItem
     {
-        T * prev; ///< pointer to previous item
-        T * next; ///< pointer to next item
-#if GN_BUILD_ENABLE_ASSERT
+        T    * prev;  ///< pointer to previous item
+        T    * next;  ///< pointer to next item
         void * owner; ///< pointer to the double-linked-list that this item belongs to.
-#endif
     };
 
     ///
     /// Templates of double-linked list container
+    ///
+    /// Note: this linked list can work on any item class that has "prev", "next", and "owner" fields.
     ///
     template<class T>
     class DoubleLinkedList
@@ -39,12 +39,12 @@ namespace GN
 
         /// \name list operations
         //@{
-        void       Append( ItemType * newItem ) { InsertAfter( mTail, newItem ); }
+        bool       Append( ItemType * newItem ) { return InsertAfter( mTail, newItem ); }
         bool       Empty() const { return 0 == mHead; };
         ItemType * GetHead() const { return mHead; }
-        void       InsertAfter( ItemType * where, ItemType * newItem ) { DoInsertAfter( where, newItem ); }
-        void       InsertBefore( ItemType * where, ItemType * newItem ) { DoInsertBefore( where, newItem ); }
-        void       Remove( ItemType * item ) { DoRemove( item ); }
+        bool       InsertAfter( ItemType * where, ItemType * newItem ) { return DoInsertAfter( where, newItem ); }
+        bool       InsertBefore( ItemType * where, ItemType * newItem ) { return DoInsertBefore( where, newItem ); }
+        bool       Remove( ItemType * item ) { return DoRemove( item ); }
         ItemType * GetTail() const { return mTail; }
         //@}
 
@@ -58,9 +58,19 @@ namespace GN
         DoubleLinkedList( const DoubleLinkedList & );
         const DoubleLinkedList & operator = ( const DoubleLinkedList & );
 
-        void DoInsertAfter( ItemType * where, ItemType * newItem )
+        bool DoInsertAfter( ItemType * where, ItemType * newItem )
         {
-            GN_ASSERT( newItem && where != newItem );
+            if( NULL != where && where->owner != this )
+            {
+                return false;
+            }
+
+            if( NULL == newItem || NULL != newItem->owner )
+            {
+                return false;
+            }
+
+            GN_ASSERT( where != newItem );
 
             if( NULL == mHead )
             {
@@ -73,8 +83,10 @@ namespace GN
             }
             else
             {
-                GN_ASSERT( where );
-                GN_ASSERT( where->owner == this );
+                if( NULL == where )
+                {
+                    return false;
+                }
 
                 ItemType * prev = where;
                 ItemType * next = where->next;
@@ -95,14 +107,24 @@ namespace GN
                 }
             }
 
-#if GN_BUILD_ENABLE_ASSERT
             newItem->owner = this;
-#endif
+            return true;
         }
 
         void DoInsertBefore( ItemType * where, ItemType * newItem )
         {
-            GN_ASSERT( newItem && where != newItem );
+            if( NULL != where && where->owner != this )
+            {
+                return false;
+            }
+
+            if( NULL == newItem || NULL != newItem->owner )
+            {
+                return false;
+            }
+
+            GN_ASSERT( where != newItem );
+
 
             if( NULL == mHead )
             {
@@ -115,8 +137,10 @@ namespace GN
             }
             else
             {
-                GN_ASSERT( where );
-                GN_ASSERT( where->owner == this );
+                if( NULL == where )
+                {
+                    return false;
+                }
 
                 ItemType * prev = where->prev;
                 ItemType * next = where;
@@ -138,24 +162,28 @@ namespace GN
                 next->prev = newItem;
             }
 
-#if GN_BUILD_ENABLE_ASSERT
             newItem->owner = this;
-#endif
+            return true;
         }
 
-        void DoRemove( ItemType * item )
+        bool DoRemove( ItemType * item )
         {
-            GN_ASSERT( item && this == item->owner );
+            if( NULL == item || this != item->owner )
+            {
+                return false;
+            }
 
             ItemType * prev = item->prev;
             ItemType * next = item->next;
             if( prev ) prev->next = next;
             if( next ) next->prev = prev;
-#if GN_BUILD_ENABLE_ASSERT
-            item->owner = NULL;
-#endif
+
             if( item == mHead ) mHead = item->next;
             if( item == mTail ) mTail = item->prev;
+
+            item->owner = NULL;
+
+            return true;
         }
     };
 
