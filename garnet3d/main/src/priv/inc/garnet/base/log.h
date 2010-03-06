@@ -164,12 +164,12 @@ namespace GN
             ///
             /// deal with incoming log message
             ///
-            virtual void OnLog( Logger &, const LogDesc &, const StrA & ) = 0;
+            virtual void OnLog( Logger &, const LogDesc &, const char * ) = 0;
 
             ///
             /// deal with incoming UNICODE log message
             ///
-            virtual void OnLog( Logger &, const LogDesc &, const StrW & ) = 0;
+            virtual void OnLog( Logger &, const LogDesc &, const wchar_t * ) = 0;
         };
 
         ///
@@ -180,12 +180,12 @@ namespace GN
         ///
         /// Do log
         ///
-        virtual void DoLog( const LogDesc & desc, const StrA & msg ) = 0;
+        virtual void DoLog( const LogDesc & desc, const char * msg ) = 0;
 
         ///
         /// Do log (UNICODE)
         ///
-        virtual void DoLog( const LogDesc & desc, const StrW & msg ) = 0;
+        virtual void DoLog( const LogDesc & desc, const wchar_t * msg ) = 0;
 
         ///
         /// change logger level.
@@ -212,7 +212,7 @@ namespace GN
         ///
         /// get logger name
         ///
-        const StrA & GetName() const { return mName; }
+        const char * GetName() const { return mName; }
 
         ///
         /// get logger level
@@ -258,13 +258,13 @@ namespace GN
         ///
         /// protective constructor
         ///
-        Logger( const StrA & name ) : mName(name) {}
+        Logger( const char * name ) : mName(name) {}
 
         int  mLevel;   ///< DoLog level
         bool mEnabled; ///< logger enabled or not.
 
     private:
-        StrA mName;
+        const char * mName;
     };
 
     /// \name Global DoLog functions

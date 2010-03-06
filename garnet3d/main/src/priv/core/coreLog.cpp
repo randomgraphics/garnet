@@ -263,13 +263,16 @@ namespace GN
     ///
     struct ConsoleReceiver : public Logger::Receiver
     {
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
             if( GetEnvBoolean( "GN_LOG_QUIET" ) ) return;
+
+            if( NULL == msg ) msg = "";
+
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
-                ::fprintf( stdout, "%s\n", msg.ToRawPtr() );
+                ::fprintf( stdout, "%s\n", msg );
             }
             else
             {
@@ -280,18 +283,21 @@ namespace GN
                     "\t%s\n\n",
                     sFormatPath(desc.file).ToRawPtr(),
                     desc.line,
-                    logger.GetName().ToRawPtr(),
+                    logger.GetName(),
                     sLevel2Str(desc.level).ToRawPtr(),
-                    msg.ToRawPtr() );
+                    msg );
             }
         };
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
             if( GetEnvBoolean( "GN_LOG_QUIET" ) ) return;
+
+            if( NULL == msg ) msg = L"";
+
             ConsoleColor cc(desc.level);
             if( desc.level >= GN::Logger::INFO )
             {
-                ::fprintf( stdout, "%S\n", msg.ToRawPtr() );
+                ::fprintf( stdout, "%S\n", msg );
             }
             else
             {
@@ -302,9 +308,9 @@ namespace GN
                     "\t%S\n\n",
                     sFormatPath(desc.file).ToRawPtr(),
                     desc.line,
-                    logger.GetName().ToRawPtr(),
+                    logger.GetName(),
                     sLevel2Str(desc.level).ToRawPtr(),
-                    msg.ToRawPtr() );
+                    msg );
             }
         };
     };
@@ -354,31 +360,35 @@ namespace GN
             ::fprintf( af.fp, "</srlog>\n" );
         }
 
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
             AutoFile af( mFileName );
             if( !af.fp ) return;
+
+            if( NULL == msg ) msg = "";
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
                 sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().ToRawPtr(),
+                logger.GetName(),
                 sLevel2Str(desc.level).ToRawPtr(),
-                msg.ToRawPtr() );
+                msg );
         }
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
             AutoFile af( mFileName );
             if( !af.fp ) return;
+
+            if( NULL == msg ) msg = L"";
 
             ::fprintf( af.fp,
                 "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
                 sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().ToRawPtr(),
+                logger.GetName(),
                 sLevel2Str(desc.level).ToRawPtr(),
-                msg.ToRawPtr() );
+                msg );
         }
     };
 
@@ -387,7 +397,7 @@ namespace GN
     ///
     class DebugReceiver : public Logger::Receiver
     {
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
 #if GN_MSWIN
             char buf[16384];
@@ -397,15 +407,18 @@ namespace GN
                 "%s(%d) : name(%s), level(%s) : %s\n",
                 sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().ToRawPtr(),
+                logger.GetName(),
                 sLevel2Str(desc.level).ToRawPtr(),
-                msg.ToRawPtr() );
+                msg );
             ::OutputDebugStringA( buf );
 #endif
         }
-        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        virtual void OnLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
 #if GN_MSWIN
+
+            if( NULL == msg ) msg = L"";
+
             wchar_t buf[16384];
             StringPrintf(
                 buf,
@@ -413,9 +426,9 @@ namespace GN
                 L"%S(%d) : name(%S), level(%S) : %s\n",
                 sFormatPath(desc.file).ToRawPtr(),
                 desc.line,
-                logger.GetName().ToRawPtr(),
+                logger.GetName(),
                 sLevel2Str(desc.level).ToRawPtr(),
-                msg.ToRawPtr() );
+                msg );
             ::OutputDebugStringW( buf );
 #endif
         }
@@ -428,8 +441,8 @@ namespace GN
     {
     public:
 
-        LoggerImpl( const StrA & name, LocalMutex & mutex )
-            : Logger(name)
+        LoggerImpl( const char * name, LocalMutex & mutex )
+            : Logger(name?name:"")
             , mGlobalMutex( mutex )
             , mInheritLevel(true)
             , mInheritEnabled(true) {}
@@ -456,13 +469,13 @@ namespace GN
             mInheritEnabled = false;
         }
 
-        virtual void DoLog( const LogDesc & desc, const StrA & msg )
+        virtual void DoLog( const LogDesc & desc, const char * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
-        virtual void DoLog( const LogDesc & desc, const StrW & msg )
+        virtual void DoLog( const LogDesc & desc, const wchar_t * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
@@ -497,7 +510,7 @@ namespace GN
         bool mInheritEnabled;
 
         template<typename CHAR>
-        void recursiveLog( Logger & logger, const LogDesc & desc, const Str<CHAR> & msg )
+        void recursiveLog( Logger & logger, const LogDesc & desc, const CHAR * msg )
         {
             // call parent's logging
             LoggerImpl * p = parent();
@@ -561,7 +574,7 @@ namespace GN
         {
             // print itself
             for( int i = 0; i < level; ++i ) str.Append( "  " );
-            str.Append( StringFormat( "%s\n", logger.GetName().ToRawPtr() ) );
+            str.Append( StringFormat( "%s\n", logger.GetName() ) );
 
             // print children
             LoggerImpl * c = logger.firstChild();
