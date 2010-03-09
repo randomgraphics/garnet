@@ -145,7 +145,7 @@ namespace GN { namespace gfx
         DynaArray<TextureItem>      mTextures;
         DynaArray<UniformItem>      mUniforms;
 
-        mutable GN::Dictionary<StrA,AutoRef<UniformResource> > mDummyUniforms;
+        mutable StringMap<char,AutoRef<UniformResource> > mDummyUniforms;
 
         // ********************************
         // private functions

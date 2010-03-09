@@ -380,11 +380,28 @@ public:
         TS_ASSERT_EQUALS( *m.Find( "abc" ), 1 );
         TS_ASSERT_EQUALS( *m.Find( "abd" ), 2 );
         TS_ASSERT_EQUALS( m.Find( "abcd" ), (int*)NULL );
+    }
 
-        // Iteration
-        size_t count = 0;
-        for( i = m.First(); i != NULL; i = m.Next( i ) ) ++count;
-        TS_ASSERT_EQUALS( count, m.Size() );
+    void testIteration()
+    {
+        using namespace GN;
+
+        StringMap<char,int> m;
+
+        m["a"] = 1;
+        m["b"] = 2;
+        m["c"] = 3;
+        m["d"] = 4;
+
+        const char * keys[] = { "a", "b", "c", "d" };
+        const int  values[] = { 1, 2, 3, 4 };
+
+        int i = 0;
+        for( StringMap<char,int>::KeyValuePair * p = m.First(); p != NULL; p = m.Next( p ), ++i )
+        {
+            TS_ASSERT_EQUALS( p->key, keys[i] );
+            TS_ASSERT_EQUALS( p->value, values[i] );
+        }
     }
 
     void testClone()
@@ -425,6 +442,21 @@ public:
         TS_ASSERT_EQUALS( 2, a.Size() );
         TS_ASSERT_EQUALS( *a.Find( "abc" ), 3 );
         TS_ASSERT_EQUALS( *a.Find( "abd" ), 4 );
+    }
+
+    void testCaseInsensitive()
+    {
+        using namespace GN;
+
+        StringMap<char,int,StringCompareCase::INSENSITIVE> m;
+
+        m["a,b,c"] = 1;
+        m["a,B,c"] = 2;
+
+        TS_ASSERT_EQUALS( 1, m.Size() );
+        TS_ASSERT_EQUALS( *m.Find( "a,b,C" ), 2 );
+        TS_ASSERT_EQUALS( *m.Find( "A,b,c" ), 2 );
+        TS_ASSERT_EQUALS(  m.Find( "A,b,c,d" ), (int*)NULL );
     }
 
     void testHashMapSmoke()

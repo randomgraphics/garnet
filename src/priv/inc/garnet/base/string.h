@@ -1068,7 +1068,9 @@ namespace GN
     //      http://www.codeproject.com/KB/recipes/tst.aspx
     //      http://meshula.net/wordpress/?p=183
     //
-    template<class CHAR, class T>
+    // TODO: sorted leaf list
+    //
+    template<class CHAR, class T, StringCompareCase::ENUM CASE_COMPARE = StringCompareCase::SENSITIVE>
     class StringMap
     {
         // *****************************
@@ -1113,9 +1115,11 @@ namespace GN
         }
 
         /// get first element in the map
+        /// \note elements are _NOT_ sorted yet.
         const KeyValuePair * First() const { return DoFirst(); }
 
         /// get first element in the map
+        /// \note elements are _NOT_ sorted yet.
         KeyValuePair * First() { return DoFirst(); }
 
         /// clear whole map
@@ -1125,9 +1129,11 @@ namespace GN
         bool Empty() const { return 0 == mCount; }
 
         /// Get next item
+        /// \note elements are _NOT_ sorted yet.
         const KeyValuePair * Next( const KeyValuePair * p ) const { return DoNext( p ); }
 
         /// Get next item
+        /// \note elements are _NOT_ sorted yet.
         KeyValuePair * Next( const KeyValuePair * p ) { return DoNext( p ); }
 
         /// erase by key
@@ -1199,7 +1205,8 @@ namespace GN
 
         struct Node
         {
-            CHAR   splitchar;
+            CHAR   splitchar; // 0 means a leaf node
+            Node * parent;
             Node * lower;
             Node * equal;
             Node * higher;
@@ -1304,7 +1311,21 @@ namespace GN
             Node * p = mRoot;
             while( p )
             {
-                int d = *text - p->splitchar;
+                int d;
+
+                if( StringCompareCase::INSENSITIVE == CASE_COMPARE )
+                {
+                    // conver both to upper case
+                    CHAR t = *text;
+                    CHAR s = p->splitchar;
+                    if( 'a' <= t && t <= 'z' ) t += 'A' - 'a';
+                    if( 'a' <= s && s <= 'z' ) s += 'A' - 'a';
+                    d = t - s;
+                }
+                else
+                {
+                    d = *text - p->splitchar;
+                }
 
                 if( 0 == d )
                 {
@@ -1351,10 +1372,25 @@ namespace GN
             const char * inputText = text;
 
             // search in existing nodes
+            Node * parentNode = NULL;
             Node ** pp = &mRoot;
             while( NULL != *pp )
             {
-                int d = *text - (*pp)->splitchar;
+                int d;
+
+                if( StringCompareCase::INSENSITIVE == CASE_COMPARE )
+                {
+                    // conver both to upper case
+                    CHAR t = *text;
+                    CHAR s = (*pp)->splitchar;
+                    if( 'a' <= t && t <= 'z' ) t += 'A' - 'a';
+                    if( 'a' <= s && s <= 'z' ) s += 'A' - 'a';
+                    d = t - s;
+                }
+                else
+                {
+                    d = *text - (*pp)->splitchar;
+                }
 
                 if( 0 == d )
                 {
@@ -1367,6 +1403,7 @@ namespace GN
                     }
                     else
                     {
+                        parentNode = *pp;
                         pp = &((*pp)->equal);
                     }
 
@@ -1374,10 +1411,12 @@ namespace GN
                 }
                 else if( d < 0 )
                 {
+                    parentNode = *pp;
                     pp = &((*pp)->lower);
                 }
                 else
                 {
+                    parentNode = *pp;
                     pp = &((*pp)->higher);
                 }
             }
@@ -1398,7 +1437,7 @@ namespace GN
                 // create new leaf if reaching the end of the text
                 if( 0 == *text )
                 {
-                    // we reach the end of the text. Insertion is done.
+                    // we reach the end of the text. Now create a new leaf.
                     newNode->leaf = AllocLeaf( inputText, text - inputText, value );
                     if( NULL == newNode->leaf )
                     {
@@ -1407,9 +1446,12 @@ namespace GN
                         return NULL;
                     }
 
+                    // TODO: find the real "previous" leaf node
+                    Leaf * previousNode = mLeafs.GetTail();
+
                     // insert the new leaf into linked list
                     // TODO: sort and insert
-                    mLeafs.InsertAfter( mLeafs.GetTail(), newNode->leaf );
+                    mLeafs.InsertAfter( previousNode, newNode->leaf );
 
                     ++mCount;
                     inserted = true;
@@ -1420,9 +1462,10 @@ namespace GN
                 }
 
                 // link new node into node tree
+                newNode->parent = parentNode;
+                newNode->splitchar = *text;
+                newNode->lower = newNode->higher = newNode->equal = 0;
                 *pp = newNode;
-                (*pp)->splitchar = *text;
-                (*pp)->lower = (*pp)->higher = (*pp)->equal = 0;
 
                 // continue with next character or exit
                 if( 0 == *text )
@@ -1432,6 +1475,7 @@ namespace GN
                 }
                 else
                 {
+                    parentNode = *pp;
                     pp = &((*pp)->equal);
                     ++text;
                 }
@@ -1516,7 +1560,6 @@ namespace GN
             mRoot = DoRecursiveErase( mRoot, text );
         }
     }; // End of StringMap class
-
 
     /// \name string -> number conversion
     ///

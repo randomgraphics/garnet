@@ -436,13 +436,13 @@ namespace GN
         {
             GN_GUARD;
             StrA realname;
-            typename StringMap::const_iterator iter = mResNames.find( resolveName(realname,name) );
-            if( mResNames.end() == iter )
+            HandleType * h = mResNames.Find( resolveName(realname,name) );
+            if( NULL == h )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", realname.ToRawPtr() );
                 return;
             }
-            disposeResourceByHandle( iter->second );
+            disposeResourceByHandle( *h );
             GN_UNGUARD;
         }
 
@@ -515,11 +515,11 @@ namespace GN
             ResDesc() : userData(0), prev(0), next(0) {}
         };
 
-        typedef GN::Dictionary<StrA,HandleType>          StringMap;
+        typedef StringMap<char,HandleType>         NameMap;
         typedef HandleManager<ResDesc*,HandleType> ResHandleMgr;
 
         ResHandleMgr mResHandles;
-        StringMap    mResNames;
+        NameMap      mResNames;
 
         ResDesc      mLRUHead;
         ResDesc      mLRUTail;

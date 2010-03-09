@@ -268,7 +268,7 @@ namespace GN
     template< typename T, typename H, bool CASE_INSENSITIVE = false>
     class NamedHandleManager
     {
-        typedef GN::Dictionary<StrA,H> NameMap;
+        typedef StringMap<char,H> NameMap;
 
         struct NamedItem
         {

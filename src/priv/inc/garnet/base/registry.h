@@ -20,7 +20,7 @@ namespace GN
         };
 
         HandleManager<Item,UInt32> mItems;
-        Dictionary<StrA,UInt32> mNames;
+        StringMap<char,UInt32> mNames;
 
         static Logger * sLogger;
 

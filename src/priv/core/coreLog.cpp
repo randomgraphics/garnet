@@ -157,96 +157,96 @@ class LoggerTreeNode
 {
     T * mParent;
     T * mFirstChild;
-    T * mPrevBrother;
-    T * mNextBrother;
+    T * mPrevSibling;
+    T * mNextSibling;
 
 public:
 
-    LoggerTreeNode() : mParent(0), mFirstChild(0), mPrevBrother(0), mNextBrother(0) {}
+    LoggerTreeNode() : mParent(0), mFirstChild(0), mPrevSibling(0), mNextSibling(0) {}
 
-    T * parent() const { return mParent; }
-    T * firstChild() const { return mFirstChild; }
-    T * prevBrother() const { return mPrevBrother; }
-    T * nextBrother() const { return mNextBrother; }
+    T * Parent() const { return mParent; }
+    T * FirstChild() const { return mFirstChild; }
+    T * PrevSibling() const { return mPrevSibling; }
+    T * NextSibling() const { return mNextSibling; }
 
     ///
-    /// set parent
+    /// set Parent
     ///
-    void setParent( T * newParent )
+    void SetParent( T * newParent )
     {
         if( 0 == newParent )
         {
             if( mFirstChild )
             {
-                // modify parent's first child pointer
+                // modify Parent's first child pointer
                 if( mParent && this == mParent->mFirstChild )
                 {
-                    GN_ASSERT( 0 == mPrevBrother );
+                    GN_ASSERT( 0 == mPrevSibling );
                     mParent->mFirstChild = mFirstChild;
                 }
 
-                // set children's parent as my parent
+                // set children's Parent as my Parent
                 T * child = mFirstChild;
                 while( child )
                 {
                     child->mParent = mParent;
-                    child = child->mNextBrother;
+                    child = child->mNextSibling;
                 }
 
                 // find last child
                 T * lastChild = mFirstChild;
-                while( lastChild->mNextBrother ) lastChild = lastChild->mNextBrother;
+                while( lastChild->mNextSibling ) lastChild = lastChild->mNextSibling;
 
                 // connect children to brothers
-                if( mPrevBrother )
+                if( mPrevSibling )
                 {
-                    GN_ASSERT( this == mPrevBrother->mNextBrother );
-                    GN_ASSERT( 0 == mFirstChild->mPrevBrother );
-                    mPrevBrother->mNextBrother = mFirstChild;
-                    mFirstChild->mPrevBrother = mPrevBrother;
+                    GN_ASSERT( this == mPrevSibling->mNextSibling );
+                    GN_ASSERT( 0 == mFirstChild->mPrevSibling );
+                    mPrevSibling->mNextSibling = mFirstChild;
+                    mFirstChild->mPrevSibling = mPrevSibling;
                 }
-                if( mNextBrother )
+                if( mNextSibling )
                 {
-                    GN_ASSERT( this == mNextBrother->mPrevBrother );
-                    GN_ASSERT( 0 == lastChild->mNextBrother );
-                    mNextBrother->mPrevBrother = lastChild;
-                    lastChild->mNextBrother = mNextBrother;
+                    GN_ASSERT( this == mNextSibling->mPrevSibling );
+                    GN_ASSERT( 0 == lastChild->mNextSibling );
+                    mNextSibling->mPrevSibling = lastChild;
+                    lastChild->mNextSibling = mNextSibling;
                 }
             }
             else
             {
-                // modify parent's first child pointer
+                // modify Parent's first child pointer
                 if( mParent && this == mParent->mFirstChild )
                 {
-                    GN_ASSERT( 0 == mPrevBrother );
-                    mParent->mFirstChild = mNextBrother;
+                    GN_ASSERT( 0 == mPrevSibling );
+                    mParent->mFirstChild = mNextSibling;
                 }
 
                 // remove itsel from brother list
-                if( mPrevBrother )
+                if( mPrevSibling )
                 {
-                    GN_ASSERT( this == mPrevBrother->mNextBrother );
-                    mPrevBrother->mNextBrother = mNextBrother;
+                    GN_ASSERT( this == mPrevSibling->mNextSibling );
+                    mPrevSibling->mNextSibling = mNextSibling;
                 }
-                if( mNextBrother )
+                if( mNextSibling )
                 {
-                    GN_ASSERT( this == mNextBrother );
-                    mNextBrother->mPrevBrother = mPrevBrother;
+                    GN_ASSERT( this == mNextSibling );
+                    mNextSibling->mPrevSibling = mPrevSibling;
                 }
             }
 
-            // clear my parent
+            // clear my Parent
             mParent = 0;
         }
         else
         {
-            // detach from old parent
-            setParent( 0 );
+            // detach from old Parent
+            SetParent( 0 );
 
-            // attach to new parent
+            // attach to new Parent
             mParent = newParent;
-            mPrevBrother = NULL;
-            mNextBrother = mParent->mFirstChild;
+            mPrevSibling = NULL;
+            mNextSibling = mParent->mFirstChild;
             mParent->mFirstChild = (T*)this;
         }
     }
@@ -447,10 +447,10 @@ namespace GN
             , mInheritLevel(true)
             , mInheritEnabled(true) {}
 
-        void reapplyAttributes()
+        void ReapplyAttributes()
         {
-            recursiveUpdateLevel( GetLevel() );
-            recursiveUpdateEnabled( isEnabled() );
+            RecursiveUpdateLevel( GetLevel() );
+            RecursiveUpdateEnabled( isEnabled() );
         }
 
     public:
@@ -458,27 +458,27 @@ namespace GN
         virtual void SetLevel( int level )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
-            recursiveUpdateLevel( level );
+            RecursiveUpdateLevel( level );
             mInheritLevel = false;
         }
 
         virtual void SetEnabled( bool enabled )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
-            recursiveUpdateEnabled( enabled );
+            RecursiveUpdateEnabled( enabled );
             mInheritEnabled = false;
         }
 
         virtual void DoLog( const LogDesc & desc, const char * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
-            recursiveLog( *this, desc, msg );
+            RecursiveLog( *this, desc, msg );
         }
 
         virtual void DoLog( const LogDesc & desc, const wchar_t * msg )
         {
             ScopeMutex<LocalMutex> m(mGlobalMutex);
-            recursiveLog( *this, desc, msg );
+            RecursiveLog( *this, desc, msg );
         }
 
         virtual void AddReceiver( Receiver * r )
@@ -510,11 +510,11 @@ namespace GN
         bool mInheritEnabled;
 
         template<typename CHAR>
-        void recursiveLog( Logger & logger, const LogDesc & desc, const CHAR * msg )
+        void RecursiveLog( Logger & logger, const LogDesc & desc, const CHAR * msg )
         {
-            // call parent's logging
-            LoggerImpl * p = parent();
-            if( p ) p->recursiveLog( logger, desc, msg );
+            // call Parent's logging
+            LoggerImpl * p = Parent();
+            if( p ) p->RecursiveLog( logger, desc, msg );
 
             // send msg to receivers
             for( std::set<Receiver*>::const_iterator i = mReceivers.begin(); i != mReceivers.end(); ++i )
@@ -523,25 +523,25 @@ namespace GN
             }
         }
 
-        void recursiveUpdateLevel( int level )
+        void RecursiveUpdateLevel( int level )
         {
             mLevel = level;
-            LoggerImpl * child = firstChild();
+            LoggerImpl * child = FirstChild();
             while( child )
             {
-                if( child->mInheritLevel ) child->recursiveUpdateLevel( level );
-                child = child->nextBrother();
+                if( child->mInheritLevel ) child->RecursiveUpdateLevel( level );
+                child = child->NextSibling();
             }
         }
 
-        void recursiveUpdateEnabled( bool enabled )
+        void RecursiveUpdateEnabled( bool enabled )
         {
             mEnabled = enabled;
-            LoggerImpl * child = firstChild();
+            LoggerImpl * child = FirstChild();
             while( child )
             {
-                if( child->mInheritEnabled ) child->recursiveUpdateEnabled( enabled );
-                child = child->nextBrother();
+                if( child->mInheritEnabled ) child->RecursiveUpdateEnabled( enabled );
+                child = child->NextSibling();
             }
         }
     };
@@ -551,15 +551,17 @@ namespace GN
     ///
     class LoggerContainer
     {
+        // Note: Logger map is case "insensitive"
+        typedef GN::StringMap<char,LoggerImpl*,GN::StringCompareCase::INSENSITIVE> LoggerMap;
+
         ConsoleReceiver mCr;
         FileReceiver    mFr;
         DebugReceiver   mDr;
         LoggerImpl      mRootLogger;
         LocalMutex      mMutex;
+        LoggerMap       mLoggers;
 
-        GN::Dictionary<StrA,LoggerImpl*> mLoggers;
-
-        LoggerImpl * findParent( const StrA & name )
+        LoggerImpl * FindParent( const StrA & name )
         {
             // get parent name
             size_t n = name.FindLastOf( "." );
@@ -570,34 +572,20 @@ namespace GN
             return GetLogger( parent.ToRawPtr() );
         }
 
-        void printLoggerTree( StrA & str, int level, LoggerImpl & logger )
+        void PrintLoggerTree( StrA & str, int level, LoggerImpl & logger )
         {
             // print itself
             for( int i = 0; i < level; ++i ) str.Append( "  " );
             str.Append( StringFormat( "%s\n", logger.GetName() ) );
 
             // print children
-            LoggerImpl * c = logger.firstChild();
+            LoggerImpl * c = logger.FirstChild();
             while( c )
             {
-                printLoggerTree( str, level + 1, *c );
-                c = c->nextBrother();
+                PrintLoggerTree( str, level + 1, *c );
+                c = c->NextSibling();
             }
         }
-
-		struct CaseInsensitiveMatch
-		{
-			const StrA & mName;
-
-			CaseInsensitiveMatch( const StrA & name ) : mName(name)
-			{
-			}
-
-			inline bool operator()( const GN::Dictionary<StrA,LoggerImpl*>::KeyValuePair & i )
-			{
-				return 0 == StringCompareI( mName.ToRawPtr(), i.Key().ToRawPtr() );
-			}
-		};
 
     public:
 
@@ -617,11 +605,11 @@ namespace GN
         {
             static Logger * sLogger = GetLogger("GN.core.LoggerContainer");
             StrA loggerTree;
-            printLoggerTree( loggerTree, 0, mRootLogger );
+            PrintLoggerTree( loggerTree, 0, mRootLogger );
             GN_VERBOSE(sLogger)( "\n%s", loggerTree.ToRawPtr() );
-            for( Dictionary<StrA,LoggerImpl*>::Iterator i = mLoggers.Begin(); i != mLoggers.End(); ++i )
+            for( LoggerMap::KeyValuePair * p = mLoggers.First(); NULL != p; p = mLoggers.Next( p ) )
             {
-                delete i->Value();
+                delete p->value;
             }
         }
 
@@ -637,21 +625,18 @@ namespace GN
             if( n.Empty() || 0 == StringCompareI( "ROOT", n.ToRawPtr() ) ) return &mRootLogger;
 
             // find for existing logger
-            GN::Dictionary<StrA,LoggerImpl*>::ConstIterator i = std::find_if(
-				mLoggers.Begin(),
-				mLoggers.End(),
-				CaseInsensitiveMatch(n) );
-            if( mLoggers.End() != i ) { GN_ASSERT( i->Value() ); return i->Value(); }
+            LoggerImpl ** pplogger = mLoggers.Find( n );
+            if( NULL != pplogger ) { GN_ASSERT( *pplogger ); return *pplogger; }
 
             // not found. create new one.
             AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n,mMutex) );
             mLoggers[n] = newLogger;
 
             // update logger tree
-            LoggerImpl * parent = findParent( n );
+            LoggerImpl * parent = FindParent( n );
             GN_ASSERT( parent );
-            newLogger->setParent( parent );
-            parent->reapplyAttributes();
+            newLogger->SetParent( parent );
+            parent->ReapplyAttributes();
 
             // sucess
             return newLogger.Detach();

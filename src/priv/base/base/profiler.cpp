@@ -99,15 +99,15 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
         "                         profile result\n"
         "---------------------------------------------------------------------\n"
         "\n";
-    GN::Dictionary<StrA,ProfilerTimerImpl>::ConstIterator i, e = mTimers.End();
-    for( i = mTimers.Begin(); i != e; ++i )
+    const StringMap<char,ProfilerTimerImpl>::KeyValuePair * i;
+    for( i = mTimers.First(); i != NULL; i = mTimers.Next( i ) )
     {
-        const ProfilerTimerImpl & t = i->Value();
-        rval += GN::StringFormat(
+        const ProfilerTimerImpl & t = i->value;
+        rval += StringFormat(
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
-            i->Key().ToRawPtr(),
+            i->key,
             t.count,
             sTime2Str( t.timesum ).ToRawPtr(),
             sTime2Str( t.timesum / t.count ).ToRawPtr(),

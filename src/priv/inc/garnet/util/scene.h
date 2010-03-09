@@ -436,11 +436,11 @@ namespace GN { namespace util
             DynaArray<StrA> models;
         };
 
-        GN::Dictionary<StrA,gfx::MeshResourceDesc>  meshes;
-        DynaArray<AutoRef<Blob> >             meshdata;
-        GN::Dictionary<StrA,gfx::ModelResourceDesc> models;
-        GN::Dictionary<StrA,EntityDesc>             entities;
-        Boxf                                  bbox;     ///< bounding box of the whole world.
+        StringMap<char,gfx::MeshResourceDesc>  meshes;
+        DynaArray<AutoRef<Blob> >              meshdata;
+        StringMap<char,gfx::ModelResourceDesc> models;
+        StringMap<char,EntityDesc>             entities;
+        Boxf                                   bbox;     ///< bounding box of the whole world.
         //@}
 
         ///
