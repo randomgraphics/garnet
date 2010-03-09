@@ -4,163 +4,20 @@
 #include <string>
 #include <iostream>
 
-namespace GN
-{
-    ///
-    /// string hash map prototype
-    ///
-    template<class CHAR, class T>
-    class StringHashMap
-    {
-        struct KeyValuePair
-        {
-            Str<CHAR> key;
-            T         value;
-
-            KeyValuePair( const CHAR * k, const T & v )
-                : key(k)
-                , value(v)
-            {
-            }
-        };
-
-        struct HashItem
-        {
-            DynaArray<KeyValuePair*> pairs;
-
-            ~HashItem()
-            {
-                for( size_t i = 0; i < pairs.Size(); ++i )
-                {
-                    delete pairs[i];
-                }
-            }
-        };
-
-        HashItem * mItems;
-        size_t     mMaxSize;
-        size_t     mSize;
-
-        size_t calcHash( const CHAR * text ) const
-        {
-            GN_ASSERT( text );
-
-            size_t hash = 0;
-            while( *text )
-            {
-                hash = 31 * hash + (*text++);
-            }
-
-            return hash % mMaxSize;
-        }
-
-        KeyValuePair * DoFindPair( const CHAR * text, size_t * position = NULL, size_t * index = NULL ) const
-        {
-            GN_ASSERT( text );
-
-            size_t hash = calcHash( text );
-            GN_ASSERT( hash < mMaxSize );
-
-            if( position ) *position = hash;
-
-            HashItem & item = mItems[hash];
-
-            for( size_t i = 0; i < item.pairs.Size(); ++i )
-            {
-                KeyValuePair * p = item.pairs[i];
-                if( text == p->key )
-                {
-                    // found!
-                    if( index ) *index = i;
-                    return p;
-                }
-            }
-
-            // not found
-            return NULL;
-        }
-
-    public:
-
-        /// default constructor
-        StringHashMap( size_t hashTableSize )
-            : mMaxSize( hashTableSize )
-            , mSize( 0 )
-        {
-            mItems = new HashItem[hashTableSize];
-        }
-
-        /// destructor
-        ~StringHashMap()
-        {
-            delete [] mItems;
-        }
-
-        /// clear the map
-        void Clear() { delete [] mItems; mSize = 0; }
-
-        bool empty() const { return 0 == mSize; }
-
-        /// erase item from map
-        void erase( const CHAR * text )
-        {
-            if( NULL == text )
-            {
-                return;
-            }
-
-            size_t pos, idx;
-            KeyValuePair * p = DoFindPair( text, &pos, &idx );
-
-            if( p )
-            {
-                GN_ASSERT( pos < mMaxSize );
-                GN_ASSERT( idx < mItems[pos].pairs.Size() );
-                mItems[pos].pairs.EraseAt( idx );
-                delete p;
-
-                --mSize;
-            }
-        }
-
-        // find item in map
-        T * find( const CHAR * text ) const
-        {
-            if(NULL == text) return NULL;
-
-            KeyValuePair * p = DoFindPair( text );
-
-            return p ? &p->value : NULL;
-        }
-
-        /// insert new item into map
-        bool insert( const CHAR * text, const T & value )
-        {
-            if( NULL == text )
-            {
-                return false;
-            }
-
-            size_t pos;
-            KeyValuePair * p = DoFindPair( text, &pos );
-
-            if( p ) return false;
-
-            p = new KeyValuePair( text, value );
-
-            mItems[pos].pairs.Append( p );
-
-            ++mSize;
-
-            return true;
-        }
-
-        size_t Size() const { return mSize; }
-    };
-}
-
 class StringMapTest : public CxxTest::TestSuite
 {
+    static bool equal( const std::string & a, const std::string & b )
+    {
+        return a == b;
+    }
+
+    static UInt64 hash( const std::string & s )
+    {
+        return GN::StringHash( s.c_str() );
+    }
+
+    typedef GN::HashMap<std::string, size_t, hash, equal> StringHashMap;
+
     struct Dictionary
     {
         const char * const * table;
@@ -242,11 +99,11 @@ class StringMapTest : public CxxTest::TestSuite
             perfs.strmap.insert += c.getCycleCount() - t;
 
             // HashMap insertion
-            StringHashMap<char,size_t> hmap(d.count);
+            StringHashMap hmap(d.count);
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {
-                hmap.insert( d.table[i], i );
+                hmap.Insert( d.table[i], i );
             }
             perfs.hashmap.insert += c.getCycleCount() - t;
 
@@ -287,7 +144,7 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < strings.Size(); ++i )
             {
-                hmap.find( strings[i].c_str() );
+                hmap.Find( strings[i] );
             }
             perfs.hashmap.find += c.getCycleCount() - t;
 
@@ -322,10 +179,10 @@ class StringMapTest : public CxxTest::TestSuite
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {
-                hmap.erase( d.table[i] );
+                hmap.Remove( d.table[i] );
             }
             perfs.hashmap.remove += c.getCycleCount() - t;
-            TS_ASSERT( hmap.empty() );
+            TS_ASSERT( hmap.Empty() );
         }
 
         perfs.print();
@@ -457,38 +314,6 @@ public:
         TS_ASSERT_EQUALS( *m.Find( "a,b,C" ), 2 );
         TS_ASSERT_EQUALS( *m.Find( "A,b,c" ), 2 );
         TS_ASSERT_EQUALS(  m.Find( "A,b,c,d" ), (int*)NULL );
-    }
-
-    void testHashMapSmoke()
-    {
-        using namespace GN;
-
-        StringHashMap<char,int> m(13);
-
-        m.insert( "abc", 1 );
-        m.insert( "abd", 2 );
-
-        // find
-        int * i;
-        i = m.find( "abc" );
-        TS_ASSERT_DIFFERS( i, (int*)NULL );
-        TS_ASSERT_EQUALS( *i, 1 );
-        i = m.find( "abcd" );
-        TS_ASSERT_EQUALS( i, (int*)NULL );
-
-        // erase
-        m.erase( "abe" );
-        TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
-        i = m.find( "abc" );
-        m.erase( "abd" );
-        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one item is removed.
-        TS_ASSERT_EQUALS( m.find( "abd" ), (int*)NULL ); // verify correct item is erased.
-        TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
-
-        // erase the very last item in string map, would leave the map empty.
-        m.erase( "abc" );
-        TS_ASSERT( m.empty() );
-        TS_ASSERT_EQUALS( m.find( "abc" ), (int*)NULL );
     }
 
     void testrRemove()

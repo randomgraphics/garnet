@@ -442,10 +442,20 @@ namespace GN
     public:
 
         LoggerImpl( const char * name, LocalMutex & mutex )
-            : Logger(name?name:"")
+            : Logger( sDuplicateName(name) )
             , mGlobalMutex( mutex )
             , mInheritLevel(true)
             , mInheritEnabled(true) {}
+
+        ~LoggerImpl()
+        {
+            const char * name = GetName();
+
+            if( NULL != name && 0 != *name )
+            {
+                GN::HeapMemory::Free( (void*)name );
+            }
+        }
 
         void ReapplyAttributes()
         {
@@ -508,6 +518,31 @@ namespace GN
         std::set<Receiver*> mReceivers;
         bool mInheritLevel;
         bool mInheritEnabled;
+
+        static const char * sDuplicateName( const char * name )
+        {
+            if( NULL == name || 0 == *name )
+            {
+                return "";
+            }
+            else
+            {
+                size_t n = strlen( name );
+
+                char * p = (char*)HeapMemory::Alloc( n + 1 );
+
+                if( p )
+                {
+                    memcpy( p, name, n + 1 );
+
+                    return p;
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
 
         template<typename CHAR>
         void RecursiveLog( Logger & logger, const LogDesc & desc, const CHAR * msg )
