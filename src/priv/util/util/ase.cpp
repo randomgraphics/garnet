@@ -1344,6 +1344,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         n = ttpre.next( n, &level );
     }
 
+    // Output an empty line
     GN_VERBOSE(sLogger)( "" );
 
     // success
@@ -1362,6 +1363,12 @@ struct VertexSelector
         if( p != rhs.p ) return p < rhs.p;
         if( t != rhs.t ) return t < rhs.t;
         return n < rhs.n;
+    }
+
+    static UInt64 Hash( const VertexSelector & vs )
+    {
+        UInt64 h = ( ( ((UInt64)vs.p) << 32 ) | vs.t ) ^ ( ((UInt64)vs.n) << 16 );
+        return h;
     }
 };
 

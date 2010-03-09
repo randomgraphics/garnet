@@ -21,197 +21,82 @@ namespace GN
     {
     public:
 
-        //@{
-
-        HashMap()
-            : mPrimIndex(0)
-            , mCount(0)
-            , mValues( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] )
+        /// the key-value pair type.
+        struct KeyValuePair
         {
-        }
+            const KEY key;
+            VALUE     value;
 
-        //@}
+        protected:
 
-        ///
-        /// hash map iterator class
-        ///
-        class Iterator
-        {
-            mutable const HashMap * mMap;
-            mutable size_t          mIdx1;
-            mutable size_t          mIdx2;
-
-        public:
-
-            ///
-            /// ctor
-            ///
-            Iterator( const HashMap * m, size_t i1, size_t i2 )
-                : mMap(m), mIdx1(i1), mIdx2(i2)
-            {}
-
-            /// copy constructor
-            Iterator( const Iterator & it )
-                : mMap(it.mMap), mIdx1(it.mIdx1), mIdx2(it.mIdx2)
+            KeyValuePair( const KEY & k, const VALUE & v )
+                : key( k ), value( v )
             {
             }
-
-            /// \name operators
-            //@{
-
-            VALUE & operator->()
-            {
-                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].Size() );
-
-                mMap->mValues[mIdx1].values[mIdx2];
-            }
-
-            const VALUE & operator->() const
-            {
-                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].Size() );
-                mMap->mValues[mIdx1].values[mIdx2];
-            }
-
-            bool operator==( const Iterator & rhs ) const
-            {
-                return  mMap == rhs.mMap
-                    && mIdx1 == rhs.mIdx1
-                    && mIdx2 == rhs.mIdx2;
-            }
-
-            bool operator!=( const Iterator & rhs ) const
-            {
-                return  mMap != rhs.mMap
-                    || mIdx1 != rhs.mIdx1
-                    || mIdx2 != rhs.mIdx2;
-            }
-
-            bool operator<( const Iterator & rhs ) const
-            {
-                if( mMap != rhs.mMap ) return mMap < rhs.mMap;
-                if( mIdx1 != rhs.mIdx1 ) return mIdx1 < rhs.mIdx1;
-                return mIdx2 < rhs.mIdx2;
-            }
-
-            const Iterator & operator=( const Iterator & rhs ) const
-            {
-                mMap  = rhs.mMap;
-                mIdx1 = rhs.mIdx1;
-                mIdx2 = rhs.mIdx2;
-                return *this;
-            }
-
-            /// prefix plus operator
-            const Iterator & operator++() const
-            {
-                GN_ASSERT( mIdx1 < mMap->mValues.Size() );
-                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].values.Size() );
-
-                ++mIdx2;
-                if( mIdx2 < mMap->mValues[mIdx1].values.Size() ) return *this;
-
-                mIdx2 = 0;
-                do {
-
-                    ++mIdx1;
-
-                    if( mIdx1 < mMap->mValues.Size() && mIdx2 < mMap->mValues[mIdx1].values.Size() )
-                    {
-                        return *this;
-                    }
-                } while( mIdx1 < mMap->mValues.Size() );
-
-                // reach the end of the hash map
-                 mMap = 0;
-                mIdx1 = 0;
-                mIdx2 = 0;
-                return *this;
-            }
-
-            /// suffix plus operator
-            friend Iterator operator++( const Iterator & it, int )
-            {
-                Iterator ret( it );
-                ++it;
-                return ret;
-            }
-
-            //@}
         };
 
-        ///
-        /// constant iterator class
-        ///
-        typedef const Iterator ConstIterator;
+    public:
 
-        /// \name hash map operations
+        /// \name public methods
         //@{
 
-        Iterator Begin()
+
+        explicit HashMap( size_t initialTableSize = 0 )
+            : mPrimIndex( GetInitialPrimIndex( initialTableSize ) )
+            , mCount(0)
+            , mTable( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] )
         {
-            for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
-            {
-                if( mValues[idx1].values.Size() > 0 )
-                {
-                    return Iterator( this, idx1, 0 );
-                }
-            }
-            return Iterator( 0, 0, 0 );
         }
 
-        ConstIterator Begin() const
+        ~HashMap()
         {
-            for( size_t idx1 = 0; idx1 < mValues.Size(); ++idx1 )
-            {
-                if( mValues[idx1].values.Size() > 0 )
-                {
-                    return Iterator( this, idx1, 0 );
-                }
-            }
-            return Iterator( 0, 0, 0 );
+            Clear();
         }
 
         void Clear()
         {
-            mValues.Resize( HASH_MAP_PRIMARY_ARRAY[0] );
+            // clear link table
+            for( PairType * p = mLinkedItems.GetHead(); p != NULL; )
+            {
+                PairType * np = p->next;
+                delete p;
+                p = np;
+            }
+            memset( &mLinkedItems, 0, sizeof(mLinkedItems) );
+
+            // clear hash table
+            mTable.Clear();
+            mTable.Resize( HASH_MAP_PRIMARY_ARRAY[0] );
             mPrimIndex = 0;
             mCount = 0;
         }
 
-        bool Empty() const { return 0 == mCount; }
-
-        Iterator End()
+        bool Empty() const
         {
-            return Iterator( 0, 0, 0 );
-        }
-
-        ConstIterator End() const
-        {
-            return Iterator( 0, 0, 0 );
+            return 0 == mCount;
         }
 
         VALUE * Find( const KEY & key ) const
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.Size() );
+            GN_ASSERT( N == mTable.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
-            const HashItem & hi = mValues[k];
+            const HashItem & hi = mTable[k];
 
             for(
-                const PairType * p = hi.values.Begin();
-                p != hi.values.End();
-                ++p )
+                const PairType * const * pp = hi.values.Begin();
+                pp != hi.values.End();
+                ++pp )
             {
-                if( EQUAL_FUNC( p->first, key ) )
+                GN_ASSERT( *pp );
+                if( EQUAL_FUNC( (*pp)->key, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
-                    return const_cast<VALUE*>(&p->second);
+                    return const_cast<VALUE*>(&(*pp)->value);
                 }
             }
 
@@ -219,128 +104,182 @@ namespace GN
             return 0;
         }
 
-        bool Insert( const KEY & key, const VALUE & value )
+        KeyValuePair * First()
+        {
+            return mLinkedItems.GetHead();
+        }
+
+        const KeyValuePair * First() const
+        {
+            return mLinkedItems.GetHead();
+        }
+
+        KeyValuePair * Insert( const KEY & key, const VALUE & value )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.Size() );
+            GN_ASSERT( N == mTable.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
-            HashItem & hi = mValues[k];
+            HashItem & hi = mTable[k];
 
+            // check for redundency
             for(
-                const PairType * p = hi.values.Begin();
-                p != hi.values.End();
-                ++p )
+                const PairType * const * pp = hi.values.Begin();
+                pp != hi.values.End();
+                ++pp )
             {
-                if( EQUAL_FUNC( p->first, key ) )
+                if( EQUAL_FUNC( (*pp)->key, key ) )
                 {
-                    // redundent key
-                    return false;
+                    // redundent item
+                    return NULL;
                 }
             }
 
-            // insert new value
-            hi.values.Append( PairType(key,value) );
+            // create new pair item
+            PairType * newPair = new PairType( key, value );
+
+            // add to linked list
+            mLinkedItems.Append( newPair );
+
+            // add to hash table
+            hi.values.Append( newPair );
+
+            // adjust count
             ++mCount;
             if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
-                mValues.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
+                mTable.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
             }
 
-            return true;
+            return newPair;
+        }
+
+        KeyValuePair * Next( const KeyValuePair * p )
+        {
+            if( NULL == p ) return NULL;
+
+            PairType * pt = (PairType*)p;
+
+            if( pt->owner != &mLinkedItems ) return NULL;
+
+            return pt->next;
+        }
+
+        const KeyValuePair * Next( const KeyValuePair * p ) const
+        {
+            if( NULL == p && p->owner != &mLinkedItems ) return NULL;
+            return ((const PairType*)p)->next;
         }
 
         void Remove( const KEY & key )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mValues.Size() );
+            GN_ASSERT( N == mTable.Size() );
 
             size_t k = mod( HASH_FUNC(key), N );
 
-            HashItem & hi = mValues[k];
+            HashItem & hi = mTable[k];
 
             for(
-                PairType * p = hi.values.Begin();
-                p != hi.values.End();
-                ++p )
+                PairType ** pp = hi.values.Begin();
+                pp != hi.values.End();
+                ++pp )
             {
-                if( EQUAL_FUNC( p->first, key ) )
+                if( EQUAL_FUNC( (*pp)->key, key ) )
                 {
-                    // remove exisiting value
+                    // Found. Remove it.
                     GN_ASSERT( mCount > 0 );
-                    hi.values.EraseItem( p );
+
+                    // remove from linked list
+                    mLinkedItems.Remove( (*pp) );
+
+                    // delete the pair item
+                    delete *pp;
+
+                    // remove from hash table
+                    // Note: this will change value of "*pp"
+                    hi.values.EraseItem( pp );
+
+                    // adjust count
                     --mCount;
+
+                    // Done!
                     return;
                 }
             }
-        }
-
-        void RemoveValue( const VALUE & )
-        {
-            GN_UNIMPL();
         }
 
         size_t Size() const { return mCount; }
 
         //@}
 
-        /// \name hash map operators
+        /// \name public operators
         //@{
 
         VALUE & operator[]( const KEY & key )
         {
-            const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
+            VALUE * p = Find( key );
+            if( p ) return *p;
 
-            GN_ASSERT( N == mValues.Size() );
+            return Insert( key, VALUE() )->value;
+         }
 
-            size_t k = mod( HASH_FUNC(key), N );
+        const VALUE & operator[]( const KEY & key ) const
+        {
+            VALUE * p = Find( key );
 
-            HashItem & hi = mValues[k];
+            GN_ASSERT( p );
 
-            for(
-                PairType * p = hi.values.Begin();
-                p != hi.values.End();
-                ++p )
-            {
-                if( EQUAL_FUNC( p->first, key ) )
-                {
-                    // found!
-                    GN_ASSERT( mCount > 0 );
-                    return p->second;
-                }
-            }
-
-            // not found, insert new value
-            hi.values.Append( PairType(key,VALUE()) );
-            ++mCount;
-            if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
-            {
-                ++mPrimIndex;
-                mValues.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
-            }
-            return hi.values.Back().second;
-        }
+            return *p;
+         }
 
         //@}
 
     private:
 
-        typedef std::pair<KEY,VALUE> PairType;
+        struct PairType : public KeyValuePair
+        {
+            void *     owner;
+            PairType * prev;
+            PairType * next;
+
+            PairType( const KEY & k, const VALUE & v )
+                : KeyValuePair( k, v )
+                , owner(NULL)
+                , prev(0)
+                , next(0)
+            {
+            }
+        };
 
         struct HashItem
         {
-            DynaArray<PairType> values;
+            DynaArray<PairType*> values;
         };
 
-        size_t                mPrimIndex;
-        size_t                mCount;
-        DynaArray<HashItem> mValues;
+        size_t                     mPrimIndex;
+        size_t                     mCount;
+        DynaArray<HashItem>        mTable;
+        DoubleLinkedList<PairType> mLinkedItems;
 
     private:
+
+        /// return index to primay number array
+        static inline size_t GetInitialPrimIndex( size_t initialSize )
+        {
+            size_t i;
+
+            for( i = 0; i < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY); ++i )
+            {
+                if( HASH_MAP_PRIMARY_ARRAY[i] >= initialSize ) return i;
+            }
+
+            return i - 1;
+        }
 
         /// mod interger into range [0..N)
         static inline size_t mod( UInt64 i, size_t N )
@@ -348,7 +287,6 @@ namespace GN
             return (size_t)( i % N );
         }
     };
-
 }
 
 
