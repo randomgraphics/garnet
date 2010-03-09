@@ -361,11 +361,11 @@ namespace GN { namespace gfx
         ///
         struct EffectGpuProgramDesc
         {
-            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
-            GpuProgramDesc      gpd;                ///< GPU Program descriptor
-            DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store shader source.
-            GN::Dictionary<StrA,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
-            GN::Dictionary<StrA,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
+            ShaderPrerequisites  prerequisites;      ///< prerequisites of the shader.
+            GpuProgramDesc       gpd;                ///< GPU Program descriptor
+            DynaArray<char>      shaderSourceBuffer; ///< optional buffer used to store store shader source.
+            StringMap<char,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
+            StringMap<char,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
 
             /// default constructor
             EffectGpuProgramDesc() {}
@@ -476,10 +476,10 @@ namespace GN { namespace gfx
         // data
         // *****************************
 
-        GN::Dictionary<StrA,EffectTextureDesc>      textures;     ///< Texture list
-        GN::Dictionary<StrA,EffectUniformDesc>      uniforms;     ///< Uniform list
-        GN::Dictionary<StrA,EffectGpuProgramDesc>   gpuprograms;  ///< GPU program list
-        GN::Dictionary<StrA,EffectTechniqueDesc>    techniques;   ///< Technique list. Technique name must be unique.
+        StringMap<char,EffectTextureDesc>     textures;     ///< Texture list
+        StringMap<char,EffectUniformDesc>     uniforms;     ///< Uniform list
+        StringMap<char,EffectGpuProgramDesc>  gpuprograms;  ///< GPU program list
+        StringMap<char,EffectTechniqueDesc>   techniques;   ///< Technique list. Technique name must be unique.
         EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
 
         // *****************************
@@ -654,12 +654,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        StrA                            effect;   ///< effect resource name.
-        GN::Dictionary<StrA,ModelTextureDesc> textures; ///< key is effect parameter name
-        GN::Dictionary<StrA,ModelUniformDesc> uniforms; ///< key is effect parameter name
+        StrA                             effect;   ///< effect resource name.
+        StringMap<char,ModelTextureDesc> textures; ///< key is effect parameter name
+        StringMap<char,ModelUniformDesc> uniforms; ///< key is effect parameter name
 
-        StrA                            mesh;     ///< Mesh resource name.
-        MeshResourceSubset              subset;   ///< Mesh subset information.
+        StrA                             mesh;     ///< Mesh resource name.
+        MeshResourceSubset               subset;   ///< Mesh subset information.
 
         //@}
 

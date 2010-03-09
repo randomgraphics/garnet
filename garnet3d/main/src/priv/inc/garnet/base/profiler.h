@@ -143,9 +143,8 @@ namespace GN
 
             // create new timer
             ProfilerTimerImpl newTimer( mClock );
-            TimerMap::Iterator iter;
-            mTimers.Insert( name, newTimer, &iter );
-            return iter->Value();
+
+            return mTimers.Insert( name, newTimer )->value;
         }
 
         ///
@@ -175,7 +174,7 @@ namespace GN
             ~ProfilerTimerImpl() {}
         };
 
-        typedef Dictionary<StrA,ProfilerTimerImpl> TimerMap;
+        typedef StringMap<char,ProfilerTimerImpl> TimerMap;
 
         Clock             mClock;
         TimerMap          mTimers;

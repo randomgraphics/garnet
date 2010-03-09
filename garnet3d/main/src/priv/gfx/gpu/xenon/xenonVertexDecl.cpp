@@ -20,7 +20,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     {
         struct MapItem { const char * binding; D3DDECLUSAGE usage; };
 
-        GN::Dictionary<StrA,D3DDECLUSAGE> map;
+        GN::StringMap<char,D3DDECLUSAGE> map;
 
         BindingMap()
         {
@@ -51,9 +51,9 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     StrA lowerCaseBinding( binding );
     lowerCaseBinding.ToLowerCase();
 
-    GN::Dictionary<StrA,D3DDECLUSAGE>::const_iterator iter = sConvertTable.map.find( lowerCaseBinding );
+    const D3DDECLUSAGE * usage = sConvertTable.map.Find( lowerCaseBinding );
 
-    return ( sConvertTable.map.end() == iter ) ? D3DDECLUSAGE_ERROR : iter->second;
+    return ( NULL == usage ) ? D3DDECLUSAGE_ERROR : *usage;
 }
 
 static const D3DDECLTYPE D3DDECLTYPE_ERROR = D3DDECLTYPE(MAXD3DDECLTYPE+1);

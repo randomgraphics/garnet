@@ -591,13 +591,13 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // write meshes
     int meshindex = 0;
-    GN::Dictionary<StrA,StrA> meshNameMapping;
-    for( GN::Dictionary<StrA,MeshResourceDesc>::ConstIterator i = desc.meshes.Begin();
-        i != desc.meshes.End();
-        ++i )
+    StringMap<char,StrA> meshNameMapping;
+    for( const StringMap<char,MeshResourceDesc>::KeyValuePair * i = desc.meshes.First();
+        i != NULL;
+        i = desc.meshes.Next( i ) )
     {
-        const StrA & oldMeshName = i->Key();
-        const MeshResourceDesc & mesh = i->Value();
+        const StrA & oldMeshName = i->key;
+        const MeshResourceDesc & mesh = i->value;
 
         StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.ToRawPtr(), meshindex );
 
@@ -616,12 +616,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write models
     XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
-    for( GN::Dictionary<StrA,gfx::ModelResourceDesc>::ConstIterator i = desc.models.Begin();
-         i != desc.models.End();
-         ++i )
+    for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * i = desc.models.First();
+         i != NULL;
+         i = desc.models.Next( i ) )
     {
-        const StrA & modelName  = i->Key();
-        ModelResourceDesc model = i->Value();
+        const StrA & modelName  = i->key;
+        ModelResourceDesc model = i->value;
 
         StrA * pNewMeshName = meshNameMapping.Find( model.mesh );
         if( NULL != pNewMeshName )
@@ -639,12 +639,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // rename entities
     int entityIndex = 0;
-    GN::Dictionary<StrA,StrA> entityNameMap;
-    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::ConstIterator i = desc.entities.Begin();
-        i != desc.entities.End();
-        ++i )
+    StringMap<char,StrA> entityNameMap;
+    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.First();
+        i != NULL;
+        i = desc.entities.Next( i ) )
     {
-        const StrA & entityName = i->Key();
+        const StrA & entityName = i->key;
 
         entityNameMap[entityName] = StringFormat( "%d", ++entityIndex );
     }
@@ -652,12 +652,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write entities
     XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
-    for( GN::Dictionary<StrA,SimpleWorldDesc::EntityDesc>::ConstIterator i = desc.entities.Begin();
-        i != desc.entities.End();
-        ++i )
+    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.First();
+        i != NULL;
+        i = desc.entities.Next( i ) )
     {
-        const StrA                        & entityName = *entityNameMap.Find(i->Key());
-        const SimpleWorldDesc::EntityDesc & entityDesc = i->Value();
+        const StrA                        & entityName = *entityNameMap.Find(i->key);
+        const SimpleWorldDesc::EntityDesc & entityDesc = i->value;
 
         XmlElement * entity = xmldoc.createElement( entities );
         entity->name = "entity";
@@ -678,7 +678,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         }
         else if( !entityDesc.spatial.parent.Empty() )
         {
-            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->Key().ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
+            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->key, entityDesc.spatial.parent.ToRawPtr() );
         }
 
         a = xmldoc.createAttrib( spatial );
@@ -805,8 +805,12 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
         }
     }
 
+    // check if the entity is in the world already
+    Entity * e = world.findEntity( entityName );
+    if( e ) return e;
+
     // create a new entity instance
-    Entity * e = entityDesc.models.Empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
+    e = entityDesc.models.Empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
     if( !e ) return NULL;
 
     // attach the entity to parent node or root node
@@ -966,11 +970,11 @@ Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
     Entity * root = world.createSpatialEntity( NULL );
     if( NULL == root ) return NULL;
 
-    for( Dictionary<StrA,EntityDesc>::ConstIterator i = entities.Begin();
-         i != entities.End();
-         ++i )
+    for( const StringMap<char,EntityDesc>::KeyValuePair * i = entities.First();
+         i != NULL;
+         i = entities.Next( i ) )
     {
-        const StrA & entityName = i->Key();
+        const StrA & entityName = i->key;
 
         if( !world.findEntity( entityName ) )
         {

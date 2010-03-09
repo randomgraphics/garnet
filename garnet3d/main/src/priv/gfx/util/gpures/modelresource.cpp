@@ -411,12 +411,12 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create texture nodes
-    for( Dictionary<StrA,ModelTextureDesc>::ConstIterator i = textures.Begin();
-         i != textures.End();
-         ++i )
+    for( const StringMap<char,ModelTextureDesc>::KeyValuePair * i = textures.First();
+         i != NULL;
+         i = textures.Next( i ) )
     {
-        const StrA             & texname = i->Key();
-        const ModelTextureDesc & texdesc = i->Value();
+        const StrA             & texname = i->key;
+        const ModelTextureDesc & texdesc = i->value;
 
         XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name = "texture";
@@ -439,12 +439,12 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // create uniform nodes
-    for( Dictionary<StrA,ModelUniformDesc>::ConstIterator i = uniforms.Begin();
-         i != uniforms.End();
-         ++i )
+    for( const StringMap<char,ModelUniformDesc>::KeyValuePair * i = uniforms.First();
+         i != NULL;
+         i = uniforms.Next( i ) )
     {
-        const StrA             & uniname = i->Key();
-        const ModelUniformDesc & unidesc = i->Value();
+        const StrA             & uniname = i->key;
+        const ModelUniformDesc & unidesc = i->value;
 
         XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name = "uniform";

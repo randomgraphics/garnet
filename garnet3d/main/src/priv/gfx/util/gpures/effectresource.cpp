@@ -109,19 +109,19 @@ sMergeRenderStates(
 // -----------------------------------------------------------------------------
 static bool
 sCheckShaderTextures(
-    const EffectResourceDesc & effectDesc,
-    const EffectGpuProgramDesc   & shaderDesc,
-    const char               * shaderName,
-    const GpuProgram         & program )
+    const EffectResourceDesc   & effectDesc,
+    const EffectGpuProgramDesc & shaderDesc,
+    const char                 * shaderName,
+    const GpuProgram           & program )
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( Dictionary<StrA,StrA>::ConstIterator iter = shaderDesc.textures.Begin();
-         iter != shaderDesc.textures.End();
-         ++iter )
+    for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc.textures.First();
+         iter != NULL;
+         iter = shaderDesc.textures.Next( iter ) )
     {
-        const StrA & shaderParameterName = iter->Key();
-        const StrA & textureName = iter->Value();
+        const StrA & shaderParameterName = iter->key;
+        const StrA & textureName = iter->value;
 
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.textures[shaderParameterName] )
         {
@@ -154,12 +154,12 @@ sCheckShaderUniforms(
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( GN::Dictionary<StrA,StrA>::ConstIterator iter = shaderDesc.uniforms.Begin();
-         iter != shaderDesc.uniforms.End();
-         ++iter )
+    for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc.uniforms.First();
+         iter != NULL;
+         iter = shaderDesc.uniforms.Next( iter ) )
     {
-        const StrA & shaderParameterName = iter->Key();
-        const StrA & uniformName = iter->Value();
+        const StrA & shaderParameterName = iter->key;
+        const StrA & uniformName = iter->value;
 
         if( GPU_PROGRAM_PARAMETER_NOT_FOUND == param.uniforms[shaderParameterName] )
         {
@@ -299,12 +299,12 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
 {
     Gpu & gpu = database().gpu();
 
-    for( GN::Dictionary<StrA,EffectGpuProgramDesc>::ConstIterator iter = effectDesc.gpuprograms.Begin();
-         iter != effectDesc.gpuprograms.End();
-         ++iter )
+    for( const StringMap<char,EffectGpuProgramDesc>::KeyValuePair * iter = effectDesc.gpuprograms.First();
+         iter != NULL;
+         iter = effectDesc.gpuprograms.Next( iter ) )
     {
-        const StrA             & shaderName = iter->Key();
-        const EffectGpuProgramDesc & shaderDesc = iter->Value();
+        const StrA                 & shaderName = iter->key;
+        const EffectGpuProgramDesc & shaderDesc = iter->value;
 
         // check shader requirements.
         // Note: it is expected scenario that some shaders are not supported by current hardware.
@@ -341,12 +341,12 @@ GN::gfx::EffectResource::Impl::initTechniques(
 {
     int currentQuality = (int)0x80000000; // minimal signed integer
 
-    for( GN::Dictionary<StrA,EffectTechniqueDesc>::ConstIterator iter = effectDesc.techniques.Begin();
-         iter != effectDesc.techniques.End();
-         ++iter )
+    for( const StringMap<char,EffectTechniqueDesc>::KeyValuePair * iter = effectDesc.techniques.First();
+         iter != NULL;
+         iter = effectDesc.techniques.Next( iter ) )
     {
-        const StrA                & techName = iter->Key();
-        const EffectTechniqueDesc & techDesc = iter->Value();
+        const StrA                & techName = iter->key;
+        const EffectTechniqueDesc & techDesc = iter->value;
 
         // ignore the technique with lower quality
         if( techDesc.quality <= currentQuality )
@@ -457,14 +457,14 @@ bool
 GN::gfx::EffectResource::Impl::initTextures(
     const EffectResourceDesc  & effectDesc )
 {
-    for( GN::Dictionary<StrA,EffectTextureDesc>::ConstIterator iter = effectDesc.textures.Begin();
-         iter != effectDesc.textures.End();
-         ++iter )
+    for( const StringMap<char,EffectTextureDesc>::KeyValuePair * iter = effectDesc.textures.First();
+         iter != NULL;
+         iter = effectDesc.textures.Next( iter ) )
     {
         TextureProperties tp;
 
-        tp.parameterName = iter->Key();
-        tp.sampler = iter->Value().sampler;
+        tp.parameterName = iter->key;
+        tp.sampler = iter->value.sampler;
 
         // setup texture binding point array
         for( size_t ipass = 0; ipass < mPasses.Size(); ++ipass )
@@ -473,12 +473,12 @@ GN::gfx::EffectResource::Impl::initTextures(
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc * shaderDesc = effectDesc.gpuprograms.Find( gpitem.name );
 
-            for( GN::Dictionary<StrA,StrA>::ConstIterator iter = shaderDesc->textures.Begin();
-                 iter != shaderDesc->textures.End();
-                 ++iter )
+            for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc->textures.First();
+                 iter != NULL;
+                 iter = shaderDesc->textures.Next( iter ) )
             {
-                const StrA & shaderParameterName = iter->Key();
-                const StrA & textureName = iter->Value();
+                const StrA & shaderParameterName = iter->key;
+                const StrA & textureName = iter->value;
 
                 GN_ASSERT( NULL != effectDesc.textures.Find( textureName ) );
 
@@ -511,15 +511,15 @@ bool
 GN::gfx::EffectResource::Impl::initUniforms(
     const EffectResourceDesc  & effectDesc )
 {
-    for( GN::Dictionary<StrA,EffectUniformDesc>::ConstIterator iter = effectDesc.uniforms.Begin();
-         iter != effectDesc.uniforms.End();
-         ++iter )
+    for( const StringMap<char,EffectUniformDesc>::KeyValuePair * iter = effectDesc.uniforms.First();
+         iter != NULL;
+         iter = effectDesc.uniforms.Next( iter ) )
     {
         UniformProperties up;
 
-        up.parameterName = iter->Key();
+        up.parameterName = iter->key;
 
-        const EffectUniformDesc & eud = iter->Value();
+        const EffectUniformDesc & eud = iter->value;
         up.size = eud.size;
 
         // setup uniform binding point array
@@ -529,12 +529,12 @@ GN::gfx::EffectResource::Impl::initUniforms(
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
             const EffectGpuProgramDesc    * shaderDesc = effectDesc.gpuprograms.Find( gpitem.name );
 
-            for( GN::Dictionary<StrA,StrA>::ConstIterator iter = shaderDesc->uniforms.Begin();
-                 iter != shaderDesc->uniforms.End();
-                 ++iter )
+            for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc->uniforms.First();
+                 iter != NULL;
+                 iter = shaderDesc->uniforms.Next( iter ) )
             {
-                const StrA & shaderParameterName = iter->Key();
-                const StrA & uniformName = iter->Value();
+                const StrA & shaderParameterName = iter->key;
+                const StrA & uniformName = iter->value;
 
                 GN_ASSERT( NULL != effectDesc.uniforms.Find( uniformName ) );
 
