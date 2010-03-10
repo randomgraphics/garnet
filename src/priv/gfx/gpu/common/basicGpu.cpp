@@ -136,7 +136,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
     }
     else
     {
-        // adding new data
+        // add new data
         DynaArray<UInt8> & newUserData = mUserData[id];
 
         if( NULL != data && length > 0 )

@@ -207,7 +207,31 @@ namespace GN
         /// \name public methods
         //@{
 
-        const char * ToStr() const; // Note: this function is not thread safe
+        ///
+        /// Convert to string
+        ///
+        /// \note: this is not thread safe
+        ///
+        const char * ToStr() const;
+
+        ///
+        /// Hasing
+        ///
+        UInt64 Hash() const
+        {
+            const UInt64 * u64 = (const UInt64*)this;
+            return u64[0] + u64[1];
+        }
+
+        ///
+        /// Hasing (used by HashMap class)
+        ///
+        static UInt64 sHash( const Guid & guid ) { return guid.Hash(); }
+
+        ///
+        /// Equality (used by HashMap class)
+        ///
+        static bool sEqual( const Guid & a, const Guid & b ) { return a == b; }
 
         //@}
 
