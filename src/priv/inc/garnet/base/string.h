@@ -537,11 +537,6 @@ namespace GN
         CharType GetLast() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
 
         ///
-        /// string Hash
-        ///
-        UInt64 Hash() const { return StringHash( mPtr, mCount ); }
-
-        ///
         /// Insert a character at specific position
         ///
         void Insert( size_t pos, CharType ch )
@@ -967,6 +962,17 @@ namespace GN
             os << str.ToRawPtr();
             return os;
         }
+
+        ///
+        /// string Hash Functor
+        ///
+        struct Hash
+        {
+            UInt64 operator()( const Str & s ) const
+            {
+                return StringHash( s.mPtr, s.mCount );
+            }
+        };
 
     private:
 

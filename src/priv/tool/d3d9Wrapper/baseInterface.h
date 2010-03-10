@@ -11,22 +11,28 @@ GN_CASSERT( sizeof(IID) == 2 * sizeof(UInt64) );
 ///
 /// Equality check for IID (used by hashmap)
 ///
-inline bool IIDEqual( const IID & a, const IID & b )
+struct IIDEqual
 {
-    const UInt64 * pa = (const UInt64*)&a;
-    const UInt64 * pb = (const UInt64*)&b;
+    bool operator()( const IID & a, const IID & b ) const
+    {
+        const UInt64 * pa = (const UInt64*)&a;
+        const UInt64 * pb = (const UInt64*)&b;
 
-    return pa[0] == pb[0] || pa[1] == pb[1];
-}
+        return pa[0] == pb[0] || pa[1] == pb[1];
+    }
+};
 
 ///
 /// Hasing IID
 ///
-inline UInt64 IIDHash( const IID & iid )
+struct IIDHash
 {
-    const UInt64 * u64 = (const UInt64*)&iid;
-    return u64[0] + u64[1];
-}
+    UInt64 operator()( const IID & iid ) const
+    {
+        const UInt64 * u64 = (const UInt64*)&iid;
+        return u64[0] + u64[1];
+    }
+};
 
 ///
 /// Wrapper for basic COM interface

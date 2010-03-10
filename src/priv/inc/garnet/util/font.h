@@ -303,6 +303,8 @@ namespace GN { namespace util
 
         typedef StackArray<AutoRef<gfx::Texture>,MAX_TEXTURES> TextureArray;
 
+        typedef HashMap<wchar_t,size_t> SlotMap;
+
         // graphics resources
         gfx::SpriteRenderer       * mSpriteRenderer;
 
@@ -313,7 +315,8 @@ namespace GN { namespace util
         FontSlot                  * mFontSlots;
         size_t                      mMaxSlots;
         size_t                      mNumUsedSlots;  // number of used slots
-        GN::Dictionary<wchar_t,size_t>    mSlotMap;       // map that convert charcode to slot index
+
+        SlotMap                     mSlotMap;       // map that convert charcode to slot index
 
         // font textures
         TextureArray                mTextures;
@@ -326,6 +329,9 @@ namespace GN { namespace util
         // private functions
         // ********************************
     private:
+
+        static inline UInt64 sWcharHash( const wchar_t & ch ) { return (UInt64)ch; }
+        static inline bool sWcharEqual( const wchar_t & a, const wchar_t & b ) { return a == b; }
 
         ///
         /// get slot of specific character

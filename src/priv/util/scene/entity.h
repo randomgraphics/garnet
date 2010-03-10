@@ -37,7 +37,7 @@ namespace GN { namespace util
 
     private:
 
-        typedef GN::Dictionary<Guid, NodeBase*> NodeMap;
+        typedef HashMap<Guid, NodeBase*, Guid::Hash> NodeMap;
 
         World::Impl & mWorld;
         Entity      & mOwner;

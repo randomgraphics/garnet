@@ -2,14 +2,7 @@
 
 class StrHashTest : public CxxTest::TestSuite
 {
-    static bool equal( const GN::StrA & a, const GN::StrA & b )
-    {
-        return a == b;
-    }
-
-    static UInt64 hash( const GN::StrA & s ) { return s.Hash(); }
-
-    typedef GN::HashMap< GN::StrA, int, hash, equal > StrHashMap;
+    typedef GN::HashMap<GN::StrA, int, GN::StrA::Hash> StrHashMap;
 
 public:
 
