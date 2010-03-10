@@ -3,20 +3,19 @@
 #include <string.h>
 #include <string>
 #include <iostream>
+#include <hash_map>
 
 class StringMapTest : public CxxTest::TestSuite
 {
-    static bool equal( const std::string & a, const std::string & b )
+    struct StlStringHash
     {
-        return a == b;
-    }
+        UInt64 operator()( const std::string & s ) const
+        {
+            return GN::StringHash( s.c_str() );
+        }
+    };
 
-    static UInt64 hash( const std::string & s )
-    {
-        return GN::StringHash( s.c_str() );
-    }
-
-    typedef GN::HashMap<std::string, size_t, hash, equal> StringHashMap;
+    typedef GN::HashMap<std::string, int, StlStringHash> StrHashMap;
 
     struct Dictionary
     {
@@ -99,7 +98,7 @@ class StringMapTest : public CxxTest::TestSuite
             perfs.strmap.insert += c.getCycleCount() - t;
 
             // HashMap insertion
-            StringHashMap hmap(d.count);
+            StrHashMap hmap(d.count);
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {
@@ -140,7 +139,7 @@ class StringMapTest : public CxxTest::TestSuite
             }
             perfs.strmap.find += c.getCycleCount() - t;
 
-            // StringHashMap find
+            // StrHashMap find
             t = c.getCycleCount();
             for( size_t i = 0; i < strings.Size(); ++i )
             {
@@ -175,7 +174,7 @@ class StringMapTest : public CxxTest::TestSuite
             perfs.strmap.remove += c.getCycleCount() - t;
             TS_ASSERT( mymap.Empty() );
 
-            // StringHashMap erasing
+            // StrHashMap erasing
             t = c.getCycleCount();
             for( size_t i = 0; i < d.count; ++i )
             {

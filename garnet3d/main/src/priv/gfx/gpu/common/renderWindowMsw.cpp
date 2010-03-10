@@ -3,7 +3,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-GN::Dictionary<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
+GN::gfx::RenderWindowMsw::WindowMap GN::gfx::RenderWindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.MSW");
 

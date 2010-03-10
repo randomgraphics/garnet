@@ -50,33 +50,38 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
-        static inline UInt64
-        hash( const D3D11_RASTERIZER_DESC & desc )
+        struct Hash
         {
-            CompactDesc cd;
+            UInt64 operator()( const D3D11_RASTERIZER_DESC & desc ) const
+            {
+                CompactDesc cd;
 
-            cd.fillmode  = desc.FillMode;
-            cd.cullmode  = desc.CullMode;
-            cd.frontccw  = desc.FrontCounterClockwise;
-            cd.depthclip = desc.DepthClipEnable;
-            cd.scissor   = desc.ScissorEnable;
-            cd.msaa      = desc.MultisampleEnable;
-            cd.antialias = desc.AntialiasedLineEnable;
-            cd.depthbias = desc.DepthBias;
-            cd.misc      = desc.DepthBiasClamp + desc.SlopeScaledDepthBias;
+                cd.fillmode  = desc.FillMode;
+                cd.cullmode  = desc.CullMode;
+                cd.frontccw  = desc.FrontCounterClockwise;
+                cd.depthclip = desc.DepthClipEnable;
+                cd.scissor   = desc.ScissorEnable;
+                cd.msaa      = desc.MultisampleEnable;
+                cd.antialias = desc.AntialiasedLineEnable;
+                cd.depthbias = desc.DepthBias;
+                cd.misc      = desc.DepthBiasClamp + desc.SlopeScaledDepthBias;
 
-            return cd.u64;
-        }
+                return cd.u64;
+            }
+        };
 
         ///
         /// rasterize state equality check
         ///
-        static inline bool equal(
-            const D3D11_RASTERIZER_DESC & a,
-            const D3D11_RASTERIZER_DESC & b )
+        struct Equal
         {
-            return 0 == ::memcmp( &a, &b, sizeof(a) );
-        }
+            bool operator()(
+                const D3D11_RASTERIZER_DESC & a,
+                const D3D11_RASTERIZER_DESC & b ) const
+            {
+                return 0 == ::memcmp( &a, &b, sizeof(a) );
+            }
+        };
     };
 
     ///
@@ -112,40 +117,45 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
-        static inline UInt64
-        hash( const D3D11_BLEND_DESC & desc )
+        struct Hash
         {
-            CompactDesc cd;
-
-            cd.a2c  = desc.AlphaToCoverageEnable;
-            cd.ibe  = desc.IndependentBlendEnable;
-            cd.be   = desc.RenderTarget[0].BlendEnable;
-            cd.sb   = desc.RenderTarget[0].SrcBlend;
-            cd.db   = desc.RenderTarget[0].DestBlend;
-            cd.bo   = desc.RenderTarget[0].BlendOp;
-            cd.sba  = desc.RenderTarget[0].SrcBlendAlpha;
-            cd.dba  = desc.RenderTarget[0].DestBlendAlpha;
-            cd.boa  = desc.RenderTarget[0].BlendOpAlpha;
-            cd.mask = desc.RenderTarget[0].RenderTargetWriteMask;
-
-            for( int i = 1; i < 8; ++i )
+            UInt64 operator()( const D3D11_BLEND_DESC & desc ) const
             {
-                cd.be |= desc.RenderTarget[i].BlendEnable << i;
-                cd.mask += desc.RenderTarget[i].RenderTargetWriteMask;
-            }
+                CompactDesc cd;
 
-            return cd.u64;
-        }
+                cd.a2c  = desc.AlphaToCoverageEnable;
+                cd.ibe  = desc.IndependentBlendEnable;
+                cd.be   = desc.RenderTarget[0].BlendEnable;
+                cd.sb   = desc.RenderTarget[0].SrcBlend;
+                cd.db   = desc.RenderTarget[0].DestBlend;
+                cd.bo   = desc.RenderTarget[0].BlendOp;
+                cd.sba  = desc.RenderTarget[0].SrcBlendAlpha;
+                cd.dba  = desc.RenderTarget[0].DestBlendAlpha;
+                cd.boa  = desc.RenderTarget[0].BlendOpAlpha;
+                cd.mask = desc.RenderTarget[0].RenderTargetWriteMask;
+
+                for( int i = 1; i < 8; ++i )
+                {
+                    cd.be |= desc.RenderTarget[i].BlendEnable << i;
+                    cd.mask += desc.RenderTarget[i].RenderTargetWriteMask;
+                }
+
+                return cd.u64;
+            }
+        };
 
         ///
         /// blend state equality check
         ///
-        static inline bool equal(
-            const D3D11_BLEND_DESC & a,
-            const D3D11_BLEND_DESC & b )
+        struct Equal
         {
-            return 0 == memcmp( &a, &b, sizeof(a) );
-        }
+            bool operator()(
+                const D3D11_BLEND_DESC & a,
+                const D3D11_BLEND_DESC & b ) const
+            {
+                return 0 == memcmp( &a, &b, sizeof(a) );
+            }
+        };
     };
 
     ///
@@ -186,39 +196,44 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
-        static inline UInt64
-        hash( const D3D11_DEPTH_STENCIL_DESC & desc )
+        struct Hash
         {
-            CompactDesc cd;
+            UInt64 operator()( const D3D11_DEPTH_STENCIL_DESC & desc ) const
+            {
+                CompactDesc cd;
 
-            cd.depth    = desc.DepthEnable;
-            cd.write    = desc.DepthWriteMask;
-            cd.zfunc    = desc.DepthFunc - 1;
-            cd.stencil  = desc.StencilEnable;
-            cd.ff_fail  = desc.FrontFace.StencilFailOp - 1;
-            cd.ff_zfail = desc.FrontFace.StencilDepthFailOp - 1;
-            cd.ff_pass  = desc.FrontFace.StencilPassOp - 1;
-            cd.ff_func  = desc.FrontFace.StencilFunc - 1;
-            cd.bf_fail  = desc.BackFace.StencilFailOp - 1;
-            cd.bf_zfail = desc.BackFace.StencilDepthFailOp - 1;
-            cd.bf_pass  = desc.BackFace.StencilPassOp - 1;
-            cd.bf_func  = desc.BackFace.StencilFunc - 1;
-            cd.nouse    = 0;
-            cd.srmask   = desc.StencilReadMask;
-            cd.swmask   = desc.StencilWriteMask;
+                cd.depth    = desc.DepthEnable;
+                cd.write    = desc.DepthWriteMask;
+                cd.zfunc    = desc.DepthFunc - 1;
+                cd.stencil  = desc.StencilEnable;
+                cd.ff_fail  = desc.FrontFace.StencilFailOp - 1;
+                cd.ff_zfail = desc.FrontFace.StencilDepthFailOp - 1;
+                cd.ff_pass  = desc.FrontFace.StencilPassOp - 1;
+                cd.ff_func  = desc.FrontFace.StencilFunc - 1;
+                cd.bf_fail  = desc.BackFace.StencilFailOp - 1;
+                cd.bf_zfail = desc.BackFace.StencilDepthFailOp - 1;
+                cd.bf_pass  = desc.BackFace.StencilPassOp - 1;
+                cd.bf_func  = desc.BackFace.StencilFunc - 1;
+                cd.nouse    = 0;
+                cd.srmask   = desc.StencilReadMask;
+                cd.swmask   = desc.StencilWriteMask;
 
-            return cd.u64;
-        }
+                return cd.u64;
+            }
+        };
 
         ///
         /// depth stencil state equality check
         ///
-        static inline bool equal(
-            const D3D11_DEPTH_STENCIL_DESC & a,
-            const D3D11_DEPTH_STENCIL_DESC & b )
+        struct Equal
         {
-            return 0 == memcmp( &a, &b, sizeof(a) );
-        }
+            bool operator()(
+                const D3D11_DEPTH_STENCIL_DESC & a,
+                const D3D11_DEPTH_STENCIL_DESC & b ) const
+            {
+                return 0 == memcmp( &a, &b, sizeof(a) );
+            }
+        };
     };
 
     ///
@@ -252,45 +267,50 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( 8 == sizeof(CompactDesc) );
 
-        static inline UInt64
-        hash( const D3D11_SAMPLER_DESC & desc )
+        struct Hash
         {
-            CompactDesc cd;
+            UInt64 operator()( const D3D11_SAMPLER_DESC & desc ) const
+            {
+                CompactDesc cd;
 
-///
-/// compose BGRA32 color constant
-///
+    ///
+    /// compose BGRA32 color constant
+    ///
 #define GN_RGBA32_FROM_FLOAT4( r, g, b, a )   \
-        ( ( (((UInt32)(r*255.0f))&0xFF) <<  0 ) | \
-          ( (((UInt32)(g*255.0f))&0xFF) <<  8 ) | \
-          ( (((UInt32)(b*255.0f))&0xFF) << 16 ) | \
-          ( (((UInt32)(a*255.0f))&0xFF) << 24 ) )
+            ( ( (((UInt32)(r*255.0f))&0xFF) <<  0 ) | \
+              ( (((UInt32)(g*255.0f))&0xFF) <<  8 ) | \
+              ( (((UInt32)(b*255.0f))&0xFF) << 16 ) | \
+              ( (((UInt32)(a*255.0f))&0xFF) << 24 ) )
 
-            cd.filter      = desc.Filter;
-            cd.addressU    = desc.AddressU;
-            cd.addressV    = desc.AddressV;
-            cd.addressW    = desc.AddressW;
-            cd.lodbias     = (UInt64)desc.MipLODBias;
-            cd.maxaniso    = (UInt64)desc.MaxAnisotropy;
-            cd.compare     = desc.ComparisonFunc;
-            cd.bordercolor = GN_RGBA32_FROM_FLOAT4( desc.BorderColor[0],
-                                                    desc.BorderColor[1],
-                                                    desc.BorderColor[2],
-                                                    desc.BorderColor[3] );
-            cd.lod         = (UInt32)( desc.MinLOD + desc.MaxLOD );
+                cd.filter      = desc.Filter;
+                cd.addressU    = desc.AddressU;
+                cd.addressV    = desc.AddressV;
+                cd.addressW    = desc.AddressW;
+                cd.lodbias     = (UInt64)desc.MipLODBias;
+                cd.maxaniso    = (UInt64)desc.MaxAnisotropy;
+                cd.compare     = desc.ComparisonFunc;
+                cd.bordercolor = GN_RGBA32_FROM_FLOAT4( desc.BorderColor[0],
+                                                        desc.BorderColor[1],
+                                                        desc.BorderColor[2],
+                                                        desc.BorderColor[3] );
+                cd.lod         = (UInt32)( desc.MinLOD + desc.MaxLOD );
 
-            return cd.u64;
-        }
+                return cd.u64;
+            }
+        };
 
         ///
         /// rasterize state equality check
         ///
-        static inline bool equal(
-            const D3D11_SAMPLER_DESC & a,
-            const D3D11_SAMPLER_DESC & b )
+        struct Equal
         {
-            return 0 == ::memcmp( &a, &b, sizeof(a) );
-        }
+            bool operator()(
+                const D3D11_SAMPLER_DESC & a,
+                const D3D11_SAMPLER_DESC & b ) const
+            {
+                return 0 == ::memcmp( &a, &b, sizeof(a) );
+            }
+        };
     };
 
     ///
@@ -488,8 +508,8 @@ namespace GN { namespace gfx
         typedef HashMap<
             OBJECT_DESC,
             StateObjectItem*,
-            &D3D11StateObjectCreator<OBJECT_DESC>::hash,
-            &D3D11StateObjectCreator<OBJECT_DESC>::equal
+            typename D3D11StateObjectCreator<OBJECT_DESC>::Hash,
+            typename D3D11StateObjectCreator<OBJECT_DESC>::Equal
             > ObjectHashMap;
 
         // *************************************************

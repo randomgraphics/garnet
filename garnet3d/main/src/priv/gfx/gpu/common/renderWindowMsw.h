@@ -94,7 +94,9 @@ namespace GN { namespace gfx
         bool       mUseExternalWindow;
         bool       mInsideSizeMove;
 
-        static GN::Dictionary<void*,RenderWindowMsw*> msInstanceMap;
+        typedef GN::HashMap<void*,RenderWindowMsw*> WindowMap;
+
+        static WindowMap msInstanceMap;
 
         // ********************************
         // private functions

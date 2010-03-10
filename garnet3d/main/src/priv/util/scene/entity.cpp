@@ -16,9 +16,9 @@ static GN::Logger * sLogger = GN::GetLogger("GN.util");
 // -----------------------------------------------------------------------------
 GN::util::Entity::Impl::~Impl()
 {
-    for( NodeMap::Iterator i = mNodes.Begin(); i != mNodes.End(); ++i )
+    for( NodeMap::KeyValuePair * i = mNodes.First(); i != NULL; i = mNodes.Next( i ) )
     {
-        NodeBase * n = i->Value();
+        NodeBase * n = i->value;
 
         GN_ASSERT( n );
 

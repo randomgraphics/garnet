@@ -10,12 +10,33 @@ namespace GN
 {
     extern const size_t HASH_MAP_PRIMARY_ARRAY[28];
 
+    namespace HashMapUtils
+    {
+        template<typename T>
+        struct DirectHash
+        {
+            UInt64 operator()( const T & t ) const
+            {
+                return (UInt64)t;
+            }
+        };
+
+        template<typename T>
+        struct EqualOperator
+        {
+            bool operator()( const T & a, const T & b ) const
+            {
+                return a == b;
+            }
+        };
+    };
+
     /// Hash map template class
     template<
         class  KEY,
         class  VALUE,
-        UInt64(*HASH_FUNC)( const KEY & ),
-        bool  (*EQUAL_FUNC)( const KEY &, const KEY & ),
+        class  KEY_HASH_FUNC = HashMapUtils::DirectHash<KEY>,
+        class  KEY_EQUAL_FUNC = HashMapUtils::EqualOperator<KEY>,
         size_t LOAD_FACTOR = 2 >
     class HashMap
     {
@@ -42,7 +63,9 @@ namespace GN
 
 
         explicit HashMap( size_t initialTableSize = 0 )
-            : mPrimIndex( GetInitialPrimIndex( initialTableSize ) )
+            : mKeyHashFunc( KEY_HASH_FUNC() )
+            , mKeyEqualFunc( KEY_EQUAL_FUNC() )
+            , mPrimIndex( GetInitialPrimIndex( initialTableSize ) )
             , mCount(0)
             , mTable( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] )
         {
@@ -82,7 +105,7 @@ namespace GN
 
             GN_ASSERT( N == mTable.Size() );
 
-            size_t k = mod( HASH_FUNC(key), N );
+            size_t k = mod( mKeyHashFunc(key), N );
 
             const HashItem & hi = mTable[k];
 
@@ -92,7 +115,7 @@ namespace GN
                 ++pp )
             {
                 GN_ASSERT( *pp );
-                if( EQUAL_FUNC( (*pp)->key, key ) )
+                if( mKeyEqualFunc( (*pp)->key, key ) )
                 {
                     // found!
                     GN_ASSERT( mCount > 0 );
@@ -120,7 +143,7 @@ namespace GN
 
             GN_ASSERT( N == mTable.Size() );
 
-            size_t k = mod( HASH_FUNC(key), N );
+            size_t k = mod( mKeyHashFunc(key), N );
 
             HashItem & hi = mTable[k];
 
@@ -130,7 +153,7 @@ namespace GN
                 pp != hi.values.End();
                 ++pp )
             {
-                if( EQUAL_FUNC( (*pp)->key, key ) )
+                if( mKeyEqualFunc( (*pp)->key, key ) )
                 {
                     // redundent item
                     return NULL;
@@ -180,7 +203,7 @@ namespace GN
 
             GN_ASSERT( N == mTable.Size() );
 
-            size_t k = mod( HASH_FUNC(key), N );
+            size_t k = mod( mKeyHashFunc(key), N );
 
             HashItem & hi = mTable[k];
 
@@ -189,7 +212,7 @@ namespace GN
                 pp != hi.values.End();
                 ++pp )
             {
-                if( EQUAL_FUNC( (*pp)->key, key ) )
+                if( mKeyEqualFunc( (*pp)->key, key ) )
                 {
                     // Found. Remove it.
                     GN_ASSERT( mCount > 0 );
@@ -260,6 +283,9 @@ namespace GN
         {
             DynaArray<PairType*> values;
         };
+
+        KEY_HASH_FUNC              mKeyHashFunc;
+        KEY_EQUAL_FUNC             mKeyEqualFunc;
 
         size_t                     mPrimIndex;
         size_t                     mCount;

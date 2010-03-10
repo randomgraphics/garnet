@@ -1358,30 +1358,26 @@ struct VertexSelector
     UInt32 t; ///< texcoord (index into AseVertex.t)
     UInt32 n; ///< normal   (index into AseVertex.n)
 
-    bool operator < ( const VertexSelector & rhs ) const
-    {
-        if( p != rhs.p ) return p < rhs.p;
-        if( t != rhs.t ) return t < rhs.t;
-        return n < rhs.n;
-    }
-
-    static UInt64 Hash( const VertexSelector & vs )
-    {
-        UInt64 h = ( ( ((UInt64)vs.p) << 32 ) | vs.t ) ^ ( ((UInt64)vs.n) << 16 );
-        return h;
-    }
-
-    static bool Equal( const VertexSelector & a, const VertexSelector & b )
+    friend bool operator==( const VertexSelector & a, const VertexSelector & b )
     {
         return a.p == b.p && a.t == b.t && a.n == b.n;
     }
+
+    struct Hash
+    {
+        UInt64 operator()( const VertexSelector & vs ) const
+        {
+            UInt64 h = ( ( ((UInt64)vs.p) << 32 ) | vs.t ) ^ ( ((UInt64)vs.n) << 16 );
+            return h;
+        }
+    };
 };
 
 /// collection of unique items
 template<typename T>
 class ElementCollection
 {
-    typedef GN::HashMap<T,UInt32,T::Hash, T::Equal> TypeMap;
+    typedef GN::HashMap<T,UInt32,typename T::Hash> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;

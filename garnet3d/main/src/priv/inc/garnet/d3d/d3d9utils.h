@@ -230,8 +230,10 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
     class D3D9RenderStateSaver
     {
-        IDirect3DDevice9                    * m_Device;
-        Dictionary<D3DRENDERSTATETYPE, DWORD> m_Values;
+        typedef HashMap<D3DRENDERSTATETYPE, DWORD> RenderStateMap;
+
+        IDirect3DDevice9 * m_Device;
+        RenderStateMap     m_Values;
 
     public:
 
@@ -259,11 +261,11 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         void RestoreAllRenderStates()
         {
-            Dictionary<D3DRENDERSTATETYPE, DWORD>::ConstIterator i;
-            for( i = m_Values.Begin(); i != m_Values.End(); ++i )
+            RenderStateMap::KeyValuePair * i;
+            for( i = m_Values.First(); i != NULL; i = m_Values.Next( i ) )
             {
-                D3DRENDERSTATETYPE type = i->Key();
-                DWORD              value = i->Value();
+                D3DRENDERSTATETYPE type = i->key;
+                DWORD              value = i->value;
                 m_Device->SetRenderState( type, value );
             }
             m_Values.Clear();
