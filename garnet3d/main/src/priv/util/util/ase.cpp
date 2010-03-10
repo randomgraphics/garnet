@@ -1370,13 +1370,18 @@ struct VertexSelector
         UInt64 h = ( ( ((UInt64)vs.p) << 32 ) | vs.t ) ^ ( ((UInt64)vs.n) << 16 );
         return h;
     }
+
+    static bool Equal( const VertexSelector & a, const VertexSelector & b )
+    {
+        return a.p == b.p && a.t == b.t && a.n == b.n;
+    }
 };
 
 /// collection of unique items
 template<typename T>
 class ElementCollection
 {
-    typedef GN::Dictionary<T,UInt32> TypeMap;
+    typedef GN::HashMap<T,UInt32,T::Hash, T::Equal> TypeMap;
 
     TypeMap      mMap;
     DynaArray<T> mBuffer;
@@ -1388,22 +1393,24 @@ public:
     ///
     UInt32 add( const T & element )
     {
-        TypeMap::Iterator iter;
+        TypeMap::KeyValuePair * p = mMap.Insert( element, 0xbad );
 
-        bool inserted = mMap.Insert( element, 0xbad, &iter );
-
-        if( inserted )
+        if( p )
         {
             // this is a new element
-            GN_ASSERT( 0xbad == iter->Value() );
+            GN_ASSERT( 0xbad == p->value );
             GN_ASSERT( mBuffer.Size() + 1 == mMap.Size() );
 
-            iter->Value() = (UInt32)( mBuffer.Size() );
+            p->value = (UInt32)( mBuffer.Size() );
 
             mBuffer.Append( element );
-        }
 
-        return iter->Value();
+            return p->value;
+        }
+        else
+        {
+            return mMap[element];
+        }
     }
 
     ///

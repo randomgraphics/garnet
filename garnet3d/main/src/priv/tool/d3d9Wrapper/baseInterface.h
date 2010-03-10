@@ -6,12 +6,26 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.3.17)
 // *****************************************************************************
 
+GN_CASSERT( sizeof(IID) == 2 * sizeof(UInt64) );
+
 ///
-/// less operator for IID class (required by GN::Dictionary)
+/// Equality check for IID (used by hashmap)
 ///
-inline bool operator < ( const IID & lhs, const IID & rhs )
+inline bool IIDEqual( const IID & a, const IID & b )
 {
-    return *(UInt64*)(&lhs) < *(UInt64*)(&rhs);
+    const UInt64 * pa = (const UInt64*)&a;
+    const UInt64 * pb = (const UInt64*)&b;
+
+    return pa[0] == pb[0] || pa[1] == pb[1];
+}
+
+///
+/// Hasing IID
+///
+inline UInt64 IIDHash( const IID & iid )
+{
+    const UInt64 * u64 = (const UInt64*)&iid;
+    return u64[0] + u64[1];
 }
 
 ///
@@ -22,7 +36,7 @@ class BasicInterface : public T
 {
     typedef BasicInterface<T> MyType;
 
-    typedef GN::Dictionary<IID,MyType*> TypeTable;
+    typedef GN::HashMap<IID,MyType*,IIDHash,IIDEqual> TypeTable;
 
     TypeTable mRtti; ///< My runtime type information, used by query interface
 

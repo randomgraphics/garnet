@@ -160,7 +160,7 @@ namespace GN { namespace gfx
 
         typedef DynaArray<UInt8> UserData;
 
-        typedef GN::Dictionary<Guid, UserData> UserDataMap;
+        typedef HashMap<Guid, UserData,Guid::sHash,Guid::sEqual> UserDataMap;
 
         GpuSignals  mSignals;
         bool        mParamCheckEnabled;
@@ -178,7 +178,7 @@ namespace GN { namespace gfx
         StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS> colortargets;
 
         /// depth stencil render target
-        RenderTargetTexture                                                        depthstencil;
+        RenderTargetTexture                                                   depthstencil;
 
         /// check for invalid description.
         bool valid() const
