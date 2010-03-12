@@ -173,6 +173,8 @@ size_t GN::String2FloatArray( float * buffer, size_t maxCount, const char * str,
     if( NULL == buffer ) return 0;
     if( IsStringEmpty(str) ) return 0;
 
+    if( 0 == stringLength ) stringLength = strlen( str );
+
     float * bufbegin = buffer;
     float * bufend = buffer + maxCount;
     const char * strend = str + stringLength;

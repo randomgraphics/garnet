@@ -77,9 +77,10 @@ template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a || 0 != String2Integer<T>( result, a->value.ToRawPtr() ) )
+    if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
-        GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid." );
+        GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid.",
+            attribName, node.name.ToRawPtr() );
         return false;
     }
     else

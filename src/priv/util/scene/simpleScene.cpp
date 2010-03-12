@@ -358,7 +358,15 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 static void sPostXMLError( const XmlNode & node, const StrA & msg )
 {
     GN_UNUSED_PARAM( node );
-    GN_ERROR(sLogger)( "%s", msg.ToRawPtr() );
+    const XmlElement * e = node.toElement();
+    if( e )
+    {
+        GN_ERROR(sLogger)( "<%s>: %s", e->name.ToRawPtr(), msg.ToRawPtr() );
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "%s", msg.ToRawPtr() );
+    }
 }
 
 //
