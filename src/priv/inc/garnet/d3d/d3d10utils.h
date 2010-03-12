@@ -191,6 +191,12 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
                 buf = desc;
             }
 
+            /// Equality operator
+            bool operator==( const PooledResourceDesc & rhs ) const
+            {
+                return ::memcmp( this, &rhs, sizeof(*this) ) == 0;
+            }
+
             /// Less operator
             bool operator<( const PooledResourceDesc & rhs ) const
             {

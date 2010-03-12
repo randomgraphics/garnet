@@ -104,9 +104,26 @@ namespace GN { namespace gfx
     private:
 
         // mapping subresource index to render target view
-        typedef GN::Dictionary<D3D11_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D11ShaderResourceView> > SRViewMap;
-        typedef GN::Dictionary<D3D11_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D11RenderTargetView> > RTViewMap;
-        typedef GN::Dictionary<D3D11_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D11DepthStencilView> > DSViewMap;
+        typedef HashMap<
+            D3D11_SHADER_RESOURCE_VIEW_DESC,
+            AutoComPtr<ID3D11ShaderResourceView>,
+            HashMapUtils::MemoryHash<D3D11_SHADER_RESOURCE_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D11_SHADER_RESOURCE_VIEW_DESC>
+            > SRViewMap;
+
+        typedef HashMap<
+            D3D11_RENDER_TARGET_VIEW_DESC,
+            AutoComPtr<ID3D11RenderTargetView>,
+            HashMapUtils::MemoryHash<D3D11_RENDER_TARGET_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D11_RENDER_TARGET_VIEW_DESC>
+            > RTViewMap;
+
+        typedef HashMap<
+            D3D11_DEPTH_STENCIL_VIEW_DESC,
+            AutoComPtr<ID3D11DepthStencilView>,
+            HashMapUtils::MemoryHash<D3D11_DEPTH_STENCIL_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D11_DEPTH_STENCIL_VIEW_DESC>
+            > DSViewMap;
 
         D3D11_SRV_DIMENSION        mDimension;      ///< texture dimension
         DXGI_FORMAT                mTextureFormat;  ///< D3D11 texture format
@@ -124,37 +141,6 @@ namespace GN { namespace gfx
         bool createTexture();
     };
 }}
-
-//
-// less operator for SRV descriptor
-// ----------------------------------------------------------------------------
-inline bool operator<(
-    const D3D11_SHADER_RESOURCE_VIEW_DESC & a,
-    const D3D11_SHADER_RESOURCE_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-//
-// less operator for RTV descriptor
-// ----------------------------------------------------------------------------
-inline bool operator<(
-    const D3D11_RENDER_TARGET_VIEW_DESC & a,
-    const D3D11_RENDER_TARGET_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-//
-// less operator for RTV descriptor
-// ----------------------------------------------------------------------------
-inline bool operator<(
-    const D3D11_DEPTH_STENCIL_VIEW_DESC & a,
-    const D3D11_DEPTH_STENCIL_VIEW_DESC & b )
-{
-    return ::memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
 
 // *****************************************************************************
 //                                     EOF

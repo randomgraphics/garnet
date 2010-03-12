@@ -103,10 +103,26 @@ namespace GN {namespace gfx
         // ********************************
     private:
 
-        // mapping subresource index to render target view
-        typedef GN::Dictionary<D3D10_SHADER_RESOURCE_VIEW_DESC, AutoComPtr<ID3D10ShaderResourceView> > SRViewMap;
-        typedef GN::Dictionary<D3D10_RENDER_TARGET_VIEW_DESC,AutoComPtr<ID3D10RenderTargetView> > RTViewMap;
-        typedef GN::Dictionary<D3D10_DEPTH_STENCIL_VIEW_DESC,AutoComPtr<ID3D10DepthStencilView> > DSViewMap;
+        typedef HashMap<
+            D3D10_SHADER_RESOURCE_VIEW_DESC,
+            AutoComPtr<ID3D10ShaderResourceView>,
+            HashMapUtils::MemoryHash<D3D10_SHADER_RESOURCE_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D10_SHADER_RESOURCE_VIEW_DESC>
+            > SRViewMap;
+
+        typedef HashMap<
+            D3D10_RENDER_TARGET_VIEW_DESC,
+            AutoComPtr<ID3D10RenderTargetView>,
+            HashMapUtils::MemoryHash<D3D10_RENDER_TARGET_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D10_RENDER_TARGET_VIEW_DESC>
+            > RTViewMap;
+
+        typedef HashMap<
+            D3D10_DEPTH_STENCIL_VIEW_DESC,
+            AutoComPtr<ID3D10DepthStencilView>,
+            HashMapUtils::MemoryHash<D3D10_DEPTH_STENCIL_VIEW_DESC>,
+            HashMapUtils::MemoryCompare<D3D10_DEPTH_STENCIL_VIEW_DESC>
+            > DSViewMap;
 
         D3D10_SRV_DIMENSION        mDimension;      ///< texture dimension
         DXGI_FORMAT                mTextureFormat;  ///< D3D10 texture format
@@ -125,27 +141,6 @@ namespace GN {namespace gfx
         bool createTexture();
     };
 }}
-
-inline bool operator<(
-    const D3D10_SHADER_RESOURCE_VIEW_DESC & a,
-    const D3D10_SHADER_RESOURCE_VIEW_DESC & b )
-{
-    return memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-inline bool operator<(
-    const D3D10_RENDER_TARGET_VIEW_DESC & a,
-    const D3D10_RENDER_TARGET_VIEW_DESC & b )
-{
-    return memcmp( &a, &b, sizeof(a) ) < 0;
-}
-
-inline bool operator<(
-    const D3D10_DEPTH_STENCIL_VIEW_DESC & a,
-    const D3D10_DEPTH_STENCIL_VIEW_DESC & b )
-{
-    return memcmp( &a, &b, sizeof(a) ) < 0;
-}
 
 // *****************************************************************************
 //                                     EOF
