@@ -54,6 +54,30 @@ struct CECImpl
 //
 //
 // -----------------------------------------------------------------------------
+const char * GN::CharacterEncodingConverter::sEncoding2Str( Encoding e )
+{
+    switch( e )
+    {
+        case ASCII      : return "ascii";
+        case ISO_8859_1 : return "iso-8859-1";
+        case UTF7       : return "utf-7";
+        case UTF8       : return "utf-8";
+        case UTF16_LE   : return "utf-16-le";
+        case UTF16_BE   : return "utf-16-be";
+        case UTF16      : return "utf-16";
+        case UTF32_LE   : return "utf-32-le";
+        case UTF32_BE   : return "utf-32-be";
+        case UTF32      : return "utf-32";
+        case WIDECHAR   : return 2 == sizeof(wchar_t) ? "utf-16" : "utf-32";
+        case GBK        : return "gbk";
+        case BIG5       : return "big5";
+        default         : return "=[unknown]=";
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encoding to )
     : mImpl( new CECImpl )
 {
@@ -107,8 +131,8 @@ size_t GN::CharacterEncodingConverter::Convert(
 // -----------------------------------------------------------------------------
 GN::CharacterEncodingConverter::Encoding GN::GetCurrentSystemEncoding()
 {
-    GN_UNIMPL();
-    return CharacterEncodingConverter::ISO_8859_1;
+    GN_UNIMPL_WARNING();
+    return CharacterEncodingConverter::GBK;
 }
 
 //

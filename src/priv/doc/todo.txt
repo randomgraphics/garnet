@@ -16,6 +16,7 @@ TODO
       - opacity map (teraiyuki\woman.ase)
       - non-geometry node (games\swordman\1.ase)
   - support chinese in XML parser
+    - XML_Encoding: http://www.vivtek.com/expat/api.html#XML_Encoding
   - skin mesh test case: porting DXSDK sample.
   - Cg shader
   - Endian swap:
