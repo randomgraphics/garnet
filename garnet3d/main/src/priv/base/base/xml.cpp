@@ -579,7 +579,9 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     //static const UInt8 bom[3] = { 0xEF, 0xBB, 0xBF };
     //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
-    file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+    file << "<?xml version=\"1.0\" encoding=\""
+         << CharacterEncodingConverter::sEncoding2Str( GetCurrentSystemEncoding() )
+         << "\"?>\n";
 
     if( compact )
     {

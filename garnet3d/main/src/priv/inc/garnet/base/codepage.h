@@ -48,6 +48,9 @@ namespace GN
 
     public:
 
+        /// Convert Encoding enum to string
+        static const char * sEncoding2Str( Encoding );
+
         ///
         /// constructor
         ///
