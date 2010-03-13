@@ -28,7 +28,7 @@ namespace GN
         {
             GN_GUARD_SLOW;
 
-            if( !mItems.validHandle( key ) )
+            if( !mItems.ValidHandle( key ) )
             {
                 if( printError )
                 {
@@ -84,7 +84,7 @@ namespace GN
         ///
         const StrA & key2Name( ItemKey key ) const
         {
-            return mItems.validHandle( key ) ? mItems[key].name : StrA::EMPTYSTR;
+            return mItems.ValidHandle( key ) ? mItems[key].name : StrA::EMPTYSTR;
         }
 
         /// set registry value by name
@@ -159,12 +159,12 @@ namespace GN
         ///
         /// get key of first item
         ///
-        ItemKey getFirstItem() const { return mItems.first(); }
+        ItemKey getFirstItem() const { return mItems.First(); }
 
         ///
         /// get key of next item
         ///
-        ItemKey getNextItem( ItemKey key ) const { return mItems.next( key ); }
+        ItemKey getNextItem( ItemKey key ) const { return mItems.Next( key ); }
 
         ///
         /// Import registry from string.

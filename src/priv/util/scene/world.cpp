@@ -48,17 +48,17 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
         StringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed entity #%d", i );
         name = unnamed;
 
-        GN_ASSERT( !mEntities.validName( name ) );
+        GN_ASSERT( !mEntities.ValidName( name ) );
     }
 
-    if( mEntities.validName( name ) )
+    if( mEntities.ValidName( name ) )
     {
         GN_ERROR(sLogger)( "Entity creation failed: entity named '%s' exists already.", name );
         return NULL;
     }
 
     // create new ID
-    UInt32 id = mEntities.add(name);
+    UInt32 id = mEntities.Add(name);
     if( 0 == id ) return false;
 
     // create new entity
@@ -79,13 +79,13 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
 // -----------------------------------------------------------------------------
 void GN::util::World::Impl::deleteEntity( const char * name )
 {
-    if( !mEntities.validName( name ) )
+    if( !mEntities.ValidName( name ) )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: invalid entity named '%s'.", name ? name : "<NULL_NAME>" );
         return;
     }
 
-    UInt32 id = mEntities.name2handle( name );
+    UInt32 id = mEntities.Name2Handle( name );
 
     delete (EntityInternal*)mEntities[id];
 
@@ -97,7 +97,7 @@ void GN::util::World::Impl::deleteEntity( const char * name )
 // -----------------------------------------------------------------------------
 void GN::util::World::Impl::deleteEntity( int id )
 {
-    if( !mEntities.validHandle( id ) )
+    if( !mEntities.ValidHandle( id ) )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
         return;
@@ -129,7 +129,7 @@ void GN::util::World::Impl::deleteEntity( Entity * entity )
 // -----------------------------------------------------------------------------;
 void GN::util::World::Impl::deleteAllEntities()
 {
-    for( UInt32 id = mEntities.first(); id != 0; id = mEntities.next( id ) )
+    for( UInt32 id = mEntities.First(); id != 0; id = mEntities.Next( id ) )
     {
         delete (EntityInternal*)mEntities[id];
     }
@@ -141,7 +141,7 @@ void GN::util::World::Impl::deleteAllEntities()
 // -----------------------------------------------------------------------------
 Entity * GN::util::World::Impl::findEntity( const char * name )
 {
-    if( !mEntities.validName( name ) ) return NULL;
+    if( !mEntities.ValidName( name ) ) return NULL;
 
     return mEntities[name];
 }
@@ -151,7 +151,7 @@ Entity * GN::util::World::Impl::findEntity( const char * name )
 // -----------------------------------------------------------------------------
 Entity * GN::util::World::Impl::findEntity( int id )
 {
-    if( !mEntities.validHandle( id ) ) return NULL;
+    if( !mEntities.ValidHandle( id ) ) return NULL;
 
     return mEntities[id];
 }
@@ -161,7 +161,7 @@ Entity * GN::util::World::Impl::findEntity( int id )
 // -----------------------------------------------------------------------------
 const char  * GN::util::World::Impl::getEntityName( int id ) const
 {
-    const char * name = mEntities.handle2name(id);
+    const char * name = mEntities.Handle2Name(id);
 
     if( NULL == name )
     {

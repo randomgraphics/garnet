@@ -22,7 +22,7 @@ GN::Registry::ItemKey GN::Registry::set(
         Item i;
         i.name = name;
         i.value = value;
-        key = mItems.add( i );
+        key = mItems.Add( i );
         if( 0 == key ) return 0;
         GN_ASSERT( NULL == mNames.Find(name) );
         mNames[name] = key;

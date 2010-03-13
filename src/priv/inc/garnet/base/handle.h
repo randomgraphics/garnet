@@ -98,19 +98,19 @@ namespace GN
         }
 
         ///
-        /// get current capacity
+        /// Get current Capacity
         ///
-        size_t capacity() const { return mItems.Capacity(); }
+        size_t Capacity() const { return mItems.Capacity(); }
 
         ///
-        /// set capacity
+        /// set Capacity
         ///
-        void reserve( size_t n ) { mItems.Reserve(n); mFreeList.Reserve(n); }
+        void Reserve( size_t n ) { mItems.Reserve(n); mFreeList.Reserve(n); }
 
         ///
-        /// return first handle
+        /// return First handle
         ///
-        HANDLE_TYPE first() const
+        HANDLE_TYPE First() const
         {
             if( Empty() ) return (HANDLE_TYPE)0;
             size_t idx = 0;
@@ -123,11 +123,11 @@ namespace GN
         }
 
         ///
-        /// return next handle
+        /// return Next handle
         ///
-        HANDLE_TYPE next( HANDLE_TYPE h ) const
+        HANDLE_TYPE Next( HANDLE_TYPE h ) const
         {
-            if( !validHandle(h) ) return (HANDLE_TYPE)0;
+            if( !ValidHandle(h) ) return (HANDLE_TYPE)0;
             size_t idx = h2idx( h ) + 1;
             while( idx < mItems.Size() && !mItems[idx]->occupied )
             {
@@ -140,7 +140,7 @@ namespace GN
         ///
         /// Add new item with user define value
         ///
-        HANDLE_TYPE add( const T & val )
+        HANDLE_TYPE Add( const T & val )
         {
             if( mFreeList.Empty() )
             {
@@ -168,7 +168,7 @@ namespace GN
         ///
         /// Add new item, with undefined value
         ///
-        HANDLE_TYPE newItem()
+        HANDLE_TYPE NewHandle()
         {
             if( mFreeList.Empty() )
             {
@@ -198,7 +198,7 @@ namespace GN
         ///
         void Remove( HANDLE_TYPE h )
         {
-            if( !validHandle(h) )
+            if( !ValidHandle(h) )
             {
                 GN_ERROR(GetLogger("GN.base.HandleManager"))( "Invalid handle!" );
             }
@@ -212,9 +212,9 @@ namespace GN
         }
 
         ///
-        /// Find specific item (always return first found)
+        /// Find specific item (always return First found)
         ///
-        HANDLE_TYPE find( const T & val ) const
+        HANDLE_TYPE Find( const T & val ) const
         {
             for( size_t i = 0; i < mItems.Size(); ++i )
             {
@@ -225,10 +225,10 @@ namespace GN
         }
 
         ///
-        /// Find specific item (always return first found)
+        /// Find specific item (always return First found)
         ///
         template<typename FUNC>
-        HANDLE_TYPE findIf( const FUNC & fp ) const
+        HANDLE_TYPE FindIf( const FUNC & fp ) const
         {
             for( size_t i = 0; i < mItems.Size(); ++i )
             {
@@ -241,7 +241,7 @@ namespace GN
         ///
         /// Is valid handle or not?
         ///
-        bool validHandle( HANDLE_TYPE h ) const
+        bool ValidHandle( HANDLE_TYPE h ) const
         {
             size_t idx = h2idx(h);
             return idx < mItems.Size() && mItems[idx]->occupied;
@@ -250,16 +250,16 @@ namespace GN
         ///
         /// Get item from manager. Handle must be valid.
         ///
-        T & get( HANDLE_TYPE h ) const
+        T & Get( HANDLE_TYPE h ) const
         {
-            GN_ASSERT( validHandle(h) );
+            GN_ASSERT( ValidHandle(h) );
             return mItems[h2idx(h)]->t();
         }
 
         ///
         /// Get item from manager. Handle must be valid.
         ///
-        T & operator[]( HANDLE_TYPE h ) const { return get(h); }
+        T & operator[]( HANDLE_TYPE h ) const { return Get(h); }
     };
 
     ///
@@ -304,7 +304,7 @@ namespace GN
         ///
         void Clear()
         {
-            for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
+            for( H i = mItems.First(); i != 0; i = mItems.Next( i ) )
             {
                 mPool.DeconstructAndFree( mItems[i] );
             }
@@ -331,19 +331,19 @@ namespace GN
         }
 
         ///
-        /// return first handle
+        /// return First handle
         ///
-        H first() const { return mItems.first(); }
+        H First() const { return mItems.First(); }
 
         ///
-        /// return next handle
+        /// return Next handle
         ///
-        H next( H h ) const { return mItems.next( h ); }
+        H Next( H h ) const { return mItems.Next( h ); }
 
         ///
         /// name must be unique.
         ///
-        H add( const StrA & name )
+        H Add( const StrA & name )
         {
             if( CASE_INSENSITIVE )
             {
@@ -360,7 +360,7 @@ namespace GN
             NamedItem * p = mPool.AllocUnconstructed();
             if( 0 == p ) return 0;
 
-            H handle = mItems.newItem();
+            H handle = mItems.NewHandle();
             if( 0 == handle ) return 0;
 
             new (p) NamedItem(*this,handle,name);
@@ -375,7 +375,7 @@ namespace GN
         ///
         /// name must be unique.
         ///
-        H add( const StrA & name, const T & data )
+        H Add( const StrA & name, const T & data )
         {
             if( CASE_INSENSITIVE )
             {
@@ -391,7 +391,7 @@ namespace GN
             NamedItem * p = mPool.AllocUnconstructed();
             if( 0 == p ) return 0;
 
-            H handle = mItems.newItem();
+            H handle = mItems.NewHandle();
             if( 0 == handle ) return 0;
 
             new (p) NamedItem(*this,handle,name,data);
@@ -405,7 +405,7 @@ namespace GN
 
         void Remove( H h )
         {
-            if( !validHandle( h ) )
+            if( !ValidHandle( h ) )
             {
                 GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
                 return;
@@ -428,7 +428,7 @@ namespace GN
                 GN_UNIMPL();
             }
 
-            if( !validName( name ) )
+            if( !ValidName( name ) )
             {
                 GN_ERROR(GetLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.ToRawPtr() );
                 return;
@@ -445,12 +445,12 @@ namespace GN
             mPool.DeconstructAndFree( item );
         }
 
-        bool validHandle( H h ) const
+        bool ValidHandle( H h ) const
         {
-            return mItems.validHandle( h );
+            return mItems.ValidHandle( h );
         }
 
-        bool validName( const StrA & name ) const
+        bool ValidName( const StrA & name ) const
         {
             if( CASE_INSENSITIVE )
             {
@@ -460,7 +460,7 @@ namespace GN
             return NULL != mNames.Find( name );
         }
 
-        H name2handle( const StrA & name ) const
+        H Name2Handle( const StrA & name ) const
         {
             if( CASE_INSENSITIVE )
             {
@@ -472,28 +472,28 @@ namespace GN
             return h ? *h : (H)0;
         }
 
-        const char * handle2name( H h ) const
+        const char * Handle2Name( H h ) const
         {
-            if( !mItems.validHandle( h ) )
+            if( !mItems.ValidHandle( h ) )
                 return NULL;
             else
                 return mItems[h]->name;
         }
 
-        T & get( H h ) const
+        T & Get( H h ) const
         {
             return mItems[h]->data;
         }
 
-        T & get( const StrA & name ) const
+        T & Get( const StrA & name ) const
         {
-            GN_ASSERT( validName(name) );
+            GN_ASSERT( ValidName(name) );
             return mItems[mNames[name]]->data;
         }
 
-        T & operator[]( H h ) const { return get(h); }
+        T & operator[]( H h ) const { return Get(h); }
 
-        T & operator[]( const StrA & name ) const { return get(name); }
+        T & operator[]( const StrA & name ) const { return Get(name); }
 
         //@}
     };}
