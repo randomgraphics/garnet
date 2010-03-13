@@ -83,7 +83,7 @@ int GN::util::VisualNode::Impl::addModel( GpuResource * model )
     }
 
     // add the model into model list
-    int h = mModels.newItem();
+    int h = mModels.NewHandle();
     if( 0 != h ) mModels[h].set( GpuResource::castTo<ModelResource>( model ) );
 
     // done
@@ -158,7 +158,7 @@ void GN::util::VisualNode::Impl::draw() const
     }
 
     // draw models
-    for( int i = mModels.first(); i != 0; i = mModels.next( i ) )
+    for( int i = mModels.First(); i != 0; i = mModels.Next( i ) )
     {
         ModelResource * m = mModels[i];
 

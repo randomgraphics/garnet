@@ -178,12 +178,12 @@ namespace GN
             disposeAll();
 
             // delete resource descriptions
-            HandleType h = mResHandles.first();
+            HandleType h = mResHandles.First();
             while( h )
             {
                 GN_ASSERT( mResHandles[h] );
                 delete mResHandles[h];
-                h = mResHandles.next( h );
+                h = mResHandles.Next( h );
             }
 
             // clear handles and names
@@ -205,7 +205,7 @@ namespace GN
         ///
         /// Return true for valid resource handle
         ///
-        bool validResourceHandle( HandleType h ) const { return mResHandles.validHandle( h ); }
+        bool validResourceHandle( HandleType h ) const { return mResHandles.ValidHandle( h ); }
 
         ///
         /// Return true for valid resource name
@@ -300,8 +300,8 @@ namespace GN
             GN_GUARD_SLOW;
             if( validResourceHandle(handle) )
             {
-                GN_ASSERT( mResHandles.get(handle) );
-                return mResHandles.get(handle)->name;
+                GN_ASSERT( mResHandles.Get(handle) );
+                return mResHandles.Get(handle)->name;
             }
             else return StrA::EMPTYSTR;
             GN_UNGUARD_SLOW;
@@ -330,15 +330,15 @@ namespace GN
                     GN_ERROR(sLogger)( "resource '%s' already exist!", realname.ToRawPtr() );
                     return 0;
                 }
-                GN_ASSERT( mResHandles.validHandle(*handle) );
+                GN_ASSERT( mResHandles.ValidHandle(*handle) );
                 h = *handle;
-                item = mResHandles.get( *handle );
+                item = mResHandles.Get( *handle );
                 doDispose( item ); // dispose existing resource
             }
             else
             {
                 item = new ResDesc;
-                h = mResHandles.add( item );
+                h = mResHandles.Add( item );
                 if( 0 == h )
                 {
                     GN_ERROR(sLogger)( "Fail to create new resource item!" );
@@ -348,7 +348,7 @@ namespace GN
                 mResNames[realname] = h;
             }
             GN_ASSERT( mResNames.Size() == mResHandles.Size() );
-            GN_ASSERT( mResHandles.validHandle(h) && item );
+            GN_ASSERT( mResHandles.ValidHandle(h) && item );
             item->creator = creator;
             item->nullor = nullor;
             item->name = realname;
@@ -452,11 +452,11 @@ namespace GN
         void disposeAll()
         {
             GN_GUARD;
-            HandleType h = mResHandles.first();
+            HandleType h = mResHandles.First();
             while( h )
             {
-                doDispose( mResHandles.get(h) );
-                h = mResHandles.next( h );
+                doDispose( mResHandles.Get(h) );
+                h = mResHandles.Next( h );
             }
             deleteNullInstance();
             GN_UNGUARD;
@@ -471,7 +471,7 @@ namespace GN
             RES res;
             bool ok = true;
             HandleType h;
-            for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
+            for( h = mResHandles.First(); h != 0; h = mResHandles.Next(h) )
             {
                 ok &= getResource( res, h );
             }
@@ -580,7 +580,7 @@ namespace GN
                 return true;
             }
 
-            ResDesc * item = mResHandles.get( handle );
+            ResDesc * item = mResHandles.Get( handle );
 
             GN_ASSERT( item );
 

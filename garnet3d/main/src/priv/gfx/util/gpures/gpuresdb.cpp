@@ -534,11 +534,11 @@ GpuResourceDatabase::Impl::createResource(
         StringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed %s #%d", mgr->desc.ToRawPtr(), i );
         name = unnamed;
 
-        GN_ASSERT( !mgr->resources.validName( name ) );
+        GN_ASSERT( !mgr->resources.ValidName( name ) );
     }
 
     // check if the resource with same name exisits already.
-    if( mgr->resources.validName( name ) )
+    if( mgr->resources.ValidName( name ) )
     {
         GN_ERROR(sLogger)( "Resource named \"%s\" exists already.", name );
         return AutoRef<GpuResource>::NULLREF;
@@ -554,7 +554,7 @@ GpuResourceDatabase::Impl::createResource(
     newres->mImpl = resimpl;
 
     // create new handle
-    UInt32 internalHandle = mgr->resources.add( name, resimpl );
+    UInt32 internalHandle = mgr->resources.Add( name, resimpl );
     if( 0 ==internalHandle ) return AutoRef<GpuResource>::NULLREF;
     resimpl->handle.set( (UInt32)mgr->index, internalHandle );
 
@@ -571,7 +571,7 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) 
     const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return AutoRef<GpuResource>::NULLREF;
 
-    UInt32 internalHandle = mgr->resources.name2handle(name);
+    UInt32 internalHandle = mgr->resources.Name2Handle(name);
     if( 0 == internalHandle ) return AutoRef<GpuResource>::NULLREF;
 
     GpuResource::Impl * resimpl = mgr->resources[internalHandle];
@@ -595,7 +595,7 @@ bool GpuResourceDatabase::Impl::validResource( const Guid & type, const GpuResou
     const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return false;
 
-    return mgr->resources.validHandle( resource->mImpl->handle.internalHandle() );
+    return mgr->resources.ValidHandle( resource->mImpl->handle.internalHandle() );
 }
 
 //
@@ -611,7 +611,7 @@ bool GpuResourceDatabase::Impl::validResource( const GpuResource * resource ) co
     {
         const ResourceManager & mgr = mManagers[i];
 
-        if( mgr.resources.validHandle( resource->mImpl->handle.internalHandle() ) ) return true;
+        if( mgr.resources.ValidHandle( resource->mImpl->handle.internalHandle() ) ) return true;
     }
 
     return false;
@@ -628,7 +628,7 @@ GpuResourceDatabase::Impl::getResourceName( const GpuResource * resource ) const
 
     const ResourceManager & mgr = mManagers[resimpl->handle.managerIndex()];
 
-    const char * name = mgr.resources.handle2name( resimpl->handle.internalHandle() );
+    const char * name = mgr.resources.Handle2Name( resimpl->handle.internalHandle() );
 
     if( NULL == name )
     {
@@ -754,7 +754,7 @@ GpuResourceDatabase::Impl::getResourceImpl( const GpuResource * resource ) const
 
     GN_ASSERT( impl );
     GN_ASSERT( impl->handle.managerIndex() < mManagers.Size() );
-    GN_ASSERT( mManagers[impl->handle.managerIndex()].resources.validHandle(impl->handle.internalHandle()) );
+    GN_ASSERT( mManagers[impl->handle.managerIndex()].resources.ValidHandle(impl->handle.internalHandle()) );
 
     return impl;
 }
