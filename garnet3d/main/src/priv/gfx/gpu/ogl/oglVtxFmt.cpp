@@ -116,7 +116,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         }
 
         const VertexBufferBinding & b = bindings[stream];
-        const OGLBasicVtxBuf * vb = SafeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
+        const OGLBasicVtxBuf * vb = SafeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.Get() );
 
         const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;

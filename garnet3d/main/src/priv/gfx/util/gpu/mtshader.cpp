@@ -178,7 +178,7 @@ namespace GN { namespace gfx
     void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, size_t )
     {
         GpuProgram & gp = **(GpuProgram**)p;
-        gp.decref();
+        gp.DecRef();
     }
 
     //
@@ -196,7 +196,7 @@ namespace GN { namespace gfx
     void func_UNIFORM_DESTROY( Gpu &, void * p, size_t )
     {
         Uniform & u = **(Uniform**)p;
-        u.decref();
+        u.DecRef();
     }
 
     //

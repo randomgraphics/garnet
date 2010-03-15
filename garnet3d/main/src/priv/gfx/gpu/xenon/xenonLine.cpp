@@ -185,7 +185,7 @@ void GN::gfx::XenonLine::drawLines(
         for( size_t i = 0; i < vertexCount; ++i )
         {
             XenonLineVertex & v = vbData[i];
-            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
+            v.p.Set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }
@@ -195,7 +195,7 @@ void GN::gfx::XenonLine::drawLines(
         for( size_t i = 0; i < vertexCount; ++i )
         {
             XenonLineVertex & v = vbData[i];
-            v.p.set( positions[0], positions[1], positions[2] );
+            v.p.Set( positions[0], positions[1], positions[2] );
             v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }

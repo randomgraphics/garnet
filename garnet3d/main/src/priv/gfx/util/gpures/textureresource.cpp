@@ -92,7 +92,7 @@ bool GN::gfx::TextureResource::reset( const TextureDesc * desc )
 
     if( desc )
     {
-        tex.attach( database().gpu().createTexture( *desc ) );
+        tex.Attach( database().gpu().createTexture( *desc ) );
         if( !tex ) return false;
     }
 

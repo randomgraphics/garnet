@@ -404,7 +404,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     {
         const TextureBinding & tb = bindings[i];
 
-        D3D10Texture * tex = (D3D10Texture*)tb.texture.get();
+        D3D10Texture * tex = (D3D10Texture*)tb.texture.Get();
 
         if( tex )
         {

@@ -356,7 +356,7 @@ public:
         ip.rapi = RendererAPI::D3D9;
         #if GN_XENON
         ip.ro.fullscreen = true;
-        ip.ro.displayMode.set( 1024, 768, 32, 0 );
+        ip.ro.displayMode.Set( 1024, 768, 32, 0 );
         #endif
     }
 

@@ -267,8 +267,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
     //
     if( newContext.gpuProgram )
     {
-        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.get();
-        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.get();
+        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.Get();
+        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.Get();
 
         // apply shader
         if( skipDirtyCheck || newProg != oldProg )
@@ -416,7 +416,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D11VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D11VtxBuf>(b.vtxbuf.Get())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
@@ -430,7 +430,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     {
         if( newContext.idxbuf )
         {
-            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.get();
+            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.Get();
 
             const IdxBufDesc & ibdesc = ib->getDesc();
 

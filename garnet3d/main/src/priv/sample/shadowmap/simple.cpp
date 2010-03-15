@@ -43,7 +43,7 @@ bool GN::SimpleShadowMap::Init( const StrA & actorName )
     }
 
     // setup light
-    mScene.light(0).position.set( radius * 1.5f, radius * 1.5f, radius * 1.5f );
+    mScene.light(0).position.Set( radius * 1.5f, radius * 1.5f, radius * 1.5f );
     mLightView.LookAtRh( mScene.light(0).position, Vector3f(0,0,0), Vector3f(0,1,0) );
     re.composePerspectiveMatrixRh(
         mLightProj,

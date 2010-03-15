@@ -323,11 +323,11 @@ class BezierApp : public SampleApp
         AutoRef<ModelResource>  model;
 
         // initialize effect
-        effect.attach( createEffect( gdb ) );
+        effect.Attach( createEffect( gdb ) );
         if( !effect ) return false;
 
         // load meshes
-        mesh.attach( createMesh( gdb ) );
+        mesh.Attach( createMesh( gdb ) );
         if( !mesh ) return false;
 
         // initialize model

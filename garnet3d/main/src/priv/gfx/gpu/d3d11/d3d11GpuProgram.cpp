@@ -403,7 +403,7 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
     {
         const TextureBinding & tb = bindings[i];
 
-        D3D11Texture * tex = (D3D11Texture*)tb.texture.get();
+        D3D11Texture * tex = (D3D11Texture*)tb.texture.Get();
 
         if( tex )
         {

@@ -75,7 +75,7 @@ bool GN::gfx::SpriteRenderer::Init()
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    mPureWhiteTexture.Attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return Failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
@@ -104,7 +104,7 @@ bool GN::gfx::SpriteRenderer::Init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return Failure();
     }
-    mGpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+    mGpuProgram.Attach( mGpu.createGpuProgram( gpd ) );
     if( !mGpuProgram ) return Failure();
 
     // create vertex format
@@ -123,11 +123,11 @@ bool GN::gfx::SpriteRenderer::Init()
     mVertexFormat.elements[2].bindTo( "texcoord", 0 );
 
     // create vertex buffer
-    mVertexBuffer.attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
+    mVertexBuffer.Attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
     if( !mVertexBuffer ) return Failure();
 
     // create index buffer
-    mIndexBuffer.attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
+    mIndexBuffer.Attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
     if( !mIndexBuffer ) return Failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
@@ -199,7 +199,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     mContext = mGpu.getContext();
 
     // setup parameters that are not affected by options
-    mContext.textures[0].texture.set( texture );
+    mContext.textures[0].texture.Set( texture );
     mContext.vtxfmt            = mVertexFormat;
     mContext.vtxbufs[0].vtxbuf = mVertexBuffer;
     mContext.vtxbufs[0].stride = sizeof(SpriteVertex);
@@ -341,7 +341,7 @@ GN::gfx::SpriteRenderer::drawTextured(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture.Get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -399,7 +399,7 @@ GN::gfx::SpriteRenderer::drawSolid(
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
         drawEnd();
-        drawBegin( mContext.textures[0].texture.get(), mOptions );
+        drawBegin( mContext.textures[0].texture.Get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );

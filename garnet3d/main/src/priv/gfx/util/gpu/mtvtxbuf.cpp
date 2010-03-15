@@ -96,7 +96,7 @@ namespace GN { namespace gfx
     void func_VTXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         VtxBuf * vb = *(VtxBuf**)p;
-        vb->decref();
+        vb->DecRef();
     }
 
     //

@@ -85,7 +85,7 @@ bool GN::gfx::LineRenderer::Init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return Failure();
     }
-    mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+    mContext.gpuProgram.Attach( mGpu.createGpuProgram( gpd ) );
     if( !mContext.gpuProgram ) return Failure();
 
     // create vertex format
@@ -116,7 +116,7 @@ bool GN::gfx::LineRenderer::Init()
     mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
     // create vertex buffer
-    mContext.vtxbufs[0].vtxbuf.attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
+    mContext.vtxbufs[0].vtxbuf.Attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
     if( !mContext.vtxbufs[0].vtxbuf ) return Failure();
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 

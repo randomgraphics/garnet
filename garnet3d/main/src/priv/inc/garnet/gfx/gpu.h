@@ -21,7 +21,7 @@ namespace GN { namespace gfx
         ///
         /// Set display mode parameters
         ///
-        void set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
+        void Set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
         {
             width = w; height = h; depth = d; refrate = r;
         }
@@ -262,7 +262,7 @@ namespace GN { namespace gfx
             , reference(false)
             , autoRestore(true)
         {
-            displayMode.set(0,0,0,0);
+            displayMode.Set(0,0,0,0);
         }
     };
 

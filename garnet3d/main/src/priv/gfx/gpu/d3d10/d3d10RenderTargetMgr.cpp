@@ -116,7 +116,7 @@ bool GN::gfx::D3D10RTMgr::bind(
         {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
-            D3D10Texture * tex = (D3D10Texture*)rtt.texture.get();
+            D3D10Texture * tex = (D3D10Texture*)rtt.texture.Get();
 
             GN_ASSERT( tex );
 
@@ -136,7 +136,7 @@ bool GN::gfx::D3D10RTMgr::bind(
         mNumColors = newrt.colortargets.Size();
 
         // Get depth stencil view
-        D3D10Texture * dstex = (D3D10Texture*)newrt.depthstencil.texture.get();
+        D3D10Texture * dstex = (D3D10Texture*)newrt.depthstencil.texture.Get();
         if( dstex )
         {
             mDepth = dstex->getDSView(

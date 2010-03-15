@@ -180,7 +180,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
 
             // create GPU vertex buffer
             VtxBufDesc vbdesc = { vbsize, desc.dynavb };
-            mVtxBufs[i].gpudata.attach( gpu.createVtxBuf( vbdesc ) );
+            mVtxBufs[i].gpudata.Attach( gpu.createVtxBuf( vbdesc ) );
             if( NULL == mVtxBufs[i].gpudata ) return false;
 
             // copy vertices to vertex buffer
@@ -193,7 +193,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     if( desc.numidx > 0 )
     {
         IdxBufDesc ibd = { (UInt32)desc.numidx, desc.idx32, desc.dynaib };
-        mIdxBuf.gpudata.attach( gpu.createIdxBuf( ibd ) );
+        mIdxBuf.gpudata.Attach( gpu.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return false;
 
         if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );

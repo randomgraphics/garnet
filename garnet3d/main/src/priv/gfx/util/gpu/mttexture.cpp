@@ -184,7 +184,7 @@ namespace GN { namespace gfx
     void func_TEXTURE_DESTROY( Gpu &, void * p, size_t )
     {
         Texture ** tex = (Texture**)p;
-        (*tex)->decref();
+        (*tex)->DecRef();
     }
 
     //

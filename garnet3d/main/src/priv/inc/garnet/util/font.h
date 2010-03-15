@@ -219,7 +219,7 @@ namespace GN { namespace util
         ///
         /// Get internal font pointer
         ///
-        FontFace * getFontFace() const { return mFont.get(); }
+        FontFace * getFontFace() const { return mFont.Get(); }
 
         ///
         /// draw UNICODE text

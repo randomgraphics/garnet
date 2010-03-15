@@ -196,8 +196,8 @@ GN::gfx::OGLGpu::bindContextShaders(
 {
     GN_GUARD_SLOW;
 
-    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
-    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
+    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.Get();
+    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.Get();
 
     if( oldProgram == newProgram )
     {
@@ -441,7 +441,7 @@ GN::gfx::OGLGpu::bindContextResources(
     //
     if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt || newContext.gpuProgram != mContext.gpuProgram )
     {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.Get() );
         if( !mCurrentOGLVtxFmt ) return false;
         if( !mCurrentOGLVtxFmt->bindStates() ) return false;
     }

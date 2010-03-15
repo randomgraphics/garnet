@@ -15,7 +15,7 @@ bool Init( Gpu & gpu )
     if( !sr->Init() ) return false;
 
     // create texture
-    tex.attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
+    tex.Attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
     if( !tex ) return false;
 
     // success

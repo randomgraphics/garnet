@@ -151,7 +151,7 @@ namespace GN
     {
         if( ptr )
         {
-            ptr->decref();
+            ptr->DecRef();
             ptr = 0;
         }
     }

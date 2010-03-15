@@ -318,7 +318,7 @@ GN::gfx::EffectResource::Impl::initGpuPrograms(
         // create GPU program
         GpuProgramItem gpitem;
         gpitem.name = shaderName;
-        gpitem.prog.attach( gpu.createGpuProgram( shaderDesc.gpd ) );
+        gpitem.prog.Attach( gpu.createGpuProgram( shaderDesc.gpd ) );
         if( !gpitem.prog ) continue;
 
         // check textures and uniforms

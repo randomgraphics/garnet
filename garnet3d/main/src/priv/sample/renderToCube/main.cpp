@@ -66,7 +66,7 @@ public:
         for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
-            faces[i].attach( loadTextureFromFile( gpu, name ) );
+            faces[i].Attach( loadTextureFromFile( gpu, name ) );
             if( 0 == faces[i] ) return false;
         }
 

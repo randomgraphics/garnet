@@ -39,7 +39,7 @@ namespace GN { namespace gfx
             mInternalHandle = internalHandle;
         }
 
-        void  set( UInt32 managerIndex, UInt32 internalHandle )
+        void  Set( UInt32 managerIndex, UInt32 internalHandle )
         {
             mIndexPlusOne = managerIndex + 1;
             mInternalHandle = internalHandle;

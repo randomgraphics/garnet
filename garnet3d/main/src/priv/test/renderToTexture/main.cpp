@@ -49,22 +49,22 @@ public:
         Gpu & gpu = db.gpu();
 
         // create render targets
-        c0.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
-        if( c0.empty() )
+        c0.Attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
+        if( !c0 )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
-        if( ds.empty() )
+        ds.Attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
+        if( !ds )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
         }
 
         // load textures
-        tex0.attach( loadTextureFromFile( gpu, "media::texture/rabit.png" ) );
-        tex1.attach( loadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
+        tex0.Attach( loadTextureFromFile( gpu, "media::texture/rabit.png" ) );
+        tex1.Attach( loadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
         if( 0 == tex0 || 0 == tex1 ) return false;
 
         // create box mesh

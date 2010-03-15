@@ -84,7 +84,7 @@ int GN::util::VisualNode::Impl::addModel( GpuResource * model )
 
     // add the model into model list
     int h = mModels.NewHandle();
-    if( 0 != h ) mModels[h].set( GpuResource::castTo<ModelResource>( model ) );
+    if( 0 != h ) mModels[h].Set( GpuResource::castTo<ModelResource>( model ) );
 
     // done
     return h;
