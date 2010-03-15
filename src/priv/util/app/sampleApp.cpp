@@ -600,7 +600,7 @@ bool GN::util::SampleApp::initFont()
     if( !ff )
     {
         // if failed, then use simple ASCII font face
-        ff.attach( util::createSimpleAsciiFontFace() );
+        ff.Attach( util::createSimpleAsciiFontFace() );
 
         if( !ff ) return false;
     }

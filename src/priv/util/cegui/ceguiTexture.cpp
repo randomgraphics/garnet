@@ -134,7 +134,7 @@ bool CEGUI::GarnetTexture::reload()
 
         // load texture
         MemFile<UInt8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.c_str() );
-        mGarnetTexture.attach( scene::createTextureFromFile( mf ) );
+        mGarnetTexture.Attach( scene::createTextureFromFile( mf ) );
         if( !mGarnetTexture ) return false;
 
         // update texture size

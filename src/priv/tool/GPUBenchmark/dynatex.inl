@@ -133,7 +133,7 @@ class TestTextureBandwidth : public BasicTestCase
         TEX_BYTES = lrc.Pitch * TEX_SIZE;
 #endif
 
-        desc.texture.attach( tex );
+        desc.texture.Attach( tex );
         return true;
 
 		GN_UNGUARD;

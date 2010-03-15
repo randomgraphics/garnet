@@ -19,7 +19,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
 
     GN_ASSERT( rtt.texture );
 
-    const OGLTexture * tex = (const OGLTexture*)rtt.texture.get();
+    const OGLTexture * tex = (const OGLTexture*)rtt.texture.Get();
 
     switch( tex->getOGLTarget() )
     {

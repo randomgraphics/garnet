@@ -106,11 +106,11 @@ public:
         gpd.vs.entry = "vsmain";
         gpd.ps.source = rippleCode;
         gpd.ps.entry = "psmain";
-        mContext.gpuProgram.attach( gpu.createGpuProgram( gpd ) );
+        mContext.gpuProgram.Attach( gpu.createGpuProgram( gpd ) );
         if( !mContext.gpuProgram ) return false;
 
         mContext.uniforms.Resize( 1 );
-        mContext.uniforms[0].attach( gpu.createUniform( sizeof(mRipples) ) );
+        mContext.uniforms[0].Attach( gpu.createUniform( sizeof(mRipples) ) );
         if( !mContext.uniforms[0] ) return false;
 
         // initialize ripples

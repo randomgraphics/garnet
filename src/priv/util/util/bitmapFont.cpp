@@ -83,7 +83,7 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
 
     // success
     mSpriteRenderer = sr;
-    mFont.set( ff );
+    mFont.Set( ff );
     return Success();
 
     GN_UNGUARD;
@@ -417,7 +417,7 @@ GN::util::BitmapFont::slotInit(
     mTextures.Resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
-        mTextures[i].attach( gpu.createTexture( td ) );
+        mTextures[i].Attach( gpu.createTexture( td ) );
 
         if( 0 == mTextures[i] )
         {

@@ -62,7 +62,7 @@ public:
         ffc.width = (UInt16)_w;
         ffc.height = (UInt16)_h;
         ffc.quality = FFQ_MONOCHROM;
-        mFace.attach( createFontFace( ffc ) );
+        mFace.Attach( createFontFace( ffc ) );
         if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;

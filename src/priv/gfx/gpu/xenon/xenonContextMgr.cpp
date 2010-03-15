@@ -325,7 +325,7 @@ GN::gfx::XenonGpu::bindContextShaders(
 {
     if( newContext.gpuProgram )
     {
-        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.get();
+        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.Get();
 
         if( skipDirtyCheck || mContext.gpuProgram != newContext.gpuProgram )
         {
@@ -393,7 +393,7 @@ GN::gfx::XenonGpu::bindContextResources(
         {
             GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
-                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
+                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.Get())->getD3DBuffer() : NULL,
                 vbb.offset,
                 vbb.stride ) );
         }
@@ -405,7 +405,7 @@ GN::gfx::XenonGpu::bindContextResources(
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
+            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.Get())->getD3DBuffer()
             : NULL ) );
     }
 

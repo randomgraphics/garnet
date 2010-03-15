@@ -507,7 +507,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     size_t            effectParameterIndex,
     TextureResource * newTexture )
 {
-    if( mResource.get() == newTexture ) return;
+    if( mResource.Get() == newTexture ) return;
 
     // disconnect from old handle
     if( mResource ) mResource->sigTextureChanged.Disconnect( this );
@@ -528,7 +528,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mResource.set( newTexture );
+    mResource.Set( newTexture );
 
     updateContext( tex );
 }
@@ -567,7 +567,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 
         TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
 
-        binding.texture.set( tex );
+        binding.texture.Set( tex );
         binding.sampler = prop.sampler;
     }
 }
@@ -599,7 +599,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     size_t            effectParameterIndex,
     UniformResource * newUniform )
 {
-    if( mResource.get() == newUniform ) return;
+    if( mResource.Get() == newUniform ) return;
 
     // disconnect from old handle
     if( mResource ) mResource->sigUniformChanged.Disconnect( this );
@@ -620,7 +620,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mResource.set( newUniform );
+    mResource.Set( newUniform );
 
     updateContext( uniform );
 }
@@ -664,7 +664,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
             gc.uniforms.Resize( location.stage + 1 );
         }
 
-        gc.uniforms[location.stage].set( uniform );
+        gc.uniforms[location.stage].Set( uniform );
     }
 }
 
@@ -852,7 +852,7 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     }
 
     // update mesh resource pointer
-    mMesh.resource.set( mesh );
+    mMesh.resource.Set( mesh );
 
     // update mesh subset
     if( subset )
@@ -909,7 +909,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     }
 
     // update effect resource pointer
-    mEffect.resource.set( effect );
+    mEffect.resource.Set( effect );
 
     // initialize passes array
     size_t numpasses = effect ? effect->getNumPasses() : 0;
@@ -966,7 +966,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
             AutoRef<Uniform> u = unires->getUniform();
             if( !u && up.size > 0 )
             {
-                u.attach( database().gpu().createUniform( up.size ) );
+                u.Attach( database().gpu().createUniform( up.size ) );
                 if( !u ) return false;
             }
             unires->setUniform( u );

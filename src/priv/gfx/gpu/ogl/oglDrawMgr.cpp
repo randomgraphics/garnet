@@ -169,7 +169,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = SafeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
+    const OGLIdxBuf * ib = SafeCastPtr<const OGLIdxBuf>( mContext.idxbuf.Get() );
 
     // Verify index buffer
     if( paramCheckEnabled() )

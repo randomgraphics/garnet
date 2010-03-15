@@ -556,7 +556,7 @@ GpuResourceDatabase::Impl::createResource(
     // create new handle
     UInt32 internalHandle = mgr->resources.Add( name, resimpl );
     if( 0 ==internalHandle ) return AutoRef<GpuResource>::NULLREF;
-    resimpl->handle.set( (UInt32)mgr->index, internalHandle );
+    resimpl->handle.Set( (UInt32)mgr->index, internalHandle );
 
     // done
     return newres;
@@ -578,7 +578,7 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) 
     GN_ASSERT( resimpl );
 
     AutoRef<GpuResource> result;
-    result.set( &resimpl->resource );
+    result.Set( &resimpl->resource );
 
     return result;
 }

@@ -43,12 +43,12 @@ struct DiffuseEffect : public BasicEffect
             "    o.clr = saturate(dot(i.nrm,LIGHT_DIR)) + 0.2;    \n"
             "    return o;                                        \n"
             "}";
-        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.Attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
         static const char * pscode = "float4 main( in float4 clr : COLOR0 ) : COLOR0 { return clr; }";
-        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.Attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // initialize projection matrix

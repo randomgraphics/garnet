@@ -479,7 +479,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         }
 
         // update time stamp
-        desc.lastUniform.set( uniform );
+        desc.lastUniform.Set( uniform );
         desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
@@ -591,7 +591,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
         {
             r.chooseTextureStage( i );
 
-            const OGLTexture * ogltexture = SafeCastPtr<const OGLTexture>(b.texture.get());
+            const OGLTexture * ogltexture = SafeCastPtr<const OGLTexture>(b.texture.Get());
 
             // bind sampler
             ogltexture->setSampler( b.sampler );

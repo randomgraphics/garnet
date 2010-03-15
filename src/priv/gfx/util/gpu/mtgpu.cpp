@@ -37,7 +37,7 @@ struct DrawLineParams
 template<typename T>
 static inline void sReplaceAutoRefPtr( AutoRef<T> & ref, T * newptr )
 {
-    ref.set( newptr );
+    ref.Set( newptr );
 }
 
 // *****************************************************************************
@@ -349,43 +349,43 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     // Replace wrapper resource pointers with real resource pointers.
 
     // GPU program
-    MultiThreadGpuProgram * mtgp = (MultiThreadGpuProgram *)rc->gpuProgram.get();
+    MultiThreadGpuProgram * mtgp = (MultiThreadGpuProgram *)rc->gpuProgram.Get();
     sReplaceAutoRefPtr( rc->gpuProgram, mtgp ? mtgp->getRealGpuProgram() : NULL );
 
     // uniforms
     for( size_t i = 0; i < rc->uniforms.Size(); ++i )
     {
-        MultiThreadUniform * mtu = (MultiThreadUniform*)rc->uniforms[i].get();
+        MultiThreadUniform * mtu = (MultiThreadUniform*)rc->uniforms[i].Get();
         sReplaceAutoRefPtr( rc->uniforms[i], mtu ? mtu->getRealUniform() : NULL );
     }
 
     // textures
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->textures); ++i )
     {
-        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].texture.get();
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->textures[i].texture.Get();
         sReplaceAutoRefPtr( rc->textures[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // vertex buffers
     for( size_t i = 0; i < GN_ARRAY_COUNT(rc->vtxbufs); ++i )
     {
-        MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].vtxbuf.get();
+        MultiThreadVtxBuf * mtvb = (MultiThreadVtxBuf *)rc->vtxbufs[i].vtxbuf.Get();
         sReplaceAutoRefPtr( rc->vtxbufs[i].vtxbuf, mtvb ? mtvb->getRealVtxBuf() : NULL );
     }
 
     // index buffer
-    MultiThreadIdxBuf * mtib = (MultiThreadIdxBuf *)rc->idxbuf.get();
+    MultiThreadIdxBuf * mtib = (MultiThreadIdxBuf *)rc->idxbuf.Get();
     sReplaceAutoRefPtr( rc->idxbuf, mtib ? mtib->getRealIdxBuf() : NULL );
 
     // color render targets
     for( size_t i = 0; i < rc->colortargets.Size(); ++i )
     {
-        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->colortargets[i].texture.get();
+        MultiThreadTexture * mtt = (MultiThreadTexture*)rc->colortargets[i].texture.Get();
         sReplaceAutoRefPtr( rc->colortargets[i].texture, mtt ? mtt->getRealTexture() : NULL );
     }
 
     // depth-stencil render target
-    MultiThreadTexture * ds = (MultiThreadTexture*)rc->depthstencil.texture.get();
+    MultiThreadTexture * ds = (MultiThreadTexture*)rc->depthstencil.texture.Get();
     sReplaceAutoRefPtr( rc->depthstencil.texture, ds ? ds->getRealTexture() : NULL );
 
     // done

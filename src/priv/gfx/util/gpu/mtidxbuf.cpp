@@ -98,7 +98,7 @@ namespace GN { namespace gfx
     void func_IDXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         IdxBuf * ib = *(IdxBuf**)p;
-        ib->decref();
+        ib->DecRef();
     }
 
     //

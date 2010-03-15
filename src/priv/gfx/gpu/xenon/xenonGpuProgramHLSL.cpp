@@ -227,7 +227,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
 
         const XenonTextureParamDesc & param = mTextures[i];
 
-        IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.get())->getD3DTexture() : NULL;
+        IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.Get())->getD3DTexture() : NULL;
 
         if( param.vshandle )
         {
