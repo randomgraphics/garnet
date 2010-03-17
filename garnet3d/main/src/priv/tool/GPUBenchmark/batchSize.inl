@@ -152,7 +152,7 @@ public:
         }
 
         // draw text
-        gAsciiFont.drawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        gAsciiFont.DrawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     void BasicTestCase::onkey( GN::input::KeyEvent key )

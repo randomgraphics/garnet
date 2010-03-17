@@ -288,6 +288,7 @@ namespace GN
             {
                 GN_ASSERT( ptr );
                 T * k = (T*)ptr;
+                GN_UNUSED_PARAM(k);
                 k->T::~T();
             }
 

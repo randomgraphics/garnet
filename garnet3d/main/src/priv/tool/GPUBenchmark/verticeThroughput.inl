@@ -326,7 +326,7 @@ public:
         mGeometry.draw();
 
         // draw statistics
-        scene::gAsciiFont.drawText( mThroughputStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.DrawText( mThroughputStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

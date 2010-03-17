@@ -336,7 +336,7 @@ public:
         r.rebindContext( ff );
 
         // draw text
-        scene::gAsciiFont.drawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.DrawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

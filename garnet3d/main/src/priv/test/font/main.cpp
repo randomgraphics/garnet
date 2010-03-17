@@ -13,7 +13,7 @@ wchar_t              textw[256];
 bool initTTF()
 {
     // create font
-    AutoRef<FontFace> ff( createFontFace(ffc) );
+    AutoRef<FontFace> ff( CreateFontFace(ffc) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
@@ -28,7 +28,7 @@ bool Init( Gpu & gpu )
     if( !sr->Init() ) return false;
 
     // initialize ascii font
-    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
+    AutoRef<FontFace> ff( CreateSimpleAsciiFontFace() );
     if( !ff ) return false;
     if( !ascii.Init( sr, ff ) ) return false;
 
@@ -94,12 +94,12 @@ void onKeyPress( KeyEvent ke )
 
 void draw( Gpu &, const wchar_t * fps )
 {
-    ascii.drawText( fps, 10, 13 );
+    ascii.DrawText( fps, 10, 13 );
 
     if( ttf.Ok() )
     {
-        ttf.drawText( textw, 100, 100 );
-        ttf.drawText( L"Hello!", 200, 200 );
+        ttf.DrawText( textw, 100, 100 );
+        ttf.DrawText( L"Hello!", 200, 200 );
     }
 }
 

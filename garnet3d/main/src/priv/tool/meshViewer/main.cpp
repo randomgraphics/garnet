@@ -109,7 +109,7 @@ public:
 
         const Vector3f & position = arcball.getTranslation();
 
-        getFont().drawText(
+        getFont().DrawText(
             StringFormat(
                 L"position : %f,\n"
                 L"           %f,\n"

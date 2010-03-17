@@ -171,7 +171,7 @@ public:
         RenderEngine & re = getApp().getRenderEngine();
         re.setContext( mContext );
         mGeometry.draw();
-        getApp().asciiFont().drawText( mFillrateStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        getApp().asciiFont().DrawText( mFillrateStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
