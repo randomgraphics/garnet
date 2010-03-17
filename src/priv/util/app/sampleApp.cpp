@@ -596,11 +596,11 @@ bool GN::util::SampleApp::initFont()
     GN_GUARD;
 
     // try load default font face in mInitParam first
-    AutoRef<util::FontFace> ff( util::createFontFace(mInitParam.ffc) );
+    AutoRef<util::FontFace> ff( util::CreateFontFace(mInitParam.ffc) );
     if( !ff )
     {
         // if failed, then use simple ASCII font face
-        ff.Attach( util::createSimpleAsciiFontFace() );
+        ff.Attach( util::CreateSimpleAsciiFontFace() );
 
         if( !ff ) return false;
     }
@@ -632,11 +632,11 @@ void GN::util::SampleApp::drawHUD()
 
     if( mShowHUD )
     {
-        mFont.drawText( mFps.getFpsString().ToRawPtr(), 40, 40 );
+        mFont.DrawText( mFps.getFpsString().ToRawPtr(), 40, 40 );
 
         if( mShowHelp )
         {
-            mFont.drawText( mHelpText, 40, 80 );
+            mFont.DrawText( mHelpText, 40, 80 );
         }
     }
 

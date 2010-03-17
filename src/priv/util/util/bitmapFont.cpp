@@ -72,7 +72,7 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
     const FontFaceDesc & ffd = ff->getDesc();
 
     // initialize font slots
-    if( !slotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return Failure();
+    if( !SlotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return Failure();
 
     // create character list
     for( int i = 0; i < MAX_TEXTURES; ++i )
@@ -124,7 +124,7 @@ void GN::util::BitmapFont::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::drawText( const TextDesc & td )
+void GN::util::BitmapFont::DrawText( const TextDesc & td )
 {
     GN_GUARD_SLOW;
 
@@ -167,7 +167,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
         }
         else if( L'\t' == ch )
         {
-            fs = getSlot( L' ' );
+            fs = GetSlot( L' ' );
             if ( fs )
             {
                 float tabx = fs->advx * TAB_SIZE;
@@ -177,7 +177,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
         else // normal character
         {
             // find the slot
-            fs = getSlot( ch );
+            fs = GetSlot( ch );
             if ( NULL == fs ) return;
 
             // add character to charlist
@@ -242,7 +242,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 //
 // -----------------------------------------------------------------------------
 inline const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::getSlot( wchar_t ch )
+GN::util::BitmapFont::GetSlot( wchar_t ch )
 {
     // find font slot in slotmap
     size_t * slot = mSlotMap.Find( ch );
@@ -253,7 +253,7 @@ GN::util::BitmapFont::getSlot( wchar_t ch )
     }
     else
     {
-        return createSlot( ch );
+        return CreateSlot( ch );
     }
 }
 
@@ -261,7 +261,7 @@ GN::util::BitmapFont::getSlot( wchar_t ch )
 //
 // -----------------------------------------------------------------------------
 const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::createSlot( wchar_t ch )
+GN::util::BitmapFont::CreateSlot( wchar_t ch )
 {
     GN_GUARD_SLOW;
 
@@ -338,7 +338,7 @@ GN::util::BitmapFont::createSlot( wchar_t ch )
 //
 // -----------------------------------------------------------------------------
 bool
-GN::util::BitmapFont::slotInit(
+GN::util::BitmapFont::SlotInit(
     Gpu      & gpu,
     UInt16     fontw,
     UInt16     fonth,

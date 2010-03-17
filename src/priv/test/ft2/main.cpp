@@ -62,7 +62,7 @@ public:
         ffc.width = (UInt16)_w;
         ffc.height = (UInt16)_h;
         ffc.quality = FFQ_MONOCHROM;
-        mFace.Attach( createFontFace( ffc ) );
+        mFace.Attach( CreateFontFace( ffc ) );
         if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;
@@ -140,7 +140,7 @@ GN::StrW g_text(
     L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" );
 const wchar_t * g_UnicodeString = g_text.ToRawPtr();
 
-void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
+void DrawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 {
 	int sx = x;
 	int sy = y;
@@ -231,7 +231,7 @@ void display( void )
    //glPushMatrix();
    //glTranslatef ( 0.0, 0.0, -5.0 );
    glEnable ( GL_TEXTURE_2D );
-   drawText(g_UnicodeString,50,50,900,25);
+   DrawText(g_UnicodeString,50,50,900,25);
    //glPopMatrix();
    glutSwapBuffers();
 }

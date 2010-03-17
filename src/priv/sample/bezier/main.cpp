@@ -391,7 +391,7 @@ class BezierApp : public SampleApp
 
         drawCoords();
 
-        getFont().drawText(
+        getFont().DrawText(
             StringFormat(
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",

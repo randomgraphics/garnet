@@ -133,12 +133,12 @@ namespace GN { namespace util
     ///
     /// create font face (usually loading from a TTF file)
     ///
-    FontFace * createFontFace( const FontFaceCreationDesc & cd );
+    FontFace * CreateFontFace( const FontFaceCreationDesc & cd );
 
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
     ///
-    FontFace * createSimpleAsciiFontFace();
+    FontFace * CreateSimpleAsciiFontFace();
 
     ///
     /// font alignment flags
@@ -219,17 +219,17 @@ namespace GN { namespace util
         ///
         /// Get internal font pointer
         ///
-        FontFace * getFontFace() const { return mFont.Get(); }
+        FontFace * GetFontFace() const { return mFont.Get(); }
 
         ///
         /// draw UNICODE text
         ///
-        void drawText( const TextDesc & td );
+        void DrawText( const TextDesc & td );
 
         ///
         /// draw UNICODE text
         ///
-        void drawText( const wchar_t * text, float x, float y )
+        void DrawText( const wchar_t * text, float x, float y )
         {
             TextDesc td;
             td.text = text;
@@ -241,7 +241,7 @@ namespace GN { namespace util
             td.alignment = TextAlignment::HORI_LEFT | TextAlignment::VERT_TOP;
             td.background = true;
             td.kerning = false;
-            drawText( td );
+            DrawText( td );
         }
 
         // ********************************
@@ -338,19 +338,19 @@ namespace GN { namespace util
         ///
         /// \return Return null, if failed.
         ///
-        inline const FontSlot * getSlot( wchar_t ch );
+        inline const FontSlot * GetSlot( wchar_t ch );
 
         ///
         /// create slot of specific character
         ///
         /// \return Return null, if failed.
         ///
-        const FontSlot * createSlot( wchar_t ch );
+        const FontSlot * CreateSlot( wchar_t ch );
 
         ///
         /// initialize font slots and font textures
         ///
-        bool slotInit(
+        bool SlotInit(
             gfx::Gpu & gpu,
             UInt16     fontw,
             UInt16     fonth,
