@@ -48,7 +48,7 @@ void GN::gfx::XenonGpu::contextQuit()
     bindContext( emptyContext );
 
     // Delete all vertex formats
-    mVertexFormats.clear();
+    mVertexFormats.Clear();
 
     //SafeDelete( mRTMgr );
 

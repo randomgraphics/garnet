@@ -23,7 +23,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS   & d3dpp,
     GN_ASSERT( dd.height > 0 && dd.width > 0 );
     d3dpp.BackBufferWidth  = dd.width;
     d3dpp.BackBufferHeight = dd.height;
-    d3dpp.BackBufferFormat = D3DFMT_A8B8G8R8;
+    d3dpp.BackBufferFormat = D3DFMT_X2R10G10B10;
     d3dpp.BackBufferCount  = 0;
     d3dpp.DisableAutoBackBuffer = false;
 
@@ -45,7 +45,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS   & d3dpp,
     // front buffer parameters
     d3dpp.DisableAutoFrontBuffer = false;
     d3dpp.FrontBufferFormat      = D3DFMT_LE_X2R10G10B10;
-    d3dpp.FrontBufferColorSpace  = D3DCOLORSPACE_YCbCr709; // the color space corresponding to HDTV.
+    d3dpp.FrontBufferColorSpace  = D3DCOLORSPACE_RGB;
 
     // misc. parameters
     d3dpp.SwapEffect                 = D3DSWAPEFFECT_DISCARD;
