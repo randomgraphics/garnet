@@ -25,7 +25,8 @@ TODO
   - Dictionary template that replaces GN::Dictionary
   - replace STL containers:
   	- queue, list, set
-
+  - FontFace unit should be integer instead of float, since it is supposed to
+    represent rasterized font metrics.
 
 - p1
   - Runtime option managers that could be modified by:

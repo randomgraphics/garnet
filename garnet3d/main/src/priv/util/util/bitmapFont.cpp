@@ -142,7 +142,8 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
     size_t               textlen = ( 0 == td.len ) ? static_cast<size_t>(-1) : td.len;
     const FontFaceDesc & ffd     = mFont->getDesc();
 
-    float baselineDistance = ffd.baseLineDistance();
+    // align baseline distance to interger for better clarity
+    float baselineDistance = ceil( ffd.baseLineDistance() );
 
     Rectf bbox( td.x + ffd.xmin, td.y + ffd.ymin, 0, baselineDistance );
 
@@ -168,11 +169,16 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
         else if( L'\t' == ch )
         {
             fs = GetSlot( L' ' );
-            if ( fs )
-            {
-                float tabx = fs->advx * TAB_SIZE;
-                penx = floor((penx+tabx-1) / tabx) * tabx;
-            }
+            if ( NULL == fs ) return;
+
+            float tabx = fs->advx * TAB_SIZE;
+            penx = floor((penx+tabx-1) / tabx) * tabx;
+        }
+        else if( L' ' == ch )
+        {
+            fs = GetSlot( L' ' );
+            if ( NULL == fs ) return;
+            penx += fs->advx;
         }
         else // normal character
         {
