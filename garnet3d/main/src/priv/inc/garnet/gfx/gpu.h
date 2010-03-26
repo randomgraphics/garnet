@@ -426,6 +426,37 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// Calculate number of streams.
+        ///
+        size_t inline CalcNumStreams() const
+        {
+            size_t n = 0;
+            for( size_t i = 0; i < numElements; ++i )
+            {
+                const VertexElement & e =  elements[i];
+                if( e.stream >= n ) n = e.stream + 1;
+            }
+            return n;
+        }
+
+        ///
+        /// Calculate stride of specific stream.
+        ///
+        size_t inline CalcStreamStride( size_t stream ) const
+        {
+            size_t stride = 0;
+            for( size_t i = 0; i < numElements; ++i )
+            {
+                const VertexElement & e =  elements[i];
+
+                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
+
+                if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
+            }
+            return stride;
+        }
+
+        ///
         /// return a vertex format definition for vertex like this:
         ///
         /// struct VertexFormat
@@ -499,7 +530,7 @@ namespace GN { namespace gfx
     struct VertexBufferBinding
     {
         AutoRef<VtxBuf> vtxbuf; ///< vertex buffer
-        UInt16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
+        UInt16          stride; ///< vertex stride. (Note: don't use 0 as default value)
         UInt32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
 
         /// ctor
