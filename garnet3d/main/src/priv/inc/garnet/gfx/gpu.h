@@ -1206,7 +1206,7 @@ namespace GN { namespace gfx
         {
             AutoRef<Blob> bin( compileGpuProgram( desc ) );
             if( !bin ) return NULL;
-            return createGpuProgram( bin->data(), bin->Size() );
+            return createGpuProgram( bin->Data(), bin->Size() );
         }
 
         ///

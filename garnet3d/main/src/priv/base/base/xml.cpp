@@ -558,7 +558,7 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
 
     size_t sz;
 
-    if( !fp.read( &buf[0], fp.Size(), &sz ) )
+    if( !fp.Read( &buf[0], fp.Size(), &sz ) )
     {
         result.errInfo = "Fail to read the file!";
         return false;
@@ -577,7 +577,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
     GN_GUARD;
 
     //static const UInt8 bom[3] = { 0xEF, 0xBB, 0xBF };
-    //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
+    //if( sizeof(bom) != file.Write( bom, sizeof(bom) ) ) return false;
 
     file << "<?xml version=\"1.0\" encoding=\""
          << CharacterEncodingConverter::sEncoding2Str( GetCurrentSystemEncoding() )

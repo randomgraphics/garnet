@@ -209,7 +209,7 @@ struct D3D9StateDump
             void * vertices;
             GN_DX_CHECK_RETURN( vbd.vb->Lock( 0, 0, &vertices, 0 ), false );
 
-            bool ok = fp->read( vertices, bytes, 0 );
+            bool ok = fp->Read( vertices, bytes, 0 );
 
             vbd.vb->Unlock();
 
@@ -229,7 +229,7 @@ struct D3D9StateDump
             void * indices;
             GN_DX_CHECK_RETURN( idxbuf.ib->Lock( 0, 0, &indices, 0 ), false );
 
-            bool ok = fp->read( indices, bytes, 0 );
+            bool ok = fp->Read( indices, bytes, 0 );
 
             idxbuf.ib->Unlock();
 

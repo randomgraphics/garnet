@@ -63,36 +63,36 @@ namespace GN
         ///
         /// 读取size个字节到buffer中
         ///
-        virtual bool read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) = 0;
+        virtual bool Read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) = 0;
 
         ///
         /// 向文件中写入size个字节
         ///
         /// \return   -1 means failed
         ///
-        virtual bool write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) = 0;
+        virtual bool Write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) = 0;
 
         ///
         /// 是否已经到文件结尾. Return true, if something goes wrong.
         ///
-        virtual bool eof() const = 0;
+        virtual bool Eof() const = 0;
 
         ///
-        /// write string to file
+        /// Write string to file
         ///
-        inline bool print( const StrA & s ) { return write( s.ToRawPtr(), s.Size(), 0 ); }
+        inline bool Print( const StrA & s ) { return Write( s.ToRawPtr(), s.Size(), 0 ); }
 
         ///
-        /// write formatted string to file
+        /// Write formatted string to file
         ///
-        inline bool printf( const char * fmt, ... )
+        inline bool Printf( const char * fmt, ... )
         {
             StrA s;
             va_list arglist;
             va_start( arglist, fmt );
             s.FormatV( fmt, arglist );
             va_end( arglist );
-            return print( s );
+            return Print( s );
         }
 
         ///
@@ -100,12 +100,12 @@ namespace GN
         ///
         /// \return   return false if error
         ///
-        virtual bool seek( size_t /*offset*/, FileSeek /*origin*/ ) = 0;
+        virtual bool Seek( size_t /*offset*/, FileSeek /*origin*/ ) = 0;
 
         ///
         /// 返回当前文件读写游标的位置. Return -1 if something goes wrong.
         ///
-        virtual size_t tell() const = 0;
+        virtual size_t Tell() const = 0;
 
         ///
         /// 返回文件的总长度. Return 0 if something goes wrong.
@@ -115,17 +115,17 @@ namespace GN
         ///
         /// get memory mapping of the file content. Return NULL if failed.
         ///
-        virtual void * map( size_t offset, size_t length, bool readonly ) = 0;
+        virtual void * Map( size_t offset, size_t length, bool readonly ) = 0;
 
         ///
-        /// unmap file content
+        /// Unmap file content
         ///
-        virtual void unmap() = 0;
+        virtual void Unmap() = 0;
 
         ///
-        /// return file name string
+        /// return file Name string
         ///
-        const char * name() const { return mName; }
+        const char * Name() const { return mName; }
 
         ///
         /// dtor
@@ -140,9 +140,9 @@ namespace GN
         File() { mCaps.u8 = 0; }
 
         ///
-        /// Set file name
+        /// Set file Name
         ///
-        void setName( const StrA & name ) { mName = name; }
+        void SetName( const StrA & name ) { mName = name; }
 
         ///
         /// Set operation caps
@@ -157,7 +157,7 @@ namespace GN
         ///
         /// File logger
         ///
-        static inline Logger * myLogger() { static Logger * logger = GetLogger("GN.base.File"); return logger; }
+        static inline Logger * MyLogger() { static Logger * logger = GetLogger("GN.base.File"); return logger; }
 
     private:
 
@@ -172,7 +172,7 @@ namespace GN
     {
         char buf[256];
         StringPrintf( buf, 256, "%d", i );
-        fp.write( buf, StringLength(buf), 0 );
+        fp.Write( buf, StringLength(buf), 0 );
         return fp;
     }
 
@@ -183,7 +183,7 @@ namespace GN
     {
         char buf[256];
         StringPrintf( buf, 256, "%Iu", s );
-        fp.write( buf, StringLength(buf), 0 );
+        fp.Write( buf, StringLength(buf), 0 );
         return fp;
     }
 
@@ -193,7 +193,7 @@ namespace GN
     inline File & operator<<( File & fp, const char * s )
     {
         if( 0 == s ) return fp;
-        fp.write( s, StringLength(s), 0 );
+        fp.Write( s, StringLength(s), 0 );
         return fp;
     }
 
@@ -203,7 +203,7 @@ namespace GN
     inline File & operator<<( File & fp, const StrA & s )
     {
         if( s.Empty() ) return fp;
-        fp.write( s.ToRawPtr(), s.Size(), 0 );
+        fp.Write( s.ToRawPtr(), s.Size(), 0 );
         return fp;
     }
 
@@ -222,10 +222,10 @@ namespace GN
         void setFile( FILE * fp )
         {
             mFile = fp;
-            if( stdin == fp ) setName( "stdin" );
-            else if( stdout == fp ) setName( "stdout" );
-            else if( stderr == fp ) setName( "stderr" );
-            else setName( StringFormat( "#%p", fp ) );
+            if( stdin == fp ) SetName( "stdin" );
+            else if( stdout == fp ) SetName( "stdout" );
+            else if( stderr == fp ) SetName( "stderr" );
+            else SetName( StringFormat( "#%p", fp ) );
         }
 
     public :
@@ -251,14 +251,14 @@ namespace GN
 
         // from File
     public:
-        bool read( void *, size_t, size_t* );
-        bool write( const void * buffer, size_t size, size_t* );
-        bool eof() const;
-        bool seek( size_t, FileSeek );
-        size_t tell() const;
+        bool Read( void *, size_t, size_t* );
+        bool Write( const void * buffer, size_t size, size_t* );
+        bool Eof() const;
+        bool Seek( size_t, FileSeek );
+        size_t Tell() const;
         size_t Size() const;
-        void * map( size_t, size_t, bool ) { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); return 0; }
-        void unmap() { GN_ERROR(myLogger())( "StdFile: does not support memory mapping operation!" ); }
+        void * Map( size_t, size_t, bool ) { GN_ERROR(MyLogger())( "StdFile: does not support memory mapping operation!" ); return 0; }
+        void Unmap() { GN_ERROR(MyLogger())( "StdFile: does not support memory mapping operation!" ); }
     };
 
     ///
@@ -270,20 +270,20 @@ namespace GN
     public:
 
         DiskFile() : StdFile(0), mSize(0) {}
-        ~DiskFile() { close(); }
+        ~DiskFile() { Close(); }
 
         ///
-        /// open a file
+        /// Open a file
         ///
-        /// \param fname File name
-        /// \param mode  ANSI compatible open mode, such as "r", "w+".
+        /// \param fname File Name
+        /// \param mode  ANSI compatible Open mode, such as "r", "w+".
         ///
-        bool open( const StrA & fname, const StrA & mode );
+        bool Open( const StrA & fname, const StrA & mode );
 
         ///
-        /// close the file
+        /// Close the file
         ///
-        void close() throw();
+        void Close() throw();
 
         ///
         /// Convert to ANSI FILE *
@@ -315,14 +315,14 @@ namespace GN
         TempFile() : StdFile(0), mFileDesc(-1) {};
 
         ///
-        /// open a temporary file with user specified prefix
+        /// Open a temporary file with user specified prefix
         ///
-        bool open( const StrA & prefix, const StrA & mode, Behavior behavior );
+        bool Open( const StrA & prefix, const StrA & mode, Behavior behavior );
 
         ///
-        /// close the temporary file
+        /// Close the temporary file
         ///
-        void close();
+        void Close();
 
         ///
         /// Convert to ANSI FILE *
@@ -346,7 +346,7 @@ namespace GN
 
     public:
 
-        /// \name ctor/dtor
+        /// \Name ctor/dtor
         //@{
         MemFile( T * buf = 0, size_t size = 0, const StrA & name = "" )
             : mStart((UInt8*)buf)
@@ -354,7 +354,7 @@ namespace GN
             , mSize(size)
         {
             SetCaps( 0xFF ); // support all operations
-            setName(name);
+            SetName(name);
         }
         ~MemFile() {}
         //@}
@@ -362,26 +362,26 @@ namespace GN
         ///
         /// reset memory buf
         ///
-        void reset( T * buf = 0, size_t size = 0, const StrA & name = "" );
+        void Reset( T * buf = 0, size_t size = 0, const StrA & name = "" );
 
-        /// \name from File
+        /// \Name from File
         //@{
-        bool read( void *, size_t, size_t* );
-        bool write( const void * buffer, size_t size, size_t* );
-        bool eof() const { return (mStart+mSize) == mPtr; }
-        bool seek( size_t offset, FileSeek origin );
-        size_t tell() const { return mPtr - mStart; }
+        bool Read( void *, size_t, size_t* );
+        bool Write( const void * buffer, size_t size, size_t* );
+        bool Eof() const { return (mStart+mSize) == mPtr; }
+        bool Seek( size_t offset, FileSeek origin );
+        size_t Tell() const { return mPtr - mStart; }
         size_t Size() const { return mSize; }
-        void * map( size_t offset, size_t length, bool )
+        void * Map( size_t offset, size_t length, bool )
         {
             if( offset >= mSize || (offset + length) > mSize )
             {
-                GN_ERROR(myLogger())( "invalid mapping range!" );
+                GN_ERROR(MyLogger())( "invalid mapping range!" );
                 return 0;
             }
             return mStart + offset;
         }
-        void unmap() {}
+        void Unmap() {}
         //@}
     };
 
@@ -408,24 +408,24 @@ namespace GN
         ///
         ~VectorFile() {}
 
-        /// \name from File
+        /// \Name from File
         //@{
-        bool read( void *, size_t, size_t* );
-        bool write( const void * buffer, size_t size, size_t* );
-        bool eof() const { return mBuffer.Size() == mCursor; }
-        bool seek( size_t offset, FileSeek origin );
-        size_t tell() const { return mCursor; }
+        bool Read( void *, size_t, size_t* );
+        bool Write( const void * buffer, size_t size, size_t* );
+        bool Eof() const { return mBuffer.Size() == mCursor; }
+        bool Seek( size_t offset, FileSeek origin );
+        size_t Tell() const { return mCursor; }
         size_t Size() const { return mBuffer.Size(); }
-        void * map( size_t offset, size_t length, bool )
+        void * Map( size_t offset, size_t length, bool )
         {
             if( offset >= mBuffer.Size() || (offset + length) > mBuffer.Size() )
             {
-                GN_ERROR(myLogger())( "invalid mapping range!" );
+                GN_ERROR(MyLogger())( "invalid mapping range!" );
                 return 0;
             }
             return &mBuffer[offset];
         }
-        void unmap() {}
+        void Unmap() {}
         //@}
     };
 }

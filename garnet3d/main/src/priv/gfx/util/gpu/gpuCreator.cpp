@@ -133,8 +133,8 @@ namespace GN { namespace gfx
             default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.ToRawEnum() ); return 0;
         }
         AutoObjPtr<SharedLib> dll( new SharedLib );
-        if( !dll->load( dllName ) ) return 0;
-        creator = (CreateGpuFunc)dll->getSymbol( "GNgfxCreateGpu" );
+        if( !dll->Load( dllName ) ) return 0;
+        creator = (CreateGpuFunc)dll->GetSymbol( "GNgfxCreateGpu" );
         if( !creator ) return 0;
         Gpu * r = creator( ro );
         if( 0 == r ) return 0;

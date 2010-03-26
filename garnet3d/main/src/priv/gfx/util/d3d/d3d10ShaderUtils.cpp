@@ -133,11 +133,11 @@ ID3D10Blob * GN::d3d10::compileShader(
     StrA filename;
 #if GN_BUILD_DEBUG
     TempFile file;
-    if( file.open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
+    if( file.Open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {
-        filename = file.name();
-        file.write( source, len, NULL );
-        file.close();
+        filename = file.Name();
+        file.Write( source, len, NULL );
+        file.Close();
     }
 #endif
 

@@ -104,11 +104,11 @@ private:
     {
         File * fp = (File*)stream->descriptor.pointer;
 
-        fp->seek( offset, FileSeek::SET );
+        fp->Seek( offset, FileSeek::SET );
 
         size_t readen;
 
-        if( !fp->read( buffer, count, &readen ) ) return 0;
+        if( !fp->Read( buffer, count, &readen ) ) return 0;
 
         return (unsigned long)readen;
     }
@@ -173,7 +173,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
     // initialize FT2 stream
     mStream.base               = 0;
     mStream.size               = (FT_ULong)fp->Size();
-    mStream.pos                = (FT_ULong)fp->tell();
+    mStream.pos                = (FT_ULong)fp->Tell();
     mStream.descriptor.pointer = fp;
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;

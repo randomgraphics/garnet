@@ -248,10 +248,10 @@ bool DDSReader::checkFormat( GN::File & fp )
 
     char buf[5];
 
-    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
-    if( !fp.read( buf, 4, &sz ) || 4 != sz ) return false;
+    if( !fp.Read( buf, 4, &sz ) || 4 != sz ) return false;
 
     buf[4] = 0;
 

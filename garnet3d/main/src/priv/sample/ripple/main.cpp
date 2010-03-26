@@ -87,11 +87,11 @@ public:
         if( fs::pathExist( filename ) )
         {
             DiskFile f;
-            if( f.open( filename, "rt" ) )
+            if( f.Open( filename, "rt" ) )
             {
                 rippleCodeFromFile.Resize( f.Size() + 1 );
                 rippleCodeFromFile[f.Size()] = '\0';
-                if( f.read( &rippleCodeFromFile[0], f.Size(), NULL ) )
+                if( f.Read( &rippleCodeFromFile[0], f.Size(), NULL ) )
                 {
                     rippleCode = &rippleCodeFromFile[0];
                 }

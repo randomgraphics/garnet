@@ -213,9 +213,9 @@ bool TGAReader::checkFormat( GN::File & fp )
     TGA_HEADER header;
 
     // read TGA header
-    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
     size_t sz;
-    if( !fp.read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
+    if( !fp.Read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
 
     // do endian swap (TGA file is always little endian)
 #if GN_BIG_ENDIAN

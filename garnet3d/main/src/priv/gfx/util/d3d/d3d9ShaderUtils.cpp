@@ -117,7 +117,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
         return StrA::EMPTYSTR;
     }
 
-    if( !fp->write( code, len ? len : StringLength(code), 0 ) )
+    if( !fp->Write( code, len ? len : StringLength(code), 0 ) )
     {
         GN_ERROR(sLogger)( "fail to write to temporary file." );
         return StrA::EMPTYSTR;

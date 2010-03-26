@@ -137,7 +137,7 @@ struct AseFile
         // read ASE file
         buf.Resize( file.Size() + 1 );
         size_t readen;
-        if( !file.read( buf.ToRawPtr(), file.Size(), &readen ) )
+        if( !file.Read( buf.ToRawPtr(), file.Size(), &readen ) )
         {
             return false;
         }
@@ -148,7 +148,7 @@ struct AseFile
         line = 0;
 
         // get file dir
-        filedir = GN::fs::dirName( file.name() );
+        filedir = GN::fs::dirName( file.Name() );
 
         // success
         return true;
@@ -1566,7 +1566,7 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
 
     // copy vertices into destination scene
     AutoRef<Blob> blob( new SimpleBlob(sizeof(OutputVertex) * vc.Size()) );
-    OutputVertex * vertices = (OutputVertex*)blob->data();
+    OutputVertex * vertices = (OutputVertex*)blob->Data();
     if( NULL == vertices ) return false;
     for( size_t i = 0; i < vc.Size(); ++i )
     {
@@ -1592,16 +1592,16 @@ static bool sWriteGeoObject( AseScene & dst, const AseSceneInternal & src, const
     {
         // 32bit index buffer
         blob.Attach( new SimpleBlob(sizeof(UInt32) * ib.Size()) );
-        memcpy( blob->data(), ib.ToRawPtr(), blob->Size() );
+        memcpy( blob->Data(), ib.ToRawPtr(), blob->Size() );
         dstmesh.idx32 = true;
-        dstmesh.indices = blob->data();
+        dstmesh.indices = blob->Data();
         dst.meshdata.Append( blob );
     }
     else
     {
         // 16bit index buffer
         blob.Attach( new SimpleBlob(sizeof(UInt16) * ib.Size()) );
-        UInt16 * idx16 = (UInt16*)blob->data();
+        UInt16 * idx16 = (UInt16*)blob->Data();
         for( size_t i = 0; i < ib.Size(); ++i )
         {
             GN_ASSERT( ib[i] < 0x10000 );
