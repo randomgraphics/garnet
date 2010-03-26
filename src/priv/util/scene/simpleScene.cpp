@@ -358,7 +358,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 static void sPostXMLError( const XmlNode & node, const StrA & msg )
 {
     GN_UNUSED_PARAM( node );
-    const XmlElement * e = node.toElement();
+    const XmlElement * e = node.ToElement();
     if( e )
     {
         GN_ERROR(sLogger)( "<%s>: %s", e->name.ToRawPtr(), msg.ToRawPtr() );
@@ -379,7 +379,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 
     if( !md.loadFromXml( root, basedir ) ) return false;
 
-    XmlAttrib * modelName = root.findAttrib( "name" );
+    XmlAttrib * modelName = root.FindAttrib( "name" );
     if( !modelName || modelName->value.Empty() )
     {
         GN_ERROR(sLogger)( "Model name attribute is missing." );
@@ -409,7 +409,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
 {
     GN_ASSERT( root.name == "entity" );
 
-    XmlAttrib * entityName = root.findAttrib( "name" );
+    XmlAttrib * entityName = root.FindAttrib( "name" );
     if( NULL == entityName )
     {
         sPostXMLError( root, "Entity name attribute is missing." );
@@ -419,7 +419,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     SimpleWorldDesc::EntityDesc entity;
 
     // parse spatial
-    XmlElement * spatialNode = root.findChildElement( "spatial" );
+    XmlElement * spatialNode = root.FindChildElement( "spatial" );
     if( !spatialNode )
     {
         sPostXMLError( root, "<spatial> element is missing." );
@@ -427,24 +427,24 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     }
     else
     {
-        XmlAttrib * a = spatialNode->findAttrib( "parent" );
+        XmlAttrib * a = spatialNode->FindAttrib( "parent" );
         if( a ) entity.spatial.parent = a->value;
 
-        a = spatialNode->findAttrib( "position" );
+        a = spatialNode->FindAttrib( "position" );
         if( !a || 3 != String2FloatArray( (float*)&entity.spatial.position, 3, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid position" );
             entity.spatial.position.Set( 0, 0, 0 );
         }
 
-        a = spatialNode->findAttrib( "orientation" );
+        a = spatialNode->FindAttrib( "orientation" );
         if( !a || 4 != String2FloatArray( (float*)&entity.spatial.orientation, 4, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid orientation" );
             entity.spatial.orientation.Set( 0, 0, 0, 1 );
         }
 
-        a = spatialNode->findAttrib( "bbox" );
+        a = spatialNode->FindAttrib( "bbox" );
         if( !a || 6 != String2FloatArray( (float*)&entity.spatial.bbox, 6, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid bounding box" );
@@ -453,17 +453,17 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     }
 
     // parse visual
-    XmlElement * visualNode = root.findChildElement( "visual" );
+    XmlElement * visualNode = root.FindChildElement( "visual" );
     if( visualNode )
     {
         for( XmlNode * n = visualNode->child; n != NULL; n = n->next )
         {
-            XmlElement * e = n->toElement();
+            XmlElement * e = n->ToElement();
             if( !e ) continue;
 
             if( "model" == e->name )
             {
-                XmlAttrib * a = e->findAttrib( "ref" );
+                XmlAttrib * a = e->FindAttrib( "ref" );
                 if( !a )
                 {
                     sPostXMLError( *e, "ref attribute is missing." );
@@ -492,7 +492,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
 {
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.parse( xpr, file ) )
+    if( !doc.Parse( xpr, file ) )
     {
         static Logger * sLogger = GetLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
@@ -510,14 +510,14 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
 
     StrA basedir = fs::DirName( file.Name() );
 
-    XmlElement * root = xpr.root->toElement();
+    XmlElement * root = xpr.root->ToElement();
     if( !root || "simpleWorld" != root->name )
     {
         sPostXMLError( *root, "Root element name must be \"<simpleWorld>\"." );
         return false;
     }
 
-    XmlAttrib * bboxAttr = root->findAttrib( "bbox" );
+    XmlAttrib * bboxAttr = root->FindAttrib( "bbox" );
     if( !bboxAttr || 6 != String2FloatArray( (float*)&desc.bbox, 6, bboxAttr->value ) )
     {
         sPostXMLError( *root, "Invalid bbox attribute." );
@@ -525,7 +525,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
 
     // parse models
-    XmlElement * modelsNode = root->findChildElement( "models" );
+    XmlElement * modelsNode = root->FindChildElement( "models" );
     if( NULL == modelsNode )
     {
         sPostXMLError( *root, "Element <models> is missing." );
@@ -533,7 +533,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     for( XmlNode * n = modelsNode->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->toElement();
+        XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "model" == e->name )
@@ -547,7 +547,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
 
     // parse entities
-    XmlElement * entitiesNode = root->findChildElement( "entities" );
+    XmlElement * entitiesNode = root->FindChildElement( "entities" );
     if( NULL == entitiesNode )
     {
         sPostXMLError( *root, "Element <entities> is missing." );
@@ -555,7 +555,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     for( XmlNode * n = entitiesNode->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->toElement();
+        XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "entity" == e->name )
@@ -618,11 +618,11 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // create a new XML document
     XmlDocument xmldoc;
-    XmlElement * root = xmldoc.createElement(NULL);
+    XmlElement * root = xmldoc.CreateElement(NULL);
     root->name = "simpleWorld";
 
     // write models
-    XmlElement * models = xmldoc.createElement( root );
+    XmlElement * models = xmldoc.CreateElement( root );
     models->name = "models";
     for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * i = desc.models.First();
          i != NULL;
@@ -640,7 +640,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         XmlElement * modelNode = model.saveToXml( *models, dirname );
         if( !modelNode ) return false;
 
-        XmlAttrib * a = xmldoc.createAttrib( modelNode );
+        XmlAttrib * a = xmldoc.CreateAttrib( modelNode );
         a->name = "name";
         a->value = modelName;
     }
@@ -658,7 +658,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     }
 
     // write entities
-    XmlElement * entities = xmldoc.createElement( root );
+    XmlElement * entities = xmldoc.CreateElement( root );
     entities->name = "entities";
     for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.First();
         i != NULL;
@@ -667,17 +667,17 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
         const StrA                        & entityName = *entityNameMap.Find(i->key);
         const SimpleWorldDesc::EntityDesc & entityDesc = i->value;
 
-        XmlElement * entity = xmldoc.createElement( entities );
+        XmlElement * entity = xmldoc.CreateElement( entities );
         entity->name = "entity";
 
-        XmlAttrib * a = xmldoc.createAttrib( entity );
+        XmlAttrib * a = xmldoc.CreateAttrib( entity );
         a->name  = "name";
         a->value = entityName;
 
-        XmlElement * spatial = xmldoc.createElement( entity );
+        XmlElement * spatial = xmldoc.CreateElement( entity );
         spatial->name = "spatial";
 
-        a = xmldoc.createAttrib( spatial );
+        a = xmldoc.CreateAttrib( spatial );
         a->name  = "parent";
         StrA * pParentEntityName = entityNameMap.Find(entityDesc.spatial.parent);
         if( NULL != pParentEntityName )
@@ -689,14 +689,14 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->key, entityDesc.spatial.parent.ToRawPtr() );
         }
 
-        a = xmldoc.createAttrib( spatial );
+        a = xmldoc.CreateAttrib( spatial );
         a->name  = "position";
         a->value = StringFormat( "%f,%f,%f",
             entityDesc.spatial.position.x,
             entityDesc.spatial.position.y,
             entityDesc.spatial.position.z );
 
-        a = xmldoc.createAttrib( spatial );
+        a = xmldoc.CreateAttrib( spatial );
         a->name  = "orientation";
         a->value = StringFormat( "%f,%f,%f,%f",
             entityDesc.spatial.orientation.v.x,
@@ -704,7 +704,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             entityDesc.spatial.orientation.v.x,
             entityDesc.spatial.orientation.w );
 
-        a = xmldoc.createAttrib( spatial );
+        a = xmldoc.CreateAttrib( spatial );
         a->name  = "bbox";
         a->value = StringFormat( "%f,%f,%f,%f,%f,%f",
             entityDesc.spatial.bbox.x,
@@ -714,21 +714,21 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             entityDesc.spatial.bbox.h,
             entityDesc.spatial.bbox.d );
 
-        XmlElement * visual = xmldoc.createElement( entity );
+        XmlElement * visual = xmldoc.CreateElement( entity );
         visual->name  = "visual";
         for( size_t i = 0; i < entityDesc.models.Size(); ++i )
         {
-            XmlElement * modelref = xmldoc.createElement( visual );
+            XmlElement * modelref = xmldoc.CreateElement( visual );
             modelref->name = "model";
 
-            XmlAttrib * a = xmldoc.createAttrib( modelref );
+            XmlAttrib * a = xmldoc.CreateAttrib( modelref );
             a->name = "ref";
             a->value = entityDesc.models[i];
         }
     }
 
     // write scene bounding box
-    XmlAttrib * a = xmldoc.createAttrib( root->toElement() );
+    XmlAttrib * a = xmldoc.CreateAttrib( root->ToElement() );
     a->name  = "bbox";
     a->value = StringFormat( "%f,%f,%f,%f,%f,%f",
             desc.bbox.x,
@@ -741,7 +741,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // write XML document
     AutoObjPtr<File> fp( fs::OpenFile( filename, "wt" ) );
     if( !fp ) return false;
-    return xmldoc.writeToFile( *fp, *root, false );
+    return xmldoc.WriteToFile( *fp, *root, false );
 }
 
 // *****************************************************************************

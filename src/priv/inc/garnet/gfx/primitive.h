@@ -27,7 +27,7 @@ namespace GN { namespace gfx
         };
 
         /// conver to string
-        const char * toString() const
+        const char * ToString() const
         {
             static const char * TABLE[]=
             {

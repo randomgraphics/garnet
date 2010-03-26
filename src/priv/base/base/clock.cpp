@@ -88,11 +88,11 @@ void GN::Clock::Reset()
 //
 // 计时器暂停
 // -----------------------------------------------------------------------------
-void GN::Clock::pause()
+void GN::Clock::Pause()
 {
     if (!mPaused)
     {
-        GN_TRACE(sLogger)( "Timer pause!" );
+        GN_TRACE(sLogger)( "Timer is Paused!" );
         mPauseTime = sGetSystemCycleCount();
         mPaused = true;
     }
@@ -101,11 +101,11 @@ void GN::Clock::pause()
 //
 // 计时器恢复
 // -----------------------------------------------------------------------------
-void GN::Clock::resume()
+void GN::Clock::Resume()
 {
     if (mPaused)
     {
-        GN_TRACE(sLogger)( "Timer resume!" );
+        GN_TRACE(sLogger)( "Timer is resumed!" );
         mPauseElapsed += sGetSystemCycleCount() - mPauseTime;
         mPaused = false;
     }

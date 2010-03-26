@@ -452,12 +452,12 @@ namespace GN { namespace gfx
         ///
         /// convert to string
         ///
-        void toString( StrA & ) const;
+        void ToString( StrA & ) const;
 
         ///
         /// convert to string
         ///
-        inline StrA toString() const { StrA s; toString(s); return s; }
+        inline StrA ToString() const { StrA s; ToString(s); return s; }
 
         ///
         /// convert from string

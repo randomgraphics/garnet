@@ -428,7 +428,7 @@ public:
             mFirstFrame = false;
             mClock.Reset();
         }
-        else if( mClock.getTimef() >= 10.0f )
+        else if( mClock.GetTimef() >= 10.0f )
         {
             mFirstFrame = true;
             if( !nextCase() ) postExitEvent();

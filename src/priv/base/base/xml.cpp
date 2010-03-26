@@ -51,7 +51,7 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
     {
         case GN::XML_CDATA:
         {
-            const GN::XmlCdata * c = root->toCdata();
+            const GN::XmlCdata * c = root->ToCdata();
             GN_ASSERT( c && !c->child ); // cdata node should have no child.
             sIdent( fp, ident );
             fp << "<![CDATA[" << c->text << "]]>\n";
@@ -60,7 +60,7 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
 
         case GN::XML_COMMENT:
         {
-            const GN::XmlComment * c = root->toComment();
+            const GN::XmlComment * c = root->ToComment();
             GN_ASSERT( c && !c->child ); // comment node should have no child.
             sIdent( fp, ident );
             fp << "<!-- " << c->text << " -->\n";
@@ -69,7 +69,7 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
 
         case GN::XML_ELEMENT:
         {
-            const GN::XmlElement * e = root->toElement();
+            const GN::XmlElement * e = root->ToElement();
             GN_ASSERT( e );
 
             sIdent( fp, ident );
@@ -134,7 +134,7 @@ static bool sCompactNodeAndChildren( GN::File & fp, const GN::XmlNode * root )
     {
         case GN::XML_CDATA:
         {
-            const GN::XmlCdata * c = root->toCdata();
+            const GN::XmlCdata * c = root->ToCdata();
             GN_ASSERT( !c->child ); // cdata node should have no child.
             fp << "<![CDATA[" << c->text << "]]>\n";
             break;
@@ -142,7 +142,7 @@ static bool sCompactNodeAndChildren( GN::File & fp, const GN::XmlNode * root )
 
         case GN::XML_COMMENT:
         {
-            const GN::XmlComment * c = root->toComment();
+            const GN::XmlComment * c = root->ToComment();
             GN_ASSERT( c && !c->child ); // comment node should have no child.
             fp << "<!-- " << c->text << " -->\n";
             break;
@@ -150,7 +150,7 @@ static bool sCompactNodeAndChildren( GN::File & fp, const GN::XmlNode * root )
 
         case GN::XML_ELEMENT:
         {
-            const GN::XmlElement * e = root->toElement();
+            const GN::XmlElement * e = root->ToElement();
             GN_ASSERT( e );
             fp << "<" << e->name;
             if( e->attrib )
@@ -202,7 +202,7 @@ static void sParseFail( ParseTracer * tracer, const char * errInfo )
 
 static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
 {
-    GN::XmlNode * n = tracer->doc->createNode( type, NULL );
+    GN::XmlNode * n = tracer->doc->CreateNode( type, NULL );
     if( 0 == n )
     {
         sParseFail(
@@ -265,7 +265,7 @@ void XMLCALL sStartElementHandler(
     // create new node
     GN::XmlNode * n = sNewNode( tracer, GN::XML_ELEMENT );
     if( 0 == n ) return;
-    GN::XmlElement * e = n->toElement();
+    GN::XmlElement * e = n->ToElement();
     GN_ASSERT( e );
 
     e->attrib = NULL;
@@ -274,7 +274,7 @@ void XMLCALL sStartElementHandler(
     // create attribute list
     while( *atts )
     {
-        GN::XmlAttrib * a = tracer->doc->createAttrib( e );
+        GN::XmlAttrib * a = tracer->doc->CreateAttrib( e );
 
         if( 0 == a )
         {
@@ -341,7 +341,7 @@ static void XMLCALL sCharacterDataHandler(
 
     if( tracer->parent->type == GN::XML_CDATA )
     {
-        GN::XmlCdata * t = tracer->parent->toCdata();
+        GN::XmlCdata * t = tracer->parent->ToCdata();
         t->text.Append( s, len );
     }
     else
@@ -349,7 +349,7 @@ static void XMLCALL sCharacterDataHandler(
         GN::StrA text = sMangleText( s, len );
         if( !text.Empty() && tracer->parent->type == GN::XML_ELEMENT )
         {
-            GN::StrA & currentText = tracer->parent->toElement()->text;
+            GN::StrA & currentText = tracer->parent->ToElement()->text;
 
             if( !currentText.Empty() ) currentText += ' ';
 
@@ -368,7 +368,7 @@ static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
     // create new node
     GN::XmlNode * n = sNewNode( tracer, GN::XML_COMMENT );
     if( 0 == n ) return;
-    GN::XmlComment * c = n->toComment();
+    GN::XmlComment * c = n->ToComment();
     c->text.Assign( data );
 
     // update tracer
@@ -486,7 +486,7 @@ void GN::XmlNode::SetParent( XmlNode * newParent, XmlNode * newPrev )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::parse(
+bool GN::XmlDocument::Parse(
     XmlParseResult & result, const char * content, size_t length )
 {
     GN_GUARD;
@@ -540,7 +540,7 @@ bool GN::XmlDocument::parse(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
+bool GN::XmlDocument::Parse( XmlParseResult & result, File & fp )
 {
     GN_GUARD;
 
@@ -564,7 +564,7 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
         return false;
     }
 
-    return parse( result, &buf[0], sz );
+    return Parse( result, &buf[0], sz );
 
     GN_UNGUARD;
 }
@@ -572,7 +572,7 @@ bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compact )
+bool GN::XmlDocument::WriteToFile( File & file, const XmlNode & root, bool compact )
 {
     GN_GUARD;
 
@@ -598,7 +598,7 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
+GN::XmlNode * GN::XmlDocument::CreateNode( XmlNodeType type, XmlNode * parent )
 {
     XmlNode * p;
     switch( type )
@@ -616,7 +616,7 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
+GN::XmlAttrib * GN::XmlDocument::CreateAttrib( XmlElement * owner )
 {
     PooledAttrib * a = new PooledAttrib( *this );
 
@@ -630,7 +630,7 @@ GN::XmlAttrib * GN::XmlDocument::createAttrib( XmlElement * owner )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlDocument::releaseAllNodesAndAttribs()
+void GN::XmlDocument::ReleaseAllNodesAndAttribs()
 {
     GN_GUARD;
 

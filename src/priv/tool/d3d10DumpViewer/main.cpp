@@ -86,10 +86,10 @@ template<> struct ShaderFunc<ID3D10GeometryShader>
 template<typename T>
 static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA & basedir, DynaArray<T> & result )
 {
-    const XmlAttrib * a = node.findAttrib( attr );
+    const XmlAttrib * a = node.FindAttrib( attr );
     if ( !a )
     {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.ToRawPtr() );
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.GetLocation(), attr.ToRawPtr() );
         return false;
     }
 
@@ -97,7 +97,7 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
 
     if( !fs::IsFile( fullname ) )
     {
-        GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.ToRawPtr() );
+        GN_WARN(sLogger)("%s : binary file not found :  %s!", node.GetLocation(), fullname.ToRawPtr() );
     }
 
     AutoObjPtr<File> fp( fs::OpenFile( fullname, "rb" ) );
@@ -111,10 +111,10 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
 template<typename T>
 static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
 {
-    const XmlAttrib * a = node.findAttrib( attrname );
+    const XmlAttrib * a = node.FindAttrib( attrname );
     if ( !a || !String2Number<T>( result, a->value.ToRawPtr() ) )
     {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.ToRawPtr() );
+        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.GetLocation(), attrname.ToRawPtr() );
         return false;
     }
     else
@@ -196,15 +196,15 @@ struct D3D10InputLayoutDump
 
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            e = n->toElement();
+            e = n->ToElement();
 
             if( !e ) continue;
             else if( "element" == e->name )
             {
-                XmlAttrib * sem = e->findAttrib( "semantic" );
+                XmlAttrib * sem = e->FindAttrib( "semantic" );
                 if( 0 == sem )
                 {
-                    GN_ERROR(sLogger)( "%s : 'semantic' attribute is missing.", e->getLocation() );
+                    GN_ERROR(sLogger)( "%s : 'semantic' attribute is missing.", e->GetLocation() );
                     return false;
                 }
                 semantics.Append( sem->value );
@@ -221,7 +221,7 @@ struct D3D10InputLayoutDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -678,7 +678,7 @@ struct D3D10StateDump
         GN_GUARD;
 
         // check root name
-        const XmlElement * e = root.toElement();
+        const XmlElement * e = root.ToElement();
         if( 0 == e || "D3D10StateDump" != e->name )
         {
             GN_ERROR(sLogger)( "root node must be \"<D3D10StateDump>\"." );
@@ -687,7 +687,7 @@ struct D3D10StateDump
 
         for( XmlNode * n = root.child; n; n = n->next )
         {
-            e = n->toElement();
+            e = n->ToElement();
 
             if( !e ) continue;
 
@@ -849,7 +849,7 @@ struct D3D10StateDump
 			}
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -1143,7 +1143,7 @@ protected:
     {
         GN_GUARD;
 
-        if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
+        if( !LoadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if DRAW_TO_BACKBUF
         o.width  = mState.rendertargets[0].width;

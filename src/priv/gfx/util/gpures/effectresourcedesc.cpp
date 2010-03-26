@@ -75,7 +75,7 @@ static RESULT_TYPE sParseEnum(
 // -----------------------------------------------------------------------------
 static void sPostError( const XmlNode & node, const StrA & msg )
 {
-    const XmlElement * e = node.toElement();
+    const XmlElement * e = node.ToElement();
     if( e )
     {
         GN_ERROR(sLogger)( "Effect XML error: element <%s> - %s", e->name.ToRawPtr(), msg.ToRawPtr() );
@@ -94,7 +94,7 @@ static const char * sGetAttrib(
     const char * attribName,
     const char * defaultValue = NULL )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     return a ? a->value.ToRawPtr() : defaultValue;
 }
 
@@ -104,7 +104,7 @@ static const char * sGetAttrib(
 template<typename T>
 static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defaultValue )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
 
     T result;
 
@@ -119,7 +119,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 // -----------------------------------------------------------------------------
 static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defaultValue )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     if( !a ) return defaultValue;
 
     if( 0 == StringCompareI( "1", a->value.ToRawPtr() ) ||
@@ -143,7 +143,7 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 // -----------------------------------------------------------------------------
 static const char * sGetItemName( const XmlElement & node, const char * nodeType )
 {
-    XmlAttrib * a = node.findAttrib( "name" );
+    XmlAttrib * a = node.FindAttrib( "name" );
     if( !a )
     {
         sPostError( node, StringFormat("Unnamed %s node. Ignored.", nodeType) );
@@ -179,13 +179,13 @@ static void sParseTexture( EffectResourceDesc & desc, const XmlElement & node )
 
     SamplerDesc & sampler = texdesc.sampler;
 
-    const XmlAttrib * a = node.findAttrib( "addressU", StringCompareCase::INSENSITIVE );
+    const XmlAttrib * a = node.FindAttrib( "addressU", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressU = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressV", StringCompareCase::INSENSITIVE );
+    a = node.FindAttrib( "addressV", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressV = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
-    a = node.findAttrib( "addressW", StringCompareCase::INSENSITIVE );
+    a = node.FindAttrib( "addressW", StringCompareCase::INSENSITIVE );
     if( a ) sampler.addressW = sParseEnum( a->value, ADDRESS_MODE_TABLE, SamplerDesc::ADDRESS_REPEAT );
 
     GN_TODO( "more samplers fields." );
@@ -240,7 +240,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 {
     for( const XmlNode * n = root.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
@@ -296,7 +296,7 @@ static void sParseCode( EffectGpuProgramDesc & sd, ShaderCode & code, const XmlE
     // get shader code
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlCdata * c = n->toCdata();
+        const XmlCdata * c = n->ToCdata();
         if( c )
         {
             size_t offset = sd.shaderSourceBuffer.Size();
@@ -352,7 +352,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
     // parse children
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "texref" == e->name ) sParseTexref( sd, *e );
@@ -386,7 +386,7 @@ static void sParseGpuPrograms( EffectResourceDesc & desc, const XmlElement & nod
 
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "gpuprogram" == e->name ) sParseGpuProgram( desc, *e );
@@ -448,7 +448,7 @@ static void sParsePass( EffectResourceDesc::EffectTechniqueDesc & td, const XmlE
 
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "renderstates" == e->name ) sParseRenderStates( pd.renderstates, *e );
@@ -475,7 +475,7 @@ static void sParseTechnique( EffectResourceDesc & desc, const XmlElement & node 
     // parse children
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "renderstates" == e->name ) sParseRenderStates( td.renderstates, *e );
@@ -495,7 +495,7 @@ static void sParseTechniques( EffectResourceDesc & desc, const XmlElement & node
 
     for( const XmlNode * n = node.child; n; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "renderstates" == e->name ) sParseRenderStates( desc.renderstates, *e );
@@ -637,7 +637,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXml( const XmlNode & root )
 {
     Clear();
 
-    const XmlElement * e = root.toElement();
+    const XmlElement * e = root.ToElement();
 
     if( 0 == e ||e->name != "effect" )
     {
@@ -647,7 +647,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXml( const XmlNode & root )
 
     for( const XmlNode * n = e->child; n; n = n->next )
     {
-        e = n->toElement();
+        e = n->ToElement();
         if( !e ) continue;
 
         if( "parameters" == e->name ) sParseParameters( *this, *e );

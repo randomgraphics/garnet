@@ -668,7 +668,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     if( !fp ) return AutoRef<EffectResource>::NULLREF;
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.parse( xpr, *fp ) )
+    if( !doc.Parse( xpr, *fp ) )
     {
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"

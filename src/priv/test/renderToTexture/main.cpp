@@ -115,7 +115,7 @@ public:
 
     void drawBox( float speed )
     {
-        float angle = speed * fmod( timer.getTimef(), GN_TWO_PI );
+        float angle = speed * fmod( timer.GetTimef(), GN_TWO_PI );
 
         Matrix44f world;
         world.RotateY( angle );

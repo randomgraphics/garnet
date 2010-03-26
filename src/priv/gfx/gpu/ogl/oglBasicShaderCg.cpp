@@ -30,7 +30,7 @@ bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
 
     // parse hints
     Registry reg( hints );
-    StrA entry = reg.gets( "entry", "main" );
+    StrA entry = reg.GetS( "entry", "main" );
 
     // create the shader
     if( !mShader.Init( getGpu().getCgContext(), mProfile, code, entry ) ) return Failure();

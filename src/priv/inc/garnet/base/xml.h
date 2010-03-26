@@ -78,37 +78,37 @@ namespace GN
         ///
         /// return location of this node in the document (unimplemented)
         ///
-        const char * getLocation() const { return ""; }
+        const char * GetLocation() const { return ""; }
 
         ///
         /// conver to cdata node
         ///
-        XmlCdata * toCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }
+        XmlCdata * ToCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        const XmlCdata * toCdata() const { return XML_CDATA == type ? (const XmlCdata*)this : 0; }
+        const XmlCdata * ToCdata() const { return XML_CDATA == type ? (const XmlCdata*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        XmlComment * toComment() { return XML_COMMENT == type ? (XmlComment*)this : 0; }
+        XmlComment * ToComment() { return XML_COMMENT == type ? (XmlComment*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        const XmlComment * toComment() const { return XML_COMMENT == type ? (const XmlComment*)this : 0; }
+        const XmlComment * ToComment() const { return XML_COMMENT == type ? (const XmlComment*)this : 0; }
 
         ///
         /// Convert to element node
         ///
-        XmlElement * toElement() { return XML_ELEMENT == type ? (XmlElement*)this : 0; }
+        XmlElement * ToElement() { return XML_ELEMENT == type ? (XmlElement*)this : 0; }
 
         ///
         /// Convert to element node
         ///
-        const XmlElement * toElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
+        const XmlElement * ToElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
 
         ///
         /// virtual dtor
@@ -178,7 +178,7 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
+        XmlAttrib * FindAttrib( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlAttrib * a = attrib; a; a = a->next )
             {
@@ -197,11 +197,11 @@ namespace GN
         ///
         /// find specific child of element
         ///
-        XmlElement * findChildElement( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
+        XmlElement * FindChildElement( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlNode * n = child; n; n = n->next )
             {
-                XmlElement * e = n->toElement();
+                XmlElement * e = n->ToElement();
                 if( !e ) continue;
 
                 if( StringCompareCase::SENSITIVE == sc )
@@ -267,64 +267,64 @@ namespace GN
         ///
         /// dtor
         ///
-        ~XmlDocument() { releaseAllNodesAndAttribs(); }
+        ~XmlDocument() { ReleaseAllNodesAndAttribs(); }
 
         ///
         /// parse xml string buffer
         ///
-        bool parse( XmlParseResult & result, const char * content, size_t length = 0 );
+        bool Parse( XmlParseResult & result, const char * content, size_t length = 0 );
 
         ///
         /// parse xml file
         ///
-        bool parse( XmlParseResult &, File & );
+        bool Parse( XmlParseResult &, File & );
 
         ///
         /// write xml document to file. If compact if false, the format output with newline and ident
         ///
-        bool writeToFile( File & file, const XmlNode & root, bool compact );
+        bool WriteToFile( File & file, const XmlNode & root, bool compact );
 
         ///
         /// Create new node. Nodes are created in pooled memory. No need
         /// to release them. They will be release automatically, when the
         /// XML document is deleted.
         ///
-        XmlNode * createNode( XmlNodeType type, XmlNode * parent );
+        XmlNode * CreateNode( XmlNodeType type, XmlNode * parent );
 
         ///
         /// Create element
         ///
-        XmlElement * createElement( XmlNode * parent )
+        XmlElement * CreateElement( XmlNode * parent )
         {
-            XmlNode * n = createNode( XML_ELEMENT, parent );
-            return n ? n->toElement() : NULL;
+            XmlNode * n = CreateNode( XML_ELEMENT, parent );
+            return n ? n->ToElement() : NULL;
         }
 
         ///
         /// Create new attribute. Attributes are created in pooled memory also,
         /// just like XmlNode.
         ///
-        XmlAttrib * createAttrib( XmlElement * owner );
+        XmlAttrib * CreateAttrib( XmlElement * owner );
 
     private:
 
         ///
         /// Release all attributes and nodes
         ///
-        void releaseAllNodesAndAttribs();
+        void ReleaseAllNodesAndAttribs();
     };
 
     ///
     /// load something from XML file
     ///
     template<class T>
-    inline bool loadFromXmlFile( T & t, File & fp, const StrA & basedir )
+    inline bool LoadFromXmlFile( T & t, File & fp, const StrA & basedir )
     {
         GN_GUARD;
 
         XmlDocument doc;
         XmlParseResult xpr;
-        if( !doc.parse( xpr, fp ) )
+        if( !doc.Parse( xpr, fp ) )
         {
             static Logger * sLogger = GetLogger( "GN.base.xml" );
             GN_ERROR(sLogger)(
@@ -348,7 +348,7 @@ namespace GN
     /// load something from XML file
     ///
     template<class T>
-    inline bool loadFromXmlFile( T & t, const StrA & filename )
+    inline bool LoadFromXmlFile( T & t, const StrA & filename )
     {
         GN_GUARD;
 
@@ -360,7 +360,7 @@ namespace GN
 
         StrA basedir = fs::DirName( filename );
 
-        return loadFromXmlFile( t, *fp, basedir );
+        return LoadFromXmlFile( t, *fp, basedir );
 
         GN_UNGUARD;
     }

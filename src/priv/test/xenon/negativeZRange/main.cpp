@@ -20,7 +20,7 @@ public:
 	bool onInit()
 	{
         // initialize actor
-        loadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
+        LoadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
 
         // update camera stuff
         mRadius = mActor.getBoundingSphere().radius * 2.0f;

@@ -63,7 +63,7 @@ namespace GN { namespace gfx
         };
 
         /// convert enum to string
-        const char * toString() const
+        const char * ToString() const
         {
             static const char * TABLE[] =
             {

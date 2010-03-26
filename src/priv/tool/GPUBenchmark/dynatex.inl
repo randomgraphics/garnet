@@ -75,12 +75,12 @@ class TestTextureBandwidth : public BasicTestCase
 
         Clock c;
 
-        double start = c.getTimeD();
+        double start = c.GetTimeD();
         for( size_t i = 0; i < LOOP_COUNT; ++i )
         {
             memcpy( dst, src, BUF_SIZE );
         }
-        double elapsed = c.getTimeD() - start;
+        double elapsed = c.GetTimeD() - start;
 		StrA txt;
 		txt.Format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
 		OutputDebugStringA( txt.ToRawPtr() );

@@ -435,7 +435,7 @@ struct D3D9StateDump
     bool loadFromXml( const XmlNode & root, const StrA & basedir )
     {
         // check root name
-        const XmlElement * e = root.toElement();
+        const XmlElement * e = root.ToElement();
         if( 0 == e || "D3D9StateDump" != e->name )
         {
             GN_ERROR(sLogger)( "root node must be \"<D3D9StateDump>\"." );
@@ -444,7 +444,7 @@ struct D3D9StateDump
 
         for( XmlNode * n = root.child; n; n = n->next )
         {
-            e = n->toElement();
+            e = n->ToElement();
             if( !e ) continue;
 
             if( "vs" == e->name )
@@ -544,7 +544,7 @@ struct D3D9StateDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
             }
         }
 
@@ -560,7 +560,7 @@ private:
     {
         for( const XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlCdata * c = n->toCdata();
+            const XmlCdata * c = n->ToCdata();
             if( c )
             {
                 result = c->text;
@@ -574,10 +574,10 @@ private:
     template<typename T>
     static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
-        const XmlAttrib * a = node.findAttrib( attrname );
+        const XmlAttrib * a = node.FindAttrib( attrname );
         if ( !a || !String2Number<T>( result, a->value.ToRawPtr() ) )
         {
-            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.ToRawPtr() );
+            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.GetLocation(), attrname.ToRawPtr() );
             return false;
         }
         else
@@ -588,10 +588,10 @@ private:
 
     static bool sGetRefString( const XmlElement & node, const StrA & basedir, StrA & result )
     {
-        const XmlAttrib * a = node.findAttrib( "ref" );
+        const XmlAttrib * a = node.FindAttrib( "ref" );
         if ( !a )
         {
-            GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.getLocation() );
+            GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.GetLocation() );
             return false;
         }
 
@@ -599,7 +599,7 @@ private:
 
         if( !fs::IsFile( result ) )
         {
-            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.ToRawPtr() );
+            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.GetLocation(), result.ToRawPtr() );
         }
 
         // success
@@ -610,11 +610,11 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlElement * e = n->toElement();
+            const XmlElement * e = n->ToElement();
             if( !e ) continue;
             if( e->name != "f" )
             {
-                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -622,7 +622,7 @@ private:
             if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
-                GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
+                GN_ERROR(sLogger)( "%s : invalid const index.", e->GetLocation() );
                 continue;
             }
 
@@ -641,14 +641,14 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlElement * e = n->toElement();
+            const XmlElement * e = n->ToElement();
             if( !e ) continue;
 
             size_t index;
             if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
-                GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
+                GN_ERROR(sLogger)( "%s : invalid const index.", e->GetLocation() );
                 continue;
             }
 
@@ -670,26 +670,26 @@ private:
             int   * bools,  size_t countb,
             const XmlElement & node )
     {
-        XmlElement * e = node.findChildElement( "float" );
+        XmlElement * e = node.FindChildElement( "float" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs float constants are missing!", node.getLocation() );
+            GN_ERROR(sLogger)( "%s : vs float constants are missing!", node.GetLocation() );
             return false;
         }
         if( !sLoadConstF( floats, countf, *e ) ) return false;
 
-        e = node.findChildElement( "int" );
+        e = node.FindChildElement( "int" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs integer constants are missing!", node.getLocation() );
+            GN_ERROR(sLogger)( "%s : vs integer constants are missing!", node.GetLocation() );
             return false;
         }
         if( !sLoadConstI( ints, 4, counti, *e ) ) return false;
 
-        e = node.findChildElement( "bool" );
+        e = node.FindChildElement( "bool" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs boolean constants are missing!", node.getLocation() );
+            GN_ERROR(sLogger)( "%s : vs boolean constants are missing!", node.GetLocation() );
             return false;
         }
         if( !sLoadConstI( bools, 1, countb, *e ) ) return false;
@@ -703,19 +703,19 @@ private:
         size_t count = 0;
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->toElement();
+            XmlElement * e = n->ToElement();
 
             if( !e ) continue;
 
             if( e->name != "element" )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
             if( count >= GN_ARRAY_COUNT(vtxdecl.elements) )
             {
-                GN_ERROR(sLogger)( "%s : too many elements!", e->getLocation() );
+                GN_ERROR(sLogger)( "%s : too many elements!", e->GetLocation() );
                 return false;
             }
 
@@ -820,18 +820,18 @@ private:
         size_t count = 0;
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->toElement();
+            XmlElement * e = n->ToElement();
             if( !e ) continue;
 
             if( "rs" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
             if( count >= GN_ARRAY_COUNT(renderstates) )
             {
-                GN_WARN(sLogger)( "%s : too many render states", e->getLocation() );
+                GN_WARN(sLogger)( "%s : too many render states", e->GetLocation() );
                 return true;
             }
 
@@ -845,7 +845,7 @@ private:
 
         if( count != GN_ARRAY_COUNT(renderstates) )
         {
-            GN_WARN(sLogger)( "%s : too little render states", node.getLocation() );
+            GN_WARN(sLogger)( "%s : too little render states", node.GetLocation() );
         }
 
         // success
@@ -856,12 +856,12 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->toElement();
+            XmlElement * e = n->ToElement();
             if( !e ) continue;
 
             if( "ss" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
                 continue;
             }
 
@@ -871,7 +871,7 @@ private:
 
             if( stage > 15 || type > 13 )
             {
-                GN_ERROR(sLogger)( "%s : invalid SS stage and/or type", e->getLocation() );
+                GN_ERROR(sLogger)( "%s : invalid SS stage and/or type", e->GetLocation() );
                 return false;
             }
 
@@ -898,7 +898,7 @@ protected:
     bool onInit( D3D9AppOption & o )
     {
         mState.Clear();
-        if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
+        if( !LoadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if RENDER_TO_BACKBUF
         o.windowedWidth  = mState.rendertargets[0].width;
