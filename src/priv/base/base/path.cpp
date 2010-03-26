@@ -11,7 +11,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
+void GN::fs::NormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
     StrA tmp;
 
@@ -49,14 +49,14 @@ void GN::fs::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::parentPath( StrA & result, const StrA & path )
+void GN::fs::ParentPath( StrA & result, const StrA & path )
 {
     struct Local
     {
         static bool isPathSeparator( char ch ) { return '/' == ch; }
     };
     StrA root, child;
-    splitPath( path, root, child );
+    SplitPath( path, root, child );
     child.TrimRightUntil( Local::isPathSeparator );
     if( child.Size() > 1 ) child.PopBack();
     result = root + child;
@@ -65,11 +65,11 @@ void GN::fs::parentPath( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::extName( StrA & result, const StrA & path )
+void GN::fs::ExtName( StrA & result, const StrA & path )
 {
     StrA tmp;
 
-    normalizePathSeparator( tmp, path );
+    NormalizePathSeparator( tmp, path );
 
     size_t n = tmp.Size();
 
@@ -90,15 +90,15 @@ void GN::fs::extName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::baseName( StrA & result, const StrA & path )
+void GN::fs::BaseName( StrA & result, const StrA & path )
 {
     StrA tmp;
-    normalizePathSeparator( tmp, path );
+    NormalizePathSeparator( tmp, path );
 
     StrA dir, ext;
 
-    dirName( dir, tmp );
-    extName( ext, tmp );
+    DirName( dir, tmp );
+    ExtName( ext, tmp );
 
     size_t n1 = ( dir.Size() < tmp.Size() && '/' == tmp[dir.Size()] ) ? dir.Size()+1 : dir.Size();
     size_t n2 = tmp.Size() - n1 - ext.Size();
@@ -109,7 +109,7 @@ void GN::fs::baseName( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
+void GN::fs::RelPath( StrA & result, const StrA & path, const StrA & base )
 {
     GN_GUARD;
 
@@ -122,7 +122,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
         void split( const StrA & path )
         {
             parts.Clear();
-            normalizePathSeparator( input, path );
+            NormalizePathSeparator( input, path );
             buf.Resize( input.Size() + 1 );
             memcpy( buf.ToRawPtr(), input.ToRawPtr(), input.Size() + 1 );
             parts.Append( buf.ToRawPtr() );
@@ -140,7 +140,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
     // shortcut for empty input strings.
     if( path.Empty() || base.Empty() )
     {
-        normalizePathSeparator( result, path );
+        NormalizePathSeparator( result, path );
         return;
     }
 
@@ -184,7 +184,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::joinPath2(
+void GN::fs::JoinPath2(
     StrA & result,
     const StrA & path1,
     const StrA & path2,
@@ -213,13 +213,13 @@ void GN::fs::joinPath2(
         tmp.Append( p );
     }
 
-    normalizePathSeparator( result, tmp );
+    NormalizePathSeparator( result, tmp );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
+void GN::fs::SplitPath( const StrA & path, StrA & root, StrA & child )
 {
     root.Clear();
     child.Clear();
@@ -255,18 +255,18 @@ void GN::fs::splitPath( const StrA & path, StrA & root, StrA & child )
 
     if( hasroot )
     {
-        normalizePathSeparator( child, tmpChild );
+        NormalizePathSeparator( child, tmpChild );
     }
     else
     {
-        normalizePathSeparator( child, path );
+        NormalizePathSeparator( child, path );
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::getCurrentDir( StrA & result )
+void GN::fs::GetCurrentDir( StrA & result )
 {
 #if GN_XENON
     result = "game:";
@@ -299,7 +299,7 @@ void GN::fs::getCurrentDir( StrA & result )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::getCurrentDrive( StrA & result )
+void GN::fs::GetCurrentDrive( StrA & result )
 {
 #if GN_XENON
     result.Clear();

@@ -304,7 +304,7 @@ GN::gfx::MeshResource::loadFromFile(
     if( m ) return m;
 
     // convert to full (absolute) path
-    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path

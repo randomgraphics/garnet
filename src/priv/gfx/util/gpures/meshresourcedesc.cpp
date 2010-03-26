@@ -425,7 +425,7 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 // -----------------------------------------------------------------------------
 static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t length, const char * filename )
 {
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
     if( !fp ) return false;
 
     if( !fp->Read( &header, sizeof(header), NULL ) )
@@ -598,7 +598,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         return AutoRef<Blob>::NULLREF;
     }
 
-    StrA basedir = fs::dirName( fp.Name() );
+    StrA basedir = fs::DirName( fp.Name() );
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
     SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->Data(), blob->Size() );
@@ -621,7 +621,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             UInt8 * vb = meshData.SubRange( offset, vbsize );
 
             MeshBinaryHeaderV1 header;
-            if( !sReadV1BinaryFile( header, vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
+            if( !sReadV1BinaryFile( header, vb, vbsize, fs::ResolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
             }
@@ -645,7 +645,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             UInt8 * ib = meshData.SubRange( offset, ibsize );
 
             MeshBinaryHeaderV1 header;
-            if( !sReadV1BinaryFile( header, ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
+            if( !sReadV1BinaryFile( header, ib, ibsize, fs::ResolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
             }
@@ -767,7 +767,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
 
     Clear();
 
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
     if( !fp ) return AutoRef<Blob>::NULLREF;
 
     return loadFromFile( *fp );
@@ -863,7 +863,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile( const char * filename ) const
 {
     GN_INFO(sLogger)( "Save mesh to file: %s", filename?filename:"<null filename>" );
 
-    AutoObjPtr<File> fp( fs::openFile( filename, "wb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "wb" ) );
     if( !fp ) return false;
     return saveToFile( *fp );
 }

@@ -388,7 +388,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             0 == StringCompareI( "/h", a ) ||
             0 == StringCompareI( "/?", a ) )
         {
-            StrA executableName = fs::baseName( argv[0] ) + fs::extName( argv[0] );
+            StrA executableName = fs::BaseName( argv[0] ) + fs::ExtName( argv[0] );
             onPrintHelpScreen( executableName );
             return false;
         }

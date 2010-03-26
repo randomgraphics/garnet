@@ -108,7 +108,7 @@ public:
     {
         using namespace GN;
 
-        StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
+        StrA executableName = fs::BaseName( applicationName ) + fs::ExtName( applicationName );
 
         GN_INFO(logger)( "Usage: %s [options]\n", executableName.ToRawPtr() );
         showStandardCommandLineOptions();

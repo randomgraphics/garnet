@@ -199,7 +199,7 @@ struct D3D9StateDump
 
             if( vbd.ref.Empty() ) continue;
 
-            AutoObjPtr<File> fp( fs::openFile( vbd.ref, "rb" ) );
+            AutoObjPtr<File> fp( fs::OpenFile( vbd.ref, "rb" ) );
             if( !fp ) return false;
 
             size_t bytes = fp->Size();
@@ -219,7 +219,7 @@ struct D3D9StateDump
         // ib
         if( !idxbuf.ref.Empty() )
         {
-            AutoObjPtr<File> fp( fs::openFile( idxbuf.ref, "rb" ) );
+            AutoObjPtr<File> fp( fs::OpenFile( idxbuf.ref, "rb" ) );
             if( !fp ) return false;
 
             size_t bytes = fp->Size();
@@ -243,7 +243,7 @@ struct D3D9StateDump
 
             if( td.ref.Empty() ) continue;
 
-            StrA filename = fs::toNativeDiskFilePath( td.ref );
+            StrA filename = fs::ToNativeDiskFilePath( td.ref );
 
             D3DXIMAGE_INFO info;
 
@@ -595,9 +595,9 @@ private:
             return false;
         }
 
-        result = fs::resolvePath( basedir, a->value );
+        result = fs::ResolvePath( basedir, a->value );
 
-        if( !fs::isFile( result ) )
+        if( !fs::IsFile( result ) )
         {
             GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.ToRawPtr() );
         }
@@ -968,7 +968,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).ToRawPtr() );
+    printf( "Usage: %s [dumpname]\n", (fs::BaseName(appname) + fs::ExtName(appname)).ToRawPtr() );
 }
 
 int main( int argc, const char * argv [] )

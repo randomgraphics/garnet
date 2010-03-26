@@ -214,7 +214,7 @@ namespace GN { namespace gfx
     inline bool
     loadImageFromFile( ImageDesc & desc, DynaArray<UInt8> & data, const char * filename )
     {
-        AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+        AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
         if( NULL == fp ) return false;
 
         ImageReader ir;

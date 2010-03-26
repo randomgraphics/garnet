@@ -44,7 +44,7 @@ bool GN::SharedLib::Load( const char * libName )
 
     // Handle libName
     StrA filename;
-    if( fs::extName(libName).Empty() )
+    if( fs::ExtName(libName).Empty() )
         filename = StrA(libName) + SHLIB_EXT;
     else
         filename = libName;

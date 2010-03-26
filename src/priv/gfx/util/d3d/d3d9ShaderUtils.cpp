@@ -110,7 +110,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
         return StrA::EMPTYSTR;
     }
 
-    AutoObjPtr<File> fp( core::openFile( fname, "wt" ) );
+    AutoObjPtr<File> fp( core::OpenFile( fname, "wt" ) );
     if( 0 == fp )
     {
         GN_ERROR(sLogger)( "fail to open temporary file." );
@@ -124,7 +124,7 @@ static GN::StrA sSaveCodeToTemporaryFile( const char * code, size_t len )
     }
 
     GN_INFO(sLogger)( "save shader code to file '%s'", fname );
-    return fs::toNativeDiskFilePath(fname);
+    return fs::ToNativeDiskFilePath(fname);
 }
 #endif
 
@@ -186,7 +186,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).ToRawPtr(),
+            fs::ToNativeDiskFilePath(file).ToRawPtr(),
             NULL, NULL, // no macros, no includes,
             entry,
             IsStringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
@@ -276,7 +276,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).ToRawPtr(),
+            fs::ToNativeDiskFilePath(file).ToRawPtr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
@@ -358,7 +358,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            fs::toNativeDiskFilePath(file).ToRawPtr(),
+            fs::ToNativeDiskFilePath(file).ToRawPtr(),
             NULL, NULL, // no macros, no includes,
             entry,
             IsStringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
@@ -448,7 +448,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            fs::toNativeDiskFilePath(file).ToRawPtr(),
+            fs::ToNativeDiskFilePath(file).ToRawPtr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
