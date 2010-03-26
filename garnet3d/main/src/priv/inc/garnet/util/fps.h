@@ -41,7 +41,7 @@ namespace GN { namespace util
         ///
         void Reset()
         {
-            mCurrentTime = mClock.getTimeD();
+            mCurrentTime = mClock.GetTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
             mFpsString.Format( mFormatString.ToRawPtr(), 0 );
             mFrameCounter = 0;
@@ -56,7 +56,7 @@ namespace GN { namespace util
         ///
         void onFrame()
         {
-            mCurrentTime = mClock.getTimeD();
+            mCurrentTime = mClock.GetTimeD();
 
             ++mFrameCounter;
 

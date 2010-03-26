@@ -47,19 +47,19 @@ GN::ProfileTimer::~ProfileTimer()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::start()
+void GN::ProfileTimer::Start()
 {
     GN_ASSERT( 0 == timestart );
-    timestart = clock.getTimeD();
+    timestart = clock.GetTimeD();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::stop()
+void GN::ProfileTimer::Stop()
 {
     GN_ASSERT( 0 != timestart );
-    double t = clock.getTimeD() - timestart;
+    double t = clock.GetTimeD() - timestart;
     if( t < timemin ) timemin = t;
     if( t > timemax ) timemax = t;
     timesum += t;
@@ -79,7 +79,7 @@ GN::ProfilerManager::~ProfilerManager()
 #if GN_BUILD_PROFILE
     // print profile result
     StrA s;
-    toString( s );
+    ToString( s );
     printf( "%s\n", s.ToRawPtr() );
 #endif
 }
@@ -87,7 +87,7 @@ GN::ProfilerManager::~ProfilerManager()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfilerManager::toString( GN::StrA & rval ) const
+void GN::ProfilerManager::ToString( GN::StrA & rval ) const
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 

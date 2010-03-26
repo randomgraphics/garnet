@@ -42,7 +42,7 @@ namespace GN { namespace gfx
         }
 
         /// convert to string
-        const char * toString() const
+        const char * ToString() const
         {
             switch( *this )
             {

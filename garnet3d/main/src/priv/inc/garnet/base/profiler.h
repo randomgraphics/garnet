@@ -17,17 +17,17 @@
 ///
 /// define a static instance of the timer
 ///
-#define GN_DEFINE_STATIC_PROFILER( name, desc ) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().getTimer( desc )
+#define GN_DEFINE_STATIC_PROFILER( name, desc ) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().GetTimer( desc )
 
 ///
 /// start a previously defined profile timer
 ///
-#define GN_START_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).start()
+#define GN_START_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).Start()
 
 ///
 /// stop a previously defined profile timer
 ///
-#define GN_STOP_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).stop()
+#define GN_STOP_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).Stop()
 
 ///
 /// define an automatic profiler that evaluate the time of its life-scope.
@@ -72,14 +72,14 @@ namespace GN
     public:
 
         ///
-        /// start the timer
+        /// Start the timer
         ///
-        void start();
+        void Start();
 
         ///
-        /// stop the timer
+        /// Stop the timer
         ///
-        void stop();
+        void Stop();
     };
 
     ///
@@ -122,17 +122,17 @@ namespace GN
         ///
         /// print profile result to string
         ///
-        void toString( StrA & ) const;
+        void ToString( StrA & ) const;
 
         ///
         /// print profile result to string
         ///
-        StrA toString() { StrA str; toString(str); return str; }
+        StrA ToString() { StrA str; ToString(str); return str; }
 
         ///
         /// return a named timer
         ///
-        ProfileTimer & getTimer( const StrA & name )
+        ProfileTimer & GetTimer( const StrA & name )
         {
             GN_ASSERT( !name.Empty() );
 
@@ -150,17 +150,17 @@ namespace GN
         ///
         /// start a profile timer
         ///
-        void startTimer( const StrA & name )
+        void StartTimer( const StrA & name )
         {
-            getTimer(name).start();
+            GetTimer(name).Start();
         }
 
         ///
         /// stop a profile timer
         ///
-        void stopTimer( const StrA & name )
+        void StopTimer( const StrA & name )
         {
-            getTimer(name).stop();
+            GetTimer(name).Stop();
         }
 
         // ********************************
@@ -198,9 +198,9 @@ namespace GN
         ///
         /// start the timer
         ///
-        ScopeTimer( const char * name ) : mTimer( &ProfilerManager::sGetGlobalInstance().getTimer(name) )
+        ScopeTimer( const char * name ) : mTimer( &ProfilerManager::sGetGlobalInstance().GetTimer(name) )
         {
-            mTimer->start();
+            mTimer->Start();
         }
 
         ///
@@ -208,7 +208,7 @@ namespace GN
         ///
         ScopeTimer( ProfileTimer * timer ) : mTimer( timer )
         {
-            mTimer->start();
+            mTimer->Start();
         }
 
         ///
@@ -216,17 +216,17 @@ namespace GN
         ///
         ~ScopeTimer()
         {
-            stop();
+            Stop();
         }
 
         ///
         /// end the mTimer manually
         ///
-        void stop()
+        void Stop()
         {
             if( mTimer )
             {
-                mTimer->stop();
+                mTimer->Stop();
                 mTimer = 0;
             }
         }

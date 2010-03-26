@@ -76,7 +76,7 @@ sApplyRenderStates(
 template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid.",
@@ -198,7 +198,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
 {
     Clear();
 
-    const XmlElement * rootElement = root.toElement();
+    const XmlElement * rootElement = root.ToElement();
     if( !rootElement || rootElement->name != "model" )
     {
         GN_ERROR(sLogger)( "Root node must be a XML element named <model>." );
@@ -210,7 +210,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
     bool subsetFound = false;
     for( const XmlNode * n = rootElement->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "effect" == e->name )
@@ -221,7 +221,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
             }
             else
             {
-                const XmlAttrib * a = e->findAttrib( "ref" );
+                const XmlAttrib * a = e->FindAttrib( "ref" );
                 if( !a )
                 {
                     GN_ERROR(sLogger)( "\"ref\" attribute of <effect> element is missing." );
@@ -240,7 +240,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
             }
             else
             {
-                const XmlAttrib * a = e->findAttrib( "ref" );
+                const XmlAttrib * a = e->FindAttrib( "ref" );
                 if( !a )
                 {
                     GN_ERROR(sLogger)( "\"ref\" attribute of <mesh> element is missing." );
@@ -271,7 +271,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else if( "texture" == e->name )
         {
-            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
+            const XmlAttrib * a = e->FindAttrib( "shaderParameter" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <texture> element is missing." );
@@ -280,7 +280,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
 
             ModelTextureDesc & td = textures[a->value];
 
-            a = e->findAttrib( "ref" );
+            a = e->FindAttrib( "ref" );
             if( a )
             {
                 td.resourceName = sResolveResourcePath( basedir, a->value );
@@ -292,7 +292,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
         }
         else if( "uniform" == e->name )
         {
-            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
+            const XmlAttrib * a = e->FindAttrib( "shaderParameter" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <uniform> element is missing." );
@@ -301,7 +301,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
 
             ModelUniformDesc & ud = uniforms[a->value];
 
-            a = e->findAttrib( "size" );
+            a = e->FindAttrib( "size" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
@@ -313,7 +313,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
                 return false;
             }
 
-            const XmlElement * binnode = e->findChildElement( "initialValue" );
+            const XmlElement * binnode = e->FindChildElement( "initialValue" );
             if( binnode && !sBinaryDecode( ud.initialValue, binnode->text ) )
             {
                 GN_ERROR(sLogger)( "Invalid uniform initial data." );
@@ -341,7 +341,7 @@ bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char *
 // -----------------------------------------------------------------------------
 XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char * basedir ) const
 {
-    XmlElement * rootElement = root.toElement();
+    XmlElement * rootElement = root.ToElement();
     if( !rootElement )
     {
         GN_ERROR(sLogger)( "Root node must be a XML element." );
@@ -356,11 +356,11 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
 
     XmlDocument & doc = rootElement->doc;
 
-    XmlElement * modelNode = doc.createElement(NULL);
+    XmlElement * modelNode = doc.CreateElement(NULL);
     modelNode->name = "model";
 
     // create effect node
-    XmlElement * effectNode = doc.createElement(modelNode);
+    XmlElement * effectNode = doc.CreateElement(modelNode);
     effectNode->name = "effect";
     if( effect.Empty() )
     {
@@ -369,13 +369,13 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
     else
     {
-        XmlAttrib * a = doc.createAttrib( effectNode );
+        XmlAttrib * a = doc.CreateAttrib( effectNode );
         a->name = "ref";
         a->value = fs::RelPath( effect, basedir );
     }
 
     // create mesh node
-    XmlElement * meshNode = doc.createElement(modelNode);
+    XmlElement * meshNode = doc.CreateElement(modelNode);
     meshNode->name = "mesh";
     if( mesh.Empty() )
     {
@@ -384,29 +384,29 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
     else
     {
-        XmlAttrib * a = doc.createAttrib( meshNode );
+        XmlAttrib * a = doc.CreateAttrib( meshNode );
         a->name = "ref";
         a->value = fs::RelPath( mesh, basedir );
     }
 
     // create subset node
-    XmlElement * subsetNode = doc.createElement(modelNode);
+    XmlElement * subsetNode = doc.CreateElement(modelNode);
     subsetNode->name = "subset";
     if( !subset.isWholeMesh() )
     {
-        XmlAttrib * a = doc.createAttrib( subsetNode );
+        XmlAttrib * a = doc.CreateAttrib( subsetNode );
         a->name = "basevtx";
         a->value = StringFormat( "%u", subset.basevtx );
 
-        a = doc.createAttrib( subsetNode );
+        a = doc.CreateAttrib( subsetNode );
         a->name = "numvtx";
         a->value = StringFormat( "%u", subset.numvtx );
 
-        a = doc.createAttrib( subsetNode );
+        a = doc.CreateAttrib( subsetNode );
         a->name = "startidx";
         a->value = StringFormat( "%u", subset.startidx );
 
-        a = doc.createAttrib( subsetNode );
+        a = doc.CreateAttrib( subsetNode );
         a->name = "numidx";
         a->value = StringFormat( "%u", subset.numidx );
     }
@@ -419,10 +419,10 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         const StrA             & texname = i->key;
         const ModelTextureDesc & texdesc = i->value;
 
-        XmlElement * textureNode = doc.createElement(modelNode);
+        XmlElement * textureNode = doc.CreateElement(modelNode);
         textureNode->name = "texture";
 
-        XmlAttrib * a = doc.createAttrib( textureNode );
+        XmlAttrib * a = doc.CreateAttrib( textureNode );
         a->name = "shaderParameter";
         a->value = texname;
         if( texdesc.resourceName.Empty() )
@@ -433,7 +433,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         }
         else
         {
-            a = doc.createAttrib( textureNode );
+            a = doc.CreateAttrib( textureNode );
             a->name = "ref";
             a->value = fs::RelPath( texdesc.resourceName, basedir );
         }
@@ -447,29 +447,29 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         const StrA             & uniname = i->key;
         const ModelUniformDesc & unidesc = i->value;
 
-        XmlElement * uniformNode = doc.createElement(modelNode);
+        XmlElement * uniformNode = doc.CreateElement(modelNode);
         uniformNode->name = "uniform";
 
-        XmlAttrib * a = doc.createAttrib( uniformNode );
+        XmlAttrib * a = doc.CreateAttrib( uniformNode );
         a->name = "shaderParameter";
         a->value = uniname;
 
         if( unidesc.resourceName.Empty() )
         {
-            a = doc.createAttrib( uniformNode );
+            a = doc.CreateAttrib( uniformNode );
             a->name = "size";
             a->value = StringFormat( "%u", unidesc.size );
 
             if( !unidesc.initialValue.Empty() )
             {
-                XmlElement * bin = doc.createElement( uniformNode );
+                XmlElement * bin = doc.CreateElement( uniformNode );
                 bin->name = "initialValue";
                 sBinaryEncode( bin->text, unidesc.initialValue.ToRawPtr(), unidesc.initialValue.Size() );
             }
         }
         else
         {
-            a = doc.createAttrib( uniformNode );
+            a = doc.CreateAttrib( uniformNode );
             a->name = "ref";
             a->value = fs::RelPath( unidesc.resourceName, basedir );
         }
@@ -1341,7 +1341,7 @@ GN::gfx::ModelResource::loadFromFile(
     if( m ) return m;
 
     ModelResourceDesc desc;
-    if( !loadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
+    if( !LoadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
 
     m = db.createResource<ModelResource>( abspath );
     if( !m || !m->Reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;

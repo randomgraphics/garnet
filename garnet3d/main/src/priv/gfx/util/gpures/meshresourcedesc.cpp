@@ -211,7 +211,7 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
     }
     else
     {
-        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().ToRawPtr() );
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.ToString().ToRawPtr() );
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -338,7 +338,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 // -----------------------------------------------------------------------------
 static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
 
     if( !a )
     {
@@ -357,7 +357,7 @@ static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char
 template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     return a && 0 != String2Integer<T>( result, a->value.ToRawPtr() );
 }
 
@@ -381,7 +381,7 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
     {
         GN_ERROR(sLogger)(
@@ -401,7 +401,7 @@ static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const ch
 // -----------------------------------------------------------------------------
 static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defaultValue )
 {
-    const XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.FindAttrib( attribName );
     if( !a ) return defaultValue;
 
     if( 0 == StringCompareI( "1", a->value.ToRawPtr() ) ||
@@ -458,7 +458,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.parse( xpr, fp ) )
+    if( !doc.Parse( xpr, fp ) )
     {
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
@@ -473,14 +473,14 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     }
     GN_ASSERT( xpr.root );
 
-    const XmlElement * root = xpr.root->toElement();
+    const XmlElement * root = xpr.root->ToElement();
     if( !root || root->name != "mesh" )
     {
         GN_ERROR(sLogger)( "Invalid root element." );
         return AutoRef<Blob>::NULLREF;
     }
 
-    const XmlAttrib * a = root->findAttrib( "primtype" );
+    const XmlAttrib * a = root->FindAttrib( "primtype" );
     if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
     {
         GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.ToRawPtr(), "primtype" );
@@ -502,7 +502,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     desc.dynaib = sGetBoolAttrib( *root, "dynaib", false );
 
     // get vertex format
-    const XmlElement * vtxfmtNode = root->findChildElement( "vtxfmt" );
+    const XmlElement * vtxfmtNode = root->FindChildElement( "vtxfmt" );
     if( !vtxfmtNode )
     {
         GN_ERROR(sLogger)( "<vtxfmt> element is missing." );
@@ -510,7 +510,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     }
     for( const XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "attrib" != e->name )
@@ -538,7 +538,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
         ve.bindTo( a->value, bidx );
 
-        a = e->findAttrib( "format" );
+        a = e->FindAttrib( "format" );
         if( !a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)) ) )
         {
             GN_ERROR(sLogger)( "Missing or invalid format attribute." );
@@ -552,7 +552,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     size_t meshDataSize = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "vtxbuf" == e->name )
@@ -605,7 +605,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     size_t offset = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->toElement();
+        const XmlElement * e = n->ToElement();
         if( !e ) continue;
 
         if( "vtxbuf" == e->name )

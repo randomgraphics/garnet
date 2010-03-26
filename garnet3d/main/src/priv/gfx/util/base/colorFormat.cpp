@@ -590,7 +590,7 @@ int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ColorFormat::toString( GN::StrA & s ) const
+void GN::gfx::ColorFormat::ToString( GN::StrA & s ) const
 {
     struct Local
     {

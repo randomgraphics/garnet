@@ -283,7 +283,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().ToRawPtr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.ToString().ToRawPtr() );
                 return false;
         }
 

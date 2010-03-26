@@ -327,7 +327,7 @@ namespace GN
                 NUM_APIs, ///< Number of available input APIs.
             };
 
-            const char * toString() const
+            const char * ToString() const
             {
                 static const char * TABLE[] =
                 {

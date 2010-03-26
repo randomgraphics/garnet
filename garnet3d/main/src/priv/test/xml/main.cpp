@@ -11,7 +11,7 @@ bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 
     if( !fp.Open( fs::ToNativeDiskFilePath(filename), "rt" ) ) return false;
 
-    if( !doc.parse( xpr, fp ) )
+    if( !doc.Parse( xpr, fp ) )
     {
         GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.ToRawPtr() );
         return false;
@@ -34,7 +34,7 @@ int main( int argc, const char * argv[] )
     if( doParse( doc, xpr, argv[1] ) )
     {
         StdFile fp(stdout);
-        doc.writeToFile( fp, *xpr.root, 0 );
+        doc.WriteToFile( fp, *xpr.root, 0 );
     }
 
     return 0;

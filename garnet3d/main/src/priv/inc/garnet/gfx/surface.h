@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             if( !format.valid() )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().ToRawPtr() );
+                GN_ERROR(sLogger)( "invalid texture format: %s", format.ToString().ToRawPtr() );
                 return false;
             }
 
@@ -143,7 +143,7 @@ namespace GN { namespace gfx
         };
 
         /// convert enumeration to string
-        const char * toString() const
+        const char * ToString() const
         {
             static const char * TABLE[]=
             {

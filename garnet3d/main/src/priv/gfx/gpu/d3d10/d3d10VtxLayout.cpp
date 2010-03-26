@@ -37,7 +37,7 @@ sVtxFmt2InputLayout(
         elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
-            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().ToRawPtr() );
+            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.ToString().ToRawPtr() );
             return false;
         }
 

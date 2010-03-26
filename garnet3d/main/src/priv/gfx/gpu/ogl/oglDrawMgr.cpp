@@ -30,7 +30,7 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
         case GN::gfx::PrimitiveType::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
         case GN::gfx::PrimitiveType::QUAD_LIST      : return GL_QUADS;
         default :
-            GN_ERROR(sLogger)( "unsupport primitve type %s!", prim.toString() );
+            GN_ERROR(sLogger)( "unsupport primitve type %s!", prim.ToString() );
             return GL_TRIANGLES;
     }
 }

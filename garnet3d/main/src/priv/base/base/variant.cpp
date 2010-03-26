@@ -15,12 +15,12 @@ static GN::Logger * sLogger = GN::GetLogger("GN.base.Variant");
 //
 // set value
 // -----------------------------------------------------------------------------
-void GN::Variant::setb( bool b ) { mValue = b ? "1" : "0"; }
-void GN::Variant::seti( int i ) { mValue.Format( "%d", i ); }
-void GN::Variant::setf( float f ) { mValue.Format( "%f", f ); }
-void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.Format( "%p", p ); }
-void GN::Variant::setv( const Vector4f & v ) { mValue.Format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
-void GN::Variant::setm( const Matrix44f & m )
+void GN::Variant::SetB( bool b ) { mValue = b ? "1" : "0"; }
+void GN::Variant::SetI( int i ) { mValue.Format( "%d", i ); }
+void GN::Variant::SetF( float f ) { mValue.Format( "%f", f ); }
+void GN::Variant::SetP( void * p ) { if( 0 == p ) mValue = "0"; else mValue.Format( "%p", p ); }
+void GN::Variant::SetV( const Vector4f & v ) { mValue.Format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
+void GN::Variant::SetM( const Matrix44f & m )
 {
     mValue.Format(
         "%f,%f,%f,%f,\n"
@@ -36,7 +36,7 @@ void GN::Variant::setm( const Matrix44f & m )
 //
 // get value
 // -----------------------------------------------------------------------------
-bool GN::Variant::getb( bool & b ) const
+bool GN::Variant::GetB( bool & b ) const
 {
     int i;
     float f;
@@ -57,12 +57,12 @@ bool GN::Variant::getb( bool & b ) const
         b = false;
         return true;
     }
-    else if( geti( i ) )
+    else if( GetI( i ) )
     {
         b = 0 != i;
         return true;
     }
-    else if( getf( f ) )
+    else if( GetF( f ) )
     {
         b = .0f != f;
         return true;
@@ -74,29 +74,29 @@ bool GN::Variant::getb( bool & b ) const
     }
 }
 //
-bool GN::Variant::geti( int & i ) const
+bool GN::Variant::GetI( int & i ) const
 {
     return 0 != GN::String2Integer<int>( i, mValue.ToRawPtr() );
 }
 //
-bool GN::Variant::getf( float & f ) const
+bool GN::Variant::GetF( float & f ) const
 {
     return 0 != GN::String2Float( f, mValue.ToRawPtr() );
 }
 //
-bool GN::Variant::getp( void * & p ) const
+bool GN::Variant::GetP( void * & p ) const
 {
     bool b = 0 != GN::String2Integer<size_t>( (size_t&)p, mValue.ToRawPtr() );
     if( !b ) p = NULL;
     return b;
 }
 //
-bool GN::Variant::getv( Vector4f & v ) const
+bool GN::Variant::GetV( Vector4f & v ) const
 {
     return 4 == GN::String2FloatArray( v, 4, mValue.ToRawPtr(), mValue.Size() );
 }
 //
-bool GN::Variant::getm( Matrix44f & m ) const
+bool GN::Variant::GetM( Matrix44f & m ) const
 {
     return 16 == GN::String2FloatArray( m[0], 16, mValue.ToRawPtr(), mValue.Size() );
 }
