@@ -32,7 +32,7 @@ const Guid & GN::gfx::UniformResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::UniformResource::reset(
+bool GN::gfx::UniformResource::Reset(
     size_t                length,
     const void          * initialData )
 {

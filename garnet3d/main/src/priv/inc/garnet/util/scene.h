@@ -89,7 +89,7 @@ namespace GN { namespace util
 
         //@}
 
-        void          reset(); ///< reset the world to its initial state
+        void          Reset(); ///< Reset the world to its initial state
 
         Entity      * createEntity( const char * name = NULL );
         void          deleteEntity( const char * name );
@@ -222,16 +222,16 @@ namespace GN { namespace util
 
         SpatialGraph      & graph() const;
 
-        void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
+        void                SetParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
         void                setRotation( const Quaternionf & );     ///< set rotation around it's local origin.
         void                setScale( const Vector3f & );           ///< set scaling for each axis.
         void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere for the node itself, in local space.
 
-        SpatialNode       * getParent() const;
-        SpatialNode       * getPrevSibling() const;
-        SpatialNode       * getNextSibling() const;
-        SpatialNode       * getFirstChild() const;
+        SpatialNode       * GetParent() const;
+        SpatialNode       * GetPrevSibling() const;
+        SpatialNode       * GetNextSibling() const;
+        SpatialNode       * GetFirstChild() const;
         SpatialNode       * getLastChild() const;
 
         const Vector3f    & getPosition() const;       ///< get position in parent space

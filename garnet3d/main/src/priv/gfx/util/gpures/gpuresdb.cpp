@@ -136,7 +136,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@DIFFUSE" );
 
-    e->reset( &ed );
+    e->Reset( &ed );
 
     return e;
 }
@@ -209,7 +209,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
 
-    e->reset( &ed );
+    e->Reset( &ed );
 
     return e;
 }
@@ -348,7 +348,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@NORMAL_MAP" );
 
-    e->reset( &ed );
+    e->Reset( &ed );
 
     return e;
 }

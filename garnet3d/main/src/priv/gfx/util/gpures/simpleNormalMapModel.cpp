@@ -51,7 +51,7 @@ bool GN::gfx::SimpleNormalMapModel::Init()
     GN_STDCLASS_INIT( GN::gfx::SimpleNormalMapModel, () );
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->reset(&DESC) ) return Failure();
+    if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
 
     // initialize uniforms
     mMatrixPvw     = mModel->getUniformResource( "MATRIX_PVW"      );

@@ -212,7 +212,7 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     }
 
     // update tree links
-    n->setParent( tracer->parent, tracer->prev );
+    n->SetParent( tracer->parent, tracer->prev );
 
     // update tracer
     tracer->parent = n;
@@ -425,7 +425,7 @@ void GN::XmlAttrib::setOwner( XmlElement * newOwner )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlNode::setParent( XmlNode * newParent, XmlNode * newPrev )
+void GN::XmlNode::SetParent( XmlNode * newParent, XmlNode * newPrev )
 {
     if( parent == newParent ) return;
 
@@ -609,7 +609,7 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type, XmlNode * parent )
         default          : GN_ERROR(sLogger)( "invalid node type : %d", type ); return NULL;
     }
     mNodes.Append( p );
-    p->setParent( parent );
+    p->SetParent( parent );
     return p;
 }
 

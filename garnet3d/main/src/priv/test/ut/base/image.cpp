@@ -19,7 +19,7 @@ public:
         TS_ASSERT( !ir.readHeader( id ) );
         TS_ASSERT( !ir.readImage( gBuf ) );
 
-        ir.reset( gFile );
+        ir.Reset( gFile );
         TS_ASSERT( !ir.readHeader( id ) );
         TS_ASSERT( !ir.readImage( gBuf ) );
     }
@@ -36,7 +36,7 @@ public:
 
         gFile.Seek( 0, GN::FileSeek::SET );
 
-        ir.reset( gFile );
+        ir.Reset( gFile );
         TS_ASSERT( !ir.readHeader( id ) );
         TS_ASSERT( !ir.readImage( gBuf ) );
     }

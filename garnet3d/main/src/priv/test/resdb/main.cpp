@@ -111,12 +111,12 @@ bool Init( Gpu & g )
     EffectResourceDesc ed;
     initEffectDesc( ed );
     AutoRef<EffectResource> e = db->createResource<EffectResource>( "e0" );
-    if( !e || !e->reset( &ed ) ) return false;
+    if( !e || !e->Reset( &ed ) ) return false;
 
     MeshResourceDesc med;
     initMeshDesc( med );
     AutoRef<MeshResource> mesh = db->createResource<MeshResource>( "m0" );
-    if( !mesh || !mesh->reset( &med ) ) return false;
+    if( !mesh || !mesh->Reset( &med ) ) return false;
 
     ModelResourceDesc mod;
     mod.effect = "e0";
@@ -127,7 +127,7 @@ bool Init( Gpu & g )
     model = db->createResource<ModelResource>( "m0" ).Detach();
     if( 0 == model ) return false;
 
-    if( !model->reset( &mod ) ) return false;
+    if( !model->Reset( &mod ) ) return false;
 
     tex[0].Attach( loadTextureFromFile( db->gpu(), "media::/texture/rabit.png" ) );
     tex[1].Attach( loadTextureFromFile( db->gpu(), "media::/texture/earth.jpg" ) );

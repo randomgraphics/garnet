@@ -50,7 +50,7 @@ bool GN::gfx::SimpleDiffuseModel::Init()
     GN_STDCLASS_INIT( GN::gfx::SimpleDiffuseModel, () );
 
     mModel = mDatabase.createResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->reset(&DESC) ) return Failure();
+    if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
 
     // initialize uniforms
     mMatrixPvw     = mModel->getUniformResource( "MATRIX_PVW"      );

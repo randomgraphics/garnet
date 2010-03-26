@@ -87,7 +87,7 @@ public:
         md.vertices[0] = vertices;
         md.indices     = indices;
         AutoRef<MeshResource> boxmesh = db.createResource<MeshResource>( NULL );
-        if( !boxmesh->reset( &md ) ) return false;
+        if( !boxmesh->Reset( &md ) ) return false;
 
         // setup transformation matrices
         view.LookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );

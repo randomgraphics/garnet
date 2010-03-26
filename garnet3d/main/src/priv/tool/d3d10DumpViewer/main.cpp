@@ -307,7 +307,7 @@ struct D3D10ViewDump
             ImageDesc        id;
             DynaArray<UInt8> data;
 
-            if( !ir.reset( file ) ) return false;
+            if( !ir.Reset( file ) ) return false;
             if( !ir.readHeader( id ) ) return false;
             data.Resize( id.getTotalBytes() );
             if( !ir.readImage( data.ToRawPtr() ) ) return false;

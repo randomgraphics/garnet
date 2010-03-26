@@ -76,7 +76,7 @@ GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 //
 // ¼ÆÊ±Æ÷¸´Î»
 // -----------------------------------------------------------------------------
-void GN::Clock::reset()
+void GN::Clock::Reset()
 {
     // reset timer variables
     mResetTime = sGetSystemCycleCount();

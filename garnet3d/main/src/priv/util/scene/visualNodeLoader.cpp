@@ -272,7 +272,7 @@ sLoadModelsFromXPR( VisualNode & node, GpuResourceDatabase & db, File & file )
     {
         meshes[i] = db.createResource<MeshResource>( NULL );
         if( !meshes[i] ) return false;
-        if( !meshes[i]->reset( &xpr.meshes[i] ) ) return false;
+        if( !meshes[i]->Reset( &xpr.meshes[i] ) ) return false;
     }
 
     GN_UNUSED_PARAM( node );
@@ -315,7 +315,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
 
             meshes[i] = db.createResource<MeshResource>( meshname );
             if( !meshes[i] ) return false;
-            if( !meshes[i]->reset( &ase.meshes[i] ) ) return false;
+            if( !meshes[i]->Reset( &ase.meshes[i] ) ) return false;
         }
     }
 

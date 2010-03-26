@@ -112,11 +112,11 @@ namespace GN
         ///
         /// reset profiler, clear all timers
         ///
-        void reset()
+        void Reset()
         {
             ScopeMutex<SpinLoop> lock( mMutex );
             mTimers.Clear();
-            mClock.reset();
+            mClock.Reset();
         }
 
         ///

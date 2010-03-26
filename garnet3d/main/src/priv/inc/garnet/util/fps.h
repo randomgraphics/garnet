@@ -29,7 +29,7 @@ namespace GN { namespace util
         ///
         /// Constructor
         ///
-        FpsCalculator( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { reset(); }
+        FpsCalculator( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { Reset(); }
 
         ///
         /// Get time
@@ -39,7 +39,7 @@ namespace GN { namespace util
         ///
         /// reset the counter
         ///
-        void reset()
+        void Reset()
         {
             mCurrentTime = mClock.getTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.

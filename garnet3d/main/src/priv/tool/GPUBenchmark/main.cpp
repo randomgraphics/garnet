@@ -346,7 +346,7 @@ public:
 
     BenchmarkingApp() : mFirstFrame(true), mAsciiFont( getQuadRenderer() )
     {
-        mClock.reset();
+        mClock.Reset();
     }
 
     AsciiFont & asciiFont() { return mAsciiFont; }
@@ -426,7 +426,7 @@ public:
         /*else if( mFirstFrame )
         {
             mFirstFrame = false;
-            mClock.reset();
+            mClock.Reset();
         }
         else if( mClock.getTimef() >= 10.0f )
         {

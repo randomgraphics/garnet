@@ -75,7 +75,7 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::setTargetPosition( const Vector3f & p )
 {
-    mTargetPosition.reset( mPosition, p, INTERP_TIME );
+    mTargetPosition.Reset( mPosition, p, INTERP_TIME );
 }
 
 //
@@ -88,7 +88,7 @@ void FirstPersonCamera::setTargetAngle( const Vector3f & r )
         fmod( r.y, GN_TWO_PI ),
         fmod( r.z, GN_TWO_PI ) );
 
-    mTargetAngle.reset( mAngle, v, INTERP_TIME );
+    mTargetAngle.Reset( mAngle, v, INTERP_TIME );
 }
 
 //

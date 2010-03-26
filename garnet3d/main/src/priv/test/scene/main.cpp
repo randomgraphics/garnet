@@ -32,7 +32,7 @@ bool Init( Scene & sc )
 
     // robot stays at the origin.
     robot = sc.world.createVisualEntity();
-    robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
+    robot->getNode<SpatialNode>()->SetParent( root->getNode<SpatialNode>() );
     robot->getNode<VisualNode>()->loadModelsFromFile( "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
 
     const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
@@ -41,7 +41,7 @@ bool Init( Scene & sc )
 
     // light is where eyes are
     light = sc.world.createLightEntity( "light" );
-    light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
+    light->getNode<SpatialNode>()->SetParent( root->getNode<SpatialNode>() );
     light->getNode<SpatialNode>()->setPosition( eye );
 
     // setup camera

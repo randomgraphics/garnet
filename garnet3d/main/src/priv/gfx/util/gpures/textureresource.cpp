@@ -86,7 +86,7 @@ GN::gfx::TextureResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::TextureResource::reset( const TextureDesc * desc )
+bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
 {
     AutoRef<Texture> tex;
 

@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool                        reset( const ModelResourceDesc * desc );
+        bool                        Reset( const ModelResourceDesc * desc );
 
         AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
 

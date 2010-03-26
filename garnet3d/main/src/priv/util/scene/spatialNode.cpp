@@ -31,15 +31,15 @@ GN::util::SpatialNode::Impl::Impl( SpatialNode & owner, SpatialGraph & graph )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SpatialNode::Impl::setParent( SpatialNode * parent, SpatialNode * prevSibling )
+void GN::util::SpatialNode::Impl::SetParent( SpatialNode * parent, SpatialNode * prevSibling )
 {
     // only nodes belong to same graph can be linked with each other.
     GN_ASSERT( NULL == parent || &parent->graph() == &mOwner.graph() );
     GN_ASSERT( NULL == prevSibling || &prevSibling->graph() == &mOwner.graph() );
 
-    if( parent != getParent() || prevSibling != getPrevSibling() )
+    if( parent != GetParent() || prevSibling != GetPrevSibling() )
     {
-        TreeNodeClass::setParent( toImplPtr(parent), toImplPtr(prevSibling) );
+        TreeNodeClass::SetParent( toImplPtr(parent), toImplPtr(prevSibling) );
         invalidateTransformation();
     }
 }
@@ -110,7 +110,7 @@ void GN::util::SpatialNode::Impl::invalidateTransformation()
 
     mTransformDirty = true;
 
-    for( SpatialNode * child = getFirstChild(); child; child = child->getNextSibling() )
+    for( SpatialNode * child = GetFirstChild(); child; child = child->GetNextSibling() )
     {
         toImplPtr( child )->invalidateTransformation();
     }
@@ -145,7 +145,7 @@ void GN::util::SpatialNode::Impl::calcTransform()
     mLocal2Parent = t * r * s;
     mParent2Local = Matrix44f::sInverse( mLocal2Parent );
 
-    Impl * parent = (Impl*)( TreeNodeClass::getParent() );
+    Impl * parent = (Impl*)( TreeNodeClass::GetParent() );
     if( parent )
     {
         mLocal2Root = parent->getLocal2Root() * mLocal2Parent;
@@ -199,16 +199,16 @@ const Guid & GN::util::SpatialNode::guid()
 //
 // -----------------------------------------------------------------------------
 SpatialGraph      & GN::util::SpatialNode::graph() const { return mImpl->graph(); }
-void                GN::util::SpatialNode::setParent( SpatialNode * parent, SpatialNode * prevSibling ) { return mImpl->setParent( parent, prevSibling ); }
+void                GN::util::SpatialNode::SetParent( SpatialNode * parent, SpatialNode * prevSibling ) { return mImpl->SetParent( parent, prevSibling ); }
 void                GN::util::SpatialNode::setPosition( const Vector3f & position ) { return mImpl->setPosition( position ); }
 void                GN::util::SpatialNode::setRotation( const Quaternionf & rotation ) { return mImpl->setRotation( rotation ); }
 void                GN::util::SpatialNode::setScale( const Vector3f & scale ) { return mImpl->setScale( scale ); }
 void                GN::util::SpatialNode::setBoundingSphere( const Spheref & sphere ) { return mImpl->setBoundingSphere( sphere ); }
 
-SpatialNode       * GN::util::SpatialNode::getParent() const { return mImpl->getParent(); }
-SpatialNode       * GN::util::SpatialNode::getPrevSibling() const { return mImpl->getPrevSibling(); }
-SpatialNode       * GN::util::SpatialNode::getNextSibling() const { return mImpl->getNextSibling(); }
-SpatialNode       * GN::util::SpatialNode::getFirstChild() const { return mImpl->getFirstChild(); }
+SpatialNode       * GN::util::SpatialNode::GetParent() const { return mImpl->GetParent(); }
+SpatialNode       * GN::util::SpatialNode::GetPrevSibling() const { return mImpl->GetPrevSibling(); }
+SpatialNode       * GN::util::SpatialNode::GetNextSibling() const { return mImpl->GetNextSibling(); }
+SpatialNode       * GN::util::SpatialNode::GetFirstChild() const { return mImpl->GetFirstChild(); }
 SpatialNode       * GN::util::SpatialNode::getLastChild() const { return mImpl->getLastChild(); }
 
 const Vector3f    & GN::util::SpatialNode::getPosition() const { return mImpl->getPosition(); }
