@@ -68,8 +68,8 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
         return Failure();
     }
 
-    Gpu & gpu = sr->getGpu();
-    const FontFaceDesc & ffd = ff->getDesc();
+    Gpu & gpu = sr->GetGpu();
+    const FontFaceDesc & ffd = ff->GetDesc();
 
     // initialize font slots
     if( !SlotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return Failure();
@@ -140,7 +140,7 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
     float                peny    = td.y;
     const wchar_t      * text    = td.text;
     size_t               textlen = ( 0 == td.len ) ? static_cast<size_t>(-1) : td.len;
-    const FontFaceDesc & ffd     = mFont->getDesc();
+    const FontFaceDesc & ffd     = mFont->GetDesc();
 
     // align baseline distance to interger for better clarity
     float baselineDistance = ceil( ffd.baseLineDistance() );
@@ -276,7 +276,7 @@ GN::util::BitmapFont::CreateSlot( wchar_t ch )
 
     if( mNumUsedSlots >= mMaxSlots )
     {
-        GN_ERROR(sLogger)( "run out of charactor slots!" );
+        GN_ERROR(sLogger)( "Run out of charactor slots!" );
         return NULL;
     }
 
@@ -331,7 +331,7 @@ GN::util::BitmapFont::CreateSlot( wchar_t ch )
 
     // update texture
     Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
-    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.ToRawPtr() );
+    mTextures[slot.texidx]->UpdateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.ToRawPtr() );
 
     // success
     return &slot;
@@ -432,7 +432,7 @@ GN::util::BitmapFont::SlotInit(
         }
 
         // Clear texture to pure black
-        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.Size(), texels.ToRawPtr() );
+        //mTextures[i]->UpdateMipmap( 0, 0, 0, texwidth * 4, texels.Size(), texels.ToRawPtr() );
     }
 
     // success

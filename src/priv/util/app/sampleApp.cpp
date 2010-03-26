@@ -135,7 +135,7 @@ GN::util::SampleApp::SampleApp()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::util::SampleApp::run( int argc, const char * const argv[] )
+int GN::util::SampleApp::Run( int argc, const char * const argv[] )
 {
     if( !Init( argc, argv ) ) { Quit(); return -1; }
 
@@ -143,7 +143,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 
     bool firstframe = true;
     double elapsedUpdateTime;
-    double lastUpdateTime = mFps.getCurrentTime();
+    double lastUpdateTime = mFps.GetCurrentTime();
 
     const int MAX_UPDATE_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
 
@@ -156,27 +156,27 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
         mFps.onFrame();
 
         // call update in fixed interval
-        elapsedUpdateTime = mFps.getCurrentTime() - lastUpdateTime;
+        elapsedUpdateTime = mFps.GetCurrentTime() - lastUpdateTime;
         if( elapsedUpdateTime > UPDATE_INTERVAL || firstframe )
         {
             // process user input
-            gInput.processInputEvents();
+            gInput.ProcessInputEvents();
 
             int count = firstframe ? 1 : (int)( elapsedUpdateTime / UPDATE_INTERVAL );
             if( count > MAX_UPDATE_COUNT ) count = MAX_UPDATE_COUNT; // make easy of long time debug break.
             for( int i = 0; i < count; ++i )
             {
-                onUpdate();
+                OnUpdate();
             }
             lastUpdateTime += UPDATE_INTERVAL * count;
             firstframe = false;
         }
 
         // do render
-        mLastFrameTime = 1.0 / mFps.getFps();
-        mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
-        onRender();
-        drawHUD();
+        mLastFrameTime = 1.0 / mFps.GetFps();
+        mTimeSinceLastUpdate = mFps.GetCurrentTime() - lastUpdateTime;
+        OnRender();
+        DrawHUD();
         mGpu->present();
     }
 
@@ -188,7 +188,7 @@ int GN::util::SampleApp::run( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * const argv[] )
+bool GN::util::SampleApp::OnCheckExtraCmdlineArguments( int argc, const char * const argv[] )
 {
     if( argc > 0 )
     {
@@ -207,17 +207,17 @@ bool GN::util::SampleApp::onCheckExtraCmdlineArguments( int argc, const char * c
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::onPrintHelpScreen( const char * executableName )
+void GN::util::SampleApp::OnPrintHelpScreen( const char * executableName )
 {
     // show default help screen
     printf( "Usage: %s [options]\n", executableName );
-    printStandardCommandLineOptions();
+    PrintStandardCommandLineOptions();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
+void GN::util::SampleApp::OnKeyPress( input::KeyEvent ke )
 {
     if( input::KeyCode::XB360_X == ke.code && ke.status.down )
     {
@@ -235,7 +235,7 @@ void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
     {
         GN_TODO( "dump graphics system states" );
     }
-    else if( input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.altDown() )
+    else if( input::KeyCode::RETURN == ke.code && ke.status.down && ke.status.AltDown() )
     {
         GN_TODO( "switch fullscreen mode." );
     }
@@ -248,7 +248,7 @@ void GN::util::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld )
+void GN::util::SampleApp::DrawXYZCoordinateAxes( const Matrix44f & projViewWorld )
 {
     static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
     static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
@@ -262,7 +262,7 @@ void GN::util::SampleApp::drawXYZCoordinateAxes( const Matrix44f & projViewWorld
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::printStandardCommandLineOptions()
+void GN::util::SampleApp::PrintStandardCommandLineOptions()
 {
     printf(
         "Standard command line options:\n"
@@ -312,12 +312,12 @@ void GN::util::SampleApp::printStandardCommandLineOptions()
 // -----------------------------------------------------------------------------
 bool GN::util::SampleApp::Init( int argc, const char * const argv[] )
 {
-    if( !checkCmdLine(argc,argv) ) return false;
-    if( !onPreInit( mInitParam ) ) return false;
-    if( !initGpu() ) return false;
-    if( !initInput() ) return false;
-    if( !initFont() ) return false;
-    if( !onInit() ) return false;
+    if( !CheckCmdLine(argc,argv) ) return false;
+    if( !OnPreInit( mInitParam ) ) return false;
+    if( !InitGpu() ) return false;
+    if( !InitInput() ) return false;
+    if( !InitFont() ) return false;
+    if( !OnInit() ) return false;
 
     // convert help text to unicode
     static const char helpGBK[] =
@@ -344,10 +344,10 @@ void GN::util::SampleApp::Quit()
 {
     GN_GUARD_ALWAYS;
 
-    onQuit();
-    quitFont();
-    quitInput();
-    quitGpu();
+    OnQuit();
+    QuitFont();
+    QuitInput();
+    QuitGpu();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -355,7 +355,7 @@ void GN::util::SampleApp::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
+bool GN::util::SampleApp::CheckCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
@@ -389,7 +389,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             0 == StringCompareI( "/?", a ) )
         {
             StrA executableName = fs::BaseName( argv[0] ) + fs::ExtName( argv[0] );
-            onPrintHelpScreen( executableName );
+            OnPrintHelpScreen( executableName );
             return false;
         }
         else if( '-' == *a
@@ -482,7 +482,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     }
 
     // handle unrecoganized arguments
-    if( !onCheckExtraCmdlineArguments( (int)unknownArgs.Size(), unknownArgs.ToRawPtr() ) ) return false;
+    if( !OnCheckExtraCmdlineArguments( (int)unknownArgs.Size(), unknownArgs.ToRawPtr() ) ) return false;
 
 #endif
 
@@ -495,7 +495,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initGpu()
+bool GN::util::SampleApp::InitGpu()
 {
     GN_GUARD;
 
@@ -507,8 +507,8 @@ bool GN::util::SampleApp::initGpu()
     if( NULL == mGpu ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    mGpu->getSignals().rendererWindowClose.Connect( this, &SampleApp::postExitEvent );
-    mGpu->getSignals().rendererWindowSizeMove.Connect( this, &SampleApp::onRenderWindowResize );
+    mGpu->getSignals().rendererWindowClose.Connect( this, &SampleApp::PostExitEvent );
+    mGpu->getSignals().rendererWindowSizeMove.Connect( this, &SampleApp::OnRenderWindowResize );
 
     // create sprite renderer
     mSpriteRenderer = new SpriteRenderer( *mGpu );
@@ -533,7 +533,7 @@ bool GN::util::SampleApp::initGpu()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitGpu()
+void GN::util::SampleApp::QuitGpu()
 {
     GN_GUARD;
 
@@ -549,19 +549,19 @@ void GN::util::SampleApp::quitGpu()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initInput()
+bool GN::util::SampleApp::InitInput()
 {
     GN_GUARD;
 
     // create INPUT system
-    if( !initializeInputSystem( mInitParam.iapi ) ) return false;
+    if( !InitializeInputSystem( mInitParam.iapi ) ) return false;
     const DispDesc & dd = mGpu->getDispDesc();
-    gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+    gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
 
     // connect to input signals
-    gInput.sigKeyPress.Connect( this, &SampleApp::onKeyPress );
-    gInput.sigCharPress.Connect( this, &SampleApp::onCharPress );
-    gInput.sigAxisMove.Connect( this, &SampleApp::onAxisMove );
+    gInput.sigKeyPress.Connect( this, &SampleApp::OnKeyPress );
+    gInput.sigCharPress.Connect( this, &SampleApp::OnCharPress );
+    gInput.sigAxisMove.Connect( this, &SampleApp::OnAxisMove );
 
     // success
     return true;
@@ -572,7 +572,7 @@ bool GN::util::SampleApp::initInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitInput()
+void GN::util::SampleApp::QuitInput()
 {
     GN_GUARD;
 
@@ -583,7 +583,7 @@ void GN::util::SampleApp::quitInput()
         gInput.sigAxisMove.Disconnect( this );
     }
 
-    shutdownInputSystem();
+    ShutdownInputSystem();
 
     GN_UNGUARD;
 }
@@ -591,7 +591,7 @@ void GN::util::SampleApp::quitInput()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SampleApp::initFont()
+bool GN::util::SampleApp::InitFont()
 {
     GN_GUARD;
 
@@ -614,7 +614,7 @@ bool GN::util::SampleApp::initFont()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::quitFont()
+void GN::util::SampleApp::QuitFont()
 {
     GN_GUARD;
 
@@ -626,7 +626,7 @@ void GN::util::SampleApp::quitFont()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::drawHUD()
+void GN::util::SampleApp::DrawHUD()
 {
     GN_GUARD_SLOW;
 

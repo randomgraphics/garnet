@@ -33,7 +33,7 @@ bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
     StrA entry = reg.GetS( "entry", "main" );
 
     // create the shader
-    if( !mShader.Init( getGpu().getCgContext(), mProfile, code, entry ) ) return Failure();
+    if( !mShader.Init( GetGpu().getCgContext(), mProfile, code, entry ) ) return Failure();
 
     // load the program
     GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), Failure() );

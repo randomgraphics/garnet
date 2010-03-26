@@ -14,10 +14,10 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ImageDesc::valid() const
+bool GN::gfx::ImageDesc::Valid() const
 {
     // check format
-    if( !format.valid() )
+    if( !format.Valid() )
     {
         GN_ERROR(sLogger)( "invalid format" );
         return false;
@@ -36,7 +36,7 @@ bool GN::gfx::ImageDesc::valid() const
     for( size_t f = 0; f < numFaces; ++f )
     for( size_t l = 0; l < numLevels; ++l )
     {
-        const MipmapDesc & m = getMipmap( f, l );
+        const MipmapDesc & m = GetMipmap( f, l );
 
         // check image size
         if( 0 == m.width || 0 == m.height || 0 == m.depth )
@@ -164,7 +164,7 @@ public:
     ///
     /// read image header
     ///
-    bool readHeader( ImageDesc & o_desc )
+    bool ReadHeader( ImageDesc & o_desc )
     {
         GN_GUARD;
 
@@ -177,7 +177,7 @@ public:
         GN_ASSERT( !mSrc.Empty() );
 
         #define READ_HEADER( reader ) \
-            if( !reader.readHeader( o_desc, &mSrc[0], mSrc.Size() ) ) \
+            if( !reader.ReadHeader( o_desc, &mSrc[0], mSrc.Size() ) ) \
             { mState = INVALID; return false; }
 
         switch( mFileFormat )
@@ -205,7 +205,7 @@ public:
     ///
     /// read image data
     ///
-    bool readImage( void * o_data )
+    bool ReadImage( void * o_data )
     {
         GN_GUARD;
 
@@ -222,7 +222,7 @@ public:
         }
 
         #define READ_IMAGE( reader ) \
-            if( !reader.readImage( o_data ) ) \
+            if( !reader.ReadImage( o_data ) ) \
             { mState = INVALID; return false; }
 
         switch( mFileFormat )
@@ -268,16 +268,16 @@ bool GN::gfx::ImageReader::Reset( File & i_file )
     GN_UNGUARD;
 }
 //
-bool GN::gfx::ImageReader::readHeader( ImageDesc & o_desc )
+bool GN::gfx::ImageReader::ReadHeader( ImageDesc & o_desc )
 {
     GN_GUARD;
-    return mImpl->readHeader( o_desc );
+    return mImpl->ReadHeader( o_desc );
     GN_UNGUARD;
 }
 //
-bool GN::gfx::ImageReader::readImage( void * o_data )
+bool GN::gfx::ImageReader::ReadImage( void * o_data )
 {
     GN_GUARD;
-    return mImpl->readImage( o_data );
+    return mImpl->ReadImage( o_data );
     GN_UNGUARD;
 }

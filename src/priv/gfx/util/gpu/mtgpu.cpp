@@ -455,7 +455,7 @@ void GN::gfx::MultiThreadGpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::draw(
+void GN::gfx::MultiThreadGpu::Draw(
     PrimitiveType prim,
     size_t        numvtx,
     size_t        startvtx )
@@ -875,7 +875,7 @@ namespace GN { namespace gfx
 
         DrawParam * dp = (DrawParam*)p;
 
-        r.draw( dp->prim, dp->numvtx, dp->startvtx );
+        r.Draw( dp->prim, dp->numvtx, dp->startvtx );
     }
 
     //

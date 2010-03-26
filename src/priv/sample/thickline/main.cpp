@@ -70,7 +70,7 @@ public:
         activeScene = 1;
 
         // create box geometry
-        createBox(
+        CreateBox(
             10.0f, 10.0f, 10.0f,
             &m_Box[0].x, sizeof(ThickLineVertex),
             &m_Box[0].u, sizeof(ThickLineVertex),
@@ -145,7 +145,7 @@ public:
         viewFrustum.OnDeviceDelete();
     }
 
-    void onKeyPress( input::KeyEvent ke )
+    void OnKeyPress( input::KeyEvent ke )
     {
         if( input::KeyCode::SPACEBAR == ke.code && ke.status.down )
         {
@@ -154,7 +154,7 @@ public:
         }
     }
 
-    void onAxisMove( GN::input::Axis a, int d )
+    void OnAxisMove( GN::input::Axis a, int d )
     {
         if( GN::input::Axis::MOUSE_WHEEL_0 == a )
         {
@@ -229,5 +229,5 @@ int main()
     //opt.refdev = true;
 
     ThickLineDemo app;
-    return app.run( &opt );
+    return app.Run( &opt );
 }

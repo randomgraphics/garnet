@@ -196,7 +196,7 @@ void GN::gfx::D3D10Gpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Gpu::draw(
+void GN::gfx::D3D10Gpu::Draw(
     PrimitiveType prim,
     size_t        numvtx,
     size_t        startvtx )

@@ -57,7 +57,7 @@ bool GN::gfx::D3D10Gpu::checkTextureFormatSupport(
     ColorFormat  format,
     TextureUsage usage ) const
 {
-    DXGI_FORMAT d3dfmt = (DXGI_FORMAT)colorFormat2DxgiFormat( format );
+    DXGI_FORMAT d3dfmt = (DXGI_FORMAT)ColorFormat2DxgiFormat( format );
     if( DXGI_FORMAT_UNKNOWN == d3dfmt ) return false;
 
     UINT formatSupport;

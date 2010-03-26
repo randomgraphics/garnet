@@ -51,18 +51,18 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        void   updateMipmap( size_t              face,
+        void   UpdateMipmap( size_t              face,
                              size_t              level,
                              const Box<UInt32> * area,
                              size_t              rowPitch,
                              size_t              slicePitch,
                              const void        * data,
                              SurfaceUpdateFlag   flag );
-        void   readMipmap( size_t face, size_t level, MipmapData & data );
-        void   blobWrite( const void * data, size_t length );
-        size_t blobRead( void * data );
-        void   generateMipmapPyramid();
-        void * getAPIDependentData() const;
+        void   ReadMipmap( size_t face, size_t level, MipmapData & data );
+        void   BlobWrite( const void * data, size_t length );
+        size_t BlobRead( void * data );
+        void   GenerateMipmapPyramid();
+        void * GetAPIDependentData() const;
 
         // ********************************
         // private variables

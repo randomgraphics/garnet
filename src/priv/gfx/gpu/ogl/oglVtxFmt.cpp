@@ -167,8 +167,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 {
     GN_GUARD;
 
-    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().GetCaps().maxTextures;
+    UInt32 maxAttributes = GetGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = GetGpu().GetCaps().maxTextures;
 
     bool hasVertex = false;
     bool hasNormal = false;
@@ -376,8 +376,8 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     // then try stanadard/predefined bindings
     //
 
-    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = getGpu().GetCaps().maxTextures;
+    UInt32 maxAttributes = GetGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = GetGpu().GetCaps().maxTextures;
 
     if( ( 0 == StringCompareI( "position", bindingName ) ||
           0 == StringCompareI( "pos", bindingName ) ||
@@ -515,7 +515,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
     const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( info.self );
-    OGLGpu & r = info.self->getGpu();
+    OGLGpu & r = info.self->GetGpu();
     r.chooseClientTextureStage( info.index );
     GN_OGL_CHECK( glTexCoordPointer(
         info.components,
@@ -569,13 +569,13 @@ void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
 void GN::gfx::OGLVtxFmt::sEnableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->getGpu().chooseClientTextureStage( info.texStage );
+    info.self->GetGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }
 //
 void GN::gfx::OGLVtxFmt::sDisableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->getGpu().chooseClientTextureStage( info.texStage );
+    info.self->GetGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }

@@ -94,8 +94,8 @@ bool GN::gfx::D3D11RTMgr::bind(
     renderTargetSizeChanged = false;
 
     // make new render target description is valid.
-    GN_ASSERT( oldrt.valid() );
-    if( !newrt.valid() ) return false;
+    GN_ASSERT( oldrt.Valid() );
+    if( !newrt.Valid() ) return false;
 
     // check for redundancy
     if( !skipDirtyCheck && oldrt == newrt )
@@ -166,11 +166,11 @@ bool GN::gfx::D3D11RTMgr::bind(
     Vector2<UInt32> newRtSize;
     if( newrt.colortargets.Size() > 0 )
     {
-        newrt.colortargets[0].texture->getMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
+        newrt.colortargets[0].texture->GetMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
     }
     else if( newrt.depthstencil.texture )
     {
-        newrt.depthstencil.texture->getMipSize( newrt.depthstencil.level, &newRtSize.x, &newRtSize.y );
+        newrt.depthstencil.texture->GetMipSize( newrt.depthstencil.level, &newRtSize.x, &newRtSize.y );
     }
     else
     {

@@ -449,7 +449,7 @@ namespace GN { namespace gfx
             {
                 const VertexElement & e =  elements[i];
 
-                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
+                size_t elementEnd = e.offset + e.format.GetBytesPerBlock();
 
                 if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
             }
@@ -676,11 +676,11 @@ namespace GN { namespace gfx
         virtual const void * getval() const = 0;
 
         /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data ) = 0;
+        virtual void Update( size_t offset, size_t length, const void * data ) = 0;
 
         /// update parameter value
         template<typename T>
-        void update( const T & t ) { update( 0, sizeof(t), &t ); }
+        void Update( const T & t ) { Update( 0, sizeof(t), &t ); }
     };
 
     ///
@@ -1398,11 +1398,11 @@ namespace GN { namespace gfx
             }
             else if( rc.colortargets.Size() > 0 )
             {
-                rc.colortargets[0].texture->getMipSize( rc.colortargets[0].level, width, height );
+                rc.colortargets[0].texture->GetMipSize( rc.colortargets[0].level, width, height );
             }
             else
             {
-                rc.depthstencil.texture->getMipSize( rc.depthstencil.level, width, height );
+                rc.depthstencil.texture->GetMipSize( rc.depthstencil.level, width, height );
             }
         }
 
@@ -1465,7 +1465,7 @@ namespace GN { namespace gfx
         /// \param startvtx
         ///     index into vertex buffer of the first vertex.
         ///
-        virtual void draw( PrimitiveType prim,
+        virtual void Draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx ) = 0;
 

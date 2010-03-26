@@ -146,10 +146,10 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void update()
+    void Update()
     {
         const DispDesc & dd = getApp().getRenderEngine().getDispDesc();
-        float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
+        float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
         float texfr = pixfr * mInitTexCount;
         float bandwidth = pixfr * dd.depth / 8;
         mFillrateStr.Format(
@@ -170,7 +170,7 @@ public:
     {
         RenderEngine & re = getApp().getRenderEngine();
         re.setContext( mContext );
-        mGeometry.draw();
+        mGeometry.Draw();
         getApp().asciiFont().DrawText( mFillrateStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 

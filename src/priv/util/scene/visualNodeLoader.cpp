@@ -64,7 +64,7 @@ static bool sHasTangent( const VertexFormat & vf )
 ///
 static ModelType::ENUM sDetermineBestModel( const MeshResource & m )
 {
-    const VertexFormat & vf = m.getDesc().vtxfmt;
+    const VertexFormat & vf = m.GetDesc().vtxfmt;
 
     // position is required
     if( !sHasPosition( vf ) )

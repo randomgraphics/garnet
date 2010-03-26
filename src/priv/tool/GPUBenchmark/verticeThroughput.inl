@@ -157,7 +157,7 @@ struct DenseMesh
         mesh.Clear();
     }
 
-    void draw()
+    void Draw()
     {
         Renderer & r = gRenderer;
 
@@ -255,11 +255,11 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void update()
+    void Update()
     {
         // update moving speed
         using namespace GN::input;
-        const int * a = gInput.getAxisStatus();
+        const int * a = gInput.GetAxisStatus();
         GN_ASSERT( a );
         static const float MIN_SPEED = 0.000001f;
         float speed = max( MIN_SPEED, mRadius * 0.000001f );
@@ -279,7 +279,7 @@ public:
 
         // calculate throughput
         size_t triangles = mGeometry.DRAW_COUNT * mGeometry.PRIM_COUNT;
-        float throughput = triangles / 1000000.0f * getApp().getFps();
+        float throughput = triangles / 1000000.0f * getApp().GetFps();
         mThroughput = throughput;
         mThroughputStr.Format(
             "%s\n"
@@ -323,7 +323,7 @@ public:
 
         // draw the mesh
         r.setContext( mContext );
-        mGeometry.draw();
+        mGeometry.Draw();
 
         // draw statistics
         scene::gAsciiFont.DrawText( mThroughputStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );

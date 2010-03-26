@@ -78,7 +78,7 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 
     GN_ASSERT( 0 != monitor && width > 0 && height > 0 );
 
-    if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return Failure();
+    if( !NewWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return Failure();
 
     mGpu = gpu;
     mUseExternalWindow = false;
@@ -131,7 +131,7 @@ void GN::gfx::RenderWindowMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
+void GN::gfx::RenderWindowMsw::GetClientSize( UInt32 & width, UInt32 & height ) const
 {
     GN_ASSERT( ::IsWindow(mWindow) );
 
@@ -158,7 +158,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
 
     // get client window size
     UInt32 currentWidth, currentHeight;
-    getClientSize( currentWidth, currentHeight );
+    GetClientSize( currentWidth, currentHeight );
 
     // compare with old window properties
     if( currentWidth  != mOldWidth ||
@@ -222,7 +222,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
+GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
 {
     GN_GUARD;
 

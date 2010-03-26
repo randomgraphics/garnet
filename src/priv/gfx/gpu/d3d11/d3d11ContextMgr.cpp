@@ -416,7 +416,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D11VtxBuf>(b.vtxbuf.Get())->getD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D11VtxBuf>(b.vtxbuf.Get())->GetD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
@@ -432,10 +432,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
         {
             const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.Get();
 
-            const IdxBufDesc & ibdesc = ib->getDesc();
+            const IdxBufDesc & ibdesc = ib->GetDesc();
 
             mDeviceContext->IASetIndexBuffer(
-                ib->getD3DBuffer(),
+                ib->GetD3DBuffer(),
                 ibdesc.bits32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT,
                 0 );
         }

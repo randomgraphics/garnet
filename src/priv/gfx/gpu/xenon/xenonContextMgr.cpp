@@ -148,8 +148,8 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                 else
                 {
                     // setup RT based on RTT
-                    //const Vector3<UInt32> & sz = newSurf->texture->getMipSize( newSurf->level );
-                    //setupRT( sz.x, sz.y, newSurf->texture->getDesc().format );
+                    //const Vector3<UInt32> & sz = newSurf->texture->GetMipSize( newSurf->level );
+                    //setupRT( sz.x, sz.y, newSurf->texture->GetDesc().format );
                 }
 
             }
@@ -393,7 +393,7 @@ GN::gfx::XenonGpu::bindContextResources(
         {
             GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
-                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.Get())->getD3DBuffer() : NULL,
+                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.Get())->GetD3DBuffer() : NULL,
                 vbb.offset,
                 vbb.stride ) );
         }
@@ -405,7 +405,7 @@ GN::gfx::XenonGpu::bindContextResources(
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.Get())->getD3DBuffer()
+            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.Get())->GetD3DBuffer()
             : NULL ) );
     }
 

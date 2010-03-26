@@ -89,7 +89,7 @@ namespace GN { namespace util
         ///
         /// get descriptor
         ///
-        virtual const FontFaceDesc & getDesc() const = 0;
+        virtual const FontFaceDesc & GetDesc() const = 0;
 
         ///
         /// load font data of specific unicode character.

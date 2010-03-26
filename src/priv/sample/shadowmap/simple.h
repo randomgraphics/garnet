@@ -54,8 +54,8 @@ namespace GN
 
         //@{
 
-        void update();
-        void draw();
+        void Update();
+        void Draw();
 
         //@}
 

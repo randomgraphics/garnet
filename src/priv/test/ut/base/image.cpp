@@ -16,12 +16,12 @@ public:
         GN::gfx::ImageDesc id;
         GN::gfx::ImageReader ir;
 
-        TS_ASSERT( !ir.readHeader( id ) );
-        TS_ASSERT( !ir.readImage( gBuf ) );
+        TS_ASSERT( !ir.ReadHeader( id ) );
+        TS_ASSERT( !ir.ReadImage( gBuf ) );
 
         ir.Reset( gFile );
-        TS_ASSERT( !ir.readHeader( id ) );
-        TS_ASSERT( !ir.readImage( gBuf ) );
+        TS_ASSERT( !ir.ReadHeader( id ) );
+        TS_ASSERT( !ir.ReadImage( gBuf ) );
     }
 
     void testInvalidJPG()
@@ -37,7 +37,7 @@ public:
         gFile.Seek( 0, GN::FileSeek::SET );
 
         ir.Reset( gFile );
-        TS_ASSERT( !ir.readHeader( id ) );
-        TS_ASSERT( !ir.readImage( gBuf ) );
+        TS_ASSERT( !ir.ReadHeader( id ) );
+        TS_ASSERT( !ir.ReadImage( gBuf ) );
     }
 };

@@ -72,7 +72,7 @@ void GN::input::InputX11::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
+bool GN::input::InputX11::AttachToWindow( HandleType disp, HandleType win )
 {
     GN_GUARD;
 
@@ -102,7 +102,7 @@ bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 
     // update mouse position
     int x, y;
-    getMousePosition( x, y );
+    GetMousePosition( x, y );
     updateMousePosition( x, y, false );
 
     // success
@@ -114,7 +114,7 @@ bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::processInputEvents()
+void GN::input::InputX11::ProcessInputEvents()
 {
     GN_GUARD_SLOW;
 
@@ -189,7 +189,7 @@ void GN::input::InputX11::processInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::getMousePosition( int & x, int & y ) const
+void GN::input::InputX11::GetMousePosition( int & x, int & y ) const
 {
     GN_GUARD;
 

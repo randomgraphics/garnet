@@ -109,7 +109,7 @@ namespace GN { namespace gfx
             if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
 
             // check GPU program language
-            if( !desc.lang.valid() )
+            if( !desc.lang.Valid() )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.ToRawEnum() );
@@ -164,7 +164,7 @@ namespace GN { namespace gfx
         virtual const void * getval() const { return mData; }
 
         /// update parameter value
-        virtual void update( size_t offset, size_t length, const void * data )
+        virtual void Update( size_t offset, size_t length, const void * data )
         {
             if( offset >= mSize || (offset+length) > mSize )
             {
@@ -182,7 +182,7 @@ namespace GN { namespace gfx
 
         /// update parameter value
         template<typename T>
-        void update( const T & t ) { set( 0, sizeof(t), &t ); }
+        void Update( const T & t ) { set( 0, sizeof(t), &t ); }
 
         /// get current update time stamp
         SInt32 getTimeStamp() const { return mTimeStamp; }

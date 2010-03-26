@@ -49,7 +49,7 @@ class GpuTest
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
 
-        const Vector3<UInt32> & rtsize = rtt.texture->getMipSize( rtt.level );
+        const Vector3<UInt32> & rtsize = rtt.texture->GetMipSize( rtt.level );
         if( x >= rtsize.x && y >= rtsize.y )
         {
             TS_ASSERT( 0 );
@@ -57,9 +57,9 @@ class GpuTest
         }
 
         MipmapData md;
-        rtt.texture->readMipmap( rtt.face, rtt.level, md );
+        rtt.texture->ReadMipmap( rtt.face, rtt.level, md );
 
-        size_t bytesPerPixel = rtt.texture->getDesc().format.getBytesPerBlock();
+        size_t bytesPerPixel = rtt.texture->GetDesc().format.GetBytesPerBlock();
         size_t srcOffset = md.slicePitch * rtt.slice + md.rowPitch * y + x * bytesPerPixel;
         if( srcOffset >= md.data.Size() )
         {
@@ -94,7 +94,7 @@ class GpuTest
         TS_ASSERT( x < bc.width && y < bc.height );
         if( x >= bc.width && y >= bc.height ) return rtp;
 
-        size_t bytesPerPixel = bc.format.getBytesPerBlock();
+        size_t bytesPerPixel = bc.format.GetBytesPerBlock();
         size_t srcOffset = bc.pitch * y + x * bytesPerPixel;
         TS_ASSERT( srcOffset < bc.data.Size() );
         if( srcOffset >= bc.data.Size() ) return rtp;
@@ -157,16 +157,16 @@ protected :
         using namespace GN::gfx;
 
         GN::AutoObjPtr<win::Window> win;
-        win.Attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
+        win.Attach( win::NewWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
         TS_ASSERT( !win.Empty() );
         if( win.Empty() ) return;
-        win->setClientSize( 511, 236 );
-        win->show();
+        win->SetClientSize( 511, 236 );
+        win->Show();
 
         GpuOptions ro;
         ro.useExternalWindow = true;
-        ro.displayHandle     = win->getDisplayHandle();
-        ro.renderWindow      = win->getWindowHandle();
+        ro.displayHandle     = win->GetDisplayHandle();
+        ro.renderWindow      = win->GetWindowHandle();
         AutoGpu gpu( createGpu( ro ) );
         TS_ASSERT( gpu );
         if( !gpu ) return;

@@ -13,30 +13,30 @@ class InputTest
 
     GN::input::KeyEvent mLastKeyEvent;
 
-    bool createWindow()
+    bool CreateWindow()
     {
-        mWin.Attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        mWin.Attach( GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
         if( mWin.Empty() ) return false;
-        mWin->show();
+        mWin->Show();
         return true;
     }
 
-    bool createInput( const char * api )
+    bool CreateInput( const char * api )
     {
-        if( !GN::input::initializeInputSystem( 0 == GN::StringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
+        if( !GN::input::InitializeInputSystem( 0 == GN::StringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
             return false;
-        if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
+        if( !gInputPtr->AttachToWindow( 0, mWin->GetWindowHandle() ) )
             return false;
 
         // connect to input signals
-        gInput.sigKeyPress.Connect( this, &InputTest::onKeyPress );
-        gInput.sigCharPress.Connect( this, &InputTest::onCharPress );
-        gInput.sigAxisMove.Connect( this, &InputTest::onAxisMove );
+        gInput.sigKeyPress.Connect( this, &InputTest::OnKeyPress );
+        gInput.sigCharPress.Connect( this, &InputTest::OnCharPress );
+        gInput.sigAxisMove.Connect( this, &InputTest::OnAxisMove );
 
         return true;
     }
 
-    /*LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+    /*LRESULT WinProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
     {
         switch(msg)
         {
@@ -48,17 +48,17 @@ class InputTest
                     GN::StrA txt;
                     txt.format(
                         "%s%s%s%s %s",
-                        mLastKeyEvent.status.ctrlDown()?"CTRL-":"",
-                        mLastKeyEvent.status.shiftDown()?"SHIFT-":"",
-                        mLastKeyEvent.status.altDown()?"ALT-":"",
-                        GN::input::kc2str(mLastKeyEvent.code),
+                        mLastKeyEvent.status.CtrlDown()?"CTRL-":"",
+                        mLastKeyEvent.status.ShiftDown()?"SHIFT-":"",
+                        mLastKeyEvent.status.AltDown()?"ALT-":"",
+                        GN::input::KeyCode2String(mLastKeyEvent.code),
                         mLastKeyEvent.status.down?"DOWN":"UP" );
                     TextOutA( dc, 0, 0, txt.ToRawPtr(), (INT)txt.Size() );
 
                     if( gInputPtr )
                     {
                         int x, y;
-                        gInputPtr->getMousePosition( x, y );
+                        gInputPtr->GetMousePosition( x, y );
                         txt.format( "Mouse: %d, %d", x, y );
                         TextOutA( dc, 0, 20, txt.ToRawPtr(), (INT)txt.Size() );
                     }
@@ -74,23 +74,23 @@ class InputTest
         return ::DefWindowProc( hwnd, msg, wp, lp );
     }*/
 
-    void onKeyPress( GN::input::KeyEvent ke )
+    void OnKeyPress( GN::input::KeyEvent ke )
     {
         mLastKeyEvent = ke;
-        mWin->repaint();
+        mWin->Repaint();
         if( !ke.status.down )
         {
             if( GN::input::KeyCode::ESCAPE == ke.code ) mDone = true;
         }
     }
 
-    void onCharPress( wchar_t )
+    void OnCharPress( wchar_t )
     {
     }
 
-    void onAxisMove( GN::input::Axis, int  )
+    void OnAxisMove( GN::input::Axis, int  )
     {
-        mWin->repaint();
+        mWin->Repaint();
     }
 
 public:
@@ -110,7 +110,7 @@ public:
     ///
     bool Init( const char * api )
     {
-        if( !createWindow() || !createInput(api) ) return false;
+        if( !CreateWindow() || !CreateInput(api) ) return false;
 
         mDone = false;
 
@@ -123,14 +123,14 @@ public:
     ///
     void Quit()
     {
-        GN::input::shutdownInputSystem();
+        GN::input::ShutdownInputSystem();
         mWin.Clear();
     }
 
     ///
     /// Run test application
     ///
-    int run()
+    int Run()
     {
         if( !gInputPtr )
         {
@@ -140,8 +140,8 @@ public:
 
         while(!mDone)
         {
-            mWin->runWhileEvents();
-            gInputPtr->processInputEvents();
+            mWin->RunUntilNoNewEvents();
+            gInputPtr->ProcessInputEvents();
         }
 
         return 0;
@@ -151,7 +151,7 @@ public:
 ///
 /// Print usage
 ///
-void usage( const char * appName )
+void Usage( const char * appName )
 {
     printf(
         "Input module test application.\n"
@@ -171,7 +171,7 @@ int main( int argc, const char * argv[] )
 
     if( argc < 2 )
     {
-        usage( argv[0] );
+        Usage( argv[0] );
         module = "MSW";
     }
     else
@@ -181,5 +181,5 @@ int main( int argc, const char * argv[] )
 
     InputTest app;
     if( !app.Init( module ) ) return -1;
-    return app.run();
+    return app.Run();
 }

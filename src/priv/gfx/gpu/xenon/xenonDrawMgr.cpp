@@ -137,7 +137,7 @@ void GN::gfx::XenonGpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::draw(
+void GN::gfx::XenonGpu::Draw(
     PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );

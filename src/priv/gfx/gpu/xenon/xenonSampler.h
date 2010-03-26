@@ -45,7 +45,7 @@ namespace GN { namespace gfx
         ///
         /// get descriptor
         ///
-        const SamplerDesc & getDesc() const { return mDesc; }
+        const SamplerDesc & GetDesc() const { return mDesc; }
 
         ///
         /// bind

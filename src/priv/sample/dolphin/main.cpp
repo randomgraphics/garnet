@@ -24,7 +24,7 @@ public:
 
     bool create()
     {
-        GpuResourceDatabase & gdb = mApp.getGdb();
+        GpuResourceDatabase & gdb = mApp.GetGdb();
 
         // load caustic textures
         for( int i = 0; i < 32; ++i )
@@ -42,16 +42,16 @@ public:
         return true;
     }
 
-    void update( float time, const Matrix44f & view, const Matrix44f & proj )
+    void Update( float time, const Matrix44f & view, const Matrix44f & proj )
     {
         // update caustic parameters
         Vector4f caustics( 0.05f, 0.05f, sinf(time)/8, cosf(time)/10 );
         UInt32 causticTex = ((UInt32)(time*32))%32;
 
         // update seafloor effect parameters
-        mSeafloor->getUniformResource("view")->getUniform()->update( view );
-        mSeafloor->getUniformResource("proj")->getUniform()->update( proj );
-        mSeafloor->getUniformResource("caustic")->getUniform()->update( caustics );
+        mSeafloor->getUniformResource("view")->getUniform()->Update( view );
+        mSeafloor->getUniformResource("proj")->getUniform()->Update( proj );
+        mSeafloor->getUniformResource("caustic")->getUniform()->Update( caustics );
         mSeafloor->setTextureResource( "caustic", mCaustics[causticTex] );
 
         // Animation attributes for the dolphin
@@ -87,17 +87,17 @@ public:
         Vector3f vWeight( fWeight1, fWeight2, fWeight3 );
 
         // update dolphin effect parameters
-        mDolphin->getUniformResource("pvw")->getUniform()->update( proj * view * world );
-        mDolphin->getUniformResource("viewworld")->getUniform()->update( view * world );
-        mDolphin->getUniformResource("weights")->getUniform()->update( vWeight );
+        mDolphin->getUniformResource("pvw")->getUniform()->Update( proj * view * world );
+        mDolphin->getUniformResource("viewworld")->getUniform()->Update( view * world );
+        mDolphin->getUniformResource("weights")->getUniform()->Update( vWeight );
         mDolphin->setTextureResource( "caustic", mCaustics[causticTex] );
     }
 
     void render()
     {
-        mApp.getGpu().clearScreen( WATER_COLOR );
-        mSeafloor->draw();
-        mDolphin->draw();
+        mApp.GetGpu().clearScreen( WATER_COLOR );
+        mSeafloor->Draw();
+        mDolphin->Draw();
     }
 };
 
@@ -126,14 +126,14 @@ public:
         world.Identity();
     }
 
-    bool onPreInit( InitParam & )
+    bool OnPreInit( InitParam & )
     {
         return true;
     }
 
-    bool onInit()
+    bool OnInit()
     {
-        Gpu & g = getGpu();
+        Gpu & g = GetGpu();
 
         UInt32 width = g.getDispDesc().width;
         UInt32 height = g.getDispDesc().height;
@@ -146,14 +146,14 @@ public:
         return scene->create();
     }
 
-    void onQuit()
+    void OnQuit()
     {
         SafeDelete( scene );
     }
 
-    void onKeyPress( input::KeyEvent key )
+    void OnKeyPress( input::KeyEvent key )
     {
-        GN::util::SampleApp::onKeyPress( key );
+        GN::util::SampleApp::OnKeyPress( key );
 
         if( input::KeyCode::SPACEBAR == key.code && key.status.down )
         {
@@ -161,13 +161,13 @@ public:
         }
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         if( swimming ) time += 1.0f/60.0f;
-        scene->update( time, view, proj );
+        scene->Update( time, view, proj );
     }
 
-    void onRender()
+    void OnRender()
     {
         GN_ASSERT( scene );
         scene->render();
@@ -177,5 +177,5 @@ public:
 int main( int argc, const char * argv[] )
 {
     Dolphin app;
-    return app.run( argc, argv );
+    return app.Run( argc, argv );
 }

@@ -46,21 +46,21 @@ namespace GN { namespace win
 
         //@{
 
-        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
-        MonitorHandle getMonitorHandle() const;
-        WindowHandle getWindowHandle() const { return mWindow; }
-        Vector2<size_t> getClientSize() const;
-        void show();
-        void hide();
-        void minimize() { GN_UNIMPL_WARNING(); }
-        void moveTo( int, int );
-        void setClientSize( size_t, size_t );
-        void repaint();
-        void run();
-        void runWhileEvents() { processWindowMessages(mWindow,false); }
-        void stepOneEvent() { GN_UNIMPL_WARNING(); }
-        void attachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
-        void removeEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
+        DisplayHandle GetDisplayHandle() const { return (DisplayHandle)1; }
+        MonitorHandle GetMonitorHandle() const;
+        WindowHandle GetWindowHandle() const { return mWindow; }
+        Vector2<size_t> GetClientSize() const;
+        void Show();
+        void Hide();
+        void Minimize() { GN_UNIMPL_WARNING(); }
+        void MoveTo( int, int );
+        void SetClientSize( size_t, size_t );
+        void Repaint();
+        void Run();
+        void RunUntilNoNewEvents() { ProcessWindowMessages(mWindow,false); }
+        void StepOneEvent() { GN_UNIMPL_WARNING(); }
+        void AttachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
+        void RemoveEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
 
         //@}
 
@@ -79,7 +79,7 @@ namespace GN { namespace win
         // private functions
         // ********************************
     private:
-        bool createWindow( const WindowCreationParams & wcp );
+        bool NewWindow( const WindowCreationParams & wcp );
 
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

@@ -249,7 +249,7 @@ bool TGAReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool TGAReader::readHeader(
+bool TGAReader::ReadHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -320,14 +320,14 @@ bool TGAReader::readHeader(
 
     // update o_desc
 	o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
+    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
     m.width      = header.width;
     m.height     = header.height;
     m.depth      = 1;
     m.rowPitch   = (UInt32)( header.width * mOutputBytesPerPixel );
     m.slicePitch = m.rowPitch * header.height;
     m.levelPitch = m.slicePitch;
-    GN_ASSERT( o_desc.valid() );
+    GN_ASSERT( o_desc.Valid() );
 
     // success
     mImageSrc  = i_buf;
@@ -340,7 +340,7 @@ bool TGAReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool TGAReader::readImage( void * o_data )
+bool TGAReader::ReadImage( void * o_data )
 {
     GN_GUARD;
 

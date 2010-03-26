@@ -74,7 +74,7 @@ private:
     // ********************************
 public:
 
-    virtual const FontFaceDesc & getDesc() const { return mDesc; }
+    virtual const FontFaceDesc & GetDesc() const { return mDesc; }
     virtual bool loadFontImage( FontImage &, wchar_t );
     virtual void getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 );
 

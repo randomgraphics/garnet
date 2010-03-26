@@ -39,7 +39,7 @@ bool GN::gfx::UniformResource::Reset(
     AutoRef<Uniform> u( database().gpu().createUniform( length ) );
     if( !u ) return false;
 
-    if( initialData ) u->update( 0, length, initialData );
+    if( initialData ) u->Update( 0, length, initialData );
 
     setUniform( u );
 

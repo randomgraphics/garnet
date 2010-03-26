@@ -20,7 +20,7 @@ public:
 
     void updateRadius()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = GetGpu();
 
         const DispDesc & dd = gpu.getDispDesc();
 
@@ -41,9 +41,9 @@ public:
         light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) );
     }
 
-    bool onInit()
+    bool OnInit()
     {
-        World & w = getWorld();
+        World & w = GetWorld();
 
         light = w.createLightEntity( NULL );
         if( !light ) return false;
@@ -71,16 +71,16 @@ public:
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
     }
 
-    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    void OnRenderWindowResize( HandleType, UInt32 width, UInt32 height )
     {
         arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
     }
 
-    void onAxisMove( Axis a, int d )
+    void OnAxisMove( Axis a, int d )
     {
         if( Axis::MOUSE_WHEEL_0 == a )
         {
@@ -91,7 +91,7 @@ public:
         }
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         SpatialNode * sceneSpatial = scene->getNode<SpatialNode>();
         const Vector3f & position = arcball.getTranslation();
@@ -99,17 +99,17 @@ public:
         sceneSpatial->setRotation( arcball.getRotation() );
     }
 
-    void onRender()
+    void OnRender()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = GetGpu();
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
-        getWorld().visualGraph().draw( camera );
+        GetWorld().visualGraph().Draw( camera );
 
         const Vector3f & position = arcball.getTranslation();
 
-        getFont().DrawText(
+        GetFont().DrawText(
             StringFormat(
                 L"position : %f,\n"
                 L"           %f,\n"
@@ -119,10 +119,10 @@ public:
                 radius ).ToRawPtr(),
             320, 40 );
 
-        drawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );
+        DrawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );
     }
 
-    bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )
+    bool OnCheckExtraCmdlineArguments( int argc, const char * const argv [] )
     {
         if( 0 == argc )
         {
@@ -133,10 +133,10 @@ public:
         return true;
     }
 
-    void onPrintHelpScreen( const char * executableName )
+    void OnPrintHelpScreen( const char * executableName )
     {
         GN_INFO(sLogger)( "\nUsage: %s [options] meshfile\n", executableName );
-        printStandardCommandLineOptions();
+        PrintStandardCommandLineOptions();
     }
 };
 
@@ -146,5 +146,5 @@ int main( int argc, const char * argv[] )
 
    MyApp app;
 
-   return app.run( argc, argv );
+   return app.Run( argc, argv );
 }

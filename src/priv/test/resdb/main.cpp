@@ -144,9 +144,9 @@ void Quit( Gpu & )
     SafeDelete( db );
 }
 
-void update( Input & in )
+void Update( Input & in )
 {
-    KeyEvent k = in.popLastKeyEvent();
+    KeyEvent k = in.PopLastKeyEvent();
 
     if( KeyCode::SPACEBAR == k.code && k.status.down )
     {
@@ -158,15 +158,15 @@ void update( Input & in )
     }
 }
 
-void draw( Gpu & )
+void Draw( Gpu & )
 {
     AutoRef<UniformResource> u( model->getUniformResource( "MATRIX_PVW" ) );
-    if( u ) u->getUniform()->update( Matrix44f::sIdentity() );
+    if( u ) u->getUniform()->Update( Matrix44f::sIdentity() );
 
-    model->draw();
+    model->Draw();
 }
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
@@ -181,17 +181,17 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
 
-        update( in );
+        Update( in );
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( gpu );
+        Draw( gpu );
         gpu.present();
 
         fps.onFrame();
@@ -206,14 +206,14 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
@@ -249,7 +249,7 @@ int main( int argc, const char * argv[] )
 
     InputInitiator ii(*r);
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

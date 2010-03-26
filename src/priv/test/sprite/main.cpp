@@ -32,12 +32,12 @@ static float pos_x;
 static float pos_y;
 static float angle = 0;
 
-void update( float timestep )
+void Update( float timestep )
 {
     static bool paused = false;
 
     Input & in = gInput;
-    KeyEvent ke = in.popLastKeyEvent();
+    KeyEvent ke = in.PopLastKeyEvent();
     if( ke.status.down && ( KeyCode::SPACEBAR == ke.code || KeyCode::XB360_A == ke.code ) )
     {
         paused = !paused;
@@ -54,9 +54,9 @@ void update( float timestep )
     }
 }
 
-void draw( Gpu & )
+void Draw( Gpu & )
 {
-    const TextureDesc & td = tex->getDesc();
+    const TextureDesc & td = tex->GetDesc();
 
     sr->drawSingleTexturedSprite(
         tex,
@@ -65,7 +65,7 @@ void draw( Gpu & )
         (float)td.width, (float)td.height ); // z
 }
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
@@ -80,17 +80,17 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_B ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down || in.GetKeyStatus( KeyCode::XB360_B ).down )
         {
             gogogo = false;
         }
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         double frameTime = fps.getLastFrameElasped();
-        update( (float)frameTime );
-        draw( gpu );
+        Update( (float)frameTime );
+        Draw( gpu );
         gpu.present();
 
         fps.onFrame();
@@ -105,14 +105,14 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
@@ -148,7 +148,7 @@ int main( int argc, const char * argv[] )
 
     InputInitiator ii(*r);
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

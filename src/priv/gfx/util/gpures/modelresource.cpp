@@ -982,12 +982,12 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::draw() const
+void GN::gfx::ModelResource::Impl::Draw() const
 {
     MeshResource * mesh = mMesh.resource;
     if( NULL == mesh ) return;
 
-    const MeshResourceDesc & meshdesc = mesh->getDesc();
+    const MeshResourceDesc & meshdesc = mesh->GetDesc();
 
     Gpu & g = database().gpu();
 
@@ -1036,7 +1036,7 @@ void GN::gfx::ModelResource::Impl::draw() const
         }
         else
         {
-            g.draw(
+            g.Draw(
                 meshdesc.prim,
                 subset.numvtx,
                 subset.basevtx );
@@ -1118,7 +1118,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
                 tp.parameterName.ToRawPtr(),
-                mEffect.resource->name(),
+                mEffect.resource->Name(),
                 modelName() );
 
             return false;
@@ -1174,7 +1174,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
                 up.parameterName.ToRawPtr(),
-                mEffect.resource->name(),
+                mEffect.resource->Name(),
                 modelName() );
 
             return false;
@@ -1362,4 +1362,4 @@ void                        GN::gfx::ModelResource::setMeshResource( GpuResource
 AutoRef<MeshResource>       GN::gfx::ModelResource::getMeshResource( MeshResourceSubset * subset ) const { return mImpl->getMeshResource( subset ); }
 void                        GN::gfx::ModelResource::setEffectResource( GpuResource * effect ) { mImpl->setEffectResource( effect ); }
 AutoRef<EffectResource>     GN::gfx::ModelResource::getEffectResource() const { return mImpl->getEffectResource(); }
-void                        GN::gfx::ModelResource::draw() const { mImpl->draw(); }
+void                        GN::gfx::ModelResource::Draw() const { mImpl->Draw(); }

@@ -229,7 +229,7 @@ void GN::d3d10::SimpleMesh::setTriangles( const UInt16 * triangles, size_t trian
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::draw() const
+void GN::d3d10::SimpleMesh::Draw() const
 {
     if( mNumVertices > 0 )
     {

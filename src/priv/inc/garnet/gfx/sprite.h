@@ -71,7 +71,7 @@ namespace GN { namespace gfx
         };
 
         /// get underline renderer
-        Gpu & getGpu() const { return mGpu; }
+        Gpu & GetGpu() const { return mGpu; }
 
         ///
         /// \note set texture to NULL, to draw solid sprite

@@ -78,7 +78,7 @@ bool GN::gfx::SpriteRenderer::Init()
     mPureWhiteTexture.Attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return Failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
-    mPureWhiteTexture->updateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
+    mPureWhiteTexture->UpdateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
 
     // create GPU program
     const GpuCaps & caps = mGpu.GetCaps();
@@ -139,7 +139,7 @@ bool GN::gfx::SpriteRenderer::Init()
         indices[i*6+4] = i * 4 + 2;
         indices[i*6+5] = i * 4 + 3;
     }
-    mIndexBuffer->update( 0, MAX_INDICES, indices.ToRawPtr() );
+    mIndexBuffer->Update( 0, MAX_INDICES, indices.ToRawPtr() );
 
 
     // create pending vertex buffer
@@ -302,7 +302,7 @@ void GN::gfx::SpriteRenderer::drawEnd()
     {
         size_t firstPendingSpriteOffset = mNextPendingSprite - mSprites;
 
-        mVertexBuffer->update(
+        mVertexBuffer->Update(
             firstPendingSpriteOffset * sizeof(Sprite),
             numPendingSprites * sizeof(Sprite),
             mNextPendingSprite,

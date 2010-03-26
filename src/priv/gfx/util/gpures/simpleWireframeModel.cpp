@@ -83,7 +83,7 @@ void GN::gfx::SimpleWireframeModel::setTransformation(
     const Matrix44f & world )
 {
     Matrix44f pvw = proj * view * world;
-    mMatrixPvw->getUniform()->update( pvw );
+    mMatrixPvw->getUniform()->Update( pvw );
 }
 
 //
@@ -91,5 +91,5 @@ void GN::gfx::SimpleWireframeModel::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleWireframeModel::setColor( const Vector4f & clr )
 {
-    mColor->getUniform()->update( clr );
+    mColor->getUniform()->Update( clr );
 }

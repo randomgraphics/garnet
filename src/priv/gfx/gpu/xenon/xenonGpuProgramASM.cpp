@@ -21,7 +21,7 @@ bool GN::gfx::XenonGpuProgramASM::Init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::MICROCODE == desc.lang );
 
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
@@ -69,7 +69,7 @@ void GN::gfx::XenonGpuProgramASM::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramASM::apply() const
 {
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }

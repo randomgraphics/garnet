@@ -61,8 +61,8 @@ void GN::util::ArcBall::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigKeyPress.Connect( this, &ArcBall::onKeyPress );
-        gInput.sigAxisMove.Connect( this, &ArcBall::onAxisMove );
+        gInput.sigKeyPress.Connect( this, &ArcBall::OnKeyPress );
+        gInput.sigAxisMove.Connect( this, &ArcBall::OnAxisMove );
     }
     else
     {
@@ -185,14 +185,14 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
+void GN::util::ArcBall::OnKeyPress( input::KeyEvent key )
 {
     if( input::KeyCode::MOUSEBTN_0 == key.code )
     {
         if( key.status.down )
         {
             int x, y;
-            gInput.getMousePosition( x, y );
+            gInput.GetMousePosition( x, y );
             beginRotation( x, y );
         }
         else
@@ -205,7 +205,7 @@ void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
         if( key.status.down )
         {
             int x, y;
-            gInput.getMousePosition( x, y );
+            gInput.GetMousePosition( x, y );
             beginTranslation( x, y );
         }
         else
@@ -218,12 +218,12 @@ void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onAxisMove( input::Axis, int )
+void GN::util::ArcBall::OnAxisMove( input::Axis, int )
 {
     if( !mMoving && !mRolling ) return;
 
     int x, y;
-    gInput.getMousePosition( x, y );
+    gInput.GetMousePosition( x, y );
 
     onTranslation( x, y );
     onRotation( x, y );

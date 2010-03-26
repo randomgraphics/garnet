@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         };
 
         /// check for validity
-        bool valid() const
+        bool Valid() const
         {
             return HLSL9 == *this
                 || HLSL10 == *this

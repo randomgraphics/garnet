@@ -118,7 +118,7 @@ public:
         md.slicePitch = 0x40000000;
         md.levelPitch = 0x40000000;
 
-        size_t totalBytes = id.getTotalBytes();
+        size_t totalBytes = id.GetTotalBytes();
         TS_ASSERT_EQUALS( totalBytes, md.levelPitch );
     }
 };

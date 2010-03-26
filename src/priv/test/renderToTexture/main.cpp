@@ -71,7 +71,7 @@ public:
         float edge = 200.0f;
         BoxVert vertices[24];
         UInt16  indices[36];
-        createBox(
+        CreateBox(
             edge, edge, edge,
             &vertices[0].x, sizeof(BoxVert),
             &vertices[0].u, sizeof(BoxVert),
@@ -122,7 +122,7 @@ public:
 
         model.setTransformation( proj, view, world );
 
-        model.modelResource().draw();
+        model.modelResource().Draw();
     }
 
     void drawToColorRenderTarget( Texture * tex )
@@ -181,7 +181,7 @@ public:
     }
 };
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     GpuResourceDatabase db(gpu);
 
@@ -200,9 +200,9 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
@@ -221,14 +221,14 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
@@ -267,7 +267,7 @@ int main( int argc, const char * argv[] )
 
     InputInitiator ii(*r);
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

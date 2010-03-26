@@ -24,7 +24,7 @@ bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
         return Failure();
     }
 
-    setDesc( desc );
+    SetDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
     mBuffer = (UInt8*)HeapMemory::Alloc( desc.numidx * mBytesPerIndex );
@@ -57,7 +57,7 @@ void GN::gfx::OGLIdxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLIdxBuf::Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -75,9 +75,9 @@ void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * da
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLIdxBuf::Readback( DynaArray<UInt8> & data )
 {
-    const IdxBufDesc & desc = getDesc();
+    const IdxBufDesc & desc = GetDesc();
 
     size_t lengthInBytes = desc.numidx * mBytesPerIndex;
 

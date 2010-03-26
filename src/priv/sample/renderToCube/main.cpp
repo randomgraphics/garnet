@@ -23,7 +23,7 @@ class RenderToTexture : public SampleApp
         Vector3f vertices[24];
         UInt16   indices[36];
 
-        createBox( 100, 100, 100,
+        CreateBox( 100, 100, 100,
             (float*)vertices, sizeof(Vector3f),
             NULL, 0, // texcoord
             NULL, 0, // normal
@@ -49,7 +49,7 @@ class RenderToTexture : public SampleApp
 
 public:
 
-    bool onInit()
+    bool OnInit()
     {
         world.Identity();
         view.Translate( 0, 0, -200 );
@@ -58,8 +58,8 @@ public:
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 
-        Gpu                 & gpu = getGpu();
-        GpuResourceDatabase & gdb = getGdb();
+        Gpu                 & gpu = GetGpu();
+        GpuResourceDatabase & gdb = GetGdb();
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
@@ -110,7 +110,7 @@ public:
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
         for( int i = 0; i < 6; ++i ) faces[i].Clear();
         cubemap.Clear();
@@ -118,17 +118,17 @@ public:
         gc.Clear();
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         world = arcball.getRotationMatrix44();
         pvw = proj * view * world;
-        box->getUniformResource("pvw")->getUniform()->update( pvw );
+        box->getUniformResource("pvw")->getUniform()->Update( pvw );
     }
 
-    void onRender()
+    void OnRender()
     {
-        Gpu            & gpu = getGpu();
-        SpriteRenderer & sr = getSpriteRenderer();
+        Gpu            & gpu = GetGpu();
+        SpriteRenderer & sr = GetSpriteRenderer();
 
         // draw to cubemap
         gc.colortargets.Resize( 1 );
@@ -145,12 +145,12 @@ public:
         gc.colortargets.Clear();
         gpu.bindContext( gc );
         gpu.clearScreen();
-        box->draw();
+        box->Draw();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
     RenderToTexture app;
-    return app.run( argc, argv );
+    return app.Run( argc, argv );
 }

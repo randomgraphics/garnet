@@ -223,7 +223,7 @@ void GN::gfx::RenderWindowX11::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) const
+bool GN::gfx::RenderWindowX11::GetClientSize( UInt32 & width, UInt32 & height ) const
 {
     GN_GUARD;
 

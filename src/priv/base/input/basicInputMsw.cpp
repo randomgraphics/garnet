@@ -60,9 +60,9 @@ void GN::input::BasicInputMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::processInputEvents()
+void GN::input::BasicInputMsw::ProcessInputEvents()
 {
-    BasicXInput::processInputEvents();
+    BasicXInput::ProcessInputEvents();
 
     ScopeMutex<Mutex> mutex( mEventQueueMutex );
 
@@ -86,7 +86,7 @@ void GN::input::BasicInputMsw::processInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
+bool GN::input::BasicInputMsw::AttachToWindow( HandleType, HandleType window )
 {
     GN_GUARD;
 
@@ -123,7 +123,7 @@ bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::getMousePosition( int & x, int & y ) const
+void GN::input::BasicInputMsw::GetMousePosition( int & x, int & y ) const
 {
     GN_GUARD_SLOW;
 

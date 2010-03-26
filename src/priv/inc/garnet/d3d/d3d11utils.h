@@ -302,7 +302,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         void endTriangles();
         void setTriangles( const UInt16 * triangles, size_t triangleCount );
 
-        void draw() const;
+        void Draw() const;
         void drawIndexed() const;
 
         //@}
@@ -607,7 +607,7 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
         ID3D11RenderTargetView * backrtv() const { return mBackRTV; }
         ID3D11DepthStencilView * depthrtv() const { return mDepthDSV; }
 
-        int run( const D3D11AppOption & );
+        int Run( const D3D11AppOption & );
 
         bool changeOption( const D3D11AppOption & );
 
@@ -623,13 +623,13 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
 
         //@{
 
-        virtual bool onInit( D3D11AppOption & ) { return true; }
+        virtual bool OnInit( D3D11AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual void onDestroy() {}
-        virtual void onQuit() {}
+        virtual void OnQuit() {}
 
         virtual void onDraw() {}
-        virtual void onUpdate() {}
+        virtual void OnUpdate() {}
 
         //@}
 

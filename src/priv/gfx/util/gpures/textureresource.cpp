@@ -55,11 +55,11 @@ GN::gfx::TextureResource::loadFromFile(
     // load image
     ImageDesc id;
     DynaArray<UInt8> texels;
-    if( !loadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
+    if( !LoadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
     TextureDesc td;
-    td.fromImageDesc( id );
+    td.FromImageDesc( id );
     AutoRef<Texture> tex( db.gpu().createTexture( td ) );
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
@@ -67,9 +67,9 @@ GN::gfx::TextureResource::loadFromFile(
     for( size_t f = 0; f < td.faces; ++f )
     for( size_t l = 0; l < td.levels; ++l )
     {
-        const MipmapDesc & md = id.getMipmap( f, l );
-        size_t offset = id.getMipmapOffset( f, l );
-        tex->updateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
+        const MipmapDesc & md = id.GetMipmap( f, l );
+        size_t offset = id.GetMipmapOffset( f, l );
+        tex->UpdateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
     }
 
     // create new texture resource

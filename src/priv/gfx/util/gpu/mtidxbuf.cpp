@@ -22,9 +22,9 @@ bool GN::gfx::MultiThreadIdxBuf::Init( IdxBuf * ib )
 
     mIdxBuf = ib;
 
-    const IdxBufDesc & desc = mIdxBuf->getDesc();
+    const IdxBufDesc & desc = mIdxBuf->GetDesc();
 
-    setDesc( desc );
+    SetDesc( desc );
 
     // success
     return Success();
@@ -58,11 +58,11 @@ void GN::gfx::MultiThreadIdxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadIdxBuf::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
-        const IdxBufDesc & desc = getDesc();
+        const IdxBufDesc & desc = GetDesc();
         size_t maxlen = desc.numidx * ( desc.bits32 ? 4 : 2 );
         length = maxlen - offset;
     }
@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::MultiThreadIdxBuf::Readback( DynaArray<UInt8> & data )
 {
     mGpu.postCommand2( CMD_IDXBUF_READBACK, mIdxBuf, &data );
 }
@@ -117,7 +117,7 @@ namespace GN { namespace gfx
 
         IdxBufUpdateParam * vbup = (IdxBufUpdateParam*)p;
 
-        vbup->idxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
+        vbup->idxbuf->Update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
         HeapMemory::Free( vbup->data );
     }
@@ -134,7 +134,7 @@ namespace GN { namespace gfx
         };
         IdxBufReadBackParam * vbrp = (IdxBufReadBackParam*)p;
 
-        vbrp->ib->readback( *vbrp->buf );
+        vbrp->ib->Readback( *vbrp->buf );
      }
 }}
 

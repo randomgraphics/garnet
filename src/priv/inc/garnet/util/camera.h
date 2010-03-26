@@ -53,7 +53,7 @@ namespace GN { namespace util
         /// \param time  estimated time of interpolation
         ///
         /// 重置后，插值器将在 time 时间内，完成从 from 到 to 的线性插值过程。
-        /// （调用 update() 更新插值器的状态）
+        /// （调用 Update() 更新插值器的状态）
         ///
         void Reset( const T & from, const T & to, float time )
         {
@@ -69,7 +69,7 @@ namespace GN { namespace util
         /// move forward the interpolator by 'deltaTime'.
         /// Return true means the end of interpolation.
         ///
-        bool update( float deltaTime )
+        bool Update( float deltaTime )
         {
             if( mRemainingTime < deltaTime )
             {
@@ -209,8 +209,8 @@ namespace GN { namespace util
 
     private:
 
-        void onKeyPress( input::KeyEvent );
-        void onAxisMove( input::Axis, int );
+        void OnKeyPress( input::KeyEvent );
+        void OnAxisMove( input::Axis, int );
     };
 
     ///
@@ -282,7 +282,7 @@ namespace GN { namespace util
         const Vector3f  & getAngle() const    { return mAngle; }
         const Matrix44f & getViewMatrix() const { return mView; }
 
-        void update( float timeslice );
+        void Update( float timeslice );
 
         //@}
 
@@ -310,7 +310,7 @@ namespace GN { namespace util
         LinearInterpolator<Vector3f> mTargetAngle;
 
     private:
-        void onAxisMove( input::Axis, int );
+        void OnAxisMove( input::Axis, int );
     };
 }}
 

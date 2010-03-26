@@ -295,7 +295,7 @@ class BezierApp : public SampleApp
 
     void updateRadius()
     {
-        Gpu            & gpu = getGpu();
+        Gpu            & gpu = GetGpu();
         const DispDesc & dd  = gpu.getDispDesc();
 
         Matrix44f view, proj;
@@ -313,10 +313,10 @@ class BezierApp : public SampleApp
         light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) ); // head light: same location as camera.
     }
 
-    bool onInit()
+    bool OnInit()
     {
-        GpuResourceDatabase & gdb = getGdb();
-        World               & world = getWorld();
+        GpuResourceDatabase & gdb = GetGdb();
+        World               & world = GetWorld();
 
         AutoRef<MeshResource>   mesh;
         AutoRef<EffectResource> effect;
@@ -353,16 +353,16 @@ class BezierApp : public SampleApp
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
     }
 
-    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    void OnRenderWindowResize( HandleType, UInt32 width, UInt32 height )
     {
         arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
     }
 
-    void onAxisMove( Axis a, int d )
+    void OnAxisMove( Axis a, int d )
     {
         if( Axis::MOUSE_WHEEL_0 == a )
         {
@@ -373,7 +373,7 @@ class BezierApp : public SampleApp
         }
     }
 
-    void GN::util::SampleApp::onUpdate()
+    void GN::util::SampleApp::OnUpdate()
     {
         SpatialNode * spatialNode = bezier->getNode<SpatialNode>();
         const Vector3f & position = arcball.getTranslation();
@@ -381,17 +381,17 @@ class BezierApp : public SampleApp
         spatialNode->setRotation( arcball.getRotation() );
     }
 
-    void onRender()
+    void OnRender()
     {
-        getGpu().clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        GetGpu().clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
         const Vector3f & position = arcball.getTranslation();
 
-        bezier->getNode<VisualNode>()->graph().draw( camera );
+        bezier->getNode<VisualNode>()->graph().Draw( camera );
 
         drawCoords();
 
-        getFont().DrawText(
+        GetFont().DrawText(
             StringFormat(
                 L"position : %f, %f, %f\n"
                 L"radius   : %f",
@@ -406,7 +406,7 @@ class BezierApp : public SampleApp
         static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
-        Gpu & gpu = getGpu();
+        Gpu & gpu = GetGpu();
 
         const Matrix44f & world = arcball.getRotationMatrix44();
         const Matrix44f & view  = camera.getViewMatrix();
@@ -423,6 +423,6 @@ int main( int argc, const char * argv[] )
 
     BezierApp app;
 
-    return app.run( argc, argv );
+    return app.Run( argc, argv );
 }
 

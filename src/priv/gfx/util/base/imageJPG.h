@@ -135,13 +135,13 @@ public:
     ///
     /// read JPEG header
     ///
-    bool readHeader(
+    bool ReadHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
     ///
     /// read JPEG image
     ///
-    bool readImage( void * o_data );
+    bool ReadImage( void * o_data );
 };
 // *****************************************************************************
 //                                     EOF

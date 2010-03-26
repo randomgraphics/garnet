@@ -138,7 +138,7 @@ bool CEGUI::GarnetTexture::reload()
         if( !mGarnetTexture ) return false;
 
         // update texture size
-        mGarnetTexture->getBaseSize( &mWidth, &mHeight );
+        mGarnetTexture->GetBaseSize( &mWidth, &mHeight );
     }
 
     // success

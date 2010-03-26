@@ -34,7 +34,7 @@ sVtxFmt2InputLayout(
         elem.SemanticIndex = ve.bindingIndex;
 
         // set attrib format
-        elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
+        elem.Format = (DXGI_FORMAT)ColorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
             GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.ToString().ToRawPtr() );

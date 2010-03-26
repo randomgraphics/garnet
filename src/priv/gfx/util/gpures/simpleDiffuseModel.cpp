@@ -102,9 +102,9 @@ void GN::gfx::SimpleDiffuseModel::setTransformation(
 {
     Matrix44f pvw = proj * view * world;
     Matrix44f wit = Matrix44f::sInverse( Matrix44f::sTranspose( world ) );
-    mMatrixPvw->getUniform()->update( pvw );
-    mMatrixWorld->getUniform()->update( world );
-    mMatrixWorldIT->getUniform()->update( wit );
+    mMatrixPvw->getUniform()->Update( pvw );
+    mMatrixWorld->getUniform()->Update( world );
+    mMatrixWorldIT->getUniform()->Update( wit );
 }
 
 //
@@ -112,7 +112,7 @@ void GN::gfx::SimpleDiffuseModel::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleDiffuseModel::setLightPos( const Vector4f & pos )
 {
-    mLightPos->getUniform()->update( pos );
+    mLightPos->getUniform()->Update( pos );
 }
 
 //
@@ -120,7 +120,7 @@ void GN::gfx::SimpleDiffuseModel::setLightPos( const Vector4f & pos )
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleDiffuseModel::setLightColor( const Vector4f & clr )
 {
-    mLightColor->getUniform()->update( clr );
+    mLightColor->getUniform()->Update( clr );
 }
 
 //
@@ -128,7 +128,7 @@ void GN::gfx::SimpleDiffuseModel::setLightColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleDiffuseModel::setAlbedoColor( const Vector4f & clr )
 {
-    mAlbedoColor->getUniform()->update( clr );
+    mAlbedoColor->getUniform()->Update( clr );
 }
 
 //

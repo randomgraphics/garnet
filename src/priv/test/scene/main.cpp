@@ -59,31 +59,31 @@ void Quit( Scene & )
 {
 }
 
-void update()
+void Update()
 {
 }
 
-void draw( Scene & )
+void Draw( Scene & )
 {
-    robot->getNode<VisualNode>()->graph().draw( camera );
+    robot->getNode<VisualNode>()->graph().Draw( camera );
 }
 
 struct InputInitiator
 {
     InputInitiator( Gpu & g )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = g.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     InputInitiator ii(gpu);
 
@@ -102,16 +102,16 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
-        update();
+        Update();
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( sc );
+        Draw( sc );
         gpu.present();
 
         fps.onFrame();
@@ -152,7 +152,7 @@ int main( int argc, const char * argv[] )
         r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

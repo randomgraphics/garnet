@@ -483,7 +483,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
-        if( getGpu().paramCheckEnabled() )
+        if( GetGpu().paramCheckEnabled() )
         {
             if( uniform->Size() != desc.size )
             {
@@ -568,7 +568,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
     const TextureBinding * textures,
     size_t                 count ) const
 {
-    OGLGpu & r = getGpu();
+    OGLGpu & r = GetGpu();
     size_t maxStages = r.GetCaps().maxTextures;
 
     // determine effective texture count
@@ -695,7 +695,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
     }
 
     // check for texture capability
-    OGLGpu & r = getGpu();
+    OGLGpu & r = GetGpu();
     if( mTextures.Size() > r.GetCaps().maxTextures )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );

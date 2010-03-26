@@ -22,9 +22,9 @@ bool GN::gfx::MultiThreadVtxBuf::Init( VtxBuf * vb )
 
     mVtxBuf = vb;
 
-    const VtxBufDesc & desc = mVtxBuf->getDesc();
+    const VtxBufDesc & desc = mVtxBuf->GetDesc();
 
-    setDesc( desc );
+    SetDesc( desc );
 
     // success
     return Success();
@@ -58,11 +58,11 @@ void GN::gfx::MultiThreadVtxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadVtxBuf::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
-        length = getDesc().length - offset;
+        length = GetDesc().length - offset;
     }
 
     void * tmpbuf = HeapMemory::Alloc( length );
@@ -79,7 +79,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::MultiThreadVtxBuf::Readback( DynaArray<UInt8> & data )
 {
     mGpu.postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
 }
@@ -115,7 +115,7 @@ namespace GN { namespace gfx
 
         VtxBufUpdateParam * vbup = (VtxBufUpdateParam*)p;
 
-        vbup->vtxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
+        vbup->vtxbuf->Update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
         HeapMemory::Free( vbup->data );
     }
@@ -132,6 +132,6 @@ namespace GN { namespace gfx
         };
         VtxBufReadBackParam * vbrp = (VtxBufReadBackParam*)p;
 
-        vbrp->vb->readback( *vbrp->buf );
+        vbrp->vb->Readback( *vbrp->buf );
      }
 }}

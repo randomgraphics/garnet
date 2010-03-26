@@ -45,7 +45,7 @@ public:
         }
     }
 
-    virtual const FontFaceDesc & getDesc() const { return mDesc; }
+    virtual const FontFaceDesc & GetDesc() const { return mDesc; }
 
     virtual bool loadFontImage( FontImage & result, wchar_t ch )
     {

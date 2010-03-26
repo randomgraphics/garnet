@@ -181,7 +181,7 @@ namespace GN { namespace gfx
         RenderTargetTexture                                                   depthstencil;
 
         /// check for invalid description.
-        bool valid() const
+        bool Valid() const
         {
             for( size_t i = 0; i < colortargets.Size(); ++i )
             {

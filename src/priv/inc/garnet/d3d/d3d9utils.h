@@ -463,7 +463,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         HWND               window() const { return mWindow; }
         IDirect3DDevice9 & d3d9dev() const { GN_ASSERT( mDevice ); return *mDevice; }
 
-        int run( const D3D9AppOption * = 0 );
+        int Run( const D3D9AppOption * = 0 );
 
         bool changeOption( const D3D9AppOption & );
 
@@ -473,18 +473,18 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         //@{
 
-        virtual bool onInit( D3D9AppOption & ) { return true; }
+        virtual bool OnInit( D3D9AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual bool onRestore() { return true; }
         virtual void onDispose() {}
         virtual void onDestroy() {}
-        virtual void onQuit() {}
+        virtual void OnQuit() {}
 
         virtual void onDraw() {}
-        virtual void onUpdate() {}
-        virtual void onKeyPress( input::KeyEvent );
-        virtual void onCharPress( wchar_t ) {}
-        virtual void onAxisMove( input::Axis, int ) {}
+        virtual void OnUpdate() {}
+        virtual void OnKeyPress( input::KeyEvent );
+        virtual void OnCharPress( wchar_t ) {}
+        virtual void OnAxisMove( input::Axis, int ) {}
 
         //@}
 

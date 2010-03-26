@@ -33,7 +33,7 @@ namespace GN { namespace gfx
         bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, SurfaceUpdateFlag flag, Box<UInt32> & clippedArea )
         {
             // check face
-            if( face >= getDesc().faces )
+            if( face >= GetDesc().faces )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock face : %d", face );
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
             }
 
             // check level
-            if( level >= getDesc().levels )
+            if( level >= GetDesc().levels )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock level : %d", level );
@@ -57,7 +57,7 @@ namespace GN { namespace gfx
             }
 
             // get texture size
-            const Vector3<UInt32> & sz = getMipSize( level );
+            const Vector3<UInt32> & sz = GetMipSize( level );
 
             // make sure lock area is valid
             if( area )
@@ -132,7 +132,7 @@ namespace GN { namespace gfx
         ///
         bool validateUpdateParameters( size_t offset, size_t * length, const void * data, SurfaceUpdateFlag flag )
         {
-            const VtxBufDesc & desc = getDesc();
+            const VtxBufDesc & desc = GetDesc();
 
             if( NULL == data )
             {
@@ -200,7 +200,7 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( numidx );
 
-            const IdxBufDesc & desc = getDesc();
+            const IdxBufDesc & desc = GetDesc();
 
             if( NULL == data )
             {

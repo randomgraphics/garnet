@@ -115,7 +115,7 @@
     - Window property save/restore
     - Refine ntWindow class:
       - support external window
-      - getClientSize();
+      - GetClientSize();
     - remove platform specific code from display manager.
     - UT for GFX module: using external render window
   - Run UT for both GFXD3D and GFXOGL will throw exception.

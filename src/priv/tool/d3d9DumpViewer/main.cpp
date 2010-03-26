@@ -85,7 +85,7 @@ struct D3D9OperationDump
     UInt32  numvtx;
     UInt32  startidx;
 
-    void draw( IDirect3DDevice9 & dev )
+    void Draw( IDirect3DDevice9 & dev )
     {
         if( indexed )
         {
@@ -415,7 +415,7 @@ struct D3D9StateDump
         dev.SetScissorRect( &scissorrect );
     }
 
-    void draw( IDirect3DDevice9 & dev )
+    void Draw( IDirect3DDevice9 & dev )
     {
         // load RT data
         {
@@ -429,7 +429,7 @@ struct D3D9StateDump
             }
         }
 
-        operation.draw( dev );
+        operation.Draw( dev );
     }
 
     bool loadFromXml( const XmlNode & root, const StrA & basedir )
@@ -895,7 +895,7 @@ class MyApp : public D3D9Application
 
 protected:
 
-    bool onInit( D3D9AppOption & o )
+    bool OnInit( D3D9AppOption & o )
     {
         mState.Clear();
         if( !LoadFromXmlFile( mState, sDumpFileName ) ) return false;
@@ -940,7 +940,7 @@ protected:
         if( D3D_OK == dev.BeginScene() )
         {
             mState.bind( dev );
-            mState.draw( dev );
+            mState.Draw( dev );
 
 #if !RENDER_TO_BACKBUF
             // copy RT0 content to backbuffer
@@ -984,7 +984,7 @@ int main( int argc, const char * argv [] )
     sDumpFileName = argv[1];
 
     MyApp app;
-    return app.run();
+    return app.Run();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
     return -1;

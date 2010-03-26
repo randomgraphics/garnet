@@ -57,9 +57,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        bool attachToWindow( HandleType, HandleType );
+        bool AttachToWindow( HandleType, HandleType );
 
-        void processInputEvents();
+        void ProcessInputEvents();
 
         // ********************************
         // from BasicInputMsw

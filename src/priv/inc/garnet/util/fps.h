@@ -34,7 +34,7 @@ namespace GN { namespace util
         ///
         /// Get time
         ///
-        double getCurrentTime() const { return mCurrentTime; }
+        double GetCurrentTime() const { return mCurrentTime; }
 
         ///
         /// reset the counter
@@ -89,7 +89,7 @@ namespace GN { namespace util
         ///
         /// Get average FPS value
         ///
-        float getFps() const { return mFpsValue; }
+        float GetFps() const { return mFpsValue; }
 
         ///
         /// Get FPS string

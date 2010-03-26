@@ -72,13 +72,13 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonTexture, () );
 
-    if( !setDesc( inputDesc ) ) return Failure();
+    if( !SetDesc( inputDesc ) ) return Failure();
 
-    // Note: always use descriptor returned by getDesc(), since it may differ with inputDesc.
-    const TextureDesc & desc = getDesc();
+    // Note: always use descriptor returned by GetDesc(), since it may differ with inputDesc.
+    const TextureDesc & desc = GetDesc();
 
     // determine texture format
-    mD3DFormat = (D3DFORMAT)colorFormat2XenonFormat( desc.format );
+    mD3DFormat = (D3DFORMAT)ColorFormat2XenonFormat( desc.format );
     if( D3DFMT_UNKNOWN == mD3DFormat )
     {
         GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", desc.format.ToString().ToRawPtr() );
@@ -92,7 +92,7 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
     mD3DUsage = (TextureUsage::FAST_CPU_WRITE == desc.usage ) ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
 
     // create texture
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
     switch( mD3DDimension )
     {
         case XENON_TEXDIM_1D:
@@ -159,7 +159,7 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
 
         DWORD depth = ( D3DRTYPE_VOLUMETEXTURE == xdesc.ResourceType ) ? xdesc.Depth : 1;
 
-        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
+        SetMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
     }
 
     // success
@@ -190,7 +190,7 @@ void GN::gfx::XenonTexture::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonTexture::updateMipmap(
+void GN::gfx::XenonTexture::UpdateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -204,8 +204,8 @@ void GN::gfx::XenonTexture::updateMipmap(
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     // prepare for update
-    const TextureDesc & desc = getDesc();
-    const ColorLayoutDesc & ld = desc.format.getLayoutDesc();
+    const TextureDesc & desc = GetDesc();
+    const ColorLayoutDesc & ld = desc.format.GetLayoutDesc();
     size_t srcBlockRowPitch = rowPitch * ld.blockHeight;
     XGTEXTURE_DESC xdesc;
     XGGetTextureDesc( mD3DTexture, level, &xdesc );

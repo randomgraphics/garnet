@@ -21,21 +21,21 @@ namespace GN { namespace win
 
         //@{
 
-        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
-        MonitorHandle getMonitorHandle() const { return (MonitorHandle)1; }
-        WindowHandle getWindowHandle() const { return (WindowHandle)1; }
-        Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
-        void show() {}
-        void hide() {}
-        void minimize() {}
-        void moveTo( int, int ) {}
-        void setClientSize( size_t, size_t ) {}
-        void repaint() {}
-        void run() {}
-        void runWhileEvents() {}
-        void stepOneEvent() {}
-        void attachEventHandler( const StrA &, const WindowEventHandler & ) {}
-        void removeEventHandler( const StrA &, const WindowEventHandler & ) {}
+        DisplayHandle GetDisplayHandle() const { return (DisplayHandle)1; }
+        MonitorHandle GetMonitorHandle() const { return (MonitorHandle)1; }
+        WindowHandle GetWindowHandle() const { return (WindowHandle)1; }
+        Vector2<size_t> GetClientSize() const { return Vector2<size_t>(640,480); }
+        void Show() {}
+        void Hide() {}
+        void Minimize() {}
+        void MoveTo( int, int ) {}
+        void SetClientSize( size_t, size_t ) {}
+        void Repaint() {}
+        void Run() {}
+        void RunUntilNoNewEvents() {}
+        void StepOneEvent() {}
+        void AttachEventHandler( const StrA &, const WindowEventHandler & ) {}
+        void RemoveEventHandler( const StrA &, const WindowEventHandler & ) {}
 
         //@}
 
@@ -90,7 +90,7 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-    Window * createWindow( const WindowCreationParams & wcp )
+    Window * NewWindow( const WindowCreationParams & wcp )
     {
         GN_GUARD;
 
@@ -120,7 +120,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_XENON
-    MonitorHandle getMonitorByIndex( size_t ) { return (MonitorHandle)1; }
+    MonitorHandle GetMonitorByIndex( size_t ) { return (MonitorHandle)1; }
 #elif GN_MSWIN
     struct MonitorEnumInfo
     {
@@ -142,14 +142,14 @@ namespace GN { namespace win
             return TRUE;
         }
     }
-    MonitorHandle getMonitorByIndex( size_t i )
+    MonitorHandle GetMonitorByIndex( size_t i )
     {
         MonitorEnumInfo mei = { 0, i, 0 };
         ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
         return mei.handle;
     }
 #else
-    MonitorHandle getMonitorByIndex( size_t )
+    MonitorHandle GetMonitorByIndex( size_t )
     {
         GN_UNIMPL();
         return 0;
@@ -160,7 +160,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_MSWIN && !GN_XENON
-    void processWindowMessages( WindowHandle window, bool blockWhileMinized )
+    void ProcessWindowMessages( WindowHandle window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;
 
@@ -189,6 +189,6 @@ namespace GN { namespace win
         GN_UNGUARD_SLOW;
     }
 #else
-    void processWindowMessages( WindowHandle, bool ) {}
+    void ProcessWindowMessages( WindowHandle, bool ) {}
 #endif
 }}

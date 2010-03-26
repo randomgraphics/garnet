@@ -18,7 +18,7 @@ public:
     /// \name from SampleApp
     //@{
 
-    bool onInit()
+    bool OnInit()
     {
         using namespace CEGUI;
 
@@ -69,9 +69,9 @@ public:
         FontManager::getSingleton().createFont("../datafiles/fonts/Commonwealth-10.font");
         SchemeManager::getSingleton().loadScheme("../datafiles/schemes/TaharezLookWidgets.scheme");
         WindowManager& winMgr = WindowManager::getSingleton();
-        DefaultWindow* root = (DefaultWindow*)winMgr.createWindow("DefaultWindow", "Root");
+        DefaultWindow* root = (DefaultWindow*)winMgr.NewWindow("DefaultWindow", "Root");
         System::getSingleton().setGUISheet(root);
-        FrameWindow* wnd = (FrameWindow*)winMgr.createWindow("TaharezLook/FrameWindow", "Demo Window");
+        FrameWindow* wnd = (FrameWindow*)winMgr.NewWindow("TaharezLook/FrameWindow", "Demo Window");
         root->addChildWindow(wnd);
         wnd->setPosition(Point(0.25f, 0.25f));
         wnd->setSize(Size(0.5f, 0.5f));
@@ -83,7 +83,7 @@ public:
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
         CEGUI::System * sys = CEGUI::System::getSingletonPtr();
         if( sys )
@@ -96,9 +96,9 @@ public:
         }
     }
 
-    void onKeyPress( GN::input::KeyEvent key )
+    void OnKeyPress( GN::input::KeyEvent key )
     {
-        SampleApp::onKeyPress( key );
+        SampleApp::OnKeyPress( key );
         using namespace GN::input;
         if( key.status.down )
         {
@@ -118,18 +118,18 @@ public:
         }
     }
 
-    void onAxisMove( GN::input::Axis, int )
+    void OnAxisMove( GN::input::Axis, int )
     {
         int x, y;
-        gInput.getMousePosition( x, y );
+        gInput.GetMousePosition( x, y );
         CEGUI::System::getSingleton().injectMousePosition( (float)x, (float)y );
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
     }
 
-    void onRender()
+    void OnRender()
     {
         gRenderer.clearScreen();
         //for( int i = 0; i < 30; ++i )

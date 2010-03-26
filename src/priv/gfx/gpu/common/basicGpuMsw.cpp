@@ -184,7 +184,7 @@ void GN::gfx::BasicGpuMsw::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicGpuMsw::processRenderWindowMessages( bool blockWhileMinimized )
 {
-    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
+    GN::win::ProcessWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************
@@ -245,9 +245,9 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     {
         if( !mWindow.initInternalWindow( this, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindowHandle() ) ) return false;
+    if( !ro.fullscreen && !mWinProp.save( mWindow.GetWindowHandle() ) ) return false;
     desc.displayHandle = 0;
-    desc.windowHandle  = mWindow.getWindowHandle();
+    desc.windowHandle  = mWindow.GetWindowHandle();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,

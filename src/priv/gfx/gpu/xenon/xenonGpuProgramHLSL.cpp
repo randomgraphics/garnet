@@ -71,7 +71,7 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::HLSL9 == desc.lang );
 
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
@@ -142,7 +142,7 @@ void GN::gfx::XenonGpuProgramHLSL::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::apply() const
 {
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }
@@ -155,7 +155,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
     size_t                  count,
     bool                    /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     for( size_t i = 0; i < count; ++i )
     {
@@ -178,7 +178,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         GN_ASSERT( !d.name.Empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
-        if( getGpu().paramCheckEnabled() )
+        if( GetGpu().paramCheckEnabled() )
         {
             if( u->Size() != d.size )
             {
@@ -210,7 +210,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
     size_t                 count,
     bool                   /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     // determine effective texture count
     if( count > mParamDesc.textures.count() )

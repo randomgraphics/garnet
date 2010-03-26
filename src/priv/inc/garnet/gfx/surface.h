@@ -49,7 +49,7 @@ namespace GN { namespace gfx
         ///
         /// compose texture descriptor from image descriptor
         ///
-        bool fromImageDesc( const ImageDesc & id )
+        bool FromImageDesc( const ImageDesc & id )
         {
             width      = id.mipmaps[0].width;
             height     = id.mipmaps[0].height;
@@ -58,13 +58,13 @@ namespace GN { namespace gfx
             levels     = id.numLevels;
             format     = id.format;
             usage      = TextureUsage::DEFAULT;
-            return validate();
+            return Validate();
         }
 
         ///
-        /// validate texture descriptor
+        /// Validate texture descriptor
         ///
-        bool validate()
+        bool Validate()
         {
             // calculate maximum mipmap levels
             UInt32 nx = 0, ny = 0, nz = 0;
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
             levels = ( 0 == levels ) ? maxLevels : math::GetMin( maxLevels, levels );
 
             // check format
-            if( !format.valid() )
+            if( !format.Valid() )
             {
                 static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", format.ToString().ToRawPtr() );
@@ -106,8 +106,8 @@ namespace GN { namespace gfx
 
     struct MipmapData
     {
-        size_t             rowPitch;
-        size_t             slicePitch;
+        size_t           rowPitch;
+        size_t           slicePitch;
         DynaArray<UInt8> data;
     };
 
@@ -167,18 +167,18 @@ namespace GN { namespace gfx
         ///
         /// Get texture descriptor
         ///
-        const TextureDesc & getDesc() const { return mDesc; }
+        const TextureDesc & GetDesc() const { return mDesc; }
 
         ///
         /// get size of base map
         ///
-        const Vector3<UInt32> & getBaseSize() const { return mDesc.Size(); }
+        const Vector3<UInt32> & GetBaseSize() const { return mDesc.Size(); }
 
         ///
         /// get size of base map
         ///
         template<typename T>
-        void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
+        void GetBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
             if( sx ) *sx = (T)mDesc.width;
             if( sy ) *sy = (T)mDesc.height;
@@ -188,15 +188,15 @@ namespace GN { namespace gfx
         ///
         /// get size of specific mip level
         ///
-        const Vector3<UInt32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
+        const Vector3<UInt32> & GetMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         ///
         /// get size of specific mip level
         ///
         template<typename T>
-        void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
+        void GetMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<UInt32> & mipSize = getMipSize( level );
+            const Vector3<UInt32> & mipSize = GetMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
             if( sy ) *sy = (T)mipSize.y;
             if( sz ) *sz = (T)mipSize.z;
@@ -212,7 +212,7 @@ namespace GN { namespace gfx
         /// \param data             The data buffer that holds data that are going to be copied to texture.
         ///                         The data must be the same format as the texture.
         ///
-        virtual void updateMipmap(
+        virtual void UpdateMipmap(
             size_t              face,
             size_t              level,
             const Box<UInt32> * area,
@@ -224,32 +224,32 @@ namespace GN { namespace gfx
         ///
         /// read mipmap content.
         ///
-        virtual void readMipmap( size_t face, size_t level, MipmapData & data ) = 0;
+        virtual void ReadMipmap( size_t face, size_t level, MipmapData & data ) = 0;
 
         /// read/write the whole texture as a BLOB.
         //@{
-        virtual void   blobWrite( const void * data, size_t length ) = 0;
-        virtual size_t blobRead( void * data ) = 0;
+        virtual void   BlobWrite( const void * data, size_t length ) = 0;
+        virtual size_t BlobRead( void * data ) = 0;
         //@}
 
         ///
         /// generate content of all mipmap levels based on content in base level
         ///
-        virtual void generateMipmapPyramid() = 0;
+        virtual void GenerateMipmapPyramid() = 0;
 
         ///
         /// Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for
         /// DirectX; name of texture object(GLuint) for OpenGL.
         ///
-        virtual void * getAPIDependentData() const = 0;
+        virtual void * GetAPIDependentData() const = 0;
 
         /// \name get reference to texture name.
         ///
         /// Name field is for debug purpose only, it is not used by garnet library except logging.
         /// Set it to any value you want.
         //@{
-        const StrA & name() const { return mName; }
-        StrA & name() { return mName; }
+        const StrA & Name() const { return mName; }
+        StrA & Name() { return mName; }
         //@}
 
     protected :
@@ -258,11 +258,11 @@ namespace GN { namespace gfx
         /// Set texture descriptor. Subclass must call this function to set
         /// all texture properities to valid value.
         ///
-        bool setDesc( const TextureDesc & desc )
+        bool SetDesc( const TextureDesc & desc )
         {
             mDesc = desc;
 
-            if( !mDesc.validate() ) return false;
+            if( !mDesc.Validate() ) return false;
 
             // allocate mipmap size array
             mMipSize.Resize( mDesc.levels );
@@ -274,7 +274,7 @@ namespace GN { namespace gfx
         /// setup mip size
         ///
         template<typename T>
-        void setMipSize( size_t level, T sx, T sy, T sz )
+        void SetMipSize( size_t level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
             GN_ASSERT( level > 0 ||
@@ -287,9 +287,9 @@ namespace GN { namespace gfx
         ///
         /// setup mip size
         ///
-        void setMipSize( size_t level, const Vector3<UInt32> & s )
+        void SetMipSize( size_t level, const Vector3<UInt32> & s )
         {
-            setMipSize( level, s.x, s.y, s.z );
+            SetMipSize( level, s.x, s.y, s.z );
         }
 
     private :
@@ -315,24 +315,24 @@ namespace GN { namespace gfx
         ///
         /// get vertex buffer descriptor
         ///
-        const VtxBufDesc & getDesc() const { return mDesc; }
+        const VtxBufDesc & GetDesc() const { return mDesc; }
 
         ///
         /// update vertex buffer content
         ///
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
         ///
-        virtual void readback( DynaArray<UInt8> & data ) = 0;
+        virtual void Readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 
         ///
         /// Set buffer properties
         ///
-        void setDesc( const VtxBufDesc & desc )
+        void SetDesc( const VtxBufDesc & desc )
         {
             GN_ASSERT( desc.length > 0 );
             mDesc = desc;
@@ -361,24 +361,24 @@ namespace GN { namespace gfx
         ///
         /// Get descriptor
         ///
-        const IdxBufDesc & getDesc() const { return mDesc; }
+        const IdxBufDesc & GetDesc() const { return mDesc; }
 
         ///
         /// update index buffer content
         ///
-        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
         ///
-        virtual void readback( DynaArray<UInt8> & data ) = 0;
+        virtual void Readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 
         ///
         /// Set buffer properties
         ///
-        void setDesc( const IdxBufDesc & desc )
+        void SetDesc( const IdxBufDesc & desc )
         {
             GN_ASSERT( desc.numidx > 0 );
             mDesc = desc;

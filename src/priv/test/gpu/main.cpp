@@ -95,14 +95,14 @@ bool Init( Gpu & gpu )
     };
     rc.vtxbufs[0].vtxbuf.Attach( gpu.createVtxBuf( vbd ) );
     if( NULL == rc.vtxbufs[0].vtxbuf ) return false;
-    rc.vtxbufs[0].vtxbuf->update( 0, 0, vertices );
+    rc.vtxbufs[0].vtxbuf->Update( 0, 0, vertices );
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
     IdxBufDesc ibd = { 4, false, false };
     rc.idxbuf.Attach( gpu.createIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
-    rc.idxbuf->update( 0, 0, indices );
+    rc.idxbuf->Update( 0, 0, indices );
 
     return true;
 }
@@ -112,7 +112,7 @@ void Quit( Gpu & )
     rc.Clear();
 }
 
-void draw( Gpu & r )
+void Draw( Gpu & r )
 {
     if( blankScreen ) return;
 
@@ -127,31 +127,31 @@ void draw( Gpu & r )
         0,1,0,1,
     };
     m.Translate( -1.0f, -0.0f, 0 );
-    rc.uniforms[0]->update( m );
+    rc.uniforms[0]->Update( m );
     r.bindContext( rc );
     r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
     m.Translate( -1.0f, -1.0f, 0 );
-    rc.uniforms[0]->update( m );
+    rc.uniforms[0]->Update( m );
     r.bindContext( rc );
     r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
     m.Identity();
-    rc.uniforms[0]->update( m );
+    rc.uniforms[0]->Update( m );
     r.bindContext( rc );
-    r.draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
+    r.Draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
     m.Translate( 0.5f, -1.5f, 0 );
-    rc.uniforms[0]->update( m );
+    rc.uniforms[0]->Update( m );
     r.bindContext( rc );
     r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
@@ -166,15 +166,15 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_A ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down || in.GetKeyStatus( KeyCode::XB360_A ).down )
         {
             gogogo = false;
         }
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( gpu );
+        Draw( gpu );
         gpu.present();
 
         fps.onFrame();
@@ -189,14 +189,14 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
@@ -255,7 +255,7 @@ int main( int argc, const char * argv[] )
 
     InputInitiator ii(*r);
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

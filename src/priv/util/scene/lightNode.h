@@ -31,8 +31,8 @@ namespace GN { namespace util
         //@{
 
         LightNode       & owner() const { return mOwner; }
-        const LightDesc & getDesc() const { return mDesc; }
-        void              setDesc( const LightDesc & desc ) { mDesc = desc; }
+        const LightDesc & GetDesc() const { return mDesc; }
+        void              SetDesc( const LightDesc & desc ) { mDesc = desc; }
 
         //@}
 

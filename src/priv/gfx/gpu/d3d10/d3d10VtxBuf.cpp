@@ -16,7 +16,7 @@ bool GN::gfx::D3D10VtxBuf::Init( const VtxBufDesc & desc )
     // standard init procedure
     GN_STDCLASS_INIT( D3D10VtxBuf, (desc.length, desc.fastCpuWrite, D3D10_BIND_VERTEX_BUFFER) );
 
-    setDesc( desc );
+    SetDesc( desc );
 
     // success
     return Success();
@@ -44,7 +44,7 @@ void GN::gfx::D3D10VtxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::update(
+void GN::gfx::D3D10VtxBuf::Update(
     size_t            offset,
     size_t            length,
     const void      * data,
@@ -52,13 +52,13 @@ void GN::gfx::D3D10VtxBuf::update(
 {
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
-    D3D10Buffer::update( offset, length, data, flag );
+    D3D10Buffer::Update( offset, length, data, flag );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D10VtxBuf::Readback( DynaArray<UInt8> & data )
 {
-    D3D10Buffer::readback( data );
+    D3D10Buffer::Readback( data );
 }

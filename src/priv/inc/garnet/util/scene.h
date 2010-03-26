@@ -36,7 +36,7 @@ namespace GN { namespace util
         gfx::GpuResourceDatabase  & gdb() const;
 
         int                         id() const;
-        const char                * name() const;
+        const char                * Name() const;
 
         bool                        hasNode( const Guid & nodeType ) const;
         const NodeBase            * getNode( const Guid & nodeType ) const;
@@ -367,8 +367,8 @@ namespace GN { namespace util
 
         virtual          ~LightNode();
 
-        const LightDesc & getDesc() const;
-        void              setDesc( const LightDesc & desc );
+        const LightDesc & GetDesc() const;
+        void              SetDesc( const LightDesc & desc );
 
         /// the LightNode implementation class
         class Impl;
@@ -407,7 +407,7 @@ namespace GN { namespace util
 
         gfx::GpuResourceDatabase & gdb() const;
         Impl                     & impl() const { GN_ASSERT(mImpl); return *mImpl; }
-        void                       draw( Camera & camera );
+        void                       Draw( Camera & camera );
 
         //@}
 

@@ -151,12 +151,12 @@ void createOGL( HDC hdc, int pfdIndex )
     ::wglDeleteContext( hrc );
 }
 
-void createWindow( int pfdIndex )
+void NewWindow( int pfdIndex )
 {
-    GN::AutoObjPtr<GN::win::Window> oglWindow( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+    GN::AutoObjPtr<GN::win::Window> oglWindow( GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
     if( !oglWindow ) return;
 
-    HWND hwnd = (HWND)oglWindow->getWindowHandle();
+    HWND hwnd = (HWND)oglWindow->GetWindowHandle();
     HDC hdc;
     GN_MSW_CHECK_RETURN_VOID( hdc = ::GetDC(hwnd) );
     createOGL( hdc, pfdIndex );
@@ -165,10 +165,10 @@ void createWindow( int pfdIndex )
 
 int main()
 {
-    GN::win::Window * mainWindow = GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
+    GN::win::Window * mainWindow = GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
     if( 0 == mainWindow ) return -1;
 
-    HWND hwnd = (HWND)mainWindow->getWindowHandle();
+    HWND hwnd = (HWND)mainWindow->GetWindowHandle();
     HDC hdc;
     GN_MSW_CHECK_RETURN( hdc = ::GetDC(hwnd), -1 );
 
@@ -180,7 +180,7 @@ int main()
 
     for( int i = 1; i <= count; ++i )
     {
-        createWindow( i );
+        NewWindow( i );
     }
 
     // success
