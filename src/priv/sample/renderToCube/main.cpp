@@ -44,7 +44,7 @@ class RenderToTexture : public SampleApp
         desc.vertices[0] = vertices;
         desc.indices = indices;
 
-        return m->reset( &desc );
+        return m->Reset( &desc );
     }
 
 public:
@@ -80,7 +80,7 @@ public:
         texdesc.levels = 1;
         texdesc.format = ColorFormat::RGBA32;
         texdesc.usage = TextureUsage::COLOR_RENDER_TARGET;
-        if( !cubemap->reset( &texdesc ) ) return false;
+        if( !cubemap->Reset( &texdesc ) ) return false;
 
         // load cube texture rendering effect
         AutoRef<EffectResource> cubefx = EffectResource::loadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );

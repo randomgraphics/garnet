@@ -19,7 +19,7 @@ namespace GN
 
         //@{
     public:
-        Clock()  { reset(); }
+        Clock()  { Reset(); }
         ~Clock() {}
         //@}
 
@@ -70,7 +70,7 @@ namespace GN
         ///
         /// 重置时钟到初始状态
         ///
-        void reset();
+        void Reset();
 
         ///
         /// 恢复时钟运行

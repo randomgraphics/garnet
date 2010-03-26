@@ -26,28 +26,28 @@ namespace GN
 
         //@{
         TreeNode() : mParent(0), mPrev(0), mNext(0), mChild(0) {}
-        virtual ~TreeNode() { doDtor(); }
+        virtual ~TreeNode() { DoDtor(); }
         //@}
 
         //@{
-        TreeNode<T> * getParent() const { return mParent; }
-        TreeNode<T> * getPrevSibling() const { return mPrev; }
-        TreeNode<T> * getNextSibling() const { return mNext; }
-        TreeNode<T> * getFirstChild() const { return mChild; }
-        void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
+        TreeNode<T> * GetParent() const { return mParent; }
+        TreeNode<T> * GetPrevSibling() const { return mPrev; }
+        TreeNode<T> * GetNextSibling() const { return mNext; }
+        TreeNode<T> * GetFirstChild() const { return mChild; }
+        void SetParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { DoSetParent( newParent, newPrev ); }
         //@}
 
         //@{
-        bool isDescendant( const TreeNode<T> * p ) const { return doIsDescendant( p ); }
-        size_t calcChildrenCount() const { return doCalcChildrenCount(); }
+        bool IsDescendant( const TreeNode<T> * p ) const { return DoIsDescendant( p ); }
+        size_t CalcChildrenCount() const { return DoCalcChildrenCount(); }
         //@}
 
     private:
 
-        void doDtor()
+        void DoDtor()
         {
             // detach from parent
-            setParent( 0, 0 );
+            SetParent( 0, 0 );
             GN_ASSERT( 0 == mParent );
             GN_ASSERT( 0 == mPrev );
             GN_ASSERT( 0 == mNext );
@@ -57,7 +57,7 @@ namespace GN
             while( c1 )
             {
                 c2 = c1->mNext;
-                c1->setParent( 0, 0 );
+                c1->SetParent( 0, 0 );
                 c1 = c2;
             }
 
@@ -71,7 +71,7 @@ namespace GN
         /// 2. Cannot be this
         /// 3. Cannot be in child tree.
         ///
-        bool checkParent( const TreeNode<T> * p ) const
+        bool CheckParent( const TreeNode<T> * p ) const
         {
             if( this == p )
             {
@@ -79,7 +79,7 @@ namespace GN
                 GN_ERROR(sLogger)( "can't set itself as parent" );
                 return false;
             }
-            if( isDescendant( p ) )
+            if( IsDescendant( p ) )
             {
                 static Logger * sLogger = GetLogger("GN.base.TreeNode");
                 GN_ERROR(sLogger)( "can't descendant as parent" );
@@ -92,7 +92,7 @@ namespace GN
         ///
         /// check for previous sibling pointer.
         ///
-        bool checkPrev( const TreeNode<T> * parent, const TreeNode<T> * prev ) const
+        bool CheckPrev( const TreeNode<T> * parent, const TreeNode<T> * prev ) const
         {
             if( 0 == parent ) return true; // prev will be ignored, if parent is NULL.
 
@@ -115,17 +115,17 @@ namespace GN
             return true;
         }
 
-        void doSetParent( TreeNode<T> * newParent, TreeNode<T> * newPrev )
+        void DoSetParent( TreeNode<T> * newParent, TreeNode<T> * newPrev )
         {
             if( newParent == mParent ) return;
 
-            GN_ASSERT( checkParent( newParent ) );
-            GN_ASSERT( checkPrev( newParent, newPrev ) );
+            GN_ASSERT( CheckParent( newParent ) );
+            GN_ASSERT( CheckPrev( newParent, newPrev ) );
 
             if( newParent )
             {
                 // detach from old parent
-                setParent( 0, 0 );
+                SetParent( 0, 0 );
 
                 // attach to new parent
                 mParent = newParent;
@@ -174,22 +174,22 @@ namespace GN
              }
         }
 
-        bool doIsDescendant( const TreeNode<T> * p ) const
+        bool DoIsDescendant( const TreeNode<T> * p ) const
         {
             for( TreeNode<T> * c = mChild; c; c = c->mNext )
             {
                 if( p == c ) return true;
-                if( c->doIsDescendant( p ) ) return true;
+                if( c->DoIsDescendant( p ) ) return true;
             }
             return false;
         }
 
-        size_t doCalcChildrenCount() const
+        size_t DoCalcChildrenCount() const
         {
             size_t n = 0;
             for( TreeNode<T> * c = mChild; c; c = c->mNext )
             {
-                n += c->doCalcChildrenCount() + 1;
+                n += c->DoCalcChildrenCount() + 1;
             }
             return n;
         }
@@ -216,20 +216,20 @@ namespace GN
 
         //@{
 
-        void reset( T * root )
+        void Reset( T * root )
         {
             GN_ASSERT( root );
             mFirstNode = root;
         }
 
-        T * first() const { return mFirstNode; }
+        T * First() const { return mFirstNode; }
 
-        T * next( T * current, int * level = 0 ) const
+        T * Next( T * current, int * level = 0 ) const
         {
             GN_ASSERT( current );
 
             // if( has child ) next is child
-            T * n = SafeCastPtr<T>( current->getFirstChild() );
+            T * n = SafeCastPtr<T>( current->GetFirstChild() );
             if( n )
             {
                 if( level ) ++(*level);
@@ -237,15 +237,15 @@ namespace GN
             }
 
             // if( has brother ) next is brother
-            n = SafeCastPtr<T>( current->getNextSibling() );
+            n = SafeCastPtr<T>( current->GetNextSibling() );
             if( n ) return n;
 
             // check parent
-            T * p = SafeCastPtr<T>( current->getParent() );
+            T * p = SafeCastPtr<T>( current->GetParent() );
             while( p )
             {
                 // if( parent has next ) next is parent's next
-                n = SafeCastPtr<T>( p->getNextSibling() );
+                n = SafeCastPtr<T>( p->GetNextSibling() );
                 if( n )
                 {
                     if( level ) --(*level);
@@ -253,7 +253,7 @@ namespace GN
                 }
 
                 // loop one level up
-                p = SafeCastPtr<T>( p->getParent() );
+                p = SafeCastPtr<T>( p->GetParent() );
             }
 
             // if( no parent ) done.
@@ -280,31 +280,31 @@ namespace GN
         {
             GN_ASSERT( root );
             T * c;
-            while( NULL != ( c = SafeCastPtr<T>( root->getFirstChild() ) ) ) root = c;
+            while( NULL != ( c = SafeCastPtr<T>( root->GetFirstChild() ) ) ) root = c;
             mFirstNode = root;
             GN_ASSERT( root );
         }
 
         //@{
 
-        T * first() const { return mFirstNode; }
+        T * First() const { return mFirstNode; }
 
-        T * next( T * current ) const
+        T * Next( T * current ) const
         {
             GN_ASSERT( current );
 
-            T * n = SafeCastPtr<T>( current->getNextSibling() );
+            T * n = SafeCastPtr<T>( current->GetNextSibling() );
 
             if( n )
             {
                 T * c;
-                while( NULL != ( c = SafeCastPtr<T>( n->getFirstChild() ) ) ) n = c;
+                while( NULL != ( c = SafeCastPtr<T>( n->GetFirstChild() ) ) ) n = c;
                 GN_ASSERT( n );
                 return n;
             }
             else
             {
-                return SafeCastPtr<T>( current->getParent() );
+                return SafeCastPtr<T>( current->GetParent() );
             }
         }
 

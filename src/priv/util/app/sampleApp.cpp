@@ -129,7 +129,7 @@ GN::util::SampleApp::SampleApp()
     , mShowHelp(false)
 {
     EnableCRTMemoryCheck();
-    mFps.reset();
+    mFps.Reset();
 }
 
 //

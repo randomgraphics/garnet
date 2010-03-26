@@ -140,7 +140,7 @@ namespace GN { namespace gfx
 
         /// Texture resource properties
         //@{
-        bool                     reset( const TextureDesc * desc );
+        bool                     Reset( const TextureDesc * desc );
         void                     setTexture( const AutoRef<Texture> & );
         const AutoRef<Texture> & getTexture() const { return mTexture; }
         //@}
@@ -178,7 +178,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     reset( size_t length, const void * initialData );
+        bool                     Reset( size_t length, const void * initialData );
         void                     setUniform( const AutoRef<Uniform> & );
         const AutoRef<Uniform> & getUniform() const { return mUniform; }
         //@}
@@ -285,7 +285,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     reset( const MeshResourceDesc * desc );
+        bool                     Reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & getDesc() const;
         void                     applyToContext( GpuContext & context ) const;
         void                     CalculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
@@ -571,7 +571,7 @@ namespace GN { namespace gfx
         /// public properties
         //@{
 
-        bool                          reset( const EffectResourceDesc * desc );
+        bool                          Reset( const EffectResourceDesc * desc );
 
         size_t                        getNumPasses() const;
 
@@ -725,7 +725,7 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     reset( const ModelResourceDesc * desc );
+        bool                     Reset( const ModelResourceDesc * desc );
 
         AutoRef<ModelResource>   makeClone( const char * nameOfTheClone = NULL ) const;
 

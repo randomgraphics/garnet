@@ -118,7 +118,7 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
     AutoRef<MeshResource> mesh( gdb.createResource<MeshResource>(NULL) );
-    if( !mesh || !mesh->reset(&md) ) return 0;
+    if( !mesh || !mesh->Reset(&md) ) return 0;
 
     return mesh.Detach();
 }
@@ -280,7 +280,7 @@ createEffect( GpuResourceDatabase & gdb )
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);
-    if( !e || !e->reset( &ed ) ) return NULL;
+    if( !e || !e->Reset( &ed ) ) return NULL;
 
     return e.Detach();
 }

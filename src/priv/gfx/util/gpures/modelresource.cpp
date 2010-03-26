@@ -476,7 +476,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     }
 
     // done
-    modelNode->setParent( &root );
+    modelNode->SetParent( &root );
     return modelNode;
 }
 
@@ -679,7 +679,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
+bool GN::gfx::ModelResource::Impl::Reset( const ModelResourceDesc * desc )
 {
     Clear();
 
@@ -1110,7 +1110,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             {
                 StrA texname = StringFormat( "%s.texture.%s", modelName(), tp.parameterName.ToRawPtr() );
                 texres = db.findOrCreateResource<TextureResource>( texname );
-                if( texres ) texres->reset( &td->desc );
+                if( texres ) texres->Reset( &td->desc );
             }
         }
         else
@@ -1166,7 +1166,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
                 }
 
                 unires = db.findOrCreateResource<UniformResource>( uniname );
-                if( unires ) unires->reset( ud->size, initialValue );
+                if( unires ) unires->Reset( ud->size, initialValue );
             }
         }
         else
@@ -1344,7 +1344,7 @@ GN::gfx::ModelResource::loadFromFile(
     if( !loadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
 
     m = db.createResource<ModelResource>( abspath );
-    if( !m || !m->reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;
+    if( !m || !m->Reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;
 
     return m;
 }
@@ -1352,7 +1352,7 @@ GN::gfx::ModelResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool                        GN::gfx::ModelResource::reset( const ModelResourceDesc * desc ) { return mImpl->reset( desc ); }
+bool                        GN::gfx::ModelResource::Reset( const ModelResourceDesc * desc ) { return mImpl->Reset( desc ); }
 AutoRef<ModelResource>      GN::gfx::ModelResource::makeClone( const char * nameOfTheClone ) const { return mImpl->makeClone( nameOfTheClone ); }
 void                        GN::gfx::ModelResource::setTextureResource( const char * effectParameterName, GpuResource * texture ) { mImpl->setTextureResource( effectParameterName, texture ); }
 AutoRef<TextureResource>    GN::gfx::ModelResource::getTextureResource( const char * effectParameterName ) const { return mImpl->getTextureResource( effectParameterName ); }

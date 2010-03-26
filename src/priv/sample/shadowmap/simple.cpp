@@ -197,7 +197,7 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
     if( 0 == eff ) return false;
 
     TreeTraversePreOrder<Actor> ttpre(mShadowProjectors);
-    for( Actor * a = ttpre.first(); a; a = ttpre.next( a ) )
+    for( Actor * a = ttpre.First(); a; a = ttpre.Next( a ) )
     {
         for( size_t i = 0; i < a->getNumDrawables(); ++i )
         {
@@ -220,8 +220,8 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
     if( 0 == eff ) return false;
 
     // prepare shadow receivers
-    ttpre.reset( mShadowReceivers );
-    for( Actor * a = ttpre.first(); a; a = ttpre.next( a ) )
+    ttpre.Reset( mShadowReceivers );
+    for( Actor * a = ttpre.First(); a; a = ttpre.Next( a ) )
     {
         for( size_t i = 0; i < a->getNumDrawables(); ++i )
         {

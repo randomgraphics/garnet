@@ -55,7 +55,7 @@ namespace GN { namespace util
         /// 重置后，插值器将在 time 时间内，完成从 from 到 to 的线性插值过程。
         /// （调用 update() 更新插值器的状态）
         ///
-        void reset( const T & from, const T & to, float time )
+        void Reset( const T & from, const T & to, float time )
         {
             GN_ASSERT( .0f != time );
             mDelta = from * 0.0f;

@@ -64,16 +64,16 @@ namespace GN
 
         /// \name method required by traversal class
         //@{
-        XmlNode * getParent() const { return parent; }
-        XmlNode * getPrevSibling() const { return prev; }
-        XmlNode * getNextSibling() const { return next; }
-        XmlNode * getFirstChild() const { return child; }
+        XmlNode * GetParent() const { return parent; }
+        XmlNode * GetPrevSibling() const { return prev; }
+        XmlNode * GetNextSibling() const { return next; }
+        XmlNode * GetFirstChild() const { return child; }
         //@}
 
         ///
         /// Change node parent
         ///
-        void setParent( XmlNode * parent, XmlNode * prev = NULL );
+        void SetParent( XmlNode * parent, XmlNode * prev = NULL );
 
         ///
         /// return location of this node in the document (unimplemented)

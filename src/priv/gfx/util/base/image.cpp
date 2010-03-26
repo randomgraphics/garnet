@@ -124,7 +124,7 @@ public:
     ///
     /// reset image reader
     ///
-    bool reset( File & i_file )
+    bool Reset( File & i_file )
     {
         GN_GUARD;
 
@@ -261,10 +261,10 @@ GN::gfx::ImageReader::~ImageReader() { delete mImpl; }
 //
 // forward call to Impl
 // -----------------------------------------------------------------------------
-bool GN::gfx::ImageReader::reset( File & i_file )
+bool GN::gfx::ImageReader::Reset( File & i_file )
 {
     GN_GUARD;
-    return mImpl->reset( i_file );
+    return mImpl->Reset( i_file );
     GN_UNGUARD;
 }
 //

@@ -822,7 +822,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     if( !e ) return NULL;
 
     // attach the entity to parent node or root node
-    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
+    e->getNode<SpatialNode>()->SetParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
 
     // calculate bounding sphere
     const Boxf & bbox = entityDesc.spatial.bbox;
@@ -868,12 +868,12 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
 
                 // create new mesh
                 mesh = world.gdb().createResource<MeshResource>( pModelDesc->mesh );
-                if( !mesh || !mesh->reset( pMeshDesc ) ) continue;
+                if( !mesh || !mesh->Reset( pMeshDesc ) ) continue;
             }
         }
 
         AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
-        if( !model->reset( pModelDesc ) ) continue;
+        if( !model->Reset( pModelDesc ) ) continue;
 
         e->getNode<VisualNode>()->addModel( model );
     }

@@ -38,7 +38,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool                          reset( const EffectResourceDesc * desc );
+        bool                          Reset( const EffectResourceDesc * desc );
 
         size_t                        getNumPasses() const { return mPasses.Size(); }
 

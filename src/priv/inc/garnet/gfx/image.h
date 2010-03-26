@@ -199,7 +199,7 @@ namespace GN { namespace gfx
     public:
         ImageReader();                  ///< constructor
         ~ImageReader();                 ///< destructor
-        bool reset( File & );           ///< reset image reader
+        bool Reset( File & );           ///< reset image reader
         bool readHeader( ImageDesc & ); ///< read image header
         bool readImage( void * data );  ///< read image content
 
@@ -218,7 +218,7 @@ namespace GN { namespace gfx
         if( NULL == fp ) return false;
 
         ImageReader ir;
-        if( !ir.reset( *fp ) ) return false;
+        if( !ir.Reset( *fp ) ) return false;
 
         if( !ir.readHeader( desc ) ) return false;
 

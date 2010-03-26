@@ -199,9 +199,9 @@ struct AseFile
     }
 
     ///
-    /// get next token
+    /// get Next token
     ///
-    const char * next( const char * expectedValue = 0, ScanOption option = 0 )
+    const char * Next( const char * expectedValue = 0, ScanOption option = 0 )
     {
         GN_ASSERT( str );
 
@@ -259,7 +259,7 @@ struct AseFile
 
             if( '\n' == *str ) ++line;
 
-            if( 0 != *str ) *str = 0, ++str; // point to start of next token
+            if( 0 != *str ) *str = 0, ++str; // point to start of Next token
 
             if( expectedValue && 0 != StringCompare( expectedValue, r ) )
             {
@@ -285,7 +285,7 @@ struct AseFile
         int level = 0;
         for(;;)
         {
-            token = next();
+            token = Next();
 
             if( 0 == StringCompare( "{", token ) ) ++level;
             else if( 0 == StringCompare( "}", token ) ) --level;
@@ -309,7 +309,7 @@ struct AseFile
     }
 
     //
-    // True, if next token is a node (begin with '*')
+    // True, if Next token is a node (begin with '*')
     // -----------------------------------------------------------------------------
     bool nextIsNode()
     {
@@ -325,27 +325,27 @@ struct AseFile
         do {
             skipWhiteSpaces();
             if( '{' == *str ) return skipUntil( "}", option );
-            if( '*' == *str || '}' == *str ) return true; // found next node
-        } while( next( 0, option ) );
+            if( '*' == *str || '}' == *str ) return true; // found Next node
+        } while( Next( 0, option ) );
         return false;
     }
 
     //
     //
     // -----------------------------------------------------------------------------
-    bool readBlockStart( ScanOption option = 0 ) { return 0 != next( "{", option ); }
+    bool readBlockStart( ScanOption option = 0 ) { return 0 != Next( "{", option ); }
 
     //
     //
     // -----------------------------------------------------------------------------
-    bool readBlockEnd( ScanOption option = 0 ) { return 0 != next( "}", option ); }
+    bool readBlockEnd( ScanOption option = 0 ) { return 0 != Next( "}", option ); }
 
     //
     //
     // -----------------------------------------------------------------------------
     const char * readNode( ScanOption option = 0  )
     {
-        const char * token = next( 0, option );
+        const char * token = Next( 0, option );
         if( !token ) return false;
         GN_ASSERT( !IsStringEmpty( token ) );
 
@@ -364,7 +364,7 @@ struct AseFile
     // -----------------------------------------------------------------------------
     const char * readString( ScanOption option = 0  )
     {
-        char * token = const_cast<char*>( next( 0, option ) );
+        char * token = const_cast<char*>( Next( 0, option ) );
         if( !token ) return false;
         GN_ASSERT( !IsStringEmpty( token ) );
 
@@ -411,7 +411,7 @@ struct AseFile
     // -----------------------------------------------------------------------------
     bool readSymbol( StrA & result, ScanOption option = 0  )
     {
-        const char * s = next( 0, option );
+        const char * s = Next( 0, option );
         if( 0 == s ) return false;
         if( ( 'a' <= *s && *s <= 'z' ) || ( 'A' <= *s && *s <= 'Z' ) || '_' == *s )
         {
@@ -430,7 +430,7 @@ struct AseFile
     // -----------------------------------------------------------------------------
     bool readFloat( float & result, ScanOption option = 0  )
     {
-        const char * token = next( 0, option );
+        const char * token = Next( 0, option );
 
         if( String2Float( result, token ) ) return true;
         else if( 0 == StringCompare( "1.#QNB", token ) ) { result = 1.0f; return true; }
@@ -448,7 +448,7 @@ struct AseFile
     template<typename INT_TYPE>
     bool readInt( INT_TYPE & result, ScanOption option = 0  )
     {
-        const char * token = next( 0, option );
+        const char * token = Next( 0, option );
         if( 0 == token ) return false;
 
         if( 0 == String2Integer<INT_TYPE>( result, token ) )
@@ -486,8 +486,8 @@ struct AseFile
     bool readIndexedVector3Node( const char * nodename, UInt32 index, Vector3f & result, ScanOption option = 0  )
     {
         GN_ASSERT( !IsStringEmpty(nodename) );
-        return next( nodename, option )
-            && next( StringFormat( "%d", index ).ToRawPtr(), option )
+        return Next( nodename, option )
+            && Next( StringFormat( "%d", index ).ToRawPtr(), option )
             && readVector3( result, option );
     }
 };
@@ -503,7 +503,7 @@ static bool sReadMap( AseMap & m, AseFile & ase )
 
     const char * token;
 
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         if( 0 == StringCompare( token, "*MAP_NAME" ) )
         {
@@ -612,7 +612,7 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
 
     const char * token;
 
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         GN_ASSERT( !IsStringEmpty( token ) );
 
@@ -698,8 +698,8 @@ static bool sReadMaterial( AseMaterialInternal & m, AseFile & ase )
             // read sub-materials one by one
             for( UInt32 i = 0; i < count; ++i )
             {
-                if( !ase.next( "*SUBMATERIAL" ) ) return false;
-                if( !ase.next( StringFormat("%d",i).ToRawPtr() ) ) return false;
+                if( !ase.Next( "*SUBMATERIAL" ) ) return false;
+                if( !ase.Next( StringFormat("%d",i).ToRawPtr() ) ) return false;
                 if( !sReadMaterial( m.submaterials[i], ase ) ) return false;
             }
         }
@@ -737,7 +737,7 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     if( !ase.readBlockStart() ) return false;
 
     // read material count
-    if( !ase.next( "*MATERIAL_COUNT" ) ) return false;
+    if( !ase.Next( "*MATERIAL_COUNT" ) ) return false;
     UInt32 matcount;
     if( !ase.readInt( matcount ) ) return false;
 
@@ -746,8 +746,8 @@ static bool sReadMaterials( AseSceneInternal & scene, AseFile & ase )
     // read materials one by one
     for( UInt32 i = 0; i < matcount; ++i )
     {
-        if( !ase.next( "*MATERIAL" ) ) return false;
-        if( !ase.next( StringFormat("%d",i).ToRawPtr() ) ) return false;
+        if( !ase.Next( "*MATERIAL" ) ) return false;
+        if( !ase.Next( StringFormat("%d",i).ToRawPtr() ) ) return false;
         if( !sReadMaterial( scene.materials[i], ase ) ) return false;
     }
 
@@ -766,17 +766,17 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     if( !ase.readBlockStart() ) return false;
 
-    if( !ase.next( "*TIMEVALUE" ) || !ase.readInt( m.timevalue ) ) return false;
+    if( !ase.Next( "*TIMEVALUE" ) || !ase.readInt( m.timevalue ) ) return false;
 
     UInt32 numvert, numface;
-    if( !ase.next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
-    if( !ase.next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
+    if( !ase.Next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
+    if( !ase.Next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
 
     m.vertices.Resize( numvert );
     m.faces.Resize( numface );
 
     // read vertices
-    if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
+    if( !ase.Next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
     for( UInt32 i = 0; i < numvert; ++i )
     {
         // Note: vertex position in ASE file is post-transformed.
@@ -795,20 +795,20 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
     }
 
     // read faces
-    if( !ase.next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
+    if( !ase.Next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
     for( UInt32 i = 0; i < numface; ++i )
     {
         AseFace & f = m.faces[i];
         int dummy;
-        if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( StringFormat( "%d:", i ).ToRawPtr() ) ) return false;
-        if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
-        if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
-        if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
-        if( !ase.next( "AB:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "BC:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "CA:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "*MESH_SMOOTHING" ) ) return false;
+        if( !ase.Next( "*MESH_FACE" ) ) return false;
+        if( !ase.Next( StringFormat( "%d:", i ).ToRawPtr() ) ) return false;
+        if( !ase.Next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
+        if( !ase.Next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
+        if( !ase.Next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
+        if( !ase.Next( "AB:" ) || !ase.readInt( dummy ) ) return false;
+        if( !ase.Next( "BC:" ) || !ase.readInt( dummy ) ) return false;
+        if( !ase.Next( "CA:" ) || !ase.readInt( dummy ) ) return false;
+        if( !ase.Next( "*MESH_SMOOTHING" ) ) return false;
         if( !ase.nextIsNode() )
         {
             // then next must be smooth group ID
@@ -818,18 +818,18 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         {
             f.smooth = 0;
         }
-        if( !ase.next( "*MESH_MTLID" ) || !ase.readInt( f.submat ) ) return false;
+        if( !ase.Next( "*MESH_MTLID" ) || !ase.readInt( f.submat ) ) return false;
     }
     if( !ase.readBlockEnd() ) return false;
 
     // read texcoords
     UInt numtexcoord;
-    if( !ase.next( "*MESH_NUMTVERTEX" ) || !ase.readInt( numtexcoord ) ) return false;
+    if( !ase.Next( "*MESH_NUMTVERTEX" ) || !ase.readInt( numtexcoord ) ) return false;
     if( numtexcoord > 0 )
     {
         DynaArray<Vector3f> texcoords( numtexcoord );
 
-        if( !ase.next( "*MESH_TVERTLIST" ) || !ase.readBlockStart() ) return false;
+        if( !ase.Next( "*MESH_TVERTLIST" ) || !ase.readBlockStart() ) return false;
         for( UInt32 i = 0; i < numtexcoord; ++i )
         {
             if( !ase.readIndexedVector3Node( "*MESH_TVERT", i, texcoords[i] ) ) return false;
@@ -843,14 +843,14 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
         if( !ase.readBlockEnd() ) return false;
 
         // read tface list
-        if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( StringFormat( "%d", numface ).ToRawPtr() ) ) return false;
-        if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
+        if( !ase.Next( "*MESH_NUMTVFACES" ) || !ase.Next( StringFormat( "%d", numface ).ToRawPtr() ) ) return false;
+        if( !ase.Next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
         for( UInt32 i = 0; i < numface; ++i )
         {
             AseFace & f = m.faces[i];
 
-            if( !ase.next( "*MESH_TFACE" ) ) return false;
-            if( !ase.next( StringFormat( "%d", i ).ToRawPtr() ) ) return false;
+            if( !ase.Next( "*MESH_TFACE" ) ) return false;
+            if( !ase.Next( StringFormat( "%d", i ).ToRawPtr() ) ) return false;
 
             // for each vertex in the face
             for( UInt32 i = 0; i < 3; ++i )
@@ -889,15 +889,15 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
     // skip vertex colors
     UInt numcolor;
-    if( !ase.next( "*MESH_NUMCVERTEX" ) || !ase.readInt( numcolor ) ) return false;
+    if( !ase.Next( "*MESH_NUMCVERTEX" ) || !ase.readInt( numcolor ) ) return false;
     if( numcolor > 0 )
     {
-        if( !ase.next( "*MESH_CVERTLIST" ) ) return false;
+        if( !ase.Next( "*MESH_CVERTLIST" ) ) return false;
         if( !ase.skipNode() ) return false;
     }
 
     // read normals
-    if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
+    if( !ase.Next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
     Matrix44f it = Matrix44f::sInvTrans( transform ); // use to transform normal
     for( UInt32 i = 0; i < numface; ++i )
     {
@@ -906,7 +906,7 @@ static bool sReadMesh( AseMeshInternal & m, const Matrix44f & transform, AseFile
 
         for( UInt32 i = 0; i < 3; ++i )
         {
-            if( !ase.next( "*MESH_VERTEXNORMAL" ) ) return false;
+            if( !ase.Next( "*MESH_VERTEXNORMAL" ) ) return false;
 
             UInt32 vi;
             if( !ase.readInt( vi ) ) return false;
@@ -939,7 +939,7 @@ static bool sReadNode( AseNode & n, AseFile & ase )
     n.transform.Identity();
 
     const char * token;
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         if( 0 ) {}
         else if( 0 == StringCompare( "*TM_ROW0", token ) )
@@ -1024,7 +1024,7 @@ static bool sReadGeomObject( AseSceneInternal & scene, AseFile & ase )
     bool hasMaterial = false;
 
     const char * token;
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         if( 0 == StringCompare( token, "*NODE_NAME" ) )
         {
@@ -1145,7 +1145,7 @@ static bool sReadGroup( AseSceneInternal & scene, AseFile & ase )
 
     const char * token;
 
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         if( 0 ) {}
         //else if( 0 == StringCompare( token, "*SCENE" ) )
@@ -1194,7 +1194,7 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
     if( !ase.open( file ) ) return false;
 
     // read ASE version
-    const char * token = ase.next( "*3DSMAX_ASCIIEXPORT" );
+    const char * token = ase.Next( "*3DSMAX_ASCIIEXPORT" );
     if( !token ) return false;
     if( 200 != ase.readOptionalInt( 0 ) )
     {
@@ -1202,7 +1202,7 @@ static bool sReadAse( AseSceneInternal & scene, File & file )
         return false;
     }
 
-    while( 0 != ( token = ase.next() ) )
+    while( 0 != ( token = ase.Next() ) )
     {
         if( 0 ) {}
         //else if( 0 == StringCompare( token, "*SCENE" ) )
@@ -1285,20 +1285,20 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
             p = &scene.root;
         }
 
-        o.setParent( p, 0 );
+        o.SetParent( p, 0 );
     }
 
     // make sure all objects are linked into the tree.
     GN_ASSERT_EX(
-        scene.root.calcChildrenCount() == scene.objects.Size(),
+        scene.root.CalcChildrenCount() == scene.objects.Size(),
         StringFormat( "numchildren=%d, numobjects=%d",
-            scene.root.calcChildrenCount(), scene.objects.Size() ).ToRawPtr() );
+            scene.root.CalcChildrenCount(), scene.objects.Size() ).ToRawPtr() );
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
 
-    AseGeoObject * n = ttpost.first();
-    GN_ASSERT( 0 == n->getFirstChild() );
+    AseGeoObject * n = ttpost.First();
+    GN_ASSERT( 0 == n->GetFirstChild() );
 
     while( n )
     {
@@ -1307,21 +1307,21 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         n->node.treebbox = n->mesh.bbox;
 
         // then merge with all childrens' bbox
-        AseGeoObject * c = SafeCastPtr<AseGeoObject>( n->getFirstChild() );
+        AseGeoObject * c = SafeCastPtr<AseGeoObject>( n->GetFirstChild() );
         while( c )
         {
             Boxf::sGetUnion( n->node.treebbox, n->node.treebbox, c->node.treebbox );
 
-            c = SafeCastPtr<AseGeoObject>( c->getNextSibling() );
+            c = SafeCastPtr<AseGeoObject>( c->GetNextSibling() );
         }
 
         // next node
-        n = ttpost.next( n );
+        n = ttpost.Next( n );
     }
 
     // print node tree
     TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
-    n = ttpre.first();
+    n = ttpre.First();
     int level = 0;
     while( n )
     {
@@ -1341,7 +1341,7 @@ static bool sBuildNodeTree( AseSceneInternal & scene )
         GN_VERBOSE(sLogger)( s.ToRawPtr() );
 
         // next node
-        n = ttpre.next( n, &level );
+        n = ttpre.Next( n, &level );
     }
 
     // Output an empty line

@@ -187,7 +187,7 @@ sCheckShaderUniforms(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResource::Impl::reset( const EffectResourceDesc * desc )
+bool GN::gfx::EffectResource::Impl::Reset( const EffectResourceDesc * desc )
 {
     Clear();
 
@@ -690,7 +690,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
 
     // create new resource
     resource = db.createResource<EffectResource>( filename );
-    if( 0 == resource || !resource->reset( &desc ) ) return AutoRef<EffectResource>::NULLREF;
+    if( 0 == resource || !resource->Reset( &desc ) ) return AutoRef<EffectResource>::NULLREF;
 
     // done
     return resource;
@@ -699,7 +699,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResource::reset( const EffectResourceDesc * desc ) { return mImpl->reset( desc ); }
+bool GN::gfx::EffectResource::Reset( const EffectResourceDesc * desc ) { return mImpl->Reset( desc ); }
 
 size_t GN::gfx::EffectResource::getNumPasses() const { return mImpl->getNumPasses(); }
 

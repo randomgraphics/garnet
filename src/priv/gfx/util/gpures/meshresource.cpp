@@ -46,7 +46,7 @@ bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResource::Impl::reset( const MeshResourceDesc * desc )
+bool GN::gfx::MeshResource::Impl::Reset( const MeshResourceDesc * desc )
 {
     Clear();
 
@@ -316,7 +316,7 @@ GN::gfx::MeshResource::loadFromFile(
     if( !blob ) return AutoRef<MeshResource>::NULLREF;
 
     m = db.createResource<MeshResource>( abspath );
-    if( !m || !m->reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
+    if( !m || !m->Reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
 
     return m;
 }
@@ -324,9 +324,9 @@ GN::gfx::MeshResource::loadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResource::reset( const MeshResourceDesc * desc )
+bool GN::gfx::MeshResource::Reset( const MeshResourceDesc * desc )
 {
-    return mImpl->reset( desc );
+    return mImpl->Reset( desc );
 }
 
 
