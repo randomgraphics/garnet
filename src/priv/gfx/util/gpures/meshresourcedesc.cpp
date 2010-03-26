@@ -17,10 +17,22 @@ enum MeshFileType
     MESH_FILE_BIN,
 };
 
-struct MeshBinaryFileHeader
+struct MeshBinaryHeaderV1
+{
+    char   tag[2]; ///< must be "GN";
+    UInt16 endian; ///< 0x0201 means file is in same endian as the host OS.
+    UInt32 padding[7];
+};
+GN_CASSERT( 32 == sizeof(MeshBinaryHeaderV1) );
+
+static const char MESH_BINARY_TAG_V1[] = "GN";
+
+static const UInt16 MESH_BINARY_ENDIAN_TAG_V1 = 0x0201;
+
+struct MeshBinaryFileHeaderV2
 {
     char         tag[16];      ///< must be "GARNET MESH BIN\0"
-    UInt32       endian;       ///< endian type: 0x04030201 means little endian, else, big endian
+    UInt32       endian;       ///< endian tag: 0x01020304 means file is in the same endian as the host OS.
     UInt32       version;      ///< mesh binary version must be 0x00010000
     UInt32       prim;         ///< primitive type
     UInt32       numvtx;       ///< number of vertices
@@ -37,8 +49,10 @@ struct MeshBinaryFileHeader
     UInt32       bytes;        ///< total binary size in bytes, not including this header.
 };
 
-static const char MESH_BINARY_TAG[] = "GARNET MESH BIN";
-GN_CASSERT( sizeof(MESH_BINARY_TAG) == 16 );
+static const char MESH_BINARY_TAG_V2[] = "GARNET MESH BIN";
+GN_CASSERT( sizeof(MESH_BINARY_TAG_V2) == 16 );
+
+static const UInt32 MESH_BINARY_ENDIAN_TAG_V2 = 0x01020304;
 
 struct MeshVertexPosition
 {
@@ -49,6 +63,94 @@ struct MeshVertexPosition
     const float * z;
     size_t        strideZ;
 };
+
+//
+//
+// -----------------------------------------------------------------------------
+void sSwapVertexEndianInplace(
+    void *               buffer,
+    size_t               bufferSize, // buffer size in bytes
+    const VertexFormat & format,
+    size_t               stream,
+    size_t               stride )
+{
+    if( stride == 0 ) stride = format.CalcStreamStride( stream );
+
+    UInt8 * vertex = (UInt8*)buffer;
+
+    size_t count = bufferSize / stride;
+
+    for( size_t i = 0; i < count; ++i, vertex += stride )
+    {
+        for( size_t i = 0; i < format.numElements; ++i )
+        {
+            const VertexElement & e = format.elements[i];
+
+            UInt8 * p = vertex + e.offset;
+
+            switch( e.format.layout )
+            {
+                // 16 bits
+                case ColorFormat::LAYOUT_4_4_4_4 :
+                case ColorFormat::LAYOUT_5_5_5_1 :
+                case ColorFormat::LAYOUT_5_6_5 :
+                case ColorFormat::LAYOUT_16 :
+                    SwapEndian8In16( p, p, 1 );
+                    break;
+
+                case ColorFormat::LAYOUT_16_16 :
+                    SwapEndian8In16( p, p, 2 );
+                    break;
+
+                case ColorFormat::LAYOUT_16_16_16_16 :
+                    SwapEndian8In16( p, p, 4 );
+                    break;
+
+                // 32 bits
+                case ColorFormat::LAYOUT_10_11_11 :
+                case ColorFormat::LAYOUT_11_11_10 :
+                case ColorFormat::LAYOUT_10_10_10_2 :
+                case ColorFormat::LAYOUT_32 :
+                    SwapEndian8In32( p, p, 1 );
+                    break;
+
+                case ColorFormat::LAYOUT_32_32 :
+                    SwapEndian8In32( p, p, 2 );
+                    break;
+
+                case ColorFormat::LAYOUT_32_32_32 :
+                    SwapEndian8In32( p, p, 3 );
+                    break;
+
+                case ColorFormat::LAYOUT_32_32_32_32 :
+                    SwapEndian8In32( p, p, 4 );
+                    break;
+
+                // other cases
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void sSwapIndexEndianInplace(
+    void *               buffer,
+    size_t               bufferSize, // buffer size in bytes
+    bool                 idx32 )
+{
+    if( idx32 )
+    {
+        SwapEndian8In32( buffer, buffer, bufferSize / 4 );
+    }
+    else
+    {
+        SwapEndian8In16( buffer, buffer, bufferSize / 2 );
+    }
+}
 
 //
 //
@@ -139,7 +241,7 @@ MeshFileType sDetermineMeshFileType( File & fp )
         return MESH_FILE_UNKNOWN;
     }
 
-    if( 0 == memcmp( buf, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
+    if( 0 == memcmp( buf, MESH_BINARY_TAG_V2, sizeof(MESH_BINARY_TAG_V2) ) )
     {
         return MESH_FILE_BIN;
     }
@@ -159,7 +261,7 @@ MeshFileType sDetermineMeshFileType( File & fp )
 // -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 {
-    MeshBinaryFileHeader header;
+    MeshBinaryFileHeaderV2 header;
 
     if( !fp.read( &header, sizeof(header), NULL ) )
     {
@@ -168,12 +270,12 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
     }
 
     // verify header
-    if( 0 != memcmp( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) ) )
+    if( 0 != memcmp( header.tag, MESH_BINARY_TAG_V2, sizeof(MESH_BINARY_TAG_V2) ) )
     {
         GN_ERROR(sLogger)( "Unrecognized binary tag" );
         return AutoRef<Blob>::NULLREF;
     }
-    if( 0x04030201 != header.endian )
+    if( MESH_BINARY_ENDIAN_TAG_V2 != header.endian )
     {
         GN_ERROR(sLogger)( "Unsupported endian." );
         return AutoRef<Blob>::NULLREF;
@@ -321,15 +423,20 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadBinaryFile( UInt8 * dst, size_t length, const char * filename )
+static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t length, const char * filename )
 {
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
 
-    // skip binary file header
-    if( !fp->seek( 32, FileSeek::SET ) )
+    if( !fp->read( &header, sizeof(header), NULL ) )
     {
-        GN_ERROR(sLogger)( "Fail to by-pass garnet binary file header: %s", filename );
+        GN_ERROR(sLogger)( "Fail to read garnet binary file header: %s", filename );
+        return false;
+    }
+
+    if( 0 != memcmp( header.tag, MESH_BINARY_TAG_V1, sizeof(header.tag) ) )
+    {
+        GN_ERROR(sLogger)( "Invalid garnet V1 binary file: %s", filename );
         return false;
     }
 
@@ -513,9 +620,15 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             UInt8 * vb = meshData.SubRange( offset, vbsize );
 
-            if( !sReadBinaryFile( vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
+            MeshBinaryHeaderV1 header;
+            if( !sReadV1BinaryFile( header, vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
+            }
+
+            if( header.endian != MESH_BINARY_ENDIAN_TAG_V1 )
+            {
+                sSwapVertexEndianInplace( vb, vbsize, desc.vtxfmt, stream, desc.strides[stream] );
             }
 
             desc.vertices[stream] = vb;
@@ -531,9 +644,15 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             UInt8 * ib = meshData.SubRange( offset, ibsize );
 
-            if( !sReadBinaryFile( ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
+            MeshBinaryHeaderV1 header;
+            if( !sReadV1BinaryFile( header, ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
+            }
+
+            if( header.endian != MESH_BINARY_ENDIAN_TAG_V1 )
+            {
+                sSwapIndexEndianInplace( ib, ibsize, desc.idx32 );
             }
 
             desc.indices = ib;
@@ -662,9 +781,9 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     VertexFormatProperties vfp;
     if( !vfp.analyze( vtxfmt ) ) return false;
 
-    MeshBinaryFileHeader header;
-    memcpy( header.tag, MESH_BINARY_TAG, sizeof(MESH_BINARY_TAG) );
-    header.endian = 0x04030201;
+    MeshBinaryFileHeaderV2 header;
+    memcpy( header.tag, MESH_BINARY_TAG_V2, sizeof(MESH_BINARY_TAG_V2) );
+    header.endian = MESH_BINARY_ENDIAN_TAG_V2;
     header.version = 0x00010000;
     header.prim   = this->prim;
     header.numvtx = (UInt32)this->numvtx;
