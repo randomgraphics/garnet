@@ -653,7 +653,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     if( resource ) return resource;
 
     // convert to full (absolute) path
-    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path
@@ -664,7 +664,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     GN_INFO(sLogger)( "Load effect from file: %s", filename );
 
     // open XML file
-    AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "rt" ) );
     if( !fp ) return AutoRef<EffectResource>::NULLREF;
     XmlDocument doc;
     XmlParseResult xpr;

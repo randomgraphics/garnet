@@ -21,7 +21,7 @@ static StrA sResolveResourcePath( const StrA & basedir, const StrA & path )
     }
     else
     {
-        return fs::resolvePath( basedir, path );
+        return fs::ResolvePath( basedir, path );
     }
 }
 
@@ -371,7 +371,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     {
         XmlAttrib * a = doc.createAttrib( effectNode );
         a->name = "ref";
-        a->value = fs::relPath( effect, basedir );
+        a->value = fs::RelPath( effect, basedir );
     }
 
     // create mesh node
@@ -386,7 +386,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
     {
         XmlAttrib * a = doc.createAttrib( meshNode );
         a->name = "ref";
-        a->value = fs::relPath( mesh, basedir );
+        a->value = fs::RelPath( mesh, basedir );
     }
 
     // create subset node
@@ -435,7 +435,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         {
             a = doc.createAttrib( textureNode );
             a->name = "ref";
-            a->value = fs::relPath( texdesc.resourceName, basedir );
+            a->value = fs::RelPath( texdesc.resourceName, basedir );
         }
     }
 
@@ -471,7 +471,7 @@ XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char *
         {
             a = doc.createAttrib( uniformNode );
             a->name = "ref";
-            a->value = fs::relPath( unidesc.resourceName, basedir );
+            a->value = fs::RelPath( unidesc.resourceName, basedir );
         }
     }
 
@@ -1333,7 +1333,7 @@ GN::gfx::ModelResource::loadFromFile(
     if( m ) return m;
 
     // convert to full (absolute) path
-    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
+    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path

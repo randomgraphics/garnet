@@ -202,7 +202,7 @@ struct InputInitiator
 
 void showHelp( CommandLineArguments & ca )
 {
-    StrA executableName = fs::baseName( ca.applicationName ) + fs::extName( ca.applicationName );
+    StrA executableName = fs::BaseName( ca.applicationName ) + fs::ExtName( ca.applicationName );
     GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.ToRawPtr() );
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)(

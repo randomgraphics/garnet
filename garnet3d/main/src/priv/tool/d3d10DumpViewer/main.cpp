@@ -93,14 +93,14 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
         return false;
     }
 
-    StrA fullname = fs::resolvePath( basedir, a->value );
+    StrA fullname = fs::ResolvePath( basedir, a->value );
 
-    if( !fs::isFile( fullname ) )
+    if( !fs::IsFile( fullname ) )
     {
         GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.ToRawPtr() );
     }
 
-    AutoObjPtr<File> fp( fs::openFile( fullname, "rb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( fullname, "rb" ) );
     if( !fp ) return false;
 
     result.Resize( fp->Size() / sizeof(T) );
@@ -608,7 +608,7 @@ struct D3D10OperationDump
 			}
 			else
 			{
-	            //setDumpFilePrefix( fs::joinPath( "a", fs::baseName(sDumpFileName) ) );
+	            //setDumpFilePrefix( fs::JoinPath( "a", fs::baseName(sDumpFileName) ) );
 	            //dumpDrawIndexed( dev, numidx, startidx, startvtx );
 
 	            dev.DrawIndexed( numidx, startidx, startvtx );
@@ -623,7 +623,7 @@ struct D3D10OperationDump
 			}
 			else
 			{
-	            //setDumpFilePrefix( fs::joinPath( "a", fs::baseName(sDumpFileName) ) );
+	            //setDumpFilePrefix( fs::JoinPath( "a", fs::baseName(sDumpFileName) ) );
 	            //dumpDraw( dev, numvtx, startvtx );
 
 	            dev.Draw( numvtx, startvtx );
@@ -1205,7 +1205,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).ToRawPtr() );
+    printf( "Usage: %s <ref|hal|refd|hald> [dumpname]\n", (fs::BaseName(appname) + fs::ExtName(appname)).ToRawPtr() );
 }
 
 int main( int argc, const char * argv [] )

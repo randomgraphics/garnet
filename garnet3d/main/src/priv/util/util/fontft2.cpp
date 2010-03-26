@@ -167,7 +167,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
     }
 
     // open font file
-    File * fp = fs::openFile( cd.fontname, "rb" );
+    File * fp = fs::OpenFile( cd.fontname, "rb" );
     if( !fp ) return Failure();
 
     // initialize FT2 stream

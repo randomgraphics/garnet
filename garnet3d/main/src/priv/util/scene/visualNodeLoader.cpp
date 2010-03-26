@@ -420,11 +420,11 @@ bool GN::util::VisualNode::Impl::loadModelsFromFile( const char * filename )
     removeAllModels();
 
     // open file
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
     if( !fp ) return false;
 
     // get file extension
-    StrA ext = fs::extName( filename );
+    StrA ext = fs::ExtName( filename );
 
     GpuResourceDatabase & db = mGraph.gdb();
 

@@ -355,10 +355,10 @@ namespace GN
         static Logger * sLogger = GetLogger( "GN.base.xml" );
         GN_INFO(sLogger)( "Load '%s'", filename.ToRawPtr() );
 
-        AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
+        AutoObjPtr<File> fp( fs::OpenFile( filename, "rt" ) );
         if( !fp ) return false;
 
-        StrA basedir = fs::dirName( filename );
+        StrA basedir = fs::DirName( filename );
 
         return loadFromXmlFile( t, *fp, basedir );
 

@@ -185,32 +185,32 @@ class NativeFileSystem : public FileSystem
 {
 public:
 
-    bool exist( const StrA & path )
+    bool Exist( const StrA & path )
     {
-        return sNativeExist( FileSystem::toNativeDiskFilePath( path ) );
+        return sNativeExist( FileSystem::ToNativeDiskFilePath( path ) );
     }
 
-    bool isDir( const StrA & path  )
+    bool IsDir( const StrA & path  )
     {
-        return sNativeIsDir( FileSystem::toNativeDiskFilePath( path ) );
+        return sNativeIsDir( FileSystem::ToNativeDiskFilePath( path ) );
     }
 
-    bool isFile( const StrA & path )
+    bool IsFile( const StrA & path )
     {
-        return sNativeIsFile( FileSystem::toNativeDiskFilePath( path ) );
+        return sNativeIsFile( FileSystem::ToNativeDiskFilePath( path ) );
     }
 
-    bool isAbsPath( const StrA & path )
+    bool IsAbsPath( const StrA & path )
     {
         return sIsAbsPath( path );
     }
 
-    void toNativeDiskFilePath( StrA & result, const StrA & path )
+    void ToNativeDiskFilePath( StrA & result, const StrA & path )
     {
         StrA tmp;
 
         // normalize path separators
-        normalizePathSeparator( tmp, path );
+        NormalizePathSeparator( tmp, path );
 
 #if GN_XENON
 
@@ -248,7 +248,7 @@ public:
                 result.Clear();
                 return;
             }
-            joinPath2( result, cwd, tmp );
+            JoinPath2( result, cwd, tmp );
         }
         else
         {
@@ -260,7 +260,7 @@ public:
     }
 
     DynaArray<StrA> &
-    glob(
+    Glob(
         DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
@@ -269,13 +269,13 @@ public:
     {
         GN_GUARD;
 
-        if( !exist(dirName) )
+        if( !Exist(dirName) )
         {
-            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.ToRawPtr() );
+            GN_TRACE(sLogger)( "'%s' does not Exist!", dirName.ToRawPtr() );
             return result;
         }
 
-        if( !isDir(dirName) )
+        if( !IsDir(dirName) )
         {
             GN_TRACE(sLogger)( "'%s' is not directory!", dirName.ToRawPtr() );
             return result;
@@ -288,10 +288,10 @@ public:
         GN_UNGUARD;
     }
 
-     File * openFile( const StrA & name, const StrA & mode )
+     File * OpenFile( const StrA & name, const StrA & mode )
      {
         StrA nativeName;
-        toNativeDiskFilePath( nativeName, name );
+        ToNativeDiskFilePath( nativeName, name );
         AutoObjPtr<DiskFile> fp( new DiskFile );
         if( !fp->Open( nativeName, mode ) ) return false;
         return fp.Detach();
@@ -313,35 +313,35 @@ private:
         using namespace GN;
 
         // validate dirName
-        GN_ASSERT( exist(dirName) && isDir(dirName) );
+        GN_ASSERT( Exist(dirName) && IsDir(dirName) );
 
-        StrA curDir = FileSystem::toNativeDiskFilePath( dirName );
+        StrA curDir = FileSystem::ToNativeDiskFilePath( dirName );
 
         // search in sub-directories
         if( recursive )
         {
             // TODO: ignore links/junctions
             CSimpleGlobA sg( SG_GLOB_ONLYDIR | SG_GLOB_NODOT );
-            StrA p = joinPath( curDir, "*" );
+            StrA p = JoinPath( curDir, "*" );
             sg.Add( p.ToRawPtr() );
             char ** dirs = sg.Files();
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
             {
-                resolvePath( p, curDir, *dirs );
+                ResolvePath( p, curDir, *dirs );
                 recursiveFind( result, p, pattern, recursive, useRegex );
             }
         }
 
         // search in current directory
         CSimpleGlobA sg( SG_GLOB_ONLYFILE );
-        StrA p = joinPath( curDir, (useRegex ? "*.*" : pattern) );
+        StrA p = JoinPath( curDir, (useRegex ? "*.*" : pattern) );
         sg.Add( p.ToRawPtr() );
         char ** files = sg.Files();
         int c = sg.FileCount();
         for( int i = 0; i < c; ++i, ++files )
         {
-            result.Append( joinPath( curDir, *files ) );
+            result.Append( JoinPath( curDir, *files ) );
         }
 
         GN_UNGUARD;
@@ -366,7 +366,7 @@ public:
 #elif GN_MSWIN
         char buf[MAX_PATH+1];
         GN_MSW_CHECK( GetModuleFileNameA(0,buf,MAX_PATH) );
-        mRootDir = parentPath( buf );
+        mRootDir = ParentPath( buf );
 #elif GN_POSIX
         char linkName[PATH_MAX+1];
         char realPath[PATH_MAX+1];
@@ -377,57 +377,57 @@ public:
         }
         else
         {
-            mRootDir = parentPath( realPath );
+            mRootDir = ParentPath( realPath );
         }
 #else
 #error Unknown platform!
 #endif
     }
 
-    bool exist( const StrA & path )
+    bool Exist( const StrA & path )
     {
-        return mNativeFs.exist( joinPath( mRootDir, path ) );
+        return mNativeFs.Exist( JoinPath( mRootDir, path ) );
     }
 
-    bool isDir( const StrA & path  )
+    bool IsDir( const StrA & path  )
     {
-        return mNativeFs.isDir( joinPath( mRootDir, path ) );
+        return mNativeFs.IsDir( JoinPath( mRootDir, path ) );
     }
 
-    bool isFile( const StrA & path )
+    bool IsFile( const StrA & path )
     {
-        return mNativeFs.isFile( joinPath( mRootDir, path ) );
+        return mNativeFs.IsFile( JoinPath( mRootDir, path ) );
     }
 
-    bool isAbsPath( const StrA & path )
+    bool IsAbsPath( const StrA & path )
     {
         return !path.Empty() && '/' == path[0];
     }
 
-    void toNativeDiskFilePath( StrA & result, const StrA & path )
+    void ToNativeDiskFilePath( StrA & result, const StrA & path )
     {
-        mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
+        mNativeFs.ToNativeDiskFilePath( result, JoinPath( mRootDir, path ) );
     }
 
     DynaArray<StrA> &
-    glob(
+    Glob(
         DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
         bool         useRegex )
     {
-        return mNativeFs.glob(
+        return mNativeFs.Glob(
             result,
-            joinPath( mRootDir, dirName ),
+            JoinPath( mRootDir, dirName ),
             pattern,
             recursive,
             useRegex );
     }
 
-     File * openFile( const StrA & path, const StrA & mode )
+     File * OpenFile( const StrA & path, const StrA & mode )
      {
-        return mNativeFs.openFile( joinPath( mRootDir, path ), mode );
+        return mNativeFs.OpenFile( JoinPath( mRootDir, path ), mode );
      }
 };
 
@@ -444,54 +444,54 @@ public:
 
     StartupFileSystem( NativeFileSystem & nfs )
         : mNativeFs( nfs )
-        , mRootDir( getCurrentDir() )
+        , mRootDir( GetCurrentDir() )
     {
     }
 
-    bool exist( const StrA & path )
+    bool Exist( const StrA & path )
     {
-        return mNativeFs.exist( joinPath( mRootDir, path ) );
+        return mNativeFs.Exist( JoinPath( mRootDir, path ) );
     }
 
-    bool isDir( const StrA & path  )
+    bool IsDir( const StrA & path  )
     {
-        return mNativeFs.isDir( joinPath( mRootDir, path ) );
+        return mNativeFs.IsDir( JoinPath( mRootDir, path ) );
     }
 
-    bool isFile( const StrA & path )
+    bool IsFile( const StrA & path )
     {
-        return mNativeFs.isFile( joinPath( mRootDir, path ) );
+        return mNativeFs.IsFile( JoinPath( mRootDir, path ) );
     }
 
-    bool isAbsPath( const StrA & path )
+    bool IsAbsPath( const StrA & path )
     {
         return !path.Empty() && '/' == path[0];
     }
 
-    void toNativeDiskFilePath( StrA & result, const StrA & path )
+    void ToNativeDiskFilePath( StrA & result, const StrA & path )
     {
-        mNativeFs.toNativeDiskFilePath( result, joinPath( mRootDir, path ) );
+        mNativeFs.ToNativeDiskFilePath( result, JoinPath( mRootDir, path ) );
     }
 
     DynaArray<StrA> &
-    glob(
+    Glob(
         DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
         bool         recursive,
         bool         useRegex )
     {
-        return mNativeFs.glob(
+        return mNativeFs.Glob(
             result,
-            joinPath( mRootDir, dirName ),
+            JoinPath( mRootDir, dirName ),
             pattern,
             recursive,
             useRegex );
     }
 
-     File * openFile( const StrA & path, const StrA & mode )
+     File * OpenFile( const StrA & path, const StrA & mode )
      {
-        return mNativeFs.openFile( joinPath( mRootDir, path ), mode );
+        return mNativeFs.OpenFile( JoinPath( mRootDir, path ), mode );
      }
 };
 
@@ -507,7 +507,7 @@ class MultiRootsFileSystem : public FileSystem
     {
         for( size_t i = 0; i < mRoots.Size(); ++i )
         {
-            if( GN::fs::pathExist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+            if( GN::fs::PathExist( JoinPath( mRoots[i], path ) ) ) return &mRoots[i];
         }
         return 0;
     }
@@ -520,40 +520,40 @@ public:
 
     void addRoot( const StrA & root ) { mRoots.Append( root ); }
 
-    bool exist( const StrA & path )
+    bool Exist( const StrA & path )
     {
         return 0 != findRoot( path );
     }
 
-    bool isDir( const StrA & path  )
+    bool IsDir( const StrA & path  )
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return GN::fs::isDir( joinPath( *root, path ) );
+        return GN::fs::IsDir( JoinPath( *root, path ) );
     }
 
-    bool isFile( const StrA & path )
+    bool IsFile( const StrA & path )
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return GN::fs::isFile( joinPath( *root, path ) );
+        return GN::fs::IsFile( JoinPath( *root, path ) );
     }
 
-    bool isAbsPath( const StrA & path )
+    bool IsAbsPath( const StrA & path )
     {
         return !path.Empty() && '/' == path[0];
     }
 
-    void toNativeDiskFilePath( StrA & result, const StrA & path )
+    void ToNativeDiskFilePath( StrA & result, const StrA & path )
     {
         result.Clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
-        GN::fs::toNativeDiskFilePath( result, joinPath( *root, path ) );
+        GN::fs::ToNativeDiskFilePath( result, JoinPath( *root, path ) );
     }
 
     DynaArray<StrA> &
-    glob(
+    Glob(
         DynaArray<StrA> & result,
         const StrA & dirName,
         const StrA & pattern,
@@ -568,9 +568,9 @@ public:
 
                 DynaArray<StrA> tmp;
 
-                GN::fs::glob(
+                GN::fs::Glob(
                     tmp,
-                    joinPath( root, dirName ),
+                    JoinPath( root, dirName ),
                     pattern,
                     recursive,
                     useRegex );
@@ -589,9 +589,9 @@ public:
             const StrA * root = findRoot( dirName );
             if( !root ) return result;
 
-            GN::fs::glob(
+            GN::fs::Glob(
                 result,
-                joinPath( *root, dirName ),
+                JoinPath( *root, dirName ),
                 pattern,
                 recursive,
                 useRegex );
@@ -600,7 +600,7 @@ public:
         return result;
     }
 
-     File * openFile( const StrA & path, const StrA & mode )
+     File * OpenFile( const StrA & path, const StrA & mode )
      {
         const StrA * root = findRoot( path );
         if( !root )
@@ -608,7 +608,7 @@ public:
             GN_ERROR(sLogger)( "file '%s' not found!", path.ToRawPtr() );
             return 0;
         }
-        return GN::fs::openFile( joinPath( *root, path ), mode );
+        return GN::fs::OpenFile( JoinPath( *root, path ), mode );
      }
 };
 
@@ -645,7 +645,7 @@ public:
 #if GN_MSWIN && !GN_XENON
         char windir[MAX_PATH+1];
         GetWindowsDirectoryA( windir, MAX_PATH );
-        addRoot( joinPath( windir, "fonts" ) );
+        addRoot( JoinPath( windir, "fonts" ) );
 #endif
     }
 };
@@ -662,16 +662,16 @@ public:
     {
     }
 
-    bool exist( const StrA & ) { return false; }
-    bool isDir( const StrA & ) { return false; }
-    bool isFile( const StrA & ) { return false; }
-    void toNativeDiskFilePath( StrA & result, const StrA & path ) { result = path; }
-    bool isAbsPath( const StrA & ) { return true; }
-    DynaArray<StrA> & glob( DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool )
+    bool Exist( const StrA & ) { return false; }
+    bool IsDir( const StrA & ) { return false; }
+    bool IsFile( const StrA & ) { return false; }
+    void ToNativeDiskFilePath( StrA & result, const StrA & path ) { result = path; }
+    bool IsAbsPath( const StrA & ) { return true; }
+    DynaArray<StrA> & Glob( DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool )
     {
         return result;
     }
-    File * openFile( const StrA &, const StrA & ) { return 0; }
+    File * OpenFile( const StrA &, const StrA & ) { return 0; }
 };
 
 // *****************************************************************************
@@ -768,7 +768,7 @@ FileSystemContainer & sGetFileSystemContainer()
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT bool GN::fs::registerFileSystem( const StrA & name, FileSystem * root )
+GN_EXPORT bool GN::fs::RegisterFileSystem( const StrA & name, FileSystem * root )
 {
     return sGetFileSystemContainer().registerFs( name, root );
 }
@@ -784,7 +784,7 @@ GN_EXPORT void GN::fs::UnregisterFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
+GN_EXPORT FileSystem * GN::fs::GetFileSystem( const StrA & name )
 {
     return sGetFileSystemContainer().getFs( name );
 }
@@ -792,7 +792,7 @@ GN_EXPORT FileSystem * GN::fs::getFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+GN_EXPORT void GN::fs::ResolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
     if( base.Empty() || relpath.Empty() )
@@ -802,8 +802,8 @@ GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA
     }
 
     StrA basefs, basec, relfs, relc;
-    splitPath( base, basefs, basec );
-    splitPath( relpath, relfs, relc );
+    SplitPath( base, basefs, basec );
+    SplitPath( relpath, relfs, relc );
 
     if( !relfs.Empty() && basefs != relfs )
     {
@@ -811,11 +811,11 @@ GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA
         return;
     }
 
-    if( getFileSystem(relfs)->isAbsPath(relc) )
+    if( GetFileSystem(relfs)->IsAbsPath(relc) )
     {
         result = relpath;
         return;
     }
 
-    joinPath2( result, base, relc );
+    JoinPath2( result, base, relc );
 }

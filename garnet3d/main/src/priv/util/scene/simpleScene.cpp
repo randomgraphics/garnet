@@ -280,7 +280,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
         GN_WARN(sLogger)( "Can not get filename" );
         return false;
     }
-    filename = fs::resolvePath( fs::getCurrentDir(), filename );
+    filename = fs::ResolvePath( fs::GetCurrentDir(), filename );
 
 #define FULL_MESH_NAME( n ) (n) // StringFormat("%s.%s",filename.ToRawPtr(),n.ToRawPtr())
 
@@ -389,7 +389,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
     if( NULL == desc.meshes.Find( md.mesh ) )
     {
         MeshResourceDesc mesh;
-        AutoRef<Blob> blob = mesh.loadFromFile( fs::resolvePath( basedir, md.mesh ) );
+        AutoRef<Blob> blob = mesh.loadFromFile( fs::ResolvePath( basedir, md.mesh ) );
         if( !blob ) return false;
 
         desc.meshes[md.mesh] = mesh;
@@ -508,7 +508,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     GN_ASSERT( xpr.root );
 
-    StrA basedir = fs::dirName( file.Name() );
+    StrA basedir = fs::DirName( file.Name() );
 
     XmlElement * root = xpr.root->toElement();
     if( !root || "simpleWorld" != root->name )
@@ -586,12 +586,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     }
 
     // convert to full path
-    StrA fullpath = fs::resolvePath( fs::getCurrentDir(), filename );
+    StrA fullpath = fs::ResolvePath( fs::GetCurrentDir(), filename );
     filename = fullpath;
-    StrA dirname = fs::dirName( fullpath );
-    StrA basename = fs::baseName( fullpath );
+    StrA dirname = fs::DirName( fullpath );
+    StrA basename = fs::BaseName( fullpath );
 
-    if( !fs::isDir( dirname ) )
+    if( !fs::IsDir( dirname ) )
     {
         GN_ERROR(sLogger)( "%s is not a directory", dirname.ToRawPtr() );
         return false;
@@ -739,7 +739,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             desc.bbox.d );
 
     // write XML document
-    AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "wt" ) );
     if( !fp ) return false;
     return xmldoc.writeToFile( *fp, *root, false );
 }
@@ -926,11 +926,11 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
     Clear();
 
     // open file
-    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
     if( !fp ) return false;
 
     // get file extension
-    StrA ext = fs::extName( filename );
+    StrA ext = fs::ExtName( filename );
 
     // do loading
     if( sStrEndWithI( filename, ".xml" ) )

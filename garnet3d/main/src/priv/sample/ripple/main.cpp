@@ -84,7 +84,7 @@ public:
 
         DynaArray<char> rippleCodeFromFile;
         const char * filename = "media/ripple.ps";
-        if( fs::pathExist( filename ) )
+        if( fs::PathExist( filename ) )
         {
             DiskFile f;
             if( f.Open( filename, "rt" ) )

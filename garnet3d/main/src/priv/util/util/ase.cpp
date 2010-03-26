@@ -148,7 +148,7 @@ struct AseFile
         line = 0;
 
         // get file dir
-        filedir = GN::fs::dirName( file.Name() );
+        filedir = GN::fs::DirName( file.Name() );
 
         // success
         return true;
@@ -402,7 +402,7 @@ struct AseFile
     {
         StrA relpath;
         if( !readString( relpath, option ) ) return false;
-        GN::fs::resolvePath( result, filedir, relpath );
+        GN::fs::ResolvePath( result, filedir, relpath );
         return true;
     }
 
