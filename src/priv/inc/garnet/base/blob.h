@@ -16,7 +16,7 @@ namespace GN
         ///
         /// get binary pointer
         ///
-        virtual void * data() const = 0;
+        virtual void * Data() const = 0;
 
         ///
         /// get binary size in bytes
@@ -37,7 +37,7 @@ namespace GN
         explicit SimpleBlob( size_t sz = 0 ) : mBuffer(sz) {}
 
         //@{
-        virtual void * data() const { return (void*)mBuffer.ToRawPtr(); }
+        virtual void * Data() const { return (void*)mBuffer.ToRawPtr(); }
         virtual size_t Size() const { return mBuffer.Size(); }
         //@}
 

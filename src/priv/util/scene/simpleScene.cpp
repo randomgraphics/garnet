@@ -154,7 +154,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read file header
     XPRFileHeader header;
-    if( !file.read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
+    if( !file.Read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
     {
         GN_ERROR(sLogger)( "Fail to read file header." );
         return false;
@@ -168,7 +168,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.Resize( dataSize );
-    if( !file.read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
+    if( !file.Read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
@@ -274,7 +274,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     AseScene ase;
     if( !loadAseSceneFromFile( ase, file) ) return false;
 
-    StrA filename = file.name();
+    StrA filename = file.Name();
     if( filename.Empty() )
     {
         GN_WARN(sLogger)( "Can not get filename" );
@@ -500,7 +500,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            file.name(),
+            file.Name(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.ToRawPtr() );
@@ -508,7 +508,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     GN_ASSERT( xpr.root );
 
-    StrA basedir = fs::dirName( file.name() );
+    StrA basedir = fs::dirName( file.Name() );
 
     XmlElement * root = xpr.root->toElement();
     if( !root || "simpleWorld" != root->name )
@@ -755,7 +755,7 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 {
     desc.Clear();
 
-    const StrA & meshname = fp.name();
+    const StrA & meshname = fp.Name();
 
     MeshResourceDesc mesh;
     AutoRef<Blob> blob = mesh.loadFromFile( fp );

@@ -20,7 +20,7 @@ namespace GN
         //@{
     public:
         SharedLib() : mHandle(0) {}
-        virtual ~SharedLib() { free(); }
+        virtual ~SharedLib() { Free(); }
         //@}
 
         // ********************************
@@ -37,24 +37,24 @@ namespace GN
         ///     However, libName can include a trailing point character (.) to
         ///     indicate that the library name has no extension.
         ///
-        bool load( const char * libName );
+        bool Load( const char * libName );
 
         ///
         /// Free the library.
         ///
         /// \note All symbols of the library will be invalidated as well.
         ///
-        void free();
+        void Free();
 
         ///
         /// Get library handle
         ///
-        void * getHandle() const { return mHandle; }
+        void * GetHandle() const { return mHandle; }
 
         ///
         /// Get pointer of specified symbol of the shared library.
         ///
-        void * getSymbol( const char * symbol );
+        void * GetSymbol( const char * symbol );
 
         // ********************************
         // private variables

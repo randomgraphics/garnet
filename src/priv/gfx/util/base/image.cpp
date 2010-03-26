@@ -149,8 +149,8 @@ public:
         // read whole file
         size_t sz = i_file.Size();
         mSrc.Resize( sz );
-        if( !i_file.seek( 0, FileSeek::SET ) ) return false;
-        if( !i_file.read( &mSrc[0], mSrc.Size(), &sz ) ) return false;
+        if( !i_file.Seek( 0, FileSeek::SET ) ) return false;
+        if( !i_file.Read( &mSrc[0], mSrc.Size(), &sz ) ) return false;
         GN_ASSERT( sz <= mSrc.Size() );
         if( sz < mSrc.Size() ) mSrc.Resize( sz );
 

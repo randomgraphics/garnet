@@ -224,18 +224,18 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
 // -----------------------------------------------------------------------------
 MeshFileType sDetermineMeshFileType( File & fp )
 {
-    size_t currentPos = fp.tell();
+    size_t currentPos = fp.Tell();
 
     char buf[16];
 
     size_t readen;
-    if( !fp.read( buf, 16, &readen ) )
+    if( !fp.Read( buf, 16, &readen ) )
     {
         GN_ERROR(sLogger)( "Fail to read mesh file header." );
         return MESH_FILE_UNKNOWN;
     }
 
-    if( !fp.seek( currentPos, FileSeek::SET ) )
+    if( !fp.Seek( currentPos, FileSeek::SET ) )
     {
         GN_ERROR(sLogger)( "Fail to seek mesh file reading cursor back." );
         return MESH_FILE_UNKNOWN;
@@ -263,7 +263,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 {
     MeshBinaryFileHeaderV2 header;
 
-    if( !fp.read( &header, sizeof(header), NULL ) )
+    if( !fp.Read( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read mesh header." );
         return AutoRef<Blob>::NULLREF;
@@ -292,12 +292,12 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 
     // read mesh data
     AutoRef<Blob> blob( new SimpleBlob(header.bytes) );
-    if( !fp.read( blob->data(), header.bytes, NULL ) )
+    if( !fp.Read( blob->Data(), header.bytes, NULL ) )
     {
         GN_ERROR(sLogger)( "fail to read mesh data." );
         return AutoRef<Blob>::NULLREF;
     }
-    UInt8 * start = (UInt8*)blob->data();
+    UInt8 * start = (UInt8*)blob->Data();
 
     desc.prim   = (PrimitiveType)header.prim;
     desc.numvtx = header.numvtx;
@@ -428,7 +428,7 @@ static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t 
     AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
 
-    if( !fp->read( &header, sizeof(header), NULL ) )
+    if( !fp->Read( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read garnet binary file header: %s", filename );
         return false;
@@ -440,7 +440,7 @@ static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t 
         return false;
     }
 
-    if( !fp->read( dst, length, NULL ) )
+    if( !fp->Read( dst, length, NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read binary data from file: %s", filename );
         return false;
@@ -465,7 +465,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp.name(),
+            fp.Name(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.ToRawPtr() );
@@ -598,10 +598,10 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         return AutoRef<Blob>::NULLREF;
     }
 
-    StrA basedir = fs::dirName( fp.name() );
+    StrA basedir = fs::dirName( fp.Name() );
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->Size() );
+    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->Data(), blob->Size() );
     size_t offset = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
@@ -824,7 +824,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     }
 
     // write header
-    if( !fp.write( &header, sizeof(header), NULL ) )
+    if( !fp.Write( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to write mesh header." );
         return false;
@@ -835,7 +835,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     {
         if( vfp.used[i] )
         {
-            if( !fp.write( this->vertices[i], vbsizes[i], NULL ) )
+            if( !fp.Write( this->vertices[i], vbsizes[i], NULL ) )
             {
                 GN_ERROR(sLogger)( "Fail to write vertex buffer %i", i );
                 return false;
@@ -846,7 +846,7 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
     // write index buffer
     if( numidx > 0 )
     {
-        if( !fp.write( this->indices, ibsize, NULL ) )
+        if( !fp.Write( this->indices, ibsize, NULL ) )
         {
             GN_ERROR(sLogger)( "Fail to write index buffer" );
             return false;

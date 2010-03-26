@@ -105,7 +105,7 @@ static bool sLoadBinary( const XmlElement & node, const StrA & attr, const StrA 
 
     result.Resize( fp->Size() / sizeof(T) );
 
-    return fp->read( result.ToRawPtr(), result.Size() * sizeof(T), 0 );
+    return fp->Read( result.ToRawPtr(), result.Size() * sizeof(T), 0 );
 }
 
 template<typename T>

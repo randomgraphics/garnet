@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             return true;
         }
 
-        /// initialize from raw data buffer
+        /// initialize from raw Data buffer
         bool Init( const void * data, size_t length )
         {
             // copy input buffer
@@ -131,7 +131,7 @@ namespace GN { namespace gfx
 
         const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.ToRawPtr(); }
 
-        virtual void         * data() const { return (void*)mBuffer.ToRawPtr(); }
+        virtual void         * Data() const { return (void*)mBuffer.ToRawPtr(); }
         virtual size_t         Size() const { return mBuffer.Size(); }
     };
 

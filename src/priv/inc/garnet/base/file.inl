@@ -2,7 +2,7 @@
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline void
-GN::MemFile<T>::reset( T * buf, size_t size, const StrA & name )
+GN::MemFile<T>::Reset( T * buf, size_t size, const StrA & name )
 {
     mStart = (UInt8*)buf;
     mPtr   = mStart;
@@ -14,7 +14,7 @@ GN::MemFile<T>::reset( T * buf, size_t size, const StrA & name )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
+GN::MemFile<T>::Read( void * buf, size_t size, size_t * readen )
 {
     GN_GUARD;
 
@@ -28,14 +28,14 @@ GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(myLogger())( "null output buf!" );
+        GN_ERROR(MyLogger())( "null output buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(myLogger())( "null file!" );
+        GN_ERROR(MyLogger())( "null file!" );
         return false;
     }
 
@@ -59,13 +59,13 @@ GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
+GN::MemFile<T>::Write( const void * buf, size_t size, size_t * written )
 {
     GN_GUARD;
 
     if( IsConst<T>::value )
     {
-        GN_ERROR(myLogger())( "cannot write to constant buffer!" );
+        GN_ERROR(MyLogger())( "cannot Write to constant buffer!" );
         return false;
     }
 
@@ -79,14 +79,14 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(myLogger())( "null input buf!" );
+        GN_ERROR(MyLogger())( "null input buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(myLogger())( "null file!" );
+        GN_ERROR(MyLogger())( "null file!" );
         return false;
     }
 
@@ -110,7 +110,7 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::seek( size_t offset, FileSeek origin )
+GN::MemFile<T>::Seek( size_t offset, FileSeek origin )
 {
     UInt8 * end = mStart + mSize;
     UInt8 * ptr;
@@ -128,13 +128,13 @@ GN::MemFile<T>::seek( size_t offset, FileSeek origin )
     }
     else
     {
-        GN_ERROR(myLogger())( "invalid seek origin!" );
+        GN_ERROR(MyLogger())( "invalid Seek origin!" );
         return false;
     }
 
     if( ptr < mStart || ptr > end )
     {
-        GN_ERROR(myLogger())( "out of range" );
+        GN_ERROR(MyLogger())( "out of range" );
         return false;
     }
     mPtr = ptr;
@@ -145,7 +145,7 @@ GN::MemFile<T>::seek( size_t offset, FileSeek origin )
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
+inline bool GN::VectorFile::Read( void * buf, size_t size, size_t * readen )
 {
     GN_ASSERT( mCursor <= mBuffer.Size() );
 
@@ -159,7 +159,7 @@ inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 
     if( 0 == buf )
     {
-        GN_ERROR(myLogger())( "null output buffer!" );
+        GN_ERROR(MyLogger())( "null output buffer!" );
         return false;
     }
 
@@ -175,7 +175,7 @@ inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * written )
+inline bool GN::VectorFile::Write( const void * buf, size_t size, size_t * written )
 {
     GN_ASSERT( mCursor <= mBuffer.Size() );
 
@@ -187,7 +187,7 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
 
     if( 0 == buf )
     {
-        GN_ERROR(myLogger())( "null output buffer!" );
+        GN_ERROR(MyLogger())( "null output buffer!" );
         return false;
     }
 
@@ -209,7 +209,7 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
+inline bool GN::VectorFile::Seek( size_t offset, FileSeek origin )
 {
     size_t cur;
     if( FileSeek::CUR == origin )
@@ -226,13 +226,13 @@ inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
     }
     else
     {
-        GN_ERROR(myLogger())( "invalid seek origin!" );
+        GN_ERROR(MyLogger())( "invalid Seek origin!" );
         return false;
     }
 
     if( cur > mBuffer.Size() )
     {
-        GN_ERROR(myLogger())( "out of range" );
+        GN_ERROR(MyLogger())( "out of range" );
         return false;
     }
     mCursor = cur;

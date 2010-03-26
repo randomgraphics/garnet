@@ -675,7 +675,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp->name(),
+            fp->Name(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.ToRawPtr() );

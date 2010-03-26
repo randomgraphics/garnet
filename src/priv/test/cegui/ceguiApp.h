@@ -39,14 +39,14 @@ public:
                 name.Format( "d:/software/green/cegui/datafiles/%s", filename.c_str() );
 
                 DiskFile fp;
-                if( !fp.open( name, "rb" ) )
+                if( !fp.Open( name, "rb" ) )
                 {
                     throw InvalidRequestException((utf8*)
                         "DefaultResourceProvider::load - " + filename + " does not exist");
                 }
 
                 AutoObjPtr<UInt8> buffer( new UInt8[fp.Size()] );
-                if( !fp.read( buffer, fp.Size(), NULL ) )
+                if( !fp.Read( buffer, fp.Size(), NULL ) )
                 {
                     throw GenericException((utf8*)
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);

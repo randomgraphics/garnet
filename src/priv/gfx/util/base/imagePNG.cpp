@@ -83,10 +83,10 @@ bool PNGReader::checkFormat( GN::File & fp )
 
     unsigned char buf[8];
 
-    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
-    if( !fp.read( buf, 8, &sz ) || 8 != sz ) return false;
+    if( !fp.Read( buf, 8, &sz ) || 8 != sz ) return false;
 
     return 0 == png_sig_cmp( buf, 0, 8 );
 

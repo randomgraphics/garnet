@@ -37,7 +37,7 @@ class StringMapTest : public CxxTest::TestSuite
         Perf strmap;
         Perf hashmap;
 
-        void print() const
+        void Print() const
         {
             printf( "GN::Dictionary  - insert : %llu\n", dict.insert );
             printf( "std::map        - insert : %llu\n", stlmap.insert );
@@ -184,7 +184,7 @@ class StringMapTest : public CxxTest::TestSuite
             TS_ASSERT( hmap.Empty() );
         }
 
-        perfs.print();
+        perfs.Print();
     }
 
     void doPerfTestWithFixedNumberOfItems( size_t count )

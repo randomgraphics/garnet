@@ -28,12 +28,12 @@ static GN::Logger * sLogger = GN::GetLogger("GN.base.SharedLib");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SharedLib::load( const char * libName )
+bool GN::SharedLib::Load( const char * libName )
 {
     GN_GUARD;
 
-    // free old library
-    free();
+    // Free old library
+    Free();
 
     // check parameter
     if( IsStringEmpty(libName) )
@@ -49,11 +49,11 @@ bool GN::SharedLib::load( const char * libName )
     else
         filename = libName;
 
-    // load library
+    // Load library
     mHandle = SHLIB_LOAD( filename.ToRawPtr() );
     if( 0 == mHandle )
     {
-        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.ToRawPtr(), SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Fail to Load library %s: %s!", filename.ToRawPtr(), SHLIB_ERROR() );
         return false;
     }
 
@@ -69,7 +69,7 @@ bool GN::SharedLib::load( const char * libName )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SharedLib::free()
+void GN::SharedLib::Free()
 {
     GN_GUARD;
 
@@ -86,7 +86,7 @@ void GN::SharedLib::free()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::SharedLib::getSymbol( const char * symbol )
+void * GN::SharedLib::GetSymbol( const char * symbol )
 {
     GN_GUARD;
 

@@ -17,9 +17,9 @@ bool BMPReader::checkFormat( GN::File & fp )
     BMPHeader header;
 
     // read BMP header
-    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
     size_t sz;
-    if( !fp.read( &header, sizeof(BMPHeader), &sz ) || sizeof(BMPHeader) != sz ) return false;
+    if( !fp.Read( &header, sizeof(BMPHeader), &sz ) || sizeof(BMPHeader) != sz ) return false;
 
 #if GN_PPC
     header.swapEndian();

@@ -166,7 +166,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read file header
     XPRFileHeader header;
-    if( !file.read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
+    if( !file.Read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
     {
         GN_ERROR(sLogger)( "Fail to read file header." );
         return false;
@@ -180,7 +180,7 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.Resize( dataSize );
-    if( !file.read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
+    if( !file.Read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
@@ -308,7 +308,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         for( size_t i = 0; i < ase.meshes.Size(); ++i )
         {
             char meshname[1024];
-            StringPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
+            StringPrintf( meshname, 1024, "%s.mesh.%u", file.Name(), i );
 
             meshes[i] = db.findResource<MeshResource>( meshname );
             if( meshes[i] ) continue; // use exising mesh directly.
