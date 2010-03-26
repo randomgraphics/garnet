@@ -15,7 +15,7 @@ public:
     {
     }
 
-    bool onInit()
+    bool OnInit()
     {
         mSimple = new SimpleShadowMap(*this);
         if( !mSimple->Init( "a/objects.actor.xml" ) ) return false;
@@ -24,25 +24,25 @@ public:
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
         delete mSimple;
         mSimple = 0;
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
-        mSimple->update();
+        mSimple->Update();
     }
 
-    void onRender()
+    void OnRender()
     {
-        mSimple->draw();
+        mSimple->Draw();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
     ShadowMap app;
-    return app.run( argc, argv );
+    return app.Run( argc, argv );
 }

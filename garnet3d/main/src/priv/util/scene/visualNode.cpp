@@ -101,7 +101,7 @@ void GN::util::VisualNode::Impl::removeAllModels()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualNode::Impl::draw() const
+void GN::util::VisualNode::Impl::Draw() const
 {
     // update standard transfomration uniforms
     SpatialNode * sn = mOwner.entity().getNode<SpatialNode>();
@@ -127,27 +127,27 @@ void GN::util::VisualNode::Impl::draw() const
             switch( type )
             {
                 case StandardUniformType::MATRIX_PVW :
-                    u->update( pvw );
+                    u->Update( pvw );
                     break;
 
                 case StandardUniformType::MATRIX_PVW_INV:
-                    u->update( Matrix44f::sInverse( pvw ) );
+                    u->Update( Matrix44f::sInverse( pvw ) );
                     break;
 
                 case StandardUniformType::MATRIX_PVW_IT:
-                    u->update( Matrix44f::sInvTrans( pvw ) );
+                    u->Update( Matrix44f::sInvTrans( pvw ) );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD :
-                    u->update( world );
+                    u->Update( world );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD_INV:
-                    u->update( Matrix44f::sInverse(world) );
+                    u->Update( Matrix44f::sInverse(world) );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD_IT:
-                    u->update( Matrix44f::sInvTrans(world) );
+                    u->Update( Matrix44f::sInvTrans(world) );
                     break;
 
                 default:
@@ -162,7 +162,7 @@ void GN::util::VisualNode::Impl::draw() const
     {
         ModelResource * m = mModels[i];
 
-        m->draw();
+        m->Draw();
     }
 }
 
@@ -178,7 +178,7 @@ GN::util::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 {
     AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
 
-    StrA fullname = StringFormat( "GN.scene.visualnode.stduniform.%s", type.name() );
+    StrA fullname = StringFormat( "GN.scene.visualnode.stduniform.%s", type.Name() );
 
     GpuResourceDatabase & gdb = mGraph.gdb();
 

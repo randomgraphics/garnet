@@ -111,10 +111,10 @@ public:
         mGeometry.destroy();
     }
 
-    void BasicTestCase::update(void)
+    void BasicTestCase::Update(void)
     {
         UInt32 numBatches = (UInt32)mGeometry.PRIM_COUNT / BATCH_SIZE;
-        float    batchesPerSec = getApp().getFps() * numBatches;
+        float    batchesPerSec = getApp().GetFps() * numBatches;
 
         mBatchesPerSecond.newValue( batchesPerSec );
 

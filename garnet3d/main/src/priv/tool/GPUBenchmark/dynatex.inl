@@ -175,7 +175,7 @@ class TestTextureBandwidth : public BasicTestCase
     {
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         dev->SetTexture( 0, mTextures[texid].texture );
-        mGeometry.draw();
+        mGeometry.Draw();
 #if GN_XENON
         mTextures[texid].fence = dev->InsertFence();
 #endif
@@ -289,12 +289,12 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void update()
+    void Update()
     {
         const DispDesc & dd = gRenderer.getDispDesc();
 
-        float fillrate = 2 * TEX_COUNT * REPEAT_COUNT * dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
-        float bandwidth = 2 * TEX_COUNT * REPEAT_COUNT * TEX_BYTES / 1000000000.0f * getApp().getFps();
+        float fillrate = 2 * TEX_COUNT * REPEAT_COUNT * dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
+        float bandwidth = 2 * TEX_COUNT * REPEAT_COUNT * TEX_BYTES / 1000000000.0f * getApp().GetFps();
 
         mBandwidth = bandwidth;
 

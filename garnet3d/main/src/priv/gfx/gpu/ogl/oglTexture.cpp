@@ -581,10 +581,10 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
     // store texture properties
-    if( !setDesc( inputDesc ) ) return Failure();
+    if( !SetDesc( inputDesc ) ) return Failure();
 
     // Note: this descriptor may differ with the input one.
-    const TextureDesc & desc = getDesc();
+    const TextureDesc & desc = GetDesc();
 
     // determine texture dimension
     mTarget = sDetermineTextureDimension( desc.faces, desc.width, desc.height, desc.depth );
@@ -675,7 +675,7 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
                 return Failure();
         }
 
-        setMipSize( i, sx, sy, sz );
+        SetMipSize( i, sx, sy, sz );
     }
 
     // setup default filters and wrap modes
@@ -708,7 +708,7 @@ void GN::gfx::OGLTexture::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::OGLTexture::updateMipmap(
+GN::gfx::OGLTexture::UpdateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -730,7 +730,7 @@ GN::gfx::OGLTexture::updateMipmap(
     // setup pixel store parameters
 
     // Note: GL_PACK_ROW_LENGTH defines number of pixels in a row.
-    size_t bpp = getDesc().format.getBitsPerPixel();
+    size_t bpp = GetDesc().format.GetBitsPerPixel();
     glPixelStorei( GL_UNPACK_ROW_LENGTH, (GLint)(rowPitch*8/bpp) );
 
     GLint alignment;
@@ -852,7 +852,7 @@ GN::gfx::OGLTexture::updateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::readMipmap( size_t, size_t, MipmapData & )
+void GN::gfx::OGLTexture::ReadMipmap( size_t, size_t, MipmapData & )
 {
     GN_UNIMPL();
 }
@@ -870,7 +870,7 @@ void GN::gfx::OGLTexture::setSampler( const SamplerDesc & samp, bool forceUpdate
     mOGLFilters[1] = GL_NEAREST + samp.filterMag;
 
     // min and mip filter
-    if( 1 == getDesc().levels )
+    if( 1 == GetDesc().levels )
     {
         // the texture has no mipmap, ignore mipmap filter
         mOGLFilters[0] = GL_NEAREST + samp.filterMag;

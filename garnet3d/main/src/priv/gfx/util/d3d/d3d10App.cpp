@@ -209,7 +209,7 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mDebug(0)
     , mInfoQueue(0)
 {
-    input::initializeInputSystem();
+    input::InitializeInputSystem();
 }
 
 //
@@ -217,7 +217,7 @@ GN::d3d10::D3D10Application::D3D10Application()
 // -----------------------------------------------------------------------------
 GN::d3d10::D3D10Application::~D3D10Application()
 {
-    input::shutdownInputSystem();
+    input::ShutdownInputSystem();
 }
 
 #include <conio.h>
@@ -225,7 +225,7 @@ GN::d3d10::D3D10Application::~D3D10Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
+int GN::d3d10::D3D10Application::Run( const D3D10AppOption & o )
 {
     GN_GUARD_ALWAYS;
 
@@ -259,11 +259,11 @@ int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
             // process input message
             if( gInputPtr )
             {
-                gInput.processInputEvents();
+                gInput.ProcessInputEvents();
             }
 
             // Idle time, do rendering and update
-            onUpdate();
+            OnUpdate();
             onDraw();
 
             // present()
@@ -325,11 +325,11 @@ bool GN::d3d10::D3D10Application::Init()
 
     if( gInputPtr )
     {
-        gInput.attachToWindow( 0, mWindow );
+        gInput.AttachToWindow( 0, mWindow );
     }
 
     // success
-    return onInit( mOption );
+    return OnInit( mOption );
 }
 
 //
@@ -337,7 +337,7 @@ bool GN::d3d10::D3D10Application::Init()
 // -----------------------------------------------------------------------------
 void GN::d3d10::D3D10Application::Quit()
 {
-    onQuit();
+    OnQuit();
 
     destroyDevice();
 

@@ -370,7 +370,7 @@ namespace GN
         ~AutoFinalizer() { if( !mDismissed ) mFunc(); }
 
         ///
-        /// Tell finalizer to _NOT_ run the function by the end of life scope.
+        /// Tell finalizer to _NOT_ Run the function by the end of life scope.
         ///
         void Dismiss() { mDismissed = true; }
     };

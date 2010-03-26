@@ -3,7 +3,7 @@ namespace GN { namespace input
     //
     //
     // ----------------------------------------------------------------------------
-    inline KeyCode str2kc( const char * name )
+    inline KeyCode String2KeyCode( const char * name )
     {
         if( GN::IsStringEmpty(name) ) return KeyCode::NONE;
 
@@ -26,7 +26,7 @@ namespace GN { namespace input
     //
     //
     // ----------------------------------------------------------------------------
-    inline const char * kc2str( int code )
+    inline const char * KeyCode2String( int code )
     {
         static const char * sTable[]=
         {

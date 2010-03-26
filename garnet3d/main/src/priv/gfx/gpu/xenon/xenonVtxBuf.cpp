@@ -65,9 +65,9 @@ bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
         return Failure();
     }
 
-    setDesc( desc );
+    SetDesc( desc );
 
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     //
     // create d3d vertex buffer
@@ -111,7 +111,7 @@ void GN::gfx::XenonVtxBuf::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::XenonVtxBuf::update(
+GN::gfx::XenonVtxBuf::Update(
     size_t            offset,
     size_t            length,
     const void      * data,
@@ -124,7 +124,7 @@ GN::gfx::XenonVtxBuf::update(
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
     // check if the vertex buffer is binding to the device.
-    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)getGpu().getD3DDevice();
+    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)GetGpu().getD3DDevice();
     const DWORD NUM_VB = 16;
     bool bindingFlags[NUM_VB];
     UINT offsets[NUM_VB];
@@ -168,7 +168,7 @@ GN::gfx::XenonVtxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonVtxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonVtxBuf::Readback( DynaArray<UInt8> & data )
 {
     GN_GUARD_SLOW;
 

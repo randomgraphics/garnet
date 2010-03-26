@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadUniform::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const void * data )
+void GN::gfx::MultiThreadUniform::Update( size_t offset, size_t length, const void * data )
 {
     if( offset >= mSize || (offset+length) > mSize )
     {
@@ -205,6 +205,6 @@ namespace GN { namespace gfx
     void func_UNIFORM_UPDATE( Gpu &, void * p, size_t )
     {
         const UniformUpdateParam & uup = *(const UniformUpdateParam*)p;
-        uup.uniform->update( uup.offset, uup.length, uup.data );
+        uup.uniform->Update( uup.offset, uup.length, uup.data );
     }
 }}

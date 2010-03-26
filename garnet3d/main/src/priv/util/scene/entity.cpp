@@ -39,7 +39,7 @@ World & GN::util::Entity::Impl::world() const
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::util::Entity::Impl::name() const
+const char * GN::util::Entity::Impl::Name() const
 {
     return mWorld.getEntityName( mID );
 }
@@ -160,7 +160,7 @@ GN::util::Entity::~Entity()
 // -----------------------------------------------------------------------------
 World             & GN::util::Entity::world() const { return mImpl->world(); }
 int                 GN::util::Entity::id() const { return mImpl->id(); }
-const char        * GN::util::Entity::name() const { return mImpl->name(); }
+const char        * GN::util::Entity::Name() const { return mImpl->Name(); }
 
 bool                GN::util::Entity::hasNode( const Guid & nodeType ) const { return mImpl->hasNode( nodeType ); }
 const NodeBase    * GN::util::Entity::getNode( const Guid & nodeType ) const { return mImpl->getNode( nodeType ); }

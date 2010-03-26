@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         //@{
         GpuResourceDatabase & database() const { return mDatabase; }
         inline const Guid   & type() const;
-        inline const char   * name() const;
+        inline const char   * Name() const;
         //@}
 
         /// Cast GPU resource pointer with type check.
@@ -286,7 +286,7 @@ namespace GN { namespace gfx
 
         //@{
         bool                     Reset( const MeshResourceDesc * desc );
-        const MeshResourceDesc & getDesc() const;
+        const MeshResourceDesc & GetDesc() const;
         void                     applyToContext( GpuContext & context ) const;
         void                     CalculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
         void                     CalculateBoundingSphere( Sphere<float> & ) const;
@@ -741,7 +741,7 @@ namespace GN { namespace gfx
         void                     setEffectResource( GpuResource * effect );
         AutoRef<EffectResource>  getEffectResource() const;
 
-        void                     draw() const;
+        void                     Draw() const;
         //@}
 
         // ********************************

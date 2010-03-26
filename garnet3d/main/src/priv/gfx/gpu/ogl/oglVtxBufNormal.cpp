@@ -24,7 +24,7 @@ bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
     }
 
     // store descriptor
-    setDesc( desc );
+    SetDesc( desc );
 
     mBuffer = (UInt8*)HeapMemory::Alloc( desc.length );
 
@@ -56,7 +56,7 @@ void GN::gfx::OGLVtxBufNormal::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLVtxBufNormal::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -82,9 +82,9 @@ void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLVtxBufNormal::Readback( DynaArray<UInt8> & data )
 {
-    size_t length = getDesc().length;
+    size_t length = GetDesc().length;
 
     data.Resize( length );
 

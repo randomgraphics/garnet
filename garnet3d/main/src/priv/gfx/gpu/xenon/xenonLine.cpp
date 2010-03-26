@@ -40,7 +40,7 @@ bool GN::gfx::XenonLine::Init()
 
     GN_ASSERT( !mVtxShader && !mPxlShader );
 
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     // create vertex decl
     GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), Failure() );
@@ -142,7 +142,7 @@ void GN::gfx::XenonLine::drawLines(
         count -= n;
     }
 
-    XenonGpu & r = getGpu();
+    XenonGpu & r = GetGpu();
     IDirect3DDevice9 & dev = r.getDeviceInlined();
 
     D3DPRIMITIVETYPE d3dpt;

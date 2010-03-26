@@ -136,7 +136,7 @@ struct ManyManyQuads
         safeFreeGraphicsResource( vtxfmt );
     }
 
-    void draw()
+    void Draw()
     {
         for( size_t i = 0; i < DRAW_COUNT; ++i )
         {
@@ -298,7 +298,7 @@ public:
     virtual ~BasicTestCase() {}
     virtual bool create() = 0;
     virtual void destroy() = 0;
-    virtual void update() = 0;
+    virtual void Update() = 0;
     virtual void render() = 0;
     virtual void onkey( input::KeyEvent ) = 0;
     virtual void onmove( input::Axis, int ) = 0;
@@ -360,9 +360,9 @@ public:
         #endif
     }
 
-    bool onInit();
+    bool OnInit();
 
-    void onQuit()
+    void OnQuit()
     {
         GN_GUARD;
 
@@ -379,11 +379,11 @@ public:
         GN_UNGUARD;
     }
 
-    void onKeyPress( input::KeyEvent ke )
+    void OnKeyPress( input::KeyEvent ke )
     {
         GN_GUARD_SLOW;
 
-        app::SampleApp::onKeyPress( ke );
+        app::SampleApp::OnKeyPress( ke );
 
         if( !mTestCases.empty() )
         {
@@ -396,13 +396,13 @@ public:
             input::KEY_XB360_A == ke.code && !ke.status.down )
         {
             mFirstFrame = true;
-            if( !nextCase() ) postExitEvent();
+            if( !nextCase() ) PostExitEvent();
         }
 
         GN_UNGUARD_SLOW;
     }
 
-    void onAxisMove( input::Axis a, int d )
+    void OnAxisMove( input::Axis a, int d )
     {
         GN_GUARD_SLOW;
 
@@ -416,12 +416,12 @@ public:
         GN_UNGUARD_SLOW;
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         GN_GUARD_SLOW;
         if( mTestCases.empty() )
         {
-            postExitEvent();
+            PostExitEvent();
         }
         /*else if( mFirstFrame )
         {
@@ -431,19 +431,19 @@ public:
         else if( mClock.GetTimef() >= 10.0f )
         {
             mFirstFrame = true;
-            if( !nextCase() ) postExitEvent();
+            if( !nextCase() ) PostExitEvent();
         }*/
         else
         {
             CaseDesc & cd = mTestCases.back();
             GN_ASSERT( cd.theCase );
-            cd.theCase->update();
+            cd.theCase->Update();
         }
 
         GN_UNGUARD_SLOW;
     }
 
-    void onRender()
+    void OnRender()
     {
         GN_GUARD_SLOW;
 
@@ -465,7 +465,7 @@ public:
 #include "batchSize.inl" // batch size test
 #endif
 
-bool BenchmarkingApp::onInit()
+bool BenchmarkingApp::OnInit()
 {
     GN_GUARD;
 
@@ -533,5 +533,5 @@ bool BenchmarkingApp::onInit()
 int main( int argc, const char * argv[] )
 {
     BenchmarkingApp app;
-    return app.run( argc, argv );
+    return app.Run( argc, argv );
 }

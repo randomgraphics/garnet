@@ -41,13 +41,13 @@ bool GN::gfx::MultiThreadTexture::Init( Texture * tex )
 
     mTexture = tex;
 
-    const TextureDesc & desc = mTexture->getDesc();
+    const TextureDesc & desc = mTexture->GetDesc();
 
-    setDesc( desc );
+    SetDesc( desc );
 
     for( size_t i = 0; i < desc.levels; ++i )
     {
-        setMipSize( i, mTexture->getMipSize( i ) );
+        SetMipSize( i, mTexture->GetMipSize( i ) );
     }
 
     // success
@@ -82,7 +82,7 @@ void GN::gfx::MultiThreadTexture::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::updateMipmap(
+void GN::gfx::MultiThreadTexture::UpdateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -91,13 +91,13 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     const void        * data,
     SurfaceUpdateFlag   flag )
 {
-    if( level >= getDesc().levels )
+    if( level >= GetDesc().levels )
     {
         GN_ERROR(sLogger)( "Invalid mipmap level: %d", level );
         return;
     }
 
-    const Vector3<UInt32> & mipsize = getMipSize( level );
+    const Vector3<UInt32> & mipsize = GetMipSize( level );
 
     size_t dataSize = slicePitch * mipsize.z;
 
@@ -125,7 +125,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapData & data )
+void GN::gfx::MultiThreadTexture::ReadMipmap( size_t face, size_t level, MipmapData & data )
 {
     GN_UNUSED_PARAM( face );
     GN_UNUSED_PARAM( level );
@@ -137,7 +137,7 @@ void GN::gfx::MultiThreadTexture::readMipmap( size_t face, size_t level, MipmapD
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
+void GN::gfx::MultiThreadTexture::BlobWrite( const void * data, size_t length )
 {
     GN_UNUSED_PARAM( data );
     GN_UNUSED_PARAM( length );
@@ -147,7 +147,7 @@ void GN::gfx::MultiThreadTexture::blobWrite( const void * data, size_t length )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MultiThreadTexture::blobRead( void * data )
+size_t GN::gfx::MultiThreadTexture::BlobRead( void * data )
 {
     GN_UNUSED_PARAM( data );
     GN_UNIMPL();
@@ -157,7 +157,7 @@ size_t GN::gfx::MultiThreadTexture::blobRead( void * data )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadTexture::generateMipmapPyramid()
+void GN::gfx::MultiThreadTexture::GenerateMipmapPyramid()
 {
     GN_UNIMPL();
 }
@@ -166,7 +166,7 @@ void GN::gfx::MultiThreadTexture::generateMipmapPyramid()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::MultiThreadTexture::getAPIDependentData() const
+void * GN::gfx::MultiThreadTexture::GetAPIDependentData() const
 {
     GN_UNIMPL();
     return 0;
@@ -194,7 +194,7 @@ namespace GN { namespace gfx
     {
         UpdateMipmapParam * ump = (UpdateMipmapParam*)p;
 
-        ump->tex->updateMipmap(
+        ump->tex->UpdateMipmap(
             ump->face,
             ump->level,
             &ump->area,

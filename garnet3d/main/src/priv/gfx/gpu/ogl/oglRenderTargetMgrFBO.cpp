@@ -125,8 +125,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( ; );
 
     // make new render target description is valid.
-    GN_ASSERT( oldrt.valid() );
-    if( !newrt.valid() ) return false;
+    GN_ASSERT( oldrt.Valid() );
+    if( !newrt.Valid() ) return false;
 
     // check for redundancy
     if( !skipDirtyCheck && oldrt == newrt )
@@ -185,7 +185,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         }
 
         // update color render target size
-        newrt.colortargets[0].texture->getMipSize<UInt32>(
+        newrt.colortargets[0].texture->GetMipSize<UInt32>(
             newrt.colortargets[0].level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );
@@ -199,7 +199,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
 
         // update color render target size
-        newrt.depthstencil.texture->getMipSize<UInt32>(
+        newrt.depthstencil.texture->GetMipSize<UInt32>(
             newrt.depthstencil.level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );

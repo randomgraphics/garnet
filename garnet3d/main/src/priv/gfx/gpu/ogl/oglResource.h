@@ -25,7 +25,7 @@ namespace GN { namespace gfx
         ///
         /// Get renderer that the resource belongs to
         ///
-        OGLGpu & getGpu() const { return mGpu; }
+        OGLGpu & GetGpu() const { return mGpu; }
 
     private:
         OGLGpu & mGpu;

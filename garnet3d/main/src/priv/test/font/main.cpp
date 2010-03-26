@@ -49,7 +49,7 @@ void Quit( Gpu & )
     SafeDelete( sr );
 }
 
-void onKeyPress( KeyEvent ke )
+void OnKeyPress( KeyEvent ke )
 {
     if( !ke.status.down ) return;
 
@@ -92,7 +92,7 @@ void onKeyPress( KeyEvent ke )
     }
 }
 
-void draw( Gpu &, const wchar_t * fps )
+void Draw( Gpu &, const wchar_t * fps )
 {
     ascii.DrawText( fps, 10, 13 );
 
@@ -103,7 +103,7 @@ void draw( Gpu &, const wchar_t * fps )
     }
 }
 
-int run( Gpu & gpu )
+int Run( Gpu & gpu )
 {
     if( !Init( gpu ) ) { Quit( gpu ); return -1; }
 
@@ -118,15 +118,15 @@ int run( Gpu & gpu )
 
         Input & in = gInput;
 
-        in.processInputEvents();
+        in.ProcessInputEvents();
 
-        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
 
         gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        draw( gpu, fps.getFpsString() );
+        Draw( gpu, fps.getFpsString() );
         gpu.present();
 
         fps.onFrame();
@@ -141,15 +141,15 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        initializeInputSystem( InputAPI::NATIVE );
+        InitializeInputSystem( InputAPI::NATIVE );
         const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
-        gInput.sigKeyPress.Connect( onKeyPress );
+        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.sigKeyPress.Connect( OnKeyPress );
     }
 
     ~InputInitiator()
     {
-        shutdownInputSystem();
+        ShutdownInputSystem();
     }
 };
 
@@ -185,7 +185,7 @@ int main( int argc, const char * argv[] )
 
     InputInitiator ii(*r);
 
-    int result = run( *r );
+    int result = Run( *r );
 
     deleteGpu( r );
 

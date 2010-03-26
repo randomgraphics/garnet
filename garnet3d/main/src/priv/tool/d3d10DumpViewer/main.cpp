@@ -308,9 +308,9 @@ struct D3D10ViewDump
             DynaArray<UInt8> data;
 
             if( !ir.Reset( file ) ) return false;
-            if( !ir.readHeader( id ) ) return false;
-            data.Resize( id.getTotalBytes() );
-            if( !ir.readImage( data.ToRawPtr() ) ) return false;
+            if( !ir.ReadHeader( id ) ) return false;
+            data.Resize( id.GetTotalBytes() );
+            if( !ir.ReadImage( data.ToRawPtr() ) ) return false;
 
             switch( info.ResourceDimension )
             {
@@ -338,10 +338,10 @@ struct D3D10ViewDump
                     for( UInt32 f = 0; f < id.numFaces; ++f )
                     for( UInt32 l = 0; l < id.numLevels; ++l )
                     {
-                        const MipmapDesc       & m = id.getMipmap( f, l );
+                        const MipmapDesc       & m = id.GetMipmap( f, l );
                         D3D10_SUBRESOURCE_DATA & d = subdata[D3D10CalcSubresource( l, f, id.numLevels )];
 
-                        d.pSysMem          = &data[id.getMipmapOffset( f, l )];
+                        d.pSysMem          = &data[id.GetMipmapOffset( f, l )];
                         d.SysMemPitch      = m.rowPitch;
                         d.SysMemSlicePitch = m.slicePitch;
                     }
@@ -597,7 +597,7 @@ struct D3D10OperationDump
 		memset( this, sizeof(*this), 0 );
 	}
 
-    void draw( ID3D10Device & dev )
+    void Draw( ID3D10Device & dev )
     {
         dev.IASetPrimitiveTopology( (D3D10_PRIMITIVE_TOPOLOGY)prim );
         if( indexed )
@@ -1089,11 +1089,11 @@ struct D3D10StateDump
         GN_UNGUARD_SLOW;
     }
 
-    void draw( ID3D10Device & dev )
+    void Draw( ID3D10Device & dev )
     {
         GN_GUARD_SLOW;
 
-        operation.draw( dev );
+        operation.Draw( dev );
 
         GN_UNGUARD_SLOW;
     }
@@ -1139,7 +1139,7 @@ class MyApp : public D3D10Application
 
 protected:
 
-    bool onInit( D3D10AppOption & o )
+    bool OnInit( D3D10AppOption & o )
     {
         GN_GUARD;
 
@@ -1192,10 +1192,10 @@ protected:
 #if DRAW_TO_BACKBUF
         copyRt0ToBackbuf();
         mState.bind( dev, backrtv() );
-        mState.draw( dev );
+        mState.Draw( dev );
 #else
         mState.bind( dev, 0 );
-        mState.draw( dev );
+        mState.Draw( dev );
         copyRt0ToBackbuf();
 #endif
 
@@ -1232,7 +1232,7 @@ int main( int argc, const char * argv [] )
     }
 
     MyApp app;
-    return app.run( opt );
+    return app.Run( opt );
 
     GN_UNGUARD;
 }

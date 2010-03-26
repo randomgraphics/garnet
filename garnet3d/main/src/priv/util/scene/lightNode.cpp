@@ -71,8 +71,8 @@ const Guid & GN::util::LightNode::guid()
 //
 //
 // -----------------------------------------------------------------------------
-const LightDesc & GN::util::LightNode::getDesc() const { return mImpl->getDesc(); }
-void              GN::util::LightNode::setDesc( const LightDesc & desc ) { return mImpl->setDesc( desc ); }
+const LightDesc & GN::util::LightNode::GetDesc() const { return mImpl->GetDesc(); }
+void              GN::util::LightNode::SetDesc( const LightDesc & desc ) { return mImpl->SetDesc( desc ); }
 
 // *****************************************************************************
 // LightNode factory

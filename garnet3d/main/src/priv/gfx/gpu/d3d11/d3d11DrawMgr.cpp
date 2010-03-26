@@ -186,7 +186,7 @@ void GN::gfx::D3D11Gpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::draw(
+void GN::gfx::D3D11Gpu::Draw(
     PrimitiveType prim,
     size_t        numvtx,
     size_t        startvtx )

@@ -15,7 +15,7 @@ GN::gfx::GpuResource::type() const
 // Get resource name
 // -----------------------------------------------------------------------------
 inline const char *
-GN::gfx::GpuResource::name() const
+GN::gfx::GpuResource::Name() const
 {
     return mDatabase.getResourceName(this);
 }

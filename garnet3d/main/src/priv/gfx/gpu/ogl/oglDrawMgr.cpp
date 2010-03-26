@@ -174,7 +174,7 @@ void GN::gfx::OGLGpu::drawIndexed(
     // Verify index buffer
     if( paramCheckEnabled() )
     {
-        if( ib->getDesc().bits32 )
+        if( ib->GetDesc().bits32 )
         {
             const UInt32 * indices = (const UInt32*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
@@ -208,7 +208,7 @@ void GN::gfx::OGLGpu::drawIndexed(
             (GLuint)startvtx,
             (GLuint)( startvtx + numvtx - 1 ),
             (GLsizei)numidx,
-            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+            ib->GetDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
     }
     else
@@ -216,7 +216,7 @@ void GN::gfx::OGLGpu::drawIndexed(
         GN_OGL_CHECK( glDrawElements(
             oglPrim,
             (GLsizei)numidx,
-            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+            ib->GetDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
     }
 
@@ -229,7 +229,7 @@ void GN::gfx::OGLGpu::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
+void GN::gfx::OGLGpu::Draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_GUARD_SLOW;
 

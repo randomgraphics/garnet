@@ -20109,7 +20109,7 @@ StringMapTest::dict()
         "rump",
         "rumple",
         "rumpus",
-        "run",
+        "Run",
         "runabout",
         "runaway",
         "rundown",

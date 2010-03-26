@@ -244,7 +244,7 @@ GN::d3d9::D3D9Application::~D3D9Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
+int GN::d3d9::D3D9Application::Run( const D3D9AppOption * )
 {
     GN_GUARD_ALWAYS;
 
@@ -258,8 +258,8 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 
     while( mRunning )
     {
-        if( gInputPtr ) gInput.processInputEvents();
-        onUpdate();
+        if( gInputPtr ) gInput.ProcessInputEvents();
+        OnUpdate();
         onDraw();
     }
 
@@ -282,8 +282,8 @@ int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
         else
         {
             // Idle time, do rendering and update
-            if( gInputPtr ) gInput.processInputEvents();
-            onUpdate();
+            if( gInputPtr ) gInput.ProcessInputEvents();
+            OnUpdate();
             onDraw();
         }
     }
@@ -337,13 +337,13 @@ bool GN::d3d9::D3D9Application::Init()
     // initialize input system
     if( NULL == gInputPtr )
     {
-        if( !input::initializeInputSystem() ) return false;
+        if( !input::InitializeInputSystem() ) return false;
         mShutdownInputSystem = true;
     }
-    if( !gInput.attachToWindow( 0, mWindow ) ) return false;
-    gInput.sigKeyPress.Connect( this, &D3D9Application::onKeyPress );
-    gInput.sigCharPress.Connect( this, &D3D9Application::onCharPress );
-    gInput.sigAxisMove.Connect( this, &D3D9Application::onAxisMove );
+    if( !gInput.AttachToWindow( 0, mWindow ) ) return false;
+    gInput.sigKeyPress.Connect( this, &D3D9Application::OnKeyPress );
+    gInput.sigCharPress.Connect( this, &D3D9Application::OnCharPress );
+    gInput.sigAxisMove.Connect( this, &D3D9Application::OnAxisMove );
 
     // create D3D object
     mD3D = Direct3DCreate9( D3D_SDK_VERSION );
@@ -354,7 +354,7 @@ bool GN::d3d9::D3D9Application::Init()
     }
 
     // success
-    return onInit( mOption );
+    return OnInit( mOption );
 }
 
 //
@@ -365,7 +365,7 @@ void GN::d3d9::D3D9Application::Quit()
     disposeDevice();
     destroyDevice();
 
-    onQuit();
+    OnQuit();
 
     SafeRelease( mD3D );
 
@@ -377,7 +377,7 @@ void GN::d3d9::D3D9Application::Quit()
 
         if( mShutdownInputSystem )
         {
-            input::shutdownInputSystem();
+            input::ShutdownInputSystem();
         }
     }
 
@@ -389,7 +389,7 @@ void GN::d3d9::D3D9Application::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
+void GN::d3d9::D3D9Application::OnKeyPress( input::KeyEvent ke )
 {
 #if GN_XENON
     GN_UNUSED_PARAM( ke );

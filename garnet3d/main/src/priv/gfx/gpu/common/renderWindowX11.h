@@ -71,7 +71,7 @@ namespace GN { namespace gfx
         ///
         /// Get client size
         ///
-        bool getClientSize( UInt32 & width , UInt32 & height ) const;
+        bool GetClientSize( UInt32 & width , UInt32 & height ) const;
 
         ///
         /// handle render window size move, trigger renderer signal as apropriate.

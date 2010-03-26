@@ -250,7 +250,7 @@ namespace GN { namespace gfx
                                   size_t        startvtx,
                                   size_t        numvtx,
                                   size_t        startidx );
-        virtual void draw( PrimitiveType prim,
+        virtual void Draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx );
         virtual void drawIndexedUp(

@@ -37,7 +37,7 @@ public:
 
 	VtxFmtEndian() : mVs(0), mPs(0), mVb(0) {}
 
-	bool onInit()
+	bool OnInit()
 	{
         RenderEngine  & re = getRenderEngine();
 
@@ -70,7 +70,7 @@ public:
 		return true;
 	}
 
-	void onQuit()
+	void OnQuit()
 	{
         safeFreeGraphicsResource( mVs );
         safeFreeGraphicsResource( mPs );
@@ -78,16 +78,16 @@ public:
         safeFreeGraphicsResource( mVb );
 	}
 
-	void onUpdate()
+	void OnUpdate()
 	{
 	}
 
-	void onKeyPress( input::KeyEvent ke )
+	void OnKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::onKeyPress( ke );
+		app::SampleApp::OnKeyPress( ke );
 	}
 
-	void onRender()
+	void OnRender()
 	{
         RenderEngine & re = getRenderEngine();
 
@@ -95,12 +95,12 @@ public:
 
         re.setContext( mCtx );
 
-        re.draw( PrimitiveType::TRIANGLE_LIST, 1, 0 );
+        re.Draw( PrimitiveType::TRIANGLE_LIST, 1, 0 );
 	}
 };
 
 int main()
 {
 	VtxFmtEndian app;
-	return app.run( 0, 0 );
+	return app.Run( 0, 0 );
 }

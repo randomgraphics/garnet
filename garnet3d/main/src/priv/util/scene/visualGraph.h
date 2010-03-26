@@ -38,7 +38,7 @@ namespace GN { namespace util
         gfx::UniformResource * getGlobalUniform( StandardUniformType type ) const;
 
         /// draw all visual node associated with this graph
-        void                   draw( Camera & camera );
+        void                   Draw( Camera & camera );
 
         //@}
 

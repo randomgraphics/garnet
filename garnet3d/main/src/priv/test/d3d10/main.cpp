@@ -43,7 +43,7 @@ public:
         // create mesh
         static SimpleMesh::Vertex vertices[24];
         static UInt16             indices[36];
-        gfx::createBox(
+        gfx::CreateBox(
             1.0f, 1.0f, 1.0f,
             vertices[0].pos, sizeof(SimpleMesh::Vertex),
             vertices[0].tex, sizeof(SimpleMesh::Vertex),
@@ -97,7 +97,7 @@ public:
         rtt.Quit();
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
@@ -133,5 +133,5 @@ int main()
     D3D10AppOption option;
     MyApp          app;
 
-    return app.run( option );
+    return app.Run( option );
 }

@@ -116,7 +116,7 @@ void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
     D3D10_MAPPED_TEXTURE2D mt;
     GN_DX_CHECK_RETURN_VOID( sysbuf->Map( 0, D3D10_MAP_READ, 0, &mt ) );
 
-    bc.format = dxgiFormat2ColorFormat( desc.Format );
+    bc.format = DxgiFormat2ColorFormat( desc.Format );
     bc.width  = desc.Width;
     bc.height = desc.Height;
     bc.pitch  = mt.RowPitch;

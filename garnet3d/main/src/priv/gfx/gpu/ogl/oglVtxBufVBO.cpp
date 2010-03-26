@@ -27,7 +27,7 @@ bool GN::gfx::OGLVtxBufVBO::Init( const VtxBufDesc & desc )
     }
 
     // store properties
-    setDesc( desc );
+    SetDesc( desc );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
@@ -70,7 +70,7 @@ void GN::gfx::OGLVtxBufVBO::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLVtxBufVBO::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -84,9 +84,9 @@ void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * d
 
     // sanity check
     GN_ASSERT(
-        offset < getDesc().length &&
+        offset < GetDesc().length &&
         0 < length &&
-        (offset + length) <= getDesc().length );
+        (offset + length) <= GetDesc().length );
 
     // bind as active buffer
     GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
@@ -104,7 +104,7 @@ void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * d
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLVtxBufVBO::Readback( DynaArray<UInt8> & data )
 {
     GN_UNIMPL_WARNING();
     data.Clear();
@@ -144,7 +144,7 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
     GN_OGL_CHECK_RV(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
-            getDesc().length,
+            GetDesc().length,
             NULL,
             mOGLUsage ),
         false );

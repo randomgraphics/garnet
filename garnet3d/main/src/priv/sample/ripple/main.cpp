@@ -26,9 +26,9 @@ public:
 
     MyApp() : mSprite(NULL) {}
 
-    bool onInit()
+    bool OnInit()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = GetGpu();
 
         mSprite = new SpriteRenderer(gpu);
         if( !mSprite->Init() ) return false;
@@ -124,18 +124,18 @@ public:
         return true;
     }
 
-    void onQuit()
+    void OnQuit()
     {
         SafeDelete( mSprite );
         mContext.Clear();
     }
 
-    void onKeyPress( input::KeyEvent key )
+    void OnKeyPress( input::KeyEvent key )
     {
         if( key.code == KeyCode::MOUSEBTN_0 && key.status.down )
         {
             int mx, my;
-            gInput.getMousePosition( mx, my );
+            gInput.GetMousePosition( mx, my );
 
             mRipples[mNextRipple].x = (float)mx;
             mRipples[mNextRipple].y = (float)my;
@@ -145,7 +145,7 @@ public:
         }
     }
 
-    void onUpdate()
+    void OnUpdate()
     {
         for( size_t i = 0; i < GN_ARRAY_COUNT(mRipples); ++i )
         {
@@ -155,12 +155,12 @@ public:
             }
         }
 
-        mContext.uniforms[0]->update( 0, sizeof(mRipples), mRipples );
+        mContext.uniforms[0]->Update( 0, sizeof(mRipples), mRipples );
     }
 
-    void onRender()
+    void OnRender()
     {
-        Gpu & gpu = getGpu();
+        Gpu & gpu = GetGpu();
 
         const DispDesc & dd = gpu.getDispDesc();
 
@@ -175,5 +175,5 @@ public:
 int main( int argc, const char * argv[] )
 {
    MyApp app;
-   return app.run( argc, argv );
+   return app.Run( argc, argv );
 }

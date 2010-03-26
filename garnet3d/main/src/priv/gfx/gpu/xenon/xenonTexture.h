@@ -57,7 +57,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void   updateMipmap(
+        virtual void   UpdateMipmap(
                             size_t              face,
                             size_t              level,
                             const Box<UInt32> * area,
@@ -65,11 +65,11 @@ namespace GN { namespace gfx
                             size_t              slicePitch,
                             const void        * data,
                             SurfaceUpdateFlag   flag );
-        virtual void   readMipmap( size_t face, size_t level, MipmapData & data ) { GN_UNUSED_PARAM(face); GN_UNUSED_PARAM(level); GN_UNUSED_PARAM(data); GN_UNIMPL(); }
-        virtual void   blobWrite( const void * data, size_t length ) { GN_UNUSED_PARAM(data); GN_UNUSED_PARAM(length); GN_UNIMPL(); }
-        virtual size_t blobRead( void * data ) { GN_UNUSED_PARAM(data); GN_UNIMPL(); return 0; }
-        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
-        virtual void * getAPIDependentData() const { return mD3DTexture; }
+        virtual void   ReadMipmap( size_t face, size_t level, MipmapData & data ) { GN_UNUSED_PARAM(face); GN_UNUSED_PARAM(level); GN_UNUSED_PARAM(data); GN_UNIMPL(); }
+        virtual void   BlobWrite( const void * data, size_t length ) { GN_UNUSED_PARAM(data); GN_UNUSED_PARAM(length); GN_UNIMPL(); }
+        virtual size_t BlobRead( void * data ) { GN_UNUSED_PARAM(data); GN_UNIMPL(); return 0; }
+        virtual void   GenerateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * GetAPIDependentData() const { return mD3DTexture; }
 
         // ********************************
         // public functions

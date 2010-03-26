@@ -95,7 +95,7 @@ bool GN::gfx::D3D11Texture::Init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D11Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !createTexture() ) return Failure();
+    if( !SetDesc( desc ) || !createTexture() ) return Failure();
 
     // success
     return Success();
@@ -128,7 +128,7 @@ void GN::gfx::D3D11Texture::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D11Texture::updateMipmap(
+void GN::gfx::D3D11Texture::UpdateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -140,7 +140,7 @@ void GN::gfx::D3D11Texture::updateMipmap(
     Box<UInt32> clippedArea;
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
-    const TextureDesc & desc = getDesc();
+    const TextureDesc & desc = GetDesc();
 
     if( TextureUsage::FAST_CPU_WRITE == desc.usage )
     {
@@ -183,7 +183,7 @@ void GN::gfx::D3D11Texture::updateMipmap(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D11Texture::readMipmap(
+void GN::gfx::D3D11Texture::ReadMipmap(
     size_t       /*face*/,
     size_t       /*level*/,
     MipmapData & /*data*/ )
@@ -287,7 +287,7 @@ ID3D11RenderTargetView *
 GN::gfx::D3D11Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 {
     // must be a color render target texture
-    GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == getDesc().usage );
+    GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == GetDesc().usage );
 
     D3D11_RENDER_TARGET_VIEW_DESC rtvdesc;
     memset( &rtvdesc, 0, sizeof(rtvdesc) );
@@ -386,7 +386,7 @@ ID3D11DepthStencilView *
 GN::gfx::D3D11Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 {
     // must be a depth texture
-    GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == getDesc().usage );
+    GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == GetDesc().usage );
 
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvdesc;
     memset( &dsvdesc, 0, sizeof(dsvdesc) );
@@ -482,14 +482,14 @@ bool GN::gfx::D3D11Texture::createTexture()
 
     GN_ASSERT( !mTexture );
 
-    const TextureDesc & desc = getDesc();
+    const TextureDesc & desc = GetDesc();
 
     // determine texture formats
     if( TextureUsage::DEPTH_RENDER_TARGET == desc.usage )
     {
         // special case for depth texture
 
-        mTextureFormat = dxgi::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format ) ).typelessFormat;
+        mTextureFormat = dxgi::getDXGIFormatDesc( (DXGI_FORMAT)ColorFormat2DxgiFormat( desc.format ) ).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
         mWritingFormat = sGetDepthWritingFormat( mTextureFormat );
         if( DXGI_FORMAT_UNKNOWN == mTextureFormat ||
@@ -502,7 +502,7 @@ bool GN::gfx::D3D11Texture::createTexture()
     }
     else
     {
-        mReadingFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( desc.format );
+        mReadingFormat = (DXGI_FORMAT)ColorFormat2DxgiFormat( desc.format );
         mTextureFormat = mReadingFormat;
         mWritingFormat = mReadingFormat;
         if( DXGI_FORMAT_UNKNOWN == mReadingFormat )
@@ -612,7 +612,7 @@ bool GN::gfx::D3D11Texture::createTexture()
     Vector3<UInt32> mipSize( desc.width, desc.height, desc.depth );
     for( size_t i = 0; i < desc.levels; ++i )
     {
-        setMipSize( i, mipSize );
+        SetMipSize( i, mipSize );
         if( mipSize.x > 1 ) mipSize.x >>= 1;
         if( mipSize.y > 1 ) mipSize.y >>= 1;
         if( mipSize.z > 1 ) mipSize.z >>= 1;

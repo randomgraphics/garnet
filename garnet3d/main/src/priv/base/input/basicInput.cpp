@@ -9,7 +9,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::KeyEvent GN::input::BasicInput::popLastKeyEvent()
+GN::input::KeyEvent GN::input::BasicInput::PopLastKeyEvent()
 {
     mKeyEventQueueMutex.Lock();
 
@@ -44,7 +44,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     // ignore redundant keyup(s)
     if( keydown == mKeyboardStatus[code].down ) return;
 
-    //GN_TRACE( "Key press: %s %s", kc2str(code), keydown?"down":"up" );
+    //GN_TRACE( "Key press: %s %s", KeyCode2String(code), keydown?"down":"up" );
 
     // 更新状态键的标志
     mKeyFlags.down = keydown;

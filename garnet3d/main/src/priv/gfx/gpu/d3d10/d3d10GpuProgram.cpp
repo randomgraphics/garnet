@@ -277,7 +277,7 @@ bool GN::gfx::D3D10GpuProgram::Init( const GpuProgramDesc & desc )
     // build parameter array
     mParamDesc.buildParameterArrays();
 
-    const size_t NUM_STAGES = getGpu().GetCaps().maxTextures;
+    const size_t NUM_STAGES = GetGpu().GetCaps().maxTextures;
     if( mParamDesc.textures.count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
@@ -380,7 +380,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     size_t                 count,
     bool                   skipDirtyCheck ) const
 {
-    const size_t NUM_STAGES = getGpu().GetCaps().maxTextures;
+    const size_t NUM_STAGES = GetGpu().GetCaps().maxTextures;
 
     // allocate SRV array on stack, Clear to zero.
     const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;
@@ -394,7 +394,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     }
     GN_ASSERT( count <= NUM_STAGES );
 
-    D3D10Gpu & gpu = getGpu();
+    D3D10Gpu & gpu = GetGpu();
 
     D3D10_SAMPLER_DESC sd;
     GN::d3d10::constructDefaultSamplerDesc( sd );

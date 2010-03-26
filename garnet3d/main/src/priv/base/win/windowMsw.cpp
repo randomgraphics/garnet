@@ -21,7 +21,7 @@ bool GN::win::WindowMsw::Init( const WindowCreationParams & wcp )
     // standard init procedure
     GN_STDCLASS_INIT( GN::win::WindowMsw, () );
 
-    if( !createWindow( wcp ) ) return Failure();
+    if( !NewWindow( wcp ) ) return Failure();
 
     // success
     return Success();
@@ -69,7 +69,7 @@ void GN::win::WindowMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::win::MonitorHandle GN::win::WindowMsw::getMonitorHandle() const
+GN::win::MonitorHandle GN::win::WindowMsw::GetMonitorHandle() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -82,7 +82,7 @@ GN::win::MonitorHandle GN::win::WindowMsw::getMonitorHandle() const
 //
 //
 // -----------------------------------------------------------------------------
-GN::Vector2<size_t> GN::win::WindowMsw::getClientSize() const
+GN::Vector2<size_t> GN::win::WindowMsw::GetClientSize() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -98,7 +98,7 @@ GN::Vector2<size_t> GN::win::WindowMsw::getClientSize() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::show()
+void GN::win::WindowMsw::Show()
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -110,7 +110,7 @@ void GN::win::WindowMsw::show()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::hide()
+void GN::win::WindowMsw::Hide()
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -122,7 +122,7 @@ void GN::win::WindowMsw::hide()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::moveTo( int x, int y )
+void GN::win::WindowMsw::MoveTo( int x, int y )
 {
     GN_GUARD;
     GN_MSW_CHECK( ::SetWindowPos(
@@ -137,7 +137,7 @@ void GN::win::WindowMsw::moveTo( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
+void GN::win::WindowMsw::SetClientSize( size_t w, size_t h )
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -159,7 +159,7 @@ void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::repaint()
+void GN::win::WindowMsw::Repaint()
 {
     GN_GUARD;
     GN_MSW_CHECK( ::RedrawWindow(
@@ -172,7 +172,7 @@ void GN::win::WindowMsw::repaint()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::run()
+void GN::win::WindowMsw::Run()
 {
     GN_GUARD_ALWAYS;
 
@@ -195,7 +195,7 @@ void GN::win::WindowMsw::run()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
 {
     GN_GUARD;
 

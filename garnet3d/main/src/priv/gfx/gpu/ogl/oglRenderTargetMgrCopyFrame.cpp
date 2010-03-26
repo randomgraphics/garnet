@@ -24,11 +24,11 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 
     // get texture size
     UInt32 sx, sy;
-    tex->getMipSize<UInt32>( rtt.level, &sx, &sy );
+    tex->GetMipSize<UInt32>( rtt.level, &sx, &sy );
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
-    switch( tex->getDesc().dim )
+    switch( tex->GetDesc().dim )
     {
         case TEXDIM_CUBE :
             GN_ASSERT( sx == sy );
@@ -123,7 +123,7 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
                 UInt32 oldh = mHeight;
                 if( newc && newc->texture )
                 {
-                    newc->texture->getMipSize<UInt32>( newc->level, &mWidth, &mHeight );
+                    newc->texture->GetMipSize<UInt32>( newc->level, &mWidth, &mHeight );
                 }
                 else
                 {

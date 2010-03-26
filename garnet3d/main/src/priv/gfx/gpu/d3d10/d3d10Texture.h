@@ -50,12 +50,12 @@ namespace GN {namespace gfx
         // ********************************
     public:
 
-        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
-        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
-        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
-        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
-        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
-        virtual void * getAPIDependentData() const { return mTexture; }
+        virtual void   UpdateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   ReadMipmap( size_t face, size_t level, MipmapData & data );
+        virtual void   BlobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t BlobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   GenerateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * GetAPIDependentData() const { return mTexture; }
 
         // ********************************
         // public functions
@@ -67,7 +67,7 @@ namespace GN {namespace gfx
         ///
         ID3D10ShaderResourceView * getSRView()
         {
-            const TextureDesc & desc = getDesc();
+            const TextureDesc & desc = GetDesc();
 
             return getSRView(
                 mReadingFormat,

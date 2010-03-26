@@ -39,11 +39,11 @@
     - why not use exising portable framework (like apr, boost, wxWidgets, Qt and etc...):
       - They are too huge and complex. Only tiny part of the  functionalies they provide
         are truly useful for us, like portable threading and network.
-      - As a game library, portablity should also include game consoles, like 
+      - As a game library, portablity should also include game consoles, like
         xbox and ps2/3. But those frameworks are for PC only.
 
 - 2007.4.5
-  - generate tangent vectors in createBox()
+  - generate tangent vectors in CreateBox()
   - add endian swap defines and routines
   - handle endianess in binary mesh saving/loading
   - remove unused/obsolete media files
@@ -70,7 +70,7 @@
   - implement sample: renderToCube
 
 - 2007.3.2
-  - now d3d10 renderer is kind of usable: can render geometry, but no texture 
+  - now d3d10 renderer is kind of usable: can render geometry, but no texture
     yet.
 
 - 2007.2.22
@@ -82,16 +82,16 @@
   - new module: Scene with design doc
 
 - 2007.2.16
-  - support alias in resource manager: now single resource instance may have 
+  - support alias in resource manager: now single resource instance may have
     several different names/alias.
 
 - 2007.2.15
   - OGL renderer bug fix: should disable programmable pipeline when renderging quads
-  - cube effect bug fix: avoid using function sign(), because Cg 1.5 has bugs 
+  - cube effect bug fix: avoid using function sign(), because Cg 1.5 has bugs
     when dealing with it.
 
 - 2007.2.14
-  - new class: Renderable, which is the top level graphics object that can be 
+  - new class: Renderable, which is the top level graphics object that can be
     drawed to screen (composed by effect, mesh and textures)
 
 - 2007.2.13

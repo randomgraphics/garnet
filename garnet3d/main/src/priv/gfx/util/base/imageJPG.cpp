@@ -50,7 +50,7 @@ bool JPGReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool JPGReader::readHeader(
+bool JPGReader::ReadHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -92,7 +92,7 @@ bool JPGReader::readHeader(
 
     // fill image descriptor
     o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
+    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
     m.width         = (UInt16)mCInfo.image_width;
     m.height        = (UInt16)mCInfo.image_height;
     m.depth         = 1;
@@ -101,7 +101,7 @@ bool JPGReader::readHeader(
     m.levelPitch    = m.slicePitch;
 
     // success
-    GN_ASSERT( o_desc.valid() );
+    GN_ASSERT( o_desc.Valid() );
     return true;
 
     // failed
@@ -111,7 +111,7 @@ bool JPGReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool JPGReader::readImage( void * o_data )
+bool JPGReader::ReadImage( void * o_data )
 {
     GN_GUARD;
 

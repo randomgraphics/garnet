@@ -20,12 +20,12 @@ namespace GN { namespace input
     {
 
     public:
-        virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
-        virtual void processInputEvents() {}
-        virtual KeyEvent popLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
-        virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
-        virtual const int * getAxisStatus() const { static int as[Axis::NUM_AXISES]; return as; }
-        virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }
+        virtual bool AttachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
+        virtual void ProcessInputEvents() {}
+        virtual KeyEvent PopLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
+        virtual const KeyStatus * GetKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
+        virtual const int * GetAxisStatus() const { static int as[Axis::NUM_AXISES]; return as; }
+        virtual void GetMousePosition( int & x, int & y ) const { x = 0; y = 0; }
     };
 }}
 
@@ -56,7 +56,7 @@ static GN::input::Input * sCreateNativeInputSystem()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::initializeInputSystem( InputAPI api )
+bool GN::input::InitializeInputSystem( InputAPI api )
 {
     GN_GUARD;
 
@@ -94,7 +94,7 @@ bool GN::input::initializeInputSystem( InputAPI api )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::shutdownInputSystem()
+void GN::input::ShutdownInputSystem()
 {
     GN_GUARD;
 

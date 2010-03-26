@@ -61,8 +61,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<UInt8> & data );
+        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void Readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public OGLBasicVtxBuf
@@ -124,8 +124,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        virtual void readback( DynaArray<UInt8> & data );
+        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void Readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public OGLBasicVtxBuf

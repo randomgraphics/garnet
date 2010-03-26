@@ -72,7 +72,7 @@ namespace GN { namespace gfx
     /// \param numvert  vertex count
     /// \return         primitive count
     ///
-    inline size_t calcPrimitiveCount( PrimitiveType pt, size_t numvert )
+    inline size_t CalcPrimitiveCount( PrimitiveType pt, size_t numvert )
     {
         GN_GUARD_SLOW;
 
@@ -102,7 +102,7 @@ namespace GN { namespace gfx
     /// \param numprim  primitive count
     /// \return         vertex count
     ///
-    inline size_t calcVertexCount( PrimitiveType pt, size_t numprim )
+    inline size_t CalcVertexCount( PrimitiveType pt, size_t numprim )
     {
         GN_GUARD_SLOW;
         switch( pt )

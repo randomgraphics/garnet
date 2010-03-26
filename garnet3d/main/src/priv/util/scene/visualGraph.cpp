@@ -70,7 +70,7 @@ GN::util::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualGraph::Impl::draw( Camera & camera )
+void GN::util::VisualGraph::Impl::Draw( Camera & camera )
 {
     updateTransformation( camera );
     updateDefaultLighting();
@@ -80,7 +80,7 @@ void GN::util::VisualGraph::Impl::draw( Camera & camera )
     std::for_each(
         mVisualNodes.begin(),
         mVisualNodes.end(),
-        std::mem_fun<void,VisualNode::Impl>( &VisualNode::Impl::draw ) );
+        std::mem_fun<void,VisualNode::Impl>( &VisualNode::Impl::Draw ) );
 }
 
 //
@@ -141,17 +141,17 @@ void GN::util::VisualGraph::Impl::updateTransformation( Camera & c )
     Matrix44f iv  = Matrix44f::sInverse( view );
     Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( view ) );
 
-    mUniforms[StandardUniformType::MATRIX_PV]->getUniform()->update( pv );
-    mUniforms[StandardUniformType::MATRIX_PV_INV]->getUniform()->update( ipv );
-    mUniforms[StandardUniformType::MATRIX_PV_IT]->getUniform()->update( itpv );
+    mUniforms[StandardUniformType::MATRIX_PV]->getUniform()->Update( pv );
+    mUniforms[StandardUniformType::MATRIX_PV_INV]->getUniform()->Update( ipv );
+    mUniforms[StandardUniformType::MATRIX_PV_IT]->getUniform()->Update( itpv );
 
-    mUniforms[StandardUniformType::MATRIX_PROJ]->getUniform()->update( proj );
-    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->getUniform()->update( ip );
-    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->getUniform()->update( itp );
+    mUniforms[StandardUniformType::MATRIX_PROJ]->getUniform()->Update( proj );
+    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->getUniform()->Update( ip );
+    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->getUniform()->Update( itp );
 
-    mUniforms[StandardUniformType::MATRIX_VIEW]->getUniform()->update( view );
-    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->getUniform()->update( iv );
-    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->getUniform()->update( itv );
+    mUniforms[StandardUniformType::MATRIX_VIEW]->getUniform()->Update( view );
+    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->getUniform()->Update( iv );
+    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->getUniform()->Update( itv );
 }
 
 //
@@ -168,10 +168,10 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
     LightNode::Impl * light0 = mLightNodes.front();
 
     // update light color
-    const LightDesc & light0Desc = light0->getDesc();
-    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->getUniform()->update( light0Desc.diffuse );
-    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->getUniform()->update( light0Desc.ambient );
-    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->getUniform()->update( light0Desc.specular );
+    const LightDesc & light0Desc = light0->GetDesc();
+    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->getUniform()->Update( light0Desc.diffuse );
+    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->getUniform()->Update( light0Desc.ambient );
+    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->getUniform()->Update( light0Desc.specular );
 
     // update light position and direction
     SpatialNode * sn = light0->owner().entity().getNode<SpatialNode>();
@@ -185,8 +185,8 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
         GN_TODO( "rotate light direction accordingly" );
         direction.Set( 0, 0, 1.0f );
     }
-    mUniforms[StandardUniformType::LIGHT0_POSITION]->getUniform()->update( position );
-    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->getUniform()->update( direction );
+    mUniforms[StandardUniformType::LIGHT0_POSITION]->getUniform()->Update( position );
+    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->getUniform()->Update( direction );
 }
 
 // *****************************************************************************
@@ -220,7 +220,7 @@ GpuResourceDatabase & GN::util::VisualGraph::gdb() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualGraph::draw( Camera & camera )
+void GN::util::VisualGraph::Draw( Camera & camera )
 {
-    mImpl->draw( camera );
+    mImpl->Draw( camera );
 }

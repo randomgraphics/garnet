@@ -20,7 +20,7 @@ namespace GN { namespace gfx
         ///
         /// Get the renderer that the resource belongs to.
         ///
-        XenonGpu & getGpu() const { return mGpu; }
+        XenonGpu & GetGpu() const { return mGpu; }
 
     protected :
 

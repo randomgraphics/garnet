@@ -171,7 +171,7 @@ void GN::gfx::BasicGpuX11::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicGpuX11::processRenderWindowMessages( bool blockWhileMinimized )
 {
-    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
+    GN::win::ProcessWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************

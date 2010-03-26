@@ -95,7 +95,7 @@ namespace GN { namespace util
         }
 
         /// get uniform name. Return NULL for invalid uniform type.
-        const char * name() const
+        const char * Name() const
         {
             return isValid() ? desc().name : NULL;
         }

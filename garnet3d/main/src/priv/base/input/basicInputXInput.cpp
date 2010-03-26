@@ -8,7 +8,7 @@ typedef DWORD (WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex,XINPUT_STATE* pSt
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicXInput::processInputEvents()
+void GN::input::BasicXInput::ProcessInputEvents()
 {
     GN_GUARD;
 
@@ -56,6 +56,6 @@ void GN::input::BasicXInput::processInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicXInput::processInputEvents() {}
+void GN::input::BasicXInput::ProcessInputEvents() {}
 
 #endif

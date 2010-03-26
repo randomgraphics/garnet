@@ -10,25 +10,25 @@ public:
 
 	StackTexture() {}
 
-	bool onInit()
+	bool OnInit()
 	{
 		return true;
 	}
 
-	void onQuit()
+	void OnQuit()
 	{
 	}
 
-	void onUpdate()
+	void OnUpdate()
 	{
 	}
 
-	void onKeyPress( input::KeyEvent ke )
+	void OnKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::onKeyPress( ke );
+		app::SampleApp::OnKeyPress( ke );
 	}
 
-	void onRender()
+	void OnRender()
 	{
         RenderEngine & re = getRenderEngine();
         re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
@@ -38,5 +38,5 @@ public:
 int main()
 {
 	StackTexture app;
-	return app.run( 0, 0 );
+	return app.Run( 0, 0 );
 }

@@ -54,7 +54,7 @@ echo.            return DESCRIPTORS[*this];>>%header%
 echo.        }>>%header%
 echo.>>%header%
 echo.        /// get uniform name. Return NULL for invalid uniform type.>>%header%
-echo.        const char * name() const>>%header%
+echo.        const char * Name() const>>%header%
 echo.        {>>%header%
 echo.            return isValid() ? desc().name : NULL;>>%header%
 echo.        }>>%header%

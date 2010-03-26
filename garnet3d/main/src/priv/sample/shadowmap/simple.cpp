@@ -115,10 +115,10 @@ void GN::SimpleShadowMap::Clear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SimpleShadowMap::update()
+void GN::SimpleShadowMap::Update()
 {
     // update camera
-    mCamera.update( app::SampleApp::UPDATE_INTERVAL );
+    mCamera.Update( app::SampleApp::UPDATE_INTERVAL );
 
     RenderEngine & re = mApp.getRenderEngine();
 
@@ -136,7 +136,7 @@ void GN::SimpleShadowMap::update()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SimpleShadowMap::draw()
+void GN::SimpleShadowMap::Draw()
 {
     RenderEngine & re = mApp.getRenderEngine();
 
@@ -146,7 +146,7 @@ void GN::SimpleShadowMap::draw()
     mCtx.setDrawToTextures( 1, mColorMap, 0, 0, 0, mShadowMap, MsaaType::NONE );
     re.setContext( mCtx );
     re.clearScreen();
-    mShadowProjectors->draw();
+    mShadowProjectors->Draw();
 
     // draw to back buffer
     mScene.setProj( mProj );
@@ -154,7 +154,7 @@ void GN::SimpleShadowMap::draw()
     mCtx.setDrawToBackBuf();
     re.setContext( mCtx );
     re.clearScreen();
-    mShadowReceivers->draw();
+    mShadowReceivers->Draw();
 
     // draw axises
     static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };

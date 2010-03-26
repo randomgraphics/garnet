@@ -131,13 +131,13 @@ void FirstPersonCamera::setAngle( const Vector3f & r )
 //
 //
 // -----------------------------------------------------------------------------
-void FirstPersonCamera::update( float timeslice )
+void FirstPersonCamera::Update( float timeslice )
 {
     Vector3f delta_p(0,0,0);
     Vector3f delta_a(0,0,0);
 
     // process keyboard actions (as for right hand)
-    const KeyStatus * kb = gInput.getKeyboardStatus();
+    const KeyStatus * kb = gInput.GetKeyboardStatus();
     if( kb[mKeys[MOVE_F]].down ) delta_p.z -= mMoveSpeed * timeslice;
     if( kb[mKeys[MOVE_B]].down ) delta_p.z += mMoveSpeed * timeslice;
     if( kb[mKeys[MOVE_L]].down ) delta_p.x -= mMoveSpeed * timeslice;
@@ -162,7 +162,7 @@ void FirstPersonCamera::update( float timeslice )
     {
         setTargetAngle( mTargetAngle.getTarget() + delta_a );
     }
-    mTargetAngle.update( timeslice );
+    mTargetAngle.Update( timeslice );
     mAngle = mTargetAngle.getValue();
     sEuler2Matrix( mRotation3x3, -mAngle );
     mRotation4x4.Set( mRotation3x3 );
@@ -172,7 +172,7 @@ void FirstPersonCamera::update( float timeslice )
     {
         setTargetPosition( mTargetPosition.getTarget() + delta_p * mRotation3x3 );
     }
-    mTargetPosition.update( timeslice );
+    mTargetPosition.Update( timeslice );
     mPosition = mTargetPosition.getValue();
 
     // update view matrix
@@ -188,7 +188,7 @@ void FirstPersonCamera::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigAxisMove.Connect( this, &FirstPersonCamera::onAxisMove );
+        gInput.sigAxisMove.Connect( this, &FirstPersonCamera::OnAxisMove );
     }
     else
     {
@@ -214,11 +214,11 @@ void FirstPersonCamera::disconnectFromInput()
 //
 //
 // -----------------------------------------------------------------------------
-void FirstPersonCamera::onAxisMove( input::Axis a, int d )
+void FirstPersonCamera::OnAxisMove( input::Axis a, int d )
 {
     Input & i = gInput;
 
-    if( i.getKeyStatus( mKeys[AXIS_LOOK] ).down )
+    if( i.GetKeyStatus( mKeys[AXIS_LOOK] ).down )
     {
         float distance = mAxisSensitivity * d;
         Vector3f rotation(0,0,0);

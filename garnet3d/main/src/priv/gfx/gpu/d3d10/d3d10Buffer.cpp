@@ -76,7 +76,7 @@ static const D3D10_MAP SURFACE_UPDATE_FLAG_TO_D3D10_MAP[] =
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::D3D10Buffer::Update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -112,7 +112,7 @@ void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D10Buffer::Readback( DynaArray<UInt8> & data )
 {
     PIXPERF_FUNCTION_EVENT();
 

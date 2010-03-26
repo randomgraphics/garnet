@@ -4,7 +4,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::createBox(
+void GN::gfx::CreateBox(
     float sx, float sy, float sz,
     float * positions, size_t posStride,
     float * texcoords, size_t texStride,

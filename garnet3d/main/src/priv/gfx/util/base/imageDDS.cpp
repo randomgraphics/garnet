@@ -263,7 +263,7 @@ bool DDSReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::readHeader(
+bool DDSReader::ReadHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buff, size_t i_size )
 {
     GN_GUARD;
@@ -310,7 +310,7 @@ bool DDSReader::readHeader(
         i_buff += sizeof(DX10Info);
         i_size -= sizeof(DX10Info);
 
-        mImgDesc.format = GN::gfx::dxgiFormat2ColorFormat( dx10info->format );
+        mImgDesc.format = GN::gfx::DxgiFormat2ColorFormat( dx10info->format );
         if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
     }
     else
@@ -340,7 +340,7 @@ bool DDSReader::readHeader(
     {
         for( size_t f = 0; f < mImgDesc.numFaces; ++f )
         {
-            GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
+            GN::gfx::MipmapDesc & m = mImgDesc.GetMipmap( f, l );
 
             m.width  = width;
             m.height = height;
@@ -375,7 +375,7 @@ bool DDSReader::readHeader(
         if( depth > 1 ) depth >>= 1;
     }
 
-    GN_ASSERT( mImgDesc.valid() );
+    GN_ASSERT( mImgDesc.Valid() );
 
     // success
     o_desc = mImgDesc;
@@ -389,7 +389,7 @@ bool DDSReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::readImage( void * o_data ) const
+bool DDSReader::ReadImage( void * o_data ) const
 {
     GN_GUARD;
 
@@ -419,7 +419,7 @@ bool DDSReader::readImage( void * o_data ) const
                 }
 
                 UInt8 * dst =
-                    ((UInt8*)o_data) + mImgDesc.getSliceOffset( level, face );
+                    ((UInt8*)o_data) + mImgDesc.GetSliceOffset( level, face );
 
                 memcpy( dst, src, m.slicePitch );
 
@@ -432,7 +432,7 @@ bool DDSReader::readImage( void * o_data ) const
     else*/
     {
         // 1D, 2D, 3D texture
-        size_t nbytes = mImgDesc.getTotalBytes();
+        size_t nbytes = mImgDesc.GetTotalBytes();
         if( nbytes != mSize )
         {
             GN_ERROR(sLogger)( "image size is incorrect!" );

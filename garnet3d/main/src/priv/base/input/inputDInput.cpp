@@ -58,13 +58,13 @@ void GN::input::InputDInput::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::input::InputDInput::attachToWindow( HandleType disp, HandleType window )
+bool GN::input::InputDInput::AttachToWindow( HandleType disp, HandleType window )
 {
     GN_GUARD;
 
     mAttached = false;
 
-    if( !MyParent::attachToWindow(disp,window) ) return false;
+    if( !MyParent::AttachToWindow(disp,window) ) return false;
 
     GN_ASSERT( ::IsWindow( (HWND)window ) );
 
@@ -94,11 +94,11 @@ bool GN::input::InputDInput::attachToWindow( HandleType disp, HandleType window 
 //
 //
 // ----------------------------------------------------------------------------
-void GN::input::InputDInput::processInputEvents()
+void GN::input::InputDInput::ProcessInputEvents()
 {
     GN_GUARD_SLOW;
 
-    MyParent::processInputEvents();
+    MyParent::ProcessInputEvents();
 
     if( mAttached && mAcquired )
     {

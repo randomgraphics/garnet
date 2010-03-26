@@ -51,17 +51,17 @@ namespace GN { namespace gfx
         ///
         /// Get window handle
         ///
-        HWND getWindowHandle() const { return mWindow; }
+        HWND GetWindowHandle() const { return mWindow; }
 
         ///
         /// Get monitor handle
         ///
-        HMONITOR getMonitorHandle() const { return mMonitor; }
+        HMONITOR GetMonitorHandle() const { return mMonitor; }
 
         ///
         /// Get client size
         ///
-        void getClientSize( UInt32 & width, UInt32 & height ) const;
+        void GetClientSize( UInt32 & width, UInt32 & height ) const;
 
         ///
         /// handle render window size move, trigger renderer signal as apropriate.
@@ -104,7 +104,7 @@ namespace GN { namespace gfx
     private:
 
         bool    postInit();
-        bool    createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
+        bool    NewWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
         void    handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static  LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

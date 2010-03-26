@@ -17,7 +17,7 @@ public:
     {
     }
 
-	bool onInit()
+	bool OnInit()
 	{
         // initialize actor
         LoadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
@@ -33,20 +33,20 @@ public:
 		return true;
 	}
 
-	void onQuit()
+	void OnQuit()
 	{
 	}
 
-	void onUpdate()
+	void OnUpdate()
 	{
 	}
 
-	void onKeyPress( input::KeyEvent ke )
+	void OnKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::onKeyPress( ke );
+		app::SampleApp::OnKeyPress( ke );
 	}
 
-	void onRender()
+	void OnRender()
 	{
 	}
 };
@@ -54,5 +54,5 @@ public:
 int main()
 {
 	MyApp app;
-	return app.run( 0, 0 );
+	return app.Run( 0, 0 );
 }

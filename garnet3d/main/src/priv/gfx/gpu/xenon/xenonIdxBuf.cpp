@@ -65,9 +65,9 @@ bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
         return Failure();
     }
 
-    setDesc( desc );
+    SetDesc( desc );
 
-    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     // get bytes per index
     UInt32 bpi = 2 << (UInt32)desc.bits32;
@@ -114,7 +114,7 @@ void GN::gfx::XenonIdxBuf::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::XenonIdxBuf::update(
+GN::gfx::XenonIdxBuf::Update(
     size_t            startidx,
     size_t            numidx,
     const void      * data,
@@ -127,7 +127,7 @@ GN::gfx::XenonIdxBuf::update(
     // Note: this function may modify "numidx"
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
-    size_t bpi = 2 << (size_t)getDesc().bits32;
+    size_t bpi = 2 << (size_t)GetDesc().bits32;
 
     // Note: XDK does not support partial locking on index buffer
     UInt8 * buf;
@@ -146,7 +146,7 @@ GN::gfx::XenonIdxBuf::update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonIdxBuf::Readback( DynaArray<UInt8> & data )
 {
     GN_GUARD_SLOW;
 

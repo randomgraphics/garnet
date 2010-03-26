@@ -52,9 +52,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        void processInputEvents();
-        bool attachToWindow( HandleType, HandleType );
-        void getMousePosition( int & x, int & y ) const;
+        void ProcessInputEvents();
+        bool AttachToWindow( HandleType, HandleType );
+        void GetMousePosition( int & x, int & y ) const;
 
         // ********************************
         // protected functions

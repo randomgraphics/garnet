@@ -46,7 +46,7 @@ namespace GN { namespace gfx
         bool                        setEffectResource( GpuResource * resource );
         AutoRef<EffectResource>     getEffectResource() const { return mEffect.resource; }
 
-        void                        draw() const;
+        void                        Draw() const;
 
         // ********************************
         // private classes

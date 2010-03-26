@@ -96,7 +96,7 @@ bool PNGReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool PNGReader::readHeader(
+bool PNGReader::ReadHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -131,18 +131,18 @@ bool PNGReader::readHeader(
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
     if ( GN::gfx::ColorFormat::UNKNOWN == o_desc.format ) return false;
-    UInt32 bpp = (UInt32)o_desc.format.getBitsPerPixel();
+    UInt32 bpp = (UInt32)o_desc.format.GetBitsPerPixel();
 
     // update o_desc
     o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
+    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
     m.width         = (UInt16)mInfo->width;
     m.height        = (UInt16)mInfo->height;
     m.depth         = 1;
     m.rowPitch      = mInfo->width * bpp / 8;
     m.slicePitch    = m.rowPitch * mInfo->height;
     m.levelPitch    = m.slicePitch;
-    GN_ASSERT( o_desc.valid() );
+    GN_ASSERT( o_desc.Valid() );
 
     // store image pitch
     mRowPitch = m.rowPitch;
@@ -156,7 +156,7 @@ bool PNGReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool PNGReader::readImage( void * o_data )
+bool PNGReader::ReadImage( void * o_data )
 {
     GN_GUARD;
 

@@ -226,7 +226,7 @@ void GN::gfx::LineRenderer::flush()
 
     GN_ASSERT( firstPendingLineOffset + numPendingLines <= MAX_LINES );
 
-    mContext.vtxbufs[0].vtxbuf->update(
+    mContext.vtxbufs[0].vtxbuf->Update(
         firstPendingLineOffset * sizeof(Line),
         numPendingLines * sizeof(Line),
         mNextPendingLine,
@@ -234,7 +234,7 @@ void GN::gfx::LineRenderer::flush()
 
     mGpu.bindContext( mContext );
 
-    mGpu.draw(
+    mGpu.Draw(
         PrimitiveType::LINE_LIST,
         numPendingLines * 2,       // numvtx
         firstPendingLineOffset * 2 // startvtx,

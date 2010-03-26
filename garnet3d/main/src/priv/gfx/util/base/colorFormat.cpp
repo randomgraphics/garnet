@@ -311,7 +311,7 @@ GN::gfx::ColorFormat::sFromString( const char * str )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
+const char * GN::gfx::D3d9Format2Str( int d3d9fmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =
@@ -393,7 +393,7 @@ const char * GN::gfx::d3d9Format2Str( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::xenonFormat2Str( int xefmt )
+const char * GN::gfx::XenonFormat2Str( int xefmt )
 {
     GN_UNUSED_PARAM(xefmt);
     return "NOT IMPLEMENTED";
@@ -402,7 +402,7 @@ const char * GN::gfx::xenonFormat2Str( int xefmt )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
+const char * GN::gfx::DxgiFormat2Str( int dxgifmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =
@@ -508,7 +508,7 @@ const char * GN::gfx::dxgiFormat2Str( int dxgifmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
+GN::gfx::ColorFormat GN::gfx::D3d9Format2ColorFormat( int d3d9fmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -521,7 +521,7 @@ GN::gfx::ColorFormat GN::gfx::d3d9Format2ColorFormat( int d3d9fmt )
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
+int GN::gfx::ColorFormat2D3D9Format( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -534,7 +534,7 @@ int GN::gfx::colorFormat2D3D9Format( ColorFormat clrfmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
+GN::gfx::ColorFormat GN::gfx::XenonFormat2ColorFormat( int xefmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -547,7 +547,7 @@ GN::gfx::ColorFormat GN::gfx::xenonFormat2ColorFormat( int xefmt )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
+UInt32 GN::gfx::ColorFormat2XenonFormat( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -560,7 +560,7 @@ UInt32 GN::gfx::colorFormat2XenonFormat( ColorFormat clrfmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
+GN::gfx::ColorFormat GN::gfx::DxgiFormat2ColorFormat( int dxgifmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
@@ -573,7 +573,7 @@ GN::gfx::ColorFormat GN::gfx::dxgiFormat2ColorFormat( int dxgifmt )
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::colorFormat2DxgiFormat( ColorFormat clrfmt )
+int GN::gfx::ColorFormat2DxgiFormat( ColorFormat clrfmt )
 {
     for( size_t i = 0; i < COLOR_FORMAT_CONVERT_TABLE_SIZE; ++i )
     {
