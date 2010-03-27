@@ -432,7 +432,7 @@ struct D3D9StateDump
         operation.Draw( dev );
     }
 
-    bool loadFromXml( const XmlNode & root, const StrA & basedir )
+    bool LoadFromXml( const XmlNode & root, const StrA & basedir )
     {
         // check root name
         const XmlElement * e = root.ToElement();

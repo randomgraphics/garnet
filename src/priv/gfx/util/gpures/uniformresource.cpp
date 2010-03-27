@@ -23,7 +23,7 @@ struct UniformDesc
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::UniformResource::guid()
+const Guid & GN::gfx::UniformResource::GetGuid()
 {
     static const Guid UNIFORM_GUID = { 0xd140dbea, 0x9ce3, 0x4bb9, { 0x9c, 0xa7, 0xb8, 0x14, 0xf3, 0x83, 0xab, 0x95 } };
     return UNIFORM_GUID;
@@ -36,12 +36,12 @@ bool GN::gfx::UniformResource::Reset(
     size_t                length,
     const void          * initialData )
 {
-    AutoRef<Uniform> u( database().gpu().CreateUniform( length ) );
+    AutoRef<Uniform> u( GetGdb().GetGpu().CreateUniform( length ) );
     if( !u ) return false;
 
     if( initialData ) u->Update( 0, length, initialData );
 
-    setUniform( u );
+    SetUniform( u );
 
     return true;
 }
@@ -49,7 +49,7 @@ bool GN::gfx::UniformResource::Reset(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
+void GN::gfx::UniformResource::SetUniform( const AutoRef<Uniform> & newUniform )
 {
     if( mUniform == newUniform ) return;
 
@@ -96,9 +96,9 @@ public:
     {
         GpuResourceFactory factory = { &sCreateInstance };
 
-        if( db.hasResourceFactory( UniformResource::guid() ) ) return true;
+        if( db.HasResourceFactory( UniformResource::GetGuid() ) ) return true;
 
-        return db.registerResourceFactory( UniformResource::guid(), "Uniform Resource", factory );
+        return db.RegisterResourceFactory( UniformResource::GetGuid(), "Uniform Resource", factory );
     }
 };
 

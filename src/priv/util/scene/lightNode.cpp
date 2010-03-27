@@ -62,7 +62,7 @@ GN::util::LightNode::~LightNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::util::LightNode::guid()
+const Guid & GN::util::LightNode::GetGuid()
 {
     static const Guid MY_GUID = { 0x5cd50f8d, 0x69fc, 0x4836, { 0xb3, 0x28, 0xea, 0x60, 0xef, 0xcb, 0x21, 0xa8 } };
     return MY_GUID;

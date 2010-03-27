@@ -710,7 +710,7 @@ GN::gfx::MeshResourceDesc::CalculateBoundingSphere( Sphere<float> & sphere ) con
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
+size_t GN::gfx::MeshResourceDesc::GetVtxBufSize( size_t stream ) const
 {
     if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
     {
@@ -732,7 +732,7 @@ size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
+size_t GN::gfx::MeshResourceDesc::GetIdxBufSize() const
 {
     return numidx * (idx32?4:2);
 }
@@ -740,7 +740,7 @@ size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::LoadFromFile( File & fp )
 {
     Clear();
 
@@ -761,7 +761,7 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::LoadFromFile( const char * filename )
 {
     GN_INFO(sLogger)( "Load mesh from file: %s", filename?filename:"<null filename>" );
 
@@ -770,13 +770,13 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
     AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
     if( !fp ) return AutoRef<Blob>::NULLREF;
 
-    return loadFromFile( *fp );
+    return LoadFromFile( *fp );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
+bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
 {
     VertexFormatProperties vfp;
     if( !vfp.analyze( vtxfmt ) ) return false;
@@ -859,11 +859,11 @@ bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::saveToFile( const char * filename ) const
+bool GN::gfx::MeshResourceDesc::SaveToFile( const char * filename ) const
 {
     GN_INFO(sLogger)( "Save mesh to file: %s", filename?filename:"<null filename>" );
 
     AutoObjPtr<File> fp( fs::OpenFile( filename, "wb" ) );
     if( !fp ) return false;
-    return saveToFile( *fp );
+    return SaveToFile( *fp );
 }

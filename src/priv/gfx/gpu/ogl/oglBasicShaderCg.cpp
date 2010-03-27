@@ -91,7 +91,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
     UInt32 handle = getFirstUniform();
     while( handle )
     {
-        applyUniform( getUniform( handle ) );
+        applyUniform( GetUniform( handle ) );
         handle = getNextUniform( handle );
     }
     clearDirtySet();
@@ -109,7 +109,7 @@ void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
     std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
-        applyUniform( getUniform( *i ) );
+        applyUniform( GetUniform( *i ) );
     }
     clearDirtySet();
     GN_UNGUARD_SLOW;

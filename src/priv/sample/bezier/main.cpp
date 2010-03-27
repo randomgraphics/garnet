@@ -117,7 +117,7 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     md.indices = indices;
     md.prim = PrimitiveType::TRIANGLE_LIST;
 
-    AutoRef<MeshResource> mesh( gdb.createResource<MeshResource>(NULL) );
+    AutoRef<MeshResource> mesh( gdb.CreateResource<MeshResource>(NULL) );
     if( !mesh || !mesh->Reset(&md) ) return 0;
 
     return mesh.Detach();
@@ -279,7 +279,7 @@ createEffect( GpuResourceDatabase & gdb )
     ed.techniques["glsl"].passes.Resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
-    AutoRef<EffectResource> e = gdb.createResource<EffectResource>(NULL);
+    AutoRef<EffectResource> e = gdb.CreateResource<EffectResource>(NULL);
     if( !e || !e->Reset( &ed ) ) return NULL;
 
     return e.Detach();
@@ -331,10 +331,10 @@ class BezierApp : public SampleApp
         if( !mesh ) return false;
 
         // initialize model
-        model = gdb.createResource<ModelResource>(NULL);
-        model->setEffectResource( effect );
-        model->setMeshResource( mesh );
-        model->setTextureResource( "DIFFUSE_TEXTURE", TextureResource::loadFromFile( gdb, "media::texture/earth.jpg" ) );
+        model = gdb.CreateResource<ModelResource>(NULL);
+        model->SetEffectResource( effect );
+        model->SetMeshResource( mesh );
+        model->SetTextureResource( "DIFFUSE_TEXTURE", TextureResource::LoadFromFile( gdb, "media::texture/earth.jpg" ) );
 
         // create entity
         light  = world.createLightEntity( NULL );

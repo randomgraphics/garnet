@@ -110,12 +110,12 @@ bool Init( Gpu & g )
 
     EffectResourceDesc ed;
     initEffectDesc( ed );
-    AutoRef<EffectResource> e = db->createResource<EffectResource>( "e0" );
+    AutoRef<EffectResource> e = db->CreateResource<EffectResource>( "e0" );
     if( !e || !e->Reset( &ed ) ) return false;
 
     MeshResourceDesc med;
     initMeshDesc( med );
-    AutoRef<MeshResource> mesh = db->createResource<MeshResource>( "m0" );
+    AutoRef<MeshResource> mesh = db->CreateResource<MeshResource>( "m0" );
     if( !mesh || !mesh->Reset( &med ) ) return false;
 
     ModelResourceDesc mod;
@@ -124,13 +124,13 @@ bool Init( Gpu & g )
     mod.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
     mod.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
-    model = db->createResource<ModelResource>( "m0" ).Detach();
+    model = db->CreateResource<ModelResource>( "m0" ).Detach();
     if( 0 == model ) return false;
 
     if( !model->Reset( &mod ) ) return false;
 
-    tex[0].Attach( loadTextureFromFile( db->gpu(), "media::/texture/rabit.png" ) );
-    tex[1].Attach( loadTextureFromFile( db->gpu(), "media::/texture/earth.jpg" ) );
+    tex[0].Attach( loadTextureFromFile( db->GetGpu(), "media::/texture/rabit.png" ) );
+    tex[1].Attach( loadTextureFromFile( db->GetGpu(), "media::/texture/earth.jpg" ) );
 
     // success
     return true;
@@ -153,15 +153,15 @@ void Update( Input & in )
         static int i = 0;
         i = ( i + 1 ) % 2;
 
-        AutoRef<TextureResource> t( db->findResource<TextureResource>( "media::/texture/rabit.png" ) );
-        if( t ) t->setTexture( tex[i] );
+        AutoRef<TextureResource> t( db->FindResource<TextureResource>( "media::/texture/rabit.png" ) );
+        if( t ) t->SetTexture( tex[i] );
     }
 }
 
 void Draw( Gpu & )
 {
-    AutoRef<UniformResource> u( model->getUniformResource( "MATRIX_PVW" ) );
-    if( u ) u->getUniform()->Update( Matrix44f::sIdentity() );
+    AutoRef<UniformResource> u( model->GetUniformResource( "MATRIX_PVW" ) );
+    if( u ) u->GetUniform()->Update( Matrix44f::sIdentity() );
 
     model->Draw();
 }

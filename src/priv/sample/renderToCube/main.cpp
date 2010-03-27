@@ -71,7 +71,7 @@ public:
         }
 
         // create cube render target
-        cubemap = gdb.createResource<TextureResource>( NULL );
+        cubemap = gdb.CreateResource<TextureResource>( NULL );
         if( !cubemap ) return false;
         TextureDesc texdesc;
         texdesc.width = texdesc.height = 512;
@@ -83,22 +83,22 @@ public:
         if( !cubemap->Reset( &texdesc ) ) return false;
 
         // load cube texture rendering effect
-        AutoRef<EffectResource> cubefx = EffectResource::loadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );
+        AutoRef<EffectResource> cubefx = EffectResource::LoadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );
         if( !cubefx ) return false;
 
         // load cube mesh
-        AutoRef<MeshResource> cubemesh = gdb.createResource<MeshResource>( NULL );
+        AutoRef<MeshResource> cubemesh = gdb.CreateResource<MeshResource>( NULL );
         if( !cubemesh ) return false;
         if( !initMesh( cubemesh ) ) return false;
 
         // create cube model
-        box = gdb.createResource<ModelResource>( NULL );
+        box = gdb.CreateResource<ModelResource>( NULL );
         if( !box ) return false;
 
         // setup model effect and textures
-        box->setEffectResource( cubefx );
-        box->setMeshResource( cubemesh );
-        box->setTextureResource( "cube", cubemap );
+        box->SetEffectResource( cubefx );
+        box->SetMeshResource( cubemesh );
+        box->SetTextureResource( "cube", cubemap );
 
         // initial arcball window
         const DispDesc & dd = gpu.GetDispDesc();
@@ -122,7 +122,7 @@ public:
     {
         world = arcball.getRotationMatrix44();
         pvw = proj * view * world;
-        box->getUniformResource("pvw")->getUniform()->Update( pvw );
+        box->GetUniformResource("pvw")->GetUniform()->Update( pvw );
     }
 
     void OnRender()
@@ -132,7 +132,7 @@ public:
 
         // draw to cubemap
         gc.colortargets.Resize( 1 );
-        gc.colortargets[0].texture = cubemap->getTexture();
+        gc.colortargets[0].texture = cubemap->GetTexture();
         gc.colortargets[0].subsurface = 0;
         for( int i = 0; i < 6; ++i )
         {

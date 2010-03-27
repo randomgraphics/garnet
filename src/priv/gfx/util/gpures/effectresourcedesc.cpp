@@ -633,7 +633,7 @@ void GN::gfx::EffectResourceDesc::Clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectResourceDesc::loadFromXml( const XmlNode & root )
+bool GN::gfx::EffectResourceDesc::LoadFromXml( const XmlNode & root )
 {
     Clear();
 
@@ -662,7 +662,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXml( const XmlNode & root )
 //
 //
 // -----------------------------------------------------------------------------
-XmlElement * GN::gfx::EffectResourceDesc::saveToXml( XmlNode & root ) const
+XmlElement * GN::gfx::EffectResourceDesc::SaveToXml( XmlNode & root ) const
 {
     GN_UNUSED_PARAM( root );
     GN_UNIMPL();

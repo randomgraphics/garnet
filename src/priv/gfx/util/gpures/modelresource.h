@@ -32,19 +32,19 @@ namespace GN { namespace gfx
 
         bool                        Reset( const ModelResourceDesc * desc );
 
-        AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
+        AutoRef<ModelResource>      MakeClone( const char * nameOfTheClone ) const;
 
-        bool                        setTextureResource( const char * effectParameterName, GpuResource * );
-        AutoRef<TextureResource>    getTextureResource( const char * effectParameterName ) const;
+        bool                        SetTextureResource( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource>    GetTextureResource( const char * effectParameterName ) const;
 
-        bool                        setUniformResource( const char * effectParameterName, GpuResource * );
-        AutoRef<UniformResource>    getUniformResource( const char * effectParameterName ) const;
+        bool                        SetUniformResource( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource>    GetUniformResource( const char * effectParameterName ) const;
 
-        bool                        setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
-        AutoRef<MeshResource>       getMeshResource( MeshResourceSubset * subset ) const;
+        bool                        SetMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
+        AutoRef<MeshResource>       GetMeshResource( MeshResourceSubset * subset ) const;
 
-        bool                        setEffectResource( GpuResource * resource );
-        AutoRef<EffectResource>     getEffectResource() const { return mEffect.resource; }
+        bool                        SetEffectResource( GpuResource * resource );
+        AutoRef<EffectResource>     GetEffectResource() const { return mEffect.resource; }
 
         void                        Draw() const;
 
@@ -152,8 +152,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          modelName() const { return mOwner.database().getResourceName( &mOwner ); }
+        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
+        const char *          modelName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
 
         bool fromDesc( const ModelResourceDesc & desc );
         void Clear();

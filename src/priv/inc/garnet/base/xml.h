@@ -339,7 +339,7 @@ namespace GN
             return false;
         }
         GN_ASSERT( xpr.root );
-        return t.loadFromXml( *xpr.root, basedir );
+        return t.LoadFromXml( *xpr.root, basedir );
 
         GN_UNGUARD;
     }

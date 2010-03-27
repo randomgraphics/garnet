@@ -1373,7 +1373,7 @@ namespace GN { namespace gfx
         /// call this function to force rebinding of current renderer
         /// context, which is much easier and less error prone.
         ///
-        virtual void rebindContext() = 0;
+        virtual void RebindContext() = 0;
 
         ///
         /// Get current render context

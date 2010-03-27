@@ -210,7 +210,7 @@ bool GN::gfx::EffectResource::Impl::Reset( const EffectResourceDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
+size_t GN::gfx::EffectResource::Impl::FindTexture( const char * name ) const
 {
     if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
 
@@ -228,7 +228,7 @@ size_t GN::gfx::EffectResource::Impl::findTexture( const char * name ) const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
+size_t GN::gfx::EffectResource::Impl::FindUniform( const char * name ) const
 {
     if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
 
@@ -246,7 +246,7 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext & gc ) const
+void GN::gfx::EffectResource::Impl::ApplyToContext( size_t passIndex, GpuContext & gc ) const
 {
     if( passIndex >= mPasses.Size() )
     {
@@ -297,7 +297,7 @@ bool
 GN::gfx::EffectResource::Impl::initGpuPrograms(
     const EffectResourceDesc & effectDesc )
 {
-    Gpu & gpu = database().gpu();
+    Gpu & gpu = GetGdb().GetGpu();
 
     for( const StringMap<char,EffectGpuProgramDesc>::KeyValuePair * iter = effectDesc.gpuprograms.First();
          iter != NULL;
@@ -390,7 +390,7 @@ GN::gfx::EffectResource::Impl::initTech(
     EffectRenderStateDesc commonRenderStates;
     sMergeRenderStates( commonRenderStates, techDesc.renderstates, effectDesc.renderstates );
 
-    Gpu & gpu = database().gpu();
+    Gpu & gpu = GetGdb().GetGpu();
 
     // initialize each pass
     for( size_t ipass = 0; ipass < techDesc.passes.Size(); ++ipass )
@@ -597,11 +597,11 @@ public:
 // -----------------------------------------------------------------------------
 bool GN::gfx::registerEffectResourceFactory( GpuResourceDatabase & db )
 {
-    if( db.hasResourceFactory( EffectResource::guid() ) ) return true;
+    if( db.HasResourceFactory( EffectResource::GetGuid() ) ) return true;
 
     GpuResourceFactory factory = { &EffectResourceInternal::sCreateInstance };
 
-    return db.registerResourceFactory( EffectResource::guid(), "Effect Resource", factory );
+    return db.RegisterResourceFactory( EffectResource::GetGuid(), "Effect Resource", factory );
 }
 
 // *****************************************************************************
@@ -629,7 +629,7 @@ GN::gfx::EffectResource::~EffectResource()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::EffectResource::guid()
+const Guid & GN::gfx::EffectResource::GetGuid()
 {
     static const Guid EFFECT_GUID = { 0x621c00ed, 0xcd51, 0x4cc5, { 0x89, 0x9f, 0xd4, 0xd5, 0xb1, 0xd5, 0xb2, 0xa4 } };
     return EFFECT_GUID;
@@ -638,7 +638,7 @@ const Guid & GN::gfx::EffectResource::guid()
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
+AutoRef<EffectResource> GN::gfx::EffectResource::LoadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -649,7 +649,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<EffectResource> resource( db.findResource<EffectResource>( filename ) );
+    AutoRef<EffectResource> resource( db.FindResource<EffectResource>( filename ) );
     if( resource ) return resource;
 
     // convert to full (absolute) path
@@ -657,7 +657,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
     filename = abspath;
 
     // Try search for existing resource again with full path
-    resource = db.findResource<EffectResource>( filename );
+    resource = db.FindResource<EffectResource>( filename );
     if( resource ) return resource;
 
     // load new effect from file
@@ -686,10 +686,10 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
 
     // load descriptor from file
     EffectResourceDesc desc;
-    if( !desc.loadFromXml( *xpr.root ) ) return AutoRef<EffectResource>::NULLREF;
+    if( !desc.LoadFromXml( *xpr.root ) ) return AutoRef<EffectResource>::NULLREF;
 
     // create new resource
-    resource = db.createResource<EffectResource>( filename );
+    resource = db.CreateResource<EffectResource>( filename );
     if( 0 == resource || !resource->Reset( &desc ) ) return AutoRef<EffectResource>::NULLREF;
 
     // done
@@ -701,16 +701,16 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Reset( const EffectResourceDesc * desc ) { return mImpl->Reset( desc ); }
 
-size_t GN::gfx::EffectResource::getNumPasses() const { return mImpl->getNumPasses(); }
+size_t GN::gfx::EffectResource::GetNumPasses() const { return mImpl->GetNumPasses(); }
 
-size_t GN::gfx::EffectResource::getNumTextures() const { return mImpl->getNumTextures(); }
-size_t GN::gfx::EffectResource::findTexture( const char * name ) const { return mImpl->findTexture( name ); }
-const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::getTextureProperties( size_t i ) const { return mImpl->getTextureProperties( i ); }
+size_t GN::gfx::EffectResource::GetNumTextures() const { return mImpl->GetNumTextures(); }
+size_t GN::gfx::EffectResource::FindTexture( const char * name ) const { return mImpl->FindTexture( name ); }
+const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::GetTextureProperties( size_t i ) const { return mImpl->GetTextureProperties( i ); }
 
-size_t GN::gfx::EffectResource::getNumUniforms() const { return mImpl->getNumUniforms(); }
-size_t GN::gfx::EffectResource::findUniform( const char * name ) const { return mImpl->findUniform( name ); }
-const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::getUniformProperties( size_t i ) const { return mImpl->getUniformProperties( i ); }
+size_t GN::gfx::EffectResource::GetNumUniforms() const { return mImpl->GetNumUniforms(); }
+size_t GN::gfx::EffectResource::FindUniform( const char * name ) const { return mImpl->FindUniform( name ); }
+const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::GetUniformProperties( size_t i ) const { return mImpl->GetUniformProperties( i ); }
 
-const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::getRenderStates( size_t pass ) const { return mImpl->getRenderStates( pass ); }
+const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::GetRenderStates( size_t pass ) const { return mImpl->GetRenderStates( pass ); }
 
-void GN::gfx::EffectResource::applyToContext( size_t pass, GpuContext & gc ) const { return mImpl->applyToContext( pass, gc ); }
+void GN::gfx::EffectResource::ApplyToContext( size_t pass, GpuContext & gc ) const { return mImpl->ApplyToContext( pass, gc ); }

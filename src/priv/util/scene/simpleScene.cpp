@@ -323,11 +323,11 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // associate texture to the model
         const AseMaterial & am = ase.materials[subset.matid];
-        if( model.hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
+        if( model.HasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
         {
             model.textures["ALBEDO_TEXTURE"].resourceName = am.mapdiff.bitmap;
         }
-        if( model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.Empty() )
+        if( model.HasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.Empty() )
         {
             model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap;
         }
@@ -377,7 +377,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 {
     ModelResourceDesc md;
 
-    if( !md.loadFromXml( root, basedir ) ) return false;
+    if( !md.LoadFromXml( root, basedir ) ) return false;
 
     XmlAttrib * modelName = root.FindAttrib( "name" );
     if( !modelName || modelName->value.Empty() )
@@ -389,7 +389,7 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
     if( NULL == desc.meshes.Find( md.mesh ) )
     {
         MeshResourceDesc mesh;
-        AutoRef<Blob> blob = mesh.loadFromFile( fs::ResolvePath( basedir, md.mesh ) );
+        AutoRef<Blob> blob = mesh.LoadFromFile( fs::ResolvePath( basedir, md.mesh ) );
         if( !blob ) return false;
 
         desc.meshes[md.mesh] = mesh;
@@ -609,7 +609,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
         StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.ToRawPtr(), meshindex );
 
-        if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
+        if( !mesh.SaveToFile( dirname + "\\" + newMeshName ) ) return false;
 
         meshNameMapping[oldMeshName] = newMeshName;
 
@@ -637,7 +637,7 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             model.mesh = *pNewMeshName;
         }
 
-        XmlElement * modelNode = model.saveToXml( *models, dirname );
+        XmlElement * modelNode = model.SaveToXml( *models, dirname );
         if( !modelNode ) return false;
 
         XmlAttrib * a = xmldoc.CreateAttrib( modelNode );
@@ -758,7 +758,7 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
     const StrA & meshname = fp.Name();
 
     MeshResourceDesc mesh;
-    AutoRef<Blob> blob = mesh.loadFromFile( fp );
+    AutoRef<Blob> blob = mesh.LoadFromFile( fp );
     if( !blob ) return false;
 
     // determine the model template
@@ -851,7 +851,7 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
 
         if( !pModelDesc->mesh.Empty() )
         {
-            mesh = world.gdb().findResource<MeshResource>( pModelDesc->mesh );
+            mesh = world.gdb().FindResource<MeshResource>( pModelDesc->mesh );
             if( !mesh )
             {
 
@@ -867,12 +867,12 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
                 }
 
                 // create new mesh
-                mesh = world.gdb().createResource<MeshResource>( pModelDesc->mesh );
+                mesh = world.gdb().CreateResource<MeshResource>( pModelDesc->mesh );
                 if( !mesh || !mesh->Reset( pMeshDesc ) ) continue;
             }
         }
 
-        AutoRef<ModelResource> model = world.gdb().createResource<ModelResource>( NULL );
+        AutoRef<ModelResource> model = world.gdb().CreateResource<ModelResource>( NULL );
         if( !model->Reset( pModelDesc ) ) continue;
 
         e->getNode<VisualNode>()->addModel( model );
@@ -917,7 +917,7 @@ void GN::util::SimpleWorldDesc::Clear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
+bool GN::util::SimpleWorldDesc::LoadFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
 
@@ -960,7 +960,7 @@ bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 ///
 /// write world description to file
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
+bool GN::util::SimpleWorldDesc::SaveToFile( const char * filename )
 {
     GN_SCOPE_PROFILER( profiler, "Save simple world to file" );
 

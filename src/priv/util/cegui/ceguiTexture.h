@@ -37,7 +37,7 @@ namespace CEGUI
 
     	virtual	ushort  getWidth(void) const { return mWidth; }
     	virtual	ushort  getHeight(void) const { return mHeight; }
-    	virtual void    loadFromFile(const String& filename, const String& resourceGroup);
+    	virtual void    LoadFromFile(const String& filename, const String& resourceGroup);
     	virtual void    loadFromMemory(const void* buffPtr, uint buffWidth, uint buffHeight);
 
         // ********************************

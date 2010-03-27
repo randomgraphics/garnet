@@ -51,7 +51,7 @@ public:
         // load scene from file
         //if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
         SimpleWorldDesc swd;
-        if( !swd.loadFromFile( filename ) ) return false;
+        if( !swd.LoadFromFile( filename ) ) return false;
         scene = swd.populateTheWorld( w );
         if( !scene ) return false;
 

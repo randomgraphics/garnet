@@ -55,7 +55,7 @@ bool GN::SimpleShadowMap::Init( const StrA & actorName )
     // set light transform for shadow map look-up
     EffectItemID id = 0;
     Effect * e = entity2Object<Effect*>( loadEffectEntityFromXmlFile( em, re, "media::/effect/shadowmap.xml" ), 0 );
-    if( e && e->hasUniform( "light0_pvw", &id ) )
+    if( e && e->HasUniform( "light0_pvw", &id ) )
     {
         float fOffsetX = 0.5f + (0.5f / 1024);
         float fOffsetY = 0.5f + (0.5f / 1024);
@@ -67,7 +67,7 @@ bool GN::SimpleShadowMap::Init( const StrA & actorName )
             0.0f,  0.0f, fZScale, fBias,
             0.0f,  0.0f,    0.0f, 1.0f );
         Matrix44f lpvw = scaleBias * mLightProj * mLightView * mShadowProjectors->getLocal2Root();
-        e->setUniform( id, lpvw );
+        e->SetUniform( id, lpvw );
     }
 
     mCtx.resetToDefault();
