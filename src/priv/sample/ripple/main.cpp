@@ -106,11 +106,11 @@ public:
         gpd.vs.entry = "vsmain";
         gpd.ps.source = rippleCode;
         gpd.ps.entry = "psmain";
-        mContext.gpuProgram.Attach( gpu.createGpuProgram( gpd ) );
+        mContext.gpuProgram.Attach( gpu.CreateGpuProgram( gpd ) );
         if( !mContext.gpuProgram ) return false;
 
         mContext.uniforms.Resize( 1 );
-        mContext.uniforms[0].Attach( gpu.createUniform( sizeof(mRipples) ) );
+        mContext.uniforms[0].Attach( gpu.CreateUniform( sizeof(mRipples) ) );
         if( !mContext.uniforms[0] ) return false;
 
         // initialize ripples
@@ -162,9 +162,9 @@ public:
     {
         Gpu & gpu = GetGpu();
 
-        const DispDesc & dd = gpu.getDispDesc();
+        const DispDesc & dd = gpu.GetDispDesc();
 
-        gpu.bindContext( mContext );
+        gpu.BindContext( mContext );
         mSprite->drawSingleSolidSprite(
             0xFFFF0000,
             SpriteRenderer::USE_EXTERNAL_GPU_PROGRAM,

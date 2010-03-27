@@ -67,7 +67,7 @@ void GN::gfx::XenonGpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::present()
+void GN::gfx::XenonGpu::Present()
 {
     GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
@@ -97,7 +97,7 @@ void GN::gfx::XenonGpu::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::clearScreen(
+void GN::gfx::XenonGpu::ClearScreen(
     const Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
@@ -115,7 +115,7 @@ void GN::gfx::XenonGpu::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::drawIndexed(
+void GN::gfx::XenonGpu::DrawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -153,7 +153,7 @@ void GN::gfx::XenonGpu::Draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::drawIndexedUp(
+void GN::gfx::XenonGpu::DrawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -193,7 +193,7 @@ void GN::gfx::XenonGpu::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::drawUp(
+void GN::gfx::XenonGpu::DrawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -224,7 +224,7 @@ void GN::gfx::XenonGpu::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::drawLines(
+void GN::gfx::XenonGpu::DrawLines(
     BitFields         options,
     const void      * positions,
     size_t            stride,
@@ -238,7 +238,7 @@ void GN::gfx::XenonGpu::drawLines(
 
     GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 
-    mLine->drawLines(
+    mLine->DrawLines(
         options,
         (const float*)positions,
         stride,

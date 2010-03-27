@@ -46,7 +46,7 @@ bool Init( Scene & sc )
 
     // setup camera
     Matrix44f proj, view;
-    sc.gpu.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
+    sc.gpu.ComposePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
     view.LookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
     camera.setProjectionMatrix( proj );
     camera.setViewMatrix( view );
@@ -73,7 +73,7 @@ struct InputInitiator
     InputInitiator( Gpu & g )
     {
         InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = g.getDispDesc();
+        const DispDesc & dd = g.GetDispDesc();
         gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
@@ -98,7 +98,7 @@ int Run( Gpu & gpu )
 
     while( gogogo )
     {
-        gpu.processRenderWindowMessages( false );
+        gpu.ProcessRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -110,9 +110,9 @@ int Run( Gpu & gpu )
         }
         Update();
 
-        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         Draw( sc );
-        gpu.present();
+        gpu.Present();
 
         fps.onFrame();
     }
@@ -147,14 +147,14 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
+        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
+        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     int result = Run( *r );
 
-    deleteGpu( r );
+    DeleteGpu( r );
 
     return result;
 }

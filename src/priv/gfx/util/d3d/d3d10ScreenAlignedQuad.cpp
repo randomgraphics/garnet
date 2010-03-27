@@ -128,5 +128,5 @@ void GN::d3d10::ScreenAlignedQuad::drawTexed( ID3D10ShaderResourceView * srv )
     mDevice->PSSetShaderResources( 0, 1, &srv );
     mDevice->PSSetSamplers( 0, 1, &nullsamp );
     mDevice->OMSetDepthStencilState( mDepthStencilState, 0 );
-    mMesh.drawIndexed();
+    mMesh.DrawIndexed();
 }

@@ -95,7 +95,7 @@ bool GN::gfx::D3D11Texture::Init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D11Texture, () );
 
     // create device data
-    if( !SetDesc( desc ) || !createTexture() ) return Failure();
+    if( !SetDesc( desc ) || !CreateTexture() ) return Failure();
 
     // success
     return Success();
@@ -476,7 +476,7 @@ GN::gfx::D3D11Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D11Texture::createTexture()
+bool GN::gfx::D3D11Texture::CreateTexture()
 {
     GN_GUARD;
 

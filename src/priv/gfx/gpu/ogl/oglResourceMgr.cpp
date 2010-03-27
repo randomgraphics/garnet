@@ -70,7 +70,7 @@ void GN::gfx::OGLGpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 Blob *
-GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::OGLGpu::CompileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
@@ -87,7 +87,7 @@ GN::gfx::OGLGpu::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
+GN::gfx::OGLGpu::CreateGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
@@ -117,7 +117,7 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::OGLGpu::createUniform( size_t size )
+GN::gfx::OGLGpu::CreateUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -126,7 +126,7 @@ GN::gfx::OGLGpu::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::OGLGpu::createTexture( const TextureDesc & desc )
+GN::gfx::OGLGpu::CreateTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -140,7 +140,7 @@ GN::gfx::OGLGpu::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::OGLGpu::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::OGLGpu::CreateVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -163,7 +163,7 @@ GN::gfx::VtxBuf * GN::gfx::OGLGpu::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::OGLGpu::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::OGLGpu::CreateIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

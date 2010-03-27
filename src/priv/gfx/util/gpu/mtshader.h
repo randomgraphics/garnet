@@ -52,7 +52,7 @@ namespace GN { namespace gfx
     public:
 
         virtual size_t Size() const { return mSize; }
-        virtual const void * getval() const { return mFrontEndData; }
+        virtual const void * GetValue() const { return mFrontEndData; }
         virtual void Update( size_t offset, size_t length, const void * data );
 
         // ********************************

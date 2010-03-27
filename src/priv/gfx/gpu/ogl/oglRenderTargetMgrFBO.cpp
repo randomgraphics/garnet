@@ -143,8 +143,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_BACK ) );
 
         // update render target size
-        mRenderTargetSize.x = mGpu.getDispDesc().width;
-        mRenderTargetSize.y = mGpu.getDispDesc().height;
+        mRenderTargetSize.x = mGpu.GetDispDesc().width;
+        mRenderTargetSize.y = mGpu.GetDispDesc().height;
 
         return true;
     }

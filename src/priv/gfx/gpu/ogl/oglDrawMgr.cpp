@@ -76,14 +76,14 @@ void GN::gfx::OGLGpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::present()
+void GN::gfx::OGLGpu::Present()
 {
     GN_GUARD_SLOW;
 
 #if GN_MSWIN
     GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
 #else
-    const DispDesc & dd = getDispDesc();
+    const DispDesc & dd = GetDispDesc();
     GN_ASSERT( dd.displayHandle && dd.windowHandle );
     glXSwapBuffers( (Display*)dd.displayHandle, (Window)dd.windowHandle );
 #endif
@@ -100,7 +100,7 @@ void GN::gfx::OGLGpu::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::clearScreen(
+void GN::gfx::OGLGpu::ClearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
@@ -146,7 +146,7 @@ void GN::gfx::OGLGpu::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexed(
+void GN::gfx::OGLGpu::DrawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -258,7 +258,7 @@ void GN::gfx::OGLGpu::Draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawIndexedUp(
+void GN::gfx::OGLGpu::DrawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -339,7 +339,7 @@ void GN::gfx::OGLGpu::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawUp(
+void GN::gfx::OGLGpu::DrawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -387,7 +387,7 @@ void GN::gfx::OGLGpu::drawUp(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::drawLines(
+void GN::gfx::OGLGpu::DrawLines(
     BitFields options,
     const void * positions,
     size_t stride,
@@ -402,15 +402,15 @@ void GN::gfx::OGLGpu::drawLines(
     GN_ASSERT( mLine );
 
     // disable GPU program and resources
-    GpuContext ctx = getContext();
+    GpuContext ctx = GetContext();
     ctx.gpuProgram.Clear();
     ctx.uniforms.Clear();
-    ctx.clearResources();
+    ctx.ClearResources();
 
-    bindContext( ctx );
+    BindContext( ctx );
     if( !mContextOk ) return;
 
-    mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
+    mLine->DrawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
 
     // done
     ++mDrawCounter;

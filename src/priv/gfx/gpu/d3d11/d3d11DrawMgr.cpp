@@ -132,15 +132,15 @@ void GN::gfx::D3D11Gpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::present()
+void GN::gfx::D3D11Gpu::Present()
 {
-    GN_DX_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
+    GN_DX_CHECK( mSwapChain->Present( GetOptions().vsync ? 1 : 0, 0 ) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::clearScreen(
+void GN::gfx::D3D11Gpu::ClearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     PIXPERF_FUNCTION_EVENT();
@@ -166,7 +166,7 @@ void GN::gfx::D3D11Gpu::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawIndexed(
+void GN::gfx::D3D11Gpu::DrawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -200,7 +200,7 @@ void GN::gfx::D3D11Gpu::Draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawIndexedUp(
+void GN::gfx::D3D11Gpu::DrawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -249,7 +249,7 @@ void GN::gfx::D3D11Gpu::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawUp(
+void GN::gfx::D3D11Gpu::DrawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -284,7 +284,7 @@ void GN::gfx::D3D11Gpu::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::drawLines(
+void GN::gfx::D3D11Gpu::DrawLines(
     BitFields         /*options*/,
     const void      * /*positions*/,
     size_t            /*stride*/,

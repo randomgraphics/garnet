@@ -91,7 +91,7 @@ void GN::gfx::D3D10Gpu::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
+void GN::gfx::D3D10Gpu::GetBackBufferContent( BackBufferContent & bc )
 {
     bc.data.Clear();
     bc.format = ColorFormat::UNKNOWN;

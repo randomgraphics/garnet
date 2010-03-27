@@ -245,7 +245,7 @@ void GN::d3d10::SimpleMesh::Draw() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::drawIndexed() const
+void GN::d3d10::SimpleMesh::DrawIndexed() const
 {
     if( mNumIndices > 0 )
     {

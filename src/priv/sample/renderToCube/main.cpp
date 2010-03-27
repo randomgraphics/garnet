@@ -39,7 +39,7 @@ class RenderToTexture : public SampleApp
         desc.numvtx = 24;
         desc.numidx = 36;
         desc.vtxfmt.numElements = 1;
-        desc.vtxfmt.elements[0].bindTo( "POSITION", 0 );
+        desc.vtxfmt.elements[0].BindTo( "POSITION", 0 );
         desc.vtxfmt.elements[0].format = ColorFormat::RGB_32_32_32_FLOAT;
         desc.vertices[0] = vertices;
         desc.indices = indices;
@@ -101,7 +101,7 @@ public:
         box->setTextureResource( "cube", cubemap );
 
         // initial arcball window
-        const DispDesc & dd = gpu.getDispDesc();
+        const DispDesc & dd = gpu.GetDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
         // initialize GPU context
@@ -137,14 +137,14 @@ public:
         for( int i = 0; i < 6; ++i )
         {
             gc.colortargets[0].face = i;
-            gpu.bindContext( gc );
+            gpu.BindContext( gc );
             sr.drawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
         }
 
         // draw the cube model to screen
         gc.colortargets.Clear();
-        gpu.bindContext( gc );
-        gpu.clearScreen();
+        gpu.BindContext( gc );
+        gpu.ClearScreen();
         box->Draw();
     }
 };

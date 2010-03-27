@@ -95,7 +95,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    Gpu * createSingleThreadGpu( const GpuOptions & inputOptions )
+    Gpu * CreateSingleThreadGpu( const GpuOptions & inputOptions )
     {
         GN_GUARD;
 
@@ -139,7 +139,7 @@ namespace GN { namespace gfx
         Gpu * r = creator( ro );
         if( 0 == r ) return 0;
         SharedLib * dllptr = dll;
-        r->setUserData( GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
+        r->SetUserData( GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
         dll.Detach();
         return r;
 #endif
@@ -149,7 +149,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    Gpu * createMultiThreadGpu( const GpuOptions & ro )
+    Gpu * CreateMultiThreadGpu( const GpuOptions & ro )
     {
         GN_GUARD;
 
@@ -164,15 +164,15 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void deleteGpu( Gpu * r )
+    void DeleteGpu( Gpu * r )
     {
         GN_GUARD;
 
         if( r )
         {
-            bool hasdll = r->hasUserData( GPU_DLL_GUID );
+            bool hasdll = r->HasUserData( GPU_DLL_GUID );
             SharedLib * dll = NULL;
-            if( hasdll ) r->getUserData( GPU_DLL_GUID, &dll, sizeof(dll) );
+            if( hasdll ) r->GetUserData( GPU_DLL_GUID, &dll, sizeof(dll) );
             delete r;
             if( hasdll ) delete dll;
         }

@@ -174,7 +174,7 @@ UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     // create the GPU instance
     GN_ASSERT( 2 == mGpuCreationStatus );
     const GpuOptions * ro = (const GpuOptions*)param;
-    mGpu = createSingleThreadGpu( *ro );
+    mGpu = CreateSingleThreadGpu( *ro );
     if( NULL == mGpu )
     {
         mGpuCreationStatus = 0;
@@ -223,7 +223,7 @@ UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadGpu::checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const
+bool GN::gfx::MultiThreadGpu::CheckTextureFormatSupport( ColorFormat format, TextureUsage usages ) const
 {
     MultiThreadGpu * nonConstPtr = const_cast<GN::gfx::MultiThreadGpu*>(this);
     bool result;
@@ -235,7 +235,7 @@ bool GN::gfx::MultiThreadGpu::checkTextureFormatSupport( ColorFormat format, Tex
 //
 //
 // -----------------------------------------------------------------------------
-ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usages ) const
+ColorFormat GN::gfx::MultiThreadGpu::GetDefaultTextureFormat( TextureUsage usages ) const
 {
     MultiThreadGpu * nonConstPtr = const_cast<GN::gfx::MultiThreadGpu*>(this);
     ColorFormat result;
@@ -247,7 +247,7 @@ ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usage
 //
 //
 // -----------------------------------------------------------------------------
-Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
+Blob * GN::gfx::MultiThreadGpu::CompileGpuProgram( const GpuProgramDesc & desc )
 {
     Blob * cgp;
     postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
@@ -258,7 +258,7 @@ Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length )
+GpuProgram * GN::gfx::MultiThreadGpu::CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length )
 {
     GpuProgram * gp = NULL;
     postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
@@ -274,7 +274,7 @@ GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpu
 //
 //
 // -----------------------------------------------------------------------------
-Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
+Uniform * GN::gfx::MultiThreadGpu::CreateUniform( size_t size )
 {
     Uniform * uni = NULL;
     postCommand2( CMD_CREATE_UNIFORM, &uni, size );
@@ -290,7 +290,7 @@ Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
 //
 //
 // -----------------------------------------------------------------------------
-Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
+Texture * GN::gfx::MultiThreadGpu::CreateTexture( const TextureDesc & desc )
 {
     Texture * tex = NULL;
     postCommand2( CMD_CREATE_TEXTURE, &tex, &desc );
@@ -306,7 +306,7 @@ Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
+VtxBuf * GN::gfx::MultiThreadGpu::CreateVtxBuf( const VtxBufDesc & desc )
 {
     VtxBuf * vb = NULL;
     postCommand2( CMD_CREATE_VTXBUF, &vb, &desc );
@@ -322,7 +322,7 @@ VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
+IdxBuf * GN::gfx::MultiThreadGpu::CreateIdxBuf( const IdxBufDesc & desc )
 {
     IdxBuf * ib = NULL;
     postCommand2( CMD_CREATE_IDXBUF, &ib, &desc );
@@ -339,7 +339,7 @@ IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
+void GN::gfx::MultiThreadGpu::BindContext( const GpuContext & inputrc )
 {
     GpuContext * rc = (GpuContext*)beginPostCommand( CMD_BIND_CONTEXT, sizeof(inputrc) );
 
@@ -404,7 +404,7 @@ void GN::gfx::MultiThreadGpu::rebindContext()
 //
 //
 // -----------------------------------------------------------------------------
-const GpuContext & GN::gfx::MultiThreadGpu::getContext() const
+const GpuContext & GN::gfx::MultiThreadGpu::GetContext() const
 {
     return mGpuContext;
 }
@@ -413,7 +413,7 @@ const GpuContext & GN::gfx::MultiThreadGpu::getContext() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::present()
+void GN::gfx::MultiThreadGpu::Present()
 {
     // we cache only one frame, at most, in command buffer.
     if( mMultithreadOptions.cacheOneFrameAtMost && 0 != mLastPresentFence )
@@ -429,7 +429,7 @@ void GN::gfx::MultiThreadGpu::present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::clearScreen(
+void GN::gfx::MultiThreadGpu::ClearScreen(
     const Vector4f & c,
     float            z,
     UInt8            s,
@@ -441,7 +441,7 @@ void GN::gfx::MultiThreadGpu::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::drawIndexed(
+void GN::gfx::MultiThreadGpu::DrawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -466,7 +466,7 @@ void GN::gfx::MultiThreadGpu::Draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::drawIndexedUp(
+void GN::gfx::MultiThreadGpu::DrawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -500,7 +500,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::drawUp(
+void GN::gfx::MultiThreadGpu::DrawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -521,7 +521,7 @@ void GN::gfx::MultiThreadGpu::drawUp(
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MultiThreadGpu::drawLines(
+GN::gfx::MultiThreadGpu::DrawLines(
     BitFields         options,
     const void *      positions,
     size_t            stride,
@@ -557,7 +557,7 @@ GN::gfx::MultiThreadGpu::drawLines(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::getBackBufferContent( BackBufferContent & result )
+void GN::gfx::MultiThreadGpu::GetBackBufferContent( BackBufferContent & result )
 {
     postCommand1( CMD_GET_BACK_BUFFER_CONTENT, &result );
     waitForIdle();
@@ -566,7 +566,7 @@ void GN::gfx::MultiThreadGpu::getBackBufferContent( BackBufferContent & result )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::MultiThreadGpu::ProcessRenderWindowMessages( bool blockWhileMinimized )
 {
     postCommand1( CMD_PROCESS_RENDER_WINDOW_MESSAGES, blockWhileMinimized );
 }
@@ -574,7 +574,7 @@ void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::enableParameterCheck( bool enable )
+void GN::gfx::MultiThreadGpu::EnableParameterCheck( bool enable )
 {
     postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
 }
@@ -582,7 +582,7 @@ void GN::gfx::MultiThreadGpu::enableParameterCheck( bool enable )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::MultiThreadGpu::DumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
     postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
 }
@@ -590,25 +590,25 @@ void GN::gfx::MultiThreadGpu::dumpNextFrame( size_t startBatchIndex, size_t numB
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::setUserData( const Guid & id, const void * data, size_t length )
+void GN::gfx::MultiThreadGpu::SetUserData( const Guid & id, const void * data, size_t length )
 {
-    mGpu->setUserData( id, data, length );
+    mGpu->SetUserData( id, data, length );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::MultiThreadGpu::getUserData( const Guid & id, size_t * length ) const
+const void * GN::gfx::MultiThreadGpu::GetUserData( const Guid & id, size_t * length ) const
 {
-    return mGpu->getUserData( id, length );
+    return mGpu->GetUserData( id, length );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadGpu::hasUserData( const Guid & id ) const
+bool GN::gfx::MultiThreadGpu::HasUserData( const Guid & id ) const
 {
-    return mGpu->hasUserData( id );
+    return mGpu->HasUserData( id );
 }
 
 // *****************************************************************************
@@ -623,7 +623,7 @@ namespace GN { namespace gfx
     void func_GET_GPU_OPTIONS( Gpu & r, void * p, size_t )
     {
         GpuOptions ** ro = (GpuOptions **)p;
-        memcpy( *ro, &r.getOptions(), sizeof(**ro) );
+        memcpy( *ro, &r.GetOptions(), sizeof(**ro) );
     }
 
     //
@@ -632,7 +632,7 @@ namespace GN { namespace gfx
     void func_GET_DISP_DESC( Gpu & r, void * p, size_t )
     {
         DispDesc ** dd = (DispDesc**)p;
-        memcpy( *dd, &r.getDispDesc(), sizeof(**dd) );
+        memcpy( *dd, &r.GetDispDesc(), sizeof(**dd) );
     }
 
     //
@@ -641,7 +641,7 @@ namespace GN { namespace gfx
     void func_GET_D3D_DEVICE( Gpu & r, void * p, size_t )
     {
         void *** dev = (void***)p;
-        **dev = r.getD3DDevice();
+        **dev = r.GetD3DDevice();
     }
 
     //
@@ -650,7 +650,7 @@ namespace GN { namespace gfx
     void func_GET_OGL_RC( Gpu & r, void * p, size_t )
     {
         void *** rc = (void***)p;
-        **rc = r.getOGLRC();
+        **rc = r.GetOGLRC();
     }
 
     //
@@ -675,7 +675,7 @@ namespace GN { namespace gfx
         };
         CheckTextureFormatSupportParam * param = (CheckTextureFormatSupportParam*)p;
 
-        *param->result = r.checkTextureFormatSupport( param->format, param->usages );
+        *param->result = r.CheckTextureFormatSupport( param->format, param->usages );
     }
 
     //
@@ -690,7 +690,7 @@ namespace GN { namespace gfx
         };
         GetDefaultTextureFormatParam * param = (GetDefaultTextureFormatParam*)p;
 
-        *param->result = r.getDefaultTextureFormat( param->usages );
+        *param->result = r.GetDefaultTextureFormat( param->usages );
     }
 
     //
@@ -705,7 +705,7 @@ namespace GN { namespace gfx
         };
         CompileGpuProgramParam * cgpp = (CompileGpuProgramParam*)p;
 
-        *cgpp->cgp = r.compileGpuProgram( *cgpp->desc );
+        *cgpp->cgp = r.CompileGpuProgram( *cgpp->desc );
     }
 
     //
@@ -721,7 +721,7 @@ namespace GN { namespace gfx
         };
         CreateGpuProgramParam * cgpp = (CreateGpuProgramParam*)p;
 
-        *cgpp->gp = r.createGpuProgram( cgpp->bin, cgpp->length );
+        *cgpp->gp = r.CreateGpuProgram( cgpp->bin, cgpp->length );
     }
 
     //
@@ -737,7 +737,7 @@ namespace GN { namespace gfx
 
         CreateUniformParam * cup = (CreateUniformParam*)p;
 
-        *cup->result = r.createUniform( cup->length );
+        *cup->result = r.CreateUniform( cup->length );
     }
 
     //
@@ -753,7 +753,7 @@ namespace GN { namespace gfx
 
         CreateTextureParam * ctp = (CreateTextureParam*)p;
 
-        *ctp->result = r.createTexture( *ctp->desc );
+        *ctp->result = r.CreateTexture( *ctp->desc );
     }
 
     //
@@ -769,7 +769,7 @@ namespace GN { namespace gfx
 
         CreateVtxBufParam * param = (CreateVtxBufParam*)p;
 
-        *param->result = r.createVtxBuf( *param->desc );
+        *param->result = r.CreateVtxBuf( *param->desc );
     }
 
     //
@@ -785,7 +785,7 @@ namespace GN { namespace gfx
 
         CreateIdxBufParam * param = (CreateIdxBufParam*)p;
 
-        *param->result = r.createIdxBuf( *param->desc );
+        *param->result = r.CreateIdxBuf( *param->desc );
     }
 
     //
@@ -795,7 +795,7 @@ namespace GN { namespace gfx
     {
         GpuContext * rc = (GpuContext*)p;
 
-        r.bindContext( *rc );
+        r.BindContext( *rc );
 
         // destruct the GPU context (release all ref counted resources)
         rc->GpuContext::~GpuContext();
@@ -814,7 +814,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_PRESENT( Gpu & r, void *, size_t )
     {
-        r.present();
+        r.Present();
     }
 
     //
@@ -834,7 +834,7 @@ namespace GN { namespace gfx
 
         ClearParam * cp = (ClearParam*)p;
 
-        r.clearScreen( cp->c, cp->z, cp->s, cp->flags );
+        r.ClearScreen( cp->c, cp->z, cp->s, cp->flags );
     }
 
     //
@@ -856,7 +856,7 @@ namespace GN { namespace gfx
 
         DrawIndexedParam * dip = (DrawIndexedParam*)p;
 
-        r.drawIndexed( dip->prim, dip->numidx, dip->basevtx, dip->startvtx, dip->numvtx, dip->startidx );
+        r.DrawIndexed( dip->prim, dip->numidx, dip->basevtx, dip->startvtx, dip->numvtx, dip->startidx );
     }
 
     //
@@ -897,7 +897,7 @@ namespace GN { namespace gfx
 
         DrawIndexedUpParam * diup = (DrawIndexedUpParam*)p;
 
-        r.drawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
+        r.DrawIndexedUp( diup->prim, diup->numidx, diup->numvtx, diup->vertexData, diup->strideInBytes, diup->indexData );
 
         HeapMemory::Free( diup->vertexData );
         HeapMemory::Free( diup->indexData );
@@ -916,7 +916,7 @@ namespace GN { namespace gfx
             size_t        strideInBytes;
         };
         DrawUpParam * dup = (DrawUpParam*)p;
-        r.drawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
+        r.DrawUp( dup->prim, dup->numvtx, dup->vertexData, dup->strideInBytes );
         HeapMemory::Free( dup->vertexData );
     }
 
@@ -927,7 +927,7 @@ namespace GN { namespace gfx
     {
         DrawLineParams * dlp = (DrawLineParams*)p;
 
-        r.drawLines(
+        r.DrawLines(
             dlp->options,
             dlp->positions,
             dlp->stride,
@@ -950,7 +950,7 @@ namespace GN { namespace gfx
             GpuSignals ** ppSignals;
         };
         GetSignalsParam * param = (GetSignalsParam *)p;
-        *(param->ppSignals) = &r.getSignals();
+        *(param->ppSignals) = &r.GetSignals();
     }
 
     //
@@ -959,7 +959,7 @@ namespace GN { namespace gfx
     void func_GET_BACK_BUFFER_CONTENT( Gpu & r, void * p, size_t )
     {
         Gpu::BackBufferContent ** param = (Gpu::BackBufferContent **)p;
-        r.getBackBufferContent( **param );
+        r.GetBackBufferContent( **param );
     }
 
     //
@@ -968,7 +968,7 @@ namespace GN { namespace gfx
     void func_PROCESS_RENDER_WINDOW_MESSAGES( Gpu & r, void * p, size_t )
     {
         bool * blockWhileMinimized = (bool*)p;
-        r.processRenderWindowMessages( *blockWhileMinimized );
+        r.ProcessRenderWindowMessages( *blockWhileMinimized );
     }
 
     //
@@ -977,7 +977,7 @@ namespace GN { namespace gfx
     void func_ENABLE_PARAMETER_CHECK( Gpu & r, void * p, size_t )
     {
         bool * enable = (bool*)p;
-        r.enableParameterCheck( *enable );
+        r.EnableParameterCheck( *enable );
     }
 
     //
@@ -992,6 +992,6 @@ namespace GN { namespace gfx
         };
 
         DumpNextFrameParam * param = (DumpNextFrameParam*)p;
-        r.dumpNextFrame( param->startBatchIndex, param->numBatches );
+        r.DumpNextFrame( param->startBatchIndex, param->numBatches );
     }
 }}

@@ -95,7 +95,7 @@ public:
 
     void render()
     {
-        mApp.GetGpu().clearScreen( WATER_COLOR );
+        mApp.GetGpu().ClearScreen( WATER_COLOR );
         mSeafloor->Draw();
         mDolphin->Draw();
     }
@@ -135,11 +135,11 @@ public:
     {
         Gpu & g = GetGpu();
 
-        UInt32 width = g.getDispDesc().width;
-        UInt32 height = g.getDispDesc().height;
+        UInt32 width = g.GetDispDesc().width;
+        UInt32 height = g.GetDispDesc().height;
 
         float aspect = (float)width / height;
-        g.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
+        g.ComposePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
 
         // create scene
         scene = new TestScene(*this);

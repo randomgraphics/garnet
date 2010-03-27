@@ -107,7 +107,7 @@ void GN::gfx::XenonLine::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonLine::drawLines(
+void GN::gfx::XenonLine::DrawLines(
     BitFields         /*options*/,
     const float     * /*positions*/,
     size_t            /*stride*/,
@@ -137,7 +137,7 @@ void GN::gfx::XenonLine::drawLines(
     {
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        drawLines( options, positions, stride, n, rgba, model, view, proj );
+        DrawLines( options, positions, stride, n, rgba, model, view, proj );
         positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }

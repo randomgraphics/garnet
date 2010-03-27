@@ -182,7 +182,7 @@ void GN::gfx::BasicGpuMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuMsw::processRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::BasicGpuMsw::ProcessRenderWindowMessages( bool blockWhileMinimized )
 {
     GN::win::ProcessWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
@@ -236,7 +236,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     }
     GN_ASSERT( desc.width && desc.height && desc.depth );
 
-    if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
+    if( GetOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
     if( ro.useExternalWindow )
     {
         if( !mWindow.initExternalWindow( this, ro.renderWindow ) ) return false;

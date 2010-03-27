@@ -22,12 +22,12 @@ public:
     {
         Gpu & gpu = GetGpu();
 
-        const DispDesc & dd = gpu.getDispDesc();
+        const DispDesc & dd = gpu.GetDispDesc();
 
         // setup camera
         Matrix44f view, proj;
         view.LookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        gpu.ComposePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
         camera.setViewMatrix( view );
         camera.setProjectionMatrix( proj );
 
@@ -103,7 +103,7 @@ public:
     {
         Gpu & gpu = GetGpu();
 
-        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
         GetWorld().visualGraph().Draw( camera );
 

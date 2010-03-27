@@ -29,8 +29,8 @@ namespace GN { namespace gfx
        bool         isBindByIndex() const { return INDEX == mBindBy; }
         const char * getBindingName() const { GN_ASSERT( isBindByName() ); return mBindingName; }
         size_t       getBindingIndex() const { GN_ASSERT( isBindByIndex() ); return mBindingIndex; }
-        void         bindTo( const char * name ) { doBindByName( name ); }
-        void         bindTo( size_t index ) { mBindingIndex = index; mBindBy = INDEX; }
+        void         BindTo( const char * name ) { doBindByName( name ); }
+        void         BindTo( size_t index ) { mBindingIndex = index; mBindBy = INDEX; }
         //@}
 
     private:
@@ -89,12 +89,12 @@ public:
         TS_ASSERT( !b.isBindByIndex() );
         TS_ASSERT( !b.isBindByName() );
 
-        b.bindTo( "t0" );
+        b.BindTo( "t0" );
         TS_ASSERT( b.isBindByName() );
         TS_ASSERT( !b.isBindByIndex() );
         TS_ASSERT_EQUALS( "t0", b.getBindingName() );
 
-        b.bindTo( 2 );
+        b.BindTo( 2 );
         TS_ASSERT( !b.isBindByName() );
         TS_ASSERT( b.isBindByIndex() );
         TS_ASSERT_EQUALS( 2, b.getBindingIndex() );

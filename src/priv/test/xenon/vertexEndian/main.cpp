@@ -59,7 +59,7 @@ public:
             { 0, 0, 1, 1, { 0x12, 0x34, 0x56, 0x78, 0xab, 0xcd, 0xFF, 0xFF } },
         };
 
-        mVb = re.createVtxBuf( "vb", sizeof(vertices), false, false, vertices );
+        mVb = re.CreateVtxBuf( "vb", sizeof(vertices), false, false, vertices );
         if( 0 == mVb ) return false;
 
         mCtx.resetToDefault();
@@ -91,7 +91,7 @@ public:
 	{
         RenderEngine & re = getRenderEngine();
 
-        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
+        re.ClearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 
         re.setContext( mCtx );
 

@@ -63,7 +63,7 @@ void GN::gfx::D3D10Gpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 GN::Blob *
-GN::gfx::D3D10Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::D3D10Gpu::CompileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
@@ -80,7 +80,7 @@ GN::gfx::D3D10Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D10Gpu::createGpuProgram( const void * data, size_t length )
+GN::gfx::D3D10Gpu::CreateGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
@@ -109,7 +109,7 @@ GN::gfx::D3D10Gpu::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D10Gpu::createUniform( size_t size )
+GN::gfx::D3D10Gpu::CreateUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -118,7 +118,7 @@ GN::gfx::D3D10Gpu::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D10Gpu::createTexture( const TextureDesc & desc )
+GN::gfx::D3D10Gpu::CreateTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -132,7 +132,7 @@ GN::gfx::D3D10Gpu::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::CreateVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -148,7 +148,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D10Gpu::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::D3D10Gpu::CreateIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

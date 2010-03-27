@@ -36,7 +36,7 @@ class GpuTest
         using namespace GN;
         using namespace GN::gfx;
 
-        const GpuContext & rc = r.getContext();
+        const GpuContext & rc = r.GetContext();
 
         TS_ASSERT( rc.colortargets.Size() > rtidx );
         TS_ASSERT( rc.colortargets[rtidx].texture );
@@ -89,7 +89,7 @@ class GpuTest
         rtp.s32[3] = rand();
 
         Gpu::BackBufferContent bc;
-        r.getBackBufferContent( bc );
+        r.GetBackBufferContent( bc );
 
         TS_ASSERT( x < bc.width && y < bc.height );
         if( x >= bc.width && y >= bc.height ) return rtp;
@@ -113,11 +113,11 @@ class GpuTest
 
         if( mMultiThreading )
         {
-            return GN::gfx::createMultiThreadGpu( effectiveRO );
+            return GN::gfx::CreateMultiThreadGpu( effectiveRO );
         }
         else
         {
-            return GN::gfx::createSingleThreadGpu( effectiveRO );
+            return GN::gfx::CreateSingleThreadGpu( effectiveRO );
         }
     }
 
@@ -133,7 +133,7 @@ class GpuTest
 
         ~AutoGpu()
         {
-            if( mGpu ) GN::gfx::deleteGpu( mGpu );
+            if( mGpu ) GN::gfx::DeleteGpu( mGpu );
         }
 
         operator GN::gfx::Gpu *() const { return mGpu; }
@@ -173,11 +173,11 @@ protected :
         Gpu & r = *gpu;
 
         // the renderer should be in same size as the external window client
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = r.GetDispDesc();
         TS_ASSERT_EQUALS( dd.width, 511 );
         TS_ASSERT_EQUALS( dd.height, 236 );
 
-        r.clearScreen( Vector4f(1,1,0,1) );
+        r.ClearScreen( Vector4f(1,1,0,1) );
 
         RenderTargetPixel rtp = getBackBufferPixel( r, 0, 0 );
         TS_ASSERT_EQUALS( rtp.u32[0], 0xFF00FFFF );

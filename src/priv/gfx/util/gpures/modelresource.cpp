@@ -804,7 +804,7 @@ GN::gfx::ModelResource::Impl::getUniformResource( const char * effectParameterNa
         {
             GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
             dummy = database().createResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( database().gpu().createUniform( sizeof(float) ) );
+            AutoRef<Uniform> u( database().gpu().CreateUniform( sizeof(float) ) );
             dummy->setUniform( u );
         }
 
@@ -819,7 +819,7 @@ GN::gfx::ModelResource::Impl::getUniformResource( const char * effectParameterNa
         {
             GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName?effectParameterName:"<NULL name>", modelName() );
             dummy = database().createResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( database().gpu().createUniform( sizeof(float) ) );
+            AutoRef<Uniform> u( database().gpu().CreateUniform( sizeof(float) ) );
             dummy->setUniform( u );
         }
         return dummy;
@@ -966,7 +966,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
             AutoRef<Uniform> u = unires->getUniform();
             if( !u && up.size > 0 )
             {
-                u.Attach( database().gpu().createUniform( up.size ) );
+                u.Attach( database().gpu().CreateUniform( up.size ) );
                 if( !u ) return false;
             }
             unires->setUniform( u );
@@ -991,7 +991,7 @@ void GN::gfx::ModelResource::Impl::Draw() const
 
     Gpu & g = database().gpu();
 
-    const GpuContext & currentContext = g.getContext();
+    const GpuContext & currentContext = g.GetContext();
 
     for( size_t i = 0; i < mPasses.Size(); ++i )
     {
@@ -1021,12 +1021,12 @@ void GN::gfx::ModelResource::Impl::Draw() const
     {
         const GpuContext & gc = mPasses[i].gc;
 
-        g.bindContext( gc );
+        g.BindContext( gc );
 
         // do rendering
         if( gc.idxbuf )
         {
-            g.drawIndexed(
+            g.DrawIndexed(
                 meshdesc.prim,
                 subset.numidx,
                 subset.basevtx,

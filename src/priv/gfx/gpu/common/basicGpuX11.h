@@ -55,8 +55,8 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual const GpuOptions & getOptions() const { return mOptions; }
-        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
+        virtual const GpuOptions & GetOptions() const { return mOptions; }
+        virtual const DispDesc        & GetDispDesc() const { return mDispDesc; }
 
     private:
         bool dispInit( const GpuOptions & );
@@ -129,7 +129,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void processRenderWindowMessages( bool blockWhileMinimized );
+        virtual void ProcessRenderWindowMessages( bool blockWhileMinimized );
 
         //@}
     };

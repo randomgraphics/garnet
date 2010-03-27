@@ -31,7 +31,7 @@ public:
 	void OnRender()
 	{
         RenderEngine & re = getRenderEngine();
-        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
+        re.ClearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 	}
 };
 

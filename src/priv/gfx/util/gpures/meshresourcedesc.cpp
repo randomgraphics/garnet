@@ -536,7 +536,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             return AutoRef<Blob>::NULLREF;
         }
 
-        ve.bindTo( a->value, bidx );
+        ve.BindTo( a->value, bidx );
 
         a = e->FindAttrib( "format" );
         if( !a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)) ) )

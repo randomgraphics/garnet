@@ -134,9 +134,9 @@ public:
     void BasicTestCase::render(void)
     {
         Renderer & r = gRenderer;
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.GetD3DDevice();
 
-        r.clearScreen();
+        r.ClearScreen();
 
         // bind context
         r.setContext( mContext );

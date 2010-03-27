@@ -45,7 +45,7 @@ void GN::gfx::XenonGpu::contextQuit()
 
     // Reset context.
     GpuContext emptyContext;
-    bindContext( emptyContext );
+    BindContext( emptyContext );
 
     // Delete all vertex formats
     mVertexFormats.Clear();

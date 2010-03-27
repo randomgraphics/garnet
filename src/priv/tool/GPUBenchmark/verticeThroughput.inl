@@ -72,7 +72,7 @@ struct DenseMesh
     bool create()
     {
         Renderer & r = gRenderer;
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.GetD3DDevice();
         if( 0 == dev )
         {
             GN_ERROR(sLogger)( "only work with D3D9 renderer" );
@@ -303,11 +303,11 @@ public:
     void render()
     {
         Renderer & r = gRenderer;
-        r.clearScreen();
+        r.ClearScreen();
 
         // update transformation matrix
         Matrix44f proj, view;
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = gRenderer.GetDispDesc();
         const Spheref & s = mGeometry.boundingSphere;
         if( mRadius < s.radius * 2.0f )
         {

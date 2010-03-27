@@ -14,8 +14,8 @@ bool GN::gfx::D3D11Gpu::dispInit()
 {
     GN_GUARD;
 
-    const GpuOptions & ro = getOptions();
-    const DispDesc & dd = getDispDesc();
+    const GpuOptions & ro = GetOptions();
+    const DispDesc & dd = GetDispDesc();
 
     UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
     if( ro.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -102,7 +102,7 @@ void GN::gfx::D3D11Gpu::dispQuit()
     GN_GUARD;
 
     // switch back to windowed mode, before destroy the swap chain.
-    if( mSwapChain && getOptions().fullscreen )
+    if( mSwapChain && GetOptions().fullscreen )
     {
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }

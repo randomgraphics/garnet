@@ -76,7 +76,7 @@ int Run( Gpu & gpu )
 
     while( gogogo )
     {
-        gpu.processRenderWindowMessages( false );
+        gpu.ProcessRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -87,11 +87,11 @@ int Run( Gpu & gpu )
             gogogo = false;
         }
 
-        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         double frameTime = fps.getLastFrameElasped();
         Update( (float)frameTime );
         Draw( gpu );
-        gpu.present();
+        gpu.Present();
 
         fps.onFrame();
     }
@@ -106,7 +106,7 @@ struct InputInitiator
     InputInitiator( Gpu & r )
     {
         InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = r.GetDispDesc();
         gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
@@ -141,16 +141,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
+        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
+        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = Run( *r );
 
-    deleteGpu( r );
+    DeleteGpu( r );
 
     return result;
 }

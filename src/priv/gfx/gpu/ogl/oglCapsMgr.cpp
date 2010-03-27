@@ -185,12 +185,12 @@ bool GN::gfx::OGLGpu::capsInit()
 #if GN_MSWIN
     if( !sGetOGLExtensions( mDeviceContext, glexts ) )
 #else
-    if( !sGetOGLExtensions( (Display*)getDispDesc().displayHandle, glexts) )
+    if( !sGetOGLExtensions( (Display*)GetDispDesc().displayHandle, glexts) )
 #endif
     {
         return false;
     }
-    sOutputOGLInfo( getDispDesc().displayHandle, glexts );
+    sOutputOGLInfo( GetDispDesc().displayHandle, glexts );
 
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
@@ -261,7 +261,7 @@ bool GN::gfx::OGLGpu::capsInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLGpu::checkTextureFormatSupport(
+GN::gfx::OGLGpu::CheckTextureFormatSupport(
     ColorFormat   /*format*/,
     TextureUsage /*usages*/ ) const
 {
@@ -273,7 +273,7 @@ GN::gfx::OGLGpu::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::OGLGpu::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::OGLGpu::GetDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

@@ -131,7 +131,7 @@ public:
 
     void OnRender()
     {
-        gRenderer.clearScreen();
+        gRenderer.ClearScreen();
         //for( int i = 0; i < 30; ++i )
         CEGUI::System::getSingleton().renderGUI();
     }

@@ -285,7 +285,7 @@ struct D3D10ViewDump
         return true;
     }
 
-    bool createTexture( ID3D10Device & dev, UINT bind, DXGI_FORMAT format )
+    bool CreateTexture( ID3D10Device & dev, UINT bind, DXGI_FORMAT format )
     {
         // get image information
         D3DX10_IMAGE_INFO info;
@@ -445,7 +445,7 @@ struct D3D10SrvDump : public D3D10ViewDump<ID3D10ShaderResourceView>
         }
         else
         {
-            if( !createTexture( dev, D3D10_BIND_SHADER_RESOURCE, srvdesc->Format ) ) return false;
+            if( !CreateTexture( dev, D3D10_BIND_SHADER_RESOURCE, srvdesc->Format ) ) return false;
         }
 
         // create view
@@ -468,7 +468,7 @@ struct D3D10RtvDump : public D3D10ViewDump<ID3D10RenderTargetView>
 
         const D3D10_RENDER_TARGET_VIEW_DESC * rtvdesc = (const D3D10_RENDER_TARGET_VIEW_DESC *)desc.ToRawPtr();
 
-        if( !createTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format ) ) return false;
+        if( !CreateTexture( dev, D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE, rtvdesc->Format ) ) return false;
 
         GN_DX_CHECK_RETURN(
             dev.CreateRenderTargetView( res, rtvdesc, &view ),
@@ -517,7 +517,7 @@ struct D3D10DsvDump : public D3D10ViewDump<ID3D10DepthStencilView>
 
         const D3D10_DEPTH_STENCIL_VIEW_DESC * dsvdesc = (const D3D10_DEPTH_STENCIL_VIEW_DESC *)desc.ToRawPtr();
 
-        if( !createTexture( dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format ) ) return false;
+        if( !CreateTexture( dev, D3D10_BIND_DEPTH_STENCIL, dsvdesc->Format ) ) return false;
 
         // create view
         GN_DX_CHECK_RETURN(

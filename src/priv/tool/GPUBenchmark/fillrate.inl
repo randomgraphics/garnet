@@ -83,7 +83,7 @@ public:
         // create texture
         for( UInt i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].Attach( re.create2DTexture( StringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
+            mTextures[i].Attach( re.Create2DTexture( StringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
             GraphicsResourceLoader * loader = new TexLoader;
             re.updateResource( mTextures[i], 0, loader );
@@ -148,7 +148,7 @@ public:
 
     void Update()
     {
-        const DispDesc & dd = getApp().getRenderEngine().getDispDesc();
+        const DispDesc & dd = getApp().getRenderEngine().GetDispDesc();
         float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
         float texfr = pixfr * mInitTexCount;
         float bandwidth = pixfr * dd.depth / 8;

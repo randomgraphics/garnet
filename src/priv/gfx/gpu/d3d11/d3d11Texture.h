@@ -138,7 +138,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool createTexture();
+        bool CreateTexture();
     };
 }}
 

@@ -18,7 +18,7 @@ GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
     // create texture
     TextureDesc td;
     td.FromImageDesc( id );
-    AutoRef<Texture> tex( gpu.createTexture( td ) );
+    AutoRef<Texture> tex( gpu.CreateTexture( td ) );
     if( !tex ) return 0;
 
     // update texture content

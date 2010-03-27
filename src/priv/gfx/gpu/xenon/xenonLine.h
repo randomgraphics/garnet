@@ -54,9 +54,9 @@ namespace GN { namespace gfx {
         ///
         /// Draw lines on screen
         ///
-        /// \sa Gpu::drawLines
+        /// \sa Gpu::DrawLines
         ///
-        void drawLines(
+        void DrawLines(
             BitFields         options,
             const float *     positions,
             size_t            stride,

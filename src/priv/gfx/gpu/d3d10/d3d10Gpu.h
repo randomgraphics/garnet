@@ -84,8 +84,8 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual void * getD3DDevice() const { return mDevice; }
-        virtual void * getOGLRC() const { return 0; }
+        virtual void * GetD3DDevice() const { return mDevice; }
+        virtual void * GetOGLRC() const { return 0; }
 
     public :
 
@@ -122,8 +122,8 @@ namespace GN { namespace gfx
     public :
 
         virtual const GpuCaps & GetCaps() const { return mCaps; }
-        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
-        virtual ColorFormat getDefaultTextureFormat( TextureUsage usage ) const;
+        virtual bool CheckTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
+        virtual ColorFormat GetDefaultTextureFormat( TextureUsage usage ) const;
 
     private :
 
@@ -147,12 +147,12 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform    * createUniform( size_t size );
-        virtual Texture    * createTexture( const TextureDesc & desc );
-        virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf     * createIdxBuf( const IdxBufDesc & desc );
+        virtual Blob       * CompileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram * CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform    * CreateUniform( size_t size );
+        virtual Texture    * CreateTexture( const TextureDesc & desc );
+        virtual VtxBuf     * CreateVtxBuf( const VtxBufDesc & desc );
+        virtual IdxBuf     * CreateIdxBuf( const IdxBufDesc & desc );
 
     public :
 
@@ -235,9 +235,9 @@ namespace GN { namespace gfx
 
     public: // from Gpu
 
-        virtual void present();
-        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
-        virtual void drawIndexed( PrimitiveType prim,
+        virtual void Present();
+        virtual void ClearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
+        virtual void DrawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
                                   size_t        startvtx,
@@ -246,18 +246,18 @@ namespace GN { namespace gfx
         virtual void Draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx );
-        virtual void drawIndexedUp(
+        virtual void DrawIndexedUp(
                              PrimitiveType  prim,
                              size_t         numidx,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
                              const UInt16 * indexData );
-        virtual void drawUp( PrimitiveType prim,
+        virtual void DrawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields         options,
+        virtual void DrawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
@@ -292,9 +292,9 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void getBackBufferContent( BackBufferContent & );
+        virtual void GetBackBufferContent( BackBufferContent & );
 
-        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+        virtual void DumpNextFrame( size_t startBatchIndex, size_t numBatches )
         {
             GN_UNUSED_PARAM( startBatchIndex );
             GN_UNUSED_PARAM( numBatches );

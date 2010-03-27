@@ -68,7 +68,7 @@ void GN::gfx::BasicGpu::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::bindContext( const GpuContext & newContext )
+void GN::gfx::BasicGpu::BindContext( const GpuContext & newContext )
 {
     // skip dirty check, if last context binding failed.
     bool skipDirtyCheck = !mContextOk;
@@ -92,7 +92,7 @@ void GN::gfx::BasicGpu::rebindContext()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
+void GN::gfx::BasicGpu::GetBackBufferContent( BackBufferContent & c )
 {
     c.data.Clear();
     c.format = ColorFormat::UNKNOWN;
@@ -104,7 +104,7 @@ void GN::gfx::BasicGpu::getBackBufferContent( BackBufferContent & c )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t length )
+void GN::gfx::BasicGpu::SetUserData( const Guid & id, const void * data, size_t length )
 {
     UserData * currentUserData = mUserData.Find( id );
 
@@ -150,7 +150,7 @@ void GN::gfx::BasicGpu::setUserData( const Guid & id, const void * data, size_t 
 //
 //
 // -----------------------------------------------------------------------------
-const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) const
+const void * GN::gfx::BasicGpu::GetUserData( const Guid & id, size_t * length ) const
 {
     const UserData * currentUserData = mUserData.Find( id );
 
@@ -173,7 +173,7 @@ const void * GN::gfx::BasicGpu::getUserData( const Guid & id, size_t * length ) 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpu::hasUserData( const Guid & id ) const
+bool GN::gfx::BasicGpu::HasUserData( const Guid & id ) const
 {
     return NULL != mUserData.Find( id );
 }
