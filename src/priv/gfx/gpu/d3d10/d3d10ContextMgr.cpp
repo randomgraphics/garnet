@@ -113,7 +113,7 @@ bool GN::gfx::D3D10Gpu::contextInit()
     if( !mRTMgr->Init() ) return false;
 
     // bind default context
-    rebindContext();
+    RebindContext();
 
     // success
     return true;
@@ -153,14 +153,14 @@ void GN::gfx::D3D10Gpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
+bool GN::gfx::D3D10Gpu::BindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
     PIXPERF_FUNCTION_EVENT();
 
     //
     // Parameter check
     //
-    if( paramCheckEnabled() )
+    if( ParamCheckEnabled() )
     {
         // TODO: verify data in new context
         // TODO: make sure all fields in current context are valid.

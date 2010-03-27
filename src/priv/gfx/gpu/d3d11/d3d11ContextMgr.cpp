@@ -114,7 +114,7 @@ bool GN::gfx::D3D11Gpu::contextInit()
     if( !mRTMgr->Init() ) return false;
 
     // bind default context
-    rebindContext();
+    RebindContext();
 
     // success
     return true;
@@ -153,7 +153,7 @@ void GN::gfx::D3D11Gpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
+bool GN::gfx::D3D11Gpu::BindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
     PIXPERF_FUNCTION_EVENT();
 

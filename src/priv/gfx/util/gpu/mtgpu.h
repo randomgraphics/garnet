@@ -232,7 +232,7 @@ namespace GN { namespace gfx
         virtual IdxBuf * CreateIdxBuf( const IdxBufDesc & desc );
 
         virtual void BindContext( const GpuContext & );
-        virtual void rebindContext();
+        virtual void RebindContext();
         virtual const GpuContext & GetContext() const;
 
         virtual void Present();

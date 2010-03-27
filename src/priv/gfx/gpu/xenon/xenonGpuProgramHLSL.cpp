@@ -178,7 +178,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         GN_ASSERT( !d.name.Empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
-        if( GetGpu().paramCheckEnabled() )
+        if( GetGpu().ParamCheckEnabled() )
         {
             if( u->Size() != d.size )
             {

@@ -195,7 +195,7 @@ void GN::gfx::BasicGpuMsw::ProcessRenderWindowMessages( bool blockWhileMinimized
 //
 // ----------------------------------------------------------------------------
 void
-GN::gfx::BasicGpuMsw::handleRenderWindowSizeMove()
+GN::gfx::BasicGpuMsw::HandleRenderWindowSizeMove()
 {
     mWindow.handleSizeMove();
 }

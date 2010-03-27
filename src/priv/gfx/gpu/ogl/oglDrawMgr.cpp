@@ -92,7 +92,7 @@ void GN::gfx::OGLGpu::Present()
     mDrawCounter = 0;
 
     // handle render window size move
-    handleRenderWindowSizeMove();
+    HandleRenderWindowSizeMove();
 
     GN_UNGUARD_SLOW;
 }
@@ -172,7 +172,7 @@ void GN::gfx::OGLGpu::DrawIndexed(
     const OGLIdxBuf * ib = SafeCastPtr<const OGLIdxBuf>( mContext.idxbuf.Get() );
 
     // Verify index buffer
-    if( paramCheckEnabled() )
+    if( ParamCheckEnabled() )
     {
         if( ib->GetDesc().bits32 )
         {
@@ -288,7 +288,7 @@ void GN::gfx::OGLGpu::DrawIndexedUp(
     if( bindSuccess )
     {
         // Verify index buffer
-        if( paramCheckEnabled() )
+        if( ParamCheckEnabled() )
         {
             const UInt16 * indices = indexData;
             for( size_t i = 0; i < numidx; ++i, ++indices )

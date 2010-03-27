@@ -69,7 +69,7 @@ namespace GN { namespace gfx
             dispClear();
             capsClear();
             resourceClear();
-            contextClear();
+            ContextClear();
             drawClear();
         }
         //@}
@@ -197,7 +197,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
         void setSampler(
             int                        shaderStage,  // 0: VS, 1: GS: 2: PS
@@ -209,7 +209,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.Clear(); mSOMgr = 0; mRTMgr = 0; }
+        void ContextClear() { mContext.Clear(); mSOMgr = 0; mRTMgr = 0; }
 
         inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );

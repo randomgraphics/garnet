@@ -54,7 +54,7 @@ namespace GN { namespace gfx
             dispClear();
             capsClear();
             resourceClear();
-            contextClear();
+            ContextClear();
             drawClear();
             miscClear();
         }
@@ -193,7 +193,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -204,7 +204,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.Clear(); mRTMgr = 0; }
+        void ContextClear() { mContext.Clear(); mRTMgr = 0; }
 
         inline bool bindContextRenderTargetsAndViewport( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck  );

@@ -46,7 +46,7 @@ namespace GN { namespace gfx
     private :
         void Clear()
         {
-            contextClear();
+            ContextClear();
             miscClear();
         }
         //@}
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
         ///
         /// Called by sub class to respond to render window resizing/moving
         ///
-        virtual void handleRenderWindowSizeMove() = 0;
+        virtual void HandleRenderWindowSizeMove() = 0;
 
         //@}
 
@@ -99,21 +99,21 @@ namespace GN { namespace gfx
     public:
 
         virtual void BindContext( const GpuContext & c );
-        virtual void rebindContext();
+        virtual void RebindContext();
         virtual inline const GpuContext & GetContext() const { return mContext; }
 
     protected:
 
-        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck ) = 0;
+        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck ) = 0;
 
     private:
 
-        void contextClear() { mContextOk = false; mContext.Clear(); }
+        void ContextClear() { mContextOk = false; mContext.Clear(); }
 
     protected:
 
         GpuContext mContext;
-        bool            mContextOk;
+        bool       mContextOk;
 
         //@}
 
@@ -138,15 +138,15 @@ namespace GN { namespace gfx
     public:
 
         virtual GpuSignals & GetSignals() { return mSignals; }
-        virtual void              GetBackBufferContent( BackBufferContent & );
-        virtual void              EnableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
-        virtual void              SetUserData( const Guid & id, const void * data, size_t length );
-        virtual const void      * GetUserData( const Guid & id, size_t * length ) const;
-        virtual bool              HasUserData( const Guid & id ) const;
+        virtual void         GetBackBufferContent( BackBufferContent & );
+        virtual void         EnableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
+        virtual void         SetUserData( const Guid & id, const void * data, size_t length );
+        virtual const void * GetUserData( const Guid & id, size_t * length ) const;
+        virtual bool         HasUserData( const Guid & id ) const;
 
     public:
 
-        bool                      paramCheckEnabled() const { return mParamCheckEnabled; }
+        bool                 ParamCheckEnabled() const { return mParamCheckEnabled; }
 
     private:
 

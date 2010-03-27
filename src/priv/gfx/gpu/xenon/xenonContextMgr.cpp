@@ -28,7 +28,7 @@ bool GN::gfx::XenonGpu::contextInit()
     //if( !mRTMgr->Init() ) return false;
 
     // bind default context to device
-    rebindContext();
+    RebindContext();
 
     // success
     return true;
@@ -62,7 +62,7 @@ void GN::gfx::XenonGpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpu::bindContextImpl(
+bool GN::gfx::XenonGpu::BindContextImpl(
     const GpuContext & context,
     bool               skipDirtyCheck )
 {
@@ -73,7 +73,7 @@ bool GN::gfx::XenonGpu::bindContextImpl(
     //
     // Parameter check
     //
-    if( paramCheckEnabled() )
+    if( ParamCheckEnabled() )
     {
         GN_TODO( "verify GPU context data" );
     }

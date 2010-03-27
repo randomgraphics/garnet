@@ -483,7 +483,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
-        if( GetGpu().paramCheckEnabled() )
+        if( GetGpu().ParamCheckEnabled() )
         {
             if( uniform->Size() != desc.size )
             {
