@@ -27,7 +27,7 @@ void CEGUI::GarnetRenderer::addQuad(
     GN_GUARD_SLOW;
 
     // get screen size
-    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
 
     float x0 = dest_rect.d_left / dd.width;
     float y0 = dest_rect.d_top / dd.height;
@@ -70,7 +70,7 @@ void CEGUI::GarnetRenderer::doRender(void)
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(void)
+CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(void)
 {
     GN_GUARD;
 
@@ -85,7 +85,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(void)
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(
+CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(
     const String& filename, const String& resourceGroup)
 {
     GN_GUARD;
@@ -102,7 +102,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(float size)
+CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(float size)
 {
     GN_GUARD;
 
@@ -160,7 +160,7 @@ float CEGUI::GarnetRenderer::getWidth(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
     return (float)dd.width;
 
     GN_UNGUARD;
@@ -173,7 +173,7 @@ float CEGUI::GarnetRenderer::getHeight(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
     return (float)dd.height;
 
     GN_UNGUARD;
@@ -186,7 +186,7 @@ CEGUI::Size CEGUI::GarnetRenderer::getSize(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
     return Size( (float)dd.width, (float)dd.height );
 
     GN_UNGUARD;
@@ -199,7 +199,7 @@ CEGUI::Rect CEGUI::GarnetRenderer::getRect(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
     return Rect( 0, 0, (float)dd.width, (float)dd.height );
 
     GN_UNGUARD;

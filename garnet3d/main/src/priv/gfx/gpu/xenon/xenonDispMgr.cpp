@@ -81,8 +81,8 @@ bool GN::gfx::XenonGpu::dispInit()
         return false;
     }
 
-    const GpuOptions & ro = getOptions();
-    const DispDesc        & dd = getDispDesc();
+    const GpuOptions & ro = GetOptions();
+    const DispDesc        & dd = GetDispDesc();
 
     // init d3d present parameters
     if( !sSetupD3dpp( mD3DPresentParameters, dd, ro.msaa, ro.vsync ) ) return false;

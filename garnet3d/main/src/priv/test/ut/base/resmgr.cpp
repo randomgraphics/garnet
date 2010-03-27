@@ -482,7 +482,7 @@ namespace GN
         ///
         /// Set user data for specfic resource
         ///
-        void setUserData( HandleType h, void * data )
+        void SetUserData( HandleType h, void * data )
         {
             if( !validResourceHandle(h) )
             {

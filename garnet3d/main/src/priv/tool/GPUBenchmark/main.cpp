@@ -107,7 +107,7 @@ struct ManyManyQuads
             {  1.0f, -1.0f, 0.0f, 1.0f, 1.0f },
             {  1.0f,  1.0f, 0.0f, 1.0f, 0.0f },
         };
-        vtxbuf = re.createVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
+        vtxbuf = re.CreateVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
         if( !vtxbuf ) return false;
 
         DynaArray<UInt16> indices( INDEX_COUNT );
@@ -122,7 +122,7 @@ struct ManyManyQuads
         }
 
         // create index buffer
-        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.ToRawPtr() );
+        idxbuf = re.CreateIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.ToRawPtr() );
         if( !idxbuf ) return false;
 
         // success
@@ -140,7 +140,7 @@ struct ManyManyQuads
     {
         for( size_t i = 0; i < DRAW_COUNT; ++i )
         {
-            re.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+            re.DrawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
         }
     }
 
@@ -149,7 +149,7 @@ struct ManyManyQuads
         GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numprim) <= PRIM_COUNT );
         UInt32 startidx = startPrim * 3;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.DrawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 
     void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
@@ -158,7 +158,7 @@ struct ManyManyQuads
         UInt32 numprim = numQuads * 2;
         UInt32 startidx = startQuad * 6;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.DrawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 };
 

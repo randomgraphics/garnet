@@ -183,7 +183,7 @@ namespace GN { namespace gfx
         ///
         /// return number of parameters
         ///
-        size_t count() const { return mCount; }
+        size_t Count() const { return mCount; }
 
         ///
         /// bracket operator. index must be valid

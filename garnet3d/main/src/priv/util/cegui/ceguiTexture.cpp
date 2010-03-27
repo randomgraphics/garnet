@@ -90,7 +90,7 @@ bool CEGUI::GarnetTexture::reload()
         dispose();
 
         // create the texture
-        AutoRef<gfx::Texture> tex( gRenderer.create2DTexture( mWidth, mHeight, 1, gfx::FMT_RGBA32 ) );
+        AutoRef<gfx::Texture> tex( gRenderer.Create2DTexture( mWidth, mHeight, 1, gfx::FMT_RGBA32 ) );
         if( tex.empty() ) return false;
 
         // copy data from memory buffer

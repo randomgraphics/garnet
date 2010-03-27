@@ -181,7 +181,7 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext && !mDeviceContext );
 
-    HWND hwnd = (HWND)getDispDesc().windowHandle;
+    HWND hwnd = (HWND)GetDispDesc().windowHandle;
     if( !::IsWindow(hwnd) )
     {
         GN_ERROR(sLogger)( "Invalid render window handle!" );
@@ -201,7 +201,7 @@ bool GN::gfx::OGLGpu::dispInit()
     // init GLEW
     glewInit();
 
-    const GpuOptions & ro = getOptions();
+    const GpuOptions & ro = GetOptions();
 
     // modify fullscreen render window properties
     if( ro.fullscreen )
@@ -209,7 +209,7 @@ bool GN::gfx::OGLGpu::dispInit()
         // activate display mode
         if( !activateDisplayMode() ) return false;
 
-        const DispDesc & dd = getDispDesc();
+        const DispDesc & dd = GetDispDesc();
 
         HWND hwnd = (HWND)dd.windowHandle;
         HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
@@ -283,7 +283,7 @@ void GN::gfx::OGLGpu::dispQuit()
 
     if( mDeviceContext )
     {
-        HWND hwnd = (HWND)getDispDesc().windowHandle;
+        HWND hwnd = (HWND)GetDispDesc().windowHandle;
         GN_ASSERT( ::IsWindow(hwnd) );
         ::ReleaseDC( hwnd, mDeviceContext );
         mDeviceContext = 0;
@@ -307,9 +307,9 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
-    if( !getOptions().fullscreen ) return true;
+    if( !GetOptions().fullscreen ) return true;
 
-    const DispDesc & dd = getDispDesc();
+    const DispDesc & dd = GetDispDesc();
 
     // ignore message hook during this function call
     ScopeBool ignoreHook(mIgnoreMsgHook);
@@ -389,18 +389,18 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GN_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
-    if( !getOptions().fullscreen ) return;
+    if( !GetOptions().fullscreen ) return;
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
     {
         if( wp )
         {
             activateDisplayMode();
-            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_NORMAL );
+            ::ShowWindowAsync( (HWND)GetDispDesc().windowHandle, SW_NORMAL );
         }
         else
         {
-            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_MINIMIZE );
+            ::ShowWindowAsync( (HWND)GetDispDesc().windowHandle, SW_MINIMIZE );
             restoreDisplayMode();
         }
     }

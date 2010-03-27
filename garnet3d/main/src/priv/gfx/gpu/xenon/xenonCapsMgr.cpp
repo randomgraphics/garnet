@@ -43,7 +43,7 @@ bool GN::gfx::XenonGpu::capsInit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpu::checkTextureFormatSupport(
+bool GN::gfx::XenonGpu::CheckTextureFormatSupport(
     ColorFormat   format,
     TextureUsage usages ) const
 {
@@ -65,7 +65,7 @@ bool GN::gfx::XenonGpu::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::XenonGpu::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::XenonGpu::GetDefaultTextureFormat( TextureUsage usage ) const
 {
     GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
 

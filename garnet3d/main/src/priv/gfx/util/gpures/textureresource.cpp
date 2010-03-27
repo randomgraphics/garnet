@@ -60,7 +60,7 @@ GN::gfx::TextureResource::loadFromFile(
     // create texture
     TextureDesc td;
     td.FromImageDesc( id );
-    AutoRef<Texture> tex( db.gpu().createTexture( td ) );
+    AutoRef<Texture> tex( db.gpu().CreateTexture( td ) );
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
@@ -92,7 +92,7 @@ bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
 
     if( desc )
     {
-        tex.Attach( database().gpu().createTexture( *desc ) );
+        tex.Attach( database().gpu().CreateTexture( *desc ) );
         if( !tex ) return false;
     }
 

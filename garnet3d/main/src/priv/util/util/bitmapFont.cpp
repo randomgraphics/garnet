@@ -423,7 +423,7 @@ GN::util::BitmapFont::SlotInit(
     mTextures.Resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
-        mTextures[i].Attach( gpu.createTexture( td ) );
+        mTextures[i].Attach( gpu.CreateTexture( td ) );
 
         if( 0 == mTextures[i] )
         {

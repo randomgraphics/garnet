@@ -49,14 +49,14 @@ public:
         Gpu & gpu = db.gpu();
 
         // create render targets
-        c0.Attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
+        c0.Attach( gpu.Create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
         if( !c0 )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.Attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
+        ds.Attach( gpu.Create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
         if( !ds )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
@@ -91,7 +91,7 @@ public:
 
         // setup transformation matrices
         view.LookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+        gpu.ComposePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize the model
         if( !model.Init() ) return false;
@@ -130,8 +130,8 @@ public:
         Gpu & gpu = db.gpu();
         context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
-        gpu.bindContext( context );
-        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        gpu.BindContext( context );
+        gpu.ClearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
     }
 
@@ -140,8 +140,8 @@ public:
         Gpu & gpu = db.gpu();
         context.colortargets.Clear();
         context.depthstencil.texture = ds;
-        gpu.bindContext( context );
-        gpu.clearScreen();
+        gpu.BindContext( context );
+        gpu.ClearScreen();
 
         drawBox( 1.0f );
     }
@@ -152,8 +152,8 @@ public:
         context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
-        gpu.bindContext( context );
-        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        gpu.BindContext( context );
+        gpu.ClearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
 
         drawBox( -1.0f );
     }
@@ -163,7 +163,7 @@ public:
         Gpu & gpu = db.gpu();
         context.colortargets.Clear();
         context.depthstencil.Clear();
-        gpu.bindContext( context );
+        gpu.BindContext( context );
         sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }
 
@@ -196,7 +196,7 @@ int Run( Gpu & gpu )
 
     while( gogogo )
     {
-        gpu.processRenderWindowMessages( false );
+        gpu.ProcessRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -207,9 +207,9 @@ int Run( Gpu & gpu )
             gogogo = false;
         }
 
-        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         scene.render();
-        gpu.present();
+        gpu.Present();
 
         fps.onFrame();
     }
@@ -222,7 +222,7 @@ struct InputInitiator
     InputInitiator( Gpu & r )
     {
         InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = r.GetDispDesc();
         gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
@@ -260,16 +260,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
+        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
+        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = Run( *r );
 
-    deleteGpu( r );
+    DeleteGpu( r );
 
     return result;
 }

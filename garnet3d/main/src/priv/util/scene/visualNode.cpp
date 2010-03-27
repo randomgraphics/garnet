@@ -107,7 +107,7 @@ void GN::util::VisualNode::Impl::Draw() const
     SpatialNode * sn = mOwner.entity().getNode<SpatialNode>();
     if( sn )
     {
-        const Matrix44f pv = *(const Matrix44f *)mGraph.impl().getGlobalUniform(StandardUniformType::MATRIX_PV)->getUniform()->getval();
+        const Matrix44f pv = *(const Matrix44f *)mGraph.impl().getGlobalUniform(StandardUniformType::MATRIX_PV)->getUniform()->GetValue();
 
         const Matrix44f & world = sn->getLocal2Root();
 
@@ -186,7 +186,7 @@ GN::util::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 
     if( !ur->getUniform() )
     {
-        AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
+        AutoRef<Uniform> u( gdb.gpu().CreateUniform( type.desc().size ) );
         ur->setUniform( u );
     }
 

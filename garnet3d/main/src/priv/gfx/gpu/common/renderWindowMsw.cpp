@@ -151,7 +151,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
 {
     GN_GUARD;
 
-    const GpuOptions & ro = mGpu->getOptions();
+    const GpuOptions & ro = mGpu->GetOptions();
 
     // do nothing if in full screen mode
     if( ro.fullscreen ) return;
@@ -170,7 +170,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
         mOldMonitor = mMonitor;
 
         // trigger renderer signal when window size is changed or window is moved to another monitor
-        mGpu->getSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
+        mGpu->GetSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
     }
 
     GN_UNGUARD;
@@ -316,7 +316,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
         case WM_CLOSE:
             // do not close the window. just trigger the signal
             GN_ASSERT( mGpu );
-            mGpu->getSignals().rendererWindowClose();
+            mGpu->GetSignals().rendererWindowClose();
             break;
 
         case WM_ENTERSIZEMOVE :

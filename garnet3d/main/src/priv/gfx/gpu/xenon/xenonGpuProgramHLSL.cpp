@@ -193,11 +193,11 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         // apply to D3D
         if( d.vshandle )
         {
-            GN_DX_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->getval(), (UINT)d.size ) );
+            GN_DX_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->GetValue(), (UINT)d.size ) );
         }
         if( d.pshandle )
         {
-            GN_DX_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->getval(), (UINT)d.size ) );
+            GN_DX_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->GetValue(), (UINT)d.size ) );
         }
     }
 }
@@ -213,9 +213,9 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
     IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
 
     // determine effective texture count
-    if( count > mParamDesc.textures.count() )
+    if( count > mParamDesc.textures.Count() )
     {
-        count = mParamDesc.textures.count();
+        count = mParamDesc.textures.Count();
     }
 
     bool usedStages[GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT];

@@ -61,7 +61,7 @@ void GN::gfx::D3D11Gpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 GN::Blob *
-GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::D3D11Gpu::CompileGpuProgram( const GpuProgramDesc & gpd )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->Init( gpd ) ) return NULL;
@@ -74,7 +74,7 @@ GN::gfx::D3D11Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
+GN::gfx::D3D11Gpu::CreateGpuProgram( const void * data, size_t length )
 {
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
     if( !s->Init( data, length ) ) return NULL;
@@ -100,7 +100,7 @@ GN::gfx::D3D11Gpu::createGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D11Gpu::createUniform( size_t size )
+GN::gfx::D3D11Gpu::CreateUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -109,7 +109,7 @@ GN::gfx::D3D11Gpu::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D11Gpu::createTexture( const TextureDesc & desc )
+GN::gfx::D3D11Gpu::CreateTexture( const TextureDesc & desc )
 {
     AutoRef<D3D11Texture> p( new D3D11Texture(*this) );
     if( !p->Init( desc ) ) return 0;
@@ -119,7 +119,7 @@ GN::gfx::D3D11Gpu::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D11Gpu::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::D3D11Gpu::CreateVtxBuf( const VtxBufDesc & desc )
 {
     AutoRef<D3D11VtxBuf> buf( new D3D11VtxBuf(*this) );
 
@@ -131,7 +131,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D11Gpu::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D11Gpu::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::D3D11Gpu::CreateIdxBuf( const IdxBufDesc & desc )
 {
     AutoRef<D3D11IdxBuf> buf( new D3D11IdxBuf(*this) );
 

@@ -128,8 +128,8 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
                 else
                 {
                     // use default back buffer size
-                    mWidth = mGpu.getDispDesc().width;
-                    mHeight = mGpu.getDispDesc().height;
+                    mWidth = mGpu.GetDispDesc().width;
+                    mHeight = mGpu.GetDispDesc().height;
                 }
 
                 renderTargetSizeChanged = ( oldw != mWidth || oldh != mHeight );

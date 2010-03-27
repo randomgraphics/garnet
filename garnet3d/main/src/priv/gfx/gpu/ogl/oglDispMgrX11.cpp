@@ -20,8 +20,8 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext );
 
-    Display * disp = (Display*)getDispDesc().displayHandle;
-    Window win = (Window)getDispDesc().windowHandle;
+    Display * disp = (Display*)GetDispDesc().displayHandle;
+    Window win = (Window)GetDispDesc().windowHandle;
     GN_ASSERT( disp && win );
 
     // get window attributes
@@ -67,7 +67,7 @@ bool GN::gfx::OGLGpu::dispInit()
     // setup swap control
     if( GLX_SGI_swap_control )
     {
-        if( !glXSwapIntervalSGI( getOptions().vsync ) )
+        if( !glXSwapIntervalSGI( GetOptions().vsync ) )
         {
             GN_WARN(sLogger)( "Fail to adjust SGI swap control" );
         }
@@ -88,7 +88,7 @@ void GN::gfx::OGLGpu::dispQuit()
 
     if( mRenderContext )
     {
-        Display * disp = (Display*)getDispDesc().displayHandle;
+        Display * disp = (Display*)GetDispDesc().displayHandle;
         GN_ASSERT( disp );
         glXMakeCurrent( disp, 0, 0 );
         glXDestroyContext( disp, mRenderContext );

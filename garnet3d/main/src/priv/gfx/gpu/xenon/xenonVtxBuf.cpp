@@ -124,7 +124,7 @@ GN::gfx::XenonVtxBuf::Update(
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
     // check if the vertex buffer is binding to the device.
-    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)GetGpu().getD3DDevice();
+    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)GetGpu().GetD3DDevice();
     const DWORD NUM_VB = 16;
     bool bindingFlags[NUM_VB];
     UINT offsets[NUM_VB];

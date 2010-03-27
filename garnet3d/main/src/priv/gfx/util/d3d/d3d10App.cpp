@@ -266,7 +266,7 @@ int GN::d3d10::D3D10Application::Run( const D3D10AppOption & o )
             OnUpdate();
             onDraw();
 
-            // present()
+            // Present()
             mSwapChain->Present( 0, 0 );
         }
     }
@@ -295,7 +295,7 @@ bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
+void GN::d3d10::D3D10Application::ClearScreen( float r, float g, float b, float a, float d, UInt8 s )
 {
     float color[] = { r, g, b, a };
     mDevice->ClearRenderTargetView( mBackRTV, color );

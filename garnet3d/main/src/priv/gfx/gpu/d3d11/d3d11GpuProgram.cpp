@@ -232,7 +232,7 @@ sUpdateConstData(
     }
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.Size() );
+    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.GetValue(), uniform.Size() );
     SafeArrayAccessor<UInt8>       dst( cb.ToRawPtr(), cb.Size() );
 
     // copy uniform data to system const buffer
@@ -277,7 +277,7 @@ bool GN::gfx::D3D11GpuProgram::Init( const GpuProgramDesc & desc )
     mParamDesc.buildParameterArrays();
 
     const size_t NUM_STAGES = GetGpu().GetCaps().maxTextures;
-    if( mParamDesc.textures.count() > NUM_STAGES )
+    if( mParamDesc.textures.Count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
         return Failure();
@@ -314,7 +314,7 @@ void GN::gfx::D3D11GpuProgram::applyUniforms(
     size_t                  count,
     bool                    skipDirtyCheck ) const
 {
-    count = math::GetMin( count, mParamDesc.uniforms.count() );
+    count = math::GetMin( count, mParamDesc.uniforms.Count() );
 
     // dirty flags
     bool vscDirty[D3D11ConstBufferArray::MAX_SIZE];
@@ -387,9 +387,9 @@ void GN::gfx::D3D11GpuProgram::applyTextures(
     memset( srvArray, 0, SRV_ARRAY_SIZE );
 
     // determine effective texture count
-    if( count > mParamDesc.textures.count() )
+    if( count > mParamDesc.textures.Count() )
     {
-        count = mParamDesc.textures.count();
+        count = mParamDesc.textures.Count();
     }
     GN_ASSERT( count <= NUM_STAGES );
 

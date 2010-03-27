@@ -85,7 +85,7 @@ bool GN::gfx::LineRenderer::Init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return Failure();
     }
-    mContext.gpuProgram.Attach( mGpu.createGpuProgram( gpd ) );
+    mContext.gpuProgram.Attach( mGpu.CreateGpuProgram( gpd ) );
     if( !mContext.gpuProgram ) return Failure();
 
     // create vertex format
@@ -93,30 +93,30 @@ bool GN::gfx::LineRenderer::Init()
     mContext.vtxfmt.elements[0].stream = 0;
     mContext.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( LineVertex, pos );
     mContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
-    mContext.vtxfmt.elements[0].bindTo( "position", 0 );
+    mContext.vtxfmt.elements[0].BindTo( "position", 0 );
     mContext.vtxfmt.elements[1].stream = 0;
     mContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( LineVertex, colorInRGBA );
     mContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
-    mContext.vtxfmt.elements[1].bindTo( "color", 0 );
+    mContext.vtxfmt.elements[1].BindTo( "color", 0 );
     mContext.vtxfmt.elements[2].stream = 0;
     mContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
     mContext.vtxfmt.elements[2].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
+    mContext.vtxfmt.elements[2].BindTo( "texcoord", 0 );
     mContext.vtxfmt.elements[3].stream = 0;
     mContext.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f);
     mContext.vtxfmt.elements[3].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[3].bindTo( "texcoord", 1 );
+    mContext.vtxfmt.elements[3].BindTo( "texcoord", 1 );
     mContext.vtxfmt.elements[4].stream = 0;
     mContext.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 2;
     mContext.vtxfmt.elements[4].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[4].bindTo( "texcoord", 2 );
+    mContext.vtxfmt.elements[4].BindTo( "texcoord", 2 );
     mContext.vtxfmt.elements[5].stream = 0;
     mContext.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 3;
     mContext.vtxfmt.elements[5].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
+    mContext.vtxfmt.elements[5].BindTo( "texcoord", 3 );
 
     // create vertex buffer
-    mContext.vtxbufs[0].vtxbuf.Attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
+    mContext.vtxbufs[0].vtxbuf.Attach( mGpu.CreateVtxBuf( MAX_LINES * sizeof(Line), true ) );
     if( !mContext.vtxbufs[0].vtxbuf ) return Failure();
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
@@ -155,7 +155,7 @@ void GN::gfx::LineRenderer::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::drawLines(
+void GN::gfx::LineRenderer::DrawLines(
     const void *      positions,
     size_t            stride,
     size_t            numpoints,
@@ -173,7 +173,7 @@ void GN::gfx::LineRenderer::drawLines(
         // handle line buffer longer than maxinum length.
         for( size_t i = 0; i < numNewLines / MAX_LINES; ++i )
         {
-            drawLines(
+            DrawLines(
                 positionsU8,
                 stride,
                 MAX_LINES * 2,
@@ -232,7 +232,7 @@ void GN::gfx::LineRenderer::flush()
         mNextPendingLine,
         mLines == mNextPendingLine ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-    mGpu.bindContext( mContext );
+    mGpu.BindContext( mContext );
 
     mGpu.Draw(
         PrimitiveType::LINE_LIST,

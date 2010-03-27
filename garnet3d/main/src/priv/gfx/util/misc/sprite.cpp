@@ -75,7 +75,7 @@ bool GN::gfx::SpriteRenderer::Init()
     };
 
     // create a 2x2 pure white texture
-    mPureWhiteTexture.Attach( mGpu.create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    mPureWhiteTexture.Attach( mGpu.Create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     if( !mPureWhiteTexture ) return Failure();
     const UInt32 PURE_WHITE[] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF } ;
     mPureWhiteTexture->UpdateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, &PURE_WHITE );
@@ -104,7 +104,7 @@ bool GN::gfx::SpriteRenderer::Init()
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
         return Failure();
     }
-    mGpuProgram.Attach( mGpu.createGpuProgram( gpd ) );
+    mGpuProgram.Attach( mGpu.CreateGpuProgram( gpd ) );
     if( !mGpuProgram ) return Failure();
 
     // create vertex format
@@ -112,22 +112,22 @@ bool GN::gfx::SpriteRenderer::Init()
     mVertexFormat.elements[0].stream = 0;
     mVertexFormat.elements[0].offset = 0;
     mVertexFormat.elements[0].format = ColorFormat::FLOAT3;
-    mVertexFormat.elements[0].bindTo( "position", 0 );
+    mVertexFormat.elements[0].BindTo( "position", 0 );
     mVertexFormat.elements[1].stream = 0;
     mVertexFormat.elements[1].offset = GN_FIELD_OFFSET( SpriteVertex, clr );
     mVertexFormat.elements[1].format = ColorFormat::RGBA32;
-    mVertexFormat.elements[1].bindTo( "color", 0 );
+    mVertexFormat.elements[1].BindTo( "color", 0 );
     mVertexFormat.elements[2].stream = 0;
     mVertexFormat.elements[2].offset = GN_FIELD_OFFSET( SpriteVertex, tex );
     mVertexFormat.elements[2].format = ColorFormat::FLOAT2;
-    mVertexFormat.elements[2].bindTo( "texcoord", 0 );
+    mVertexFormat.elements[2].BindTo( "texcoord", 0 );
 
     // create vertex buffer
-    mVertexBuffer.Attach( mGpu.createVtxBuf( VTXBUF_SIZE, true ) );
+    mVertexBuffer.Attach( mGpu.CreateVtxBuf( VTXBUF_SIZE, true ) );
     if( !mVertexBuffer ) return Failure();
 
     // create index buffer
-    mIndexBuffer.Attach( mGpu.createIdxBuf16( MAX_INDICES, false ) );
+    mIndexBuffer.Attach( mGpu.CreateIdxBuf16( MAX_INDICES, false ) );
     if( !mIndexBuffer ) return Failure();
     DynaArray<UInt16> indices( MAX_INDICES );
     for( UInt16 i = 0; i < MAX_SPRITES; ++i )
@@ -196,7 +196,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     if( NULL == texture ) texture = mPureWhiteTexture;
 
     // copy current renderer context
-    mContext = mGpu.getContext();
+    mContext = mGpu.GetContext();
 
     // setup parameters that are not affected by options
     mContext.textures[0].texture.Set( texture );
@@ -273,7 +273,7 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
     }
 
     // Note: D3D9 and Xenon needs -0.5f vertex shift
-    if( mGpu.getOptions().api == GpuAPI::XENON )
+    if( mGpu.GetOptions().api == GpuAPI::XENON )
     {
         mVertexShift = -0.5f;
     }
@@ -308,9 +308,9 @@ void GN::gfx::SpriteRenderer::drawEnd()
             mNextPendingSprite,
             mSprites == mNextPendingSprite ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-        mGpu.bindContext( mContext );
+        mGpu.BindContext( mContext );
 
-        mGpu.drawIndexed(
+        mGpu.DrawIndexed(
             PrimitiveType::TRIANGLE_LIST,
             numPendingSprites * 6,        // numidx
             firstPendingSpriteOffset * 4, // basevtx,
@@ -355,7 +355,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 
     // get screen size based on current context
     UInt32 screenWidth, screenHeight;
-    mGpu.getCurrentRenderTargetSize( &screenWidth, &screenHeight );
+    mGpu.GetCurrentRenderTargetSize( &screenWidth, &screenHeight );
 
     float x1 = ( x + mVertexShift ) / screenWidth;
     float y1 = ( y + mVertexShift ) / screenHeight;
@@ -411,7 +411,7 @@ GN::gfx::SpriteRenderer::drawSolid(
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
 
-    const DispDesc & dd = mGpu.getDispDesc();
+    const DispDesc & dd = mGpu.GetDispDesc();
 
     float x1 = x / dd.width;
     float y1 = y / dd.height;

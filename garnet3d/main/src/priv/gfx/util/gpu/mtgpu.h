@@ -215,32 +215,32 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual const GpuOptions & getOptions() const { return mGpuOptions; }
-        virtual const DispDesc & getDispDesc() const { return mDispDesc; }
-        virtual void * getD3DDevice() const { return mD3DDevice; }
-        virtual void * getOGLRC() const { return mOGLRC; }
+        virtual const GpuOptions & GetOptions() const { return mGpuOptions; }
+        virtual const DispDesc & GetDispDesc() const { return mDispDesc; }
+        virtual void * GetD3DDevice() const { return mD3DDevice; }
+        virtual void * GetOGLRC() const { return mOGLRC; }
 
         virtual const GpuCaps & GetCaps() const { return mCaps; }
-        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
-        virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const;
+        virtual bool CheckTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
+        virtual ColorFormat GetDefaultTextureFormat( TextureUsage usages ) const;
 
-        virtual Blob * compileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform * createUniform( size_t size );
-        virtual Texture * createTexture( const TextureDesc & desc );
-        virtual VtxBuf * createVtxBuf( const VtxBufDesc & );
-        virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
+        virtual Blob * CompileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram * CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform * CreateUniform( size_t size );
+        virtual Texture * CreateTexture( const TextureDesc & desc );
+        virtual VtxBuf * CreateVtxBuf( const VtxBufDesc & );
+        virtual IdxBuf * CreateIdxBuf( const IdxBufDesc & desc );
 
-        virtual void bindContext( const GpuContext & );
+        virtual void BindContext( const GpuContext & );
         virtual void rebindContext();
-        virtual const GpuContext & getContext() const;
+        virtual const GpuContext & GetContext() const;
 
-        virtual void present();
-        virtual void clearScreen( const Vector4f & c,
+        virtual void Present();
+        virtual void ClearScreen( const Vector4f & c,
                                   float            z,
                                   UInt8            s,
                                   BitFields        flags );
-        virtual void drawIndexed( PrimitiveType prim,
+        virtual void DrawIndexed( PrimitiveType prim,
                                   size_t        numprim,
                                   size_t        basevtx,
                                   size_t        startvtx,
@@ -249,18 +249,18 @@ namespace GN { namespace gfx
         virtual void Draw( PrimitiveType prim,
                            size_t        numprim,
                            size_t        startvtx );
-        virtual void drawIndexedUp(
+        virtual void DrawIndexedUp(
                              PrimitiveType  prim,
                              size_t         numprim,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
                              const UInt16 * indexData );
-        virtual void drawUp( PrimitiveType prim,
+        virtual void DrawUp( PrimitiveType prim,
                              size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawLines( BitFields         options,
+        virtual void DrawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            count,
@@ -269,14 +269,14 @@ namespace GN { namespace gfx
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
 
-        virtual GpuSignals & getSignals() { GN_ASSERT(mSignals); return *mSignals; }
-        virtual void getBackBufferContent( BackBufferContent & );
-        virtual void processRenderWindowMessages( bool blockWhileMinimized );
-        virtual void enableParameterCheck( bool enable );
-        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
-        virtual void setUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * getUserData( const Guid & id, size_t * length ) const;
-        virtual bool hasUserData( const Guid & id ) const;
+        virtual GpuSignals & GetSignals() { GN_ASSERT(mSignals); return *mSignals; }
+        virtual void GetBackBufferContent( BackBufferContent & );
+        virtual void ProcessRenderWindowMessages( bool blockWhileMinimized );
+        virtual void EnableParameterCheck( bool enable );
+        virtual void DumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void SetUserData( const Guid & id, const void * data, size_t length );
+        virtual const void * GetUserData( const Guid & id, size_t * length ) const;
+        virtual bool HasUserData( const Guid & id ) const;
 
         //@}
     };

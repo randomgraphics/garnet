@@ -90,7 +90,7 @@ class TestTextureBandwidth : public BasicTestCase
         memFree( dst );
     }
 
-    bool createTexture( TextureDesc & desc )
+    bool CreateTexture( TextureDesc & desc )
     {
 		GN_GUARD;
 
@@ -117,7 +117,7 @@ class TestTextureBandwidth : public BasicTestCase
         desc.baseMap = memAlloc( TEX_BYTES, 'd' );
         XGOffsetResourceAddress( tex, desc.baseMap );
 #else
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
         GN_DX_CHECK_RETURN(
             dev->CreateTexture(
                 TEX_SIZE, TEX_SIZE, 1,
@@ -155,7 +155,7 @@ class TestTextureBandwidth : public BasicTestCase
         const UInt8 * data = mMemBuf[memid];
 
 #if GN_XENON
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
         if( desc.fence ) dev->BlockOnFence( desc.fence );
         memCopy( desc.baseMap, data, TEX_BYTES );
 #if !USE_WRITE_COMBINE
@@ -173,7 +173,7 @@ class TestTextureBandwidth : public BasicTestCase
 
     void drawTexture( UInt32 texid )
     {
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
         dev->SetTexture( 0, mTextures[texid].texture );
         mGeometry.Draw();
 #if GN_XENON
@@ -219,7 +219,7 @@ public:
         // create textures
         for( size_t i = 0; i < TEX_COUNT; ++i )
         {
-            if( !createTexture( mTextures[i] ) ) return false;
+            if( !CreateTexture( mTextures[i] ) ) return false;
         }
 
         // initialize memory buffer
@@ -291,7 +291,7 @@ public:
 
     void Update()
     {
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = gRenderer.GetDispDesc();
 
         float fillrate = 2 * TEX_COUNT * REPEAT_COUNT * dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
         float bandwidth = 2 * TEX_COUNT * REPEAT_COUNT * TEX_BYTES / 1000000000.0f * getApp().GetFps();

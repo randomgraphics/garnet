@@ -150,7 +150,7 @@ int GN::util::SampleApp::Run( int argc, const char * const argv[] )
     while( !mDone )
     {
         // process render window messages
-        mGpu->processRenderWindowMessages( false );
+        mGpu->ProcessRenderWindowMessages( false );
 
         // update timing stuff
         mFps.onFrame();
@@ -177,7 +177,7 @@ int GN::util::SampleApp::Run( int argc, const char * const argv[] )
         mTimeSinceLastUpdate = mFps.GetCurrentTime() - lastUpdateTime;
         OnRender();
         DrawHUD();
-        mGpu->present();
+        mGpu->Present();
     }
 
     // success
@@ -253,9 +253,9 @@ void GN::util::SampleApp::DrawXYZCoordinateAxes( const Matrix44f & projViewWorld
     static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
     static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
     static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
-    mLineRenderer->drawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
-    mLineRenderer->drawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
-    mLineRenderer->drawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
+    mLineRenderer->DrawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
+    mLineRenderer->DrawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
+    mLineRenderer->DrawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
     mLineRenderer->flush();
 }
 
@@ -501,14 +501,14 @@ bool GN::util::SampleApp::InitGpu()
 
     // initialize GPU
     if( mInitParam.useMultithreadGpu )
-        mGpu = createMultiThreadGpu( mInitParam.ro );
+        mGpu = CreateMultiThreadGpu( mInitParam.ro );
     else
-        mGpu = createSingleThreadGpu( mInitParam.ro );
+        mGpu = CreateSingleThreadGpu( mInitParam.ro );
     if( NULL == mGpu ) return false;
 
     // connect to renderer signal: post quit event, if render window is closed.
-    mGpu->getSignals().rendererWindowClose.Connect( this, &SampleApp::PostExitEvent );
-    mGpu->getSignals().rendererWindowSizeMove.Connect( this, &SampleApp::OnRenderWindowResize );
+    mGpu->GetSignals().rendererWindowClose.Connect( this, &SampleApp::PostExitEvent );
+    mGpu->GetSignals().rendererWindowSizeMove.Connect( this, &SampleApp::OnRenderWindowResize );
 
     // create sprite renderer
     mSpriteRenderer = new SpriteRenderer( *mGpu );
@@ -541,7 +541,7 @@ void GN::util::SampleApp::QuitGpu()
     SafeDelete( mGpuResourceDatabase );
     SafeDelete( mLineRenderer );
     SafeDelete( mSpriteRenderer );
-    deleteGpu( mGpu ); mGpu = NULL;
+    DeleteGpu( mGpu ); mGpu = NULL;
 
     GN_UNGUARD;
 }
@@ -555,7 +555,7 @@ bool GN::util::SampleApp::InitInput()
 
     // create INPUT system
     if( !InitializeInputSystem( mInitParam.iapi ) ) return false;
-    const DispDesc & dd = mGpu->getDispDesc();
+    const DispDesc & dd = mGpu->GetDispDesc();
     gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
 
     // connect to input signals

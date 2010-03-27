@@ -306,7 +306,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void setTriangles( const UInt16 * triangles, size_t triangleCount );
 
         void Draw() const;
-        void drawIndexed() const;
+        void DrawIndexed() const;
 
         //@}
 
@@ -419,7 +419,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), 0 ); }
         void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), mDepth.dsv ); }
 
-        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void ClearScreen( float r, float g, float b, float a, float d, UInt8 s );
 
         // ********************************
         // private variables
@@ -616,7 +616,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         const D3D10AppOption & getOption() const { return mOption; }
 
-        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void ClearScreen( float r, float g, float b, float a, float d, UInt8 s );
 
         void resetToDefaultRenderTargets() { mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV ); }
 

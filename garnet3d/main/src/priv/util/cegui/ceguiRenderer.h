@@ -48,9 +48,9 @@ namespace CEGUI
     	virtual	void           doRender(void);
     	virtual	void           clearRenderList(void) { mQuads.Clear(); }
     	virtual void           setQueueingEnabled(bool setting) { mQueueEnabled = setting; }
-    	virtual	Texture*       createTexture(void);
-    	virtual	Texture*       createTexture(const String& filename, const String& resourceGroup);
-    	virtual	Texture*       createTexture(float size);
+    	virtual	Texture*       CreateTexture(void);
+    	virtual	Texture*       CreateTexture(const String& filename, const String& resourceGroup);
+    	virtual	Texture*       CreateTexture(float size);
     	virtual	void           destroyTexture(Texture* texture);
     	virtual void           destroyAllTextures(void);
     	virtual bool           isQueueingEnabled(void) const { return mQueueEnabled; }

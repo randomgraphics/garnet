@@ -28,7 +28,7 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
         if( type.desc().global )
         {
             ur = gdb.findOrCreateResource<UniformResource>( type.desc().name );
-            AutoRef<Uniform> u( gdb.gpu().createUniform( type.desc().size ) );
+            AutoRef<Uniform> u( gdb.gpu().CreateUniform( type.desc().size ) );
             ur->setUniform( u );
         }
     }

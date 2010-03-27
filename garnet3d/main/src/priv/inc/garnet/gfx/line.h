@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         ///
         /// draw line list
         ///
-        void drawLines(
+        void DrawLines(
             const void *      positions, // 3D positions
             size_t            stride,    // position buffer stride. 0 for default stride (3 floats).
             size_t            numpoints,

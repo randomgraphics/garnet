@@ -55,7 +55,7 @@ void GN::gfx::OGLLine::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLLine::drawLines(
+void GN::gfx::OGLLine::DrawLines(
     BitFields options,
     const float * positions,
     size_t stride,
@@ -90,7 +90,7 @@ void GN::gfx::OGLLine::drawLines(
     {
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        drawLines( options, positions, stride, n, rgba, model, view, proj );
+        DrawLines( options, positions, stride, n, rgba, model, view, proj );
         positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }

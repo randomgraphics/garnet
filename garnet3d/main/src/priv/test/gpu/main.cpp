@@ -49,7 +49,7 @@ bool Init( Gpu & gpu )
 
     // create GPU program
     GpuProgramDesc gpd;
-    if( GpuAPI::OGL == gpu.getOptions().api )
+    if( GpuAPI::OGL == gpu.GetOptions().api )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glsl_vscode;
@@ -63,17 +63,17 @@ bool Init( Gpu & gpu )
         gpd.vs.entry  = "main";
         gpd.ps.entry  = "main";
     }
-    rc.gpuProgram.Attach( gpu.createGpuProgram( gpd ) );
+    rc.gpuProgram.Attach( gpu.CreateGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
     // create uniform
     rc.uniforms.Resize( 1 );
-    rc.uniforms[0].Attach( gpu.createUniform( sizeof(Matrix44f) ) );
+    rc.uniforms[0].Attach( gpu.CreateUniform( sizeof(Matrix44f) ) );
     if( !rc.uniforms[0] ) return false;
 
     // setup vertex format
     rc.vtxfmt.numElements = 1;
-    rc.vtxfmt.elements[0].bindTo( "position", 0 );
+    rc.vtxfmt.elements[0].BindTo( "position", 0 );
     rc.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
     rc.vtxfmt.elements[0].offset = 0;
     rc.vtxfmt.elements[0].stream = 0;
@@ -93,14 +93,14 @@ bool Init( Gpu & gpu )
         sizeof(vertices),
         false,
     };
-    rc.vtxbufs[0].vtxbuf.Attach( gpu.createVtxBuf( vbd ) );
+    rc.vtxbufs[0].vtxbuf.Attach( gpu.CreateVtxBuf( vbd ) );
     if( NULL == rc.vtxbufs[0].vtxbuf ) return false;
     rc.vtxbufs[0].vtxbuf->Update( 0, 0, vertices );
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
     IdxBufDesc ibd = { 4, false, false };
-    rc.idxbuf.Attach( gpu.createIdxBuf( ibd ) );
+    rc.idxbuf.Attach( gpu.CreateIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
     rc.idxbuf->Update( 0, 0, indices );
 
@@ -128,27 +128,27 @@ void Draw( Gpu & r )
     };
     m.Translate( -1.0f, -0.0f, 0 );
     rc.uniforms[0]->Update( m );
-    r.bindContext( rc );
-    r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
+    r.BindContext( rc );
+    r.DrawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
     m.Translate( -1.0f, -1.0f, 0 );
     rc.uniforms[0]->Update( m );
-    r.bindContext( rc );
-    r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
+    r.BindContext( rc );
+    r.DrawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
     m.Identity();
     rc.uniforms[0]->Update( m );
-    r.bindContext( rc );
+    r.BindContext( rc );
     r.Draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
     m.Translate( 0.5f, -1.5f, 0 );
     rc.uniforms[0]->Update( m );
-    r.bindContext( rc );
-    r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
+    r.BindContext( rc );
+    r.DrawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
 int Run( Gpu & gpu )
@@ -162,7 +162,7 @@ int Run( Gpu & gpu )
 
     while( gogogo )
     {
-        gpu.processRenderWindowMessages( false );
+        gpu.ProcessRenderWindowMessages( false );
 
         Input & in = gInput;
 
@@ -173,9 +173,9 @@ int Run( Gpu & gpu )
             gogogo = false;
         }
 
-        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         Draw( gpu );
-        gpu.present();
+        gpu.Present();
 
         fps.onFrame();
     }
@@ -190,7 +190,7 @@ struct InputInitiator
     InputInitiator( Gpu & r )
     {
         InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = r.GetDispDesc();
         gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
@@ -248,16 +248,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = createMultiThreadGpu( cmdargs.rendererOptions );
+        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = createSingleThreadGpu( cmdargs.rendererOptions );
+        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
     int result = Run( *r );
 
-    deleteGpu( r );
+    DeleteGpu( r );
 
     return result;
 }

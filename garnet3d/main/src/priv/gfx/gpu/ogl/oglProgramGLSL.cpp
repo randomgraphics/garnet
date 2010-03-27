@@ -498,51 +498,51 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         switch( desc.type )
         {
             case GL_FLOAT                      :
-                glUniform1fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
+                glUniform1fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_VEC2_ARB             :
-                glUniform2fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
+                glUniform2fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_VEC3_ARB             :
-                glUniform3fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
+                glUniform3fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_VEC4_ARB             :
-                glUniform4fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
+                glUniform4fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_INT                        :
             case GL_BOOL_ARB                   :
-                glUniform1ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
+                glUniform1ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
                 break;
 
             case GL_INT_VEC2_ARB               :
             case GL_BOOL_VEC2_ARB              :
-                glUniform2ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
+                glUniform2ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
                 break;
 
             case GL_INT_VEC3_ARB               :
             case GL_BOOL_VEC3_ARB              :
-                glUniform3ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
+                glUniform3ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
                 break;
 
             case GL_INT_VEC4_ARB               :
             case GL_BOOL_VEC4_ARB              :
-                glUniform4ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
+                glUniform4ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_MAT2_ARB             :
-                glUniformMatrix2fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
+                glUniformMatrix2fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_MAT3_ARB             :
-                glUniformMatrix3fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
+                glUniformMatrix3fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_FLOAT_MAT4_ARB             :
-                glUniformMatrix4fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
+                glUniformMatrix4fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
                 break;
 
             case GL_SAMPLER_1D_ARB             :

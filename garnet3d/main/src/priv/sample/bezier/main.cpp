@@ -35,31 +35,31 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     md.vtxfmt.elements[0].stream = 0;
     md.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( BezierVertex, p0 );
-    md.vtxfmt.elements[0].bindTo( "pos", 0 );
+    md.vtxfmt.elements[0].BindTo( "pos", 0 );
     md.vtxfmt.elements[1].stream = 0;
     md.vtxfmt.elements[1].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( BezierVertex, p1 );
-    md.vtxfmt.elements[1].bindTo( "pos", 1 );
+    md.vtxfmt.elements[1].BindTo( "pos", 1 );
     md.vtxfmt.elements[2].stream = 0;
     md.vtxfmt.elements[2].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( BezierVertex, p2 );
-    md.vtxfmt.elements[2].bindTo( "pos", 2 );
+    md.vtxfmt.elements[2].BindTo( "pos", 2 );
     md.vtxfmt.elements[3].stream = 0;
     md.vtxfmt.elements[3].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( BezierVertex, n0 );
-    md.vtxfmt.elements[3].bindTo( "normal", 0 );
+    md.vtxfmt.elements[3].BindTo( "normal", 0 );
     md.vtxfmt.elements[4].stream = 0;
     md.vtxfmt.elements[4].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( BezierVertex, n1 );
-    md.vtxfmt.elements[4].bindTo( "nml", 1 );
+    md.vtxfmt.elements[4].BindTo( "nml", 1 );
     md.vtxfmt.elements[5].stream = 0;
     md.vtxfmt.elements[5].format = ColorFormat::FLOAT3;
     md.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( BezierVertex, n2 );
-    md.vtxfmt.elements[5].bindTo( "nml", 2 );
+    md.vtxfmt.elements[5].BindTo( "nml", 2 );
     md.vtxfmt.elements[6].stream = 0;
     md.vtxfmt.elements[6].format = ColorFormat::FLOAT2;
     md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET( BezierVertex, bc );
-    md.vtxfmt.elements[6].bindTo( "bc" );
+    md.vtxfmt.elements[6].BindTo( "bc" );
 
     //                               v0 (0,0)
     //                              / \
@@ -296,11 +296,11 @@ class BezierApp : public SampleApp
     void updateRadius()
     {
         Gpu            & gpu = GetGpu();
-        const DispDesc & dd  = gpu.getDispDesc();
+        const DispDesc & dd  = gpu.GetDispDesc();
 
         Matrix44f view, proj;
         view.LookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        gpu.ComposePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
         camera.setViewMatrix( view );
         camera.setProjectionMatrix( proj );
 
@@ -383,7 +383,7 @@ class BezierApp : public SampleApp
 
     void OnRender()
     {
-        GetGpu().clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        GetGpu().ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
         const Vector3f & position = arcball.getTranslation();
 
@@ -411,9 +411,9 @@ class BezierApp : public SampleApp
         const Matrix44f & world = arcball.getRotationMatrix44();
         const Matrix44f & view  = camera.getViewMatrix();
         const Matrix44f & proj  = camera.getProjectionMatrix();
-        gpu.drawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
-        gpu.drawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
-        gpu.drawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
+        gpu.DrawLines( 0, X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), world, view, proj );
+        gpu.DrawLines( 0, Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), world, view, proj );
+        gpu.DrawLines( 0, Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), world, view, proj );
     }
 };
 

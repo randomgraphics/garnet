@@ -59,7 +59,7 @@ void GN::gfx::XenonGpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 GN::Blob *
-GN::gfx::XenonGpu::compileGpuProgram( const GpuProgramDesc & desc )
+GN::gfx::XenonGpu::CompileGpuProgram( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -76,7 +76,7 @@ GN::gfx::XenonGpu::compileGpuProgram( const GpuProgramDesc & desc )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::XenonGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
+GN::gfx::XenonGpu::CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
 {
     GN_GUARD;
 
@@ -116,7 +116,7 @@ GN::gfx::XenonGpu::createGpuProgram( const void * compiledGpuProgramBinary, size
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::XenonGpu::createUniform( size_t size )
+GN::gfx::XenonGpu::CreateUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -125,7 +125,7 @@ GN::gfx::XenonGpu::createUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::XenonGpu::createTexture( const TextureDesc & desc )
+GN::gfx::XenonGpu::CreateTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -141,7 +141,7 @@ GN::gfx::XenonGpu::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::XenonGpu::createVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::XenonGpu::CreateVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -159,7 +159,7 @@ GN::gfx::VtxBuf * GN::gfx::XenonGpu::createVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::XenonGpu::createIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::XenonGpu::CreateIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 

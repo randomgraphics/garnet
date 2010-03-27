@@ -45,7 +45,7 @@ bool GN::SimpleShadowMap::Init( const StrA & actorName )
     // setup light
     mScene.light(0).position.Set( radius * 1.5f, radius * 1.5f, radius * 1.5f );
     mLightView.LookAtRh( mScene.light(0).position, Vector3f(0,0,0), Vector3f(0,1,0) );
-    re.composePerspectiveMatrixRh(
+    re.ComposePerspectiveMatrixRh(
         mLightProj,
         1.0f,
         1.0f,
@@ -123,14 +123,14 @@ void GN::SimpleShadowMap::Update()
     RenderEngine & re = mApp.getRenderEngine();
 
     // update projection matrix
-    const DispDesc & dd = re.getDispDesc();
+    const DispDesc & dd = re.GetDispDesc();
     const Spheref & bs = mShadowProjectors->getBoundingSphere();
     float d = mCamera.getPosition().Length();
     float n_min = bs.radius / 100.0f;
     float n = d - bs.radius;
     float f = d + bs.radius;
     if( n < n_min ) n = n_min;
-    re.composePerspectiveMatrixRh( mProj, 0.6f, (float)dd.width/dd.height, n, f );
+    re.ComposePerspectiveMatrixRh( mProj, 0.6f, (float)dd.width/dd.height, n, f );
 }
 
 //
@@ -145,7 +145,7 @@ void GN::SimpleShadowMap::Draw()
     mScene.setView( mLightView );
     mCtx.setDrawToTextures( 1, mColorMap, 0, 0, 0, mShadowMap, MsaaType::NONE );
     re.setContext( mCtx );
-    re.clearScreen();
+    re.ClearScreen();
     mShadowProjectors->Draw();
 
     // draw to back buffer
@@ -153,7 +153,7 @@ void GN::SimpleShadowMap::Draw()
     mScene.setView( mCamera.getViewMatrix() );
     mCtx.setDrawToBackBuf();
     re.setContext( mCtx );
-    re.clearScreen();
+    re.ClearScreen();
     mShadowReceivers->Draw();
 
     // draw axises
@@ -162,9 +162,9 @@ void GN::SimpleShadowMap::Draw()
     static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
     const Matrix44f & view = mScene.getView();
     const Matrix44f & proj = mScene.getProj();
-    re.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), Matrix44f::IDENTITY, view, proj );
-    re.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), Matrix44f::IDENTITY, view, proj );
-    re.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), Matrix44f::IDENTITY, view, proj );
+    re.DrawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), Matrix44f::IDENTITY, view, proj );
+    re.DrawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), Matrix44f::IDENTITY, view, proj );
+    re.DrawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), Matrix44f::IDENTITY, view, proj );
 }
 
 // *****************************************************************************

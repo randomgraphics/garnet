@@ -29,7 +29,7 @@ bool GN::gfx::D3D11RTMgr::Init()
     GN_ASSERT( mAutoColor0 );
 
     // create depth texture
-    const DispDesc & dd = mGpu.getDispDesc();
+    const DispDesc & dd = mGpu.GetDispDesc();
     D3D11_TEXTURE2D_DESC td;
     td.Width              = dd.width;
     td.Height             = dd.height;
@@ -174,7 +174,7 @@ bool GN::gfx::D3D11RTMgr::bind(
     }
     else
     {
-        const DispDesc & dd = mGpu.getDispDesc();
+        const DispDesc & dd = mGpu.GetDispDesc();
         newRtSize.x = dd.width;
         newRtSize.y = dd.height;
     }

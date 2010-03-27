@@ -53,7 +53,7 @@ bool GN::gfx::D3D10Gpu::capsInit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::checkTextureFormatSupport(
+bool GN::gfx::D3D10Gpu::CheckTextureFormatSupport(
     ColorFormat  format,
     TextureUsage usage ) const
 {
@@ -104,7 +104,7 @@ bool GN::gfx::D3D10Gpu::checkTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::D3D10Gpu::getDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::D3D10Gpu::GetDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

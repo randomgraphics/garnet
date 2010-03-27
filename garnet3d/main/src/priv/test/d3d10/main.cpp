@@ -106,7 +106,7 @@ public:
 
     void onDraw()
     {
-        rtt.clearScreen( 0, 1.0f, 1.0f, 0, 1.0f, 0 );
+        rtt.ClearScreen( 0, 1.0f, 1.0f, 0, 1.0f, 0 );
         rtt.bindWithDepth();
 
         ID3D10EffectTechnique * tech = effect->GetTechniqueByIndex( 0 );
@@ -115,7 +115,7 @@ public:
         for( UINT p = 0; p < techDesc.Passes; ++p )
         {
             tech->GetPassByIndex( p )->Apply( 0 );
-            mesh.drawIndexed();
+            mesh.DrawIndexed();
         }
 
         resetToDefaultRenderTargets();

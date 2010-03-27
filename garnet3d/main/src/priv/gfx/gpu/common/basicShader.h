@@ -161,7 +161,7 @@ namespace GN { namespace gfx
         virtual size_t Size() const { return mSize; }
 
         /// get current parameter value
-        virtual const void * getval() const { return mData; }
+        virtual const void * GetValue() const { return mData; }
 
         /// update parameter value
         virtual void Update( size_t offset, size_t length, const void * data )
