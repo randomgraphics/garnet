@@ -6,9 +6,9 @@
 // Get resource type (GUID)
 // -----------------------------------------------------------------------------
 inline const GN::Guid &
-GN::gfx::GpuResource::type() const
+GN::gfx::GpuResource::Type() const
 {
-    return mDatabase.getResourceType(this);
+    return mDatabase.GetResourceType(this);
 }
 
 //
@@ -17,16 +17,16 @@ GN::gfx::GpuResource::type() const
 inline const char *
 GN::gfx::GpuResource::Name() const
 {
-    return mDatabase.getResourceName(this);
+    return mDatabase.GetResourceName(this);
 }
 
 //
 // Cast GPU resource pointer with type check.
 // -----------------------------------------------------------------------------
 template<typename T>
-inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
+inline T * GN::gfx::GpuResource::CastTo( GpuResource * r )
 {
-    GN_ASSERT( 0 == r || T::guid() == r->database().getResourceType( r ) );
+    GN_ASSERT( 0 == r || T::GetGuid() == r->GetGdb().GetResourceType( r ) );
     return (T*)r;
 }
 
@@ -34,9 +34,9 @@ inline T * GN::gfx::GpuResource::castTo( GpuResource * r )
 // Cast GPU resource pointer with type check.
 // -----------------------------------------------------------------------------
 template<typename T>
-inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
+inline T & GN::gfx::GpuResource::CastTo( GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.database().getResourceType( &r ) );
+    GN_ASSERT( T::GetGuid() == r.GetGdb().GetResourceType( &r ) );
     return (T&)r;
 }
 
@@ -44,9 +44,9 @@ inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 // Cast GPU resource pointer with type check.
 // -----------------------------------------------------------------------------
 template<typename T>
-inline const T & GN::gfx::GpuResource::castTo( const GpuResource & r )
+inline const T & GN::gfx::GpuResource::CastTo( const GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.database().getResourceType( this ) );
+    GN_ASSERT( T::GetGuid() == r.GetGdb().GetResourceType( this ) );
     return (const T&)r;
 }
 
@@ -58,38 +58,38 @@ inline const T & GN::gfx::GpuResource::castTo( const GpuResource & r )
 //
 // -----------------------------------------------------------------------------
 inline GN::AutoRef<GN::gfx::GpuResource>
-GN::gfx::GpuResourceDatabase::findOrCreateResource( const Guid & type, const char * name )
+GN::gfx::GpuResourceDatabase::FindOrCreateResource( const Guid & type, const char * name )
 {
-    AutoRef<GpuResource> res = findResource( type, name );
-    return res ? res : createResource( type, name );
+    AutoRef<GpuResource> res = FindResource( type, name );
+    return res ? res : CreateResource( type, name );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 template<class T> inline GN::AutoRef<T>
-GN::gfx::GpuResourceDatabase::createResource( const char * name )
+GN::gfx::GpuResourceDatabase::CreateResource( const char * name )
 {
-    GpuResource * res = createResource( T::guid(), name ).Detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    GpuResource * res = CreateResource( T::GetGuid(), name ).Detach();
+    return AutoRef<T>( GpuResource::CastTo<T>(res) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 template<class T> inline GN::AutoRef<T>
-GN::gfx::GpuResourceDatabase::findResource( const char * name ) const
+GN::gfx::GpuResourceDatabase::FindResource( const char * name ) const
 {
-    GpuResource * res = findResource( T::guid(), name ).Detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    GpuResource * res = FindResource( T::GetGuid(), name ).Detach();
+    return AutoRef<T>( GpuResource::CastTo<T>(res) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 template<class T> inline GN::AutoRef<T>
-GN::gfx::GpuResourceDatabase::findOrCreateResource( const char * name )
+GN::gfx::GpuResourceDatabase::FindOrCreateResource( const char * name )
 {
-    GpuResource * res = findOrCreateResource( T::guid(), name ).Detach();
-    return AutoRef<T>( GpuResource::castTo<T>(res) );
+    GpuResource * res = FindOrCreateResource( T::GetGuid(), name ).Detach();
+    return AutoRef<T>( GpuResource::CastTo<T>(res) );
 }

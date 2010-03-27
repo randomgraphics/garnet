@@ -295,7 +295,7 @@ namespace GN
         ///
         /// Get resource name
         ///
-        const StrA & getResourceName( HandleType handle ) const
+        const StrA & GetResourceName( HandleType handle ) const
         {
             GN_GUARD_SLOW;
             if( validResourceHandle(handle) )
@@ -802,8 +802,8 @@ public:
         TS_ASSERT( !rm.empty() );
 
         // handle -> name
-        TS_ASSERT_EQUALS( "1", rm.getResourceName(h1) );
-        TS_ASSERT_EQUALS( "", rm.getResourceName(h1+1) );
+        TS_ASSERT_EQUALS( "1", rm.GetResourceName(h1) );
+        TS_ASSERT_EQUALS( "", rm.GetResourceName(h1+1) );
 
         // name -> handle
         TS_ASSERT_EQUALS( h1, rm.getResourceHandle("1") );

@@ -92,7 +92,7 @@ CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
     if( !p ) return 0;
-    p->loadFromFile( filename, resourceGroup );
+    p->LoadFromFile( filename, resourceGroup );
     mTextures.push_back( p );
     return p.Detach();
 

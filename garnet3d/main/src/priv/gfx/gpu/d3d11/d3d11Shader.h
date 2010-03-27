@@ -112,10 +112,10 @@ namespace GN { namespace gfx
 
         /// find parameter with specific name
         //@{
-        const D3D11UniformParameterDesc   * findUniform( const char * name ) const;
-        D3D11UniformParameterDesc         * findUniform( const char * name );
-        const D3D11TextureParameterDesc   * findTexture( const char * name ) const;
-        D3D11TextureParameterDesc         * findTexture( const char * name );
+        const D3D11UniformParameterDesc   * FindUniform( const char * name ) const;
+        D3D11UniformParameterDesc         * FindUniform( const char * name );
+        const D3D11TextureParameterDesc   * FindTexture( const char * name ) const;
+        D3D11TextureParameterDesc         * FindTexture( const char * name );
         const D3D11AttributeParameterDesc * findAttribute( const char * name ) const;
         D3D11AttributeParameterDesc       * findAttribute( const char * name );
         //@}

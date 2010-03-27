@@ -185,7 +185,7 @@ GN::util::SpatialNode::~SpatialNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::util::SpatialNode::guid()
+const Guid & GN::util::SpatialNode::GetGuid()
 {
     static const Guid SPATIAL_NODE_GUID =
     {

@@ -29,13 +29,13 @@ public:
         // load caustic textures
         for( int i = 0; i < 32; ++i )
         {
-            mCaustics[i] = TextureResource::loadFromFile( gdb, StringFormat("media::dolphin/caust%02d.tga",i) );
+            mCaustics[i] = TextureResource::LoadFromFile( gdb, StringFormat("media::dolphin/caust%02d.tga",i) );
             if( 0 == mCaustics[i] ) return false;
         }
 
         // load dolphin and seafloor
-        mDolphin = ModelResource::loadFromFile( gdb, "media::dolphin/dolphin.model.xml" );
-        mSeafloor = ModelResource::loadFromFile( gdb, "media::dolphin/seafloor.model.xml" );
+        mDolphin = ModelResource::LoadFromFile( gdb, "media::dolphin/dolphin.model.xml" );
+        mSeafloor = ModelResource::LoadFromFile( gdb, "media::dolphin/seafloor.model.xml" );
         if( !mDolphin || !mSeafloor ) return false;
 
         // success
@@ -49,10 +49,10 @@ public:
         UInt32 causticTex = ((UInt32)(time*32))%32;
 
         // update seafloor effect parameters
-        mSeafloor->getUniformResource("view")->getUniform()->Update( view );
-        mSeafloor->getUniformResource("proj")->getUniform()->Update( proj );
-        mSeafloor->getUniformResource("caustic")->getUniform()->Update( caustics );
-        mSeafloor->setTextureResource( "caustic", mCaustics[causticTex] );
+        mSeafloor->GetUniformResource("view")->GetUniform()->Update( view );
+        mSeafloor->GetUniformResource("proj")->GetUniform()->Update( proj );
+        mSeafloor->GetUniformResource("caustic")->GetUniform()->Update( caustics );
+        mSeafloor->SetTextureResource( "caustic", mCaustics[causticTex] );
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -87,10 +87,10 @@ public:
         Vector3f vWeight( fWeight1, fWeight2, fWeight3 );
 
         // update dolphin effect parameters
-        mDolphin->getUniformResource("pvw")->getUniform()->Update( proj * view * world );
-        mDolphin->getUniformResource("viewworld")->getUniform()->Update( view * world );
-        mDolphin->getUniformResource("weights")->getUniform()->Update( vWeight );
-        mDolphin->setTextureResource( "caustic", mCaustics[causticTex] );
+        mDolphin->GetUniformResource("pvw")->GetUniform()->Update( proj * view * world );
+        mDolphin->GetUniformResource("viewworld")->GetUniform()->Update( view * world );
+        mDolphin->GetUniformResource("weights")->GetUniform()->Update( vWeight );
+        mDolphin->SetTextureResource( "caustic", mCaustics[causticTex] );
     }
 
     void render()

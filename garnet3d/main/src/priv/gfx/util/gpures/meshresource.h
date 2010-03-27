@@ -47,7 +47,7 @@ namespace GN { namespace gfx
 
         bool  Reset( const MeshResourceDesc * desc );
         const MeshResourceDesc & GetDesc() const { return mDesc; }
-        void  applyToContext( GpuContext & context ) const;
+        void  ApplyToContext( GpuContext & context ) const;
         void  CalculateBoundingBox( Box<float> & ) const;
         void  CalculateBoundingSphere( Sphere<float> & ) const;
 
@@ -76,8 +76,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          meshName() const { return mOwner.database().getResourceName( &mOwner ); }
+        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
+        const char *          meshName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
 
         bool create( const MeshResourceDesc & desc );
         void Clear();

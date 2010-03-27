@@ -45,9 +45,9 @@ namespace GN { namespace util
         void                        detachNode( const Guid & nodeType ) { attachNode( nodeType, NULL ); }
 
         // templated node helpers
-        template<class T> const T * getNode() const        { return (const T*)getNode( T::guid() ); }
-        template<class T> T       * getNode()              { return (T*)getNode( T::guid() ); }
-        template<class T> void      attachNode( T * node ) { attachNode( T::guid(), node ); }
+        template<class T> const T * getNode() const        { return (const T*)getNode( T::GetGuid() ); }
+        template<class T> T       * getNode()              { return (T*)getNode( T::GetGuid() ); }
+        template<class T> void      attachNode( T * node ) { attachNode( T::GetGuid(), node ); }
 
         //@}
 
@@ -138,7 +138,7 @@ namespace GN { namespace util
         Entity & entity() const { return mEntity; }
 
         /// Get node type
-        const Guid & type() const;
+        const Guid & Type() const;
 
         //@}
 
@@ -212,7 +212,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & guid();
+        static const Guid & GetGuid();
 
         //@}
 
@@ -288,7 +288,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & guid();
+        static const Guid & GetGuid();
 
         //@}
 
@@ -359,7 +359,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & guid();
+        static const Guid & GetGuid();
 
         //@}
 
@@ -451,12 +451,12 @@ namespace GN { namespace util
         ///
         /// load world description from external file
         ///
-        bool loadFromFile( const char * filename );
+        bool LoadFromFile( const char * filename );
 
         ///
         /// Save the world to specific directory
         ///
-        bool saveToFile( const char * filename );
+        bool SaveToFile( const char * filename );
 
         /// create entities in the world according to the descriptor.
         /// Return the root spatial node represent the whole world.

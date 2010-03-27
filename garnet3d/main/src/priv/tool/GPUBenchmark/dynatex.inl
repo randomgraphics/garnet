@@ -333,7 +333,7 @@ public:
         RendererContext::FieldFlags ff;
         ff.u32 = 0;
         ff.textures = 1;
-        r.rebindContext( ff );
+        r.RebindContext( ff );
 
         // draw text
         scene::gAsciiFont.DrawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );

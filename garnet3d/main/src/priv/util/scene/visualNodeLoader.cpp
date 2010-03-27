@@ -270,7 +270,7 @@ sLoadModelsFromXPR( VisualNode & node, GpuResourceDatabase & db, File & file )
     meshes.Resize( xpr.meshes.Size() );
     for( size_t i = 0; i < xpr.meshes.Size(); ++i )
     {
-        meshes[i] = db.createResource<MeshResource>( NULL );
+        meshes[i] = db.CreateResource<MeshResource>( NULL );
         if( !meshes[i] ) return false;
         if( !meshes[i]->Reset( &xpr.meshes[i] ) ) return false;
     }
@@ -310,10 +310,10 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
             char meshname[1024];
             StringPrintf( meshname, 1024, "%s.mesh.%u", file.Name(), i );
 
-            meshes[i] = db.findResource<MeshResource>( meshname );
+            meshes[i] = db.FindResource<MeshResource>( meshname );
             if( meshes[i] ) continue; // use exising mesh directly.
 
-            meshes[i] = db.createResource<MeshResource>( meshname );
+            meshes[i] = db.CreateResource<MeshResource>( meshname );
             if( !meshes[i] ) return false;
             if( !meshes[i]->Reset( &ase.meshes[i] ) ) return false;
         }
@@ -360,32 +360,32 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         if( !modelTemplate ) continue;
 
         // make a clone the selected modelTemplate
-        AutoRef<ModelResource> clone = modelTemplate->makeClone( NULL );
+        AutoRef<ModelResource> clone = modelTemplate->MakeClone( NULL );
         if( NULL == clone ) return false;
 
         // bind textures to effect
         {
             GN_SCOPE_PROFILER( sLoadModelsFromASE_LoadTextures, "Load ASE into VisualNode: load textures" );
 
-            AutoRef<EffectResource> e = clone->getEffectResource();
+            AutoRef<EffectResource> e = clone->GetEffectResource();
 
             const AseMaterial & am = ase.materials[subset.matid];
 
             AutoRef<TextureResource> t;
 
-            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
+            if( e->HasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
             {
-                t = TextureResource::loadFromFile( db, am.mapdiff.bitmap );
-                clone->setTextureResource( "ALBEDO_TEXTURE", t );
+                t = TextureResource::LoadFromFile( db, am.mapdiff.bitmap );
+                clone->SetTextureResource( "ALBEDO_TEXTURE", t );
             }
-            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.Empty() )
+            if( e->HasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.Empty() )
             {
-                t = TextureResource::loadFromFile( db, am.mapbump.bitmap );
-                clone->setTextureResource( "ALBEDO_TEXTURE", t );
+                t = TextureResource::LoadFromFile( db, am.mapbump.bitmap );
+                clone->SetTextureResource( "ALBEDO_TEXTURE", t );
             }
         }
 
-        clone->setMeshResource( mesh, &subset );
+        clone->SetMeshResource( mesh, &subset );
 
         node.addModel( clone );
     }

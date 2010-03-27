@@ -118,22 +118,22 @@ namespace GN { namespace gfx
         Impl( GpuResourceDatabase & db, Gpu & gpu );
         virtual ~Impl();
 
-        Gpu & gpu() const { return mGpu; }
+        Gpu & GetGpu() const { return mGpu; }
 
         //@}
 
         //@{
-        bool registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory );
-        bool hasResourceFactory( const Guid & type );
+        bool RegisterResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory );
+        bool HasResourceFactory( const Guid & type );
         //@}
 
         //@{
-        AutoRef<GpuResource> createResource( const Guid & type, const char * name );
-        AutoRef<GpuResource> findResource( const Guid & type, const char * name ) const;
-        bool                 validResource( const Guid & type, const GpuResource * resource ) const;
-        bool                 validResource( const GpuResource * resource ) const;
-        const char *         getResourceName( const GpuResource * ) const;
-        const Guid         & getResourceType( const GpuResource * ) const;
+        AutoRef<GpuResource> CreateResource( const Guid & type, const char * name );
+        AutoRef<GpuResource> FindResource( const Guid & type, const char * name ) const;
+        bool                 ValidResource( const Guid & type, const GpuResource * resource ) const;
+        bool                 ValidResource( const GpuResource * resource ) const;
+        const char *         GetResourceName( const GpuResource * ) const;
+        const Guid         & GetResourceType( const GpuResource * ) const;
         //@}
 
         //@{

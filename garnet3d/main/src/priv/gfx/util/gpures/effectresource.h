@@ -40,20 +40,20 @@ namespace GN { namespace gfx
 
         bool                          Reset( const EffectResourceDesc * desc );
 
-        size_t                        getNumPasses() const { return mPasses.Size(); }
+        size_t                        GetNumPasses() const { return mPasses.Size(); }
 
-        size_t                        getNumTextures() const { return mTextures.Size(); }
-        size_t                        findTexture( const char * name ) const;
-        const TextureProperties     & getTextureProperties( size_t i ) const { return mTextures[i]; }
+        size_t                        GetNumTextures() const { return mTextures.Size(); }
+        size_t                        FindTexture( const char * name ) const;
+        const TextureProperties     & GetTextureProperties( size_t i ) const { return mTextures[i]; }
 
-        size_t                        getNumUniforms() const { return mUniforms.Size(); }
-        size_t                        findUniform( const char * name ) const;
-        const UniformProperties     & getUniformProperties( size_t i ) const { return mUniforms[i]; }
+        size_t                        GetNumUniforms() const { return mUniforms.Size(); }
+        size_t                        FindUniform( const char * name ) const;
+        const UniformProperties     & GetUniformProperties( size_t i ) const { return mUniforms[i]; }
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      getRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.Size() ); return mPasses[pass].renderstates; }
+                                      GetRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.Size() ); return mPasses[pass].renderstates; }
 
-        void                          applyToContext( size_t pass, GpuContext & gc ) const;
+        void                          ApplyToContext( size_t pass, GpuContext & gc ) const;
 
         // ********************************
         // private types
@@ -91,8 +91,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & database() const { return mOwner.database(); }
-        const char *          effectName() const { return mOwner.database().getResourceName( &mOwner ); }
+        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
+        const char *          effectName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
 
         bool Init( const EffectResourceDesc & desc );
         void Clear();

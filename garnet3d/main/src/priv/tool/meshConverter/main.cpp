@@ -41,9 +41,9 @@ int main( int argc, const char * argv[] )
 
     SimpleWorldDesc swd;
 
-    if( !swd.loadFromFile( inputFile ) ) return -1;
+    if( !swd.LoadFromFile( inputFile ) ) return -1;
 
-    if( !swd.saveToFile( outputFile ) ) return -1;
+    if( !swd.SaveToFile( outputFile ) ) return -1;
 
     GN_INFO(sLogger)( "Conversion done successfully." );
     return 0;

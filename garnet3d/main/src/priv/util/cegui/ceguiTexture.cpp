@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.util.cegui");
 //
 //
 // -----------------------------------------------------------------------------
-void CEGUI::GarnetTexture::loadFromFile( const CEGUI::String & filename, const CEGUI::String & group )
+void CEGUI::GarnetTexture::LoadFromFile( const CEGUI::String & filename, const CEGUI::String & group )
 {
     GN_GUARD;
 

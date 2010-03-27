@@ -103,7 +103,7 @@ public:
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
             mContext.setPS( mEffect->ps );
         }
-        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
+        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.SetTexture( i, mTextures[i] );
         if( mInitMaxBandwidth )
         {
             //mContext->

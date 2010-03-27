@@ -70,7 +70,7 @@ bool GN::gfx::MeshResource::Impl::Reset( const MeshResourceDesc * desc )
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
+GN::gfx::MeshResource::Impl::ApplyToContext( GpuContext & context ) const
 {
     // vertex format
     context.vtxfmt = mDesc.vtxfmt;
@@ -148,7 +148,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     // store descriptor
     mDesc = desc;
 
-    Gpu & gpu = database().gpu();
+    Gpu & gpu = GetGdb().GetGpu();
 
     // initialize vertex buffers
     if( desc.numvtx > 0 )
@@ -247,11 +247,11 @@ public:
 // -----------------------------------------------------------------------------
 bool GN::gfx::registerMeshResourceFactory( GpuResourceDatabase & db )
 {
-    if( db.hasResourceFactory( MeshResource::guid() ) ) return true;
+    if( db.HasResourceFactory( MeshResource::GetGuid() ) ) return true;
 
     GpuResourceFactory factory = { &MeshResourceInternal::sCreateInstance };
 
-    return db.registerResourceFactory( MeshResource::guid(), "Mesh Resource", factory );
+    return db.RegisterResourceFactory( MeshResource::GetGuid(), "Mesh Resource", factory );
 }
 
 // *****************************************************************************
@@ -279,7 +279,7 @@ GN::gfx::MeshResource::~MeshResource()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::MeshResource::guid()
+const Guid & GN::gfx::MeshResource::GetGuid()
 {
     static const Guid MESH_GUID = { 0x892f15d5, 0x8e56, 0x4982, { 0x83, 0x1a, 0xc7, 0x1a, 0x11, 0x20, 0x4e, 0x4a } };
     return MESH_GUID;
@@ -289,7 +289,7 @@ const Guid & GN::gfx::MeshResource::guid()
 //
 // -----------------------------------------------------------------------------
 AutoRef<MeshResource>
-GN::gfx::MeshResource::loadFromFile(
+GN::gfx::MeshResource::LoadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -300,7 +300,7 @@ GN::gfx::MeshResource::loadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<MeshResource> m( db.findResource<MeshResource>( filename ) );
+    AutoRef<MeshResource> m( db.FindResource<MeshResource>( filename ) );
     if( m ) return m;
 
     // convert to full (absolute) path
@@ -308,14 +308,14 @@ GN::gfx::MeshResource::loadFromFile(
     filename = abspath;
 
     // Try search for existing resource again with full path
-    m = db.findResource<MeshResource>( filename );
+    m = db.FindResource<MeshResource>( filename );
     if( m ) return m;
 
     MeshResourceDesc desc;
-    AutoRef<Blob> blob = desc.loadFromFile( filename );
+    AutoRef<Blob> blob = desc.LoadFromFile( filename );
     if( !blob ) return AutoRef<MeshResource>::NULLREF;
 
-    m = db.createResource<MeshResource>( abspath );
+    m = db.CreateResource<MeshResource>( abspath );
     if( !m || !m->Reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
 
     return m;
@@ -342,9 +342,9 @@ const MeshResourceDesc & GN::gfx::MeshResource::GetDesc() const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
+GN::gfx::MeshResource::ApplyToContext( GpuContext & context ) const
 {
-    mImpl->applyToContext( context );
+    mImpl->ApplyToContext( context );
 }
 
 //

@@ -50,21 +50,21 @@ bool GN::gfx::SimpleNormalMapModel::Init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::SimpleNormalMapModel, () );
 
-    mModel = mDatabase.createResource<ModelResource>( NULL );
+    mModel = mDatabase.CreateResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
 
     // initialize uniforms
-    mMatrixPvw     = mModel->getUniformResource( "MATRIX_PVW"      );
-    mMatrixWorld   = mModel->getUniformResource( "MATRIX_WORLD"    );
-    mMatrixWorldIT = mModel->getUniformResource( "MATRIX_WORLD_IT" );
-    mLightPos      = mModel->getUniformResource( "LIGHT0_POSITION" );
-    mLightColor    = mModel->getUniformResource( "LIGHT0_DIFFUSE"  );
-    mAlbedoColor   = mModel->getUniformResource( "ALBEDO_COLOR"    );
-    mAlbedoTexture = mModel->getTextureResource( "ALBEDO_TEXTURE"  );
+    mMatrixPvw     = mModel->GetUniformResource( "MATRIX_PVW"      );
+    mMatrixWorld   = mModel->GetUniformResource( "MATRIX_WORLD"    );
+    mMatrixWorldIT = mModel->GetUniformResource( "MATRIX_WORLD_IT" );
+    mLightPos      = mModel->GetUniformResource( "LIGHT0_POSITION" );
+    mLightColor    = mModel->GetUniformResource( "LIGHT0_DIFFUSE"  );
+    mAlbedoColor   = mModel->GetUniformResource( "ALBEDO_COLOR"    );
+    mAlbedoTexture = mModel->GetTextureResource( "ALBEDO_TEXTURE"  );
 
     // initialize textures
-    mAlbedoTexture = mModel->getTextureResource("ALBEDO_TEXTURE");
-    mNormalTexture = mModel->getTextureResource("NORMAL_TEXTURE");
+    mAlbedoTexture = mModel->GetTextureResource("ALBEDO_TEXTURE");
+    mNormalTexture = mModel->GetTextureResource("NORMAL_TEXTURE");
 
     // success
     return Success();
@@ -107,9 +107,9 @@ void GN::gfx::SimpleNormalMapModel::setTransformation(
 {
     Matrix44f pvw = proj * view * world;
     Matrix44f wit = Matrix44f::sInverse( Matrix44f::sTranspose( world ) );
-    mMatrixPvw->getUniform()->Update( pvw );
-    mMatrixWorld->getUniform()->Update( world );
-    mMatrixWorldIT->getUniform()->Update( wit );
+    mMatrixPvw->GetUniform()->Update( pvw );
+    mMatrixWorld->GetUniform()->Update( world );
+    mMatrixWorldIT->GetUniform()->Update( wit );
 }
 
 //
@@ -117,7 +117,7 @@ void GN::gfx::SimpleNormalMapModel::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleNormalMapModel::setLightPos( const Vector4f & pos )
 {
-    mLightPos->getUniform()->Update( pos );
+    mLightPos->GetUniform()->Update( pos );
 }
 
 //
@@ -125,7 +125,7 @@ void GN::gfx::SimpleNormalMapModel::setLightPos( const Vector4f & pos )
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleNormalMapModel::setLightColor( const Vector4f & clr )
 {
-    mLightColor->getUniform()->Update( clr );
+    mLightColor->GetUniform()->Update( clr );
 }
 
 //
@@ -133,7 +133,7 @@ void GN::gfx::SimpleNormalMapModel::setLightColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleNormalMapModel::setAlbedoColor( const Vector4f & clr )
 {
-    mAlbedoColor->getUniform()->Update( clr );
+    mAlbedoColor->GetUniform()->Update( clr );
 }
 
 //
@@ -141,7 +141,7 @@ void GN::gfx::SimpleNormalMapModel::setAlbedoColor( const Vector4f & clr )
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleNormalMapModel::setAlbedoTexture( const AutoRef<Texture> & tex )
 {
-    mAlbedoTexture->setTexture( tex ? tex : mDefaultAlbedoTexture );
+    mAlbedoTexture->SetTexture( tex ? tex : mDefaultAlbedoTexture );
 }
 
 //
@@ -149,5 +149,5 @@ void GN::gfx::SimpleNormalMapModel::setAlbedoTexture( const AutoRef<Texture> & t
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleNormalMapModel::setNormalTexture( const AutoRef<Texture> & tex )
 {
-    mNormalTexture->setTexture( tex ? tex : mDefaultNormalTexture );
+    mNormalTexture->SetTexture( tex ? tex : mDefaultNormalTexture );
 }

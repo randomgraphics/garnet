@@ -134,7 +134,7 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.techniques["hlsl9"].passes.Resize( 1 );
     ed.techniques["hlsl9"].passes[0].gpuprogram = "hlsl9";
 
-    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@DIFFUSE" );
+    AutoRef<EffectResource> e = gdb.CreateResource<EffectResource>( "@DIFFUSE" );
 
     e->Reset( &ed );
 
@@ -207,7 +207,7 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.techniques["hlsl"].passes.Resize( 1 );
     ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 
-    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
+    AutoRef<EffectResource> e = gdb.CreateResource<EffectResource>( "@WIREFRAME" );
 
     e->Reset( &ed );
 
@@ -346,7 +346,7 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.techniques["hlsl"].passes.Resize( 1 );
     ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 
-    AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@NORMAL_MAP" );
+    AutoRef<EffectResource> e = gdb.CreateResource<EffectResource>( "@NORMAL_MAP" );
 
     e->Reset( &ed );
 
@@ -362,11 +362,11 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb )
 {
-    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@WHITE" );
-    AutoRef<Texture> t( gdb.gpu().Create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    AutoRef<TextureResource> tr = gdb.CreateResource<TextureResource>( "@WHITE" );
+    AutoRef<Texture> t( gdb.GetGpu().Create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     UInt32 white[4] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
     t->UpdateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, white, SurfaceUpdateFlag::DEFAULT );
-    tr->setTexture( t );
+    tr->SetTexture( t );
     return tr;
 }
 
@@ -375,11 +375,11 @@ static AutoRef<TextureResource> sRegisterWhiteTexture( GpuResourceDatabase & gdb
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb )
 {
-    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@BLACK" );
-    AutoRef<Texture> t( gdb.gpu().Create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
+    AutoRef<TextureResource> tr = gdb.CreateResource<TextureResource>( "@BLACK" );
+    AutoRef<Texture> t( gdb.GetGpu().Create2DTexture( 2, 2, 0, ColorFormat::RGBA32 ) );
     UInt32 black[4] = { 0, 0, 0, 0 };
     t->UpdateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, black, SurfaceUpdateFlag::DEFAULT );
-    tr->setTexture( t );
+    tr->SetTexture( t );
     return tr;
 }
 
@@ -388,11 +388,11 @@ static AutoRef<TextureResource> sRegisterBlackTexture( GpuResourceDatabase & gdb
 // -----------------------------------------------------------------------------
 static AutoRef<TextureResource> sRegisterFlatNormalMap( GpuResourceDatabase & gdb )
 {
-    AutoRef<TextureResource> tr = gdb.createResource<TextureResource>( "@FLAT_NORMAL_MAP" );
-    AutoRef<Texture> t(  gdb.gpu().Create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM ) );
+    AutoRef<TextureResource> tr = gdb.CreateResource<TextureResource>( "@FLAT_NORMAL_MAP" );
+    AutoRef<Texture> t(  gdb.GetGpu().Create2DTexture( 2, 2, 0, ColorFormat::RG_16_16_UNORM ) );
     UInt32 up[4] = { 0x80008000, 0x80008000, 0x80008000, 0x80008000 };
     t->UpdateMipmap( 0, 0, NULL, sizeof(UInt32)*2, sizeof(UInt32)*4, up, SurfaceUpdateFlag::DEFAULT );
-    tr->setTexture( t );
+    tr->SetTexture( t );
     return tr;
 }
 
@@ -465,18 +465,18 @@ GpuResourceDatabase::Impl::~Impl()
 //
 //
 // -----------------------------------------------------------------------------
-bool GpuResourceDatabase::Impl::registerResourceFactory(
+bool GpuResourceDatabase::Impl::RegisterResourceFactory(
     const Guid       & type,
     const char       * descriptiveName,
     GpuResourceFactory factory )
 {
-    if( hasResourceFactory( type ) )
+    if( HasResourceFactory( type ) )
     {
         GN_ERROR(sLogger)( "Resource type exisits already!" );
         return false;
     }
 
-    if( NULL == factory.createResource )
+    if( NULL == factory.CreateResource )
     {
         GN_ERROR(sLogger)( "Resource factory has NULL function pointer(s)." );
         return false;
@@ -504,7 +504,7 @@ bool GpuResourceDatabase::Impl::registerResourceFactory(
 //
 //
 // -----------------------------------------------------------------------------
-bool GpuResourceDatabase::Impl::hasResourceFactory( const Guid & type )
+bool GpuResourceDatabase::Impl::HasResourceFactory( const Guid & type )
 {
     return NULL != getManager(type);
 }
@@ -513,7 +513,7 @@ bool GpuResourceDatabase::Impl::hasResourceFactory( const Guid & type )
 //
 // -----------------------------------------------------------------------------
 AutoRef<GpuResource>
-GpuResourceDatabase::Impl::createResource(
+GpuResourceDatabase::Impl::CreateResource(
     const Guid & type,
     const char * name )
 {
@@ -545,7 +545,7 @@ GpuResourceDatabase::Impl::createResource(
     }
 
     // create new resource instance
-    AutoRef<GpuResource> newres( mgr->factory.createResource( mDatabase ) );
+    AutoRef<GpuResource> newres( mgr->factory.CreateResource( mDatabase ) );
     if( !newres ) return AutoRef<GpuResource>::NULLREF;
 
     // create new instance of resource implementation class, assign handle to it
@@ -566,7 +566,7 @@ GpuResourceDatabase::Impl::createResource(
 //
 // -----------------------------------------------------------------------------
 AutoRef<GpuResource>
-GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) const
+GpuResourceDatabase::Impl::FindResource( const Guid & type, const char * name ) const
 {
     const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return AutoRef<GpuResource>::NULLREF;
@@ -586,11 +586,11 @@ GpuResourceDatabase::Impl::findResource( const Guid & type, const char * name ) 
 //
 //
 // -----------------------------------------------------------------------------
-bool GpuResourceDatabase::Impl::validResource( const Guid & type, const GpuResource * resource ) const
+bool GpuResourceDatabase::Impl::ValidResource( const Guid & type, const GpuResource * resource ) const
 {
     if( NULL == resource ) return false;
 
-    if( this != resource->database().mImpl ) return false;
+    if( this != resource->GetGdb().mImpl ) return false;
 
     const ResourceManager * mgr = getManager( type );
     if( NULL == mgr ) return false;
@@ -601,11 +601,11 @@ bool GpuResourceDatabase::Impl::validResource( const Guid & type, const GpuResou
 //
 //
 // -----------------------------------------------------------------------------
-bool GpuResourceDatabase::Impl::validResource( const GpuResource * resource ) const
+bool GpuResourceDatabase::Impl::ValidResource( const GpuResource * resource ) const
 {
     if( NULL == resource ) return false;
 
-    if( this != resource->database().mImpl ) return false;
+    if( this != resource->GetGdb().mImpl ) return false;
 
     for( size_t i = 0; i < mManagers.Size(); ++i )
     {
@@ -621,7 +621,7 @@ bool GpuResourceDatabase::Impl::validResource( const GpuResource * resource ) co
 //
 // -----------------------------------------------------------------------------
 const char *
-GpuResourceDatabase::Impl::getResourceName( const GpuResource * resource ) const
+GpuResourceDatabase::Impl::GetResourceName( const GpuResource * resource ) const
 {
     GpuResource::Impl * resimpl = getResourceImpl( resource );
     if( NULL == resimpl ) return NULL;
@@ -642,7 +642,7 @@ GpuResourceDatabase::Impl::getResourceName( const GpuResource * resource ) const
 //
 // -----------------------------------------------------------------------------
 const Guid &
-GpuResourceDatabase::Impl::getResourceType( const GpuResource * resource ) const
+GpuResourceDatabase::Impl::GetResourceType( const GpuResource * resource ) const
 {
     GpuResource::Impl * resimpl = getResourceImpl( resource );
 
@@ -744,7 +744,7 @@ GpuResourceDatabase::Impl::getResourceImpl( const GpuResource * resource ) const
         return NULL;
     }
 
-    if( this != resource->database().mImpl )
+    if( this != resource->GetGdb().mImpl )
     {
         GN_ERROR(sLogger)( "The resource belongs to another database." );
         return NULL;
@@ -777,12 +777,12 @@ GpuResourceDatabase::GpuResourceDatabase( Gpu & g ) : mImpl(NULL)
 }
 
 GpuResourceDatabase::~GpuResourceDatabase() { delete mImpl; }
-Gpu                & GpuResourceDatabase::gpu() const { return mImpl->gpu(); }
-bool                 GpuResourceDatabase::registerResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->registerResourceFactory( type, desc, factory ); }
-bool                 GpuResourceDatabase::hasResourceFactory( const Guid & type ) { return mImpl->hasResourceFactory( type ); }
-AutoRef<GpuResource> GpuResourceDatabase::createResource( const Guid & type, const char * name ) { return mImpl->createResource( type, name ); }
-AutoRef<GpuResource> GpuResourceDatabase::findResource( const Guid & type, const char * name ) const { return mImpl->findResource( type, name ); }
-bool                 GpuResourceDatabase::validResource( const Guid & type, const GpuResource * resource ) const { return mImpl->validResource( type, resource ); }
-bool                 GpuResourceDatabase::validResource( const GpuResource * resource ) const { return mImpl->validResource( resource ); }
-const char         * GpuResourceDatabase::getResourceName( const GpuResource * resource ) const { return mImpl->getResourceName(resource); }
-const Guid         & GpuResourceDatabase::getResourceType( const GpuResource * resource ) const { return mImpl->getResourceType(resource); }
+Gpu                & GpuResourceDatabase::GetGpu() const { return mImpl->GetGpu(); }
+bool                 GpuResourceDatabase::RegisterResourceFactory( const Guid & type, const char * desc, GpuResourceFactory factory ) { return mImpl->RegisterResourceFactory( type, desc, factory ); }
+bool                 GpuResourceDatabase::HasResourceFactory( const Guid & type ) { return mImpl->HasResourceFactory( type ); }
+AutoRef<GpuResource> GpuResourceDatabase::CreateResource( const Guid & type, const char * name ) { return mImpl->CreateResource( type, name ); }
+AutoRef<GpuResource> GpuResourceDatabase::FindResource( const Guid & type, const char * name ) const { return mImpl->FindResource( type, name ); }
+bool                 GpuResourceDatabase::ValidResource( const Guid & type, const GpuResource * resource ) const { return mImpl->ValidResource( type, resource ); }
+bool                 GpuResourceDatabase::ValidResource( const GpuResource * resource ) const { return mImpl->ValidResource( resource ); }
+const char         * GpuResourceDatabase::GetResourceName( const GpuResource * resource ) const { return mImpl->GetResourceName(resource); }
+const Guid         & GpuResourceDatabase::GetResourceType( const GpuResource * resource ) const { return mImpl->GetResourceType(resource); }

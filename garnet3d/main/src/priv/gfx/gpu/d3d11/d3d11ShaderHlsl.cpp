@@ -270,7 +270,7 @@ sInitUniforms(
             var->GetDesc( &vardesc );
 
             // find uniform with same name
-            D3D11UniformParameterDesc * existingUniform = paramDesc.findUniform( vardesc.Name );
+            D3D11UniformParameterDesc * existingUniform = paramDesc.FindUniform( vardesc.Name );
             if( existingUniform )
             {
                 if( existingUniform->size != vardesc.Size )
@@ -332,7 +332,7 @@ sInitTextures(
         if( D3D10_SIT_TEXTURE != sibdesc.Type ) continue;
 
         // find uniform with same name
-        D3D11TextureParameterDesc * existingTexture = paramDesc.findTexture( sibdesc.Name );
+        D3D11TextureParameterDesc * existingTexture = paramDesc.FindTexture( sibdesc.Name );
         if( existingTexture )
         {
             // update shader specific properties

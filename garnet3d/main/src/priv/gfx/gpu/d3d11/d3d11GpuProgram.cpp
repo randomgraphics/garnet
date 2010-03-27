@@ -96,7 +96,7 @@ void GN::gfx::D3D11GpuProgramParameterDesc::buildParameterArrays()
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::D3D11UniformParameterDesc *
-GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name ) const
+GN::gfx::D3D11GpuProgramParameterDesc::FindUniform( const char * name ) const
 {
     const GN::gfx::D3D11UniformParameterDesc * p = std::find_if(
         mUniforms.Begin(),
@@ -110,7 +110,7 @@ GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D11UniformParameterDesc *
-GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name )
+GN::gfx::D3D11GpuProgramParameterDesc::FindUniform( const char * name )
 {
     GN::gfx::D3D11UniformParameterDesc * p = std::find_if(
         mUniforms.Begin(),
@@ -124,7 +124,7 @@ GN::gfx::D3D11GpuProgramParameterDesc::findUniform( const char * name )
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::D3D11TextureParameterDesc *
-GN::gfx::D3D11GpuProgramParameterDesc::findTexture( const char * name ) const
+GN::gfx::D3D11GpuProgramParameterDesc::FindTexture( const char * name ) const
 {
     const GN::gfx::D3D11TextureParameterDesc * p = std::find_if(
         mTextures.Begin(),
@@ -138,7 +138,7 @@ GN::gfx::D3D11GpuProgramParameterDesc::findTexture( const char * name ) const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D11TextureParameterDesc *
-GN::gfx::D3D11GpuProgramParameterDesc::findTexture( const char * name )
+GN::gfx::D3D11GpuProgramParameterDesc::FindTexture( const char * name )
 {
     GN::gfx::D3D11TextureParameterDesc * p = std::find_if(
         mTextures.Begin(),

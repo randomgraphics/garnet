@@ -175,7 +175,7 @@ struct DenseMesh
         ff.vtxfmt = 1;
         ff.vtxbufs = 1;
         ff.idxbuf = 1;
-        r.rebindContext( ff );
+        r.RebindContext( ff );
     }
 };
 

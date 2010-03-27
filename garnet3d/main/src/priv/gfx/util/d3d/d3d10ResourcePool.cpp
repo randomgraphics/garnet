@@ -82,7 +82,7 @@ void GN::d3d10::ResourcePool::Quit()
 ID3D10Buffer *
 GN::d3d10::ResourcePool::createBuffer( const D3D10_BUFFER_DESC & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
-    return (ID3D10Buffer*)findOrCreateResource( desc, data );
+    return (ID3D10Buffer*)FindOrCreateResource( desc, data );
 }
 
 //
@@ -164,7 +164,7 @@ GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
 //
 // -----------------------------------------------------------------------------
 ID3D10Resource *
-GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
+GN::d3d10::ResourcePool::FindOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;
 
@@ -212,7 +212,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
     }
 
     // try create new one
-    ID3D10Resource * newResource = createResource( desc, data );
+    ID3D10Resource * newResource = CreateResource( desc, data );
     if( NULL == newResource )
     {
         GN_ERROR(sLogger)( "Fail to create new resource." );
@@ -230,7 +230,7 @@ GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, 
 //
 // -----------------------------------------------------------------------------
 ID3D10Resource *
-GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
+GN::d3d10::ResourcePool::CreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;
 

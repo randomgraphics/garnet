@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::TextureResource::guid()
+const Guid & GN::gfx::TextureResource::GetGuid()
 {
     static const Guid TEXTURE_GUID = {0x6ad8b59d, 0xe672, 0x4b5e, { 0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd } };
     return TEXTURE_GUID;
@@ -27,7 +27,7 @@ const Guid & GN::gfx::TextureResource::guid()
 //
 // -----------------------------------------------------------------------------
 AutoRef<TextureResource>
-GN::gfx::TextureResource::loadFromFile(
+GN::gfx::TextureResource::LoadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -38,7 +38,7 @@ GN::gfx::TextureResource::loadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<TextureResource> texres( db.findResource<TextureResource>( filename ) );
+    AutoRef<TextureResource> texres( db.FindResource<TextureResource>( filename ) );
     if( texres ) return texres;
 
     // convert to full (absolute) path
@@ -46,7 +46,7 @@ GN::gfx::TextureResource::loadFromFile(
     filename = abspath;
 
     // Try search for existing resource again with full path
-    texres = db.findResource<TextureResource>( filename );
+    texres = db.FindResource<TextureResource>( filename );
     if( texres ) return texres;
 
     // load new texture from file
@@ -60,7 +60,7 @@ GN::gfx::TextureResource::loadFromFile(
     // create texture
     TextureDesc td;
     td.FromImageDesc( id );
-    AutoRef<Texture> tex( db.gpu().CreateTexture( td ) );
+    AutoRef<Texture> tex( db.GetGpu().CreateTexture( td ) );
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
@@ -73,11 +73,11 @@ GN::gfx::TextureResource::loadFromFile(
     }
 
     // create new texture resource
-    texres = db.createResource<TextureResource>( filename );
+    texres = db.CreateResource<TextureResource>( filename );
     if( 0 == texres ) return AutoRef<TextureResource>::NULLREF;
 
     // attach the texture to the resource
-    texres->setTexture( tex );
+    texres->SetTexture( tex );
 
     // success
     return texres;
@@ -92,11 +92,11 @@ bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
 
     if( desc )
     {
-        tex.Attach( database().gpu().CreateTexture( *desc ) );
+        tex.Attach( GetGdb().GetGpu().CreateTexture( *desc ) );
         if( !tex ) return false;
     }
 
-    setTexture( tex );
+    SetTexture( tex );
 
     return true;
 }
@@ -104,7 +104,7 @@ bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::TextureResource::setTexture( const AutoRef<Texture> & newTexture )
+void GN::gfx::TextureResource::SetTexture( const AutoRef<Texture> & newTexture )
 {
     if( mTexture == newTexture ) return;
 
@@ -152,9 +152,9 @@ public:
     {
         GpuResourceFactory factory = { &sCreateInstance };
 
-        if( db.hasResourceFactory( TextureResource::guid() ) ) return true;
+        if( db.HasResourceFactory( TextureResource::GetGuid() ) ) return true;
 
-        return db.registerResourceFactory( TextureResource::guid(), "Texture Resource", factory );
+        return db.RegisterResourceFactory( TextureResource::GetGuid(), "Texture Resource", factory );
     }
 };
 

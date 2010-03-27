@@ -31,7 +31,7 @@ public:
 
     RenderToTexture( GpuResourceDatabase & db_ )
         : db(db_)
-        , sr(db_.gpu())
+        , sr(db_.GetGpu())
         , model(db_)
     {
     }
@@ -46,7 +46,7 @@ public:
         // create sprite renderer
         if( !sr.Init() ) return false;
 
-        Gpu & gpu = db.gpu();
+        Gpu & gpu = db.GetGpu();
 
         // create render targets
         c0.Attach( gpu.Create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
@@ -86,7 +86,7 @@ public:
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        AutoRef<MeshResource> boxmesh = db.createResource<MeshResource>( NULL );
+        AutoRef<MeshResource> boxmesh = db.CreateResource<MeshResource>( NULL );
         if( !boxmesh->Reset( &md ) ) return false;
 
         // setup transformation matrices
@@ -95,7 +95,7 @@ public:
 
         // initialize the model
         if( !model.Init() ) return false;
-        model.modelResource().setMeshResource( boxmesh );
+        model.modelResource().SetMeshResource( boxmesh );
         model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
         model.setAlbedoTexture( tex1 );
 
@@ -127,7 +127,7 @@ public:
 
     void drawToColorRenderTarget( Texture * tex )
     {
-        Gpu & gpu = db.gpu();
+        Gpu & gpu = db.GetGpu();
         context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
         gpu.BindContext( context );
@@ -137,7 +137,7 @@ public:
 
     void drawToDepthTexture()
     {
-        Gpu & gpu = db.gpu();
+        Gpu & gpu = db.GetGpu();
         context.colortargets.Clear();
         context.depthstencil.texture = ds;
         gpu.BindContext( context );
@@ -148,7 +148,7 @@ public:
 
     void drawToBothColorAndDepthTexture()
     {
-        Gpu & gpu = db.gpu();
+        Gpu & gpu = db.GetGpu();
         context.colortargets.Resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
@@ -160,7 +160,7 @@ public:
 
     void drawToBackBuffer( Texture * tex, float x, float y )
     {
-        Gpu & gpu = db.gpu();
+        Gpu & gpu = db.GetGpu();
         context.colortargets.Clear();
         context.depthstencil.Clear();
         gpu.BindContext( context );

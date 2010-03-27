@@ -44,12 +44,12 @@ bool GN::gfx::SimpleWireframeModel::Init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::SimpleWireframeModel, () );
 
-    mModel = mDatabase.createResource<ModelResource>( NULL );
+    mModel = mDatabase.CreateResource<ModelResource>( NULL );
     if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
 
     // initialize uniforms
-    mMatrixPvw = mModel->getUniformResource( "MATRIX_PVW" );
-    mColor     = mModel->getUniformResource( "COLOR" );
+    mMatrixPvw = mModel->GetUniformResource( "MATRIX_PVW" );
+    mColor     = mModel->GetUniformResource( "COLOR" );
 
     // success
     return Success();
@@ -83,7 +83,7 @@ void GN::gfx::SimpleWireframeModel::setTransformation(
     const Matrix44f & world )
 {
     Matrix44f pvw = proj * view * world;
-    mMatrixPvw->getUniform()->Update( pvw );
+    mMatrixPvw->GetUniform()->Update( pvw );
 }
 
 //
@@ -91,5 +91,5 @@ void GN::gfx::SimpleWireframeModel::setTransformation(
 // -----------------------------------------------------------------------------
 void GN::gfx::SimpleWireframeModel::setColor( const Vector4f & clr )
 {
-    mColor->getUniform()->Update( clr );
+    mColor->GetUniform()->Update( clr );
 }

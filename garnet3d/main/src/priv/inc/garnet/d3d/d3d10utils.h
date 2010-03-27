@@ -224,10 +224,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     private:
 
         /// find or create new resource from pool
-        ID3D10Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        ID3D10Resource * FindOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
 
         /// create new D3D10 resource instance
-        ID3D10Resource * createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        ID3D10Resource * CreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
     };
 
     ///

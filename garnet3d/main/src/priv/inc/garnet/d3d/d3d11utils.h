@@ -221,10 +221,10 @@ namespace GN { /*namespace for D3D11 utils*/ namespace d3d11
     private:
 
         /// find or create new resource from pool
-        ID3D11Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
+        ID3D11Resource * FindOrCreateResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
 
         /// create new D3D11 resource instance
-        ID3D11Resource * createResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
+        ID3D11Resource * CreateResource( const PooledResourceDesc & desc, const D3D11_SUBRESOURCE_DATA * data );
     };
 
     ///

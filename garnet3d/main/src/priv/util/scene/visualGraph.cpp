@@ -27,9 +27,9 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
 
         if( type.desc().global )
         {
-            ur = gdb.findOrCreateResource<UniformResource>( type.desc().name );
-            AutoRef<Uniform> u( gdb.gpu().CreateUniform( type.desc().size ) );
-            ur->setUniform( u );
+            ur = gdb.FindOrCreateResource<UniformResource>( type.desc().name );
+            AutoRef<Uniform> u( gdb.GetGpu().CreateUniform( type.desc().size ) );
+            ur->SetUniform( u );
         }
     }
 }
@@ -141,17 +141,17 @@ void GN::util::VisualGraph::Impl::updateTransformation( Camera & c )
     Matrix44f iv  = Matrix44f::sInverse( view );
     Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( view ) );
 
-    mUniforms[StandardUniformType::MATRIX_PV]->getUniform()->Update( pv );
-    mUniforms[StandardUniformType::MATRIX_PV_INV]->getUniform()->Update( ipv );
-    mUniforms[StandardUniformType::MATRIX_PV_IT]->getUniform()->Update( itpv );
+    mUniforms[StandardUniformType::MATRIX_PV]->GetUniform()->Update( pv );
+    mUniforms[StandardUniformType::MATRIX_PV_INV]->GetUniform()->Update( ipv );
+    mUniforms[StandardUniformType::MATRIX_PV_IT]->GetUniform()->Update( itpv );
 
-    mUniforms[StandardUniformType::MATRIX_PROJ]->getUniform()->Update( proj );
-    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->getUniform()->Update( ip );
-    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->getUniform()->Update( itp );
+    mUniforms[StandardUniformType::MATRIX_PROJ]->GetUniform()->Update( proj );
+    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->GetUniform()->Update( ip );
+    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->GetUniform()->Update( itp );
 
-    mUniforms[StandardUniformType::MATRIX_VIEW]->getUniform()->Update( view );
-    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->getUniform()->Update( iv );
-    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->getUniform()->Update( itv );
+    mUniforms[StandardUniformType::MATRIX_VIEW]->GetUniform()->Update( view );
+    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->GetUniform()->Update( iv );
+    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->GetUniform()->Update( itv );
 }
 
 //
@@ -169,9 +169,9 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
 
     // update light color
     const LightDesc & light0Desc = light0->GetDesc();
-    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->getUniform()->Update( light0Desc.diffuse );
-    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->getUniform()->Update( light0Desc.ambient );
-    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->getUniform()->Update( light0Desc.specular );
+    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->GetUniform()->Update( light0Desc.diffuse );
+    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->GetUniform()->Update( light0Desc.ambient );
+    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->GetUniform()->Update( light0Desc.specular );
 
     // update light position and direction
     SpatialNode * sn = light0->owner().entity().getNode<SpatialNode>();
@@ -185,8 +185,8 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
         GN_TODO( "rotate light direction accordingly" );
         direction.Set( 0, 0, 1.0f );
     }
-    mUniforms[StandardUniformType::LIGHT0_POSITION]->getUniform()->Update( position );
-    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->getUniform()->Update( direction );
+    mUniforms[StandardUniformType::LIGHT0_POSITION]->GetUniform()->Update( position );
+    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->GetUniform()->Update( direction );
 }
 
 // *****************************************************************************
