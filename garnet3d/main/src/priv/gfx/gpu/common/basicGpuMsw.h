@@ -65,7 +65,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual void handleRenderWindowSizeMove();
+        virtual void HandleRenderWindowSizeMove();
 
         RenderWindowMsw & getRenderWindow() { return mWindow; }
 

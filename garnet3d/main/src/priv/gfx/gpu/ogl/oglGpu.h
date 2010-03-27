@@ -69,7 +69,7 @@ namespace GN { namespace gfx
             dispClear();
             capsClear();
             resourceClear();
-            contextClear();
+            ContextClear();
             drawClear();
         }
 
@@ -218,7 +218,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -230,7 +230,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void contextClear() { mContext.Clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
+        void ContextClear() { mContext.Clear(); mCurrentOGLVtxFmt = NULL; mRTMgr = NULL; }
 
         inline OGLVtxFmt * findOrCreateOGLVtxFmt( const VertexFormat & vf, const OGLBasicGpuProgram * gpuProgram );
         inline bool bindContextShaders( const GpuContext & newContext, bool skipDirtyCheck );

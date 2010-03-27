@@ -73,7 +73,7 @@ void GN::gfx::BasicGpu::BindContext( const GpuContext & newContext )
     // skip dirty check, if last context binding failed.
     bool skipDirtyCheck = !mContextOk;
 
-    mContextOk = bindContextImpl( newContext, skipDirtyCheck );
+    mContextOk = BindContextImpl( newContext, skipDirtyCheck );
 
     if( mContextOk )
     {
@@ -84,9 +84,9 @@ void GN::gfx::BasicGpu::BindContext( const GpuContext & newContext )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpu::rebindContext()
+void GN::gfx::BasicGpu::RebindContext()
 {
-    mContextOk = bindContextImpl( mContext, true );
+    mContextOk = BindContextImpl( mContext, true );
 }
 
 //

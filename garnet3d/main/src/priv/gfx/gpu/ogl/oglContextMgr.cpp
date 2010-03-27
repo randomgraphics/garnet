@@ -95,7 +95,7 @@ bool GN::gfx::OGLGpu::contextInit()
     if( !mRTMgr->Init() ) return false;
 
     // bind default context to device
-    rebindContext();
+    RebindContext();
 
     return true;
 }
@@ -129,7 +129,7 @@ void GN::gfx::OGLGpu::contextQuit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLGpu::bindContextImpl(
+GN::gfx::OGLGpu::BindContextImpl(
     const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {

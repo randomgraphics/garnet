@@ -249,7 +249,7 @@ void GN::gfx::XenonLine::DrawLines(
         (UINT)count ) );
 
     // restore renderer context
-    r.rebindContext( cf );
+    r.RebindContext( cf );
 
     // update mNextLine
     mNextLine += count;

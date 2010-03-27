@@ -64,7 +64,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual void handleRenderWindowSizeMove() { /* do nothing */ }
+        virtual void HandleRenderWindowSizeMove() { /* do nothing */ }
 
     private:
 

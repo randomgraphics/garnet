@@ -396,7 +396,7 @@ void GN::gfx::MultiThreadGpu::BindContext( const GpuContext & inputrc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::rebindContext()
+void GN::gfx::MultiThreadGpu::RebindContext()
 {
     postCommand0( CMD_BIND_CONTEXT );
 }
@@ -806,7 +806,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     void func_REBIND_CONTEXT( Gpu & r, void *, size_t )
     {
-        r.rebindContext();
+        r.RebindContext();
     }
 
     //
