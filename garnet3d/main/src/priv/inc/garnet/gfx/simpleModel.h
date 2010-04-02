@@ -48,10 +48,10 @@ namespace GN { namespace gfx
         static const ModelResourceDesc DESC;
 
         //@{
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setColor( const Vector4f & ); ///< set wireframe color, default is (1,1,1,1)
+        const ModelResource & GetModelResource() const { GN_ASSERT(mModel); return *mModel; }
+        ModelResource & GetModelResource() { GN_ASSERT(mModel); return *mModel; }
+        void SetTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
+        void SetColor( const Vector4f & ); ///< set wireframe color, default is (1,1,1,1)
         //@}
 
         // ********************************
@@ -114,13 +114,13 @@ namespace GN { namespace gfx
         /// The descriptor that is used to initialize this model
         static const ModelResourceDesc DESC;
 
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
-        void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
-        void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
-        void setAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
+        const ModelResource & GetModelResource() const { GN_ASSERT(mModel); return *mModel; }
+        ModelResource & GetModelResource() { GN_ASSERT(mModel); return *mModel; }
+        void SetTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
+        void SetLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
+        void SetLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
+        void SetAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
+        void SetAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
         //@}
 
         // ********************************
@@ -186,14 +186,14 @@ namespace GN { namespace gfx
         /// The descriptor that is used to initialize this model
         static const ModelResourceDesc DESC;
 
-        const ModelResource & modelResource() const { GN_ASSERT(mModel); return *mModel; }
-        ModelResource & modelResource() { GN_ASSERT(mModel); return *mModel; }
-        void setTransformation( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
-        void setLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
-        void setLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
-        void setAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
-        void setAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
-        void setNormalTexture( const AutoRef<Texture> & ); ///< set to NULL to use flat normal texture. Defau is NULL.
+        const ModelResource & GetModelResource() const { GN_ASSERT(mModel); return *mModel; }
+        ModelResource & GetModelResource() { GN_ASSERT(mModel); return *mModel; }
+        void SetTransform( const Matrix44f & proj, const Matrix44f & view, const Matrix44f & world ); ///< Defaults are identity matrices.
+        void SetLightPos( const Vector4f & ); ///< set light position in world space, default is (0,0,0)
+        void SetLightColor( const Vector4f & ); ///< set light color, default is (1,1,1,1)
+        void SetAlbedoColor( const Vector4f & ); ///< set albedo color, default is (1,1,1,1)
+        void SetAlbedoTexture( const AutoRef<Texture> & ); ///< set to NULL to use pure white texture. Default is NULL.
+        void SetNormalTexture( const AutoRef<Texture> & ); ///< set to NULL to use flat normal texture. Defau is NULL.
         //@}
 
         // ********************************

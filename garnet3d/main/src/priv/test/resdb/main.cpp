@@ -129,8 +129,8 @@ bool Init( Gpu & g )
 
     if( !model->Reset( &mod ) ) return false;
 
-    tex[0].Attach( loadTextureFromFile( db->GetGpu(), "media::/texture/rabit.png" ) );
-    tex[1].Attach( loadTextureFromFile( db->GetGpu(), "media::/texture/earth.jpg" ) );
+    tex[0].Attach( LoadTextureFromFile( db->GetGpu(), "media::/texture/rabit.png" ) );
+    tex[1].Attach( LoadTextureFromFile( db->GetGpu(), "media::/texture/earth.jpg" ) );
 
     // success
     return true;

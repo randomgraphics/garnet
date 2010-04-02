@@ -340,15 +340,15 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         switch( mt )
         {
             case ModelType::WIREFRAME:
-                modelTemplate = &wireframeModel.modelResource();
+                modelTemplate = &wireframeModel.GetModelResource();
                 break;
 
             case ModelType::DIFFUSE:
-                modelTemplate = &diffuseModel.modelResource();
+                modelTemplate = &diffuseModel.GetModelResource();
                 break;
 
             case ModelType::NORMAL_MAP:
-                modelTemplate = &normalMapModel.modelResource();
+                modelTemplate = &normalMapModel.GetModelResource();
                 break;
 
             default:

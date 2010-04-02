@@ -95,7 +95,7 @@ void GN::gfx::SimpleDiffuseModel::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::setTransformation(
+void GN::gfx::SimpleDiffuseModel::SetTransform(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
@@ -110,7 +110,7 @@ void GN::gfx::SimpleDiffuseModel::setTransformation(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::setLightPos( const Vector4f & pos )
+void GN::gfx::SimpleDiffuseModel::SetLightPos( const Vector4f & pos )
 {
     mLightPos->GetUniform()->Update( pos );
 }
@@ -118,7 +118,7 @@ void GN::gfx::SimpleDiffuseModel::setLightPos( const Vector4f & pos )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::setLightColor( const Vector4f & clr )
+void GN::gfx::SimpleDiffuseModel::SetLightColor( const Vector4f & clr )
 {
     mLightColor->GetUniform()->Update( clr );
 }
@@ -126,7 +126,7 @@ void GN::gfx::SimpleDiffuseModel::setLightColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::setAlbedoColor( const Vector4f & clr )
+void GN::gfx::SimpleDiffuseModel::SetAlbedoColor( const Vector4f & clr )
 {
     mAlbedoColor->GetUniform()->Update( clr );
 }
@@ -134,7 +134,7 @@ void GN::gfx::SimpleDiffuseModel::setAlbedoColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleDiffuseModel::setAlbedoTexture( const AutoRef<Texture> & tex )
+void GN::gfx::SimpleDiffuseModel::SetAlbedoTexture( const AutoRef<Texture> & tex )
 {
     mAlbedoTexture->SetTexture( tex ? tex : mDefaultTexture );
 }

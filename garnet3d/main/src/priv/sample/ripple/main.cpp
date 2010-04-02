@@ -165,7 +165,7 @@ public:
         const DispDesc & dd = gpu.GetDispDesc();
 
         gpu.BindContext( mContext );
-        mSprite->drawSingleSolidSprite(
+        mSprite->DrawSingleSolidSprite(
             0xFFFF0000,
             SpriteRenderer::USE_EXTERNAL_GPU_PROGRAM,
             0.0f, 0.0f, (float)dd.width, (float)dd.height, 0.0f );

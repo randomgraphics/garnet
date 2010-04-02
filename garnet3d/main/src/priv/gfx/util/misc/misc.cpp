@@ -6,7 +6,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.misc");
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::loadTextureFromFile( Gpu & gpu, const char * filename )
+GN::gfx::LoadTextureFromFile( Gpu & gpu, const char * filename )
 {
     GN_VERBOSE(sLogger)( "Load texture from file: %s", filename );
 

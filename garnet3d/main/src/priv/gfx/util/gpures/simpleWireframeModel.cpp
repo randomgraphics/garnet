@@ -77,7 +77,7 @@ void GN::gfx::SimpleWireframeModel::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::setTransformation(
+void GN::gfx::SimpleWireframeModel::SetTransform(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
@@ -89,7 +89,7 @@ void GN::gfx::SimpleWireframeModel::setTransformation(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::setColor( const Vector4f & clr )
+void GN::gfx::SimpleWireframeModel::SetColor( const Vector4f & clr )
 {
     mColor->GetUniform()->Update( clr );
 }

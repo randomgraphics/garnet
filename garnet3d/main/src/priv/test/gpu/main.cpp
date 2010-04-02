@@ -79,7 +79,7 @@ bool Init( Gpu & gpu )
     rc.vtxfmt.elements[0].stream = 0;
 
     // create texture
-    rc.textures[0].texture.Attach( loadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
+    rc.textures[0].texture.Attach( LoadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
 
     // create vertex buffer
     static float vertices[] =

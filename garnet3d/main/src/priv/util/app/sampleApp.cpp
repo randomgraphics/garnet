@@ -256,7 +256,7 @@ void GN::util::SampleApp::DrawXYZCoordinateAxes( const Matrix44f & projViewWorld
     mLineRenderer->DrawLines( X, 3*sizeof(float), 2, GN_RGBA32(255,0,0,255), projViewWorld );
     mLineRenderer->DrawLines( Y, 3*sizeof(float), 2, GN_RGBA32(0,255,0,255), projViewWorld );
     mLineRenderer->DrawLines( Z, 3*sizeof(float), 2, GN_RGBA32(0,0,255,255), projViewWorld );
-    mLineRenderer->flush();
+    mLineRenderer->Flush();
 }
 
 //
