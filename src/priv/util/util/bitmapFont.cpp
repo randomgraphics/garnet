@@ -205,7 +205,7 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
     // draw background box
     if( td.background )
     {
-        mSpriteRenderer->drawSingleSolidSprite(
+        mSpriteRenderer->DrawSingleSolidSprite(
             GN_RGBA32( 0, 0, 0, 128 ),
             GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, // option
             bbox.x,
@@ -223,18 +223,18 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
 
         if( 0 == numchars ) continue;
 
-        mSpriteRenderer->drawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
+        mSpriteRenderer->DrawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
 
         ci = mCharList[i];
 
         for( size_t i = 0; i < numchars; ++i, ++ci )
         {
-            mSpriteRenderer->drawTextured(
+            mSpriteRenderer->DrawTextured(
                 ci->x, ci->y, ci->fs->w, ci->fs->h,
                 ci->fs->u, ci->fs->v, ci->fs->tw, ci->fs->th, td.z );
         };
 
-        mSpriteRenderer->drawEnd();
+        mSpriteRenderer->DrawEnd();
     }
 
     GN_UNGUARD_SLOW;

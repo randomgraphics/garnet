@@ -15,7 +15,7 @@ bool Init( Gpu & gpu )
     if( !sr->Init() ) return false;
 
     // create texture
-    tex.Attach( loadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
+    tex.Attach( LoadTextureFromFile( gpu, "media::texture\\rabit.png" ) );
     if( !tex ) return false;
 
     // success
@@ -58,7 +58,7 @@ void Draw( Gpu & )
 {
     const TextureDesc & td = tex->GetDesc();
 
-    sr->drawSingleTexturedSprite(
+    sr->DrawSingleTexturedSprite(
         tex,
         GN::gfx::SpriteRenderer::DEFAULT_OPTIONS,
         pos_x, pos_y, // x1, y1

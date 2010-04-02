@@ -63,8 +63,8 @@ public:
         }
 
         // load textures
-        tex0.Attach( loadTextureFromFile( gpu, "media::texture/rabit.png" ) );
-        tex1.Attach( loadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
+        tex0.Attach( LoadTextureFromFile( gpu, "media::texture/rabit.png" ) );
+        tex1.Attach( LoadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
         if( 0 == tex0 || 0 == tex1 ) return false;
 
         // create box mesh
@@ -95,9 +95,9 @@ public:
 
         // initialize the model
         if( !model.Init() ) return false;
-        model.modelResource().SetMeshResource( boxmesh );
-        model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
-        model.setAlbedoTexture( tex1 );
+        model.GetModelResource().SetMeshResource( boxmesh );
+        model.SetLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
+        model.SetAlbedoTexture( tex1 );
 
         return true;
     }
@@ -120,9 +120,9 @@ public:
         Matrix44f world;
         world.RotateY( angle );
 
-        model.setTransformation( proj, view, world );
+        model.SetTransform( proj, view, world );
 
-        model.modelResource().Draw();
+        model.GetModelResource().Draw();
     }
 
     void drawToColorRenderTarget( Texture * tex )
@@ -132,7 +132,7 @@ public:
         context.colortargets[0].texture = c0;
         gpu.BindContext( context );
         gpu.ClearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
-        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
+        sr.DrawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
     }
 
     void drawToDepthTexture()
@@ -164,7 +164,7 @@ public:
         context.colortargets.Clear();
         context.depthstencil.Clear();
         gpu.BindContext( context );
-        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
+        sr.DrawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }
 
     void render()

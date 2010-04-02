@@ -260,23 +260,23 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
 
     const GarnetTexture * tex = q->tex;
 
-    qr.drawBegin( tex ? tex->getGarnetTexture() : 0 );
+    qr.DrawBegin( tex ? tex->getGarnetTexture() : 0 );
 
     for( ; q <= end; ++q )
     {
         if( q == end || q->tex != tex )
         {
             // switch texture
-            qr.drawEnd();
+            qr.DrawEnd();
 
             if( q < end )
             {
-                qr.drawBegin( q->tex ? q->tex->getGarnetTexture() : 0 );
+                qr.DrawBegin( q->tex ? q->tex->getGarnetTexture() : 0 );
             }
             else break;
         }
 
-        qr.drawTextured(
+        qr.DrawTextured(
             q->z,
             q->x0, q->y0, q->x1, q->y1,
             q->u0, q->v0, q->u1, q->v1 );

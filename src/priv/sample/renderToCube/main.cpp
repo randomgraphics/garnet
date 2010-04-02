@@ -66,7 +66,7 @@ public:
         for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
-            faces[i].Attach( loadTextureFromFile( gpu, name ) );
+            faces[i].Attach( LoadTextureFromFile( gpu, name ) );
             if( 0 == faces[i] ) return false;
         }
 
@@ -138,7 +138,7 @@ public:
         {
             gc.colortargets[0].face = i;
             gpu.BindContext( gc );
-            sr.drawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
+            sr.DrawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
         }
 
         // draw the cube model to screen

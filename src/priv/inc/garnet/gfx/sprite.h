@@ -76,10 +76,10 @@ namespace GN { namespace gfx
         ///
         /// \note set texture to NULL, to draw solid sprite
         ///
-        void drawBegin( Texture * texture, BitFields options = DEFAULT_OPTIONS );
-        void drawEnd();
+        void DrawBegin( Texture * texture, BitFields options = DEFAULT_OPTIONS );
+        void DrawEnd();
 
-        void drawTextured(
+        void DrawTextured(
             float x,
             float y,
             float w,
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
         ///
         /// Note that [0,0] is upper left corner of the screen.
         ///
-        void drawSolid(
+        void DrawSolid(
             UInt32 rgba,
             float  x,
             float  y,
@@ -106,7 +106,7 @@ namespace GN { namespace gfx
         /// \name helpers to ease drawing of single sprite.
         //@{
 
-        void drawSingleTexturedSprite(
+        void DrawSingleTexturedSprite(
             Texture * tex,
             BitFields options,
             float     x,
@@ -119,12 +119,12 @@ namespace GN { namespace gfx
             float     th = 1.0f,
             float     z  = 0.0f )
         {
-            drawBegin( tex, options );
-            drawTextured( x, y, w, h, u, v, tw, th, z );
-            drawEnd();
+            DrawBegin( tex, options );
+            DrawTextured( x, y, w, h, u, v, tw, th, z );
+            DrawEnd();
         }
 
-        void drawSingleSolidSprite(
+        void DrawSingleSolidSprite(
             UInt32    rgba, // color in R-G-B-A format
             BitFields options,
             float     x,
@@ -133,9 +133,9 @@ namespace GN { namespace gfx
             float     h,
             float     z )
         {
-            drawBegin( 0, options );
-            drawSolid( rgba, x, y, w, h, z );
-            drawEnd();
+            DrawBegin( 0, options );
+            DrawSolid( rgba, x, y, w, h, z );
+            DrawEnd();
         }
 
         //@}
@@ -166,26 +166,27 @@ namespace GN { namespace gfx
 
         Gpu                 & mGpu;
 
-        AutoRef<Texture>           mPureWhiteTexture;
-        AutoRef<GpuProgram>        mGpuProgram;
-        VertexFormat               mVertexFormat;
-        AutoRef<VtxBuf>            mVertexBuffer;
-        AutoRef<IdxBuf>            mIndexBuffer;
+        AutoRef<Texture>      mPureWhiteTexture;
+        AutoRef<GpuProgram>   mGpuProgram;
+        VertexFormat          mVertexFormat;
+        AutoRef<VtxBuf>       mVertexBuffer;
+        AutoRef<IdxBuf>       mIndexBuffer;
 
         GpuContext            mContext;
 
-        BitFields                  mOptions;
-        float                      mVertexShift;
-        bool                       mDrawBegun;
-        Sprite                   * mSprites;
-        Sprite                   * mNextPendingSprite;
-        Sprite                   * mNextFreeSprite;
+        BitFields             mOptions;
+        float                 mVertexShift;
+        bool                  mDrawBegun;
+        Sprite              * mSprites;
+        Sprite              * mNextPendingSprite;
+        Sprite              * mNextFreeSprite;
 
         // ********************************
         // private functions
         // ********************************
     private:
-    };}}
+    };
+}}
 
 // *****************************************************************************
 //                                     EOF

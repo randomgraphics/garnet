@@ -100,7 +100,7 @@ void GN::gfx::SimpleNormalMapModel::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setTransformation(
+void GN::gfx::SimpleNormalMapModel::SetTransform(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
@@ -115,7 +115,7 @@ void GN::gfx::SimpleNormalMapModel::setTransformation(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setLightPos( const Vector4f & pos )
+void GN::gfx::SimpleNormalMapModel::SetLightPos( const Vector4f & pos )
 {
     mLightPos->GetUniform()->Update( pos );
 }
@@ -123,7 +123,7 @@ void GN::gfx::SimpleNormalMapModel::setLightPos( const Vector4f & pos )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setLightColor( const Vector4f & clr )
+void GN::gfx::SimpleNormalMapModel::SetLightColor( const Vector4f & clr )
 {
     mLightColor->GetUniform()->Update( clr );
 }
@@ -131,7 +131,7 @@ void GN::gfx::SimpleNormalMapModel::setLightColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setAlbedoColor( const Vector4f & clr )
+void GN::gfx::SimpleNormalMapModel::SetAlbedoColor( const Vector4f & clr )
 {
     mAlbedoColor->GetUniform()->Update( clr );
 }
@@ -139,7 +139,7 @@ void GN::gfx::SimpleNormalMapModel::setAlbedoColor( const Vector4f & clr )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setAlbedoTexture( const AutoRef<Texture> & tex )
+void GN::gfx::SimpleNormalMapModel::SetAlbedoTexture( const AutoRef<Texture> & tex )
 {
     mAlbedoTexture->SetTexture( tex ? tex : mDefaultAlbedoTexture );
 }
@@ -147,7 +147,7 @@ void GN::gfx::SimpleNormalMapModel::setAlbedoTexture( const AutoRef<Texture> & t
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::setNormalTexture( const AutoRef<Texture> & tex )
+void GN::gfx::SimpleNormalMapModel::SetNormalTexture( const AutoRef<Texture> & tex )
 {
     mNormalTexture->SetTexture( tex ? tex : mDefaultNormalTexture );
 }

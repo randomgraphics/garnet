@@ -190,7 +190,7 @@ void GN::gfx::LineRenderer::DrawLines(
     if( numNewLines + mNextFreeLine > mLines + MAX_LINES )
     {
         // there's no enough space to hold all incoming lines. So flush first.
-        flush();
+        Flush();
     }
 
     GN_ASSERT( numNewLines + mNextFreeLine <= mLines + MAX_LINES );
@@ -211,13 +211,13 @@ void GN::gfx::LineRenderer::DrawLines(
         ++mNextFreeLine;
     }
 
-    if( !mBatchingModeEnabled ) flush();
+    if( !mBatchingModeEnabled ) Flush();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::flush()
+void GN::gfx::LineRenderer::Flush()
 {
     size_t numPendingLines = mNextFreeLine - mNextPendingLine;
     if( 0 == numPendingLines ) return;

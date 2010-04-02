@@ -184,11 +184,11 @@ void GN::gfx::SpriteRenderer::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
+void GN::gfx::SpriteRenderer::DrawBegin( Texture * texture, BitFields options )
 {
     if( mDrawBegun )
     {
-        GN_ERROR(sLogger)( "SpriteRenderer::drawBegin() can not be called consequtively w/o drawEnd() in between" );
+        GN_ERROR(sLogger)( "SpriteRenderer::DrawBegin() can not be called consequtively w/o DrawEnd() in between" );
         return;
     }
 
@@ -289,11 +289,11 @@ void GN::gfx::SpriteRenderer::drawBegin( Texture * texture, BitFields options )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SpriteRenderer::drawEnd()
+void GN::gfx::SpriteRenderer::DrawEnd()
 {
     if( !mDrawBegun )
     {
-        GN_ERROR(sLogger)( "SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between" );
+        GN_ERROR(sLogger)( "SpriteRenderer::DrawEnd() can not be called consequtively w/o DrawBegin() in between" );
         return;
     }
 
@@ -328,7 +328,7 @@ void GN::gfx::SpriteRenderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::SpriteRenderer::drawTextured(
+GN::gfx::SpriteRenderer::DrawTextured(
     float x,
     float y,
     float w,
@@ -341,14 +341,14 @@ GN::gfx::SpriteRenderer::drawTextured(
 {
     if( !mDrawBegun )
     {
-        GN_ERROR(sLogger)( "Must be called between drawBegin() and drawEnd()." );
+        GN_ERROR(sLogger)( "Must be called between DrawBegin() and DrawEnd()." );
         return;
     }
 
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
-        drawEnd();
-        drawBegin( mContext.textures[0].texture.Get(), mOptions );
+        DrawEnd();
+        DrawBegin( mContext.textures[0].texture.Get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );
@@ -389,7 +389,7 @@ GN::gfx::SpriteRenderer::drawTextured(
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::SpriteRenderer::drawSolid(
+GN::gfx::SpriteRenderer::DrawSolid(
     UInt32 rgba,
     float  x,
     float  y,
@@ -399,14 +399,14 @@ GN::gfx::SpriteRenderer::drawSolid(
 {
     if( !mDrawBegun )
     {
-        GN_ERROR(sLogger)( "Must be called between drawBegin() and drawEnd()." );
+        GN_ERROR(sLogger)( "Must be called between DrawBegin() and DrawEnd()." );
         return;
     }
 
     if( mNextFreeSprite == mSprites + MAX_SPRITES )
     {
-        drawEnd();
-        drawBegin( mContext.textures[0].texture.Get(), mOptions );
+        DrawEnd();
+        DrawBegin( mContext.textures[0].texture.Get(), mOptions );
     }
 
     GN_ASSERT( mNextFreeSprite < mSprites + MAX_SPRITES );

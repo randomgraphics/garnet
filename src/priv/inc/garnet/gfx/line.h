@@ -45,7 +45,7 @@ namespace GN { namespace gfx
         ///
         /// Enable/Disable batch rendering mode. It is enabled by default.
         ///
-        void setBatchRenderingEnable( bool enabled ) { flush(); mBatchingModeEnabled = enabled; }
+        void EnableBatchRendering( bool enabled ) { Flush(); mBatchingModeEnabled = enabled; }
 
         ///
         /// draw line list
@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         ///
         /// submit any pending line drawing requests to renderer
         ///
-        void flush();
+        void Flush();
 
         // ********************************
         // private variables
@@ -86,10 +86,10 @@ namespace GN { namespace gfx
 
         Gpu        & mGpu;
         GpuContext   mContext;
-        Line            * mLines;
-        Line            * mNextPendingLine;
-        Line            * mNextFreeLine;
-        bool              mBatchingModeEnabled;
+        Line       * mLines;
+        Line       * mNextPendingLine;
+        Line       * mNextFreeLine;
+        bool         mBatchingModeEnabled;
 
         // ********************************
         // private functions
