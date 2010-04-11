@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Entity::Impl public methods
@@ -16,7 +16,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.util");
 // -----------------------------------------------------------------------------
 GN::util::Entity::Impl::~Impl()
 {
-    for( NodeMap::KeyValuePair * i = mNodes.First(); i != NULL; i = mNodes.Next( i ) )
+    for( NodeMap::KeyValuePair * i = mNodes.first(); i != NULL; i = mNodes.next( i ) )
     {
         NodeBase * n = i->value;
 
@@ -25,13 +25,13 @@ GN::util::Entity::Impl::~Impl()
         delete n;
     }
 
-    mNodes.Clear();
+    mNodes.clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-World & GN::util::Entity::Impl::world() const
+World & GN::util::Entity::Impl::getWorld() const
 {
     return mWorld.owner();
 }
@@ -39,7 +39,7 @@ World & GN::util::Entity::Impl::world() const
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::util::Entity::Impl::Name() const
+const char * GN::util::Entity::Impl::name() const
 {
     return mWorld.getEntityName( mID );
 }
@@ -49,7 +49,7 @@ const char * GN::util::Entity::Impl::Name() const
 // -----------------------------------------------------------------------------
 bool GN::util::Entity::Impl::hasNode( const Guid & nodeType ) const
 {
-    return mNodes.Find( nodeType ) != NULL;
+    return mNodes.find( nodeType ) != NULL;
 }
 
 //
@@ -57,11 +57,11 @@ bool GN::util::Entity::Impl::hasNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 {
-    NodeBase * const * ppNode = mNodes.Find( nodeType );
+    NodeBase * const * ppNode = mNodes.find( nodeType );
 
     if( NULL == ppNode )
     {
-        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
         return NULL;
     }
     else
@@ -76,11 +76,11 @@ const NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType ) const
 // -----------------------------------------------------------------------------
 NodeBase * GN::util::Entity::Impl::getNode( const Guid & nodeType )
 {
-    NodeBase ** ppNode = mNodes.Find( nodeType );
+    NodeBase ** ppNode = mNodes.find( nodeType );
 
     if( NULL == ppNode )
     {
-        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.ToStr() );
+        GN_ERROR(sLogger)( "Invalid node type: %s", nodeType.toStr() );
         return NULL;
     }
     else
@@ -101,7 +101,7 @@ void GN::util::Entity::Impl::attachNode( const Guid & nodeType, NodeBase * node 
         return;
     }
 
-    NodeBase ** ppNode = mNodes.Find( nodeType );
+    NodeBase ** ppNode = mNodes.find( nodeType );
 
     if( NULL != ppNode )
     {
@@ -158,9 +158,9 @@ GN::util::Entity::~Entity()
 //
 //
 // -----------------------------------------------------------------------------
-World             & GN::util::Entity::world() const { return mImpl->world(); }
+World             & GN::util::Entity::getWorld() const { return mImpl->getWorld(); }
 int                 GN::util::Entity::id() const { return mImpl->id(); }
-const char        * GN::util::Entity::Name() const { return mImpl->Name(); }
+const char        * GN::util::Entity::name() const { return mImpl->name(); }
 
 bool                GN::util::Entity::hasNode( const Guid & nodeType ) const { return mImpl->hasNode( nodeType ); }
 const NodeBase    * GN::util::Entity::getNode( const Guid & nodeType ) const { return mImpl->getNode( nodeType ); }

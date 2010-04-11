@@ -6,7 +6,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 ///
 /// D3D11 shader type
@@ -65,7 +65,7 @@ struct D3D11ShaderTypeTemplate<VERTEX_SHADER>
         GN_DX_CHECK_RETURN( dev.CreateVertexShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.Detach();
+        if( signature ) *signature = bin.detach();
         return shader;
     }
 };
@@ -111,7 +111,7 @@ struct D3D11ShaderTypeTemplate<GEOMETRY_SHADER>
         GN_DX_CHECK_RETURN( dev.CreateGeometryShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.Detach();
+        if( signature ) *signature = bin.detach();
         return shader;
     }
 };
@@ -157,7 +157,7 @@ struct D3D11ShaderTypeTemplate<PIXEL_SHADER>
         GN_DX_CHECK_RETURN( dev.CreatePixelShader( bin->GetBufferPointer(), bin->GetBufferSize(), NULL, &shader ), 0 );
 
         // success
-        if( signature ) *signature = bin.Detach();
+        if( signature ) *signature = bin.detach();
         return shader;
     }
 };
@@ -169,9 +169,9 @@ static const char * sCloneString( const char * str )
 {
     if( NULL == str ) return NULL;
 
-    size_t n = GN::StringLength( str ) + 1;
+    size_t n = GN::stringLength( str ) + 1;
 
-    char * clone = (char*)GN::HeapMemory::Alloc( n );
+    char * clone = (char*)GN::HeapMemory::alloc( n );
     if( NULL == clone )
     {
         GN_GPU_RIP( "Out of memory!" );
@@ -212,8 +212,8 @@ sInitConstBuffers(
     }
 
     // create constant buffers
-    constBufs.Resize( desc.ConstantBuffers );
-    constData.Resize( desc.ConstantBuffers );
+    constBufs.resize( desc.ConstantBuffers );
+    constData.resize( desc.ConstantBuffers );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D11ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
@@ -231,7 +231,7 @@ sInitConstBuffers(
         bufdesc.MiscFlags      = 0;
         GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &constBufs[i] ), false );
 
-        constData[i].Resize( cbdesc.Size );
+        constData[i].resize( cbdesc.Size );
     }
 
     return true;
@@ -270,7 +270,7 @@ sInitUniforms(
             var->GetDesc( &vardesc );
 
             // find uniform with same name
-            D3D11UniformParameterDesc * existingUniform = paramDesc.FindUniform( vardesc.Name );
+            D3D11UniformParameterDesc * existingUniform = paramDesc.findUniform( vardesc.Name );
             if( existingUniform )
             {
                 if( existingUniform->size != vardesc.Size )
@@ -332,7 +332,7 @@ sInitTextures(
         if( D3D10_SIT_TEXTURE != sibdesc.Type ) continue;
 
         // find uniform with same name
-        D3D11TextureParameterDesc * existingTexture = paramDesc.FindTexture( sibdesc.Name );
+        D3D11TextureParameterDesc * existingTexture = paramDesc.findTexture( sibdesc.Name );
         if( existingTexture )
         {
             // update shader specific properties
@@ -373,14 +373,14 @@ sInitShader(
     GN_GUARD;
 
     // do nothing for empty shader code
-    if( IsStringEmpty( code.source ) ) return true;
+    if( stringEmpty( code.source ) ) return true;
 
     // initialize shader type template
     D3D11ShaderTypeTemplate<SHADER_TYPE> templ;
 
     // compile shader
     AutoComPtr<ID3D10Blob> binary;
-    shader.Attach( templ.create(
+    shader.attach( templ.create(
         dev,
         code.source,
         0,
@@ -424,7 +424,7 @@ sInitShader(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11VertexShaderHLSL::Init(
+bool GN::gfx::D3D11VertexShaderHLSL::init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,
@@ -440,7 +440,7 @@ bool GN::gfx::D3D11VertexShaderHLSL::Init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11GeometryShaderHLSL::Init(
+bool GN::gfx::D3D11GeometryShaderHLSL::init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,
@@ -456,7 +456,7 @@ bool GN::gfx::D3D11GeometryShaderHLSL::Init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11PixelShaderHLSL::Init(
+bool GN::gfx::D3D11PixelShaderHLSL::init(
     ID3D11Device                    & dev,
     const ShaderCode                & code,
     const D3D11ShaderCompileOptions & options,

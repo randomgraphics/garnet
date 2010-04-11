@@ -35,7 +35,7 @@ namespace GN { namespace util
         int           addModel( gfx::GpuResource * model );
         void          removeAllModels();
         bool          loadModelsFromFile( const char * filename );
-        void          Draw() const;
+        void          draw() const;
 
         //@}
 

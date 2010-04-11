@@ -17,7 +17,7 @@ namespace GN { namespace gfx
         }
 
         /// clear current binding
-        void Clear()
+        void clear()
         {
             mBindBy = NOTHING;
          }
@@ -29,8 +29,8 @@ namespace GN { namespace gfx
        bool         isBindByIndex() const { return INDEX == mBindBy; }
         const char * getBindingName() const { GN_ASSERT( isBindByName() ); return mBindingName; }
         size_t       getBindingIndex() const { GN_ASSERT( isBindByIndex() ); return mBindingIndex; }
-        void         BindTo( const char * name ) { doBindByName( name ); }
-        void         BindTo( size_t index ) { mBindingIndex = index; mBindBy = INDEX; }
+        void         bindTo( const char * name ) { doBindByName( name ); }
+        void         bindTo( size_t index ) { mBindingIndex = index; mBindBy = INDEX; }
         //@}
 
     private:
@@ -54,21 +54,21 @@ namespace GN { namespace gfx
 
         void doBindByName( const char * name )
         {
-            size_t len = StringLength( name );
+            size_t len = stringLength( name );
             if( 0 == len )
             {
-                GN_ERROR(GetLogger("GN.gfx.GpuProgramResourceBinding"))( "Empty binding string is not allowed." );
+                GN_ERROR(getLogger("GN.gfx.GpuProgramResourceBinding"))( "Empty binding string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(mBindingName) )
             {
-                GN_ERROR(GetLogger("GN.gfx.GpuProgramResourceBinding"))(
+                GN_ERROR(getLogger("GN.gfx.GpuProgramResourceBinding"))(
                     "GPU program parameter name (%s) is too long. Maxinum length is %d characters including ending zero.",
                     name,
                     GN_ARRAY_COUNT(mBindingName) );
             }
-            len = math::GetMin<size_t>( GN_ARRAY_COUNT(mBindingName), len+1 );
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(mBindingName), len+1 );
             memcpy( mBindingName, name, len );
             mBindBy = NAME;
         }
@@ -89,12 +89,12 @@ public:
         TS_ASSERT( !b.isBindByIndex() );
         TS_ASSERT( !b.isBindByName() );
 
-        b.BindTo( "t0" );
+        b.bindTo( "t0" );
         TS_ASSERT( b.isBindByName() );
         TS_ASSERT( !b.isBindByIndex() );
         TS_ASSERT_EQUALS( "t0", b.getBindingName() );
 
-        b.BindTo( 2 );
+        b.bindTo( 2 );
         TS_ASSERT( !b.isBindByName() );
         TS_ASSERT( b.isBindByIndex() );
         TS_ASSERT_EQUALS( 2, b.getBindingIndex() );
@@ -108,7 +108,7 @@ public:
         ImageDesc id;
 
         id.format.alias = ColorFormat::RGBA_8_8_8_8_UNORM;
-        id.SetFaceAndLevel( 1, 1 );
+        id.setFaceAndLevel( 1, 1 );
 
         MipmapDesc & md = id.mipmaps[0];
         md.width = 0x4000;
@@ -118,7 +118,7 @@ public:
         md.slicePitch = 0x40000000;
         md.levelPitch = 0x40000000;
 
-        size_t totalBytes = id.GetTotalBytes();
+        size_t totalBytes = id.getTotalBytes();
         TS_ASSERT_EQUALS( totalBytes, md.levelPitch );
     }
 };

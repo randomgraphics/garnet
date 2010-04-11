@@ -11,9 +11,9 @@
 #include "ceguiHeaders.h"
 
 namespace CEGUI
-{
+{    
     ///
-    /// CEGUI Texture adapter
+    /// CEGUI Texture adapter 
     ///
     class GarnetTexture : public Texture
     {
@@ -27,7 +27,7 @@ namespace CEGUI
             : Texture(r)
             , mWidth(0), mHeight(0)
             , mMemBuffer(0) {}
-        virtual ~GarnetTexture() { dispose(); GN::SafeHeapFree(mMemBuffer); }
+        virtual ~GarnetTexture() { dispose(); GN::safeHeapFree(mMemBuffer); }
         //@}
 
         // ********************************
@@ -37,7 +37,7 @@ namespace CEGUI
 
     	virtual	ushort  getWidth(void) const { return mWidth; }
     	virtual	ushort  getHeight(void) const { return mHeight; }
-    	virtual void    LoadFromFile(const String& filename, const String& resourceGroup);
+    	virtual void    loadFromFile(const String& filename, const String& resourceGroup);
     	virtual void    loadFromMemory(const void* buffPtr, uint buffWidth, uint buffHeight);
 
         // ********************************
@@ -54,7 +54,7 @@ namespace CEGUI
         ///
         /// dispose the content
         ///
-        void dispose() { mGarnetTexture.Clear(); }
+        void dispose() { mGarnetTexture.clear(); }
 
         ///
         /// Get internal texture handle

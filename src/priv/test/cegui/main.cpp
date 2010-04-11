@@ -7,15 +7,15 @@
 class GuiTest : public GN::util::SampleApp
 {
 public:
-    bool OnInit() { return true; }
-    void OnQuit() {}
-    void OnUpdate() {}
-    void OnRender() {}
+    bool onInit() { return true; }
+    void onQuit() {}
+    void onUpdate() {}
+    void onRender() {}
 };
 #endif
 
 int main( int argc, const char * argv[] )
 {
     GuiTest app;
-    return app.Run( argc, argv );
+    return app.run( argc, argv );
 }

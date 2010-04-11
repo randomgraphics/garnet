@@ -14,15 +14,15 @@ namespace GN
     template<class T>
     struct DoubleLinkedItem
     {
-        T    * prev;  ///< pointer to previous item
-        T    * next;  ///< pointer to next item
+        T * prev; ///< pointer to previous item
+        T * next; ///< pointer to next item
         void * owner; ///< pointer to the double-linked-list that this item belongs to.
     };
 
     ///
     /// Templates of double-linked list container
     ///
-    /// Note: this linked list can work on any item class that has "prev", "next", and "owner" fields.
+    /// Note: this linked list can work with any item class that has "prev", "next", and "owner" fields.
     ///
     template<class T>
     class DoubleLinkedList
@@ -39,13 +39,13 @@ namespace GN
 
         /// \name list operations
         //@{
-        bool       Append( ItemType * newItem ) { return InsertAfter( mTail, newItem ); }
-        bool       Empty() const { return 0 == mHead; };
-        ItemType * GetHead() const { return mHead; }
-        bool       InsertAfter( ItemType * where, ItemType * newItem ) { return DoInsertAfter( where, newItem ); }
-        bool       InsertBefore( ItemType * where, ItemType * newItem ) { return DoInsertBefore( where, newItem ); }
-        bool       Remove( ItemType * item ) { return DoRemove( item ); }
-        ItemType * GetTail() const { return mTail; }
+        void       append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
+        bool       empty() const { return 0 == mHead; };
+        ItemType * head() const { return mHead; }
+        bool       insertAfter( ItemType * where, ItemType * newItem ) { return doInsertAfter( where, newItem ); }
+        bool       insertBefore( ItemType * where, ItemType * newItem ) { return doInsertBefore( where, newItem ); }
+        bool       remove( ItemType * item ) { return doRemove( item ); }
+        ItemType * tail() const { return mTail; }
         //@}
 
     private:
@@ -58,7 +58,7 @@ namespace GN
         DoubleLinkedList( const DoubleLinkedList & );
         const DoubleLinkedList & operator = ( const DoubleLinkedList & );
 
-        bool DoInsertAfter( ItemType * where, ItemType * newItem )
+        bool doInsertAfter( ItemType * where, ItemType * newItem )
         {
             if( NULL != where && where->owner != this )
             {
@@ -111,7 +111,7 @@ namespace GN
             return true;
         }
 
-        void DoInsertBefore( ItemType * where, ItemType * newItem )
+        bool doInsertBefore( ItemType * where, ItemType * newItem )
         {
             if( NULL != where && where->owner != this )
             {
@@ -166,7 +166,7 @@ namespace GN
             return true;
         }
 
-        bool DoRemove( ItemType * item )
+        bool doRemove( ItemType * item )
         {
             if( NULL == item || this != item->owner )
             {
@@ -217,11 +217,11 @@ namespace GN
 
         /// \name list operations
         //@{
-        void       Append( ItemType * newItem ) { InsertAfter( GetTail(), newItem ); }
-        ItemType * GetHead() const { return mHead; }
-        void       InsertAfter( ItemType * where, ItemType * newItem ) { DoInsertAfter( where, newItem ); }
-        void       RemoveNextOf( ItemType * item ) { DoRemoveNextOf( item ); }
-        ItemType * GetTail() const { return mTail; }
+        void       append( ItemType * newItem ) { insertAfter( tail(), newItem ); }
+        ItemType * head() const { return mHead; }
+        void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
+        void       removeNextOf( ItemType * item ) { doRemoveNextOf( item ); }
+        ItemType * tail() const { return mTail; }
         //@}
 
     private:
@@ -234,7 +234,7 @@ namespace GN
         SingleLinkedList( const SingleLinkedList & );
         const SingleLinkedList & operator = ( const SingleLinkedList & );
 
-        void DoInsertAfter( ItemType * where, ItemType * newItem )
+        void doInsertAfter( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
             if( where )
@@ -252,7 +252,7 @@ namespace GN
             if( mTail == where ) mTail = newItem;
         }
 
-        void DoRemoveNextOf( ItemType * item )
+        void doRemoveNextOf( ItemType * item )
         {
             if( item )
             {
@@ -267,7 +267,7 @@ namespace GN
             }
             else if( mHead )
             {
-                // remove GetHead item
+                // remove head item
                 mHead = mHead->next;
             }
         }

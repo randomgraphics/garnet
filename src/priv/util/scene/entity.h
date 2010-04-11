@@ -24,9 +24,9 @@ namespace GN { namespace util
         /// methods from Entity
         //@{
 
-        World             & world() const;
+        World             & getWorld() const;
         int                 id() const { return mID; }
-        const char        * Name() const;
+        const char        * name() const;
 
         bool                hasNode( const Guid & nodeType ) const;
         const NodeBase    * getNode( const Guid & nodeType ) const;

@@ -6,7 +6,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff
@@ -28,7 +28,7 @@ static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t 
 {
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        if( 0 == StringCompareI( vf.elements[i].binding, binding ) &&
+        if( 0 == stringCompareI( vf.elements[i].binding, binding ) &&
             index == vf.elements[i].bindingIndex )
         {
             return true;
@@ -64,7 +64,7 @@ static bool sHasTangent( const VertexFormat & vf )
 ///
 static ModelType::ENUM sDetermineBestModel( const MeshResource & m )
 {
-    const VertexFormat & vf = m.GetDesc().vtxfmt;
+    const VertexFormat & vf = m.getDesc().vtxfmt;
 
     // position is required
     if( !sHasPosition( vf ) )
@@ -166,36 +166,36 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read file header
     XPRFileHeader header;
-    if( !file.Read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
+    if( !file.read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
     {
         GN_ERROR(sLogger)( "Fail to read file header." );
         return false;
     }
 
     // swap header to little endian
-    header.size1 = SwapEndian8In32( header.size1 );
-    header.size2 = SwapEndian8In32( header.size2 );
-    header.numObjects = SwapEndian8In32( header.numObjects );
+    header.size1 = swap8in32( header.size1 );
+    header.size2 = swap8in32( header.size2 );
+    header.numObjects = swap8in32( header.numObjects );
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
-    xpr.sceneData.Resize( dataSize );
-    if( !file.Read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
+    xpr.sceneData.resize( dataSize );
+    if( !file.read( xpr.sceneData.cptr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.ToRawPtr();
+    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.cptr();
     for( size_t i = 0; i < header.numObjects; ++i )
     {
         XPRObjectHeader & o = objects[i];
 
         // do endian swap
-        o.offset = SwapEndian8In32( o.offset );
-        o.size   = SwapEndian8In32( o.size );
-        o.unknown = SwapEndian8In32( o.unknown );
+        o.offset = swap8in32( o.offset );
+        o.size   = swap8in32( o.size );
+        o.unknown = swap8in32( o.unknown );
 
         size_t offset = o.offset - sizeof(header) + 12;
         void * desc   = &xpr.sceneData[offset];
@@ -210,8 +210,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
-                xpr.vbDescs.Append( vbdesc );
+                swap8in32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
+                xpr.vbDescs.append( vbdesc );
                 break;
             }
 
@@ -223,8 +223,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
-                xpr.ibDescs.Append( ibdesc );
+                swap8in32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
+                xpr.ibDescs.append( ibdesc );
                 break;
             }
 
@@ -236,8 +236,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
-                xpr.texDescs.Append( texdesc );
+                swap8in32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
+                xpr.texDescs.append( texdesc );
                 break;
             }
 
@@ -267,12 +267,12 @@ sLoadModelsFromXPR( VisualNode & node, GpuResourceDatabase & db, File & file )
 
     // create mesh list
     DynaArray<AutoRef<MeshResource> > meshes;
-    meshes.Resize( xpr.meshes.Size() );
-    for( size_t i = 0; i < xpr.meshes.Size(); ++i )
+    meshes.resize( xpr.meshes.size() );
+    for( size_t i = 0; i < xpr.meshes.size(); ++i )
     {
-        meshes[i] = db.CreateResource<MeshResource>( NULL );
+        meshes[i] = db.createResource<MeshResource>( NULL );
         if( !meshes[i] ) return false;
-        if( !meshes[i]->Reset( &xpr.meshes[i] ) ) return false;
+        if( !meshes[i]->reset( &xpr.meshes[i] ) ) return false;
     }
 
     GN_UNUSED_PARAM( node );
@@ -303,32 +303,32 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
     {
         GN_SCOPE_PROFILER( sLoadModelsFromASE_GenerateMeshList, "Load ASE into VisualNode: generating mesh list" );
 
-        meshes.Resize( ase.meshes.Size() );
+        meshes.resize( ase.meshes.size() );
 
-        for( size_t i = 0; i < ase.meshes.Size(); ++i )
+        for( size_t i = 0; i < ase.meshes.size(); ++i )
         {
             char meshname[1024];
-            StringPrintf( meshname, 1024, "%s.mesh.%u", file.Name(), i );
+            stringPrintf( meshname, 1024, "%s.mesh.%u", file.name(), i );
 
-            meshes[i] = db.FindResource<MeshResource>( meshname );
+            meshes[i] = db.findResource<MeshResource>( meshname );
             if( meshes[i] ) continue; // use exising mesh directly.
 
-            meshes[i] = db.CreateResource<MeshResource>( meshname );
+            meshes[i] = db.createResource<MeshResource>( meshname );
             if( !meshes[i] ) return false;
-            if( !meshes[i]->Reset( &ase.meshes[i] ) ) return false;
+            if( !meshes[i]->reset( &ase.meshes[i] ) ) return false;
         }
     }
 
     // initialize model templates
     SimpleWireframeModel wireframeModel( db );
-    if( !wireframeModel.Init() ) return false;
+    if( !wireframeModel.init() ) return false;
     SimpleDiffuseModel diffuseModel( db );
-    if( !diffuseModel.Init() ) return false;
+    if( !diffuseModel.init() ) return false;
     SimpleNormalMapModel normalMapModel( db );
-    if( !normalMapModel.Init() ) return false;
+    if( !normalMapModel.init() ) return false;
 
     // create model
-    for( size_t i = 0; i < ase.subsets.Size(); ++i )
+    for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
 
@@ -340,15 +340,15 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         switch( mt )
         {
             case ModelType::WIREFRAME:
-                modelTemplate = &wireframeModel.GetModelResource();
+                modelTemplate = &wireframeModel.modelResource();
                 break;
 
             case ModelType::DIFFUSE:
-                modelTemplate = &diffuseModel.GetModelResource();
+                modelTemplate = &diffuseModel.modelResource();
                 break;
 
             case ModelType::NORMAL_MAP:
-                modelTemplate = &normalMapModel.GetModelResource();
+                modelTemplate = &normalMapModel.modelResource();
                 break;
 
             default:
@@ -360,32 +360,32 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         if( !modelTemplate ) continue;
 
         // make a clone the selected modelTemplate
-        AutoRef<ModelResource> clone = modelTemplate->MakeClone( NULL );
+        AutoRef<ModelResource> clone = modelTemplate->makeClone( NULL );
         if( NULL == clone ) return false;
 
         // bind textures to effect
         {
             GN_SCOPE_PROFILER( sLoadModelsFromASE_LoadTextures, "Load ASE into VisualNode: load textures" );
 
-            AutoRef<EffectResource> e = clone->GetEffectResource();
+            AutoRef<EffectResource> e = clone->effectResource();
 
             const AseMaterial & am = ase.materials[subset.matid];
 
             AutoRef<TextureResource> t;
 
-            if( e->HasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
+            if( e->hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
             {
-                t = TextureResource::LoadFromFile( db, am.mapdiff.bitmap );
-                clone->SetTextureResource( "ALBEDO_TEXTURE", t );
+                t = TextureResource::loadFromFile( db, am.mapdiff.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
             }
-            if( e->HasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.Empty() )
+            if( e->hasTexture( "NORMAL_TEXTURE" ) && !am.mapbump.bitmap.empty() )
             {
-                t = TextureResource::LoadFromFile( db, am.mapbump.bitmap );
-                clone->SetTextureResource( "ALBEDO_TEXTURE", t );
+                t = TextureResource::loadFromFile( db, am.mapbump.bitmap );
+                clone->setTextureResource( "ALBEDO_TEXTURE", t );
             }
         }
 
-        clone->SetMeshResource( mesh, &subset );
+        clone->setMeshResource( mesh, &subset );
 
         node.addModel( clone );
     }
@@ -397,7 +397,7 @@ sLoadModelsFromASE( VisualNode & node, GpuResourceDatabase & db, File & file )
         const Boxf & bbox = ase.bbox;
 
         Spheref bs;
-        bs.center = bbox.Center();
+        bs.center = bbox.center();
         bs.radius = (float)sqrt( bbox.w * bbox.w + bbox.h * bbox.h + bbox.d * bbox.d );
 
         sn->setBoundingSphere( bs );
@@ -420,27 +420,27 @@ bool GN::util::VisualNode::Impl::loadModelsFromFile( const char * filename )
     removeAllModels();
 
     // open file
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
 
     // get file extension
-    StrA ext = fs::ExtName( filename );
+    StrA ext = fs::extName( filename );
 
-    GpuResourceDatabase & db = mGraph.gdb();
+    GpuResourceDatabase & db = mGraph.getGdb();
 
     // do loading
-    if( 0 == StringCompareI( ".ase", ext.ToRawPtr() ) )
+    if( 0 == stringCompareI( ".ase", ext.cptr() ) )
     {
         return sLoadModelsFromASE( mOwner, db, *fp );
     }
-    else if( 0 == StringCompareI( ".xpr", ext.ToRawPtr() ) ||
-             0 == StringCompareI( ".tpr", ext.ToRawPtr() ))
+    else if( 0 == stringCompareI( ".xpr", ext.cptr() ) ||
+             0 == stringCompareI( ".tpr", ext.cptr() ))
     {
         return sLoadModelsFromXPR( mOwner, db, *fp );
     }
     else
     {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.ToRawPtr() );
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
         return NULL;
     }
 }

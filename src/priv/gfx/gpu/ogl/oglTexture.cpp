@@ -2,7 +2,7 @@
 #include "oglTexture.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.Texture");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.Texture");
 
 // *****************************************************************************
 // local var/types/functions
@@ -354,7 +354,7 @@ static inline bool sColorFormat2OGL(
     }
 
     // failed
-    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", clrfmt.ToString().ToRawPtr() );
+    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", clrfmt.toString().cptr() );
     return false;
 }
 
@@ -571,7 +571,7 @@ sNewCubeTexture(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
+bool GN::gfx::OGLTexture::init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
@@ -581,48 +581,48 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
     // store texture properties
-    if( !SetDesc( inputDesc ) ) return Failure();
+    if( !setDesc( inputDesc ) ) return failure();
 
     // Note: this descriptor may differ with the input one.
-    const TextureDesc & desc = GetDesc();
+    const TextureDesc & texdesc = getDesc();
 
     // determine texture dimension
-    mTarget = sDetermineTextureDimension( desc.faces, desc.width, desc.height, desc.depth );
-    if( INVALID_DIMENSION == mTarget ) return Failure();
+    mTarget = sDetermineTextureDimension( texdesc.faces, texdesc.width, texdesc.height, texdesc.depth );
+    if( INVALID_DIMENSION == mTarget ) return failure();
 
     // convert format to opengl paramaters
     if( !sColorFormat2OGL( mOGLInternalFormat,
                            mOGLFormat,
                            mOGLType,
                            mOGLCompressed,
-                           desc.format,
-                           desc.usage ) )
-        return Failure();
+                           texdesc.format,
+                           texdesc.usage ) )
+        return failure();
 
     // create new opengl texture object
     switch( mTarget )
     {
         case GL_TEXTURE_1D :
             mOGLTexture = sNew1DTexture(
-                mOGLInternalFormat, desc.width, desc.levels,
+                mOGLInternalFormat, texdesc.width, texdesc.levels,
                 mOGLFormat, mOGLType );
             break;
 
         case GL_TEXTURE_2D :
             mOGLTexture = sNew2DTexture(
-                mOGLInternalFormat, desc.width, desc.height, desc.levels,
+                mOGLInternalFormat, texdesc.width, texdesc.height, texdesc.levels,
                 mOGLFormat, mOGLType );
             break;
 
         case GL_TEXTURE_3D :
             mOGLTexture = sNew3DTexture(
-                mOGLInternalFormat, desc.width, desc.height, desc.depth, desc.levels,
+                mOGLInternalFormat, texdesc.width, texdesc.height, texdesc.depth, texdesc.levels,
                 mOGLFormat, mOGLType );
             break;
 
         case GL_TEXTURE_CUBE_MAP_ARB:
             mOGLTexture = sNewCubeTexture(
-                mOGLInternalFormat, desc.width, desc.levels,
+                mOGLInternalFormat, texdesc.width, texdesc.levels,
                 mOGLFormat, mOGLType );
             break;
 
@@ -630,10 +630,10 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
             GN_UNEXPECTED();
             mOGLTexture = 0;
     }
-    if( 0 == mOGLTexture ) return Failure();
+    if( 0 == mOGLTexture ) return failure();
 
     // setup mipmap size array
-    for( size_t i = 0; i < desc.levels; ++i )
+    for( size_t i = 0; i < texdesc.levels; ++i )
     {
         GLint sx, sy, sz;
         switch( mTarget )
@@ -672,18 +672,18 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
 
             default:
                 GN_UNEXPECTED();
-                return Failure();
+                return failure();
         }
 
-        SetMipSize( i, sx, sy, sz );
+        setMipSize( i, sx, sy, sz );
     }
 
     // setup default filters and wrap modes
-    mSampler.Clear();
+    mSampler.clear();
     setSampler( mSampler, true );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -691,14 +691,14 @@ bool GN::gfx::OGLTexture::Init( const TextureDesc & inputDesc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::Quit()
+void GN::gfx::OGLTexture::quit()
 {
     GN_GUARD;
 
     // delete opengl texture
     if (mOGLTexture) glDeleteTextures( 1, &mOGLTexture ), mOGLTexture = 0;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -708,7 +708,7 @@ void GN::gfx::OGLTexture::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::OGLTexture::UpdateMipmap(
+GN::gfx::OGLTexture::updateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -730,7 +730,7 @@ GN::gfx::OGLTexture::UpdateMipmap(
     // setup pixel store parameters
 
     // Note: GL_PACK_ROW_LENGTH defines number of pixels in a row.
-    size_t bpp = GetDesc().format.GetBitsPerPixel();
+    size_t bpp = getDesc().format.getBitsPerPixel();
     glPixelStorei( GL_UNPACK_ROW_LENGTH, (GLint)(rowPitch*8/bpp) );
 
     GLint alignment;
@@ -852,7 +852,7 @@ GN::gfx::OGLTexture::UpdateMipmap(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::ReadMipmap( size_t, size_t, MipmapData & )
+void GN::gfx::OGLTexture::readMipmap( size_t, size_t, MipmapData & )
 {
     GN_UNIMPL();
 }
@@ -870,7 +870,7 @@ void GN::gfx::OGLTexture::setSampler( const SamplerDesc & samp, bool forceUpdate
     mOGLFilters[1] = GL_NEAREST + samp.filterMag;
 
     // min and mip filter
-    if( 1 == GetDesc().levels )
+    if( 1 == getDesc().levels )
     {
         // the texture has no mipmap, ignore mipmap filter
         mOGLFilters[0] = GL_NEAREST + samp.filterMag;

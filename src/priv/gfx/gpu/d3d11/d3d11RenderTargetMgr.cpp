@@ -3,7 +3,7 @@
 #include "d3d11RenderTargetMgr.h"
 #include "d3d11Texture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11RTMgr::Init()
+bool GN::gfx::D3D11RTMgr::init()
 {
     GN_GUARD;
 
@@ -24,12 +24,12 @@ bool GN::gfx::D3D11RTMgr::Init()
 
     // create default rener target view
     AutoComPtr<ID3D11Texture2D> backBuffer;
-    GN_DX_CHECK_RETURN( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D11Texture2D ), (void**)&backBuffer ), Failure() );
-    GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), Failure() );
+    GN_DX_CHECK_RETURN( mGpu.getSwapChainRef().GetBuffer( 0, __uuidof( ID3D11Texture2D ), (void**)&backBuffer ), failure() );
+    GN_DX_CHECK_RETURN( dev.CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
     GN_ASSERT( mAutoColor0 );
 
     // create depth texture
-    const DispDesc & dd = mGpu.GetDispDesc();
+    const DispDesc & dd = mGpu.getDispDesc();
     D3D11_TEXTURE2D_DESC td;
     td.Width              = dd.width;
     td.Height             = dd.height;
@@ -42,7 +42,7 @@ bool GN::gfx::D3D11RTMgr::Init()
     td.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
     td.CPUAccessFlags     = 0;
     td.MiscFlags          = 0;
-    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), Failure() );
+    GN_DX_CHECK_RETURN( dev.CreateTexture2D( &td, NULL, &mAutoDepthTexture ), failure() );
 
     // create depth stencil view
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
@@ -50,13 +50,13 @@ bool GN::gfx::D3D11RTMgr::Init()
     dsvd.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvd.Flags              = 0;
     dsvd.Texture2D.MipSlice = 0;
-    GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), Failure() );
+    GN_DX_CHECK_RETURN( dev.CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
 
     // bind these views to device.
     cxt.OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -64,15 +64,15 @@ bool GN::gfx::D3D11RTMgr::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11RTMgr::Quit()
+void GN::gfx::D3D11RTMgr::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mAutoColor0 );
-    SafeRelease( mAutoDepthTexture );
-    SafeRelease( mAutoDepth );
+    safeRelease( mAutoColor0 );
+    safeRelease( mAutoDepthTexture );
+    safeRelease( mAutoDepth );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -94,8 +94,8 @@ bool GN::gfx::D3D11RTMgr::bind(
     renderTargetSizeChanged = false;
 
     // make new render target description is valid.
-    GN_ASSERT( oldrt.Valid() );
-    if( !newrt.Valid() ) return false;
+    GN_ASSERT( oldrt.valid() );
+    if( !newrt.valid() ) return false;
 
     // check for redundancy
     if( !skipDirtyCheck && oldrt == newrt )
@@ -103,7 +103,7 @@ bool GN::gfx::D3D11RTMgr::bind(
         return true;
     }
 
-    if( 0 == newrt.colortargets.Size() && 0 == newrt.depthstencil.texture )
+    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
     {
         // separate code path for rendering to back buffer
         memset( mColors, 0, sizeof(mColors) );
@@ -114,11 +114,11 @@ bool GN::gfx::D3D11RTMgr::bind(
     else
     {
         // build RTV array
-        for( size_t i = 0; i < newrt.colortargets.Size(); ++i )
+        for( size_t i = 0; i < newrt.colortargets.size(); ++i )
         {
             const RenderTargetTexture & rtt = newrt.colortargets[i];
 
-            D3D11Texture * tex = (D3D11Texture*)rtt.texture.Get();
+            D3D11Texture * tex = (D3D11Texture*)rtt.texture.get();
 
             GN_ASSERT( tex );
 
@@ -130,15 +130,15 @@ bool GN::gfx::D3D11RTMgr::bind(
             }
         }
         // fill remained items in RTV array with NULLs
-        for( size_t i = newrt.colortargets.Size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
+        for( size_t i = newrt.colortargets.size(); i < GpuContext::MAX_COLOR_RENDER_TARGETS; ++i )
         {
             mColors[i] = NULL;
         }
 
-        mNumColors = newrt.colortargets.Size();
+        mNumColors = newrt.colortargets.size();
 
         // Get depth stencil view
-        D3D11Texture * dstex = (D3D11Texture*)newrt.depthstencil.texture.Get();
+        D3D11Texture * dstex = (D3D11Texture*)newrt.depthstencil.texture.get();
         if( dstex )
         {
             mDepth = dstex->getDSView(
@@ -164,17 +164,17 @@ bool GN::gfx::D3D11RTMgr::bind(
 
     // update mRenderTargetSize
     Vector2<UInt32> newRtSize;
-    if( newrt.colortargets.Size() > 0 )
+    if( newrt.colortargets.size() > 0 )
     {
-        newrt.colortargets[0].texture->GetMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
+        newrt.colortargets[0].texture->getMipSize( newrt.colortargets[0].level, &newRtSize.x, &newRtSize.y );
     }
     else if( newrt.depthstencil.texture )
     {
-        newrt.depthstencil.texture->GetMipSize( newrt.depthstencil.level, &newRtSize.x, &newRtSize.y );
+        newrt.depthstencil.texture->getMipSize( newrt.depthstencil.level, &newRtSize.x, &newRtSize.y );
     }
     else
     {
-        const DispDesc & dd = mGpu.GetDispDesc();
+        const DispDesc & dd = mGpu.getDispDesc();
         newRtSize.x = dd.width;
         newRtSize.y = dd.height;
     }

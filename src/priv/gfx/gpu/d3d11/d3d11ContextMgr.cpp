@@ -111,10 +111,10 @@ bool GN::gfx::D3D11Gpu::contextInit()
 
     // create render target manager
     mRTMgr = new D3D11RTMgr( *this );
-    if( !mRTMgr->Init() ) return false;
+    if( !mRTMgr->init() ) return false;
 
     // bind default context
-    RebindContext();
+    rebindContext();
 
     // success
     return true;
@@ -135,13 +135,13 @@ void GN::gfx::D3D11Gpu::contextQuit()
         mDeviceContext->Flush();
     }
 
-    mContext.Clear();
+    mContext.clear();
 
-    SafeDelete( mRTMgr );
-    SafeDelete( mSOMgr );
+    safeDelete( mRTMgr );
+    safeDelete( mSOMgr );
 
-    mDefaultSampler.Clear();
-    mVertexLayouts.Clear();
+    mDefaultSampler.clear();
+    mVertexLayouts.clear();
 
     GN_UNGUARD;
 }
@@ -153,7 +153,7 @@ void GN::gfx::D3D11Gpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::BindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
+bool GN::gfx::D3D11Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -231,10 +231,10 @@ inline bool GN::gfx::D3D11Gpu::bindContextRenderTarget(
         UInt32 r = newvp.x + newvp.w;
         UInt32 b = newvp.y + newvp.h;
 
-        math::ClampMinMax<UInt32>( l, 0, rtsize.width );
-        math::ClampMinMax<UInt32>( t, 0, rtsize.height );
-        math::ClampMinMax<UInt32>( r, 0, rtsize.width );
-        math::ClampMinMax<UInt32>( b, 0, rtsize.height );
+        math::clamp<UInt32>( l, 0, rtsize.width );
+        math::clamp<UInt32>( t, 0, rtsize.height );
+        math::clamp<UInt32>( r, 0, rtsize.width );
+        math::clamp<UInt32>( b, 0, rtsize.height );
 
         d3dvp.TopLeftX = (float)l;
         d3dvp.TopLeftY = (float)t;
@@ -267,8 +267,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
     //
     if( newContext.gpuProgram )
     {
-        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.Get();
-        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.Get();
+        D3D11GpuProgram * newProg = (D3D11GpuProgram*)newContext.gpuProgram.get();
+        D3D11GpuProgram * oldProg = (D3D11GpuProgram*)mContext.gpuProgram.get();
 
         // apply shader
         if( skipDirtyCheck || newProg != oldProg )
@@ -280,8 +280,8 @@ inline bool GN::gfx::D3D11Gpu::bindContextShader(
         GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
         // apply GPU program resources
-        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.ToRawPtr(), newContext.uniforms.Size(), skipDirtyCheck );
-        newProg->applyTextures( newContext.textures.ToRawPtr(), newContext.textures.Size(), skipDirtyCheck );
+        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
+        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
@@ -393,7 +393,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
 
             if( NULL == layout->il )
             {
-                if( !layout->Init( *mDevice, newContext.vtxfmt ) ) return false;
+                if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
             }
 
             mDeviceContext->IASetInputLayout( layout->il );
@@ -416,7 +416,7 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D11VtxBuf>(b.vtxbuf.Get())->GetD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D11VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
@@ -430,12 +430,12 @@ inline bool GN::gfx::D3D11Gpu::bindContextResource(
     {
         if( newContext.idxbuf )
         {
-            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.Get();
+            const D3D11IdxBuf * ib = (const D3D11IdxBuf*)newContext.idxbuf.get();
 
-            const IdxBufDesc & ibdesc = ib->GetDesc();
+            const IdxBufDesc & ibdesc = ib->getDesc();
 
             mDeviceContext->IASetIndexBuffer(
-                ib->GetD3DBuffer(),
+                ib->getD3DBuffer(),
                 ibdesc.bits32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT,
                 0 );
         }

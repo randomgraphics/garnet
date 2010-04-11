@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxFmt( OGLGpu & r ) : OGLResource(r) { Clear(); }
-        virtual ~OGLVtxFmt() { Quit(); }
+        OGLVtxFmt( OGLGpu & r ) : OGLResource(r) { clear(); }
+        virtual ~OGLVtxFmt() { quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const VertexFormat &, const OGLBasicGpuProgram * program );
-        void Quit();
+        bool init( const VertexFormat &, const OGLBasicGpuProgram * program );
+        void quit();
     private:
-        void Clear() { mAttribBindings.Clear(); mStateBindings.Clear(); mValid = false; }
+        void clear() { mAttribBindings.clear(); mStateBindings.clear(); mValid = false; }
         //@}
 
         // ********************************

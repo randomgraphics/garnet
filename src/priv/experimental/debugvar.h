@@ -41,13 +41,13 @@ namespace GN
 
         DebugVariableId getId() const { return mId; }
 
-        size_t       getSize() const { return mValue.Size(); }
+        size_t       getSize() const { return mValue.size(); }
 
-        const void * getValue() const { return mValue.ToRawPtr(); }
+        const void * getValue() const { return mValue.cptr(); }
 
         const StrA & getName() const { return mName; }
 
-        const StrA & GetType() const { return mType; }
+        const StrA & getType() const { return mType; }
 
         //@}
     };

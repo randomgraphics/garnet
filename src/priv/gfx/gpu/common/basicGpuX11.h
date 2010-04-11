@@ -26,7 +26,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicGpuX11() { Clear(); }
+        BasicGpuX11() { clear(); }
         virtual ~BasicGpuX11() {}
         //@}
 
@@ -36,10 +36,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuOptions & );
-        void Quit();
+        bool init( const GpuOptions & );
+        void quit();
     private :
-        void Clear()
+        void clear()
         {
             dispClear();
         }
@@ -55,8 +55,8 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual const GpuOptions & GetOptions() const { return mOptions; }
-        virtual const DispDesc        & GetDispDesc() const { return mDispDesc; }
+        virtual const GpuOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
 
     private:
         bool dispInit( const GpuOptions & );
@@ -65,7 +65,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual void HandleRenderWindowSizeMove();
+        virtual void handleRenderWindowSizeMove();
 
         RenderWindowX11 & getRenderWindow() { return mWindow; }
 
@@ -129,7 +129,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void ProcessRenderWindowMessages( bool blockWhileMinimized );
+        virtual void processRenderWindowMessages( bool blockWhileMinimized );
 
         //@}
     };

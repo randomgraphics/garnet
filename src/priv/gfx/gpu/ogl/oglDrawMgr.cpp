@@ -8,7 +8,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -30,7 +30,7 @@ sPrimitiveType2OGL( GN::gfx::PrimitiveType prim )
         case GN::gfx::PrimitiveType::TRIANGLE_STRIP : return GL_TRIANGLE_STRIP;
         case GN::gfx::PrimitiveType::QUAD_LIST      : return GL_QUADS;
         default :
-            GN_ERROR(sLogger)( "unsupport primitve type %s!", prim.ToString() );
+            GN_ERROR(sLogger)( "unsupport primitve type %s!", prim.toString() );
             return GL_TRIANGLES;
     }
 }
@@ -49,7 +49,7 @@ bool GN::gfx::OGLGpu::drawInit()
     // create line renderer
     GN_ASSERT( !mLine );
     mLine = new OGLLine(*this);
-    if( !mLine->Init() ) return false;
+    if( !mLine->init() ) return false;
 
     // success
     return true;
@@ -64,7 +64,7 @@ void GN::gfx::OGLGpu::drawQuit()
 {
     GN_GUARD;
 
-    SafeDelete( mLine );
+    safeDelete( mLine );
 
     GN_UNGUARD
 }
@@ -76,14 +76,14 @@ void GN::gfx::OGLGpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::Present()
+void GN::gfx::OGLGpu::present()
 {
     GN_GUARD_SLOW;
 
 #if GN_MSWIN
     GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
 #else
-    const DispDesc & dd = GetDispDesc();
+    const DispDesc & dd = getDispDesc();
     GN_ASSERT( dd.displayHandle && dd.windowHandle );
     glXSwapBuffers( (Display*)dd.displayHandle, (Window)dd.windowHandle );
 #endif
@@ -92,7 +92,7 @@ void GN::gfx::OGLGpu::Present()
     mDrawCounter = 0;
 
     // handle render window size move
-    HandleRenderWindowSizeMove();
+    handleRenderWindowSizeMove();
 
     GN_UNGUARD_SLOW;
 }
@@ -100,7 +100,7 @@ void GN::gfx::OGLGpu::Present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::ClearScreen(
+void GN::gfx::OGLGpu::clearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
@@ -146,7 +146,7 @@ void GN::gfx::OGLGpu::ClearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::DrawIndexed(
+void GN::gfx::OGLGpu::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -160,8 +160,8 @@ void GN::gfx::OGLGpu::DrawIndexed(
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.ToRawPtr(),
-                                         mContext.vtxbufs.Size(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+                                         mContext.vtxbufs.size(),
                                          basevtx ) )
     {
         return;
@@ -169,12 +169,12 @@ void GN::gfx::OGLGpu::DrawIndexed(
 
     // get current index buffer
     GN_ASSERT( mContext.idxbuf );
-    const OGLIdxBuf * ib = SafeCastPtr<const OGLIdxBuf>( mContext.idxbuf.Get() );
+    const OGLIdxBuf * ib = safeCastPtr<const OGLIdxBuf>( mContext.idxbuf.get() );
 
     // Verify index buffer
-    if( ParamCheckEnabled() )
+    if( paramCheckEnabled() )
     {
-        if( ib->GetDesc().bits32 )
+        if( ib->getDesc().bits32 )
         {
             const UInt32 * indices = (const UInt32*)ib->getIdxData( startidx );
             for( size_t i = 0; i < numidx; ++i, ++indices )
@@ -208,7 +208,7 @@ void GN::gfx::OGLGpu::DrawIndexed(
             (GLuint)startvtx,
             (GLuint)( startvtx + numvtx - 1 ),
             (GLsizei)numidx,
-            ib->GetDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
     }
     else
@@ -216,7 +216,7 @@ void GN::gfx::OGLGpu::DrawIndexed(
         GN_OGL_CHECK( glDrawElements(
             oglPrim,
             (GLsizei)numidx,
-            ib->GetDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+            ib->getDesc().bits32 ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
             ib->getIdxData( startidx ) ) );
     }
 
@@ -229,7 +229,7 @@ void GN::gfx::OGLGpu::DrawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::Draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
+void GN::gfx::OGLGpu::draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
     GN_GUARD_SLOW;
 
@@ -237,8 +237,8 @@ void GN::gfx::OGLGpu::Draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 
     // bind vertex buffer based on current startvtx
     if( mCurrentOGLVtxFmt &&
-        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.ToRawPtr(),
-                                         mContext.vtxbufs.Size(),
+        !mCurrentOGLVtxFmt->bindBuffers( mContext.vtxbufs.cptr(),
+                                         mContext.vtxbufs.size(),
                                          startvtx ) )
     {
         return;
@@ -258,7 +258,7 @@ void GN::gfx::OGLGpu::Draw( PrimitiveType prim, size_t numvtx, size_t startvtx )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::DrawIndexedUp(
+void GN::gfx::OGLGpu::drawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -288,7 +288,7 @@ void GN::gfx::OGLGpu::DrawIndexedUp(
     if( bindSuccess )
     {
         // Verify index buffer
-        if( ParamCheckEnabled() )
+        if( paramCheckEnabled() )
         {
             const UInt16 * indices = indexData;
             for( size_t i = 0; i < numidx; ++i, ++indices )
@@ -339,7 +339,7 @@ void GN::gfx::OGLGpu::DrawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::DrawUp(
+void GN::gfx::OGLGpu::drawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -387,7 +387,7 @@ void GN::gfx::OGLGpu::DrawUp(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLGpu::DrawLines(
+void GN::gfx::OGLGpu::drawLines(
     BitFields options,
     const void * positions,
     size_t stride,
@@ -402,15 +402,15 @@ void GN::gfx::OGLGpu::DrawLines(
     GN_ASSERT( mLine );
 
     // disable GPU program and resources
-    GpuContext ctx = GetContext();
-    ctx.gpuProgram.Clear();
-    ctx.uniforms.Clear();
-    ctx.ClearResources();
+    GpuContext ctx = getContext();
+    ctx.gpuProgram.clear();
+    ctx.uniforms.clear();
+    ctx.clearResources();
 
-    BindContext( ctx );
+    bindContext( ctx );
     if( !mContextOk ) return;
 
-    mLine->DrawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
+    mLine->drawLines( options, (const float*)positions, stride, numpoints, rgba, model, view, proj );
 
     // done
     ++mDrawCounter;

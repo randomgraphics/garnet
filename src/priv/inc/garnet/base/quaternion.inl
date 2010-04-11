@@ -2,7 +2,7 @@
 //
 // -----------------------------------------------------------------------------
 template < typename T >
-GN::Quaternion<T> & GN::Quaternion<T>::FromMatrix33( const Matrix33<T> & m )
+GN::Quaternion<T> & GN::Quaternion<T>::fromMatrix33( const Matrix33<T> & m )
 {
     ElementType Tr = m[0][0] + m[1][1] + m[2][2] + 1,fourD;
     int i,j,k;
@@ -55,7 +55,7 @@ GN::Quaternion<T> & GN::Quaternion<T>::FromMatrix33( const Matrix33<T> & m )
 //
 // -----------------------------------------------------------------------------
 template < typename T >
-void GN::Quaternion<T>::ToMatrix33( Matrix33<T> & out ) const
+void GN::Quaternion<T>::toMatrix33( Matrix33<T> & out ) const
 {
     /*
     If q is guaranteed to be a unit quaternion, s will always
@@ -107,7 +107,7 @@ void GN::Quaternion<T>::ToMatrix33( Matrix33<T> & out ) const
 //
 // -----------------------------------------------------------------------------
 template < typename T >
-void GN::Quaternion<T>::ToMatrix44( Matrix44<T> & out ) const
+void GN::Quaternion<T>::toMatrix44( Matrix44<T> & out ) const
 {
     /*
     If q is guaranteed to be a unit quaternion, s will always

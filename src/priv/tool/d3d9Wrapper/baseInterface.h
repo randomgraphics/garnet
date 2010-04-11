@@ -58,7 +58,7 @@ protected:
     void addRuntimeType( const IID & iid, MyType * ptr )
     {
         GN_ASSERT( ptr );
-        GN_ASSERT( NULL == mRtti.Find( iid ) );
+        GN_ASSERT( NULL == mRtti.find( iid ) );
         mRtti[iid] = ptr;
     }
 
@@ -80,12 +80,12 @@ public:
 
         if( 0 == ppvObj ) return E_INVALIDARG;
 
-        MyType ** pptype = mRtti.Find( riid );
+        MyType ** pptype = mRtti.find( riid );
         if( NULL == pptype )
         {
             GN::AutoComPtr<IUnknown> obj;
             GN_ASSERT( E_NOINTERFACE == mRealObject->QueryInterface( riid, (void**)&obj ) );
-            obj.Clear();
+            obj.clear();
             return E_NOINTERFACE;
         }
         else

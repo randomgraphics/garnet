@@ -8,6 +8,21 @@
 
 namespace GN
 {
+    namespace detail
+    {
+        ///
+        /// Swap to elements
+        ///
+        template<typename T>
+        inline void swap( T & a, T & b )
+        {
+            T tmp;
+            tmp = a;
+            a = b;
+            b = tmp;
+        }
+    }
+
     ///
     /// 表示一个二维矢量（比如贴图坐标）。
     ///
@@ -218,51 +233,51 @@ namespace GN
         ///
         /// type conversion
         ///
-        const T * ToPtr() const
+        const T * toPtr() const
         {
             return &x;
         }
         ///
         /// type conversion
         ///
-        T * ToPtr()
+        T * toPtr()
         {
             return &x;
         }
         ///
         /// Set Values
         ///
-        Vector2 & Set( T ix, T iy )
+        Vector2 & set( T ix, T iy )
         {
             x = ix;
             y = iy;
             return *this;
         }
         ///
-        /// Get Length of a Vector2
+        /// Get length of a Vector2
         ///
-        T Length() const
+        T length() const
         {
             return(T) sqrt(x*x + y*y);
         }
         ///
-        /// Get squared Length of a Vector2
+        /// Get squared length of a Vector2
         ///
-        T LengthSqr() const
+        T lengthSqr() const
         {
             return(x*x + y*y);
         }
         ///
         /// Does Vector2 equal (0, 0)?
         ///
-        bool IsZero() const
+        bool isZero() const
         {
             return((x == 0.0F) && (y == 0.0F));
         }
         ///
         /// Normalize a Vector2
         ///
-        Vector2 & Normalize()
+        Vector2 & normalize()
         {
 			sNormalize( *this, *this );
             return *this;
@@ -283,7 +298,7 @@ namespace GN
         ///
         static void sNormalize( Vector2 & o, const Vector2 & i )
         {
-            T m = i.Length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -484,41 +499,41 @@ namespace GN
 
         //@{
 
-        const T * ToPtr() const
+        const T * toPtr() const
         {
             return &x;
         }
-        T * ToPtr()
+        T * toPtr()
         {
             return &x;
         }
-        Vector3 & Set( T ix, T iy, T iz )
+        Vector3 & set( T ix, T iy, T iz )
         {
             x = ix;
             y = iy;
             z = iz;
             return *this;
         }
-        Vector3 & Set( const Vector2<T> & ixy, T iz )
+        Vector3 & set( const Vector2<T> & ixy, T iz )
         {
             x = ixy.x;
             y = ixy.y;
             z = iz;
             return *this;
         }
-        T Length() const
+        T length() const
         {
             return (T)sqrt(x*x + y*y + z*z);
         }
-        T LengthSqr() const
+        T lengthSqr() const
         {
             return (x*x + y*y + z*z);
         }
-        bool IsZero() const
+        bool isZero() const
         {
             return((x == 0.0F) && (y == 0.0F) && (z == 0.0F));
         }
-        Vector3 & Normalize()
+        Vector3 & normalize()
         {
 			sNormalize( *this, *this );
             return *this;
@@ -531,7 +546,7 @@ namespace GN
         }
         static void sNormalize( Vector3 & o, const Vector3 & i )
         {
-            T m = i.Length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -559,7 +574,7 @@ namespace GN
         }
         static void sCross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
         {
-            o.Set( v1.y * v2.z - v1.z * v2.y,
+            o.set( v1.y * v2.z - v1.z * v2.y,
                    v1.z * v2.x - v1.x * v2.z,
                    v1.x * v2.y - v1.y * v2.x);
         }
@@ -776,15 +791,15 @@ namespace GN
 
         //@{
 
-        const T * ToPtr() const
+        const T * toPtr() const
         {
             return &x;
         }
-        T * ToPtr()
+        T * toPtr()
         {
             return &x;
         }
-        Vector4 & Set( T ix, T iy, T iz, T iw )
+        Vector4 & set( T ix, T iy, T iz, T iw )
         {
             x = ix;
             y = iy;
@@ -792,7 +807,7 @@ namespace GN
             w = iw;
             return *this;
         }
-        Vector4 & Set( const Vector2<T> & ixy, T iz, T iw )
+        Vector4 & set( const Vector2<T> & ixy, T iz, T iw )
         {
             x = ixy.x;
             y = ixy.y;
@@ -800,7 +815,7 @@ namespace GN
             w = iw;
             return *this;
         }
-        Vector4 & Set( const Vector3<T> & ixyz, T iw )
+        Vector4 & set( const Vector3<T> & ixyz, T iw )
         {
             x = ixyz.x;
             y = ixyz.y;
@@ -808,28 +823,28 @@ namespace GN
             w = iw;
             return *this;
         }
-        T Length() const
+        T length() const
         {
             return(T) sqrt(x*x + y*y + z*z + w*w);
         }
-        T LengthSqr() const
+        T lengthSqr() const
         {
             return(x*x + y*y + z*z + w*w);
         }
-        Vector4 & Normalize()
+        Vector4 & normalize()
         {
-			Normalize( *this, *this );
+			normalize( *this, *this );
             return *this;
         }
         static Vector4 sNormalize( const Vector4 & v )
         {
             Vector4 r;
-            Normalize( r, v );
+            normalize( r, v );
             return r;
         }
         static void sNormalize( Vector4 & o, const Vector4 & i )
         {
-            T m = i.Length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -847,14 +862,14 @@ namespace GN
 				o.w = ((T)0.0);
 			}
         }
-        Vector3<T> ToVec3() const
+        Vector3<T> toVec3() const
         {
             Vector3<T> ret( x / w, y / w, z / w );
             return ret;
         }
-        Vector3<T> & ToVec3( Vector3<T> & o ) const
+        Vector3<T> & toVec3( Vector3<T> & o ) const
         {
-            o.Set( x / w, y / w, z / w );
+            o.set( x / w, y / w, z / w );
             return o;
         }
         static T sDot( const Vector4 & v1, const Vector4 & v2 )
@@ -903,9 +918,9 @@ namespace GN
             T _10, T _11, T _12,
             T _20, T _21, T _22 )
         {
-            rows[0].Set(_00,_01,_02);
-            rows[1].Set(_10,_11,_12);
-            rows[2].Set(_20,_21,_22);
+            rows[0].set(_00,_01,_02);
+            rows[1].set(_10,_11,_12);
+            rows[2].set(_20,_21,_22);
         }
         //
         Matrix33( const Matrix33 & m )
@@ -1019,7 +1034,7 @@ namespace GN
         friend std::ostream & operator<<( std::ostream & o, const Matrix33 & m )
         {
             StrA s;
-            m.Print( s );
+            m.print( s );
             o << s;
             return o;
         }
@@ -1033,11 +1048,11 @@ namespace GN
 
         //@{
 
-        Matrix33 & Identity()
+        Matrix33 & identity()
         {
-            rows[0].Set(1,0,0);
-            rows[1].Set(0,1,0);
-            rows[2].Set(0,0,1);
+            rows[0].set(1,0,0);
+            rows[1].set(0,1,0);
+            rows[2].set(0,0,1);
             return *this;
         }
         static Matrix33 sIdentity()
@@ -1047,39 +1062,39 @@ namespace GN
                 (T)0, (T)1, (T)0,
                 (T)0, (T)0, (T)1 );
         }
-        Matrix33 & Transpose()
+        Matrix33 & transpose()
         {
-            Swap( rows[0][1], rows[1][0] );
-            Swap( rows[0][2], rows[2][0] );
-            Swap( rows[1][2], rows[2][1] );
+            detail::swap( rows[0][1], rows[1][0] );
+            detail::swap( rows[0][2], rows[2][0] );
+            detail::swap( rows[1][2], rows[2][1] );
             return *this;
         }
         static void sTranspose( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
-            dst.Transpose();
+            dst.transpose();
         }
         static Matrix33 sTranspose( const Matrix33 & src )
         {
             Matrix33 r(src);
-            r.Transpose();
+            r.transpose();
             return r;
         }
-        Matrix33 & Inverse();
+        Matrix33 & inverse();
         static void sInverse( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
-            dst.Inverse();
+            dst.inverse();
         }
         static Matrix33 sInverse( const Matrix33 & src )
         {
             Matrix33 r(src);
-            r.Inverse();
+            r.inverse();
             return r;
         }
-        Matrix33 & Scale( const Vector3<T> & f )
+        Matrix33 & scale( const Vector3<T> & f )
         {
-            Identity();
+            identity();
             rows[0][0] = f[0];
             rows[1][1] = f[1];
             rows[2][2] = f[2];
@@ -1088,46 +1103,32 @@ namespace GN
         ///
         /// 求旋转矩阵. Angle is in radius
         ///
-        Matrix33 & RotateX( T angle );
-        Matrix33 & RotateY( T angle );
-        Matrix33 & RotateZ( T angle );
-        Matrix33 & Rotate( const Vector3<T> & v, T angle );
-        Matrix33 & LookAtLh( const Vector3<T> & forward, const Vector3<T> & up );
-        Matrix33 & LookAtRh( const Vector3<T> & forward, const Vector3<T> & up );
-        Matrix33 & LookAt( const Vector3<T> & forward, const Vector3<T> & up )
+        Matrix33 & rotateX( T angle );
+        Matrix33 & rotateY( T angle );
+        Matrix33 & rotateZ( T angle );
+        Matrix33 & rotate( const Vector3<T> & v, T angle );
+        Matrix33 & lookAtLh( const Vector3<T> & forward, const Vector3<T> & up );
+        Matrix33 & lookAtRh( const Vector3<T> & forward, const Vector3<T> & up );
+        Matrix33 & lookAt( const Vector3<T> & forward, const Vector3<T> & up )
         {
 #if GN_BUILD_LEFT_HAND
-            return LookAtLh( forward, up );
+            return lookAtLh( forward, up );
 #else
-            return LookAtRh( forward, up );
+            return lookAtRh( forward, up );
 #endif
         }
 
         ///
         /// 打印矩阵内容到字符串中, mainly for debug purpose.
         ///
-        void Print( StrA & ) const;
+        void print( StrA & ) const;
 
         ///
-        /// Print to string
+        /// print to string
         ///
-        StrA Print() const { StrA s; Print(s); return s; }
+        StrA print() const { StrA s; print(s); return s; }
 
         //@}
-
-    private:
-
-        ///
-        /// Swap to elements
-        ///
-        template<typename T>
-        static inline void Swap( T & a, T & b )
-        {
-            T tmp;
-            tmp = a;
-            a = b;
-            b = tmp;
-        }
     };
 
     ///
@@ -1164,10 +1165,10 @@ namespace GN
             T _20, T _21, T _22, T _23,
             T _30, T _31, T _32, T _33 )
         {
-            rows[0].Set(_00,_01,_02,_03);
-            rows[1].Set(_10,_11,_12,_13);
-            rows[2].Set(_20,_21,_22,_23);
-            rows[3].Set(_30,_31,_32,_33);
+            rows[0].set(_00,_01,_02,_03);
+            rows[1].set(_10,_11,_12,_13);
+            rows[2].set(_20,_21,_22,_23);
+            rows[3].set(_30,_31,_32,_33);
         }
         //
         Matrix44( const Matrix44 & m )
@@ -1184,10 +1185,10 @@ namespace GN
             const Vector3<T>  & row3 = Vector3<T>(0,0,0),
             T        _33   = ((T)1.0) )
         {
-            rows[0].Set( m33[0], col3.x );
-            rows[1].Set( m33[1], col3.y );
-            rows[2].Set( m33[2], col3.z );
-            rows[3].Set( row3, _33 );
+            rows[0].set( m33[0], col3.x );
+            rows[1].set( m33[1], col3.y );
+            rows[2].set( m33[2], col3.z );
+            rows[3].set( row3, _33 );
         }
         //@}
 
@@ -1217,10 +1218,10 @@ namespace GN
         }
         Matrix44 & operator = ( const Matrix33<T> & m )
         {
-            rows[0].Set( m[0], ((T)0.0) );
-            rows[1].Set( m[1], ((T)0.0) );
-            rows[2].Set( m[2], ((T)0.0) );
-            rows[3].Set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
+            rows[0].set( m[0], ((T)0.0) );
+            rows[1].set( m[1], ((T)0.0) );
+            rows[2].set( m[2], ((T)0.0) );
+            rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
         Matrix44 & operator += ( const Matrix44 & m )
@@ -1315,7 +1316,7 @@ namespace GN
         friend std::ostream & operator<<( std::ostream & o, const Matrix44 & m )
         {
             StrA s;
-            m.Print( s );
+            m.print( s );
             o << s;
             return o;
         }
@@ -1329,34 +1330,34 @@ namespace GN
 
         //@{
 
-        Matrix44 & Set( T _00, T _01, T _02, T _03,
+        Matrix44 & set( T _00, T _01, T _02, T _03,
                         T _10, T _11, T _12, T _13,
                         T _20, T _21, T _22, T _23,
                         T _30, T _31, T _32, T _33 )
         {
-            rows[0].Set(_00,_01,_02,_03);
-            rows[1].Set(_10,_11,_12,_13);
-            rows[2].Set(_20,_21,_22,_23);
-            rows[3].Set(_30,_31,_32,_33);
+            rows[0].set(_00,_01,_02,_03);
+            rows[1].set(_10,_11,_12,_13);
+            rows[2].set(_20,_21,_22,_23);
+            rows[3].set(_30,_31,_32,_33);
             return *this;
         }
-        Matrix44 & Set( const Matrix33<T> & m33,
+        Matrix44 & set( const Matrix33<T> & m33,
                         const Vector3<T> & col3 = Vector3<T>(0,0,0),
                         const Vector3<T> & row3 = Vector3<T>(0,0,0),
                         T         _33 = ((T)1.0) )
         {
-            rows[0].Set( m33[0], col3.x );
-            rows[1].Set( m33[1], col3.y );
-            rows[2].Set( m33[2], col3.z );
-            rows[3].Set( row3, _33 );
+            rows[0].set( m33[0], col3.x );
+            rows[1].set( m33[1], col3.y );
+            rows[2].set( m33[2], col3.z );
+            rows[3].set( row3, _33 );
             return *this;
         }
-        Matrix44 & Identity()
+        Matrix44 & identity()
         {
-            rows[0].Set( ((T)1.0), ((T)0.0), ((T)0.0), ((T)0.0) );
-            rows[1].Set( ((T)0.0), ((T)1.0), ((T)0.0), ((T)0.0) );
-            rows[2].Set( ((T)0.0), ((T)0.0), ((T)1.0), ((T)0.0) );
-            rows[3].Set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
+            rows[0].set( ((T)1.0), ((T)0.0), ((T)0.0), ((T)0.0) );
+            rows[1].set( ((T)0.0), ((T)1.0), ((T)0.0), ((T)0.0) );
+            rows[2].set( ((T)0.0), ((T)0.0), ((T)1.0), ((T)0.0) );
+            rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
         static Matrix44 sIdentity()
@@ -1367,99 +1368,99 @@ namespace GN
                 (T)0,(T)0,(T)1,(T)0,
                 (T)0,(T)0,(T)0,(T)1 );
         }
-        Matrix44 & Transpose()
+        Matrix44 & transpose()
         {
-            Swap( rows[0][1], rows[1][0] );
-            Swap( rows[0][2], rows[2][0] );
-            Swap( rows[0][3], rows[3][0] );
-            Swap( rows[1][2], rows[2][1] );
-            Swap( rows[1][3], rows[3][1] );
-            Swap( rows[2][3], rows[3][2] );
+            detail::swap( rows[0][1], rows[1][0] );
+            detail::swap( rows[0][2], rows[2][0] );
+            detail::swap( rows[0][3], rows[3][0] );
+            detail::swap( rows[1][2], rows[2][1] );
+            detail::swap( rows[1][3], rows[3][1] );
+            detail::swap( rows[2][3], rows[3][2] );
             return *this;
         }
         static void sTranspose( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
-            dst.Transpose();
+            dst.transpose();
         }
         static Matrix44 sTranspose( const Matrix44 & src )
         {
             Matrix44 r(src);
-            r.Transpose();
+            r.transpose();
             return r;
         }
-        Matrix44 & Inverse();
+        Matrix44 & inverse();
         static void sInverse( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
-            dst.Inverse();
+            dst.inverse();
         }
         static Matrix44 sInverse( const Matrix44 & src )
         {
             Matrix44 r(src);
-            r.Inverse();
+            r.inverse();
             return r;
         }
-        Matrix44 & InvTrans()
+        Matrix44 & invtrans()
         {
-            Inverse();
-            Transpose();
+            inverse();
+            transpose();
             return *this;
         }
-        static void sInvTrans( Matrix44 & dst, const Matrix44 & src )
+        static void sInvtrans( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
-            dst.InvTrans();
+            dst.invtrans();
         }
-        static Matrix44 sInvTrans( const Matrix44 & src )
+        static Matrix44 sInvtrans( const Matrix44 & src )
         {
             Matrix44 r(src);
-            r.InvTrans();
+            r.invtrans();
             return r;
         }
         ///
         /// 求旋转矩阵. Angle is in radians.
         ///
-        Matrix44 & RotateX( T angle );
-        Matrix44 & RotateY( T angle );
-        Matrix44 & RotateZ( T angle );
-        Matrix44 & Rotate( const Vector3<T> & v, T angle );
-        Matrix44 & Translate( T x, T y = (T)0, T z = (T)0 )
+        Matrix44 & rotateX( T angle );
+        Matrix44 & rotateY( T angle );
+        Matrix44 & rotateZ( T angle );
+        Matrix44 & rotate( const Vector3<T> & v, T angle );
+        Matrix44 & translate( T x, T y = (T)0, T z = (T)0 )
         {
-            Identity();
+            identity();
             rows[0][3] = x;
             rows[1][3] = y;
             rows[2][3] = z;
             return *this;
         }
-        Matrix44 & Translate( const Vector3<T> & v )
+        Matrix44 & translate( const Vector3<T> & v )
         {
-            return Translate( v.x, v.y, v.z );
+            return translate( v.x, v.y, v.z );
         }
-        Matrix44 & Translate( const Vector2<T> & v )
+        Matrix44 & translate( const Vector2<T> & v )
         {
-            return Translate( v.x, v.y, (T)0 );
+            return translate( v.x, v.y, (T)0 );
         }
         static Matrix44 sTranslate( const Vector3<T> & v )
         {
             Matrix44 m;
-            m.Translate( v );
+            m.translate( v );
             return m;
         }
-        Matrix44 & LookAtLh( const Vector3<T> & eye,
+        Matrix44 & lookAtLh( const Vector3<T> & eye,
                              const Vector3<T> & to,
                              const Vector3<T> & up );
-        Matrix44 & LookAtRh( const Vector3<T> & eye,
+        Matrix44 & lookAtRh( const Vector3<T> & eye,
                              const Vector3<T> & to,
                              const Vector3<T> & up );
-        Matrix44 & LookAt( const Vector3<T> & eye,
+        Matrix44 & lookAt( const Vector3<T> & eye,
                            const Vector3<T> & to,
                            const Vector3<T> & up )
         {
 #if GN_BUILD_LEFT_HAND
-            return LookAtLh( eye, to, up );
+            return lookAtLh( eye, to, up );
 #else
-            return LookAtRh( eye, to, up );
+            return lookAtRh( eye, to, up );
 #endif
         }
         ///
@@ -1478,38 +1479,38 @@ namespace GN
         ///     同的变换矩阵。 因此特别设置了两套分别适用于opengl和directx的计算
         ///     投影矩阵的函数。
         ///
-        Matrix44 & OrthoOGLLh( T left, T right,
+        Matrix44 & orthoOGLLh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
 
-        Matrix44 & OrthoOGLRh( T left, T right,
+        Matrix44 & orthoOGLRh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
 
-        Matrix44 & OrthoOGL( T left, T right,
+        Matrix44 & orthoOGL( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
         {
 #if GN_BUILD_LEFT_HAND
-            return OrthoOGLLh( left, right, bottom, top, znear, zfar );
+            return orthoOGLLh( left, right, bottom, top, znear, zfar );
 #else
-            return OrthoOGLRh( left, right, bottom, top, znear, zfar );
+            return orthoOGLRh( left, right, bottom, top, znear, zfar );
 #endif
         }
-        Matrix44 & OrthoD3DLh( T left, T right,
+        Matrix44 & orthoD3DLh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
-        Matrix44 & OrthoD3DRh( T left, T right,
+        Matrix44 & orthoD3DRh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
-        Matrix44 & OrthoD3D( T left, T right,
+        Matrix44 & orthoD3D( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
         {
 #if GN_BUILD_LEFT_HAND
-            return OrthoD3DLh( left, right, bottom, top, znear, zfar );
+            return orthoD3DLh( left, right, bottom, top, znear, zfar );
 #else
-            return OrthoD3DRh( left, right, bottom, top, znear, zfar );
+            return orthoD3DRh( left, right, bottom, top, znear, zfar );
 #endif
         }
         ///
@@ -1521,30 +1522,30 @@ namespace GN
         ///
         /// \note fovy和ratio不能为0，znear不能等于zfar，否则会引起除0错误。
         ///
-        Matrix44 & PerspectiveOGLLh( T fovy, T ratio,
+        Matrix44 & perspectiveOGLLh( T fovy, T ratio,
                                      T znear, T zfar );
-        Matrix44 & PerspectiveOGLRh( T fovy, T ratio,
+        Matrix44 & perspectiveOGLRh( T fovy, T ratio,
                                      T znear, T zfar );
-        Matrix44 & PerspectiveOGL( T fovy, T ratio,
+        Matrix44 & perspectiveOGL( T fovy, T ratio,
                                    T znear, T zfar )
         {
 #if GN_BUILD_LEFT_HAND
-            return PerspectiveOGLLh( fovy, ratio, znear, zfar );
+            return perspectiveOGLLh( fovy, ratio, znear, zfar );
 #else
-            return PerspectiveOGLRh( fovy, ratio, znear, zfar );
+            return perspectiveOGLRh( fovy, ratio, znear, zfar );
 #endif
         }
-        Matrix44 & PerspectiveD3DLh( T fovy, T ratio,
+        Matrix44 & perspectiveD3DLh( T fovy, T ratio,
                                      T znear, T zfar );
-        Matrix44 & PerspectiveD3DRh( T fovy, T ratio,
+        Matrix44 & perspectiveD3DRh( T fovy, T ratio,
                                      T znear, T zfar );
-        Matrix44 & PerspectiveD3D( T fovy, T ratio,
+        Matrix44 & perspectiveD3D( T fovy, T ratio,
                                    T znear, T zfar )
         {
 #if GN_BUILD_LEFT_HAND
-            return PerspectiveD3DLh( fovy, ratio, znear, zfar );
+            return perspectiveD3DLh( fovy, ratio, znear, zfar );
 #else
-            return PerspectiveD3DRh( fovy, ratio, znear, zfar );
+            return perspectiveD3DRh( fovy, ratio, znear, zfar );
 #endif
         }
         ///
@@ -1552,12 +1553,12 @@ namespace GN
         ///
         /// This function treads input vector as (x, y, z, 1)
         ///
-        void TransformPoint( Vector3<T> & dst, const Vector3<T> & src ) const
+        void transformPoint( Vector3<T> & dst, const Vector3<T> & src ) const
         {
             if( &dst == &src )
             {
                 Vector3<T> tmp;
-                TransformPoint( tmp, src );
+                transformPoint( tmp, src );
                 dst = tmp;
             }
             else
@@ -1574,29 +1575,29 @@ namespace GN
                 }
                 else
                 {
-                    static Logger * sLogger = GetLogger("GN.base.Matrix44");
+                    static Logger * sLogger = getLogger("GN.base.Matrix44");
                     GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
                 }
             }
         }
-        Vector3<T> TransformPoint( const Vector3<T> & src ) const
+        Vector3<T> transformPoint( const Vector3<T> & src ) const
         {
 			Vector3<T> dst;
-			TransformPoint( dst, src );
+			transformPoint( dst, src );
 			return dst;
         }
         ///
         /// transform a vector by this matrix
         ///
         /// This function treads input vector as (x, y, z, 0).
-        /// To transform an normal, you should use InvTrans of the desired matrix.
+        /// To transform an normal, you should use invtrans of the desired matrix.
         ///
-        void TransformVector( Vector3<T> & dst, const Vector3<T> & src ) const
+        void transformVector( Vector3<T> & dst, const Vector3<T> & src ) const
         {
             if( &dst == &src )
             {
                 Vector3<T> tmp;
-                TransformVector( tmp, src );
+                transformVector( tmp, src );
                 dst = tmp;
             }
             else
@@ -1606,30 +1607,16 @@ namespace GN
                 dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z;
             }
         }
-        Vector3<T> TransformVector( const Vector3<T> & src ) const
+        Vector3<T> transformVector( const Vector3<T> & src ) const
         {
             Vector3<T> dst;
-			TransformVector( dst, src );
+			transformVector( dst, src );
             return dst;
         }
-        void Print( StrA & ) const;
-        StrA Print() const { StrA s; Print(s); return s; }
+        void print( StrA & ) const;
+        StrA print() const { StrA s; print(s); return s; }
 
         //@}
-
-    private:
-
-        ///
-        /// Swap 2 elements
-        ///
-        template<typename T>
-        static inline void Swap( T & a, T & b )
-        {
-            T tmp;
-            tmp = a;
-            a = b;
-            b = tmp;
-        }
     };
 
     ///
@@ -1742,7 +1729,7 @@ namespace GN
     public:
 
         template<typename T2>
-        void Set( T2 x_, T2 y_, T2 z_, T2 w_ )
+        void set( T2 x_, T2 y_, T2 z_, T2 w_ )
         {
             v.x = (T)x_;
             v.y = (T)y_;
@@ -1751,12 +1738,12 @@ namespace GN
         }
 
         /// 归一化
-        Quaternion & Identity()
+        Quaternion & identity()
         {
-            w = ((T)1.0); v.Set(0, 0, 0); return *this;
+            w = ((T)1.0); v.set(0, 0, 0); return *this;
         }
 
-        /// Identity quaternion
+        /// identity quaternion
         static Quaternion sIdentity()
         {
             return Quaternion( (T)0, (T)0, (T)0, (T)1 );
@@ -1765,16 +1752,16 @@ namespace GN
         ///
         /// get norm
         ///
-        T GetNormal() const
+        T getNormal() const
         {
             return w * w + Vector3<T>::dot( v, v );
         }
         ///
-        /// Normalize a quaternion
+        /// normalize a quaternion
         ///
-        Quaternion & Normalize()
+        Quaternion & normalize()
         {
-            T n = (T)sqrt( GetNormal() );
+            T n = (T)sqrt( getNormal() );
             if (n > ((T)0.0)) n = 1/n;
             else n = ((T)0.0);
 
@@ -1783,75 +1770,75 @@ namespace GN
             return *this;
         }
         ///
-        /// Normalize a quaternion
+        /// normalize a quaternion
         ///
         static void sNormalize( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
-            dst.Normalize();
+            dst.normalize();
         }
         ///
-        /// Normalize a quaternion
+        /// normalize a quaternion
         ///
         static Quaternion sNormalize( const Quaternion & src )
         {
             Quaternion r(src);
-            r.Normalize();
+            r.normalize();
             return r;
         }
         ///
-        /// Conjugate (共扼)
+        /// conjugate (共扼)
         ///
-        Quaternion & Conjugate()
+        Quaternion & conjugate()
         {
             v = -v; return *this;
         }
         ///
-        /// Conjugate
+        /// conjugate
         ///
         static void sConjugate( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
-            dst.Conjugate();
+            dst.conjugate();
         }
         ///
-        /// Conjugate
+        /// conjugate
         ///
         static Quaternion sConjugate( const Quaternion & src )
         {
             Quaternion r(src);
-            r.Conjugate();
+            r.conjugate();
             return r;
         }
         ///
-        /// Inverse
+        /// inverse
         ///
-        Quaternion & Inverse()
+        Quaternion & inverse()
         {
-            T l = GetNormal();
+            T l = getNormal();
 
             if (l > ((T)0.0))
-            { this->Conjugate(); v /= l; w /= l; }
+            { this->conjugate(); v /= l; w /= l; }
             else
-            { w = ((T)0.0); v.Set(0, 0, 0); }
+            { w = ((T)0.0); v.set(0, 0, 0); }
 
             return *this;
         }
         ///
-        /// Inverse
+        /// inverse
         ///
         static void sInvert( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
-            dst.Inverse();
+            dst.inverse();
         }
         ///
-        /// Inverse
+        /// inverse
         ///
         static Quaternion sInverse( const Quaternion & src )
         {
             Quaternion r(src);
-            r.Inverse();
+            r.inverse();
             return r;
         }
         ///
@@ -1861,7 +1848,7 @@ namespace GN
         /// \param angle Angle of rotation, in radians
         ///
         Quaternion &
-        FromRotation( const Vector3<T> & axis, const T angle )
+        fromRotation( const Vector3<T> & axis, const T angle )
         {
             T r = angle / (T)2.0;
             v = axis * sin(r);
@@ -1874,7 +1861,7 @@ namespace GN
         ///
         /// \note v1 and v2 should be <b>UNIT</b> vectors
         ///
-        Quaternion & FromArc( const Vector3<T> & v1, const Vector3<T> & v2 )
+        Quaternion & fromArc( const Vector3<T> & v1, const Vector3<T> & v2 )
         {
             T  d = Vector3<T>::sDot( v1, v2 );
             T  s = (T)sqrt( ( 1 + d ) * 2 );
@@ -1892,7 +1879,7 @@ namespace GN
         ///
         /// \param pitch, yaw, roll   Euler angles in radians
         ///
-        Quaternion & FromEuler( T pitch,
+        Quaternion & fromEuler( T pitch,
                                 T yaw,
                                 T roll )
         {
@@ -1902,7 +1889,7 @@ namespace GN
             float sp = sin( pitch / (T)2.0 );
             float cr = cos( roll / (T)2.0 );
             float sr = sin( roll / (T)2.0 );
-            v.Set( cr * sp * cy + sr * cp * sy,
+            v.set( cr * sp * cy + sr * cp * sy,
                    cr * cp * sy - sr * sp * cy,
                    sr * cp * cy - cr * sp * sy );
             w =    cr * cp * cy + sr * sp * sy;
@@ -1911,38 +1898,38 @@ namespace GN
         ///
         /// construct from euler angles
         ///
-        Quaternion & FromEuler( const Vector3<T> & euler )
+        Quaternion & fromEuler( const Vector3<T> & euler )
         {
-            return FromEuler( euler.x, euler.y, euler.z );
+            return fromEuler( euler.x, euler.y, euler.z );
         }
         ///
         /// construct from matrix33
         ///
-        Quaternion & FromMatrix33( const Matrix33<T> & mat );
+        Quaternion & fromMatrix33( const Matrix33<T> & mat );
         ///
         /// convert to matrix33
         ///
-        void ToMatrix33( Matrix33<T> & out ) const;
+        void toMatrix33( Matrix33<T> & out ) const;
         ///
         /// convert to matrix33
         ///
         Matrix33<T> toMatrix33() const
         {
 			Matrix33<T> out;
-			ToMatrix33( out );
+			toMatrix33( out );
 			return out;
         }
         ///
         /// convert to matrix44
         ///
-        void ToMatrix44( Matrix44<T> & out ) const;
+        void toMatrix44( Matrix44<T> & out ) const;
         ///
         /// convert to matrix33
         ///
-        Matrix44<T> ToMatrix44() const
+        Matrix44<T> toMatrix44() const
         {
 			Matrix44<T> out;
-			ToMatrix44( out );
+			toMatrix44( out );
 			return out;
         }
     };
@@ -1975,13 +1962,13 @@ namespace GN
         Plane3( const Plane3 & p ) : n(p.n), d(p.d) {}
         Plane3( const Vector3<T> & point, const Vector3<T> & normal )
         {
-            FromPointNormal( point, normal );
+            fromPointNormal( point, normal );
         }
         Plane3( const Vector3<T> & v1,
                    const Vector3<T> & v2,
                    const Vector3<T> & v3 )
         {
-            FromPoints( v1, v2, v3 );
+            fromPoints( v1, v2, v3 );
         }
         //@}
 
@@ -2059,16 +2046,16 @@ namespace GN
         ///
         /// update plane parameters
         ///
-        Plane3 & Set( T a_, T b_, T c_, T d_ )
+        Plane3 & set( T a_, T b_, T c_, T d_ )
         {
-            n.Set( a_, b_, c_ );
+            n.set( a_, b_, c_ );
             d = d_;
             return *this;
         }
         ///
         /// update plane parameters
         ///
-        Plane3 & Set( const Vector3<T> & n_, T d_ )
+        Plane3 & set( const Vector3<T> & n_, T d_ )
         {
             n = n_;
             d = d_;
@@ -2077,9 +2064,9 @@ namespace GN
         ///
         /// Normalize the plane (so that |a,b,c| == 1)
         ///
-        Plane3 & Normalize()
+        Plane3 & normalize()
         {
-            T f = n.Length();
+            T f = n.length();
             if( f ) { n /= f; d /= f; }
             return *this;
         }
@@ -2089,7 +2076,7 @@ namespace GN
         static void sNormalize( Plane3 & dst, const Plane3 & src )
         {
             dst = src;
-            dst.Normalize();
+            dst.normalize();
             return dst;
         }
         ///
@@ -2098,13 +2085,13 @@ namespace GN
         static Plane3 sNormalize( const Plane3 & src )
         {
             Plane3 r(src);
-            r.Normalize();
+            r.normalize();
             return r;
         }
         ///
         /// construct a plane from a point and a normal
         ///
-        Plane3 & FromPointNormal( const Vector3<T> & point,
+        Plane3 & fromPointNormal( const Vector3<T> & point,
                                   const Vector3<T> & normal )
         {
             n = normal;
@@ -2114,7 +2101,7 @@ namespace GN
         ///
         /// Construct a plane from 3 points
         ///
-        Plane3 & FromPoints( const Vector3<T> & v1,
+        Plane3 & fromPoints( const Vector3<T> & v1,
                              const Vector3<T> & v2,
                              const Vector3<T> & v3 )
         {
@@ -2125,14 +2112,14 @@ namespace GN
         ///
         /// treate plane as an 4-D vector
         ///
-        Vector4<T> & ToVec4()
+        Vector4<T> & toVec4()
         {
             return *reinterpret_cast<Vector4<T>*>(this);
         }
         ///
         /// treate plane as an 4-D vector
         ///
-        const Vector4<T> & ToVec4() const
+        const Vector4<T> & toVec4() const
         {
             return *reinterpret_cast<const Vector4<T>*>(this);
         }
@@ -2185,7 +2172,7 @@ namespace GN
         ///
         /// Set rectangle values
         ///
-        Rect & Set( T x_, T y_, T w_, T h_ )
+        Rect & set( T x_, T y_, T w_, T h_ )
         {
             x = x_;
             y = y_;
@@ -2194,37 +2181,37 @@ namespace GN
             return *this;
         }
         ///
-        /// Get rectangle Origin
+        /// Get rectangle origin
         ///
-        const PointType & Origin() const
+        const PointType & origin() const
         {
             return *reinterpret_cast<const PointType*>(this);
         }
         ///
-        /// get rectangle Origin
+        /// get rectangle origin
         ///
-        PointType & Origin()
+        PointType & origin()
         {
             return *reinterpret_cast<PointType*>(this);
         }
         ///
-        /// get rectangle Size
+        /// get rectangle size
         ///
-        const PointType & Size() const
+        const PointType & size() const
         {
             return *reinterpret_cast<const PointType*>(&w);
         }
         ///
-        /// get rectangle Size
+        /// get rectangle size
         ///
-        PointType & Size()
+        PointType & size()
         {
             return *reinterpret_cast<PointType*>(&w);
         }
         ///
         /// Check if the point is inside the rectangle
         ///
-        bool Contain( const PointType & p ) const
+        bool contain( const PointType & p ) const
         {
             return
                 ( ( (w >= 0) && x <= p.x && p.x < (x + w) )
@@ -2238,7 +2225,7 @@ namespace GN
         ///
         /// Normalize the rectangle
         ///
-        Rect & Normalize()
+        Rect & normalize()
         {
             if( w < 0 )
             {
@@ -2253,20 +2240,20 @@ namespace GN
             return *this;
         }
         ///
-        /// Get Normalize rectangle
+        /// Get normalize rectangle
         ///
         static void sNormalize( Rect<T> & dst, const Rect<T> & src )
         {
 			dst = src;
-            dst.Normalize();
+            dst.normalize();
         }
         ///
-        /// Get Normalize rectangle
+        /// Get normalize rectangle
         ///
         static Rect<T> sNormalize( const Rect<T> & src )
         {
             Rect<T> dst(src);
-            dst.Normalize();
+            dst.normalize();
             return dst;
         }
     };
@@ -2293,7 +2280,7 @@ namespace GN
         typedef Vector3<T> PointType;
 
         ///
-        /// Box position and Size
+        /// Box position and size
         //@{
         T x, y, z, w, h, d;
         //@}
@@ -2308,7 +2295,7 @@ namespace GN
         ///
         Box() {}
         ///
-        /// construct from position and Size
+        /// construct from position and size
         ///
         Box( T x_, T y_, T z_, T w_, T h_, T d_ )
             : x(x_), y(y_), z(z_) , w(w_), h(h_), d(d_)
@@ -2375,37 +2362,37 @@ namespace GN
         ///
         /// return box position
         ///
-        const PointType & Pos() const { return *(const PointType*)this; }
+        const PointType & pos() const { return *(const PointType*)this; }
 
         ///
         /// return box position
         ///
-        PointType & Pos() { return *(PointType*)this; }
+        PointType & pos() { return *(PointType*)this; }
 
         ///
-        /// return box Size
+        /// return box size
         ///
-        const PointType & Size() const { return *(const PointType*)&w; }
+        const PointType & size() const { return *(const PointType*)&w; }
 
         ///
-        /// return box Size
+        /// return box size
         ///
-        PointType & Size() { return *(PointType*)&w; }
+        PointType & size() { return *(PointType*)&w; }
 
         ///
-        /// return box Center
+        /// return box center
         ///
-        PointType Center() const { return Pos() + Size() / (T)2.0; }
+        PointType center() const { return pos() + size() / (T)2.0; }
 
         ///
-        /// return box Center
+        /// return box center
         ///
-        void Center( PointType & out ) const { out = Pos() + Size() / (T)2.0; }
+        void center( PointType & out ) const { out = pos() + size() / (T)2.0; }
 
         ///
         /// return the maximum axis. 0 for W, 1 for H, 2 for D.
         ///
-        int GetTheLongestAxis() const
+        int theLongestAxis() const
         {
             if( w < h )
             {
@@ -2420,15 +2407,15 @@ namespace GN
         ///
         /// from two points
         ///
-        void FromPoints( const PointType & v1, const PointType & v2 )
+        void fromPoints( const PointType & v1, const PointType & v2 )
         {
-            Pos() = v1;
-            Size() = v2 - v1;
+            pos() = v1;
+            size() = v2 - v1;
         }
         ///
-        /// Normalization (that is, positive Size)
+        /// Normalization (that is, positive size)
         ///
-        Box & Normalize()
+        Box & normalize()
         {
             if( w < 0 ) { x += w; w = -w; }
             if( h < 0 ) { y += h; h = -h; }
@@ -2441,7 +2428,7 @@ namespace GN
         static void sNormalize( Box & dst, const Box & src )
         {
 			dst = src;
-            dst.Normalize();
+            dst.normalize();
         }
         ///
         /// normalization (store result into another variable)
@@ -2449,17 +2436,17 @@ namespace GN
         static Box sNormalize( const Box & src )
         {
             Box dst(src);
-            dst.Normalize();
+            dst.normalize();
             return dst;
         }
         ///
         /// Return true if point is inside the box.
         ///
-        bool ContainsPoint( const PointType & v )
+        bool checkPoint( const PointType & v )
         {
             Box b;
 
-            Normalize( b, *this );
+            normalize( b, *this );
 
             return b.x <= v.x && v.x < (b.x+b.w)
                 && b.y <= v.y && v.y < (b.y+b.h)
@@ -2481,14 +2468,14 @@ namespace GN
             else
             {
                 Box a(b1), b(b2);
-                a.Normalize();
-                b.Normalize();
-                result.x = math::GetMin( a.x, b.x );
-                result.y = math::GetMin( a.y, b.y );
-                result.z = math::GetMin( a.z, b.z );
-                result.w = math::GetMax( a.x+a.w, b.x+b.w ) - result.x;
-                result.h = math::GetMax( a.y+a.h, b.y+b.h ) - result.y;
-                result.d = math::GetMax( a.z+a.d, b.z+b.d ) - result.z;
+                a.normalize();
+                b.normalize();
+                result.x = math::getmin( a.x, b.x );
+                result.y = math::getmin( a.y, b.y );
+                result.z = math::getmin( a.z, b.z );
+                result.w = math::getmax( a.x+a.w, b.x+b.w ) - result.x;
+                result.h = math::getmax( a.y+a.h, b.y+b.h ) - result.y;
+                result.d = math::getmax( a.z+a.d, b.z+b.d ) - result.z;
             }
         }
     };
@@ -2529,8 +2516,8 @@ namespace GN
         /// construct from a box
         ///
         explicit Sphere( const Box<T> & b )
-            : center( b.Center() )
-            , radius( (b.vmax-b.vmin).Length() / (T)2.0 )
+            : center( b.center() )
+            , radius( (b.vmax-b.vmin).length() / (T)2.0 )
         {}
         //@}
 
@@ -2555,9 +2542,9 @@ namespace GN
     public :
 
         ///
-        /// value Set
+        /// value set
         ///
-        Sphere & Set( const Vector3<T> & c, T r )
+        Sphere & set( const Vector3<T> & c, T r )
         {
             center = c; radius = r;
             return *this;
@@ -2615,7 +2602,7 @@ namespace GN
     ///
     /// Calculate bounding sphere.
     ///
-    void CalculateBoundingSphere(
+    void calculateBoundingSphere(
         Spheref & result,
         const float * x, size_t strideX,
         const float * y, size_t strideY,
@@ -2625,17 +2612,17 @@ namespace GN
     ///
     /// Calculate bounding sphere.
     ///
-    void CalculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count );
+    void calculateBoundingSphere( Spheref & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 
     ///
     /// Calculate bounding sphere.
     ///
-    void CalculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox );
+    void calculateBoundingSphereFromBoundingBox( Spheref & result, const Boxf & bbox );
 
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void CalculateBoundingBox(
+    void calculateBoundingBox(
         Boxf & result,
         const float * x, size_t strideX,
         const float * y, size_t strideY,
@@ -2645,7 +2632,7 @@ namespace GN
     ///
     /// Calculate axis aligned bounding box.
     ///
-    void CalculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
+    void calculateBoundingBox( Boxf & result, const Vector3f * positions, size_t strideInBytes, size_t count );
 }
 
 // *****************************************************************************

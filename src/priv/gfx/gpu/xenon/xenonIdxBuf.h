@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonIdxBuf( XenonGpu & r ) : XenonResource(r) { Clear(); }
-        virtual ~XenonIdxBuf() { Quit(); }
+        XenonIdxBuf( XenonGpu & r ) : XenonResource(r) { clear(); }
+        virtual ~XenonIdxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const IdxBufDesc & desc );
-        void Quit();
+        bool init( const IdxBufDesc & desc );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mIb = 0;
         }
@@ -48,8 +48,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void Readback( DynaArray<UInt8> & data );
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions
@@ -57,7 +57,7 @@ namespace GN { namespace gfx
     public:
 
         /// return pointer to D3D buffer
-        IDirect3DIndexBuffer9 * GetD3DBuffer() const { return mIb; }
+        IDirect3DIndexBuffer9 * getD3DBuffer() const { return mIb; }
 
         // ********************************
         // private variables

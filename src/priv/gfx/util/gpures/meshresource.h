@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( MeshResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { Clear(); }
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
@@ -45,11 +45,11 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool  Reset( const MeshResourceDesc * desc );
-        const MeshResourceDesc & GetDesc() const { return mDesc; }
-        void  ApplyToContext( GpuContext & context ) const;
-        void  CalculateBoundingBox( Box<float> & ) const;
-        void  CalculateBoundingSphere( Sphere<float> & ) const;
+        bool  reset( const MeshResourceDesc * desc );
+        const MeshResourceDesc & getDesc() const { return mDesc; }
+        void  applyToContext( GpuContext & context ) const;
+        void  calculateBoundingBox( Box<float> & ) const;
+        void  calculateBoundingSphere( Sphere<float> & ) const;
 
         // ********************************
         // private variables
@@ -76,11 +76,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
-        const char *          meshName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
+        GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
+        const char *          meshName() const { return mOwner.getGdb().getResourceName( &mOwner ); }
 
         bool create( const MeshResourceDesc & desc );
-        void Clear();
+        void clear();
     };
 
     ///

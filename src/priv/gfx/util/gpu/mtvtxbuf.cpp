@@ -2,7 +2,7 @@
 #include "mtvtxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtvtxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtvtxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,23 +11,23 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtvtxbuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadVtxBuf::Init( VtxBuf * vb )
+bool GN::gfx::MultiThreadVtxBuf::init( VtxBuf * vb )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadVtxBuf, () );
 
-    if( NULL == vb ) return Failure();
+    if( NULL == vb ) return failure();
 
     mVtxBuf = vb;
 
-    const VtxBufDesc & desc = mVtxBuf->GetDesc();
+    const VtxBufDesc & desc = mVtxBuf->getDesc();
 
-    SetDesc( desc );
+    setDesc( desc );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -35,7 +35,7 @@ bool GN::gfx::MultiThreadVtxBuf::Init( VtxBuf * vb )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::Quit()
+void GN::gfx::MultiThreadVtxBuf::quit()
 {
     GN_GUARD;
 
@@ -45,7 +45,7 @@ void GN::gfx::MultiThreadVtxBuf::Quit()
         mVtxBuf = NULL;
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -58,14 +58,14 @@ void GN::gfx::MultiThreadVtxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
-        length = GetDesc().length - offset;
+        length = getDesc().length - offset;
     }
 
-    void * tmpbuf = HeapMemory::Alloc( length );
+    void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -79,7 +79,7 @@ void GN::gfx::MultiThreadVtxBuf::Update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadVtxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::MultiThreadVtxBuf::readback( DynaArray<UInt8> & data )
 {
     mGpu.postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
 }
@@ -96,7 +96,7 @@ namespace GN { namespace gfx
     void func_VTXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         VtxBuf * vb = *(VtxBuf**)p;
-        vb->DecRef();
+        vb->decref();
     }
 
     //
@@ -115,9 +115,9 @@ namespace GN { namespace gfx
 
         VtxBufUpdateParam * vbup = (VtxBufUpdateParam*)p;
 
-        vbup->vtxbuf->Update( vbup->offset, vbup->length, vbup->data, vbup->flag );
+        vbup->vtxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        HeapMemory::Free( vbup->data );
+        HeapMemory::dealloc( vbup->data );
     }
 
     //
@@ -132,6 +132,6 @@ namespace GN { namespace gfx
         };
         VtxBufReadBackParam * vbrp = (VtxBufReadBackParam*)p;
 
-        vbrp->vb->Readback( *vbrp->buf );
+        vbrp->vb->readback( *vbrp->buf );
      }
 }}

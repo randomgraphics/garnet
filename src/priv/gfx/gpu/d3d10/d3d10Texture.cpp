@@ -2,7 +2,7 @@
 #include "d3d10Gpu.h"
 #include "d3d10Texture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // local functions
@@ -87,7 +87,7 @@ sDetermineTextureDimension( const GN::gfx::TextureDesc & desc )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D10Texture::Init( const TextureDesc & desc )
+bool GN::gfx::D3D10Texture::init( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -95,10 +95,10 @@ bool GN::gfx::D3D10Texture::Init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D10Texture, () );
 
     // create device data
-    if( !SetDesc( desc ) || !CreateTexture() ) return Failure();
+    if( !setDesc( desc ) || !createTexture() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -106,16 +106,16 @@ bool GN::gfx::D3D10Texture::Init( const TextureDesc & desc )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::Quit()
+void GN::gfx::D3D10Texture::quit()
 {
     GN_GUARD;
 
-    mSRViews.Clear();
-    mRTViews.Clear();
-    mDSViews.Clear();
-    SafeRelease( mTexture );
+    mSRViews.clear();
+    mRTViews.clear();
+    mDSViews.clear();
+    safeRelease( mTexture );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -128,7 +128,7 @@ void GN::gfx::D3D10Texture::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::UpdateMipmap(
+void GN::gfx::D3D10Texture::updateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -140,9 +140,9 @@ void GN::gfx::D3D10Texture::UpdateMipmap(
     Box<UInt32> clippedArea;
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
-    const TextureDesc & desc = GetDesc();
+    const TextureDesc & texdesc = getDesc();
 
-    if( TextureUsage::FAST_CPU_WRITE == desc.usage )
+    if( TextureUsage::FAST_CPU_WRITE == texdesc.usage )
     {
         GN_TODO( "Updating dynamic texture is not implemented yet." );
     }
@@ -153,8 +153,8 @@ void GN::gfx::D3D10Texture::UpdateMipmap(
         const dxgi::DXGI_FORMAT_DESCRIPTION & fmtdesc = dxgi::getDXGIFormatDesc( mTextureFormat );
 
         // align width and heigh to texel block boundary
-        clippedArea.w = math::AlignToPowerOf2<UInt32>( clippedArea.w, fmtdesc.blockWidth );
-        clippedArea.h = math::AlignToPowerOf2<UInt32>( clippedArea.h, fmtdesc.blockHeight );
+        clippedArea.w = math::alignToPowerOf2<UInt32>( clippedArea.w, fmtdesc.blockWidth );
+        clippedArea.h = math::alignToPowerOf2<UInt32>( clippedArea.h, fmtdesc.blockHeight );
 
         D3D10_BOX box =
         {
@@ -168,7 +168,7 @@ void GN::gfx::D3D10Texture::UpdateMipmap(
 
         dev.UpdateSubresource(
             mTexture,
-            D3D10CalcSubresource( (UInt32)level, (UInt32)face, desc.levels ),
+            D3D10CalcSubresource( (UInt32)level, (UInt32)face, texdesc.levels ),
             &box,
             data,
             (UInt32)(rowPitch * fmtdesc.blockHeight),
@@ -179,7 +179,7 @@ void GN::gfx::D3D10Texture::UpdateMipmap(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::ReadMipmap(
+void GN::gfx::D3D10Texture::readMipmap(
     size_t       /*face*/,
     size_t       /*level*/,
     MipmapData & /*data*/ )
@@ -266,7 +266,7 @@ GN::gfx::D3D10Texture::getSRView(
 
     AutoComPtr<ID3D10ShaderResourceView> & srv = mSRViews[srvdesc];
 
-    if( srv.Empty() )
+    if( srv.empty() )
     {
         ID3D10Device & dev = getDeviceRef();
 
@@ -283,7 +283,7 @@ ID3D10RenderTargetView *
 GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 {
     // must be a color render target texture
-    GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == GetDesc().usage );
+    GN_ASSERT( TextureUsage::COLOR_RENDER_TARGET == getDesc().usage );
 
     D3D10_RENDER_TARGET_VIEW_DESC rtvdesc;
     memset( &rtvdesc, 0, sizeof(rtvdesc) );
@@ -365,7 +365,7 @@ GN::gfx::D3D10Texture::getRTView( UInt32 face, UInt32 level, UInt32 slice )
 
     AutoComPtr<ID3D10RenderTargetView> & rtv = mRTViews[rtvdesc];
 
-    if( rtv.Empty() )
+    if( rtv.empty() )
     {
         ID3D10Device & dev = getDeviceRef();
 
@@ -382,7 +382,7 @@ ID3D10DepthStencilView *
 GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 {
     // must be a depth texture
-    GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == GetDesc().usage );
+    GN_ASSERT( TextureUsage::DEPTH_RENDER_TARGET == getDesc().usage );
 
     D3D10_DEPTH_STENCIL_VIEW_DESC dsvdesc;
     memset( &dsvdesc, 0, sizeof(dsvdesc) );
@@ -455,7 +455,7 @@ GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 
     AutoComPtr<ID3D10DepthStencilView> & dsv = mDSViews[dsvdesc];
 
-    if( dsv.Empty() )
+    if( dsv.empty() )
     {
         ID3D10Device & dev = getDeviceRef();
 
@@ -472,20 +472,20 @@ GN::gfx::D3D10Texture::getDSView( UInt32 face, UInt32 level, UInt32 slice )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D10Texture::CreateTexture()
+bool GN::gfx::D3D10Texture::createTexture()
 {
     GN_GUARD;
 
     GN_ASSERT( !mTexture );
 
-    const TextureDesc & desc = GetDesc();
+    const TextureDesc & texdesc = getDesc();
 
     // determine texture formats
-    if( TextureUsage::DEPTH_RENDER_TARGET == desc.usage )
+    if( TextureUsage::DEPTH_RENDER_TARGET == texdesc.usage )
     {
         // special case for depth texture
 
-        mTextureFormat = dxgi::getDXGIFormatDesc( (DXGI_FORMAT)ColorFormat2DxgiFormat( desc.format ) ).typelessFormat;
+        mTextureFormat = dxgi::getDXGIFormatDesc( (DXGI_FORMAT)colorFormat2DxgiFormat( texdesc.format ) ).typelessFormat;
         mReadingFormat = sGetDepthReadingFormat( mTextureFormat );
         mWritingFormat = sGetDepthWritingFormat( mTextureFormat );
         if( DXGI_FORMAT_UNKNOWN == mTextureFormat ||
@@ -498,7 +498,7 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     }
     else
     {
-        mReadingFormat = (DXGI_FORMAT)ColorFormat2DxgiFormat( desc.format );
+        mReadingFormat = (DXGI_FORMAT)colorFormat2DxgiFormat( texdesc.format );
         mTextureFormat = mReadingFormat;
         mWritingFormat = mReadingFormat;
         if( DXGI_FORMAT_UNKNOWN == mReadingFormat )
@@ -512,7 +512,7 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     D3D10_USAGE usage = D3D10_USAGE_DEFAULT;
     UINT        caf   = 0;
     UINT        bf    = D3D10_BIND_SHADER_RESOURCE;
-    switch( desc.usage )
+    switch( texdesc.usage )
     {
         case TextureUsage::DEFAULT:
             // nothing to do
@@ -537,7 +537,7 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     }
 
     // determine texture dimension
-    mDimension = sDetermineTextureDimension( desc );
+    mDimension = sDetermineTextureDimension( texdesc );
 
     // determine cube flag
     UINT mf = 0;
@@ -550,9 +550,9 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     {
         ID3D10Texture1D * tex1d;
         D3D10_TEXTURE1D_DESC desc1d;
-        desc1d.Width = desc.width;
-        desc1d.MipLevels = desc.levels;
-        desc1d.ArraySize = desc.faces;
+        desc1d.Width = texdesc.width;
+        desc1d.MipLevels = texdesc.levels;
+        desc1d.ArraySize = texdesc.faces;
         desc1d.Format = mTextureFormat;
         desc1d.Usage = usage;
         desc1d.BindFlags = bf;
@@ -567,10 +567,10 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     {
         ID3D10Texture2D * tex2d;
         D3D10_TEXTURE2D_DESC desc2d;
-        desc2d.Width = desc.width;
-        desc2d.Height = desc.height;
-        desc2d.MipLevels = desc.levels;
-        desc2d.ArraySize = desc.faces;
+        desc2d.Width = texdesc.width;
+        desc2d.Height = texdesc.height;
+        desc2d.MipLevels = texdesc.levels;
+        desc2d.ArraySize = texdesc.faces;
         desc2d.Format = mTextureFormat;
         desc2d.SampleDesc.Count = 1;
         desc2d.SampleDesc.Quality = 0;
@@ -585,10 +585,10 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     {
         ID3D10Texture3D * tex3d;
         D3D10_TEXTURE3D_DESC desc3d;
-        desc3d.Width = desc.width;
-        desc3d.Height = desc.height;
-        desc3d.Depth = desc.depth;
-        desc3d.MipLevels = desc.levels;
+        desc3d.Width = texdesc.width;
+        desc3d.Height = texdesc.height;
+        desc3d.Depth = texdesc.depth;
+        desc3d.MipLevels = texdesc.levels;
         desc3d.Format = mTextureFormat;
         desc3d.Usage = usage;
         desc3d.BindFlags = bf;
@@ -605,10 +605,10 @@ bool GN::gfx::D3D10Texture::CreateTexture()
     }
 
     // calculate mipmap sizes
-    Vector3<UInt32> mipSize( desc.width, desc.height, desc.depth );
-    for( size_t i = 0; i < desc.levels; ++i )
+    Vector3<UInt32> mipSize( texdesc.width, texdesc.height, texdesc.depth );
+    for( size_t i = 0; i < texdesc.levels; ++i )
     {
-        SetMipSize( i, mipSize );
+        setMipSize( i, mipSize );
         if( mipSize.x > 1 ) mipSize.x >>= 1;
         if( mipSize.y > 1 ) mipSize.y >>= 1;
         if( mipSize.z > 1 ) mipSize.z >>= 1;

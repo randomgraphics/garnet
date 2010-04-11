@@ -24,8 +24,8 @@ namespace GN
 
         //@{
     public:
-        CECImplXenon()          { Clear(); }
-        virtual ~CECImplXenon() { Quit(); }
+        CECImplXenon()          { clear(); }
+        virtual ~CECImplXenon() { quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN
 
         //@{
     public:
-        bool Init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
-        void Quit();
+        bool init( CharacterEncodingConverter::Encoding from, CharacterEncodingConverter::Encoding to );
+        void quit();
     private:
-        void Clear() { }
+        void clear() { }
         //@}
 
         // ********************************

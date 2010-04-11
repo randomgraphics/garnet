@@ -15,17 +15,17 @@ class LineRendererTest : public CxxTest::TestSuite
         LineRendererInitiator() : mGpu(NULL), mLine(NULL)
         {
             GN::gfx::GpuOptions ro;
-            mGpu = GN::gfx::CreateSingleThreadGpu( ro );
+            mGpu = GN::gfx::createSingleThreadGpu( ro );
             if( NULL == mGpu ) return;
 
             mLine = new GN::gfx::LineRenderer( *mGpu );
-            if( !mLine->Init() ) delete mLine, mLine = NULL;
+            if( !mLine->init() ) delete mLine, mLine = NULL;
         }
 
         ~LineRendererInitiator()
         {
             if( mLine ) delete mLine;
-            if( mGpu ) GN::gfx::DeleteGpu( mGpu );
+            if( mGpu ) GN::gfx::deleteGpu( mGpu );
         }
 
         operator bool() const { return NULL != mLine; }
@@ -40,6 +40,6 @@ public:
 
         GN::DynaArray<GN::Vector3f> positions( 513 );
 
-        l.mLine->DrawLines( positions.ToRawPtr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
+        l.mLine->drawLines( positions.cptr(), 0, 513, 0, GN::Matrix44f::sIdentity() );
     }
 };

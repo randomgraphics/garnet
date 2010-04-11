@@ -27,13 +27,13 @@ namespace CEGUI
     public:
         GarnetRenderer() : mQueueEnabled(true)
         {
-            gSigRendererRestore.Connect( this, &GarnetRenderer::onRendererRestore );
-            gSigRendererDispose.Connect( this, &GarnetRenderer::onRendererDispose );
+            gSigRendererRestore.connect( this, &GarnetRenderer::onRendererRestore );
+            gSigRendererDispose.connect( this, &GarnetRenderer::onRendererDispose );
         }
         virtual ~GarnetRenderer()
         {
-            gSigRendererRestore.Disconnect( this );
-            gSigRendererDispose.Disconnect( this );
+            gSigRendererRestore.disconnect( this );
+            gSigRendererDispose.disconnect( this );
             destroyAllTextures();
         }
         //@}
@@ -46,11 +46,11 @@ namespace CEGUI
         virtual const String & getIdentifierString() const { static const String id("GarnetRenderer"); return id; }
     	virtual	void           addQuad(const Rect& dest_rect, float z, const Texture* tex, const Rect& texture_rect, const ColourRect& colours, QuadSplitMode quad_split_mode);
     	virtual	void           doRender(void);
-    	virtual	void           clearRenderList(void) { mQuads.Clear(); }
+    	virtual	void           clearRenderList(void) { mQuads.clear(); }
     	virtual void           setQueueingEnabled(bool setting) { mQueueEnabled = setting; }
-    	virtual	Texture*       CreateTexture(void);
-    	virtual	Texture*       CreateTexture(const String& filename, const String& resourceGroup);
-    	virtual	Texture*       CreateTexture(float size);
+    	virtual	Texture*       createTexture(void);
+    	virtual	Texture*       createTexture(const String& filename, const String& resourceGroup);
+    	virtual	Texture*       createTexture(float size);
     	virtual	void           destroyTexture(Texture* texture);
     	virtual void           destroyAllTextures(void);
     	virtual bool           isQueueingEnabled(void) const { return mQueueEnabled; }
@@ -58,7 +58,7 @@ namespace CEGUI
     	virtual float          getHeight(void) const;
     	virtual Size           getSize(void) const;
     	virtual Rect           getRect(void) const;
-    	virtual	uint           getMaxTextureSize(void) const { return gRenderer.GetCaps( GN::gfx::CAPS_MAX_2D_TEXTURE_SIZE ); }
+    	virtual	uint           getMaxTextureSize(void) const { return gRenderer.getCaps( GN::gfx::CAPS_MAX_2D_TEXTURE_SIZE ); }
     	virtual	uint           getHorzScreenDPI(void) const { return 96; }
     	virtual	uint           getVertScreenDPI(void) const { return 96; }
 

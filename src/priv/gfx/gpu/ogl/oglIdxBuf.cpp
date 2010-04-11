@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglIdxBuf.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.IdxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.IdxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.IdxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
+bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -21,16 +21,16 @@ bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
     if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "invalid buffer length!" );
-        return Failure();
+        return failure();
     }
 
-    SetDesc( desc );
+    setDesc( desc );
 
     mBytesPerIndex = desc.bits32 ? 4 : 2;
-    mBuffer = (UInt8*)HeapMemory::Alloc( desc.numidx * mBytesPerIndex );
+    mBuffer = (UInt8*)HeapMemory::alloc( desc.numidx * mBytesPerIndex );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -38,13 +38,13 @@ bool GN::gfx::OGLIdxBuf::Init( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::Quit()
+void GN::gfx::OGLIdxBuf::quit()
 {
     GN_GUARD;
 
-    SafeHeapFree(mBuffer);
+    safeHeapFree(mBuffer);
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -57,11 +57,11 @@ void GN::gfx::OGLIdxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLIdxBuf::update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
@@ -75,13 +75,13 @@ void GN::gfx::OGLIdxBuf::Update( size_t startidx, size_t numidx, const void * da
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLIdxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLIdxBuf::readback( DynaArray<UInt8> & data )
 {
-    const IdxBufDesc & desc = GetDesc();
+    const IdxBufDesc & ibdesc = getDesc();
 
-    size_t lengthInBytes = desc.numidx * mBytesPerIndex;
+    size_t lengthInBytes = ibdesc.numidx * mBytesPerIndex;
 
-    data.Resize( lengthInBytes );
+    data.resize( lengthInBytes );
 
     memcpy( &data[0], mBuffer, lengthInBytes );
 }

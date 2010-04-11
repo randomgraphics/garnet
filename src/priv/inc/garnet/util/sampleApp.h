@@ -45,85 +45,85 @@ namespace GN { namespace util
             util::FontFaceCreationDesc ffc;               ///< default font face creation descriptor
         };
 
-        static float UPDATE_INTERVAL; ///< Time interval for calling OnUpdate(), in seconds.
+        static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
 
-        virtual int  Run( int argc, const char * const argv[] );
-        virtual bool OnCheckExtraCmdlineArguments( int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
-        virtual void OnPrintHelpScreen( const char * executableName );
-        virtual bool OnPreInit( InitParam & ) { return true; }
-        virtual bool OnInit() = 0;
-        virtual void OnQuit() = 0;
-        virtual void OnUpdate() = 0;
-        virtual void OnRender() = 0;
-        virtual void OnRenderWindowResize( HandleType /*window*/, UInt32 /*width*/, UInt32 /*height*/ ) {}
-        virtual void OnKeyPress( input::KeyEvent );
-        virtual void OnCharPress( wchar_t ) {}
-        virtual void OnAxisMove( input::Axis, int ) {}
+        virtual int  run( int argc, const char * const argv[] );
+        virtual bool onCheckExtraCmdlineArguments( int argc, const char * const argv[] ); // only non-standard/unknown arguments are passed to this function.
+        virtual void onPrintHelpScreen( const char * executableName );
+        virtual bool onPreInit( InitParam & ) { return true; }
+        virtual bool onInit() = 0;
+        virtual void onQuit() = 0;
+        virtual void onUpdate() = 0;
+        virtual void onRender() = 0;
+        virtual void onRenderWindowResize( HandleType /*window*/, UInt32 /*width*/, UInt32 /*height*/ ) {}
+        virtual void onKeyPress( input::KeyEvent );
+        virtual void onCharPress( wchar_t ) {}
+        virtual void onAxisMove( input::Axis, int ) {}
 
         ///
         /// Draw X/Y/Z coordinate axes onto screen
         ///
-        void DrawXYZCoordinateAxes( const Matrix44f & projViewWorld );
+        void drawXYZCoordinateAxes( const Matrix44f & projViewWorld );
 
         ///
         /// print standard command line options to console screen
         ///
-        void PrintStandardCommandLineOptions();
+        void printStandardCommandLineOptions();
 
         ///
         /// post exit event. Application will exit at the beginning of next frame.
         ///
-        void PostExitEvent() { mDone = true; }
+        void postExitEvent() { mDone = true; }
 
 		///
 		/// show HUD or not?
 		///
-		void ShowHUD( bool show ) { mShowHUD = show; }
+		void showHUD( bool show ) { mShowHUD = show; }
 
         ///
         /// Return time in seconds since application starts
         ///
-        double GetCurrentTime() const { return mFps.GetCurrentTime(); }
+        double currentTime() const { return mFps.currentTime(); }
 
         ///
         /// Return time in seconds of the last frame
         ///
-        double GetLastFrameTime() const { return mLastFrameTime; }
+        double lastFrameTime() const { return mLastFrameTime; }
 
         ///
-        /// Return time in seconds since last call to OnUpdate()
+        /// Return time in seconds since last call to onUpdate()
         ///
-        double GetTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
+        double timeElapsedSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
         ///
         /// get the FPS
         ///
-        float GetFps() const { return mFps.GetFps(); }
+        float fps() const { return mFps.fps(); }
 
         ///
         /// get reference to renderer
         ///
-        gfx::Gpu & GetGpu() const { GN_ASSERT(mGpu); return *mGpu; }
+        gfx::Gpu & getGpu() const { GN_ASSERT(mGpu); return *mGpu; }
 
         ///
         /// get reference to GPU resource database
         ///
-        gfx::GpuResourceDatabase & GetGdb() const { GN_ASSERT(mGpuResourceDatabase); return *mGpuResourceDatabase; }
+        gfx::GpuResourceDatabase & getGdb() const { GN_ASSERT(mGpuResourceDatabase); return *mGpuResourceDatabase; }
 
         ///
         /// get refernece to the world
         ///
-        util::World & GetWorld() const { GN_ASSERT(mWorld); return *mWorld; }
+        util::World & getWorld() const { GN_ASSERT(mWorld); return *mWorld; }
 
         ///
         /// get sprite renderer
         ///
-        gfx::SpriteRenderer & GetSpriteRenderer() const { GN_ASSERT( mSpriteRenderer ); return *mSpriteRenderer; }
+        gfx::SpriteRenderer & spriteRenderer() const { GN_ASSERT( mSpriteRenderer ); return *mSpriteRenderer; }
 
         ///
         /// get font renderer
         ///
-        util::BitmapFont & GetFont() { return mFont; }
+        util::BitmapFont & font() { return mFont; }
 
         //@}
 
@@ -156,16 +156,17 @@ namespace GN { namespace util
         // ********************************
     private:
 
-        bool Init( int argc, const char *  const argv[] );
-        void Quit();
-        bool CheckCmdLine( int argc, const char * const argv[] );
-        bool InitGpu();
-        void QuitGpu();
-        bool InitInput();
-        void QuitInput();
-        bool InitFont();
-        void QuitFont();
-        void DrawHUD();
+        bool init( int argc, const char *  const argv[] );
+        void quit();
+        bool checkCmdLine( int argc, const char * const argv[] );
+        bool initGpu();
+        void quitGpu();
+        bool recreateGpu();
+        bool initInput();
+        void quitInput();
+        bool initFont();
+        void quitFont();
+        void drawHUD();
     };
 }}
 

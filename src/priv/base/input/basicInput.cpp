@@ -9,9 +9,9 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::KeyEvent GN::input::BasicInput::PopLastKeyEvent()
+GN::input::KeyEvent GN::input::BasicInput::popLastKeyEvent()
 {
-    mKeyEventQueueMutex.Lock();
+    mKeyEventQueueMutex.lock();
 
     KeyEvent k;
 
@@ -25,7 +25,7 @@ GN::input::KeyEvent GN::input::BasicInput::PopLastKeyEvent()
         mKeyEventQueue.pop();
     }
 
-    mKeyEventQueueMutex.Unlock();
+    mKeyEventQueueMutex.unlock();
 
     return k;
 }
@@ -44,7 +44,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     // ignore redundant keyup(s)
     if( keydown == mKeyboardStatus[code].down ) return;
 
-    //GN_TRACE( "Key press: %s %s", KeyCode2String(code), keydown?"down":"up" );
+    //GN_TRACE( "Key press: %s %s", keyCode2String(code), keydown?"down":"up" );
 
     // 更新状态键的标志
     mKeyFlags.down = keydown;
@@ -61,13 +61,13 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     mKeyboardStatus[code] = k.status;
 
     //update last key event
-    mKeyEventQueueMutex.Lock();
+    mKeyEventQueueMutex.lock();
     if( mKeyEventQueue.size() >= 32 ) // buffer 32 key events
     {
         mKeyEventQueue.pop();
     }
     mKeyEventQueue.push( k );
-    mKeyEventQueueMutex.Unlock();
+    mKeyEventQueueMutex.unlock();
 
     // 触发按键信号
     sigKeyPress( k );
@@ -85,16 +85,16 @@ void GN::input::BasicInput::triggerCharPress( char ch )
     if( (unsigned char)ch < 128 )
     {
         // ASCII character
-        //GN_TRACE( "Char press: %s", StrA(&ch,1).ToRawPtr() );
+        //GN_TRACE( "Char press: %s", StrA(&ch,1).cptr() );
         sigCharPress( ch );
     }
     else if( mHalfWideChar )
     {
         mHalfBytes[1] = ch;
         wchar_t wch[2];
-        Mbs2Wcs( wch, 2, mHalfBytes, 2 );
+        mbs2wcs( wch, 2, mHalfBytes, 2 );
 
-        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).ToRawPtr() );
+        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).cptr() );
         sigCharPress( wch[0] );
 
         // 清除“半字符”标志

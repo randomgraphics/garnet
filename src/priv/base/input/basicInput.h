@@ -28,9 +28,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        KeyEvent PopLastKeyEvent();
-        const KeyStatus * GetKeyboardStatus() const { return mKeyboardStatus; }
-        const int * GetAxisStatus() const { return mAxisStatus; }
+        KeyEvent popLastKeyEvent();
+        const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
+        const int * getAxisStatus() const { return mAxisStatus; }
 
         // ********************************
         //     custom protected functions

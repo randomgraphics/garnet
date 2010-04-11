@@ -2,7 +2,7 @@
 
 #if GN_POSIX
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.Thread");
+static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
 
@@ -23,8 +23,8 @@ class ThreadX11 : public Thread, public StdClass
 
     //@{
 public:
-    ThreadX11()          { Clear(); }
-    virtual ~ThreadX11() { Quit(); }
+    ThreadX11()          { clear(); }
+    virtual ~ThreadX11() { quit(); }
     //@}
 
     // ********************************
@@ -49,14 +49,14 @@ public:
         if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority." );
-            return Failure();
+            return failure();
         }
 
         GN_UNIMPL_WARNING();
 
         // success
         mAttached = false;
-        return Success();
+        return success();
 
         GN_UNGUARD;
     }
@@ -72,12 +72,12 @@ public:
 
         // success
         mAttached = true;
-        return Success();
+        return success();
 
         GN_UNGUARD;
     }
 
-    void Quit()
+    void quit()
     {
         GN_GUARD;
 
@@ -86,19 +86,19 @@ public:
         if( !mAttached /*&& mHandle*/ )
         {
             // wait for thread termination
-            WaitForTermination( INFINITE_TIME, 0 );
+            waitForTermination( INFINITE_TIME, 0 );
 
             // TODO: close thread handle
         }
 
-        // standard Quit procedure
+        // standard quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 
 private:
-    void Clear()
+    void clear()
     {
         mAttached = false;
     }
@@ -109,12 +109,12 @@ private:
     // ********************************
 public:
 
-    virtual ThreadPriority GetPriority() const
+    virtual ThreadPriority getPriority() const
     {
         return mPriority;
     }
 
-    virtual void SetPriority( ThreadPriority p )
+    virtual void setPriority( ThreadPriority p )
     {
         if( p < 0 || p >= NUM_THREAD_PRIORITIES )
         {
@@ -127,31 +127,31 @@ public:
         mPriority = p;
     }
 
-    virtual void SetAffinity( UInt32 hardwareThread )
+    virtual void setAffinity( UInt32 hardwareThread )
     {
         GN_UNIMPL_WARNING();
     }
 
-    bool IsCurrentThread() const
+    bool isCurrentThread() const
     {
         GN_UNIMPL_WARNING();
         return true;
     }
 
-    virtual void Suspend()
+    virtual void suspend()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual void Resume()
+    virtual void resume()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool WaitForTermination( float seconds, UInt32 * threadProcReturnValue )
+    virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
     {
         // can't wait for self termination
-        GN_ASSERT( !IsCurrentThread() );
+        GN_ASSERT( !isCurrentThread() );
 
         GN_UNIMPL_WARNING();
 
@@ -204,7 +204,7 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::Thread *
-GN::NewThread(
+GN::createThread(
     const ThreadProcedure & proc,
     void                  * param,
     ThreadPriority          priority,
@@ -217,7 +217,7 @@ GN::NewThread(
 
     if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -225,7 +225,7 @@ GN::NewThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SleepCurrentThread( float seconds )
+void GN::sleepCurrentThread( float seconds )
 {
     GN_UNIMPL_WARNING();
 }
@@ -233,15 +233,15 @@ void GN::SleepCurrentThread( float seconds )
 //
 //
 // -----------------------------------------------------------------------------
-Thread * GN::GenerateCurrentThreadObject()
+Thread * GN::generateCurrentThreadObject()
 {
     GN_GUARD;
 
     AutoObjPtr<ThreadX11> s( new ThreadX11 );
 
-    if( !s->Attach() ) return 0;
+    if( !s->attach() ) return 0;
 
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -249,7 +249,7 @@ Thread * GN::GenerateCurrentThreadObject()
 //
 //
 // -----------------------------------------------------------------------------
-SInt32 GN::GetCurrentThreadIdentifier()
+SInt32 GN::getCurrentThreadId()
 {
     GN_UNIMPL_WARNING();
     return 0;

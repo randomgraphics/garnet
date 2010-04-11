@@ -110,10 +110,10 @@ bool GN::gfx::D3D10Gpu::contextInit()
 
     // create render target manager
     mRTMgr = new D3D10RTMgr( *this );
-    if( !mRTMgr->Init() ) return false;
+    if( !mRTMgr->init() ) return false;
 
     // bind default context
-    RebindContext();
+    rebindContext();
 
     // success
     return true;
@@ -133,15 +133,15 @@ void GN::gfx::D3D10Gpu::contextQuit()
         mDevice->ClearState();
     }
 
-    mContext.Clear();
+    mContext.clear();
 
-    SafeDelete( mRTMgr );
+    safeDelete( mRTMgr );
 
-    SafeDelete( mSOMgr );
+    safeDelete( mSOMgr );
 
-    mDefaultSampler.Clear();
+    mDefaultSampler.clear();
 
-    mVertexLayouts.Clear();
+    mVertexLayouts.clear();
 
     GN_UNGUARD;
 }
@@ -153,14 +153,14 @@ void GN::gfx::D3D10Gpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::BindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
+bool GN::gfx::D3D10Gpu::bindContextImpl( const GpuContext & newContext, bool skipDirtyCheck )
 {
     PIXPERF_FUNCTION_EVENT();
 
     //
     // Parameter check
     //
-    if( ParamCheckEnabled() )
+    if( paramCheckEnabled() )
     {
         // TODO: verify data in new context
         // TODO: make sure all fields in current context are valid.
@@ -237,10 +237,10 @@ inline bool GN::gfx::D3D10Gpu::bindContextRenderTarget(
         UInt32 r = newvp.x + newvp.w;
         UInt32 b = newvp.y + newvp.h;
 
-        math::ClampMinMax<UInt32>( l, 0, rtsize.width );
-        math::ClampMinMax<UInt32>( t, 0, rtsize.height );
-        math::ClampMinMax<UInt32>( r, 0, rtsize.width );
-        math::ClampMinMax<UInt32>( b, 0, rtsize.height );
+        math::clamp<UInt32>( l, 0, rtsize.width );
+        math::clamp<UInt32>( t, 0, rtsize.height );
+        math::clamp<UInt32>( r, 0, rtsize.width );
+        math::clamp<UInt32>( b, 0, rtsize.height );
 
         d3dvp.TopLeftX = l;
         d3dvp.TopLeftY = t;
@@ -273,8 +273,8 @@ inline bool GN::gfx::D3D10Gpu::bindContextShader(
     //
     if( newContext.gpuProgram )
     {
-        D3D10GpuProgram * newProg = (D3D10GpuProgram*)newContext.gpuProgram.Get();
-        D3D10GpuProgram * oldProg = (D3D10GpuProgram*)mContext.gpuProgram.Get();
+        D3D10GpuProgram * newProg = (D3D10GpuProgram*)newContext.gpuProgram.get();
+        D3D10GpuProgram * oldProg = (D3D10GpuProgram*)mContext.gpuProgram.get();
 
         // apply shader
         if( skipDirtyCheck || newProg != oldProg )
@@ -286,8 +286,8 @@ inline bool GN::gfx::D3D10Gpu::bindContextShader(
         GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
         // apply GPU program resources
-        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.ToRawPtr(), newContext.uniforms.Size(), skipDirtyCheck );
-        newProg->applyTextures( newContext.textures.ToRawPtr(), newContext.textures.Size(), skipDirtyCheck );
+        newProg->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
+        newProg->applyTextures( newContext.textures.cptr(), newContext.textures.size(), skipDirtyCheck );
     }
     else if( skipDirtyCheck || (NULL != mContext.gpuProgram) )
     {
@@ -410,7 +410,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
 
             if( NULL == layout->il )
             {
-                if( !layout->Init( *mDevice, newContext.vtxfmt ) ) return false;
+                if( !layout->init( *mDevice, newContext.vtxfmt ) ) return false;
             }
 
             mDevice->IASetInputLayout( layout->il );
@@ -433,7 +433,7 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
         {
             const VertexBufferBinding & b = newContext.vtxbufs[i];
 
-            buf[i]     = b.vtxbuf ? SafeCastPtr<const D3D10VtxBuf>(b.vtxbuf.Get())->GetD3DBuffer() : NULL;
+            buf[i]     = b.vtxbuf ? safeCastPtr<const D3D10VtxBuf>(b.vtxbuf.get())->getD3DBuffer() : NULL;
             strides[i] = b.stride;
             offsets[i] = b.offset;
         }
@@ -447,12 +447,12 @@ inline bool GN::gfx::D3D10Gpu::bindContextResource(
     {
         if( newContext.idxbuf )
         {
-            const D3D10IdxBuf * ib = (const D3D10IdxBuf*)newContext.idxbuf.Get();
+            const D3D10IdxBuf * ib = (const D3D10IdxBuf*)newContext.idxbuf.get();
 
-            const IdxBufDesc & ibdesc = ib->GetDesc();
+            const IdxBufDesc & ibdesc = ib->getDesc();
 
             mDevice->IASetIndexBuffer(
-                ib->GetD3DBuffer(),
+                ib->getD3DBuffer(),
                 ibdesc.bits32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT,
                 0 );
         }

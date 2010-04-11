@@ -18,7 +18,7 @@
 #include <windows.h>
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.UT");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.UT");
 
 ///
 /// namespace of CxxTest framework
@@ -31,7 +31,7 @@ namespace CxxTest
     ///
     bool equals<const char *, const char *>( const char * x, const char * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -40,7 +40,7 @@ namespace CxxTest
     ///
     bool equals<const char *, char *>( const char * x, char * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -49,7 +49,7 @@ namespace CxxTest
     ///
     bool equals<char *, const char *>( char * x, const char * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -58,7 +58,7 @@ namespace CxxTest
     ///
     bool equals<char *, char *>( char * x, char * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -67,7 +67,7 @@ namespace CxxTest
     ///
     bool equals<const wchar_t *, const wchar_t *>( const wchar_t * x, const wchar_t * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -76,7 +76,7 @@ namespace CxxTest
     ///
     bool equals<wchar_t *, const wchar_t *>( wchar_t * x, const wchar_t * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -85,7 +85,7 @@ namespace CxxTest
     ///
     bool equals<const wchar_t *, wchar_t *>( const wchar_t * x, wchar_t * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     CXXTEST_TEMPLATE_INSTANTIATION
@@ -94,7 +94,7 @@ namespace CxxTest
     ///
     bool equals<wchar_t *, wchar_t *>( wchar_t * x, wchar_t * y )
     {
-        return 0 == ::GN::StringCompare(x,y);
+        return 0 == ::GN::stringCompare(x,y);
     }
 
     ///
@@ -108,7 +108,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrA & t ) : s(t) {}
         /** convert to string */
-        const char *asString() const { return s.ToRawPtr(); }
+        const char *asString() const { return s.cptr(); }
     };
 
     ///
@@ -120,9 +120,9 @@ namespace CxxTest
         GN::StrA s;
     public:
         /** ctor */
-        ValueTraits( const GN::StrW & t ) : s(GN::Wcs2Mbs(t)) {}
+        ValueTraits( const GN::StrW & t ) : s(GN::wcs2mbs(t)) {}
         /** convert to string */
-        const char *asString() const { return s.ToRawPtr(); }
+        const char *asString() const { return s.cptr(); }
     };
 
     ///
@@ -134,9 +134,9 @@ namespace CxxTest
         GN::StrA s;
     public:
         /** ctor */
-        ValueTraits( const wchar_t * t ) : s(GN::Wcs2Mbs(t,0)) {}
+        ValueTraits( const wchar_t * t ) : s(GN::wcs2mbs(t,0)) {}
         /** convert to string */
-        const char *asString() const { return s.ToRawPtr(); }
+        const char *asString() const { return s.cptr(); }
     };
 }
 

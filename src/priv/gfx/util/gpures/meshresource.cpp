@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // GN::gfx::VertexFormatProperties - public methods
@@ -31,7 +31,7 @@ bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
 
         size_t currentStride = minStrides[e.stream];
 
-        size_t newStride = e.offset + e.format.GetBytesPerBlock();
+        size_t newStride = e.offset + e.format.getBytesPerBlock();
 
         if( newStride > currentStride ) minStrides[e.stream] = newStride;
     }
@@ -46,14 +46,14 @@ bool GN::gfx::VertexFormatProperties::analyze( const VertexFormat & vf )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResource::Impl::Reset( const MeshResourceDesc * desc )
+bool GN::gfx::MeshResource::Impl::reset( const MeshResourceDesc * desc )
 {
-    Clear();
+    clear();
 
     bool ok;
     if( desc && !create( *desc ) )
     {
-        Clear();
+        clear();
         ok = false;
     }
     else
@@ -70,7 +70,7 @@ bool GN::gfx::MeshResource::Impl::Reset( const MeshResourceDesc * desc )
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::ApplyToContext( GpuContext & context ) const
+GN::gfx::MeshResource::Impl::applyToContext( GpuContext & context ) const
 {
     // vertex format
     context.vtxfmt = mDesc.vtxfmt;
@@ -92,7 +92,7 @@ GN::gfx::MeshResource::Impl::ApplyToContext( GpuContext & context ) const
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::CalculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResource::Impl::calculateBoundingBox( Box<float> & box ) const
 {
     MeshResourceDesc desc = mDesc;
 
@@ -101,20 +101,20 @@ GN::gfx::MeshResource::Impl::CalculateBoundingBox( Box<float> & box ) const
     {
         if( mVtxBufs[i].gpudata )
         {
-            mVtxBufs[i].gpudata->Readback( buffers[i] );
+            mVtxBufs[i].gpudata->readback( buffers[i] );
         }
 
-        desc.vertices[i] = buffers[i].ToRawPtr();
+        desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
     }
 
-    desc.CalculateBoundingBox( box );
+    desc.calculateBoundingBox( box );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::Impl::CalculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResource::Impl::calculateBoundingSphere( Sphere<float> & sphere ) const
 {
     MeshResourceDesc desc = mDesc;
 
@@ -123,13 +123,13 @@ GN::gfx::MeshResource::Impl::CalculateBoundingSphere( Sphere<float> & sphere ) c
     {
         if( mVtxBufs[i].gpudata )
         {
-            mVtxBufs[i].gpudata->Readback( buffers[i] );
+            mVtxBufs[i].gpudata->readback( buffers[i] );
         }
 
-        desc.vertices[i] = buffers[i].Empty() ? NULL : &buffers[i][0];
+        desc.vertices[i] = buffers[i].empty() ? NULL : &buffers[i][0];
     }
 
-    desc.CalculateBoundingSphere( sphere );
+    desc.calculateBoundingSphere( sphere );
 }
 
 // *****************************************************************************
@@ -148,7 +148,7 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     // store descriptor
     mDesc = desc;
 
-    Gpu & gpu = GetGdb().GetGpu();
+    Gpu & gpu = getGdb().getGpu();
 
     // initialize vertex buffers
     if( desc.numvtx > 0 )
@@ -180,12 +180,12 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
 
             // create GPU vertex buffer
             VtxBufDesc vbdesc = { vbsize, desc.dynavb };
-            mVtxBufs[i].gpudata.Attach( gpu.CreateVtxBuf( vbdesc ) );
+            mVtxBufs[i].gpudata.attach( gpu.createVtxBuf( vbdesc ) );
             if( NULL == mVtxBufs[i].gpudata ) return false;
 
             // copy vertices to vertex buffer
             const void * vertices = desc.vertices[i];
-            if( vertices ) mVtxBufs[i].gpudata->Update( 0, 0, vertices );
+            if( vertices ) mVtxBufs[i].gpudata->update( 0, 0, vertices );
         }
     }
 
@@ -193,10 +193,10 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
     if( desc.numidx > 0 )
     {
         IdxBufDesc ibd = { (UInt32)desc.numidx, desc.idx32, desc.dynaib };
-        mIdxBuf.gpudata.Attach( gpu.CreateIdxBuf( ibd ) );
+        mIdxBuf.gpudata.attach( gpu.createIdxBuf( ibd ) );
         if( NULL == mIdxBuf.gpudata ) return false;
 
-        if( desc.indices ) mIdxBuf.gpudata->Update( 0, 0, desc.indices );
+        if( desc.indices ) mIdxBuf.gpudata->update( 0, 0, desc.indices );
     }
 
     // clear data pointers in stored decriptor
@@ -210,14 +210,14 @@ bool GN::gfx::MeshResource::Impl::create( const MeshResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MeshResource::Impl::Clear()
+void GN::gfx::MeshResource::Impl::clear()
 {
     for( size_t i = 0; i < GN_ARRAY_COUNT(mVtxBufs); ++i )
     {
-        mVtxBufs[i].gpudata.Clear();
+        mVtxBufs[i].gpudata.clear();
     }
 
-    mIdxBuf.gpudata.Clear();
+    mIdxBuf.gpudata.clear();
 }
 
 // *****************************************************************************
@@ -247,11 +247,11 @@ public:
 // -----------------------------------------------------------------------------
 bool GN::gfx::registerMeshResourceFactory( GpuResourceDatabase & db )
 {
-    if( db.HasResourceFactory( MeshResource::GetGuid() ) ) return true;
+    if( db.hasResourceFactory( MeshResource::guid() ) ) return true;
 
     GpuResourceFactory factory = { &MeshResourceInternal::sCreateInstance };
 
-    return db.RegisterResourceFactory( MeshResource::GetGuid(), "Mesh Resource", factory );
+    return db.registerResourceFactory( MeshResource::guid(), "Mesh Resource", factory );
 }
 
 // *****************************************************************************
@@ -279,7 +279,7 @@ GN::gfx::MeshResource::~MeshResource()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::MeshResource::GetGuid()
+const Guid & GN::gfx::MeshResource::guid()
 {
     static const Guid MESH_GUID = { 0x892f15d5, 0x8e56, 0x4982, { 0x83, 0x1a, 0xc7, 0x1a, 0x11, 0x20, 0x4e, 0x4a } };
     return MESH_GUID;
@@ -289,7 +289,7 @@ const Guid & GN::gfx::MeshResource::GetGuid()
 //
 // -----------------------------------------------------------------------------
 AutoRef<MeshResource>
-GN::gfx::MeshResource::LoadFromFile(
+GN::gfx::MeshResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -300,23 +300,23 @@ GN::gfx::MeshResource::LoadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<MeshResource> m( db.FindResource<MeshResource>( filename ) );
+    AutoRef<MeshResource> m( db.findResource<MeshResource>( filename ) );
     if( m ) return m;
 
     // convert to full (absolute) path
-    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path
-    m = db.FindResource<MeshResource>( filename );
+    m = db.findResource<MeshResource>( filename );
     if( m ) return m;
 
     MeshResourceDesc desc;
-    AutoRef<Blob> blob = desc.LoadFromFile( filename );
+    AutoRef<Blob> blob = desc.loadFromFile( filename );
     if( !blob ) return AutoRef<MeshResource>::NULLREF;
 
-    m = db.CreateResource<MeshResource>( abspath );
-    if( !m || !m->Reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
+    m = db.createResource<MeshResource>( abspath );
+    if( !m || !m->reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
 
     return m;
 }
@@ -324,43 +324,43 @@ GN::gfx::MeshResource::LoadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResource::Reset( const MeshResourceDesc * desc )
+bool GN::gfx::MeshResource::reset( const MeshResourceDesc * desc )
 {
-    return mImpl->Reset( desc );
+    return mImpl->reset( desc );
 }
 
 
 //
 //
 // -----------------------------------------------------------------------------
-const MeshResourceDesc & GN::gfx::MeshResource::GetDesc() const
+const MeshResourceDesc & GN::gfx::MeshResource::getDesc() const
 {
-    return mImpl->GetDesc();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void
-GN::gfx::MeshResource::ApplyToContext( GpuContext & context ) const
-{
-    mImpl->ApplyToContext( context );
+    return mImpl->getDesc();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::CalculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResource::applyToContext( GpuContext & context ) const
 {
-    return mImpl->CalculateBoundingBox( box );
+    mImpl->applyToContext( context );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResource::CalculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResource::calculateBoundingBox( Box<float> & box ) const
 {
-    return mImpl->CalculateBoundingSphere( sphere );
+    return mImpl->calculateBoundingBox( box );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::gfx::MeshResource::calculateBoundingSphere( Sphere<float> & sphere ) const
+{
+    return mImpl->calculateBoundingSphere( sphere );
 }

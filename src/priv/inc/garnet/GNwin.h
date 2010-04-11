@@ -32,21 +32,21 @@ namespace GN
             /// \name window properties
             //@{
 
-            virtual DisplayHandle GetDisplayHandle() const = 0;
-            virtual MonitorHandle GetMonitorHandle() const = 0;
-            virtual WindowHandle GetWindowHandle() const = 0;
-            virtual Vector2<size_t> GetClientSize() const = 0;
+            virtual DisplayHandle getDisplayHandle() const = 0;
+            virtual MonitorHandle getMonitorHandle() const = 0;
+            virtual WindowHandle getWindowHandle() const = 0;
+            virtual Vector2<size_t> getClientSize() const = 0;
 
             //@}
 
             /// \name window manipulation
             //@{
-            virtual void Show() = 0;
-            virtual void Hide() = 0;
-            virtual void Minimize() = 0;
-            virtual void MoveTo( int x, int y ) = 0;
-            virtual void SetClientSize( size_t clientWidth, size_t clientHeight ) = 0;
-            virtual void Repaint() = 0;
+            virtual void show() = 0;
+            virtual void hide() = 0;
+            virtual void minimize() = 0;
+            virtual void moveTo( int x, int y ) = 0;
+            virtual void setClientSize( size_t clientWidth, size_t clientHeight ) = 0;
+            virtual void repaint() = 0;
             //@}
 
             /// \name window events
@@ -55,20 +55,20 @@ namespace GN
             ///
             /// Run the application until the window is closed.
             ///
-            virtual void Run() = 0;
+            virtual void run() = 0;
 
             ///
             /// Run the application while there's events in event queue.
             ///
-            virtual void RunUntilNoNewEvents() = 0;
+            virtual void runUntilNoNewEvents() = 0;
 
             ///
             /// Step one event. Block the application if there's no event.
             ///
-            virtual void StepOneEvent() = 0;
+            virtual void stepOneEvent() = 0;
 
-            virtual void AttachEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
-            virtual void RemoveEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
+            virtual void attachEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
+            virtual void removeEventHandler( const StrA & eventName, const WindowEventHandler & ) = 0;
 
             //@}
         };
@@ -112,17 +112,17 @@ namespace GN
         ///
         /// Create window instance
         ///
-        Window * NewWindow( const WindowCreationParams & );
+        Window * createWindow( const WindowCreationParams & );
 
         ///
         /// Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
         ///
-        MonitorHandle GetMonitorByIndex( size_t );
+        MonitorHandle getMonitorByIndex( size_t );
 
         ///
         /// Process windows messages. No effects on platform other than MS Windows.
         ///
-        void ProcessWindowMessages( WindowHandle window, bool blockWhileMinized );
+        void processWindowMessages( WindowHandle window, bool blockWhileMinized );
     }
 }
 

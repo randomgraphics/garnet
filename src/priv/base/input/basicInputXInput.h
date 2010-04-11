@@ -37,7 +37,7 @@ namespace GN { namespace input
         //
         // inherited from Input
         //
-        void ProcessInputEvents();
+        void processInputEvents();
 
     };
 }}

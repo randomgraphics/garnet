@@ -3,17 +3,17 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.test.xml");
+static GN::Logger * sLogger = GN::getLogger("GN.test.xml");
 
 bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
     DiskFile fp;
 
-    if( !fp.Open( fs::ToNativeDiskFilePath(filename), "rt" ) ) return false;
+    if( !fp.open( fs::toNativeDiskFilePath(filename), "rt" ) ) return false;
 
-    if( !doc.Parse( xpr, fp ) )
+    if( !doc.parse( xpr, fp ) )
     {
-        GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.ToRawPtr() );
+        GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
         return false;
     }
 
@@ -34,7 +34,7 @@ int main( int argc, const char * argv[] )
     if( doParse( doc, xpr, argv[1] ) )
     {
         StdFile fp(stdout);
-        doc.WriteToFile( fp, *xpr.root, 0 );
+        doc.writeToFile( fp, *xpr.root, 0 );
     }
 
     return 0;

@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( EffectResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { Clear(); }
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
@@ -38,22 +38,22 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool                          Reset( const EffectResourceDesc * desc );
+        bool                          reset( const EffectResourceDesc * desc );
 
-        size_t                        GetNumPasses() const { return mPasses.Size(); }
+        size_t                        numPasses() const { return mPasses.size(); }
 
-        size_t                        GetNumTextures() const { return mTextures.Size(); }
-        size_t                        FindTexture( const char * name ) const;
-        const TextureProperties     & GetTextureProperties( size_t i ) const { return mTextures[i]; }
+        size_t                        numTextures() const { return mTextures.size(); }
+        size_t                        findTexture( const char * name ) const;
+        const TextureProperties     & textureProperties( size_t i ) const { return mTextures[i]; }
 
-        size_t                        GetNumUniforms() const { return mUniforms.Size(); }
-        size_t                        FindUniform( const char * name ) const;
-        const UniformProperties     & GetUniformProperties( size_t i ) const { return mUniforms[i]; }
+        size_t                        numUniforms() const { return mUniforms.size(); }
+        size_t                        findUniform( const char * name ) const;
+        const UniformProperties     & uniformProperties( size_t i ) const { return mUniforms[i]; }
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      GetRenderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.Size() ); return mPasses[pass].renderstates; }
+                                      renderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
 
-        void                          ApplyToContext( size_t pass, GpuContext & gc ) const;
+        void                          applyToContext( size_t pass, GpuContext & gc ) const;
 
         // ********************************
         // private types
@@ -91,11 +91,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
-        const char *          effectName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
+        GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
+        const char *          effectName() const { return mOwner.getGdb().getResourceName( &mOwner ); }
 
-        bool Init( const EffectResourceDesc & desc );
-        void Clear();
+        bool init( const EffectResourceDesc & desc );
+        void clear();
 
         bool initGpuPrograms( const EffectResourceDesc & effectDesc );
 

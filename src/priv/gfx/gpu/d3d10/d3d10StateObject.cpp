@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d10StateObject.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // public methods

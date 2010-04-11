@@ -3,7 +3,7 @@
 
 #if GN_MSWIN
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local functions
@@ -181,7 +181,7 @@ bool GN::gfx::OGLGpu::dispInit()
 
     GN_ASSERT( !mRenderContext && !mDeviceContext );
 
-    HWND hwnd = (HWND)GetDispDesc().windowHandle;
+    HWND hwnd = (HWND)getDispDesc().windowHandle;
     if( !::IsWindow(hwnd) )
     {
         GN_ERROR(sLogger)( "Invalid render window handle!" );
@@ -201,7 +201,7 @@ bool GN::gfx::OGLGpu::dispInit()
     // init GLEW
     glewInit();
 
-    const GpuOptions & ro = GetOptions();
+    const GpuOptions & ro = getOptions();
 
     // modify fullscreen render window properties
     if( ro.fullscreen )
@@ -209,7 +209,7 @@ bool GN::gfx::OGLGpu::dispInit()
         // activate display mode
         if( !activateDisplayMode() ) return false;
 
-        const DispDesc & dd = GetDispDesc();
+        const DispDesc & dd = getDispDesc();
 
         HWND hwnd = (HWND)dd.windowHandle;
         HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
@@ -243,7 +243,7 @@ bool GN::gfx::OGLGpu::dispInit()
     // setup message hook
     if( ro.autoRestore )
     {
-        getRenderWindow().sigMessage.Connect( this, &OGLGpu::msgHook );
+        getRenderWindow().sigMessage.connect( this, &OGLGpu::msgHook );
     }
 
     // set swap interval
@@ -269,7 +269,7 @@ void GN::gfx::OGLGpu::dispQuit()
     GN_GUARD;
 
     // remove message hook
-    getRenderWindow().sigMessage.Disconnect( this );
+    getRenderWindow().sigMessage.disconnect( this );
 
     // restore display mode
     restoreDisplayMode();
@@ -283,7 +283,7 @@ void GN::gfx::OGLGpu::dispQuit()
 
     if( mDeviceContext )
     {
-        HWND hwnd = (HWND)GetDispDesc().windowHandle;
+        HWND hwnd = (HWND)getDispDesc().windowHandle;
         GN_ASSERT( ::IsWindow(hwnd) );
         ::ReleaseDC( hwnd, mDeviceContext );
         mDeviceContext = 0;
@@ -307,9 +307,9 @@ bool GN::gfx::OGLGpu::activateDisplayMode()
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
-    if( !GetOptions().fullscreen ) return true;
+    if( !getOptions().fullscreen ) return true;
 
-    const DispDesc & dd = GetDispDesc();
+    const DispDesc & dd = getDispDesc();
 
     // ignore message hook during this function call
     ScopeBool ignoreHook(mIgnoreMsgHook);
@@ -371,7 +371,7 @@ void GN::gfx::OGLGpu::restoreDisplayMode()
         // restore display mode
         if( DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0) )
         {
-            GN_ERROR(sLogger)( "Failed to restore display mode: %s!", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "Failed to restore display mode: %s!", getWin32LastErrorInfo() );
         }
 
         GN_INFO(sLogger)( "Display mode restored." );
@@ -389,18 +389,18 @@ void GN::gfx::OGLGpu::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GN_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
-    if( !GetOptions().fullscreen ) return;
+    if( !getOptions().fullscreen ) return;
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
     {
         if( wp )
         {
             activateDisplayMode();
-            ::ShowWindowAsync( (HWND)GetDispDesc().windowHandle, SW_NORMAL );
+            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_NORMAL );
         }
         else
         {
-            ::ShowWindowAsync( (HWND)GetDispDesc().windowHandle, SW_MINIMIZE );
+            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_MINIMIZE );
             restoreDisplayMode();
         }
     }

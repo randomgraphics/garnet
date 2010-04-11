@@ -5,7 +5,7 @@
 
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxFmt");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxFmt");
 
 // *****************************************************************************
 // Local classes and functions
@@ -32,7 +32,7 @@ static size_t inline sCalcNumStreams( const VertexFormat & vf )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::Init( const VertexFormat & format, const OGLBasicGpuProgram * program )
+bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuProgram * program )
 {
     GN_GUARD;
 
@@ -45,7 +45,7 @@ bool GN::gfx::OGLVtxFmt::Init( const VertexFormat & format, const OGLBasicGpuPro
     mValid = setupStateBindings();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -53,11 +53,11 @@ bool GN::gfx::OGLVtxFmt::Init( const VertexFormat & format, const OGLBasicGpuPro
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxFmt::Quit()
+void GN::gfx::OGLVtxFmt::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -76,7 +76,7 @@ bool GN::gfx::OGLVtxFmt::bindStates() const
 
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mStateBindings.Size(); ++i )
+    for( size_t i = 0; i < mStateBindings.size(); ++i )
     {
         const StateBinding & sb = mStateBindings[i];
         GN_ASSERT( sb.func );
@@ -101,7 +101,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
 
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mAttribBindings.Size(); ++i )
+    for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
         const AttribBinding & ab = mAttribBindings[i];
 
@@ -116,7 +116,7 @@ GN::gfx::OGLVtxFmt::bindBuffers(
         }
 
         const VertexBufferBinding & b = bindings[stream];
-        const OGLBasicVtxBuf * vb = SafeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.Get() );
+        const OGLBasicVtxBuf * vb = safeCastPtr<const OGLBasicVtxBuf>( b.vtxbuf.get() );
 
         const UInt8 * vtxdata = vb ? (const UInt8*)vb->getVtxData() : NULL;
         size_t       stride  = b.stride;
@@ -138,7 +138,7 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
 {
     if( !mValid ) return false;
 
-    for( size_t i = 0; i < mAttribBindings.Size(); ++i )
+    for( size_t i = 0; i < mAttribBindings.size(); ++i )
     {
         const AttribBinding & ab = mAttribBindings[i];
 
@@ -167,8 +167,8 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 {
     GN_GUARD;
 
-    UInt32 maxAttributes = GetGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = GetGpu().GetCaps().maxTextures;
+    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getGpu().caps().maxTextures;
 
     bool hasVertex = false;
     bool hasNormal = false;
@@ -180,7 +180,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 
     OGLVertexBindingDesc vbd;
 
-    mAttribBindings.Reserve( mFormat.numElements );
+    mAttribBindings.reserve( mFormat.numElements );
 
     for( size_t i = 0; i < mFormat.numElements; ++i )
     {
@@ -283,13 +283,13 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 break;
 
             default:
-                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.ToString().ToRawPtr() );
+                GN_ERROR(sLogger)( "unsupport vertex format: %s", e.format.toString().cptr() );
                 return false;
         }
 
         GN_ASSERT( ab.func );
 
-        mAttribBindings.Append( ab );
+        mAttribBindings.append( ab );
     }
 
     // ===================
@@ -302,37 +302,37 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     // position
     sb.func = hasVertex ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_VERTEX_ARRAY;
-    mStateBindings.Append( sb );
+    mStateBindings.append( sb );
 
     // normal
     sb.func = hasNormal ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_NORMAL_ARRAY;
-    mStateBindings.Append( sb );
+    mStateBindings.append( sb );
 
     // color0
     sb.func = hasColor0 ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_COLOR_ARRAY;
-    mStateBindings.Append( sb );
+    mStateBindings.append( sb );
 
     // color1
     if( GLEW_EXT_secondary_color )
     {
         sb.func = hasColor1 ? &sEnableClientState : &sDisableClientState;
         sb.info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
-        mStateBindings.Append( sb );
+        mStateBindings.append( sb );
     }
 
     // has fog
     sb.func = hasFog ? &sEnableClientState : &sDisableClientState;
     sb.info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
-    mStateBindings.Append( sb );
+    mStateBindings.append( sb );
 
     // vertex attributes
     for( UInt32 i = 0; i < maxAttributes; ++i )
     {
         sb.func = hasAttrib[i] ? &sEnableVAA : &sDisableVAA;
         sb.info.attribute = i;
-        mStateBindings.Append( sb );
+        mStateBindings.append( sb );
     }
 
     // texture coordinates
@@ -342,7 +342,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         sb.info.self     = this;
         sb.info.texStage = i;
         sb.info.semantic = GL_TEXTURE_COORD_ARRAY;
-        mStateBindings.Append( sb );
+        mStateBindings.append( sb );
     }
 
     // success
@@ -376,32 +376,32 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     // then try stanadard/predefined bindings
     //
 
-    UInt32 maxAttributes = GetGpu().getOGLCaps().maxVertexAttributes;
-    UInt32 maxTextures = GetGpu().GetCaps().maxTextures;
+    UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
+    UInt32 maxTextures = getGpu().caps().maxTextures;
 
-    if( ( 0 == StringCompareI( "position", bindingName ) ||
-          0 == StringCompareI( "pos", bindingName ) ||
-          0 == StringCompareI( "gl_vertex", bindingName ) )
+    if( ( 0 == stringCompareI( "position", bindingName ) ||
+          0 == stringCompareI( "pos", bindingName ) ||
+          0 == stringCompareI( "gl_vertex", bindingName ) )
         &&
         0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_VERTEX;
         vbd.index = 0;
     }
-    else if( ( 0 == StringCompareI( "attribute", bindingName ) ||
-               0 == StringCompareI( "VertexArrribute", bindingName ) )
+    else if( ( 0 == stringCompareI( "attribute", bindingName ) ||
+               0 == stringCompareI( "VertexArrribute", bindingName ) )
              &&
              bindingIndex < maxAttributes )
     {
         vbd.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
         vbd.index = bindingIndex;
     }
-    else if( (0 == StringCompareI( "normal", bindingName ) || 0 == StringCompareI( "nml", bindingName ) ) && 0 == bindingIndex )
+    else if( (0 == stringCompareI( "normal", bindingName ) || 0 == stringCompareI( "nml", bindingName ) ) && 0 == bindingIndex )
     {
         vbd.semantic = VERTEX_SEMANTIC_NORMAL;
         vbd.index = 0;
     }
-    else if( 0 == StringCompareI( "color", bindingName ) )
+    else if( 0 == stringCompareI( "color", bindingName ) )
     {
         if( 0 == bindingIndex )
         {
@@ -418,12 +418,12 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
             return false;
         }
     }
-    else if( 0 == StringCompareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
+    else if( 0 == stringCompareI( "fog", bindingName ) && GLEW_EXT_fog_coord )
     {
         vbd.semantic = VERTEX_SEMANTIC_FOG;
         vbd.index = 0;
     }
-    else if( 0 == StringCompareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
+    else if( 0 == stringCompareI( "texcoord", bindingName ) && bindingIndex < maxTextures )
     {
         vbd.semantic = VERTEX_SEMANTIC_TEXCOORD;
         vbd.index = bindingIndex;
@@ -515,7 +515,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
     const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( info.self );
-    OGLGpu & r = info.self->GetGpu();
+    OGLGpu & r = info.self->getGpu();
     r.chooseClientTextureStage( info.index );
     GN_OGL_CHECK( glTexCoordPointer(
         info.components,
@@ -569,13 +569,13 @@ void GN::gfx::OGLVtxFmt::sDisableVAA( const StateBindingInfo & info )
 void GN::gfx::OGLVtxFmt::sEnableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->GetGpu().chooseClientTextureStage( info.texStage );
+    info.self->getGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }
 //
 void GN::gfx::OGLVtxFmt::sDisableTexArray( const StateBindingInfo & info )
 {
     GN_ASSERT( info.self );
-    info.self->GetGpu().chooseClientTextureStage( info.texStage );
+    info.self->getGpu().chooseClientTextureStage( info.texStage );
     GN_OGL_CHECK( glDisableClientState( GL_TEXTURE_COORD_ARRAY ) );
 }

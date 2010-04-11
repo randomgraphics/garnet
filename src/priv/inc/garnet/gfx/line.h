@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        LineRenderer( Gpu & r ) : mGpu(r) { Clear(); }
-        virtual ~LineRenderer() { Quit(); }
+        LineRenderer( Gpu & r ) : mGpu(r) { clear(); }
+        virtual ~LineRenderer() { quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear() { mLines = 0; mBatchingModeEnabled = true; }
+        void clear() { mLines = 0; mBatchingModeEnabled = true; }
         //@}
 
         // ********************************
@@ -45,12 +45,12 @@ namespace GN { namespace gfx
         ///
         /// Enable/Disable batch rendering mode. It is enabled by default.
         ///
-        void EnableBatchRendering( bool enabled ) { Flush(); mBatchingModeEnabled = enabled; }
+        void setBatchRenderingEnable( bool enabled ) { flush(); mBatchingModeEnabled = enabled; }
 
         ///
         /// draw line list
         ///
-        void DrawLines(
+        void drawLines(
             const void *      positions, // 3D positions
             size_t            stride,    // position buffer stride. 0 for default stride (3 floats).
             size_t            numpoints,
@@ -60,7 +60,7 @@ namespace GN { namespace gfx
         ///
         /// submit any pending line drawing requests to renderer
         ///
-        void Flush();
+        void flush();
 
         // ********************************
         // private variables
@@ -86,10 +86,10 @@ namespace GN { namespace gfx
 
         Gpu        & mGpu;
         GpuContext   mContext;
-        Line       * mLines;
-        Line       * mNextPendingLine;
-        Line       * mNextFreeLine;
-        bool         mBatchingModeEnabled;
+        Line            * mLines;
+        Line            * mNextPendingLine;
+        Line            * mNextFreeLine;
+        bool              mBatchingModeEnabled;
 
         // ********************************
         // private functions

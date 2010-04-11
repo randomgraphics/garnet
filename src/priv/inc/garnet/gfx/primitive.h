@@ -27,7 +27,7 @@ namespace GN { namespace gfx
         };
 
         /// conver to string
-        const char * ToString() const
+        const char * toString() const
         {
             static const char * TABLE[]=
             {
@@ -49,13 +49,13 @@ namespace GN { namespace gfx
         /// convert from string
         static PrimitiveType sFromString( const char * s )
         {
-            if( 0 == StringCompareI( "POINT_LIST", s ) ) return POINT_LIST;
-            else if( 0 == StringCompareI( "LINE_LIST", s ) ) return LINE_LIST;
-            else if( 0 == StringCompareI( "LINE_STRIP", s ) ) return LINE_STRIP;
-            else if( 0 == StringCompareI( "TRIANGLE_LIST", s ) ) return TRIANGLE_LIST;
-            else if( 0 == StringCompareI( "TRIANGLE_STRIP", s ) ) return TRIANGLE_STRIP;
-            else if( 0 == StringCompareI( "QUAD_LIST", s ) ) return QUAD_LIST;
-            else if( 0 == StringCompareI( "RECT_LIST", s ) ) return RECT_LIST;
+            if( 0 == stringCompareI( "POINT_LIST", s ) ) return POINT_LIST;
+            else if( 0 == stringCompareI( "LINE_LIST", s ) ) return LINE_LIST;
+            else if( 0 == stringCompareI( "LINE_STRIP", s ) ) return LINE_STRIP;
+            else if( 0 == stringCompareI( "TRIANGLE_LIST", s ) ) return TRIANGLE_LIST;
+            else if( 0 == stringCompareI( "TRIANGLE_STRIP", s ) ) return TRIANGLE_STRIP;
+            else if( 0 == stringCompareI( "QUAD_LIST", s ) ) return QUAD_LIST;
+            else if( 0 == stringCompareI( "RECT_LIST", s ) ) return RECT_LIST;
             else return INVALID;
         }
 
@@ -72,7 +72,7 @@ namespace GN { namespace gfx
     /// \param numvert  vertex count
     /// \return         primitive count
     ///
-    inline size_t CalcPrimitiveCount( PrimitiveType pt, size_t numvert )
+    inline size_t calcPrimitiveCount( PrimitiveType pt, size_t numvert )
     {
         GN_GUARD_SLOW;
 
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             case PrimitiveType::RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
             default             :
                 {
-                    static Logger * sLogger = GetLogger("GN.gfx.misc");
+                    static Logger * sLogger = getLogger("GN.gfx.misc");
                     GN_ERROR(sLogger)( "Invalid primitive type!" );
                 }
                 return 0;
@@ -102,7 +102,7 @@ namespace GN { namespace gfx
     /// \param numprim  primitive count
     /// \return         vertex count
     ///
-    inline size_t CalcVertexCount( PrimitiveType pt, size_t numprim )
+    inline size_t calcVertexCount( PrimitiveType pt, size_t numprim )
     {
         GN_GUARD_SLOW;
         switch( pt )
@@ -116,7 +116,7 @@ namespace GN { namespace gfx
             case PrimitiveType::RECT_LIST      : return numprim * 3;
             default :
                 {
-                    static Logger * sLogger = GetLogger("GN.gfx.misc");
+                    static Logger * sLogger = getLogger("GN.gfx.misc");
                     GN_ERROR(sLogger)( "Invalid primitive type!" );
                 }
                 return 0;

@@ -74,13 +74,13 @@ namespace GN
         ///
         ~FixSizedRawMemoryPool()
         {
-            FreeAll();
+            freeAll();
         }
 
         ///
         /// make sure a valid pointer belongs to this pool
         ///
-        bool Check( const void * p ) const
+        bool check( const void * p ) const
         {
             if( 0 == p ) return false;
 
@@ -92,28 +92,28 @@ namespace GN
         ///
         /// Allocate raw memory for one item
         ///
-        void * Alloc()
+        void * alloc()
         {
             if( MAX_ITEMS > 0 && mItemCount == MAX_ITEMS )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of pool memory!" );
                 return 0;
             }
 
             if( 0 == mFreeItems )
             {
                 // no free items. create new block
-                Block * b = (Block*)HeapMemory::Alloc( sizeof(Block) );
+                Block * b = (Block*)HeapMemory::alloc( sizeof(Block) );
                 if( 0 == b )
                 {
-                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
                     return 0;
                 }
-                b->items = (Item*)HeapMemory::Alloc( sizeof(Item) * mNewBlockSize );
+                b->items = (Item*)HeapMemory::alloc( sizeof(Item) * mNewBlockSize );
                 if( 0 == b )
                 {
-                    GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
-                    HeapMemory::Free( b );
+                    GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "out of heap memory!" );
+                    HeapMemory::dealloc( b );
                     return 0;
                 }
                 b->count = mNewBlockSize;
@@ -150,20 +150,20 @@ namespace GN
         ///
         /// Deallocate
         ///
-        void Dealloc( void * p )
+        void dealloc( void * p )
         {
             if( 0 == p ) return;
 
             Item * i = (Item*)p;
-            if( !Check(p) )
+            if( !check(p) )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "invalid pointer!" );
                 return;
             }
 
             if( 0 == mItemCount )
             {
-                GN_ERROR(GetLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"))( "input pointer is not belong to this pool!" );
                 return;
             }
 
@@ -182,15 +182,15 @@ namespace GN
         ///
         /// free all items
         ///
-        void FreeAll()
+        void freeAll()
         {
             Block * p;
             while( mBlocks )
             {
                 p = mBlocks;
                 mBlocks = mBlocks->next;
-                HeapMemory::Free( p->items );
-                HeapMemory::Free( p );
+                HeapMemory::dealloc( p->items );
+                HeapMemory::dealloc( p );
             }
             mBlocks = 0;
             mItems = 0;
@@ -201,12 +201,12 @@ namespace GN
         ///
         /// get first item in allocator
         ///
-        void * GetFirst() const { return mItems; }
+        void * getFirst() const { return mItems; }
 
         ///
         /// get next item in allocator
         ///
-        void * GetNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
+        void * getNext( const void * p ) const { GN_ASSERT(p); return ((Item*)p)->next; }
     };
 
     ///
@@ -214,14 +214,14 @@ namespace GN
     ///
     template<
         class  T,
-        class  RAW_MEMORY_POOL = FixSizedRawMemoryPool<sizeof(T)>>
+        class  RAW_MEMORY_POOL = FixSizedRawMemoryPool<sizeof(T)> >
     class ObjectPool
     {
         RAW_MEMORY_POOL mRawMem;
 
-        T * DoAlloc()
+        T * doAlloc()
         {
-            T * p = (T*)mRawMem.Alloc();
+            T * p = (T*)mRawMem.alloc();
             if( 0 == p ) return 0;
 
             // construct the object, using defualt constructor
@@ -231,7 +231,7 @@ namespace GN
             return p;
         }
 
-        void DoDealloc( T * p )
+        void doDealloc( T * p )
         {
             if( 0 == p ) return;
 
@@ -239,19 +239,19 @@ namespace GN
             p->T::~T();
 
             // free p
-            mRawMem.Dealloc( p );
+            mRawMem.dealloc( p );
         }
 
-        void DoFreeAll()
+        void doFreeAll()
         {
             // destruct all objects
-            for( T * p = (T*)mRawMem.GetFirst(); 0 != p; p = (T*)mRawMem.GetNext(p) )
+            for( T * p = (T*)mRawMem.getFirst(); 0 != p; p = (T*)mRawMem.getNext(p) )
             {
                 p->T::~T();
             }
 
             // free memory
-            mRawMem.FreeAll();
+            mRawMem.freeAll();
         }
 
     public:
@@ -260,19 +260,19 @@ namespace GN
 
         ObjectPool() {}
 
-        ~ObjectPool() { DeconstructAndFreeAll(); }
+        ~ObjectPool() { deconstructAndFreeAll(); }
 
         //@}
 
         //@{
-        T  * AllocConstructed() { return DoAlloc(); }
-        T  * AllocUnconstructed() { return (T*)mRawMem.Alloc(); }
-        void DeconstructAndFree( void * p ) { DoDealloc( (T*)p ); }
-        void FreeWithoutDeconstruct( void * p ) { mRawMem.Dealloc( p ); }
-        void DeconstructAndFreeAll() { DoFreeAll(); }
-        bool Check( const T * p ) const { return mRawMem.Check( p ); }
-        T  * GetFirst() const { return (T*)mRawMem.GetFirst(); }
-        T  * GetNext( const T * p ) const { return (T*)mRawMem.GetNext(p); }
+        T  * allocConstructed() { return doAlloc(); }
+        T  * allocUnconstructed() { return (T*)mRawMem.alloc(); }
+        void deconstructAndFree( void * p ) { doDealloc( (T*)p ); }
+        void freeWithoutDeconstruct( void * p ) { mRawMem.dealloc( p ); }
+        void deconstructAndFreeAll() { doFreeAll(); }
+        bool check( const T * p ) const { return mRawMem.check( p ); }
+        T  * getFirst() const { return (T*)mRawMem.getFirst(); }
+        T  * getNext( const T * p ) const { return (T*)mRawMem.getNext(p); }
         //@}
     };
 }

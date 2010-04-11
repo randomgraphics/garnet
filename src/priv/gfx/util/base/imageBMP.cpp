@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "imageBMP.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // public functions
@@ -17,9 +17,9 @@ bool BMPReader::checkFormat( GN::File & fp )
     BMPHeader header;
 
     // read BMP header
-    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
     size_t sz;
-    if( !fp.Read( &header, sizeof(BMPHeader), &sz ) || sizeof(BMPHeader) != sz ) return false;
+    if( !fp.read( &header, sizeof(BMPHeader), &sz ) || sizeof(BMPHeader) != sz ) return false;
 
 #if GN_PPC
     header.swapEndian();
@@ -36,7 +36,7 @@ bool BMPReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool BMPReader::ReadHeader(
+bool BMPReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -84,15 +84,15 @@ bool BMPReader::ReadHeader(
     }
 
     // update o_desc
-	o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
+	o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width      = mHeader.infoHeader.width;
     m.height     = abs( mHeader.infoHeader.height );
     m.depth      = 1;
     m.rowPitch   = m.width * mOutputBytesPerPixel;
     m.slicePitch = m.rowPitch * m.height;
     m.levelPitch = m.slicePitch;
-    GN_ASSERT( o_desc.Valid() );
+    GN_ASSERT( o_desc.valid() );
 
     // success
     mImageSrc = i_buf + mHeader.fileHeader.offBits;
@@ -104,7 +104,7 @@ bool BMPReader::ReadHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool BMPReader::ReadImage( void * o_data ) const
+bool BMPReader::readImage( void * o_data ) const
 {
     GN_GUARD;
 
@@ -132,7 +132,7 @@ bool BMPReader::ReadImage( void * o_data ) const
                 for( size_t y = 0; y < height; ++y )
                 {
 #if GN_PPC
-                    GN::SwapEndian8In16( dst, src, width );
+                    GN::swap8in16( dst, src, width );
 #else
                     memcpy( dst, src, width * 2 );
 #endif
@@ -145,7 +145,7 @@ bool BMPReader::ReadImage( void * o_data ) const
                 for( size_t y = 0; y < height; ++y )
                 {
 #if GN_PPC
-                    GN::SwapEndian8In16( dst, src, width );
+                    GN::swap8in16( dst, src, width );
 #else
                     memcpy( dst, src, width * 2 );
 #endif

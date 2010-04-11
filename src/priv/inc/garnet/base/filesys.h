@@ -21,22 +21,22 @@ namespace GN
             ///
             /// 路径是否存在
             ///
-            virtual bool Exist( const StrA & ) = 0;
+            virtual bool exist( const StrA & ) = 0;
 
             ///
             /// if the path points to a directoy?
             ///
-            virtual bool IsDir( const StrA & ) = 0;
+            virtual bool isDir( const StrA & ) = 0;
 
             ///
             /// if the path points to a file
             ///
-            virtual bool IsFile( const StrA & path ) = 0;
+            virtual bool isFile( const StrA & path ) = 0;
 
             ///
             /// if the path is absolute path
             ///
-            virtual bool IsAbsPath( const StrA & path ) = 0;
+            virtual bool isAbsPath( const StrA & path ) = 0;
 
             ///
             /// Conver to disk file path in platform native format.
@@ -50,15 +50,15 @@ namespace GN
             ///   - Resolve embbed environment variable, like this:
             ///     "${windir}/system32" -> "c:\\windows\\system32"
             ///
-            virtual void ToNativeDiskFilePath( StrA & result, const StrA & path ) = 0;
+            virtual void toNativeDiskFilePath( StrA & result, const StrA & path ) = 0;
 
             ///
             /// Conver path to platform native format.
             ///
-            inline StrA ToNativeDiskFilePath( const StrA & path )
+            inline StrA toNativeDiskFilePath( const StrA & path )
             {
                 StrA ret;
-                ToNativeDiskFilePath( ret, path );
+                toNativeDiskFilePath( ret, path );
                 return ret;
             }
 
@@ -66,16 +66,16 @@ namespace GN
             /// 查找指定文件
             ///
             /// \param result     返回搜索结果
-            /// \param DirName    在什么目录下
+            /// \param dirName    在什么目录下
             /// \param pattern    搜索什么文件
             /// \param recursive  是否递归搜索子目录
             /// \param useRegex   是否使用正则匹配
             /// \return           返回参数 result
             ///
             virtual DynaArray<StrA> &
-            Glob(
+            glob(
                 DynaArray<StrA> & result,
-                const StrA & DirName,
+                const StrA & dirName,
                 const StrA & pattern,
                 bool         recursive,
                 bool         useRegex ) = 0;
@@ -83,7 +83,7 @@ namespace GN
             ///
             /// open file. Note that meaning of mode is identical with standard fopen().
             ///
-            virtual File * OpenFile( const StrA & path, const StrA & mode ) = 0;
+            virtual File * openFile( const StrA & path, const StrA & mode ) = 0;
         };
 
         /// \name managing file system objects
@@ -100,9 +100,9 @@ namespace GN
         //      - if register same file system multiple times, only the last one is effective.
         ///
         //@{
-        GN_EXPORT bool RegisterFileSystem( const StrA & name, FileSystem * fs );
+        GN_EXPORT bool registerFileSystem( const StrA & name, FileSystem * fs );
         GN_EXPORT void UnregisterFileSystem( const StrA & name );
-        GN_EXPORT FileSystem * GetFileSystem( const StrA & name );
+        GN_EXPORT FileSystem * getFileSystem( const StrA & name );
         //@}
 
         /// path related utilites
@@ -113,7 +113,7 @@ namespace GN
         /// 2. remove redundent separators
         /// 3. convert to unix style
         ///
-        void NormalizePathSeparator( GN::StrA & result, const GN::StrA & path );
+        void normalizePathSeparator( GN::StrA & result, const GN::StrA & path );
 
         ///
         /// Get the parent path (directory) of the path.
@@ -132,12 +132,12 @@ namespace GN
         ///     - "c:a" -> "c:"
         ///     - "c:" -> "c:"
         ///
-        void ParentPath( StrA &, const StrA & );
+        void parentPath( StrA &, const StrA & );
 
         ///
         /// Get the parent path (directory) of the path
         ///
-        inline StrA ParentPath( const StrA & path ) { StrA ret; ParentPath(ret,path); return ret; }
+        inline StrA parentPath( const StrA & path ) { StrA ret; parentPath(ret,path); return ret; }
 
         ///
         /// Get extension name of the path, with prefixing dot.
@@ -148,52 +148,52 @@ namespace GN
         ///     - "a." -> "."
         ///     - "a" -> ""
         ///
-        void ExtName( StrA &, const StrA & );
+        void extName( StrA &, const StrA & );
 
         ///
         /// Get extension name of the path.
         ///
-        inline StrA ExtName( const StrA & path ) { StrA ret; ExtName(ret,path); return ret; }
+        inline StrA extName( const StrA & path ) { StrA ret; extName(ret,path); return ret; }
 
         ///
         /// get basename of a path (no directory, no extension)
         ///
-        void BaseName( StrA & result, const StrA & path );
+        void baseName( StrA & result, const StrA & path );
 
         ///
         /// get basename of a path
         ///
-        inline StrA BaseName( const StrA & path ) { StrA result; BaseName( result, path ); return result; }
+        inline StrA baseName( const StrA & path ) { StrA result; baseName( result, path ); return result; }
 
         ///
-        /// get dirname of a path ( alias of ParentPath() )
+        /// get dirname of a path ( alias of parentPath() )
         ///
-        inline void DirName( StrA & result, const StrA & path ) { ParentPath( result, path ); }
+        inline void dirName( StrA & result, const StrA & path ) { parentPath( result, path ); }
 
         ///
-        /// get dirname of a path ( alias of ParentPath() )
+        /// get dirname of a path ( alias of parentPath() )
         ///
-        inline StrA DirName( const StrA & path ) { return ParentPath( path ); }
+        inline StrA dirName( const StrA & path ) { return parentPath( path ); }
 
         ///
         /// Convert a path to relative path from a base dir.
         ///
-        void RelPath( StrA & result, const StrA & path, const StrA & base );
+        void relPath( StrA & result, const StrA & path, const StrA & base );
 
         ///
         /// Convert a path to relative path from and base dir.
         ///
-        inline StrA RelPath( const StrA & path, const StrA & base )
+        inline StrA relPath( const StrA & path, const StrA & base )
         {
             StrA ret;
-            RelPath( ret, path, base );
+            relPath( ret, path, base );
             return ret;
         }
 
         ///
         /// Join path
         ///
-        void JoinPath2(
+        void joinPath2(
             StrA & result,
             const StrA & path1 = StrA::EMPTYSTR,
             const StrA & path2 = StrA::EMPTYSTR,
@@ -204,7 +204,7 @@ namespace GN
         ///
         /// Join path
         ///
-        inline StrA JoinPath(
+        inline StrA joinPath(
             const StrA & path1 = StrA::EMPTYSTR,
             const StrA & path2 = StrA::EMPTYSTR,
             const StrA & path3 = StrA::EMPTYSTR,
@@ -212,7 +212,7 @@ namespace GN
             const StrA & path5 = StrA::EMPTYSTR )
         {
             StrA ret;
-            JoinPath2( ret, path1, path2, path3, path4, path5 );
+            joinPath2( ret, path1, path2, path3, path4, path5 );
             return ret;
         }
 
@@ -221,27 +221,27 @@ namespace GN
         ///
         /// fs and local path are separated by "::"
         ///
-        void SplitPath( const StrA & path, StrA & fs, StrA & local );
+        void splitPath( const StrA & path, StrA & fs, StrA & local );
 
         ///
         /// get current working directory
         ///
-        void GetCurrentDir( StrA & );
+        void getCurrentDir( StrA & );
 
         ///
         /// get current working directory
         ///
-        inline StrA GetCurrentDir() { StrA s; GetCurrentDir(s); return s; }
+        inline StrA getCurrentDir() { StrA s; getCurrentDir(s); return s; }
 
         ///
         /// get current driver (for Windows only, return empty string on *nix system)
         ///
-        void GetCurrentDrive( StrA & );
+        void getCurrentDrive( StrA & );
 
         ///
         /// get current driver (for Windows only, return empty string on *nix system)
         ///
-        inline StrA GetCurrentDrive() { StrA s; GetCurrentDrive(s); return s; }
+        inline StrA getCurrentDrive() { StrA s; getCurrentDrive(s); return s; }
 
         ///
         /// resolve relative path to absolute path.
@@ -251,15 +251,15 @@ namespace GN
         ///     - base and relpath belongs to different file system.
         ///     - relpath is already an absolute path, like "c:/haha.txt".
         ///
-        GN_EXPORT void ResolvePath( StrA & result, const StrA & base, const StrA & relpath );
+        GN_EXPORT void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
 
         ///
         /// resolve relative path to absolute path.
         ///
-        inline StrA ResolvePath( const StrA & base, const StrA & relpath )
+        inline StrA resolvePath( const StrA & base, const StrA & relpath )
         {
             StrA r;
-            ResolvePath( r, base, relpath );
+            resolvePath( r, base, relpath );
             return r;
         };
 
@@ -268,56 +268,56 @@ namespace GN
         /// \name FileSystem method wrappers. See FileSystem methods for details.
         //@{
 
-        inline bool PathExist( const StrA & path )
+        inline bool pathExist( const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->Exist( child );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->exist( child );
         }
 
-        inline bool IsDir( const StrA & path )
+        inline bool isDir( const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->IsDir( child );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->isDir( child );
         }
 
-        inline bool IsFile( const StrA & path )
+        inline bool isFile( const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->IsFile( child );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->isFile( child );
         }
 
-        inline void ToNativeDiskFilePath( StrA & result, const StrA & path )
+        inline void toNativeDiskFilePath( StrA & result, const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            GetFileSystem(sys)->ToNativeDiskFilePath( result, child );
+            splitPath( path, sys, child );
+            getFileSystem(sys)->toNativeDiskFilePath( result, child );
         }
 
-        inline StrA ToNativeDiskFilePath( const StrA & path )
+        inline StrA toNativeDiskFilePath( const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->ToNativeDiskFilePath( child );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->toNativeDiskFilePath( child );
         }
 
-        inline bool IsAbsPath( const StrA & path )
+        inline bool isAbsPath( const StrA & path )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->IsAbsPath( child );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->isAbsPath( child );
         }
 
-        inline File * OpenFile( const StrA & path, const StrA & mode )
+        inline File * openFile( const StrA & path, const StrA & mode )
         {
             StrA sys, child;
-            SplitPath( path, sys, child );
-            return GetFileSystem(sys)->OpenFile( child, mode );
+            splitPath( path, sys, child );
+            return getFileSystem(sys)->openFile( child, mode );
         }
 
-        inline DynaArray<StrA> & Glob(
+        inline DynaArray<StrA> & glob(
             DynaArray<StrA> & result,
             const StrA & dirName,
             const StrA & pattern,
@@ -325,8 +325,8 @@ namespace GN
             bool         useRegex )
         {
             StrA sys, child;
-            SplitPath( dirName, sys, child );
-            return GetFileSystem(sys)->Glob(
+            splitPath( dirName, sys, child );
+            return getFileSystem(sys)->glob(
                 result,
                 child,
                 pattern,

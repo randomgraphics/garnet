@@ -24,14 +24,14 @@ namespace GN { namespace gfx
         {
             if( 0 != sc.source && ( sc.source < begin || sc.source >= end ) )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader source pointer.", type );
                 return false;
             }
 
             if( 0 != sc.entry && ( sc.entry < begin || sc.entry >= end ) )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "invalid %s shader entry pointer.", type );
                 return false;
             }
@@ -42,7 +42,7 @@ namespace GN { namespace gfx
     public:
 
         /// initialize from shader description
-        bool Init( const GpuProgramDesc & desc )
+        bool init( const GpuProgramDesc & desc )
         {
             // calculate buffer size
             size_t headerLen  = sizeof(desc);
@@ -58,9 +58,9 @@ namespace GN { namespace gfx
                                 psCodeLen + psEntryLen;
 
             // allocate buffer
-            mBuffer.Resize( length );
-            GpuProgramDesc & copy = *(GpuProgramDesc*)mBuffer.ToRawPtr();
-            UInt8 * start = mBuffer.ToRawPtr();
+            mBuffer.resize( length );
+            GpuProgramDesc & copy = *(GpuProgramDesc*)mBuffer.cptr();
+            UInt8 * start = mBuffer.cptr();
             UInt8 * ptr = start;
 
             // copy header
@@ -87,14 +87,14 @@ namespace GN { namespace gfx
             return true;
         }
 
-        /// initialize from raw Data buffer
-        bool Init( const void * data, size_t length )
+        /// initialize from raw data buffer
+        bool init( const void * data, size_t length )
         {
             // copy input buffer
-            mBuffer.Resize( length );
-            memcpy( mBuffer.ToRawPtr(), data, length );
+            mBuffer.resize( length );
+            memcpy( mBuffer.cptr(), data, length );
 
-            const char     * start = (const char *)mBuffer.ToRawPtr();
+            const char     * start = (const char *)mBuffer.cptr();
             const char     * end   = start + length;
             GpuProgramDesc & desc  = *(GpuProgramDesc*)start;
 
@@ -109,10 +109,10 @@ namespace GN { namespace gfx
             if( 0 != desc.ps.entry ) desc.ps.entry = start + (size_t)desc.ps.entry;
 
             // check GPU program language
-            if( !desc.lang.Valid() )
+            if( !desc.lang.valid() )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
-                GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.ToRawEnum() );
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
+                GN_ERROR(sLogger)( "invalid GPU program language: %d", desc.lang.toRawEnum() );
                 return false;
             }
 
@@ -121,7 +121,7 @@ namespace GN { namespace gfx
                 !sCheckShaderCode( "geometry", desc.gs, start, end ) ||
                 !sCheckShaderCode( "pixel", desc.ps, start, end ) )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common");
                 GN_ERROR(sLogger)( "Invalid shader binary." );
                 return false;
             }
@@ -129,10 +129,10 @@ namespace GN { namespace gfx
             return true;
         }
 
-        const GpuProgramDesc & desc() const { return *(const GpuProgramDesc*)mBuffer.ToRawPtr(); }
+        const GpuProgramDesc & getDesc() const { return *(const GpuProgramDesc*)mBuffer.cptr(); }
 
-        virtual void         * Data() const { return (void*)mBuffer.ToRawPtr(); }
-        virtual size_t         Size() const { return mBuffer.Size(); }
+        virtual void         * data() const { return (void*)mBuffer.cptr(); }
+        virtual size_t         size() const { return mBuffer.size(); }
     };
 
     ///
@@ -149,31 +149,31 @@ namespace GN { namespace gfx
         /// ctor
         SysMemUniform( size_t sz )
             : mSize(0==sz?1:sz)
-            , mData( HeapMemory::Alloc(mSize) )
+            , mData( HeapMemory::alloc(mSize) )
             , mTimeStamp(0)
         {
         }
 
         /// dtor
-        ~SysMemUniform() { HeapMemory::Free(mData); }
+        ~SysMemUniform() { HeapMemory::dealloc(mData); }
 
         /// get parameter size
-        virtual size_t Size() const { return mSize; }
+        virtual size_t size() const { return mSize; }
 
         /// get current parameter value
-        virtual const void * GetValue() const { return mData; }
+        virtual const void * getval() const { return mData; }
 
         /// update parameter value
-        virtual void Update( size_t offset, size_t length, const void * data )
+        virtual void update( size_t offset, size_t length, const void * data )
         {
             if( offset >= mSize || (offset+length) > mSize )
             {
-                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
+                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
                 return;
             }
             if( NULL == data )
             {
-                GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
+                GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
                 return;
             }
             memcpy( (UInt8*)mData + offset, data, length );
@@ -182,7 +182,7 @@ namespace GN { namespace gfx
 
         /// update parameter value
         template<typename T>
-        void Update( const T & t ) { set( 0, sizeof(t), &t ); }
+        void update( const T & t ) { set( 0, sizeof(t), &t ); }
 
         /// get current update time stamp
         SInt32 getTimeStamp() const { return mTimeStamp; }

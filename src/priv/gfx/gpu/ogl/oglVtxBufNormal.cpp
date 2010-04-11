@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglVtxBuf.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.VtxBuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.VtxBuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
+bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -20,16 +20,16 @@ bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
     if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        return Failure();
+        return failure();
     }
 
     // store descriptor
-    SetDesc( desc );
+    setDesc( desc );
 
-    mBuffer = (UInt8*)HeapMemory::Alloc( desc.length );
+    mBuffer = (UInt8*)HeapMemory::alloc( desc.length );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -37,13 +37,13 @@ bool GN::gfx::OGLVtxBufNormal::Init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::Quit()
+void GN::gfx::OGLVtxBufNormal::quit()
 {
     GN_GUARD;
 
-    SafeHeapFree( mBuffer );
+    safeHeapFree( mBuffer );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -56,11 +56,11 @@ void GN::gfx::OGLVtxBufNormal::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLVtxBufNormal::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     GN_UNUSED_PARAM( flag );
 
@@ -82,11 +82,11 @@ void GN::gfx::OGLVtxBufNormal::Update( size_t offset, size_t length, const void 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::Readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLVtxBufNormal::readback( DynaArray<UInt8> & data )
 {
-    size_t length = GetDesc().length;
+    size_t length = getDesc().length;
 
-    data.Resize( length );
+    data.resize( length );
 
     memcpy( &data[0], mBuffer, length );
 }

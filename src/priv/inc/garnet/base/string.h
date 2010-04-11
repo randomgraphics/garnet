@@ -26,10 +26,10 @@ namespace GN
     ///
     /// Get string length.
     ///
-    /// if maxLen > 0, then return math::GetMin(maxLen,realLength).
+    /// if maxLen > 0, then return math::getmin(maxLen,realLength).
     ///
     template<typename CHAR>
-    inline size_t StringLength( const CHAR * s, size_t maxLen = 0 )
+    inline size_t stringLength( const CHAR * s, size_t maxLen = 0 )
     {
         if( 0 == s ) return 0;
         size_t l = 0;
@@ -56,7 +56,7 @@ namespace GN
     /// string comparison (case sensitive)
     ///
     template<typename CHAR>
-    inline int StringCompare( const CHAR * s1, const CHAR * s2 )
+    inline int stringCompare( const CHAR * s1, const CHAR * s2 )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -77,7 +77,7 @@ namespace GN
     /// string comparison, case sensitive, with limited length
     ///
     template<typename CHAR>
-    inline int StringCompare( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    inline int stringCompare( const CHAR * s1, const CHAR * s2, size_t maxLength )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -101,7 +101,7 @@ namespace GN
     /// string comparison (case insensitive)
     ///
     template<typename CHAR>
-    inline int StringCompareI( const CHAR * s1, const CHAR * s2 )
+    inline int stringCompareI( const CHAR * s1, const CHAR * s2 )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -127,7 +127,7 @@ namespace GN
     /// string comparison (case insensitive), with limited length
     ///
     template<typename CHAR>
-    inline int StringCompareI( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    inline int stringCompareI( const CHAR * s1, const CHAR * s2, size_t maxLength )
     {
         if( s1 == s2 ) return 0;
         if( 0 == s1 ) return -1;
@@ -156,7 +156,7 @@ namespace GN
     /// check for empty string, including NULL.
     ///
     template<typename CHAR>
-    inline bool IsStringEmpty( const CHAR * s )
+    inline bool stringEmpty( const CHAR * s )
     {
         return 0 == s || 0 == s[0];
     }
@@ -166,7 +166,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    StringPrintf(
+    stringPrintf(
         char *       buf,
         size_t       bufSizeInChar,
         const char * fmt,
@@ -177,7 +177,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    StringPrintf(
+    stringPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
         const wchar_t * fmt,
@@ -188,7 +188,7 @@ namespace GN
     /// like StringCchPrintf(...)
     ///
     void
-    StringVarPrintf(
+    stringVarPrintf(
         char *       buf,
         size_t       bufSizeInChar,
         const char * fmt,
@@ -198,7 +198,7 @@ namespace GN
     /// printf-like format string (wide-char)
     ///
     void
-    StringVarPrintf(
+    stringVarPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
         const wchar_t * fmt,
@@ -210,7 +210,7 @@ namespace GN
     /// set to length to 0 to hash NULL terminated string.
     ///
     template<typename CHAR>
-    inline UInt64 StringHash( const CHAR * s, size_t length = 0 )
+    inline UInt64 stringHash( const CHAR * s, size_t length = 0 )
     {
         unsigned long hash = 5381;
 
@@ -245,13 +245,13 @@ namespace GN
         typedef ALLOCATOR AllocatorType;
 
         CharType * mPtr;   ///< string buffer pointer.
-        size_t     mCount; ///< How many charecters in the string, not including null End.
-        size_t     mCaps;  ///< How many characters can we hold, not including null End?
+        size_t     mCount; ///< How many charecters in the string, not including null end.
+        size_t     mCaps;  ///< How many characters can we hold, not including null end?
 
     public:
 
         ///
-        /// Instance of Empty string
+        /// Instance of empty string
         ///
         static Str EMPTYSTR;
 
@@ -272,7 +272,7 @@ namespace GN
         ///
         /// copy constructor
         ///
-        Str( const Str & s ) : mCount(s.mCount), mCaps(CalculateCaps(s.mCount))
+        Str( const Str & s ) : mCount(s.mCount), mCaps(calcCaps(s.mCount))
         {
             mPtr = alloc(mCaps);
             ::memcpy( mPtr, s.mPtr, (mCount+1)*sizeof(CharType) );
@@ -292,8 +292,8 @@ namespace GN
             }
             else
             {
-                l = StringLength<CharType>(s,l);
-                mCaps = CalculateCaps(l);
+                l = stringLength<CharType>(s,l);
+                mCaps = calcCaps(l);
                 mPtr = alloc(mCaps);
                 mCount = l;
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
@@ -310,47 +310,47 @@ namespace GN
         }
 
         ///
-        /// Append to this string
+        /// append to this string
         ///
-        void Append( const CharType * s, size_t l = 0 )
+        void append( const CharType * s, size_t l = 0 )
         {
             if( 0 == s ) return;
-            l = StringLength<CharType>(s,l);
-            SetCaps( mCount + l );
+            l = stringLength<CharType>(s,l);
+            setCaps( mCount + l );
             ::memcpy( mPtr+mCount, s, l*sizeof(CharType) );
             mCount += l;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// Append to this string
+        /// append to this string
         ///
-        void Append( const Str & s )
+        void append( const Str & s )
         {
-            if( s.Empty() ) return;
-            size_t l = s.Size();
-            SetCaps( mCount + l );
-            ::memcpy( mPtr+mCount, s.ToRawPtr(), l*sizeof(CharType) );
+            if( s.empty() ) return;
+            size_t l = s.size();
+            setCaps( mCount + l );
+            ::memcpy( mPtr+mCount, s.cptr(), l*sizeof(CharType) );
             mCount += l;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// Append to this string
+        /// append to this string
         ///
-        void Append( CharType ch )
+        void append( CharType ch )
         {
             if( 0 == ch ) return;
-            SetCaps( mCount + 1 );
+            setCaps( mCount + 1 );
             mPtr[mCount] = ch;
             ++mCount;
             mPtr[mCount] = 0;
         }
 
         ///
-        /// Assign value to string class
+        /// assign value to string class
         ///
-        void Assign( const CharType * s, size_t l = 0 )
+        void assign( const CharType * s, size_t l = 0 )
         {
             if( 0 == s )
             {
@@ -359,8 +359,8 @@ namespace GN
             }
             else
             {
-                l = StringLength<CharType>(s,l);
-                SetCaps(l);
+                l = stringLength<CharType>(s,l);
+                setCaps(l);
                 mCount = l;
                 ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
@@ -368,50 +368,55 @@ namespace GN
         }
 
         ///
-        /// Begin iterator(1)
+        /// begin iterator(1)
         ///
-        CharType * Begin() { return mPtr; }
+        CharType * begin() { return mPtr; }
 
         ///
-        /// Begin iterator(2)
+        /// begin iterator(2)
         ///
-        const CharType * Begin() const { return mPtr; }
+        const CharType * begin() const { return mPtr; }
 
         ///
-        /// Clear to Empty string
+        /// Clear to empty string
         ///
-        void Clear()
+        void clear()
         {
             mPtr[0] = 0;
             mCount = 0;
         }
 
         ///
-        /// Empty string or not?
+        /// return c-style const char pointer
         ///
-        bool Empty() const { return 0 == mCount; }
+        const CharType * cptr() const { return mPtr; }
 
         ///
-        /// Begin iterator(1)
+        /// empty string or not?
         ///
-        CharType * End() { return mPtr+mCount; }
+        bool empty() const { return 0 == mCount; }
 
         ///
-        /// Begin iterator(2)
+        /// begin iterator(1)
         ///
-        const CharType * End() const { return mPtr+mCount; }
+        CharType * end() { return mPtr+mCount; }
 
         ///
-        /// Searches through a string for the GetFirst character that matches any elements in user specified string
+        /// begin iterator(2)
+        ///
+        const CharType * end() const { return mPtr+mCount; }
+
+        ///
+        /// Searches through a string for the first character that matches any elements in user specified string
         ///
         /// \param s
         ///     User specified search pattern
         /// \param offset, count
-        ///     Range of the search. (count==0) means to the End of input string.
+        ///     Range of the search. (count==0) means to the end of input string.
         /// \return
-        ///     Return index of the character of GetFirst occurance or NOT_FOUND.
+        ///     Return index of the character of first occurance or NOT_FOUND.
         ///
-        size_t FindFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -430,9 +435,9 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the GetFirst character that not any elements of user specifed string.
+        /// Searches through a string for the first character that not any elements of user specifed string.
         ///
-        size_t FindFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -451,10 +456,10 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the GetFirst character that matches users predication
+        /// Searches through a string for the first character that matches users predication
         ///
         template<typename PRED>
-        size_t FindFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
         {
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
@@ -469,9 +474,9 @@ namespace GN
         }
 
         ///
-        /// Searches through a string for the GetLast character that matches any elements in user specified string
+        /// Searches through a string for the last character that matches any elements in user specified string
         ///
-        size_t FindLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
@@ -491,13 +496,18 @@ namespace GN
         }
 
         ///
+        /// get first character of the string. If string is empty, return 0.
+        ///
+        CharType first() const { return mPtr[0]; }
+
+        ///
         /// printf-like string formatting
         ///
-        const CharType * Format( const CharType * fmt, ... )
+        const CharType * format( const CharType * fmt, ... )
         {
             va_list arglist;
             va_start( arglist, fmt );
-            FormatV( fmt, arglist );
+            formatv( fmt, arglist );
             va_end( arglist );
             return mPtr;
         }
@@ -505,18 +515,18 @@ namespace GN
         ///
         /// printf-like string formatting(2)
         ///
-        const CharType * FormatV( const CharType * fmt, va_list args )
+        const CharType * formatv( const CharType * fmt, va_list args )
         {
-            if( IsStringEmpty(fmt) )
+            if( stringEmpty(fmt) )
             {
-                Clear();
+                clear();
             }
             else
             {
                 CharType buf[16384];  // 16k should be enough in most cases
-                StringVarPrintf( buf, 16384, fmt, args );
+                stringVarPrintf( buf, 16384, fmt, args );
                 buf[16383] = 0;
-                Assign( buf );
+                assign( buf );
             }
             return mPtr;
         }
@@ -524,31 +534,26 @@ namespace GN
         ///
         /// get string caps
         ///
-        size_t GetCaps() const { return mCaps; }
+        size_t caps() const { return mCaps; }
 
         ///
-        /// get GetFirst character of the string. If string is Empty, return 0.
+        /// string hash
         ///
-        CharType GetFirst() const { return mPtr[0]; }
-
-        ///
-        /// get GetLast character of the string. If string is Empty, return 0.
-        ///
-        CharType GetLast() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
+        UInt64 hash() const { return stringHash( mPtr, mCount ); }
 
         ///
         /// Insert a character at specific position
         ///
-        void Insert( size_t pos, CharType ch )
+        void insert( size_t pos, CharType ch )
         {
             if( 0 == ch ) return;
             if( pos >= mCount )
             {
-                Append( ch );
+                append( ch );
             }
             else
             {
-                SetCaps( mCount + 1 );
+                setCaps( mCount + 1 );
                 for( size_t i = mCount+1; i > pos; --i )
                 {
                     mPtr[i] = mPtr[i-1];
@@ -559,9 +564,14 @@ namespace GN
         }
 
         ///
-        /// pop GetLast charater
+        /// get last character of the string. If string is empty, return 0.
         ///
-        void PopBack()
+        CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
+
+        ///
+        /// pop last charater
+        ///
+        void popback()
         {
             if( mCount > 0 )
             {
@@ -573,7 +583,7 @@ namespace GN
         ///
         /// Replace specific character with another
         ///
-        void Replace( CharType from, CharType to )
+        void replace( CharType from, CharType to )
         {
             CharType * p = mPtr;
             for( size_t i = 0; i < mCount; ++i, ++p )
@@ -583,9 +593,9 @@ namespace GN
         }
 
         ///
-        /// Remove specific charactor at specific location
+        /// remove specific charactor at specific location
         ///
-        void Remove( size_t pos )
+        void remove( size_t pos )
         {
             for( size_t i = pos; i < mCount; ++i )
             {
@@ -597,11 +607,11 @@ namespace GN
         ///
         /// set string caps
         ///
-        void SetCaps( size_t newCaps )
+        void setCaps( size_t newCaps )
         {
             if( mCaps >= newCaps ) return;
             size_t oldCaps = mCaps;
-            mCaps = CalculateCaps( newCaps );
+            mCaps = calcCaps( newCaps );
             CharType * newPtr = alloc( mCaps );
             ::memcpy( newPtr, mPtr, sizeof(CharType)*(mCount+1) );
             dealloc( mPtr, oldCaps );
@@ -611,33 +621,33 @@ namespace GN
         ///
         /// return string length in character, not including ending zero
         ///
-        size_t Size() const { return mCount; }
+        size_t size() const { return mCount; }
 
         ///
-        /// Get sub string. (0==length) means to the End of original string.
+        /// Get sub string. (0==length) means to the end of original string.
         ///
-        void SubString( Str & result, size_t offset, size_t length ) const
+        void subString( Str & result, size_t offset, size_t length ) const
         {
-            if( offset >= mCount ) { result.Clear(); return; }
+            if( offset >= mCount ) { result.clear(); return; }
             if( 0 == length ) length = mCount;
             if( offset + length > mCount ) length = mCount - offset;
-            result.Assign( mPtr+offset, length );
+            result.assign( mPtr+offset, length );
         }
 
         ///
         /// Return sub string
         ///
-        Str SubString( size_t offset, size_t length ) const
+        Str subString( size_t offset, size_t length ) const
         {
             Str ret;
-            SubString( ret, offset, length );
+            subString( ret, offset, length );
             return ret;
         }
 
         ///
         /// convert to all lower case
         ///
-        void ToLowerCase()
+        void toLower()
         {
             CHAR * p = mPtr;
             CHAR * e = mPtr + mCount;
@@ -648,14 +658,25 @@ namespace GN
         }
 
         ///
-        /// return c-style const char pointer
+        /// convert to STL string(1)
         ///
-        const CharType * ToRawPtr() const { return mPtr; }
+        void toSTL( std::basic_string<CharType> & s ) const
+        {
+            s.assign( mPtr, mCount );
+        }
+
+        ///
+        /// convert to STL string(2)
+        ///
+        std::basic_string<CharType> toSTL() const
+        {
+            return std::basic_string<CharType>(mPtr,mCount);
+        }
 
         ///
         /// convert to all upper case
         ///
-        void ToUpperCase()
+        void toUpper()
         {
             CHAR * p = mPtr;
             CHAR * e = mPtr + mCount;
@@ -668,26 +689,26 @@ namespace GN
         ///
         /// Trim characters for both side
         ///
-        void Trim( const CharType * ch, size_t len = 0 )
+        void trim( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = StringLength( ch );
-            TrimRight( ch, len );
-            TrimLeft( ch, len );
+            if( 0 == len ) len = stringLength( ch );
+            trimRight( ch, len );
+            trimLeft( ch, len );
         }
 
         ///
         /// Trim characters for both side
         ///
-        void Trim( CharType ch ) { Trim( &ch, 1 ); }
+        void trim( CharType ch ) { trim( &ch, 1 ); }
 
         ///
         /// Trim left characters
         ///
-        void TrimLeft( const CharType * ch, size_t len = 0 )
+        void trimLeft( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
-            if( 0 == len ) len = StringLength( ch );
+            if( 0 == len ) len = stringLength( ch );
             if( 0 == len ) return;
             CharType * p = mPtr;
             CharType * e = mPtr+mCount;
@@ -716,16 +737,16 @@ namespace GN
         ///
         /// Trim left characters
         ///
-        void TrimLeft( CharType ch ) { TrimLeft( &ch, 1 ); }
+        void trimLeft( CharType ch ) { trimLeft( &ch, 1 ); }
 
         ///
         /// Trim right characters
         ///
-        void TrimRight( const CharType * ch, size_t len = 0 )
+        void trimRight( const CharType * ch, size_t len = 0 )
         {
             if( 0 == mCount ) return;
             if( 0 == ch ) return;
-            if( 0 == len ) len = StringLength( ch );
+            if( 0 == len ) len = stringLength( ch );
             if( 0 == len ) return;
             CharType * p = mPtr + mCount - 1;
             while( p >= mPtr )
@@ -749,13 +770,13 @@ namespace GN
         ///
         /// Trim right characters
         ///
-        void TrimRight( CharType ch ) { TrimRight( &ch, 1 ); }
+        void trimRight( CharType ch ) { trimRight( &ch, 1 ); }
 
         ///
         /// Trim right characters until meet the predication condition.
         ///
         template<typename PRED>
-        void TrimRightUntil( PRED pred )
+        void trimRightUntil( PRED pred )
         {
             if( 0 == mCount ) return;
             CharType * p = mPtr + mCount - 1;
@@ -778,20 +799,20 @@ namespace GN
         operator CharType *() { return mPtr; }
 
         ///
-        /// Assign operator
+        /// assign operator
         ///
         Str & operator = ( const Str & s )
         {
-            Assign( s.mPtr, s.mCount );
+            assign( s.mPtr, s.mCount );
             return *this;
         }
 
         ///
-        /// Assign operator
+        /// assign operator
         ///
         Str & operator = ( const CharType * s )
         {
-            Assign( s, StringLength<CharType>(s) );
+            assign( s, stringLength<CharType>(s) );
             return *this;
         }
 
@@ -800,7 +821,7 @@ namespace GN
         ///
         Str & operator += ( const Str & s )
         {
-            Append( s );
+            append( s );
             return *this;
         }
 
@@ -809,7 +830,7 @@ namespace GN
         ///
         Str & operator += ( const CharType * s )
         {
-            Append( s, 0 );
+            append( s, 0 );
             return *this;
         }
 
@@ -818,7 +839,7 @@ namespace GN
         ///
         Str & operator += ( CharType ch )
         {
-            Append( ch );
+            append( ch );
             return *this;
         }
 
@@ -827,7 +848,7 @@ namespace GN
         ///
         Str & operator += ( std::basic_string<CharType> & s )
         {
-            Append( s.c_str(), 0 );
+            append( s.cptr(), 0 );
             return *this;
         }
 
@@ -836,7 +857,7 @@ namespace GN
         ///
         friend bool operator == ( const CharType * s1, const Str & s2 )
         {
-            return 0 == StringCompare( s1, s2.mPtr );
+            return 0 == stringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -844,7 +865,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const CharType * s2 )
         {
-            return 0 == StringCompare( s1.mPtr, s2 );
+            return 0 == stringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -852,7 +873,7 @@ namespace GN
         ///
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
-            return 0 == StringCompare( s1.mPtr, s2.mPtr );
+            return 0 == stringCompare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -860,7 +881,7 @@ namespace GN
         ///
         friend bool operator != ( const CharType * s1, const Str & s2 )
         {
-            return 0 != StringCompare( s1, s2.mPtr );
+            return 0 != stringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -868,7 +889,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const CharType * s2 )
         {
-            return 0 != StringCompare( s1.mPtr, s2 );
+            return 0 != stringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -876,7 +897,7 @@ namespace GN
         ///
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
-            return 0 != StringCompare( s1.mPtr, s2.mPtr );
+            return 0 != stringCompare( s1.mPtr, s2.mPtr );
         }
 
         ///
@@ -884,7 +905,7 @@ namespace GN
         ///
         friend bool operator < ( const CharType * s1, const Str & s2 )
         {
-            return -1 == StringCompare( s1, s2.mPtr );
+            return -1 == stringCompare( s1, s2.mPtr );
         }
 
         ///
@@ -892,7 +913,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const CharType * s2 )
         {
-            return -1 == StringCompare( s1.mPtr, s2 );
+            return -1 == stringCompare( s1.mPtr, s2 );
         }
 
         ///
@@ -900,7 +921,7 @@ namespace GN
         ///
         friend bool operator < ( const Str & s1, const Str & s2 )
         {
-            return -1 == StringCompare( s1.mPtr, s2.mPtr );
+            return -1 == stringCompare( s1.mPtr, s2.mPtr );
         }
 
 
@@ -910,7 +931,7 @@ namespace GN
         friend Str operator + ( const CharType * s1, const Str & s2 )
         {
             Str r(s1);
-            r.Append(s2);
+            r.append(s2);
             return r;
         }
 
@@ -920,7 +941,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const CharType * s2 )
         {
             Str r(s1);
-            r.Append(s2);
+            r.append(s2);
             return r;
         }
 
@@ -930,7 +951,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const Str & s2 )
         {
             Str r(s1);
-            r.Append(s2);
+            r.append(s2);
             return r;
         }
 
@@ -940,7 +961,7 @@ namespace GN
         friend Str operator + ( const Str & s1, const std::basic_string<CharType> & s2 )
         {
             Str r(s1);
-            r.Append( s2.c_str() );
+            r.append( s2.c_str() );
             return r;
         }
 
@@ -950,7 +971,7 @@ namespace GN
         friend Str operator + ( const std::basic_string<CharType> & s1, const Str & s2 )
         {
             Str r(s2);
-            r.Append( s1.c_str() );
+            r.append( s1.c_str() );
             return r;
         }
 
@@ -959,7 +980,7 @@ namespace GN
         ///
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
-            os << str.ToRawPtr();
+            os << str.cptr();
             return os;
         }
 
@@ -970,14 +991,14 @@ namespace GN
         {
             UInt64 operator()( const Str & s ) const
             {
-                return StringHash( s.mPtr, s.mCount );
+                return stringHash( s.mPtr, s.mCount );
             }
         };
 
     private:
 
         // align caps to 2^n-1
-        size_t CalculateCaps( size_t count )
+        size_t calcCaps( size_t count )
         {
             #if GN_X64
             count |= count >> 32;
@@ -1003,10 +1024,10 @@ namespace GN
             a.deallocate( ptr, count + 1 );
         }
 
-        friend Str<char> Wcs2Mbs( const wchar_t *, size_t );
-        friend void Wcs2Mbs( Str<char> &, const wchar_t *, size_t );
-        friend Str<wchar_t> Mbs2Wcs( const char *, size_t );
-        friend void Mbs2Wcs( Str<wchar_t> &, const char *, size_t );
+        friend Str<char> wcs2mbs( const wchar_t *, size_t );
+        friend void wcs2mbs( Str<char> &, const wchar_t *, size_t );
+        friend Str<wchar_t> mbs2wcs( const char *, size_t );
+        friend void mbs2wcs( Str<wchar_t> &, const char *, size_t );
     };
 
     // Implement static data member
@@ -1049,7 +1070,7 @@ namespace GN
             }
             else
             {
-                if( 0 == l ) l = StringLength( s );
+                if( 0 == l ) l = stringLength( s );
                 memcpy( mBuf, s, sValidateLength(l) * sizeof(CHAR) );
             }
         }
@@ -1059,7 +1080,7 @@ namespace GN
         }
         StackStr( const Str<CHAR> & s )
         {
-            memcpy( mBuf, s.ToRawPtr(), sizeof(CHAR) * sValidateLength(s.Size()) );
+            memcpy( mBuf, s.cptr(), sizeof(CHAR) * sValidateLength(s.size()) );
         }
         //@}
     };
@@ -1111,57 +1132,57 @@ namespace GN
         /// copy constructor
         StringMap( const StringMap & sm ) : mRoot(NULL), mCount(0)
         {
-            DoClone( sm );
+            doClone( sm );
         }
 
         /// destructor
         ~StringMap()
         {
-            Clear();
+            clear();
         }
 
         /// get first element in the map
         /// \note elements are _NOT_ sorted yet.
-        const KeyValuePair * First() const { return DoFirst(); }
+        const KeyValuePair * first() const { return doFirst(); }
 
         /// get first element in the map
         /// \note elements are _NOT_ sorted yet.
-        KeyValuePair * First() { return DoFirst(); }
+        KeyValuePair * first() { return doFirst(); }
 
         /// clear whole map
-        void Clear() { DoClear(); }
+        void clear() { doClear(); }
 
         /// empty
-        bool Empty() const { return 0 == mCount; }
+        bool empty() const { return 0 == mCount; }
 
         /// Get next item
         /// \note elements are _NOT_ sorted yet.
-        const KeyValuePair * Next( const KeyValuePair * p ) const { return DoNext( p ); }
+        const KeyValuePair * next( const KeyValuePair * p ) const { return doNext( p ); }
 
         /// Get next item
         /// \note elements are _NOT_ sorted yet.
-        KeyValuePair * Next( const KeyValuePair * p ) { return DoNext( p ); }
+        KeyValuePair * next( const KeyValuePair * p ) { return doNext( p ); }
 
         /// erase by key
-        void Remove( const CHAR * text ) { DoRemove( text ); }
+        void remove( const CHAR * text ) { doRemove( text ); }
 
-        /// Find
-        const T * Find( const CHAR * text ) const { return DoFind( text ); }
+        /// find
+        const T * find( const CHAR * text ) const { return doFind( text ); }
 
-        /// Find
-        T * Find( const CHAR * text ) { return DoFind( text ); }
+        /// find
+        T * find( const CHAR * text ) { return doFind( text ); }
 
-        /// Find
-        KeyValuePair * FindPair( const CHAR * text ) { return DoFindPair( text ); }
+        /// find
+        KeyValuePair * findPair( const CHAR * text ) { return doFindPair( text ); }
 
-        /// Find
-        const KeyValuePair * FindPair( const CHAR * text ) const { return DoFindPair( text ); }
+        /// find
+        const KeyValuePair * findPair( const CHAR * text ) const { return doFindPair( text ); }
 
         /// insert. Return the inserted key value pair or NULL.
-        KeyValuePair * Insert( const CHAR * text, const T & value ) { bool inserted; KeyValuePair * p = DoFindOrInsert( text, value, inserted ); return inserted ? p : NULL; }
+        KeyValuePair * insert( const CHAR * text, const T & value ) { bool inserted; KeyValuePair * p = doFindOrInsert( text, value, inserted ); return inserted ? p : NULL; }
 
         /// return number of items in map
-        size_t Size() const { return mCount; }
+        size_t size() const { return mCount; }
 
         // *****************************
         // public operators
@@ -1170,13 +1191,13 @@ namespace GN
     public:
 
         /// assignment
-        StringMap & operator=( const StringMap & rhs ) { DoClone( rhs ); return *this; }
+        StringMap & operator=( const StringMap & rhs ) { doClone( rhs ); return *this; }
 
         /// indexing operator
-        T & operator[]( const CHAR * text ) { bool inserted; KeyValuePair * p = DoFindOrInsert( text, T(), inserted ); GN_ASSERT(p); return p->value; }
+        T & operator[]( const CHAR * text ) { bool inserted; KeyValuePair * p = doFindOrInsert( text, T(), inserted ); GN_ASSERT(p); return p->value; }
 
         /// indexing operator
-        const T & operator[]( const CHAR * text ) const { const KeyValuePair * p = DoFindPair( text ); GN_ASSERT(p); return p->value; }
+        const T & operator[]( const CHAR * text ) const { const KeyValuePair * p = doFindPair( text ); GN_ASSERT(p); return p->value; }
 
         // *****************************
         // private types
@@ -1192,7 +1213,7 @@ namespace GN
             void * owner;
 
             Leaf( const CHAR * text, size_t textlen, const T & v )
-                : KeyValuePair( (const char*)HeapMemory::Alloc(textlen+1), v )
+                : KeyValuePair( (const char*)HeapMemory::alloc(textlen+1), v )
                 , prev(NULL)
                 , next(NULL)
                 , owner(NULL)
@@ -1205,7 +1226,7 @@ namespace GN
 
             ~Leaf()
             {
-                HeapMemory::Free( (void*)key );
+                HeapMemory::dealloc( (void*)key );
             }
         };
 
@@ -1237,79 +1258,79 @@ namespace GN
 
     private:
 
-        Node * AllocNode()
+        Node * allocNode()
         {
-            return (Node*)mNodePool.Alloc();
+            return (Node*)mNodePool.alloc();
         }
 
-        void FreeNode( Node * n )
+        void freeNode( Node * n )
         {
-            mNodePool.Dealloc( n );
+            mNodePool.dealloc( n );
         }
 
-        Leaf * AllocLeaf( const CHAR * text, size_t textlen, const T & value )
+        Leaf * allocLeaf( const CHAR * text, size_t textlen, const T & value )
         {
-            Leaf * p = mLeafPool.AllocUnconstructed();
+            Leaf * p = mLeafPool.allocUnconstructed();
             if( NULL == p ) return NULL;
 
             // call in-place new to construct the leaf
             new (p) Leaf( text, textlen, value );
             if( NULL == p->key )
             {
-                mLeafPool.FreeWithoutDeconstruct( p );
+                mLeafPool.freeWithoutDeconstruct( p );
                 return NULL;
             }
 
             return p;
         }
 
-        void FreeLeaf( Leaf * l )
+        void freeLeaf( Leaf * l )
         {
             GN_ASSERT( l );
-            mLeafs.Remove( l );
-            mLeafPool.DeconstructAndFree( l );
+            mLeafs.remove( l );
+            mLeafPool.deconstructAndFree( l );
         }
 
         /// clear the whole map container
-        void DoClear()
+        void doClear()
         {
             mRoot = NULL;
             mCount = 0;
-            mNodePool.FreeAll();
-            mLeafPool.DeconstructAndFreeAll();
+            mNodePool.freeAll();
+            mLeafPool.deconstructAndFreeAll();
 
             // I know this is hacky. But it works.
             memset( &mLeafs, 0, sizeof(mLeafs) );
         }
 
         /// make itself a clone of another map
-        void DoClone( const StringMap & anotherMap )
+        void doClone( const StringMap & anotherMap )
         {
             // shortcut for cloning itself.
             if( this == &anotherMap ) return;
 
             // clear myself
-            Clear();
+            clear();
 
             // insert all items in another map to this map.
-            for( const KeyValuePair * p = anotherMap.First(); NULL != p; p = anotherMap.Next(p) )
+            for( const KeyValuePair * p = anotherMap.first(); NULL != p; p = anotherMap.next(p) )
             {
-                Insert( p->key, p->value );
+                insert( p->key, p->value );
             }
         }
 
-        T * DoFind( const CHAR * text ) const
+        T * doFind( const CHAR * text ) const
         {
-            Leaf * p = DoFindPair( text );
+            Leaf * p = doFindPair( text );
             return p ? &p->value : NULL;
         }
 
-        Leaf * DoFindPair( const CHAR * text ) const
+        Leaf * doFindPair( const CHAR * text ) const
         {
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = GetLogger("GN.base.StringMap");
+                static Logger * sLogger = getLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap finding warning: NULL text!" );
                 return NULL;
             }
@@ -1362,14 +1383,14 @@ namespace GN
             return NULL;
         }
 
-        Leaf * DoFindOrInsert( const CHAR * text, const T & value, bool & inserted )
+        Leaf * doFindOrInsert( const CHAR * text, const T & value, bool & inserted )
         {
             inserted = false;
 
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = GetLogger("GN.base.StringMap");
+                static Logger * sLogger = getLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "Null text is not allowed!" );
                 return NULL;
             }
@@ -1432,10 +1453,10 @@ namespace GN
             for(;;)
             {
                 // create new node
-                Node * newNode = AllocNode();
+                Node * newNode = allocNode();
                 if( NULL == newNode )
                 {
-                    static Logger * sLogger = GetLogger("GN.base.StringMap");
+                    static Logger * sLogger = getLogger("GN.base.StringMap");
                     GN_ERROR(sLogger)( "out of memory!" );
                     return NULL;
                 }
@@ -1444,20 +1465,20 @@ namespace GN
                 if( 0 == *text )
                 {
                     // we reach the end of the text. Now create a new leaf.
-                    newNode->leaf = AllocLeaf( inputText, text - inputText, value );
+                    newNode->leaf = allocLeaf( inputText, text - inputText, value );
                     if( NULL == newNode->leaf )
                     {
-                        static Logger * sLogger = GetLogger("GN.base.StringMap");
+                        static Logger * sLogger = getLogger("GN.base.StringMap");
                         GN_ERROR(sLogger)( "out of memory!" );
                         return NULL;
                     }
 
                     // TODO: find the real "previous" leaf node
-                    Leaf * previousNode = mLeafs.GetTail();
+                    Leaf * previousNode = mLeafs.tail();
 
                     // insert the new leaf into linked list
                     // TODO: sort and insert
-                    mLeafs.InsertAfter( previousNode, newNode->leaf );
+                    mLeafs.insertAfter( previousNode, newNode->leaf );
 
                     ++mCount;
                     inserted = true;
@@ -1488,12 +1509,12 @@ namespace GN
             }
         }
 
-        Leaf * DoFirst() const
+        Leaf * doFirst() const
         {
-            return mLeafs.GetHead();
+            return mLeafs.head();
         }
 
-        Leaf * DoNext( const KeyValuePair * p ) const
+        Leaf * doNext( const KeyValuePair * p ) const
         {
             if( NULL == p ) return NULL;
 
@@ -1501,7 +1522,7 @@ namespace GN
 
             if( leaf->owner != &mLeafs )
             {
-                static Logger * sLogger = GetLogger("GN.base.StringMap");
+                static Logger * sLogger = getLogger("GN.base.StringMap");
                 GN_ERROR(sLogger)( "Input pointer does not belong to this string map." );
                 return NULL;
             }
@@ -1509,7 +1530,7 @@ namespace GN
             return leaf->next;
         }
 
-        Node * DoRecursiveErase( Node * n, const CHAR * text )
+        Node * doRecursiveErase( Node * n, const CHAR * text )
         {
             GN_ASSERT( text );
 
@@ -1519,11 +1540,11 @@ namespace GN
 
             if( d < 0 )
             {
-                n->lower = DoRecursiveErase( n->lower, text );
+                n->lower = doRecursiveErase( n->lower, text );
             }
             else if( d > 0 )
             {
-                n->higher = DoRecursiveErase( n->higher, text );
+                n->higher = doRecursiveErase( n->higher, text );
             }
             else if( 0 == *text )
             {
@@ -1531,20 +1552,20 @@ namespace GN
                 GN_ASSERT( n->leaf );
 
                 // delete leaf node
-                FreeLeaf( n->leaf );
+                freeLeaf( n->leaf );
                 n->leaf = NULL;
 
                 --mCount;
             }
             else
             {
-                n->equal = DoRecursiveErase( n->equal, text+1 );
+                n->equal = doRecursiveErase( n->equal, text+1 );
             }
 
             // free the node if it contains neither children or leaf
             if( 0 == n->lower && 0 == n->higher && 0 == n->equal && 0 == n->leaf )
             {
-                FreeNode( n );
+                freeNode( n );
                 return NULL;
             }
             else
@@ -1553,52 +1574,52 @@ namespace GN
             }
         }
 
-        void DoRemove( const CHAR * text )
+        void doRemove( const CHAR * text )
         {
             // check for NULL text pointer
             if( NULL == text )
             {
-                static Logger * sLogger = GetLogger("GN.base.StringMap");
+                static Logger * sLogger = getLogger("GN.base.StringMap");
                 GN_WARN(sLogger)( "StringMap erasing warning: NULL text!" );
                 return;
             }
 
-            mRoot = DoRecursiveErase( mRoot, text );
+            mRoot = doRecursiveErase( mRoot, text );
         }
     }; // End of StringMap class
 
     /// \name string -> number conversion
     ///
-    ///  Returns number of characters that are sucessfully scanned. Return 0 for failure.
+    ///  Returns number of characters that are sucessfully converted. Return 0 for failure.
     //@{
 
-    size_t String2SignedInteger( SInt64 & result, int bits, int base, const char * s );
-    size_t String2UnsignedInteger( UInt64 & result, int bits, int base, const char * s );
+    size_t string2SignedInteger( SInt64 & result, int bits, int base, const char * s );
+    size_t string2UnsignedInteger( UInt64 & result, int bits, int base, const char * s );
 
-    template<typename T> size_t String2Integer( T & i, const char * s, int base = 10 )
+    template<typename T> size_t string2Integer( T & i, const char * s, int base = 10 )
     {
         size_t n;
 
         if( SignedType<T>::value )
         {
             SInt64 s64;
-            n = String2SignedInteger( s64, sizeof(T)*8, base, s );
+            n = string2SignedInteger( s64, sizeof(T)*8, base, s );
             if( n > 0 ) i = (T)s64;
         }
         else
         {
             UInt64 u64;
-            n = String2UnsignedInteger( u64, sizeof(T)*8, base, s );
+            n = string2UnsignedInteger( u64, sizeof(T)*8, base, s );
             if( n > 0 ) i = (T)u64;
         }
 
         return n;
     }
 
-    template<typename T> T String2Integer( const char * s, T defaultValue, int base = 10 )
+    template<typename T> T string2Integer( const char * s, T defaultValue, int base = 10 )
     {
         T result;
-        if( 0 == String2Integer<T>( result, s, base ) )
+        if( 0 == string2Integer<T>( result, s, base ) )
         {
             return defaultValue;
         }
@@ -1608,13 +1629,13 @@ namespace GN
         }
     }
 
-    size_t String2Float( float & i, const char * s );
+    size_t string2Float( float & i, const char * s );
 
-    size_t String2Double( double & i, const char * s );
+    size_t string2Double( double & i, const char * s );
 
-    template<typename T> size_t String2Number( T & i, const char * s ) { return String2Integer<T>( i, s, 10 ); }
-    template<> inline size_t String2Number<float>( float & i, const char * s ) { return String2Float( i, s ); }
-    template<> inline size_t String2Number<double>( double & i, const char * s ) { return String2Double( i, s ); }
+    template<typename T> size_t string2Number( T & i, const char * s ) { return string2Integer<T>( i, s, 10 ); }
+    template<> inline size_t string2Number<float>( float & i, const char * s ) { return string2Float( i, s ); }
+    template<> inline size_t string2Number<double>( double & i, const char * s ) { return string2Double( i, s ); }
 
     ///
     /// Convert string to float array. String should be in format like:
@@ -1625,21 +1646,23 @@ namespace GN
     /// \return
     ///     Return count of floating filled into target buffer.
     ///
-    size_t String2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
+    ///     REVIEW: this function returns number of floats, while other function returns number of characters.
+    ///
+    size_t string2FloatArray( float * buffer, size_t maxCount, const char * str, size_t stringLength = 0 );
 
     //@}
 
     ///
     /// printf-like string format function.
     ///
-    /// Similar as StringPrintf(...), but returns a string object
+    /// Similar as stringPrintf(...), but returns a string object
     ///
-    inline StrA StringFormat( const char * fmt, ... )
+    inline StrA stringFormat( const char * fmt, ... )
     {
         StrA s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.FormatV( fmt, arglist );
+        s.formatv( fmt, arglist );
         va_end( arglist );
         return s;
     }
@@ -1647,14 +1670,14 @@ namespace GN
     ///
     /// printf-like string format function (wide-char version)
     ///
-    /// Similar as StringPrintf(...), but returns a string object
+    /// Similar as stringPrintf(...), but returns a string object
     ///
-    inline StrW StringFormat( const wchar_t * fmt, ... )
+    inline StrW stringFormat( const wchar_t * fmt, ... )
     {
         StrW s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.FormatV( fmt, arglist );
+        s.formatv( fmt, arglist );
         va_end( arglist );
         return s;
     }

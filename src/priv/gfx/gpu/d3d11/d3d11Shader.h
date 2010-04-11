@@ -112,18 +112,18 @@ namespace GN { namespace gfx
 
         /// find parameter with specific name
         //@{
-        const D3D11UniformParameterDesc   * FindUniform( const char * name ) const;
-        D3D11UniformParameterDesc         * FindUniform( const char * name );
-        const D3D11TextureParameterDesc   * FindTexture( const char * name ) const;
-        D3D11TextureParameterDesc         * FindTexture( const char * name );
+        const D3D11UniformParameterDesc   * findUniform( const char * name ) const;
+        D3D11UniformParameterDesc         * findUniform( const char * name );
+        const D3D11TextureParameterDesc   * findTexture( const char * name ) const;
+        D3D11TextureParameterDesc         * findTexture( const char * name );
         const D3D11AttributeParameterDesc * findAttribute( const char * name ) const;
         D3D11AttributeParameterDesc       * findAttribute( const char * name );
         //@}
 
         /// add new parameters
         //@{
-        void addUniform( const D3D11UniformParameterDesc & u ) { mUniforms.Append( u ); }
-        void addTexture( const D3D11TextureParameterDesc & t ) { mTextures.Append( t ); }
+        void addUniform( const D3D11UniformParameterDesc & u ) { mUniforms.append( u ); }
+        void addTexture( const D3D11TextureParameterDesc & t ) { mTextures.append( t ); }
         void addAttribute( const D3D11AttributeParameterDesc & );
         //@}
     };
@@ -154,14 +154,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
-        bool Init(
+        bool init(
             ID3D11Device                    & dev,
             const ShaderCode                & code,
             const D3D11ShaderCompileOptions & options,
             D3D11GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
     };
 
     ///
@@ -174,14 +174,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray   constData; ///< constant data
 
         /// initialize shader
-        bool Init(
+        bool init(
             ID3D11Device                    & dev,
             const ShaderCode                & code,
             const D3D11ShaderCompileOptions & options,
             D3D11GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
     };
 
     ///
@@ -194,14 +194,14 @@ namespace GN { namespace gfx
         mutable SysMemConstBufferArray constData; ///< constant data
 
         /// initialize shader
-        bool Init(
+        bool init(
             ID3D11Device                    & dev,
             const ShaderCode                & code,
             const D3D11ShaderCompileOptions & options,
             D3D11GpuProgramParameterDesc    & paramDesc );
 
         /// clear shader
-        void Clear() { shader.Clear(); constBufs.Clear(); constData.Clear(); }
+        void clear() { shader.clear(); constBufs.clear(); constData.clear(); }
     };
 
     ///
@@ -220,9 +220,9 @@ namespace GN { namespace gfx
         D3D11GpuProgram( D3D11Gpu & r )
             : D3D11Resource(r)
         {
-            Clear();
+            clear();
         }
-        virtual ~D3D11GpuProgram() { Quit(); }
+        virtual ~D3D11GpuProgram() { quit(); }
         //@}
 
         // ********************************
@@ -231,10 +231,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuProgramDesc & desc );
-        void Quit();
+        bool init( const GpuProgramDesc & desc );
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************
@@ -262,27 +262,27 @@ namespace GN { namespace gfx
             cxt.PSSetShader( mPs.shader, NULL, 0 );
 
             // bind constant buffers
-            if( mVs.constBufs.Size() )
+            if( mVs.constBufs.size() )
             {
                 cxt.VSSetConstantBuffers(
                     0,
-                    (UInt32)mVs.constBufs.Size(),
+                    (UInt32)mVs.constBufs.size(),
                     &mVs.constBufs[0] );
             }
 
-            if( mGs.constBufs.Size() )
+            if( mGs.constBufs.size() )
             {
                 cxt.GSSetConstantBuffers(
                     0,
-                    (UInt32)mGs.constBufs.Size(),
+                    (UInt32)mGs.constBufs.size(),
                     &mGs.constBufs[0] );
             }
 
-            if( mPs.constBufs.Size() )
+            if( mPs.constBufs.size() )
             {
                 cxt.PSSetConstantBuffers(
                     0,
-                    (UInt32)mPs.constBufs.Size(),
+                    (UInt32)mPs.constBufs.size(),
                     &mPs.constBufs[0] );
             }
         }

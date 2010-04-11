@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         //@{
     public:
         Impl( ModelResource & owner ) : mOwner(owner) {}
-        virtual ~Impl() { Clear(); }
+        virtual ~Impl() { clear(); }
         //@}
 
         // ********************************
@@ -30,23 +30,23 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool                        Reset( const ModelResourceDesc * desc );
+        bool                        reset( const ModelResourceDesc * desc );
 
-        AutoRef<ModelResource>      MakeClone( const char * nameOfTheClone ) const;
+        AutoRef<ModelResource>      makeClone( const char * nameOfTheClone ) const;
 
-        bool                        SetTextureResource( const char * effectParameterName, GpuResource * );
-        AutoRef<TextureResource>    GetTextureResource( const char * effectParameterName ) const;
+        bool                        setTextureResource( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource>    textureResource( const char * effectParameterName ) const;
 
-        bool                        SetUniformResource( const char * effectParameterName, GpuResource * );
-        AutoRef<UniformResource>    GetUniformResource( const char * effectParameterName ) const;
+        bool                        setUniformResource( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource>    uniformResource( const char * effectParameterName ) const;
 
-        bool                        SetMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
-        AutoRef<MeshResource>       GetMeshResource( MeshResourceSubset * subset ) const;
+        bool                        setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset );
+        AutoRef<MeshResource>       meshResource( MeshResourceSubset * subset ) const;
 
-        bool                        SetEffectResource( GpuResource * resource );
-        AutoRef<EffectResource>     GetEffectResource() const { return mEffect.resource; }
+        bool                        setEffectResource( GpuResource * resource );
+        AutoRef<EffectResource>     effectResource() const { return mEffect.resource; }
 
-        void                        Draw() const;
+        void                        draw() const;
 
         // ********************************
         // private classes
@@ -152,11 +152,11 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GpuResourceDatabase & GetGdb() const { return mOwner.GetGdb(); }
-        const char *          modelName() const { return mOwner.GetGdb().GetResourceName( &mOwner ); }
+        GpuResourceDatabase & getGdb() const { return mOwner.getGdb(); }
+        const char *          modelName() const { return mOwner.getGdb().getResourceName( &mOwner ); }
 
         bool fromDesc( const ModelResourceDesc & desc );
-        void Clear();
+        void clear();
 
         void copyFrom( const Impl & other );
 

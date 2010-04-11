@@ -6,9 +6,9 @@
 //
 // -----------------------------------------------------------------------------
 inline GN::gfx::GpuResourceDatabase &
-GN::util::Entity::gdb() const
+GN::util::Entity::getGdb() const
 {
-    return world().gdb();
+    return getWorld().getGdb();
 }
 
 // ****************************************************************************

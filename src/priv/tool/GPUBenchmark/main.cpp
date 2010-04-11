@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.tool.gpuBenchmark");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.gpuBenchmark");
 
 // *****************************************************************************
 // Utils
@@ -107,7 +107,7 @@ struct ManyManyQuads
             {  1.0f, -1.0f, 0.0f, 1.0f, 1.0f },
             {  1.0f,  1.0f, 0.0f, 1.0f, 0.0f },
         };
-        vtxbuf = re.CreateVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
+        vtxbuf = re.createVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
         if( !vtxbuf ) return false;
 
         DynaArray<UInt16> indices( INDEX_COUNT );
@@ -122,7 +122,7 @@ struct ManyManyQuads
         }
 
         // create index buffer
-        idxbuf = re.CreateIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.ToRawPtr() );
+        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.cptr() );
         if( !idxbuf ) return false;
 
         // success
@@ -136,11 +136,11 @@ struct ManyManyQuads
         safeFreeGraphicsResource( vtxfmt );
     }
 
-    void Draw()
+    void draw()
     {
         for( size_t i = 0; i < DRAW_COUNT; ++i )
         {
-            re.DrawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+            re.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
         }
     }
 
@@ -149,7 +149,7 @@ struct ManyManyQuads
         GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numprim) <= PRIM_COUNT );
         UInt32 startidx = startPrim * 3;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            re.DrawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 
     void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
@@ -158,7 +158,7 @@ struct ManyManyQuads
         UInt32 numprim = numQuads * 2;
         UInt32 startidx = startQuad * 6;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            re.DrawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 };
 
@@ -253,7 +253,7 @@ struct TexturedEffect : public BasicEffect
         if( !vs ) return false;
 
         // create PS
-        const StrA pscode = StringFormat(
+        const StrA pscode = stringFormat(
             "#define TEX_COUNT %d                                \n"
             "sampler ss[TEX_COUNT] : register(s0);               \n"
             "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"
@@ -298,7 +298,7 @@ public:
     virtual ~BasicTestCase() {}
     virtual bool create() = 0;
     virtual void destroy() = 0;
-    virtual void Update() = 0;
+    virtual void update() = 0;
     virtual void render() = 0;
     virtual void onkey( input::KeyEvent ) = 0;
     virtual void onmove( input::Axis, int ) = 0;
@@ -330,10 +330,10 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().ToRawPtr(), cd.theCase->printResult().ToRawPtr() );
+        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
         cd.theCase->destroy();
         delete cd.theCase;
-        mTestCases.pop_back();
+        mTestCases.popBack();
 
         // return false, if no more cases.
         if( mTestCases.empty() ) return false;
@@ -346,7 +346,7 @@ public:
 
     BenchmarkingApp() : mFirstFrame(true), mAsciiFont( getQuadRenderer() )
     {
-        mClock.Reset();
+        mClock.reset();
     }
 
     AsciiFont & asciiFont() { return mAsciiFont; }
@@ -356,34 +356,34 @@ public:
         ip.rapi = RendererAPI::D3D9;
         #if GN_XENON
         ip.ro.fullscreen = true;
-        ip.ro.displayMode.Set( 1024, 768, 32, 0 );
+        ip.ro.displayMode.set( 1024, 768, 32, 0 );
         #endif
     }
 
-    bool OnInit();
+    bool onInit();
 
-    void OnQuit()
+    void onQuit()
     {
         GN_GUARD;
 
-        for( size_t i = 0; i < mTestCases.Size(); ++i )
+        for( size_t i = 0; i < mTestCases.size(); ++i )
         {
             GN_ASSERT( mTestCases[i].theCase );
             mTestCases[i].theCase->destroy();
             delete mTestCases[i].theCase;
         }
-        mTestCases.Clear();
+        mTestCases.clear();
 
-        mAsciiFont.Quit();
+        mAsciiFont.quit();
 
         GN_UNGUARD;
     }
 
-    void OnKeyPress( input::KeyEvent ke )
+    void onKeyPress( input::KeyEvent ke )
     {
         GN_GUARD_SLOW;
 
-        app::SampleApp::OnKeyPress( ke );
+        app::SampleApp::onKeyPress( ke );
 
         if( !mTestCases.empty() )
         {
@@ -396,13 +396,13 @@ public:
             input::KEY_XB360_A == ke.code && !ke.status.down )
         {
             mFirstFrame = true;
-            if( !nextCase() ) PostExitEvent();
+            if( !nextCase() ) postExitEvent();
         }
 
         GN_UNGUARD_SLOW;
     }
 
-    void OnAxisMove( input::Axis a, int d )
+    void onAxisMove( input::Axis a, int d )
     {
         GN_GUARD_SLOW;
 
@@ -416,34 +416,34 @@ public:
         GN_UNGUARD_SLOW;
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
         GN_GUARD_SLOW;
         if( mTestCases.empty() )
         {
-            PostExitEvent();
+            postExitEvent();
         }
         /*else if( mFirstFrame )
         {
             mFirstFrame = false;
-            mClock.Reset();
+            mClock.reset();
         }
-        else if( mClock.GetTimef() >= 10.0f )
+        else if( mClock.getTimef() >= 10.0f )
         {
             mFirstFrame = true;
-            if( !nextCase() ) PostExitEvent();
+            if( !nextCase() ) postExitEvent();
         }*/
         else
         {
             CaseDesc & cd = mTestCases.back();
             GN_ASSERT( cd.theCase );
-            cd.theCase->Update();
+            cd.theCase->update();
         }
 
         GN_UNGUARD_SLOW;
     }
 
-    void OnRender()
+    void onRender()
     {
         GN_GUARD_SLOW;
 
@@ -465,35 +465,35 @@ public:
 #include "batchSize.inl" // batch size test
 #endif
 
-bool BenchmarkingApp::OnInit()
+bool BenchmarkingApp::onInit()
 {
     GN_GUARD;
 
     // create font
-    if( !mAsciiFont.Init() ) return false;
+    if( !mAsciiFont.init() ) return false;
 
     CaseDesc cd;
 
     //*
     cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , 0, true , false );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );
+    mTestCases.append( cd );
 
     cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , 0, false, false );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );
+    mTestCases.append( cd );
 
     cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", 1 , false, false );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );
+    mTestCases.append( cd );
 
     cd.theCase = new TestFillrate( *this, "Fillrate - TWO_TEXTURES", 2 , false, false );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );
+    mTestCases.append( cd );
 
     cd.theCase = new TestFillrate( *this, "Fillrate - FOUR_TEXTURES", 4 , false, false );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );//*/
+    mTestCases.append( cd );//*/
 
     // create the first case
     if( !mTestCases.back().theCase->create() ) return false;
@@ -501,7 +501,7 @@ bool BenchmarkingApp::OnInit()
     /*
     cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
     if( !cd.theCase ) return false;
-    mTestCases.push_back( cd );//*/
+    mTestCases.append( cd );//*/
 
     /*
     UInt32 texSize = 1024;
@@ -509,7 +509,7 @@ bool BenchmarkingApp::OnInit()
     {
         cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
         if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
+        mTestCases.append( cd );
         texSize /= 2;
     }
     //*/
@@ -520,7 +520,7 @@ bool BenchmarkingApp::OnInit()
     {
         cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );
         if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
+        mTestCases.append( cd );
     }
     //*/
 
@@ -533,5 +533,5 @@ bool BenchmarkingApp::OnInit()
 int main( int argc, const char * argv[] )
 {
     BenchmarkingApp app;
-    return app.Run( argc, argv );
+    return app.run( argc, argv );
 }

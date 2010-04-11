@@ -26,8 +26,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11Texture( D3D11Gpu & r ) : D3D11Resource(r) { Clear(); }
-        virtual ~D3D11Texture() { Quit(); }
+        D3D11Texture( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
+        virtual ~D3D11Texture() { quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const TextureDesc & desc );
-        void Quit();
+        bool init( const TextureDesc & desc );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mTexture = 0;
         }
@@ -50,12 +50,12 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void   UpdateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
-        virtual void   ReadMipmap( size_t face, size_t level, MipmapData & data );
-        virtual void   BlobWrite( const void *, size_t ) { GN_UNIMPL(); }
-        virtual size_t BlobRead( void * ) { GN_UNIMPL(); return 0; }
-        virtual void   GenerateMipmapPyramid() { GN_UNIMPL(); }
-        virtual void * GetAPIDependentData() const { return mTexture; }
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
+        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * getAPIDependentData() const { return mTexture; }
 
         // ********************************
         // public functions
@@ -67,13 +67,13 @@ namespace GN { namespace gfx
         ///
         ID3D11ShaderResourceView * getSRView()
         {
-            const TextureDesc & desc = GetDesc();
+            const TextureDesc & texdesc = getDesc();
 
             return getSRView(
                 mReadingFormat,
-                0, desc.faces,
-                0, desc.levels,
-                0, desc.depth );
+                0, texdesc.faces,
+                0, texdesc.levels,
+                0, texdesc.depth );
         }
 
         ///
@@ -138,7 +138,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool CreateTexture();
+        bool createTexture();
     };
 }}
 

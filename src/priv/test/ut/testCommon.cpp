@@ -17,7 +17,7 @@ static void sPrintUsage()
 //
 int myInit( int argc, const char * argv[] )
 {
-    GN::EnableCRTMemoryCheck();
+    GN::enableCRTMemoryCheck();
 
     // parse command line arguments
     bool verbose = false;
@@ -31,12 +31,12 @@ int myInit( int argc, const char * argv[] )
             #endif
             )
         {
-            if( 0 == GN::StringCompareI( a+1, "h" ) )
+            if( 0 == GN::stringCompareI( a+1, "h" ) )
             {
                 sPrintUsage();
                 exit(-1);
             }
-            else if( 0 == GN::StringCompareI( a+1, "v" ) )
+            else if( 0 == GN::stringCompareI( a+1, "v" ) )
             {
                 verbose = true;
             }
@@ -52,7 +52,7 @@ int myInit( int argc, const char * argv[] )
     // setup environment variables to control log behavior.
     if( !verbose )
     {
-        GN::PutEnv( "GN_LOG_QUIET", "1" );
+        GN::putEnv( "GN_LOG_QUIET", "1" );
     }
 
     return 0;

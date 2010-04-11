@@ -32,11 +32,11 @@ namespace GN { namespace util
 
         //@{
 
-        World                     & world() const;
-        gfx::GpuResourceDatabase  & gdb() const;
+        World                     & getWorld() const;
+        gfx::GpuResourceDatabase  & getGdb() const;
 
         int                         id() const;
-        const char                * Name() const;
+        const char                * name() const;
 
         bool                        hasNode( const Guid & nodeType ) const;
         const NodeBase            * getNode( const Guid & nodeType ) const;
@@ -45,9 +45,9 @@ namespace GN { namespace util
         void                        detachNode( const Guid & nodeType ) { attachNode( nodeType, NULL ); }
 
         // templated node helpers
-        template<class T> const T * getNode() const        { return (const T*)getNode( T::GetGuid() ); }
-        template<class T> T       * getNode()              { return (T*)getNode( T::GetGuid() ); }
-        template<class T> void      attachNode( T * node ) { attachNode( T::GetGuid(), node ); }
+        template<class T> const T * getNode() const        { return (const T*)getNode( T::guid() ); }
+        template<class T> T       * getNode()              { return (T*)getNode( T::guid() ); }
+        template<class T> void      attachNode( T * node ) { attachNode( T::guid(), node ); }
 
         //@}
 
@@ -83,13 +83,13 @@ namespace GN { namespace util
 
         //@{
 
-        gfx::GpuResourceDatabase & gdb() const;
+        gfx::GpuResourceDatabase & getGdb() const;
         SpatialGraph             & spatialGraph() const;
         VisualGraph              & visualGraph() const;
 
         //@}
 
-        void          Reset(); ///< Reset the world to its initial state
+        void          reset(); ///< reset the world to its initial state
 
         Entity      * createEntity( const char * name = NULL );
         void          deleteEntity( const char * name );
@@ -138,7 +138,7 @@ namespace GN { namespace util
         Entity & entity() const { return mEntity; }
 
         /// Get node type
-        const Guid & Type() const;
+        const Guid & type() const;
 
         //@}
 
@@ -212,7 +212,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         //@}
 
@@ -222,16 +222,16 @@ namespace GN { namespace util
 
         SpatialGraph      & graph() const;
 
-        void                SetParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
+        void                setParent( SpatialNode * parent, SpatialNode * prevSibling = NULL );
         void                setPosition( const Vector3f & );        ///< set position in parent space.
         void                setRotation( const Quaternionf & );     ///< set rotation around it's local origin.
         void                setScale( const Vector3f & );           ///< set scaling for each axis.
         void                setBoundingSphere( const Spheref & s ); ///< set bounding sphere for the node itself, in local space.
 
-        SpatialNode       * GetParent() const;
-        SpatialNode       * GetPrevSibling() const;
-        SpatialNode       * GetNextSibling() const;
-        SpatialNode       * GetFirstChild() const;
+        SpatialNode       * getParent() const;
+        SpatialNode       * getPrevSibling() const;
+        SpatialNode       * getNextSibling() const;
+        SpatialNode       * getFirstChild() const;
         SpatialNode       * getLastChild() const;
 
         const Vector3f    & getPosition() const;       ///< get position in parent space
@@ -288,7 +288,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         //@}
 
@@ -359,7 +359,7 @@ namespace GN { namespace util
 
         //@{
 
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         //@}
 
@@ -367,8 +367,8 @@ namespace GN { namespace util
 
         virtual          ~LightNode();
 
-        const LightDesc & GetDesc() const;
-        void              SetDesc( const LightDesc & desc );
+        const LightDesc & getDesc() const;
+        void              setDesc( const LightDesc & desc );
 
         /// the LightNode implementation class
         class Impl;
@@ -405,9 +405,9 @@ namespace GN { namespace util
         VisualGraph( gfx::GpuResourceDatabase & gdb );
         virtual ~VisualGraph();
 
-        gfx::GpuResourceDatabase & gdb() const;
+        gfx::GpuResourceDatabase & getGdb() const;
         Impl                     & impl() const { GN_ASSERT(mImpl); return *mImpl; }
-        void                       Draw( Camera & camera );
+        void                       draw( Camera & camera );
 
         //@}
 
@@ -437,26 +437,26 @@ namespace GN { namespace util
         };
 
         StringMap<char,gfx::MeshResourceDesc>  meshes;
-        DynaArray<AutoRef<Blob> >              meshdata;
+        DynaArray<AutoRef<Blob> >             meshdata;
         StringMap<char,gfx::ModelResourceDesc> models;
         StringMap<char,EntityDesc>             entities;
-        Boxf                                   bbox;     ///< bounding box of the whole world.
+        Boxf                                  bbox;     ///< bounding box of the whole world.
         //@}
 
         ///
         /// clear the description
         ///
-        void Clear();
+        void clear();
 
         ///
         /// load world description from external file
         ///
-        bool LoadFromFile( const char * filename );
+        bool loadFromFile( const char * filename );
 
         ///
         /// Save the world to specific directory
         ///
-        bool SaveToFile( const char * filename );
+        bool saveToFile( const char * filename );
 
         /// create entities in the world according to the descriptor.
         /// Return the root spatial node represent the whole world.

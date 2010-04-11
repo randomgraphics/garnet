@@ -3,7 +3,7 @@
 #include "d3d10Gpu.h"
 #include "d3d10Texture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 using namespace GN;
 using namespace GN::gfx;
@@ -36,7 +36,7 @@ D3D10_TEXTURE_ADDRESS_MODE sAdressModeToD3D10( unsigned short addr )
 template<class T>
 static void sFreeNameString( T & t )
 {
-    HeapMemory::Free( (void*)t.name );
+    HeapMemory::dealloc( (void*)t.name );
 }
 
 template<class T>
@@ -52,7 +52,7 @@ public:
 
     bool operator()( const T & t ) const
     {
-        return 0 == StringCompare( t.name, mName );
+        return 0 == stringCompare( t.name, mName );
     }
 };
 
@@ -69,9 +69,9 @@ GN::gfx::D3D10GpuProgramParameterDesc::D3D10GpuProgramParameterDesc()
 GN::gfx::D3D10GpuProgramParameterDesc::~D3D10GpuProgramParameterDesc()
 {
     // delete all name string
-    std::for_each( mUniforms.Begin(), mUniforms.End(), &sFreeNameString<D3D10UniformParameterDesc> );
-    std::for_each( mTextures.Begin(), mTextures.End(), &sFreeNameString<D3D10TextureParameterDesc> );
-    std::for_each( mAttributes.Begin(), mAttributes.End(), &sFreeNameString<D3D10AttributeParameterDesc> );
+    std::for_each( mUniforms.begin(), mUniforms.end(), &sFreeNameString<D3D10UniformParameterDesc> );
+    std::for_each( mTextures.begin(), mTextures.end(), &sFreeNameString<D3D10TextureParameterDesc> );
+    std::for_each( mAttributes.begin(), mAttributes.end(), &sFreeNameString<D3D10AttributeParameterDesc> );
 }
 
 //
@@ -79,16 +79,16 @@ GN::gfx::D3D10GpuProgramParameterDesc::~D3D10GpuProgramParameterDesc()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10GpuProgramParameterDesc::buildParameterArrays()
 {
-    mUniformArray       = mUniforms.ToRawPtr();
-    mUniformCount       = mUniforms.Size();
+    mUniformArray       = mUniforms.cptr();
+    mUniformCount       = mUniforms.size();
     mUniformArrayStride = sizeof(mUniforms[0]);
 
-    mTextureArray       = mTextures.ToRawPtr();
-    mTextureCount       = mTextures.Size();
+    mTextureArray       = mTextures.cptr();
+    mTextureCount       = mTextures.size();
     mTextureArrayStride = sizeof(mTextures[0]);
 
-    mAttributeArray       = mAttributes.ToRawPtr();
-    mAttributeCount       = mAttributes.Size();
+    mAttributeArray       = mAttributes.cptr();
+    mAttributeCount       = mAttributes.size();
     mAttributeArrayStride = sizeof(mAttributes[0]);
 }
 
@@ -96,56 +96,56 @@ void GN::gfx::D3D10GpuProgramParameterDesc::buildParameterArrays()
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::D3D10UniformParameterDesc *
-GN::gfx::D3D10GpuProgramParameterDesc::FindUniform( const char * name ) const
+GN::gfx::D3D10GpuProgramParameterDesc::findUniform( const char * name ) const
 {
     const GN::gfx::D3D10UniformParameterDesc * p = std::find_if(
-        mUniforms.Begin(),
-        mUniforms.End(),
+        mUniforms.begin(),
+        mUniforms.end(),
         FindByName<D3D10UniformParameterDesc>(name) );
 
-    return ( p == mUniforms.End() ) ? NULL : p;
+    return ( p == mUniforms.end() ) ? NULL : p;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D10UniformParameterDesc *
-GN::gfx::D3D10GpuProgramParameterDesc::FindUniform( const char * name )
+GN::gfx::D3D10GpuProgramParameterDesc::findUniform( const char * name )
 {
     GN::gfx::D3D10UniformParameterDesc * p = std::find_if(
-        mUniforms.Begin(),
-        mUniforms.End(),
+        mUniforms.begin(),
+        mUniforms.end(),
         FindByName<D3D10UniformParameterDesc>(name) );
 
-    return ( p == mUniforms.End() ) ? NULL : p;
+    return ( p == mUniforms.end() ) ? NULL : p;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 const GN::gfx::D3D10TextureParameterDesc *
-GN::gfx::D3D10GpuProgramParameterDesc::FindTexture( const char * name ) const
+GN::gfx::D3D10GpuProgramParameterDesc::findTexture( const char * name ) const
 {
     const GN::gfx::D3D10TextureParameterDesc * p = std::find_if(
-        mTextures.Begin(),
-        mTextures.End(),
+        mTextures.begin(),
+        mTextures.end(),
         FindByName<D3D10TextureParameterDesc>(name) );
 
-    return ( p == mTextures.End() ) ? NULL : p;
+    return ( p == mTextures.end() ) ? NULL : p;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D10TextureParameterDesc *
-GN::gfx::D3D10GpuProgramParameterDesc::FindTexture( const char * name )
+GN::gfx::D3D10GpuProgramParameterDesc::findTexture( const char * name )
 {
     GN::gfx::D3D10TextureParameterDesc * p = std::find_if(
-        mTextures.Begin(),
-        mTextures.End(),
+        mTextures.begin(),
+        mTextures.end(),
         FindByName<D3D10TextureParameterDesc>(name) );
 
-    return ( p == mTextures.End() ) ? NULL : p;
+    return ( p == mTextures.end() ) ? NULL : p;
 }
 
 //
@@ -155,11 +155,11 @@ const GN::gfx::D3D10AttributeParameterDesc *
 GN::gfx::D3D10GpuProgramParameterDesc::findAttribute( const char * name ) const
 {
     const GN::gfx::D3D10AttributeParameterDesc * p = std::find_if(
-        mAttributes.Begin(),
-        mAttributes.End(),
+        mAttributes.begin(),
+        mAttributes.end(),
         FindByName<D3D10AttributeParameterDesc>(name) );
 
-    return ( p == mAttributes.End() ) ? NULL : p;
+    return ( p == mAttributes.end() ) ? NULL : p;
 }
 
 //
@@ -169,11 +169,11 @@ GN::gfx::D3D10AttributeParameterDesc *
 GN::gfx::D3D10GpuProgramParameterDesc::findAttribute( const char * name )
 {
     GN::gfx::D3D10AttributeParameterDesc * p = std::find_if(
-        mAttributes.Begin(),
-        mAttributes.End(),
+        mAttributes.begin(),
+        mAttributes.end(),
         FindByName<D3D10AttributeParameterDesc>(name) );
 
-    return ( p == mAttributes.End() ) ? NULL : p;
+    return ( p == mAttributes.end() ) ? NULL : p;
 }
 
 // *****************************************************************************
@@ -223,21 +223,21 @@ sUpdateConstData(
     // do nothing, if the uniform is not used by the shader
     if( !ssp.used ) return;
 
-    if( desc.size != uniform.Size() )
+    if( desc.size != uniform.size() )
     {
         GN_WARN(sLogger)(
             "parameter %s: value size(%d) differs from size defined in shader code(%d).",
             desc.name,
-            uniform.Size(),
+            uniform.size(),
             desc.size );
     }
 
     DynaArray<UInt8>             & cb = cbarray[ssp.cbidx];
-    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.GetValue(), uniform.Size() );
-    SafeArrayAccessor<UInt8>       dst( cb.ToRawPtr(), cb.Size() );
+    SafeArrayAccessor<const UInt8> src( (const UInt8*)uniform.getval(), uniform.size() );
+    SafeArrayAccessor<UInt8>       dst( cb.cptr(), cb.size() );
 
     // copy uniform data to system const buffer
-    src.CopyTo(
+    src.copyTo(
         0,          // src offset
         dst,        // dst buffer
         ssp.offset, // dst offset
@@ -251,7 +251,7 @@ sUpdateConstData(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GpuProgram::Init( const GpuProgramDesc & desc )
+bool GN::gfx::D3D10GpuProgram::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -270,22 +270,22 @@ bool GN::gfx::D3D10GpuProgram::Init( const GpuProgramDesc & desc )
 
     // compile all shaders
     ID3D10Device & dev = getDeviceRef();
-    if( !mVs.Init( dev, desc.vs, options, mParamDesc ) ) return Failure();
-    if( !mGs.Init( dev, desc.gs, options, mParamDesc ) ) return Failure();
-    if( !mPs.Init( dev, desc.ps, options, mParamDesc ) ) return Failure();
+    if( !mVs.init( dev, desc.vs, options, mParamDesc ) ) return failure();
+    if( !mGs.init( dev, desc.gs, options, mParamDesc ) ) return failure();
+    if( !mPs.init( dev, desc.ps, options, mParamDesc ) ) return failure();
 
     // build parameter array
     mParamDesc.buildParameterArrays();
 
-    const size_t NUM_STAGES = GetGpu().GetCaps().maxTextures;
-    if( mParamDesc.textures.Count() > NUM_STAGES )
+    const size_t NUM_STAGES = getGpu().caps().maxTextures;
+    if( mParamDesc.textures.count() > NUM_STAGES )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
-        return Failure();
+        return failure();
     }
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -293,15 +293,15 @@ bool GN::gfx::D3D10GpuProgram::Init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10GpuProgram::Quit()
+void GN::gfx::D3D10GpuProgram::quit()
 {
     GN_GUARD;
 
-    mVs.Clear();
-    mGs.Clear();
-    mPs.Clear();
+    mVs.clear();
+    mGs.clear();
+    mPs.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -315,7 +315,7 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
     size_t                  count,
     bool                    skipDirtyCheck ) const
 {
-    count = math::GetMin( count, mParamDesc.uniforms.Count() );
+    count = math::getmin( count, mParamDesc.uniforms.count() );
 
     // dirty flags
     bool vscDirty[D3D10ConstBufferArray::MAX_SIZE];
@@ -339,35 +339,35 @@ void GN::gfx::D3D10GpuProgram::applyUniforms(
     ID3D10Device & dev = getDeviceRef();
 
     // update vertex shader constant buffers
-    for( size_t i = 0; i < mVs.constBufs.Size(); ++i )
+    for( size_t i = 0; i < mVs.constBufs.size(); ++i )
     {
         if( skipDirtyCheck || vscDirty[i] )
         {
             ID3D10Buffer           & buf = *mVs.constBufs[i];
             const DynaArray<UInt8> & data = mVs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.ToRawPtr(), data.Size() );
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
 
     // update geometry shader constant buffers
-    for( size_t i = 0; i < mGs.constBufs.Size(); ++i )
+    for( size_t i = 0; i < mGs.constBufs.size(); ++i )
     {
         if( skipDirtyCheck || gscDirty[i] )
         {
             ID3D10Buffer           & buf = *mGs.constBufs[i];
             const DynaArray<UInt8> & data = mGs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.ToRawPtr(), data.Size() );
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
 
     // update pixel shader constant buffers
-    for( size_t i = 0; i < mPs.constBufs.Size(); ++i )
+    for( size_t i = 0; i < mPs.constBufs.size(); ++i )
     {
         if( skipDirtyCheck || pscDirty[i] )
         {
             ID3D10Buffer           & buf = *mPs.constBufs[i];
             const DynaArray<UInt8> & data = mPs.constData[i];
-            sUpdateConstBuffer( dev, buf, data.ToRawPtr(), data.Size() );
+            sUpdateConstBuffer( dev, buf, data.cptr(), data.size() );
         }
     }
 }
@@ -380,21 +380,21 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     size_t                 count,
     bool                   skipDirtyCheck ) const
 {
-    const size_t NUM_STAGES = GetGpu().GetCaps().maxTextures;
+    const size_t NUM_STAGES = getGpu().caps().maxTextures;
 
-    // allocate SRV array on stack, Clear to zero.
+    // allocate SRV array on stack, clear to zero.
     const size_t SRV_ARRAY_SIZE = sizeof(void*) * NUM_STAGES * 3;
     ID3D10ShaderResourceView ** srvArray = (ID3D10ShaderResourceView **)alloca( SRV_ARRAY_SIZE );
     memset( srvArray, 0, SRV_ARRAY_SIZE );
 
     // determine effective texture count
-    if( count > mParamDesc.textures.Count() )
+    if( count > mParamDesc.textures.count() )
     {
-        count = mParamDesc.textures.Count();
+        count = mParamDesc.textures.count();
     }
     GN_ASSERT( count <= NUM_STAGES );
 
-    D3D10Gpu & gpu = GetGpu();
+    D3D10Gpu & gpu = getGpu();
 
     D3D10_SAMPLER_DESC sd;
     GN::d3d10::constructDefaultSamplerDesc( sd );
@@ -404,7 +404,7 @@ void GN::gfx::D3D10GpuProgram::applyTextures(
     {
         const TextureBinding & tb = bindings[i];
 
-        D3D10Texture * tex = (D3D10Texture*)tb.texture.Get();
+        D3D10Texture * tex = (D3D10Texture*)tb.texture.get();
 
         if( tex )
         {

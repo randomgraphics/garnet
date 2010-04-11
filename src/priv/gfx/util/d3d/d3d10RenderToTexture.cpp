@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.RenderToTexture");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.RenderToTexture");
 
 // *****************************************************************************
 // local functions
@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.RenderToTexture");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::RenderToTexture::Init(
+bool GN::d3d10::RenderToTexture::init(
     ID3D10Device * device, const RenderToTextureOption & options )
 {
     GN_GUARD;
@@ -28,7 +28,7 @@ bool GN::d3d10::RenderToTexture::Init(
     if( options.count > 8 )
     {
         GN_ERROR(sLogger)( "can not support more then 8 render targets." );
-        return Failure();
+        return failure();
     }
 
     D3D10_TEXTURE2D_DESC texdesc = {
@@ -45,14 +45,14 @@ bool GN::d3d10::RenderToTexture::Init(
     };
 
     // create color buffers
-    mColors.Resize( options.count );
+    mColors.resize( options.count );
     for( size_t i = 0; i < options.count; ++i )
     {
         RenderTargetTexture & rtt = mColors[i];
 
         // create texture
         ID3D10Texture2D * tex2d;
-        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         rtt.res = tex2d;
 
         // create RTV
@@ -61,7 +61,7 @@ bool GN::d3d10::RenderToTexture::Init(
             options.msaa ? D3D10_RTV_DIMENSION_TEXTURE2DMS : D3D10_RTV_DIMENSION_TEXTURE2D,
         };
         rtvdesc.Texture2D.MipSlice = 0;
-        GN_DX_CHECK_RETURN( device->CreateRenderTargetView( tex2d, &rtvdesc, &rtt.rtv ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateRenderTargetView( tex2d, &rtvdesc, &rtt.rtv ), failure() );
 
         // create SRV
         D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc = {
@@ -70,7 +70,7 @@ bool GN::d3d10::RenderToTexture::Init(
         };
         srvdesc.Texture2D.MostDetailedMip = 0;
         srvdesc.Texture2D.MipLevels = 1;
-        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &rtt.srv ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &rtt.srv ), failure() );
 
         mColorViews[i] = rtt.rtv;
     }
@@ -82,7 +82,7 @@ bool GN::d3d10::RenderToTexture::Init(
         texdesc.BindFlags = D3D10_BIND_DEPTH_STENCIL;
 
         ID3D10Texture2D * tex2d;
-        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         mDepth.res = tex2d;
 
         // create DSV
@@ -90,7 +90,7 @@ bool GN::d3d10::RenderToTexture::Init(
             DXGI_FORMAT_D32_FLOAT,
             D3D10_DSV_DIMENSION_TEXTURE2DMS,
         };
-        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
     }
     else
     {
@@ -98,7 +98,7 @@ bool GN::d3d10::RenderToTexture::Init(
         texdesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D10_BIND_SHADER_RESOURCE;
 
         ID3D10Texture2D * tex2d;
-        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateTexture2D( &texdesc, NULL, &tex2d ), failure() );
         mDepth.res = tex2d;
 
         // create DSV
@@ -107,7 +107,7 @@ bool GN::d3d10::RenderToTexture::Init(
             D3D10_DSV_DIMENSION_TEXTURE2D,
         };
         dsvdesc.Texture2D.MipSlice = 0;
-        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateDepthStencilView( tex2d, &dsvdesc, &mDepth.dsv ), failure() );
 
         // create SRV
         D3D10_SHADER_RESOURCE_VIEW_DESC srvdesc = {
@@ -116,12 +116,12 @@ bool GN::d3d10::RenderToTexture::Init(
         };
         srvdesc.Texture2D.MostDetailedMip = 0;
         srvdesc.Texture2D.MipLevels = 1;
-        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &mDepth.srv ), Failure() );
+        GN_DX_CHECK_RETURN( device->CreateShaderResourceView( tex2d, &srvdesc, &mDepth.srv ), failure() );
     }
 
     // success
     mDevice = device;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -129,18 +129,18 @@ bool GN::d3d10::RenderToTexture::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::RenderToTexture::Quit()
+void GN::d3d10::RenderToTexture::quit()
 {
     GN_GUARD;
 
-    for( size_t i = 0; i < mColors.Size(); ++i )
+    for( size_t i = 0; i < mColors.size(); ++i )
     {
-        mColors[i].Clear();
+        mColors[i].clear();
     }
-    mColors.Clear();
-    mDepth.Clear();
+    mColors.clear();
+    mDepth.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -153,10 +153,10 @@ void GN::d3d10::RenderToTexture::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::RenderToTexture::ClearScreen( float r, float g, float b, float a, float d, UInt8 s )
+void GN::d3d10::RenderToTexture::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
 {
     float color[] = { r, g, b, a };
-    for( size_t i = 0; i < mColors.Size(); ++i )
+    for( size_t i = 0; i < mColors.size(); ++i )
     {
         mDevice->ClearRenderTargetView( mColors[i].rtv, color );
     }

@@ -9,32 +9,32 @@ public:
         {
             GN::Variant var(true);
             bool v = false;
-            TS_ASSERT( var.GetB(v) ); TS_ASSERT_EQUALS( true, v );
+            TS_ASSERT( var.getb(v) ); TS_ASSERT_EQUALS( true, v );
         }
         {
             GN::Variant var(1);
             int v = 0;
-            TS_ASSERT( var.GetI(v) ); TS_ASSERT_EQUALS( 1, v );
+            TS_ASSERT( var.geti(v) ); TS_ASSERT_EQUALS( 1, v );
         }
         {
             GN::Variant var(1.0f);
             float v = 0.0f;
-            TS_ASSERT( var.GetF(v) ); TS_ASSERT_EQUALS( 1.0f, v );
+            TS_ASSERT( var.getf(v) ); TS_ASSERT_EQUALS( 1.0f, v );
         }
         {
             GN::Variant var((void*)NULL);
             void * v = &var; // initialize to any non-NULL value.
-            TS_ASSERT( var.GetP(v) ); TS_ASSERT_EQUALS( (void*)NULL, v );
+            TS_ASSERT( var.getp(v) ); TS_ASSERT_EQUALS( (void*)NULL, v );
         }
         {
             GN::Variant var(GN::StrA("a"));
-            GN::StrA v = var.GetS();
+            GN::StrA v = var.gets();
             TS_ASSERT_EQUALS( "a", v );
         }
         {
             GN::Variant var(GN::Vector4f(1.0f,2.0f,3.0f,4.0f));
             GN::Vector4f v;
-            TS_ASSERT( var.GetV(v) );
+            TS_ASSERT( var.getv(v) );
             TS_ASSERT_EQUALS( 1.0f, v.x );
             TS_ASSERT_EQUALS( 2.0f, v.y );
             TS_ASSERT_EQUALS( 3.0f, v.z );
@@ -52,12 +52,12 @@ public:
         GN::Vector4f  v;
         GN::Matrix44f m;
 
-        TS_ASSERT( !var.GetB(b) );
-        TS_ASSERT( !var.GetI(i) );
-        TS_ASSERT( !var.GetF(f) );
-        TS_ASSERT( !var.GetP(p) );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        TS_ASSERT( !var.getb(b) );
+        TS_ASSERT( !var.geti(i) );
+        TS_ASSERT( !var.getf(f) );
+        TS_ASSERT( !var.getp(p) );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
     }
 
     void testFromBool()
@@ -71,25 +71,25 @@ public:
         GN::Vector4f  v;
         GN::Matrix44f m;
 
-        var.SetB(true);
+        var.setb(true);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "1", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( true, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 1, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 1.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)1, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "1", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( true, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 1, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 1.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)1, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
 
-        var.SetB(false);
+        var.setb(false);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "0", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( false, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 0, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 0.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)0, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "0", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( false, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 0, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 0.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)0, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
     }
 
     void testFromInt()
@@ -103,25 +103,25 @@ public:
         GN::Vector4f  v;
         GN::Matrix44f m;
 
-        var.SetI(1);
+        var.seti(1);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "1", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( true, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 1, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 1.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)1, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "1", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( true, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 1, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 1.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)1, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
 
-        var.SetI(0);
+        var.seti(0);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "0", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( false, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 0, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 0.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)0, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "0", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( false, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 0, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 0.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)0, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
     }
 
     void testFromFloat()
@@ -135,25 +135,25 @@ public:
         GN::Vector4f  v;
         GN::Matrix44f m;
 
-        var.SetF(1.123f);
+        var.setf(1.123f);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "1.123000", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( true, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 1, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 1.123f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)1, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "1.123000", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( true, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 1, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 1.123f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)1, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
 
-        var.SetF(0.0f);
+        var.setf(0.0f);
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "0.000000", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( false, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 0, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 0.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)0, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "0.000000", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( false, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 0, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 0.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)0, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
     }
 
     void testFromString()
@@ -167,28 +167,28 @@ public:
         GN::Vector4f  v;
         GN::Matrix44f m;
 
-        var.SetS("1");
+        var.sets("1");
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "1", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( true, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 1, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 1.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)1, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "1", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( true, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 1, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 1.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)1, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
 
-        var.SetS("0");
+        var.sets("0");
 
-        s = var.GetS(); TS_ASSERT_EQUALS( "0", s );
-        TS_ASSERT( var.GetB(b) ); TS_ASSERT_EQUALS( false, b );
-        TS_ASSERT( var.GetI(i) ); TS_ASSERT_EQUALS( 0, i );
-        TS_ASSERT( var.GetF(f) ); TS_ASSERT_EQUALS( 0.0f, f );
-        TS_ASSERT( var.GetP(p) ); TS_ASSERT_EQUALS( (void*)0, p );
-        TS_ASSERT( !var.GetV(v) );
-        TS_ASSERT( !var.GetM(m) );
+        s = var.gets(); TS_ASSERT_EQUALS( "0", s );
+        TS_ASSERT( var.getb(b) ); TS_ASSERT_EQUALS( false, b );
+        TS_ASSERT( var.geti(i) ); TS_ASSERT_EQUALS( 0, i );
+        TS_ASSERT( var.getf(f) ); TS_ASSERT_EQUALS( 0.0f, f );
+        TS_ASSERT( var.getp(p) ); TS_ASSERT_EQUALS( (void*)0, p );
+        TS_ASSERT( !var.getv(v) );
+        TS_ASSERT( !var.getm(m) );
 
-        var.SetS("1,2,3,4");
-        TS_ASSERT( var.GetV(v) );
+        var.sets("1,2,3,4");
+        TS_ASSERT( var.getv(v) );
         TS_ASSERT_EQUALS( 1.0f, v.x );
         TS_ASSERT_EQUALS( 2.0f, v.y );
         TS_ASSERT_EQUALS( 3.0f, v.z );

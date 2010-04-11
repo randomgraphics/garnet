@@ -41,15 +41,15 @@ const char * glsl_pscode =
     "   gl_FragColor = texture2D( t0, texcoords ); \n"
     "}";
 
-bool Init( Gpu & gpu )
+bool init( Gpu & gpu )
 {
     if( blankScreen ) return true;
 
-    rc.Clear();
+    rc.clear();
 
     // create GPU program
     GpuProgramDesc gpd;
-    if( GpuAPI::OGL == gpu.GetOptions().api )
+    if( GpuAPI::OGL == gpu.getOptions().api )
     {
         gpd.lang = GpuProgramLanguage::GLSL;
         gpd.vs.source = glsl_vscode;
@@ -63,23 +63,23 @@ bool Init( Gpu & gpu )
         gpd.vs.entry  = "main";
         gpd.ps.entry  = "main";
     }
-    rc.gpuProgram.Attach( gpu.CreateGpuProgram( gpd ) );
+    rc.gpuProgram.attach( gpu.createGpuProgram( gpd ) );
     if( !rc.gpuProgram ) return false;
 
     // create uniform
-    rc.uniforms.Resize( 1 );
-    rc.uniforms[0].Attach( gpu.CreateUniform( sizeof(Matrix44f) ) );
+    rc.uniforms.resize( 1 );
+    rc.uniforms[0].attach( gpu.createUniform( sizeof(Matrix44f) ) );
     if( !rc.uniforms[0] ) return false;
 
     // setup vertex format
     rc.vtxfmt.numElements = 1;
-    rc.vtxfmt.elements[0].BindTo( "position", 0 );
+    rc.vtxfmt.elements[0].bindTo( "position", 0 );
     rc.vtxfmt.elements[0].format = ColorFormat::FLOAT4;
     rc.vtxfmt.elements[0].offset = 0;
     rc.vtxfmt.elements[0].stream = 0;
 
     // create texture
-    rc.textures[0].texture.Attach( LoadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
+    rc.textures[0].texture.attach( loadTextureFromFile( gpu, "media::texture\\earth.jpg" ) );
 
     // create vertex buffer
     static float vertices[] =
@@ -93,26 +93,26 @@ bool Init( Gpu & gpu )
         sizeof(vertices),
         false,
     };
-    rc.vtxbufs[0].vtxbuf.Attach( gpu.CreateVtxBuf( vbd ) );
+    rc.vtxbufs[0].vtxbuf.attach( gpu.createVtxBuf( vbd ) );
     if( NULL == rc.vtxbufs[0].vtxbuf ) return false;
-    rc.vtxbufs[0].vtxbuf->Update( 0, 0, vertices );
+    rc.vtxbufs[0].vtxbuf->update( 0, 0, vertices );
 
     // create index buffer
     UInt16 indices[] = { 0, 1, 3, 2 };
     IdxBufDesc ibd = { 4, false, false };
-    rc.idxbuf.Attach( gpu.CreateIdxBuf( ibd ) );
+    rc.idxbuf.attach( gpu.createIdxBuf( ibd ) );
     if( !rc.idxbuf ) return false;
-    rc.idxbuf->Update( 0, 0, indices );
+    rc.idxbuf->update( 0, 0, indices );
 
     return true;
 }
 
-void Quit( Gpu & )
+void quit( Gpu & )
 {
-    rc.Clear();
+    rc.clear();
 }
 
-void Draw( Gpu & r )
+void draw( Gpu & r )
 {
     if( blankScreen ) return;
 
@@ -126,61 +126,61 @@ void Draw( Gpu & r )
         1,1,0,1,
         0,1,0,1,
     };
-    m.Translate( -1.0f, -0.0f, 0 );
-    rc.uniforms[0]->Update( m );
-    r.BindContext( rc );
-    r.DrawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
+    m.translate( -1.0f, -0.0f, 0 );
+    rc.uniforms[0]->update( m );
+    r.bindContext( rc );
+    r.drawUp( PrimitiveType::TRIANGLE_LIST, 3, vertices, 4*sizeof(float) );
 
     // DRAW_INDEXED_UP : triangle at left bottom
     static UInt16 indices[] = { 0, 1, 3 };
-    m.Translate( -1.0f, -1.0f, 0 );
-    rc.uniforms[0]->Update( m );
-    r.BindContext( rc );
-    r.DrawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
+    m.translate( -1.0f, -1.0f, 0 );
+    rc.uniforms[0]->update( m );
+    r.bindContext( rc );
+    r.drawIndexedUp( PrimitiveType::TRIANGLE_STRIP, 3, 4, vertices, 4*sizeof(float), indices );
 
     // DRAW: triangle at right top corner
-    m.Identity();
-    rc.uniforms[0]->Update( m );
-    r.BindContext( rc );
-    r.Draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
+    m.identity();
+    rc.uniforms[0]->update( m );
+    r.bindContext( rc );
+    r.draw( PrimitiveType::TRIANGLE_LIST, 3, 0 );
 
     // DRAW_INDEXED : quad at right bottom corner
-    m.Translate( 0.5f, -1.5f, 0 );
-    rc.uniforms[0]->Update( m );
-    r.BindContext( rc );
-    r.DrawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
+    m.translate( 0.5f, -1.5f, 0 );
+    rc.uniforms[0]->update( m );
+    r.bindContext( rc );
+    r.drawIndexed( PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0 );
 }
 
-int Run( Gpu & gpu )
+int run( Gpu & gpu )
 {
-    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
-        gpu.ProcessRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
-        in.ProcessInputEvents();
+        in.processInputEvents();
 
-        if( in.GetKeyStatus( KeyCode::ESCAPE ).down || in.GetKeyStatus( KeyCode::XB360_A ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down || in.getKeyStatus( KeyCode::XB360_A ).down )
         {
             gogogo = false;
         }
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        Draw( gpu );
-        gpu.Present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    Quit( gpu );
+    quit( gpu );
 
     return 0;
 }
@@ -189,21 +189,21 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.GetDispDesc();
-        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        ShutdownInputSystem();
+        shutdownInputSystem();
     }
 };
 
 void showHelp( CommandLineArguments & ca )
 {
-    StrA executableName = fs::BaseName( ca.applicationName ) + fs::ExtName( ca.applicationName );
-    GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.ToRawPtr() );
+    StrA executableName = fs::baseName( ca.applicationName ) + fs::extName( ca.applicationName );
+    GN_INFO(ca.logger)( "Usage: %s [options]\n", executableName.cptr() );
     ca.showStandardCommandLineOptions();
     GN_INFO(ca.logger)(
             "  -b                       Draw blank screen only. Do not create any graphics resources.\n" );
@@ -211,7 +211,7 @@ void showHelp( CommandLineArguments & ca )
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )
@@ -234,7 +234,7 @@ int main( int argc, const char * argv[] )
 
     for( size_t i = 0; i < cmdargs.extraArgc; ++i )
     {
-        if( 0 == StringCompareI( "-b", cmdargs.extraArgv[i] ) )
+        if( 0 == stringCompareI( "-b", cmdargs.extraArgv[i] ) )
         {
             blankScreen = true;
         }
@@ -248,16 +248,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
-    int result = Run( *r );
+    int result = run( *r );
 
-    DeleteGpu( r );
+    deleteGpu( r );
 
     return result;
 }

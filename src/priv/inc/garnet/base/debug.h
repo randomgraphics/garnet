@@ -12,9 +12,9 @@
 #define GN_ASSERT_FAILURE( desc )                                \
     {                                                            \
         static bool sIgnoreFromNowOn = false;                    \
-        if( !sIgnoreFromNowOn && GN::AssertFunc( desc, __FILE__, \
+        if( !sIgnoreFromNowOn && GN::assertFunc( desc, __FILE__, \
             __LINE__, &sIgnoreFromNowOn ) )                      \
-        { ::GN::BreakIntoDebugger(); }                                    \
+        { ::GN::breakIntoDebugger(); }                                    \
     }
 
 ///
@@ -72,12 +72,12 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: function %s is not implmented yet.", GN_FUNCTION ) );
 
 ///
 /// Output a todo message.
 ///
-#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::GetLogger("GN.base.todo"))( "TODO: %s", msg ) );
+#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
 // *****************************************************************************
 /// \name error check macros
@@ -91,7 +91,7 @@
         GLenum err = glGetError();                                          \
         if( GL_NO_ERROR != err )                                            \
         {                                                                   \
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.OGLError"); \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.OGLError"); \
             GN_ERROR(sLogger)( "%s%s!", errDesc,                            \
                 (const char*)::gluErrorString(err) );                       \
             GN_UNEXPECTED();                                                \
@@ -124,8 +124,8 @@
         intptr_t rr = (intptr_t)(func);                                      \
         if( 0 == rr )                                                        \
         {                                                                    \
-            static GN::Logger * sLogger = GN::GetLogger("GN.base.MSWError"); \
-            GN_ERROR(sLogger)( ::GN::GetWin32LastErrorInfo() );                     \
+            static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
+            GN_ERROR(sLogger)( ::GN::getWin32LastErrorInfo() );              \
             something                                                        \
         }                                                                    \
     } else void(0)
@@ -160,8 +160,8 @@
         HRESULT hr = func;                                                  \
         if( FAILED(hr) )                                                    \
         {                                                                   \
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.DXError");  \
-            GN_ERROR(sLogger)( GN::GetDirectXErrorInfo(hr) );                    \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DXError");  \
+            GN_ERROR(sLogger)( GN::getDXErrorInfo(hr) );                    \
             something                                                       \
         }                                                                   \
     } else void(0)
@@ -196,7 +196,7 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.XLibError"); \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.XLibError"); \
             GN_ERROR(sLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \
@@ -247,13 +247,13 @@ namespace GN
     /// \return
     ///     Return old behavior.
     ///
-    RuntimeAssertBehavior SetRuntimeAssertBehavior( RuntimeAssertBehavior );
+    RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     ///
-    /// Return true to break into debugger ( ASCII version )
+    /// break into debugger ( ASCII version )
     ///
     bool
-    AssertFunc(
+    assertFunc(
         const char * msg,
         const char * file,
         int          line,
@@ -262,31 +262,31 @@ namespace GN
 	///
 	/// Debug break function
 	///
-	void BreakIntoDebugger();
+	void breakIntoDebugger();
 
 #ifdef GN_MSWIN
 
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw();
+    const char * getWin32ErrorInfo( UInt32 win32ErrorCode ) throw();
 
     ///
     /// get OS error info (Windows specific)
     ///
-    const char * GetWin32LastErrorInfo() throw();
+    const char * getWin32LastErrorInfo() throw();
 
 #endif
 
     ///
     /// get DX error string
     ///
-    const char * GetDirectXErrorInfo( SInt32 hr ) throw();
+    const char * getDXErrorInfo( SInt32 hr ) throw();
 
     ///
     /// convert errno value to string
     ///
-    const char * Errno2Str( int );
+    const char * errno2str( int );
 
     //@}
 }

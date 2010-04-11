@@ -2,7 +2,7 @@
 #include "xenonVtxBuf.h"
 #include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Local functions
@@ -52,7 +52,7 @@ sLockFlags2Xenon( GN::gfx::SurfaceUpdateFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
+bool GN::gfx::XenonVtxBuf::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -62,12 +62,12 @@ bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
     if( 0 == desc.length || desc.length > (64*1024*1024) )
     {
         GN_ERROR(sLogger)( "Vertex buffer size must be larger then zero and not greater than 64MB." );
-        return Failure();
+        return failure();
     }
 
-    SetDesc( desc );
+    setDesc( desc );
 
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     //
     // create d3d vertex buffer
@@ -80,10 +80,10 @@ bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
             0, // POOL
             &mVb,
             0 ),
-        Failure() );
+        failure() );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -91,13 +91,13 @@ bool GN::gfx::XenonVtxBuf::Init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonVtxBuf::Quit()
+void GN::gfx::XenonVtxBuf::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVb );
+    safeRelease( mVb );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -111,7 +111,7 @@ void GN::gfx::XenonVtxBuf::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::XenonVtxBuf::Update(
+GN::gfx::XenonVtxBuf::update(
     size_t            offset,
     size_t            length,
     const void      * data,
@@ -119,12 +119,12 @@ GN::gfx::XenonVtxBuf::Update(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
     // check if the vertex buffer is binding to the device.
-    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)GetGpu().GetD3DDevice();
+    IDirect3DDevice9 * dev = (IDirect3DDevice9 *)getGpu().getD3DDevice();
     const DWORD NUM_VB = 16;
     bool bindingFlags[NUM_VB];
     UINT offsets[NUM_VB];
@@ -168,15 +168,15 @@ GN::gfx::XenonVtxBuf::Update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonVtxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonVtxBuf::readback( DynaArray<UInt8> & data )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     GN_UNIMPL();
 
-    data.Clear();
+    data.clear();
 
     GN_UNGUARD_SLOW;
 }

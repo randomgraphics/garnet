@@ -3,7 +3,7 @@
 #include "oglTexture.h"
 #include "oglGpu.h"
 
-//static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+//static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -20,15 +20,15 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 
     GN_ASSERT( rtt.texture );
 
-    const OGLTexture * tex = SafeCastPtr<const OGLTexture>( rtt.texture );
+    const OGLTexture * tex = safeCastPtr<const OGLTexture>( rtt.texture );
 
     // get texture size
     UInt32 sx, sy;
-    tex->GetMipSize<UInt32>( rtt.level, &sx, &sy );
+    tex->getMipSize<UInt32>( rtt.level, &sx, &sy );
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
-    switch( tex->GetDesc().dim )
+    switch( tex->getDesc().dim )
     {
         case TEXDIM_CUBE :
             GN_ASSERT( sx == sy );
@@ -98,7 +98,7 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
     /*
 
     // bind color buffers
-    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.GetCaps().maxRenderTargets ) );
+    UInt32 count = min( (UInt32)RenderContext::NUM_COLOR_RENDER_TARGETS, mGpu.caps().maxRenderTargets ) );
     for( UInt32 i = 0; i < count; ++i )
     {
         const RenderTargetTexture * oldc = i < oldrt.count ? oldrt.crts[i] : NULL;
@@ -123,13 +123,13 @@ bool GN::gfx::OGLRTMgrCopyFrame::bind(
                 UInt32 oldh = mHeight;
                 if( newc && newc->texture )
                 {
-                    newc->texture->GetMipSize<UInt32>( newc->level, &mWidth, &mHeight );
+                    newc->texture->getMipSize<UInt32>( newc->level, &mWidth, &mHeight );
                 }
                 else
                 {
                     // use default back buffer size
-                    mWidth = mGpu.GetDispDesc().width;
-                    mHeight = mGpu.GetDispDesc().height;
+                    mWidth = mGpu.getDispDesc().width;
+                    mHeight = mGpu.getDispDesc().height;
                 }
 
                 renderTargetSizeChanged = ( oldw != mWidth || oldh != mHeight );

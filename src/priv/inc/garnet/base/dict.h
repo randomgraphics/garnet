@@ -24,10 +24,10 @@ namespace GN
             Iterator( const Iterator & ); ///< copy ctor
             ~Iterator(); ///< dtor
 
-            const void * Key() const;   ///< get pointer to key
-            void       * Value() const; ///< get pointer to value.
-            void         GoToNext(); ///< move iterator to next item
-            bool         Equal( const Iterator & rhs ) const; // check equality of 2 iterators
+            const void * key() const;   ///< get pointer to key
+            void       * value() const; ///< get pointer to value.
+            void         moveToNext(); ///< move iterator to next item
+            bool         equal( const Iterator & rhs ) const; // check equality of 2 iterators
 
             Iterator & operator=( const Iterator & rhs ); // assign operator
         };
@@ -61,16 +61,16 @@ namespace GN
         TypelessDict( const TypelessDict & );
         ~TypelessDict();
 
-        Iterator        Begin() const;
-        void            Clear();
-        void            CopyFrom( const TypelessDict & );
-        bool            Empty() const;
-        Iterator        End() const;
-        void *          Find( const void * key ) const;
-        void *          FindOrInsert( const void * key, TypeTraits::CtorFunc ctor );
-        bool            Insert( const void * key, const void * value, Iterator * iter );
-        void            Remove( const void * key );
-        size_t          Size() const;
+        Iterator        begin() const;
+        void            clear();
+        void            copyFrom( const TypelessDict & );
+        bool            empty() const;
+        Iterator        end() const;
+        void *          find( const void * key ) const;
+        void *          findOrInsert( const void * key, TypeTraits::CtorFunc ctor );
+        bool            insert( const void * key, const void * value, Iterator * iter );
+        void            remove( const void * key );
+        size_t          size() const;
 
         //@}
 
@@ -100,14 +100,14 @@ namespace GN
             KeyValuePair( const KeyValuePair & p ) : mTypelessIter(p.mTypelessIter) {}
             KeyValuePair( const TypelessDict::Iterator & i ) : mTypelessIter(i) {}
 
-            const KEY_TYPE   & Key() const { return *(const KEY_TYPE*)mTypelessIter.Key(); }
+            const KEY_TYPE   & key() const { return *(const KEY_TYPE*)mTypelessIter.key(); }
 
-            const VALUE_TYPE & Value() const { return *(const VALUE_TYPE*)mTypelessIter.Value(); }
+            const VALUE_TYPE & value() const { return *(const VALUE_TYPE*)mTypelessIter.value(); }
 
-            VALUE_TYPE       & Value() { return *(VALUE_TYPE*)mTypelessIter.Value(); }
+            VALUE_TYPE       & value() { return *(VALUE_TYPE*)mTypelessIter.value(); }
 
-            //const Iterator & operator++() const { mTypelessIter.GoToNext(); return *this; }
-            //friend Iterator operator++( const Iterator & it, int ) { Iterator ret(it); ret.GotoNext(); return ret; }
+            //const Iterator & operator++() const { mTypelessIter.moveToNext(); return *this; }
+            //friend Iterator operator++( const Iterator & it, int ) { Iterator ret(it); ret.moveToNext(); return ret; }
             //bool operator==( const ConstIterator & rhs ) const { return mTypelessIter.Equal( rhs.mTypelessIter ); }
             //bool operator==( const Iterator      & rhs ) const { return mTypelessIter.Equal( rhs.mTypelessIter ); }
             //bool operator!=( const ConstIterator & rhs ) const { return !mTypelessIter.Equal( rhs.mTypelessIter ); }
@@ -141,13 +141,13 @@ namespace GN
 
             Iterator & operator=( const Iterator & rhs ) { mKeyValuePair.mTypelessIter = rhs.mKeyValuePair.mTypelessIter; return *this; }
 
-            const Iterator & operator++() const { mKeyValuePair.mTypelessIter.GoToNext(); return *this; }
-            friend Iterator operator++( Iterator & it, int ) { Iterator ret(it); it.GotoNext(); return ret; }
+            const Iterator & operator++() const { mKeyValuePair.mTypelessIter.moveToNext(); return *this; }
+            friend Iterator operator++( Iterator & it, int ) { Iterator ret(it); it.moveToNext(); return ret; }
 
-            bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator!=( const ConstIterator & rhs ) const { return !mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator!=( const Iterator      & rhs ) const { return !mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator!=( const ConstIterator & rhs ) const { return !mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator!=( const Iterator      & rhs ) const { return !mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
 
             //@}
 
@@ -183,15 +183,15 @@ namespace GN
             ConstIterator & operator=( const Iterator      & rhs ) { mKeyValuePair.mTypelessIter = rhs.mKeyValuePair.mTypelessIter; return *this; }
 
             // ++i
-            const ConstIterator & operator++() const { mKeyValuePair.mTypelessIter.GoToNext(); return *this; }
+            const ConstIterator & operator++() const { mKeyValuePair.mTypelessIter.moveToNext(); return *this; }
 
             // i++
-            friend ConstIterator operator++( ConstIterator & it, int ) { ConstIterator ret(it); it.GotoNext(); return ret; }
+            friend ConstIterator operator++( ConstIterator & it, int ) { ConstIterator ret(it); it.moveToNext(); return ret; }
 
-            bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator!=( const ConstIterator & rhs ) const { return !mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
-            bool operator!=( const Iterator      & rhs ) const { return !mKeyValuePair.mTypelessIter.Equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator==( const ConstIterator & rhs ) const { return mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator==( const Iterator      & rhs ) const { return mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator!=( const ConstIterator & rhs ) const { return !mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
+            bool operator!=( const Iterator      & rhs ) const { return !mKeyValuePair.mTypelessIter.equal( rhs.mKeyValuePair.mTypelessIter ); }
 
             //@}
         };
@@ -203,38 +203,38 @@ namespace GN
         Dictionary( const Dictionary & d ) : mTypelessDict( d.mTypelessDict ) {}
         ~Dictionary() {}
 
-        ConstIterator       Begin() const { ConstIterator i( mTypelessDict.Begin() ); return i; }
-        Iterator            Begin() { Iterator i( mTypelessDict.Begin() ); return i; }
-        void                Clear() { return mTypelessDict.Clear(); }
-        bool                Empty() const { return mTypelessDict.Empty(); }
-        ConstIterator       End() const { ConstIterator i( mTypelessDict.End() ); return i; }
-        Iterator            End() { Iterator i( mTypelessDict.End() ); return i; }
-        const VALUE_TYPE *  Find( const KEY_TYPE & key ) const { return (const VALUE_TYPE*)mTypelessDict.Find( &key ); }
-        VALUE_TYPE *        Find( const KEY_TYPE & key ) { return (VALUE_TYPE*)mTypelessDict.Find( &key ); }
-        bool                Insert( const KEY_TYPE & key, const VALUE_TYPE & value, Iterator * iter = NULL ) { return mTypelessDict.Insert( &key, &value, (TypelessDict::Iterator*)iter ); }
-        void                Remove( const KEY_TYPE & key ) { mTypelessDict.Remove( &key ); }
-        size_t              Size() const { return mTypelessDict.Size(); }
+        ConstIterator       begin() const { ConstIterator i( mTypelessDict.begin() ); return i; }
+        Iterator            begin() { Iterator i( mTypelessDict.begin() ); return i; }
+        void                clear() { return mTypelessDict.clear(); }
+        bool                empty() const { return mTypelessDict.empty(); }
+        ConstIterator       end() const { ConstIterator i( mTypelessDict.end() ); return i; }
+        Iterator            end() { Iterator i( mTypelessDict.end() ); return i; }
+        const VALUE_TYPE *  find( const KEY_TYPE & key ) const { return (const VALUE_TYPE*)mTypelessDict.find( &key ); }
+        VALUE_TYPE *        find( const KEY_TYPE & key ) { return (VALUE_TYPE*)mTypelessDict.find( &key ); }
+        bool                insert( const KEY_TYPE & key, const VALUE_TYPE & value, Iterator * iter = NULL ) { return mTypelessDict.insert( &key, &value, (TypelessDict::Iterator*)iter ); }
+        void                remove( const KEY_TYPE & key ) { mTypelessDict.remove( &key ); }
+        size_t              size() const { return mTypelessDict.size(); }
 
         //@}
 
         // operators
         //@{
 
-        Dictionary & operator=( const Dictionary & rhs ) { mTypelessDict.CopyFrom( rhs.mTypelessDict ); return *this; }
+        Dictionary & operator=( const Dictionary & rhs ) { mTypelessDict.copyFrom( rhs.mTypelessDict ); return *this; }
 
-        VALUE_TYPE & operator[]( const KEY_TYPE & key ) { return FindOrCreate( key ); }
+        VALUE_TYPE & operator[]( const KEY_TYPE & key ) { return findOrInsert( key ); }
 
-        const VALUE_TYPE & operator[]( const KEY_TYPE & key ) const { return *Find( key ); }
+        const VALUE_TYPE & operator[]( const KEY_TYPE & key ) const { return *find( key ); }
 
         //@}
 
     private:
 
-        VALUE_TYPE & FindOrCreate( const KEY_TYPE & key )
+        VALUE_TYPE & findOrInsert( const KEY_TYPE & key )
         {
-            TypelessDict::TypeTraits::CtorFunc ctor = TypeHelper<VALUE_TYPE>::Construct;
+            TypelessDict::TypeTraits::CtorFunc ctor = TypeHelper<VALUE_TYPE>::construct;
 
-            return *(VALUE_TYPE*)mTypelessDict.FindOrInsert( &key, ctor );
+            return *(VALUE_TYPE*)mTypelessDict.findOrInsert( &key, ctor );
         }
 
         template<typename T>
@@ -245,12 +245,12 @@ namespace GN
                 TypelessDict::TypeTraits tt;
 
                 tt.size = sizeof(T);
-                tt.ctor = NULL;//Construct;
-                tt.cctor = CopyConstruct;
-                tt.dtor = Destruct;
-                tt.assign = Assign;
-                tt.equal = NULL;//Equal;
-                tt.less = &Less;
+                tt.ctor = NULL;//construct;
+                tt.cctor = copyConstruct;
+                tt.dtor = destruct;
+                tt.assign = assign;
+                tt.equal = NULL;//equal;
+                tt.less = &less;
 
                 return tt;
             }
@@ -260,31 +260,31 @@ namespace GN
                 TypelessDict::TypeTraits tt;
 
                 tt.size = sizeof(T);
-                tt.ctor = NULL;//Construct; // ctor is required for [] operator only
-                tt.cctor = CopyConstruct;
-                tt.dtor = Destruct;
+                tt.ctor = NULL;//construct; // ctor is required for [] operator only
+                tt.cctor = copyConstruct;
+                tt.dtor = destruct;
 
                 // value type requires no operator
-                tt.assign = NULL;//Assign;
-                tt.equal = NULL;//Equal;
-                tt.less = NULL;//&Less;
+                tt.assign = NULL;//assign;
+                tt.equal = NULL;//equal;
+                tt.less = NULL;//&less;
 
                 return tt;
             }
 
-            static void Construct( void * ptr )
+            static void construct( void * ptr )
             {
                 GN_ASSERT( ptr );
                 new (ptr) T();
             }
 
-            static void CopyConstruct( void * ptr, const void * ref )
+            static void copyConstruct( void * ptr, const void * ref )
             {
                 GN_ASSERT( ptr && ref );
                 new (ptr) T(*(const T*)ref);
             }
 
-            static void Destruct( void * ptr )
+            static void destruct( void * ptr )
             {
                 GN_ASSERT( ptr );
                 T * k = (T*)ptr;
@@ -292,18 +292,18 @@ namespace GN
                 k->T::~T();
             }
 
-            static void Assign( void * a, const void * b )
+            static void assign( void * a, const void * b )
             {
                 (*(T*)a) = (*(const T*)b);
             }
 
-            static bool Equal( const void * a, const void * b )
+            static bool equal( const void * a, const void * b )
             {
                 GN_ASSERT( a && b );
                 return (*(const T*)a) == (*(const T*)b);
             }
 
-            static bool Less( const void * a, const void * b )
+            static bool less( const void * a, const void * b )
             {
                 GN_ASSERT( a && b );
                 return (*(const T*)a) < (*(const T*)b);

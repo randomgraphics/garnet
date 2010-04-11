@@ -10,7 +10,7 @@
 
 #define IDX_INPUT_BUFFER_SIZE  128
 
-static GN::Logger * sLogger = GN::GetLogger("GN.input.DI");
+static GN::Logger * sLogger = GN::getLogger("GN.input.DI");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -19,7 +19,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.DI");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputDInput::Init()
+bool GN::input::InputDInput::init()
 {
     GN_GUARD;
 
@@ -27,10 +27,10 @@ bool GN::input::InputDInput::Init()
     GN_STDCLASS_INIT( GN::input::InputDInput, () );
 
     // init dinput stuff
-    if( !diInit() ) return Failure();
+    if( !diInit() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -38,14 +38,14 @@ bool GN::input::InputDInput::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputDInput::Quit()
+void GN::input::InputDInput::quit()
 {
     GN_GUARD;
 
     unacquire();
     diQuit();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -58,13 +58,13 @@ void GN::input::InputDInput::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::input::InputDInput::AttachToWindow( HandleType disp, HandleType window )
+bool GN::input::InputDInput::attachToWindow( HandleType disp, HandleType window )
 {
     GN_GUARD;
 
     mAttached = false;
 
-    if( !MyParent::AttachToWindow(disp,window) ) return false;
+    if( !MyParent::attachToWindow(disp,window) ) return false;
 
     GN_ASSERT( ::IsWindow( (HWND)window ) );
 
@@ -94,11 +94,11 @@ bool GN::input::InputDInput::AttachToWindow( HandleType disp, HandleType window 
 //
 //
 // ----------------------------------------------------------------------------
-void GN::input::InputDInput::ProcessInputEvents()
+void GN::input::InputDInput::processInputEvents()
 {
     GN_GUARD_SLOW;
 
-    MyParent::ProcessInputEvents();
+    MyParent::processInputEvents();
 
     if( mAttached && mAcquired )
     {
@@ -154,7 +154,7 @@ bool GN::input::InputDInput::acquire()
 {
     GN_GUARD;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     mAcquired = false;
 
@@ -185,7 +185,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", GetDirectXErrorInfo(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", getDXErrorInfo(rval) );
             return false;
         }
     }
@@ -194,7 +194,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", GetDirectXErrorInfo(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", getDXErrorInfo(rval) );
             return false;
         }
     }
@@ -285,7 +285,7 @@ void GN::input::InputDInput::pollMouse()
 // ----------------------------------------------------------------------------
 void GN::input::InputDInput::buildKeyMap()
 {
-    // Clear all field to KeyCode::NONE
+    // clear all field to KeyCode::NONE
     memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map
@@ -335,9 +335,9 @@ void GN::input::InputDInput::diQuit()
     GN_GUARD;
 
     // release dinput stuff
-    SafeRelease(mMouse);
-    SafeRelease(mKeyboard);
-    SafeRelease(mDInput);
+    safeRelease(mMouse);
+    safeRelease(mKeyboard);
+    safeRelease(mDInput);
     if( mLibrary ) ::FreeLibrary( mLibrary ), mLibrary = 0;
 
     GN_UNGUARD;

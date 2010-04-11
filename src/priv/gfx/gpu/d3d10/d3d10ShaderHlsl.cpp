@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 ///
 /// D3D10 shader type
@@ -141,9 +141,9 @@ static const char * sCloneString( const char * str )
 {
     if( NULL == str ) return NULL;
 
-    size_t n = GN::StringLength( str ) + 1;
+    size_t n = GN::stringLength( str ) + 1;
 
-    char * clone = (char*)GN::HeapMemory::Alloc( n );
+    char * clone = (char*)GN::HeapMemory::alloc( n );
     if( NULL == clone )
     {
         GN_GPU_RIP( "Out of memory!" );
@@ -184,8 +184,8 @@ sInitConstBuffers(
     }
 
     // create constant buffers
-    constBufs.Resize( desc.ConstantBuffers );
-    constData.Resize( desc.ConstantBuffers );
+    constBufs.resize( desc.ConstantBuffers );
+    constData.resize( desc.ConstantBuffers );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = reflection.GetConstantBufferByIndex( i );
@@ -203,7 +203,7 @@ sInitConstBuffers(
         bufdesc.MiscFlags      = 0;
         GN_DX_CHECK_RETURN( dev.CreateBuffer( &bufdesc, NULL, &constBufs[i] ), false );
 
-        constData[i].Resize( cbdesc.Size );
+        constData[i].resize( cbdesc.Size );
     }
 
     return true;
@@ -242,7 +242,7 @@ sInitUniforms(
             var->GetDesc( &vardesc );
 
             // find uniform with same name
-            D3D10UniformParameterDesc * existingUniform = paramDesc.FindUniform( vardesc.Name );
+            D3D10UniformParameterDesc * existingUniform = paramDesc.findUniform( vardesc.Name );
             if( existingUniform )
             {
                 if( existingUniform->size != vardesc.Size )
@@ -304,7 +304,7 @@ sInitTextures(
         if( D3D10_SIT_TEXTURE != sibdesc.Type ) continue;
 
         // find uniform with same name
-        D3D10TextureParameterDesc * existingTexture = paramDesc.FindTexture( sibdesc.Name );
+        D3D10TextureParameterDesc * existingTexture = paramDesc.findTexture( sibdesc.Name );
         if( existingTexture )
         {
             // update shader specific properties
@@ -345,14 +345,14 @@ sInitShader(
     GN_GUARD;
 
     // do nothing for empty shader code
-    if( IsStringEmpty( code.source ) ) return true;
+    if( stringEmpty( code.source ) ) return true;
 
     // initialize shader type template
     D3D10ShaderTypeTemplate<SHADER_TYPE> templ;
 
     // compile shader
     AutoComPtr<ID3D10Blob> binary;
-    shader.Attach( templ.compileAndCreateShader(
+    shader.attach( templ.compileAndCreateShader(
         dev,
         code.source,
         0,
@@ -395,7 +395,7 @@ sInitShader(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10VertexShaderHLSL::Init(
+bool GN::gfx::D3D10VertexShaderHLSL::init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,
@@ -411,7 +411,7 @@ bool GN::gfx::D3D10VertexShaderHLSL::Init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10GeometryShaderHLSL::Init(
+bool GN::gfx::D3D10GeometryShaderHLSL::init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,
@@ -427,7 +427,7 @@ bool GN::gfx::D3D10GeometryShaderHLSL::Init(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10PixelShaderHLSL::Init(
+bool GN::gfx::D3D10PixelShaderHLSL::init(
     ID3D10Device                    & dev,
     const ShaderCode                & code,
     const D3D10ShaderCompileOptions & options,
@@ -454,7 +454,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_BOOL:
             if( !u.value.bools.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.bools.Size() );
+                GN_ASSERT( uud.sizedw == u.value.bools.size() );
                 src = &u.value.bools[0];
             }
             break;
@@ -462,7 +462,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_INT:
             if( !u.value.ints.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.ints.Size() );
+                GN_ASSERT( uud.sizedw == u.value.ints.size() );
                 src = &u.value.ints[0];
             }
             break;
@@ -470,7 +470,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_FLOAT:
             if( !u.value.floats.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.floats.Size() );
+                GN_ASSERT( uud.sizedw == u.value.floats.size() );
                 src = &u.value.floats[0];
             }
             break;
@@ -478,7 +478,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_VECTOR4:
             if( !u.value.vector4s.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.vector4s.Size() * 4 );
+                GN_ASSERT( uud.sizedw == u.value.vector4s.size() * 4 );
                 src = &u.value.vector4s[0];
             }
             break;
@@ -486,20 +486,20 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         case UVT_MATRIX44:
             if( !u.value.matrix44s.empty() )
             {
-                GN_ASSERT( uud.sizedw == u.value.matrix44s.Size() * 16 );
+                GN_ASSERT( uud.sizedw == u.value.matrix44s.size() * 16 );
                 src = &u.value.matrix44s[0];
             }
             break;
 
         default:
-            GN_ERROR(GN::GetLogger("GN.gfx.gpu.D3D9"))( "unitialized/invalid uniform!" );
+            GN_ERROR(GN::getLogger("GN.gfx.gpu.D3D9"))( "unitialized/invalid uniform!" );
             break;
 
     }
 
     if( 0 == src ) return;
 
-    GN_ASSERT( uud.bufidx < constBufs.Size() );
+    GN_ASSERT( uud.bufidx < constBufs.size() );
     ID3D10Buffer * cb = constBufs[uud.bufidx];
     DynaArray<UInt8> & syscopy = constData[uud.bufidx];
 
@@ -512,7 +512,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         cb,
         0, // sub resource
         0, // box
-        syscopy.ToRawPtr(),
+        syscopy.cptr(),
         0,   // row pitch
         0 ); // slice pitch
 
@@ -523,7 +523,7 @@ void GN::gfx::D3D10ShaderHLSL::applyUniform( const Uniform & u ) const
         GN_ERROR(sLogger)( "fail to map constant buffer." );
         return;
     }
-    memcpy( data, syscopy.ToRawPtr(), syscopy.Size() );
+    memcpy( data, syscopy.cptr(), syscopy.size() );
     cb->Unmap();
 #endif
 

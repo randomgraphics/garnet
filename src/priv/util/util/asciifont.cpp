@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.AsciiFont");
+static GN::Logger * sLogger = GN::getLogger("GN.util.AsciiFont");
 
 // *****************************************************************************
 // ascii font face class
@@ -45,7 +45,7 @@ public:
         }
     }
 
-    virtual const FontFaceDesc & GetDesc() const { return mDesc; }
+    virtual const FontFaceDesc & getDesc() const { return mDesc; }
 
     virtual bool loadFontImage( FontImage & result, wchar_t ch )
     {
@@ -94,7 +94,7 @@ public:
 //
 // -----------------------------------------------------------------------------
 GN::util::FontFace *
-GN::util::CreateSimpleAsciiFontFace()
+GN::util::createSimpleAsciiFontFace()
 {
     return new AsciiFontFace;
 }

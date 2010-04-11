@@ -67,7 +67,7 @@ public:
         TS_ASSERT( e <= MyEnum::C);
 
         //MyEnum::toStr(E1);
-        //e.FromStr( "E1" );
+        //e.fromStr( "E1" );
         //e = MyEnum::sGetAt(0);
     }
 

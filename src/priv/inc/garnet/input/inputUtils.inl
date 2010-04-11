@@ -3,9 +3,9 @@ namespace GN { namespace input
     //
     //
     // ----------------------------------------------------------------------------
-    inline KeyCode String2KeyCode( const char * name )
+    inline KeyCode str2kc( const char * name )
     {
-        if( GN::IsStringEmpty(name) ) return KeyCode::NONE;
+        if( GN::stringEmpty(name) ) return KeyCode::NONE;
 
         static const char * sTable[]=
         {
@@ -17,7 +17,7 @@ namespace GN { namespace input
 
         for( size_t i = 0; i < sizeof(sTable)/sizeof(sTable[0]); ++i )
         {
-            if( 0 == StringCompare( name, sTable[i] ) ) return (KeyCode)i;
+            if( 0 == stringCompare( name, sTable[i] ) ) return (KeyCode)i;
         }
 
         return KeyCode::NONE;
@@ -26,7 +26,7 @@ namespace GN { namespace input
     //
     //
     // ----------------------------------------------------------------------------
-    inline const char * KeyCode2String( int code )
+    inline const char * keyCode2String( int code )
     {
         static const char * sTable[]=
         {

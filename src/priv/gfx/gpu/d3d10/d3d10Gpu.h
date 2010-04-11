@@ -29,7 +29,7 @@ namespace GN { namespace gfx
     public:
 
         /// initialize the layout
-        bool Init( ID3D10Device & dev, const GN::gfx::VertexFormat & format );
+        bool init( ID3D10Device & dev, const GN::gfx::VertexFormat & format );
 
         /// less operator
         bool operator<( const D3D10VertexLayout & rhs ) const
@@ -51,8 +51,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        D3D10Gpu()          { Clear(); }
-        virtual ~D3D10Gpu() { Quit(); }
+        D3D10Gpu()          { clear(); }
+        virtual ~D3D10Gpu() { quit(); }
         //@}
 
         // ********************************
@@ -61,15 +61,15 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuOptions & );
-        void Quit();
+        bool init( const GpuOptions & );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             dispClear();
             capsClear();
             resourceClear();
-            ContextClear();
+            contextClear();
             drawClear();
         }
         //@}
@@ -84,8 +84,8 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual void * GetD3DDevice() const { return mDevice; }
-        virtual void * GetOGLRC() const { return 0; }
+        virtual void * getD3DDevice() const { return mDevice; }
+        virtual void * getOGLRC() const { return 0; }
 
     public :
 
@@ -121,9 +121,9 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual const GpuCaps & GetCaps() const { return mCaps; }
-        virtual bool CheckTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
-        virtual ColorFormat GetDefaultTextureFormat( TextureUsage usage ) const;
+        virtual const GpuCaps & caps() const { return mCaps; }
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usage ) const;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsage usage ) const;
 
     private :
 
@@ -147,12 +147,12 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Blob       * CompileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform    * CreateUniform( size_t size );
-        virtual Texture    * CreateTexture( const TextureDesc & desc );
-        virtual VtxBuf     * CreateVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf     * CreateIdxBuf( const IdxBufDesc & desc );
+        virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform    * createUniform( size_t size );
+        virtual Texture    * createTexture( const TextureDesc & desc );
+        virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
+        virtual IdxBuf     * createIdxBuf( const IdxBufDesc & desc );
 
     public :
 
@@ -197,7 +197,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
         void setSampler(
             int                        shaderStage,  // 0: VS, 1: GS: 2: PS
@@ -209,7 +209,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void ContextClear() { mContext.Clear(); mSOMgr = 0; mRTMgr = 0; }
+        void contextClear() { mContext.clear(); mSOMgr = 0; mRTMgr = 0; }
 
         inline bool bindContextRenderTarget( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextShader( const GpuContext & newContext, bool skipDirtyCheck );
@@ -235,29 +235,29 @@ namespace GN { namespace gfx
 
     public: // from Gpu
 
-        virtual void Present();
-        virtual void ClearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
-        virtual void DrawIndexed( PrimitiveType prim,
+        virtual void present();
+        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
+        virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
                                   size_t        startvtx,
                                   size_t        numvtx,
                                   size_t        startidx );
-        virtual void Draw( PrimitiveType prim,
+        virtual void draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx );
-        virtual void DrawIndexedUp(
+        virtual void drawIndexedUp(
                              PrimitiveType  prim,
                              size_t         numidx,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
                              const UInt16 * indexData );
-        virtual void DrawUp( PrimitiveType prim,
+        virtual void drawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void DrawLines( BitFields         options,
+        virtual void drawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
@@ -292,9 +292,9 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void GetBackBufferContent( BackBufferContent & );
+        virtual void getBackBufferContent( BackBufferContent & );
 
-        virtual void DumpNextFrame( size_t startBatchIndex, size_t numBatches )
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
         {
             GN_UNUSED_PARAM( startBatchIndex );
             GN_UNUSED_PARAM( numBatches );

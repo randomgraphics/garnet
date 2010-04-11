@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // Local stuff
@@ -23,7 +23,7 @@ struct UniformDesc
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::UniformResource::GetGuid()
+const Guid & GN::gfx::UniformResource::guid()
 {
     static const Guid UNIFORM_GUID = { 0xd140dbea, 0x9ce3, 0x4bb9, { 0x9c, 0xa7, 0xb8, 0x14, 0xf3, 0x83, 0xab, 0x95 } };
     return UNIFORM_GUID;
@@ -32,16 +32,16 @@ const Guid & GN::gfx::UniformResource::GetGuid()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::UniformResource::Reset(
+bool GN::gfx::UniformResource::reset(
     size_t                length,
     const void          * initialData )
 {
-    AutoRef<Uniform> u( GetGdb().GetGpu().CreateUniform( length ) );
+    AutoRef<Uniform> u( getGdb().getGpu().createUniform( length ) );
     if( !u ) return false;
 
-    if( initialData ) u->Update( 0, length, initialData );
+    if( initialData ) u->update( 0, length, initialData );
 
-    SetUniform( u );
+    setUniform( u );
 
     return true;
 }
@@ -49,7 +49,7 @@ bool GN::gfx::UniformResource::Reset(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::UniformResource::SetUniform( const AutoRef<Uniform> & newUniform )
+void GN::gfx::UniformResource::setUniform( const AutoRef<Uniform> & newUniform )
 {
     if( mUniform == newUniform ) return;
 
@@ -96,9 +96,9 @@ public:
     {
         GpuResourceFactory factory = { &sCreateInstance };
 
-        if( db.HasResourceFactory( UniformResource::GetGuid() ) ) return true;
+        if( db.hasResourceFactory( UniformResource::guid() ) ) return true;
 
-        return db.RegisterResourceFactory( UniformResource::GetGuid(), "Uniform Resource", factory );
+        return db.registerResourceFactory( UniformResource::guid(), "Uniform Resource", factory );
     }
 };
 

@@ -24,7 +24,7 @@ namespace GN { namespace gfx
         //@{
     public:
         RenderWindowMsw() : mGpu(0), mWindow(0), mHook(0), mMonitor(0) {}
-        ~RenderWindowMsw() { Quit(); }
+        ~RenderWindowMsw() { quit(); }
         //@}
 
         // ********************************
@@ -37,9 +37,9 @@ namespace GN { namespace gfx
         bool initExternalWindow( Gpu * gpu, HandleType externalWindow );
         /// initialize render window to use internal widow.
         bool initInternalWindow( Gpu * gpu, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
-        void Quit();
+        void quit();
     private:
-        void Clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
+        void clear() { mGpu = 0; mWindow = 0; mHook = 0; mMonitor = 0; mOldWidth = 0; mOldHeight = 0; mOldMonitor = 0; }
         //@}
 
         // ********************************
@@ -51,17 +51,17 @@ namespace GN { namespace gfx
         ///
         /// Get window handle
         ///
-        HWND GetWindowHandle() const { return mWindow; }
+        HWND getWindowHandle() const { return mWindow; }
 
         ///
         /// Get monitor handle
         ///
-        HMONITOR GetMonitorHandle() const { return mMonitor; }
+        HMONITOR getMonitorHandle() const { return mMonitor; }
 
         ///
         /// Get client size
         ///
-        void GetClientSize( UInt32 & width, UInt32 & height ) const;
+        void getClientSize( UInt32 & width, UInt32 & height ) const;
 
         ///
         /// handle render window size move, trigger renderer signal as apropriate.
@@ -104,7 +104,7 @@ namespace GN { namespace gfx
     private:
 
         bool    postInit();
-        bool    NewWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
+        bool    createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
         void    handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static  LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

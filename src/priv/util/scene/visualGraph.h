@@ -32,13 +32,13 @@ namespace GN { namespace util
 
         //@{
 
-        gfx::GpuResourceDatabase & gdb() const { return mGdb; }
+        gfx::GpuResourceDatabase & getGdb() const { return mGdb; }
 
         /// get pointer to specific standard uniform resource, assuming that it is initialized already.
         gfx::UniformResource * getGlobalUniform( StandardUniformType type ) const;
 
         /// draw all visual node associated with this graph
-        void                   Draw( Camera & camera );
+        void                   draw( Camera & camera );
 
         //@}
 

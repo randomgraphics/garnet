@@ -16,12 +16,12 @@ namespace GN
         ///
         /// get binary pointer
         ///
-        virtual void * Data() const = 0;
+        virtual void * data() const = 0;
 
         ///
         /// get binary size in bytes
         ///
-        virtual size_t Size() const = 0;
+        virtual size_t size() const = 0;
     };
 
     ///
@@ -37,12 +37,12 @@ namespace GN
         explicit SimpleBlob( size_t sz = 0 ) : mBuffer(sz) {}
 
         //@{
-        virtual void * Data() const { return (void*)mBuffer.ToRawPtr(); }
-        virtual size_t Size() const { return mBuffer.Size(); }
+        virtual void * data() const { return (void*)mBuffer.cptr(); }
+        virtual size_t size() const { return mBuffer.size(); }
         //@}
 
         /// resize the buffer
-        void Resize( size_t newSize ) { mBuffer.Resize( newSize ); }
+        void resize( size_t newSize ) { mBuffer.resize( newSize ); }
     };
 };
 

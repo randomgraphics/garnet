@@ -29,7 +29,7 @@ struct ColoredEffect : public BasicEffect
             "   o = i;                      \n"
             "   o.pos.xy /= 480.0;          \n"
             "}";
-        vs.Attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
@@ -39,7 +39,7 @@ struct ColoredEffect : public BasicEffect
             "{                                    \n"
             "       return color;                 \n"
             "}";
-        ps.Attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // success
@@ -77,7 +77,7 @@ public:
         , mGeometry( 1, 32768 ) // 65536 triangles
     {
         // align batch size to 2^N
-        BATCH_SIZE = CeilPowerOf2( initialBatchSize );
+        BATCH_SIZE = ceilPowerOf2( initialBatchSize );
 
         // clamp to 8 to 32768
         clamp<UInt32>( BATCH_SIZE, 8, 32768 );
@@ -111,14 +111,14 @@ public:
         mGeometry.destroy();
     }
 
-    void BasicTestCase::Update(void)
+    void BasicTestCase::update(void)
     {
         UInt32 numBatches = (UInt32)mGeometry.PRIM_COUNT / BATCH_SIZE;
-        float    batchesPerSec = getApp().GetFps() * numBatches;
+        float    batchesPerSec = getApp().fps() * numBatches;
 
         mBatchesPerSecond.newValue( batchesPerSec );
 
-        mInfo.Format(
+        mInfo.format(
             "batch size      = %d\n"
             "batches/frame   = %d\n"
             "batches/sec     = %f\n"
@@ -134,9 +134,9 @@ public:
     void BasicTestCase::render(void)
     {
         Renderer & r = gRenderer;
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.GetD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
 
-        r.ClearScreen();
+        r.clearScreen();
 
         // bind context
         r.setContext( mContext );
@@ -152,7 +152,7 @@ public:
         }
 
         // draw text
-        gAsciiFont.DrawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     void BasicTestCase::onkey( GN::input::KeyEvent key )
@@ -174,7 +174,7 @@ public:
 
     StrA BasicTestCase::printResult(void)
     {
-        return StringFormat( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
+        return stringFormat( "batchSize(%d) batches/frame(%d) batches/sec(%f)",
             BATCH_SIZE,
             mGeometry.PRIM_COUNT / BATCH_SIZE,
             mBatchesPerSecond.getAverageValue() );

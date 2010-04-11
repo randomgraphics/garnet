@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.statedumper");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.statedumper");
 
 using namespace GN;
 
@@ -170,7 +170,7 @@ static void sDumpVs( ID3D10Device & device, FILE * fp )
         GN_ERROR(sLogger)( "Vertex shader is not dumpable. Please use createDumpableVS()." );
         return;
     }
-    binbuf.Resize( sz );
+    binbuf.resize( sz );
     vs->GetPrivateData( VSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "vs" );
@@ -195,7 +195,7 @@ static void sDumpGs( ID3D10Device & device, FILE * fp )
         GN_ERROR(sLogger)( "Geometry shader is not dumpable. Please use createDumpableGS()." );
         return;
     }
-    binbuf.Resize( sz );
+    binbuf.resize( sz );
     gs->GetPrivateData( GSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "gs" );
@@ -224,7 +224,7 @@ static void sDumpPs( ID3D10Device & device, FILE * fp )
         GN_ERROR(sLogger)( "Pixel shader is not dumpable. Please use createDumpablePS()." );
         return;
     }
-    binbuf.Resize( sz );
+    binbuf.resize( sz );
     ps->GetPrivateData( PSGUID(), &sz, &binbuf[0] );
 
     sDumpShaderCode( fp, &binbuf[0], sz, "ps" );
@@ -365,9 +365,9 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
         GN_ERROR(sLogger)( "InputLayout is not dumpable. Please use createDumpableIL()." );
         return;
     }
-    signature.Resize( sz );
+    signature.resize( sz );
     il->GetPrivateData( IL1GUID(), &sz, &signature[0] );
-    sDumpBinary( sname, &signature[0], signature.Size() );
+    sDumpBinary( sname, &signature[0], signature.size() );
 
     // write IL open tag
     fprintf( fp, "\t<il signature=\"%s\">\n", sname );
@@ -375,7 +375,7 @@ static void sDumpInputLayout( ID3D10Device & device, FILE * fp )
     // get element array
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     il->GetPrivateData( IL0GUID(), &sz, 0 );
-    elements.Resize( sz / sizeof(D3D10_INPUT_ELEMENT_DESC) );
+    elements.resize( sz / sizeof(D3D10_INPUT_ELEMENT_DESC) );
     il->GetPrivateData( IL0GUID(), &sz, &elements[0] );
 
     // write element one by one
@@ -518,7 +518,7 @@ static void sDumpShaderResources(
             sDumpFilePrefix, tag, i );
         StrA resname = sDumpResource( device, fname, res );
 
-        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.ToRawPtr() );
+        fprintf( fp, "\t<%ssrv slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n", tag, i, descname, resname.cptr() );
     }
 }
 
@@ -533,7 +533,7 @@ static void sDumpVsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "vs", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -547,7 +547,7 @@ static void sDumpGsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "gs", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -561,7 +561,7 @@ static void sDumpPsSrv( ID3D10Device & device, FILE * fp )
 
     sDumpShaderResources( device, fp, "ps", srv, 128 );
 
-    for( int i = 0; i < 128; ++i ) SafeRelease( srv[i] );
+    for( int i = 0; i < 128; ++i ) safeRelease( srv[i] );
 }
 
 //
@@ -595,7 +595,7 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 
         fprintf( fp,
             "\t<rendertarget slot=\"%d\" desc=\"%s\" res=\"%s\"/>\n",
-            i, descname, resname.ToRawPtr() );
+            i, descname, resname.cptr() );
 
         colors[i]->Release();
     }
@@ -615,7 +615,7 @@ static void sDumpRenderTargets( ID3D10Device & device, FILE * fp )
 
         fprintf( fp,
             "\t<depthstencil desc=\"%s\" res=\"%s\"/>\n",
-            descname, resname.ToRawPtr() );
+            descname, resname.cptr() );
 
         depth->Release();
     }
@@ -725,8 +725,8 @@ void sDumpD3D10States( ID3D10Device & device, FILE * fp )
 
 void GN::d3d10::setDumpFilePrefix( const StrA & prefix )
 {
-    size_t n = math::GetMin<size_t>( prefix.Size(), _MAX_PATH );
-    memcpy( sDumpFilePrefix, prefix.ToRawPtr(), n );
+    size_t n = math::getmin<size_t>( prefix.size(), _MAX_PATH );
+    memcpy( sDumpFilePrefix, prefix.cptr(), n );
     sDumpFilePrefix[_MAX_PATH-1] = 0;
 }
 
@@ -744,7 +744,7 @@ ID3D10VertexShader * GN::d3d10::createDumpableVS(
 
     shader->SetPrivateData( VSGUID(), (UINT)bytes, binary );
 
-    return shader.Detach();
+    return shader.detach();
 }
 
 //
@@ -761,7 +761,7 @@ ID3D10GeometryShader * GN::d3d10::createDumpableGS(
 
     shader->SetPrivateData( GSGUID(), (UINT)bytes, binary );
 
-    return shader.Detach();
+    return shader.detach();
 }
 
 //
@@ -778,7 +778,7 @@ ID3D10PixelShader * GN::d3d10::createDumpablePS(
 
     shader->SetPrivateData( PSGUID(), (UINT)bytes, binary );
 
-    return shader.Detach();
+    return shader.detach();
 }
 
 //

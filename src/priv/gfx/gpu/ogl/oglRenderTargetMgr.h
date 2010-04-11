@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         ///
         /// initialize
         ///
-        virtual bool Init() = 0;
+        virtual bool init() = 0;
 
         ///
         /// Get color render target size
@@ -65,8 +65,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLRTMgrCopyFrame( OGLGpu & r ) : OGLBasicRTMgr(r) { Clear(); }
-        virtual ~OGLRTMgrCopyFrame() { Quit(); }
+        OGLRTMgrCopyFrame( OGLGpu & r ) : OGLBasicRTMgr(r) { clear(); }
+        virtual ~OGLRTMgrCopyFrame() { quit(); }
         //@}
 
         // ********************************
@@ -74,7 +74,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual bool Init() { return true; }
+        virtual bool init() { return true; }
         virtual bool bind( const RenderTargetDesc &, const RenderTargetDesc &, bool );
 
         // ********************************
@@ -87,8 +87,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void Clear() { mRenderTargetSize.Set( 0, 0 ); }
-        void Quit() { Clear(); }
+        void clear() { mRenderTargetSize.set( 0, 0 ); }
+        void quit() { clear(); }
     };
 
     ///
@@ -102,8 +102,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLRTMgrFBO( OGLGpu & r ) : OGLBasicRTMgr(r) { Clear(); }
-        virtual ~OGLRTMgrFBO() { Quit(); }
+        OGLRTMgrFBO( OGLGpu & r ) : OGLBasicRTMgr(r) { clear(); }
+        virtual ~OGLRTMgrFBO() { quit(); }
         //@}
 
         // ********************************
@@ -119,7 +119,7 @@ namespace GN { namespace gfx
             return GLEW_EXT_framebuffer_object && GLEW_ARB_draw_buffers;
         };
 
-        virtual bool Init();
+        virtual bool init();
         virtual bool bind(
             const RenderTargetDesc & oldRT,
             const RenderTargetDesc & newRT,
@@ -139,8 +139,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void Quit();
-        void Clear() { mFbo = 0; mAutoZ = 0; mAutoZSize.Set(0,0); }
+        void quit();
+        void clear() { mFbo = 0; mAutoZ = 0; mAutoZSize.set(0,0); }
     };
 }}
 

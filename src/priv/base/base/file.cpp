@@ -2,7 +2,7 @@
 
 using namespace GN;
 
-static Logger * sLogger = GetLogger("GN.base.File");
+static Logger * sLogger = getLogger("GN.base.File");
 
 static FILE * sOpenFile( const char * filename, const char * mode )
 {
@@ -20,7 +20,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
             "fopen() fail to open file '%s' with mode '%s' : %s.",
             filename,
             mode,
-            GN::Errno2Str( errno ) );
+            GN::errno2str( errno ) );
     }
 
     return fp;
@@ -33,7 +33,7 @@ static FILE * sOpenFile( const char * filename, const char * mode )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::Read( void * buffer, size_t size, size_t * readen )
+bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 {
     GN_GUARD;
 
@@ -50,7 +50,7 @@ bool GN::StdFile::Read( void * buffer, size_t size, size_t * readen )
         return false;
     }
 
-    if( Eof() )
+    if( eof() )
     {
         GN_VERBOSE(sLogger)( "Already reach the end of the file." );
         if( readen ) *readen = 0;
@@ -61,7 +61,7 @@ bool GN::StdFile::Read( void * buffer, size_t size, size_t * readen )
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : fread() failed!", Name() );
+        GN_ERROR(sLogger)( "%s : fread() failed!", name() );
         return false;
     }
 
@@ -75,7 +75,7 @@ bool GN::StdFile::Read( void * buffer, size_t size, size_t * readen )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::Write( const void * buffer, size_t size, size_t * written )
+bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
 {
     GN_GUARD;
 
@@ -95,7 +95,7 @@ bool GN::StdFile::Write( const void * buffer, size_t size, size_t * written )
     size_t r = ::fwrite( buffer, 1, size, mFile );
     if ( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s: fwrite() failed!", Name() );
+        GN_ERROR(sLogger)( "%s: fwrite() failed!", name() );
         return false;
     }
 
@@ -109,7 +109,7 @@ bool GN::StdFile::Write( const void * buffer, size_t size, size_t * written )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::Eof() const
+bool GN::StdFile::eof() const
 {
     GN_GUARD;
 
@@ -127,7 +127,7 @@ bool GN::StdFile::Eof() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::StdFile::Seek( size_t offset, FileSeek origin )
+bool GN::StdFile::seek( size_t offset, FileSeek origin )
 {
     GN_GUARD;
 
@@ -143,7 +143,7 @@ bool GN::StdFile::Seek( size_t offset, FileSeek origin )
     // check parameter
     if( origin >= FileSeek::NUM_MODES )
     {
-        GN_ERROR(sLogger)( "%s: invalid Seek origin!", Name() );
+        GN_ERROR(sLogger)( "%s: invalid seek origin!", name() );
         return false;
     }
 
@@ -155,7 +155,7 @@ bool GN::StdFile::Seek( size_t offset, FileSeek origin )
 
     if( 0 != ::fseek( mFile, (int)offset, seek_table[origin] ) )
     {
-        GN_ERROR(sLogger)( "%s : fseek() failed!", Name() );
+        GN_ERROR(sLogger)( "%s : fseek() failed!", name() );
         return false;
     }
 
@@ -168,7 +168,7 @@ bool GN::StdFile::Seek( size_t offset, FileSeek origin )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::StdFile::Tell() const
+size_t GN::StdFile::tell() const
 {
     GN_GUARD;
 
@@ -182,7 +182,7 @@ size_t GN::StdFile::Tell() const
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : ftell() failed!", Name() );
+        GN_ERROR(sLogger)( "%s : ftell() failed!", name() );
     }
 
     return r;
@@ -193,7 +193,7 @@ size_t GN::StdFile::Tell() const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::StdFile::Size() const
+size_t GN::StdFile::size() const
 {
     GN_GUARD;
 
@@ -207,14 +207,14 @@ size_t GN::StdFile::Size() const
     long oldPos = ::ftell( mFile );
     if( -1 == oldPos )
     {
-        GN_ERROR(sLogger)( "%s : fail to get current file position!", Name() );
+        GN_ERROR(sLogger)( "%s : fail to get current file position!", name() );
         return 0;
     }
 
-    // Seek to the end of the file
+    // seek to the end of the file
     if( 0 == ::fseek( mFile, SEEK_END, 0 ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to Seek to the end of file!", Name() );
+        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name() );
         return 0;
     }
 
@@ -224,7 +224,7 @@ size_t GN::StdFile::Size() const
     // restore file position
     if( 0 == ::fseek( mFile, SEEK_SET, oldPos ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to restore file position!", Name() );
+        GN_ERROR(sLogger)( "%s : fail to restore file position!", name() );
         return 0;
     }
 
@@ -241,25 +241,25 @@ size_t GN::StdFile::Size() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::DiskFile::Open( const StrA & filename, const StrA & mode )
+bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
 {
     GN_GUARD_ALWAYS;
 
-    // Close previous file
-    Close();
+    // close previous file
+    close();
 
     // check parameter(s)
-    if( filename.Empty() )
+    if( filename.empty() )
     {
         GN_ERROR(sLogger)( "empty filename!" );
-        Close(); return false;
+        close(); return false;
     }
 
     // 打开文件
-    FILE * fp = sOpenFile( filename.ToRawPtr(), mode.ToRawPtr() );
+    FILE * fp = sOpenFile( filename.cptr(), mode.cptr() );
     if( 0 == fp )
     {
-        Close(); return false;
+        close(); return false;
     }
 
     // 得到文件大小
@@ -269,7 +269,7 @@ bool GN::DiskFile::Open( const StrA & filename, const StrA & mode )
 
     // success
     setFile( fp );
-    SetName( filename );
+    setName( filename );
     return true;
 
     GN_UNGUARD_ALWAYS_DO( return false; );
@@ -278,17 +278,17 @@ bool GN::DiskFile::Open( const StrA & filename, const StrA & mode )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::DiskFile::Close() throw()
+void GN::DiskFile::close() throw()
 {
     GN_GUARD_ALWAYS;
 
-    // Close file
+    // close file
     if( getFILE() ) ::fclose( getFILE() );
 
     // clear data members
     mSize = 0;
     setFile( 0 );
-    SetName( "" );
+    setName( "" );
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -300,7 +300,7 @@ void GN::DiskFile::Close() throw()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::TempFile::Open( const StrA & prefix, const StrA & mode, Behavior beh )
+bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 {
     GN_GUARD_ALWAYS;
 
@@ -308,20 +308,20 @@ bool GN::TempFile::Open( const StrA & prefix, const StrA & mode, Behavior beh )
 
 #if GN_MSWIN
 
-    // generate temporary file Name
+    // generate temporary file name
     AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );
 
-    // Open the file
-    FILE * fp = sOpenFile( filename.ToRawPtr(), mode );
+    // open the file
+    FILE * fp = sOpenFile( filename.cptr(), mode );
     if( 0 == fp )
     {
-        Close();
+        close();
         return false;
     }
 
     // success
     setFile( fp );
-    SetName( filename.ToRawPtr() );
+    setName( filename.cptr() );
     return true;
 
 #else
@@ -334,25 +334,25 @@ bool GN::TempFile::Open( const StrA & prefix, const StrA & mode, Behavior beh )
         return false;
     }
 
-    // unlink the temporary file Name. So the file will be deleted automatically after beging closed.
+    // unlink the temporary file name. So the file will be deleted automatically after beging closed.
     if( AUTO_DELETE == beh )
     {
         unlink( fileNameTempl );
     }
 
-    // Open file
+    // open file
     FILE * fp = fdopen( mFileDesc, mode );
     if( 0 == fp )
     {
-        GN_ERROR(sLogger)( "fail to Open file '%s' with mode '%s' : %s",
-            fileNameTempl.ToRawPtr(), mode.ToRawPtr(), Errno2Str( errno ) );
-        Close();
+        GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s' : %s",
+            fileNameTempl.cptr(), mode.cptr(), errno2str( errno ) );
+        close();
         return false;
     }
 
     // success
     setFile( fp );
-    SetName( fileNameTempl );
+    setName( fileNameTempl );
     return true;
 
 #endif
@@ -363,20 +363,20 @@ bool GN::TempFile::Open( const StrA & prefix, const StrA & mode, Behavior beh )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::TempFile::Close()
+void GN::TempFile::close()
 {
     GN_GUARD_ALWAYS;
 
-    // Close file pointer
+    // close file pointer
     if( getFILE() ) ::fclose( getFILE() );
     setFile( 0 );
-    SetName( "" );
+    setName( "" );
 
 #if GN_POSIX
-    // Close file descriptor
+    // close file descriptor
     if( -1 != mFileDesc )
     {
-        ::Close( mFileDesc );
+        ::close( mFileDesc );
 
         mFileDesc = -1;
     }

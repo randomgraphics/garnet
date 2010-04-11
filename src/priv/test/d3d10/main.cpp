@@ -34,16 +34,16 @@ public:
         const D3D10AppOption & option = getOption();
 
         RenderToTextureOption rtto = { option.width, option.height, DXGI_FORMAT_R8G8B8A8_UNORM, 1, MSAA_DISABLE, false };
-        if( !rtt.Init( &dev, rtto ) ) return false;
+        if( !rtt.init( &dev, rtto ) ) return false;
 
         ScreenAlignedQuadDesc saqd;
         saqd.makeDefault();
-        if( !quad.Init( &dev, saqd ) ) return false;
+        if( !quad.init( &dev, saqd ) ) return false;
 
         // create mesh
         static SimpleMesh::Vertex vertices[24];
         static UInt16             indices[36];
-        gfx::CreateBox(
+        gfx::createBox(
             1.0f, 1.0f, 1.0f,
             vertices[0].pos, sizeof(SimpleMesh::Vertex),
             vertices[0].tex, sizeof(SimpleMesh::Vertex),
@@ -52,7 +52,7 @@ public:
             0, 0, // binormal
             indices,
             0 );  // quads
-        if( !mesh.Init( &dev ) ) return false;
+        if( !mesh.init( &dev ) ) return false;
         mesh.setVertices( vertices, GN_ARRAY_COUNT(vertices) );
         mesh.setTriangles( indices, GN_ARRAY_COUNT(indices)/3 );
 
@@ -60,7 +60,7 @@ public:
         AutoComPtr<ID3D10Blob> err;
         GN_DX_CHECK_RETURN(
             D3DX10CreateEffectFromMemory(
-                fxcode, StringLength(fxcode),
+                fxcode, stringLength(fxcode),
                 "effect.h",
                 0, 0,
                 "fx_4_0",
@@ -75,9 +75,9 @@ public:
             false );
 
         // initialize arcball
-        world.Identity();
-        view.Translate( 0, 0, 2 );
-        proj.PerspectiveD3DLh( 1.0f, 4.0f/3.0f, 0.1f, 10.0f );
+        world.identity();
+        view.translate( 0, 0, 2 );
+        proj.perspectiveD3DLh( 1.0f, 4.0f/3.0f, 0.1f, 10.0f );
         arcball.setHandness( util::LEFT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
@@ -91,13 +91,13 @@ public:
 
     void onDestroy()
     {
-        effect.Clear();
-        mesh.Quit();
-        quad.Quit();
-        rtt.Quit();
+        effect.clear();
+        mesh.quit();
+        quad.quit();
+        rtt.quit();
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
         world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
@@ -106,7 +106,7 @@ public:
 
     void onDraw()
     {
-        rtt.ClearScreen( 0, 1.0f, 1.0f, 0, 1.0f, 0 );
+        rtt.clearScreen( 0, 1.0f, 1.0f, 0, 1.0f, 0 );
         rtt.bindWithDepth();
 
         ID3D10EffectTechnique * tech = effect->GetTechniqueByIndex( 0 );
@@ -115,7 +115,7 @@ public:
         for( UINT p = 0; p < techDesc.Passes; ++p )
         {
             tech->GetPassByIndex( p )->Apply( 0 );
-            mesh.DrawIndexed();
+            mesh.drawIndexed();
         }
 
         resetToDefaultRenderTargets();
@@ -133,5 +133,5 @@ int main()
     D3D10AppOption option;
     MyApp          app;
 
-    return app.Run( option );
+    return app.run( option );
 }

@@ -1,15 +1,13 @@
 #include "pch.h"
 #include "imageJPG.h"
 
-using namespace GN;
-
 #if GN_MSVC
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
 UInt8 JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.JPG");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.JPG");
 
 //
 //
@@ -32,17 +30,17 @@ bool JPGReader::checkFormat( GN::File & fp )
 
     char buf[11];
 
-    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
-    if( !fp.Read( buf, 11, &sz ) || 11 != sz ) return false;
+    if( !fp.read( buf, 11, &sz ) || 11 != sz ) return false;
 
     buf[10] = 0;
 
     return
         0xFF == (unsigned char)buf[0] &&
         0xD8 == (unsigned char)buf[1] &&
-        ( 0 == GN::StringCompare( buf+6, "JFIF" ) || 0 == GN::StringCompare( buf+6, "Exif" ) );
+        ( 0 == GN::stringCompare( buf+6, "JFIF" ) || 0 == GN::stringCompare( buf+6, "Exif" ) );
 
     GN_UNGUARD;
 }
@@ -50,7 +48,7 @@ bool JPGReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool JPGReader::ReadHeader(
+bool JPGReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -70,7 +68,7 @@ bool JPGReader::ReadHeader(
     jpeg_create_decompress( &mCInfo );
 
     // specify o_data source
-    mSrc.Init( i_buf, i_size );
+    mSrc.init( i_buf, i_size );
     mCInfo.src = &mSrc;
 
     // read jpeg header
@@ -91,8 +89,8 @@ bool JPGReader::ReadHeader(
     }
 
     // fill image descriptor
-    o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
+    o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width         = (UInt16)mCInfo.image_width;
     m.height        = (UInt16)mCInfo.image_height;
     m.depth         = 1;
@@ -101,7 +99,7 @@ bool JPGReader::ReadHeader(
     m.levelPitch    = m.slicePitch;
 
     // success
-    GN_ASSERT( o_desc.Valid() );
+    GN_ASSERT( o_desc.valid() );
     return true;
 
     // failed
@@ -111,7 +109,7 @@ bool JPGReader::ReadHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool JPGReader::ReadImage( void * o_data )
+bool JPGReader::readImage( void * o_data )
 {
     GN_GUARD;
 
@@ -146,15 +144,15 @@ bool JPGReader::ReadImage( void * o_data )
     if( !grayscale )
     {
         // create temporary RGB_8_8_8 buffer
-        rgbBuf.Attach( new UInt8[rowPitch*height] );
+        rgbBuf.attach( new UInt8[rowPitch*height] );
         decompressedBuf = rgbBuf;
     }
     else decompressedBuf = (UInt8*)o_data;
 
     // read scanlines
-    DynaArray<UInt8*> scanlines;
-    scanlines.Resize( height );
-    for( size_t i = 0; i < scanlines.Size(); ++i )
+    GN::DynaArray<UInt8*> scanlines;
+    scanlines.resize( height );
+    for( size_t i = 0; i < scanlines.size(); ++i )
     {
         scanlines[i] = decompressedBuf + rowPitch * i;
     }
@@ -164,12 +162,12 @@ bool JPGReader::ReadImage( void * o_data )
     while( left_scanlines > 0 )
     {
         readen_scanlines = jpeg_read_scanlines(
-            &mCInfo, &scanlines[0], (JDIMENSION)scanlines.Size() );
+            &mCInfo, &scanlines[0], (JDIMENSION)scanlines.size() );
         GN_ASSERT( readen_scanlines <= left_scanlines );
         left_scanlines -= readen_scanlines;
 
         readen_bytes = readen_scanlines * rowPitch;
-        for( size_t i = 0; i < scanlines.Size(); ++i )
+        for( size_t i = 0; i < scanlines.size(); ++i )
         {
             scanlines[i] += readen_bytes;
         }

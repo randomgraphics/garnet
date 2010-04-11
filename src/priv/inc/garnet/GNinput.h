@@ -165,9 +165,9 @@ namespace GN
 
             /// \name Misc functions
             //@{
-            bool CtrlDown() const { return lctrl && rctrl; }
-            bool AltDown() const { return lalt && ralt; }
-            bool ShiftDown() const { return lshift && rshift; }
+            bool ctrlDown() const { return lctrl && rctrl; }
+            bool altDown() const { return lalt && ralt; }
+            bool shiftDown() const { return lshift && rshift; }
             //@}
         };
 
@@ -220,9 +220,9 @@ namespace GN
             //@}
 
             ///
-            /// Set key data
+            /// set key data
             ///
-            const KeyEvent & Set( KeyCode kc, KeyStatus ks )
+            const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
                 GN_ASSERT( kc < KeyCode::NUM_KEYS );
                 code = static_cast<UInt8>(kc);
@@ -270,12 +270,12 @@ namespace GN
             ///
             /// \Note parameters displayHandle is only used on X11 platform.
             ///
-            virtual bool AttachToWindow( HandleType displayHandle, HandleType windowHandle ) = 0;
+            virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) = 0;
 
             ///
             /// 获取并处理最新的输入事件
             ///
-            virtual void ProcessInputEvents() = 0;
+            virtual void processInputEvents() = 0;
 
             ///
             /// get the latest key event from event queue, then pop it out of event queue.
@@ -284,20 +284,20 @@ namespace GN
             ///
             /// Note: the input device will buffer the most recent 32 key events.
             ///
-            virtual KeyEvent PopLastKeyEvent() = 0;
+            virtual KeyEvent popLastKeyEvent() = 0;
 
             ///
             /// Return keyboard status indexed by KeyCode.
             ///
-            virtual const KeyStatus * GetKeyboardStatus() const = 0;
+            virtual const KeyStatus * getKeyboardStatus() const = 0;
 
             ///
             /// Get status of specific key
             ///
-            const KeyStatus & GetKeyStatus( KeyCode k ) const
+            const KeyStatus & getKeyStatus( KeyCode k ) const
             {
                 GN_ASSERT( 0 <= k && k < KeyCode::NUM_KEYS );
-                return GetKeyboardStatus()[k];
+                return getKeyboardStatus()[k];
             }
 
             ///
@@ -306,12 +306,12 @@ namespace GN
             /// \note
             /// - Mouse positions are based left-up corner of the attached window.
             ///
-            virtual const int * GetAxisStatus() const = 0;
+            virtual const int * getAxisStatus() const = 0;
 
             ///
             /// 得到当前鼠标的位置（相对窗口的左上角）
             ///
-            virtual void GetMousePosition( int & x, int & y ) const = 0;
+            virtual void getMousePosition( int & x, int & y ) const = 0;
         };
 
         ///
@@ -327,7 +327,7 @@ namespace GN
                 NUM_APIs, ///< Number of available input APIs.
             };
 
-            const char * ToString() const
+            const char * toString() const
             {
                 static const char * TABLE[] =
                 {
@@ -347,27 +347,28 @@ namespace GN
         ///
         /// initialize of input system (shutdown previous input system automatically)
         ///
-        bool InitializeInputSystem( InputAPI = InputAPI::NATIVE );
+        bool initializeInputSystem( InputAPI = InputAPI::NATIVE );
 
         ///
         /// shutdown input system
         ///
-        void ShutdownInputSystem();
+        void shutdownInputSystem();
 
         ///
         /// convert string to keycode
         ///
         /// \return 失败时返回 KeyCode::NONE
         ///
-        KeyCode String2KeyCode( const char * );
+        KeyCode str2kc( const char * );
 
         ///
         /// convert keycode to string
         ///
         /// \return  失败时返回空字串（注意，是空字串""，不是NULL，
-        ///          你可以用 GN::IsStringEmpty() 来检测返回值
+        ///          你可以用 GN::stringEmpty() 来检测返回值
         ///
-        const char * KeyCode2String( int );
+        const char * keyCode2String( int );
+
     }
 }
 

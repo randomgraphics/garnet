@@ -35,7 +35,7 @@ class TestFillrate : public BasicTestCase
             TexLockedResult tlr;
             res.texture->lock( tlr, 0, 0, 0, LOCK_DISCARD );
             memset( tlr.data, 0xFF, tlr.sliceBytes );
-            res.texture->Unlock();
+            res.texture->unlock();
             return true;
         }
 
@@ -83,11 +83,11 @@ public:
         // create texture
         for( UInt i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].Attach( re.Create2DTexture( StringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
+            mTextures[i].attach( re.create2DTexture( stringFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
             GraphicsResourceLoader * loader = new TexLoader;
             re.updateResource( mTextures[i], 0, loader );
-            loader->DecRef();
+            loader->decref();
         }
 
         // initialize the context
@@ -103,7 +103,7 @@ public:
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
             mContext.setPS( mEffect->ps );
         }
-        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.SetTexture( i, mTextures[i] );
+        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
         if( mInitMaxBandwidth )
         {
             //mContext->
@@ -119,8 +119,8 @@ public:
     void destroy()
     {
         mGeometry.destroy();
-        SafeDelete( mEffect );
-        for( UInt i = 0; i < 16; ++i ) mTextures[i].Clear();
+        safeDelete( mEffect );
+        for( UInt i = 0; i < 16; ++i ) mTextures[i].clear();
     }
 
     void onkey( input::KeyEvent key )
@@ -146,19 +146,19 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void Update()
+    void update()
     {
-        const DispDesc & dd = getApp().getRenderEngine().GetDispDesc();
-        float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
+        const DispDesc & dd = getApp().getRenderEngine().getDispDesc();
+        float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().fps();
         float texfr = pixfr * mInitTexCount;
         float bandwidth = pixfr * dd.depth / 8;
-        mFillrateStr.Format(
+        mFillrateStr.format(
             "%s\n"
             "quads = %d x %d\n"
             "pixel fillrate = %f GB/sec\n"
             "texel fillrate = %f GB/sec\n"
             "EDRAM bandwidth = %f GB/sec",
-            getName().ToRawPtr(),
+            getName().cptr(),
             mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
             pixfr,
             texfr,
@@ -170,12 +170,12 @@ public:
     {
         RenderEngine & re = getApp().getRenderEngine();
         re.setContext( mContext );
-        mGeometry.Draw();
-        getApp().asciiFont().DrawText( mFillrateStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        mGeometry.draw();
+        getApp().asciiFont().drawText( mFillrateStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return StringFormat( "fillrate(%f)", mFillrate.getAverageValue() );
+        return stringFormat( "fillrate(%f)", mFillrate.getAverageValue() );
     }
 };

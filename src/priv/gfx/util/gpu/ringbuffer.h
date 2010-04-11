@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        RingBuffer()          { Clear(); }
-        virtual ~RingBuffer() { Quit(); }
+        RingBuffer()          { clear(); }
+        virtual ~RingBuffer() { quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( size_t ringBufferSize );
-        void Quit();
+        bool init( size_t ringBufferSize );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mBegin    = NULL;
             mNotFull  = NULL;
@@ -48,13 +48,13 @@ namespace GN { namespace gfx
     public:
 
         /// get ring buffer size
-        size_t Size() const { return mSize; }
+        size_t size() const { return mSize; }
 
-        // post Quit message to ring buffer, unblock any blocked threads.
+        // post quit message to ring buffer, unblock any blocked threads.
         void   postQuitMessage();
 
-        // Block calling thread util ring buffer is not full, or the ring buffer is about to Quit.
-        // Return NULL, if the ring buffer is about to Quit.
+        // Block calling thread util ring buffer is not full, or the ring buffer is about to quit.
+        // Return NULL, if the ring buffer is about to quit.
         // Caller has to make sure that the size is no larger then the buffer size.
         void * beginProduce( size_t size );
 
@@ -62,8 +62,8 @@ namespace GN { namespace gfx
         // blocking consumer thread.
         void   endProduce();
 
-        // Block calling thread until there's not empty or the ring buffer is about to Quit.
-        // Return NULL, if the ring buffer is about to Quit.
+        // Block calling thread until there's not empty or the ring buffer is about to quit.
+        // Return NULL, if the ring buffer is about to quit.
         // Caller has to make sure that the size is no larger then the buffer size.
         void * beginConsume( size_t size );
 

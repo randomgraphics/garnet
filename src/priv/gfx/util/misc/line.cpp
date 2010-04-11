@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.LineRenderer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.LineRenderer");
 
 static const char * glslvscode=
     "varying vec4 color; \n"
@@ -54,7 +54,7 @@ static const char * hlslpscode=
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::LineRenderer::Init()
+bool GN::gfx::LineRenderer::init()
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ bool GN::gfx::LineRenderer::Init()
     GN_STDCLASS_INIT( GN::gfx::LineRenderer, () );
 
     // create GPU program
-    const GpuCaps & caps = mGpu.GetCaps();
+    const GpuCaps & caps = mGpu.caps();
     GpuProgramDesc gpd;
     if( caps.vsLanguages & GpuProgramLanguage::GLSL &&
         caps.psLanguages & GpuProgramLanguage::GLSL )
@@ -83,51 +83,51 @@ bool GN::gfx::LineRenderer::Init()
     else
     {
         GN_ERROR(sLogger)( "Sprite renderer requires either GLSL or HLSL support from graphics hardware." );
-        return Failure();
+        return failure();
     }
-    mContext.gpuProgram.Attach( mGpu.CreateGpuProgram( gpd ) );
-    if( !mContext.gpuProgram ) return Failure();
+    mContext.gpuProgram.attach( mGpu.createGpuProgram( gpd ) );
+    if( !mContext.gpuProgram ) return failure();
 
     // create vertex format
     mContext.vtxfmt.numElements = 6;
     mContext.vtxfmt.elements[0].stream = 0;
     mContext.vtxfmt.elements[0].offset = GN_FIELD_OFFSET( LineVertex, pos );
     mContext.vtxfmt.elements[0].format = ColorFormat::FLOAT3;
-    mContext.vtxfmt.elements[0].BindTo( "position", 0 );
+    mContext.vtxfmt.elements[0].bindTo( "position", 0 );
     mContext.vtxfmt.elements[1].stream = 0;
     mContext.vtxfmt.elements[1].offset = GN_FIELD_OFFSET( LineVertex, colorInRGBA );
     mContext.vtxfmt.elements[1].format = ColorFormat::RGBA32;
-    mContext.vtxfmt.elements[1].BindTo( "color", 0 );
+    mContext.vtxfmt.elements[1].bindTo( "color", 0 );
     mContext.vtxfmt.elements[2].stream = 0;
     mContext.vtxfmt.elements[2].offset = GN_FIELD_OFFSET( LineVertex, transform );
     mContext.vtxfmt.elements[2].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[2].BindTo( "texcoord", 0 );
+    mContext.vtxfmt.elements[2].bindTo( "texcoord", 0 );
     mContext.vtxfmt.elements[3].stream = 0;
     mContext.vtxfmt.elements[3].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f);
     mContext.vtxfmt.elements[3].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[3].BindTo( "texcoord", 1 );
+    mContext.vtxfmt.elements[3].bindTo( "texcoord", 1 );
     mContext.vtxfmt.elements[4].stream = 0;
     mContext.vtxfmt.elements[4].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 2;
     mContext.vtxfmt.elements[4].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[4].BindTo( "texcoord", 2 );
+    mContext.vtxfmt.elements[4].bindTo( "texcoord", 2 );
     mContext.vtxfmt.elements[5].stream = 0;
     mContext.vtxfmt.elements[5].offset = GN_FIELD_OFFSET( LineVertex, transform ) + sizeof(Vector4f) * 3;
     mContext.vtxfmt.elements[5].format = ColorFormat::FLOAT4;
-    mContext.vtxfmt.elements[5].BindTo( "texcoord", 3 );
+    mContext.vtxfmt.elements[5].bindTo( "texcoord", 3 );
 
     // create vertex buffer
-    mContext.vtxbufs[0].vtxbuf.Attach( mGpu.CreateVtxBuf( MAX_LINES * sizeof(Line), true ) );
-    if( !mContext.vtxbufs[0].vtxbuf ) return Failure();
+    mContext.vtxbufs[0].vtxbuf.attach( mGpu.createVtxBuf( MAX_LINES * sizeof(Line), true ) );
+    if( !mContext.vtxbufs[0].vtxbuf ) return failure();
     mContext.vtxbufs[0].stride = sizeof(LineVertex);
 
     // create line buffer
-    mLines = (Line*)HeapMemory::Alloc( MAX_LINES * sizeof(Line) );
-    if( NULL == mLines ) return Failure();
+    mLines = (Line*)HeapMemory::alloc( MAX_LINES * sizeof(Line) );
+    if( NULL == mLines ) return failure();
     mNextPendingLine = mLines;
     mNextFreeLine = mLines;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -135,14 +135,14 @@ bool GN::gfx::LineRenderer::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::Quit()
+void GN::gfx::LineRenderer::quit()
 {
     GN_GUARD;
 
-    HeapMemory::Free( mLines ); mLines = NULL;
-    mContext.Clear();
+    HeapMemory::dealloc( mLines ); mLines = NULL;
+    mContext.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -155,7 +155,7 @@ void GN::gfx::LineRenderer::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::DrawLines(
+void GN::gfx::LineRenderer::drawLines(
     const void *      positions,
     size_t            stride,
     size_t            numpoints,
@@ -173,7 +173,7 @@ void GN::gfx::LineRenderer::DrawLines(
         // handle line buffer longer than maxinum length.
         for( size_t i = 0; i < numNewLines / MAX_LINES; ++i )
         {
-            DrawLines(
+            drawLines(
                 positionsU8,
                 stride,
                 MAX_LINES * 2,
@@ -190,7 +190,7 @@ void GN::gfx::LineRenderer::DrawLines(
     if( numNewLines + mNextFreeLine > mLines + MAX_LINES )
     {
         // there's no enough space to hold all incoming lines. So flush first.
-        Flush();
+        flush();
     }
 
     GN_ASSERT( numNewLines + mNextFreeLine <= mLines + MAX_LINES );
@@ -211,13 +211,13 @@ void GN::gfx::LineRenderer::DrawLines(
         ++mNextFreeLine;
     }
 
-    if( !mBatchingModeEnabled ) Flush();
+    if( !mBatchingModeEnabled ) flush();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::LineRenderer::Flush()
+void GN::gfx::LineRenderer::flush()
 {
     size_t numPendingLines = mNextFreeLine - mNextPendingLine;
     if( 0 == numPendingLines ) return;
@@ -226,15 +226,15 @@ void GN::gfx::LineRenderer::Flush()
 
     GN_ASSERT( firstPendingLineOffset + numPendingLines <= MAX_LINES );
 
-    mContext.vtxbufs[0].vtxbuf->Update(
+    mContext.vtxbufs[0].vtxbuf->update(
         firstPendingLineOffset * sizeof(Line),
         numPendingLines * sizeof(Line),
         mNextPendingLine,
         mLines == mNextPendingLine ? SurfaceUpdateFlag::DISCARD : SurfaceUpdateFlag::NO_OVERWRITE );
 
-    mGpu.BindContext( mContext );
+    mGpu.bindContext( mContext );
 
-    mGpu.Draw(
+    mGpu.draw(
         PrimitiveType::LINE_LIST,
         numPendingLines * 2,       // numvtx
         firstPendingLineOffset * 2 // startvtx,

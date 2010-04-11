@@ -13,7 +13,7 @@
 
 #endif // GN_MSVC
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // Global functions
@@ -32,8 +32,8 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::D3D10Gpu> p( new GN::gfx::D3D10Gpu );
-    if( !p->Init( o ) ) return 0;
-    return p.Detach();
+    if( !p->init( o ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -45,7 +45,7 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::Init( const GN::gfx::GpuOptions & o )
+bool GN::gfx::D3D10Gpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
@@ -53,14 +53,14 @@ bool GN::gfx::D3D10Gpu::Init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::D3D10Gpu, ( o ) );
 
     // init sub-components
-    if( !dispInit()        ) return Failure();
-    if( !capsInit()         ) return Failure();
-    if( !resourceInit()     ) return Failure();
-    if( !contextInit()      ) return Failure();
-    if( !drawInit()         ) return Failure();
+    if( !dispInit()        ) return failure();
+    if( !capsInit()         ) return failure();
+    if( !resourceInit()     ) return failure();
+    if( !contextInit()      ) return failure();
+    if( !drawInit()         ) return failure();
 
     // successful
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -68,7 +68,7 @@ bool GN::gfx::D3D10Gpu::Init( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Gpu::Quit()
+void GN::gfx::D3D10Gpu::quit()
 {
     GN_GUARD;
 
@@ -91,9 +91,9 @@ void GN::gfx::D3D10Gpu::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Gpu::GetBackBufferContent( BackBufferContent & bc )
+void GN::gfx::D3D10Gpu::getBackBufferContent( BackBufferContent & bc )
 {
-    bc.data.Clear();
+    bc.data.clear();
     bc.format = ColorFormat::UNKNOWN;
     bc.width = 0;
     bc.height = 0;
@@ -116,11 +116,11 @@ void GN::gfx::D3D10Gpu::GetBackBufferContent( BackBufferContent & bc )
     D3D10_MAPPED_TEXTURE2D mt;
     GN_DX_CHECK_RETURN_VOID( sysbuf->Map( 0, D3D10_MAP_READ, 0, &mt ) );
 
-    bc.format = DxgiFormat2ColorFormat( desc.Format );
+    bc.format = dxgiFormat2ColorFormat( desc.Format );
     bc.width  = desc.Width;
     bc.height = desc.Height;
     bc.pitch  = mt.RowPitch;
-    bc.data.Append( (UInt8*)mt.pData, mt.RowPitch * desc.Height );
+    bc.data.append( (UInt8*)mt.pData, mt.RowPitch * desc.Height );
 
     sysbuf->Unmap( 0 );
 }

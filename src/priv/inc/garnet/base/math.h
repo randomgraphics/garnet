@@ -36,7 +36,7 @@ namespace GN
         // --------------------------------------------------------------------
         template<typename T>
         GN_FORCE_INLINE bool
-        FloatEqual( const T & a, const T & b, const T & epsilon = (T)0.0000001 )
+        floatEqual( const T & a, const T & b, const T & epsilon = (T)0.0000001 )
         {
             T diff = a - b;
             return -epsilon < diff && diff < epsilon;
@@ -46,19 +46,19 @@ namespace GN
         /// 角度->弧度
         // --------------------------------------------------------------------
         template<typename T>
-        GN_FORCE_INLINE T Deg2Rad( T a ) { return a*(T)0.01745329252f; }
+        GN_FORCE_INLINE T deg2rad( T a ) { return a*(T)0.01745329252f; }
 
         ///
         /// 弧度->角度
         // --------------------------------------------------------------------
         template<typename T>
-        GN_FORCE_INLINE T Rad2Deg( T a ) { return a*(T)57.29577951f;   }
+        GN_FORCE_INLINE T rad2deg( T a ) { return a*(T)57.29577951f;   }
 
         ///
         /// 检查n是否为2^n
         // --------------------------------------------------------------------
         template<typename T>
-        GN_FORCE_INLINE bool IsPowerOf2( T n )
+        GN_FORCE_INLINE bool isPowerOf2( T n )
         {
             return ( 0 == (n & (n - 1)) ) && ( 0 != n );
         }
@@ -66,7 +66,7 @@ namespace GN
         ///
         /// 返回不小于n的最小的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE UInt32 CeilPowerOf2( UInt32 n )
+        GN_FORCE_INLINE UInt32 ceilPowerOf2( UInt32 n )
         {
             n -= 1;
 
@@ -82,7 +82,7 @@ namespace GN
         ///
         /// 返回不大于n的最大的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE UInt32 FloorPowerOf2( UInt32 n )
+        GN_FORCE_INLINE UInt32 floorPowerOf2( UInt32 n )
         {
             n |= n >> 16;
             n |= n >> 8;
@@ -98,7 +98,7 @@ namespace GN
         ///
         /// 返回不小于n的最小的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE size_t CeilPowerOf2( size_t n )
+        GN_FORCE_INLINE size_t ceilPowerOf2( size_t n )
         {
             n -= 1;
 
@@ -115,7 +115,7 @@ namespace GN
         ///
         /// 返回不大于n的最大的2的整幂
         // --------------------------------------------------------------------
-        GN_FORCE_INLINE size_t FloorPowerOf2( size_t n )
+        GN_FORCE_INLINE size_t floorPowerOf2( size_t n )
         {
             n |= n >> 32;
             n |= n >> 16;
@@ -133,7 +133,7 @@ namespace GN
         /// 将value限定在[vmin, vmax]区间内
         // --------------------------------------------------------------------
         template < typename T >
-        inline void ClampMinMax( T & value, const T & vmin, const T & vmax )
+        inline void clamp( T & value, const T & vmin, const T & vmax )
         {
             value = vmin > value ? vmin : vmax < value ? vmax : value;
         }
@@ -143,21 +143,21 @@ namespace GN
         /// Note that the alignment must be 2^N.
         // --------------------------------------------------------------------
         template< typename T >
-        inline T AlignToPowerOf2( const T & value, const T & alignment )
+        inline T alignToPowerOf2( const T & value, const T & alignment )
         {
-            GN_ASSERT( IsPowerOf2( alignment ) );
+            GN_ASSERT( isPowerOf2( alignment ) );
             return ( value + (alignment-1) ) & ~(alignment-1);
         }
 
         ///
         /// get minimal value
         ///
-        template<typename T> inline const T & GetMin( const T & a, const T & b ) { return a < b ? a : b; }
+        template<typename T> inline const T & getmin( const T & a, const T & b ) { return a < b ? a : b; }
 
         ///
         /// get minimal value
         ///
-        template<typename T> inline const T & GetMin( const T & a, const T & b, const T & c )
+        template<typename T> inline const T & getmin( const T & a, const T & b, const T & c )
         {
             return a < b ? ( c < a ? c : a ) : ( c < b ? c : b );
         }
@@ -165,12 +165,12 @@ namespace GN
         ///
         /// get maximal value
         ///
-        template<typename T> inline const T & GetMax( const T & a, const T & b ) { return a > b ? a : b; }
+        template<typename T> inline const T & getmax( const T & a, const T & b ) { return a > b ? a : b; }
 
         ///
         /// get maximal value
         ///
-        template<typename T> inline const T & GetMax( const T & a, const T & b, const T & c )
+        template<typename T> inline const T & getmax( const T & a, const T & b, const T & c )
         {
             return a > b ? ( c > a ? c : a ) : ( c > b ? c : b );
         }

@@ -27,8 +27,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLTexture( OGLGpu & r ) :OGLResource(r) { Clear(); }
-        virtual ~OGLTexture() { Quit(); }
+        OGLTexture( OGLGpu & r ) :OGLResource(r) { clear(); }
+        virtual ~OGLTexture() { quit(); }
         //@}
 
         // ********************************
@@ -37,10 +37,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const TextureDesc & );
-        void Quit();
+        bool init( const TextureDesc & );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mOGLTexture = 0;
             mSamplerDirty = true;
@@ -54,12 +54,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void   UpdateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
-        virtual void   ReadMipmap( size_t face, size_t level, MipmapData & data );
-        virtual void   BlobWrite( const void *, size_t ) { GN_UNIMPL(); }
-        virtual size_t BlobRead( void * ) { GN_UNIMPL(); return 0; }
-        virtual void   GenerateMipmapPyramid() { GN_UNIMPL(); }
-        virtual void * GetAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
+        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * getAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
 
         //@}
 

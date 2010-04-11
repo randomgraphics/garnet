@@ -5,7 +5,7 @@
 
 GN::gfx::RenderWindowMsw::WindowMap GN::gfx::RenderWindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.MSW");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -25,38 +25,38 @@ bool GN::gfx::RenderWindowMsw::initExternalWindow( Gpu * gpu, HandleType externa
     if( !gpu )
     {
         GN_ERROR(sLogger)( "Null renderer pointer." );
-        return Failure();
+        return failure();
     }
 
     if( !::IsWindow( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "External render window handle must be valid." );
-        return Failure();
+        return failure();
     }
 
-    if( NULL != msInstanceMap.Find( (HWND)externalWindow ) )
+    if( NULL != msInstanceMap.find( (HWND)externalWindow ) )
     {
         GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
-        return Failure();
+        return failure();
     }
 
     // register a message hook to render window.
-    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadIdentifier() );
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
     if( 0 == mHook )
     {
-        GN_ERROR(sLogger)( "Fail to setup message hook : %s", GetWin32LastErrorInfo() );
-        return Failure();
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getWin32LastErrorInfo() );
+        return failure();
     }
 
-    mGpu               = gpu;
+    mGpu          = gpu;
     mWindow            = (HWND)externalWindow;
     mUseExternalWindow = true;
 
     // do post initialize tasks
-    if( !postInit() ) return Failure();
+    if( !postInit() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -78,16 +78,16 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 
     GN_ASSERT( 0 != monitor && width > 0 && height > 0 );
 
-    if( !NewWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return Failure();
+    if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return failure();
 
     mGpu = gpu;
     mUseExternalWindow = false;
 
     // success
-    if( !postInit() ) return Failure();
+    if( !postInit() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -95,7 +95,7 @@ bool GN::gfx::RenderWindowMsw::initInternalWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowMsw::Quit()
+void GN::gfx::RenderWindowMsw::quit()
 {
     GN_GUARD;
 
@@ -107,22 +107,22 @@ void GN::gfx::RenderWindowMsw::Quit()
     {
         if( !mUseExternalWindow) ::DestroyWindow( mWindow );
 
-        GN_ASSERT( NULL != msInstanceMap.Find(mWindow) );
-        msInstanceMap.Remove(mWindow);
+        GN_ASSERT( NULL != msInstanceMap.find(mWindow) );
+        msInstanceMap.remove(mWindow);
 
         mWindow = 0;
     }
 
     // tru unregister window class
-    if( !mClassName.Empty() )
+    if( !mClassName.empty() )
     {
-        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
+        GN_VERBOSE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.ToRawPtr(), mModuleInstance ) );
-        mClassName.Clear();
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
+        mClassName.clear();
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -131,7 +131,7 @@ void GN::gfx::RenderWindowMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowMsw::GetClientSize( UInt32 & width, UInt32 & height ) const
+void GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
 {
     GN_ASSERT( ::IsWindow(mWindow) );
 
@@ -151,14 +151,14 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
 {
     GN_GUARD;
 
-    const GpuOptions & ro = mGpu->GetOptions();
+    const GpuOptions & ro = mGpu->getOptions();
 
     // do nothing if in full screen mode
     if( ro.fullscreen ) return;
 
     // get client window size
     UInt32 currentWidth, currentHeight;
-    GetClientSize( currentWidth, currentHeight );
+    getClientSize( currentWidth, currentHeight );
 
     // compare with old window properties
     if( currentWidth  != mOldWidth ||
@@ -170,7 +170,7 @@ void GN::gfx::RenderWindowMsw::handleSizeMove()
         mOldMonitor = mMonitor;
 
         // trigger renderer signal when window size is changed or window is moved to another monitor
-        mGpu->GetSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
+        mGpu->getSignals().rendererWindowSizeMove( mMonitor, currentWidth, currentHeight );
     }
 
     GN_UNGUARD;
@@ -205,11 +205,11 @@ bool GN::gfx::RenderWindowMsw::postInit()
 
     // add window handle to instance map
     GN_ASSERT(
-        NULL ==  msInstanceMap.Find(mWindow) ||
-        this == *msInstanceMap.Find(mWindow) );
+        NULL ==  msInstanceMap.find(mWindow) ||
+        this == *msInstanceMap.find(mWindow) );
     msInstanceMap[mWindow] = this;
 
-    // Clear all state flags
+    // clear all state flags
     mInsideSizeMove = false;
 
     // success
@@ -222,7 +222,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
+GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
 {
     GN_GUARD;
 
@@ -237,11 +237,11 @@ GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width
     // generate an unique window class name
     do
     {
-        mClassName.Format( L"GNgfxRenderWindow_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.ToRawPtr(), &wcex ) );
+        mClassName.format( L"GNgfxRenderWindow_%d", rand() );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
+    GN_VERBOSE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
     wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
@@ -252,11 +252,11 @@ GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.ToRawPtr();
+    wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return false;
     }
 
@@ -276,7 +276,7 @@ GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.ToRawPtr(),
+        mClassName.cptr(),
         L"Garnet Render Window",
         style,
         mi.rcWork.left, mi.rcWork.top,
@@ -287,7 +287,7 @@ GN::gfx::RenderWindowMsw::NewWindow( HWND parent, HMONITOR monitor, UInt32 width
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
         return false;
     }
 
@@ -316,7 +316,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
         case WM_CLOSE:
             // do not close the window. just trigger the signal
             GN_ASSERT( mGpu );
-            mGpu->GetSignals().rendererWindowClose();
+            mGpu->getSignals().rendererWindowClose();
             break;
 
         case WM_ENTERSIZEMOVE :
@@ -409,7 +409,7 @@ GN::gfx::RenderWindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARA
 
     //GN_TRACE( "GN::gfx::RenderWindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    RenderWindowMsw ** ppwnd = msInstanceMap.Find(wnd);
+    RenderWindowMsw ** ppwnd = msInstanceMap.find(wnd);
 
     // call class specific window procedure
     if( NULL == ppwnd )
@@ -435,7 +435,7 @@ GN::gfx::RenderWindowMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
 
     //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    RenderWindowMsw ** ppwnd = msInstanceMap.Find( ((CWPSTRUCT*)lp)->hwnd );
+    RenderWindowMsw ** ppwnd = msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
 
     if( NULL != ppwnd )
     {

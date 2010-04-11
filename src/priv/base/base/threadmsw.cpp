@@ -4,7 +4,7 @@
 
 #include <process.h>
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.Thread");
+static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
 
@@ -53,8 +53,8 @@ class ThreadMsw : public Thread, public StdClass
 
     //@{
 public:
-    ThreadMsw()          { Clear(); }
-    virtual ~ThreadMsw() { Quit(); }
+    ThreadMsw()          { clear(); }
+    virtual ~ThreadMsw() { quit(); }
     //@}
 
     // ********************************
@@ -63,7 +63,7 @@ public:
 
     //@{
 public:
-    bool Create(
+    bool create(
         const ThreadProcedure & proc,
         void * param,
         ThreadPriority priority,
@@ -79,7 +79,7 @@ public:
         if( priority < 0 || priority >= NUM_THREAD_PRIORITIES )
         {
             GN_ERROR(sLogger)( "invalid thread priority." );
-            return Failure();
+            return failure();
         }
 
         mProc = proc;
@@ -94,16 +94,16 @@ public:
             &mParam,
             initialSuspended ? CREATE_SUSPENDED : 0,
             (unsigned int*)&mId );
-        GN_MSW_CHECK_RETURN( mHandle, Failure() );
+        GN_MSW_CHECK_RETURN( mHandle, failure() );
 
         // success
         mAttached = false;
-        return Success();
+        return success();
 
         GN_UNGUARD;
     }
 
-    bool Attach()
+    bool attach()
     {
         GN_GUARD;
 
@@ -118,32 +118,32 @@ public:
 
         // success
         mAttached = true;
-        return Success();
+        return success();
 
         GN_UNGUARD;
     }
 
-    void Quit()
+    void quit()
     {
         GN_GUARD;
 
         if( !mAttached && mHandle )
         {
             // wait for thread termination
-            WaitForTermination( INFINITE_TIME, 0 );
+            waitForTermination( INFINITE_TIME, 0 );
 
             // close thread handle
             CloseHandle( mHandle );
         }
 
-        // standard Quit procedure
+        // standard quit procedure
         GN_STDCLASS_QUIT();
 
         GN_UNGUARD;
     }
 
 private:
-    void Clear()
+    void clear()
     {
         mAttached = false;
         mHandle = 0;
@@ -156,12 +156,12 @@ private:
     // ********************************
 public:
 
-    virtual ThreadPriority GetPriority() const
+    virtual ThreadPriority getPriority() const
     {
         return mPriority;
     }
 
-    virtual void SetPriority( ThreadPriority p )
+    virtual void setPriority( ThreadPriority p )
     {
         if( p < 0 || p >= NUM_THREAD_PRIORITIES )
         {
@@ -174,46 +174,46 @@ public:
         mPriority = p;
     }
 
-    virtual void SetAffinity( UInt32 hardwareThread )
+    virtual void setAffinity( UInt32 hardwareThread )
     {
 #if GN_XENON
         if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getWin32LastErrorInfo() );
         }
 #else
         if( (DWORD)-1 == SetThreadIdealProcessor( mHandle, hardwareThread ) )
         {
-            GN_ERROR(sLogger)( "fail to set thread affinity: %s", GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getWin32LastErrorInfo() );
         }
 #endif
     }
 
-    bool IsCurrentThread() const
+    bool isCurrentThread() const
     {
         return ::GetCurrentThreadId() == mId;
     }
 
-    virtual void Suspend()
+    virtual void suspend()
     {
         if( (DWORD)-1 == ::SuspendThread( mHandle ) )
         {
-            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( getWin32LastErrorInfo() );
         }
     }
 
-    virtual void Resume()
+    virtual void resume()
     {
         if( (DWORD)-1 == ::ResumeThread( mHandle ) )
         {
-            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( getWin32LastErrorInfo() );
         }
     }
 
-    virtual bool WaitForTermination( float seconds, UInt32 * threadProcReturnValue )
+    virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
     {
         // can't wait for self termination
-        GN_ASSERT( !IsCurrentThread() );
+        GN_ASSERT( !isCurrentThread() );
 
         UInt32 ret = ::WaitForSingleObject( mHandle, sec2usec( seconds ) );
 
@@ -232,7 +232,7 @@ public:
         }
         else
         {
-            GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+            GN_ERROR(sLogger)( getWin32LastErrorInfo() );
             return false;
         }
     }
@@ -286,7 +286,7 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::Thread *
-GN::NewThread(
+GN::createThread(
     const ThreadProcedure & proc,
     void * param,
     ThreadPriority priority,
@@ -297,9 +297,9 @@ GN::NewThread(
 
     AutoObjPtr<ThreadMsw> s( new ThreadMsw );
 
-    if( !s->Create( proc, param, priority, initialSuspended, name ) ) return 0;
+    if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -307,7 +307,7 @@ GN::NewThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SleepCurrentThread( float seconds )
+void GN::sleepCurrentThread( float seconds )
 {
    ::Sleep( sec2usec( seconds ) );
 }
@@ -315,15 +315,15 @@ void GN::SleepCurrentThread( float seconds )
 //
 //
 // -----------------------------------------------------------------------------
-Thread * GN::GenerateCurrentThreadObject()
+Thread * GN::generateCurrentThreadObject()
 {
     GN_GUARD;
 
     AutoObjPtr<ThreadMsw> s( new ThreadMsw );
 
-    if( !s->Attach() ) return 0;
+    if( !s->attach() ) return 0;
 
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -331,9 +331,9 @@ Thread * GN::GenerateCurrentThreadObject()
 //
 //
 // -----------------------------------------------------------------------------
-SInt32 GN::GetCurrentThreadIdentifier()
+SInt32 GN::getCurrentThreadId()
 {
-    return (SInt32)::GetCurrentThreadId();
+    return (SInt32)GetCurrentThreadId();
 }
 
 #endif

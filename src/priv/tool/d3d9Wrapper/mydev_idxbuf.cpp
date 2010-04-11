@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "mydevice9.h"
 
-//static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyDevice9.IdxBuf");
+//static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyDevice9.IdxBuf");
 
 using namespace GN;
 

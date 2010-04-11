@@ -2,7 +2,7 @@
 #include "xenonGpu.h"
 #include "xenonTexture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -65,62 +65,62 @@ static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
+bool GN::gfx::XenonTexture::init( const TextureDesc & inputDesc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::XenonTexture, () );
 
-    if( !SetDesc( inputDesc ) ) return Failure();
+    if( !setDesc( inputDesc ) ) return failure();
 
-    // Note: always use descriptor returned by GetDesc(), since it may differ with inputDesc.
-    const TextureDesc & desc = GetDesc();
+    // Note: always use descriptor returned by getDesc(), since it may differ with inputDesc.
+    const TextureDesc & texdesc = getDesc();
 
     // determine texture format
-    mD3DFormat = (D3DFORMAT)ColorFormat2XenonFormat( desc.format );
+    mD3DFormat = (D3DFORMAT)colorFormat2XenonFormat( texdesc.format );
     if( D3DFMT_UNKNOWN == mD3DFormat )
     {
-        GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", desc.format.ToString().ToRawPtr() );
-        return Failure();
+        GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", texdesc.format.toString().cptr() );
+        return failure();
     }
 
     // determine dimension
-    mD3DDimension = sDetermineTextureDimension( desc );
+    mD3DDimension = sDetermineTextureDimension( texdesc );
 
     // determine texture usage
-    mD3DUsage = (TextureUsage::FAST_CPU_WRITE == desc.usage ) ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
+    mD3DUsage = (TextureUsage::FAST_CPU_WRITE == texdesc.usage ) ? D3DUSAGE_CPU_CACHED_MEMORY : 0;
 
     // create texture
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     switch( mD3DDimension )
     {
         case XENON_TEXDIM_1D:
         {
             IDirect3DLineTexture9 * tex1d;
             GN_DX_CHECK_RETURN(
-                dev.CreateLineTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &tex1d, NULL ),
-                Failure() );
+                dev.CreateLineTexture( texdesc.width, texdesc.levels, mD3DUsage, mD3DFormat, 0, &tex1d, NULL ),
+                failure() );
             mD3DTexture = tex1d;
             break;
         }
 
         case XENON_TEXDIM_2D:
         {
-            if( 1 == desc.faces )
+            if( 1 == texdesc.faces )
             {
                 IDirect3DTexture9 * tex2d;
                 GN_DX_CHECK_RETURN(
-                    dev.CreateTexture( desc.width, desc.height, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
-                    Failure() );
+                    dev.CreateTexture( texdesc.width, texdesc.height, texdesc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
+                    failure() );
                 mD3DTexture = tex2d;
             }
             else
             {
                 IDirect3DArrayTexture9 * tex2d;
                 GN_DX_CHECK_RETURN(
-                    dev.CreateArrayTexture( desc.width, desc.height, desc.faces, desc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
-                    Failure() );
+                    dev.CreateArrayTexture( texdesc.width, texdesc.height, texdesc.faces, texdesc.levels, mD3DUsage, mD3DFormat, 0, &tex2d, NULL ),
+                    failure() );
                 mD3DTexture = tex2d;
             }
             break;
@@ -130,8 +130,8 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
         {
             IDirect3DVolumeTexture9 * tex3d;
             GN_DX_CHECK_RETURN(
-                dev.CreateVolumeTexture( desc.width, desc.height, desc.depth, desc.levels, mD3DUsage, mD3DFormat, 0, &tex3d, NULL ),
-                Failure() );
+                dev.CreateVolumeTexture( texdesc.width, texdesc.height, texdesc.depth, texdesc.levels, mD3DUsage, mD3DFormat, 0, &tex3d, NULL ),
+                failure() );
             mD3DTexture = tex3d;
             break;
         }
@@ -140,30 +140,30 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
         {
             IDirect3DCubeTexture9 * texcube;
             GN_DX_CHECK_RETURN(
-                dev.CreateCubeTexture( desc.width, desc.levels, mD3DUsage, mD3DFormat, 0, &texcube, NULL ),
-                Failure() );
+                dev.CreateCubeTexture( texdesc.width, texdesc.levels, mD3DUsage, mD3DFormat, 0, &texcube, NULL ),
+                failure() );
             mD3DTexture = texcube;
             break;
         }
 
         default:
             GN_UNEXPECTED(); // invalid dimension
-            return Failure();
+            return failure();
     }
 
     // calculate mipmap sizes
     XGTEXTURE_DESC xdesc;
-    for( size_t i = 0; i < desc.levels; ++i )
+    for( size_t i = 0; i < texdesc.levels; ++i )
     {
         XGGetTextureDesc( mD3DTexture, i, &xdesc );
 
         DWORD depth = ( D3DRTYPE_VOLUMETEXTURE == xdesc.ResourceType ) ? xdesc.Depth : 1;
 
-        SetMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
+        setMipSize( i, Vector3<UInt32>(xdesc.Width, xdesc.Height, depth) );
     }
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -171,13 +171,13 @@ bool GN::gfx::XenonTexture::Init( const TextureDesc & inputDesc )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonTexture::Quit()
+void GN::gfx::XenonTexture::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mD3DTexture );
+    safeRelease( mD3DTexture );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -190,7 +190,7 @@ void GN::gfx::XenonTexture::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonTexture::UpdateMipmap(
+void GN::gfx::XenonTexture::updateMipmap(
     size_t              face,
     size_t              level,
     const Box<UInt32> * area,
@@ -204,8 +204,8 @@ void GN::gfx::XenonTexture::UpdateMipmap(
     if( !validateUpdateParameters( face, level, area, flag, clippedArea ) ) return;
 
     // prepare for update
-    const TextureDesc & desc = GetDesc();
-    const ColorLayoutDesc & ld = desc.format.GetLayoutDesc();
+    const TextureDesc & texdesc = getDesc();
+    const ColorLayoutDesc & ld = texdesc.format.layoutDesc();
     size_t srcBlockRowPitch = rowPitch * ld.blockHeight;
     XGTEXTURE_DESC xdesc;
     XGGetTextureDesc( mD3DTexture, level, &xdesc );

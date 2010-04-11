@@ -5,7 +5,7 @@ using namespace GN::gfx;
 using namespace GN::input;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshViewer");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
 class MyApp : public SampleApp
 {
@@ -20,14 +20,14 @@ public:
 
     void updateRadius()
     {
-        Gpu & gpu = GetGpu();
+        Gpu & gpu = getGpu();
 
-        const DispDesc & dd = gpu.GetDispDesc();
+        const DispDesc & dd = gpu.getDispDesc();
 
         // setup camera
         Matrix44f view, proj;
-        view.LookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.ComposePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
+        view.lookAtRh( Vector3f(0,0,radius), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gpu.composePerspectiveMatrixRh( proj, GN_PI/4.0f, (float)dd.width/dd.height, radius / 100.0f, radius * 2.0f );
         camera.setViewMatrix( view );
         camera.setProjectionMatrix( proj );
 
@@ -41,9 +41,9 @@ public:
         light->getNode<SpatialNode>()->setPosition( Vector3f(0,0,radius) );
     }
 
-    bool OnInit()
+    bool onInit()
     {
-        World & w = GetWorld();
+        World & w = getWorld();
 
         light = w.createLightEntity( NULL );
         if( !light ) return false;
@@ -51,13 +51,13 @@ public:
         // load scene from file
         //if( !scene->getNode<VisualNode>()->loadModelsFromFile( filename ) ) return false;
         SimpleWorldDesc swd;
-        if( !swd.LoadFromFile( filename ) ) return false;
+        if( !swd.loadFromFile( filename ) ) return false;
         scene = swd.populateTheWorld( w );
         if( !scene ) return false;
 
         // update camera stuff
         Spheref bs;
-        CalculateBoundingSphereFromBoundingBox( bs, swd.bbox );
+        calculateBoundingSphereFromBoundingBox( bs, swd.bbox );
         radius = bs.radius * 2.0f;
         if( 0.0f == radius ) radius = 1.0f;
 
@@ -71,16 +71,16 @@ public:
         return true;
     }
 
-    void OnQuit()
+    void onQuit()
     {
     }
 
-    void OnRenderWindowResize( HandleType, UInt32 width, UInt32 height )
+    void onRenderWindowResize( HandleType, UInt32 width, UInt32 height )
     {
         arcball.setMouseMoveWindow( 0, 0, (int)width, (int)height );
     }
 
-    void OnAxisMove( Axis a, int d )
+    void onAxisMove( Axis a, int d )
     {
         if( Axis::MOUSE_WHEEL_0 == a )
         {
@@ -91,7 +91,7 @@ public:
         }
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
         SpatialNode * sceneSpatial = scene->getNode<SpatialNode>();
         const Vector3f & position = arcball.getTranslation();
@@ -99,30 +99,30 @@ public:
         sceneSpatial->setRotation( arcball.getRotation() );
     }
 
-    void OnRender()
+    void onRender()
     {
-        Gpu & gpu = GetGpu();
+        Gpu & gpu = getGpu();
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
 
-        GetWorld().visualGraph().Draw( camera );
+        getWorld().visualGraph().draw( camera );
 
         const Vector3f & position = arcball.getTranslation();
 
-        GetFont().DrawText(
-            StringFormat(
+        font().drawText(
+            stringFormat(
                 L"position : %f,\n"
                 L"           %f,\n"
                 L"           %f\n"
                 L"radius   : %f",
                 position.x, position.y, position.z,
-                radius ).ToRawPtr(),
+                radius ).cptr(),
             320, 40 );
 
-        DrawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );
+        drawXYZCoordinateAxes( camera.getProjectionMatrix() * camera.getViewMatrix() * arcball.getRotationMatrix44() );
     }
 
-    bool OnCheckExtraCmdlineArguments( int argc, const char * const argv [] )
+    bool onCheckExtraCmdlineArguments( int argc, const char * const argv [] )
     {
         if( 0 == argc )
         {
@@ -133,10 +133,10 @@ public:
         return true;
     }
 
-    void OnPrintHelpScreen( const char * executableName )
+    void onPrintHelpScreen( const char * executableName )
     {
         GN_INFO(sLogger)( "\nUsage: %s [options] meshfile\n", executableName );
-        PrintStandardCommandLineOptions();
+        printStandardCommandLineOptions();
     }
 };
 
@@ -146,5 +146,5 @@ int main( int argc, const char * argv[] )
 
    MyApp app;
 
-   return app.Run( argc, argv );
+   return app.run( argc, argv );
 }

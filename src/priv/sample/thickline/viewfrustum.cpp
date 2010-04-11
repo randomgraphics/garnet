@@ -8,7 +8,7 @@ using namespace GN::d3d9;
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.thickline");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.thickline");
 
 //
 //
@@ -18,9 +18,9 @@ static void LOG_ERROR(const char * format, ...)
     GN::StrA s;
     va_list arglist;
     va_start( arglist, format );
-    s.FormatV( format, arglist );
+    s.formatv( format, arglist );
     va_end( arglist );
-    GN_ERROR(sLogger)( "%s\n", s.ToRawPtr() );
+    GN_ERROR(sLogger)( "%s\n", s.cptr() );
 }
 
 #define SAFE_RELEASE( x ) if(x) { (x)->Release(); (x) = NULL; } else void(0)
@@ -113,7 +113,7 @@ bool D3D9ViewFrustum::OnDeviceCreate( IDirect3DDevice9 * dev )
     if( NULL == m_Vs || NULL == m_Ps ) return false;
 
     m_Device = dev;
-    return m_LineRenderer.OnDeviceCreate( dev );
+    return m_LineRenderer.onDeviceCreate( dev );
 }
 
 //
@@ -135,7 +135,7 @@ bool D3D9ViewFrustum::OnDeviceRestore()
         return false;
     }
 
-    return m_LineRenderer.OnDeviceRestore();
+    return m_LineRenderer.onDeviceRestore();
 }
 
 //
@@ -143,7 +143,7 @@ bool D3D9ViewFrustum::OnDeviceRestore()
 // -----------------------------------------------------------------------------
 void D3D9ViewFrustum::OnDeviceDispose()
 {
-    m_LineRenderer.OnDeviceDispose();
+    m_LineRenderer.onDeviceDispose();
     SAFE_RELEASE( m_VbSolid );
     SAFE_RELEASE( m_VbTrans );
 }
@@ -153,7 +153,7 @@ void D3D9ViewFrustum::OnDeviceDispose()
 // -----------------------------------------------------------------------------
 void D3D9ViewFrustum::OnDeviceDelete()
 {
-    m_LineRenderer.OnDeviceDelete();
+    m_LineRenderer.onDeviceDelete();
     SAFE_RELEASE( m_Vs );
     SAFE_RELEASE( m_Ps );
     m_Device = 0;

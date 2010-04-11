@@ -5,7 +5,7 @@ using namespace GN::gfx;
 using namespace GN::util;
 using namespace GN::input;
 
-static GN::Logger * sLogger = GN::GetLogger( "GN.test.RenderToTexture" );
+static GN::Logger * sLogger = GN::getLogger( "GN.test.RenderToTexture" );
 
 float RT_WIDTH  = 256.0f;
 float RT_HEIGHT = 256.0f;
@@ -31,47 +31,47 @@ public:
 
     RenderToTexture( GpuResourceDatabase & db_ )
         : db(db_)
-        , sr(db_.GetGpu())
+        , sr(db_.getGpu())
         , model(db_)
     {
     }
 
     ~RenderToTexture()
     {
-        Quit();
+        quit();
     }
 
-    bool Init()
+    bool init()
     {
         // create sprite renderer
-        if( !sr.Init() ) return false;
+        if( !sr.init() ) return false;
 
-        Gpu & gpu = db.GetGpu();
+        Gpu & gpu = db.getGpu();
 
         // create render targets
-        c0.Attach( gpu.Create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
+        c0.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::RGBA32, TextureUsage::COLOR_RENDER_TARGET ) );
         if( !c0 )
         {
             GN_ERROR(sLogger)( "Current graphics hardware does not support render-to-texture at all." );
             return false;
         }
 
-        ds.Attach( gpu.Create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
+        ds.attach( gpu.create2DTexture( (UInt32)RT_WIDTH, (UInt32)RT_HEIGHT, 1, ColorFormat::UNKNOWN, TextureUsage::DEPTH_RENDER_TARGET ) );
         if( !ds )
         {
             GN_WARN(sLogger)( "Current graphics hardware does not support depth-texture. All tests related depth-texture are disabled." );
         }
 
         // load textures
-        tex0.Attach( LoadTextureFromFile( gpu, "media::texture/rabit.png" ) );
-        tex1.Attach( LoadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
+        tex0.attach( loadTextureFromFile( gpu, "media::texture/rabit.png" ) );
+        tex1.attach( loadTextureFromFile( gpu, "media::texture/earth.jpg" ) );
         if( 0 == tex0 || 0 == tex1 ) return false;
 
         // create box mesh
         float edge = 200.0f;
         BoxVert vertices[24];
         UInt16  indices[36];
-        CreateBox(
+        createBox(
             edge, edge, edge,
             &vertices[0].x, sizeof(BoxVert),
             &vertices[0].u, sizeof(BoxVert),
@@ -86,85 +86,85 @@ public:
         md.numidx      = 36;
         md.vertices[0] = vertices;
         md.indices     = indices;
-        AutoRef<MeshResource> boxmesh = db.CreateResource<MeshResource>( NULL );
-        if( !boxmesh->Reset( &md ) ) return false;
+        AutoRef<MeshResource> boxmesh = db.createResource<MeshResource>( NULL );
+        if( !boxmesh->reset( &md ) ) return false;
 
         // setup transformation matrices
-        view.LookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gpu.ComposePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+        view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gpu.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize the model
-        if( !model.Init() ) return false;
-        model.GetModelResource().SetMeshResource( boxmesh );
-        model.SetLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
-        model.SetAlbedoTexture( tex1 );
+        if( !model.init() ) return false;
+        model.modelResource().setMeshResource( boxmesh );
+        model.setLightPos( Vector4f(200,200,200,1) ); // light is at eye position.
+        model.setAlbedoTexture( tex1 );
 
         return true;
     }
 
-    void Quit()
+    void quit()
     {
-        model.Quit();
-        c0.Clear();
-        ds.Clear();
-        tex0.Clear();
-        tex1.Clear();
-        context.Clear();
-        sr.Quit();
+        model.quit();
+        c0.clear();
+        ds.clear();
+        tex0.clear();
+        tex1.clear();
+        context.clear();
+        sr.quit();
     }
 
     void drawBox( float speed )
     {
-        float angle = speed * fmod( timer.GetTimef(), GN_TWO_PI );
+        float angle = speed * fmod( timer.getTimef(), GN_TWO_PI );
 
         Matrix44f world;
-        world.RotateY( angle );
+        world.rotateY( angle );
 
-        model.SetTransform( proj, view, world );
+        model.setTransform( proj, view, world );
 
-        model.GetModelResource().Draw();
+        model.modelResource().draw();
     }
 
     void drawToColorRenderTarget( Texture * tex )
     {
-        Gpu & gpu = db.GetGpu();
-        context.colortargets.Resize( 1 );
+        Gpu & gpu = db.getGpu();
+        context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
-        gpu.BindContext( context );
-        gpu.ClearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
-        sr.DrawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
+        gpu.bindContext( context );
+        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
     }
 
     void drawToDepthTexture()
     {
-        Gpu & gpu = db.GetGpu();
-        context.colortargets.Clear();
+        Gpu & gpu = db.getGpu();
+        context.colortargets.clear();
         context.depthstencil.texture = ds;
-        gpu.BindContext( context );
-        gpu.ClearScreen();
+        gpu.bindContext( context );
+        gpu.clearScreen();
 
         drawBox( 1.0f );
     }
 
     void drawToBothColorAndDepthTexture()
     {
-        Gpu & gpu = db.GetGpu();
-        context.colortargets.Resize( 1 );
+        Gpu & gpu = db.getGpu();
+        context.colortargets.resize( 1 );
         context.colortargets[0].texture = c0;
         context.depthstencil.texture = ds;
-        gpu.BindContext( context );
-        gpu.ClearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
+        gpu.bindContext( context );
+        gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
 
         drawBox( -1.0f );
     }
 
     void drawToBackBuffer( Texture * tex, float x, float y )
     {
-        Gpu & gpu = db.GetGpu();
-        context.colortargets.Clear();
-        context.depthstencil.Clear();
-        gpu.BindContext( context );
-        sr.DrawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
+        Gpu & gpu = db.getGpu();
+        context.colortargets.clear();
+        context.depthstencil.clear();
+        gpu.bindContext( context );
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
     }
 
     void render()
@@ -181,35 +181,35 @@ public:
     }
 };
 
-int Run( Gpu & gpu )
+int run( Gpu & gpu )
 {
     GpuResourceDatabase db(gpu);
 
     RenderToTexture scene( db );
 
-    if( !scene.Init() ) return -1;
+    if( !scene.init() ) return -1;
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
-        gpu.ProcessRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
-        in.ProcessInputEvents();
+        in.processInputEvents();
 
-        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
         scene.render();
-        gpu.Present();
+        gpu.present();
 
         fps.onFrame();
     }
@@ -221,20 +221,20 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.GetDispDesc();
-        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        ShutdownInputSystem();
+        shutdownInputSystem();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )
@@ -260,16 +260,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
-    int result = Run( *r );
+    int result = run( *r );
 
-    DeleteGpu( r );
+    deleteGpu( r );
 
     return result;
 }

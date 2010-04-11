@@ -2,7 +2,7 @@
 #include "myvtxbuf9.h"
 #include "mydevice9.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3dwrapper.MyVtxBuf9");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3dwrapper.MyVtxBuf9");
 
 //
 //
@@ -16,7 +16,7 @@ HRESULT MyVtxBuf9::create(
 {
     GN_ASSERT( mDevice );
 
-    mSysCopy.Resize( Length );
+    mSysCopy.resize( Length );
 
     GN_TRACE(sLogger)( "Create D3D vertex buffer: Length(%d)", Length );
 
@@ -28,7 +28,7 @@ HRESULT MyVtxBuf9::create(
 // ----------------------------------------------------------------------------
 HRESULT MyVtxBuf9::Lock( UINT OffsetToLock, UINT SizeToLock, VOID ** ppbData, DWORD Flags )
 {
-    if( (OffsetToLock + SizeToLock) > mSysCopy.Size() )
+    if( (OffsetToLock + SizeToLock) > mSysCopy.size() )
     {
         GN_ERROR(sLogger)( "Invalid lock range" );
         return D3DERR_INVALIDCALL;
@@ -41,10 +41,10 @@ HRESULT MyVtxBuf9::Lock( UINT OffsetToLock, UINT SizeToLock, VOID ** ppbData, DW
     }
 
     mLockOffset = OffsetToLock;
-    mLockBytes  = ( 0 == SizeToLock && 0 == OffsetToLock ) ? (UINT)mSysCopy.Size() : SizeToLock;
+    mLockBytes  = ( 0 == SizeToLock && 0 == OffsetToLock ) ? (UINT)mSysCopy.size() : SizeToLock;
     mLockFlags  = Flags;
 
-    *ppbData = mSysCopy.ToRawPtr() + mLockOffset;
+    *ppbData = mSysCopy.cptr() + mLockOffset;
 
     return D3D_OK;
 }
@@ -62,7 +62,7 @@ HRESULT MyVtxBuf9::Unlock()
     HRESULT hr = realobj()->Lock( mLockOffset, mLockBytes, (void**)&data, mLockFlags );
     if( FAILED(hr) ) return hr;
 
-    memcpy( data + mLockOffset, mSysCopy.ToRawPtr() + mLockOffset, mLockBytes );
+    memcpy( data + mLockOffset, mSysCopy.cptr() + mLockOffset, mLockBytes );
 
     return realobj()->Unlock();
 }

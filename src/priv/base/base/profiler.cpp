@@ -7,15 +7,15 @@ static GN::StrA sTime2Str( double time )
 
     if( time < 0.000001 )
     {
-        return StringFormat( "%fus", time * 1000000 );
+        return stringFormat( "%fus", time * 1000000 );
     }
     else if( time < 0.001 )
     {
-        return StringFormat( "%fms", time * 1000 );
+        return stringFormat( "%fms", time * 1000 );
     }
     else
     {
-        return StringFormat( "%fs", time );
+        return stringFormat( "%fs", time );
     }
 }
 
@@ -47,19 +47,19 @@ GN::ProfileTimer::~ProfileTimer()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::Start()
+void GN::ProfileTimer::start()
 {
     GN_ASSERT( 0 == timestart );
-    timestart = clock.GetTimeD();
+    timestart = clock.getTimeD();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfileTimer::Stop()
+void GN::ProfileTimer::stop()
 {
     GN_ASSERT( 0 != timestart );
-    double t = clock.GetTimeD() - timestart;
+    double t = clock.getTimeD() - timestart;
     if( t < timemin ) timemin = t;
     if( t > timemax ) timemax = t;
     timesum += t;
@@ -79,19 +79,19 @@ GN::ProfilerManager::~ProfilerManager()
 #if GN_BUILD_PROFILE
     // print profile result
     StrA s;
-    ToString( s );
-    printf( "%s\n", s.ToRawPtr() );
+    toString( s );
+    printf( "%s\n", s.cptr() );
 #endif
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ProfilerManager::ToString( GN::StrA & rval ) const
+void GN::ProfilerManager::toString( GN::StrA & rval ) const
 {
     ScopeMutex<SpinLoop> lock( mMutex );
 
-    if( mTimers.Empty() ) { rval = ""; return; }
+    if( mTimers.empty() ) { rval = ""; return; }
 
     rval =
         "\n"
@@ -100,19 +100,19 @@ void GN::ProfilerManager::ToString( GN::StrA & rval ) const
         "---------------------------------------------------------------------\n"
         "\n";
     const StringMap<char,ProfilerTimerImpl>::KeyValuePair * i;
-    for( i = mTimers.First(); i != NULL; i = mTimers.Next( i ) )
+    for( i = mTimers.first(); i != NULL; i = mTimers.next( i ) )
     {
         const ProfilerTimerImpl & t = i->value;
-        rval += StringFormat(
+        rval += GN::stringFormat(
             "    %s :\n"
             "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
             i->key,
             t.count,
-            sTime2Str( t.timesum ).ToRawPtr(),
-            sTime2Str( t.timesum / t.count ).ToRawPtr(),
-            sTime2Str( t.timemin ).ToRawPtr(),
-            sTime2Str( t.timemax ).ToRawPtr() );
+            sTime2Str( t.timesum ).cptr(),
+            sTime2Str( t.timesum / t.count ).cptr(),
+            sTime2Str( t.timemin ).cptr(),
+            sTime2Str( t.timemax ).cptr() );
     }
     rval +=
         "=====================================================================\n"

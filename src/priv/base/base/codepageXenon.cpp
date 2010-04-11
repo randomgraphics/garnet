@@ -3,7 +3,7 @@
 
 #if GN_XENON
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -14,7 +14,7 @@ using namespace GN;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplXenon::Init(
+bool GN::CECImplXenon::init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -26,7 +26,7 @@ bool GN::CECImplXenon::Init(
     // success
     mEncodingFrom = from;
     mEncodingTo   = to;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -34,11 +34,11 @@ bool GN::CECImplXenon::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplXenon::Quit()
+void GN::CECImplXenon::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -64,7 +64,7 @@ GN::CECImplXenon::convert(
         mEncodingFrom != CharacterEncodingConverter::UTF16_BE &&
         mEncodingFrom != CharacterEncodingConverter::WIDECHAR )
     {
-        tempBuffer.Resize( sourceBufferSizeInBytes );
+        tempBuffer.resize( sourceBufferSizeInBytes );
 
         GN_MSW_CHECK_RETURN( MultiByteToWideChar(
                 CP_ACP,
@@ -75,8 +75,8 @@ GN::CECImplXenon::convert(
                 destBufferSizeInBytes / sizeof(wchar_t) ),
             0 );
 
-        sourceBuffer = tempBuffer.ToRawPtr();
-        sourceBufferSizeInBytes = tempBuffer.Size() * sizeof(wchar_t);
+        sourceBuffer = tempBuffer.cptr();
+        sourceBufferSizeInBytes = tempBuffer.size() * sizeof(wchar_t);
     }
     else
     {

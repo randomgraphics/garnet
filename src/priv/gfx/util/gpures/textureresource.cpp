@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // Local stuff
@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::TextureResource::GetGuid()
+const Guid & GN::gfx::TextureResource::guid()
 {
     static const Guid TEXTURE_GUID = {0x6ad8b59d, 0xe672, 0x4b5e, { 0x8e, 0xec, 0xf7, 0xac, 0xd4, 0xf1, 0x99, 0xdd } };
     return TEXTURE_GUID;
@@ -27,7 +27,7 @@ const Guid & GN::gfx::TextureResource::GetGuid()
 //
 // -----------------------------------------------------------------------------
 AutoRef<TextureResource>
-GN::gfx::TextureResource::LoadFromFile(
+GN::gfx::TextureResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -38,15 +38,15 @@ GN::gfx::TextureResource::LoadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<TextureResource> texres( db.FindResource<TextureResource>( filename ) );
+    AutoRef<TextureResource> texres( db.findResource<TextureResource>( filename ) );
     if( texres ) return texres;
 
     // convert to full (absolute) path
-    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path
-    texres = db.FindResource<TextureResource>( filename );
+    texres = db.findResource<TextureResource>( filename );
     if( texres ) return texres;
 
     // load new texture from file
@@ -55,29 +55,29 @@ GN::gfx::TextureResource::LoadFromFile(
     // load image
     ImageDesc id;
     DynaArray<UInt8> texels;
-    if( !LoadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
+    if( !loadImageFromFile( id, texels, filename ) ) return AutoRef<TextureResource>::NULLREF;
 
     // create texture
     TextureDesc td;
-    td.FromImageDesc( id );
-    AutoRef<Texture> tex( db.GetGpu().CreateTexture( td ) );
+    td.fromImageDesc( id );
+    AutoRef<Texture> tex( db.getGpu().createTexture( td ) );
     if( !tex ) return AutoRef<TextureResource>::NULLREF;
 
     // update texture content
     for( size_t f = 0; f < td.faces; ++f )
     for( size_t l = 0; l < td.levels; ++l )
     {
-        const MipmapDesc & md = id.GetMipmap( f, l );
-        size_t offset = id.GetMipmapOffset( f, l );
-        tex->UpdateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
+        const MipmapDesc & md = id.getMipmap( f, l );
+        size_t offset = id.getMipmapOffset( f, l );
+        tex->updateMipmap( f, l, 0, md.rowPitch, md.slicePitch, &texels[offset], SurfaceUpdateFlag::DEFAULT );
     }
 
     // create new texture resource
-    texres = db.CreateResource<TextureResource>( filename );
+    texres = db.createResource<TextureResource>( filename );
     if( 0 == texres ) return AutoRef<TextureResource>::NULLREF;
 
     // attach the texture to the resource
-    texres->SetTexture( tex );
+    texres->setTexture( tex );
 
     // success
     return texres;
@@ -86,17 +86,17 @@ GN::gfx::TextureResource::LoadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
+bool GN::gfx::TextureResource::reset( const TextureDesc * desc )
 {
     AutoRef<Texture> tex;
 
     if( desc )
     {
-        tex.Attach( GetGdb().GetGpu().CreateTexture( *desc ) );
+        tex.attach( getGdb().getGpu().createTexture( *desc ) );
         if( !tex ) return false;
     }
 
-    SetTexture( tex );
+    setTexture( tex );
 
     return true;
 }
@@ -104,7 +104,7 @@ bool GN::gfx::TextureResource::Reset( const TextureDesc * desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::TextureResource::SetTexture( const AutoRef<Texture> & newTexture )
+void GN::gfx::TextureResource::setTexture( const AutoRef<Texture> & newTexture )
 {
     if( mTexture == newTexture ) return;
 
@@ -152,9 +152,9 @@ public:
     {
         GpuResourceFactory factory = { &sCreateInstance };
 
-        if( db.HasResourceFactory( TextureResource::GetGuid() ) ) return true;
+        if( db.hasResourceFactory( TextureResource::guid() ) ) return true;
 
-        return db.RegisterResourceFactory( TextureResource::GetGuid(), "Texture Resource", factory );
+        return db.registerResourceFactory( TextureResource::guid(), "Texture Resource", factory );
     }
 };
 

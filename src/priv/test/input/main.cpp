@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.input");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 
 ///
 /// input module test application
@@ -13,30 +13,30 @@ class InputTest
 
     GN::input::KeyEvent mLastKeyEvent;
 
-    bool CreateWindow()
+    bool createWindow()
     {
-        mWin.Attach( GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
-        if( mWin.Empty() ) return false;
-        mWin->Show();
+        mWin.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        if( mWin.empty() ) return false;
+        mWin->show();
         return true;
     }
 
-    bool CreateInput( const char * api )
+    bool createInput( const char * api )
     {
-        if( !GN::input::InitializeInputSystem( 0 == GN::StringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
+        if( !GN::input::initializeInputSystem( 0 == GN::stringCompare("DI",api) ? GN::input::InputAPI::DINPUT : GN::input::InputAPI::NATIVE ) )
             return false;
-        if( !gInputPtr->AttachToWindow( 0, mWin->GetWindowHandle() ) )
+        if( !gInputPtr->attachToWindow( 0, mWin->getWindowHandle() ) )
             return false;
 
         // connect to input signals
-        gInput.sigKeyPress.Connect( this, &InputTest::OnKeyPress );
-        gInput.sigCharPress.Connect( this, &InputTest::OnCharPress );
-        gInput.sigAxisMove.Connect( this, &InputTest::OnAxisMove );
+        gInput.sigKeyPress.connect( this, &InputTest::onKeyPress );
+        gInput.sigCharPress.connect( this, &InputTest::onCharPress );
+        gInput.sigAxisMove.connect( this, &InputTest::onAxisMove );
 
         return true;
     }
 
-    /*LRESULT WinProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+    /*LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
     {
         switch(msg)
         {
@@ -48,19 +48,19 @@ class InputTest
                     GN::StrA txt;
                     txt.format(
                         "%s%s%s%s %s",
-                        mLastKeyEvent.status.CtrlDown()?"CTRL-":"",
-                        mLastKeyEvent.status.ShiftDown()?"SHIFT-":"",
-                        mLastKeyEvent.status.AltDown()?"ALT-":"",
-                        GN::input::KeyCode2String(mLastKeyEvent.code),
+                        mLastKeyEvent.status.ctrlDown()?"CTRL-":"",
+                        mLastKeyEvent.status.shiftDown()?"SHIFT-":"",
+                        mLastKeyEvent.status.altDown()?"ALT-":"",
+                        GN::input::keyCode2String(mLastKeyEvent.code),
                         mLastKeyEvent.status.down?"DOWN":"UP" );
-                    TextOutA( dc, 0, 0, txt.ToRawPtr(), (INT)txt.Size() );
+                    TextOutA( dc, 0, 0, txt.cptr(), (INT)txt.size() );
 
                     if( gInputPtr )
                     {
                         int x, y;
-                        gInputPtr->GetMousePosition( x, y );
+                        gInputPtr->getMousePosition( x, y );
                         txt.format( "Mouse: %d, %d", x, y );
-                        TextOutA( dc, 0, 20, txt.ToRawPtr(), (INT)txt.Size() );
+                        TextOutA( dc, 0, 20, txt.cptr(), (INT)txt.size() );
                     }
 
                     EndPaint( hwnd, &ps );
@@ -74,23 +74,23 @@ class InputTest
         return ::DefWindowProc( hwnd, msg, wp, lp );
     }*/
 
-    void OnKeyPress( GN::input::KeyEvent ke )
+    void onKeyPress( GN::input::KeyEvent ke )
     {
         mLastKeyEvent = ke;
-        mWin->Repaint();
+        mWin->repaint();
         if( !ke.status.down )
         {
             if( GN::input::KeyCode::ESCAPE == ke.code ) mDone = true;
         }
     }
 
-    void OnCharPress( wchar_t )
+    void onCharPress( wchar_t )
     {
     }
 
-    void OnAxisMove( GN::input::Axis, int  )
+    void onAxisMove( GN::input::Axis, int  )
     {
-        mWin->Repaint();
+        mWin->repaint();
     }
 
 public:
@@ -103,14 +103,14 @@ public:
     ///
     /// Destructor
     ///
-    ~InputTest() { Quit(); }
+    ~InputTest() { quit(); }
 
     ///
     /// Initialize test application
     ///
-    bool Init( const char * api )
+    bool init( const char * api )
     {
-        if( !CreateWindow() || !CreateInput(api) ) return false;
+        if( !createWindow() || !createInput(api) ) return false;
 
         mDone = false;
 
@@ -121,16 +121,16 @@ public:
     ///
     /// Quit test application
     ///
-    void Quit()
+    void quit()
     {
-        GN::input::ShutdownInputSystem();
-        mWin.Clear();
+        GN::input::shutdownInputSystem();
+        mWin.clear();
     }
 
     ///
     /// Run test application
     ///
-    int Run()
+    int run()
     {
         if( !gInputPtr )
         {
@@ -140,8 +140,8 @@ public:
 
         while(!mDone)
         {
-            mWin->RunUntilNoNewEvents();
-            gInputPtr->ProcessInputEvents();
+            mWin->runUntilNoNewEvents();
+            gInputPtr->processInputEvents();
         }
 
         return 0;
@@ -151,7 +151,7 @@ public:
 ///
 /// Print usage
 ///
-void Usage( const char * appName )
+void usage( const char * appName )
 {
     printf(
         "Input module test application.\n"
@@ -171,7 +171,7 @@ int main( int argc, const char * argv[] )
 
     if( argc < 2 )
     {
-        Usage( argv[0] );
+        usage( argv[0] );
         module = "MSW";
     }
     else
@@ -180,6 +180,6 @@ int main( int argc, const char * argv[] )
     }
 
     InputTest app;
-    if( !app.Init( module ) ) return -1;
-    return app.Run();
+    if( !app.init( module ) ) return -1;
+    return app.run();
 }

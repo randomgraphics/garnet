@@ -3,7 +3,7 @@
 #include "codepageMSWIN.h"
 #include "codepageXenon.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -27,7 +27,7 @@ typedef GN::CECImplMSWIN CECImpl;
 
 struct CECImpl
 {
-    bool Init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
+    bool init( CharacterEncodingConverter::Encoding, CharacterEncodingConverter::Encoding )
     {
         GN_ERROR(sLogger)( "Character encoding class is not implemented on " GN_PLATFORM_NAME "." );
         return false;
@@ -83,7 +83,7 @@ GN::CharacterEncodingConverter::CharacterEncodingConverter( Encoding from, Encod
 {
     CECImpl * p = (CECImpl*)mImpl;
 
-    if( !p->Init( from, to ) )
+    if( !p->init( from, to ) )
     {
         delete p;
         mImpl = NULL;
@@ -101,7 +101,7 @@ GN::CharacterEncodingConverter::~CharacterEncodingConverter()
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::CharacterEncodingConverter::Convert(
+size_t GN::CharacterEncodingConverter::convert(
     void            * destBuffer,
     size_t            destBufferSizeInBytes,
     const void      * sourceBuffer,
@@ -129,7 +129,7 @@ size_t GN::CharacterEncodingConverter::Convert(
 //
 //
 // -----------------------------------------------------------------------------
-GN::CharacterEncodingConverter::Encoding GN::GetCurrentSystemEncoding()
+GN::CharacterEncodingConverter::Encoding GN::getCurrentSystemEncoding()
 {
     GN_UNIMPL_WARNING();
     return CharacterEncodingConverter::GBK;
@@ -138,12 +138,12 @@ GN::CharacterEncodingConverter::Encoding GN::GetCurrentSystemEncoding()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Wcs2Mbs( StrA & o, const wchar_t * i, size_t l )
+void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 {
-    if ( 0 == i ) { o.Clear(); return; }
-    if ( 0 == l ) l = StringLength(i);
+    if ( 0 == i ) { o.clear(); return; }
+    if ( 0 == l ) l = stringLength(i);
 
-    o.SetCaps( l + 1 );
+    o.setCaps( l + 1 );
 #if GN_MSVC8
     size_t ol;
     ::wcstombs_s( &ol, o.mPtr, l+1, i, l );
@@ -153,7 +153,7 @@ void GN::Wcs2Mbs( StrA & o, const wchar_t * i, size_t l )
 #endif
     if( (size_t)-1 == l || 0 == l )
     {
-        o.Clear();
+        o.clear();
     }
     else
     {
@@ -165,24 +165,24 @@ void GN::Wcs2Mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::Mbs2Wcs( wchar_t * o, size_t os, const char * i, size_t is )
+size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
     StrW wcs;
-    Mbs2Wcs( wcs, i, is );
+    mbs2wcs( wcs, i, is );
 
-    size_t n = wcs.Size() + 1;
+    size_t n = wcs.size() + 1;
 
     if( o )
     {
         if( os > n )
         {
-            memcpy( o, wcs.ToRawPtr(), n );
+            memcpy( o, wcs.cptr(), n );
             GN_ASSERT( 0 == o[n-1] );
             return n;
         }
         else if( os > 0 )
         {
-            memcpy( o, wcs.ToRawPtr(), sizeof(wchar_t) * (os-1) );
+            memcpy( o, wcs.cptr(), sizeof(wchar_t) * (os-1) );
             o[os-1] = 0;
             return os;
         }
@@ -200,17 +200,17 @@ size_t GN::Mbs2Wcs( wchar_t * o, size_t os, const char * i, size_t is )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::Mbs2Wcs( StrW & o, const char * i, size_t l )
+void GN::mbs2wcs( StrW & o, const char * i, size_t l )
 {
-    if ( 0 == i ) { o.Clear(); return; }
-    if ( 0 == l ) l = StringLength(i);
+    if ( 0 == i ) { o.clear(); return; }
+    if ( 0 == l ) l = stringLength(i);
 
-    o.SetCaps( l + 1 );
+    o.setCaps( l + 1 );
 #if GN_MSVC8
     size_t ol;
     if( 0 != ::mbstowcs_s( &ol, o.mPtr, l+1, i, l ) )
     {
-        o.Clear();
+        o.clear();
     }
     else
     {
@@ -222,7 +222,7 @@ void GN::Mbs2Wcs( StrW & o, const char * i, size_t l )
     l = ::mbstowcs( o.mPtr, i, l );
     if( (size_t)-1 == l || 0 == l )
     {
-        o.Clear();
+        o.clear();
     }
     else
     {

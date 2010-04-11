@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 ///
 /// 根据显示模式和option设定present parameters
@@ -81,8 +81,8 @@ bool GN::gfx::XenonGpu::dispInit()
         return false;
     }
 
-    const GpuOptions & ro = GetOptions();
-    const DispDesc        & dd = GetDispDesc();
+    const GpuOptions & ro = getOptions();
+    const DispDesc        & dd = getDispDesc();
 
     // init d3d present parameters
     if( !sSetupD3dpp( mD3DPresentParameters, dd, ro.msaa, ro.vsync ) ) return false;
@@ -116,8 +116,8 @@ void GN::gfx::XenonGpu::dispQuit()
 
     PIXPERF_FUNCTION_EVENT();
 
-    SafeRelease( mDevice );
-    SafeRelease( mD3D );
+    safeRelease( mDevice );
+    safeRelease( mD3D );
 
     GN_UNGUARD;
 }

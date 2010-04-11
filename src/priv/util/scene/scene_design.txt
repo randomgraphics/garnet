@@ -10,7 +10,7 @@ main loop
     {
         for( all_objects )
         {
-            obj->Update(); // in fixed time step, 1/60s for example.
+            obj->update(); // in fixed time step, 1/60s for example.
         }
     }
 
@@ -20,7 +20,7 @@ main loop
     {
         for( all_visible_objects )
         {
-            obj->Draw();
+            obj->draw();
         }
     }
 

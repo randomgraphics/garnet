@@ -3,7 +3,7 @@
 #include "oglTexture.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // local functions
@@ -19,7 +19,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
 
     GN_ASSERT( rtt.texture );
 
-    const OGLTexture * tex = (const OGLTexture*)rtt.texture.Get();
+    const OGLTexture * tex = (const OGLTexture*)rtt.texture.get();
 
     switch( tex->getOGLTarget() )
     {
@@ -72,7 +72,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRTMgrFBO::Init()
+bool GN::gfx::OGLRTMgrFBO::init()
 {
     GN_ASSERT( usable() );
 
@@ -88,7 +88,7 @@ bool GN::gfx::OGLRTMgrFBO::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRTMgrFBO::Quit()
+void GN::gfx::OGLRTMgrFBO::quit()
 {
     if( mAutoZ )
     {
@@ -104,7 +104,7 @@ void GN::gfx::OGLRTMgrFBO::Quit()
         mFbo = 0;
     }
 
-    Clear();
+    clear();
 }
 
 // *****************************************************************************
@@ -125,8 +125,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( ; );
 
     // make new render target description is valid.
-    GN_ASSERT( oldrt.Valid() );
-    if( !newrt.Valid() ) return false;
+    GN_ASSERT( oldrt.valid() );
+    if( !newrt.valid() ) return false;
 
     // check for redundancy
     if( !skipDirtyCheck && oldrt == newrt )
@@ -135,7 +135,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     }
 
     // special case for render to back buffer
-    if( 0 == newrt.colortargets.Size() && 0 == newrt.depthstencil.texture )
+    if( 0 == newrt.colortargets.size() && 0 == newrt.depthstencil.texture )
     {
         // disable FBO, render to back buffer
         GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ) );
@@ -143,8 +143,8 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_BACK ) );
 
         // update render target size
-        mRenderTargetSize.x = mGpu.GetDispDesc().width;
-        mRenderTargetSize.y = mGpu.GetDispDesc().height;
+        mRenderTargetSize.x = mGpu.getDispDesc().width;
+        mRenderTargetSize.y = mGpu.getDispDesc().height;
 
         return true;
     }
@@ -153,7 +153,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ) );
 
     // setup color buffers
-    if( newrt.colortargets.Size() > 0 )
+    if( newrt.colortargets.size() > 0 )
     {
         // setup color buffer attachments
         static GLenum buffers[] =
@@ -175,17 +175,17 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GL_COLOR_ATTACHMENT14_EXT,
             GL_COLOR_ATTACHMENT15_EXT,
         };
-        GN_ASSERT( newrt.colortargets.Size() <= 16 );
-        GN_OGL_CHECK( glDrawBuffersARB( (GLsizei)newrt.colortargets.Size(), buffers ) );
+        GN_ASSERT( newrt.colortargets.size() <= 16 );
+        GN_OGL_CHECK( glDrawBuffersARB( (GLsizei)newrt.colortargets.size(), buffers ) );
 
         // bind color buffers
-        for( GLenum i = 0; i < newrt.colortargets.Size(); ++i )
+        for( GLenum i = 0; i < newrt.colortargets.size(); ++i )
         {
             sAttachRTT2FBO( newrt.colortargets[i], GL_COLOR_ATTACHMENT0_EXT + i );
         }
 
         // update color render target size
-        newrt.colortargets[0].texture->GetMipSize<UInt32>(
+        newrt.colortargets[0].texture->getMipSize<UInt32>(
             newrt.colortargets[0].level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );
@@ -199,7 +199,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
         GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
 
         // update color render target size
-        newrt.depthstencil.texture->GetMipSize<UInt32>(
+        newrt.depthstencil.texture->getMipSize<UInt32>(
             newrt.depthstencil.level,
             &mRenderTargetSize.x,
             &mRenderTargetSize.y );
@@ -217,14 +217,14 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             //
             // Current auto-z buffer is smaller than color render targets. Need to enlarge it.
             //
-            UInt32 newWidth  = math::GetMax( mRenderTargetSize.x, mAutoZSize.x );
-            UInt32 newHeight = math::GetMax( mRenderTargetSize.y, mAutoZSize.y );
+            UInt32 newWidth  = math::getmax( mRenderTargetSize.x, mAutoZSize.x );
+            UInt32 newHeight = math::getmax( mRenderTargetSize.y, mAutoZSize.y );
 
             // delete old z buffer
             if( mAutoZ )
             {
                 GN_OGL_CHECK( glDeleteRenderbuffersEXT( 1, &mAutoZ ) );
-                mAutoZSize.Set( 0, 0 );
+                mAutoZSize.set( 0, 0 );
             }
 
             // create new z buffer
@@ -239,7 +239,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(
             GN_OGL_CHECK( glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, newWidth, newHeight ) );
 
             // update size of auto z buffer
-            mAutoZSize.Set( newWidth, newHeight );
+            mAutoZSize.set( newWidth, newHeight );
         }
 
         // bind auto-Z buffer to OpenGL

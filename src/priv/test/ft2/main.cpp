@@ -62,7 +62,7 @@ public:
         ffc.width = (UInt16)_w;
         ffc.height = (UInt16)_h;
         ffc.quality = FFQ_MONOCHROM;
-        mFace.Attach( CreateFontFace( ffc ) );
+        mFace.attach( createFontFace( ffc ) );
         if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;
@@ -138,9 +138,9 @@ GN::StrW g_text(
     L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
     L"   glEnable(GL_BLEND);\n"
     L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" );
-const wchar_t * g_UnicodeString = g_text.ToRawPtr();
+const wchar_t * g_UnicodeString = g_text.cptr();
 
-void DrawText(const wchar_t* _strText,int x , int y, int maxW , int h)
+void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 {
 	int sx = x;
 	int sy = y;
@@ -187,7 +187,7 @@ void DrawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 static const char * font_face   = "font::/simsun.ttc";
 static int          font_width  = 16;
 static int          font_height = 16;
-void Init(void)
+void init(void)
 {
    glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
    glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
@@ -231,7 +231,7 @@ void display( void )
    //glPushMatrix();
    //glTranslatef ( 0.0, 0.0, -5.0 );
    glEnable ( GL_TEXTURE_2D );
-   DrawText(g_UnicodeString,50,50,900,25);
+   drawText(g_UnicodeString,50,50,900,25);
    //glPopMatrix();
    glutSwapBuffers();
 }
@@ -263,12 +263,12 @@ void arrow_keys ( int a_keys, int x, int y )  // Create Special Function (requir
 
 int main ( int argc, char** argv )   // Create Main Function For Bringing It All Together
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
     if( argc > 3 )
     {
         font_face = argv[1];
-        font_width = GN::String2Integer( argv[2], font_width );
-        font_height = GN::String2Integer( argv[3], font_height );
+        font_width = GN::string2Integer( argv[2], font_width );
+        font_height = GN::string2Integer( argv[3], font_height );
     }
 
     glutInit            ( &argc, argv ); // Erm Just Write It =)
@@ -276,7 +276,7 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
     glutInitWindowPosition (0,0);
     glutInitWindowSize  ( 640, 480 ); // If glutFullScreen wasn't called this is the window size
     glutCreateWindow    ( "NeHe Lesson 6- Ported by Rustad" ); // Window Title (argv[0] for current directory as title)
-    Init();
+    init();
     //glutFullScreen      ( );          // Put Into Full Screen
     glutDisplayFunc     ( display );  // Matching Earlier Functions To Their Counterparts
     glutReshapeFunc     ( reshape );

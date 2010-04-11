@@ -32,9 +32,9 @@ class BMPReader
     {
         char     B;
         char     M;
-        UInt32 size;
+        UInt32 size; 
         UInt32 reserved;
-        UInt32 offBits;
+        UInt32 offBits; 
 
         void swapEndian()
         {
@@ -43,17 +43,17 @@ class BMPReader
         }
     };
     struct BMPInfoHeader
-    {
-        UInt32 size;
-        SInt32  width;
-        SInt32  height;
-        UInt16 planes;
+    { 
+        UInt32 size; 
+        SInt32  width; 
+        SInt32  height; 
+        UInt16 planes; 
         UInt16 bitCount;
-        UInt32 compression;
-        UInt32 sizeImage;
-        SInt32  xPelsPerMeter;
-        SInt32  yPelsPerMeter;
-        UInt32 clrUsed;
+        UInt32 compression; 
+        UInt32 sizeImage; 
+        SInt32  xPelsPerMeter; 
+        SInt32  yPelsPerMeter; 
+        UInt32 clrUsed; 
         UInt32 clrImportant;
 
         void swapEndian()
@@ -106,13 +106,13 @@ public:
     ///
     /// read BMP header
     ///
-    bool ReadHeader(
+    bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
     ///
     /// read BMP image
     ///
-    bool ReadImage( void * o_data ) const;
+    bool readImage( void * o_data ) const;
 };
 
 // *****************************************************************************

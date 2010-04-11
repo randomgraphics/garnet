@@ -51,14 +51,14 @@
 
 - 2006.5.6
   - remove security warnings of vs8
-  - String2Integer() functions.
-  - new Mbs2Wcs() functiont to write to wchar_t buffer directly. (with UT)
+  - string2Integer() functions.
+  - new mbs2wcs() functiont to write to wchar_t buffer directly. (with UT)
 
 - 2006.5.5
   - refine interface of File class:
     - read() and write() now returns boolean, instead of size.
     - eof() will return true, if error happens.
-    - Size() and tell() will return 0, if error happens.
+    - size() and tell() will return 0, if error happens.
 
 - 2006.4.30
   - refine build script:
@@ -91,7 +91,7 @@
   - POSIX implementation
     - implement input module on POSIX platform
     - implement GNogl on POSIX platform
-  - UT for GetEnv() and setEnv().
+  - UT for getEnv() and setEnv().
   - convert input module to static library
   - SCons
     - EMT64 icl support
@@ -115,7 +115,7 @@
     - Window property save/restore
     - Refine ntWindow class:
       - support external window
-      - GetClientSize();
+      - getClientSize();
     - remove platform specific code from display manager.
     - UT for GFX module: using external render window
   - Run UT for both GFXD3D and GFXOGL will throw exception.

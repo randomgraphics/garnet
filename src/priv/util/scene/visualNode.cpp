@@ -6,7 +6,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // VisualNode::Impl public methods
@@ -31,7 +31,7 @@ GN::util::VisualNode::Impl::~Impl()
 
     for( size_t i = 0; i < StandardUniformType::NUM_STANDARD_UNIFORMS; ++i )
     {
-        mStandardPerObjectUniforms[i].Clear();
+        mStandardPerObjectUniforms[i].clear();
     }
 
     mGraph.impl().removeVisualNode( mGraphIter );
@@ -48,43 +48,43 @@ int GN::util::VisualNode::Impl::addModel( GpuResource * model )
         return 0;
     }
 
-    if( ModelResource::GetGuid() != model->Type() )
+    if( ModelResource::guid() != model->type() )
     {
         GN_ERROR(sLogger)( "fail to attach model to visual node: the resource is not a model." );
         return 0;
     }
 
-    GpuResourceDatabase & gdb = model->GetGdb();
+    GpuResourceDatabase & gdb = model->getGdb();
 
-    if( &gdb != &mGraph.gdb() )
+    if( &gdb != &mGraph.getGdb() )
     {
         GN_ERROR(sLogger)( "fail to attach model to visual node: the model and the node belong to different GPU resource database." );
         return 0;
     }
 
     // handle standard uniforms
-    ModelResource * m = GpuResource::CastTo<ModelResource>( model );
-    AutoRef<EffectResource> effect = m->GetEffectResource();
+    ModelResource * m = GpuResource::castTo<ModelResource>( model );
+    AutoRef<EffectResource> effect = m->effectResource();
     for( StandardUniformType type = 0; type < StandardUniformType::NUM_STANDARD_UNIFORMS; ++type )
     {
-        const StandardUniformDesc & d = type.desc();
+        const StandardUniformDesc & d = type.getDesc();
 
-        if( effect->HasUniform( d.name ) )
+        if( effect->hasUniform( d.name ) )
         {
             if( d.global )
             {
-                m->SetUniformResource( d.name, mGraph.impl().getGlobalUniform( type ) );
+                m->setUniformResource( d.name, mGraph.impl().getGlobalUniform( type ) );
             }
             else
             {
-                m->SetUniformResource( d.name, getPerObjectUniform( type ) );
+                m->setUniformResource( d.name, getPerObjectUniform( type ) );
             }
         }
     }
 
     // add the model into model list
-    int h = mModels.NewHandle();
-    if( 0 != h ) mModels[h].Set( GpuResource::CastTo<ModelResource>( model ) );
+    int h = mModels.newHandle();
+    if( 0 != h ) mModels[h].set( GpuResource::castTo<ModelResource>( model ) );
 
     // done
     return h;
@@ -95,59 +95,59 @@ int GN::util::VisualNode::Impl::addModel( GpuResource * model )
 // -----------------------------------------------------------------------------
 void GN::util::VisualNode::Impl::removeAllModels()
 {
-    mModels.Clear();
+    mModels.clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualNode::Impl::Draw() const
+void GN::util::VisualNode::Impl::draw() const
 {
     // update standard transfomration uniforms
     SpatialNode * sn = mOwner.entity().getNode<SpatialNode>();
     if( sn )
     {
-        const Matrix44f pv = *(const Matrix44f *)mGraph.impl().getGlobalUniform(StandardUniformType::MATRIX_PV)->GetUniform()->GetValue();
+        const Matrix44f pv = *(const Matrix44f *)mGraph.impl().getGlobalUniform(StandardUniformType::MATRIX_PV)->uniform()->getval();
 
         const Matrix44f & world = sn->getLocal2Root();
 
         Matrix44f pvw = pv * world;
 
-        for( StandardUniformType type = 0; (size_t)type < mStandardPerObjectUniforms.Size(); ++type )
+        for( StandardUniformType type = 0; (size_t)type < mStandardPerObjectUniforms.size(); ++type )
         {
             UniformResource * ur = mStandardPerObjectUniforms[type];
             if( NULL == ur ) continue;
 
             // this should be per-object parameter
-            GN_ASSERT( !type.desc().global );
+            GN_ASSERT( !type.getDesc().global );
 
-            AutoRef<Uniform> u = ur->GetUniform();
+            AutoRef<Uniform> u = ur->uniform();
             if( NULL == u ) continue;
 
             switch( type )
             {
                 case StandardUniformType::MATRIX_PVW :
-                    u->Update( pvw );
+                    u->update( pvw );
                     break;
 
                 case StandardUniformType::MATRIX_PVW_INV:
-                    u->Update( Matrix44f::sInverse( pvw ) );
+                    u->update( Matrix44f::sInverse( pvw ) );
                     break;
 
                 case StandardUniformType::MATRIX_PVW_IT:
-                    u->Update( Matrix44f::sInvTrans( pvw ) );
+                    u->update( Matrix44f::sInvtrans( pvw ) );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD :
-                    u->Update( world );
+                    u->update( world );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD_INV:
-                    u->Update( Matrix44f::sInverse(world) );
+                    u->update( Matrix44f::sInverse(world) );
                     break;
 
                 case StandardUniformType::MATRIX_WORLD_IT:
-                    u->Update( Matrix44f::sInvTrans(world) );
+                    u->update( Matrix44f::sInvtrans(world) );
                     break;
 
                 default:
@@ -158,11 +158,11 @@ void GN::util::VisualNode::Impl::Draw() const
     }
 
     // draw models
-    for( int i = mModels.First(); i != 0; i = mModels.Next( i ) )
+    for( int i = mModels.first(); i != 0; i = mModels.next( i ) )
     {
         ModelResource * m = mModels[i];
 
-        m->Draw();
+        m->draw();
     }
 }
 
@@ -178,16 +178,16 @@ GN::util::VisualNode::Impl::getPerObjectUniform( StandardUniformType type )
 {
     AutoRef<UniformResource> & ur = mStandardPerObjectUniforms[type];
 
-    StrA fullname = StringFormat( "GN.scene.visualnode.stduniform.%s", type.Name() );
+    StrA fullname = stringFormat( "GN.scene.visualnode.stduniform.%s", type.name() );
 
-    GpuResourceDatabase & gdb = mGraph.gdb();
+    GpuResourceDatabase & gdb = mGraph.getGdb();
 
-    ur = gdb.FindOrCreateResource<UniformResource>( fullname );
+    ur = gdb.findOrCreateResource<UniformResource>( fullname );
 
-    if( !ur->GetUniform() )
+    if( !ur->uniform() )
     {
-        AutoRef<Uniform> u( gdb.GetGpu().CreateUniform( type.desc().size ) );
-        ur->SetUniform( u );
+        AutoRef<Uniform> u( gdb.getGpu().createUniform( type.getDesc().size ) );
+        ur->setUniform( u );
     }
 
     return ur;
@@ -218,7 +218,7 @@ GN::util::VisualNode::~VisualNode()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::util::VisualNode::GetGuid()
+const Guid & GN::util::VisualNode::guid()
 {
     static const Guid MY_GUID =
     {

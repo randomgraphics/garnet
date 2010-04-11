@@ -2,7 +2,7 @@
 #include "mydevice9.h"
 #include "myd3d9.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyDevice9");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyDevice9");
 
 // *****************************************************************************
 // MyDevice9
@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyDevice9");
 // -----------------------------------------------------------------------------
 MyDevice9::~MyDevice9()
 {
-    GN::SafeRelease( mD3D9 );
+    GN::safeRelease( mD3D9 );
 }
 
 //

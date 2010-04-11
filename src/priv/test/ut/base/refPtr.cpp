@@ -22,27 +22,27 @@ public:
     void testCopyCtor()
     {
         MyRefObj2Ptr p2( new MyRefObj2 );
-        TS_ASSERT_EQUALS( p2->GetRef(), 1 );
+        TS_ASSERT_EQUALS( p2->getref(), 1 );
 
         MyRefObjPtr p1( p2 );
-        TS_ASSERT_EQUALS( p1->GetRef(), 2 );
+        TS_ASSERT_EQUALS( p1->getref(), 2 );
 
         MyRefObjPtr p3( p1 );
-        TS_ASSERT_EQUALS( p3->GetRef(), 3 );
+        TS_ASSERT_EQUALS( p3->getref(), 3 );
    }
 
     void testAssignment()
     {
         MyRefObjPtr p2( new MyRefObj2 );
-        TS_ASSERT_EQUALS( p2->GetRef(), 1 );
+        TS_ASSERT_EQUALS( p2->getref(), 1 );
 
         MyRefObjPtr p1a, p1b;
 
         p1a = p2;
-        TS_ASSERT_EQUALS( p1a->GetRef(), 2 );
+        TS_ASSERT_EQUALS( p1a->getref(), 2 );
 
         p1b = p1a;
-        TS_ASSERT_EQUALS( p1b->GetRef(), 3 );
+        TS_ASSERT_EQUALS( p1b->getref(), 3 );
     }
 
     void testWeakRef()
@@ -51,11 +51,11 @@ public:
 
         AutoRef<MyRefObj> o1( new MyRefObj );
 
-        WeakRef<MyRefObj> w1( o1.Get() );
+        WeakRef<MyRefObj> w1( o1.get() );
         WeakRef<MyRefObj> w2;
         WeakRef<MyRefObj> w3( w1 );
 
-        w2.Set( o1 );
+        w2.set( o1 );
 
         TS_ASSERT( w1 );
         TS_ASSERT( w2 );
@@ -63,7 +63,7 @@ public:
         TS_ASSERT( w1 == w2 );
         TS_ASSERT( w1 == w3 );
 
-        o1.Clear();
+        o1.clear();
 
         TS_ASSERT( !w1 );
         TS_ASSERT( !w2 );

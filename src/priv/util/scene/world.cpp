@@ -7,7 +7,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // EntityInternal class
@@ -29,7 +29,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::World::Impl::Reset()
+void GN::util::World::Impl::reset()
 {
     deleteAllEntities();
 }
@@ -45,33 +45,33 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
     {
         static int i = 0;
         ++i;
-        StringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed entity #%d", i );
+        stringPrintf( unnamed, GN_ARRAY_COUNT(unnamed), "Unnamed entity #%d", i );
         name = unnamed;
 
-        GN_ASSERT( !mEntities.ValidName( name ) );
+        GN_ASSERT( !mEntities.validName( name ) );
     }
 
-    if( mEntities.ValidName( name ) )
+    if( mEntities.validName( name ) )
     {
         GN_ERROR(sLogger)( "Entity creation failed: entity named '%s' exists already.", name );
         return NULL;
     }
 
     // create new ID
-    UInt32 id = mEntities.Add(name);
+    UInt32 id = mEntities.add(name);
     if( 0 == id ) return false;
 
     // create new entity
     AutoObjPtr<EntityInternal> newEntity( new EntityInternal( mOwner, id ) );
     if( !newEntity )
     {
-        mEntities.Remove( id );
+        mEntities.remove( id );
         return NULL;
     }
     mEntities[id] = newEntity;
 
     // done
-    return newEntity.Detach();
+    return newEntity.detach();
 }
 
 //
@@ -79,17 +79,17 @@ Entity * GN::util::World::Impl::createEntity( const char * name )
 // -----------------------------------------------------------------------------
 void GN::util::World::Impl::deleteEntity( const char * name )
 {
-    if( !mEntities.ValidName( name ) )
+    if( !mEntities.validName( name ) )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: invalid entity named '%s'.", name ? name : "<NULL_NAME>" );
         return;
     }
 
-    UInt32 id = mEntities.Name2Handle( name );
+    UInt32 id = mEntities.name2handle( name );
 
     delete (EntityInternal*)mEntities[id];
 
-    mEntities.Remove( id );
+    mEntities.remove( id );
 }
 
 //
@@ -97,7 +97,7 @@ void GN::util::World::Impl::deleteEntity( const char * name )
 // -----------------------------------------------------------------------------
 void GN::util::World::Impl::deleteEntity( int id )
 {
-    if( !mEntities.ValidHandle( id ) )
+    if( !mEntities.validHandle( id ) )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: invalid ID" );
         return;
@@ -105,7 +105,7 @@ void GN::util::World::Impl::deleteEntity( int id )
 
     delete (EntityInternal*)mEntities[id];
 
-    mEntities.Remove( id );
+    mEntities.remove( id );
 }
 
 //
@@ -115,7 +115,7 @@ void GN::util::World::Impl::deleteEntity( Entity * entity )
 {
     if( NULL == entity ) return;
 
-    if( this != entity->world().mImpl )
+    if( this != entity->getWorld().mImpl )
     {
         GN_ERROR(sLogger)( "Entity deletion failed: the entity is from another world." );
         return;
@@ -129,11 +129,11 @@ void GN::util::World::Impl::deleteEntity( Entity * entity )
 // -----------------------------------------------------------------------------;
 void GN::util::World::Impl::deleteAllEntities()
 {
-    for( UInt32 id = mEntities.First(); id != 0; id = mEntities.Next( id ) )
+    for( UInt32 id = mEntities.first(); id != 0; id = mEntities.next( id ) )
     {
         delete (EntityInternal*)mEntities[id];
     }
-    mEntities.Clear();
+    mEntities.clear();
 }
 
 //
@@ -141,7 +141,7 @@ void GN::util::World::Impl::deleteAllEntities()
 // -----------------------------------------------------------------------------
 Entity * GN::util::World::Impl::findEntity( const char * name )
 {
-    if( !mEntities.ValidName( name ) ) return NULL;
+    if( !mEntities.validName( name ) ) return NULL;
 
     return mEntities[name];
 }
@@ -151,7 +151,7 @@ Entity * GN::util::World::Impl::findEntity( const char * name )
 // -----------------------------------------------------------------------------
 Entity * GN::util::World::Impl::findEntity( int id )
 {
-    if( !mEntities.ValidHandle( id ) ) return NULL;
+    if( !mEntities.validHandle( id ) ) return NULL;
 
     return mEntities[id];
 }
@@ -161,7 +161,7 @@ Entity * GN::util::World::Impl::findEntity( int id )
 // -----------------------------------------------------------------------------
 const char  * GN::util::World::Impl::getEntityName( int id ) const
 {
-    const char * name = mEntities.Handle2Name(id);
+    const char * name = mEntities.handle2name(id);
 
     if( NULL == name )
     {
@@ -185,7 +185,7 @@ const char  * GN::util::World::Impl::getEntityName( int id ) const
 GN::util::World::World( gfx::GpuResourceDatabase & gdb ) : mImpl(NULL)
 {
     mImpl = new Impl( *this, gdb );
-    mImpl->Reset();
+    mImpl->reset();
 }
 
 //
@@ -207,7 +207,7 @@ Entity * GN::util::World::createSpatialEntity( const char * name )
     AutoObjPtr<SpatialNode> sn( newSpatialNode( *e, spatialGraph() ) );
     if( !sn ) return NULL;
 
-    e->attachNode<SpatialNode>( sn.Detach() );
+    e->attachNode<SpatialNode>( sn.detach() );
 
     return e;
 }
@@ -226,8 +226,8 @@ Entity * GN::util::World::createVisualEntity( const char * name )
     AutoObjPtr<VisualNode> vn( newVisualNode( *e, visualGraph() ) );
     if( !vn ) return false;
 
-    e->attachNode<SpatialNode>( sn.Detach() );
-    e->attachNode<VisualNode>( vn.Detach() );
+    e->attachNode<SpatialNode>( sn.detach() );
+    e->attachNode<VisualNode>( vn.detach() );
 
     return e;
 }
@@ -246,8 +246,8 @@ Entity * GN::util::World::createLightEntity( const char * name )
     AutoObjPtr<LightNode> ln( newLightNode( *e, visualGraph() ) );
     if( !ln ) return false;
 
-    e->attachNode<SpatialNode>( sn.Detach() );
-    e->attachNode<LightNode>( ln.Detach() );
+    e->attachNode<SpatialNode>( sn.detach() );
+    e->attachNode<LightNode>( ln.detach() );
 
     return e;
 }
@@ -255,10 +255,10 @@ Entity * GN::util::World::createLightEntity( const char * name )
 //
 //
 // -----------------------------------------------------------------------------
-gfx::GpuResourceDatabase & GN::util::World::gdb() const { return mImpl->gdb(); }
+gfx::GpuResourceDatabase & GN::util::World::getGdb() const { return mImpl->getGdb(); }
 SpatialGraph             & GN::util::World::spatialGraph() const { return mImpl->spatialGraph(); }
 VisualGraph              & GN::util::World::visualGraph() const { return mImpl->visualGraph(); }
-void                       GN::util::World::Reset() { return mImpl->Reset(); }
+void                       GN::util::World::reset() { return mImpl->reset(); }
 Entity                   * GN::util::World::createEntity( const char * name ) { return mImpl->createEntity( name ); }
 void                       GN::util::World::deleteEntity( const char * name ) { return mImpl->deleteEntity( name ); }
 void                       GN::util::World::deleteEntity( int id ) { return mImpl->deleteEntity( id ); }

@@ -3,7 +3,7 @@
 
 #if GN_XENON
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 // *****************************************************************************
 //                         BasicGpuXenon init / quit functions
@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuXenon::Init( const GpuOptions & o )
+bool GN::gfx::BasicGpuXenon::init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -20,10 +20,10 @@ bool GN::gfx::BasicGpuXenon::Init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuXenon, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return Failure();
+    if( !dispInit(o) ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -31,14 +31,14 @@ bool GN::gfx::BasicGpuXenon::Init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuXenon::Quit()
+void GN::gfx::BasicGpuXenon::quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

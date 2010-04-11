@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLIdxBuf()          { Clear(); }
-        virtual ~OGLIdxBuf() { Quit(); }
+        OGLIdxBuf()          { clear(); }
+        virtual ~OGLIdxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const IdxBufDesc & desc );
-        void Quit();
+        bool init( const IdxBufDesc & desc );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mBuffer = 0;
         }
@@ -47,8 +47,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void Readback( DynaArray<UInt8> & data );
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions

@@ -32,16 +32,16 @@ namespace GN { namespace util
 
         SpatialGraph      & graph() const { return mGraph; }
 
-        void                SetParent( SpatialNode * parent, SpatialNode * prevSibling );
+        void                setParent( SpatialNode * parent, SpatialNode * prevSibling );
         void                setPosition( const Vector3f & );
         void                setRotation( const Quaternionf & );
         void                setScale( const Vector3f & );
         void                setBoundingSphere( const Spheref & s );
 
-        SpatialNode       * GetParent() const      { return toNodePtr( TreeNodeClass::GetParent() ); }
-        SpatialNode       * GetPrevSibling() const { return toNodePtr( TreeNodeClass::GetPrevSibling() ); }
-        SpatialNode       * GetNextSibling() const { return toNodePtr( TreeNodeClass::GetNextSibling() ); }
-        SpatialNode       * GetFirstChild() const  { return toNodePtr( TreeNodeClass::GetFirstChild() ); }
+        SpatialNode       * getParent() const      { return toNodePtr( TreeNodeClass::getParent() ); }
+        SpatialNode       * getPrevSibling() const { return toNodePtr( TreeNodeClass::getPrevSibling() ); }
+        SpatialNode       * getNextSibling() const { return toNodePtr( TreeNodeClass::getNextSibling() ); }
+        SpatialNode       * getFirstChild() const  { return toNodePtr( TreeNodeClass::getFirstChild() ); }
         SpatialNode       * getLastChild() const;
 
         const Vector3f    & getPosition() const       { return mPosition; }

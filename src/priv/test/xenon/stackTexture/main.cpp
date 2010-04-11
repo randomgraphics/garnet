@@ -10,33 +10,33 @@ public:
 
 	StackTexture() {}
 
-	bool OnInit()
+	bool onInit()
 	{
 		return true;
 	}
 
-	void OnQuit()
+	void onQuit()
 	{
 	}
 
-	void OnUpdate()
+	void onUpdate()
 	{
 	}
 
-	void OnKeyPress( input::KeyEvent ke )
+	void onKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::OnKeyPress( ke );
+		app::SampleApp::onKeyPress( ke );
 	}
 
-	void OnRender()
+	void onRender()
 	{
         RenderEngine & re = getRenderEngine();
-        re.ClearScreen( Vector4f(0,0,0,1) ); // clear to pure black
+        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 	}
 };
 
 int main()
 {
 	StackTexture app;
-	return app.Run( 0, 0 );
+	return app.run( 0, 0 );
 }

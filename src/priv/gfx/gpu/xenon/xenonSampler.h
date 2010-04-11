@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonSamplerObject()          { Clear(); }
-        virtual ~XenonSamplerObject() { Quit(); }
+        XenonSamplerObject()          { clear(); }
+        virtual ~XenonSamplerObject() { quit(); }
         //@}
 
         // ********************************
@@ -31,10 +31,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const SamplerDesc & desc );
-        void Quit();
+        bool init( const SamplerDesc & desc );
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************
@@ -45,7 +45,7 @@ namespace GN { namespace gfx
         ///
         /// get descriptor
         ///
-        const SamplerDesc & GetDesc() const { return mDesc; }
+        const SamplerDesc & getDesc() const { return mDesc; }
 
         ///
         /// bind

@@ -4,7 +4,7 @@
 
 #ifdef HAS_CG_OGL
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
+bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
@@ -25,21 +25,21 @@ bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
     if( CG_PROFILE_UNKNOWN == mProfile )
     {
         GN_ERROR(sLogger)( "Fail to get the lastest profile!" );
-        return Failure();
+        return failure();
     }
 
     // parse hints
     Registry reg( hints );
-    StrA entry = reg.GetS( "entry", "main" );
+    StrA entry = reg.gets( "entry", "main" );
 
     // create the shader
-    if( !mShader.Init( GetGpu().getCgContext(), mProfile, code, entry ) ) return Failure();
+    if( !mShader.init( getGpu().getCgContext(), mProfile, code, entry ) ) return failure();
 
     // load the program
-    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), Failure() );
+    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), failure() );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -47,11 +47,11 @@ bool GN::gfx::OGLBasicShaderCg::Init( const StrA & code, const StrA & hints )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::Quit()
+void GN::gfx::OGLBasicShaderCg::quit()
 {
     GN_GUARD;
 
-    mShader.Quit();
+    mShader.quit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -69,7 +69,7 @@ void GN::gfx::OGLBasicShaderCg::Quit()
 void GN::gfx::OGLBasicShaderCg::disable() const
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
     GN_CG_CHECK( cgGLDisableProfile( mProfile ) );
     GN_UNGUARD_SLOW;
 }
@@ -81,7 +81,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     // enable the shader
     GN_CG_CHECK( cgGLEnableProfile( mProfile ) );
@@ -91,7 +91,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
     UInt32 handle = getFirstUniform();
     while( handle )
     {
-        applyUniform( GetUniform( handle ) );
+        applyUniform( getUniform( handle ) );
         handle = getNextUniform( handle );
     }
     clearDirtySet();
@@ -109,7 +109,7 @@ void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
     std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
-        applyUniform( GetUniform( *i ) );
+        applyUniform( getUniform( *i ) );
     }
     clearDirtySet();
     GN_UNGUARD_SLOW;
@@ -127,7 +127,7 @@ bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
 {
     GN_GUARD;
 
-    GN_ASSERT( !IsStringEmpty(name) );
+    GN_ASSERT( !stringEmpty(name) );
 
     CGparameter param = mShader.getUniformHandle( name );
     if( 0 == param ) return false;
@@ -153,7 +153,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
     switch( u.value.type )
     {
         case UVT_VECTOR4 :
-            if( 1 == u.value.vector4s.Size() )
+            if( 1 == u.value.vector4s.size() )
             {
                 GN_CG_CHECK( cgGLSetParameter4fv(
                     param,
@@ -164,13 +164,13 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetParameterArray4f(
                     param,
                     0,
-                    (long)u.value.vector4s.Size(),
+                    (long)u.value.vector4s.size(),
                     u.value.vector4s[0] ) );
             }
             break;
 
         case UVT_MATRIX44 :
-            if( 1 == u.value.matrix44s.Size() )
+            if( 1 == u.value.matrix44s.size() )
             {
                 GN_CG_CHECK( cgGLSetMatrixParameterfr(
                     param,
@@ -181,13 +181,13 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetMatrixParameterArrayfr(
                     param,
                     0,
-                    (long)u.value.matrix44s.Size(),
+                    (long)u.value.matrix44s.size(),
                     u.value.matrix44s[0][0] ) );
             }
             break;
 
         case UVT_FLOAT :
-            if( 1 == u.value.floats.Size() )
+            if( 1 == u.value.floats.size() )
             {
                 GN_CG_CHECK( cgGLSetParameter1f(
                     param,
@@ -198,7 +198,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
                 GN_CG_CHECK( cgGLSetParameterArray1f(
                     param,
                     0,
-                    (long)u.value.floats.Size(),
+                    (long)u.value.floats.size(),
                     &u.value.floats[0] ) );
             }
             break;

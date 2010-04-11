@@ -80,7 +80,7 @@ public:
     ///
     /// Initialize JPEG data source
     ///
-    void Init( const JOCTET * i_buf, size_t i_size )
+    void init( const JOCTET * i_buf, size_t i_size )
     {
         GN_ASSERT( i_buf && i_size );
 
@@ -135,13 +135,13 @@ public:
     ///
     /// read JPEG header
     ///
-    bool ReadHeader(
+    bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
     ///
     /// read JPEG image
     ///
-    bool ReadImage( void * o_data );
+    bool readImage( void * o_data );
 };
 // *****************************************************************************
 //                                     EOF

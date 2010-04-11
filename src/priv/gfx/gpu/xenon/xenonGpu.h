@@ -36,8 +36,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        XenonGpu() : mThreadId(GetCurrentThreadIdentifier()) { Clear(); }
-        virtual ~XenonGpu() { Quit(); }
+        XenonGpu() : mThreadId(getCurrentThreadId()) { clear(); }
+        virtual ~XenonGpu() { quit(); }
         //@}
 
         // ********************************
@@ -46,15 +46,15 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuOptions & ro );
-        void Quit();
+        bool init( const GpuOptions & ro );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             dispClear();
             capsClear();
             resourceClear();
-            ContextClear();
+            contextClear();
             drawClear();
             miscClear();
         }
@@ -71,8 +71,8 @@ namespace GN { namespace gfx
     public :
 
         // from Gpu
-        virtual void * GetD3DDevice() const { return mDevice; }
-        virtual void * GetOGLRC() const { return 0; }
+        virtual void * getD3DDevice() const { return mDevice; }
+        virtual void * getOGLRC() const { return 0; }
 
     public :
 
@@ -117,9 +117,9 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual const GpuCaps & GetCaps() const { return mCaps; }
-        virtual bool                 CheckTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
-        virtual ColorFormat          GetDefaultTextureFormat( TextureUsage usages ) const;
+        virtual const GpuCaps & caps() const { return mCaps; }
+        virtual bool                 checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const;
+        virtual ColorFormat          getDefaultTextureFormat( TextureUsage usages ) const;
 
     private :
 
@@ -143,12 +143,12 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Blob       * CompileGpuProgram( const GpuProgramDesc & desc );
-        virtual GpuProgram * CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length );
-        virtual Uniform    * CreateUniform( size_t size );
-        virtual Texture    * CreateTexture( const TextureDesc & desc );
-        virtual VtxBuf     * CreateVtxBuf( const VtxBufDesc & desc );
-        virtual IdxBuf     * CreateIdxBuf( const IdxBufDesc & desc );
+        virtual Blob       * compileGpuProgram( const GpuProgramDesc & desc );
+        virtual GpuProgram * createGpuProgram( const void * compiledGpuProgramBinary, size_t length );
+        virtual Uniform    * createUniform( size_t size );
+        virtual Texture    * createTexture( const TextureDesc & desc );
+        virtual VtxBuf     * createVtxBuf( const VtxBufDesc & desc );
+        virtual IdxBuf     * createIdxBuf( const IdxBufDesc & desc );
 
     public :
 
@@ -158,7 +158,7 @@ namespace GN { namespace gfx
         ///
         void insertResource( XenonResource * p )
         {
-            mResourceList.push_back(p);
+            mResourceList.append(p);
         }
 
         ///
@@ -193,7 +193,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck );
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck );
 
     public:
 
@@ -204,7 +204,7 @@ namespace GN { namespace gfx
 
         bool contextInit();
         void contextQuit();
-        void ContextClear() { mContext.Clear(); mRTMgr = 0; }
+        void contextClear() { mContext.clear(); mRTMgr = 0; }
 
         inline bool bindContextRenderTargetsAndViewport( const GpuContext & newContext, bool skipDirtyCheck );
         inline bool bindContextRenderStates( const GpuContext & newContext, bool skipDirtyCheck  );
@@ -228,29 +228,29 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void Present();
-        virtual void ClearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
-        virtual void DrawIndexed( PrimitiveType prim,
+        virtual void present();
+        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
+        virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
                                   size_t        startvtx,
                                   size_t        numvtx,
                                   size_t        startidx );
-        virtual void Draw( PrimitiveType prim,
+        virtual void draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx );
-        virtual void DrawIndexedUp(
+        virtual void drawIndexedUp(
                              PrimitiveType  prim,
                              size_t         numidx,
                              size_t         numvtx,
                              const void *   vertexData,
                              size_t         strideInBytes,
                              const UInt16 * indexData );
-        virtual void DrawUp( PrimitiveType prim,
+        virtual void drawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void DrawLines( BitFields         options,
+        virtual void drawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
@@ -290,7 +290,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void DumpNextFrame( size_t startBatchIndex, size_t numBatches );
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
 
     public:
 

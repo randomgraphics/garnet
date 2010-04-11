@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLLine( OGLGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~OGLLine() { Quit(); }
+        OGLLine( OGLGpu & r ) : mGpu(r) { clear(); }
+        virtual ~OGLLine() { quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mVtxBuf = 0;
             mNextLine = 0;
@@ -51,9 +51,9 @@ namespace GN { namespace gfx
         ///
         /// Draw lines on screen
         ///
-        /// \sa Gpu::DrawLines
+        /// \sa Gpu::drawLines
         ///
-        void DrawLines(
+        void drawLines(
             BitFields options,
             const float * positions,
             size_t stride,

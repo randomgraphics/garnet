@@ -61,7 +61,7 @@ namespace GN { namespace util
         }
 
         /// get uniform descriptor
-        const StandardUniformDesc & desc() const
+        const StandardUniformDesc & getDesc() const
         {
             static const StandardUniformDesc DESCRIPTORS[] = {
                 { "MATRIX_PVW"        , sizeof(GN::Matrix44f) , false, "proj * view * world" },
@@ -95,9 +95,9 @@ namespace GN { namespace util
         }
 
         /// get uniform name. Return NULL for invalid uniform type.
-        const char * Name() const
+        const char * name() const
         {
-            return isValid() ? desc().name : NULL;
+            return isValid() ? getDesc().name : NULL;
         }
     };
 

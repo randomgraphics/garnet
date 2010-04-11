@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.utils");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.utils");
 
 // *****************************************************************************
 // public functions

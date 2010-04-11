@@ -89,7 +89,7 @@ namespace GN { namespace util
         ///
         /// get descriptor
         ///
-        virtual const FontFaceDesc & GetDesc() const = 0;
+        virtual const FontFaceDesc & getDesc() const = 0;
 
         ///
         /// load font data of specific unicode character.
@@ -133,12 +133,12 @@ namespace GN { namespace util
     ///
     /// create font face (usually loading from a TTF file)
     ///
-    FontFace * CreateFontFace( const FontFaceCreationDesc & cd );
+    FontFace * createFontFace( const FontFaceCreationDesc & cd );
 
     ///
     /// create simple ASCII only font with size of 8x16, without external font file dependency.
     ///
-    FontFace * CreateSimpleAsciiFontFace();
+    FontFace * createSimpleAsciiFontFace();
 
     ///
     /// font alignment flags
@@ -185,8 +185,8 @@ namespace GN { namespace util
 
         //@{
     public:
-        BitmapFont() { Clear(); }
-        virtual ~BitmapFont() { Quit(); }
+        BitmapFont() { clear(); }
+        virtual ~BitmapFont() { quit(); }
         //@}
 
         // ********************************
@@ -198,10 +198,10 @@ namespace GN { namespace util
         /// \param sr           Pointer to sprite renderer
         /// \param ff           Pointer to font face object. Its reference count will be increased by one after this function call.
         /// \param maxchars     Maxinum different characters allowed.
-        bool Init( gfx::SpriteRenderer * sr, FontFace * ff, size_t maxchars = 4096 );
-        void Quit();
+        bool init( gfx::SpriteRenderer * sr, FontFace * ff, size_t maxchars = 4096 );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mFontSlots = NULL;
             for( size_t i = 0; i < MAX_TEXTURES; ++i )
@@ -219,17 +219,17 @@ namespace GN { namespace util
         ///
         /// Get internal font pointer
         ///
-        FontFace * GetFontFace() const { return mFont.Get(); }
+        FontFace * getFontFace() const { return mFont.get(); }
 
         ///
         /// draw UNICODE text
         ///
-        void DrawText( const TextDesc & td );
+        void drawText( const TextDesc & td );
 
         ///
         /// draw UNICODE text
         ///
-        void DrawText( const wchar_t * text, float x, float y )
+        void drawText( const wchar_t * text, float x, float y )
         {
             TextDesc td;
             td.text = text;
@@ -241,7 +241,7 @@ namespace GN { namespace util
             td.alignment = TextAlignment::HORI_LEFT | TextAlignment::VERT_TOP;
             td.background = true;
             td.kerning = false;
-            DrawText( td );
+            drawText( td );
         }
 
         // ********************************
@@ -330,27 +330,24 @@ namespace GN { namespace util
         // ********************************
     private:
 
-        static inline UInt64 sWcharHash( const wchar_t & ch ) { return (UInt64)ch; }
-        static inline bool sWcharEqual( const wchar_t & a, const wchar_t & b ) { return a == b; }
-
         ///
         /// get slot of specific character
         ///
         /// \return Return null, if failed.
         ///
-        inline const FontSlot * GetSlot( wchar_t ch );
+        inline const FontSlot * getSlot( wchar_t ch );
 
         ///
         /// create slot of specific character
         ///
         /// \return Return null, if failed.
         ///
-        const FontSlot * CreateSlot( wchar_t ch );
+        const FontSlot * createSlot( wchar_t ch );
 
         ///
         /// initialize font slots and font textures
         ///
-        bool SlotInit(
+        bool slotInit(
             gfx::Gpu & gpu,
             UInt16     fontw,
             UInt16     fonth,

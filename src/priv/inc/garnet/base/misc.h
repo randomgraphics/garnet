@@ -55,7 +55,7 @@ namespace GN
     /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO & SafeCastRef( FROM & from )
+    GN_FORCE_INLINE TO & safeCastRef( FROM & from )
     {
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         return dynamic_cast<TO&>(from);
@@ -70,7 +70,7 @@ namespace GN
     /// perform dynamic cast in debug build, and reinterpret cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
-    GN_FORCE_INLINE TO * SafeCastPtr( FROM * from )
+    GN_FORCE_INLINE TO * safeCastPtr( FROM * from )
     {
     #if GN_BUILD_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
         TO * to = dynamic_cast<TO*>(from);
@@ -87,20 +87,20 @@ namespace GN
     /// Set environment variable. Set value to empty or NULL to delete
     /// that environment variable.
     ///
-    void PutEnv( const char * name, const char * value );
+    void putEnv( const char * name, const char * value );
 
     ///
     /// Get environment variable.
     ///
-    void GetEnv( StrA & result, const char * name );
+    void getEnv( StrA & result, const char * name );
 
     ///
     /// Get environment variable.
     ///
-    inline StrA GetEnv( const char * name )
+    inline StrA getEnv( const char * name )
     {
         StrA result;
-        GetEnv( result, name );
+        getEnv( result, name );
         return result;
     }
 
@@ -108,13 +108,13 @@ namespace GN
     /// Get environment variable as boolean variable. Return true only when the variable
     /// exists and the value is "1" or "yes" (case-insensitive).
     ///
-    inline bool GetEnvBoolean( const char * name )
+    inline bool getEnvBoolean( const char * name )
     {
         StrA result;
-        GetEnv( result, name );
+        getEnv( result, name );
         return "1" == result ||
-               0 == StringCompareI( "yes", result.ToRawPtr() ) ||
-               0 == StringCompareI( "true", result.ToRawPtr() );
+               0 == stringCompareI( "yes", result.cptr() ) ||
+               0 == stringCompareI( "true", result.cptr() );
     }
 
     ///
@@ -130,7 +130,7 @@ namespace GN
         ///
         /// conver to string
         ///
-        const char * ToStr() const
+        const char * toStr() const
         {
             static char s[5];
             s[0] = c8[0];
@@ -144,7 +144,7 @@ namespace GN
         ///
         /// convert from string
         ///
-        void FromStr(const char * str )
+        void fromStr(const char * str )
         {
             u32 = 0;
             if( str )
@@ -165,7 +165,7 @@ namespace GN
         static FOURCC sMake( const char * str )
         {
             FOURCC r;
-            r.FromStr( str );
+            r.fromStr( str );
             return r;
         }
 
@@ -224,7 +224,7 @@ namespace GN
         ///
         /// \note: this is not thread safe
         ///
-        const char * ToStr() const;
+        const char * toStr() const;
 
         //@}
 
@@ -328,14 +328,14 @@ namespace GN
         AutoInitializer( const T & value ) : mValue(value) {}
 
         ///
-        /// get internal Value
+        /// get internal value
         ///
-        T & Value() { return mValue; }
+        T & value() { return mValue; }
 
         ///
-        /// get internal Value
+        /// get internal value
         ///
-        const T & Value() const { return mValue; }
+        const T & value() const { return mValue; }
 
         ///
         /// Convert to T
@@ -370,9 +370,9 @@ namespace GN
         ~AutoFinalizer() { if( !mDismissed ) mFunc(); }
 
         ///
-        /// Tell finalizer to _NOT_ Run the function by the end of life scope.
+        /// Tell finalizer to _NOT_ run the function by the end of life scope.
         ///
-        void Dismiss() { mDismissed = true; }
+        void dismiss() { mDismissed = true; }
     };
 
     ///
