@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         //@{
 
         ImageDesc() : mipmaps(0) {}
-        ~ImageDesc() { SafeHeapFree( mipmaps ); }
+        ~ImageDesc() { safeHeapFree( mipmaps ); }
 
         //@}
 
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
         {
             if( d.mipmaps > 0 )
             {
-                SetFaceAndLevel( numFaces, numLevels );
+                setFaceAndLevel( numFaces, numLevels );
                 size_t mipCount = numFaces * numLevels;
                 memcpy( mipmaps, d.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
             numLevels = rhs.numLevels;
             if( rhs.mipmaps > 0 )
             {
-                SetFaceAndLevel( numFaces, numLevels );
+                setFaceAndLevel( numFaces, numLevels );
                 size_t mipCount = numFaces * numLevels;
                 memcpy( mipmaps, rhs.mipmaps, sizeof(MipmapDesc)*mipCount );
             }
@@ -126,67 +126,67 @@ namespace GN { namespace gfx
         ///
         /// make sure an meaningfull image descriptor
         ///
-        bool Valid() const;
+        bool valid() const;
 
         ///
         /// set image face count and level count, allocate mipmap array as well.
         ///
-        bool SetFaceAndLevel( size_t faces, size_t levels );
+        bool setFaceAndLevel( size_t faces, size_t levels );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        MipmapDesc & GetMipmap( size_t face, size_t level );
+        MipmapDesc & getMipmap( size_t face, size_t level );
 
         ///
         /// return descriptor of specific mipmap
         ///
-        const MipmapDesc & GetMipmap( size_t face, size_t level ) const;
+        const MipmapDesc & getMipmap( size_t face, size_t level ) const;
 
         ///
         /// Get image type
         ///
-        inline ImageType GetImageType() const;
+        inline ImageType getImageType() const;
 
         ///
         /// total bytes of the whole image
         ///
-        inline size_t GetTotalBytes() const;
+        inline size_t getTotalBytes() const;
 
         ///
         /// bytes of one mip level
         ///
-        inline size_t GetLevelBytes( size_t level ) const;
+        inline size_t getLevelBytes( size_t level ) const;
 
         ///
         /// bytes per face
         ///
-        inline size_t GetFaceBytes() const;
+        inline size_t getFaceBytes() const;
 
         ///
         /// offset of specific pixel
         ///
-        inline size_t GetPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
+        inline size_t getPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
 
         ///
         /// offset of specific scanline
         ///
-        inline size_t SetScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
+        inline size_t getScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
 
         ///
         /// offset of specific slice
         ///
-        inline size_t GetSliceOffset( size_t face, size_t level, size_t z ) const;
+        inline size_t getSliceOffset( size_t face, size_t level, size_t z ) const;
 
         ///
         /// offset of specific mip level
         ///
-        inline size_t GetMipmapOffset( size_t face, size_t level ) const;
+        inline size_t getMipmapOffset( size_t face, size_t level ) const;
 
         ///
         /// offset of specific face
         ///
-        inline size_t GetFaceOffset( size_t face ) const;
+        inline size_t getFaceOffset( size_t face ) const;
 
         //@}
     };
@@ -199,9 +199,9 @@ namespace GN { namespace gfx
     public:
         ImageReader();                  ///< constructor
         ~ImageReader();                 ///< destructor
-        bool Reset( File & );           ///< reset image reader
-        bool ReadHeader( ImageDesc & ); ///< read image header
-        bool ReadImage( void * data );  ///< read image content
+        bool reset( File & );           ///< reset image reader
+        bool readHeader( ImageDesc & ); ///< read image header
+        bool readImage( void * data );  ///< read image content
 
     private:
         class Impl;
@@ -212,19 +212,19 @@ namespace GN { namespace gfx
     /// load image from file
     ///
     inline bool
-    LoadImageFromFile( ImageDesc & desc, DynaArray<UInt8> & data, const char * filename )
+    loadImageFromFile( ImageDesc & desc, DynaArray<UInt8> & data, const char * filename )
     {
-        AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
+        AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
         if( NULL == fp ) return false;
 
         ImageReader ir;
-        if( !ir.Reset( *fp ) ) return false;
+        if( !ir.reset( *fp ) ) return false;
 
-        if( !ir.ReadHeader( desc ) ) return false;
+        if( !ir.readHeader( desc ) ) return false;
 
-        data.Resize( desc.GetTotalBytes() );
+        data.resize( desc.getTotalBytes() );
 
-        return ir.ReadImage( &data[0] );
+        return ir.readImage( &data[0] );
     }
 }}
 

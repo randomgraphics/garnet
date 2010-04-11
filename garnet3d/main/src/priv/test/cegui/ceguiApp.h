@@ -18,7 +18,7 @@ public:
     /// \name from SampleApp
     //@{
 
-    bool OnInit()
+    bool onInit()
     {
         using namespace CEGUI;
 
@@ -36,24 +36,24 @@ public:
                 }
 
                 StrA name;
-                name.Format( "d:/software/green/cegui/datafiles/%s", filename.c_str() );
+                name.format( "d:/software/green/cegui/datafiles/%s", filename.cptr() );
 
                 DiskFile fp;
-                if( !fp.Open( name, "rb" ) )
+                if( !fp.open( name, "rb" ) )
                 {
                     throw InvalidRequestException((utf8*)
                         "DefaultResourceProvider::load - " + filename + " does not exist");
                 }
 
-                AutoObjPtr<UInt8> buffer( new UInt8[fp.Size()] );
-                if( !fp.Read( buffer, fp.Size(), NULL ) )
+                AutoObjPtr<UInt8> buffer( new UInt8[fp.size()] );
+                if( !fp.read( buffer, fp.size(), NULL ) )
                 {
                     throw GenericException((utf8*)
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
                 }
 
-                output.setData( buffer.Detach() );
-                output.setSize( fp.Size() );
+                output.setData( buffer.detach() );
+                output.setSize( fp.size() );
             }
             virtual void unloadRawDataContainer(RawDataContainer& data)
             {
@@ -69,9 +69,9 @@ public:
         FontManager::getSingleton().createFont("../datafiles/fonts/Commonwealth-10.font");
         SchemeManager::getSingleton().loadScheme("../datafiles/schemes/TaharezLookWidgets.scheme");
         WindowManager& winMgr = WindowManager::getSingleton();
-        DefaultWindow* root = (DefaultWindow*)winMgr.NewWindow("DefaultWindow", "Root");
+        DefaultWindow* root = (DefaultWindow*)winMgr.createWindow("DefaultWindow", "Root");
         System::getSingleton().setGUISheet(root);
-        FrameWindow* wnd = (FrameWindow*)winMgr.NewWindow("TaharezLook/FrameWindow", "Demo Window");
+        FrameWindow* wnd = (FrameWindow*)winMgr.createWindow("TaharezLook/FrameWindow", "Demo Window");
         root->addChildWindow(wnd);
         wnd->setPosition(Point(0.25f, 0.25f));
         wnd->setSize(Size(0.5f, 0.5f));
@@ -83,7 +83,7 @@ public:
         return true;
     }
 
-    void OnQuit()
+    void onQuit()
     {
         CEGUI::System * sys = CEGUI::System::getSingletonPtr();
         if( sys )
@@ -96,9 +96,9 @@ public:
         }
     }
 
-    void OnKeyPress( GN::input::KeyEvent key )
+    void onKeyPress( GN::input::KeyEvent key )
     {
-        SampleApp::OnKeyPress( key );
+        SampleApp::onKeyPress( key );
         using namespace GN::input;
         if( key.status.down )
         {
@@ -118,20 +118,20 @@ public:
         }
     }
 
-    void OnAxisMove( GN::input::Axis, int )
+    void onAxisMove( GN::input::Axis, int )
     {
         int x, y;
-        gInput.GetMousePosition( x, y );
+        gInput.getMousePosition( x, y );
         CEGUI::System::getSingleton().injectMousePosition( (float)x, (float)y );
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
     }
 
-    void OnRender()
+    void onRender()
     {
-        gRenderer.ClearScreen();
+        gRenderer.clearScreen();
         //for( int i = 0; i < 30; ++i )
         CEGUI::System::getSingleton().renderGUI();
     }

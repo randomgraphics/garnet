@@ -3,7 +3,7 @@
 #include "xenonRenderTargetMgr.h"
 #include "xenonTexture.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonRenderTargetManager::Init()
+bool GN::gfx::XenonRenderTargetManager::init()
 {
     GN_GUARD;
 
@@ -20,7 +20,7 @@ bool GN::gfx::XenonRenderTargetManager::Init()
     GN_STDCLASS_INIT( GN::gfx::XenonRenderTargetManager, () );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -28,11 +28,11 @@ bool GN::gfx::XenonRenderTargetManager::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonRenderTargetManager::Quit()
+void GN::gfx::XenonRenderTargetManager::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

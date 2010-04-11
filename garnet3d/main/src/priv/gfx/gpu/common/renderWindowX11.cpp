@@ -7,7 +7,7 @@
 #include "glew.h"
 #include "glxew.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common.renderWindow.X11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common.renderWindow.X11");
 
 // *****************************************************************************
 // local functions
@@ -202,7 +202,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RenderWindowX11::Quit()
+void GN::gfx::RenderWindowX11::quit()
 {
     GN_GUARD;
 
@@ -223,7 +223,7 @@ void GN::gfx::RenderWindowX11::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::GetClientSize( UInt32 & width, UInt32 & height ) const
+bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) const
 {
     GN_GUARD;
 

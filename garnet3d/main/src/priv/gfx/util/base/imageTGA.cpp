@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "imageTGA.h"
 
-using namespace GN;
-
 // TODO: move to endian.h
 #define GN_SWAP_ENDIAN_8IN16(x) ((((x)&0xFF)<<8) | (((x)&0xFF00)>>8))
 
@@ -46,7 +44,7 @@ struct TGA_HEADER
 #pragma pack(pop)
 GN_CASSERT( sizeof(TGA_HEADER) == 18 );
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.TGA");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.TGA");
 
 // *****************************************************************************
 // local functions
@@ -213,9 +211,9 @@ bool TGAReader::checkFormat( GN::File & fp )
     TGA_HEADER header;
 
     // read TGA header
-    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
     size_t sz;
-    if( !fp.Read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
+    if( !fp.read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
 
     // do endian swap (TGA file is always little endian)
 #if GN_BIG_ENDIAN
@@ -249,7 +247,7 @@ bool TGAReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool TGAReader::ReadHeader(
+bool TGAReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -319,15 +317,15 @@ bool TGAReader::ReadHeader(
     }
 
     // update o_desc
-	o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
+	o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width      = header.width;
     m.height     = header.height;
     m.depth      = 1;
     m.rowPitch   = (UInt32)( header.width * mOutputBytesPerPixel );
     m.slicePitch = m.rowPitch * header.height;
     m.levelPitch = m.slicePitch;
-    GN_ASSERT( o_desc.Valid() );
+    GN_ASSERT( o_desc.valid() );
 
     // success
     mImageSrc  = i_buf;
@@ -340,7 +338,7 @@ bool TGAReader::ReadHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool TGAReader::ReadImage( void * o_data )
+bool TGAReader::readImage( void * o_data )
 {
     GN_GUARD;
 
@@ -388,10 +386,10 @@ bool TGAReader::ReadImage( void * o_data )
     id.u8 = header.descriptor;
 
     // read image to temporary buffer, if image is flipped and/or interleaved.
-    DynaArray<UInt8> tempBuf;
+    GN::DynaArray<UInt8> tempBuf;
     if( 0 != id.interleaved || 0 == id.flip )
     {
-        tempBuf.Resize( numPixels * mOutputBytesPerPixel );
+        tempBuf.resize( numPixels * mOutputBytesPerPixel );
         dst = &tempBuf[0];
     }
 

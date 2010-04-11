@@ -17,10 +17,10 @@ public:
     {
     }
 
-	bool OnInit()
+	bool onInit()
 	{
         // initialize actor
-        LoadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
+        loadFromXmlFile( mActor, "media::/cube/cube.actor.xml" );
 
         // update camera stuff
         mRadius = mActor.getBoundingSphere().radius * 2.0f;
@@ -33,20 +33,20 @@ public:
 		return true;
 	}
 
-	void OnQuit()
+	void onQuit()
 	{
 	}
 
-	void OnUpdate()
+	void onUpdate()
 	{
 	}
 
-	void OnKeyPress( input::KeyEvent ke )
+	void onKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::OnKeyPress( ke );
+		app::SampleApp::onKeyPress( ke );
 	}
 
-	void OnRender()
+	void onRender()
 	{
 	}
 };
@@ -54,5 +54,5 @@ public:
 int main()
 {
 	MyApp app;
-	return app.Run( 0, 0 );
+	return app.run( 0, 0 );
 }

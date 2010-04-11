@@ -29,21 +29,21 @@ namespace GN { namespace util
         ///
         /// Constructor
         ///
-        FpsCalculator( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { Reset(); }
+        FpsCalculator( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { reset(); }
 
         ///
         /// Get time
         ///
-        double GetCurrentTime() const { return mCurrentTime; }
+        double currentTime() const { return mCurrentTime; }
 
         ///
         /// reset the counter
         ///
-        void Reset()
+        void reset()
         {
-            mCurrentTime = mClock.GetTimeD();
+            mCurrentTime = mClock.getTimeD();
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
-            mFpsString.Format( mFormatString.ToRawPtr(), 0 );
+            mFpsString.format( mFormatString.cptr(), 0 );
             mFrameCounter = 0;
             mLastFrameElapsed = 1.0f / mFpsValue;
             mLastFrameTime = mCurrentTime - mLastFrameElapsed;
@@ -56,7 +56,7 @@ namespace GN { namespace util
         ///
         void onFrame()
         {
-            mCurrentTime = mClock.GetTimeD();
+            mCurrentTime = mClock.getTimeD();
 
             ++mFrameCounter;
 
@@ -68,33 +68,33 @@ namespace GN { namespace util
             {
                 mBeforeFirstUpdate = false;
                 mFpsValue = (float)( mFrameCounter / timeSinceLastCheckPoint );
-                mFpsString.Format( mFormatString.ToRawPtr(), mFpsValue );
+                mFpsString.format( mFormatString.cptr(), mFpsValue );
                 mLastCheckPoint = mCurrentTime;
                 mFrameCounter = 0;
-                static Logger * sLogger = GetLogger("GN.util.fps");
-                GN_VERBOSE(sLogger)( mFpsString.ToRawPtr() );
+                static Logger * sLogger = getLogger("GN.util.fps");
+                GN_VERBOSE(sLogger)( "FPS: %f", mFpsValue );
             }
             else if( mBeforeFirstUpdate )
             {
                 mFpsValue = (float)( (mCurrentTime - mLastCheckPoint) / mFrameCounter );
-                mFpsString.Format( mFormatString.ToRawPtr(), mFpsValue );
+                mFpsString.format( mFormatString.cptr(), mFpsValue );
             }
         }
 
         ///
         /// Get elapsed time of last frame
         ///
-        double getLastFrameElasped() const { return mLastFrameElapsed; }
+        double lastFrameTime() const { return mLastFrameElapsed; }
 
         ///
         /// Get average FPS value
         ///
-        float GetFps() const { return mFpsValue; }
+        float fps() const { return mFpsValue; }
 
         ///
         /// Get FPS string
         ///
-        const StrW & getFpsString() const { return mFpsString; }
+        const StrW & fpsString() const { return mFpsString; }
     };
 }}
 

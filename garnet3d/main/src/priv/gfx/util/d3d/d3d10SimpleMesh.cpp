@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.SimpleMesh");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.SimpleMesh");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.SimpleMesh");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
+bool GN::d3d10::SimpleMesh::init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -19,7 +19,7 @@ bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
     if( 0 == dev )
     {
         GN_ERROR(sLogger)( "NULL D3D10 device pointer!" );
-        return Failure();
+        return failure();
     }
 
     // create a mini-shader (for its signature)
@@ -28,8 +28,8 @@ bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
         "float4 main( VSInput i ) : SV_Position0 { return 0; }";
     AutoComPtr<ID3D10VertexShader> vs;
     AutoComPtr<ID3D10Blob>  signature;
-    vs.Attach( compileAndCreateVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
-    if( vs.Empty() ) return Failure();
+    vs.attach( compileAndCreateVS( *dev, vscode, 0, 0, "main", "vs_4_0", &signature ) );
+    if( vs.empty() ) return failure();
 
     // create input layout
     static const D3D10_INPUT_ELEMENT_DESC elements[] =
@@ -42,11 +42,11 @@ bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
     };
     GN_DX_CHECK_RETURN(
         dev->CreateInputLayout( elements, GN_ARRAY_COUNT(elements), signature->GetBufferPointer(), signature->GetBufferSize(), &mLayout ),
-        Failure() );
+        failure() );
 
     // success
     mDevice = dev;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -54,15 +54,15 @@ bool GN::d3d10::SimpleMesh::Init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::Quit()
+void GN::d3d10::SimpleMesh::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mLayout );
-    SafeRelease( mVtxBuf );
-    SafeRelease( mIdxBuf );
+    safeRelease( mLayout );
+    safeRelease( mVtxBuf );
+    safeRelease( mIdxBuf );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -77,7 +77,7 @@ void GN::d3d10::SimpleMesh::Quit()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::beginVertices()
 {
-    mVertices.Clear();
+    mVertices.clear();
 }
 
 //
@@ -85,8 +85,8 @@ void GN::d3d10::SimpleMesh::beginVertices()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 {
-    mNewVertex.pos.Set( x, y, z );
-    mVertices.Append( mNewVertex );
+    mNewVertex.pos.set( x, y, z );
+    mVertices.append( mNewVertex );
 }
 
 //
@@ -94,7 +94,7 @@ void GN::d3d10::SimpleMesh::pos( float x, float y, float z )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 {
-    mNewVertex.normal.Set( x, y, z );
+    mNewVertex.normal.set( x, y, z );
 }
 
 //
@@ -102,7 +102,7 @@ void GN::d3d10::SimpleMesh::normal( float x, float y, float z )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::tex( float x, float y )
 {
-    mNewVertex.tex.Set( x, y );
+    mNewVertex.tex.set( x, y );
 }
 
 //
@@ -110,7 +110,7 @@ void GN::d3d10::SimpleMesh::tex( float x, float y )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 {
-    mNewVertex.color.Set( r, g, b, a );
+    mNewVertex.color.set( r, g, b, a );
 }
 
 //
@@ -118,13 +118,13 @@ void GN::d3d10::SimpleMesh::color( float r, float g, float b, float a )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::endVertices()
 {
-    if( mVertices.Empty() ) return;
+    if( mVertices.empty() ) return;
 
-    UINT bytes = (UINT)( mVertices.Size() * sizeof(Vertex) );
+    UINT bytes = (UINT)( mVertices.size() * sizeof(Vertex) );
 
-    if( mVtxBufCapacity < mVertices.Size() )
+    if( mVtxBufCapacity < mVertices.size() )
     {
-        SafeRelease( mVtxBuf );
+        safeRelease( mVtxBuf );
         mVtxBufCapacity = 0;
 
         D3D10_BUFFER_DESC desc = {
@@ -137,17 +137,17 @@ void GN::d3d10::SimpleMesh::endVertices()
 
         GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mVtxBuf ) );
 
-        mVtxBufCapacity = mVertices.Size();
+        mVtxBufCapacity = mVertices.size();
     }
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
-    mDevice->UpdateSubresource( mVtxBuf, 0, &box, mVertices.ToRawPtr(), bytes, bytes );
+    mDevice->UpdateSubresource( mVtxBuf, 0, &box, mVertices.cptr(), bytes, bytes );
 
-    mNumVertices = mVertices.Size();
+    mNumVertices = mVertices.size();
 
     // release memory allocated by mVertices.
-    mVertices.Purge();
+    mVertices.purge();
 }
 
 //
@@ -156,7 +156,7 @@ void GN::d3d10::SimpleMesh::endVertices()
 void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 {
     beginVertices();
-    mVertices.Append( vertices, count );
+    mVertices.append( vertices, count );
     endVertices();
 }
 
@@ -165,7 +165,7 @@ void GN::d3d10::SimpleMesh::setVertices( const Vertex * vertices, size_t count )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::beginTriangles()
 {
-    mIndices.Clear();
+    mIndices.clear();
 }
 
 //
@@ -173,9 +173,9 @@ void GN::d3d10::SimpleMesh::beginTriangles()
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 {
-    mIndices.Append( (UInt16)i0 );
-    mIndices.Append( (UInt16)i1 );
-    mIndices.Append( (UInt16)i2 );
+    mIndices.append( (UInt16)i0 );
+    mIndices.append( (UInt16)i1 );
+    mIndices.append( (UInt16)i2 );
 }
 
 
@@ -184,13 +184,13 @@ void GN::d3d10::SimpleMesh::triangle( size_t i0, size_t i1, size_t i2 )
 // -----------------------------------------------------------------------------
 void GN::d3d10::SimpleMesh::endTriangles()
 {
-    if( mIndices.Empty() ) return;
+    if( mIndices.empty() ) return;
 
-    UINT bytes = (UINT)( mIndices.Size() * sizeof(UInt16) );
+    UINT bytes = (UINT)( mIndices.size() * sizeof(UInt16) );
 
-    if( mIdxBufCapacity < mIndices.Size() )
+    if( mIdxBufCapacity < mIndices.size() )
     {
-        SafeRelease( mIdxBuf );
+        safeRelease( mIdxBuf );
         mIdxBufCapacity = 0;
 
         D3D10_BUFFER_DESC desc = {
@@ -203,17 +203,17 @@ void GN::d3d10::SimpleMesh::endTriangles()
 
         GN_DX_CHECK_RETURN_VOID( mDevice->CreateBuffer( &desc, 0, &mIdxBuf ) );
 
-        mIdxBufCapacity = mIndices.Size();
+        mIdxBufCapacity = mIndices.size();
     }
 
     D3D10_BOX box = { 0, 0, 0, bytes, 1, 1 };
 
-    mDevice->UpdateSubresource( mIdxBuf, 0, &box, mIndices.ToRawPtr(), bytes, bytes );
+    mDevice->UpdateSubresource( mIdxBuf, 0, &box, mIndices.cptr(), bytes, bytes );
 
-    mNumIndices = mIndices.Size();
+    mNumIndices = mIndices.size();
 
     // release memory allocated by mIndices.
-    mIndices.Purge();
+    mIndices.purge();
 }
 
 //
@@ -222,14 +222,14 @@ void GN::d3d10::SimpleMesh::endTriangles()
 void GN::d3d10::SimpleMesh::setTriangles( const UInt16 * triangles, size_t triangleCount )
 {
     beginTriangles();
-    mIndices.Append( triangles, triangleCount * 3 );
+    mIndices.append( triangles, triangleCount * 3 );
     endTriangles();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::Draw() const
+void GN::d3d10::SimpleMesh::draw() const
 {
     if( mNumVertices > 0 )
     {
@@ -245,7 +245,7 @@ void GN::d3d10::SimpleMesh::Draw() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::SimpleMesh::DrawIndexed() const
+void GN::d3d10::SimpleMesh::drawIndexed() const
 {
     if( mNumIndices > 0 )
     {

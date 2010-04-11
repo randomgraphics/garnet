@@ -4,7 +4,7 @@
 #include "xenonGpu.h"
 #include "garnet/GNd3d.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 using namespace GN::gfx;
 
@@ -14,7 +14,7 @@ using namespace GN::gfx;
 template<class T, class ARRAY>
 static T * sFindParameter( ARRAY & array, const char * name )
 {
-    for( size_t i = 0; i < array.Size(); ++i )
+    for( size_t i = 0; i < array.size(); ++i )
     {
         T & t = array[i];
 
@@ -62,7 +62,7 @@ sSetSampler( IDirect3DDevice9 & dev, UInt32 stage, const SamplerDesc & s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
+bool GN::gfx::XenonGpuProgramHLSL::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -71,7 +71,7 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::HLSL9 == desc.lang );
 
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
@@ -84,7 +84,7 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
             0, // profile
             &mVsConsts );
 
-        if( NULL == mVs ) return Failure();
+        if( NULL == mVs ) return failure();
 
         enumerateConsts( mVsConsts, true );
     }
@@ -99,7 +99,7 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
             desc.ps.entry,
             0,
             &mPsConsts );
-        if( NULL == mPs ) return Failure();
+        if( NULL == mPs ) return failure();
 
         enumerateConsts( mPsConsts, false );
     }
@@ -108,7 +108,7 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
     buildUnformNameAndSizeArray();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -116,18 +116,18 @@ bool GN::gfx::XenonGpuProgramHLSL::Init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpuProgramHLSL::Quit()
+void GN::gfx::XenonGpuProgramHLSL::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVs );
-    SafeRelease( mVsConsts );
-    SafeRelease( mPs );
-    SafeRelease( mPsConsts );
+    safeRelease( mVs );
+    safeRelease( mVsConsts );
+    safeRelease( mPs );
+    safeRelease( mPsConsts );
 
-    mUniforms.Clear();
+    mUniforms.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -142,7 +142,7 @@ void GN::gfx::XenonGpuProgramHLSL::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::apply() const
 {
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }
@@ -155,11 +155,11 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
     size_t                  count,
     bool                    /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     for( size_t i = 0; i < count; ++i )
     {
-        if( i >= mUniforms.Size() )
+        if( i >= mUniforms.size() )
         {
             GN_WARN(sLogger)( "there are more GPU parameters than the shader needs." );
             return;
@@ -175,17 +175,17 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
 
         const XenonUniformParamDesc & d = mUniforms[i];
 
-        GN_ASSERT( !d.name.Empty() && (d.vshandle || d.pshandle) && d.size );
+        GN_ASSERT( !d.name.empty() && (d.vshandle || d.pshandle) && d.size );
 
         // check parameter size
-        if( GetGpu().ParamCheckEnabled() )
+        if( getGpu().paramCheckEnabled() )
         {
-            if( u->Size() != d.size )
+            if( u->size() != d.size )
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    d.name.ToRawPtr(),
-                    u->Size(),
+                    d.name.cptr(),
+                    u->size(),
                     d.size );
             }
         }
@@ -193,11 +193,11 @@ void GN::gfx::XenonGpuProgramHLSL::applyUniforms(
         // apply to D3D
         if( d.vshandle )
         {
-            GN_DX_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->GetValue(), (UINT)d.size ) );
+            GN_DX_CHECK( mVsConsts->SetValue( &dev, d.vshandle, u->getval(), (UINT)d.size ) );
         }
         if( d.pshandle )
         {
-            GN_DX_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->GetValue(), (UINT)d.size ) );
+            GN_DX_CHECK( mPsConsts->SetValue( &dev, d.pshandle, u->getval(), (UINT)d.size ) );
         }
     }
 }
@@ -210,12 +210,12 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
     size_t                 count,
     bool                   /*skipDirtyCheck*/ ) const
 {
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // determine effective texture count
-    if( count > mParamDesc.textures.Count() )
+    if( count > mParamDesc.textures.count() )
     {
-        count = mParamDesc.textures.Count();
+        count = mParamDesc.textures.count();
     }
 
     bool usedStages[GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT];
@@ -227,7 +227,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
 
         const XenonTextureParamDesc & param = mTextures[i];
 
-        IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.Get())->getD3DTexture() : NULL;
+        IDirect3DBaseTexture9 * d3dtex = tb.texture ? ((XenonTexture*)tb.texture.get())->getD3DTexture() : NULL;
 
         if( param.vshandle )
         {
@@ -256,7 +256,7 @@ void GN::gfx::XenonGpuProgramHLSL::applyTextures(
         }
     }
 
-    // Clear unused texture stages
+    // clear unused texture stages
     for( UINT i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
     {
         if( !usedStages[i] )
@@ -337,7 +337,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                             u.pshandle = c;
                         }
                         u.size = cd.Bytes;
-                        mUniforms.Append( u );
+                        mUniforms.append( u );
                     }
                     break;
                 }
@@ -379,7 +379,7 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
                         {
                             t.pshandle = c;
                         }
-                        mTextures.Append( t );
+                        mTextures.append( t );
                     }
                     break;
                 }
@@ -399,14 +399,14 @@ bool GN::gfx::XenonGpuProgramHLSL::enumerateConsts(
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
 {
-    if( !mUniforms.Empty() )
+    if( !mUniforms.empty() )
     {
-        size_t count = mUniforms.Size();
+        size_t count = mUniforms.size();
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mUniformArray       = mUniforms.ToRawPtr();
-        mParamDesc.mUniformCount       = mUniforms.Size();
+        mParamDesc.mUniformArray       = mUniforms.cptr();
+        mParamDesc.mUniformCount       = mUniforms.size();
         mParamDesc.mUniformArrayStride = sizeof(mUniforms[0]);
 
         for( size_t i = 0; i < count; ++i )
@@ -414,18 +414,18 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonUniformParamDesc          & u1 = mUniforms[i];
             GpuProgramUniformParameterDesc & u2 = mUniforms[i];
-            u2.name = u1.name.ToRawPtr();
+            u2.name = u1.name.cptr();
         }
     }
 
-    if( !mTextures.Empty() )
+    if( !mTextures.empty() )
     {
-        size_t count = mTextures.Size();
+        size_t count = mTextures.size();
 
         GN_ASSERT( count > 0 );
 
-        mParamDesc.mTextureArray       = mTextures.ToRawPtr();
-        mParamDesc.mTextureCount       = mTextures.Size();
+        mParamDesc.mTextureArray       = mTextures.cptr();
+        mParamDesc.mTextureCount       = mTextures.size();
         mParamDesc.mTextureArrayStride = sizeof(mTextures[0]);
 
         for( size_t i = 0; i < count; ++i )
@@ -433,7 +433,7 @@ void GN::gfx::XenonGpuProgramHLSL::buildUnformNameAndSizeArray()
             // UGLY!!! UGLY!!!
             XenonTextureParamDesc          & t1 = mTextures[i];
             GpuProgramTextureParameterDesc & t2 = mTextures[i];
-            t2.name = t1.name.ToRawPtr();
+            t2.name = t1.name.cptr();
         }
     }
 }

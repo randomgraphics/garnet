@@ -9,17 +9,17 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10VtxBuf::Init( const VtxBufDesc & desc )
+bool GN::gfx::D3D10VtxBuf::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( D3D10VtxBuf, (desc.length, desc.fastCpuWrite, D3D10_BIND_VERTEX_BUFFER) );
 
-    SetDesc( desc );
+    setDesc( desc );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -27,11 +27,11 @@ bool GN::gfx::D3D10VtxBuf::Init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::Quit()
+void GN::gfx::D3D10VtxBuf::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -44,7 +44,7 @@ void GN::gfx::D3D10VtxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::Update(
+void GN::gfx::D3D10VtxBuf::update(
     size_t            offset,
     size_t            length,
     const void      * data,
@@ -52,13 +52,13 @@ void GN::gfx::D3D10VtxBuf::Update(
 {
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
-    D3D10Buffer::Update( offset, length, data, flag );
+    D3D10Buffer::update( offset, length, data, flag );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10VtxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D10VtxBuf::readback( DynaArray<UInt8> & data )
 {
-    D3D10Buffer::Readback( data );
+    D3D10Buffer::readback( data );
 }

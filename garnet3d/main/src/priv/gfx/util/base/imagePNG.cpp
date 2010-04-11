@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "imagePNG.h"
 
-using namespace GN;
-
 #if GN_MSVC
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image.PNG");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.PNG");
 
 // *****************************************************************************
 // local functions
@@ -83,10 +81,10 @@ bool PNGReader::checkFormat( GN::File & fp )
 
     unsigned char buf[8];
 
-    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
-    if( !fp.Read( buf, 8, &sz ) || 8 != sz ) return false;
+    if( !fp.read( buf, 8, &sz ) || 8 != sz ) return false;
 
     return 0 == png_sig_cmp( buf, 0, 8 );
 
@@ -96,7 +94,7 @@ bool PNGReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool PNGReader::ReadHeader(
+bool PNGReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -131,18 +129,18 @@ bool PNGReader::ReadHeader(
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
     if ( GN::gfx::ColorFormat::UNKNOWN == o_desc.format ) return false;
-    UInt32 bpp = (UInt32)o_desc.format.GetBitsPerPixel();
+    UInt32 bpp = (UInt32)o_desc.format.getBitsPerPixel();
 
     // update o_desc
-    o_desc.SetFaceAndLevel( 1, 1 ); // 2D image
-    GN::gfx::MipmapDesc & m = o_desc.GetMipmap( 0, 0 );
+    o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width         = (UInt16)mInfo->width;
     m.height        = (UInt16)mInfo->height;
     m.depth         = 1;
     m.rowPitch      = mInfo->width * bpp / 8;
     m.slicePitch    = m.rowPitch * mInfo->height;
     m.levelPitch    = m.slicePitch;
-    GN_ASSERT( o_desc.Valid() );
+    GN_ASSERT( o_desc.valid() );
 
     // store image pitch
     mRowPitch = m.rowPitch;
@@ -156,13 +154,14 @@ bool PNGReader::ReadHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool PNGReader::ReadImage( void * o_data )
+bool PNGReader::readImage( void * o_data )
 {
     GN_GUARD;
 
     GN_ASSERT( mPng && mInfo && mRowPitch > 0 );
 
-    DynaArray<png_bytep> rows( mInfo->height );
+    GN::DynaArray<png_bytep> rows;
+    rows.resize( mInfo->height );
     png_bytep ptr = (png_bytep) o_data;
     for( UInt32 y = 0; y < mInfo->height; ++y )
     {
@@ -201,7 +200,7 @@ bool PNGReader::ReadImage( void * o_data )
     for( UInt32 y = 0; y < mInfo->height; ++y )
     {
         UInt32 * p = (UInt32*)rows[y];
-        GN::SwapEndian8In32( p, p, mRowPitch / 4 );
+        GN::swap8in32( p, p, mRowPitch / 4 );
     }
 
 #endif

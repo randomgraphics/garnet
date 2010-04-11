@@ -28,7 +28,7 @@ namespace GN { namespace util
         {
         }
 
-        ~Impl() { Reset(); }
+        ~Impl() { reset(); }
 
         //@}
 
@@ -40,11 +40,11 @@ namespace GN { namespace util
 
         //@{
 
-        gfx::GpuResourceDatabase & gdb() const { return mGpuResourceDatabase; }
+        gfx::GpuResourceDatabase & getGdb() const { return mGpuResourceDatabase; }
         SpatialGraph             & spatialGraph() const { return mSpatialGraph; }
         VisualGraph              & visualGraph() const { return mVisualGraph; }
 
-        void          Reset();
+        void          reset();
         Entity      * createEntity( const char * name = NULL );
         void          deleteEntity( const char * name );
         void          deleteEntity( int id );

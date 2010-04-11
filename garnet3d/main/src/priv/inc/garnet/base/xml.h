@@ -64,51 +64,51 @@ namespace GN
 
         /// \name method required by traversal class
         //@{
-        XmlNode * GetParent() const { return parent; }
-        XmlNode * GetPrevSibling() const { return prev; }
-        XmlNode * GetNextSibling() const { return next; }
-        XmlNode * GetFirstChild() const { return child; }
+        XmlNode * getParent() const { return parent; }
+        XmlNode * getPrevSibling() const { return prev; }
+        XmlNode * getNextSibling() const { return next; }
+        XmlNode * getFirstChild() const { return child; }
         //@}
 
         ///
         /// Change node parent
         ///
-        void SetParent( XmlNode * parent, XmlNode * prev = NULL );
+        void setParent( XmlNode * parent, XmlNode * prev = NULL );
 
         ///
         /// return location of this node in the document (unimplemented)
         ///
-        const char * GetLocation() const { return ""; }
+        const char * getLocation() const { return ""; }
 
         ///
         /// conver to cdata node
         ///
-        XmlCdata * ToCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }
+        XmlCdata * toCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        const XmlCdata * ToCdata() const { return XML_CDATA == type ? (const XmlCdata*)this : 0; }
+        const XmlCdata * toCdata() const { return XML_CDATA == type ? (const XmlCdata*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        XmlComment * ToComment() { return XML_COMMENT == type ? (XmlComment*)this : 0; }
+        XmlComment * toComment() { return XML_COMMENT == type ? (XmlComment*)this : 0; }
 
         ///
         /// conver to comment node
         ///
-        const XmlComment * ToComment() const { return XML_COMMENT == type ? (const XmlComment*)this : 0; }
+        const XmlComment * toComment() const { return XML_COMMENT == type ? (const XmlComment*)this : 0; }
 
         ///
         /// Convert to element node
         ///
-        XmlElement * ToElement() { return XML_ELEMENT == type ? (XmlElement*)this : 0; }
+        XmlElement * toElement() { return XML_ELEMENT == type ? (XmlElement*)this : 0; }
 
         ///
         /// Convert to element node
         ///
-        const XmlElement * ToElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
+        const XmlElement * toElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
 
         ///
         /// virtual dtor
@@ -178,17 +178,17 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * FindAttrib( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
+        XmlAttrib * findAttrib( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlAttrib * a = attrib; a; a = a->next )
             {
-                if( StringCompareCase::SENSITIVE == sc )
+                if( StringCompareCase::SENSITIVE == scc )
                 {
                     if( name == a->name ) return a;
                 }
                 else
                 {
-                    if( 0 == StringCompareI( name.ToRawPtr(), a->name.ToRawPtr() ) ) return a;
+                    if( 0 == stringCompareI( name.cptr(), a->name.cptr() ) ) return a;
                 }
             }
             return NULL;
@@ -197,20 +197,20 @@ namespace GN
         ///
         /// find specific child of element
         ///
-        XmlElement * FindChildElement( const StrA & name, StringCompareCase sc = StringCompareCase::SENSITIVE ) const
+        XmlElement * findChildElement( const StrA & name, StringCompareCase scc = StringCompareCase::SENSITIVE ) const
         {
             for( XmlNode * n = child; n; n = n->next )
             {
-                XmlElement * e = n->ToElement();
+                XmlElement * e = n->toElement();
                 if( !e ) continue;
 
-                if( StringCompareCase::SENSITIVE == sc )
+                if( StringCompareCase::SENSITIVE == scc )
                 {
                     if( name == e->name ) return e;
                 }
                 else
                 {
-                    if( 0 == StringCompareI( name.ToRawPtr(), e->name.ToRawPtr() ) ) return e;
+                    if( 0 == stringCompareI( name.cptr(), e->name.cptr() ) ) return e;
                 }
             }
             return NULL;
@@ -262,84 +262,84 @@ namespace GN
         ///
         /// ctor
         ///
-        XmlDocument() { mNodes.Reserve(256); mAttribs.Reserve(256); }
+        XmlDocument() { mNodes.reserve(256); mAttribs.reserve(256); }
 
         ///
         /// dtor
         ///
-        ~XmlDocument() { ReleaseAllNodesAndAttribs(); }
+        ~XmlDocument() { releaseAllNodesAndAttribs(); }
 
         ///
         /// parse xml string buffer
         ///
-        bool Parse( XmlParseResult & result, const char * content, size_t length = 0 );
+        bool parse( XmlParseResult & result, const char * content, size_t length = 0 );
 
         ///
         /// parse xml file
         ///
-        bool Parse( XmlParseResult &, File & );
+        bool parse( XmlParseResult &, File & );
 
         ///
         /// write xml document to file. If compact if false, the format output with newline and ident
         ///
-        bool WriteToFile( File & file, const XmlNode & root, bool compact );
+        bool writeToFile( File & file, const XmlNode & root, bool compact );
 
         ///
         /// Create new node. Nodes are created in pooled memory. No need
         /// to release them. They will be release automatically, when the
         /// XML document is deleted.
         ///
-        XmlNode * CreateNode( XmlNodeType type, XmlNode * parent );
+        XmlNode * createNode( XmlNodeType type, XmlNode * parent );
 
         ///
         /// Create element
         ///
-        XmlElement * CreateElement( XmlNode * parent )
+        XmlElement * createElement( XmlNode * parent )
         {
-            XmlNode * n = CreateNode( XML_ELEMENT, parent );
-            return n ? n->ToElement() : NULL;
+            XmlNode * n = createNode( XML_ELEMENT, parent );
+            return n ? n->toElement() : NULL;
         }
 
         ///
         /// Create new attribute. Attributes are created in pooled memory also,
         /// just like XmlNode.
         ///
-        XmlAttrib * CreateAttrib( XmlElement * owner );
+        XmlAttrib * createAttrib( XmlElement * owner );
 
     private:
 
         ///
         /// Release all attributes and nodes
         ///
-        void ReleaseAllNodesAndAttribs();
+        void releaseAllNodesAndAttribs();
     };
 
     ///
     /// load something from XML file
     ///
     template<class T>
-    inline bool LoadFromXmlFile( T & t, File & fp, const StrA & basedir )
+    inline bool loadFromXmlFile( T & t, File & fp, const StrA & basedir )
     {
         GN_GUARD;
 
         XmlDocument doc;
         XmlParseResult xpr;
-        if( !doc.Parse( xpr, fp ) )
+        if( !doc.parse( xpr, fp ) )
         {
-            static Logger * sLogger = GetLogger( "GN.base.xml" );
+            static Logger * sLogger = getLogger( "GN.base.xml" );
             GN_ERROR(sLogger)(
                 "Fail to parse XML file (%s):\n"
                 "    line   : %d\n"
                 "    column : %d\n"
                 "    error  : %s",
-                fp.Name(),
+                fp.name(),
                 xpr.errLine,
                 xpr.errColumn,
-                xpr.errInfo.ToRawPtr() );
+                xpr.errInfo.cptr() );
             return false;
         }
         GN_ASSERT( xpr.root );
-        return t.LoadFromXml( *xpr.root, basedir );
+        return t.loadFromXml( *xpr.root, basedir );
 
         GN_UNGUARD;
     }
@@ -348,19 +348,19 @@ namespace GN
     /// load something from XML file
     ///
     template<class T>
-    inline bool LoadFromXmlFile( T & t, const StrA & filename )
+    inline bool loadFromXmlFile( T & t, const StrA & filename )
     {
         GN_GUARD;
 
-        static Logger * sLogger = GetLogger( "GN.base.xml" );
-        GN_INFO(sLogger)( "Load '%s'", filename.ToRawPtr() );
+        static Logger * sLogger = getLogger( "GN.base.xml" );
+        GN_INFO(sLogger)( "Load '%s'", filename.cptr() );
 
-        AutoObjPtr<File> fp( fs::OpenFile( filename, "rt" ) );
+        AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
         if( !fp ) return false;
 
-        StrA basedir = fs::DirName( filename );
+        StrA basedir = fs::dirName( filename );
 
-        return LoadFromXmlFile( t, *fp, basedir );
+        return loadFromXmlFile( t, *fp, basedir );
 
         GN_UNGUARD;
     }

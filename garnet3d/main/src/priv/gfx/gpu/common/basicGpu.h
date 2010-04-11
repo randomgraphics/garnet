@@ -31,7 +31,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicGpu() { Clear(); }
+        BasicGpu() { clear(); }
         virtual ~BasicGpu() {}
         //@}
 
@@ -41,12 +41,12 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuOptions & );
-        void Quit();
+        bool init( const GpuOptions & );
+        void quit();
     private :
-        void Clear()
+        void clear()
         {
-            ContextClear();
+            contextClear();
             miscClear();
         }
         //@}
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
         ///
         /// Called by sub class to respond to render window resizing/moving
         ///
-        virtual void HandleRenderWindowSizeMove() = 0;
+        virtual void handleRenderWindowSizeMove() = 0;
 
         //@}
 
@@ -98,22 +98,22 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void BindContext( const GpuContext & c );
-        virtual void RebindContext();
-        virtual inline const GpuContext & GetContext() const { return mContext; }
+        virtual void bindContext( const GpuContext & c );
+        virtual void rebindContext();
+        virtual inline const GpuContext & getContext() const { return mContext; }
 
     protected:
 
-        virtual bool BindContextImpl( const GpuContext & context, bool skipDirtyCheck ) = 0;
+        virtual bool bindContextImpl( const GpuContext & context, bool skipDirtyCheck ) = 0;
 
     private:
 
-        void ContextClear() { mContextOk = false; mContext.Clear(); }
+        void contextClear() { mContextOk = false; mContext.clear(); }
 
     protected:
 
         GpuContext mContext;
-        bool       mContextOk;
+        bool            mContextOk;
 
         //@}
 
@@ -137,23 +137,23 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual GpuSignals & GetSignals() { return mSignals; }
-        virtual void         GetBackBufferContent( BackBufferContent & );
-        virtual void         EnableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
-        virtual void         SetUserData( const Guid & id, const void * data, size_t length );
-        virtual const void * GetUserData( const Guid & id, size_t * length ) const;
-        virtual bool         HasUserData( const Guid & id ) const;
+        virtual GpuSignals & getSignals() { return mSignals; }
+        virtual void         getBackBufferContent( BackBufferContent & );
+        virtual void         enableParameterCheck( bool enable ) { mParamCheckEnabled = enable; }
+        virtual void         setUserData( const Guid & id, const void * data, size_t length );
+        virtual const void * getUserData( const Guid & id, size_t * length ) const;
+        virtual bool         hasUserData( const Guid & id ) const;
 
     public:
 
-        bool                 ParamCheckEnabled() const { return mParamCheckEnabled; }
+        bool                 paramCheckEnabled() const { return mParamCheckEnabled; }
 
     private:
 
         void miscClear()
         {
             mParamCheckEnabled = GN_BUILD_DEBUG;
-            mUserData.Clear();
+            mUserData.clear();
         }
 
     private:
@@ -178,16 +178,16 @@ namespace GN { namespace gfx
         StackArray<RenderTargetTexture, GpuContext::MAX_COLOR_RENDER_TARGETS> colortargets;
 
         /// depth stencil render target
-        RenderTargetTexture                                                   depthstencil;
+        RenderTargetTexture                                                        depthstencil;
 
         /// check for invalid description.
-        bool Valid() const
+        bool valid() const
         {
-            for( size_t i = 0; i < colortargets.Size(); ++i )
+            for( size_t i = 0; i < colortargets.size(); ++i )
             {
                 if( !colortargets[i].texture )
                 {
-                    GN_ERROR(GN::GetLogger("GN.gfx"))(
+                    GN_ERROR(GN::getLogger("GN.gfx"))(
                         "NULL color render targets in render target array is not allowed." );
                     return false;
                 }
@@ -199,8 +199,8 @@ namespace GN { namespace gfx
         /// equality check
         bool operator==( const RenderTargetDesc & rhs ) const
         {
-            if( colortargets.Size() != rhs.colortargets.Size() ) return false;
-            for( size_t i = 0; i < colortargets.Size(); ++i )
+            if( colortargets.size() != rhs.colortargets.size() ) return false;
+            for( size_t i = 0; i < colortargets.size(); ++i )
             {
                 if( colortargets[i] != rhs.colortargets[i] ) return false;
             }

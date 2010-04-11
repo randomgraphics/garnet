@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.d3d9app");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9app");
 
 #if GN_MSVC
 # if GN_XENON
@@ -85,7 +85,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return 0;
     }
 
@@ -116,7 +116,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
         0 );
     if( 0 == hwnd )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
         return false;
     }
 
@@ -244,13 +244,13 @@ GN::d3d9::D3D9Application::~D3D9Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d9::D3D9Application::Run( const D3D9AppOption * )
+int GN::d3d9::D3D9Application::run( const D3D9AppOption * )
 {
     GN_GUARD_ALWAYS;
 
-    if( !Init() ) { Quit(); return -1; }
+    if( !init() ) { quit(); return -1; }
 
-    if( !changeOption(mOption) ) { Quit(); return -1; }
+    if( !changeOption(mOption) ) { quit(); return -1; }
 
     mRunning = true;
 
@@ -258,8 +258,8 @@ int GN::d3d9::D3D9Application::Run( const D3D9AppOption * )
 
     while( mRunning )
     {
-        if( gInputPtr ) gInput.ProcessInputEvents();
-        OnUpdate();
+        if( gInputPtr ) gInput.processInputEvents();
+        onUpdate();
         onDraw();
     }
 
@@ -282,20 +282,20 @@ int GN::d3d9::D3D9Application::Run( const D3D9AppOption * )
         else
         {
             // Idle time, do rendering and update
-            if( gInputPtr ) gInput.ProcessInputEvents();
-            OnUpdate();
+            if( gInputPtr ) gInput.processInputEvents();
+            onUpdate();
             onDraw();
         }
     }
 #endif
 
     // done
-    Quit();
+    quit();
     return 0;
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 
-    Quit();
+    quit();
     return -1;
 }
 
@@ -317,7 +317,7 @@ bool GN::d3d9::D3D9Application::changeOption( const D3D9AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9Application::Init()
+bool GN::d3d9::D3D9Application::init()
 {
 #if !GN_XENON
     // get primary monitor
@@ -337,13 +337,13 @@ bool GN::d3d9::D3D9Application::Init()
     // initialize input system
     if( NULL == gInputPtr )
     {
-        if( !input::InitializeInputSystem() ) return false;
+        if( !input::initializeInputSystem() ) return false;
         mShutdownInputSystem = true;
     }
-    if( !gInput.AttachToWindow( 0, mWindow ) ) return false;
-    gInput.sigKeyPress.Connect( this, &D3D9Application::OnKeyPress );
-    gInput.sigCharPress.Connect( this, &D3D9Application::OnCharPress );
-    gInput.sigAxisMove.Connect( this, &D3D9Application::OnAxisMove );
+    if( !gInput.attachToWindow( 0, mWindow ) ) return false;
+    gInput.sigKeyPress.connect( this, &D3D9Application::onKeyPress );
+    gInput.sigCharPress.connect( this, &D3D9Application::onCharPress );
+    gInput.sigAxisMove.connect( this, &D3D9Application::onAxisMove );
 
     // create D3D object
     mD3D = Direct3DCreate9( D3D_SDK_VERSION );
@@ -354,30 +354,30 @@ bool GN::d3d9::D3D9Application::Init()
     }
 
     // success
-    return OnInit( mOption );
+    return onInit( mOption );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::Quit()
+void GN::d3d9::D3D9Application::quit()
 {
     disposeDevice();
     destroyDevice();
 
-    OnQuit();
+    onQuit();
 
-    SafeRelease( mD3D );
+    safeRelease( mD3D );
 
     if( gInputPtr )
     {
-        gInput.sigKeyPress.Disconnect( this );
-        gInput.sigCharPress.Disconnect( this );
-        gInput.sigAxisMove.Disconnect( this );
+        gInput.sigKeyPress.disconnect( this );
+        gInput.sigCharPress.disconnect( this );
+        gInput.sigAxisMove.disconnect( this );
 
         if( mShutdownInputSystem )
         {
-            input::ShutdownInputSystem();
+            input::shutdownInputSystem();
         }
     }
 
@@ -389,7 +389,7 @@ void GN::d3d9::D3D9Application::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9Application::OnKeyPress( input::KeyEvent ke )
+void GN::d3d9::D3D9Application::onKeyPress( input::KeyEvent ke )
 {
 #if GN_XENON
     GN_UNUSED_PARAM( ke );

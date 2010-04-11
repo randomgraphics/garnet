@@ -10,7 +10,7 @@ class StackArrayTest : public CxxTest::TestSuite
         static int cctor;  ///< number of calls to copy constructor
         static int cop;    ///< number of calls to copy operator
 
-        static void Clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
+        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
 
         bool constructed;
         int  i;
@@ -72,20 +72,20 @@ public:
         using namespace GN;
 
         StackArray<int,2> a;
-        a.Append( 1 );
-        a.Append( 2 );
-        a.Append( 3 ); // should do nothing
-        TS_ASSERT_EQUALS( 2, a.Size() );
-        TS_ASSERT_EQUALS( 1, a.Front() );
-        TS_ASSERT_EQUALS( 2, a.Back() );
+        a.append( 1 );
+        a.append( 2 );
+        a.append( 3 ); // should do nothing
+        TS_ASSERT_EQUALS( 2, a.size() );
+        TS_ASSERT_EQUALS( 1, a.front() );
+        TS_ASSERT_EQUALS( 2, a.back() );
 
-        Element::Clear();
+        Element::clear();
         StackArray<Element,2> b;
         TS_ASSERT_EQUALS( 0, Element::count );
 
-        b.Append( 1 );
-        b.Append( 2 );
-        b.Append( 3 ); // should do nothing
+        b.append( 1 );
+        b.append( 2 );
+        b.append( 3 ); // should do nothing
         TS_ASSERT_EQUALS( 2, Element::count );
     }
 
@@ -93,13 +93,13 @@ public:
     {
         using namespace GN;
         StackArray<int,4> a;
-        a.Insert( 0, 1 ); // 1 (insert at head)
-        a.Insert( 1, 3 ); // 1, 3 (insert at tail)
-        a.Insert( 1, 2 ); // 1, 2, 3 (insert at middle)
-        a.Insert( 100, 0 ); // invalid position, should do nothing
-        a.Insert( 3, 4 ); // 1, 2, 3, 4 (insert at tail)
-        a.Insert( 4, 5 ); // already full, should do nothing
-        TS_ASSERT_EQUALS( 4, a.Size() );
+        a.insert( 0, 1 ); // 1 (insert at head)
+        a.insert( 1, 3 ); // 1, 3 (insert at tail)
+        a.insert( 1, 2 ); // 1, 2, 3 (insert at middle)
+        a.insert( 100, 0 ); // invalid position, should do nothing
+        a.insert( 3, 4 ); // 1, 2, 3, 4 (insert at tail)
+        a.insert( 4, 5 ); // already full, should do nothing
+        TS_ASSERT_EQUALS( 4, a.size() );
         TS_ASSERT_EQUALS( 1, a[0] );
         TS_ASSERT_EQUALS( 2, a[1] );
         TS_ASSERT_EQUALS( 3, a[2] );
@@ -110,51 +110,51 @@ public:
     {
         using namespace GN;
         StackArray<Element,4> a;
-        a.Insert( 0, 1 ); // 1 (insert at head)
-        a.Insert( 1, 3 ); // 1, 3 (insert at tail)
-        a.Insert( 1, 2 ); // 1, 2, 3 (insert at middle)
-        a.Insert( 100, 0 ); // invalid position, should do nothing
-        a.Insert( 3, 4 ); // 1, 2, 3, 4 (insert at tail)
-        a.Insert( 4, 5 ); // already full, should do nothing
-        TS_ASSERT_EQUALS( 4, a.Size() );
+        a.insert( 0, 1 ); // 1 (insert at head)
+        a.insert( 1, 3 ); // 1, 3 (insert at tail)
+        a.insert( 1, 2 ); // 1, 2, 3 (insert at middle)
+        a.insert( 100, 0 ); // invalid position, should do nothing
+        a.insert( 3, 4 ); // 1, 2, 3, 4 (insert at tail)
+        a.insert( 4, 5 ); // already full, should do nothing
+        TS_ASSERT_EQUALS( 4, a.size() );
     }
 
     void testErase()
     {
         using namespace GN;
         StackArray<int,4> a;
-        a.Append( 1 );
-        a.Append( 2 );
-        a.Append( 3 );
-        a.Append( 4 );
+        a.append( 1 );
+        a.append( 2 );
+        a.append( 3 );
+        a.append( 4 );
 
         // erase middle: 1, 2, 4
-        a.Erase( 2 );
-        TS_ASSERT_EQUALS( 3, a.Size() );
+        a.eraseIdx( 2 );
+        TS_ASSERT_EQUALS( 3, a.size() );
         TS_ASSERT_EQUALS( 4, a[2] );
 
         // erase head: 2, 4
-        a.Erase( 0 );
-        TS_ASSERT_EQUALS( 2, a.Size() );
+        a.eraseIdx( 0 );
+        TS_ASSERT_EQUALS( 2, a.size() );
         TS_ASSERT_EQUALS( 2, a[0] );
 
         // erase tail: 2
-        a.Erase( 1 );
-        TS_ASSERT_EQUALS( 1, a.Size() );
+        a.eraseIdx( 1 );
+        TS_ASSERT_EQUALS( 1, a.size() );
         TS_ASSERT_EQUALS( 2, a[0] );
 
         // invalid position
-        a.Erase( 1 );
-        TS_ASSERT_EQUALS( 1, a.Size() );
+        a.eraseIdx( 1 );
+        TS_ASSERT_EQUALS( 1, a.size() );
         TS_ASSERT_EQUALS( 2, a[0] );
 
         // erase to empty
-        a.Erase( 0 );
-        TS_ASSERT_EQUALS( 0, a.Size() );
+        a.eraseIdx( 0 );
+        TS_ASSERT_EQUALS( 0, a.size() );
 
         // already empty
-        a.Erase( 0 );
-        TS_ASSERT_EQUALS( 0, a.Size() );
+        a.eraseIdx( 0 );
+        TS_ASSERT_EQUALS( 0, a.size() );
     }
 
     void testResize()
@@ -162,17 +162,17 @@ public:
         using namespace GN;
         StackArray<int,4> a;
 
-        a.Resize( 2 );
-        TS_ASSERT_EQUALS( 2, a.Size() );
+        a.resize( 2 );
+        TS_ASSERT_EQUALS( 2, a.size() );
 
-        a.Resize( 4 );
-        TS_ASSERT_EQUALS( 4, a.Size() );
+        a.resize( 4 );
+        TS_ASSERT_EQUALS( 4, a.size() );
 
-        a.Resize( 5 );
-        TS_ASSERT_EQUALS( 4, a.Size() );
+        a.resize( 5 );
+        TS_ASSERT_EQUALS( 4, a.size() );
 
-        a.Resize( 2 );
-        TS_ASSERT_EQUALS( 2, a.Size() );
+        a.resize( 2 );
+        TS_ASSERT_EQUALS( 2, a.size() );
     }
 };
 
@@ -192,7 +192,7 @@ class DynaArrayTest : public CxxTest::TestSuite
         static int cctor;  ///< number of calls to copy constructor
         static int cop;    ///< number of calls to copy operator
 
-        static void Clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
+        static void clear() { ctor = 0; dtor = 0; cctor = 0; cop = 0; }
 
         bool constructed;
 
@@ -245,9 +245,9 @@ public:
         using namespace GN;
         DynaArray<Element> a;
 
-        TS_ASSERT( a.Empty() );
-        TS_ASSERT_EQUALS( (Element*)NULL, a.ToRawPtr() );
-        TS_ASSERT_EQUALS( 0, a.Size() );
+        TS_ASSERT( a.empty() );
+        TS_ASSERT_EQUALS( (Element*)NULL, a.cptr() );
+        TS_ASSERT_EQUALS( 0, a.size() );
     }
 
     void testCtorWithCount()
@@ -256,7 +256,7 @@ public:
 
         {
             DynaArray<Element> a(1);
-            TS_ASSERT_EQUALS( 1, a.Size() );
+            TS_ASSERT_EQUALS( 1, a.size() );
             TS_ASSERT_EQUALS( 1, Element::count );
         }
 
@@ -267,7 +267,7 @@ public:
     {
         using namespace GN;
 
-        Element::Clear();
+        Element::clear();
 
         Element e[2];
         TS_ASSERT_EQUALS( 2, Element::ctor );
@@ -288,7 +288,7 @@ public:
     {
         using namespace GN;
 
-        Element::Clear();
+        Element::clear();
 
         DynaArray<Element> a( 2 );
 
@@ -314,7 +314,7 @@ public:
     {
         using namespace GN;
 
-        Element::Clear();
+        Element::clear();
 
         DynaArray<Element> a( 1 );
         DynaArray<Element> b( 2 );
@@ -351,21 +351,21 @@ public:
         using namespace GN;
         DynaArray<int> a;
 
-        a.Append( 1 );
-        TS_ASSERT_EQUALS( 1, a.Size() );
-        TS_ASSERT_EQUALS( 1, a.Front() );
-        TS_ASSERT_EQUALS( 1, a.Back() );
+        a.append( 1 );
+        TS_ASSERT_EQUALS( 1, a.size() );
+        TS_ASSERT_EQUALS( 1, a.front() );
+        TS_ASSERT_EQUALS( 1, a.back() );
 
-        a.Append( 3 );
-        TS_ASSERT_EQUALS( 2, a.Size() );
-        TS_ASSERT_EQUALS( 1, a.Front() );
-        TS_ASSERT_EQUALS( 3, a.Back() );
+        a.append( 3 );
+        TS_ASSERT_EQUALS( 2, a.size() );
+        TS_ASSERT_EQUALS( 1, a.front() );
+        TS_ASSERT_EQUALS( 3, a.back() );
 
         DynaArray<int> b;
-        b.Append( a );
-        TS_ASSERT_EQUALS( 2, b.Size() );
-        TS_ASSERT_EQUALS( 1, b.Front() );
-        TS_ASSERT_EQUALS( 3, b.Back() );
+        b.append( a );
+        TS_ASSERT_EQUALS( 2, b.size() );
+        TS_ASSERT_EQUALS( 1, b.front() );
+        TS_ASSERT_EQUALS( 3, b.back() );
     }
 
     void testAppend2()
@@ -377,10 +377,10 @@ public:
 
         TS_ASSERT_EQUALS( 3, Element::count );
 
-        a.Append( b );
+        a.append( b );
         TS_ASSERT_EQUALS( 4, Element::count );
 
-        a.Append( c, 2 );
+        a.append( c, 2 );
         TS_ASSERT_EQUALS( 6, Element::count );
     }
 
@@ -389,11 +389,11 @@ public:
         using namespace GN;
         DynaArray<int> a;
 
-        a.Append( 1 );
-        a.Append( 2 );
+        a.append( 1 );
+        a.append( 2 );
 
-        int * b = a.Begin();
-        int * e = a.End();
+        int * b = a.begin();
+        int * e = a.end();
 
         TS_ASSERT_EQUALS( 1, *b );
         TS_ASSERT_EQUALS( 2, e-b );
@@ -404,14 +404,14 @@ public:
         using namespace GN;
         DynaArray<int> a;
 
-        a.Insert( 0, 3 ); // 3
-        a.Insert( 0, 1 ); // 1, 3
-        a.Insert( 1, 2 ); // 1, 2, 3
-        a.Insert( 100, 4 ); // should do nothing
-        a.Insert( 3, 4 ); // 1, 2, 3, 4
-        a.Insert( 4, 5 ); // 1, 2, 3, 4, 5
+        a.insert( 0, 3 ); // 3
+        a.insert( 0, 1 ); // 1, 3
+        a.insert( 1, 2 ); // 1, 2, 3
+        a.insert( 100, 4 ); // should do nothing
+        a.insert( 3, 4 ); // 1, 2, 3, 4
+        a.insert( 4, 5 ); // 1, 2, 3, 4, 5
 
-        TS_ASSERT_EQUALS( 5, a.Size() );
+        TS_ASSERT_EQUALS( 5, a.size() );
         TS_ASSERT_EQUALS( 1, a[0] );
         TS_ASSERT_EQUALS( 2, a[1] );
         TS_ASSERT_EQUALS( 3, a[2] );
@@ -424,55 +424,53 @@ public:
         using namespace GN;
         DynaArray<int> a;
 
-        a.Append( 1 );
-        a.Append( 2 );
-        a.Append( 3 );
-        a.Append( 4 );
-        a.Append( 5 );
+        a.append( 1 );
+        a.append( 2 );
+        a.append( 3 );
+        a.append( 4 );
+        a.append( 5 );
 
-        a.EraseAt( 100 ); // should do nothing
-        TS_ASSERT_EQUALS( 5, a.Size() );
+        a.eraseIdx( 100 ); // should do nothing
+        TS_ASSERT_EQUALS( 5, a.size() );
         TS_ASSERT_EQUALS( 5, a[4] );
 
-        a.EraseAt( 4 ); // 1, 2, 3, 4
-        TS_ASSERT_EQUALS( 4, a.Size() );
+        a.eraseIdx( 4 ); // 1, 2, 3, 4
+        TS_ASSERT_EQUALS( 4, a.size() );
         TS_ASSERT_EQUALS( 4, a[3] );
 
-        a.EraseAt( 3 ); // 1, 2, 3
-        TS_ASSERT_EQUALS( 3, a.Size() );
+        a.eraseIdx( 3 ); // 1, 2, 3
+        TS_ASSERT_EQUALS( 3, a.size() );
         TS_ASSERT_EQUALS( 3, a[2] );
 
-        a.EraseAt( 1 ); // 1, 3
-        TS_ASSERT_EQUALS( 2, a.Size() );
+        a.eraseIdx( 1 ); // 1, 3
+        TS_ASSERT_EQUALS( 2, a.size() );
         TS_ASSERT_EQUALS( 1, a[0] );
         TS_ASSERT_EQUALS( 3, a[1] );
 
-        a.EraseAt( 0 ); // 3
-        TS_ASSERT_EQUALS( 1, a.Size() );
+        a.eraseIdx( 0 ); // 3
+        TS_ASSERT_EQUALS( 1, a.size() );
         TS_ASSERT_EQUALS( 3, a[0] );
 
-        a.EraseAt( 0 );
-        TS_ASSERT_EQUALS( 0, a.Size() );
+        a.eraseIdx( 0 );
+        TS_ASSERT_EQUALS( 0, a.size() );
 
-        // Invalid erasing (should do nothing)
-        a.EraseAt( 0 );
-        a.EraseItem( NULL );
+        a.eraseIdx( 0 ); // this should do nothing
     }
 
     void testPopBack()
     {
         using namespace GN;
         DynaArray<int> a;
-        a.Append( 1 );
-        a.Append( 2 );
-        a.PopBack();
-        TS_ASSERT_EQUALS( 1, a.Size() );
-        TS_ASSERT_EQUALS( 1, a.Back() );
+        a.append( 1 );
+        a.append( 2 );
+        a.popBack();
+        TS_ASSERT_EQUALS( 1, a.size() );
+        TS_ASSERT_EQUALS( 1, a.back() );
 
-        a.PopBack();
-        TS_ASSERT( a.Empty() );
+        a.popBack();
+        TS_ASSERT( a.empty() );
 
-        a.PopBack(); // should do nothing
+        a.popBack(); // should do nothing
     }
 
     void testEraseAndPopback2()
@@ -481,7 +479,7 @@ public:
 
         using namespace GN;
 
-        Element::Clear();
+        Element::clear();
 
         DynaArray<Element> a( 3 );
         TS_ASSERT_EQUALS( 3, Element::count );
@@ -492,7 +490,7 @@ public:
 
         // 2 cop for moving a[1,2] to a[0,1]
         // 1 dtor for a[2]
-        a.EraseAt( 0 );
+        a.eraseIdx( 0 );
         TS_ASSERT_EQUALS( 2, Element::count );
         TS_ASSERT_EQUALS( 3, Element::ctor );
         TS_ASSERT_EQUALS( 0, Element::cctor );
@@ -500,7 +498,7 @@ public:
         TS_ASSERT_EQUALS( 2, Element::cop );
 
         // 1 dtor for a[1]
-        a.PopBack();
+        a.popBack();
         TS_ASSERT_EQUALS( 1, Element::count );
         TS_ASSERT_EQUALS( 3, Element::ctor );
         TS_ASSERT_EQUALS( 0, Element::cctor );
@@ -512,38 +510,38 @@ public:
     {
         // make sure erased item is destructed
         using namespace GN;
-        Element::Clear();
+        Element::clear();
 
         DynaArray<Element> a( 2 );
         TS_ASSERT_EQUALS( 2, Element::count );
 
-        a.Resize( 3 );
+        a.resize( 3 );
         TS_ASSERT_EQUALS( 3, Element::count );
 
-        a.Resize( 4 );
+        a.resize( 4 );
         TS_ASSERT_EQUALS( 4, Element::count );
 
-        a.Resize( 1 );
+        a.resize( 1 );
         TS_ASSERT_EQUALS( 1, Element::count );
     }
 
     void testReserve()
     {
         using namespace GN;
-        Element::Clear();
+        Element::clear();
 
         {
 
             DynaArray<Element> a;
 
-            a.Resize( 2 );
-            TS_ASSERT_EQUALS( 2, a.Size() );
+            a.resize( 2 );
+            TS_ASSERT_EQUALS( 2, a.size() );
             TS_ASSERT_EQUALS( 2, Element::count );
             TS_ASSERT_EQUALS( 2, Element::ctor );
 
             // reserve should not modify array size
-            a.Reserve( 1000 );
-            TS_ASSERT_EQUALS( 2, a.Size() );
+            a.reserve( 1000 );
+            TS_ASSERT_EQUALS( 2, a.size() );
             TS_ASSERT_EQUALS( 2, Element::count );
             TS_ASSERT_EQUALS( 2, Element::ctor );
             TS_ASSERT_EQUALS( 2, Element::cctor );

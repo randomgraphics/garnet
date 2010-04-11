@@ -1,16 +1,14 @@
 #include "pch.h"
 
-using namespace GN;
-
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.tool.oglInfo");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
 
 ///
 /// Split a string into token list
 // ------------------------------------------------------------------------
 static void
-sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
+sGetTokens( GN::DynaArray<GN::StrA> & tokens, const char * str )
 {
-    if( GN::IsStringEmpty(str) ) return;
+    if( GN::stringEmpty(str) ) return;
     const char * p1 = str;
     const char * p2 = p1;
 
@@ -18,7 +16,7 @@ sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
     {
         while( *p2 && *p2 != ' ' ) ++p2;
 
-        tokens.Append( GN::StrA(p1, p2-p1) );
+        tokens.append( GN::StrA(p1, p2-p1) );
 
         while( *p2 && *p2 == ' ' ) ++p2;
 
@@ -30,14 +28,14 @@ sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
-bool sGetOGLExtensions( HDC hdc, DynaArray<GN::StrA> & result )
+bool sGetOGLExtensions( HDC hdc, GN::DynaArray<GN::StrA> & result )
 #else
-bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
+bool sGetOGLExtensions( Display * disp, GN::DynaArray<GN::StrA> & result )
 #endif
 {
     GN_GUARD;
 
-    result.Clear();
+    result.clear();
 
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
@@ -54,7 +52,7 @@ bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
 
-    std::sort( result.Begin(), result.End() );
+    std::sort( result.begin(), result.end() );
 
     // success;
     return true;
@@ -66,7 +64,7 @@ void printOglInfo( GN::HandleType disp, int index )
 {
     GN_GUARD;
 
-    DynaArray<GN::StrA> glexts;
+    GN::DynaArray<GN::StrA> glexts;
     GN::StrA info;
 
 #if GN_POSIX
@@ -80,7 +78,7 @@ void printOglInfo( GN::HandleType disp, int index )
 #endif
     const char * renderer = (const char *)glGetString(GL_RENDERER);
 
-    info = GN::StringFormat(
+    info = GN::stringFormat(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations(%d)\n"
@@ -98,7 +96,7 @@ void printOglInfo( GN::HandleType disp, int index )
         GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
-    info += GN::StringFormat(
+    info += GN::stringFormat(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
         "    Max number of texture stages    :    %d\n",
@@ -107,7 +105,7 @@ void printOglInfo( GN::HandleType disp, int index )
     // extension info.
     info +=
         "---------------------------------------------------\n";
-    for ( size_t i = 0; i < glexts.Size(); ++i )
+    for ( size_t i = 0; i < glexts.size(); ++i )
     {
         info += glexts[i] + " ";
     }
@@ -116,7 +114,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "===================================================\n"
         "\n\n";
 
-    GN_INFO(sLogger)( info.ToRawPtr() );
+    GN_INFO(sLogger)( info.cptr() );
 
     GN_UNGUARD;
 }
@@ -151,12 +149,12 @@ void createOGL( HDC hdc, int pfdIndex )
     ::wglDeleteContext( hrc );
 }
 
-void NewWindow( int pfdIndex )
+void createWindow( int pfdIndex )
 {
-    GN::AutoObjPtr<GN::win::Window> oglWindow( GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+    GN::AutoObjPtr<GN::win::Window> oglWindow( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
     if( !oglWindow ) return;
 
-    HWND hwnd = (HWND)oglWindow->GetWindowHandle();
+    HWND hwnd = (HWND)oglWindow->getWindowHandle();
     HDC hdc;
     GN_MSW_CHECK_RETURN_VOID( hdc = ::GetDC(hwnd) );
     createOGL( hdc, pfdIndex );
@@ -165,10 +163,10 @@ void NewWindow( int pfdIndex )
 
 int main()
 {
-    GN::win::Window * mainWindow = GN::win::NewWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
+    GN::win::Window * mainWindow = GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
     if( 0 == mainWindow ) return -1;
 
-    HWND hwnd = (HWND)mainWindow->GetWindowHandle();
+    HWND hwnd = (HWND)mainWindow->getWindowHandle();
     HDC hdc;
     GN_MSW_CHECK_RETURN( hdc = ::GetDC(hwnd), -1 );
 
@@ -180,7 +178,7 @@ int main()
 
     for( int i = 1; i <= count; ++i )
     {
-        NewWindow( i );
+        createWindow( i );
     }
 
     // success

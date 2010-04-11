@@ -27,8 +27,8 @@ namespace GN { namespace input
         // from Input
         // *****************************
     public:
-        virtual bool AttachToWindow( HandleType , HandleType ) { return true; }
-        virtual void GetMousePosition( int & x, int & y ) const { x = 0; y = 0; }
+        virtual bool attachToWindow( HandleType , HandleType ) { return true; }
+        virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }
     };
 }}
 

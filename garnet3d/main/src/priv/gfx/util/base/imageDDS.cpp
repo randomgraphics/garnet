@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "imageDDS.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.base.image");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // local types
@@ -248,14 +248,14 @@ bool DDSReader::checkFormat( GN::File & fp )
 
     char buf[5];
 
-    if( !fp.Seek( 0, GN::FileSeek::SET ) ) return false;
+    if( !fp.seek( 0, GN::FileSeek::SET ) ) return false;
 
     size_t sz;
-    if( !fp.Read( buf, 4, &sz ) || 4 != sz ) return false;
+    if( !fp.read( buf, 4, &sz ) || 4 != sz ) return false;
 
     buf[4] = 0;
 
-    return 0 == GN::StringCompare( buf, "DDS " );
+    return 0 == GN::stringCompare( buf, "DDS " );
 
     GN_UNGUARD;
 }
@@ -263,7 +263,7 @@ bool DDSReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::ReadHeader(
+bool DDSReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const UInt8 * i_buff, size_t i_size )
 {
     GN_GUARD;
@@ -310,7 +310,7 @@ bool DDSReader::ReadHeader(
         i_buff += sizeof(DX10Info);
         i_size -= sizeof(DX10Info);
 
-        mImgDesc.format = GN::gfx::DxgiFormat2ColorFormat( dx10info->format );
+        mImgDesc.format = GN::gfx::dxgiFormat2ColorFormat( dx10info->format );
         if( GN::gfx::ColorFormat::UNKNOWN == mImgDesc.format ) return false;
     }
     else
@@ -335,12 +335,12 @@ bool DDSReader::ReadHeader(
     if( 0 == levels ) levels = 1;
 
     // grok mipmaps
-    mImgDesc.SetFaceAndLevel( faces, levels );
+    mImgDesc.setFaceAndLevel( faces, levels );
     for( size_t l = 0; l < mImgDesc.numLevels; ++l )
     {
         for( size_t f = 0; f < mImgDesc.numFaces; ++f )
         {
-            GN::gfx::MipmapDesc & m = mImgDesc.GetMipmap( f, l );
+            GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
 
             m.width  = width;
             m.height = height;
@@ -375,7 +375,7 @@ bool DDSReader::ReadHeader(
         if( depth > 1 ) depth >>= 1;
     }
 
-    GN_ASSERT( mImgDesc.Valid() );
+    GN_ASSERT( mImgDesc.valid() );
 
     // success
     o_desc = mImgDesc;
@@ -389,7 +389,7 @@ bool DDSReader::ReadHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool DDSReader::ReadImage( void * o_data ) const
+bool DDSReader::readImage( void * o_data ) const
 {
     GN_GUARD;
 
@@ -419,7 +419,7 @@ bool DDSReader::ReadImage( void * o_data ) const
                 }
 
                 UInt8 * dst =
-                    ((UInt8*)o_data) + mImgDesc.GetSliceOffset( level, face );
+                    ((UInt8*)o_data) + mImgDesc.getSliceOffset( level, face );
 
                 memcpy( dst, src, m.slicePitch );
 
@@ -432,7 +432,7 @@ bool DDSReader::ReadImage( void * o_data ) const
     else*/
     {
         // 1D, 2D, 3D texture
-        size_t nbytes = mImgDesc.GetTotalBytes();
+        size_t nbytes = mImgDesc.getTotalBytes();
         if( nbytes != mSize )
         {
             GN_ERROR(sLogger)( "image size is incorrect!" );

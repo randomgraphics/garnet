@@ -9,7 +9,7 @@ namespace GN
     // Global runtime assert behavior flag.
     GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
-    static Logger * sHeapLogger = GetLogger("GN.core.heapAllocation");
+    static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
 
     //
     //
@@ -23,10 +23,10 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::Alloc( size_t sz )
+    GN_PUBLIC void * HeapMemory::alloc( size_t sz )
     {
         //#if GN_MSWIN
-        //void * ptr = ::HeapMemory::Alloc( ::GetProcessHeap(), 0, sz );
+        //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
         //#else
         void * ptr = ::malloc( sz );
         //#endif
@@ -40,7 +40,7 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void * HeapMemory::Realloc( void * ptr, size_t sz )
+    GN_PUBLIC void * HeapMemory::realloc( void * ptr, size_t sz )
     {
         //#if GN_MSWIN
         //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
@@ -54,10 +54,10 @@ namespace GN
     //
     //
     // -----------------------------------------------------------------------------
-    GN_PUBLIC void HeapMemory::Free( void * ptr )
+    GN_PUBLIC void HeapMemory::dealloc( void * ptr )
     {
         //#if GN_MSWIN
-        //::HeapMemory::Free( ::GetProcessHeap(), 0, ptr );
+        //::HeapDealloc( ::GetProcessHeap(), 0, ptr );
         //#else
         ::free( ptr );
         //#endif

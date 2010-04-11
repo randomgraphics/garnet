@@ -3,7 +3,7 @@
 #include "xenonGpu.h"
 #include "garnet/GNd3d.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpuProgramASM::Init( const GpuProgramDesc & desc )
+bool GN::gfx::XenonGpuProgramASM::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -21,25 +21,25 @@ bool GN::gfx::XenonGpuProgramASM::Init( const GpuProgramDesc & desc )
 
     GN_ASSERT( GpuProgramLanguage::MICROCODE == desc.lang );
 
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     if( desc.vs.source )
     {
         mVs = d3d9::ShaderCompiler<IDirect3DVertexShader9>::assembleAndCreate( dev, desc.vs.source );
-        if( NULL == mVs ) return Failure();
+        if( NULL == mVs ) return failure();
     }
 
     if( desc.ps.source )
     {
         mPs = d3d9::ShaderCompiler<IDirect3DPixelShader9>::assembleAndCreate( dev, desc.ps.source );
-        if( NULL == mPs ) return Failure();
+        if( NULL == mPs ) return failure();
     }
 
     GN_TODO( "initialize parameter descriptor" );
     memset( &mParamDesc, 0, sizeof(mParamDesc) );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -47,14 +47,14 @@ bool GN::gfx::XenonGpuProgramASM::Init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpuProgramASM::Quit()
+void GN::gfx::XenonGpuProgramASM::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVs );
-    SafeRelease( mPs );
+    safeRelease( mVs );
+    safeRelease( mPs );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -69,7 +69,7 @@ void GN::gfx::XenonGpuProgramASM::Quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::XenonGpuProgramASM::apply() const
 {
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
     dev.SetVertexShader( mVs );
     dev.SetPixelShader( mPs );
 }

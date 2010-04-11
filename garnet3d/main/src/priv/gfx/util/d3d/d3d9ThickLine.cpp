@@ -4,7 +4,7 @@
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.thickline");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d9.thickline");
 
 //
 //
@@ -14,9 +14,9 @@ static void LOG_ERROR(const char * format, ...)
     GN::StrA s;
     va_list arglist;
     va_start( arglist, format );
-    s.FormatV( format, arglist );
+    s.formatv( format, arglist );
     va_end( arglist );
-    GN_ERROR(sLogger)( "%s\n", s.ToRawPtr() );
+    GN_ERROR(sLogger)( "%s\n", s.cptr() );
 }
 
 #define SAFE_RELEASE( x ) if(x) { (x)->Release(); (x) = NULL; } else void(0)
@@ -55,7 +55,7 @@ static const char * pscode =
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::D3D9ThickLineRenderer()
 {
-    Clear();
+    clear();
 
     // initialize index buffer
     UInt16 numpoly = MAX_VERTICES / 6;
@@ -96,7 +96,7 @@ GN::d3d9::D3D9ThickLineRenderer::D3D9ThickLineRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9ThickLineRenderer::OnDeviceCreate( IDirect3DDevice9 * dev )
+bool GN::d3d9::D3D9ThickLineRenderer::onDeviceCreate( IDirect3DDevice9 * dev )
 {
     if( NULL == dev )
     {
@@ -144,7 +144,7 @@ bool GN::d3d9::D3D9ThickLineRenderer::OnDeviceCreate( IDirect3DDevice9 * dev )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9ThickLineRenderer::OnDeviceRestore()
+bool GN::d3d9::D3D9ThickLineRenderer::onDeviceRestore()
 {
     if( NULL == m_Device )
     {
@@ -164,7 +164,7 @@ bool GN::d3d9::D3D9ThickLineRenderer::OnDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::OnDeviceDispose()
+void GN::d3d9::D3D9ThickLineRenderer::onDeviceDispose()
 {
     SAFE_RELEASE( m_Vb );
 }
@@ -172,23 +172,23 @@ void GN::d3d9::D3D9ThickLineRenderer::OnDeviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::OnDeviceDelete()
+void GN::d3d9::D3D9ThickLineRenderer::onDeviceDelete()
 {
     SAFE_RELEASE( m_Vs );
     SAFE_RELEASE( m_Ps );
     SAFE_RELEASE( m_Decl );
     SAFE_RELEASE( m_Ib );
-    Clear();
+    clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d9::D3D9ThickLineRenderer::DrawBegin( const ThickLineParameters & parameters )
+bool GN::d3d9::D3D9ThickLineRenderer::drawBegin( const ThickLineParameters & parameters )
 {
     if( m_Drawing )
     {
-        LOG_ERROR( "Unpaired DrawBegin()" );
+        LOG_ERROR( "Unpaired drawBegin()" );
         return false;
     }
 
@@ -210,34 +210,34 @@ bool GN::d3d9::D3D9ThickLineRenderer::DrawBegin( const ThickLineParameters & par
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::DrawEnd()
+void GN::d3d9::D3D9ThickLineRenderer::drawEnd()
 {
     if( !m_Drawing )
     {
-        LOG_ERROR( "Unpaired DrawEnd()" );
+        LOG_ERROR( "Unpaired drawEnd()" );
         return;
     }
 
-    Flush();
+    flush();
     m_Drawing = false;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const ThickLineVertex & v1 )
+void GN::d3d9::D3D9ThickLineRenderer::line( const ThickLineVertex & v0, const ThickLineVertex & v1 )
 {
     if( !m_Drawing )
     {
-        LOG_ERROR( "D3D9ThickLineRenderer::Line() must be called in between D3D9ThickLineRenderer::DrawBegin() and D3D9ThickLineRenderer::DrawEnd()." );
+        LOG_ERROR( "D3D9ThickLineRenderer::line() must be called in between D3D9ThickLineRenderer::drawBegin() and D3D9ThickLineRenderer::drawEnd()." );
         return;
     }
 
     EndPoint e0, e1;
-    CalcEndPoint( e0, v0 );
-    CalcEndPoint( e1, v1 );
+    calcEndPoint( e0, v0 );
+    calcEndPoint( e1, v1 );
 
-    PrivateVertex * v = NewPolygon6();
+    PrivateVertex * v = newPolygon6();
 
     if( e0.post * e1.posw < e1.post * e0.posw )
     {
@@ -253,12 +253,12 @@ void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const Th
             // |e0 /
             // ----
 
-            e0.BottomRight( v++ );
-            e0.BottomLeft( v++ );
-            e0.TopLeft( v++ );
-            e1.TopLeft( v++ );
-            e1.TopRight( v++ );
-            e1.BottomRight( v++ );
+            e0.bottomRight( v++ );
+            e0.bottomLeft( v++ );
+            e0.topLeft( v++ );
+            e1.topLeft( v++ );
+            e1.topRight( v++ );
+            e1.bottomRight( v++ );
         }
         else
         {
@@ -272,12 +272,12 @@ void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const Th
             //    \ e0|
             //     ----
 
-            e0.TopRight( v++ );
-            e0.BottomRight( v++ );
-            e0.BottomLeft( v++ );
-            e1.BottomLeft( v++ );
-            e1.TopLeft( v++ );
-            e1.TopRight( v++ );
+            e0.topRight( v++ );
+            e0.bottomRight( v++ );
+            e0.bottomLeft( v++ );
+            e1.bottomLeft( v++ );
+            e1.topLeft( v++ );
+            e1.topRight( v++ );
         }
     }
     else
@@ -294,12 +294,12 @@ void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const Th
             //    \ e1|
             //     ----
 
-            e0.BottomLeft( v++ );
-            e0.TopLeft( v++ );
-            e0.TopRight( v++ );
-            e1.TopRight( v++ );
-            e1.BottomRight( v++ );
-            e1.BottomLeft( v++ );
+            e0.bottomLeft( v++ );
+            e0.topLeft( v++ );
+            e0.topRight( v++ );
+            e1.topRight( v++ );
+            e1.bottomRight( v++ );
+            e1.bottomLeft( v++ );
         }
         else
         {
@@ -313,12 +313,12 @@ void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const Th
             // |e1 /
             // ----
 
-            e0.TopLeft( v++ );
-            e0.TopRight( v++ );
-            e0.BottomRight( v++ );
-            e1.BottomRight( v++ );
-            e1.BottomLeft( v++ );
-            e1.TopLeft( v++ );
+            e0.topLeft( v++ );
+            e0.topRight( v++ );
+            e0.bottomRight( v++ );
+            e1.bottomRight( v++ );
+            e1.bottomLeft( v++ );
+            e1.topLeft( v++ );
         }
     }
 }
@@ -326,26 +326,26 @@ void GN::d3d9::D3D9ThickLineRenderer::Line( const ThickLineVertex & v0, const Th
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::Line( float x1, float y1, float z1, float x2, float y2, float z2, D3DCOLOR color )
+void GN::d3d9::D3D9ThickLineRenderer::line( float x1, float y1, float z1, float x2, float y2, float z2, D3DCOLOR color )
 {
     ThickLineVertex v[2] =
     {
         { x1, y1, z1, 0, 0, color },
         { x2, y2, z2, 1, 1, color },
     };
-    LineList( v, 2 );
+    lineList( v, 2 );
 }
 
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::LineList( const ThickLineVertex * vertices, size_t numverts )
+void GN::d3d9::D3D9ThickLineRenderer::lineList( const ThickLineVertex * vertices, size_t numverts )
 {
     size_t numLines = numverts / 2;
     for( size_t i = 0; i < numLines; ++i )
     {
-        Line( vertices[i*2+0], vertices[i*2+1] );
+        line( vertices[i*2+0], vertices[i*2+1] );
     }
 }
 
@@ -357,7 +357,7 @@ void GN::d3d9::D3D9ThickLineRenderer::LineList( const ThickLineVertex * vertices
 //
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
-GN::d3d9::D3D9ThickLineRenderer::EndPoint::TopLeft( PrivateVertex * v )
+GN::d3d9::D3D9ThickLineRenderer::EndPoint::topLeft( PrivateVertex * v )
 {
     v->position = XMVectorSet( posl, post, posz, posw );
     v->u = texl;
@@ -370,7 +370,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::TopLeft( PrivateVertex * v )
 //
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
-GN::d3d9::D3D9ThickLineRenderer::EndPoint::TopRight( PrivateVertex * v )
+GN::d3d9::D3D9ThickLineRenderer::EndPoint::topRight( PrivateVertex * v )
 {
     v->position = XMVectorSet( posr, post, posz, posw );
     v->u = texr;
@@ -383,7 +383,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::TopRight( PrivateVertex * v )
 //
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
-GN::d3d9::D3D9ThickLineRenderer::EndPoint::BottomLeft( PrivateVertex * v )
+GN::d3d9::D3D9ThickLineRenderer::EndPoint::bottomLeft( PrivateVertex * v )
 {
     v->position = XMVectorSet( posl, posb, posz, posw );
     v->u = texl;
@@ -396,7 +396,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::BottomLeft( PrivateVertex * v )
 //
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
-GN::d3d9::D3D9ThickLineRenderer::EndPoint::BottomRight( PrivateVertex * v )
+GN::d3d9::D3D9ThickLineRenderer::EndPoint::bottomRight( PrivateVertex * v )
 {
     v->position = XMVectorSet( posr, posb, posz, posw );
     v->u = texr;
@@ -408,7 +408,7 @@ GN::d3d9::D3D9ThickLineRenderer::EndPoint::BottomRight( PrivateVertex * v )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::Clear()
+void GN::d3d9::D3D9ThickLineRenderer::clear()
 {
     m_Device = NULL;
     m_Vs = 0;
@@ -422,7 +422,7 @@ void GN::d3d9::D3D9ThickLineRenderer::Clear()
 //
 // Expand thick line vertex to a quad
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::CalcEndPoint(
+void GN::d3d9::D3D9ThickLineRenderer::calcEndPoint(
     EndPoint              & endpoint,
     const ThickLineVertex & vertex )
 {
@@ -486,11 +486,11 @@ void GN::d3d9::D3D9ThickLineRenderer::CalcEndPoint(
 //
 // -----------------------------------------------------------------------------
 GN::d3d9::D3D9ThickLineRenderer::PrivateVertex *
-GN::d3d9::D3D9ThickLineRenderer::NewPolygon6()
+GN::d3d9::D3D9ThickLineRenderer::newPolygon6()
 {
     if( m_NumVertices + 6 > MAX_VERTICES )
     {
-        Flush();
+        flush();
     }
 
     PrivateVertex * nextVertex = &m_Vertices[m_NumVertices];
@@ -502,7 +502,7 @@ GN::d3d9::D3D9ThickLineRenderer::NewPolygon6()
 //
 // push pending vertices into GPU pipeline
 // -----------------------------------------------------------------------------
-void GN::d3d9::D3D9ThickLineRenderer::Flush()
+void GN::d3d9::D3D9ThickLineRenderer::flush()
 {
     if( m_NumVertices > 0 )
     {

@@ -28,7 +28,7 @@ namespace GN { namespace gfx
         {
             static StrA sErrInfo;
             sErrInfo = (const char*)gluErrorString( errCode );
-            return sErrInfo.ToRawPtr();
+            return sErrInfo.cptr();
         }
     }
 }}

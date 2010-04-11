@@ -37,7 +37,7 @@ public:
 
 	VtxFmtEndian() : mVs(0), mPs(0), mVb(0) {}
 
-	bool OnInit()
+	bool onInit()
 	{
         RenderEngine  & re = getRenderEngine();
 
@@ -46,7 +46,7 @@ public:
         if( !mVs || !mPs ) return false;
 
         VtxFmtDesc vfd;
-        vfd.Clear();
+        vfd.clear();
         vfd.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT4 );
         vfd.addAttrib( 0, 16, VTXSEM_CLR0, FMT_USHORT4 );
         mVf = re.createVtxFmt( "vf", vfd );
@@ -59,7 +59,7 @@ public:
             { 0, 0, 1, 1, { 0x12, 0x34, 0x56, 0x78, 0xab, 0xcd, 0xFF, 0xFF } },
         };
 
-        mVb = re.CreateVtxBuf( "vb", sizeof(vertices), false, false, vertices );
+        mVb = re.createVtxBuf( "vb", sizeof(vertices), false, false, vertices );
         if( 0 == mVb ) return false;
 
         mCtx.resetToDefault();
@@ -70,7 +70,7 @@ public:
 		return true;
 	}
 
-	void OnQuit()
+	void onQuit()
 	{
         safeFreeGraphicsResource( mVs );
         safeFreeGraphicsResource( mPs );
@@ -78,29 +78,29 @@ public:
         safeFreeGraphicsResource( mVb );
 	}
 
-	void OnUpdate()
+	void onUpdate()
 	{
 	}
 
-	void OnKeyPress( input::KeyEvent ke )
+	void onKeyPress( input::KeyEvent ke )
 	{
-		app::SampleApp::OnKeyPress( ke );
+		app::SampleApp::onKeyPress( ke );
 	}
 
-	void OnRender()
+	void onRender()
 	{
         RenderEngine & re = getRenderEngine();
 
-        re.ClearScreen( Vector4f(0,0,0,1) ); // clear to pure black
+        re.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 
         re.setContext( mCtx );
 
-        re.Draw( PrimitiveType::TRIANGLE_LIST, 1, 0 );
+        re.draw( PrimitiveType::TRIANGLE_LIST, 1, 0 );
 	}
 };
 
 int main()
 {
 	VtxFmtEndian app;
-	return app.Run( 0, 0 );
+	return app.run( 0, 0 );
 }

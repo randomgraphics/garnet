@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d10Gpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // init/quit
@@ -14,7 +14,7 @@ bool GN::gfx::D3D10Gpu::capsInit()
 {
     GN_GUARD;
 
-    // Clear all caps
+    // clear all caps
     memset( &mCaps, 0, sizeof(mCaps) );
 
     // max texture size
@@ -30,10 +30,10 @@ bool GN::gfx::D3D10Gpu::capsInit()
     mCaps.maxTex3DSize[2] = 1;
 
     // max simultaneous textures
-    mCaps.maxTextures     = math::GetMin<UInt32>( D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, GpuContext::MAX_TEXTURES );
+    mCaps.maxTextures     = math::getmin<UInt32>( D3D10_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, GpuContext::MAX_TEXTURES );
 
     // max simultaneous render targets
-    mCaps.maxColorRenderTargets = math::GetMin<UInt32>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
+    mCaps.maxColorRenderTargets = math::getmin<UInt32>( D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, GpuContext::MAX_COLOR_RENDER_TARGETS );
 
     // shader caps
     mCaps.vsLanguages = GpuProgramLanguage::HLSL10 | GpuProgramLanguage::HLSL9;
@@ -53,11 +53,11 @@ bool GN::gfx::D3D10Gpu::capsInit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Gpu::CheckTextureFormatSupport(
+bool GN::gfx::D3D10Gpu::checkTextureFormatSupport(
     ColorFormat  format,
     TextureUsage usage ) const
 {
-    DXGI_FORMAT d3dfmt = (DXGI_FORMAT)ColorFormat2DxgiFormat( format );
+    DXGI_FORMAT d3dfmt = (DXGI_FORMAT)colorFormat2DxgiFormat( format );
     if( DXGI_FORMAT_UNKNOWN == d3dfmt ) return false;
 
     UINT formatSupport;
@@ -104,7 +104,7 @@ bool GN::gfx::D3D10Gpu::CheckTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::D3D10Gpu::GetDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::D3D10Gpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

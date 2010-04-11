@@ -30,16 +30,16 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        SInt32 IncRef() const  throw() { return AtomInc32(&mRef); }
+        SInt32 incref() const  throw() { return atomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
         ///
-        SInt32 DecRef() const
+        SInt32 decref() const
         {
             GN_ASSERT( mRef > 0 );
 
-            SInt32 ref = AtomDec32( &mRef ) ;
+            SInt32 ref = atomDec32( &mRef ) ;
 
             if( 0 == ref )
             {
@@ -53,19 +53,19 @@ namespace GN
         ///
         /// get current reference counter value
         ///
-        SInt32 GetRef() const throw() { return AtomGet32(&mRef); }
+        SInt32 getref() const throw() { return atomGet32(&mRef); }
 
         // ********************************
         //    weak reference management
         // ********************************
     public :
 
-        std::list<void*>::iterator _AddWeakRef( void * p ) const
+        std::list<void*>::iterator _addWeakRef( void * p ) const
         {
             return mWeakRefList.insert( mWeakRefList.end(), p );
         }
 
-        void _RemoveWeakRef( const std::list<void*>::iterator & iter ) const
+        void _removeWeakRef( const std::list<void*>::iterator & iter ) const
         {
             mWeakRefList.erase( iter );
         }
@@ -144,7 +144,7 @@ namespace GN
     public :
 
         ///
-        /// Instance of Empty/null reference pointer
+        /// Instance of empty/null reference pointer
         ///
         static AutoRef<X,MUTEX> NULLREF;
 
@@ -163,7 +163,7 @@ namespace GN
         ///
         AutoRef( const AutoRef & p ) throw() : mPtr( p )
         {
-            if(mPtr) mPtr->IncRef();
+            if(mPtr) mPtr->incref();
         }
 
         ///
@@ -172,7 +172,7 @@ namespace GN
         template <class Y,class MUTEX2>
         AutoRef( const AutoRef<Y,MUTEX2> & p ) throw() : mPtr( p )
         {
-            if(mPtr) mPtr->IncRef();
+            if(mPtr) mPtr->incref();
         }
 
         ///
@@ -180,7 +180,7 @@ namespace GN
         ///
         ~AutoRef()
         {
-            if(mPtr) mPtr->DecRef();
+            if(mPtr) mPtr->decref();
         }
 
         ///
@@ -188,7 +188,7 @@ namespace GN
         ///
         AutoRef & operator = ( const AutoRef & rhs )
         {
-            Set( rhs );
+            set( rhs );
             return *this;
         }
 
@@ -198,7 +198,7 @@ namespace GN
         template <class Y,class MUTEX2>
         AutoRef & operator = ( const AutoRef<Y,MUTEX2> & rhs )
         {
-            Set( rhs );
+            set( rhs );
             return *this;
         }
 
@@ -249,55 +249,55 @@ namespace GN
         XPTR operator->() const throw()  { GN_ASSERT(mPtr); return  mPtr; }
 
         ///
-        /// Get internal pointer
+        /// get internal pointer
         ///
-        XPTR Get() const throw() { return mPtr; }
+        XPTR get() const throw() { return mPtr; }
 
         ///
-        /// Get address of internal pointer.
+        /// get address of internal pointer.
         ///
         /// 这个函数主要用于将指向AutoRef的指针变成指向XPTR的指针（他们在内存中的映像其实是一样的）。
         /// 你可以用强制类型转换达同样的目的，不过用这个函数会更简洁一些。
         ///
-        XPTR const * Addr() const throw() { return &mPtr; }
+        XPTR const * addr() const throw() { return &mPtr; }
 
         ///
         /// return true if no pointer is currently being hold
         ///
-        bool Empty() const throw()
+        bool empty() const throw()
         {
             return 0 == mPtr;
         }
 
         ///
-        /// Clear to Empty. Same as Set(NULL).
+        /// Clear to empty. Same as set(NULL).
         ///
-        void Clear()
+        void clear()
         {
             MUTEX m;
-            m.Lock();
+            m.lock();
 
-            if( mPtr ) mPtr->DecRef(); mPtr = 0;
+            if( mPtr ) mPtr->decref(); mPtr = 0;
 
-            m.Unlock();
+            m.unlock();
         }
 
         ///
-        /// Set new pointer data
+        /// set new pointer data
         ///
         /// this function will release old pointer, if not NULL; then increase
         /// the reference counter of new pointer, if not NULL.
         ///
-        void Set( XPTR p )
+        void set( XPTR p )
         {
             MUTEX m;
-            m.Lock();
+            m.lock();
 
-            if( p ) p->IncRef();
-            if( mPtr ) mPtr->DecRef();
+            if( p ) p->incref();
+            if( mPtr ) mPtr->decref();
             mPtr = p;
 
-            m.Unlock();
+            m.unlock();
         }
 
         ///
@@ -305,17 +305,17 @@ namespace GN
         ///
         /// this function will not modify pointer's refcount
         ///
-        void Attach( XPTR ptr )
+        void attach( XPTR ptr )
         {
             if( ptr == mPtr ) return;
 
             MUTEX m;
-            m.Lock();
+            m.lock();
 
-            if( mPtr ) mPtr->DecRef();
+            if( mPtr ) mPtr->decref();
             mPtr = ptr;
 
-            m.Unlock();
+            m.unlock();
         }
 
         ///
@@ -323,15 +323,15 @@ namespace GN
         ///
         /// this function will not modify pointer's refcount
         ///
-        XPTR Detach() throw()
+        XPTR detach() throw()
         {
             MUTEX m;
-            m.Lock();
+            m.lock();
 
             XPTR tmp = mPtr;
             mPtr = 0;
 
-            m.Unlock();
+            m.unlock();
 
             return tmp;
         }
@@ -358,7 +358,7 @@ namespace GN
             {
                 if( mPtr )
                 {
-                    mIter = mPtr->_AddWeakRef( this );
+                    mIter = mPtr->_addWeakRef( this );
                 }
             }
 
@@ -367,22 +367,22 @@ namespace GN
             {
                 if( mPtr )
                 {
-                    mIter = mPtr->_AddWeakRef( this );
+                    mIter = mPtr->_addWeakRef( this );
                 }
             }
 
             /// destructor
             virtual ~WeakRefBase()
             {
-                Clear();
+                clear();
             }
 
             /// clear the reference
-            void Clear()
+            void clear()
             {
                 if( mPtr )
                 {
-                    mPtr->_RemoveWeakRef( mIter );
+                    mPtr->_removeWeakRef( mIter );
                     mPtr = NULL;
                 }
             }
@@ -410,26 +410,26 @@ namespace GN
         {
         }
 
-        // Get the pointer
-        XPTR Get() const { return (X*)mPtr; }
+        // get the pointer
+        XPTR get() const { return (X*)mPtr; }
 
-        /// check for Empty reference
-        bool Empty() const { return NULL == mPtr; }
+        /// check for empty reference
+        bool empty() const { return NULL == mPtr; }
 
         /// clear the reference
-        void Clear() { return detail::WeakRefBase::Clear(); }
+        void clear() { return detail::WeakRefBase::clear(); }
 
-        /// Set/reset the pointer
-        void Set( const X * ptr )
+        /// set/reset the pointer
+        void set( const X * ptr )
         {
             if( mPtr == ptr ) return;
 
-            Clear();
+            clear();
 
             if( ptr )
             {
                 mPtr = ptr;
-                mIter = mPtr->_AddWeakRef( this );
+                mIter = mPtr->_addWeakRef( this );
             }
         }
 
@@ -486,7 +486,7 @@ namespace GN
     inline void RefCounter::NullifyWeakRef( void * ptr )
     {
         detail::WeakRefBase * ref = (detail::WeakRefBase *)ptr;
-        ref->Clear();
+        ref->clear();
     }
 }
 

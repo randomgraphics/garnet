@@ -421,7 +421,7 @@ namespace GN { namespace gfx
         ///
         /// self validity check
         ///
-        bool Valid() const
+        bool valid() const
         {
             return
                 layout < NUM_COLOR_LAYOUTS &&
@@ -437,27 +437,27 @@ namespace GN { namespace gfx
         ///
         /// get layout descriptor
         ///
-        const ColorLayoutDesc & GetLayoutDesc() const { return ALL_COLOR_LAYOUTS[layout]; }
+        const ColorLayoutDesc & layoutDesc() const { return ALL_COLOR_LAYOUTS[layout]; }
 
         ///
         /// Get bits-per-pixel
         ///
-        UInt8 GetBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
+        UInt8 getBitsPerPixel() const { return ALL_COLOR_LAYOUTS[layout].bits; }
 
         ///
         /// Get bytes-per-pixel-block
         ///
-        UInt8 GetBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
+        UInt8 getBytesPerBlock() const { return ALL_COLOR_LAYOUTS[layout].blockBytes; }
 
         ///
         /// convert to string
         ///
-        void ToString( StrA & ) const;
+        void toString( StrA & ) const;
 
         ///
         /// convert to string
         ///
-        inline StrA ToString() const { StrA s; ToString(s); return s; }
+        inline StrA toString() const { StrA s; toString(s); return s; }
 
         ///
         /// convert from string
@@ -499,49 +499,49 @@ namespace GN { namespace gfx
     ///
     /// D3DFMT to string. Return "INVALID D3D9 FORMAT" if failed.
     ///
-    const char * D3d9Format2Str( int );
+    const char * d3d9Format2Str( int );
 
     ///
     /// Xenon texture format to string. Return "INVALID Xenon FORMAT" if failed.
     ///
-    const char * XenonFormat2Str( int );
+    const char * xenonFormat2Str( int );
 
     ///
     /// DXGI_FORMAT to string. Return "INVALID DXGI_FORMAT" if failed.
     ///
-    const char * DxgiFormat2Str( int );
+    const char * dxgiFormat2Str( int );
 
     ///
     /// Convert D3DFMT to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
-    ColorFormat D3d9Format2ColorFormat( int );
+    ColorFormat d3d9Format2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to D3D9 format. Return D3DFMT_UNKNOWN if failed.
     ///
-    int ColorFormat2D3D9Format( ColorFormat );
+    int colorFormat2D3D9Format( ColorFormat );
 
     ///
     /// Convert Xenon texture format to ColorFormat. Return ColorFormat::UNKNOWN if failed.
     ///
-    ColorFormat XenonFormat2ColorFormat( int );
+    ColorFormat xenonFormat2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to Xenon texture format. Return D3DFMT_UNKNOWN if failed.
     ///
     /// \note this function always return tiled format.
     ///
-    UInt32 ColorFormat2XenonFormat( ColorFormat );
+    UInt32 colorFormat2XenonFormat( ColorFormat );
 
     ///
     /// Convert DXGI_FORMAT to ColorFormat. Return DXGI_FORMAT_UNKNOWN if failed.
     ///
-    ColorFormat DxgiFormat2ColorFormat( int );
+    ColorFormat dxgiFormat2ColorFormat( int );
 
     ///
     /// Convert ColorFormat to DXGI_FORMAT. Return DXGI_FORMAT_UNKNOWN if failed.
     ///
-    int ColorFormat2DxgiFormat( ColorFormat );
+    int colorFormat2DxgiFormat( ColorFormat );
 }}
 
 // *****************************************************************************

@@ -27,7 +27,7 @@ void CEGUI::GarnetRenderer::addQuad(
     GN_GUARD_SLOW;
 
     // get screen size
-    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
 
     float x0 = dest_rect.d_left / dd.width;
     float y0 = dest_rect.d_top / dd.height;
@@ -50,7 +50,7 @@ void CEGUI::GarnetRenderer::addQuad(
         u0 , v0 , u1 , v1 ,
         cx0, cx1, cy0, cy1
     };
-    if( mQueueEnabled ) mQuads.push_back( qd );
+    if( mQueueEnabled ) mQuads.append( qd );
     else drawQuads( &qd, 1 );
     GN_UNGUARD_SLOW;
 }
@@ -62,7 +62,7 @@ void CEGUI::GarnetRenderer::doRender(void)
 {
     GN_GUARD_SLOW;
 
-    if( !mQuads.empty() ) drawQuads( &mQuads[0], mQuads.Size() );
+    if( !mQuads.empty() ) drawQuads( &mQuads[0], mQuads.size() );
 
     GN_UNGUARD_SLOW;
 }
@@ -70,14 +70,14 @@ void CEGUI::GarnetRenderer::doRender(void)
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(void)
+CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(void)
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
     if( !p ) return 0;
-    mTextures.push_back( p );
-    return p.Detach();
+    mTextures.append( p );
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -85,16 +85,16 @@ CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(void)
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(
+CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(
     const String& filename, const String& resourceGroup)
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
     if( !p ) return 0;
-    p->LoadFromFile( filename, resourceGroup );
-    mTextures.push_back( p );
-    return p.Detach();
+    p->loadFromFile( filename, resourceGroup );
+    mTextures.append( p );
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -102,15 +102,15 @@ CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(
 //
 //
 // -----------------------------------------------------------------------------
-CEGUI::Texture* CEGUI::GarnetRenderer::CreateTexture(float size)
+CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(float size)
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
     if( !p ) return 0;
     p->loadFromMemory( 0, (uint)size, (uint)size );
-    mTextures.push_back( p );
-    return p.Detach();
+    mTextures.append( p );
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -122,7 +122,7 @@ void CEGUI::GarnetRenderer::destroyTexture(Texture* texture)
 {
     GN_GUARD;
 
-    DynaArray<GarnetTexture*>::iterator i = std::find(
+    GN::DynaArray<GarnetTexture*>::iterator i = std::find(
         mTextures.begin(), mTextures.end(), texture );
 
     if( i != mTextures.end() )
@@ -142,13 +142,13 @@ void CEGUI::GarnetRenderer::destroyAllTextures(void)
 {
     GN_GUARD;
 
-    DynaArray<GarnetTexture*>::iterator i;
+    GN::DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );
         delete *i;
     }
-    mTextures.Clear();
+    mTextures.clear();
 
     GN_UNGUARD;
 }
@@ -160,7 +160,7 @@ float CEGUI::GarnetRenderer::getWidth(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
     return (float)dd.width;
 
     GN_UNGUARD;
@@ -173,7 +173,7 @@ float CEGUI::GarnetRenderer::getHeight(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
     return (float)dd.height;
 
     GN_UNGUARD;
@@ -186,7 +186,7 @@ CEGUI::Size CEGUI::GarnetRenderer::getSize(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
     return Size( (float)dd.width, (float)dd.height );
 
     GN_UNGUARD;
@@ -199,7 +199,7 @@ CEGUI::Rect CEGUI::GarnetRenderer::getRect(void) const
 {
     GN_GUARD;
 
-    const GN::gfx::DispDesc & dd = gRenderer.GetDispDesc();
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
     return Rect( 0, 0, (float)dd.width, (float)dd.height );
 
     GN_UNGUARD;
@@ -215,7 +215,7 @@ CEGUI::Rect CEGUI::GarnetRenderer::getRect(void) const
 bool CEGUI::GarnetRenderer::onRendererRestore()
 {
     // reload textures
-    DynaArray<GarnetTexture*>::iterator i;
+    GN::DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );
@@ -239,7 +239,7 @@ bool CEGUI::GarnetRenderer::onRendererRestore()
 void CEGUI::GarnetRenderer::onRendererDispose()
 {
     // dispose textures
-    DynaArray<GarnetTexture*>::iterator i;
+    GN::DynaArray<GarnetTexture*>::iterator i;
     for( i = mTextures.begin(); i != mTextures.end(); ++i )
     {
         GN_ASSERT( *i );
@@ -260,23 +260,23 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
 
     const GarnetTexture * tex = q->tex;
 
-    qr.DrawBegin( tex ? tex->getGarnetTexture() : 0 );
+    qr.drawBegin( tex ? tex->getGarnetTexture() : 0 );
 
     for( ; q <= end; ++q )
     {
         if( q == end || q->tex != tex )
         {
             // switch texture
-            qr.DrawEnd();
+            qr.drawEnd();
 
             if( q < end )
             {
-                qr.DrawBegin( q->tex ? q->tex->getGarnetTexture() : 0 );
+                qr.drawBegin( q->tex ? q->tex->getGarnetTexture() : 0 );
             }
             else break;
         }
 
-        qr.DrawTextured(
+        qr.drawTextured(
             q->z,
             q->x0, q->y0, q->x1, q->y1,
             q->u0, q->v0, q->u1, q->v1 );

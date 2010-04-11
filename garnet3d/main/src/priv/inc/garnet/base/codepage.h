@@ -48,7 +48,9 @@ namespace GN
 
     public:
 
+        ///
         /// Convert Encoding enum to string
+        ///
         static const char * sEncoding2Str( Encoding );
 
         ///
@@ -62,7 +64,7 @@ namespace GN
         ~CharacterEncodingConverter();
 
         ///
-        /// Convert from source encoding to destination encoding
+        /// convert from source encoding to destination encoding
         ///
         /// \param destBuffer, destBufferSizeInBytes
         ///     Specify destination buffer and size. destBuffer could be NULL.
@@ -81,7 +83,7 @@ namespace GN
         ///        including null terminator.
         ///
         size_t
-        Convert(
+        convert(
             void       * destBuffer,
             size_t       destBufferSizeInBytes,
             const void * sourceBuffer,
@@ -97,7 +99,7 @@ namespace GN
             const void * sourceBuffer,
             size_t       sourceBufferSizeInBytes )
         {
-            return Convert(
+            return convert(
                 destBuffer,
                 destBufferSizeInBytes,
                 sourceBuffer,
@@ -111,7 +113,7 @@ namespace GN
             const void  * sourceBuffer,
             size_t        sourceBufferSizeInBytes )
         {
-            return Convert(
+            return convert(
                 destBuffer,
                 DEST_SIZE * sizeof(DEST_TYPE),
                 sourceBuffer,
@@ -126,7 +128,7 @@ namespace GN
             DEST_TYPE (& destBuffer)[DEST_SIZE],
             SRC_TYPE  (& sourceBuffer)[SRC_SIZE] )
         {
-            return Convert(
+            return convert(
                 destBuffer,
                 DEST_SIZE * sizeof(DEST_TYPE),
                 sourceBuffer,
@@ -143,30 +145,30 @@ namespace GN
     ///
     /// get current system encoding
     ///
-    CharacterEncodingConverter::Encoding GetCurrentSystemEncoding();
+    CharacterEncodingConverter::Encoding getCurrentSystemEncoding();
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
     ///
-    void Wcs2Mbs( StrA &, const wchar_t *, size_t );
+    void wcs2mbs( StrA &, const wchar_t *, size_t );
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline void
-    Wcs2Mbs( StrA & o, const StrW & i ) { return Wcs2Mbs( o, i.ToRawPtr(), i.Size() ); }
+    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cptr(), i.size() ); }
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
-    Wcs2Mbs( const wchar_t * i, size_t l ) { StrA o; Wcs2Mbs( o, i, l ); return o; }
+    wcs2mbs( const wchar_t * i, size_t l ) { StrA o; wcs2mbs( o, i, l ); return o; }
 
     ///
     /// convert wide char string to multi-byte string in current system encoding
     ///
     inline StrA
-    Wcs2Mbs( const StrW & i ) { return Wcs2Mbs( i.ToRawPtr(), i.Size() ); }
+    wcs2mbs( const StrW & i ) { return wcs2mbs( i.cptr(), i.size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string.
@@ -187,30 +189,30 @@ namespace GN
     ///     character count in input buffer, not including null terminator. If zero,
     ///     then input buffer must be a null-terminated string.
     ///
-    size_t Mbs2Wcs( wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount );
+    size_t mbs2wcs( wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount );
 
     ///
     /// convert multi-byte string in current system code page to wide char string
     ///
-    void Mbs2Wcs( StrW &, const char *, size_t );
+    void mbs2wcs( StrW &, const char *, size_t );
 
     ///
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline void
-    Mbs2Wcs( StrW & o, const StrA & i ) { return Mbs2Wcs( o, i.ToRawPtr(), i.Size() ); }
+    mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.cptr(), i.size() ); }
 
     ///
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline StrW
-    Mbs2Wcs( const char * i, size_t l ) { StrW o; Mbs2Wcs( o, i, l ); return o; }
+    mbs2wcs( const char * i, size_t l ) { StrW o; mbs2wcs( o, i, l ); return o; }
 
     ///
     /// convert multi-byte string in current system code page to wide char string
     ///
     inline StrW
-    Mbs2Wcs( const StrA & i ) { return Mbs2Wcs( i.ToRawPtr(), i.Size() ); }
+    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cptr(), i.size() ); }
 }
 
 // *****************************************************************************

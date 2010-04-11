@@ -53,9 +53,9 @@ namespace GN { namespace util
         /// \param time  estimated time of interpolation
         ///
         /// 重置后，插值器将在 time 时间内，完成从 from 到 to 的线性插值过程。
-        /// （调用 Update() 更新插值器的状态）
+        /// （调用 update() 更新插值器的状态）
         ///
-        void Reset( const T & from, const T & to, float time )
+        void reset( const T & from, const T & to, float time )
         {
             GN_ASSERT( .0f != time );
             mDelta = from * 0.0f;
@@ -69,7 +69,7 @@ namespace GN { namespace util
         /// move forward the interpolator by 'deltaTime'.
         /// Return true means the end of interpolation.
         ///
-        bool Update( float deltaTime )
+        bool update( float deltaTime )
         {
             if( mRemainingTime < deltaTime )
             {
@@ -158,8 +158,8 @@ namespace GN { namespace util
         ///
         void setMouseMoveWindow( int l, int t, int w, int h )
         {
-            mWindowHalfSize.Set( w / 2, h / 2 );
-            mWindowCenter.Set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
+            mWindowHalfSize.set( w / 2, h / 2 );
+            mWindowCenter.set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
         }
 
         void setTranslation( const Vector3f & t ) { mTranslation = t; }
@@ -209,8 +209,8 @@ namespace GN { namespace util
 
     private:
 
-        void OnKeyPress( input::KeyEvent );
-        void OnAxisMove( input::Axis, int );
+        void onKeyPress( input::KeyEvent );
+        void onAxisMove( input::Axis, int );
     };
 
     ///
@@ -282,7 +282,7 @@ namespace GN { namespace util
         const Vector3f  & getAngle() const    { return mAngle; }
         const Matrix44f & getViewMatrix() const { return mView; }
 
-        void Update( float timeslice );
+        void update( float timeslice );
 
         //@}
 
@@ -310,7 +310,7 @@ namespace GN { namespace util
         LinearInterpolator<Vector3f> mTargetAngle;
 
     private:
-        void OnAxisMove( input::Axis, int );
+        void onAxisMove( input::Axis, int );
     };
 }}
 

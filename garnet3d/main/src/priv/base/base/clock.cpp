@@ -9,7 +9,7 @@
 //                        local functions
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.Clock");
+static GN::Logger * sLogger = GN::getLogger("GN.base.Clock");
 
 ///
 /// 获得计数器的主频
@@ -76,7 +76,7 @@ GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 //
 // 计时器复位
 // -----------------------------------------------------------------------------
-void GN::Clock::Reset()
+void GN::Clock::reset()
 {
     // reset timer variables
     mResetTime = sGetSystemCycleCount();
@@ -88,11 +88,11 @@ void GN::Clock::Reset()
 //
 // 计时器暂停
 // -----------------------------------------------------------------------------
-void GN::Clock::Pause()
+void GN::Clock::pause()
 {
     if (!mPaused)
     {
-        GN_TRACE(sLogger)( "Timer is Paused!" );
+        GN_TRACE(sLogger)( "Timer pause!" );
         mPauseTime = sGetSystemCycleCount();
         mPaused = true;
     }
@@ -101,11 +101,11 @@ void GN::Clock::Pause()
 //
 // 计时器恢复
 // -----------------------------------------------------------------------------
-void GN::Clock::Resume()
+void GN::Clock::resume()
 {
     if (mPaused)
     {
-        GN_TRACE(sLogger)( "Timer is resumed!" );
+        GN_TRACE(sLogger)( "Timer resume!" );
         mPauseElapsed += sGetSystemCycleCount() - mPauseTime;
         mPaused = false;
     }

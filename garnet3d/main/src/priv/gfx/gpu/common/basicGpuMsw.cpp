@@ -4,7 +4,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 //
 //
@@ -143,7 +143,7 @@ sDetermineWindowSize(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuMsw::Init( const GpuOptions & o )
+bool GN::gfx::BasicGpuMsw::init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -151,10 +151,10 @@ bool GN::gfx::BasicGpuMsw::Init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuMsw, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return Failure();
+    if( !dispInit(o) ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -162,14 +162,14 @@ bool GN::gfx::BasicGpuMsw::Init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuMsw::Quit()
+void GN::gfx::BasicGpuMsw::quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -182,9 +182,9 @@ void GN::gfx::BasicGpuMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuMsw::ProcessRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::BasicGpuMsw::processRenderWindowMessages( bool blockWhileMinimized )
 {
-    GN::win::ProcessWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
+    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************
@@ -195,7 +195,7 @@ void GN::gfx::BasicGpuMsw::ProcessRenderWindowMessages( bool blockWhileMinimized
 //
 // ----------------------------------------------------------------------------
 void
-GN::gfx::BasicGpuMsw::HandleRenderWindowSizeMove()
+GN::gfx::BasicGpuMsw::handleRenderWindowSizeMove()
 {
     mWindow.handleSizeMove();
 }
@@ -236,7 +236,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     }
     GN_ASSERT( desc.width && desc.height && desc.depth );
 
-    if( GetOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
+    if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
     if( ro.useExternalWindow )
     {
         if( !mWindow.initExternalWindow( this, ro.renderWindow ) ) return false;
@@ -245,13 +245,13 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
     {
         if( !mWindow.initInternalWindow( this, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-    if( !ro.fullscreen && !mWinProp.save( mWindow.GetWindowHandle() ) ) return false;
+    if( !ro.fullscreen && !mWinProp.save( mWindow.getWindowHandle() ) ) return false;
     desc.displayHandle = 0;
-    desc.windowHandle  = mWindow.GetWindowHandle();
+    desc.windowHandle  = mWindow.getWindowHandle();
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
-        StringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).ToRawPtr() );
+        stringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
 
     // success
     mOptions = ro;
@@ -264,7 +264,7 @@ bool GN::gfx::BasicGpuMsw::dispInit( const GpuOptions & ro )
 // ----------------------------------------------------------------------------
 void GN::gfx::BasicGpuMsw::dispQuit()
 {
-    mWindow.Quit();
+    mWindow.quit();
 }
 
 #endif

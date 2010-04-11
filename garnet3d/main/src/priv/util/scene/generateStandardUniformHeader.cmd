@@ -43,7 +43,7 @@ echo.            return 0 ^<= (*this) ^&^& (*this) ^<= NUM_STANDARD_UNIFORMS;>>%
 echo.        }>>%header%
 echo.>>%header%
 echo.        /// get uniform descriptor>>%header%
-echo.        const StandardUniformDesc ^& desc() const>>%header%
+echo.        const StandardUniformDesc ^& getDesc() const>>%header%
 echo.        {>>%header%
 echo.            static const StandardUniformDesc DESCRIPTORS[] = {>>%header%
 for /f "eol=; delims=, tokens=1,2,3,4,5*" %%a in (%~dp0standardUniformMeta.txt) do echo.                { "%%a"%%b, sizeof(%%c)%%d, %%e, "%%f" },>>%header%
@@ -54,9 +54,9 @@ echo.            return DESCRIPTORS[*this];>>%header%
 echo.        }>>%header%
 echo.>>%header%
 echo.        /// get uniform name. Return NULL for invalid uniform type.>>%header%
-echo.        const char * Name() const>>%header%
+echo.        const char * name() const>>%header%
 echo.        {>>%header%
-echo.            return isValid() ? desc().name : NULL;>>%header%
+echo.            return isValid() ? getDesc().name : NULL;>>%header%
 echo.        }>>%header%
 echo.    };>>%header%
 echo.>>%header%

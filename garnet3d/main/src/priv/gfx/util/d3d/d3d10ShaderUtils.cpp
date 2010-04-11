@@ -10,7 +10,7 @@
 #endif // GN_MSVC
 
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d9.d3d9ShaderUtils");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 
 // *****************************************************************************
 // local function
@@ -26,15 +26,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.ToRawPtr(); *s; ++s )
+    for( const char * s = in.cptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
+            out.append( stringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.Append( *s );
+            out.append( *s );
         }
     }
 
@@ -65,7 +65,7 @@ static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).ToRawPtr() : "Shader code: <EMPTY>",
+        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -98,8 +98,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).ToRawPtr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).ToRawPtr() );
+        sAddLineCount(hlsl).cptr(),
+        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
 
     GN_UNGUARD;
 }
@@ -127,17 +127,17 @@ ID3D10Blob * GN::d3d10::compileShader(
     }
 
     // determine source length
-    if( 0 == len ) len = StringLength(source);
+    if( 0 == len ) len = stringLength(source);
 
     // generate temporary file to store shader source
     StrA filename;
 #if GN_BUILD_DEBUG
     TempFile file;
-    if( file.Open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
+    if( file.open( "D3D10_shader_source", "wt", TempFile::MANUAL_DELETE ) )
     {
-        filename = file.Name();
-        file.Write( source, len, NULL );
-        file.Close();
+        filename = file.name();
+        file.write( source, len, NULL );
+        file.close();
     }
 #endif
 
@@ -148,7 +148,7 @@ ID3D10Blob * GN::d3d10::compileShader(
     if( FAILED( D3DX10CompileFromMemory(
         source,
         len,
-        filename.ToRawPtr(),
+        filename.cptr(),
         0, // defines
         0, // includes
         entry,
@@ -166,7 +166,7 @@ ID3D10Blob * GN::d3d10::compileShader(
 
     sPrintShaderCompileInfo( source, bin );
 
-    return bin.Detach();
+    return bin.detach();
 }
 
 //
@@ -190,7 +190,7 @@ ID3D10VertexShader * GN::d3d10::compileAndCreateVS(
     if( 0 == vs ) return NULL;
 
     // success
-    if( signature ) *signature = bin.Detach();
+    if( signature ) *signature = bin.detach();
     return vs;
 
     GN_UNGUARD;
@@ -217,7 +217,7 @@ ID3D10GeometryShader * GN::d3d10::compileAndCreateGS(
     if( 0 == gs ) return NULL;
 
     // success
-    if( signature ) *signature = bin.Detach();
+    if( signature ) *signature = bin.detach();
     return gs;
 
     GN_UNGUARD;
@@ -244,7 +244,7 @@ ID3D10PixelShader * GN::d3d10::compileAndCreatePS(
     if( 0 == ps ) return 0;
 
     // success
-    if( signature ) *signature = bin.Detach();
+    if( signature ) *signature = bin.detach();
     return ps;
 
     GN_UNGUARD;

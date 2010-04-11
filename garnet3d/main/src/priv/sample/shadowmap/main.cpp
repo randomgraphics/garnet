@@ -15,34 +15,34 @@ public:
     {
     }
 
-    bool OnInit()
+    bool onInit()
     {
         mSimple = new SimpleShadowMap(*this);
-        if( !mSimple->Init( "a/objects.actor.xml" ) ) return false;
+        if( !mSimple->init( "a/objects.actor.xml" ) ) return false;
 
         // success
         return true;
     }
 
-    void OnQuit()
+    void onQuit()
     {
         delete mSimple;
         mSimple = 0;
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
-        mSimple->Update();
+        mSimple->update();
     }
 
-    void OnRender()
+    void onRender()
     {
-        mSimple->Draw();
+        mSimple->draw();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
     ShadowMap app;
-    return app.Run( argc, argv );
+    return app.run( argc, argv );
 }

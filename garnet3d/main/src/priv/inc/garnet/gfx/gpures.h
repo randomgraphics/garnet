@@ -32,16 +32,16 @@ namespace GN { namespace gfx
 
         /// common resource properties
         //@{
-        GpuResourceDatabase & GetGdb() const { return mDatabase; }
-        inline const Guid   & Type() const;
-        inline const char   * Name() const;
+        GpuResourceDatabase & getGdb() const { return mDatabase; }
+        inline const Guid   & type() const;
+        inline const char   * name() const;
         //@}
 
         /// Cast GPU resource pointer with type check.
         //@{
-        template<typename T> static inline       T * CastTo( GpuResource * r );
-        template<typename T> static inline       T & CastTo( GpuResource & r );
-        template<typename T> static inline const T & CastTo( const GpuResource & r );
+        template<typename T> static inline       T * castTo( GpuResource * r );
+        template<typename T> static inline       T & castTo( GpuResource & r );
+        template<typename T> static inline const T & castTo( const GpuResource & r );
         //@}
 
         // *****************************
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
     struct GpuResourceFactory
     {
         /// create new resource instance
-        GpuResource * (*CreateResource)( GpuResourceDatabase & db );
+        GpuResource * (*createResource)( GpuResourceDatabase & db );
     };
 
     ///
@@ -87,29 +87,29 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        Gpu  & GetGpu() const;
+        Gpu  & getGpu() const;
         //@}
 
         //@{
-        bool RegisterResourceFactory( const Guid & type, const char * descriptiveName, GpuResourceFactory factory );
-        bool HasResourceFactory( const Guid & type );
+        bool registerResourceFactory( const Guid & type, const char * descriptiveName, GpuResourceFactory factory );
+        bool hasResourceFactory( const Guid & type );
         //@}
 
         //@{
-        AutoRef<GpuResource> CreateResource( const Guid & type, const char * name );
-        AutoRef<GpuResource> FindResource( const Guid & type, const char * name ) const;
-        AutoRef<GpuResource> FindOrCreateResource( const Guid & type, const char * name );
-        bool                 ValidResource( const Guid & type, const GpuResource * resource ) const; // valid resource pointer of specific type
-        bool                 ValidResource( const GpuResource * resource ) const; // valid resource pointer of whatever type.
-        const char         * GetResourceName( const GpuResource * resource ) const;
-        const Guid         & GetResourceType( const GpuResource * resource ) const;
+        AutoRef<GpuResource> createResource( const Guid & type, const char * name );
+        AutoRef<GpuResource> findResource( const Guid & type, const char * name ) const;
+        AutoRef<GpuResource> findOrCreateResource( const Guid & type, const char * name );
+        bool                 validResource( const Guid & type, const GpuResource * resource ) const; // valid resource pointer of specific type
+        bool                 validResource( const GpuResource * resource ) const; // valid resource pointer of whatever type.
+        const char         * getResourceName( const GpuResource * resource ) const;
+        const Guid         & getResourceType( const GpuResource * resource ) const;
         //@}
 
         // templated utilities
         //@{
-        template<class T> inline AutoRef<T> CreateResource( const char * name );
-        template<class T> inline AutoRef<T> FindResource( const char * name ) const;
-        template<class T> inline AutoRef<T> FindOrCreateResource( const char * name );
+        template<class T> inline AutoRef<T> createResource( const char * name );
+        template<class T> inline AutoRef<T> findResource( const char * name ) const;
+        template<class T> inline AutoRef<T> findOrCreateResource( const char * name );
         //@}
 
     private:
@@ -126,10 +126,10 @@ namespace GN { namespace gfx
         //@{
 
         /// return GUID of the texture resource class
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         /// load texture from file. Would return existing handle, if it is already loaded.
-        static AutoRef<TextureResource> LoadFromFile( GpuResourceDatabase & db, const char * filename );
+        static AutoRef<TextureResource> loadFromFile( GpuResourceDatabase & db, const char * filename );
 
         //@}
 
@@ -140,9 +140,9 @@ namespace GN { namespace gfx
 
         /// Texture resource properties
         //@{
-        bool                     Reset( const TextureDesc * desc );
-        void                     SetTexture( const AutoRef<Texture> & );
-        const AutoRef<Texture> & GetTexture() const { return mTexture; }
+        bool                     reset( const TextureDesc * desc );
+        void                     setTexture( const AutoRef<Texture> & );
+        const AutoRef<Texture> & texture() const { return mTexture; }
         //@}
 
     private:
@@ -168,7 +168,7 @@ namespace GN { namespace gfx
         //@{
 
         /// return GUID of the uniform resource class
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         //@}
 
@@ -178,9 +178,9 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     Reset( size_t length, const void * initialData );
-        void                     SetUniform( const AutoRef<Uniform> & );
-        const AutoRef<Uniform> & GetUniform() const { return mUniform; }
+        bool                     reset( size_t length, const void * initialData );
+        void                     setUniform( const AutoRef<Uniform> & );
+        const AutoRef<Uniform> & uniform() const { return mUniform; }
         //@}
 
     private:
@@ -215,12 +215,12 @@ namespace GN { namespace gfx
         ///
         /// constructor
         ///
-        MeshResourceDesc() { Clear(); }
+        MeshResourceDesc() { clear(); }
 
         ///
         /// clear to an empty descriptor
         ///
-        void Clear()
+        void clear()
         {
             memset( this, 0, sizeof(*this) );
         }
@@ -228,42 +228,42 @@ namespace GN { namespace gfx
         ///
         /// calculate bounding box
         ///
-        void CalculateBoundingBox( Box<float> & ) const;
+        void calculateBoundingBox( Box<float> & ) const;
 
         ///
         /// calculate bounding sphere
         ///
-        void CalculateBoundingSphere( Sphere<float> & ) const;
+        void calculateBoundingSphere( Sphere<float> & ) const;
 
         ///
         /// get vertex buffer size in bytes
         ///
-        size_t GetVtxBufSize( size_t stream ) const;
+        size_t getVtxBufSize( size_t stream ) const;
 
         ///
         /// get indices buffer size in bytes
         ///
-        size_t GetIdxBufSize() const;
+        size_t getIdxBufSize() const;
 
         ///
         /// Load descriptor from file, return the mesh data. Return a NULL blob for failure.
         ///
-        AutoRef<Blob> LoadFromFile( File & );
+        AutoRef<Blob> loadFromFile( File & );
 
         ///
         /// Load descriptor from file
         ///
-        AutoRef<Blob> LoadFromFile( const char * filename );
+        AutoRef<Blob> loadFromFile( const char * filename );
 
         ///
         /// Save descriptor to file
         ///
-        bool SaveToFile( File & ) const;
+        bool saveToFile( File & ) const;
 
         ///
         /// Save descriptor to file
         ///
-        bool SaveToFile( const char * filename ) const;
+        bool saveToFile( const char * filename ) const;
     };
 
     ///
@@ -275,8 +275,8 @@ namespace GN { namespace gfx
 
         /// factory
         //@{
-        static const Guid          & GetGuid();
-        static AutoRef<MeshResource> LoadFromFile( GpuResourceDatabase & db, const char * filename );
+        static const Guid          & guid();
+        static AutoRef<MeshResource> loadFromFile( GpuResourceDatabase & db, const char * filename );
         //@}
 
         /// events
@@ -285,11 +285,11 @@ namespace GN { namespace gfx
         //@}
 
         //@{
-        bool                     Reset( const MeshResourceDesc * desc );
-        const MeshResourceDesc & GetDesc() const;
-        void                     ApplyToContext( GpuContext & context ) const;
-        void                     CalculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
-        void                     CalculateBoundingSphere( Sphere<float> & ) const;
+        bool                     reset( const MeshResourceDesc * desc );
+        const MeshResourceDesc & getDesc() const;
+        void                     applyToContext( GpuContext & context ) const;
+        void                     calculateBoundingBox( Box<float> & ) const; // AABB: axis aligned bounding box
+        void                     calculateBoundingSphere( Sphere<float> & ) const;
         //@}
 
     protected:
@@ -343,7 +343,7 @@ namespace GN { namespace gfx
             SamplerDesc sampler;
 
             /// default ctor
-            EffectTextureDesc() { sampler.Clear(); }
+            EffectTextureDesc() { sampler.clear(); }
         };
 
         ///
@@ -361,9 +361,9 @@ namespace GN { namespace gfx
         ///
         struct EffectGpuProgramDesc
         {
-            ShaderPrerequisites  prerequisites;      ///< prerequisites of the shader.
-            GpuProgramDesc       gpd;                ///< GPU Program descriptor
-            DynaArray<char>      shaderSourceBuffer; ///< optional buffer used to store store shader source.
+            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
+            GpuProgramDesc      gpd;                ///< GPU Program descriptor
+            DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store shader source.
             StringMap<char,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
             StringMap<char,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
 
@@ -476,10 +476,10 @@ namespace GN { namespace gfx
         // data
         // *****************************
 
-        StringMap<char,EffectTextureDesc>     textures;     ///< Texture list
-        StringMap<char,EffectUniformDesc>     uniforms;     ///< Uniform list
-        StringMap<char,EffectGpuProgramDesc>  gpuprograms;  ///< GPU program list
-        StringMap<char,EffectTechniqueDesc>   techniques;   ///< Technique list. Technique name must be unique.
+        StringMap<char,EffectTextureDesc>      textures;     ///< Texture list
+        StringMap<char,EffectUniformDesc>      uniforms;     ///< Uniform list
+        StringMap<char,EffectGpuProgramDesc>   gpuprograms;  ///< GPU program list
+        StringMap<char,EffectTechniqueDesc>    techniques;   ///< Technique list. Technique name must be unique.
         EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
 
         // *****************************
@@ -489,22 +489,22 @@ namespace GN { namespace gfx
         ///
         /// constructor
         ///
-        EffectResourceDesc() { Clear(); }
+        EffectResourceDesc() { clear(); }
 
         ///
         /// clear to a default descriptor
         ///
-        void Clear();
+        void clear();
 
         ///
         /// setup the descriptor from XML
         ///
-        bool LoadFromXml( const XmlNode & rootNode );
+        bool loadFromXml( const XmlNode & rootNode );
 
         ///
         /// write the descriptor to XML
         ///
-        XmlElement * SaveToXml( XmlNode & rootNode ) const;
+        XmlElement * saveToXml( XmlNode & rootNode ) const;
     };
 
     ///
@@ -527,10 +527,10 @@ namespace GN { namespace gfx
         //@{
 
         /// return GUID of the effect resource class
-        static const Guid & GetGuid();
+        static const Guid & guid();
 
         /// load effect from file. Would return existing handle, if it is already loaded.
-        static AutoRef<EffectResource> LoadFromFile( GpuResourceDatabase & db, const char * filename );
+        static AutoRef<EffectResource> loadFromFile( GpuResourceDatabase & db, const char * filename );
 
         //@
 
@@ -571,24 +571,24 @@ namespace GN { namespace gfx
         /// public properties
         //@{
 
-        bool                          Reset( const EffectResourceDesc * desc );
+        bool                          reset( const EffectResourceDesc * desc );
 
-        size_t                        GetNumPasses() const;
+        size_t                        numPasses() const;
 
-        size_t                        GetNumTextures() const;
-        size_t                        FindTexture( const char * name ) const;
-        bool                          HasTexture( const char * name ) const { return PARAMETER_NOT_FOUND != FindTexture( name ); }
-        const TextureProperties     & GetTextureProperties( size_t i ) const;
+        size_t                        numTextures() const;
+        size_t                        findTexture( const char * name ) const;
+        bool                          hasTexture( const char * name ) const { return PARAMETER_NOT_FOUND != findTexture( name ); }
+        const TextureProperties     & textureProperties( size_t i ) const;
 
-        size_t                        GetNumUniforms() const;
-        size_t                        FindUniform( const char * name ) const;
-        bool                          HasUniform( const char * name ) const { return PARAMETER_NOT_FOUND != FindUniform( name ); }
-        const UniformProperties     & GetUniformProperties( size_t i ) const;
+        size_t                        numUniforms() const;
+        size_t                        findUniform( const char * name ) const;
+        bool                          hasUniform( const char * name ) const { return PARAMETER_NOT_FOUND != findUniform( name ); }
+        const UniformProperties     & uniformProperties( size_t i ) const;
 
         const EffectResourceDesc::EffectRenderStateDesc &
-                                      GetRenderStates( size_t pass ) const;
+                                      renderStates( size_t pass ) const;
 
-        void                          ApplyToContext( size_t pass, GpuContext & gc ) const;
+        void                          applyToContext( size_t pass, GpuContext & gc ) const;
 
         //@}
 
@@ -617,7 +617,7 @@ namespace GN { namespace gfx
         /// methods
         //@{
 
-        bool IsWholeMesh() const
+        bool isWholeMesh() const
         {
             return 0 == basevtx
                 && 0 == numvtx
@@ -625,7 +625,7 @@ namespace GN { namespace gfx
                 && 0 == numidx;
         }
 
-        void Clear() { basevtx = numvtx = startidx = numidx = 0; }
+        void clear() { basevtx = numvtx = startidx = numidx = 0; }
 
         //@}
     };
@@ -654,49 +654,49 @@ namespace GN { namespace gfx
 
         //@{
 
-        StrA                             effect;   ///< effect resource name.
+        StrA                            effect;   ///< effect resource name.
         StringMap<char,ModelTextureDesc> textures; ///< key is effect parameter name
         StringMap<char,ModelUniformDesc> uniforms; ///< key is effect parameter name
 
-        StrA                             mesh;     ///< Mesh resource name.
-        MeshResourceSubset               subset;   ///< Mesh subset information.
+        StrA                            mesh;     ///< Mesh resource name.
+        MeshResourceSubset              subset;   ///< Mesh subset information.
 
         //@}
 
         ///
         /// constructor
         ///
-        ModelResourceDesc() { Clear(); }
+        ModelResourceDesc() { clear(); }
 
         ///
         /// clear to an empty descriptor
         ///
-        void Clear();
+        void clear();
 
         ///
         /// check if the model has a texture parameter with specific name
         ///
-        bool HasTexture( const char * name ) const { return NULL != textures.Find( name ); }
+        bool hasTexture( const char * name ) const { return NULL != textures.find( name ); }
 
         ///
         /// check if the model has a uniform parameter with specific name
         ///
-        bool HasUniform( const char * name ) const { return NULL != uniforms.Find( name ); }
+        bool hasUniform( const char * name ) const { return NULL != uniforms.find( name ); }
 
         ///
         /// setup the descriptor from XML
         ///
-        bool LoadFromXml( const XmlNode & root, const char * basedir );
+        bool loadFromXml( const XmlNode & root, const char * basedir );
 
         ///
         /// write the descriptor to XML
         ///
-        XmlElement * SaveToXml( XmlNode & root, const char * basedir ) const;
+        XmlElement * saveToXml( XmlNode & root, const char * basedir ) const;
 
         ///
         /// write the descriptor to XML file
         ///
-        bool SaveToXmlFile( const char * filename ) const;
+        bool saveToXmlFile( const char * filename ) const;
     };
 
     ///
@@ -720,28 +720,28 @@ namespace GN { namespace gfx
     public:
 
         //@{
-        static const Guid           & GetGuid();
-        static AutoRef<ModelResource> LoadFromFile( GpuResourceDatabase & db, const char * filename );
+        static const Guid           & guid();
+        static AutoRef<ModelResource> loadFromFile( GpuResourceDatabase & db, const char * filename );
         //@}
 
         //@{
-        bool                     Reset( const ModelResourceDesc * desc );
+        bool                     reset( const ModelResourceDesc * desc );
 
-        AutoRef<ModelResource>   MakeClone( const char * nameOfTheClone = NULL ) const;
+        AutoRef<ModelResource>   makeClone( const char * nameOfTheClone = NULL ) const;
 
-        void                     SetTextureResource( const char * effectParameterName, GpuResource * );
-        AutoRef<TextureResource> GetTextureResource( const char * effectParameterName ) const;
+        void                     setTextureResource( const char * effectParameterName, GpuResource * );
+        AutoRef<TextureResource> textureResource( const char * effectParameterName ) const;
 
-        void                     SetUniformResource( const char * effectParameterName, GpuResource * );
-        AutoRef<UniformResource> GetUniformResource( const char * effectParameterName ) const;
+        void                     setUniformResource( const char * effectParameterName, GpuResource * );
+        AutoRef<UniformResource> uniformResource( const char * effectParameterName ) const;
 
-        void                     SetMeshResource( GpuResource * mesh, const MeshResourceSubset * subset = NULL );
-        AutoRef<MeshResource>    GetMeshResource( MeshResourceSubset * subset = NULL ) const;
+        void                     setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset = NULL );
+        AutoRef<MeshResource>    meshResource( MeshResourceSubset * subset = NULL ) const;
 
-        void                     SetEffectResource( GpuResource * effect );
-        AutoRef<EffectResource>  GetEffectResource() const;
+        void                     setEffectResource( GpuResource * effect );
+        AutoRef<EffectResource>  effectResource() const;
 
-        void                     Draw() const;
+        void                     draw() const;
         //@}
 
         // ********************************

@@ -2,7 +2,7 @@
 #include "oglLine.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLLine::Init()
+bool GN::gfx::OGLLine::init()
 {
     GN_GUARD;
 
@@ -24,11 +24,11 @@ bool GN::gfx::OGLLine::Init()
     if( !mVtxBuf )
     {
         GN_ERROR(sLogger)( "out of memory!" );
-        return Failure();
+        return failure();
     }
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -36,13 +36,13 @@ bool GN::gfx::OGLLine::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLLine::Quit()
+void GN::gfx::OGLLine::quit()
 {
     GN_GUARD;
 
-    SafeHeapFree( mVtxBuf );
+    safeHeapFree( mVtxBuf );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -55,7 +55,7 @@ void GN::gfx::OGLLine::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLLine::DrawLines(
+void GN::gfx::OGLLine::drawLines(
     BitFields options,
     const float * positions,
     size_t stride,
@@ -67,7 +67,7 @@ void GN::gfx::OGLLine::DrawLines(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     if( 0 == positions )
     {
@@ -90,7 +90,7 @@ void GN::gfx::OGLLine::DrawLines(
     {
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        DrawLines( options, positions, stride, n, rgba, model, view, proj );
+        drawLines( options, positions, stride, n, rgba, model, view, proj );
         positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }
@@ -99,7 +99,7 @@ void GN::gfx::OGLLine::DrawLines(
     GN_ASSERT( mVtxBuf );
     for( size_t i = 0; i < numpoints; ++i )
     {
-        mVtxBuf[i].p.Set( positions[0], positions[1], positions[2] );
+        mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
         mVtxBuf[i].c = rgba;
         positions = (const float*)( ((const UInt8*)positions) + stride );
     }

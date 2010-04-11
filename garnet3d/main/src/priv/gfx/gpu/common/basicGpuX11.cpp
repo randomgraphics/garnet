@@ -4,7 +4,7 @@
 
 #if GN_POSIX
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
 
 // ****************************************************************************
 // local function
@@ -130,7 +130,7 @@ sDetermineWindowSize(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::BasicGpuX11::Init( const GpuOptions & o )
+bool GN::gfx::BasicGpuX11::init( const GpuOptions & o )
 {
     GN_GUARD;
 
@@ -138,10 +138,10 @@ bool GN::gfx::BasicGpuX11::Init( const GpuOptions & o )
     GN_STDCLASS_INIT( BasicGpuX11, (o) );
 
     // initialize sub-components one by one
-    if( !dispInit(o) ) return Failure();
+    if( !dispInit(o) ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -149,14 +149,14 @@ bool GN::gfx::BasicGpuX11::Init( const GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuX11::Quit()
+void GN::gfx::BasicGpuX11::quit()
 {
     GN_GUARD;
 
     // shutdown sub-components in reverse sequence
     dispQuit();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -169,9 +169,9 @@ void GN::gfx::BasicGpuX11::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicGpuX11::ProcessRenderWindowMessages( bool blockWhileMinimized )
+void GN::gfx::BasicGpuX11::processRenderWindowMessages( bool blockWhileMinimized )
 {
-    GN::win::ProcessWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
+    GN::win::processWindowMessages( mDispDesc.windowHandle, blockWhileMinimized );
 }
 
 // ****************************************************************************
@@ -182,7 +182,7 @@ void GN::gfx::BasicGpuX11::ProcessRenderWindowMessages( bool blockWhileMinimized
 //
 // ----------------------------------------------------------------------------
 void
-GN::gfx::BasicGpuX11::HandleRenderWindowSizeMove()
+GN::gfx::BasicGpuX11::handleRenderWindowSizeMove()
 {
     mWindow.handleSizeMove();
 }
@@ -200,11 +200,11 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
     Display * disp;
     if( 0 == ro.displayHandle )
     {
-        StrA dispStr = GetEnv("DISPLAY");
-        mDefaultDisplay = XOpenDisplay( dispStr.ToRawPtr() );
+        StrA dispStr = getEnv("DISPLAY");
+        mDefaultDisplay = XOpenDisplay( dispStr.cptr() );
         if( 0 == mDefaultDisplay )
         {
-            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.ToRawPtr() );
+            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
             return false;
         }
         disp = mDefaultDisplay;
@@ -256,7 +256,7 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
 
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
-        StringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).ToRawPtr() );
+        stringFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
 
     // success
     mOptions = ro;
@@ -268,7 +268,7 @@ bool GN::gfx::BasicGpuX11::dispInit( const GpuOptions & ro )
 // ----------------------------------------------------------------------------
 void GN::gfx::BasicGpuX11::dispQuit()
 {
-    mWindow.Quit();
+    mWindow.quit();
 
     // close default display
     if( mDefaultDisplay )

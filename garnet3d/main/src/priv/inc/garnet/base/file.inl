@@ -2,7 +2,7 @@
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline void
-GN::MemFile<T>::Reset( T * buf, size_t size, const StrA & name )
+GN::MemFile<T>::reset( T * buf, size_t size, const StrA & name )
 {
     mStart = (UInt8*)buf;
     mPtr   = mStart;
@@ -14,7 +14,7 @@ GN::MemFile<T>::Reset( T * buf, size_t size, const StrA & name )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::Read( void * buf, size_t size, size_t * readen )
+GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
 {
     GN_GUARD;
 
@@ -28,20 +28,20 @@ GN::MemFile<T>::Read( void * buf, size_t size, size_t * readen )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(MyLogger())( "null output buf!" );
+        GN_ERROR(myLogger())( "null output buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(MyLogger())( "null file!" );
+        GN_ERROR(myLogger())( "null file!" );
         return false;
     }
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
 
-    size = math::GetMin<size_t>( size, mStart + mSize - mPtr );
+    size = math::getmin<size_t>( size, mStart + mSize - mPtr );
 
     memcpy( buf, mPtr, size );
 
@@ -59,13 +59,13 @@ GN::MemFile<T>::Read( void * buf, size_t size, size_t * readen )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::Write( const void * buf, size_t size, size_t * written )
+GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 {
     GN_GUARD;
 
     if( IsConst<T>::value )
     {
-        GN_ERROR(MyLogger())( "cannot Write to constant buffer!" );
+        GN_ERROR(myLogger())( "cannot write to constant buffer!" );
         return false;
     }
 
@@ -79,20 +79,20 @@ GN::MemFile<T>::Write( const void * buf, size_t size, size_t * written )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(MyLogger())( "null input buf!" );
+        GN_ERROR(myLogger())( "null input buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(MyLogger())( "null file!" );
+        GN_ERROR(myLogger())( "null file!" );
         return false;
     }
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
 
-    size = math::GetMin<size_t>( size, mStart + mSize - mPtr );
+    size = math::getmin<size_t>( size, mStart + mSize - mPtr );
 
     memcpy( mPtr, buf, size );
 
@@ -110,7 +110,7 @@ GN::MemFile<T>::Write( const void * buf, size_t size, size_t * written )
 //
 //  ----------------------------------------------------------------------------
 template<typename T> inline bool
-GN::MemFile<T>::Seek( size_t offset, FileSeek origin )
+GN::MemFile<T>::seek( size_t offset, FileSeek origin )
 {
     UInt8 * end = mStart + mSize;
     UInt8 * ptr;
@@ -128,13 +128,13 @@ GN::MemFile<T>::Seek( size_t offset, FileSeek origin )
     }
     else
     {
-        GN_ERROR(MyLogger())( "invalid Seek origin!" );
+        GN_ERROR(myLogger())( "invalid seek origin!" );
         return false;
     }
 
     if( ptr < mStart || ptr > end )
     {
-        GN_ERROR(MyLogger())( "out of range" );
+        GN_ERROR(myLogger())( "out of range" );
         return false;
     }
     mPtr = ptr;
@@ -145,11 +145,11 @@ GN::MemFile<T>::Seek( size_t offset, FileSeek origin )
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::Read( void * buf, size_t size, size_t * readen )
+inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 {
-    GN_ASSERT( mCursor <= mBuffer.Size() );
+    GN_ASSERT( mCursor <= mBuffer.size() );
 
-    if( size + mCursor > mBuffer.Size() ) size = mBuffer.Size() - mCursor;
+    if( size + mCursor > mBuffer.size() ) size = mBuffer.size() - mCursor;
 
     if( 0 == size )
     {
@@ -159,14 +159,14 @@ inline bool GN::VectorFile::Read( void * buf, size_t size, size_t * readen )
 
     if( 0 == buf )
     {
-        GN_ERROR(MyLogger())( "null output buffer!" );
+        GN_ERROR(myLogger())( "null output buffer!" );
         return false;
     }
 
     memcpy( buf, &mBuffer[mCursor], size );
 
     mCursor += size;
-    GN_ASSERT( mCursor <= mBuffer.Size() );
+    GN_ASSERT( mCursor <= mBuffer.size() );
 
     if( readen ) *readen = size;
     return true;
@@ -175,9 +175,9 @@ inline bool GN::VectorFile::Read( void * buf, size_t size, size_t * readen )
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::Write( const void * buf, size_t size, size_t * written )
+inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * written )
 {
-    GN_ASSERT( mCursor <= mBuffer.Size() );
+    GN_ASSERT( mCursor <= mBuffer.size() );
 
     if( 0 == size )
     {
@@ -187,20 +187,20 @@ inline bool GN::VectorFile::Write( const void * buf, size_t size, size_t * writt
 
     if( 0 == buf )
     {
-        GN_ERROR(MyLogger())( "null output buffer!" );
+        GN_ERROR(myLogger())( "null output buffer!" );
         return false;
     }
 
     // resize the vector on demond
-    if( size + mCursor > mBuffer.Size() )
+    if( size + mCursor > mBuffer.size() )
     {
-        mBuffer.Resize( size + mCursor );
+        mBuffer.resize( size + mCursor );
     }
 
     memcpy( &mBuffer[mCursor], buf, size );
 
     mCursor += size;
-    GN_ASSERT( mCursor <= mBuffer.Size() );
+    GN_ASSERT( mCursor <= mBuffer.size() );
 
     if( written ) *written = size;
     return true;
@@ -209,7 +209,7 @@ inline bool GN::VectorFile::Write( const void * buf, size_t size, size_t * writt
 //
 //
 //  ----------------------------------------------------------------------------
-inline bool GN::VectorFile::Seek( size_t offset, FileSeek origin )
+inline bool GN::VectorFile::seek( size_t offset, FileSeek origin )
 {
     size_t cur;
     if( FileSeek::CUR == origin )
@@ -218,7 +218,7 @@ inline bool GN::VectorFile::Seek( size_t offset, FileSeek origin )
     }
     else if( FileSeek::END == origin )
     {
-        cur = mBuffer.Size() + (size_t)offset;
+        cur = mBuffer.size() + (size_t)offset;
     }
     else if( FileSeek::SET == origin )
     {
@@ -226,13 +226,13 @@ inline bool GN::VectorFile::Seek( size_t offset, FileSeek origin )
     }
     else
     {
-        GN_ERROR(MyLogger())( "invalid Seek origin!" );
+        GN_ERROR(myLogger())( "invalid seek origin!" );
         return false;
     }
 
-    if( cur > mBuffer.Size() )
+    if( cur > mBuffer.size() )
     {
-        GN_ERROR(MyLogger())( "out of range" );
+        GN_ERROR(myLogger())( "out of range" );
         return false;
     }
     mCursor = cur;

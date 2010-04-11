@@ -2,7 +2,7 @@
 #include "oglShader.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Local function
@@ -42,7 +42,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 {
     GN_GUARD;
 
-    if( code.Empty() )
+    if( code.empty() )
     {
         GN_ERROR(sLogger)( "shader code can't be empty!" );
         return false;
@@ -59,8 +59,8 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
     ARBAutoDel autodel( program );
 
     // trim leading spaces in shader code
-    const char * ptr = code.ToRawPtr();
-    GLsizei      len = (GLsizei)code.Size();
+    const char * ptr = code.cptr();
+    GLsizei      len = (GLsizei)code.size();
     while( len > 0 &&
         ( ' '==*ptr || '\t' == *ptr || '\n' == *ptr ) )
     {
@@ -85,7 +85,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
             "character(%d)\n"
             "%s\n"
             "=========================================================\n",
-            code.ToRawPtr(), errPos, errStr );
+            code.cptr(), errPos, errStr );
         return false;
     }
 
@@ -103,7 +103,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderARB::Init( const StrA & code )
+bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
 {
     GN_GUARD;
 
@@ -115,10 +115,10 @@ bool GN::gfx::OGLBasicShaderARB::Init( const StrA & code )
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
     // create shader
-    if( !createShader( code ) ) return Failure();
+    if( !createShader( code ) ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -126,7 +126,7 @@ bool GN::gfx::OGLBasicShaderARB::Init( const StrA & code )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderARB::Quit()
+void GN::gfx::OGLBasicShaderARB::quit()
 {
     GN_GUARD;
 
@@ -177,7 +177,7 @@ void GN::gfx::OGLBasicShaderARB::apply() const
     UInt32 handle = getFirstUniform();
     while( handle )
     {
-        applyUniform( GetUniform( handle ) );
+        applyUniform( getUniform( handle ) );
         handle = getNextUniform( handle );
     }
     clearDirtySet();
@@ -196,7 +196,7 @@ void GN::gfx::OGLBasicShaderARB::applyDirtyUniforms() const
     std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
-        applyUniform( GetUniform( *i ) );
+        applyUniform( getUniform( *i ) );
     }
     clearDirtySet();
 
@@ -273,7 +273,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         switch( u.value.type )
         {
             case UVT_VECTOR4 :
-                for( size_t i = 0; i < u.value.vector4s.Size(); ++i )
+                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
                 {
                     GN_OGL_CHECK( glProgramEnvParameter4fvARB(
                         mTarget,
@@ -298,7 +298,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         switch( u.value.type )
         {
             case UVT_VECTOR4 :
-                for( size_t i = 0; i < u.value.vector4s.Size(); ++i )
+                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
                 {
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
                         mTarget,
@@ -308,7 +308,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
                 break;
 
             case UVT_MATRIX44 :
-                for( size_t i = 0; i < u.value.matrix44s.Size(); ++i )
+                for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
                 {
                     GLuint idx = (GLuint)( desc.index + i * 4 );
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
@@ -346,7 +346,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
         if( UVT_MATRIX44 == u.value.type )
         {
-            for( size_t i = 0; i < u.value.matrix44s.Size(); ++i )
+            for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
             {
                 GN_OGL_CHECK( glMatrixMode( (GLenum)(GL_MATRIX0_ARB+desc.index+i) ) );
                 GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(u.value.matrix44s[i])[0] ) );
@@ -372,11 +372,11 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
 {
     GN_GUARD;
 
-    GN_ASSERT( !IsStringEmpty(name) );
+    GN_ASSERT( !stringEmpty(name) );
 
     // get uniform index
     unsigned int index;
-    if( 0 == String2Integer<unsigned int>( index, name+1 ) )
+    if( 0 == string2Integer<unsigned int>( index, name+1 ) )
     {
         GN_ERROR(sLogger)(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"

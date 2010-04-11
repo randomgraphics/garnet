@@ -42,7 +42,7 @@ class TestTextureBandwidth : public BasicTestCase
 #endif
         return XPhysicalAlloc( count, MAXULONG_PTR, 0, flags );
 #else
-        return HeapMemory::Alloc( count );
+        return HeapMemory::alloc( count );
 #endif
     }
 
@@ -52,7 +52,7 @@ class TestTextureBandwidth : public BasicTestCase
 #if GN_XENON
         XPhysicalFree( p );
 #else
-        HeapMemory::Free( p );
+        HeapMemory::dealloc( p );
 #endif
     }
 
@@ -75,22 +75,22 @@ class TestTextureBandwidth : public BasicTestCase
 
         Clock c;
 
-        double start = c.GetTimeD();
+        double start = c.getTimeD();
         for( size_t i = 0; i < LOOP_COUNT; ++i )
         {
             memcpy( dst, src, BUF_SIZE );
         }
-        double elapsed = c.GetTimeD() - start;
+        double elapsed = c.getTimeD() - start;
 		StrA txt;
-		txt.Format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
-		OutputDebugStringA( txt.ToRawPtr() );
-		GN_INFO(sLogger)( txt.ToRawPtr() );
+		txt.format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
+		OutputDebugStringA( txt.cptr() );
+		GN_INFO(sLogger)( txt.cptr() );
 
         memFree( src );
         memFree( dst );
     }
 
-    bool CreateTexture( TextureDesc & desc )
+    bool createTexture( TextureDesc & desc )
     {
 		GN_GUARD;
 
@@ -117,7 +117,7 @@ class TestTextureBandwidth : public BasicTestCase
         desc.baseMap = memAlloc( TEX_BYTES, 'd' );
         XGOffsetResourceAddress( tex, desc.baseMap );
 #else
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         GN_DX_CHECK_RETURN(
             dev->CreateTexture(
                 TEX_SIZE, TEX_SIZE, 1,
@@ -133,7 +133,7 @@ class TestTextureBandwidth : public BasicTestCase
         TEX_BYTES = lrc.Pitch * TEX_SIZE;
 #endif
 
-        desc.texture.Attach( tex );
+        desc.texture.attach( tex );
         return true;
 
 		GN_UNGUARD;
@@ -142,10 +142,10 @@ class TestTextureBandwidth : public BasicTestCase
     void destroyTexture( TextureDesc & desc )
     {
 #if GN_XENON
-        delete desc.texture.Detach();
-        desc.texture.Clear();
+        delete desc.texture.detach();
+        desc.texture.clear();
 #else
-        desc.texture.Clear();
+        desc.texture.clear();
 #endif
     }
 
@@ -155,7 +155,7 @@ class TestTextureBandwidth : public BasicTestCase
         const UInt8 * data = mMemBuf[memid];
 
 #if GN_XENON
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         if( desc.fence ) dev->BlockOnFence( desc.fence );
         memCopy( desc.baseMap, data, TEX_BYTES );
 #if !USE_WRITE_COMBINE
@@ -173,9 +173,9 @@ class TestTextureBandwidth : public BasicTestCase
 
     void drawTexture( UInt32 texid )
     {
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.GetD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         dev->SetTexture( 0, mTextures[texid].texture );
-        mGeometry.Draw();
+        mGeometry.draw();
 #if GN_XENON
         mTextures[texid].fence = dev->InsertFence();
 #endif
@@ -219,7 +219,7 @@ public:
         // create textures
         for( size_t i = 0; i < TEX_COUNT; ++i )
         {
-            if( !CreateTexture( mTextures[i] ) ) return false;
+            if( !createTexture( mTextures[i] ) ) return false;
         }
 
         // initialize memory buffer
@@ -289,16 +289,16 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void Update()
+    void update()
     {
-        const DispDesc & dd = gRenderer.GetDispDesc();
+        const DispDesc & dd = gRenderer.getDispDesc();
 
-        float fillrate = 2 * TEX_COUNT * REPEAT_COUNT * dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().GetFps();
-        float bandwidth = 2 * TEX_COUNT * REPEAT_COUNT * TEX_BYTES / 1000000000.0f * getApp().GetFps();
+        float fillrate = 2 * TEX_COUNT * REPEAT_COUNT * dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().fps();
+        float bandwidth = 2 * TEX_COUNT * REPEAT_COUNT * TEX_BYTES / 1000000000.0f * getApp().fps();
 
         mBandwidth = bandwidth;
 
-        mInfo.Format(
+        mInfo.format(
             "%s\n"
             "bandwidth     = %f GB/sec\n"
             "fillrate      = %f Gpix/sec\n"
@@ -306,7 +306,7 @@ public:
             "texture count = %d\n"
             "bytes/tex     = %d Bytes\n"
             "quad count    = %d x %d x %d",
-            getName().ToRawPtr(),
+            getName().cptr(),
             bandwidth,
             fillrate,
             TEX_SIZE,
@@ -333,14 +333,14 @@ public:
         RendererContext::FieldFlags ff;
         ff.u32 = 0;
         ff.textures = 1;
-        r.RebindContext( ff );
+        r.rebindContext( ff );
 
         // draw text
-        scene::gAsciiFont.DrawText( mInfo.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return StringFormat( "bandwidth(%f) format(%s) size(%dx%d)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT), TEX_SIZE, TEX_SIZE );
+        return stringFormat( "bandwidth(%f) format(%s) size(%dx%d)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT), TEX_SIZE, TEX_SIZE );
     }
 };

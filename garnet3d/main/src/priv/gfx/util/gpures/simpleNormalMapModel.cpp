@@ -3,7 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 //
 //
@@ -19,9 +19,9 @@ static ModelResourceDesc sNormalMapModelDesc()
 #define INIT_UNIFORM( name, type, defval ) \
     if( 1 ) { \
         md.uniforms[name].size = sizeof(type); \
-        md.uniforms[name].initialValue.Resize( sizeof(type) ); \
+        md.uniforms[name].initialValue.resize( sizeof(type) ); \
         type default = (defval); \
-        memcpy( md.uniforms[name].initialValue.ToRawPtr(), &default, sizeof(type) ); \
+        memcpy( md.uniforms[name].initialValue.cptr(), &default, sizeof(type) ); \
     } else void(0)
 
     INIT_UNIFORM( "MATRIX_PVW"      , Matrix44f, Matrix44f::sIdentity() );
@@ -43,31 +43,31 @@ const ModelResourceDesc GN::gfx::SimpleNormalMapModel::DESC = sNormalMapModelDes
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SimpleNormalMapModel::Init()
+bool GN::gfx::SimpleNormalMapModel::init()
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::SimpleNormalMapModel, () );
 
-    mModel = mDatabase.CreateResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
+    mModel = mDatabase.createResource<ModelResource>( NULL );
+    if( 0 == mModel || !mModel->reset(&DESC) ) return failure();
 
     // initialize uniforms
-    mMatrixPvw     = mModel->GetUniformResource( "MATRIX_PVW"      );
-    mMatrixWorld   = mModel->GetUniformResource( "MATRIX_WORLD"    );
-    mMatrixWorldIT = mModel->GetUniformResource( "MATRIX_WORLD_IT" );
-    mLightPos      = mModel->GetUniformResource( "LIGHT0_POSITION" );
-    mLightColor    = mModel->GetUniformResource( "LIGHT0_DIFFUSE"  );
-    mAlbedoColor   = mModel->GetUniformResource( "ALBEDO_COLOR"    );
-    mAlbedoTexture = mModel->GetTextureResource( "ALBEDO_TEXTURE"  );
+    mMatrixPvw     = mModel->uniformResource( "MATRIX_PVW"      );
+    mMatrixWorld   = mModel->uniformResource( "MATRIX_WORLD"    );
+    mMatrixWorldIT = mModel->uniformResource( "MATRIX_WORLD_IT" );
+    mLightPos      = mModel->uniformResource( "LIGHT0_POSITION" );
+    mLightColor    = mModel->uniformResource( "LIGHT0_DIFFUSE"  );
+    mAlbedoColor   = mModel->uniformResource( "ALBEDO_COLOR"    );
+    mAlbedoTexture = mModel->textureResource( "ALBEDO_TEXTURE"  );
 
     // initialize textures
-    mAlbedoTexture = mModel->GetTextureResource("ALBEDO_TEXTURE");
-    mNormalTexture = mModel->GetTextureResource("NORMAL_TEXTURE");
+    mAlbedoTexture = mModel->textureResource("ALBEDO_TEXTURE");
+    mNormalTexture = mModel->textureResource("NORMAL_TEXTURE");
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -75,23 +75,23 @@ bool GN::gfx::SimpleNormalMapModel::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::Quit()
+void GN::gfx::SimpleNormalMapModel::quit()
 {
     GN_GUARD;
 
-    mModel.Clear();
-    mDefaultAlbedoTexture.Clear();
-    mDefaultNormalTexture.Clear();
-    mMatrixPvw.Clear();
-    mMatrixWorld.Clear();
-    mMatrixWorldIT.Clear();
-    mLightPos.Clear();
-    mLightColor.Clear();
-    mAlbedoColor.Clear();
-    mAlbedoTexture.Clear();
-    mNormalTexture.Clear();
+    mModel.clear();
+    mDefaultAlbedoTexture.clear();
+    mDefaultNormalTexture.clear();
+    mMatrixPvw.clear();
+    mMatrixWorld.clear();
+    mMatrixWorldIT.clear();
+    mLightPos.clear();
+    mLightColor.clear();
+    mAlbedoColor.clear();
+    mAlbedoTexture.clear();
+    mNormalTexture.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -100,54 +100,54 @@ void GN::gfx::SimpleNormalMapModel::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetTransform(
+void GN::gfx::SimpleNormalMapModel::setTransform(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
 {
     Matrix44f pvw = proj * view * world;
     Matrix44f wit = Matrix44f::sInverse( Matrix44f::sTranspose( world ) );
-    mMatrixPvw->GetUniform()->Update( pvw );
-    mMatrixWorld->GetUniform()->Update( world );
-    mMatrixWorldIT->GetUniform()->Update( wit );
+    mMatrixPvw->uniform()->update( pvw );
+    mMatrixWorld->uniform()->update( world );
+    mMatrixWorldIT->uniform()->update( wit );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetLightPos( const Vector4f & pos )
+void GN::gfx::SimpleNormalMapModel::setLightPos( const Vector4f & pos )
 {
-    mLightPos->GetUniform()->Update( pos );
+    mLightPos->uniform()->update( pos );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetLightColor( const Vector4f & clr )
+void GN::gfx::SimpleNormalMapModel::setLightColor( const Vector4f & clr )
 {
-    mLightColor->GetUniform()->Update( clr );
+    mLightColor->uniform()->update( clr );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetAlbedoColor( const Vector4f & clr )
+void GN::gfx::SimpleNormalMapModel::setAlbedoColor( const Vector4f & clr )
 {
-    mAlbedoColor->GetUniform()->Update( clr );
+    mAlbedoColor->uniform()->update( clr );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetAlbedoTexture( const AutoRef<Texture> & tex )
+void GN::gfx::SimpleNormalMapModel::setAlbedoTexture( const AutoRef<Texture> & tex )
 {
-    mAlbedoTexture->SetTexture( tex ? tex : mDefaultAlbedoTexture );
+    mAlbedoTexture->setTexture( tex ? tex : mDefaultAlbedoTexture );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleNormalMapModel::SetNormalTexture( const AutoRef<Texture> & tex )
+void GN::gfx::SimpleNormalMapModel::setNormalTexture( const AutoRef<Texture> & tex )
 {
-    mNormalTexture->SetTexture( tex ? tex : mDefaultNormalTexture );
+    mNormalTexture->setTexture( tex ? tex : mDefaultNormalTexture );
 }

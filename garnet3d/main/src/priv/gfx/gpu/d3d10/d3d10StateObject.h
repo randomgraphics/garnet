@@ -339,7 +339,7 @@ namespace GN { namespace gfx
             mTail.next = NULL;
             mTail.object = 0;
             mCount = 0;
-            mLogger = GetLogger( "GN.gfx.gpu.D3D10.D3D10StateObjectCache" );
+            mLogger = getLogger( "GN.gfx.gpu.D3D10.D3D10StateObjectCache" );
 
             // initialize free item list
             mNextFreeItem = &mPool[0];
@@ -352,25 +352,25 @@ namespace GN { namespace gfx
 
         ~D3D10StateObjectCache()
         {
-            Clear();
+            clear();
         }
 
         /// get the D3D10 device
         ID3D10Device & dev() const { return mDevice; }
 
         /// get number of objects in cache
-        size_t Size() const { return mCount; }
+        size_t size() const { return mCount; }
 
         ///
         /// clear cache. Delete all state objects.
         ///
-        void Clear()
+        void clear()
         {
             // delete all state objects
             StateObjectItem * item = mHead;
             while( item != &mTail )
             {
-                SafeRelease( item->object );
+                safeRelease( item->object );
                 item = item->next;
             }
 
@@ -396,7 +396,7 @@ namespace GN { namespace gfx
         OBJECT_CLASS * operator[]( const OBJECT_DESC & desc )
         {
             // look up existing item first
-            StateObjectItem * * hashitem = mHashTable.Find( desc );
+            StateObjectItem * * hashitem = mHashTable.find( desc );
             if( hashitem )
             {
                 StateObjectItem * item = *hashitem;
@@ -422,10 +422,10 @@ namespace GN { namespace gfx
                     GN_ASSERT( item && item != mHead );
 
                     // delete the state object object
-                    SafeRelease( item->object );
+                    safeRelease( item->object );
 
                     // remove from hash
-                    mHashTable.Remove( item->desc );
+                    mHashTable.remove( item->desc );
 
                     // remove from LRU list
                     StateObjectItem * prev = item->prev;
@@ -454,7 +454,7 @@ namespace GN { namespace gfx
             item->desc   = desc;
 
             // add to hash
-            mHashTable.Insert( desc, item );
+            mHashTable.insert( desc, item );
 
             // update LRU
             InsertToHead( item );
@@ -626,18 +626,18 @@ namespace GN { namespace gfx
         D3D10StateObjectManager( ID3D10Device & dev );
 
         /// clear all
-        void Clear()
+        void clear()
         {
-            mRasterStates.Clear();
+            mRasterStates.clear();
             mCurrentRS = NULL;
 
-            mBlendStates.Clear();
+            mBlendStates.clear();
             mCurrentBS = NULL;
 
-            mDepthStates.Clear();
+            mDepthStates.clear();
             mCurrentDS = NULL;
 
-            mSamplerStates.Clear();
+            mSamplerStates.clear();
             memset( mCurrentVSSamplers, 0, sizeof(mCurrentVSSamplers) );
             memset( mCurrentGSSamplers, 0, sizeof(mCurrentGSSamplers) );
             memset( mCurrentPSSamplers, 0, sizeof(mCurrentPSSamplers) );

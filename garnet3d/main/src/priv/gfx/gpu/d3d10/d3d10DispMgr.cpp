@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d10Gpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // device management
@@ -14,8 +14,8 @@ bool GN::gfx::D3D10Gpu::dispInit()
 {
     GN_GUARD;
 
-    const GpuOptions & ro = GetOptions();
-    const DispDesc & dd = GetDispDesc();
+    const GpuOptions & ro = getOptions();
+    const DispDesc & dd = getDispDesc();
 
     UINT flags = D3D10_CREATE_DEVICE_SINGLETHREADED;
     if( ro.debug ) flags |= D3D10_CREATE_DEVICE_DEBUG;
@@ -86,14 +86,14 @@ void GN::gfx::D3D10Gpu::dispQuit()
     GN_GUARD;
 
     // switch back to windowed mode, before destroy the swap chain.
-    if( mSwapChain && GetOptions().fullscreen )
+    if( mSwapChain && getOptions().fullscreen )
     {
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
 
-    SafeRelease( mSwapChain );
-    SafeRelease( mDevice );
-    SafeRelease( mAdapter );
+    safeRelease( mSwapChain );
+    safeRelease( mDevice );
+    safeRelease( mAdapter );
 
     GN_UNGUARD;
 }

@@ -32,8 +32,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonRenderTargetManager( XenonGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~XenonRenderTargetManager() { Quit(); }
+        XenonRenderTargetManager( XenonGpu & r ) : mGpu(r) { clear(); }
+        virtual ~XenonRenderTargetManager() { quit(); }
         //@}
 
         // ********************************
@@ -42,10 +42,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************

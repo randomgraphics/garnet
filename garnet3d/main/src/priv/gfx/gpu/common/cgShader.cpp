@@ -3,7 +3,7 @@
 
 #ifdef HAS_CG
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
 
 static GN::StrA sAddLineCount( const GN::StrA & in )
 {
@@ -12,15 +12,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.ToRawPtr(); *s; ++s )
+    for( const char * s = in.cptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
+            out.append( stringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.Append( *s );
+            out.append( *s );
         }
     }
 
@@ -34,7 +34,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::CgShader::Init(
+bool GN::gfx::CgShader::init(
     CGcontext context,
     CGprofile profile,
     const StrA & code,
@@ -47,7 +47,7 @@ bool GN::gfx::CgShader::Init(
     GN_STDCLASS_INIT( GN::gfx::CgShader, () );
 
     // create program
-    mProgram = cgCreateProgram( context, CG_SOURCE, code.ToRawPtr(), profile, entry.ToRawPtr(), args );
+    mProgram = cgCreateProgram( context, CG_SOURCE, code.cptr(), profile, entry.cptr(), args );
     if( !mProgram )
     {
         CGerror err;
@@ -63,10 +63,10 @@ bool GN::gfx::CgShader::Init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                sAddLineCount( code ).ToRawPtr(),
+                sAddLineCount( code ).cptr(),
                 cgGetLastListing(context) );
         }
-        return Failure();
+        return failure();
     }
 
     GN_TRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
@@ -80,14 +80,14 @@ bool GN::gfx::CgShader::Init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        sAddLineCount( code ).ToRawPtr(),
-        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).ToRawPtr() );
+        sAddLineCount( code ).cptr(),
+        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
 
     // success
     mContext = context;
     mProfile = profile;
     mCode = code;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -95,11 +95,11 @@ bool GN::gfx::CgShader::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::CgShader::Quit()
+void GN::gfx::CgShader::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;

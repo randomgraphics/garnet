@@ -24,29 +24,29 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        StrA pwd = ToNativeDiskFilePath( GetCurrentDir() );
-        StrA d = GetCurrentDrive();
+        StrA pwd = toNativeDiskFilePath( getCurrentDir() );
+        StrA d = getCurrentDrive();
 
-        TS_ASSERT_EQUALS( d+PSS, ToNativeDiskFilePath("/") );
-        TS_ASSERT_EQUALS( d+PSS, ToNativeDiskFilePath("\\") );
+        TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("/") );
+        TS_ASSERT_EQUALS( d+PSS, toNativeDiskFilePath("\\") );
 
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", ToNativeDiskFilePath("/a//b/") );
-        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", ToNativeDiskFilePath("\\a\\\\b\\") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("/a//b/") );
+        TS_ASSERT_EQUALS( d+PSS"a"PSS"b", toNativeDiskFilePath("\\a\\\\b\\") );
 
 #if GN_MSWIN
-        TS_ASSERT_EQUALS( "A:"PSS"b", ToNativeDiskFilePath("a:b") );
-        TS_ASSERT_EQUALS( "A:"PSS, ToNativeDiskFilePath("a:") );
-        TS_ASSERT_EQUALS( "A:"PSS, ToNativeDiskFilePath("a:/") );
-        TS_ASSERT_EQUALS( "A:"PSS, ToNativeDiskFilePath("a:\\") );
+        TS_ASSERT_EQUALS( "A:"PSS"b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( "A:"PSS, toNativeDiskFilePath("a:\\") );
 #elif GN_POSIX
-        TS_ASSERT_EQUALS( pwd+PSS"a:b", ToNativeDiskFilePath("a:b") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", ToNativeDiskFilePath("a:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", ToNativeDiskFilePath("a:/") );
-        TS_ASSERT_EQUALS( pwd+PSS"a:", ToNativeDiskFilePath("a:\\") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:b", toNativeDiskFilePath("a:b") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:/") );
+        TS_ASSERT_EQUALS( pwd+PSS"a:", toNativeDiskFilePath("a:\\") );
 #endif
 
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", ToNativeDiskFilePath("a/:") );
-        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", ToNativeDiskFilePath("a\\:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a/:") );
+        TS_ASSERT_EQUALS( pwd+PSS"a"PSS":", toNativeDiskFilePath("a\\:") );
     }
 
     void testJoin()
@@ -54,14 +54,14 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT_EQUALS( "", JoinPath( "", "" ) );
-        TS_ASSERT_EQUALS( "a", JoinPath( "", "a" ) );
-        TS_ASSERT_EQUALS( "a", JoinPath( "a", "" ) );
-        TS_ASSERT_EQUALS( "a", JoinPath( "", "a", "" ) );
-        TS_ASSERT_EQUALS( "a/b", JoinPath( "a", "b" ) );
-        TS_ASSERT_EQUALS( "a/b", JoinPath( "", "a", "", "b", "" ) );
-        TS_ASSERT_EQUALS( "/a/b/c", JoinPath( "\\a\\", "\\b\\", "\\c\\" ) );
-        TS_ASSERT_EQUALS( "/a/b/c", JoinPath( "/a/", "/b/", "/c/" ) );
+        TS_ASSERT_EQUALS( "", joinPath( "", "" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "", "a" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "a", "" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "", "a", "" ) );
+        TS_ASSERT_EQUALS( "a/b", joinPath( "a", "b" ) );
+        TS_ASSERT_EQUALS( "a/b", joinPath( "", "a", "", "b", "" ) );
+        TS_ASSERT_EQUALS( "/a/b/c", joinPath( "\\a\\", "\\b\\", "\\c\\" ) );
+        TS_ASSERT_EQUALS( "/a/b/c", joinPath( "/a/", "/b/", "/c/" ) );
     }
 
     void testPrefix()
@@ -70,19 +70,19 @@ public:
         using namespace GN::fs;
 
         StrA s[2] ={
-            ToNativeDiskFilePath("app::"),
-            ToNativeDiskFilePath("startup::"),
+            toNativeDiskFilePath("app::"),
+            toNativeDiskFilePath("startup::"),
         };
 
-        GN_INFO(sLogger)( "appDir = %s", s[0].ToRawPtr() );
-        GN_INFO(sLogger)( "startup = %s", s[1].ToRawPtr() );
+        GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );
+        GN_INFO(sLogger)( "startup = %s", s[1].cptr() );
 
         for( size_t i = 0; i < 2; ++i )
         {
-            TS_ASSERT( !s[i].Empty() );
-            if( s[i].Size() > 1 )
+            TS_ASSERT( !s[i].empty() );
+            if( s[i].size() > 1 )
             {
-                TS_ASSERT_DIFFERS( PSC, s[i].GetLast() );
+                TS_ASSERT_DIFFERS( PSC, s[i].last() );
             }
             else
             {
@@ -96,17 +96,17 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT( PathExist("/") );
-        TS_ASSERT( !PathExist("haha,heihei,hoho,huhu,mama,papa") );
-        TS_ASSERT( PathExist("SConstruct") );
+        TS_ASSERT( pathExist("/") );
+        TS_ASSERT( !pathExist("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( pathExist("SConstruct") );
 
-        TS_ASSERT( PathExist("startup::\\SConstruct") );
-        TS_ASSERT( PathExist("startup::/SConstruct") );
-        TS_ASSERT( PathExist("startup::SConstruct") );
+        TS_ASSERT( pathExist("startup::\\SConstruct") );
+        TS_ASSERT( pathExist("startup::/SConstruct") );
+        TS_ASSERT( pathExist("startup::SConstruct") );
 
-        TS_ASSERT( PathExist("app::GNut"APPEXT) );
-        TS_ASSERT( PathExist("app::/GNut"APPEXT) );
-        TS_ASSERT( PathExist("app::\\GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::/GNut"APPEXT) );
+        TS_ASSERT( pathExist("app::\\GNut"APPEXT) );
     }
 
     void testIsDir()
@@ -114,17 +114,17 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT( IsDir("/") );
+        TS_ASSERT( isDir("/") );
 
-        TS_ASSERT( IsDir("startup::") );
-        TS_ASSERT( IsDir("startup::/") );
-        TS_ASSERT( IsDir("startup::\\") );
+        TS_ASSERT( isDir("startup::") );
+        TS_ASSERT( isDir("startup::/") );
+        TS_ASSERT( isDir("startup::\\") );
 
-        TS_ASSERT( IsDir("app::") );
-        TS_ASSERT( IsDir("app::/") );
-        TS_ASSERT( IsDir("app::\\") );
+        TS_ASSERT( isDir("app::") );
+        TS_ASSERT( isDir("app::/") );
+        TS_ASSERT( isDir("app::\\") );
 
-        TS_ASSERT( !IsDir("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( !isDir("haha,heihei,hoho,huhu,mama,papa") );
     }
 
     void testIsFile()
@@ -132,11 +132,11 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT( IsFile("startup::\\SConstruct") );
-        TS_ASSERT( IsFile("app::GNut"APPEXT) );
-        TS_ASSERT( !IsFile("startup::") );
-        TS_ASSERT( !IsFile("app::") );
-        TS_ASSERT( !IsFile("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( isFile("startup::\\SConstruct") );
+        TS_ASSERT( isFile("app::GNut"APPEXT) );
+        TS_ASSERT( !isFile("startup::") );
+        TS_ASSERT( !isFile("app::") );
+        TS_ASSERT( !isFile("haha,heihei,hoho,huhu,mama,papa") );
     }
 
     void testGetParent()
@@ -144,19 +144,19 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT_EQUALS( "a", ParentPath("a/b") );
-        TS_ASSERT_EQUALS( "a", ParentPath("a/b/") );
-        TS_ASSERT_EQUALS( "/", ParentPath("/a") );
-        TS_ASSERT_EQUALS( "/", ParentPath("/a/") );
-        TS_ASSERT_EQUALS( "", ParentPath("a") );
-        TS_ASSERT_EQUALS( "", ParentPath("a/") );
-        TS_ASSERT_EQUALS( "/", ParentPath("/") );
-        TS_ASSERT_EQUALS( "", ParentPath("") );
-        TS_ASSERT_EQUALS( "startup::a", ParentPath("startup::a/b") );
-        TS_ASSERT_EQUALS( "startup::/", ParentPath("startup::/a") );
-        TS_ASSERT_EQUALS( "startup::", ParentPath("startup::a") );
-        TS_ASSERT_EQUALS( "startup::/", ParentPath("startup::\\") );
-        TS_ASSERT_EQUALS( "startup::", ParentPath("startup::") );
+        TS_ASSERT_EQUALS( "a", parentPath("a/b") );
+        TS_ASSERT_EQUALS( "a", parentPath("a/b/") );
+        TS_ASSERT_EQUALS( "/", parentPath("/a") );
+        TS_ASSERT_EQUALS( "/", parentPath("/a/") );
+        TS_ASSERT_EQUALS( "", parentPath("a") );
+        TS_ASSERT_EQUALS( "", parentPath("a/") );
+        TS_ASSERT_EQUALS( "/", parentPath("/") );
+        TS_ASSERT_EQUALS( "", parentPath("") );
+        TS_ASSERT_EQUALS( "startup::a", parentPath("startup::a/b") );
+        TS_ASSERT_EQUALS( "startup::/", parentPath("startup::/a") );
+        TS_ASSERT_EQUALS( "startup::", parentPath("startup::a") );
+        TS_ASSERT_EQUALS( "startup::/", parentPath("startup::\\") );
+        TS_ASSERT_EQUALS( "startup::", parentPath("startup::") );
     }
 
     void testGetExt()
@@ -164,11 +164,11 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT_EQUALS( ".c", ExtName("a.b.c") );
-        TS_ASSERT_EQUALS( ".c", ExtName("a.c") );
-        TS_ASSERT_EQUALS( ".c", ExtName(".c") );
-        TS_ASSERT_EQUALS( ".", ExtName("a.") );
-        TS_ASSERT_EQUALS( "", ExtName("a") );
+        TS_ASSERT_EQUALS( ".c", extName("a.b.c") );
+        TS_ASSERT_EQUALS( ".c", extName("a.c") );
+        TS_ASSERT_EQUALS( ".c", extName(".c") );
+        TS_ASSERT_EQUALS( ".", extName("a.") );
+        TS_ASSERT_EQUALS( "", extName("a") );
     }
 
     void testToRelative()
@@ -176,13 +176,13 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT_EQUALS( "..", RelPath( "a/b/c", "a\\b\\c\\d" ) );
-        TS_ASSERT_EQUALS( "", RelPath( "a/b/c", "a\\b\\c" ) );
-        TS_ASSERT_EQUALS( "c", RelPath( "a/b/c", "a\\b" ) );
-        TS_ASSERT_EQUALS( "a/b/c", RelPath( "a/b/c", "" ) );
-        TS_ASSERT_EQUALS( "a/b/c", RelPath( "a/b/c", "d/e" ) );
-        TS_ASSERT_EQUALS( "c", RelPath( "c:/a/b/c", "c:/a/b" ) );
-        TS_ASSERT_EQUALS( "c:/a/b", RelPath( "c:/a/b", "d:/a" ) );
+        TS_ASSERT_EQUALS( "..", relPath( "a/b/c", "a\\b\\c\\d" ) );
+        TS_ASSERT_EQUALS( "", relPath( "a/b/c", "a\\b\\c" ) );
+        TS_ASSERT_EQUALS( "c", relPath( "a/b/c", "a\\b" ) );
+        TS_ASSERT_EQUALS( "a/b/c", relPath( "a/b/c", "" ) );
+        TS_ASSERT_EQUALS( "a/b/c", relPath( "a/b/c", "d/e" ) );
+        TS_ASSERT_EQUALS( "c", relPath( "c:/a/b/c", "c:/a/b" ) );
+        TS_ASSERT_EQUALS( "c:/a/b", relPath( "c:/a/b", "d:/a" ) );
     }
 
     void testBaseName()
@@ -190,9 +190,9 @@ public:
         using namespace GN;
         using namespace GN::fs;
 
-        TS_ASSERT_EQUALS( "a.b", BaseName( "a.b.c" ) );
-        TS_ASSERT_EQUALS( "a.b", BaseName( "media::a.b.c" ) );
-        TS_ASSERT_EQUALS( "a.b", BaseName( "\\a.b.c" ) );
-        TS_ASSERT_EQUALS( "a.b", BaseName( "c:\\a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "media::a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "\\a.b.c" ) );
+        TS_ASSERT_EQUALS( "a.b", baseName( "c:\\a.b.c" ) );
     }
 };

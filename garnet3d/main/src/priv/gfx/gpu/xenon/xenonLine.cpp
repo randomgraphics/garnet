@@ -22,7 +22,7 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     D3DDECL_END()
 };
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -31,7 +31,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonLine::Init()
+bool GN::gfx::XenonLine::init()
 {
     GN_GUARD;
 
@@ -40,10 +40,10 @@ bool GN::gfx::XenonLine::Init()
 
     GN_ASSERT( !mVtxShader && !mPxlShader );
 
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // create vertex decl
-    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), Failure() );
+    GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( sDecl, &mDecl ), failure() );
 
     // create vertex shader
     static const char * vscode =
@@ -53,7 +53,7 @@ bool GN::gfx::XenonLine::Init()
         "m4x4 oPos, v0, c0 \n"
         "mov oD0, v1 \n";
     mVtxShader = d3d9::assembleAndCreateVS( &dev, vscode );
-    if( 0 == mVtxShader ) return Failure();
+    if( 0 == mVtxShader ) return failure();
 
 
     // create pixel shader
@@ -61,7 +61,7 @@ bool GN::gfx::XenonLine::Init()
         "ps.1.1 \n"
         "mov r0, v0 \n";
     mPxlShader = d3d9::assembleAndCreatePS( &dev, pscode );
-    if( 0 == mPxlShader ) return Failure();
+    if( 0 == mPxlShader ) return failure();
 
     // create vertex buffer
     GN_DX_CHECK_RETURN(
@@ -71,13 +71,13 @@ bool GN::gfx::XenonLine::Init()
             0, // fvf
             0, // pool
             &mVtxBuf, 0 ),
-        Failure() );
+        failure() );
 
     // reset next line indicator
     mNextLine = 0;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -85,16 +85,16 @@ bool GN::gfx::XenonLine::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonLine::Quit()
+void GN::gfx::XenonLine::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mVtxBuf );
-    SafeRelease( mDecl );
-    SafeRelease( mVtxShader );
-    SafeRelease( mPxlShader );
+    safeRelease( mVtxBuf );
+    safeRelease( mDecl );
+    safeRelease( mVtxShader );
+    safeRelease( mPxlShader );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -107,7 +107,7 @@ void GN::gfx::XenonLine::Quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::XenonLine::DrawLines(
+void GN::gfx::XenonLine::drawLines(
     BitFields         /*options*/,
     const float     * /*positions*/,
     size_t            /*stride*/,
@@ -137,12 +137,12 @@ void GN::gfx::XenonLine::DrawLines(
     {
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        DrawLines( options, positions, stride, n, rgba, model, view, proj );
+        drawLines( options, positions, stride, n, rgba, model, view, proj );
         positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }
 
-    XenonGpu & r = GetGpu();
+    XenonGpu & r = getGpu();
     IDirect3DDevice9 & dev = r.getDeviceInlined();
 
     D3DPRIMITIVETYPE d3dpt;
@@ -185,7 +185,7 @@ void GN::gfx::XenonLine::DrawLines(
         for( size_t i = 0; i < vertexCount; ++i )
         {
             XenonLineVertex & v = vbData[i];
-            v.p.Set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
+            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }
@@ -195,7 +195,7 @@ void GN::gfx::XenonLine::DrawLines(
         for( size_t i = 0; i < vertexCount; ++i )
         {
             XenonLineVertex & v = vbData[i];
-            v.p.Set( positions[0], positions[1], positions[2] );
+            v.p.set( positions[0], positions[1], positions[2] );
             v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }
@@ -249,7 +249,7 @@ void GN::gfx::XenonLine::DrawLines(
         (UINT)count ) );
 
     // restore renderer context
-    r.RebindContext( cf );
+    r.rebindContext( cf );
 
     // update mNextLine
     mNextLine += count;

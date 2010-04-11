@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ringbuffer.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.RingBuffer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.RingBuffer");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.RingBuffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RingBuffer::Init( size_t ringBufferSize )
+bool GN::gfx::RingBuffer::init( size_t ringBufferSize )
 {
     GN_GUARD;
 
@@ -18,21 +18,21 @@ bool GN::gfx::RingBuffer::Init( size_t ringBufferSize )
     GN_STDCLASS_INIT( GN::gfx::RingBuffer, () );
 
     mSize  = ringBufferSize;
-    mBegin = (UInt8*)HeapMemory::Alloc( mSize * 2 ); // Note: allocate doulbe sized buffer, to handle rewind issue
-    if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return Failure(); }
+    mBegin = (UInt8*)HeapMemory::alloc( mSize * 2 ); // Note: allocate doulbe sized buffer, to handle rewind issue
+    if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
     mEnd = mBegin + mSize;
     mReadPtr = mWritePtr = mBegin;
-    mNotFull = NewSyncEvent( false, true, NULL );  // initial unsignaled, auto-reset
-    mNotEmpty = NewSyncEvent( false, true, NULL ); // initial unsignaled, auto-reset
+    mNotFull = createSyncEvent( false, true, NULL );  // initial unsignaled, auto-reset
+    mNotEmpty = createSyncEvent( false, true, NULL ); // initial unsignaled, auto-reset
     if( NULL == mNotFull || NULL == mNotEmpty )
     {
         GN_ERROR(sLogger)( "fail to create ring buffer sync events." );
-        return Failure();
+        return failure();
     }
     mQuit = false;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -40,15 +40,15 @@ bool GN::gfx::RingBuffer::Init( size_t ringBufferSize )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::RingBuffer::Quit()
+void GN::gfx::RingBuffer::quit()
 {
     GN_GUARD;
 
     delete mNotFull;
     delete mNotEmpty;
-    HeapMemory::Free( mBegin );
+    HeapMemory::dealloc( mBegin );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -64,8 +64,8 @@ void GN::gfx::RingBuffer::Quit()
 void GN::gfx::RingBuffer::postQuitMessage()
 {
     mQuit = true;
-    if( mNotFull ) mNotFull->Signal();
-    if( mNotEmpty ) mNotEmpty->Signal();
+    if( mNotFull ) mNotFull->signal();
+    if( mNotEmpty ) mNotEmpty->signal();
 }
 
 //
@@ -88,10 +88,10 @@ GN::gfx::RingBuffer::beginProduce( size_t size )
 
         if( (size_t)freeSize < size )
         {
-            mNotFull->Wait();
+            mNotFull->wait();
             if( mQuit )
             {
-                // received Quit message
+                // received quit message
                 return NULL;
             }
         }
@@ -114,7 +114,7 @@ GN::gfx::RingBuffer::endProduce()
     if( newWrite >= mEnd ) newWrite -= mSize;
     mWritePtr = newWrite;
     GN_ASSERT( mBegin <= mWritePtr && mWritePtr < mEnd );
-    mNotEmpty->Signal();
+    mNotEmpty->signal();
 }
 
 //
@@ -136,10 +136,10 @@ GN::gfx::RingBuffer::beginConsume( size_t size )
 
         if( (size_t)unconsumedSize < size )
         {
-            mNotEmpty->Wait();
+            mNotEmpty->wait();
             if( mQuit )
             {
-                // received Quit message
+                // received quit message
                 return NULL;
             }
         }
@@ -162,5 +162,5 @@ GN::gfx::RingBuffer::endConsume()
     if( newRead >= mEnd ) newRead -= mSize;
     mReadPtr = newRead;
     GN_ASSERT( mBegin <= mReadPtr && mReadPtr < mEnd );
-    mNotFull->Signal();
+    mNotFull->signal();
 }

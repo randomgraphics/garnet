@@ -4,14 +4,14 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshConverter");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.meshConverter");
 
 static const char * outputFile = "app::boxes.scene.xml";
 
 void printHelp( const char * exepath )
 {
     printf( "Usage: %s inputfile <outputfile>\n",
-        fs::BaseName( exepath ).ToRawPtr() );
+        fs::baseName( exepath ).cptr() );
 }
 
 //
@@ -36,14 +36,14 @@ int main( int argc, const char * argv[] )
     }
     else
     {
-        outputFile = StringFormat( "startup::%s.scene.xml", fs::BaseName( inputFile ).ToRawPtr() );
+        outputFile = stringFormat( "startup::%s.scene.xml", fs::baseName( inputFile ).cptr() );
     }
 
     SimpleWorldDesc swd;
 
-    if( !swd.LoadFromFile( inputFile ) ) return -1;
+    if( !swd.loadFromFile( inputFile ) ) return -1;
 
-    if( !swd.SaveToFile( outputFile ) ) return -1;
+    if( !swd.saveToFile( outputFile ) ) return -1;
 
     GN_INFO(sLogger)( "Conversion done successfully." );
     return 0;

@@ -16,11 +16,11 @@ namespace GN
     /// \name atomic operations
     //@{
 
-    inline SInt32 AtomGet32( const SInt32 volatile * ); ///< get 32bit integer value.
-    inline void   AtomSet32( SInt32 volatile *, SInt32 ); ///< set 32bit integer value.
-    inline SInt32 AtomInc32( SInt32 volatile * ); ///< return incremented value
-    inline SInt32 AtomDec32( SInt32 volatile * ); ///< return decremented value
-    inline SInt32 AtomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
+    inline SInt32 atomGet32( const SInt32 volatile * ); ///< get 32bit integer value.
+    inline void   atomSet32( SInt32 volatile *, SInt32 ); ///< set 32bit integer value.
+    inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
+    inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
+    inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
 
     ///
     /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
@@ -28,7 +28,12 @@ namespace GN
     /// \return
     ///     Always return initial value of "dest".
     ///
-    inline SInt32 AtomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+    inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+
+    ///
+    /// memory barrier. currently implemented on MS Windows platform only.
+    ///
+    inline void memoryBarrier();
 
     //@}
 
@@ -56,9 +61,9 @@ namespace GN
         //@}
 
         //@{
-        bool TryLock() { return 0 == AtomCmpXchg32( &mLock, 1, 0 ); }
-        void Lock();
-        void Unlock() { AtomSet32( &mLock, 0 ); }
+        bool trylock() { return 0 == atomCmpXchg32( &mLock, 1, 0 ); }
+        void lock();
+        void unlock() { atomSet32( &mLock, 0 ); }
         //@}
     };
 
@@ -86,9 +91,9 @@ namespace GN
         //@}
 
         //@{
-        bool TryLock();
-        void Lock();
-        void Unlock();
+        bool trylock();
+        void lock();
+        void unlock();
         //@}
     };
 
@@ -107,9 +112,9 @@ namespace GN
         };
 
         //@{
-        bool TryLock() { return true; }
-        void Lock()    {}
-        void Unlock()  {}
+        bool trylock() { return true; }
+        void lock()    {}
+        void unlock()  {}
         //@}
     };
 
@@ -122,8 +127,8 @@ namespace GN
         M & mMutex;
     public:
         //@{
-        ScopeMutex( M & m ) : mMutex(m) { mMutex.Lock(); }
-        ~ScopeMutex() { mMutex.Unlock(); }
+        ScopeMutex( M & m ) : mMutex(m) { mMutex.lock(); }
+        ~ScopeMutex() { mMutex.unlock(); }
         //@}
     };
 
@@ -133,9 +138,9 @@ namespace GN
     struct SyncEvent : public NoCopy
     {
         //@{
-        virtual void Signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
-        virtual void Unsignal() = 0; ///< unsignal the event, block any threads that Wait for it.
-        virtual bool Wait( float seconds = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
+        virtual void signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
+        virtual void unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
+        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
         //@}
     };
 
@@ -144,21 +149,21 @@ namespace GN
     ///
     struct Semaphore : public NoCopy
     {
-        virtual bool Wait( float seconds = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
-        virtual void Wake( size_t count = 1 ) = 0; ///< Wake up specified number of threads that is waiting for this semaphore.
+        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
+        virtual void wake( size_t count = 1 ) = 0; ///< wake up specified number of threads that is waiting for this semaphore.
 
         /// \name aliases for P/V operations
         //@{
-        bool P( float seconds = INFINITE_TIME ) { return Wait( seconds ); }
-        void V() { return Wake(); }
+        bool P( float seconds = INFINITE_TIME ) { return wait( seconds ); }
+        void V() { return wake(); }
         //@}
     };
 
     //@{
 
-    SyncEvent * NewSyncEvent( bool initialSignaled, bool autoreset, const char * name = 0 );
+    SyncEvent * createSyncEvent( bool initialSignaled, bool autoreset, const char * name = 0 );
 
-    Semaphore * NewSemaphore( size_t maxcount, size_t initialcount, const char * name = 0 );
+    Semaphore * createSemaphore( size_t maxcount, size_t initialcount, const char * name = 0 );
 
     //@}
 }

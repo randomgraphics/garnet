@@ -5,7 +5,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Local stuff
@@ -15,7 +15,7 @@ static bool sHasSemantic( const VertexFormat & vf, const char * binding, size_t 
 {
     for( size_t i = 0; i < vf.numElements; ++i )
     {
-        if( 0 == StringCompareI( vf.elements[i].binding, binding ) &&
+        if( 0 == stringCompareI( vf.elements[i].binding, binding ) &&
             index == vf.elements[i].bindingIndex )
         {
             return true;
@@ -154,36 +154,36 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
 
     // read file header
     XPRFileHeader header;
-    if( !file.Read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
+    if( !file.read( &header, sizeof(header), &readen ) || sizeof(header) != readen )
     {
         GN_ERROR(sLogger)( "Fail to read file header." );
         return false;
     }
 
     // swap header to little endian
-    header.size1 = SwapEndian8In32( header.size1 );
-    header.size2 = SwapEndian8In32( header.size2 );
-    header.numObjects = SwapEndian8In32( header.numObjects );
+    header.size1 = swap8in32( header.size1 );
+    header.size2 = swap8in32( header.size2 );
+    header.numObjects = swap8in32( header.numObjects );
 
     // read scene data
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
-    xpr.sceneData.Resize( dataSize );
-    if( !file.Read( xpr.sceneData.ToRawPtr(), dataSize, &readen ) || dataSize != readen )
+    xpr.sceneData.resize( dataSize );
+    if( !file.read( xpr.sceneData.cptr(), dataSize, &readen ) || dataSize != readen )
     {
         GN_ERROR(sLogger)( "Fail to read XPR data." );
         return false;
     }
 
     // iterate all objects
-    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.ToRawPtr();
+    XPRObjectHeader * objects = (XPRObjectHeader *)xpr.sceneData.cptr();
     for( size_t i = 0; i < header.numObjects; ++i )
     {
         XPRObjectHeader & o = objects[i];
 
         // do endian swap
-        o.offset = SwapEndian8In32( o.offset );
-        o.size   = SwapEndian8In32( o.size );
-        o.unknown = SwapEndian8In32( o.unknown );
+        o.offset = swap8in32( o.offset );
+        o.size   = swap8in32( o.size );
+        o.unknown = swap8in32( o.unknown );
 
         size_t offset = o.offset - sizeof(header) + 12;
         void * desc   = &xpr.sceneData[offset];
@@ -198,8 +198,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
-                xpr.vbDescs.Append( vbdesc );
+                swap8in32( vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc)/4 );
+                xpr.vbDescs.append( vbdesc );
                 break;
             }
 
@@ -211,8 +211,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
-                xpr.ibDescs.Append( ibdesc );
+                swap8in32( ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc)/4 );
+                xpr.ibDescs.append( ibdesc );
                 break;
             }
 
@@ -224,8 +224,8 @@ loadXprSceneFromFile( XPRScene & xpr, File & file )
                     GN_ERROR(sLogger)( "object size is invalid." );
                     return false;
                 }
-                SwapEndian8In32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
-                xpr.texDescs.Append( texdesc );
+                swap8in32( texdesc->dwords, texdesc->dwords, sizeof(*texdesc)/4 );
+                xpr.texDescs.append( texdesc );
                 break;
             }
 
@@ -274,18 +274,18 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     AseScene ase;
     if( !loadAseSceneFromFile( ase, file) ) return false;
 
-    StrA filename = file.Name();
-    if( filename.Empty() )
+    StrA filename = file.name();
+    if( filename.empty() )
     {
         GN_WARN(sLogger)( "Can not get filename" );
         return false;
     }
-    filename = fs::ResolvePath( fs::GetCurrentDir(), filename );
+    filename = fs::resolvePath( fs::getCurrentDir(), filename );
 
-#define FULL_MESH_NAME( n ) (n) // StringFormat("%s.%s",filename.ToRawPtr(),n.ToRawPtr())
+#define FULL_MESH_NAME( n ) (n) // stringFormat("%s.%s",filename.cptr(),n.cptr())
 
     // copy meshes. create entities as well, since in ASE scene, one mesh is one node.
-    for( size_t i = 0; i < ase.meshes.Size(); ++i )
+    for( size_t i = 0; i < ase.meshes.size(); ++i )
     {
         const AseMesh & src = ase.meshes[i];
 
@@ -296,9 +296,9 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // create the entity
         SimpleWorldDesc::EntityDesc & entityDesc = desc.entities[meshname];
-        entityDesc.spatial.parent = src.parent.Empty() ? "" : FULL_MESH_NAME(src.parent);
+        entityDesc.spatial.parent = src.parent.empty() ? "" : FULL_MESH_NAME(src.parent);
         entityDesc.spatial.position = src.pos;
-        entityDesc.spatial.orientation.FromRotation( src.rotaxis, src.rotangle );
+        entityDesc.spatial.orientation.fromRotation( src.rotaxis, src.rotangle );
         entityDesc.spatial.bbox = src.selfbbox;
     }
 
@@ -306,7 +306,7 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
     desc.meshdata = ase.meshdata;
 
     // create models
-    for( size_t i = 0; i < ase.subsets.Size(); ++i )
+    for( size_t i = 0; i < ase.subsets.size(); ++i )
     {
         const AseMeshSubset & subset = ase.subsets[i];
 
@@ -323,23 +323,23 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 
         // associate texture to the model
         const AseMaterial & am = ase.materials[subset.matid];
-        if( model.HasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.Empty() )
+        if( model.hasTexture("ALBEDO_TEXTURE") && !am.mapdiff.bitmap.empty() )
         {
             model.textures["ALBEDO_TEXTURE"].resourceName = am.mapdiff.bitmap;
         }
-        if( model.HasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.Empty() )
+        if( model.hasTexture("NORMAL_TEXTURE") && !am.mapbump.bitmap.empty() )
         {
             model.textures["NORMAL_TEXTURE"].resourceName = am.mapbump.bitmap;
         }
 
         // add the model to model list
-        StrA modelname = StringFormat( "%s.%u", asemesh.name.ToRawPtr(), i );
-        GN_ASSERT( NULL == desc.models.Find( modelname ) );
+        StrA modelname = stringFormat( "%s.%u", asemesh.name.cptr(), i );
+        GN_ASSERT( NULL == desc.models.find( modelname ) );
         desc.models[modelname] = model;
 
         // add the model to appropriate entity
-        GN_ASSERT( NULL != desc.entities.Find( model.mesh ) );
-        desc.entities[model.mesh].models.Append( modelname );
+        GN_ASSERT( NULL != desc.entities.find( model.mesh ) );
+        desc.entities[model.mesh].models.append( modelname );
     }
 
     // setup bounding box of the whole scene
@@ -358,14 +358,14 @@ sLoadFromASE( SimpleWorldDesc & desc, File & file )
 static void sPostXMLError( const XmlNode & node, const StrA & msg )
 {
     GN_UNUSED_PARAM( node );
-    const XmlElement * e = node.ToElement();
+    const XmlElement * e = node.toElement();
     if( e )
     {
-        GN_ERROR(sLogger)( "<%s>: %s", e->name.ToRawPtr(), msg.ToRawPtr() );
+        GN_ERROR(sLogger)( "<%s>: %s", e->name.cptr(), msg.cptr() );
     }
     else
     {
-        GN_ERROR(sLogger)( "%s", msg.ToRawPtr() );
+        GN_ERROR(sLogger)( "%s", msg.cptr() );
     }
 }
 
@@ -377,23 +377,23 @@ sParseModel( SimpleWorldDesc & desc, XmlElement & root, const StrA & basedir )
 {
     ModelResourceDesc md;
 
-    if( !md.LoadFromXml( root, basedir ) ) return false;
+    if( !md.loadFromXml( root, basedir ) ) return false;
 
-    XmlAttrib * modelName = root.FindAttrib( "name" );
-    if( !modelName || modelName->value.Empty() )
+    XmlAttrib * modelName = root.findAttrib( "name" );
+    if( !modelName || modelName->value.empty() )
     {
         GN_ERROR(sLogger)( "Model name attribute is missing." );
         return false;
     }
 
-    if( NULL == desc.meshes.Find( md.mesh ) )
+    if( NULL == desc.meshes.find( md.mesh ) )
     {
         MeshResourceDesc mesh;
-        AutoRef<Blob> blob = mesh.LoadFromFile( fs::ResolvePath( basedir, md.mesh ) );
+        AutoRef<Blob> blob = mesh.loadFromFile( fs::resolvePath( basedir, md.mesh ) );
         if( !blob ) return false;
 
         desc.meshes[md.mesh] = mesh;
-        desc.meshdata.Append( blob );
+        desc.meshdata.append( blob );
     }
 
     desc.models[modelName->value] = md;
@@ -409,7 +409,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
 {
     GN_ASSERT( root.name == "entity" );
 
-    XmlAttrib * entityName = root.FindAttrib( "name" );
+    XmlAttrib * entityName = root.findAttrib( "name" );
     if( NULL == entityName )
     {
         sPostXMLError( root, "Entity name attribute is missing." );
@@ -419,7 +419,7 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     SimpleWorldDesc::EntityDesc entity;
 
     // parse spatial
-    XmlElement * spatialNode = root.FindChildElement( "spatial" );
+    XmlElement * spatialNode = root.findChildElement( "spatial" );
     if( !spatialNode )
     {
         sPostXMLError( root, "<spatial> element is missing." );
@@ -427,25 +427,25 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     }
     else
     {
-        XmlAttrib * a = spatialNode->FindAttrib( "parent" );
+        XmlAttrib * a = spatialNode->findAttrib( "parent" );
         if( a ) entity.spatial.parent = a->value;
 
-        a = spatialNode->FindAttrib( "position" );
-        if( !a || 3 != String2FloatArray( (float*)&entity.spatial.position, 3, a->value ) )
+        a = spatialNode->findAttrib( "position" );
+        if( !a || 3 != string2FloatArray( (float*)&entity.spatial.position, 3, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid position" );
-            entity.spatial.position.Set( 0, 0, 0 );
+            entity.spatial.position.set( 0, 0, 0 );
         }
 
-        a = spatialNode->FindAttrib( "orientation" );
-        if( !a || 4 != String2FloatArray( (float*)&entity.spatial.orientation, 4, a->value ) )
+        a = spatialNode->findAttrib( "orientation" );
+        if( !a || 4 != string2FloatArray( (float*)&entity.spatial.orientation, 4, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid orientation" );
-            entity.spatial.orientation.Set( 0, 0, 0, 1 );
+            entity.spatial.orientation.set( 0, 0, 0, 1 );
         }
 
-        a = spatialNode->FindAttrib( "bbox" );
-        if( !a || 6 != String2FloatArray( (float*)&entity.spatial.bbox, 6, a->value ) )
+        a = spatialNode->findAttrib( "bbox" );
+        if( !a || 6 != string2FloatArray( (float*)&entity.spatial.bbox, 6, a->value ) )
         {
             sPostXMLError( *spatialNode, "Invalid bounding box" );
             entity.spatial.bbox = Boxf( 0, 0, 0, 0, 0, 0 );
@@ -453,28 +453,28 @@ sParseEntity( SimpleWorldDesc & desc, XmlElement & root )
     }
 
     // parse visual
-    XmlElement * visualNode = root.FindChildElement( "visual" );
+    XmlElement * visualNode = root.findChildElement( "visual" );
     if( visualNode )
     {
         for( XmlNode * n = visualNode->child; n != NULL; n = n->next )
         {
-            XmlElement * e = n->ToElement();
+            XmlElement * e = n->toElement();
             if( !e ) continue;
 
             if( "model" == e->name )
             {
-                XmlAttrib * a = e->FindAttrib( "ref" );
+                XmlAttrib * a = e->findAttrib( "ref" );
                 if( !a )
                 {
                     sPostXMLError( *e, "ref attribute is missing." );
                     return false;
                 }
 
-                entity.models.Append( a->value );
+                entity.models.append( a->value );
             }
             else
             {
-                sPostXMLError( *e, StringFormat( "Unknown element: <%s>", e->name.ToRawPtr() ) );
+                sPostXMLError( *e, stringFormat( "Unknown element: <%s>", e->name.cptr() ) );
             }
         }
     }
@@ -492,40 +492,40 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
 {
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.Parse( xpr, file ) )
+    if( !doc.parse( xpr, file ) )
     {
-        static Logger * sLogger = GetLogger( "GN.base.xml" );
+        static Logger * sLogger = getLogger( "GN.base.xml" );
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            file.Name(),
+            file.name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.ToRawPtr() );
+            xpr.errInfo.cptr() );
         return false;
     }
     GN_ASSERT( xpr.root );
 
-    StrA basedir = fs::DirName( file.Name() );
+    StrA basedir = fs::dirName( file.name() );
 
-    XmlElement * root = xpr.root->ToElement();
+    XmlElement * root = xpr.root->toElement();
     if( !root || "simpleWorld" != root->name )
     {
         sPostXMLError( *root, "Root element name must be \"<simpleWorld>\"." );
         return false;
     }
 
-    XmlAttrib * bboxAttr = root->FindAttrib( "bbox" );
-    if( !bboxAttr || 6 != String2FloatArray( (float*)&desc.bbox, 6, bboxAttr->value ) )
+    XmlAttrib * bboxAttr = root->findAttrib( "bbox" );
+    if( !bboxAttr || 6 != string2FloatArray( (float*)&desc.bbox, 6, bboxAttr->value ) )
     {
         sPostXMLError( *root, "Invalid bbox attribute." );
         return false;
     }
 
     // parse models
-    XmlElement * modelsNode = root->FindChildElement( "models" );
+    XmlElement * modelsNode = root->findChildElement( "models" );
     if( NULL == modelsNode )
     {
         sPostXMLError( *root, "Element <models> is missing." );
@@ -533,7 +533,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     for( XmlNode * n = modelsNode->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->ToElement();
+        XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "model" == e->name )
@@ -542,12 +542,12 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.ToRawPtr() ) );
+            sPostXMLError( *e, stringFormat( "Ignore unknowned element: <%s>", e->name.cptr() ) );
         }
     }
 
     // parse entities
-    XmlElement * entitiesNode = root->FindChildElement( "entities" );
+    XmlElement * entitiesNode = root->findChildElement( "entities" );
     if( NULL == entitiesNode )
     {
         sPostXMLError( *root, "Element <entities> is missing." );
@@ -555,7 +555,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
     }
     for( XmlNode * n = entitiesNode->child; n != NULL; n = n->next )
     {
-        XmlElement * e = n->ToElement();
+        XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "entity" == e->name )
@@ -564,7 +564,7 @@ sLoadFromXML( SimpleWorldDesc & desc, File & file )
         }
         else
         {
-            sPostXMLError( *e, StringFormat( "Ignore unknowned element: <%s>", e->name.ToRawPtr() ) );
+            sPostXMLError( *e, stringFormat( "Ignore unknowned element: <%s>", e->name.cptr() ) );
         }
     }
 
@@ -586,30 +586,30 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     }
 
     // convert to full path
-    StrA fullpath = fs::ResolvePath( fs::GetCurrentDir(), filename );
+    StrA fullpath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = fullpath;
-    StrA dirname = fs::DirName( fullpath );
-    StrA basename = fs::BaseName( fullpath );
+    StrA dirname = fs::dirName( fullpath );
+    StrA basename = fs::baseName( fullpath );
 
-    if( !fs::IsDir( dirname ) )
+    if( !fs::isDir( dirname ) )
     {
-        GN_ERROR(sLogger)( "%s is not a directory", dirname.ToRawPtr() );
+        GN_ERROR(sLogger)( "%s is not a directory", dirname.cptr() );
         return false;
     }
 
     // write meshes
     int meshindex = 0;
     StringMap<char,StrA> meshNameMapping;
-    for( const StringMap<char,MeshResourceDesc>::KeyValuePair * i = desc.meshes.First();
+    for( const StringMap<char,MeshResourceDesc>::KeyValuePair * i = desc.meshes.first();
         i != NULL;
-        i = desc.meshes.Next( i ) )
+        i = desc.meshes.next( i ) )
     {
         const StrA & oldMeshName = i->key;
         const MeshResourceDesc & mesh = i->value;
 
-        StrA newMeshName = StringFormat( "%s.%d.mesh.bin", basename.ToRawPtr(), meshindex );
+        StrA newMeshName = stringFormat( "%s.%d.mesh.bin", basename.cptr(), meshindex );
 
-        if( !mesh.SaveToFile( dirname + "\\" + newMeshName ) ) return false;
+        if( !mesh.saveToFile( dirname + "\\" + newMeshName ) ) return false;
 
         meshNameMapping[oldMeshName] = newMeshName;
 
@@ -618,29 +618,29 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 
     // create a new XML document
     XmlDocument xmldoc;
-    XmlElement * root = xmldoc.CreateElement(NULL);
+    XmlElement * root = xmldoc.createElement(NULL);
     root->name = "simpleWorld";
 
     // write models
-    XmlElement * models = xmldoc.CreateElement( root );
+    XmlElement * models = xmldoc.createElement( root );
     models->name = "models";
-    for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * i = desc.models.First();
+    for( const StringMap<char,gfx::ModelResourceDesc>::KeyValuePair * i = desc.models.first();
          i != NULL;
-         i = desc.models.Next( i ) )
+         i = desc.models.next( i ) )
     {
         const StrA & modelName  = i->key;
         ModelResourceDesc model = i->value;
 
-        StrA * pNewMeshName = meshNameMapping.Find( model.mesh );
+        StrA * pNewMeshName = meshNameMapping.find( model.mesh );
         if( NULL != pNewMeshName )
         {
             model.mesh = *pNewMeshName;
         }
 
-        XmlElement * modelNode = model.SaveToXml( *models, dirname );
+        XmlElement * modelNode = model.saveToXml( *models, dirname );
         if( !modelNode ) return false;
 
-        XmlAttrib * a = xmldoc.CreateAttrib( modelNode );
+        XmlAttrib * a = xmldoc.createAttrib( modelNode );
         a->name = "name";
         a->value = modelName;
     }
@@ -648,65 +648,65 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
     // rename entities
     int entityIndex = 0;
     StringMap<char,StrA> entityNameMap;
-    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.First();
+    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
         i != NULL;
-        i = desc.entities.Next( i ) )
+        i = desc.entities.next( i ) )
     {
         const StrA & entityName = i->key;
 
-        entityNameMap[entityName] = StringFormat( "%d", ++entityIndex );
+        entityNameMap[entityName] = stringFormat( "%d", ++entityIndex );
     }
 
     // write entities
-    XmlElement * entities = xmldoc.CreateElement( root );
+    XmlElement * entities = xmldoc.createElement( root );
     entities->name = "entities";
-    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.First();
+    for( const StringMap<char,SimpleWorldDesc::EntityDesc>::KeyValuePair * i = desc.entities.first();
         i != NULL;
-        i = desc.entities.Next( i ) )
+        i = desc.entities.next( i ) )
     {
-        const StrA                        & entityName = *entityNameMap.Find(i->key);
+        const StrA                        & entityName = *entityNameMap.find(i->key);
         const SimpleWorldDesc::EntityDesc & entityDesc = i->value;
 
-        XmlElement * entity = xmldoc.CreateElement( entities );
+        XmlElement * entity = xmldoc.createElement( entities );
         entity->name = "entity";
 
-        XmlAttrib * a = xmldoc.CreateAttrib( entity );
+        XmlAttrib * a = xmldoc.createAttrib( entity );
         a->name  = "name";
         a->value = entityName;
 
-        XmlElement * spatial = xmldoc.CreateElement( entity );
+        XmlElement * spatial = xmldoc.createElement( entity );
         spatial->name = "spatial";
 
-        a = xmldoc.CreateAttrib( spatial );
+        a = xmldoc.createAttrib( spatial );
         a->name  = "parent";
-        StrA * pParentEntityName = entityNameMap.Find(entityDesc.spatial.parent);
+        StrA * pParentEntityName = entityNameMap.find(entityDesc.spatial.parent);
         if( NULL != pParentEntityName )
         {
             a->value = *pParentEntityName;
         }
-        else if( !entityDesc.spatial.parent.Empty() )
+        else if( !entityDesc.spatial.parent.empty() )
         {
-            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->key, entityDesc.spatial.parent.ToRawPtr() );
+            GN_WARN(sLogger)( "Entity %s has invalid parent: %s", i->key, entityDesc.spatial.parent.cptr() );
         }
 
-        a = xmldoc.CreateAttrib( spatial );
+        a = xmldoc.createAttrib( spatial );
         a->name  = "position";
-        a->value = StringFormat( "%f,%f,%f",
+        a->value = stringFormat( "%f,%f,%f",
             entityDesc.spatial.position.x,
             entityDesc.spatial.position.y,
             entityDesc.spatial.position.z );
 
-        a = xmldoc.CreateAttrib( spatial );
+        a = xmldoc.createAttrib( spatial );
         a->name  = "orientation";
-        a->value = StringFormat( "%f,%f,%f,%f",
+        a->value = stringFormat( "%f,%f,%f,%f",
             entityDesc.spatial.orientation.v.x,
             entityDesc.spatial.orientation.v.y,
             entityDesc.spatial.orientation.v.x,
             entityDesc.spatial.orientation.w );
 
-        a = xmldoc.CreateAttrib( spatial );
+        a = xmldoc.createAttrib( spatial );
         a->name  = "bbox";
-        a->value = StringFormat( "%f,%f,%f,%f,%f,%f",
+        a->value = stringFormat( "%f,%f,%f,%f,%f,%f",
             entityDesc.spatial.bbox.x,
             entityDesc.spatial.bbox.y,
             entityDesc.spatial.bbox.z,
@@ -714,23 +714,23 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             entityDesc.spatial.bbox.h,
             entityDesc.spatial.bbox.d );
 
-        XmlElement * visual = xmldoc.CreateElement( entity );
+        XmlElement * visual = xmldoc.createElement( entity );
         visual->name  = "visual";
-        for( size_t i = 0; i < entityDesc.models.Size(); ++i )
+        for( size_t i = 0; i < entityDesc.models.size(); ++i )
         {
-            XmlElement * modelref = xmldoc.CreateElement( visual );
+            XmlElement * modelref = xmldoc.createElement( visual );
             modelref->name = "model";
 
-            XmlAttrib * a = xmldoc.CreateAttrib( modelref );
+            XmlAttrib * a = xmldoc.createAttrib( modelref );
             a->name = "ref";
             a->value = entityDesc.models[i];
         }
     }
 
     // write scene bounding box
-    XmlAttrib * a = xmldoc.CreateAttrib( root->ToElement() );
+    XmlAttrib * a = xmldoc.createAttrib( root->toElement() );
     a->name  = "bbox";
-    a->value = StringFormat( "%f,%f,%f,%f,%f,%f",
+    a->value = stringFormat( "%f,%f,%f,%f,%f,%f",
             desc.bbox.x,
             desc.bbox.y,
             desc.bbox.z,
@@ -739,9 +739,9 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
             desc.bbox.d );
 
     // write XML document
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "wt" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "wt" ) );
     if( !fp ) return false;
-    return xmldoc.WriteToFile( *fp, *root, false );
+    return xmldoc.writeToFile( *fp, *root, false );
 }
 
 // *****************************************************************************
@@ -753,12 +753,12 @@ sSaveToXML( const SimpleWorldDesc & desc, const char * filename )
 // -----------------------------------------------------------------------------
 bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 {
-    desc.Clear();
+    desc.clear();
 
-    const StrA & meshname = fp.Name();
+    const StrA & meshname = fp.name();
 
     MeshResourceDesc mesh;
-    AutoRef<Blob> blob = mesh.LoadFromFile( fp );
+    AutoRef<Blob> blob = mesh.loadFromFile( fp );
     if( !blob ) return false;
 
     // determine the model template
@@ -771,15 +771,15 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 
     // add mesh and model to scene
     desc.meshes[meshname] = mesh;
-    desc.meshdata.Append( blob );
+    desc.meshdata.append( blob );
     desc.models[meshname] = model;
 
     // create a entity for the model
     SimpleWorldDesc::EntityDesc & ed = desc.entities[meshname];
-    ed.spatial.position.Set( 0, 0, 0 );
-    ed.spatial.orientation.Set( 0, 0, 0, 1 );
-    mesh.CalculateBoundingBox( ed.spatial.bbox );
-    ed.models.Append( meshname );
+    ed.spatial.position.set( 0, 0, 0 );
+    ed.spatial.orientation.set( 0, 0, 0, 1 );
+    mesh.calculateBoundingBox( ed.spatial.bbox );
+    ed.models.append( meshname );
 
     // done
     desc.bbox = ed.spatial.bbox;
@@ -795,17 +795,17 @@ bool sLoadFromMeshBinary( SimpleWorldDesc & desc, File & fp )
 // -----------------------------------------------------------------------------
 static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorldDesc & desc, const StrA & entityName )
 {
-    GN_ASSERT( NULL != desc.entities.Find( entityName ) );
+    GN_ASSERT( NULL != desc.entities.find( entityName ) );
 
-    const SimpleWorldDesc::EntityDesc & entityDesc = *desc.entities.Find(entityName);
+    const SimpleWorldDesc::EntityDesc & entityDesc = *desc.entities.find(entityName);
 
     // recursively populate parent entities
     Entity * parent = NULL;
-    if( !entityDesc.spatial.parent.Empty() )
+    if( !entityDesc.spatial.parent.empty() )
     {
-        if( NULL == desc.entities.Find( entityDesc.spatial.parent ) )
+        if( NULL == desc.entities.find( entityDesc.spatial.parent ) )
         {
-            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.ToRawPtr(), entityDesc.spatial.parent.ToRawPtr() );
+            GN_ERROR(sLogger)( "Entity '%s' has a invalid parent: '%s'", entityName.cptr(), entityDesc.spatial.parent.cptr() );
         }
         else
         {
@@ -818,30 +818,30 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
     if( e ) return e;
 
     // create a new entity instance
-    e = entityDesc.models.Empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
+    e = entityDesc.models.empty() ? world.createSpatialEntity( entityName ) : world.createVisualEntity( entityName );;
     if( !e ) return NULL;
 
     // attach the entity to parent node or root node
-    e->getNode<SpatialNode>()->SetParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
+    e->getNode<SpatialNode>()->setParent( parent ? parent->getNode<SpatialNode>() : root->getNode<SpatialNode>() );
 
     // calculate bounding sphere
     const Boxf & bbox = entityDesc.spatial.bbox;
     Spheref bs;
-    CalculateBoundingSphereFromBoundingBox( bs, bbox );
+    calculateBoundingSphereFromBoundingBox( bs, bbox );
     e->getNode<SpatialNode>()->setBoundingSphere( bs );
 
-    for( size_t i = 0; i < entityDesc.models.Size(); ++i )
+    for( size_t i = 0; i < entityDesc.models.size(); ++i )
     {
         const StrA & modelName = entityDesc.models[i];
 
 
-        const GN::gfx::ModelResourceDesc * pModelDesc = desc.models.Find( modelName );
+        const GN::gfx::ModelResourceDesc * pModelDesc = desc.models.find( modelName );
         if( NULL == pModelDesc )
         {
             GN_ERROR(sLogger)(
                 "Entity %s references invalid model named \"%s\".",
-                entityName.ToRawPtr(),
-                modelName.ToRawPtr() );
+                entityName.cptr(),
+                modelName.cptr() );
             continue;
         }
 
@@ -849,31 +849,31 @@ static Entity * sPopulateEntity( World & world, Entity * root, const SimpleWorld
         // to prevent it from being deleted, until the model is created.
         AutoRef<MeshResource> mesh;
 
-        if( !pModelDesc->mesh.Empty() )
+        if( !pModelDesc->mesh.empty() )
         {
-            mesh = world.gdb().FindResource<MeshResource>( pModelDesc->mesh );
+            mesh = world.getGdb().findResource<MeshResource>( pModelDesc->mesh );
             if( !mesh )
             {
 
-                const GN::gfx::MeshResourceDesc * pMeshDesc = desc.meshes.Find(pModelDesc->mesh);
+                const GN::gfx::MeshResourceDesc * pMeshDesc = desc.meshes.find(pModelDesc->mesh);
 
                 if( NULL == pMeshDesc )
                 {
                     GN_ERROR(sLogger)(
                         "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.",
-                        modelName.ToRawPtr(),
-                        pModelDesc->mesh.ToRawPtr() );
+                        modelName.cptr(),
+                        pModelDesc->mesh.cptr() );
                     continue; // ignore the model
                 }
 
                 // create new mesh
-                mesh = world.gdb().CreateResource<MeshResource>( pModelDesc->mesh );
-                if( !mesh || !mesh->Reset( pMeshDesc ) ) continue;
+                mesh = world.getGdb().createResource<MeshResource>( pModelDesc->mesh );
+                if( !mesh || !mesh->reset( pMeshDesc ) ) continue;
             }
         }
 
-        AutoRef<ModelResource> model = world.gdb().CreateResource<ModelResource>( NULL );
-        if( !model->Reset( pModelDesc ) ) continue;
+        AutoRef<ModelResource> model = world.getGdb().createResource<ModelResource>( NULL );
+        if( !model->reset( pModelDesc ) ) continue;
 
         e->getNode<VisualNode>()->addModel( model );
     }
@@ -896,7 +896,7 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 
     string = string + n1 - n2;
 
-    return 0 == StringCompareI( string, suffix );
+    return 0 == stringCompareI( string, suffix );
 }
 
 // *****************************************************************************
@@ -906,31 +906,31 @@ static bool sStrEndWithI( const char * string, const char * suffix )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SimpleWorldDesc::Clear()
+void GN::util::SimpleWorldDesc::clear()
 {
-    meshes.Clear();
-    meshdata.Clear();
-    models.Clear();
-    entities.Clear();
+    meshes.clear();
+    meshdata.clear();
+    models.clear();
+    entities.clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::LoadFromFile( const char * filename )
+bool GN::util::SimpleWorldDesc::loadFromFile( const char * filename )
 {
     GN_SCOPE_PROFILER( loadWorldFromFile, "Load simple world from file" );
 
     GN_INFO(sLogger)( "Load scene from file: %s", filename?filename:"<NULL>" );
 
-    Clear();
+    clear();
 
     // open file
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
 
     // get file extension
-    StrA ext = fs::ExtName( filename );
+    StrA ext = fs::extName( filename );
 
     // do loading
     if( sStrEndWithI( filename, ".xml" ) )
@@ -952,7 +952,7 @@ bool GN::util::SimpleWorldDesc::LoadFromFile( const char * filename )
     }
     else
     {
-        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.ToRawPtr() );
+        GN_ERROR(sLogger)( "Unknown file extension: %s", ext.cptr() );
         return false;
     }
 }
@@ -960,7 +960,7 @@ bool GN::util::SimpleWorldDesc::LoadFromFile( const char * filename )
 ///
 /// write world description to file
 // -----------------------------------------------------------------------------
-bool GN::util::SimpleWorldDesc::SaveToFile( const char * filename )
+bool GN::util::SimpleWorldDesc::saveToFile( const char * filename )
 {
     GN_SCOPE_PROFILER( profiler, "Save simple world to file" );
 
@@ -978,9 +978,9 @@ Entity * GN::util::SimpleWorldDesc::populateTheWorld( World & world ) const
     Entity * root = world.createSpatialEntity( NULL );
     if( NULL == root ) return NULL;
 
-    for( const StringMap<char,EntityDesc>::KeyValuePair * i = entities.First();
+    for( const StringMap<char,EntityDesc>::KeyValuePair * i = entities.first();
          i != NULL;
-         i = entities.Next( i ) )
+         i = entities.next( i ) )
     {
         const StrA & entityName = i->key;
 

@@ -15,7 +15,7 @@
         const char * str = cgGetLastErrorString( &error );                  \
         if( str )                                                           \
         {                                                                   \
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");  \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");  \
             GN_ERROR(sLogger)( "Cg error : %s", str );                      \
             something                                                       \
         }                                                                   \
@@ -46,7 +46,7 @@ namespace GN { namespace gfx
 
         static void sCgErrorHandler( CGcontext ctx, CGerror err, void * )
         {
-            static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
 
             GN_ERROR(sLogger)( "Cg error: %s", cgGetErrorString(err) );
             const char * listing = cgGetLastListing(ctx);
@@ -70,13 +70,13 @@ namespace GN { namespace gfx
         ///
         ~CgContextWrapper()
         {
-            Quit();
+            quit();
         }
 
         ///
         /// initiate the context
         ///
-        bool Init()
+        bool init()
         {
             GN_ASSERT( 0 == mContext );
 
@@ -87,7 +87,7 @@ namespace GN { namespace gfx
             mContext = cgCreateContext();
             if( !mContext )
             {
-                static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.cg");
+                static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
                 GN_FATAL(sLogger)( "Fail to create Cg context!" );
                 return false;
             }
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         ///
         /// close the Cg context
         ///
-        void Quit()
+        void quit()
         {
             if( mContext )
             {
@@ -135,8 +135,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        CgShader()          { Clear(); }
-        virtual ~CgShader() { Quit(); }
+        CgShader()          { clear(); }
+        virtual ~CgShader() { quit(); }
         //@}
 
         // ********************************
@@ -145,15 +145,15 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init(
+        bool init(
             CGcontext context,
             CGprofile profile,
             const StrA & code,
             const StrA & entry,
             const char ** args = NULL );
-        void Quit();
+        void quit();
     private:
-        void Clear() { mProgram = 0; }
+        void clear() { mProgram = 0; }
         //@}
 
         // ********************************
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
             GN_GUARD_SLOW;
             CGparameter param;
             GN_CG_CHECK_RV(
-                param = cgGetNamedParameter( mProgram, name.ToRawPtr() ),
+                param = cgGetNamedParameter( mProgram, name.cptr() ),
                 0 );
             return param;
             GN_UNGUARD_SLOW;

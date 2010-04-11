@@ -78,21 +78,21 @@ namespace GN
     ///
     /// exception handler
     ///
-    inline void ExceptionHandler(
+    inline void exceptionHandler(
         const char * msg,
         const char * func,
         const char * file,
         int          line )
     {
-        GN_LOG_EX( GetLogger("GN.base.exception"), Logger::FATAL, func, file, line )( msg );
+        GN_LOG_EX( getLogger("GN.base.exception"), Logger::FATAL, func, file, line )( msg );
     }
 
     ///
     /// exception handler
     ///
-    inline void ExceptionHandler( const Exception & e )
+    inline void exceptionHandler( const Exception & e )
     {
-        ExceptionHandler( e.msg, e.func, e.file, e.line );
+        exceptionHandler( e.msg, e.func, e.file, e.line );
     }
 }
 
@@ -139,16 +139,16 @@ namespace GN
 ///
 #define GN_UNGUARD_ALWAYS_DO( something )                                   \
     } GN_CATCH( const GN::Exception & e ) {                                 \
-        GN::ExceptionHandler( e );                                          \
+        GN::exceptionHandler( e );                                          \
         something                                                           \
     } GN_CATCH( const std::exception & e ) {                                \
-        GN::ExceptionHandler( e.what(), GN_FUNCTION, __FILE__, __LINE__ );  \
+        GN::exceptionHandler( e.what(), GN_FUNCTION, __FILE__, __LINE__ );  \
         something                                                           \
     } GN_CATCH( const char * e ) {                                          \
-        GN::ExceptionHandler( e, GN_FUNCTION, __FILE__, __LINE__ );         \
+        GN::exceptionHandler( e, GN_FUNCTION, __FILE__, __LINE__ );         \
         something                                                           \
     } GN_CATCH( ... ) {                                                     \
-        GN::ExceptionHandler( "unknown exception!",                         \
+        GN::exceptionHandler( "unknown exception!",                         \
                               GN_FUNCTION, __FILE__, __LINE__ );            \
         something                                                           \
     }

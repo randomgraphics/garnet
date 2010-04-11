@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         };
 
         /// check for validity
-        bool Valid() const
+        bool valid() const
         {
             return HLSL9 == *this
                 || HLSL10 == *this
@@ -42,7 +42,7 @@ namespace GN { namespace gfx
         }
 
         /// convert to string
-        const char * ToString() const
+        const char * toString() const
         {
             switch( *this )
             {
@@ -60,13 +60,13 @@ namespace GN { namespace gfx
         /// convert string to from string
         static GpuProgramLanguage sFromString( const char * s )
         {
-            if( 0 == StringCompareI( s, "HLSL9" ) )          return HLSL9;
-            else if( 0 == StringCompareI( s, "HLSL10" ) )    return HLSL10;
-            else if( 0 == StringCompareI( s, "HLSL11" ) )    return HLSL11;
-            else if( 0 == StringCompareI( s, "MICROCODE" ) ) return MICROCODE;
-            else if( 0 == StringCompareI( s, "GLSL" ) )      return GLSL;
-            else if( 0 == StringCompareI( s, "ARB1" ) )      return ARB1;
-            else if( 0 == StringCompareI( s, "CG" ) )        return CG;
+            if( 0 == stringCompareI( s, "HLSL9" ) )          return HLSL9;
+            else if( 0 == stringCompareI( s, "HLSL10" ) )    return HLSL10;
+            else if( 0 == stringCompareI( s, "HLSL11" ) )    return HLSL11;
+            else if( 0 == stringCompareI( s, "MICROCODE" ) ) return MICROCODE;
+            else if( 0 == stringCompareI( s, "GLSL" ) )      return GLSL;
+            else if( 0 == stringCompareI( s, "ARB1" ) )      return ARB1;
+            else if( 0 == stringCompareI( s, "CG" ) )        return CG;
             else                                      return INVALID;
         }
 
@@ -183,7 +183,7 @@ namespace GN { namespace gfx
         ///
         /// return number of parameters
         ///
-        size_t Count() const { return mCount; }
+        size_t count() const { return mCount; }
 
         ///
         /// bracket operator. index must be valid
@@ -215,13 +215,13 @@ namespace GN { namespace gfx
                 /// Assume that the first member of PARAMETER_DESC_CLASS is always parameter name
                 const char * paramName = *(const char * const *)p;
 
-                if( 0 == StringCompare( name, paramName ) )
+                if( 0 == stringCompare( name, paramName ) )
                 {
                     // got you!
                     return i;
                 }
             }
-            GN_ERROR(GetLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
+            GN_ERROR(getLogger("GN.gfx.GpuProgram.GpuProgramParameterDesc"))(
                 "Invalid uniform name: %s", name?name:"<NULLPTR>" );
             return (size_t)GPU_PROGRAM_PARAMETER_NOT_FOUND;
         }

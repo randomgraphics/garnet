@@ -6,7 +6,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.FontFt2");
+static GN::Logger * sLogger = GN::getLogger("GN.util.FontFt2");
 
 // *****************************************************************************
 // local functions
@@ -53,8 +53,8 @@ class FontFaceFt2 : public FontFace, public StdClass
 
     //@{
 public:
-    FontFaceFt2()          { Clear(); sInitLib(); }
-    virtual ~FontFaceFt2() { Quit();  sQuitLib(); }
+    FontFaceFt2()          { clear(); sInitLib(); }
+    virtual ~FontFaceFt2() { quit();  sQuitLib(); }
     //@}
 
     // ********************************
@@ -63,10 +63,10 @@ public:
 
     //@{
 public:
-    bool Init( const FontFaceCreationDesc & desc );
-    void Quit();
+    bool init( const FontFaceCreationDesc & desc );
+    void quit();
 private:
-    void Clear() { mFace = 0; }
+    void clear() { mFace = 0; }
     //@}
 
     // ********************************
@@ -74,7 +74,7 @@ private:
     // ********************************
 public:
 
-    virtual const FontFaceDesc & GetDesc() const { return mDesc; }
+    virtual const FontFaceDesc & getDesc() const { return mDesc; }
     virtual bool loadFontImage( FontImage &, wchar_t );
     virtual void getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 );
 
@@ -104,11 +104,11 @@ private:
     {
         File * fp = (File*)stream->descriptor.pointer;
 
-        fp->Seek( offset, FileSeek::SET );
+        fp->seek( offset, FileSeek::SET );
 
         size_t readen;
 
-        if( !fp->Read( buffer, count, &readen ) ) return 0;
+        if( !fp->read( buffer, count, &readen ) ) return 0;
 
         return (unsigned long)readen;
     }
@@ -118,7 +118,7 @@ private:
     {
         GN_ASSERT( stream->descriptor.pointer );
         File * fp = (File*)stream->descriptor.pointer;
-        SafeDelete( fp );
+        safeDelete( fp );
         stream->descriptor.pointer = 0;
     }
 
@@ -131,7 +131,7 @@ private:
         }
         else
         {
-            sLib->IncRef();
+            sLib->incref();
         }
     }
 
@@ -139,7 +139,7 @@ private:
     static void sQuitLib()
     {
         GN_ASSERT( sLib );
-        if( 0 == sLib->DecRef() ) sLib = 0;
+        if( 0 == sLib->decref() ) sLib = 0;
     }
 };
 Ft2Library * FontFaceFt2::sLib = 0;
@@ -151,7 +151,7 @@ Ft2Library * FontFaceFt2::sLib = 0;
 //
 //
 // -----------------------------------------------------------------------------
-bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
+bool FontFaceFt2::init( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
@@ -163,17 +163,17 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
     if( cd.quality < 0 || cd.quality >= NUM_FONT_QUALITIES )
     {
         GN_ERROR(sLogger)( "Invalid font quality enumeration: %d", cd.quality );
-        return Failure();
+        return failure();
     }
 
     // open font file
-    File * fp = fs::OpenFile( cd.fontname, "rb" );
-    if( !fp ) return Failure();
+    File * fp = fs::openFile( cd.fontname, "rb" );
+    if( !fp ) return failure();
 
     // initialize FT2 stream
     mStream.base               = 0;
-    mStream.size               = (FT_ULong)fp->Size();
-    mStream.pos                = (FT_ULong)fp->Tell();
+    mStream.size               = (FT_ULong)fp->size();
+    mStream.pos                = (FT_ULong)fp->tell();
     mStream.descriptor.pointer = fp;
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;
@@ -191,8 +191,8 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
         &mFace );
     if( err )
     {
-        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.ToRawPtr() );
-        return Failure();
+        GN_ERROR(sLogger)( "fail to load font face '%s' from file %s.", cd.fontname.cptr() );
+        return failure();
     }
 
     // set font size
@@ -200,7 +200,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
     if( err )
     {
         GN_ERROR(sLogger)( "FT_Set_Pixel_Sizes() failed!" );
-        return Failure();
+        return failure();
     }
 
     double scalex  = (double)mFace->size->metrics.x_scale / 65536.0 / 64.0;
@@ -217,7 +217,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
     mDesc.linegap  = (float)(linegap * scaley);
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -225,7 +225,7 @@ bool FontFaceFt2::Init( const FontFaceCreationDesc & cd )
 //
 //
 // -----------------------------------------------------------------------------
-void FontFaceFt2::Quit()
+void FontFaceFt2::quit()
 {
     GN_GUARD;
 
@@ -235,7 +235,7 @@ void FontFaceFt2::Quit()
         mFace = 0;
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -276,8 +276,8 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     GN_ASSERT( height <= mDesc.maxGlyphHeight() );
 
     //取道位图数据
-    mBitmapBuffer.Resize( width * height );
-    UInt8 * buf = mBitmapBuffer.ToRawPtr();
+    mBitmapBuffer.resize( width * height );
+    UInt8 * buf = mBitmapBuffer.cptr();
     switch( bitmap.pixel_mode )
     {
         case FT_PIXEL_MODE_MONO :
@@ -304,7 +304,7 @@ bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch )
     // copy glyph data to result structure
     result.width        = width;
     result.height       = height;
-    result.buffer       = mBitmapBuffer.ToRawPtr();
+    result.buffer       = mBitmapBuffer.cptr();
     result.horiBearingX = (float)slot->bitmap_left;
     result.horiBearingY = (float)-slot->bitmap_top;
     result.horiAdvance  = slot->advance.x / 64.0f;
@@ -354,16 +354,16 @@ void FontFaceFt2::getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 )
 //
 // -----------------------------------------------------------------------------
 GN::util::FontFace *
-GN::util::CreateFontFace( const FontFaceCreationDesc & cd )
+GN::util::createFontFace( const FontFaceCreationDesc & cd )
 {
     GN_GUARD;
 
     AutoRef<FontFaceFt2> font( new FontFaceFt2 );
 
-    if( !font->Init( cd ) ) return 0;
+    if( !font->init( cd ) ) return 0;
 
     // success
-    return font.Detach();
+    return font.detach();
 
     GN_UNGUARD;
 }

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ResourcePool");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.ResourcePool");
 
 static const GUID POOL_PTR_GUID = { 0xc6f87514, 0x48b1, 0x4e3c, { 0x97, 0x6a, 0x20, 0xd4, 0xb4, 0x74, 0xe4, 0x34 } };
 
@@ -38,7 +38,7 @@ inline bool GN::d3d10::ResourcePool::PooledResourceDesc::isImmutable() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ResourcePool::Init( ID3D10Device * dev )
+bool GN::d3d10::ResourcePool::init( ID3D10Device * dev )
 {
     GN_GUARD;
 
@@ -48,13 +48,13 @@ bool GN::d3d10::ResourcePool::Init( ID3D10Device * dev )
     if( NULL == dev )
     {
         GN_ERROR(sLogger)( "NULL device pointer!" );
-        return Failure();
+        return failure();
     }
 
     mDevice = dev;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -62,11 +62,11 @@ bool GN::d3d10::ResourcePool::Init( ID3D10Device * dev )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ResourcePool::Quit()
+void GN::d3d10::ResourcePool::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -82,7 +82,7 @@ void GN::d3d10::ResourcePool::Quit()
 ID3D10Buffer *
 GN::d3d10::ResourcePool::createBuffer( const D3D10_BUFFER_DESC & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
-    return (ID3D10Buffer*)FindOrCreateResource( desc, data );
+    return (ID3D10Buffer*)findOrCreateResource( desc, data );
 }
 
 //
@@ -152,7 +152,7 @@ GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
     }
     else
     {
-        mResources[desc] = resource;
+        mResource[desc] = resource;
     }
 }
 
@@ -164,14 +164,14 @@ GN::d3d10::ResourcePool::returnResource( ID3D10Resource * resource )
 //
 // -----------------------------------------------------------------------------
 ID3D10Resource *
-GN::d3d10::ResourcePool::FindOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
+GN::d3d10::ResourcePool::findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;
 
     // Note: there's no way to reuse immutable resource.
     if( !desc.isImmutable() )
     {
-        ID3D10Resource ** ppres = mResources.Find( desc );
+        ID3D10Resource ** ppres = mResource.find( desc );
 
         if( NULL != ppres )
         {
@@ -212,14 +212,14 @@ GN::d3d10::ResourcePool::FindOrCreateResource( const PooledResourceDesc & desc, 
     }
 
     // try create new one
-    ID3D10Resource * newResource = CreateResource( desc, data );
+    ID3D10Resource * newResource = createResource( desc, data );
     if( NULL == newResource )
     {
         GN_ERROR(sLogger)( "Fail to create new resource." );
         return NULL;
     }
 
-    mResources[desc] = newResource;
+    mResource[desc] = newResource;
 
     return newResource;
 
@@ -230,7 +230,7 @@ GN::d3d10::ResourcePool::FindOrCreateResource( const PooledResourceDesc & desc, 
 //
 // -----------------------------------------------------------------------------
 ID3D10Resource *
-GN::d3d10::ResourcePool::CreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
+GN::d3d10::ResourcePool::createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data )
 {
     GN_GUARD;
 

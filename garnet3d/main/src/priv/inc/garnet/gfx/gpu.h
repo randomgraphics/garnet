@@ -21,7 +21,7 @@ namespace GN { namespace gfx
         ///
         /// Set display mode parameters
         ///
-        void Set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
+        void set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
         {
             width = w; height = h; depth = d; refrate = r;
         }
@@ -63,7 +63,7 @@ namespace GN { namespace gfx
         };
 
         /// convert enum to string
-        const char * ToString() const
+        const char * toString() const
         {
             static const char * TABLE[] =
             {
@@ -103,7 +103,7 @@ namespace GN { namespace gfx
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(TABLE); ++i )
             {
-                if( 0 == StringCompare( s, TABLE[i].name ) )
+                if( 0 == stringCompare( s, TABLE[i].name ) )
                 {
                     return TABLE[i].value;
                 }
@@ -118,7 +118,7 @@ namespace GN { namespace gfx
     ///
     /// Gpu option structure.
     ///
-    /// \sa Gpu::GetOptions()
+    /// \sa Gpu::getOptions()
     ///
     struct GpuOptions
     {
@@ -262,14 +262,14 @@ namespace GN { namespace gfx
             , reference(false)
             , autoRestore(true)
         {
-            displayMode.Set(0,0,0,0);
+            displayMode.set(0,0,0,0);
         }
     };
 
     ///
     /// Display descriptor.
     ///
-    /// \sa GpuOptions, Gpu::GetDispDesc()
+    /// \sa GpuOptions, Gpu::getDispDesc()
     ///
     struct DispDesc
     {
@@ -332,27 +332,27 @@ namespace GN { namespace gfx
         ///
         /// Note that name and index are shader specific (thus, API specific).
         ///
-        void BindTo( const char * variableName, size_t index = 0 )
+        void bindTo( const char * variableName, size_t index = 0 )
         {
-            size_t len = StringLength( variableName );
+            size_t len = stringLength( variableName );
             if( 0 == len )
             {
-                GN_ERROR(GetLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(binding) )
             {
-                GN_ERROR(GetLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
                     variableName );
             }
-            len = math::GetMin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
+            len = math::getmin<size_t>( GN_ARRAY_COUNT(binding), len+1 );
             memcpy( binding, variableName, len );
 
             if( index > 255 )
             {
-                GN_ERROR(GetLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
                     "Binding index (%d) is too large. Maxinum value is 255.",
                     index );
                 bindingIndex = 0;
@@ -370,7 +370,7 @@ namespace GN { namespace gfx
                 && stream == rhs.stream
                 && offset == rhs.offset
                 && bindingIndex == rhs.bindingIndex
-                && 0 == StringCompare( binding, rhs.binding, sizeof(binding) );
+                && 0 == stringCompare( binding, rhs.binding, sizeof(binding) );
         }
 
         /// equality check
@@ -428,7 +428,7 @@ namespace GN { namespace gfx
         ///
         /// Calculate number of streams.
         ///
-        size_t inline CalcNumStreams() const
+        size_t inline calcNumStreams() const
         {
             size_t n = 0;
             for( size_t i = 0; i < numElements; ++i )
@@ -442,14 +442,14 @@ namespace GN { namespace gfx
         ///
         /// Calculate stride of specific stream.
         ///
-        size_t inline CalcStreamStride( size_t stream ) const
+        size_t inline calcStreamStride( size_t stream ) const
         {
             size_t stride = 0;
             for( size_t i = 0; i < numElements; ++i )
             {
                 const VertexElement & e =  elements[i];
 
-                size_t elementEnd = e.offset + e.format.GetBytesPerBlock();
+                size_t elementEnd = e.offset + e.format.getBytesPerBlock();
 
                 if( stream == e.stream && stride < elementEnd ) stride = elementEnd;
             }
@@ -471,13 +471,13 @@ namespace GN { namespace gfx
 
             vf.numElements = 2;
 
-            vf.elements[0].BindTo( "POSITION", 0 );
+            vf.elements[0].bindTo( "POSITION", 0 );
             vf.elements[0].format       = ColorFormat::FLOAT2;
             vf.elements[0].bindingIndex = 0;
             vf.elements[0].stream       = 0;
             vf.elements[0].offset       = 0;
 
-            vf.elements[1].BindTo( "TEXCOORD", 0 );
+            vf.elements[1].bindTo( "TEXCOORD", 0 );
             vf.elements[1].format       = ColorFormat::FLOAT2;
             vf.elements[1].bindingIndex = 0;
             vf.elements[1].stream       = 0;
@@ -502,19 +502,19 @@ namespace GN { namespace gfx
 
             vf.numElements = 3;
 
-            vf.elements[0].BindTo( "POSITION", 0 );
+            vf.elements[0].bindTo( "POSITION", 0 );
             vf.elements[0].format       = ColorFormat::FLOAT3;
             vf.elements[0].bindingIndex = 0;
             vf.elements[0].stream       = 0;
             vf.elements[0].offset       = 0;
 
-            vf.elements[1].BindTo( "NORMAL", 0 );
+            vf.elements[1].bindTo( "NORMAL", 0 );
             vf.elements[1].format       = ColorFormat::FLOAT3;
             vf.elements[1].bindingIndex = 0;
             vf.elements[1].stream       = 0;
             vf.elements[1].offset       = 12;
 
-            vf.elements[2].BindTo( "TEXCOORD", 0 );
+            vf.elements[2].bindTo( "TEXCOORD", 0 );
             vf.elements[2].format       = ColorFormat::FLOAT2;
             vf.elements[2].bindingIndex = 0;
             vf.elements[2].stream       = 0;
@@ -530,7 +530,7 @@ namespace GN { namespace gfx
     struct VertexBufferBinding
     {
         AutoRef<VtxBuf> vtxbuf; ///< vertex buffer
-        UInt16          stride; ///< vertex stride. (Note: don't use 0 as default value)
+        UInt16          stride; ///< vertex stride. 0 means using vertex stride defined in vertex format structure.
         UInt32          offset; ///< Number of bytes from vertex buffer begining to the first element that will be used.
 
         /// ctor
@@ -541,9 +541,9 @@ namespace GN { namespace gfx
         }
 
         /// clear the binding
-        void Clear()
+        void clear()
         {
-            vtxbuf.Clear();
+            vtxbuf.clear();
             stride = 0;
             offset = 0;
         }
@@ -622,7 +622,7 @@ namespace GN { namespace gfx
         float            minlod;    ///< Min mipmap level. Default is zero
         float            maxlod;    ///< Max mipmap level. Default is negative that means no limination
 
-        void Clear()
+        void clear()
         {
             filterMin    = filterMip = filterMag = FILTER_LINEAR;
             aniso        = 0;
@@ -657,10 +657,10 @@ namespace GN { namespace gfx
         SamplerDesc      sampler; ///< the sampler
 
         /// clear the binding
-        void Clear()
+        void clear()
         {
-            texture.Clear();
-            sampler.Clear();
+            texture.clear();
+            sampler.clear();
         }
     };
 
@@ -670,17 +670,17 @@ namespace GN { namespace gfx
     struct Uniform : public RefCounter
     {
         /// get parameter size
-        virtual size_t Size() const = 0;
+        virtual size_t size() const = 0;
 
         /// get current parameter value
-        virtual const void * GetValue() const = 0;
+        virtual const void * getval() const = 0;
 
         /// update parameter value
-        virtual void Update( size_t offset, size_t length, const void * data ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data ) = 0;
 
         /// update parameter value
         template<typename T>
-        void Update( const T & t ) { Update( 0, sizeof(t), &t ); }
+        void update( const T & t ) { update( 0, sizeof(t), &t ); }
     };
 
     ///
@@ -706,9 +706,9 @@ namespace GN { namespace gfx
         RenderTargetTextureTempl() : subsurface(0) {}
 
         /// clear to empty render target texture
-        void Clear()
+        void clear()
         {
-            texture.Clear();
+            texture.clear();
             subsurface = 0;
         }
 
@@ -926,7 +926,7 @@ namespace GN { namespace gfx
             Rect<UInt32> scissorRect;
 
             /// clear to default render states
-            void Clear()
+            void clear()
             {
                 bitFlags = 0;
 
@@ -957,13 +957,13 @@ namespace GN { namespace gfx
                     alphaBlend[i].blendAlphaDst = BLEND_INV_SRC_ALPHA;
                     alphaBlend[i].blendAlphaOp  = BLEND_OP_ADD;
                 }
-                blendFactors.Set( 0.0f, 0.0f, 0.0f, 1.0f );
+                blendFactors.set( 0.0f, 0.0f, 0.0f, 1.0f );
 
                 colorWriteMask = 0xFFFFFFFF;
 
-                viewport.Set( 0, 0, 0, 0 );
+                viewport.set( 0, 0, 0, 0 );
 
-                scissorRect.Set( 0, 0, 0, 0 );
+                scissorRect.set( 0, 0, 0, 0 );
             }
         };
         GN_CASSERT( GN_FIELD_OFFSET( RenderStates, independentAlphaBlending ) == 8 );
@@ -998,42 +998,42 @@ namespace GN { namespace gfx
         ///
         /// ctor
         ///
-        GpuContext() { Clear(); }
+        GpuContext() { clear(); }
 
         //
         // clear all resources binded to the context
         //
-        void ClearResources()
+        void clearResources()
         {
-            uniforms.Clear();
+            uniforms.clear();
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(textures); ++i )
             {
-                textures[i].Clear();
+                textures[i].clear();
             }
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i )
             {
-                vtxbufs[i].Clear();
+                vtxbufs[i].clear();
             }
             vtxfmt.numElements = 0;
 
-            idxbuf.Clear();
+            idxbuf.clear();
 
-            colortargets.Clear();
-            depthstencil.Clear();
+            colortargets.clear();
+            depthstencil.clear();
         }
 
         ///
         /// reset context to default value
         ///
-        void Clear()
+        void clear()
         {
-            rs.Clear();
+            rs.clear();
 
-            gpuProgram.Clear();
+            gpuProgram.clear();
 
-            ClearResources();
+            clearResources();
         }
 
     };
@@ -1050,7 +1050,7 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Options for Gpu::DrawLines
+    /// Options for Gpu::drawLines
     ///
     enum DrawLineOptions
     {
@@ -1127,22 +1127,22 @@ namespace GN { namespace gfx
         ///
         /// Get renderer options that are used to create this renderer.
         ///
-        virtual const GpuOptions & GetOptions() const = 0;
+        virtual const GpuOptions & getOptions() const = 0;
 
         ///
         /// Get Display Description
         ///
-        virtual const DispDesc & GetDispDesc() const = 0;
+        virtual const DispDesc & getDispDesc() const = 0;
 
         ///
         /// For D3D, return pointer to current D3D device; for OGL, return NULL.
         ///
-        virtual void * GetD3DDevice() const = 0;
+        virtual void * getD3DDevice() const = 0;
 
         ///
         /// For OGL, return current rendering context; for D3D, return NULL.
         ///
-        virtual void * GetOGLRC() const = 0;
+        virtual void * getOGLRC() const = 0;
 
         //@}
 
@@ -1157,7 +1157,7 @@ namespace GN { namespace gfx
         ///
         /// Get render device caps
         ///
-        virtual const GpuCaps & GetCaps() const = 0;
+        virtual const GpuCaps & caps() const = 0;
 
         ///
         /// Check texture format support
@@ -1165,7 +1165,7 @@ namespace GN { namespace gfx
         /// \param format       The texture format.
         /// \param usages       Combination of TextureUsage
         ///
-        virtual bool CheckTextureFormatSupport( ColorFormat format, TextureUsage usages ) const = 0;
+        virtual bool checkTextureFormatSupport( ColorFormat format, TextureUsage usages ) const = 0;
 
         ///
         /// Get default texture format.
@@ -1174,7 +1174,7 @@ namespace GN { namespace gfx
         ///
         /// \return             Return ColorFormat::UNKNOWN, if the usage is not supported by current renderer.
         ///
-        virtual ColorFormat GetDefaultTextureFormat( TextureUsage usages ) const = 0;
+        virtual ColorFormat getDefaultTextureFormat( TextureUsage usages ) const = 0;
 
         //@}
 
@@ -1190,43 +1190,43 @@ namespace GN { namespace gfx
         /// Compile shader into platform dependant format
         ///
         virtual Blob *
-        CompileGpuProgram( const GpuProgramDesc & desc ) = 0;
+        compileGpuProgram( const GpuProgramDesc & desc ) = 0;
 
         ///
         /// create shader
         ///
         virtual GpuProgram *
-        CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length ) = 0;
+        createGpuProgram( const void * compiledGpuProgramBinary, size_t length ) = 0;
 
         ///
         /// create shader directly from description
         ///
         GpuProgram *
-        CreateGpuProgram( const GpuProgramDesc & desc )
+        createGpuProgram( const GpuProgramDesc & desc )
         {
-            AutoRef<Blob> bin( CompileGpuProgram( desc ) );
+            AutoRef<Blob> bin( compileGpuProgram( desc ) );
             if( !bin ) return NULL;
-            return CreateGpuProgram( bin->Data(), bin->Size() );
+            return createGpuProgram( bin->data(), bin->size() );
         }
 
         ///
         /// create GPU uniform
         ///
         virtual Uniform *
-        CreateUniform( size_t size ) = 0;
+        createUniform( size_t size ) = 0;
 
         ///
         /// Create new texture
         /// See TextureDesc for detail explaination of each fields in descriptor.
         ///
         virtual Texture *
-        CreateTexture( const TextureDesc & desc ) = 0;
+        createTexture( const TextureDesc & desc ) = 0;
 
         ///
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        CreateTexture( size_t        sx,
+        createTexture( size_t        sx,
                        size_t        sy,
                        size_t        sz,
                        size_t        faces  = 1,
@@ -1238,111 +1238,111 @@ namespace GN { namespace gfx
             {
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
-                ColorFormat::UNKNOWN == format ? GetDefaultTextureFormat( usages ) : format,
+                ColorFormat::UNKNOWN == format ? getDefaultTextureFormat( usages ) : format,
                 usages,
             };
-            return CreateTexture( desc );
+            return createTexture( desc );
         }
 
         ///
         /// Create 1D texture
         ///
         Texture *
-        Create1DTexture( size_t        sx,
+        create1DTexture( size_t        sx,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return CreateTexture( sx, 1, 1, 1, levels, format, usages );
+            return createTexture( sx, 1, 1, 1, levels, format, usages );
         }
 
         ///
         /// Create 2D texture
         ///
         Texture *
-        Create2DTexture( size_t        sx,
+        create2DTexture( size_t        sx,
                          size_t        sy,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return CreateTexture( sx, sy, 1, 1, levels, format, usages );
+            return createTexture( sx, sy, 1, 1, levels, format, usages );
         }
 
         ///
         /// Create 3D texture
         ///
         Texture *
-        Create3DTexture( size_t        sx,
+        create3DTexture( size_t        sx,
                          size_t        sy,
                          size_t        sz,
                          size_t        levels = 0,
                          ColorFormat   format = ColorFormat::UNKNOWN,
                          TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return CreateTexture( sx, sy, sz, 1, levels, format, usages );
+            return createTexture( sx, sy, sz, 1, levels, format, usages );
         }
 
         ///
         /// Create CUBE texture
         ///
         Texture *
-        CreateCubeTexture( size_t        sx,
+        createCubeTexture( size_t        sx,
                            size_t        levels = 0,
                            ColorFormat   format = ColorFormat::UNKNOWN,
                            TextureUsage usages = TextureUsage::DEFAULT )
         {
-            return CreateTexture( sx, sx, 1, 6, levels, format, usages );
+            return createTexture( sx, sx, 1, 6, levels, format, usages );
         }
 
         ///
         /// Create new vertex buffer
         ///
         virtual VtxBuf *
-        CreateVtxBuf( const VtxBufDesc & ) = 0;
+        createVtxBuf( const VtxBufDesc & ) = 0;
 
         ///
         /// Create new vertex buffer
         ///
         VtxBuf *
-        CreateVtxBuf( size_t length, bool fastCpuWrite = false )
+        createVtxBuf( size_t length, bool fastCpuWrite = false )
         {
             VtxBufDesc desc;
             desc.length       = length;
             desc.fastCpuWrite = fastCpuWrite;
-            return CreateVtxBuf( desc );
+            return createVtxBuf( desc );
         }
 
         ///
         /// Create new index buffer
         ///
         virtual IdxBuf *
-        CreateIdxBuf( const IdxBufDesc & desc ) = 0;
+        createIdxBuf( const IdxBufDesc & desc ) = 0;
 
         ///
         /// Create new 16 bit index buffer
         ///
         IdxBuf *
-        CreateIdxBuf16( size_t numidx, bool fastCpuWrite = false )
+        createIdxBuf16( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (UInt32)numidx;
             desc.bits32       = false;
             desc.fastCpuWrite = fastCpuWrite;
-            return CreateIdxBuf( desc );
+            return createIdxBuf( desc );
         }
 
         ///
         /// Create new 32 bit index buffer
         ///
         IdxBuf *
-        CreateIdxBuf32( size_t numidx, bool fastCpuWrite = false )
+        createIdxBuf32( size_t numidx, bool fastCpuWrite = false )
         {
             IdxBufDesc desc;
             desc.numidx       = (UInt32)numidx;
             desc.bits32       = true;
             desc.fastCpuWrite = fastCpuWrite;
-            return CreateIdxBuf( desc );
+            return createIdxBuf( desc );
         }
 
         //@}
@@ -1360,7 +1360,7 @@ namespace GN { namespace gfx
         ///
         /// If binding failed, the renderer will try to restore device state to previos context.
         ///
-        virtual void BindContext( const GpuContext & ) = 0;
+        virtual void bindContext( const GpuContext & ) = 0;
 
         ///
         /// Rebind current rendering context to rendering device.
@@ -1373,12 +1373,12 @@ namespace GN { namespace gfx
         /// call this function to force rebinding of current renderer
         /// context, which is much easier and less error prone.
         ///
-        virtual void RebindContext() = 0;
+        virtual void rebindContext() = 0;
 
         ///
         /// Get current render context
         ///
-        virtual const GpuContext & GetContext() const = 0;
+        virtual const GpuContext & getContext() const = 0;
 
         ///
         /// get current render target size.
@@ -1387,22 +1387,22 @@ namespace GN { namespace gfx
         ///     Return render target width and height. Could be NULL.
         ///
         template<typename T>
-        void GetCurrentRenderTargetSize( T * width, T * height ) const
+        void getCurrentRenderTargetSize( T * width, T * height ) const
         {
-            const GpuContext & rc = GetContext();
-            if( 0 == rc.colortargets.Size() && 0 == rc.depthstencil.texture )
+            const GpuContext & rc = getContext();
+            if( 0 == rc.colortargets.size() && 0 == rc.depthstencil.texture )
             {
-                const DispDesc & dd = GetDispDesc();
+                const DispDesc & dd = getDispDesc();
                 if( width ) *width = dd.width;
                 if( height ) *height = dd.height;
             }
-            else if( rc.colortargets.Size() > 0 )
+            else if( rc.colortargets.size() > 0 )
             {
-                rc.colortargets[0].texture->GetMipSize( rc.colortargets[0].level, width, height );
+                rc.colortargets[0].texture->getMipSize( rc.colortargets[0].level, width, height );
             }
             else
             {
-                rc.depthstencil.texture->GetMipSize( rc.depthstencil.level, width, height );
+                rc.depthstencil.texture->getMipSize( rc.depthstencil.level, width, height );
             }
         }
 
@@ -1419,7 +1419,7 @@ namespace GN { namespace gfx
         ///
         /// 结束一帧的绘图操作
         ///
-        virtual void Present() = 0;
+        virtual void present() = 0;
 
         ///
         /// 清屏操作
@@ -1430,7 +1430,7 @@ namespace GN { namespace gfx
         /// \param s     模板值
         ///
         virtual void
-        ClearScreen( const Vector4f & c = Vector4f(0,0,0,1),
+        clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
                      float z = 1.0f, UInt8 s = 0,
                      BitFields flags = CLEAR_ALL ) = 0;
 
@@ -1448,7 +1448,7 @@ namespace GN { namespace gfx
         /// \param startidx
         ///     index into index buffer of the first index
         ///
-        virtual void DrawIndexed( PrimitiveType prim,
+        virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numidx,
                                   size_t        basevtx,
                                   size_t        startvtx,
@@ -1465,14 +1465,14 @@ namespace GN { namespace gfx
         /// \param startvtx
         ///     index into vertex buffer of the first vertex.
         ///
-        virtual void Draw( PrimitiveType prim,
+        virtual void draw( PrimitiveType prim,
                            size_t        numvtx,
                            size_t        startvtx ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
-        virtual void DrawIndexedUp(
+        virtual void drawIndexedUp(
                              PrimitiveType  prim,
                              size_t         numidx,
                              size_t         numvtx,
@@ -1483,7 +1483,7 @@ namespace GN { namespace gfx
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
-        virtual void DrawUp( PrimitiveType prim,
+        virtual void drawUp( PrimitiveType prim,
                              size_t        numvtx,
                              const void *  vertexData,
                              size_t        strideInBytes ) = 0;
@@ -1505,7 +1505,7 @@ namespace GN { namespace gfx
         /// \param model, view, proj
         ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         ///
-        virtual void DrawLines( BitFields         options,
+        virtual void drawLines( BitFields         options,
                                 const void *      positions,
                                 size_t            stride,
                                 size_t            numpoints,
@@ -1529,15 +1529,15 @@ namespace GN { namespace gfx
         /// to compose projection matrix.
         ///
         Matrix44f &
-        ComposePerspectiveMatrixLh( Matrix44f & result,
+        composePerspectiveMatrixLh( Matrix44f & result,
                                     float fovy,
                                     float ratio,
                                     float znear,
                                     float zfar ) const
         {
-            return GetD3DDevice()
-                ? result.PerspectiveD3DLh( fovy, ratio, znear, zfar )
-                : result.PerspectiveOGLLh( fovy, ratio, znear, zfar );
+            return getD3DDevice()
+                ? result.perspectiveD3DLh( fovy, ratio, znear, zfar )
+                : result.perspectiveOGLLh( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1545,15 +1545,15 @@ namespace GN { namespace gfx
         /// to compose projection matrix.
         ///
         Matrix44f &
-        ComposePerspectiveMatrixRh( Matrix44f & result,
+        composePerspectiveMatrixRh( Matrix44f & result,
                                     float fovy,
                                     float ratio,
                                     float znear,
                                     float zfar ) const
         {
-            return GetD3DDevice()
-                ? result.PerspectiveD3DRh( fovy, ratio, znear, zfar )
-                : result.PerspectiveOGLRh( fovy, ratio, znear, zfar );
+            return getD3DDevice()
+                ? result.perspectiveD3DRh( fovy, ratio, znear, zfar )
+                : result.perspectiveOGLRh( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1561,15 +1561,15 @@ namespace GN { namespace gfx
         /// to compose projection matrix.
         ///
         Matrix44f &
-        ComposePerspectiveMatrix( Matrix44f & result,
+        composePerspectiveMatrix( Matrix44f & result,
                                   float fovy,
                                   float ratio,
                                   float znear,
                                   float zfar ) const
         {
-            return GetD3DDevice()
-                ? result.PerspectiveD3D( fovy, ratio, znear, zfar )
-                : result.PerspectiveOGL( fovy, ratio, znear, zfar );
+            return getD3DDevice()
+                ? result.perspectiveD3D( fovy, ratio, znear, zfar )
+                : result.perspectiveOGL( fovy, ratio, znear, zfar );
         }
 
         ///
@@ -1577,7 +1577,7 @@ namespace GN { namespace gfx
         /// to compose projection matrix.
         ///
         Matrix44f &
-        ComposeOrthoMatrix( Matrix44f & result,
+        composeOrthoMatrix( Matrix44f & result,
                             float left,
                             float bottom,
                             float width,
@@ -1585,15 +1585,15 @@ namespace GN { namespace gfx
                             float znear,
                             float zfar ) const
         {
-            return GetD3DDevice()
-                ? result.OrthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
-                : result.OrthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
+            return getD3DDevice()
+                ? result.orthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
+                : result.orthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
         }
 
         ///
         /// get renderer signals
         ///
-        virtual GpuSignals & GetSignals() = 0;
+        virtual GpuSignals & getSignals() = 0;
 
         struct BackBufferContent
         {
@@ -1607,19 +1607,19 @@ namespace GN { namespace gfx
         ///
         /// retrieve back buffer data
         ///
-        virtual void GetBackBufferContent( BackBufferContent & ) = 0;
+        virtual void getBackBufferContent( BackBufferContent & ) = 0;
 
         ///
         /// Process render window messages, to keep render window responding to user inputs.
         ///
-        virtual void ProcessRenderWindowMessages( bool blockWhileMinimized ) = 0;
+        virtual void processRenderWindowMessages( bool blockWhileMinimized ) = 0;
 
         ///
         /// Enable/Disable parameter check for performance critical functions.
         ///
         /// Enabled by default for debug build; disabled by default for release build.
         ///
-        virtual void EnableParameterCheck( bool enable ) = 0;
+        virtual void enableParameterCheck( bool enable ) = 0;
 
         ///
         /// dump device states of the next frame.
@@ -1631,7 +1631,7 @@ namespace GN { namespace gfx
         ///     Dump data format is renderer dependent.
         ///     Check document of specific renderer implementation for details.
         ///
-        virtual void DumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
+        virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
 
         ///
         /// Attatch/Deatch user data to/from the renderer.
@@ -1644,7 +1644,7 @@ namespace GN { namespace gfx
         /// - Settting both data and length to zero, to delete exsiting user data.
         /// - User data buffer will be deleted automatically when the renderer is deleted.
         ///
-        virtual void SetUserData( const Guid & id, const void * data, size_t length ) = 0;
+        virtual void setUserData( const Guid & id, const void * data, size_t length ) = 0;
 
         ///
         /// Get user data
@@ -1653,20 +1653,20 @@ namespace GN { namespace gfx
         /// \param length           Optional parameter to return user data length.
         /// \return                 Return user data pointer. Return NULL if ID is not found.
         ///
-        virtual const void * GetUserData( const Guid & id, size_t * length = NULL ) const = 0;
+        virtual const void * getUserData( const Guid & id, size_t * length = NULL ) const = 0;
 
         ///
         /// determine if there is the user data with specific ID
         ///
-        virtual bool HasUserData( const Guid & id ) const = 0;
+        virtual bool hasUserData( const Guid & id ) const = 0;
 
         ///
         /// get user data length.
         ///
-        inline size_t GetUserDataLength( const Guid & id ) const
+        inline size_t getUserDataLength( const Guid & id ) const
         {
             size_t length;
-            if( NULL == GetUserData( id, &length ) ) length = 0;
+            if( NULL == getUserData( id, &length ) ) length = 0;
             return length;
         }
 
@@ -1677,10 +1677,10 @@ namespace GN { namespace gfx
         /// \param data, length     Target buffer to store user data.
         /// \return                 return bytes copied to target buffer. Return 0 for failure.
         ///
-        inline size_t GetUserData( const Guid & id, void * data, size_t length ) const
+        inline size_t getUserData( const Guid & id, void * data, size_t length ) const
         {
             size_t srcLength;
-            const void * src = GetUserData( id, &srcLength );
+            const void * src = getUserData( id, &srcLength );
             if( NULL == src ) return 0;
             size_t copyLength = srcLength < length ? srcLength : length;
             memcpy( data, src, copyLength );
@@ -1693,19 +1693,19 @@ namespace GN { namespace gfx
     ///
     /// Create new single thread renderer.
     ///
-    Gpu * CreateSingleThreadGpu( const GpuOptions & );
+    Gpu * createSingleThreadGpu( const GpuOptions & );
 
     ///
     /// Create new renderer with a simple multithread wrapper. So
     /// the renderer will run in another thread, and communite with
     /// user through an internal command buffer.
     ///
-    Gpu * CreateMultiThreadGpu( const GpuOptions & );
+    Gpu * createMultiThreadGpu( const GpuOptions & );
 
     ///
     /// Delete renderer
     ///
-    void DeleteGpu( gfx::Gpu * );
+    void deleteGpu( gfx::Gpu * );
 }}
 
 // *****************************************************************************

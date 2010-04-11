@@ -4,7 +4,7 @@
 
 #if GN_MSWIN
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -53,7 +53,7 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplMSWIN::Init(
+bool GN::CECImplMSWIN::init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -63,19 +63,19 @@ bool GN::CECImplMSWIN::Init(
     GN_STDCLASS_INIT( GN::CECImplMSWIN, () );
 
     const char * fromstr = sEncodingToLocal( from );
-    if( NULL == fromstr ) return Failure();
+    if( NULL == fromstr ) return failure();
     if( 0 != *fromstr )
     {
         mLocaleFrom = new std::locale( fromstr );//_create_locale( LC_ALL, fromstr );
         if( !mLocaleFrom )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
-            return Failure();
+            return failure();
         }
     }
 
     const char * tostr = sEncodingToLocal( to );
-    if( NULL == tostr ) return Failure();
+    if( NULL == tostr ) return failure();
     if( 0 != *tostr )
     {
         //mLocaleTo = _create_locale( LC_ALL, tostr );
@@ -83,14 +83,14 @@ bool GN::CECImplMSWIN::Init(
         if( !mLocaleTo )
         {
             GN_ERROR(sLogger)( "_create_locale() failed." );
-            return Failure();
+            return failure();
         }
     }
 
     // success
     mEncodingFrom = from;
     mEncodingTo   = to;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -98,14 +98,14 @@ bool GN::CECImplMSWIN::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplMSWIN::Quit()
+void GN::CECImplMSWIN::quit()
 {
     GN_GUARD;
 
-    SafeDelete( mLocaleFrom );
-    SafeDelete( mLocaleTo );
+    safeDelete( mLocaleFrom );
+    safeDelete( mLocaleTo );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -131,12 +131,12 @@ GN::CECImplMSWIN::convert(
     DynaArray<wchar_t> tempBuffer;
     if( NULL != mLocaleFrom )
     {
-        tempBuffer.Resize( sourceBufferSizeInBytes );
+        tempBuffer.resize( sourceBufferSizeInBytes );
 
         /*errno_t err = ::_mbstowcs_s_l(
             &converted,
-            tempBuffer.ToRawPtr(),
-            tempBuffer.Size(),
+            tempBuffer.cptr(),
+            tempBuffer.size(),
             (const char *)sourceBuffer,
             sourceBufferSizeInBytes,
             (_locale_t)mLocaleFrom );*/
@@ -148,8 +148,8 @@ GN::CECImplMSWIN::convert(
             (const char *)sourceBuffer,
             ((const char *)sourceBuffer)+sourceBufferSizeInBytes,
             srcnext,
-            tempBuffer.ToRawPtr(),
-            tempBuffer.ToRawPtr() + tempBuffer.Size(),
+            tempBuffer.cptr(),
+            tempBuffer.cptr() + tempBuffer.size(),
             tempnext );
 
         if( std::codecvt_base::error == err )
@@ -158,9 +158,9 @@ GN::CECImplMSWIN::convert(
             return 0;
         }
 
-        converted = tempnext - tempBuffer.ToRawPtr();
+        converted = tempnext - tempBuffer.cptr();
 
-        sourceBuffer = tempBuffer.ToRawPtr();
+        sourceBuffer = tempBuffer.cptr();
         sourceBufferSizeInBytes = converted * sizeof(wchar_t);
     }
     else if( mEncodingFrom == CharacterEncodingConverter::UTF16 ||

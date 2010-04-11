@@ -3,16 +3,16 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::PutEnv( const char * name, const char * value )
+void GN::putEnv( const char * name, const char * value )
 {
-    static GN::Logger * sLogger = GN::GetLogger("GN.base.PutEnv");
+    static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
 
 #if GN_XENON
     // Xenon does not support putenv()
     GN_UNUSED_PARAM( name );
     GN_UNUSED_PARAM( value );
 #else
-    if( IsStringEmpty(name) )
+    if( stringEmpty(name) )
     {
         GN_ERROR(sLogger)( "Environment variable name can't be empty!" );
         return;
@@ -27,18 +27,18 @@ void GN::PutEnv( const char * name, const char * value )
     }
 #else
     StrA s;
-    if( IsStringEmpty(value) )
+    if( stringEmpty(value) )
     {
-        s.Format( "%s=", name );
+        s.format( "%s=", name );
     }
     else
     {
-        s.Format( "%s=%s", name, value );
+        s.format( "%s=%s", name, value );
     }
 
-    if( 0 != _putenv( const_cast<char*>(s.ToRawPtr()) ) )
+    if( 0 != _putenv( const_cast<char*>(s.cptr()) ) )
     {
-        GN_ERROR(sLogger)( "fail to set environment '%s'.", s.ToRawPtr() );
+        GN_ERROR(sLogger)( "fail to set environment '%s'.", s.cptr() );
     }
 #endif
 #endif
@@ -47,15 +47,15 @@ void GN::PutEnv( const char * name, const char * value )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::GetEnv( StrA & result, const char * name )
+void GN::getEnv( StrA & result, const char * name )
 {
 #if GN_XENON
     // Xenon does not support getenv()
-    result.Clear();
+    result.clear();
 #else
-    if( IsStringEmpty(name) )
+    if( stringEmpty(name) )
     {
-        result.Clear();
+        result.clear();
     }
     else
     {
@@ -64,11 +64,11 @@ void GN::GetEnv( StrA & result, const char * name )
         size_t sz;
         if( 0 == _dupenv_s( &value, &sz, name ) )
         {
-            result.Assign( value, sz );
+            result.assign( value, sz );
             ::free( value );
         }
 #else
-        result.Assign( ::getenv(name) );
+        result.assign( ::getenv(name) );
 #endif
     }
 #endif
@@ -77,12 +77,12 @@ void GN::GetEnv( StrA & result, const char * name )
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::Guid::ToStr() const
+const char * GN::Guid::toStr() const
 {
     // GUID as string: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     static char str[1+8+1+4+1+4+1+4+1+12+1];
 
-    StringPrintf(
+    stringPrintf(
         str,
         sizeof(str),
         "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",

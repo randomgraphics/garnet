@@ -9,7 +9,7 @@ static const int INTERESTED_EVENTS = PointerMotionMask | ButtonMotionMask // | P
 
 static const int UNINTERESTED_EVENTS = PointerMotionHintMask;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.input.X11");
+static GN::Logger * sLogger = GN::getLogger("GN.input.X11");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -20,9 +20,9 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.X11");
 // -----------------------------------------------------------------------------
 GN::input::InputX11::InputX11()
 {
-    Clear();
+    clear();
 
-    // Clear all fields to KeyCode::NONE
+    // clear all fields to KeyCode::NONE
     memset( mKeyMap, KeyCode::NONE, sizeof(mKeyMap) );
 
     // setup key map
@@ -36,7 +36,7 @@ GN::input::InputX11::InputX11()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputX11::Init()
+bool GN::input::InputX11::init()
 {
     GN_GUARD;
 
@@ -46,7 +46,7 @@ bool GN::input::InputX11::Init()
     // Do custom init here
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -54,11 +54,11 @@ bool GN::input::InputX11::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::Quit()
+void GN::input::InputX11::quit()
 {
     GN_GUARD;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -72,7 +72,7 @@ void GN::input::InputX11::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InputX11::AttachToWindow( HandleType disp, HandleType win )
+bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 {
     GN_GUARD;
 
@@ -102,7 +102,7 @@ bool GN::input::InputX11::AttachToWindow( HandleType disp, HandleType win )
 
     // update mouse position
     int x, y;
-    GetMousePosition( x, y );
+    getMousePosition( x, y );
     updateMousePosition( x, y, false );
 
     // success
@@ -114,7 +114,7 @@ bool GN::input::InputX11::AttachToWindow( HandleType disp, HandleType win )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::ProcessInputEvents()
+void GN::input::InputX11::processInputEvents()
 {
     GN_GUARD_SLOW;
 
@@ -189,7 +189,7 @@ void GN::input::InputX11::ProcessInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::InputX11::GetMousePosition( int & x, int & y ) const
+void GN::input::InputX11::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD;
 

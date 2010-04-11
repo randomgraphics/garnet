@@ -25,10 +25,10 @@ bool GN::gfx::XenonGpu::contextInit()
     // initialize render target manager
     //GN_ASSERT( 0 == mRTMgr );
     //mRTMgr = new XenonRenderTargetMgr( *this );
-    //if( !mRTMgr->Init() ) return false;
+    //if( !mRTMgr->init() ) return false;
 
     // bind default context to device
-    RebindContext();
+    rebindContext();
 
     // success
     return true;
@@ -45,12 +45,12 @@ void GN::gfx::XenonGpu::contextQuit()
 
     // Reset context.
     GpuContext emptyContext;
-    BindContext( emptyContext );
+    bindContext( emptyContext );
 
     // Delete all vertex formats
-    mVertexFormats.Clear();
+    mVertexFormats.clear();
 
-    //SafeDelete( mRTMgr );
+    //safeDelete( mRTMgr );
 
     GN_UNGUARD;
 }
@@ -62,7 +62,7 @@ void GN::gfx::XenonGpu::contextQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpu::BindContextImpl(
+bool GN::gfx::XenonGpu::bindContextImpl(
     const GpuContext & context,
     bool               skipDirtyCheck )
 {
@@ -73,7 +73,7 @@ bool GN::gfx::XenonGpu::BindContextImpl(
     //
     // Parameter check
     //
-    if( ParamCheckEnabled() )
+    if( paramCheckEnabled() )
     {
         GN_TODO( "verify GPU context data" );
     }
@@ -148,8 +148,8 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                 else
                 {
                     // setup RT based on RTT
-                    //const Vector3<UInt32> & sz = newSurf->texture->GetMipSize( newSurf->level );
-                    //setupRT( sz.x, sz.y, newSurf->texture->GetDesc().format );
+                    //const Vector3<UInt32> & sz = newSurf->texture->getMipSize( newSurf->level );
+                    //setupRT( sz.x, sz.y, newSurf->texture->getDesc().format );
                 }
 
             }
@@ -186,7 +186,7 @@ GN::gfx::XenonGpu::bindContextRenderTargetsAndViewport(
                 {
                     // release old depth surface
                     GN_DX_CHECK( mDevice->SetDepthStencilSurface( NULL ) );
-                    mAutoDepth.Clear();
+                    mAutoDepth.clear();
 
                     // create new depth buffer
                     GN_DX_CHECK_RETURN_VOID( mDevice->CreateDepthStencilSurface(
@@ -325,15 +325,15 @@ GN::gfx::XenonGpu::bindContextShaders(
 {
     if( newContext.gpuProgram )
     {
-        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.Get();
+        const XenonBasicGpuProgram * prog = (const XenonBasicGpuProgram *)newContext.gpuProgram.get();
 
         if( skipDirtyCheck || mContext.gpuProgram != newContext.gpuProgram )
         {
             prog->apply();
         }
 
-        prog->applyUniforms( (const Uniform * const *)newContext.uniforms.ToRawPtr(), newContext.uniforms.Size(), skipDirtyCheck );
-        prog->applyTextures( newContext.textures.ToRawPtr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
+        prog->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size(), skipDirtyCheck );
+        prog->applyTextures( newContext.textures.cptr(), newContext.textures.MAX_SIZE, skipDirtyCheck );
     }
     else if( skipDirtyCheck || mContext.gpuProgram )
     {
@@ -342,7 +342,7 @@ GN::gfx::XenonGpu::bindContextShaders(
         mDevice->SetVertexShader( NULL );
         mDevice->SetPixelShader( NULL );
 
-        // Clear all textures
+        // clear all textures
         for( DWORD i = 0; i < GPU_D3D_TEXTURE_FETCH_CONSTANT_COUNT; ++i )
         {
             mDevice->SetTexture( i, 0 );
@@ -371,7 +371,7 @@ GN::gfx::XenonGpu::bindContextResources(
             AutoComPtr<IDirect3DVertexDeclaration9> & declAutoPtr = mVertexFormats[newContext.vtxfmt];
             if( !declAutoPtr )
             {
-                declAutoPtr.Attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
+                declAutoPtr.attach( createXenonVertexDecl( *mDevice, newContext.vtxfmt ) );
                 if( !declAutoPtr ) return false;
             }
 
@@ -393,7 +393,7 @@ GN::gfx::XenonGpu::bindContextResources(
         {
             GN_DX_CHECK( mDevice->SetStreamSource(
                 i,
-                vbb.vtxbuf ? SafeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.Get())->GetD3DBuffer() : NULL,
+                vbb.vtxbuf ? safeCastPtr<const XenonVtxBuf>(vbb.vtxbuf.get())->getD3DBuffer() : NULL,
                 vbb.offset,
                 vbb.stride ) );
         }
@@ -405,7 +405,7 @@ GN::gfx::XenonGpu::bindContextResources(
     if( skipDirtyCheck || newContext.idxbuf != mContext.idxbuf )
     {
         GN_DX_CHECK( mDevice->SetIndices( newContext.idxbuf
-            ? SafeCastPtr<const XenonIdxBuf>(newContext.idxbuf.Get())->GetD3DBuffer()
+            ? safeCastPtr<const XenonIdxBuf>(newContext.idxbuf.get())->getD3DBuffer()
             : NULL ) );
     }
 

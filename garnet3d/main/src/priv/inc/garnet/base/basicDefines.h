@@ -69,6 +69,9 @@
 #define GN_XBOX1 0  ///< If 1, means Xbox1
 #define GN_XENON 0  ///< if 1, means Xbox360
 
+/// \def GN_OS
+/// Indicate current OS
+
 // Windows platform
 #if defined( _WIN32 )
 
@@ -257,7 +260,7 @@
         ENUM_CLASS() {} \
         template<typename T> \
         ENUM_CLASS( T t ) : mValue( (ENUM_TYPE)t ) {} \
-        const ENUM_TYPE & ToRawEnum() const { return mValue; } \
+        const ENUM_TYPE & toRawEnum() const { return mValue; } \
         operator const ENUM_TYPE &() const { return mValue; } \
         ENUM_CLASS & operator++() { mValue = (ENUM_TYPE)(mValue + 1); return *this; } \
         ENUM_CLASS & operator--() { mValue = (ENUM_TYPE)(mValue - 1); return *this; }

@@ -2,7 +2,7 @@
 #include "oglVtxBuf.h"
 #include "oglGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::Init( const VtxBufDesc & desc )
+bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -23,21 +23,21 @@ bool GN::gfx::OGLVtxBufVBO::Init( const VtxBufDesc & desc )
     if( 0 == desc.length )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        return Failure();
+        return failure();
     }
 
     // store properties
-    SetDesc( desc );
+    setDesc( desc );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
     mOGLUsage = desc.fastCpuWrite ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
-    if( !createVBO() ) return Failure();
+    if( !createVBO() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -45,7 +45,7 @@ bool GN::gfx::OGLVtxBufVBO::Init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::Quit()
+void GN::gfx::OGLVtxBufVBO::quit()
 {
     GN_GUARD;
 
@@ -57,7 +57,7 @@ void GN::gfx::OGLVtxBufVBO::Quit()
         mOGLVertexBufferObject = 0;
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -70,11 +70,11 @@ void GN::gfx::OGLVtxBufVBO::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::OGLVtxBufVBO::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     if( !validateUpdateParameters( offset, &length, data, flag ) ) return;
 
@@ -84,9 +84,9 @@ void GN::gfx::OGLVtxBufVBO::Update( size_t offset, size_t length, const void * d
 
     // sanity check
     GN_ASSERT(
-        offset < GetDesc().length &&
+        offset < getDesc().length &&
         0 < length &&
-        (offset + length) <= GetDesc().length );
+        (offset + length) <= getDesc().length );
 
     // bind as active buffer
     GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
@@ -104,10 +104,10 @@ void GN::gfx::OGLVtxBufVBO::Update( size_t offset, size_t length, const void * d
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::Readback( DynaArray<UInt8> & data )
+void GN::gfx::OGLVtxBufVBO::readback( DynaArray<UInt8> & data )
 {
     GN_UNIMPL_WARNING();
-    data.Clear();
+    data.clear();
 }
 
 // *****************************************************************************
@@ -144,7 +144,7 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
     GN_OGL_CHECK_RV(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
-            GetDesc().length,
+            getDesc().length,
             NULL,
             mOGLUsage ),
         false );

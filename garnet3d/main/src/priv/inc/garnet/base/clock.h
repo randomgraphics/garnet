@@ -19,7 +19,7 @@ namespace GN
 
         //@{
     public:
-        Clock()  { Reset(); }
+        Clock()  { reset(); }
         ~Clock() {}
         //@}
 
@@ -44,17 +44,17 @@ namespace GN
         ///
         /// 获得当前时间计数
         ///
-        CycleType GetCycleCount() const
+        CycleType getCycleCount() const
         {
-            return GetCleanCycleCount();
+            return getCleanCycleCount();
         }
 
         ///
         /// 获得当前时间, in seconds
         ///
-        double GetTimeD() const
+        double getTimeD() const
         {
-            double c1 = static_cast<double>( GetCleanCycleCount() );
+            double c1 = static_cast<double>( getCleanCycleCount() );
             double c2 = static_cast<double>( mSystemCycleFrequency );
             return c1 / c2;
         }
@@ -62,30 +62,30 @@ namespace GN
         ///
         /// 获得当前时间, in seconds
         ///
-        float GetTimef() const
+        float getTimef() const
         {
-            return (float)GetTimeD();
+            return (float)getTimeD();
         }
 
         ///
         /// 重置时钟到初始状态
         ///
-        void Reset();
+        void reset();
 
         ///
         /// 恢复时钟运行
         ///
-        void Resume();
+        void resume();
 
         ///
         /// 暂停时钟
         ///
-        void Pause();
+        void pause();
 
         ///
         /// 当前时钟是否暂停
         ///
-        bool Paused() const { return mPaused; }
+        bool paused() const { return mPaused; }
 
         // ********************************
         //   private variables
@@ -108,7 +108,7 @@ namespace GN
         ///
         /// 得到从上次计时器复位到现在且去除暂停时间后所实际经过的净cycle数
         ///
-        CycleType GetCleanCycleCount() const
+        CycleType getCleanCycleCount() const
         {
             if (mPaused)
                 return mPauseTime;

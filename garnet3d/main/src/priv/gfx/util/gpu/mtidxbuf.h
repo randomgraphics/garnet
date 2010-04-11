@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadIdxBuf( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~MultiThreadIdxBuf() { Quit(); }
+        MultiThreadIdxBuf( MultiThreadGpu & r ) : mGpu(r) { clear(); }
+        virtual ~MultiThreadIdxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( IdxBuf * );
-        void Quit();
+        bool init( IdxBuf * );
+        void quit();
     private:
-        void Clear() { mIdxBuf = NULL; }
+        void clear() { mIdxBuf = NULL; }
         //@}
 
         // ********************************
@@ -51,8 +51,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        virtual void Readback( DynaArray<UInt8> & data );
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // private variables
@@ -60,7 +60,7 @@ namespace GN { namespace gfx
     private:
 
         MultiThreadGpu & mGpu;
-        IdxBuf              * mIdxBuf;
+        IdxBuf         * mIdxBuf;
 
         // ********************************
         // private functions

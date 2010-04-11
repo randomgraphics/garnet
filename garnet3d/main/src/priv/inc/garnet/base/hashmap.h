@@ -107,7 +107,7 @@ namespace GN
         explicit HashMap( size_t initialTableSize = 0 )
             : mKeyHashFunc( KEY_HASH_FUNC() )
             , mKeyEqualFunc( KEY_EQUAL_FUNC() )
-            , mPrimIndex( GetInitialPrimIndex( initialTableSize ) )
+            , mPrimIndex( getInitialPrimIndex( initialTableSize ) )
             , mCount(0)
             , mTable( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] )
         {
@@ -115,13 +115,13 @@ namespace GN
 
         ~HashMap()
         {
-            Clear();
+            clear();
         }
 
-        void Clear()
+        void clear()
         {
             // clear link table
-            for( PairType * p = mLinkedItems.GetHead(); p != NULL; )
+            for( PairType * p = mLinkedItems.head(); p != NULL; )
             {
                 PairType * np = p->next;
                 delete p;
@@ -130,30 +130,30 @@ namespace GN
             memset( &mLinkedItems, 0, sizeof(mLinkedItems) );
 
             // clear hash table
-            mTable.Clear();
-            mTable.Resize( HASH_MAP_PRIMARY_ARRAY[0] );
+            mTable.clear();
+            mTable.resize( HASH_MAP_PRIMARY_ARRAY[0] );
             mPrimIndex = 0;
             mCount = 0;
         }
 
-        bool Empty() const
+        bool empty() const
         {
             return 0 == mCount;
         }
 
-        VALUE * Find( const KEY & key ) const
+        VALUE * find( const KEY & key ) const
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mTable.Size() );
+            GN_ASSERT( N == mTable.size() );
 
             size_t k = mod( mKeyHashFunc(key), N );
 
             const HashItem & hi = mTable[k];
 
             for(
-                const PairType * const * pp = hi.values.Begin();
-                pp != hi.values.End();
+                const PairType * const * pp = hi.values.begin();
+                pp != hi.values.end();
                 ++pp )
             {
                 GN_ASSERT( *pp );
@@ -169,21 +169,21 @@ namespace GN
             return 0;
         }
 
-        KeyValuePair * First()
+        KeyValuePair * first()
         {
-            return mLinkedItems.GetHead();
+            return mLinkedItems.head();
         }
 
-        const KeyValuePair * First() const
+        const KeyValuePair * first() const
         {
-            return mLinkedItems.GetHead();
+            return mLinkedItems.head();
         }
 
-        KeyValuePair * Insert( const KEY & key, const VALUE & value )
+        KeyValuePair * insert( const KEY & key, const VALUE & value )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mTable.Size() );
+            GN_ASSERT( N == mTable.size() );
 
             size_t k = mod( mKeyHashFunc(key), N );
 
@@ -191,8 +191,8 @@ namespace GN
 
             // check for redundency
             for(
-                const PairType * const * pp = hi.values.Begin();
-                pp != hi.values.End();
+                const PairType * const * pp = hi.values.begin();
+                pp != hi.values.end();
                 ++pp )
             {
                 if( mKeyEqualFunc( (*pp)->key, key ) )
@@ -206,23 +206,23 @@ namespace GN
             PairType * newPair = new PairType( key, value );
 
             // add to linked list
-            mLinkedItems.Append( newPair );
+            mLinkedItems.append( newPair );
 
             // add to hash table
-            hi.values.Append( newPair );
+            hi.values.append( newPair );
 
             // adjust count
             ++mCount;
             if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(HASH_MAP_PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
-                mTable.Resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
+                mTable.resize( HASH_MAP_PRIMARY_ARRAY[mPrimIndex] );
             }
 
             return newPair;
         }
 
-        KeyValuePair * Next( const KeyValuePair * p )
+        KeyValuePair * next( const KeyValuePair * p )
         {
             if( NULL == p ) return NULL;
 
@@ -233,41 +233,41 @@ namespace GN
             return pt->next;
         }
 
-        const KeyValuePair * Next( const KeyValuePair * p ) const
+        const KeyValuePair * next( const KeyValuePair * p ) const
         {
             if( NULL == p && p->owner != &mLinkedItems ) return NULL;
             return ((const PairType*)p)->next;
         }
 
-        void Remove( const KEY & key )
+        void remove( const KEY & key )
         {
             const size_t N = HASH_MAP_PRIMARY_ARRAY[mPrimIndex];
 
-            GN_ASSERT( N == mTable.Size() );
+            GN_ASSERT( N == mTable.size() );
 
             size_t k = mod( mKeyHashFunc(key), N );
 
             HashItem & hi = mTable[k];
 
             for(
-                PairType ** pp = hi.values.Begin();
-                pp != hi.values.End();
+                PairType ** pp = hi.values.begin();
+                pp != hi.values.end();
                 ++pp )
             {
                 if( mKeyEqualFunc( (*pp)->key, key ) )
                 {
-                    // Found. Remove it.
+                    // Found. remove it.
                     GN_ASSERT( mCount > 0 );
 
                     // remove from linked list
-                    mLinkedItems.Remove( (*pp) );
+                    mLinkedItems.remove( (*pp) );
 
                     // delete the pair item
                     delete *pp;
 
                     // remove from hash table
                     // Note: this will change value of "*pp"
-                    hi.values.EraseItem( pp );
+                    hi.values.erasePtr( pp );
 
                     // adjust count
                     --mCount;
@@ -278,7 +278,7 @@ namespace GN
             }
         }
 
-        size_t Size() const { return mCount; }
+        size_t size() const { return mCount; }
 
         //@}
 
@@ -287,15 +287,15 @@ namespace GN
 
         VALUE & operator[]( const KEY & key )
         {
-            VALUE * p = Find( key );
+            VALUE * p = find( key );
             if( p ) return *p;
 
-            return Insert( key, VALUE() )->value;
+            return insert( key, VALUE() )->value;
          }
 
         const VALUE & operator[]( const KEY & key ) const
         {
-            VALUE * p = Find( key );
+            VALUE * p = find( key );
 
             GN_ASSERT( p );
 
@@ -337,7 +337,7 @@ namespace GN
     private:
 
         /// return index to primay number array
-        static inline size_t GetInitialPrimIndex( size_t initialSize )
+        static inline size_t getInitialPrimIndex( size_t initialSize )
         {
             size_t i;
 

@@ -3,15 +3,15 @@
 
 #if GN_MSWIN
 #define SHLIB_LOAD( libName )          ((void*)LoadLibraryA(libName))
-#define SHLIB_FREE( lib )              (!!FreeLibrary(HMODULE(lib)))
+#define SHLIB_UNLOAD( lib )            (!!FreeLibrary(HMODULE(lib)))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)GetProcAddress(HMODULE(lib), symb))
-#define SHLIB_ERROR()                  ::GN::GetWin32LastErrorInfo()
+#define SHLIB_ERROR()                  ::GN::getWin32LastErrorInfo()
 #define SHLIB_EXT                      ".dll"
 #elif GN_POSIX
 #include <dlfcn.h>
 #include <stdio.h>
 #define SHLIB_LOAD( libName )          ((void*)dlopen(libName, RTLD_NOW))
-#define SHLIB_FREE( lib )              (!dlclose( lib ))
+#define SHLIB_UNLOAD( lib )            (!dlclose( lib ))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)dlsym(lib, symb))
 #define SHLIB_ERROR()                  dlerror()
 #if GN_CYGWIN
@@ -23,20 +23,20 @@
 #error "Unknown platform!"
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.SharedLib");
+static GN::Logger * sLogger = GN::getLogger("GN.base.SharedLib");
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::SharedLib::Load( const char * libName )
+bool GN::SharedLib::load( const char * libName )
 {
     GN_GUARD;
 
-    // Free old library
-    Free();
+    // unload old library
+    unload();
 
     // check parameter
-    if( IsStringEmpty(libName) )
+    if( stringEmpty(libName) )
     {
         GN_ERROR(sLogger)( "Library name can't be empty!" );
         return false;
@@ -44,20 +44,20 @@ bool GN::SharedLib::Load( const char * libName )
 
     // Handle libName
     StrA filename;
-    if( fs::ExtName(libName).Empty() )
+    if( fs::extName(libName).empty() )
         filename = StrA(libName) + SHLIB_EXT;
     else
         filename = libName;
 
-    // Load library
-    mHandle = SHLIB_LOAD( filename.ToRawPtr() );
+    // load library
+    mHandle = SHLIB_LOAD( filename.cptr() );
     if( 0 == mHandle )
     {
-        GN_ERROR(sLogger)( "Fail to Load library %s: %s!", filename.ToRawPtr(), SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.cptr(), SHLIB_ERROR() );
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load library '%s'.", filename.ToRawPtr() );
+    GN_TRACE(sLogger)( "Load library '%s'.", filename.cptr() );
 
     // success
     mFileName = filename;
@@ -69,15 +69,15 @@ bool GN::SharedLib::Load( const char * libName )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::SharedLib::Free()
+void GN::SharedLib::unload()
 {
     GN_GUARD;
 
     if( mHandle )
     {
-        SHLIB_FREE( mHandle );
+        SHLIB_UNLOAD( mHandle );
         mHandle = 0;
-        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.ToRawPtr() );
+        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.cptr() );
     }
 
     GN_UNGUARD;
@@ -86,7 +86,7 @@ void GN::SharedLib::Free()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::SharedLib::GetSymbol( const char * symbol )
+void * GN::SharedLib::getSymbol( const char * symbol )
 {
     GN_GUARD;
 
@@ -96,7 +96,7 @@ void * GN::SharedLib::GetSymbol( const char * symbol )
         return 0;
     }
 
-    if( IsStringEmpty(symbol) )
+    if( stringEmpty(symbol) )
     {
         GN_ERROR(sLogger)( "Symbol name can't be empty!" );
         return 0;

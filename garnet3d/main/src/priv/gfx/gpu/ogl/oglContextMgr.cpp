@@ -92,10 +92,10 @@ bool GN::gfx::OGLGpu::contextInit()
 {
     // create render target manager
     mRTMgr = OGLRTMgrFBO::usable() ? (OGLBasicRTMgr*)new OGLRTMgrFBO(*this) : new OGLRTMgrCopyFrame(*this);
-    if( !mRTMgr->Init() ) return false;
+    if( !mRTMgr->init() ) return false;
 
     // bind default context to device
-    RebindContext();
+    rebindContext();
 
     return true;
 }
@@ -106,19 +106,19 @@ bool GN::gfx::OGLGpu::contextInit()
 void GN::gfx::OGLGpu::contextQuit()
 {
     // reset context
-    mContext.Clear();
+    mContext.clear();
 
     // delete all vertex formats
-    for( GN::Dictionary<VertexFormatKey,OGLVtxFmt*>::Iterator i = mVertexFormats.Begin();
-         i != mVertexFormats.End();
+    for( Dictionary<VertexFormatKey,OGLVtxFmt*>::Iterator i = mVertexFormats.begin();
+         i != mVertexFormats.end();
          ++i )
     {
-        delete i->Value();
+        delete i->value();
     }
-    mVertexFormats.Clear();
+    mVertexFormats.clear();
 
     // delete render target manager
-    SafeDelete( mRTMgr );
+    safeDelete( mRTMgr );
 }
 
 // *****************************************************************************
@@ -129,7 +129,7 @@ void GN::gfx::OGLGpu::contextQuit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLGpu::BindContextImpl(
+GN::gfx::OGLGpu::bindContextImpl(
     const GpuContext & newContext,
     bool                    skipDirtyCheck )
 {
@@ -174,16 +174,16 @@ GN::gfx::OGLGpu::findOrCreateOGLVtxFmt(
 
     VertexFormatKey key = { vf, shaderID };
 
-    OGLVtxFmt ** ppFormat = mVertexFormats.Find( key );
+    OGLVtxFmt ** ppFormat = mVertexFormats.find( key );
 
     if( NULL != ppFormat ) return *ppFormat;
 
     AutoObjPtr<OGLVtxFmt> oglvf( new OGLVtxFmt(*this) );
-    if( !oglvf->Init( vf, program ) ) return NULL;
+    if( !oglvf->init( vf, program ) ) return NULL;
 
     mVertexFormats[key] = oglvf;
 
-    return oglvf.Detach();
+    return oglvf.detach();
 }
 
 //
@@ -196,8 +196,8 @@ GN::gfx::OGLGpu::bindContextShaders(
 {
     GN_GUARD_SLOW;
 
-    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.Get();
-    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.Get();
+    const OGLBasicGpuProgram  * oldProgram = (const OGLBasicGpuProgram*)mContext.gpuProgram.get();
+    const OGLBasicGpuProgram  * newProgram = (const OGLBasicGpuProgram*)newContext.gpuProgram.get();
 
     if( oldProgram == newProgram )
     {
@@ -211,8 +211,8 @@ GN::gfx::OGLGpu::bindContextShaders(
             // Make sure size of AutoRef<T> and T* are same. So we can safely convert AutoRef<T> * to T **
             GN_CASSERT( sizeof(AutoRef<Uniform>) == sizeof(Uniform*) );
 
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.ToRawPtr(), newContext.uniforms.Size() );
-            newProgram->applyTextures( newContext.textures.ToRawPtr(), newContext.textures.Size() );
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
         }
     }
     else
@@ -224,8 +224,8 @@ GN::gfx::OGLGpu::bindContextShaders(
         if( newProgram )
         {
             newProgram->enable();
-            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.ToRawPtr(), newContext.uniforms.Size() );
-            newProgram->applyTextures( newContext.textures.ToRawPtr(), newContext.textures.Size() );
+            newProgram->applyUniforms( (const Uniform * const *)newContext.uniforms.cptr(), newContext.uniforms.size() );
+            newProgram->applyTextures( newContext.textures.cptr(), newContext.textures.size() );
         }
     }
 
@@ -441,7 +441,7 @@ GN::gfx::OGLGpu::bindContextResources(
     //
     if( skipDirtyCheck || newContext.vtxfmt != mContext.vtxfmt || newContext.gpuProgram != mContext.gpuProgram )
     {
-        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.Get() );
+        mCurrentOGLVtxFmt = findOrCreateOGLVtxFmt( newContext.vtxfmt, (const OGLBasicGpuProgram*)newContext.gpuProgram.get() );
         if( !mCurrentOGLVtxFmt ) return false;
         if( !mCurrentOGLVtxFmt->bindStates() ) return false;
     }

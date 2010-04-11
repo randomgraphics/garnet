@@ -6,7 +6,7 @@
 #include "xenonVtxBuf.h"
 #include "xenonIdxBuf.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -59,15 +59,15 @@ void GN::gfx::XenonGpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 GN::Blob *
-GN::gfx::XenonGpu::CompileGpuProgram( const GpuProgramDesc & desc )
+GN::gfx::XenonGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->Init( desc ) ) return NULL;
+    if( !s->init( desc ) ) return NULL;
 
     // success
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -76,31 +76,31 @@ GN::gfx::XenonGpu::CompileGpuProgram( const GpuProgramDesc & desc )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::XenonGpu::CreateGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
+GN::gfx::XenonGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length  )
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     /// get shader description about of compiled binary
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->Init( compiledGpuProgramBinary, length ) ) return NULL;
-    const GpuProgramDesc & desc = s->desc();
+    if( !s->init( compiledGpuProgramBinary, length ) ) return NULL;
+    const GpuProgramDesc & desc = s->getDesc();
 
     switch( desc.lang )
     {
         case GpuProgramLanguage::MICROCODE:
         {
             AutoRef<XenonGpuProgramASM> prog( new XenonGpuProgramASM(*this) );
-            if( !prog->Init( desc ) ) return NULL;
-            return prog.Detach();
+            if( !prog->init( desc ) ) return NULL;
+            return prog.detach();
         }
 
         case GpuProgramLanguage::HLSL9:
         {
             AutoRef<XenonGpuProgramHLSL> prog( new XenonGpuProgramHLSL(*this) );
-            if( !prog->Init( desc ) ) return NULL;
-            return prog.Detach();
+            if( !prog->init( desc ) ) return NULL;
+            return prog.detach();
             break;
         }
 
@@ -116,7 +116,7 @@ GN::gfx::XenonGpu::CreateGpuProgram( const void * compiledGpuProgramBinary, size
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::XenonGpu::CreateUniform( size_t size )
+GN::gfx::XenonGpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -125,15 +125,15 @@ GN::gfx::XenonGpu::CreateUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::XenonGpu::CreateTexture( const TextureDesc & desc )
+GN::gfx::XenonGpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     AutoRef<XenonTexture> p( new XenonTexture(*this) );
-    if( !p->Init( desc ) ) return 0;
-    return p.Detach();
+    if( !p->init( desc ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -141,17 +141,17 @@ GN::gfx::XenonGpu::CreateTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::XenonGpu::CreateVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::XenonGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     AutoRef<XenonVtxBuf> buf( new XenonVtxBuf(*this) );
 
-    if( !buf->Init( desc ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
-    return buf.Detach();
+    return buf.detach();
 
     GN_UNGUARD;
 }
@@ -159,17 +159,17 @@ GN::gfx::VtxBuf * GN::gfx::XenonGpu::CreateVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::XenonGpu::CreateIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::XenonGpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     AutoRef<XenonIdxBuf> buf( new XenonIdxBuf(*this) );
 
-    if( !buf->Init( desc ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
-    return buf.Detach();
+    return buf.detach();
 
     GN_UNGUARD;
 }

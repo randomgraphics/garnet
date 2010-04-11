@@ -6,7 +6,7 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.FirstPersonCamera");
+static GN::Logger * sLogger = GN::getLogger("GN.util.FirstPersonCamera");
 
 // *****************************************************************************
 // local functions
@@ -19,9 +19,9 @@ static inline void sEuler2Matrix( Matrix33f & m, const Vector3f & e )
 {
     Matrix33f rx, ry, rz;
 
-    rx.RotateX( e.x );
-    ry.RotateY( e.y );
-    rz.RotateZ( e.z );
+    rx.rotateX( e.x );
+    ry.rotateY( e.y );
+    rz.rotateZ( e.z );
 
     m = rz * rx * ry;
 }
@@ -75,7 +75,7 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::setTargetPosition( const Vector3f & p )
 {
-    mTargetPosition.Reset( mPosition, p, INTERP_TIME );
+    mTargetPosition.reset( mPosition, p, INTERP_TIME );
 }
 
 //
@@ -88,7 +88,7 @@ void FirstPersonCamera::setTargetAngle( const Vector3f & r )
         fmod( r.y, GN_TWO_PI ),
         fmod( r.z, GN_TWO_PI ) );
 
-    mTargetAngle.Reset( mAngle, v, INTERP_TIME );
+    mTargetAngle.reset( mAngle, v, INTERP_TIME );
 }
 
 //
@@ -101,7 +101,7 @@ void FirstPersonCamera::setPosition( const Vector3f & p )
 
     // update view matrix
     Matrix44f trans;
-    trans.Translate( -mPosition );
+    trans.translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 
@@ -120,24 +120,24 @@ void FirstPersonCamera::setAngle( const Vector3f & r )
 
     // update rotation
     sEuler2Matrix( mRotation3x3, -mAngle );
-    mRotation4x4.Set( mRotation3x3 );
+    mRotation4x4.set( mRotation3x3 );
 
     // update view matrix
     Matrix44f trans;
-    trans.Translate( -mPosition );
+    trans.translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void FirstPersonCamera::Update( float timeslice )
+void FirstPersonCamera::update( float timeslice )
 {
     Vector3f delta_p(0,0,0);
     Vector3f delta_a(0,0,0);
 
     // process keyboard actions (as for right hand)
-    const KeyStatus * kb = gInput.GetKeyboardStatus();
+    const KeyStatus * kb = gInput.getKeyboardStatus();
     if( kb[mKeys[MOVE_F]].down ) delta_p.z -= mMoveSpeed * timeslice;
     if( kb[mKeys[MOVE_B]].down ) delta_p.z += mMoveSpeed * timeslice;
     if( kb[mKeys[MOVE_L]].down ) delta_p.x -= mMoveSpeed * timeslice;
@@ -162,22 +162,22 @@ void FirstPersonCamera::Update( float timeslice )
     {
         setTargetAngle( mTargetAngle.getTarget() + delta_a );
     }
-    mTargetAngle.Update( timeslice );
+    mTargetAngle.update( timeslice );
     mAngle = mTargetAngle.getValue();
     sEuler2Matrix( mRotation3x3, -mAngle );
-    mRotation4x4.Set( mRotation3x3 );
+    mRotation4x4.set( mRotation3x3 );
 
     // update position
     if( ZERO3 != delta_p )
     {
         setTargetPosition( mTargetPosition.getTarget() + delta_p * mRotation3x3 );
     }
-    mTargetPosition.Update( timeslice );
+    mTargetPosition.update( timeslice );
     mPosition = mTargetPosition.getValue();
 
     // update view matrix
     Matrix44f trans;
-    trans.Translate( -mPosition );
+    trans.translate( -mPosition );
     mView = mRotation4x4 * trans;
 }
 
@@ -188,7 +188,7 @@ void FirstPersonCamera::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigAxisMove.Connect( this, &FirstPersonCamera::OnAxisMove );
+        gInput.sigAxisMove.connect( this, &FirstPersonCamera::onAxisMove );
     }
     else
     {
@@ -203,7 +203,7 @@ void FirstPersonCamera::disconnectFromInput()
 {
     if( gInputPtr )
     {
-        gInput.sigAxisMove.Disconnect( this );
+        gInput.sigAxisMove.disconnect( this );
     }
 }
 
@@ -214,11 +214,11 @@ void FirstPersonCamera::disconnectFromInput()
 //
 //
 // -----------------------------------------------------------------------------
-void FirstPersonCamera::OnAxisMove( input::Axis a, int d )
+void FirstPersonCamera::onAxisMove( input::Axis a, int d )
 {
     Input & i = gInput;
 
-    if( i.GetKeyStatus( mKeys[AXIS_LOOK] ).down )
+    if( i.getKeyStatus( mKeys[AXIS_LOOK] ).down )
     {
         float distance = mAxisSensitivity * d;
         Vector3f rotation(0,0,0);

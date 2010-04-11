@@ -39,7 +39,7 @@ namespace GN
     // get inverse of a 3x3 matrix
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::Inverse()
+    Matrix33<T> & Matrix33<T>::inverse()
     {
 
         // Invert a 3x3 using cofactors.  This is about 8 times faster than
@@ -66,9 +66,9 @@ namespace GN
         {
             // Uninvertable matrix is rare used in 3D graphics, and usually
             // means error. So we output a warning message here.
-            static Logger * sLogger = GetLogger("GN.base.Matrix33");
+            static Logger * sLogger = getLogger("GN.base.Matrix33");
             GN_WARN(sLogger)( "Matrix is un-invertable!" );
-            return Identity();
+            return identity();
         }
 
         T fInvDet = 1.0f/fDet;
@@ -86,7 +86,7 @@ namespace GN
     // generate a X-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::RotateX( T angle )
+    Matrix33<T> & Matrix33<T>::rotateX( T angle )
     {
         // 1    0    0
         // 0  cos -sin
@@ -95,7 +95,7 @@ namespace GN
         T s = (T)::sin( angle );
         T c = (T)::cos( angle );
 
-        Identity();
+        identity();
 
         rows[1][1] = c;
         rows[1][2] = -s;
@@ -109,7 +109,7 @@ namespace GN
     // generate a Y-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::RotateY( T angle )
+    Matrix33<T> & Matrix33<T>::rotateY( T angle )
     {
         //  cos  0  sin
         //  0    1    0
@@ -118,7 +118,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        Identity();
+        identity();
 
         rows[0][0] = c;
         rows[0][2] = s;
@@ -132,7 +132,7 @@ namespace GN
     // generate a Z-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::RotateZ( T angle )
+    Matrix33<T> & Matrix33<T>::rotateZ( T angle )
     {
         // cos -sin  0
         // sin  cos  0
@@ -141,7 +141,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        Identity();
+        identity();
 
         rows[0][0] = c;
         rows[0][1] = -s;
@@ -155,7 +155,7 @@ namespace GN
     // generate a arbitrary rotation matrix, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::Rotate( const Vector3<T> & v, T angle )
+    Matrix33<T> & Matrix33<T>::rotate( const Vector3<T> & v, T angle )
     {
         T sinA, cosA;
         T invCosA;
@@ -163,7 +163,7 @@ namespace GN
         T x, y, z;
         T xSq, ySq, zSq;
 
-        nrm.Normalize();
+        nrm.normalize();
         sinA = ::sin( angle );
         cosA = ::cos( angle );
         invCosA = 1.0F - cosA;
@@ -196,16 +196,16 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix33<T> &
-    Matrix33<T>::LookAtLh( const Vector3<T> & forward, const Vector3<T> & up )
+    Matrix33<T>::lookAtLh( const Vector3<T> & forward, const Vector3<T> & up )
     {
         Vector3<T> F = forward;
-        F.Normalize();
+        F.normalize();
 
         Vector3<T> S = Vector3<T>::sCross( Vector3<T>::sNormalize(up), F );
-        S.Normalize();
+        S.normalize();
 
         Vector3<T> U = Vector3<T>::sCross( F, S );
-        U.Normalize();
+        U.normalize();
 
         rows[0][0] = S.x;
         rows[0][1] = S.y;
@@ -228,16 +228,16 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix33<T> &
-    Matrix33<T>::LookAtRh( const Vector3<T> & forward, const Vector3<T> & up )
+    Matrix33<T>::lookAtRh( const Vector3<T> & forward, const Vector3<T> & up )
     {
         Vector3<T> F = forward;
-        F.Normalize();
+        F.normalize();
 
         Vector3<T> S = Vector3<T>::sCross( F, Vector3<T>::sNormalize(up) );
-        S.Normalize();
+        S.normalize();
 
         Vector3<T> U = Vector3<T>::sCross( S, F );
-        U.Normalize();
+        U.normalize();
 
         rows[0][0] = S.x;
         rows[0][1] = S.y;
@@ -260,9 +260,9 @@ namespace GN
     // 将矩阵的内容打印到字符串中
     // -------------------------------------------------------------------------
     template < typename T >
-    void Matrix33<T>::Print( StrA & s ) const
+    void Matrix33<T>::print( StrA & s ) const
     {
-        s.Format(
+        s.format(
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n",
@@ -318,11 +318,11 @@ namespace GN
     // Invert the matrix
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::Inverse()
+    Matrix44<T> & Matrix44<T>::inverse()
     {
         Matrix44<T> a(*this);
         Matrix44<T>  & b = *this;
-        b.Identity();
+        b.identity();
 
         int r, c;
         int cc;
@@ -345,14 +345,14 @@ namespace GN
             }
 
             // Check if the matrix is invertible. If the max value here is 0, we
-            // can't Inverse.  Return Identity.
+            // can't inverse.  Return identity.
             if (a[rowMax][c] == 0.0F)
             {
                 // Uninvertible matrix is rare used in 3D graphics, and usually
                 // means error. So we output a warning message here.
-                static Logger * sLogger = GetLogger("GN.base.Matrix44");
+                static Logger * sLogger = getLogger("GN.base.Matrix44");
                 GN_WARN(sLogger)( "Matrix is un-invertable!" );
-                return Identity();
+                return identity();
             }
 
             // Swap row "rowMax" with row "c"
@@ -399,7 +399,7 @@ namespace GN
     // generate a rotate matrix by X-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::RotateX( T angle )
+    Matrix44<T> & Matrix44<T>::rotateX( T angle )
     {
         // cos -sin  0   0
         // sin  cos  0   0
@@ -409,7 +409,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        Identity();
+        identity();
 
         rows[1][1] = c;
         rows[1][2] = -s;
@@ -423,7 +423,7 @@ namespace GN
     // generate a rotate matrix by Y-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::RotateY( T angle )
+    Matrix44<T> & Matrix44<T>::rotateY( T angle )
     {
         //  cos  0  sin   0
         //  0    1    0   0
@@ -433,7 +433,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        Identity();
+        identity();
 
         rows[0][0] = c;
         rows[0][2] = s;
@@ -447,7 +447,7 @@ namespace GN
     // generate a rotate matrix by X-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::RotateZ( T angle )
+    Matrix44<T> & Matrix44<T>::rotateZ( T angle )
     {
         // cos -sin   0    0
         // sin  cos   0    0
@@ -457,7 +457,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        Identity();
+        identity();
 
         rows[0][0] = c;
         rows[0][1] = -s;
@@ -472,10 +472,10 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::Rotate( const Vector3<T> & v, T angle )
+    Matrix44<T>::rotate( const Vector3<T> & v, T angle )
     {
         Vector3<T> nrm = v;
-        nrm.Normalize();
+        nrm.normalize();
 
         T sinA, cosA, invCosA;
         T x, y, z;
@@ -521,18 +521,18 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::LookAtLh( const Vector3<T> & eye,
+    Matrix44<T>::lookAtLh( const Vector3<T> & eye,
                            const Vector3<T> & to,
                            const Vector3<T> & up )
     {
         Vector3<T> F = to - eye;
-        F.Normalize();
+        F.normalize();
 
         Vector3<T> S = Vector3<T>::sCross( Vector3<T>::sNormalize(up), F );
-        S.Normalize();
+        S.normalize();
 
         Vector3<T> U = Vector3<T>::sCross( F, S );
-        U.Normalize();
+        U.normalize();
 
         rows[0][0] = S.x;
         rows[0][1] = S.y;
@@ -555,7 +555,7 @@ namespace GN
         rows[3][3] = 1.0f;
 
         Matrix44 mt;
-        mt.Translate( -eye );
+        mt.translate( -eye );
         *this *= mt;
 
         return *this;
@@ -566,18 +566,18 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::LookAtRh( const Vector3<T> & eye,
+    Matrix44<T>::lookAtRh( const Vector3<T> & eye,
                            const Vector3<T> & to,
                            const Vector3<T> & up )
     {
         Vector3<T> F = to - eye;
-        F.Normalize();
+        F.normalize();
 
         Vector3<T> S = Vector3<T>::sCross( F, Vector3<T>::sNormalize(up) );
-        S.Normalize();
+        S.normalize();
 
         Vector3<T> U = Vector3<T>::sCross( S, F );
-        U.Normalize();
+        U.normalize();
 
         rows[0][0] = S.x;
         rows[0][1] = S.y;
@@ -600,7 +600,7 @@ namespace GN
         rows[3][3] = 1.0f;
 
         Matrix44 mt;
-        mt.Translate( -eye );
+        mt.translate( -eye );
         *this *= mt;
 
         return *this;
@@ -611,7 +611,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::OrthoOGLLh( T left, T right,
+    Matrix44<T>::orthoOGLLh( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
     {
@@ -621,7 +621,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = 2.0f / d;                  // 此处和directx不同
@@ -638,7 +638,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::OrthoOGLRh( T left, T right,
+    Matrix44<T>::orthoOGLRh( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
     {
@@ -648,7 +648,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = -2.0f / d;                 // 此处和directx不同
@@ -665,7 +665,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::OrthoD3DLh( T left, T right,
+    Matrix44<T>::orthoD3DLh( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
     {
@@ -675,7 +675,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = 1.0f / d;                  // 此处和opengl不同
@@ -692,7 +692,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::OrthoD3DRh( T left, T right,
+    Matrix44<T>::orthoD3DRh( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
     {
@@ -702,7 +702,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = -1.0f / d;                 // 此处和opengl不同
@@ -719,7 +719,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::PerspectiveOGLLh( T fovy, T ratio,
+    Matrix44<T>::perspectiveOGLLh( T fovy, T ratio,
                                    T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
@@ -728,7 +728,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = (znear + zfar) / d;        // 此处和directx不同
@@ -744,7 +744,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::PerspectiveOGLRh( T fovy, T ratio,
+    Matrix44<T>::perspectiveOGLRh( T fovy, T ratio,
                                    T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
@@ -753,7 +753,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = -(znear + zfar) / d;       // 此处和directx不同
@@ -769,7 +769,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::PerspectiveD3DLh( T fovy, T ratio,
+    Matrix44<T>::perspectiveD3DLh( T fovy, T ratio,
                                    T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
@@ -778,7 +778,7 @@ namespace GN
         w = h * ratio,
         d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = zfar / d;                  // 此处和opengl不同
@@ -794,7 +794,7 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::PerspectiveD3DRh( T fovy, T ratio,
+    Matrix44<T>::perspectiveD3DRh( T fovy, T ratio,
                                    T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
@@ -803,7 +803,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        Identity();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = -zfar / d;                 // 此处和opengl不同
@@ -818,9 +818,9 @@ namespace GN
     //  将矩阵的内容打印到字符串中
     // -------------------------------------------------------------------------
     template < typename T >
-    void Matrix44<T>::Print( StrA & s ) const
+    void Matrix44<T>::print( StrA & s ) const
     {
-		s.Format(
+		s.format(
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"

@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11Buffer( D3D11Gpu & r ) : D3D11Resource(r) { Clear(); }
-        virtual ~D3D11Buffer() { Quit(); }
+        D3D11Buffer( D3D11Gpu & r ) : D3D11Resource(r) { clear(); }
+        virtual ~D3D11Buffer() { quit(); }
         //@}
 
         // ********************************
@@ -34,10 +34,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags );
-        void Quit();
+        bool init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mD3DBuffer = 0;
         }
@@ -51,10 +51,10 @@ namespace GN { namespace gfx
         //@{
 
         // Get D3D11 buffer pointer (no reference couter change).
-        ID3D11Buffer * GetD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
+        ID3D11Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
 
-        void           Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        void           Readback( DynaArray<UInt8> & data );
+        void           update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        void           readback( DynaArray<UInt8> & data );
 
         //@}
 
@@ -86,8 +86,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11VtxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { Clear(); }
-        virtual ~D3D11VtxBuf() { Quit(); }
+        D3D11VtxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
+        virtual ~D3D11VtxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -96,10 +96,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const VtxBufDesc & desc );
-        void Quit();
+        bool init( const VtxBufDesc & desc );
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************
@@ -107,8 +107,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
-        virtual void Readback( DynaArray<UInt8> & data );
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions
@@ -139,8 +139,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D11IdxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { Clear(); }
-        virtual ~D3D11IdxBuf() { Quit(); }
+        D3D11IdxBuf( D3D11Gpu & r ) : D3D11Buffer(r) { clear(); }
+        virtual ~D3D11IdxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -149,10 +149,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const IdxBufDesc & desc );
-        void Quit();
+        bool init( const IdxBufDesc & desc );
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************
@@ -160,8 +160,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
-        virtual void Readback( DynaArray<UInt8> & data );
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag );
+        virtual void readback( DynaArray<UInt8> & data );
 
         // ********************************
         // public functions

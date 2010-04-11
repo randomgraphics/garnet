@@ -25,7 +25,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        BasicGpuXenon() { Clear(); }
+        BasicGpuXenon() { clear(); }
         virtual ~BasicGpuXenon() {}
         //@}
 
@@ -35,10 +35,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuOptions & );
-        void Quit();
+        bool init( const GpuOptions & );
+        void quit();
     private :
-        void Clear()
+        void clear()
         {
             dispClear();
         }
@@ -54,8 +54,8 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual const GpuOptions & GetOptions() const { return mOptions; }
-        virtual const DispDesc        & GetDispDesc() const { return mDispDesc; }
+        virtual const GpuOptions & getOptions() const { return mOptions; }
+        virtual const DispDesc        & getDispDesc() const { return mDispDesc; }
 
     private:
         bool dispInit( const GpuOptions & );
@@ -64,7 +64,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        virtual void HandleRenderWindowSizeMove() { /* do nothing */ }
+        virtual void handleRenderWindowSizeMove() { /* do nothing */ }
 
     private:
 
@@ -123,7 +123,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void ProcessRenderWindowMessages( bool ) {} // do nothing on Xenon platform
+        virtual void processRenderWindowMessages( bool ) {} // do nothing on Xenon platform
 
         //@}
     };

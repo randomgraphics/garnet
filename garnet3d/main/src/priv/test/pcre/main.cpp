@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.test.pcre");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.pcre");
 
 int main( int argc, const char * argv[] )
 {

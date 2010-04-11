@@ -31,7 +31,7 @@ namespace GN
 //
 //
 // -----------------------------------------------------------------------------
-GN::RuntimeAssertBehavior GN::SetRuntimeAssertBehavior( RuntimeAssertBehavior rab )
+GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior rab )
 {
     RuntimeAssertBehavior old = gRuntimeAssertBehavior;
     gRuntimeAssertBehavior = rab;
@@ -42,7 +42,7 @@ GN::RuntimeAssertBehavior GN::SetRuntimeAssertBehavior( RuntimeAssertBehavior ra
 //
 // -----------------------------------------------------------------------------
 bool
-GN::AssertFunc(
+GN::assertFunc(
     const char * msg,
     const char * file,
     int          line,
@@ -68,7 +68,7 @@ GN::AssertFunc(
 
 #if GN_MSWIN && GN_PC
     char buf[1024];
-    StringPrintf( buf, 1024,
+    stringPrintf( buf, 1024,
         "%s(%d)\n"
         "%s\n\n"
         "Break into debugger?\n"
@@ -92,7 +92,7 @@ GN::AssertFunc(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::BreakIntoDebugger()
+void GN::breakIntoDebugger()
 {
 #if GN_MSVC
 	::DebugBreak();
@@ -109,7 +109,7 @@ void GN::BreakIntoDebugger()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
+GN::getWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
 {
     static char info[4096];
 
@@ -129,7 +129,7 @@ GN::GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
     info[4095] = 0;
 
     // 除去信息末尾多余的回车符
-    size_t n = StringLength(info);
+    size_t n = stringLength(info);
     while( n > 0 && '\n' != info[n-1] )
     {
         --n;
@@ -145,9 +145,9 @@ GN::GetWin32ErrorInfo( UInt32 win32ErrorCode ) throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::GetWin32LastErrorInfo() throw()
+GN::getWin32LastErrorInfo() throw()
 {
-    return GetWin32ErrorInfo( ::GetLastError() );
+    return getWin32ErrorInfo( ::GetLastError() );
 }
 
 #endif
@@ -157,7 +157,7 @@ GN::GetWin32LastErrorInfo() throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::GetDirectXErrorInfo( SInt32 hr ) throw()
+GN::getDXErrorInfo( SInt32 hr ) throw()
 {
     return DXERR_FUNC( hr );
 }
@@ -166,7 +166,7 @@ GN::GetDirectXErrorInfo( SInt32 hr ) throw()
 //
 // -----------------------------------------------------------------------------
 const char *
-GN::Errno2Str( int err )
+GN::errno2str( int err )
 {
     switch( err )
     {

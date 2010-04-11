@@ -52,7 +52,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 #if GN_XENON
             PIXBeginNamedEvent( color, name );
 #else
-            D3DPERF_BeginEvent( color, Mbs2Wcs(name).ToRawPtr() );
+            D3DPERF_BeginEvent( color, mbs2wcs(name).cptr() );
 #endif
         }
         ~PixPerfScopeEvent()
@@ -249,7 +249,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         void StoreRenderState( D3DRENDERSTATETYPE type )
         {
-            if( m_Device && m_Values.Find(type) == NULL )
+            if( m_Device && m_Values.find(type) == NULL )
             {
                 DWORD value;
                 if( SUCCEEDED( m_Device->GetRenderState( type, &value ) ) )
@@ -262,13 +262,13 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         void RestoreAllRenderStates()
         {
             RenderStateMap::KeyValuePair * i;
-            for( i = m_Values.First(); i != NULL; i = m_Values.Next( i ) )
+            for( i = m_Values.first(); i != NULL; i = m_Values.next( i ) )
             {
                 D3DRENDERSTATETYPE type = i->key;
                 DWORD              value = i->value;
                 m_Device->SetRenderState( type, value );
             }
-            m_Values.Clear();
+            m_Values.clear();
         }
     };
 
@@ -294,19 +294,19 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
     public:
 
         D3D9ThickLineRenderer();
-        ~D3D9ThickLineRenderer() { OnDeviceDispose(); OnDeviceDelete(); }
+        ~D3D9ThickLineRenderer() { onDeviceDispose(); onDeviceDelete(); }
 
-        bool OnDeviceCreate( IDirect3DDevice9 * dev );
-        bool OnDeviceRestore();
-        void OnDeviceDispose();
-        void OnDeviceDelete();
+        bool onDeviceCreate( IDirect3DDevice9 * dev );
+        bool onDeviceRestore();
+        void onDeviceDispose();
+        void onDeviceDelete();
 
-        bool DrawBegin( const ThickLineParameters & parameters );
-        void DrawEnd();
+        bool drawBegin( const ThickLineParameters & parameters );
+        void drawEnd();
 
-        void Line( const ThickLineVertex & v0, const ThickLineVertex & v1 );
-        void Line( float x1, float y1, float z1, float x2, float y2, float z2, D3DCOLOR color );
-        void LineList( const ThickLineVertex * vertices, size_t numverts );
+        void line( const ThickLineVertex & v0, const ThickLineVertex & v1 );
+        void line( float x1, float y1, float z1, float x2, float y2, float z2, D3DCOLOR color );
+        void lineList( const ThickLineVertex * vertices, size_t numverts );
 
     private:
 
@@ -331,10 +331,10 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             float texl, texr, text, texb;
             D3DCOLOR color;
 
-            PrivateVertex * TopLeft( PrivateVertex * v );
-            PrivateVertex * TopRight( PrivateVertex * v );
-            PrivateVertex * BottomLeft( PrivateVertex * v );
-            PrivateVertex * BottomRight( PrivateVertex * v );
+            PrivateVertex * topLeft( PrivateVertex * v );
+            PrivateVertex * topRight( PrivateVertex * v );
+            PrivateVertex * bottomLeft( PrivateVertex * v );
+            PrivateVertex * bottomRight( PrivateVertex * v );
         };
 
     private:
@@ -357,15 +357,15 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
     private:
 
-        void Clear();
+        void clear();
 
-        void CalcEndPoint(
+        void calcEndPoint(
             EndPoint              & endpoint,
             const ThickLineVertex & vertex );
 
-        PrivateVertex * NewPolygon6();
+        PrivateVertex * newPolygon6();
 
-        void Flush();
+        void flush();
     };
 
     ///
@@ -463,7 +463,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         HWND               window() const { return mWindow; }
         IDirect3DDevice9 & d3d9dev() const { GN_ASSERT( mDevice ); return *mDevice; }
 
-        int Run( const D3D9AppOption * = 0 );
+        int run( const D3D9AppOption * = 0 );
 
         bool changeOption( const D3D9AppOption & );
 
@@ -473,25 +473,25 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
         //@{
 
-        virtual bool OnInit( D3D9AppOption & ) { return true; }
+        virtual bool onInit( D3D9AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual bool onRestore() { return true; }
         virtual void onDispose() {}
         virtual void onDestroy() {}
-        virtual void OnQuit() {}
+        virtual void onQuit() {}
 
         virtual void onDraw() {}
-        virtual void OnUpdate() {}
-        virtual void OnKeyPress( input::KeyEvent );
-        virtual void OnCharPress( wchar_t ) {}
-        virtual void OnAxisMove( input::Axis, int ) {}
+        virtual void onUpdate() {}
+        virtual void onKeyPress( input::KeyEvent );
+        virtual void onCharPress( wchar_t ) {}
+        virtual void onAxisMove( input::Axis, int ) {}
 
         //@}
 
     private:
 
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
 
         bool createDevice();
         bool restoreDevice();

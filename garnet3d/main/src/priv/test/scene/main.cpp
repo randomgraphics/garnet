@@ -26,13 +26,13 @@ Entity * box;
 Entity * robot;
 Camera   camera;
 
-bool Init( Scene & sc )
+bool init( Scene & sc )
 {
     root = sc.world.createSpatialEntity( "root" );
 
     // robot stays at the origin.
     robot = sc.world.createVisualEntity();
-    robot->getNode<SpatialNode>()->SetParent( root->getNode<SpatialNode>() );
+    robot->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     robot->getNode<VisualNode>()->loadModelsFromFile( "media::/boxes/boxes.ase" );//R.F.R01/a01.ase" );
 
     const Spheref & bs = robot->getNode<SpatialNode>()->getBoundingSphere();
@@ -41,13 +41,13 @@ bool Init( Scene & sc )
 
     // light is where eyes are
     light = sc.world.createLightEntity( "light" );
-    light->getNode<SpatialNode>()->SetParent( root->getNode<SpatialNode>() );
+    light->getNode<SpatialNode>()->setParent( root->getNode<SpatialNode>() );
     light->getNode<SpatialNode>()->setPosition( eye );
 
     // setup camera
     Matrix44f proj, view;
-    sc.gpu.ComposePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
-    view.LookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
+    sc.gpu.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, bs.radius / 100.0f, bs.radius * 10.0f );
+    view.lookAtRh( eye, Vector3f(0,0,0), Vector3f(0,1,0) );
     camera.setProjectionMatrix( proj );
     camera.setViewMatrix( view );
 
@@ -55,76 +55,76 @@ bool Init( Scene & sc )
     return true;
 }
 
-void Quit( Scene & )
+void quit( Scene & )
 {
 }
 
-void Update()
+void update()
 {
 }
 
-void Draw( Scene & )
+void draw( Scene & )
 {
-    robot->getNode<VisualNode>()->graph().Draw( camera );
+    robot->getNode<VisualNode>()->graph().draw( camera );
 }
 
 struct InputInitiator
 {
     InputInitiator( Gpu & g )
     {
-        InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = g.GetDispDesc();
-        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = g.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        ShutdownInputSystem();
+        shutdownInputSystem();
     }
 };
 
-int Run( Gpu & gpu )
+int run( Gpu & gpu )
 {
     InputInitiator ii(gpu);
 
     Scene sc( gpu );
 
-    if( !Init( sc ) ) { Quit( sc ); return -1; }
+    if( !init( sc ) ) { quit( sc ); return -1; }
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
-        gpu.ProcessRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
-        in.ProcessInputEvents();
+        in.processInputEvents();
 
-        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
-        Update();
+        update();
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        Draw( sc );
-        gpu.Present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( sc );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    Quit( sc );
+    quit( sc );
 
     return 0;
 }
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )
@@ -147,14 +147,14 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
-    int result = Run( *r );
+    int result = run( *r );
 
-    DeleteGpu( r );
+    deleteGpu( r );
 
     return result;
 }

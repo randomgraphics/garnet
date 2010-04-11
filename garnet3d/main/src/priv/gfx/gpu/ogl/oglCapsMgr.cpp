@@ -4,7 +4,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
 // local types/variables/functions
@@ -14,9 +14,9 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL");
 /// Split a string into token list
 // ------------------------------------------------------------------------
 static void
-sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
+sGetTokens( DynaArray<StrA> & tokens, const char * str )
 {
-    if( GN::IsStringEmpty(str) ) return;
+    if( stringEmpty(str) ) return;
     const char * p1 = str;
     const char * p2 = p1;
 
@@ -24,7 +24,7 @@ sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
     {
         while( *p2 && *p2 != ' ' ) ++p2;
 
-        tokens.Append( GN::StrA(p1, p2-p1) );
+        tokens.append( StrA(p1, p2-p1) );
 
         while( *p2 && *p2 == ' ' ) ++p2;
 
@@ -36,14 +36,14 @@ sGetTokens( DynaArray<GN::StrA> & tokens, const char * str )
 /// function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
 static inline bool
-sFindExtension( const DynaArray<GN::StrA> & glexts, const char * ext )
+sFindExtension( const DynaArray<StrA> & glexts, const char * ext )
 {
-    return glexts.End() != std::find( glexts.Begin(), glexts.End(), ext );
+    return glexts.end() != std::find( glexts.begin(), glexts.end(), ext );
 }
 ///
 /// Check required extensions
 // ------------------------------------------------------------------------
-static bool sCheckRequiredExtensions( const DynaArray<GN::StrA> & extensions )
+static bool sCheckRequiredExtensions( const DynaArray<StrA> & extensions )
 {
     static const char * sRequiredExtensions[] =
     {
@@ -71,14 +71,14 @@ static bool sCheckRequiredExtensions( const DynaArray<GN::StrA> & extensions )
 /// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
-static bool sGetOGLExtensions( HDC hdc, DynaArray<GN::StrA> & result )
+static bool sGetOGLExtensions( HDC hdc, DynaArray<StrA> & result )
 #else
-static bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
+static bool sGetOGLExtensions( Display * disp, DynaArray<StrA> & result )
 #endif
 {
     GN_GUARD;
 
-    result.Clear();
+    result.clear();
 
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
@@ -95,7 +95,7 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
     sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
 
-    std::sort( result.Begin(), result.End() );
+    std::sort( result.begin(), result.end() );
 
     // success;
     return true;
@@ -106,11 +106,11 @@ static bool sGetOGLExtensions( Display * disp, DynaArray<GN::StrA> & result )
 ///
 /// output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & glexts )
+static void sOutputOGLInfo( HandleType disp, const DynaArray<StrA> & glexts )
 {
     GN_GUARD;
 
-    GN::StrA info;
+    StrA info;
 
     // vendor and version info.
     GN_UNUSED_PARAM( disp );
@@ -118,7 +118,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & gle
     const char * version  = (const char *)glGetString(GL_VERSION);
     const char * renderer = (const char *)glGetString(GL_RENDERER);
 
-    info = GN::StringFormat(
+    info = GN::stringFormat(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations\n"
@@ -135,14 +135,14 @@ static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & gle
         GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
-    info += GN::StringFormat(
+    info += stringFormat(
         "---------------------------------------------------\n"
         "    Max size of texture             :    %d\n"
         "    Max number of texture stages    :    %d\n"
         "===================================================\n"
         "\n\n",
         ts,tu );
-    GN_INFO(sLogger)( info.ToRawPtr() );
+    GN_INFO(sLogger)( info.cptr() );
 
     // extension info.
     info =
@@ -150,7 +150,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & gle
         "===================================================\n"
         "              OpenGL Extension List\n"
         "---------------------------------------------------\n";
-    for ( size_t i = 0; i < glexts.Size(); ++i )
+    for ( size_t i = 0; i < glexts.size(); ++i )
     {
         info += "     " + glexts[i] + "\n";
     }
@@ -158,7 +158,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const DynaArray<GN::StrA> & gle
         "===================================================\n"
         "\n\n";
 
-    GN_VERBOSE(sLogger)( info.ToRawPtr() );
+    GN_VERBOSE(sLogger)( info.cptr() );
 
     GN_UNGUARD;
 }
@@ -185,12 +185,12 @@ bool GN::gfx::OGLGpu::capsInit()
 #if GN_MSWIN
     if( !sGetOGLExtensions( mDeviceContext, glexts ) )
 #else
-    if( !sGetOGLExtensions( (Display*)GetDispDesc().displayHandle, glexts) )
+    if( !sGetOGLExtensions( (Display*)getDispDesc().displayHandle, glexts) )
 #endif
     {
         return false;
     }
-    sOutputOGLInfo( GetDispDesc().displayHandle, glexts );
+    sOutputOGLInfo( getDispDesc().displayHandle, glexts );
 
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
@@ -261,7 +261,7 @@ bool GN::gfx::OGLGpu::capsInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::OGLGpu::CheckTextureFormatSupport(
+GN::gfx::OGLGpu::checkTextureFormatSupport(
     ColorFormat   /*format*/,
     TextureUsage /*usages*/ ) const
 {
@@ -273,7 +273,7 @@ GN::gfx::OGLGpu::CheckTextureFormatSupport(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::ColorFormat
-GN::gfx::OGLGpu::GetDefaultTextureFormat( TextureUsage usage ) const
+GN::gfx::OGLGpu::getDefaultTextureFormat( TextureUsage usage ) const
 {
     if( TextureUsage::DEPTH_RENDER_TARGET == usage )
     {

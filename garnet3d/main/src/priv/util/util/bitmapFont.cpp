@@ -12,7 +12,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.BitmapFont");
+static GN::Logger * sLogger = GN::getLogger("GN.util.BitmapFont");
 
 //
 //
@@ -28,9 +28,9 @@ sDetermineTextureSizeAndCount(
     size_t     maxchars )
 {
     // determine texture size
-    size_t maxw = gpu.GetCaps().maxTex2DSize[0];
-    size_t maxh = gpu.GetCaps().maxTex2DSize[1];
-    size_t maxc = gpu.GetCaps().maxTextures;
+    size_t maxw = gpu.caps().maxTex2DSize[0];
+    size_t maxh = gpu.caps().maxTex2DSize[1];
+    size_t maxc = gpu.caps().maxTextures;
 
     for( texcount = 1; texcount <= maxc; ++texcount )
     {
@@ -55,7 +55,7 @@ sDetermineTextureSizeAndCount(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
+bool GN::util::BitmapFont::init( SpriteRenderer * sr, FontFace * ff, size_t maxchars )
 {
     GN_GUARD;
 
@@ -65,14 +65,14 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
     if( NULL == sr || NULL == ff )
     {
         GN_ERROR(sLogger)( "Null parameters." );
-        return Failure();
+        return failure();
     }
 
-    Gpu & gpu = sr->GetGpu();
-    const FontFaceDesc & ffd = ff->GetDesc();
+    Gpu & gpu = sr->getGpu();
+    const FontFaceDesc & ffd = ff->getDesc();
 
     // initialize font slots
-    if( !SlotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return Failure();
+    if( !slotInit( gpu, ffd.maxGlyphWidth(), ffd.maxGlyphHeight(), maxchars ) ) return failure();
 
     // create character list
     for( int i = 0; i < MAX_TEXTURES; ++i )
@@ -83,8 +83,8 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
 
     // success
     mSpriteRenderer = sr;
-    mFont.Set( ff );
-    return Success();
+    mFont.set( ff );
+    return success();
 
     GN_UNGUARD;
 }
@@ -92,26 +92,26 @@ bool GN::util::BitmapFont::Init( SpriteRenderer * sr, FontFace * ff, size_t maxc
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::Quit()
+void GN::util::BitmapFont::quit()
 {
     GN_GUARD;
 
     // delete character array
     for( int i = 0; i < MAX_TEXTURES; ++i )
     {
-        SafeDeleteArray( mCharList[i] );
+        safeDeleteArray( mCharList[i] );
     }
 
     // delete font map array
-    SafeDeleteArray( mFontSlots );
+    safeDeleteArray( mFontSlots );
 
     // delete per-texture resources
-    mTextures.Clear();
+    mTextures.clear();
 
     // deref font face
-    mFont.Clear();
+    mFont.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -124,11 +124,11 @@ void GN::util::BitmapFont::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::BitmapFont::DrawText( const TextDesc & td )
+void GN::util::BitmapFont::drawText( const TextDesc & td )
 {
     GN_GUARD_SLOW;
 
-    if( IsStringEmpty(td.text) ) return; // skip empty text.
+    if( stringEmpty(td.text) ) return; // skip empty text.
 
     GN_ASSERT( mFont );
 
@@ -140,7 +140,7 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
     float                peny    = td.y;
     const wchar_t      * text    = td.text;
     size_t               textlen = ( 0 == td.len ) ? static_cast<size_t>(-1) : td.len;
-    const FontFaceDesc & ffd     = mFont->GetDesc();
+    const FontFaceDesc & ffd     = mFont->getDesc();
 
     // align baseline distance to interger for better clarity
     float baselineDistance = ceil( ffd.baseLineDistance() );
@@ -168,7 +168,7 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
         }
         else if( L'\t' == ch )
         {
-            fs = GetSlot( L' ' );
+            fs = getSlot( L' ' );
             if ( NULL == fs ) return;
 
             float tabx = fs->advx * TAB_SIZE;
@@ -176,14 +176,14 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
         }
         else if( L' ' == ch )
         {
-            fs = GetSlot( L' ' );
+            fs = getSlot( L' ' );
             if ( NULL == fs ) return;
             penx += fs->advx;
         }
         else // normal character
         {
             // find the slot
-            fs = GetSlot( ch );
+            fs = getSlot( ch );
             if ( NULL == fs ) return;
 
             // add character to charlist
@@ -198,14 +198,14 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
             penx += fs->advx;
 
             // adjust bounding box
-            bbox.w = math::GetMax( penx - td.x, bbox.w );
+            bbox.w = math::getmax( penx - td.x, bbox.w );
         }
     }
 
     // draw background box
     if( td.background )
     {
-        mSpriteRenderer->DrawSingleSolidSprite(
+        mSpriteRenderer->drawSingleSolidSprite(
             GN_RGBA32( 0, 0, 0, 128 ),
             GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, // option
             bbox.x,
@@ -216,25 +216,25 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
     }
 
     // draw all characters in character list
-    for( size_t i = 0; i < mTextures.Size(); ++i )
+    for( size_t i = 0; i < mTextures.size(); ++i )
     {
         size_t numchars = mNumChars[i];
         mNumChars[i] = 0;
 
         if( 0 == numchars ) continue;
 
-        mSpriteRenderer->DrawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
+        mSpriteRenderer->drawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
 
         ci = mCharList[i];
 
         for( size_t i = 0; i < numchars; ++i, ++ci )
         {
-            mSpriteRenderer->DrawTextured(
+            mSpriteRenderer->drawTextured(
                 ci->x, ci->y, ci->fs->w, ci->fs->h,
                 ci->fs->u, ci->fs->v, ci->fs->tw, ci->fs->th, td.z );
         };
 
-        mSpriteRenderer->DrawEnd();
+        mSpriteRenderer->drawEnd();
     }
 
     GN_UNGUARD_SLOW;
@@ -248,10 +248,10 @@ void GN::util::BitmapFont::DrawText( const TextDesc & td )
 //
 // -----------------------------------------------------------------------------
 inline const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::GetSlot( wchar_t ch )
+GN::util::BitmapFont::getSlot( wchar_t ch )
 {
     // find font slot in slotmap
-    size_t * slot = mSlotMap.Find( ch );
+    size_t * slot = mSlotMap.find( ch );
     if( NULL != slot )
     {
         // found!
@@ -259,7 +259,7 @@ GN::util::BitmapFont::GetSlot( wchar_t ch )
     }
     else
     {
-        return CreateSlot( ch );
+        return createSlot( ch );
     }
 }
 
@@ -267,12 +267,12 @@ GN::util::BitmapFont::GetSlot( wchar_t ch )
 //
 // -----------------------------------------------------------------------------
 const GN::util::BitmapFont::FontSlot *
-GN::util::BitmapFont::CreateSlot( wchar_t ch )
+GN::util::BitmapFont::createSlot( wchar_t ch )
 {
     GN_GUARD_SLOW;
 
     // make sure that the slot does not exist.
-    GN_ASSERT( NULL == mSlotMap.Find(ch) );
+    GN_ASSERT( NULL == mSlotMap.find(ch) );
 
     if( mNumUsedSlots >= mMaxSlots )
     {
@@ -307,7 +307,7 @@ GN::util::BitmapFont::CreateSlot( wchar_t ch )
     // copy font image into RGBA
     GN_ASSERT( fbm.width <= slot.w && fbm.height <= slot.h );
     DynaArray<UInt8> tmpbuf( slot.w * slot.h * 4 );
-    std::fill( tmpbuf.Begin(), tmpbuf.End(), 0 );
+    std::fill( tmpbuf.begin(), tmpbuf.end(), 0 );
     for( size_t y = 0; y < fbm.height; ++y )
     {
         for( size_t x = 0; x < fbm.width; ++x )
@@ -331,7 +331,7 @@ GN::util::BitmapFont::CreateSlot( wchar_t ch )
 
     // update texture
     Box<UInt32> area( (UInt32)slot.x, (UInt32)slot.y, 0, (UInt32)slot.w, (UInt32)slot.h, 1 );
-    mTextures[slot.texidx]->UpdateMipmap( 0, 0, &area, slot.w*4, tmpbuf.Size(), tmpbuf.ToRawPtr() );
+    mTextures[slot.texidx]->updateMipmap( 0, 0, &area, slot.w*4, tmpbuf.size(), tmpbuf.cptr() );
 
     // success
     return &slot;
@@ -344,7 +344,7 @@ GN::util::BitmapFont::CreateSlot( wchar_t ch )
 //
 // -----------------------------------------------------------------------------
 bool
-GN::util::BitmapFont::SlotInit(
+GN::util::BitmapFont::slotInit(
     Gpu      & gpu,
     UInt16     fontw,
     UInt16     fonth,
@@ -412,27 +412,27 @@ GN::util::BitmapFont::SlotInit(
     mNumUsedSlots = 0;
 
     // and slot map is also empty
-    mSlotMap.Clear();
+    mSlotMap.clear();
 
     //DynaArray<UInt8> texels( texwidth * texheight * 4 );
     //std::fill( texels.begin(), texels.end(), 0 );
 
     // create font textures
     TextureDesc td = { (UInt32)texwidth, (UInt32)texheight, 1, 1, 1, ColorFormat::RGBA_8_8_8_8_UNORM, TextureUsage::DEFAULT };
-    GN_ASSERT( texcount <= gpu.GetCaps().maxTextures );
-    mTextures.Resize( texcount );
+    GN_ASSERT( texcount <= gpu.caps().maxTextures );
+    mTextures.resize( texcount );
     for( size_t i = 0; i < texcount; ++i )
     {
-        mTextures[i].Attach( gpu.CreateTexture( td ) );
+        mTextures[i].attach( gpu.createTexture( td ) );
 
         if( 0 == mTextures[i] )
         {
             GN_ERROR(sLogger)( "fail to create font texture #%d!", i );
-            return Failure();
+            return failure();
         }
 
-        // Clear texture to pure black
-        //mTextures[i]->UpdateMipmap( 0, 0, 0, texwidth * 4, texels.Size(), texels.ToRawPtr() );
+        // clear texture to pure black
+        //mTextures[i]->updateMipmap( 0, 0, 0, texwidth * 4, texels.size(), texels.cptr() );
     }
 
     // success

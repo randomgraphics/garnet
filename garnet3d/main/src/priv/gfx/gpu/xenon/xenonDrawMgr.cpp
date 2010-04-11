@@ -36,7 +36,7 @@ bool GN::gfx::XenonGpu::drawInit()
 {
     // create line renderer
     mLine = new XenonLine( *this );
-    if( !mLine->Init() ) return false;
+    if( !mLine->init() ) return false;
 
     // begin scene
     mDevice->BeginScene();
@@ -57,7 +57,7 @@ void GN::gfx::XenonGpu::drawQuit()
         mSceneBegun = false;
     }
 
-    SafeDelete( mLine );
+    safeDelete( mLine );
 }
 
 // *****************************************************************************
@@ -67,9 +67,9 @@ void GN::gfx::XenonGpu::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::Present()
+void GN::gfx::XenonGpu::present()
 {
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     GN_ASSERT( mSceneBegun );
 
@@ -97,25 +97,25 @@ void GN::gfx::XenonGpu::Present()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::ClearScreen(
+void GN::gfx::XenonGpu::clearScreen(
     const Vector4f & c, float z, UInt8 s, BitFields flags )
 {
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    // build d3d Clear flag
+    // build d3d clear flag
     int d3dflag =
         (flags & CLEAR_C ? D3DCLEAR_TARGET : 0) |
         (flags & CLEAR_Z ? D3DCLEAR_ZBUFFER : 0) |
         (flags & CLEAR_S ? D3DCLEAR_STENCIL : 0);
 
-    // do Clear
+    // do clear
     mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::DrawIndexed(
+void GN::gfx::XenonGpu::drawIndexed(
     PrimitiveType prim,
     size_t        numidx,
     size_t        basevtx,
@@ -137,10 +137,10 @@ void GN::gfx::XenonGpu::DrawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::Draw(
+void GN::gfx::XenonGpu::draw(
     PrimitiveType prim, size_t numvtx, size_t startvtx )
 {
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     mDevice->DrawVertices(
         PRIMITIVE_TO_XENON[prim],    // primitive type
@@ -153,7 +153,7 @@ void GN::gfx::XenonGpu::Draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::DrawIndexedUp(
+void GN::gfx::XenonGpu::drawIndexedUp(
     PrimitiveType  prim,
     size_t         numidx,
     size_t         numvtx,
@@ -163,7 +163,7 @@ void GN::gfx::XenonGpu::DrawIndexedUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -193,7 +193,7 @@ void GN::gfx::XenonGpu::DrawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::DrawUp(
+void GN::gfx::XenonGpu::drawUp(
     PrimitiveType prim,
     size_t        numvtx,
     const void *  vertexData,
@@ -201,7 +201,7 @@ void GN::gfx::XenonGpu::DrawUp(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -224,7 +224,7 @@ void GN::gfx::XenonGpu::DrawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::DrawLines(
+void GN::gfx::XenonGpu::drawLines(
     BitFields         options,
     const void      * positions,
     size_t            stride,
@@ -236,9 +236,9 @@ void GN::gfx::XenonGpu::DrawLines(
 {
     PIXPERF_FUNCTION_EVENT();
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
-    mLine->DrawLines(
+    mLine->drawLines(
         options,
         (const float*)positions,
         stride,

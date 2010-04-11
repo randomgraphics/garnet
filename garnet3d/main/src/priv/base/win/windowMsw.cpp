@@ -5,7 +5,7 @@
 
 GN::HashMap<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
+static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -14,17 +14,17 @@ static GN::Logger * sLogger = GN::GetLogger("GN.win.MSW");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::Init( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::win::WindowMsw, () );
 
-    if( !NewWindow( wcp ) ) return Failure();
+    if( !createWindow( wcp ) ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -32,7 +32,7 @@ bool GN::win::WindowMsw::Init( const WindowCreationParams & wcp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::Quit()
+void GN::win::WindowMsw::quit()
 {
     GN_GUARD;
 
@@ -43,20 +43,20 @@ void GN::win::WindowMsw::Quit()
         ::DestroyWindow( mWindow );
 
         // remove itself from instance map
-        GN_ASSERT( NULL != msInstanceMap.Find(mWindow) );
-        msInstanceMap.Remove(mWindow);
+        GN_ASSERT( NULL != msInstanceMap.find(mWindow) );
+        msInstanceMap.remove(mWindow);
     }
 
     // unregister window class
-    if( !mClassName.Empty() )
+    if( !mClassName.empty() )
     {
-        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
+        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassW( mClassName.ToRawPtr(), mModuleInstance ) );
-        mClassName.Clear();
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
+        mClassName.clear();
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -69,7 +69,7 @@ void GN::win::WindowMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::win::MonitorHandle GN::win::WindowMsw::GetMonitorHandle() const
+GN::win::MonitorHandle GN::win::WindowMsw::getMonitorHandle() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -82,7 +82,7 @@ GN::win::MonitorHandle GN::win::WindowMsw::GetMonitorHandle() const
 //
 //
 // -----------------------------------------------------------------------------
-GN::Vector2<size_t> GN::win::WindowMsw::GetClientSize() const
+GN::Vector2<size_t> GN::win::WindowMsw::getClientSize() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -98,7 +98,7 @@ GN::Vector2<size_t> GN::win::WindowMsw::GetClientSize() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::Show()
+void GN::win::WindowMsw::show()
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -110,7 +110,7 @@ void GN::win::WindowMsw::Show()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::Hide()
+void GN::win::WindowMsw::hide()
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -122,7 +122,7 @@ void GN::win::WindowMsw::Hide()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::MoveTo( int x, int y )
+void GN::win::WindowMsw::moveTo( int x, int y )
 {
     GN_GUARD;
     GN_MSW_CHECK( ::SetWindowPos(
@@ -137,7 +137,7 @@ void GN::win::WindowMsw::MoveTo( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::SetClientSize( size_t w, size_t h )
+void GN::win::WindowMsw::setClientSize( size_t w, size_t h )
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
@@ -159,7 +159,7 @@ void GN::win::WindowMsw::SetClientSize( size_t w, size_t h )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::Repaint()
+void GN::win::WindowMsw::repaint()
 {
     GN_GUARD;
     GN_MSW_CHECK( ::RedrawWindow(
@@ -172,7 +172,7 @@ void GN::win::WindowMsw::Repaint()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::WindowMsw::Run()
+void GN::win::WindowMsw::run()
 {
     GN_GUARD_ALWAYS;
 
@@ -195,7 +195,7 @@ void GN::win::WindowMsw::Run()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
+bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
 {
     GN_GUARD;
 
@@ -212,8 +212,8 @@ bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
     // generate an unique window class name
     do
     {
-        mClassName.Format( L"GNwindowMsw_%d", rand() );
-    } while( ::GetClassInfoExW( mModuleInstance, mClassName.ToRawPtr(), &wcex ) );
+        mClassName.format( L"GNwindowMsw_%d", rand() );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
     wcex.cbSize         = sizeof(WNDCLASSEXW);
@@ -226,14 +226,14 @@ bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.ToRawPtr();
+    wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return false;
     }
-    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.ToRawPtr(), mModuleInstance );
+    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -258,8 +258,8 @@ bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
     // create window
     mWindow = ::CreateWindowExW(
         exStyle,
-        mClassName.ToRawPtr(),
-        Mbs2Wcs(wcp.caption).ToRawPtr(),
+        mClassName.cptr(),
+        mbs2wcs(wcp.caption).cptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,
@@ -270,15 +270,15 @@ bool GN::win::WindowMsw::NewWindow( const WindowCreationParams & wcp )
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
         return false;
     }
     GN_TRACE(sLogger)( "Create window (handle: 0x%X)", mWindow );
 
     // add window handle to instance map
     GN_ASSERT(
-        NULL == msInstanceMap.Find(mWindow) ||
-        this == *msInstanceMap.Find(mWindow) );
+        NULL == msInstanceMap.find(mWindow) ||
+        this == *msInstanceMap.find(mWindow) );
     msInstanceMap[mWindow] = this;
 
     // success
@@ -319,7 +319,7 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     GN_GUARD;
 
     //GN_TRACE(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
-    WindowMsw * * ppwindow = msInstanceMap.Find(wnd);
+    WindowMsw * * ppwindow = msInstanceMap.find(wnd);
 
     // call class specific window procedure
     if( NULL == ppwindow )

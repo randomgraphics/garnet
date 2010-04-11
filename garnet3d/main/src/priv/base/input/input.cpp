@@ -4,7 +4,7 @@
 #include "inputDInput.h"
 #include "inputX11.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.input");
+static GN::Logger * sLogger = GN::getLogger("GN.input");
 
 // *****************************************************************************
 // Fake input system
@@ -20,12 +20,12 @@ namespace GN { namespace input
     {
 
     public:
-        virtual bool AttachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
-        virtual void ProcessInputEvents() {}
-        virtual KeyEvent PopLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
-        virtual const KeyStatus * GetKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
-        virtual const int * GetAxisStatus() const { static int as[Axis::NUM_AXISES]; return as; }
-        virtual void GetMousePosition( int & x, int & y ) const { x = 0; y = 0; }
+        virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
+        virtual void processInputEvents() {}
+        virtual KeyEvent popLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
+        virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
+        virtual const int * getAxisStatus() const { static int as[Axis::NUM_AXISES]; return as; }
+        virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }
     };
 }}
 
@@ -37,15 +37,15 @@ static GN::input::Input * sCreateNativeInputSystem()
 {
 #if GN_XENON
     GN::AutoObjPtr<GN::input::InputXenon> p( new GN::input::InputXenon );
-    return p.Detach();
+    return p.detach();
 #elif GN_MSWIN
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
-    if( !p->Init() ) return 0;
-    return p.Detach();
+    if( !p->init() ) return 0;
+    return p.detach();
 #else
     GN::AutoObjPtr<GN::input::InputX11> p( new GN::input::InputX11 );
-    if( !p->Init() ) return 0;
-    return p.Detach();
+    if( !p->init() ) return 0;
+    return p.detach();
 #endif
 }
 
@@ -56,7 +56,7 @@ static GN::input::Input * sCreateNativeInputSystem()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::InitializeInputSystem( InputAPI api )
+bool GN::input::initializeInputSystem( InputAPI api )
 {
     GN_GUARD;
 
@@ -72,7 +72,7 @@ bool GN::input::InitializeInputSystem( InputAPI api )
         case InputAPI::DINPUT :
         {
             InputDInput * p = new InputDInput;
-            if( !p->Init() ) return 0;
+            if( !p->init() ) return 0;
             return true;
         }
 #endif
@@ -84,7 +84,7 @@ bool GN::input::InitializeInputSystem( InputAPI api )
         }
 
         default :
-            GN_ERROR(sLogger)( "unknow or unsupport API : %d", api.ToRawEnum() );
+            GN_ERROR(sLogger)( "unknow or unsupport API : %d", api.toRawEnum() );
             return 0;
     }
 
@@ -94,7 +94,7 @@ bool GN::input::InitializeInputSystem( InputAPI api )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::ShutdownInputSystem()
+void GN::input::shutdownInputSystem()
 {
     GN_GUARD;
 

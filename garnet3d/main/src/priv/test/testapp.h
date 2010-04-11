@@ -64,7 +64,7 @@ public:
         , status( CONTINUE_EXECUTION )
         , extraArgc(0)
         , extraArgv(NULL)
-        , logger(GN::GetLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
     }
 #else
@@ -74,14 +74,14 @@ public:
         , status( INVALID_COMMAND_LINE )
         , extraArgc(0)
         , extraArgv(NULL)
-        , logger(GN::GetLogger( "GN.test.CommandLineArguments" ))
+        , logger(GN::getLogger( "GN.test.CommandLineArguments" ))
     {
         status = parseCommandLine( argc, argv );
 
         if( CONTINUE_EXECUTION == status )
         {
-            extraArgc = mExtraArgs.Size();
-            extraArgv = mExtraArgs.ToRawPtr();
+            extraArgc = mExtraArgs.size();
+            extraArgv = mExtraArgs.cptr();
         }
     }
 #endif
@@ -108,9 +108,9 @@ public:
     {
         using namespace GN;
 
-        StrA executableName = fs::BaseName( applicationName ) + fs::ExtName( applicationName );
+        StrA executableName = fs::baseName( applicationName ) + fs::extName( applicationName );
 
-        GN_INFO(logger)( "Usage: %s [options]\n", executableName.ToRawPtr() );
+        GN_INFO(logger)( "Usage: %s [options]\n", executableName.cptr() );
         showStandardCommandLineOptions();
     }
 
@@ -133,19 +133,19 @@ private:
     {
         using namespace GN;
 
-        if( 0 == StringCompareI( "on", value ) ||
-            0 == StringCompareI( "yes", value ) ||
-            0 == StringCompareI( "true", value ) ||
-            0 == StringCompareI( "1", value ) )
+        if( 0 == stringCompareI( "on", value ) ||
+            0 == stringCompareI( "yes", value ) ||
+            0 == stringCompareI( "true", value ) ||
+            0 == stringCompareI( "1", value ) )
         {
             result = true;
             return true;
         }
         else if(
-            0 == StringCompareI( "off", value ) ||
-            0 == StringCompareI( "no", value ) ||
-            0 == StringCompareI( "false", value ) ||
-            0 == StringCompareI( "0", value ) )
+            0 == stringCompareI( "off", value ) ||
+            0 == stringCompareI( "no", value ) ||
+            0 == stringCompareI( "false", value ) ||
+            0 == stringCompareI( "0", value ) )
         {
             result = false;
             return true;
@@ -164,19 +164,19 @@ private:
         using namespace GN;
         using namespace GN::gfx;
 
-        if( 0 == StringCompareI( "auto", value ) )
+        if( 0 == stringCompareI( "auto", value ) )
         {
             result = GpuAPI::AUTO;
         }
-        else if( 0 == StringCompareI( "ogl", value ) )
+        else if( 0 == stringCompareI( "ogl", value ) )
         {
             result = GpuAPI::OGL;
         }
-        else if( 0 == StringCompareI( "d3d10", value ) )
+        else if( 0 == stringCompareI( "d3d10", value ) )
         {
             result = GpuAPI::D3D10;
         }
-        else if( 0 == StringCompareI( "d3d11", value ) )
+        else if( 0 == stringCompareI( "d3d11", value ) )
         {
             result = GpuAPI::D3D11;
         }
@@ -208,11 +208,11 @@ private:
         {
             const char * a = argv[i];
 
-            if( 0 == StringCompareI( "-h", a ) ||
-                0 == StringCompareI( "/h", a ) ||
-                0 == StringCompareI( "-?", a ) ||
-                0 == StringCompareI( "/?", a ) ||
-                0 == StringCompareI( "--help", a ) )
+            if( 0 == stringCompareI( "-h", a ) ||
+                0 == stringCompareI( "/h", a ) ||
+                0 == stringCompareI( "-?", a ) ||
+                0 == stringCompareI( "/?", a ) ||
+                0 == stringCompareI( "--help", a ) )
             {
                 return SHOW_HELP;
             }
@@ -224,7 +224,7 @@ private:
             {
                 // this is a command line option name
 
-                if( 0 == StringCompareI( "fs", a+1 ) )
+                if( 0 == stringCompareI( "fs", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -232,7 +232,7 @@ private:
                     if( !parseBool( rendererOptions.fullscreen, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == StringCompareI( "mt", a+1 ) )
+                else if( 0 == stringCompareI( "mt", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -240,7 +240,7 @@ private:
                     if( !parseBool( useMultiThreadGpu, a, value ) )
                         return INVALID_COMMAND_LINE;
                 }
-                else if( 0 == StringCompareI( "gapi", a+1 ) )
+                else if( 0 == stringCompareI( "gapi", a+1 ) )
                 {
                     const char * value = getOptionValue( argc, argv, i );
                     if( NULL == value ) return INVALID_COMMAND_LINE;
@@ -251,13 +251,13 @@ private:
                 else
                 {
                     // this is an extra option
-                    mExtraArgs.Append( a );
+                    mExtraArgs.append( a );
                 }
             }
             else
             {
                 // this is an extra argument
-                mExtraArgs.Append( a );
+                mExtraArgs.append( a );
             }
         }
 

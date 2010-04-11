@@ -2,7 +2,7 @@
 #include "mtshader.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtshader");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtshader");
 
 using namespace GN::gfx;
 
@@ -37,7 +37,7 @@ struct UniformUpdateParam
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadUniform::Init( Uniform * uni )
+bool GN::gfx::MultiThreadUniform::init( Uniform * uni )
 {
     GN_GUARD;
 
@@ -47,12 +47,12 @@ bool GN::gfx::MultiThreadUniform::Init( Uniform * uni )
     GN_ASSERT( uni );
 
     mUniform = uni;
-    mSize    = uni->Size();
-    mFrontEndData = (UInt8*)HeapMemory::Alloc(mSize);
-    if( NULL == mFrontEndData ) return Failure();
+    mSize    = uni->size();
+    mFrontEndData = (UInt8*)HeapMemory::alloc(mSize);
+    if( NULL == mFrontEndData ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -60,7 +60,7 @@ bool GN::gfx::MultiThreadUniform::Init( Uniform * uni )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::Quit()
+void GN::gfx::MultiThreadUniform::quit()
 {
     GN_GUARD;
 
@@ -70,9 +70,9 @@ void GN::gfx::MultiThreadUniform::Quit()
         mUniform = NULL;
     }
 
-    SafeHeapFree( mFrontEndData );
+    safeHeapFree( mFrontEndData );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -81,16 +81,16 @@ void GN::gfx::MultiThreadUniform::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadUniform::Update( size_t offset, size_t length, const void * data )
+void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const void * data )
 {
     if( offset >= mSize || (offset+length) > mSize )
     {
-        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Out of range!" );
+        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Out of range!" );
         return;
     }
     if( NULL == data )
     {
-        GN_ERROR(GetLogger("GN.gfx.Uniform"))( "Null pointer!" );
+        GN_ERROR(getLogger("GN.gfx.Uniform"))( "Null pointer!" );
         return;
     }
 
@@ -123,7 +123,7 @@ void GN::gfx::MultiThreadUniform::Update( size_t offset, size_t length, const vo
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadGpuProgram::Init( GpuProgram * gp )
+bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
 {
     GN_GUARD;
 
@@ -143,7 +143,7 @@ bool GN::gfx::MultiThreadGpuProgram::Init( GpuProgram * gp )
     mParamDesc = gpip.params;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -151,7 +151,7 @@ bool GN::gfx::MultiThreadGpuProgram::Init( GpuProgram * gp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpuProgram::Quit()
+void GN::gfx::MultiThreadGpuProgram::quit()
 {
     GN_GUARD;
 
@@ -160,7 +160,7 @@ void GN::gfx::MultiThreadGpuProgram::Quit()
         mGpu.postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -178,7 +178,7 @@ namespace GN { namespace gfx
     void func_GPU_PROGRAM_DESTROY( Gpu &, void * p, size_t )
     {
         GpuProgram & gp = **(GpuProgram**)p;
-        gp.DecRef();
+        gp.decref();
     }
 
     //
@@ -196,7 +196,7 @@ namespace GN { namespace gfx
     void func_UNIFORM_DESTROY( Gpu &, void * p, size_t )
     {
         Uniform & u = **(Uniform**)p;
-        u.DecRef();
+        u.decref();
     }
 
     //
@@ -205,6 +205,6 @@ namespace GN { namespace gfx
     void func_UNIFORM_UPDATE( Gpu &, void * p, size_t )
     {
         const UniformUpdateParam & uup = *(const UniformUpdateParam*)p;
-        uup.uniform->Update( uup.offset, uup.length, uup.data );
+        uup.uniform->update( uup.offset, uup.length, uup.data );
     }
 }}

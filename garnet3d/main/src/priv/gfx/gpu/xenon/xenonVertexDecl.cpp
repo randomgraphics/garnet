@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // local functions
@@ -20,7 +20,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     {
         struct MapItem { const char * binding; D3DDECLUSAGE usage; };
 
-        GN::StringMap<char,D3DDECLUSAGE> map;
+        StringMap<char,D3DDECLUSAGE> map;
 
         BindingMap()
         {
@@ -49,11 +49,11 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     static const BindingMap sConvertTable;
 
     StrA lowerCaseBinding( binding );
-    lowerCaseBinding.ToLowerCase();
+    lowerCaseBinding.toLower();
 
-    const D3DDECLUSAGE * usage = sConvertTable.map.Find( lowerCaseBinding );
+    D3DDECLUSAGE * decl = sConvertTable.map.find( lowerCaseBinding );
 
-    return ( NULL == usage ) ? D3DDECLUSAGE_ERROR : *usage;
+    return ( NULL == decl ) ? D3DDECLUSAGE_ERROR : *decl;
 }
 
 static const D3DDECLTYPE D3DDECLTYPE_ERROR = D3DDECLTYPE(MAXD3DDECLTYPE+1);
@@ -138,7 +138,7 @@ sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::Ver
 {
     GN_GUARD;
 
-    elements.Clear();
+    elements.clear();
 
     for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
@@ -166,15 +166,15 @@ sVtxFmtDesc2D3DDecl( DynaArray<D3DVERTEXELEMENT9> & elements, const GN::gfx::Ver
         if( D3DDECLTYPE_ERROR == elem.Type ) return false;
 
         // add to element array
-        elements.Append( elem );
+        elements.append( elem );
     }
 
     // sort elements by offset
-    std::sort( elements.Begin(), elements.End(), &sElementSorting );
+    std::sort( elements.begin(), elements.end(), &sElementSorting );
 
     // end tag
     D3DVERTEXELEMENT9 endtag = D3DDECL_END();
-    elements.Append( endtag );
+    elements.append( endtag );
 
     // success
     return true;
@@ -196,7 +196,7 @@ GN::gfx::createXenonVertexDecl( IDirect3DDevice9 & dev, const GN::gfx::VertexFor
 
     DynaArray<D3DVERTEXELEMENT9> elements;
     if( !sVtxFmtDesc2D3DDecl( elements, format ) ) return NULL;
-    GN_ASSERT( !elements.Empty() );
+    GN_ASSERT( !elements.empty() );
 
     IDirect3DVertexDeclaration9 * decl;
     GN_DX_CHECK_RETURN( dev.CreateVertexDeclaration( &elements[0], &decl ), NULL );

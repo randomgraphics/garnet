@@ -2,7 +2,7 @@
 #include "mydevice9.h"
 #include "myvtxbuf9.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyDevice9.VtxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyDevice9.VtxBuf");
 
 using namespace GN;
 
@@ -33,7 +33,7 @@ HRESULT MyDevice9::CreateVertexBuffer(
     if( FAILED(hr) ) return hr;
 
     // success
-    *ppVertexBuffer = vb.Detach();
+    *ppVertexBuffer = vb.detach();
     return D3D_OK;
 }
 
@@ -46,7 +46,7 @@ HRESULT MyDevice9::SetStreamSource(
     UINT OffsetInBytes,
     UINT Stride)
 {
-    MyVtxBuf9 * vb = pStreamData ? SafeCastPtr<MyVtxBuf9>( pStreamData ) : 0;
+    MyVtxBuf9 * vb = pStreamData ? safeCastPtr<MyVtxBuf9>( pStreamData ) : 0;
 
     HRESULT hr = realobj()->SetStreamSource( StreamNumber, vb ? vb->realobj() : 0, OffsetInBytes, Stride );
     if( FAILED(hr) ) return hr;

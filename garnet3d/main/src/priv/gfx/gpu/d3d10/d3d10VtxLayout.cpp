@@ -2,7 +2,7 @@
 #include "d3d10Gpu.h"
 #include "d3d10VtxLayout.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10.VtxLayout");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10.VtxLayout");
 
 // *****************************************************************************
 // local functions
@@ -21,7 +21,7 @@ sVtxFmt2InputLayout(
     using namespace GN;
     using namespace GN::gfx;
 
-    elements.Clear();
+    elements.clear();
 
     for( size_t i = 0; i < vtxfmt.numElements; ++i )
     {
@@ -34,10 +34,10 @@ sVtxFmt2InputLayout(
         elem.SemanticIndex = ve.bindingIndex;
 
         // set attrib format
-        elem.Format = (DXGI_FORMAT)ColorFormat2DxgiFormat( ve.format );
+        elem.Format = (DXGI_FORMAT)colorFormat2DxgiFormat( ve.format );
         if( DXGI_FORMAT_UNKNOWN == elem.Format )
         {
-            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.ToString().ToRawPtr() );
+            GN_ERROR(sLogger)( "Unknown element format: %s", ve.format.toString().cptr() );
             return false;
         }
 
@@ -52,10 +52,10 @@ sVtxFmt2InputLayout(
         elem.InstanceDataStepRate = 0;
 
         // add to element array
-        elements.Append( elem );
+        elements.append( elem );
     }
 
-    if( elements.Empty() )
+    if( elements.empty() )
     {
         GN_ERROR(sLogger)( "Empty input layout is not allowed." );
         return false;
@@ -84,13 +84,13 @@ sVtxFmt2ShaderBinary( const GN::gfx::VertexFormat & vtxfmt )
     {
         const GN::gfx::VertexElement & ve = vtxfmt.elements[i];
 
-        code += StringFormat( "    float4 attr%d : %s%d;\n", i, ve.binding, ve.bindingIndex );
+        code += stringFormat( "    float4 attr%d : %s%d;\n", i, ve.binding, ve.bindingIndex );
     }
 
     code += "}; VS_INPUT_OUTPUT main( in VS_INPUT_OUTPUT i ) { return i; }";
 
     // return compiled shader binary
-    return d3d10::compileShader( "vs_4_0", code.ToRawPtr(), code.Size() );
+    return d3d10::compileShader( "vs_4_0", code.cptr(), code.size() );
 
     GN_UNGUARD;
 }
@@ -112,7 +112,7 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
 
     DynaArray<D3D10_INPUT_ELEMENT_DESC> elements;
     if( !sVtxFmt2InputLayout( elements, format ) ) return false;
-    GN_ASSERT( !elements.Empty() );
+    GN_ASSERT( !elements.empty() );
 
     AutoComPtr<ID3D10Blob> bin( sVtxFmt2ShaderBinary( format ) );
     if( !bin ) return false;
@@ -121,7 +121,7 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
     GN_DX_CHECK_RETURN(
         dev.CreateInputLayout(
             &elements[0],
-            (UINT)elements.Size(),
+            (UINT)elements.size(),
             bin->GetBufferPointer(),
             bin->GetBufferSize(),
             &layout ),
@@ -140,12 +140,12 @@ sCreateD3D10InputLayout( ID3D10Device & dev, const GN::gfx::VertexFormat & forma
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10VertexLayout::Init(
+bool GN::gfx::D3D10VertexLayout::init(
     ID3D10Device                & dev,
     const GN::gfx::VertexFormat & format )
 {
     // create D3D10 input layout object
-    il.Attach( sCreateD3D10InputLayout( dev, format ) );
+    il.attach( sCreateD3D10InputLayout( dev, format ) );
     if( !il ) return false;
 
     return true;

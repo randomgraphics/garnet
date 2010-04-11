@@ -33,17 +33,17 @@ namespace GN { namespace gfx
         bool validateUpdateParameters( size_t face, size_t level, const Box<UInt32> * area, SurfaceUpdateFlag flag, Box<UInt32> & clippedArea )
         {
             // check face
-            if( face >= GetDesc().faces )
+            if( face >= getDesc().faces )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock face : %d", face );
                 return false;
             }
 
             // check level
-            if( level >= GetDesc().levels )
+            if( level >= getDesc().levels )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "invalid lock level : %d", level );
                 return false;
             }
@@ -51,13 +51,13 @@ namespace GN { namespace gfx
             // check flag
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
-                GN_ERROR(sLogger)( "invalid lock flag : %d", flag.ToRawEnum() );
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
+                GN_ERROR(sLogger)( "invalid lock flag : %d", flag.toRawEnum() );
                 return false;
             }
 
             // get texture size
-            const Vector3<UInt32> & sz = GetMipSize( level );
+            const Vector3<UInt32> & sz = getMipSize( level );
 
             // make sure lock area is valid
             if( area )
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         {
             if( offset >= maxLength )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicTexture");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicTexture");
                 GN_ERROR(sLogger)( "offset is beyond the end of valid range." );
                 return false;
             }
@@ -132,32 +132,32 @@ namespace GN { namespace gfx
         ///
         bool validateUpdateParameters( size_t offset, size_t * length, const void * data, SurfaceUpdateFlag flag )
         {
-            const VtxBufDesc & desc = GetDesc();
+            const VtxBufDesc & vbd = getDesc();
 
             if( NULL == data )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "NULL data pointer!" );
                 return false;
             }
 
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
-                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.ToRawEnum() );
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 
-            if( offset >= desc.length )
+            if( offset >= vbd.length )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicVtxBuffer");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
             }
 
             // adjust length
-            if( 0 == *length ) *length = desc.length;
-            if( offset + *length > desc.length ) *length = desc.length - offset;
+            if( 0 == *length ) *length = vbd.length;
+            if( offset + *length > vbd.length ) *length = vbd.length - offset;
 
             // success
             return true;
@@ -200,32 +200,32 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( numidx );
 
-            const IdxBufDesc & desc = GetDesc();
+            const IdxBufDesc & ibd = getDesc();
 
             if( NULL == data )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "NULL data pointer!" );
                 return false;
             }
 
             if( flag >= SurfaceUpdateFlag::NUM_FLAGS )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
-                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.ToRawEnum() );
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                GN_ERROR(sLogger)( "Invalid update flag: %d.", flag.toRawEnum() );
                 return false;
             }
 
-            if( startidx >= desc.numidx )
+            if( startidx >= ibd.numidx )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.gpu.common.BasicIdxBuffer");
+                static Logger * sLogger = getLogger("GN.gfx.gpu.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "startidx is beyond the end of index buffer!" );
                 return false;
             }
 
             // adjust startidx and numidx
-            if( 0 == *numidx ) *numidx = desc.numidx;
-            if( startidx + *numidx > desc.numidx ) *numidx = desc.numidx - startidx;
+            if( 0 == *numidx ) *numidx = ibd.numidx;
+            if( startidx + *numidx > ibd.numidx ) *numidx = ibd.numidx - startidx;
 
             // success
             return true;
@@ -240,25 +240,6 @@ namespace GN { namespace gfx
         //  private functions
         // ********************************
     private:
-    };
-
-    /// Add "<" operator, by memory compare, to any type that doesn't have one.
-    template<typename T>
-    struct MemCmpLessOperator
-    {
-        T value;
-
-        MemCmpLessOperator() {}
-
-        MemCmpLessOperator( T & t ) : value(t) {}
-
-        operator       T &()       { return value; }
-        operator const T &() const { return value; }
-
-        bool operator<( const MemCmpLessOperator & rhs ) const
-        {
-            return memcmp( &value, &rhs, sizeof(T) ) < 0;
-        }
     };
 }}
 

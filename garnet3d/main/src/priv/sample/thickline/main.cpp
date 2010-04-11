@@ -8,7 +8,7 @@ using namespace GN::gfx;
 using namespace GN::util;
 using namespace GN::d3d9;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.sample.thickline");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.thickline");
 
 static XMMATRIX ToXMMatrix( const Matrix44f & m )
 {
@@ -70,7 +70,7 @@ public:
         activeScene = 1;
 
         // create box geometry
-        CreateBox(
+        createBox(
             10.0f, 10.0f, 10.0f,
             &m_Box[0].x, sizeof(ThickLineVertex),
             &m_Box[0].u, sizeof(ThickLineVertex),
@@ -104,7 +104,7 @@ public:
     {
         IDirect3DDevice9 & dev = d3d9dev();
 
-        if( !rndr.OnDeviceCreate( &dev ) ) return false;
+        if( !rndr.onDeviceCreate( &dev ) ) return false;
         if( !orientation.OnDeviceCreate( &dev ) ) return false;
         if( !viewFrustum.OnDeviceCreate( &dev ) ) return false;
 
@@ -117,7 +117,7 @@ public:
 
     bool onRestore()
     {
-        if( !rndr.OnDeviceRestore() ) return false;
+        if( !rndr.onDeviceRestore() ) return false;
         if( !orientation.OnDeviceRestore() ) return false;
         if( !viewFrustum.OnDeviceRestore() ) return false;
 
@@ -133,19 +133,19 @@ public:
 
     void onDispose()
     {
-        rndr.OnDeviceDispose();
+        rndr.onDeviceDispose();
         orientation.OnDeviceDispose();
         viewFrustum.OnDeviceDispose();
     }
 
     void onDestroy()
     {
-        rndr.OnDeviceDelete();
+        rndr.onDeviceDelete();
         orientation.OnDeviceDelete();
         viewFrustum.OnDeviceDelete();
     }
 
-    void OnKeyPress( input::KeyEvent ke )
+    void onKeyPress( input::KeyEvent ke )
     {
         if( input::KeyCode::SPACEBAR == ke.code && ke.status.down )
         {
@@ -154,7 +154,7 @@ public:
         }
     }
 
-    void OnAxisMove( GN::input::Axis a, int d )
+    void onAxisMove( GN::input::Axis a, int d )
     {
         if( GN::input::Axis::MOUSE_WHEEL_0 == a )
         {
@@ -174,18 +174,18 @@ public:
         p.proj = proj;
         p.width = 0.1f;
         p.widthInScreenSpace = false;
-        if( rndr.DrawBegin( p ) )
+        if( rndr.drawBegin( p ) )
         {
             dev.SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID );
 
             for( size_t i = 0; i < GN_ARRAY_COUNT(m_BoxIndices)/3; ++i )
             {
-                rndr.Line( m_Box[m_BoxIndices[i*3+0]], m_Box[m_BoxIndices[i*3+1]] );
-                rndr.Line( m_Box[m_BoxIndices[i*3+1]], m_Box[m_BoxIndices[i*3+2]] );
-                rndr.Line( m_Box[m_BoxIndices[i*3+2]], m_Box[m_BoxIndices[i*3+0]] );
+                rndr.line( m_Box[m_BoxIndices[i*3+0]], m_Box[m_BoxIndices[i*3+1]] );
+                rndr.line( m_Box[m_BoxIndices[i*3+1]], m_Box[m_BoxIndices[i*3+2]] );
+                rndr.line( m_Box[m_BoxIndices[i*3+2]], m_Box[m_BoxIndices[i*3+0]] );
             }
 
-            rndr.DrawEnd();
+            rndr.drawEnd();
         }
     }
 
@@ -229,5 +229,5 @@ int main()
     //opt.refdev = true;
 
     ThickLineDemo app;
-    return app.Run( &opt );
+    return app.run( &opt );
 }

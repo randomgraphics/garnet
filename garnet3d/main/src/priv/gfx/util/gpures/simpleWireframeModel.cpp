@@ -3,7 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 //
 //
@@ -16,9 +16,9 @@ static ModelResourceDesc sWireframeModelDesc()
 #define INIT_UNIFORM( name, type, defval ) \
     if( 1 ) { \
         md.uniforms[name].size = sizeof(type); \
-        md.uniforms[name].initialValue.Resize( sizeof(type) ); \
+        md.uniforms[name].initialValue.resize( sizeof(type) ); \
         type default = (defval); \
-        memcpy( md.uniforms[name].initialValue.ToRawPtr(), &default, sizeof(type) ); \
+        memcpy( md.uniforms[name].initialValue.cptr(), &default, sizeof(type) ); \
     } else void(0)
 
     INIT_UNIFORM( "MATRIX_PVW" , Matrix44f, Matrix44f::sIdentity() );
@@ -37,22 +37,22 @@ const ModelResourceDesc GN::gfx::SimpleWireframeModel::DESC = sWireframeModelDes
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::SimpleWireframeModel::Init()
+bool GN::gfx::SimpleWireframeModel::init()
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::SimpleWireframeModel, () );
 
-    mModel = mDatabase.CreateResource<ModelResource>( NULL );
-    if( 0 == mModel || !mModel->Reset(&DESC) ) return Failure();
+    mModel = mDatabase.createResource<ModelResource>( NULL );
+    if( 0 == mModel || !mModel->reset(&DESC) ) return failure();
 
     // initialize uniforms
-    mMatrixPvw = mModel->GetUniformResource( "MATRIX_PVW" );
-    mColor     = mModel->GetUniformResource( "COLOR" );
+    mMatrixPvw = mModel->uniformResource( "MATRIX_PVW" );
+    mColor     = mModel->uniformResource( "COLOR" );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -60,15 +60,15 @@ bool GN::gfx::SimpleWireframeModel::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::Quit()
+void GN::gfx::SimpleWireframeModel::quit()
 {
     GN_GUARD;
 
-    mModel.Clear();
-    mMatrixPvw.Clear();
-    mColor.Clear();
+    mModel.clear();
+    mMatrixPvw.clear();
+    mColor.clear();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -77,19 +77,19 @@ void GN::gfx::SimpleWireframeModel::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::SetTransform(
+void GN::gfx::SimpleWireframeModel::setTransform(
     const Matrix44f & proj,
     const Matrix44f & view,
     const Matrix44f & world )
 {
     Matrix44f pvw = proj * view * world;
-    mMatrixPvw->GetUniform()->Update( pvw );
+    mMatrixPvw->uniform()->update( pvw );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::SimpleWireframeModel::SetColor( const Vector4f & clr )
+void GN::gfx::SimpleWireframeModel::setColor( const Vector4f & clr )
 {
-    mColor->GetUniform()->Update( clr );
+    mColor->uniform()->update( clr );
 }

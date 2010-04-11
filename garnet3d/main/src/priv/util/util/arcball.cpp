@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNutil.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.ArcBall");
+static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
 
 // *****************************************************************************
 // local functions
@@ -61,8 +61,8 @@ void GN::util::ArcBall::connectToInput()
 {
     if( gInputPtr )
     {
-        gInput.sigKeyPress.Connect( this, &ArcBall::OnKeyPress );
-        gInput.sigAxisMove.Connect( this, &ArcBall::OnAxisMove );
+        gInput.sigKeyPress.connect( this, &ArcBall::onKeyPress );
+        gInput.sigAxisMove.connect( this, &ArcBall::onAxisMove );
     }
     else
     {
@@ -78,8 +78,8 @@ void GN::util::ArcBall::disconnectFromInput()
 {
     if( gInputPtr )
     {
-        gInput.sigKeyPress.Disconnect( this );
-        gInput.sigAxisMove.Disconnect( this );
+        gInput.sigKeyPress.disconnect( this );
+        gInput.sigAxisMove.disconnect( this );
     }
 }
 
@@ -97,7 +97,7 @@ void GN::util::ArcBall::beginRotation( int x, int y )
 
     sWindowPosition2UnitVector( mRollBase, fx, fy, mHandness );
 
-    mRollBase = mTransView.TransformVector( mRollBase );
+    mRollBase = mTransView.transformVector( mRollBase );
 
     mQuatBase = mQuat;
 
@@ -127,18 +127,18 @@ void GN::util::ArcBall::onRotation( int x, int y )
 
     Vector3f v;
     sWindowPosition2UnitVector( v, fx, fy, mHandness );
-    v = mTransView.TransformVector( v );
+    v = mTransView.transformVector( v );
 
     Quaternionf q;
-    q.FromArc( mRollBase, v );
+    q.fromArc( mRollBase, v );
     mQuat = q * mQuatBase;
 
-    mQuat.ToMatrix33( mRotation3x3 );
-    mRotation4x4.Set( mRotation3x3 );
+    mQuat.toMatrix33( mRotation3x3 );
+    mRotation4x4.set( mRotation3x3 );
 
-    mTranslation = q.ToMatrix44().TransformPoint( mTranslationBase );
+    mTranslation = q.toMatrix44().transformPoint( mTranslationBase );
 
-    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.Print().ToRawPtr() );
+    GN_VVTRACE(sLogger)( "\n%s", mRotation3x3.print().cptr() );
 }
 
 //
@@ -149,7 +149,7 @@ void GN::util::ArcBall::beginTranslation( int x, int y )
     GN_VVTRACE(sLogger)( "ArcBall::beginTranslation()" );
     mMoving = true;
     mTranslationBase = mTranslation;
-    mMoveBase.Set( x, y );
+    mMoveBase.set( x, y );
 }
 
 //
@@ -172,7 +172,7 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 
     Vector3f v( (float)( x - mMoveBase.x ), (float)( mMoveBase.y - y ), 0 );
 
-    v = mTransView.TransformVector( v * mMoveSpeed ); // view space -> world space
+    v = mTransView.transformVector( v * mMoveSpeed ); // view space -> world space
 
     mTranslation = mTranslationBase + v;
 }
@@ -185,14 +185,14 @@ void GN::util::ArcBall::onTranslation( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::OnKeyPress( input::KeyEvent key )
+void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
 {
     if( input::KeyCode::MOUSEBTN_0 == key.code )
     {
         if( key.status.down )
         {
             int x, y;
-            gInput.GetMousePosition( x, y );
+            gInput.getMousePosition( x, y );
             beginRotation( x, y );
         }
         else
@@ -205,7 +205,7 @@ void GN::util::ArcBall::OnKeyPress( input::KeyEvent key )
         if( key.status.down )
         {
             int x, y;
-            gInput.GetMousePosition( x, y );
+            gInput.getMousePosition( x, y );
             beginTranslation( x, y );
         }
         else
@@ -218,12 +218,12 @@ void GN::util::ArcBall::OnKeyPress( input::KeyEvent key )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::OnAxisMove( input::Axis, int )
+void GN::util::ArcBall::onAxisMove( input::Axis, int )
 {
     if( !mMoving && !mRolling ) return;
 
     int x, y;
-    gInput.GetMousePosition( x, y );
+    gInput.getMousePosition( x, y );
 
     onTranslation( x, y );
     onRotation( x, y );

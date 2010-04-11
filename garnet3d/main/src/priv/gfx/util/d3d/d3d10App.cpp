@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.d3d10app");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.d3d10app");
 
 #if GN_MSVC
 #pragma comment( lib, "d3d9.lib" )
@@ -84,7 +84,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
     if( 0 == ::RegisterClassExW(&wcex) )
     {
-        GN_ERROR(sLogger)( "fail to register window class, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getWin32LastErrorInfo() );
         return 0;
     }
 
@@ -115,7 +115,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
         0 );
     if( 0 == hwnd )
     {
-        GN_ERROR(sLogger)( "fail to create window, %s!", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getWin32LastErrorInfo() );
         return false;
     }
 
@@ -209,7 +209,7 @@ GN::d3d10::D3D10Application::D3D10Application()
     , mDebug(0)
     , mInfoQueue(0)
 {
-    input::InitializeInputSystem();
+    input::initializeInputSystem();
 }
 
 //
@@ -217,7 +217,7 @@ GN::d3d10::D3D10Application::D3D10Application()
 // -----------------------------------------------------------------------------
 GN::d3d10::D3D10Application::~D3D10Application()
 {
-    input::ShutdownInputSystem();
+    input::shutdownInputSystem();
 }
 
 #include <conio.h>
@@ -225,15 +225,15 @@ GN::d3d10::D3D10Application::~D3D10Application()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::d3d10::D3D10Application::Run( const D3D10AppOption & o )
+int GN::d3d10::D3D10Application::run( const D3D10AppOption & o )
 {
     GN_GUARD_ALWAYS;
 
     mOption = o;
 
-    if( !Init() ) { Quit(); return -1; }
+    if( !init() ) { quit(); return -1; }
 
-    if( !changeOption(mOption) ) { Quit(); return -1; }
+    if( !changeOption(mOption) ) { quit(); return -1; }
 
     // message loop
     MSG msg;
@@ -243,7 +243,7 @@ int GN::d3d10::D3D10Application::Run( const D3D10AppOption & o )
         {
             if( WM_QUIT == msg.message )
             {
-                Quit();
+                quit();
                 return 0;
             }
             ::TranslateMessage( &msg );
@@ -259,26 +259,26 @@ int GN::d3d10::D3D10Application::Run( const D3D10AppOption & o )
             // process input message
             if( gInputPtr )
             {
-                gInput.ProcessInputEvents();
+                gInput.processInputEvents();
             }
 
             // Idle time, do rendering and update
-            OnUpdate();
+            onUpdate();
             onDraw();
 
-            // Present()
+            // present()
             mSwapChain->Present( 0, 0 );
         }
     }
 
     // done
-    Quit();
+    quit();
     return 0;
 
     GN_UNGUARD_ALWAYS_NO_THROW;
     printf( "Press ENTER key to continue..." );
     _getch();
-    Quit();
+    quit();
     return -1;
 }
 
@@ -295,7 +295,7 @@ bool GN::d3d10::D3D10Application::changeOption( const D3D10AppOption & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::ClearScreen( float r, float g, float b, float a, float d, UInt8 s )
+void GN::d3d10::D3D10Application::clearScreen( float r, float g, float b, float a, float d, UInt8 s )
 {
     float color[] = { r, g, b, a };
     mDevice->ClearRenderTargetView( mBackRTV, color );
@@ -309,7 +309,7 @@ void GN::d3d10::D3D10Application::ClearScreen( float r, float g, float b, float 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::D3D10Application::Init()
+bool GN::d3d10::D3D10Application::init()
 {
     // get primary monitor
     POINT pt = { LONG_MIN, LONG_MIN };
@@ -325,19 +325,19 @@ bool GN::d3d10::D3D10Application::Init()
 
     if( gInputPtr )
     {
-        gInput.AttachToWindow( 0, mWindow );
+        gInput.attachToWindow( 0, mWindow );
     }
 
     // success
-    return OnInit( mOption );
+    return onInit( mOption );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::D3D10Application::Quit()
+void GN::d3d10::D3D10Application::quit()
 {
-    OnQuit();
+    onQuit();
 
     destroyDevice();
 
@@ -375,18 +375,18 @@ bool GN::d3d10::D3D10Application::createDevice()
 
         GN_TRACE(sLogger)( "Enumerating D3D adapters: %S", adaptDesc.Description );
 
-		if( 0 == StringCompare( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
+		if( 0 == stringCompare( adaptDesc.Description, L"NVIDIA PerfHUD" ) )
 		{
 			GN_INFO(sLogger)( "USE NVPerfHUD device." );
 			perfhud = true;
 			break;
 		}
 
-		SafeRelease( mAdapter );
+		safeRelease( mAdapter );
 
 		++nadapter;
 	}
-	if( !perfhud ) SafeRelease( mAdapter );
+	if( !perfhud ) safeRelease( mAdapter );
 
     // determine driver type
     D3D10_DRIVER_TYPE driverType;
@@ -501,13 +501,13 @@ void GN::d3d10::D3D10Application::destroyDevice()
         onDestroy();
     }
 
-	SafeRelease( mInfoQueue );
-	SafeRelease( mDebug );
-    SafeRelease( mBackBuf );
-    SafeRelease( mBackRTV );
-    SafeRelease( mDepthBuf );
-    SafeRelease( mDepthDSV );
-	SafeRelease( mSwapChain );
-	SafeRelease( mDevice );
-	SafeRelease( mAdapter );
+	safeRelease( mInfoQueue );
+	safeRelease( mDebug );
+    safeRelease( mBackBuf );
+    safeRelease( mBackRTV );
+    safeRelease( mDepthBuf );
+    safeRelease( mDepthDSV );
+	safeRelease( mSwapChain );
+	safeRelease( mDevice );
+	safeRelease( mAdapter );
 }

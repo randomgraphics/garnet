@@ -3,7 +3,6 @@
 
 #if GN_MSVC
 
-#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d9.lib") // for PIX routines.
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")
@@ -15,7 +14,7 @@
 
 #endif // GN_MSVC
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // Global functions
@@ -34,8 +33,8 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::D3D11Gpu> p( new GN::gfx::D3D11Gpu );
-    if( !p->Init( o ) ) return 0;
-    return p.Detach();
+    if( !p->init( o ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -47,7 +46,7 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D11Gpu::Init( const GN::gfx::GpuOptions & o )
+bool GN::gfx::D3D11Gpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
@@ -55,14 +54,14 @@ bool GN::gfx::D3D11Gpu::Init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::D3D11Gpu, ( o ) );
 
     // init sub-components
-    if( !dispInit()     ) return Failure();
-    if( !capsInit()     ) return Failure();
-    if( !resourceInit() ) return Failure();
-    if( !contextInit()  ) return Failure();
-    if( !drawInit()     ) return Failure();
+    if( !dispInit()     ) return failure();
+    if( !capsInit()     ) return failure();
+    if( !resourceInit() ) return failure();
+    if( !contextInit()  ) return failure();
+    if( !drawInit()     ) return failure();
 
     // successful
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -70,7 +69,7 @@ bool GN::gfx::D3D11Gpu::Init( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D11Gpu::Quit()
+void GN::gfx::D3D11Gpu::quit()
 {
     GN_GUARD;
 

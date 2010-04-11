@@ -30,17 +30,17 @@ namespace GN
         ///
         /// Allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC static void * Alloc( size_t sizeInBytes );
+        GN_PUBLIC static void * alloc( size_t sizeInBytes );
 
         ///
         /// Re-allocate memory from heap. Can cross DLL boundary.
         ///
-        GN_PUBLIC static void * Realloc( void *, size_t sizeInBytes );
+        GN_PUBLIC static void * realloc( void *, size_t sizeInBytes );
 
         ///
         /// Free heap-allocated memory. Can cross DLL boundary.
         ///
-        GN_PUBLIC static void Free( void * );
+        GN_PUBLIC static void dealloc( void * );
     };
 }
 
@@ -56,10 +56,10 @@ namespace GN
 /// \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
-inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
-inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::Alloc( s ); }
-inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Free( p ); }
-inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::Free( p ); }
+inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::HeapMemory::alloc( s ); }
+inline void operator delete( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
+inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::HeapMemory::dealloc( p ); }
 //@}
 
 #if GN_ICL
@@ -76,13 +76,13 @@ namespace GN
     /// enable CRT memory leak checking. Currently only work for MSVC compiler
     ///
     /// \param breakOnAllocID       Set allocation ID for "break-on-memory-allocation". Set to 0 to disable it.
-    void EnableCRTMemoryCheck( long breakOnAllocID = 0 );
+    void enableCRTMemoryCheck( long breakOnAllocID = 0 );
 
     ///
     /// general safe deallocation routine
     // ------------------------------------------------------------------------
     template < typename T, typename DEALLOC_FUNC >
-    GN_FORCE_INLINE void SafeDealloc( T * & ptr )
+    GN_FORCE_INLINE void safeDealloc( T * & ptr )
     {
         if( ptr )
         {
@@ -95,11 +95,11 @@ namespace GN
     /// free a C-style heap pointer
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeHeapFree( T * & ptr )
+    GN_FORCE_INLINE void safeHeapFree( T * & ptr )
     {
         if( ptr )
         {
-            HeapMemory::Free( ptr );
+            HeapMemory::dealloc( ptr );
             ptr = 0;
         }
     }
@@ -108,7 +108,7 @@ namespace GN
     /// delete one object
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeDelete( T * & ptr )
+    GN_FORCE_INLINE void safeDelete( T * & ptr )
     {
         if( ptr )
         {
@@ -121,7 +121,7 @@ namespace GN
     /// delete object array
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void SafeDeleteArray( T * & ptr )
+    GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
     {
         if( ptr )
         {
@@ -134,7 +134,7 @@ namespace GN
     /// Safe release COM interface
     ///
     template < typename T >
-    GN_FORCE_INLINE void SafeRelease( T * & ptr )
+    GN_FORCE_INLINE void safeRelease( T * & ptr )
     {
         if( ptr )
         {
@@ -147,11 +147,11 @@ namespace GN
     /// Safe release RefCounter class
     ///
     template < typename T >
-    GN_FORCE_INLINE void SafeDecref( T * & ptr )
+    GN_FORCE_INLINE void safeDecref( T * & ptr )
     {
         if( ptr )
         {
-            ptr->DecRef();
+            ptr->decref();
             ptr = 0;
         }
     }

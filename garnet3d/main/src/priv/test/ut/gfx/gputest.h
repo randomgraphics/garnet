@@ -36,9 +36,9 @@ class GpuTest
         using namespace GN;
         using namespace GN::gfx;
 
-        const GpuContext & rc = r.GetContext();
+        const GpuContext & rc = r.getContext();
 
-        TS_ASSERT( rc.colortargets.Size() > rtidx );
+        TS_ASSERT( rc.colortargets.size() > rtidx );
         TS_ASSERT( rc.colortargets[rtidx].texture );
 
         const RenderTargetTexture & rtt = rc.colortargets[rtidx];
@@ -49,7 +49,7 @@ class GpuTest
         rtp.s32[2] = rand();
         rtp.s32[3] = rand();
 
-        const Vector3<UInt32> & rtsize = rtt.texture->GetMipSize( rtt.level );
+        const Vector3<UInt32> & rtsize = rtt.texture->getMipSize( rtt.level );
         if( x >= rtsize.x && y >= rtsize.y )
         {
             TS_ASSERT( 0 );
@@ -57,17 +57,17 @@ class GpuTest
         }
 
         MipmapData md;
-        rtt.texture->ReadMipmap( rtt.face, rtt.level, md );
+        rtt.texture->readMipmap( rtt.face, rtt.level, md );
 
-        size_t bytesPerPixel = rtt.texture->GetDesc().format.GetBytesPerBlock();
+        size_t bytesPerPixel = rtt.texture->getDesc().format.getBytesPerBlock();
         size_t srcOffset = md.slicePitch * rtt.slice + md.rowPitch * y + x * bytesPerPixel;
-        if( srcOffset >= md.data.Size() )
+        if( srcOffset >= md.data.size() )
         {
             TS_ASSERT( 0 );
             return rtp;
         }
         const UInt8 * src = &md.data[srcOffset];
-        size_t copiedBytes = math::GetMin( md.data.Size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::getmin( md.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;
@@ -89,17 +89,17 @@ class GpuTest
         rtp.s32[3] = rand();
 
         Gpu::BackBufferContent bc;
-        r.GetBackBufferContent( bc );
+        r.getBackBufferContent( bc );
 
         TS_ASSERT( x < bc.width && y < bc.height );
         if( x >= bc.width && y >= bc.height ) return rtp;
 
-        size_t bytesPerPixel = bc.format.GetBytesPerBlock();
+        size_t bytesPerPixel = bc.format.getBytesPerBlock();
         size_t srcOffset = bc.pitch * y + x * bytesPerPixel;
-        TS_ASSERT( srcOffset < bc.data.Size() );
-        if( srcOffset >= bc.data.Size() ) return rtp;
+        TS_ASSERT( srcOffset < bc.data.size() );
+        if( srcOffset >= bc.data.size() ) return rtp;
         const UInt8 * src = &bc.data[srcOffset];
-        size_t copiedBytes = math::GetMin( bc.data.Size() - srcOffset, sizeof(rtp) );
+        size_t copiedBytes = math::getmin( bc.data.size() - srcOffset, sizeof(rtp) );
         memcpy( &rtp, src, copiedBytes );
 
         return rtp;
@@ -113,11 +113,11 @@ class GpuTest
 
         if( mMultiThreading )
         {
-            return GN::gfx::CreateMultiThreadGpu( effectiveRO );
+            return GN::gfx::createMultiThreadGpu( effectiveRO );
         }
         else
         {
-            return GN::gfx::CreateSingleThreadGpu( effectiveRO );
+            return GN::gfx::createSingleThreadGpu( effectiveRO );
         }
     }
 
@@ -133,7 +133,7 @@ class GpuTest
 
         ~AutoGpu()
         {
-            if( mGpu ) GN::gfx::DeleteGpu( mGpu );
+            if( mGpu ) GN::gfx::deleteGpu( mGpu );
         }
 
         operator GN::gfx::Gpu *() const { return mGpu; }
@@ -157,27 +157,27 @@ protected :
         using namespace GN::gfx;
 
         GN::AutoObjPtr<win::Window> win;
-        win.Attach( win::NewWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
-        TS_ASSERT( !win.Empty() );
-        if( win.Empty() ) return;
-        win->SetClientSize( 511, 236 );
-        win->Show();
+        win.attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
+        TS_ASSERT( !win.empty() );
+        if( win.empty() ) return;
+        win->setClientSize( 511, 236 );
+        win->show();
 
         GpuOptions ro;
         ro.useExternalWindow = true;
-        ro.displayHandle     = win->GetDisplayHandle();
-        ro.renderWindow      = win->GetWindowHandle();
+        ro.displayHandle     = win->getDisplayHandle();
+        ro.renderWindow      = win->getWindowHandle();
         AutoGpu gpu( createGpu( ro ) );
         TS_ASSERT( gpu );
         if( !gpu ) return;
         Gpu & r = *gpu;
 
         // the renderer should be in same size as the external window client
-        const DispDesc & dd = r.GetDispDesc();
+        const DispDesc & dd = r.getDispDesc();
         TS_ASSERT_EQUALS( dd.width, 511 );
         TS_ASSERT_EQUALS( dd.height, 236 );
 
-        r.ClearScreen( Vector4f(1,1,0,1) );
+        r.clearScreen( Vector4f(1,1,0,1) );
 
         RenderTargetPixel rtp = getBackBufferPixel( r, 0, 0 );
         TS_ASSERT_EQUALS( rtp.u32[0], 0xFF00FFFF );

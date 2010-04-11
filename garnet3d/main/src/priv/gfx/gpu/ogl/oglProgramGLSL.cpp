@@ -6,7 +6,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.OGL.GpuProgramGLSL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL.GpuProgramGLSL");
 
 // *****************************************************************************
 // Local function
@@ -38,15 +38,15 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
     GN::StrA out( "(  1) : " );
 
     int line = 1;
-    for( const char * s = in.ToRawPtr(); *s; ++s )
+    for( const char * s = in.cptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.Append( StringFormat( "\n(%3d) : ", ++line ) );
+            out.append( stringFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
-            out.Append( *s );
+            out.append( *s );
         }
     }
 
@@ -61,7 +61,7 @@ sCreateShader( const StrA & code, GLenum usage )
 {
     GN_GUARD;
 
-    if( code.Empty() )
+    if( code.empty() )
     {
         GN_ERROR(sLogger)( "shader code cannot be empty string." );
         return 0;
@@ -100,8 +100,8 @@ sCreateShader( const StrA & code, GLenum usage )
     AutoARBObjectDel autodel( sh );
 
     // set shader code
-    const char * code_str = code.ToRawPtr();
-    GLint code_size = static_cast<GLint>( code.Size() );
+    const char * code_str = code.cptr();
+    GLint code_size = static_cast<GLint>( code.size() );
     GN_OGL_CHECK_RV(
         glShaderSourceARB( sh, 1, &code_str, &code_size ),
         0 );
@@ -121,7 +121,7 @@ sCreateShader( const StrA & code, GLenum usage )
             "\n========= compile error ========\n"
             "%s\n"
             "==================================\n",
-            sAddLineCount(code_str).ToRawPtr(), buf );
+            sAddLineCount(code_str).cptr(), buf );
         return false;
     }
 
@@ -243,7 +243,7 @@ sIsTextureUniform( GLenum type )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpuProgramGLSL::Init( const GpuProgramDesc & desc )
+bool GN::gfx::OGLGpuProgramGLSL::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
@@ -255,22 +255,22 @@ bool GN::gfx::OGLGpuProgramGLSL::Init( const GpuProgramDesc & desc )
     GN_ASSERT( GpuProgramLanguage::GLSL == desc.lang );
 
     mVS = sCreateShader( desc.vs.source, GL_VERTEX_SHADER_ARB );
-    if( 0 == mVS ) return Failure();
+    if( 0 == mVS ) return failure();
 
     mPS = sCreateShader( desc.ps.source, GL_FRAGMENT_SHADER_ARB );
-    if( 0 == mPS ) return Failure();
+    if( 0 == mPS ) return failure();
 
     mProgram = sCreateProgram( mVS, mPS );
-    if( 0 == mProgram ) return Failure();
+    if( 0 == mProgram ) return failure();
 
     // enumerate parameters (textures and uniforms)
-    if( !enumParameters() ) return Failure();
+    if( !enumParameters() ) return failure();
 
     // enumerate attributes
-    if( !enumAttributes() ) return Failure();
+    if( !enumAttributes() ) return failure();
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -278,19 +278,19 @@ bool GN::gfx::OGLGpuProgramGLSL::Init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramGLSL::Quit()
+void GN::gfx::OGLGpuProgramGLSL::quit()
 {
     GN_GUARD;
 
-    mUniforms.Clear();
-    mTextures.Clear();
-    mAttributes.Clear();
+    mUniforms.clear();
+    mTextures.clear();
+    mAttributes.clear();
 
     if( mProgram ) glDeleteObjectARB( mProgram ), mProgram = 0;
     if( mPS ) glDeleteObjectARB( mPS ), mPS = 0;
     if( mVS ) glDeleteObjectARB( mVS ), mVS = 0;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -308,7 +308,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     const char           * bindingName,
     UInt8                  bindingIndex ) const
 {
-    if( IsStringEmpty(bindingName) )
+    if( stringEmpty(bindingName) )
     {
         GN_ERROR(sLogger)( "bindingName must not be empty." );
         return false;
@@ -331,7 +331,7 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     {
         // compose bindingName and bindingIndex into a single name, then look up again.
         // So for "position" and 12 become "position12"
-        size_t len = StringLength( bindingName );
+        size_t len = stringLength( bindingName );
         char * nameWithSuffix = (char*)alloca( len+4 );
         memcpy( nameWithSuffix, bindingName, len+1 );
         if( bindingIndex >= 100 )
@@ -360,67 +360,67 @@ bool GN::gfx::OGLGpuProgramGLSL::getBindingDesc(
     {
         // this is conventional attribute
 
-        const char * conventionalAttribName = desc->name.ToRawPtr();
+        const char * conventionalAttribName = desc->name.cptr();
 
         // the index is 0 in most cases.
         result.index = 0;
 
-        if( 0 == StringCompare( "gl_Vertex", conventionalAttribName ) )
+        if( 0 == stringCompare( "gl_Vertex", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_VERTEX;
         }
-        else if( 0 == StringCompare( "gl_Normal", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_Normal", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_NORMAL;
         }
-        else if( 0 == StringCompare( "gl_Color", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_Color", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
         }
-        else if( 0 == StringCompare( "gl_SecondaryColor", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_SecondaryColor", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 1;
         }
-        else if( 0 == StringCompare( "gl_FogCoord", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_FogCoord", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_FOG;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord0", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord0", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord1", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord1", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 1;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord2", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord2", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 2;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord3", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord3", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 3;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord4", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord4", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 4;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord5", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord5", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 5;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord6", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord6", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 6;
         }
-        else if( 0 == StringCompare( "gl_MultiTexCoord7", conventionalAttribName ) )
+        else if( 0 == stringCompare( "gl_MultiTexCoord7", conventionalAttribName ) )
         {
             result.semantic = VERTEX_SEMANTIC_COLOR;
             result.index    = 7;
@@ -452,12 +452,12 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
     const Uniform * const * uniforms,
     size_t                  count ) const
 {
-    if( count != mUniforms.Size() )
+    if( count != mUniforms.size() )
     {
-        GN_ERROR(sLogger)( "Current GPU program requires %d uniforms. But %d are provided.", mUniforms.Size(), count );
+        GN_ERROR(sLogger)( "Current GPU program requires %d uniforms. But %d are provided.", mUniforms.size(), count );
     }
 
-    if( count > mUniforms.Size() ) count = mUniforms.Size();
+    if( count > mUniforms.size() ) count = mUniforms.size();
 
     for( size_t i = 0; i < count; ++i )
     {
@@ -479,18 +479,18 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         }
 
         // update time stamp
-        desc.lastUniform.Set( uniform );
+        desc.lastUniform.set( uniform );
         desc.lastStamp = uniform->getTimeStamp();
 
         // check parameter size
-        if( GetGpu().ParamCheckEnabled() )
+        if( getGpu().paramCheckEnabled() )
         {
-            if( uniform->Size() != desc.size )
+            if( uniform->size() != desc.size )
             {
                 GN_WARN(sLogger)(
                     "parameter %s: value size(%d) differs from size defined in shader code(%d).",
-                    desc.name.ToRawPtr(),
-                    uniform->Size(),
+                    desc.name.cptr(),
+                    uniform->size(),
                     desc.size );
             }
         }
@@ -498,51 +498,51 @@ void GN::gfx::OGLGpuProgramGLSL::applyUniforms(
         switch( desc.type )
         {
             case GL_FLOAT                      :
-                glUniform1fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
+                glUniform1fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC2_ARB             :
-                glUniform2fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
+                glUniform2fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC3_ARB             :
-                glUniform3fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
+                glUniform3fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_VEC4_ARB             :
-                glUniform4fvARB( desc.location, desc.count, (GLfloat*)uniform->GetValue() );
+                glUniform4fvARB( desc.location, desc.count, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_INT                        :
             case GL_BOOL_ARB                   :
-                glUniform1ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
+                glUniform1ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC2_ARB               :
             case GL_BOOL_VEC2_ARB              :
-                glUniform2ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
+                glUniform2ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC3_ARB               :
             case GL_BOOL_VEC3_ARB              :
-                glUniform3ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
+                glUniform3ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_INT_VEC4_ARB               :
             case GL_BOOL_VEC4_ARB              :
-                glUniform4ivARB( desc.location, desc.count, (GLint*)uniform->GetValue() );
+                glUniform4ivARB( desc.location, desc.count, (GLint*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT2_ARB             :
-                glUniformMatrix2fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
+                glUniformMatrix2fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT3_ARB             :
-                glUniformMatrix3fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
+                glUniformMatrix3fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_FLOAT_MAT4_ARB             :
-                glUniformMatrix4fvARB( desc.location, desc.count, true, (GLfloat*)uniform->GetValue() );
+                glUniformMatrix4fvARB( desc.location, desc.count, true, (GLfloat*)uniform->getval() );
                 break;
 
             case GL_SAMPLER_1D_ARB             :
@@ -568,13 +568,13 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
     const TextureBinding * textures,
     size_t                 count ) const
 {
-    OGLGpu & r = GetGpu();
-    size_t maxStages = r.GetCaps().maxTextures;
+    OGLGpu & r = getGpu();
+    size_t maxStages = r.caps().maxTextures;
 
     // determine effective texture count
-    if( count > mTextures.Size() )
+    if( count > mTextures.size() )
     {
-        count = mTextures.Size();
+        count = mTextures.size();
     }
     GN_ASSERT( count <= maxStages );
 
@@ -591,7 +591,7 @@ void GN::gfx::OGLGpuProgramGLSL::applyTextures(
         {
             r.chooseTextureStage( i );
 
-            const OGLTexture * ogltexture = SafeCastPtr<const OGLTexture>(b.texture.Get());
+            const OGLTexture * ogltexture = safeCastPtr<const OGLTexture>(b.texture.get());
 
             // bind sampler
             ogltexture->setSampler( b.sampler );
@@ -642,7 +642,7 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
     // enumerate all parameters
     char * nameptr = (char*)alloca( maxLength+1 );
-    mUniforms.Clear();
+    mUniforms.clear();
     for( GLint i = 0; i < numParameters; ++i )
     {
         GLSLUniformOrTextureDesc u;
@@ -656,47 +656,47 @@ GN::gfx::OGLGpuProgramGLSL::enumParameters()
 
         if( sIsTextureUniform( u.type ) )
         {
-            mTextures.Append( u );
+            mTextures.append( u );
         }
         else
         {
             u.size = sGetUniformSize(u.type) * u.count;
-            mUniforms.Append( u );
+            mUniforms.append( u );
         }
     }
 
     // initialize name and size arrays
-    for( size_t i = 0; i < mUniforms.Size(); ++i )
+    for( size_t i = 0; i < mUniforms.size(); ++i )
     {
         GLSLUniformOrTextureDesc & u = mUniforms[i];
-        u.uniformDesc.name = u.name.ToRawPtr();
+        u.uniformDesc.name = u.name.cptr();
         u.uniformDesc.size = u.size;
     }
-    for( size_t i = 0; i < mTextures.Size(); ++i )
+    for( size_t i = 0; i < mTextures.size(); ++i )
     {
         GLSLUniformOrTextureDesc & t = mTextures[i];
-        t.textureDesc.name = t.name.ToRawPtr();
+        t.textureDesc.name = t.name.cptr();
     }
 
     // update parameter descriptor
-    if( mUniforms.Size() > 0 )
+    if( mUniforms.size() > 0 )
     {
         mParamDesc.setUniformArray(
             &mUniforms[0].uniformDesc,
-            mUniforms.Size(),
+            mUniforms.size(),
             sizeof(GLSLUniformOrTextureDesc) );
     }
-    if( mTextures.Size() > 0 )
+    if( mTextures.size() > 0 )
     {
         mParamDesc.setTextureArray(
             &mTextures[0].textureDesc,
-            mTextures.Size(),
+            mTextures.size(),
             sizeof(GLSLUniformOrTextureDesc) );
     }
 
     // check for texture capability
-    OGLGpu & r = GetGpu();
-    if( mTextures.Size() > r.GetCaps().maxTextures )
+    OGLGpu & r = getGpu();
+    if( mTextures.size() > r.caps().maxTextures )
     {
         GN_ERROR(sLogger)( "The GPU program requires more textures than current hardware supports." );
         return false;
@@ -724,7 +724,7 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 
     // enumerate all attributes
     char * nameptr = (char*)alloca( maxLength+1 );
-    mAttributes.Clear();
+    mAttributes.clear();
     for( GLint i = 0; i < numAttributes; ++i )
     {
         GLSLAttributeDesc a;
@@ -736,20 +736,20 @@ GN::gfx::OGLGpuProgramGLSL::enumAttributes()
 
         a.name = nameptr;
 
-        mAttributes.Append( a );
+        mAttributes.append( a );
     }
 
     // initialize name and format arrays
-    for( size_t i = 0; i < mAttributes.Size(); ++i )
+    for( size_t i = 0; i < mAttributes.size(); ++i )
     {
         GLSLAttributeDesc & a = mAttributes[i];
-        a.desc.name = a.name.ToRawPtr();
+        a.desc.name = a.name.cptr();
     }
 
     // update parameter descriptor
     mParamDesc.setAttributeArray(
         &mAttributes[0].desc,
-        mAttributes.Size(),
+        mAttributes.size(),
         sizeof(GLSLAttributeDesc) );
 
     return true;
@@ -762,9 +762,9 @@ const GN::gfx::OGLGpuProgramGLSL::GLSLAttributeDesc *
 GN::gfx::OGLGpuProgramGLSL::lookupAttribute( const char * name ) const
 {
 
-    const GLSLAttributeDesc * attrib = mAttributes.ToRawPtr();
+    const GLSLAttributeDesc * attrib = mAttributes.cptr();
 
-    for( size_t i = 0; i < mAttributes.Size(); ++i, ++attrib )
+    for( size_t i = 0; i < mAttributes.size(); ++i, ++attrib )
     {
         if( name == attrib->name )
         {

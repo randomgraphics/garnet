@@ -6,7 +6,7 @@
 #pragma comment(lib, "dxguid.lib")
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.d3d9wrapper.MyD3D9");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyD3D9");
 
 // *****************************************************************************
 // Local function Pointers
@@ -47,12 +47,12 @@ bool sLoadD3D9Dll()
     using namespace GN;
 
     // load library
-    StrA dllname = StringFormat( "%s\\system32\\d3d9.dll", GetEnv("windir").ToRawPtr() );
-    GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.ToRawPtr() );
-    gD3D9Dll = LoadLibraryA( dllname.ToRawPtr() );
+    StrA dllname = stringFormat( "%s\\system32\\d3d9.dll", getEnv("windir").cptr() );
+    GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.cptr() );
+    gD3D9Dll = LoadLibraryA( dllname.cptr() );
     if( 0 == gD3D9Dll )
     {
-        GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", getWin32LastErrorInfo() );
         return false;
     }
 
@@ -129,13 +129,13 @@ HRESULT STDMETHODCALLTYPE MyD3D9::CreateDevice(
     }
 
     GN::AutoComPtr<MyDevice9> dev;
-    dev.Attach( new MyDevice9 );
+    dev.attach( new MyDevice9 );
 
     HRESULT hr = dev->create( this, Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters );
     if( FAILED( hr ) ) return hr;
 
     // success
-    *ppReturnedDeviceInterface = (IDirect3DDevice9*)dev.Detach();
+    *ppReturnedDeviceInterface = (IDirect3DDevice9*)dev.detach();
     return D3D_OK;
 
     GN_UNGUARD;
@@ -175,12 +175,12 @@ MyD3D9 * WINAPI MyDirect3DCreate9( UINT sdkVersion )
     GN_GUARD;
 
     GN::AutoComPtr<MyD3D9> p;
-    p.Attach( new MyD3D9 );
+    p.attach( new MyD3D9 );
 
     if( !p->create( sdkVersion ) ) return NULL;
 
     // success
-    return p.Detach();
+    return p.detach();
 
     GN_UNGUARD;
 }

@@ -9,7 +9,7 @@ using namespace GN::d3d9;
 ///
 #define RENDER_TO_BACKBUF 0
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.D3D9DumpViewer");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D9DumpViewer");
 
 static StrA sDumpFileName;
 
@@ -85,7 +85,7 @@ struct D3D9OperationDump
     UInt32  numvtx;
     UInt32  startidx;
 
-    void Draw( IDirect3DDevice9 & dev )
+    void draw( IDirect3DDevice9 & dev )
     {
         if( indexed )
         {
@@ -148,25 +148,25 @@ struct D3D9StateDump
 
     //@{
 
-    void Clear()
+    void clear()
     {
         onDispose();
 
-        vs.source.Clear();
+        vs.source.clear();
         memset( &vsconstf, 0, sizeof(vsconstf) );
         memset( &vsconsti, 0, sizeof(vsconsti) );
         memset( &vsconstb, 0, sizeof(vsconstb) );
 
-        ps.source.Clear();
+        ps.source.clear();
         memset( &psconstf, 0, sizeof(psconstf) );
         memset( &psconsti, 0, sizeof(psconsti) );
         memset( &psconstb, 0, sizeof(psconstb) );
 
-        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].ref.Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].ref.clear();
 
-        idxbuf.ref.Clear();
+        idxbuf.ref.clear();
 
-        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].ref.Clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].ref.clear();
 
         for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i ) rendertargets[i].inuse = false;
 
@@ -176,17 +176,17 @@ struct D3D9StateDump
     bool onRestore( IDirect3DDevice9 & dev )
     {
         // vs
-        if( !vs.source.Empty() )
+        if( !vs.source.empty() )
         {
-            vs.vs.Attach( assembleAndCreateVS( &dev, vs.source.ToRawPtr(), 0 ) );
-            if( vs.vs.Empty() ) return false;
+            vs.vs.attach( assembleAndCreateVS( &dev, vs.source.cptr(), 0 ) );
+            if( vs.vs.empty() ) return false;
         }
 
         // ps
-        if( !ps.source.Empty() )
+        if( !ps.source.empty() )
         {
-            ps.ps.Attach( assembleAndCreatePS( &dev, ps.source.ToRawPtr(), 0 ) );
-            if( ps.ps.Empty() ) return false;
+            ps.ps.attach( assembleAndCreatePS( &dev, ps.source.cptr(), 0 ) );
+            if( ps.ps.empty() ) return false;
         }
 
         // decl
@@ -197,19 +197,19 @@ struct D3D9StateDump
         {
             D3D9VtxBufDump & vbd = vtxbufs[i];
 
-            if( vbd.ref.Empty() ) continue;
+            if( vbd.ref.empty() ) continue;
 
-            AutoObjPtr<File> fp( fs::OpenFile( vbd.ref, "rb" ) );
+            AutoObjPtr<File> fp( fs::openFile( vbd.ref, "rb" ) );
             if( !fp ) return false;
 
-            size_t bytes = fp->Size();
+            size_t bytes = fp->size();
 
             GN_DX_CHECK_RETURN( dev.CreateVertexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
 
             void * vertices;
             GN_DX_CHECK_RETURN( vbd.vb->Lock( 0, 0, &vertices, 0 ), false );
 
-            bool ok = fp->Read( vertices, bytes, 0 );
+            bool ok = fp->read( vertices, bytes, 0 );
 
             vbd.vb->Unlock();
 
@@ -217,19 +217,19 @@ struct D3D9StateDump
         }
 
         // ib
-        if( !idxbuf.ref.Empty() )
+        if( !idxbuf.ref.empty() )
         {
-            AutoObjPtr<File> fp( fs::OpenFile( idxbuf.ref, "rb" ) );
+            AutoObjPtr<File> fp( fs::openFile( idxbuf.ref, "rb" ) );
             if( !fp ) return false;
 
-            size_t bytes = fp->Size();
+            size_t bytes = fp->size();
 
             GN_DX_CHECK_RETURN( dev.CreateIndexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
 
             void * indices;
             GN_DX_CHECK_RETURN( idxbuf.ib->Lock( 0, 0, &indices, 0 ), false );
 
-            bool ok = fp->Read( indices, bytes, 0 );
+            bool ok = fp->read( indices, bytes, 0 );
 
             idxbuf.ib->Unlock();
 
@@ -241,31 +241,31 @@ struct D3D9StateDump
         {
             D3D9TextureDump & td = textures[i];
 
-            if( td.ref.Empty() ) continue;
+            if( td.ref.empty() ) continue;
 
-            StrA filename = fs::ToNativeDiskFilePath( td.ref );
+            StrA filename = fs::toNativeDiskFilePath( td.ref );
 
             D3DXIMAGE_INFO info;
 
-            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.ToRawPtr(), &info ), false );
+            GN_DX_CHECK_RETURN( D3DXGetImageInfoFromFileA( filename.cptr(), &info ), false );
 
             switch( info.ResourceType )
             {
                 case D3DRTYPE_TEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
+                        D3DXCreateTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DTEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_CUBETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateCubeTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
+                        D3DXCreateCubeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DCUBETEXTURE9*)&td.tex ),
                         false );
                     break;
 
                 case D3DRTYPE_VOLUMETEXTURE:
                     GN_DX_CHECK_RETURN(
-                        D3DXCreateVolumeTextureFromFileA( &dev, filename.ToRawPtr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
+                        D3DXCreateVolumeTextureFromFileA( &dev, filename.cptr(), (LPDIRECT3DVOLUMETEXTURE9*)&td.tex ),
                         false );
                     break;
 
@@ -325,18 +325,18 @@ struct D3D9StateDump
 
     void onDispose()
     {
-        vs.vs.Clear();
-        ps.ps.Clear();
-        vtxdecl.decl.Clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].vb.Clear();
-        idxbuf.ib.Clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].tex.Clear();
+        vs.vs.clear();
+        ps.ps.clear();
+        vtxdecl.decl.clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].vb.clear();
+        idxbuf.ib.clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].tex.clear();
         for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
         {
-            rendertargets[i].surf.Clear();
-            rendertargets[i].syscopy.Clear();
+            rendertargets[i].surf.clear();
+            rendertargets[i].syscopy.clear();
         }
-        depthstencil.surf.Clear();
+        depthstencil.surf.clear();
     }
 
     void bind( IDirect3DDevice9 & dev ) const
@@ -415,7 +415,7 @@ struct D3D9StateDump
         dev.SetScissorRect( &scissorrect );
     }
 
-    void Draw( IDirect3DDevice9 & dev )
+    void draw( IDirect3DDevice9 & dev )
     {
         // load RT data
         {
@@ -425,17 +425,17 @@ struct D3D9StateDump
                 D3D9RtDump & rtd = rendertargets[i];
                 if( !rtd.inuse ) continue;
 
-                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.ToRawPtr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
+                GN_DX_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.cptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
             }
         }
 
-        operation.Draw( dev );
+        operation.draw( dev );
     }
 
-    bool LoadFromXml( const XmlNode & root, const StrA & basedir )
+    bool loadFromXml( const XmlNode & root, const StrA & basedir )
     {
         // check root name
-        const XmlElement * e = root.ToElement();
+        const XmlElement * e = root.toElement();
         if( 0 == e || "D3D9StateDump" != e->name )
         {
             GN_ERROR(sLogger)( "root node must be \"<D3D9StateDump>\"." );
@@ -444,7 +444,7 @@ struct D3D9StateDump
 
         for( XmlNode * n = root.child; n; n = n->next )
         {
-            e = n->ToElement();
+            e = n->toElement();
             if( !e ) continue;
 
             if( "vs" == e->name )
@@ -544,7 +544,7 @@ struct D3D9StateDump
             }
             else
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
             }
         }
 
@@ -560,7 +560,7 @@ private:
     {
         for( const XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlCdata * c = n->ToCdata();
+            const XmlCdata * c = n->toCdata();
             if( c )
             {
                 result = c->text;
@@ -574,10 +574,10 @@ private:
     template<typename T>
     static bool sGetNumericAttr( const XmlElement & node, const StrA & attrname, T & result )
     {
-        const XmlAttrib * a = node.FindAttrib( attrname );
-        if ( !a || !String2Number<T>( result, a->value.ToRawPtr() ) )
+        const XmlAttrib * a = node.findAttrib( attrname );
+        if ( !a || !string2Number<T>( result, a->value.cptr() ) )
         {
-            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.GetLocation(), attrname.ToRawPtr() );
+            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.cptr() );
             return false;
         }
         else
@@ -588,18 +588,18 @@ private:
 
     static bool sGetRefString( const XmlElement & node, const StrA & basedir, StrA & result )
     {
-        const XmlAttrib * a = node.FindAttrib( "ref" );
+        const XmlAttrib * a = node.findAttrib( "ref" );
         if ( !a )
         {
-            GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.GetLocation() );
+            GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.getLocation() );
             return false;
         }
 
-        result = fs::ResolvePath( basedir, a->value );
+        result = fs::resolvePath( basedir, a->value );
 
-        if( !fs::IsFile( result ) )
+        if( !fs::isFile( result ) )
         {
-            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.GetLocation(), result.ToRawPtr() );
+            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.cptr() );
         }
 
         // success
@@ -610,11 +610,11 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlElement * e = n->ToElement();
+            const XmlElement * e = n->toElement();
             if( !e ) continue;
             if( e->name != "f" )
             {
-                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
+                GN_ERROR(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
                 continue;
             }
 
@@ -622,7 +622,7 @@ private:
             if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
-                GN_ERROR(sLogger)( "%s : invalid const index.", e->GetLocation() );
+                GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
                 continue;
             }
 
@@ -641,14 +641,14 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            const XmlElement * e = n->ToElement();
+            const XmlElement * e = n->toElement();
             if( !e ) continue;
 
             size_t index;
             if( !sGetNumericAttr( *e, "index", index ) ) return false;
             if( index >= count )
             {
-                GN_ERROR(sLogger)( "%s : invalid const index.", e->GetLocation() );
+                GN_ERROR(sLogger)( "%s : invalid const index.", e->getLocation() );
                 continue;
             }
 
@@ -670,26 +670,26 @@ private:
             int   * bools,  size_t countb,
             const XmlElement & node )
     {
-        XmlElement * e = node.FindChildElement( "float" );
+        XmlElement * e = node.findChildElement( "float" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs float constants are missing!", node.GetLocation() );
+            GN_ERROR(sLogger)( "%s : vs float constants are missing!", node.getLocation() );
             return false;
         }
         if( !sLoadConstF( floats, countf, *e ) ) return false;
 
-        e = node.FindChildElement( "int" );
+        e = node.findChildElement( "int" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs integer constants are missing!", node.GetLocation() );
+            GN_ERROR(sLogger)( "%s : vs integer constants are missing!", node.getLocation() );
             return false;
         }
         if( !sLoadConstI( ints, 4, counti, *e ) ) return false;
 
-        e = node.FindChildElement( "bool" );
+        e = node.findChildElement( "bool" );
         if( !e )
         {
-            GN_ERROR(sLogger)( "%s : vs boolean constants are missing!", node.GetLocation() );
+            GN_ERROR(sLogger)( "%s : vs boolean constants are missing!", node.getLocation() );
             return false;
         }
         if( !sLoadConstI( bools, 1, countb, *e ) ) return false;
@@ -703,19 +703,19 @@ private:
         size_t count = 0;
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->ToElement();
+            XmlElement * e = n->toElement();
 
             if( !e ) continue;
 
             if( e->name != "element" )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
                 continue;
             }
 
             if( count >= GN_ARRAY_COUNT(vtxdecl.elements) )
             {
-                GN_ERROR(sLogger)( "%s : too many elements!", e->GetLocation() );
+                GN_ERROR(sLogger)( "%s : too many elements!", e->getLocation() );
                 return false;
             }
 
@@ -820,18 +820,18 @@ private:
         size_t count = 0;
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->ToElement();
+            XmlElement * e = n->toElement();
             if( !e ) continue;
 
             if( "rs" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
                 continue;
             }
 
             if( count >= GN_ARRAY_COUNT(renderstates) )
             {
-                GN_WARN(sLogger)( "%s : too many render states", e->GetLocation() );
+                GN_WARN(sLogger)( "%s : too many render states", e->getLocation() );
                 return true;
             }
 
@@ -845,7 +845,7 @@ private:
 
         if( count != GN_ARRAY_COUNT(renderstates) )
         {
-            GN_WARN(sLogger)( "%s : too little render states", node.GetLocation() );
+            GN_WARN(sLogger)( "%s : too little render states", node.getLocation() );
         }
 
         // success
@@ -856,12 +856,12 @@ private:
     {
         for( XmlNode * n = node.child; n; n = n->next )
         {
-            XmlElement * e = n->ToElement();
+            XmlElement * e = n->toElement();
             if( !e ) continue;
 
             if( "ss" != e->name )
             {
-                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->GetLocation(), e->name.ToRawPtr() );
+                GN_WARN(sLogger)( "%s : ignore unknown node %s", e->getLocation(), e->name.cptr() );
                 continue;
             }
 
@@ -871,7 +871,7 @@ private:
 
             if( stage > 15 || type > 13 )
             {
-                GN_ERROR(sLogger)( "%s : invalid SS stage and/or type", e->GetLocation() );
+                GN_ERROR(sLogger)( "%s : invalid SS stage and/or type", e->getLocation() );
                 return false;
             }
 
@@ -895,10 +895,10 @@ class MyApp : public D3D9Application
 
 protected:
 
-    bool OnInit( D3D9AppOption & o )
+    bool onInit( D3D9AppOption & o )
     {
-        mState.Clear();
-        if( !LoadFromXmlFile( mState, sDumpFileName ) ) return false;
+        mState.clear();
+        if( !loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
 #if RENDER_TO_BACKBUF
         o.windowedWidth  = mState.rendertargets[0].width;
@@ -922,7 +922,7 @@ protected:
     void onDispose()
     {
         mState.onDispose();
-        mBackBuf.Clear();
+        mBackBuf.clear();
     }
 
     void onDraw()
@@ -940,7 +940,7 @@ protected:
         if( D3D_OK == dev.BeginScene() )
         {
             mState.bind( dev );
-            mState.Draw( dev );
+            mState.draw( dev );
 
 #if !RENDER_TO_BACKBUF
             // copy RT0 content to backbuffer
@@ -968,7 +968,7 @@ protected:
 
 void printhelp( const char * appname )
 {
-    printf( "Usage: %s [dumpname]\n", (fs::BaseName(appname) + fs::ExtName(appname)).ToRawPtr() );
+    printf( "Usage: %s [dumpname]\n", (fs::baseName(appname) + fs::extName(appname)).cptr() );
 }
 
 int main( int argc, const char * argv [] )
@@ -984,7 +984,7 @@ int main( int argc, const char * argv [] )
     sDumpFileName = argv[1];
 
     MyApp app;
-    return app.Run();
+    return app.run();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
     return -1;

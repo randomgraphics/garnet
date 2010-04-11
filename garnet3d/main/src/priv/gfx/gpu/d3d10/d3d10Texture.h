@@ -9,7 +9,7 @@
 #include "../common/basicSurface.h"
 #include "d3d10Resource.h"
 
-namespace GN {namespace gfx
+namespace GN { namespace gfx
 {
     class D3D10Gpu;
 
@@ -26,8 +26,8 @@ namespace GN {namespace gfx
 
         //@{
     public:
-        D3D10Texture( D3D10Gpu & r ) : D3D10Resource(r) { Clear(); }
-        virtual ~D3D10Texture() { Quit(); }
+        D3D10Texture( D3D10Gpu & r ) : D3D10Resource(r) { clear(); }
+        virtual ~D3D10Texture() { quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN {namespace gfx
 
         //@{
     public:
-        bool Init( const TextureDesc & desc );
-        void Quit();
+        bool init( const TextureDesc & desc );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mTexture = 0;
         }
@@ -50,12 +50,12 @@ namespace GN {namespace gfx
         // ********************************
     public:
 
-        virtual void   UpdateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
-        virtual void   ReadMipmap( size_t face, size_t level, MipmapData & data );
-        virtual void   BlobWrite( const void *, size_t ) { GN_UNIMPL(); }
-        virtual size_t BlobRead( void * ) { GN_UNIMPL(); return 0; }
-        virtual void   GenerateMipmapPyramid() { GN_UNIMPL(); }
-        virtual void * GetAPIDependentData() const { return mTexture; }
+        virtual void   updateMipmap( size_t face, size_t level, const Box<UInt32>* area, size_t rowPitch, size_t slicePitch, const void * data, SurfaceUpdateFlag flag );
+        virtual void   readMipmap( size_t face, size_t level, MipmapData & data );
+        virtual void   blobWrite( const void *, size_t ) { GN_UNIMPL(); }
+        virtual size_t blobRead( void * ) { GN_UNIMPL(); return 0; }
+        virtual void   generateMipmapPyramid() { GN_UNIMPL(); }
+        virtual void * getAPIDependentData() const { return mTexture; }
 
         // ********************************
         // public functions
@@ -67,13 +67,13 @@ namespace GN {namespace gfx
         ///
         ID3D10ShaderResourceView * getSRView()
         {
-            const TextureDesc & desc = GetDesc();
+            const TextureDesc & td = getDesc();
 
             return getSRView(
                 mReadingFormat,
-                0, desc.faces,
-                0, desc.levels,
-                0, desc.depth );
+                0, td.faces,
+                0, td.levels,
+                0, td.depth );
         }
 
         ///
@@ -137,8 +137,7 @@ namespace GN {namespace gfx
         // private functions
         // ********************************
     private:
-
-        bool CreateTexture();
+        bool createTexture();
     };
 }}
 

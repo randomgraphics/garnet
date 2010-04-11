@@ -43,12 +43,12 @@ struct DiffuseEffect : public BasicEffect
             "    o.clr = saturate(dot(i.nrm,LIGHT_DIR)) + 0.2;    \n"
             "    return o;                                        \n"
             "}";
-        vs.Attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
         static const char * pscode = "float4 main( in float4 clr : COLOR0 ) : COLOR0 { return clr; }";
-        ps.Attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // initialize projection matrix
@@ -72,7 +72,7 @@ struct DenseMesh
     bool create()
     {
         Renderer & r = gRenderer;
-        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.GetD3DDevice();
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
         if( 0 == dev )
         {
             GN_ERROR(sLogger)( "only work with D3D9 renderer" );
@@ -81,7 +81,7 @@ struct DenseMesh
 
         // search media file
         StrA filename = app::SampleResourceManager::sGetNativeResourceFileName( "mesh\\knot.x" );
-        if( filename.Empty() )
+        if( filename.empty() )
         {
             GN_ERROR(sLogger)( "mesh file not found!" );
             return false;
@@ -91,7 +91,7 @@ struct DenseMesh
         AutoComPtr<ID3DXMesh> sysMesh;
         AutoComPtr<ID3DXBuffer> adjacency;
         GN_DX_CHECK_RETURN( D3DXLoadMeshFromXA(
-            filename.ToRawPtr(),
+            filename.cptr(),
             D3DXMESH_SYSTEMMEM,
             dev,
             &adjacency,
@@ -154,10 +154,10 @@ struct DenseMesh
 
     void destroy()
     {
-        mesh.Clear();
+        mesh.clear();
     }
 
-    void Draw()
+    void draw()
     {
         Renderer & r = gRenderer;
 
@@ -175,7 +175,7 @@ struct DenseMesh
         ff.vtxfmt = 1;
         ff.vtxbufs = 1;
         ff.idxbuf = 1;
-        r.RebindContext( ff );
+        r.rebindContext( ff );
     }
 };
 
@@ -218,7 +218,7 @@ public:
         // initialize camera
         const Spheref & s = mGeometry.boundingSphere;
         mRadius = s.radius * 2.0f;
-        mEuler.Set( 0, 0, 0 );
+        mEuler.set( 0, 0, 0 );
 
         // success
         return true;
@@ -255,16 +255,16 @@ public:
 
     void onmove( input::Axis, int ) {}
 
-    void Update()
+    void update()
     {
         // update moving speed
         using namespace GN::input;
-        const int * a = gInput.GetAxisStatus();
+        const int * a = gInput.getAxisStatus();
         GN_ASSERT( a );
         static const float MIN_SPEED = 0.000001f;
         float speed = max( MIN_SPEED, mRadius * 0.000001f );
         mMoveSpeed = speed * a[Axis::XB360_THUMB_LY];
-        mRollSpeed.Set( speed * a[Axis::XB360_THUMB_RY], speed * a[Axis::XB360_THUMB_RX], 0 );
+        mRollSpeed.set( speed * a[Axis::XB360_THUMB_RY], speed * a[Axis::XB360_THUMB_RX], 0 );
 
         // update radius and euler
         mRadius += mMoveSpeed;
@@ -279,9 +279,9 @@ public:
 
         // calculate throughput
         size_t triangles = mGeometry.DRAW_COUNT * mGeometry.PRIM_COUNT;
-        float throughput = triangles / 1000000.0f * getApp().GetFps();
+        float throughput = triangles / 1000000.0f * getApp().fps();
         mThroughput = throughput;
-        mThroughputStr.Format(
+        mThroughputStr.format(
             "%s\n"
             "\n"
             "throughput = %f Mtri/sec\n"
@@ -291,7 +291,7 @@ public:
             "radius = %f\n"
             "euler  = %f, %f\n"
             "eye    = %f, %f, %f",
-            getName().ToRawPtr(),
+            getName().cptr(),
             throughput,
             mGeometry.DRAW_COUNT,
             triangles,
@@ -303,34 +303,34 @@ public:
     void render()
     {
         Renderer & r = gRenderer;
-        r.ClearScreen();
+        r.clearScreen();
 
         // update transformation matrix
         Matrix44f proj, view;
-        const DispDesc & dd = gRenderer.GetDispDesc();
+        const DispDesc & dd = gRenderer.getDispDesc();
         const Spheref & s = mGeometry.boundingSphere;
         if( mRadius < s.radius * 2.0f )
         {
-            proj.PerspectiveD3D( 1.0f, (float)dd.width/dd.height, s.radius / 10.0f, s.radius * 10.0f );
+            proj.perspectiveD3D( 1.0f, (float)dd.width/dd.height, s.radius / 10.0f, s.radius * 10.0f );
         }
         else
         {
-            proj.PerspectiveD3D( 1.0f, (float)dd.width/dd.height, mRadius - s.radius, mRadius + s.radius );
+            proj.perspectiveD3D( 1.0f, (float)dd.width/dd.height, mRadius - s.radius, mRadius + s.radius );
         }
         static const Vector3f UP(0,1,0);
-        view.LookAt( mEye, s.center, UP );
+        view.lookAt( mEye, s.center, UP );
         mEffect.vs->setUniformByNameM( "gPVW", proj * view );
 
         // draw the mesh
         r.setContext( mContext );
-        mGeometry.Draw();
+        mGeometry.draw();
 
         // draw statistics
-        scene::gAsciiFont.DrawText( mThroughputStr.ToRawPtr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        scene::gAsciiFont.drawText( mThroughputStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()
     {
-        return StringFormat( "throughput(%f)", mThroughput.getAverageValue() );
+        return stringFormat( "throughput(%f)", mThroughput.getAverageValue() );
     }
 };

@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~MultiThreadTexture() { Quit(); }
+        MultiThreadTexture( MultiThreadGpu & r ) : mGpu(r) { clear(); }
+        virtual ~MultiThreadTexture() { quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( Texture * );
-        void Quit();
+        bool init( Texture * );
+        void quit();
     private:
-        void Clear() { mTexture = NULL; }
+        void clear() { mTexture = NULL; }
         //@}
 
         // ********************************
@@ -51,18 +51,18 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        void   UpdateMipmap( size_t              face,
+        void   updateMipmap( size_t              face,
                              size_t              level,
                              const Box<UInt32> * area,
                              size_t              rowPitch,
                              size_t              slicePitch,
                              const void        * data,
                              SurfaceUpdateFlag   flag );
-        void   ReadMipmap( size_t face, size_t level, MipmapData & data );
-        void   BlobWrite( const void * data, size_t length );
-        size_t BlobRead( void * data );
-        void   GenerateMipmapPyramid();
-        void * GetAPIDependentData() const;
+        void   readMipmap( size_t face, size_t level, MipmapData & data );
+        void   blobWrite( const void * data, size_t length );
+        size_t blobRead( void * data );
+        void   generateMipmapPyramid();
+        void * getAPIDependentData() const;
 
         // ********************************
         // private variables

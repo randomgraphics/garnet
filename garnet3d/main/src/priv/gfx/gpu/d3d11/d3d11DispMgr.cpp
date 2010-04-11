@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d11Gpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D11");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D11");
 
 // *****************************************************************************
 // device management
@@ -14,8 +14,8 @@ bool GN::gfx::D3D11Gpu::dispInit()
 {
     GN_GUARD;
 
-    const GpuOptions & ro = GetOptions();
-    const DispDesc & dd = GetDispDesc();
+    const GpuOptions & ro = getOptions();
+    const DispDesc & dd = getDispDesc();
 
     UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
     if( ro.debug ) flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -102,16 +102,16 @@ void GN::gfx::D3D11Gpu::dispQuit()
     GN_GUARD;
 
     // switch back to windowed mode, before destroy the swap chain.
-    if( mSwapChain && GetOptions().fullscreen )
+    if( mSwapChain && getOptions().fullscreen )
     {
         mSwapChain->SetFullscreenState( FALSE, NULL );
     }
 
-    SafeRelease( mD3D11Debug );
-    SafeRelease( mDeviceContext );
-    SafeRelease( mSwapChain );
-    SafeRelease( mDevice );
-    SafeRelease( mAdapter );
+    safeRelease( mD3D11Debug );
+    safeRelease( mDeviceContext );
+    safeRelease( mSwapChain );
+    safeRelease( mDevice );
+    safeRelease( mAdapter );
 
     GN_UNGUARD;
 }

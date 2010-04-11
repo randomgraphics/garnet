@@ -55,8 +55,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonGpuProgramASM( XenonGpu & r ) : XenonResource(r) { Clear(); }
-        virtual ~XenonGpuProgramASM() { Quit(); }
+        XenonGpuProgramASM( XenonGpu & r ) : XenonResource(r) { clear(); }
+        virtual ~XenonGpuProgramASM() { quit(); }
         //@}
 
         // ********************************
@@ -65,10 +65,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuProgramDesc & desc );
-        void Quit();
+        bool init( const GpuProgramDesc & desc );
+        void quit();
     private:
-        void Clear() { mVs = 0; mPs = 0; }
+        void clear() { mVs = 0; mPs = 0; }
         //@}
 
         // ********************************
@@ -125,8 +125,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XenonGpuProgramHLSL( XenonGpu & r ) : XenonResource(r) { Clear(); }
-        virtual ~XenonGpuProgramHLSL() { Quit(); }
+        XenonGpuProgramHLSL( XenonGpu & r ) : XenonResource(r) { clear(); }
+        virtual ~XenonGpuProgramHLSL() { quit(); }
         //@}
 
         // ********************************
@@ -135,10 +135,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( const GpuProgramDesc & desc );
-        void Quit();
+        bool init( const GpuProgramDesc & desc );
+        void quit();
     private:
-        void Clear() { mVs = 0; mVsConsts = 0; mPs = 0; mPsConsts = 0; }
+        void clear() { mVs = 0; mVsConsts = 0; mPs = 0; mPsConsts = 0; }
         //@}
 
         // ********************************

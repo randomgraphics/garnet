@@ -2,7 +2,7 @@
 #include "mtidxbuf.h"
 #include "mtgpuCmd.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtidxbuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu.mtidxbuf");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -11,23 +11,23 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu.mtidxbuf");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MultiThreadIdxBuf::Init( IdxBuf * ib )
+bool GN::gfx::MultiThreadIdxBuf::init( IdxBuf * ib )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::MultiThreadIdxBuf, () );
 
-    if( NULL == ib ) return Failure();
+    if( NULL == ib ) return failure();
 
     mIdxBuf = ib;
 
-    const IdxBufDesc & desc = mIdxBuf->GetDesc();
+    const IdxBufDesc & desc = mIdxBuf->getDesc();
 
-    SetDesc( desc );
+    setDesc( desc );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -35,7 +35,7 @@ bool GN::gfx::MultiThreadIdxBuf::Init( IdxBuf * ib )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::Quit()
+void GN::gfx::MultiThreadIdxBuf::quit()
 {
     GN_GUARD;
 
@@ -45,7 +45,7 @@ void GN::gfx::MultiThreadIdxBuf::Quit()
         mIdxBuf = NULL;
     }
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -58,16 +58,16 @@ void GN::gfx::MultiThreadIdxBuf::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::MultiThreadIdxBuf::update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag )
 {
     if( 0 == length )
     {
-        const IdxBufDesc & desc = GetDesc();
-        size_t maxlen = desc.numidx * ( desc.bits32 ? 4 : 2 );
+        const IdxBufDesc & d = getDesc();
+        size_t maxlen = d.numidx * ( d.bits32 ? 4 : 2 );
         length = maxlen - offset;
     }
 
-    void * tmpbuf = HeapMemory::Alloc( length );
+    void * tmpbuf = HeapMemory::alloc( length );
     if( NULL == tmpbuf )
     {
         GN_ERROR(sLogger)( "fail to allocate temporary buffer." );
@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadIdxBuf::Update( size_t offset, size_t length, const voi
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadIdxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::MultiThreadIdxBuf::readback( DynaArray<UInt8> & data )
 {
     mGpu.postCommand2( CMD_IDXBUF_READBACK, mIdxBuf, &data );
 }
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
     void func_IDXBUF_DESTROY( Gpu &, void * p, size_t )
     {
         IdxBuf * ib = *(IdxBuf**)p;
-        ib->DecRef();
+        ib->decref();
     }
 
     //
@@ -117,9 +117,9 @@ namespace GN { namespace gfx
 
         IdxBufUpdateParam * vbup = (IdxBufUpdateParam*)p;
 
-        vbup->idxbuf->Update( vbup->offset, vbup->length, vbup->data, vbup->flag );
+        vbup->idxbuf->update( vbup->offset, vbup->length, vbup->data, vbup->flag );
 
-        HeapMemory::Free( vbup->data );
+        HeapMemory::dealloc( vbup->data );
     }
 
     //
@@ -134,7 +134,7 @@ namespace GN { namespace gfx
         };
         IdxBufReadBackParam * vbrp = (IdxBufReadBackParam*)p;
 
-        vbrp->ib->Readback( *vbrp->buf );
+        vbrp->ib->readback( *vbrp->buf );
      }
 }}
 

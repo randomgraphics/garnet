@@ -8,7 +8,6 @@ JAVADOC_AUTOBRIEF      = YES
 HIDE_IN_BODY_DOCS      = NO
 SORT_BY_SCOPE_NAME     = YES
 QUIET                  = YES
-WARN_IF_UNDOCUMENTED   = NO
 INPUT                  = src/priv
 FILE_PATTERNS          = *.h *.inl
 EXCLUDE                = src/priv/experimental src/priv/gfx/rndr
@@ -20,12 +19,10 @@ HHC_LOCATION           = "$HHC_LOCATION"
 GENERATE_TREEVIEW      = YES
 GENERATE_LATEX         = NO
 MACRO_EXPANSION        = YES
-PREDEFINED             = GN_BUILD_VARIANT=0 \
-                         GN_MSWIN \
+PREDEFINED             = GN_MSWIN \
                          GN_POSIX \
                          GN_CASSERT(X)="" \
-                         THIS \
-                         THIS_ \
+                         THIS THIS_ \
                          STDMETHODCALLTYPE \
                          STDMETHOD(X)="virtual HRESULT X" \
                          STDMETHOD_(R,X)="virtual R X"

@@ -27,7 +27,7 @@ namespace GN { namespace input
         //@{
     public:
         InputX11();
-        virtual ~InputX11() { Quit(); }
+        virtual ~InputX11() { quit(); }
         //@}
 
         // ********************************
@@ -36,10 +36,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mDisplay = 0;
             mWindow = 0;
@@ -51,9 +51,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        virtual bool AttachToWindow( HandleType, HandleType );
-        virtual void ProcessInputEvents();
-        virtual void GetMousePosition( int &, int & ) const;
+        virtual bool attachToWindow( HandleType, HandleType );
+        virtual void processInputEvents();
+        virtual void getMousePosition( int &, int & ) const;
 
         // ********************************
         // public functions

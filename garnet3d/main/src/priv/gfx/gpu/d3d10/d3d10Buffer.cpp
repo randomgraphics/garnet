@@ -2,7 +2,7 @@
 #include "d3d10Buffer.h"
 #include "d3d10Gpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10.Buffer");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10.Buffer");
 
 // *****************************************************************************
 // init / quit functions
@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::Init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
+bool GN::gfx::D3D10Buffer::init( size_t bytes, bool fastCpuWrite, UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -22,7 +22,7 @@ bool GN::gfx::D3D10Buffer::Init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
     if( 0 == bytes )
     {
         GN_ERROR(sLogger)( "Buffer length can not be zero!" );
-        return Failure();
+        return failure();
     }
 
     ID3D10Device & dev = getDeviceRef();
@@ -35,14 +35,14 @@ bool GN::gfx::D3D10Buffer::Init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
     d3ddesc.MiscFlags      = 0;
 
     // create d3d ibuffer
-    GN_DX_CHECK_RETURN( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), Failure() );
+    GN_DX_CHECK_RETURN( dev.CreateBuffer( &d3ddesc, 0, &mD3DBuffer ), failure() );
 
     // store buffer parameters
     mBytes        = bytes;
     mFastCpuWrite = fastCpuWrite;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -50,13 +50,13 @@ bool GN::gfx::D3D10Buffer::Init( size_t bytes, bool fastCpuWrite, UInt32 bindFla
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::Quit()
+void GN::gfx::D3D10Buffer::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mD3DBuffer );
+    safeRelease( mD3DBuffer );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -76,7 +76,7 @@ static const D3D10_MAP SURFACE_UPDATE_FLAG_TO_D3D10_MAP[] =
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::Update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
+void GN::gfx::D3D10Buffer::update( size_t offset, size_t bytes, const void * data, SurfaceUpdateFlag flag )
 {
     PIXPERF_FUNCTION_EVENT();
 
@@ -112,11 +112,11 @@ void GN::gfx::D3D10Buffer::Update( size_t offset, size_t bytes, const void * dat
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Buffer::Readback( DynaArray<UInt8> & data )
+void GN::gfx::D3D10Buffer::readback( DynaArray<UInt8> & data )
 {
     PIXPERF_FUNCTION_EVENT();
 
-    data.Clear();
+    data.clear();
 
     GN_UNIMPL();
 }

@@ -23,7 +23,7 @@ class RenderToTexture : public SampleApp
         Vector3f vertices[24];
         UInt16   indices[36];
 
-        CreateBox( 100, 100, 100,
+        createBox( 100, 100, 100,
             (float*)vertices, sizeof(Vector3f),
             NULL, 0, // texcoord
             NULL, 0, // normal
@@ -34,44 +34,44 @@ class RenderToTexture : public SampleApp
             );
 
         MeshResourceDesc desc;
-        desc.Clear();
+        desc.clear();
         desc.prim = PrimitiveType::TRIANGLE_LIST;
         desc.numvtx = 24;
         desc.numidx = 36;
         desc.vtxfmt.numElements = 1;
-        desc.vtxfmt.elements[0].BindTo( "POSITION", 0 );
+        desc.vtxfmt.elements[0].bindTo( "POSITION", 0 );
         desc.vtxfmt.elements[0].format = ColorFormat::RGB_32_32_32_FLOAT;
         desc.vertices[0] = vertices;
         desc.indices = indices;
 
-        return m->Reset( &desc );
+        return m->reset( &desc );
     }
 
 public:
 
-    bool OnInit()
+    bool onInit()
     {
-        world.Identity();
-        view.Translate( 0, 0, -200 );
-        proj.PerspectiveD3DRh( 1.0f, 4.0f/3.0f, 100.0f, 1000.0f );
+        world.identity();
+        view.translate( 0, 0, -200 );
+        proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 100.0f, 1000.0f );
         arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 
-        Gpu                 & gpu = GetGpu();
-        GpuResourceDatabase & gdb = GetGdb();
+        Gpu                 & gpu = getGpu();
+        GpuResourceDatabase & gdb = getGdb();
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
         for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
-            faces[i].Attach( LoadTextureFromFile( gpu, name ) );
+            faces[i].attach( loadTextureFromFile( gpu, name ) );
             if( 0 == faces[i] ) return false;
         }
 
         // create cube render target
-        cubemap = gdb.CreateResource<TextureResource>( NULL );
+        cubemap = gdb.createResource<TextureResource>( NULL );
         if( !cubemap ) return false;
         TextureDesc texdesc;
         texdesc.width = texdesc.height = 512;
@@ -80,77 +80,77 @@ public:
         texdesc.levels = 1;
         texdesc.format = ColorFormat::RGBA32;
         texdesc.usage = TextureUsage::COLOR_RENDER_TARGET;
-        if( !cubemap->Reset( &texdesc ) ) return false;
+        if( !cubemap->reset( &texdesc ) ) return false;
 
         // load cube texture rendering effect
-        AutoRef<EffectResource> cubefx = EffectResource::LoadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );
+        AutoRef<EffectResource> cubefx = EffectResource::loadFromFile( gdb, "media::cube/cube_on_cube.effect.xml" );
         if( !cubefx ) return false;
 
         // load cube mesh
-        AutoRef<MeshResource> cubemesh = gdb.CreateResource<MeshResource>( NULL );
+        AutoRef<MeshResource> cubemesh = gdb.createResource<MeshResource>( NULL );
         if( !cubemesh ) return false;
         if( !initMesh( cubemesh ) ) return false;
 
         // create cube model
-        box = gdb.CreateResource<ModelResource>( NULL );
+        box = gdb.createResource<ModelResource>( NULL );
         if( !box ) return false;
 
         // setup model effect and textures
-        box->SetEffectResource( cubefx );
-        box->SetMeshResource( cubemesh );
-        box->SetTextureResource( "cube", cubemap );
+        box->setEffectResource( cubefx );
+        box->setMeshResource( cubemesh );
+        box->setTextureResource( "cube", cubemap );
 
         // initial arcball window
-        const DispDesc & dd = gpu.GetDispDesc();
+        const DispDesc & dd = gpu.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
         // initialize GPU context
-        gc.Clear();
+        gc.clear();
 
         return true;
     }
 
-    void OnQuit()
+    void onQuit()
     {
-        for( int i = 0; i < 6; ++i ) faces[i].Clear();
-        cubemap.Clear();
-        box.Clear();
-        gc.Clear();
+        for( int i = 0; i < 6; ++i ) faces[i].clear();
+        cubemap.clear();
+        box.clear();
+        gc.clear();
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
         world = arcball.getRotationMatrix44();
         pvw = proj * view * world;
-        box->GetUniformResource("pvw")->GetUniform()->Update( pvw );
+        box->uniformResource("pvw")->uniform()->update( pvw );
     }
 
-    void OnRender()
+    void onRender()
     {
-        Gpu            & gpu = GetGpu();
-        SpriteRenderer & sr = GetSpriteRenderer();
+        Gpu            & gpu = getGpu();
+        SpriteRenderer & sr = spriteRenderer();
 
         // draw to cubemap
-        gc.colortargets.Resize( 1 );
-        gc.colortargets[0].texture = cubemap->GetTexture();
+        gc.colortargets.resize( 1 );
+        gc.colortargets[0].texture = cubemap->texture();
         gc.colortargets[0].subsurface = 0;
         for( int i = 0; i < 6; ++i )
         {
             gc.colortargets[0].face = i;
-            gpu.BindContext( gc );
-            sr.DrawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
+            gpu.bindContext( gc );
+            sr.drawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
         }
 
         // draw the cube model to screen
-        gc.colortargets.Clear();
-        gpu.BindContext( gc );
-        gpu.ClearScreen();
-        box->Draw();
+        gc.colortargets.clear();
+        gpu.bindContext( gc );
+        gpu.clearScreen();
+        box->draw();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
     RenderToTexture app;
-    return app.Run( argc, argv );
+    return app.run( argc, argv );
 }

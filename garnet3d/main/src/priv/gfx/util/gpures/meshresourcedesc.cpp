@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // Local stuff
@@ -74,7 +74,7 @@ void sSwapVertexEndianInplace(
     size_t               stream,
     size_t               stride )
 {
-    if( stride == 0 ) stride = format.CalcStreamStride( stream );
+    if( stride == 0 ) stride = format.calcStreamStride( stream );
 
     UInt8 * vertex = (UInt8*)buffer;
 
@@ -95,15 +95,15 @@ void sSwapVertexEndianInplace(
                 case ColorFormat::LAYOUT_5_5_5_1 :
                 case ColorFormat::LAYOUT_5_6_5 :
                 case ColorFormat::LAYOUT_16 :
-                    SwapEndian8In16( p, p, 1 );
+                    swap8in16( p, p, 1 );
                     break;
 
                 case ColorFormat::LAYOUT_16_16 :
-                    SwapEndian8In16( p, p, 2 );
+                    swap8in16( p, p, 2 );
                     break;
 
                 case ColorFormat::LAYOUT_16_16_16_16 :
-                    SwapEndian8In16( p, p, 4 );
+                    swap8in16( p, p, 4 );
                     break;
 
                 // 32 bits
@@ -111,19 +111,19 @@ void sSwapVertexEndianInplace(
                 case ColorFormat::LAYOUT_11_11_10 :
                 case ColorFormat::LAYOUT_10_10_10_2 :
                 case ColorFormat::LAYOUT_32 :
-                    SwapEndian8In32( p, p, 1 );
+                    swap8in32( p, p, 1 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32 :
-                    SwapEndian8In32( p, p, 2 );
+                    swap8in32( p, p, 2 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32_32 :
-                    SwapEndian8In32( p, p, 3 );
+                    swap8in32( p, p, 3 );
                     break;
 
                 case ColorFormat::LAYOUT_32_32_32_32 :
-                    SwapEndian8In32( p, p, 4 );
+                    swap8in32( p, p, 4 );
                     break;
 
                 // other cases
@@ -144,11 +144,11 @@ void sSwapIndexEndianInplace(
 {
     if( idx32 )
     {
-        SwapEndian8In32( buffer, buffer, bufferSize / 4 );
+        swap8in32( buffer, buffer, bufferSize / 4 );
     }
     else
     {
-        SwapEndian8In16( buffer, buffer, bufferSize / 2 );
+        swap8in16( buffer, buffer, bufferSize / 2 );
     }
 }
 
@@ -161,9 +161,9 @@ const VertexElement * sFindPositionElement( const VertexFormat & vf )
     {
         const VertexElement & e = vf.elements[i];
 
-        if( ( 0 == StringCompareI( "position", e.binding ) ||
-              0 == StringCompareI( "pos", e.binding ) ||
-              0 == StringCompareI( "gl_vertex", e.binding ) )
+        if( ( 0 == stringCompareI( "position", e.binding ) ||
+              0 == stringCompareI( "pos", e.binding ) ||
+              0 == stringCompareI( "gl_vertex", e.binding ) )
             &&
             0 == e.bindingIndex )
         {
@@ -211,7 +211,7 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
     }
     else
     {
-        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.ToString().ToRawPtr() );
+        GN_ERROR(sLogger)( "AABB calculation failed: unsupported vertex format %s", positionElement->format.toString().cptr() );
         return false;
     }
     pos.strideX = pos.strideY = pos.strideZ = desc.strides[positionElement->stream];
@@ -224,18 +224,18 @@ bool sGetMeshVertexPositions( MeshVertexPosition & pos, const MeshResourceDesc &
 // -----------------------------------------------------------------------------
 MeshFileType sDetermineMeshFileType( File & fp )
 {
-    size_t currentPos = fp.Tell();
+    size_t currentPos = fp.tell();
 
     char buf[16];
 
     size_t readen;
-    if( !fp.Read( buf, 16, &readen ) )
+    if( !fp.read( buf, 16, &readen ) )
     {
         GN_ERROR(sLogger)( "Fail to read mesh file header." );
         return MESH_FILE_UNKNOWN;
     }
 
-    if( !fp.Seek( currentPos, FileSeek::SET ) )
+    if( !fp.seek( currentPos, FileSeek::SET ) )
     {
         GN_ERROR(sLogger)( "Fail to seek mesh file reading cursor back." );
         return MESH_FILE_UNKNOWN;
@@ -245,7 +245,7 @@ MeshFileType sDetermineMeshFileType( File & fp )
     {
         return MESH_FILE_BIN;
     }
-    else if( 0 == StringCompareI( buf, "<?xml", 5 ) )
+    else if( 0 == stringCompareI( buf, "<?xml", 5 ) )
     {
         return MESH_FILE_XML;
     }
@@ -263,7 +263,7 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 {
     MeshBinaryFileHeaderV2 header;
 
-    if( !fp.Read( &header, sizeof(header), NULL ) )
+    if( !fp.read( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read mesh header." );
         return AutoRef<Blob>::NULLREF;
@@ -292,12 +292,12 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 
     // read mesh data
     AutoRef<Blob> blob( new SimpleBlob(header.bytes) );
-    if( !fp.Read( blob->Data(), header.bytes, NULL ) )
+    if( !fp.read( blob->data(), header.bytes, NULL ) )
     {
         GN_ERROR(sLogger)( "fail to read mesh data." );
         return AutoRef<Blob>::NULLREF;
     }
-    UInt8 * start = (UInt8*)blob->Data();
+    UInt8 * start = (UInt8*)blob->data();
 
     desc.prim   = (PrimitiveType)header.prim;
     desc.numvtx = header.numvtx;
@@ -338,13 +338,13 @@ AutoRef<Blob> sLoadFromMeshBinaryFile( File & fp, MeshResourceDesc & desc )
 // -----------------------------------------------------------------------------
 static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.FindAttrib( attribName );
+    const XmlAttrib * a = node.findAttrib( attribName );
 
     if( !a )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing.",
-            node.name.ToRawPtr(),
+            node.name.cptr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
     }
 
@@ -357,8 +357,8 @@ static const XmlAttrib * sGetRequiredAttrib( const XmlElement & node, const char
 template<typename T>
 static bool sGetIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.FindAttrib( attribName );
-    return a && 0 != String2Integer<T>( result, a->value.ToRawPtr() );
+    const XmlAttrib * a = node.findAttrib( attribName );
+    return a && 0 != string2Integer<T>( result, a->value.cptr() );
 }
 
 //
@@ -381,12 +381,12 @@ static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defa
 template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.FindAttrib( attribName );
-    if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a || 0 == string2Integer<T>( result, a->value.cptr() ) )
     {
         GN_ERROR(sLogger)(
             "Element <%s>: attribute \"%s\" is missing or is not a valid integer.",
-            node.name.ToRawPtr(),
+            node.name.cptr(),
             attribName ? attribName : "!!!NULLPTR!!!" );
         return false;
     }
@@ -401,16 +401,16 @@ static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const ch
 // -----------------------------------------------------------------------------
 static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defaultValue )
 {
-    const XmlAttrib * a = node.FindAttrib( attribName );
+    const XmlAttrib * a = node.findAttrib( attribName );
     if( !a ) return defaultValue;
 
-    if( 0 == StringCompareI( "1", a->value.ToRawPtr() ) ||
-        0 == StringCompareI( "true", a->value.ToRawPtr() ) )
+    if( 0 == stringCompareI( "1", a->value.cptr() ) ||
+        0 == stringCompareI( "true", a->value.cptr() ) )
     {
         return true;
     }
-    else if( 0 == StringCompareI( "0", a->value.ToRawPtr() ) ||
-             0 == StringCompareI( "false", a->value.ToRawPtr() ) )
+    else if( 0 == stringCompareI( "0", a->value.cptr() ) ||
+             0 == stringCompareI( "false", a->value.cptr() ) )
     {
         return false;
     }
@@ -425,10 +425,10 @@ static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bo
 // -----------------------------------------------------------------------------
 static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t length, const char * filename )
 {
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return false;
 
-    if( !fp->Read( &header, sizeof(header), NULL ) )
+    if( !fp->read( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read garnet binary file header: %s", filename );
         return false;
@@ -440,7 +440,7 @@ static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t 
         return false;
     }
 
-    if( !fp->Read( dst, length, NULL ) )
+    if( !fp->read( dst, length, NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to read binary data from file: %s", filename );
         return false;
@@ -454,36 +454,36 @@ static bool sReadV1BinaryFile( MeshBinaryHeaderV1 & header, UInt8 * dst, size_t 
 // -----------------------------------------------------------------------------
 AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 {
-    desc.Clear();
+    desc.clear();
 
     XmlDocument doc;
     XmlParseResult xpr;
-    if( !doc.Parse( xpr, fp ) )
+    if( !doc.parse( xpr, fp ) )
     {
         GN_ERROR(sLogger)(
             "Fail to parse XML file (%s):\n"
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            fp.Name(),
+            fp.name(),
             xpr.errLine,
             xpr.errColumn,
-            xpr.errInfo.ToRawPtr() );
+            xpr.errInfo.cptr() );
         return AutoRef<Blob>::NULLREF;
     }
     GN_ASSERT( xpr.root );
 
-    const XmlElement * root = xpr.root->ToElement();
+    const XmlElement * root = xpr.root->toElement();
     if( !root || root->name != "mesh" )
     {
         GN_ERROR(sLogger)( "Invalid root element." );
         return AutoRef<Blob>::NULLREF;
     }
 
-    const XmlAttrib * a = root->FindAttrib( "primtype" );
+    const XmlAttrib * a = root->findAttrib( "primtype" );
     if( !a || PrimitiveType::INVALID == (desc.prim = PrimitiveType::sFromString(a->value)) )
     {
-        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.ToRawPtr(), "primtype" );
+        GN_ERROR(sLogger)( "Element <%s> attribute \"%s\": missing or invalid.", root->name.cptr(), "primtype" );
         return AutoRef<Blob>::NULLREF;
     }
 
@@ -502,7 +502,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     desc.dynaib = sGetBoolAttrib( *root, "dynaib", false );
 
     // get vertex format
-    const XmlElement * vtxfmtNode = root->FindChildElement( "vtxfmt" );
+    const XmlElement * vtxfmtNode = root->findChildElement( "vtxfmt" );
     if( !vtxfmtNode )
     {
         GN_ERROR(sLogger)( "<vtxfmt> element is missing." );
@@ -510,12 +510,12 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     }
     for( const XmlNode * n = vtxfmtNode->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->ToElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "attrib" != e->name )
         {
-            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.ToRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized vertex format element: <%s>.", e->name.cptr() );
             continue;
         }
 
@@ -536,9 +536,9 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
             return AutoRef<Blob>::NULLREF;
         }
 
-        ve.BindTo( a->value, bidx );
+        ve.bindTo( a->value, bidx );
 
-        a = e->FindAttrib( "format" );
+        a = e->findAttrib( "format" );
         if( !a || (ColorFormat::UNKNOWN == (ve.format = ColorFormat::sFromString(a->value)) ) )
         {
             GN_ERROR(sLogger)( "Missing or invalid format attribute." );
@@ -552,7 +552,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
     size_t meshDataSize = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->ToElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "vtxbuf" == e->name )
@@ -587,7 +587,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.ToRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
         }
     }
 
@@ -598,14 +598,14 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         return AutoRef<Blob>::NULLREF;
     }
 
-    StrA basedir = fs::DirName( fp.Name() );
+    StrA basedir = fs::dirName( fp.name() );
 
     // parse vtxbuf and idxbuf elements, again, to read, calculate mesh data size
-    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->Data(), blob->Size() );
+    SafeArrayAccessor<UInt8> meshData( (UInt8*)blob->data(), blob->size() );
     size_t offset = 0;
     for( const XmlNode * n = root->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->ToElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "vtxbuf" == e->name )
@@ -618,10 +618,10 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t vbsize = desc.strides[stream] * desc.numvtx;
 
-            UInt8 * vb = meshData.SubRange( offset, vbsize );
+            UInt8 * vb = meshData.subrange( offset, vbsize );
 
             MeshBinaryHeaderV1 header;
-            if( !sReadV1BinaryFile( header, vb, vbsize, fs::ResolvePath( basedir, a->value ) ) )
+            if( !sReadV1BinaryFile( header, vb, vbsize, fs::resolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
             }
@@ -642,10 +642,10 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 
             size_t ibsize = desc.numidx * (desc.idx32?4:2);
 
-            UInt8 * ib = meshData.SubRange( offset, ibsize );
+            UInt8 * ib = meshData.subrange( offset, ibsize );
 
             MeshBinaryHeaderV1 header;
-            if( !sReadV1BinaryFile( header, ib, ibsize, fs::ResolvePath( basedir, a->value ) ) )
+            if( !sReadV1BinaryFile( header, ib, ibsize, fs::resolvePath( basedir, a->value ) ) )
             {
                 return AutoRef<Blob>::NULLREF;
             }
@@ -665,7 +665,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.ToRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element: <%s>.", e->name.cptr() );
         }
     }
 
@@ -680,7 +680,7 @@ AutoRef<Blob> sLoadFromMeshXMLFile( File & fp, MeshResourceDesc & desc )
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResourceDesc::CalculateBoundingBox( Box<float> & box ) const
+GN::gfx::MeshResourceDesc::calculateBoundingBox( Box<float> & box ) const
 {
     box.x = box.y = box.w = box.h = 0.0f;
 
@@ -688,29 +688,29 @@ GN::gfx::MeshResourceDesc::CalculateBoundingBox( Box<float> & box ) const
 
     if( !sGetMeshVertexPositions( positions, *this ) ) return;
 
-    GN::CalculateBoundingBox( box, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+    GN::calculateBoundingBox( box, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::MeshResourceDesc::CalculateBoundingSphere( Sphere<float> & sphere ) const
+GN::gfx::MeshResourceDesc::calculateBoundingSphere( Sphere<float> & sphere ) const
 {
-    sphere.center.Set( 0, 0, 0 );
+    sphere.center.set( 0, 0, 0 );
     sphere.radius = 0;
 
     MeshVertexPosition positions;
 
     if( !sGetMeshVertexPositions( positions, *this ) ) return;
 
-    GN::CalculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
+    GN::calculateBoundingSphere( sphere, positions.x, positions.strideX, positions.y, positions.strideY, positions.z, positions.strideZ, numvtx );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::GetVtxBufSize( size_t stream ) const
+size_t GN::gfx::MeshResourceDesc::getVtxBufSize( size_t stream ) const
 {
     if( stream >= GpuContext::MAX_VERTEX_BUFFERS )
     {
@@ -732,7 +732,7 @@ size_t GN::gfx::MeshResourceDesc::GetVtxBufSize( size_t stream ) const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::MeshResourceDesc::GetIdxBufSize() const
+size_t GN::gfx::MeshResourceDesc::getIdxBufSize() const
 {
     return numidx * (idx32?4:2);
 }
@@ -740,9 +740,9 @@ size_t GN::gfx::MeshResourceDesc::GetIdxBufSize() const
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::LoadFromFile( File & fp )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( File & fp )
 {
-    Clear();
+    clear();
 
     switch( sDetermineMeshFileType( fp ) )
     {
@@ -761,22 +761,22 @@ AutoRef<Blob> GN::gfx::MeshResourceDesc::LoadFromFile( File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-AutoRef<Blob> GN::gfx::MeshResourceDesc::LoadFromFile( const char * filename )
+AutoRef<Blob> GN::gfx::MeshResourceDesc::loadFromFile( const char * filename )
 {
     GN_INFO(sLogger)( "Load mesh from file: %s", filename?filename:"<null filename>" );
 
-    Clear();
+    clear();
 
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "rb" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "rb" ) );
     if( !fp ) return AutoRef<Blob>::NULLREF;
 
-    return LoadFromFile( *fp );
+    return loadFromFile( *fp );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
+bool GN::gfx::MeshResourceDesc::saveToFile( File & fp ) const
 {
     VertexFormatProperties vfp;
     if( !vfp.analyze( vtxfmt ) ) return false;
@@ -824,7 +824,7 @@ bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
     }
 
     // write header
-    if( !fp.Write( &header, sizeof(header), NULL ) )
+    if( !fp.write( &header, sizeof(header), NULL ) )
     {
         GN_ERROR(sLogger)( "Fail to write mesh header." );
         return false;
@@ -835,7 +835,7 @@ bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
     {
         if( vfp.used[i] )
         {
-            if( !fp.Write( this->vertices[i], vbsizes[i], NULL ) )
+            if( !fp.write( this->vertices[i], vbsizes[i], NULL ) )
             {
                 GN_ERROR(sLogger)( "Fail to write vertex buffer %i", i );
                 return false;
@@ -846,7 +846,7 @@ bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
     // write index buffer
     if( numidx > 0 )
     {
-        if( !fp.Write( this->indices, ibsize, NULL ) )
+        if( !fp.write( this->indices, ibsize, NULL ) )
         {
             GN_ERROR(sLogger)( "Fail to write index buffer" );
             return false;
@@ -859,11 +859,11 @@ bool GN::gfx::MeshResourceDesc::SaveToFile( File & fp ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::MeshResourceDesc::SaveToFile( const char * filename ) const
+bool GN::gfx::MeshResourceDesc::saveToFile( const char * filename ) const
 {
     GN_INFO(sLogger)( "Save mesh to file: %s", filename?filename:"<null filename>" );
 
-    AutoObjPtr<File> fp( fs::OpenFile( filename, "wb" ) );
+    AutoObjPtr<File> fp( fs::openFile( filename, "wb" ) );
     if( !fp ) return false;
-    return SaveToFile( *fp );
+    return saveToFile( *fp );
 }

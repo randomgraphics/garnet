@@ -12,30 +12,30 @@ public:
 
         StrHashMap m(13);
 
-        m.Insert( "abc", 1 );
-        m.Insert( "abd", 2 );
+        m.insert( "abc", 1 );
+        m.insert( "abd", 2 );
 
         // find
         int * i;
-        i = m.Find( "abc" );
+        i = m.find( "abc" );
         TS_ASSERT_DIFFERS( i, (int*)NULL );
         TS_ASSERT_EQUALS( *i, 1 );
-        i = m.Find( "abcd" );
+        i = m.find( "abcd" );
         TS_ASSERT_EQUALS( i, (int*)NULL );
 
         // erase
-        m.Remove( "abe" );
-        TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
-        i = m.Find( "abc" );
-        m.Remove( "abd" );
-        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one item is removed.
-        TS_ASSERT_EQUALS( m.Find( "abd" ), (int*)NULL ); // verify correct item is erased.
-        TS_ASSERT_EQUALS( m.Find( "abc" ), i ); // verify that erase operation does not affect other iterators.
+        m.remove( "abe" );
+        TS_ASSERT_EQUALS( m.size(), 2 ); // erase non-existing item should have no effect.
+        i = m.find( "abc" );
+        m.remove( "abd" );
+        TS_ASSERT_EQUALS( m.size(), 1 ); // verify the one item is removed.
+        TS_ASSERT_EQUALS( m.find( "abd" ), (int*)NULL ); // verify correct item is erased.
+        TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
 
         // erase the very last item in string map, would leave the map empty.
-        m.Remove( "abc" );
-        TS_ASSERT( m.Empty() );
-        TS_ASSERT_EQUALS( m.Find( "abc" ), (int*)NULL );
+        m.remove( "abc" );
+        TS_ASSERT( m.empty() );
+        TS_ASSERT_EQUALS( m.find( "abc" ), (int*)NULL );
     }
 
     void testEmptyMap()
@@ -44,8 +44,8 @@ public:
 
         StrHashMap m;
 
-        TS_ASSERT( m.Empty() );
-        TS_ASSERT_EQUALS( 0, m.Size() );
+        TS_ASSERT( m.empty() );
+        TS_ASSERT_EQUALS( 0, m.size() );
     }
 
     void testEmptyMapIteration()
@@ -53,7 +53,7 @@ public:
         StrHashMap m;
 
         bool isempty = true;
-        for( StrHashMap::KeyValuePair * i = m.First(); i != NULL; i = m.Next( i ) )
+        for( StrHashMap::KeyValuePair * i = m.first(); i != NULL; i = m.next( i ) )
         {
             isempty = false;
         }
@@ -64,23 +64,23 @@ public:
     {
         StrHashMap m;
 
-        m.Insert( "a", 1 );
+        m.insert( "a", 1 );
 
         int count = 0;
-        for( const StrHashMap::KeyValuePair * i = m.First(); i != NULL; i = m.Next( i ) )
+        for( const StrHashMap::KeyValuePair * i = m.first(); i != NULL; i = m.next( i ) )
         {
             ++count;
         }
         TS_ASSERT( 1 == count );
 
-        m.Insert( "b", 2 );
+        m.insert( "b", 2 );
 
         TS_ASSERT( 2 == m["b"] );
 
         m["c"] = 3;
 
         count = 0;
-        for( const StrHashMap::KeyValuePair * i = m.First(); i != NULL; i = m.Next( i ) )
+        for( const StrHashMap::KeyValuePair * i = m.first(); i != NULL; i = m.next( i ) )
         {
             ++count;
         }
@@ -93,12 +93,12 @@ public:
 
         StrHashMap m;
 
-        TS_ASSERT( m.Insert( "a", 1 ) );
-        TS_ASSERT( !m.Insert( "a", 2 ) );
-        TS_ASSERT( m.Insert( "b", 2 ) );
+        TS_ASSERT( m.insert( "a", 1 ) );
+        TS_ASSERT( !m.insert( "a", 2 ) );
+        TS_ASSERT( m.insert( "b", 2 ) );
 
-        TS_ASSERT_EQUALS( 1, *m.Find("a") );
-        TS_ASSERT_EQUALS( 2, *m.Find("b") );
-        TS_ASSERT( !m.Find("c") );
+        TS_ASSERT_EQUALS( 1, *m.find("a") );
+        TS_ASSERT_EQUALS( 2, *m.find("b") );
+        TS_ASSERT( !m.find("c") );
     }
 };

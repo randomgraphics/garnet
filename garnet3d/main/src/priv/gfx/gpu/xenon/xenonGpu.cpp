@@ -17,7 +17,7 @@
 
 #endif
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Global functions
@@ -34,8 +34,8 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::XenonGpu> p( new GN::gfx::XenonGpu );
-    if( !p->Init( o ) ) return 0;
-    return p.Detach();
+    if( !p->init( o ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -47,11 +47,11 @@ GNgfxCreateGpu( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonGpu::Init( const GN::gfx::GpuOptions & o )
+bool GN::gfx::XenonGpu::init( const GN::gfx::GpuOptions & o )
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -59,14 +59,14 @@ bool GN::gfx::XenonGpu::Init( const GN::gfx::GpuOptions & o )
     GN_STDCLASS_INIT( GN::gfx::XenonGpu, (o) );
 
     // init sub-components
-    if( !dispInit()         ) return Failure();
-    if( !capsInit()         ) return Failure();
-    if( !resourceInit()     ) return Failure();
-    if( !contextInit()      ) return Failure();
-    if( !drawInit()         ) return Failure();
+    if( !dispInit()         ) return failure();
+    if( !capsInit()         ) return failure();
+    if( !resourceInit()     ) return failure();
+    if( !contextInit()      ) return failure();
+    if( !drawInit()         ) return failure();
 
     // successful
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -74,11 +74,11 @@ bool GN::gfx::XenonGpu::Init( const GN::gfx::GpuOptions & o )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::Quit()
+void GN::gfx::XenonGpu::quit()
 {
     GN_GUARD;
 
-    GN_ASSERT( GetCurrentThreadIdentifier() == mThreadId );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -100,7 +100,7 @@ void GN::gfx::XenonGpu::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonGpu::DumpNextFrame( size_t startBatchIndex, size_t numBatches )
+void GN::gfx::XenonGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
     GN_UNUSED_PARAM( startBatchIndex );
     GN_UNUSED_PARAM( numBatches );

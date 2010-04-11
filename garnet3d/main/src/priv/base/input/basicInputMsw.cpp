@@ -3,7 +3,7 @@
 
 #if GN_MSWIN && !GN_XENON
 
-static GN::Logger * sLogger = GN::GetLogger("GN.input.BasicInputMsw");
+static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
 
 // *****************************************************************************
 //    init / quit functions
@@ -12,7 +12,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.input.BasicInputMsw");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::Init()
+bool GN::input::BasicInputMsw::init()
 {
     GN_GUARD;
 
@@ -20,15 +20,15 @@ bool GN::input::BasicInputMsw::Init()
     GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
 
     // setup xinput function pointers
-    if( !setupXInputFunctionPointers() ) return Failure();
+    if( !setupXInputFunctionPointers() ) return failure();
 
     // initialize internal mouse position
     POINT pos;
-    GN_MSW_CHECK_RETURN( ::GetCursorPos( &pos ), Failure() );
+    GN_MSW_CHECK_RETURN( ::GetCursorPos( &pos ), failure() );
     updateMousePosition( pos.x, pos.y, false );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -36,7 +36,7 @@ bool GN::input::BasicInputMsw::Init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::Quit()
+void GN::input::BasicInputMsw::quit()
 {
     GN_GUARD;
 
@@ -46,7 +46,7 @@ void GN::input::BasicInputMsw::Quit()
     // release xinput library
     if( mXInputLibrary ) ::FreeLibrary( mXInputLibrary ), mXInputLibrary = 0;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -60,9 +60,9 @@ void GN::input::BasicInputMsw::Quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::ProcessInputEvents()
+void GN::input::BasicInputMsw::processInputEvents()
 {
-    BasicXInput::ProcessInputEvents();
+    BasicXInput::processInputEvents();
 
     ScopeMutex<Mutex> mutex( mEventQueueMutex );
 
@@ -86,7 +86,7 @@ void GN::input::BasicInputMsw::ProcessInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::AttachToWindow( HandleType, HandleType window )
+bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 {
     GN_GUARD;
 
@@ -123,7 +123,7 @@ bool GN::input::BasicInputMsw::AttachToWindow( HandleType, HandleType window )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicInputMsw::GetMousePosition( int & x, int & y ) const
+void GN::input::BasicInputMsw::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD_SLOW;
 
@@ -331,7 +331,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks( HWND hwnd )
         threadID );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
-        GN_ERROR(sLogger)( GetWin32LastErrorInfo() );
+        GN_ERROR(sLogger)( getWin32LastErrorInfo() );
         return false;
     }
 
@@ -400,7 +400,7 @@ GN::input::BasicInputMsw::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = SafeCastPtr<BasicInputMsw>(gInputPtr);
+    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const MSG * p = (const MSG*)lParam;
@@ -422,7 +422,7 @@ GN::input::BasicInputMsw::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicInputMsw * inst = SafeCastPtr<BasicInputMsw>(gInputPtr);
+    BasicInputMsw * inst = safeCastPtr<BasicInputMsw>(gInputPtr);
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;

@@ -2,7 +2,7 @@
 #include "xenonIdxBuf.h"
 #include "xenonGpu.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.xenon");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************
 // Local functions
@@ -52,7 +52,7 @@ sLockFlags2Xenon( GN::gfx::SurfaceUpdateFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
+bool GN::gfx::XenonIdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -62,12 +62,12 @@ bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
     if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "Index buffer size must be larger then zero." );
-        return Failure();
+        return failure();
     }
 
-    SetDesc( desc );
+    setDesc( desc );
 
-    IDirect3DDevice9 & dev = GetGpu().getDeviceInlined();
+    IDirect3DDevice9 & dev = getGpu().getDeviceInlined();
 
     // get bytes per index
     UInt32 bpi = 2 << (UInt32)desc.bits32;
@@ -83,10 +83,10 @@ bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
             0, // POOL
             &mIb,
             0 ),
-        Failure() );
+        failure() );
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -94,13 +94,13 @@ bool GN::gfx::XenonIdxBuf::Init( const IdxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::Quit()
+void GN::gfx::XenonIdxBuf::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mIb );
+    safeRelease( mIb );
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -114,7 +114,7 @@ void GN::gfx::XenonIdxBuf::Quit()
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::XenonIdxBuf::Update(
+GN::gfx::XenonIdxBuf::update(
     size_t            startidx,
     size_t            numidx,
     const void      * data,
@@ -122,12 +122,12 @@ GN::gfx::XenonIdxBuf::Update(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     // Note: this function may modify "numidx"
     if( !validateUpdateParameters( startidx, &numidx, data, flag ) ) return;
 
-    size_t bpi = 2 << (size_t)GetDesc().bits32;
+    size_t bpi = 2 << (size_t)getDesc().bits32;
 
     // Note: XDK does not support partial locking on index buffer
     UInt8 * buf;
@@ -146,15 +146,15 @@ GN::gfx::XenonIdxBuf::Update(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XenonIdxBuf::Readback( DynaArray<UInt8> & data )
+void GN::gfx::XenonIdxBuf::readback( DynaArray<UInt8> & data )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( Ok() );
+    GN_ASSERT( ok() );
 
     GN_UNIMPL();
 
-    data.Clear();
+    data.clear();
 
     GN_UNGUARD_SLOW;
 }

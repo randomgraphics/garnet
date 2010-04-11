@@ -4,7 +4,7 @@
 
 #if HAS_ICONV
 
-static GN::Logger * sLogger = GN::GetLogger("GN.base.codepage");
+static GN::Logger * sLogger = GN::getLogger("GN.base.codepage");
 
 using namespace GN;
 
@@ -71,7 +71,7 @@ static const char * sEncodingToLocal( CharacterEncodingConverter::Encoding e )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::CECImplICONV::Init(
+bool GN::CECImplICONV::init(
     CharacterEncodingConverter::Encoding from,
     CharacterEncodingConverter::Encoding to )
 {
@@ -82,7 +82,7 @@ bool GN::CECImplICONV::Init(
 
     const char * fromstr = sEncodingToLocal( from );
     const char * tostr   = sEncodingToLocal( to );
-    if( NULL == fromstr || NULL == tostr  ) return Failure();
+    if( NULL == fromstr || NULL == tostr  ) return failure();
 
     mIconv = iconv_open( tostr, fromstr );
     if( (iconv_t)-1 == mIconv )
@@ -97,15 +97,15 @@ bool GN::CECImplICONV::Init(
                 break;
 
             default:
-                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d (%s).", err, Errno2Str(err) );
+                GN_ERROR(sLogger)( "iconv_open() failed: errno=%d (%s).", err, errno2str(err) );
                 break;
         };
 
-        return Failure();
+        return failure();
     }
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -113,13 +113,13 @@ bool GN::CECImplICONV::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::CECImplICONV::Quit()
+void GN::CECImplICONV::quit()
 {
     GN_GUARD;
 
     if( mIconv ) iconv_close( mIconv ), mIconv = 0;
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -179,7 +179,7 @@ GN::CECImplICONV::convert(
                 break;
 
             default :
-                reason = Errno2Str( err );
+                reason = errno2str( err );
                 break;
         }
 

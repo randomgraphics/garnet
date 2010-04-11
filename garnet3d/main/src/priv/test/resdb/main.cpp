@@ -76,10 +76,10 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
 
-    ed.techniques["glsl"].passes.Resize( 1 );
+    ed.techniques["glsl"].passes.resize( 1 );
     ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
-    ed.techniques["hlsl"].passes.Resize( 1 );
+    ed.techniques["hlsl"].passes.resize( 1 );
     ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
 }
 
@@ -87,36 +87,36 @@ void initMeshDesc( MeshResourceDesc & md )
 {
     struct Vertex { float x, y, u, v; };
 
-    static Vertex vertices[] = {
+    static const Vertex vertices[] = {
         { -1.0f,  1.0f, 0.0f, 0.0f },
         { -1.0f, -1.0f, 0.0f, 1.0f },
         {  1.0f,  1.0f, 1.0f, 0.0f },
         {  1.0f, -1.0f, 1.0f, 1.0f },
     };
 
-    static UInt16 indices[] = { 0, 1, 2, 2, 1, 3 };
+    static const UInt16 indices[] = { 0, 1, 2, 2, 1, 3 };
 
     md.prim = PrimitiveType::TRIANGLE_LIST;
     md.numvtx = GN_ARRAY_COUNT( vertices );
     md.numidx = GN_ARRAY_COUNT( indices );
     md.vtxfmt = VertexFormat::XY_UV();
-    md.vertices[0] = vertices;
-    md.indices = indices;
+    md.vertices[0] = (void*)vertices;
+    md.indices = (void*)indices;
 }
 
-bool Init( Gpu & g )
+bool init( Gpu & g )
 {
     db = new GpuResourceDatabase( g );
 
     EffectResourceDesc ed;
     initEffectDesc( ed );
-    AutoRef<EffectResource> e = db->CreateResource<EffectResource>( "e0" );
-    if( !e || !e->Reset( &ed ) ) return false;
+    AutoRef<EffectResource> e = db->createResource<EffectResource>( "e0" );
+    if( !e || !e->reset( &ed ) ) return false;
 
     MeshResourceDesc med;
     initMeshDesc( med );
-    AutoRef<MeshResource> mesh = db->CreateResource<MeshResource>( "m0" );
-    if( !mesh || !mesh->Reset( &med ) ) return false;
+    AutoRef<MeshResource> mesh = db->createResource<MeshResource>( "m0" );
+    if( !mesh || !mesh->reset( &med ) ) return false;
 
     ModelResourceDesc mod;
     mod.effect = "e0";
@@ -124,80 +124,80 @@ bool Init( Gpu & g )
     mod.textures["ALBEDO_TEXTURE"].resourceName = "media::/texture/rabit.png";
     mod.uniforms["MATRIX_PVW"].size = sizeof(Matrix44f);
 
-    model = db->CreateResource<ModelResource>( "m0" ).Detach();
+    model = db->createResource<ModelResource>( "m0" ).detach();
     if( 0 == model ) return false;
 
-    if( !model->Reset( &mod ) ) return false;
+    if( !model->reset( &mod ) ) return false;
 
-    tex[0].Attach( LoadTextureFromFile( db->GetGpu(), "media::/texture/rabit.png" ) );
-    tex[1].Attach( LoadTextureFromFile( db->GetGpu(), "media::/texture/earth.jpg" ) );
+    tex[0].attach( loadTextureFromFile( db->getGpu(), "media::/texture/rabit.png" ) );
+    tex[1].attach( loadTextureFromFile( db->getGpu(), "media::/texture/earth.jpg" ) );
 
     // success
     return true;
 }
 
-void Quit( Gpu & )
+void quit( Gpu & )
 {
-    tex[0].Clear();
-    tex[1].Clear();
-    SafeDecref( model );
-    SafeDelete( db );
+    tex[0].clear();
+    tex[1].clear();
+    safeDecref( model );
+    safeDelete( db );
 }
 
-void Update( Input & in )
+void update( Input & in )
 {
-    KeyEvent k = in.PopLastKeyEvent();
+    KeyEvent k = in.popLastKeyEvent();
 
     if( KeyCode::SPACEBAR == k.code && k.status.down )
     {
         static int i = 0;
         i = ( i + 1 ) % 2;
 
-        AutoRef<TextureResource> t( db->FindResource<TextureResource>( "media::/texture/rabit.png" ) );
-        if( t ) t->SetTexture( tex[i] );
+        AutoRef<TextureResource> t( db->findResource<TextureResource>( "media::/texture/rabit.png" ) );
+        if( t ) t->setTexture( tex[i] );
     }
 }
 
-void Draw( Gpu & )
+void draw( Gpu & )
 {
-    AutoRef<UniformResource> u( model->GetUniformResource( "MATRIX_PVW" ) );
-    if( u ) u->GetUniform()->Update( Matrix44f::sIdentity() );
+    AutoRef<UniformResource> u( model->uniformResource( "MATRIX_PVW" ) );
+    if( u ) u->uniform()->update( Matrix44f::sIdentity() );
 
-    model->Draw();
+    model->draw();
 }
 
-int Run( Gpu & gpu )
+int run( Gpu & gpu )
 {
-    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
-        gpu.ProcessRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
-        in.ProcessInputEvents();
+        in.processInputEvents();
 
-        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
 
-        Update( in );
+        update( in );
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        Draw( gpu );
-        gpu.Present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    Quit( gpu );
+    quit( gpu );
 
     return 0;
 }
@@ -206,20 +206,20 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.GetDispDesc();
-        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
     }
 
     ~InputInitiator()
     {
-        ShutdownInputSystem();
+        shutdownInputSystem();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )
@@ -242,16 +242,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
-    int result = Run( *r );
+    int result = run( *r );
 
-    DeleteGpu( r );
+    deleteGpu( r );
 
     return result;
 }

@@ -22,7 +22,7 @@ namespace GN { namespace gfx
         ///
         /// Get the GPU that the resource belongs to.
         ///
-        D3D10Gpu & GetGpu() const { return mGpu; }
+        D3D10Gpu & getGpu() const { return mGpu; }
 
         ///
         /// Get reference to D3D10Device

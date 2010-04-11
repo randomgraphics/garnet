@@ -1,6 +1,6 @@
 #include "pch.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ScreenAlignedQuad");
+static GN::Logger * sLogger = GN::getLogger("GN.d3d10.ScreenAlignedQuad");
 
 // *****************************************************************************
 // local functions
@@ -17,7 +17,7 @@ static GN::Logger * sLogger = GN::GetLogger("GN.d3d10.ScreenAlignedQuad");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3d10::ScreenAlignedQuad::Init(
+bool GN::d3d10::ScreenAlignedQuad::init(
     ID3D10Device * device, const ScreenAlignedQuadDesc & desc )
 {
     GN_GUARD;
@@ -26,7 +26,7 @@ bool GN::d3d10::ScreenAlignedQuad::Init(
     GN_STDCLASS_INIT( GN::d3d10::ScreenAlignedQuad, () );
 
     // initialize mesh
-    if( !mMesh.Init( device ) ) return Failure();
+    if( !mMesh.init( device ) ) return failure();
     mMesh.beginVertices();
         mMesh.tex( desc.u1, desc.v1 ); mMesh.pos( desc.x1, desc.y1, desc.z );
         mMesh.tex( desc.u1, desc.v2 ); mMesh.pos( desc.x1, desc.y2, desc.z );
@@ -59,7 +59,7 @@ bool GN::d3d10::ScreenAlignedQuad::Init(
             D3D10_COMPARISON_ALWAYS
         },
     };
-    GN_DX_CHECK_RETURN( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), Failure() );
+    GN_DX_CHECK_RETURN( device->CreateDepthStencilState( &dsd, &mDepthStencilState ), failure() );
 
     // create internal shaders
     static const char * vscode =
@@ -82,11 +82,11 @@ bool GN::d3d10::ScreenAlignedQuad::Init(
     mVs      = compileAndCreateVS( *device, vscode );
     mPsTexed = compileAndCreatePS( *device, texedcode );
     mPsSolid = compileAndCreatePS( *device, solidcode );
-    if( 0 == mVs || 0 == mPsTexed || 0 == mPsSolid ) return Failure();
+    if( 0 == mVs || 0 == mPsTexed || 0 == mPsSolid ) return failure();
 
     // success
     mDevice = device;
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -94,18 +94,18 @@ bool GN::d3d10::ScreenAlignedQuad::Init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d10::ScreenAlignedQuad::Quit()
+void GN::d3d10::ScreenAlignedQuad::quit()
 {
     GN_GUARD;
 
-    SafeRelease( mDepthStencilState );
-    SafeRelease( mVs );
-    SafeRelease( mPsTexed );
-    SafeRelease( mPsSolid );
+    safeRelease( mDepthStencilState );
+    safeRelease( mVs );
+    safeRelease( mPsTexed );
+    safeRelease( mPsSolid );
 
-    mMesh.Quit();
+    mMesh.quit();
 
-    // standard Quit procedure
+    // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
@@ -128,5 +128,5 @@ void GN::d3d10::ScreenAlignedQuad::drawTexed( ID3D10ShaderResourceView * srv )
     mDevice->PSSetShaderResources( 0, 1, &srv );
     mDevice->PSSetSamplers( 0, 1, &nullsamp );
     mDevice->OMSetDepthStencilState( mDepthStencilState, 0 );
-    mMesh.DrawIndexed();
+    mMesh.drawIndexed();
 }

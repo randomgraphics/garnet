@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~MultiThreadUniform() { Quit(); }
+        MultiThreadUniform( MultiThreadGpu & r ) : mGpu(r) { clear(); }
+        virtual ~MultiThreadUniform() { quit(); }
         //@}
 
         // ********************************
@@ -33,10 +33,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( Uniform * );
-        void Quit();
+        bool init( Uniform * );
+        void quit();
     private:
-        void Clear() { mUniform = NULL; mFrontEndData = NULL; }
+        void clear() { mUniform = NULL; mFrontEndData = NULL; }
         //@}
 
         // ********************************
@@ -51,9 +51,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual size_t Size() const { return mSize; }
-        virtual const void * GetValue() const { return mFrontEndData; }
-        virtual void Update( size_t offset, size_t length, const void * data );
+        virtual size_t size() const { return mSize; }
+        virtual const void * getval() const { return mFrontEndData; }
+        virtual void update( size_t offset, size_t length, const void * data );
 
         // ********************************
         // private variables
@@ -84,8 +84,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { Clear(); }
-        virtual ~MultiThreadGpuProgram() { Quit(); }
+        MultiThreadGpuProgram( MultiThreadGpu & r ) : mGpu(r) { clear(); }
+        virtual ~MultiThreadGpuProgram() { quit(); }
         //@}
 
         // ********************************
@@ -94,10 +94,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool Init( GpuProgram * );
-        void Quit();
+        bool init( GpuProgram * );
+        void quit();
     private:
-        void Clear() { mGpuProgram = NULL; }
+        void clear() { mGpuProgram = NULL; }
         //@}
 
         // ********************************

@@ -17,17 +17,17 @@
 ///
 /// define a static instance of the timer
 ///
-#define GN_DEFINE_STATIC_PROFILER( name, desc ) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().GetTimer( desc )
+#define GN_DEFINE_STATIC_PROFILER( name, desc ) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().getTimer( desc )
 
 ///
 /// start a previously defined profile timer
 ///
-#define GN_START_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).Start()
+#define GN_START_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).start()
 
 ///
 /// stop a previously defined profile timer
 ///
-#define GN_STOP_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).Stop()
+#define GN_STOP_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).stop()
 
 ///
 /// define an automatic profiler that evaluate the time of its life-scope.
@@ -36,10 +36,10 @@
 
 #else
 
-#define GN_DEFINE_STATIC_PROFILER( name, desc )
+#define GN_DEFINE_STATIC_PROFILER( name )
 #define GN_START_PROFILER( name )
 #define GN_STOP_PROFILER( name )
-#define GN_SCOPE_PROFILER( name, desc )
+#define GN_SCOPE_PROFILER( name )
 
 #endif
 //@}
@@ -72,14 +72,14 @@ namespace GN
     public:
 
         ///
-        /// Start the timer
+        /// start the timer
         ///
-        void Start();
+        void start();
 
         ///
-        /// Stop the timer
+        /// stop the timer
         ///
-        void Stop();
+        void stop();
     };
 
     ///
@@ -112,55 +112,54 @@ namespace GN
         ///
         /// reset profiler, clear all timers
         ///
-        void Reset()
+        void reset()
         {
             ScopeMutex<SpinLoop> lock( mMutex );
-            mTimers.Clear();
-            mClock.Reset();
+            mTimers.clear();
+            mClock.reset();
         }
 
         ///
         /// print profile result to string
         ///
-        void ToString( StrA & ) const;
+        void toString( StrA & ) const;
 
         ///
         /// print profile result to string
         ///
-        StrA ToString() { StrA str; ToString(str); return str; }
+        StrA toString() { StrA str; toString(str); return str; }
 
         ///
         /// return a named timer
         ///
-        ProfileTimer & GetTimer( const StrA & name )
+        ProfileTimer & getTimer( const StrA & name )
         {
-            GN_ASSERT( !name.Empty() );
+            GN_ASSERT( !name.empty() );
 
             ScopeMutex<SpinLoop> lock( mMutex );
 
-            ProfilerTimerImpl * impl = mTimers.Find( name );
-            if( NULL != impl ) return *impl;
+            ProfilerTimerImpl * p = mTimers.find( name );
+            if( NULL != p ) return *p;
 
             // create new timer
             ProfilerTimerImpl newTimer( mClock );
-
-            return mTimers.Insert( name, newTimer )->value;
+            return mTimers.insert( name, newTimer )->value;
         }
 
         ///
         /// start a profile timer
         ///
-        void StartTimer( const StrA & name )
+        void startTimer( const StrA & name )
         {
-            GetTimer(name).Start();
+            getTimer(name).start();
         }
 
         ///
         /// stop a profile timer
         ///
-        void StopTimer( const StrA & name )
+        void stopTimer( const StrA & name )
         {
-            GetTimer(name).Stop();
+            getTimer(name).stop();
         }
 
         // ********************************
@@ -198,9 +197,9 @@ namespace GN
         ///
         /// start the timer
         ///
-        ScopeTimer( const char * name ) : mTimer( &ProfilerManager::sGetGlobalInstance().GetTimer(name) )
+        ScopeTimer( const char * name ) : mTimer( &ProfilerManager::sGetGlobalInstance().getTimer(name) )
         {
-            mTimer->Start();
+            mTimer->start();
         }
 
         ///
@@ -208,7 +207,7 @@ namespace GN
         ///
         ScopeTimer( ProfileTimer * timer ) : mTimer( timer )
         {
-            mTimer->Start();
+            mTimer->start();
         }
 
         ///
@@ -216,17 +215,17 @@ namespace GN
         ///
         ~ScopeTimer()
         {
-            Stop();
+            stop();
         }
 
         ///
         /// end the mTimer manually
         ///
-        void Stop()
+        void stop()
         {
             if( mTimer )
             {
-                mTimer->Stop();
+                mTimer->stop();
                 mTimer = 0;
             }
         }

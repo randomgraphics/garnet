@@ -133,8 +133,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        ResourcePool()          { Clear(); }
-        virtual ~ResourcePool() { Quit(); }
+        ResourcePool()          { clear(); }
+        virtual ~ResourcePool() { quit(); }
         //@}
 
         // ********************************
@@ -143,10 +143,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool Init( ID3D10Device * pDevice );
-        void Quit();
+        bool init( ID3D10Device * pDevice );
+        void quit();
     private:
-        void Clear() { mDevice = NULL; }
+        void clear() { mDevice = NULL; }
         //@}
 
         // ********************************
@@ -216,7 +216,7 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         ID3D10Device * mDevice;
 
-        ResourceMap    mResources;
+        ResourceMap mResource;
 
         // ********************************
         // private functions
@@ -224,10 +224,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
     private:
 
         /// find or create new resource from pool
-        ID3D10Resource * FindOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        ID3D10Resource * findOrCreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
 
         /// create new D3D10 resource instance
-        ID3D10Resource * CreateResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
+        ID3D10Resource * createResource( const PooledResourceDesc & desc, const D3D10_SUBRESOURCE_DATA * data );
     };
 
     ///
@@ -259,8 +259,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        SimpleMesh()          { Clear(); }
-        virtual ~SimpleMesh() { Quit(); }
+        SimpleMesh()          { clear(); }
+        virtual ~SimpleMesh() { quit(); }
         //@}
 
         // ********************************
@@ -269,10 +269,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool Init( ID3D10Device * dev );
-        void Quit();
+        bool init( ID3D10Device * dev );
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mDevice = 0;
             mLayout = 0;
@@ -305,8 +305,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         void endTriangles();
         void setTriangles( const UInt16 * triangles, size_t triangleCount );
 
-        void Draw() const;
-        void DrawIndexed() const;
+        void draw() const;
+        void drawIndexed() const;
 
         //@}
 
@@ -353,12 +353,12 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         {
         }
 
-        void Clear()
+        void clear()
         {
-            SafeRelease( res );
-            SafeRelease( rtv );
-            SafeRelease( dsv );
-            SafeRelease( srv );
+            safeRelease( res );
+            safeRelease( rtv );
+            safeRelease( dsv );
+            safeRelease( srv );
         }
 
         //@}
@@ -392,8 +392,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        RenderToTexture()          { Clear(); }
-        virtual ~RenderToTexture() { Quit(); }
+        RenderToTexture()          { clear(); }
+        virtual ~RenderToTexture() { quit(); }
         //@}
 
         // ********************************
@@ -402,10 +402,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool Init( ID3D10Device * device, const RenderToTextureOption & options );
-        void Quit();
+        bool init( ID3D10Device * device, const RenderToTextureOption & options );
+        void quit();
     private:
-        void Clear() {}
+        void clear() {}
         //@}
 
         // ********************************
@@ -413,13 +413,13 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         // ********************************
     public:
 
-        const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.Size() ); return mColors[index]; }
+        const RenderTargetTexture & getColorBuffer( size_t index ) const { GN_ASSERT( index < mColors.size() ); return mColors[index]; }
         const RenderTargetTexture & getDepthBuffer() const { return mDepth; }
 
-        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), 0 ); }
-        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.Size(), mColorViews.ToRawPtr(), mDepth.dsv ); }
+        void bindNoDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), 0 ); }
+        void bindWithDepth() const { mDevice->OMSetRenderTargets( (UINT)mColors.size(), mColorViews.cptr(), mDepth.dsv ); }
 
-        void ClearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
 
         // ********************************
         // private variables
@@ -477,8 +477,8 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        ScreenAlignedQuad()          { Clear(); }
-        virtual ~ScreenAlignedQuad() { Quit(); }
+        ScreenAlignedQuad()          { clear(); }
+        virtual ~ScreenAlignedQuad() { quit(); }
         //@}
 
         // ********************************
@@ -487,10 +487,10 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
     public:
-        bool Init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
-        void Quit();
+        bool init( ID3D10Device * device, const ScreenAlignedQuadDesc & desc );
+        void quit();
     private:
-        void Clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
+        void clear() { mDevice = 0; mDepthStencilState = 0; mVs = 0; mPsTexed = 0; mPsSolid = 0; }
         //@}
         //@}
 
@@ -610,13 +610,13 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
         ID3D10RenderTargetView * backrtv() const { return mBackRTV; }
         ID3D10DepthStencilView * depthrtv() const { return mDepthDSV; }
 
-        int Run( const D3D10AppOption & );
+        int run( const D3D10AppOption & );
 
         bool changeOption( const D3D10AppOption & );
 
         const D3D10AppOption & getOption() const { return mOption; }
 
-        void ClearScreen( float r, float g, float b, float a, float d, UInt8 s );
+        void clearScreen( float r, float g, float b, float a, float d, UInt8 s );
 
         void resetToDefaultRenderTargets() { mDevice->OMSetRenderTargets( 1, &mBackRTV, mDepthDSV ); }
 
@@ -626,20 +626,20 @@ namespace GN { /*namespace for D3D10 utils*/ namespace d3d10
 
         //@{
 
-        virtual bool OnInit( D3D10AppOption & ) { return true; }
+        virtual bool onInit( D3D10AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual void onDestroy() {}
-        virtual void OnQuit() {}
+        virtual void onQuit() {}
 
         virtual void onDraw() {}
-        virtual void OnUpdate() {}
+        virtual void onUpdate() {}
 
         //@}
 
     private:
 
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
 
         bool createDevice();
         void destroyDevice();

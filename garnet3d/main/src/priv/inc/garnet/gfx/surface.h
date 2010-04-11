@@ -34,9 +34,9 @@ namespace GN { namespace gfx
         UInt32        width;   ///< basemap width
         UInt32        height;  ///< basemap height
         UInt32        depth;   ///< basemap depth
-        UInt32        faces;   ///< face count. When used as parameter of Gpu::CreateTexture(),
+        UInt32        faces;   ///< face count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32        levels;  ///< mipmap level count. When used as parameter of Gpu::CreateTexture(),
+        UInt32        levels;  ///< mipmap level count. When used as parameter of Gpu::createTexture(),
                                ///< you may set it to 0 to create full mipmap chain (down to 1x1).
         ColorFormat   format;  ///< pixel format.
         TextureUsage  usage;   ///< texture usage
@@ -44,12 +44,12 @@ namespace GN { namespace gfx
         ///
         /// get basemap size
         ///
-        const Vector3<UInt32> & Size() const { return *(Vector3<UInt32>*)&width; }
+        const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
 
         ///
         /// compose texture descriptor from image descriptor
         ///
-        bool FromImageDesc( const ImageDesc & id )
+        bool fromImageDesc( const ImageDesc & id )
         {
             width      = id.mipmaps[0].width;
             height     = id.mipmaps[0].height;
@@ -58,13 +58,13 @@ namespace GN { namespace gfx
             levels     = id.numLevels;
             format     = id.format;
             usage      = TextureUsage::DEFAULT;
-            return Validate();
+            return validate();
         }
 
         ///
-        /// Validate texture descriptor
+        /// validate texture descriptor
         ///
-        bool Validate()
+        bool validate()
         {
             // calculate maximum mipmap levels
             UInt32 nx = 0, ny = 0, nz = 0;
@@ -79,23 +79,23 @@ namespace GN { namespace gfx
             maxLevels = depth;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
 
-            maxLevels = math::GetMax( nx, ny, nz );
+            maxLevels = math::getmax( nx, ny, nz );
 
-            levels = ( 0 == levels ) ? maxLevels : math::GetMin( maxLevels, levels );
+            levels = ( 0 == levels ) ? maxLevels : math::getmin( maxLevels, levels );
 
             // check format
-            if( !format.Valid() )
+            if( !format.valid() )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture format: %s", format.ToString().ToRawPtr() );
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                GN_ERROR(sLogger)( "invalid texture format: %s", format.toString().cptr() );
                 return false;
             }
 
             // check usage
             if( usage < 0 && usage >= TextureUsage::NUM_USAGES )
             {
-                static Logger * sLogger = GetLogger("GN.gfx.TextureDesc");
-                GN_ERROR(sLogger)( "invalid texture usage: %d", usage.ToRawEnum() );
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                GN_ERROR(sLogger)( "invalid texture usage: %d", usage.toRawEnum() );
                 return false;
             }
 
@@ -106,8 +106,8 @@ namespace GN { namespace gfx
 
     struct MipmapData
     {
-        size_t           rowPitch;
-        size_t           slicePitch;
+        size_t             rowPitch;
+        size_t             slicePitch;
         DynaArray<UInt8> data;
     };
 
@@ -143,7 +143,7 @@ namespace GN { namespace gfx
         };
 
         /// convert enumeration to string
-        const char * ToString() const
+        const char * toString() const
         {
             static const char * TABLE[]=
             {
@@ -167,18 +167,18 @@ namespace GN { namespace gfx
         ///
         /// Get texture descriptor
         ///
-        const TextureDesc & GetDesc() const { return mDesc; }
+        const TextureDesc & getDesc() const { return mDesc; }
 
         ///
         /// get size of base map
         ///
-        const Vector3<UInt32> & GetBaseSize() const { return mDesc.Size(); }
+        const Vector3<UInt32> & getBaseSize() const { return mDesc.size(); }
 
         ///
         /// get size of base map
         ///
         template<typename T>
-        void GetBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
+        void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
             if( sx ) *sx = (T)mDesc.width;
             if( sy ) *sy = (T)mDesc.height;
@@ -188,15 +188,15 @@ namespace GN { namespace gfx
         ///
         /// get size of specific mip level
         ///
-        const Vector3<UInt32> & GetMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
+        const Vector3<UInt32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         ///
         /// get size of specific mip level
         ///
         template<typename T>
-        void GetMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
+        void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<UInt32> & mipSize = GetMipSize( level );
+            const Vector3<UInt32> & mipSize = getMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
             if( sy ) *sy = (T)mipSize.y;
             if( sz ) *sz = (T)mipSize.z;
@@ -212,7 +212,7 @@ namespace GN { namespace gfx
         /// \param data             The data buffer that holds data that are going to be copied to texture.
         ///                         The data must be the same format as the texture.
         ///
-        virtual void UpdateMipmap(
+        virtual void updateMipmap(
             size_t              face,
             size_t              level,
             const Box<UInt32> * area,
@@ -224,32 +224,32 @@ namespace GN { namespace gfx
         ///
         /// read mipmap content.
         ///
-        virtual void ReadMipmap( size_t face, size_t level, MipmapData & data ) = 0;
+        virtual void readMipmap( size_t face, size_t level, MipmapData & data ) = 0;
 
         /// read/write the whole texture as a BLOB.
         //@{
-        virtual void   BlobWrite( const void * data, size_t length ) = 0;
-        virtual size_t BlobRead( void * data ) = 0;
+        virtual void   blobWrite( const void * data, size_t length ) = 0;
+        virtual size_t blobRead( void * data ) = 0;
         //@}
 
         ///
         /// generate content of all mipmap levels based on content in base level
         ///
-        virtual void GenerateMipmapPyramid() = 0;
+        virtual void generateMipmapPyramid() = 0;
 
         ///
         /// Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for
         /// DirectX; name of texture object(GLuint) for OpenGL.
         ///
-        virtual void * GetAPIDependentData() const = 0;
+        virtual void * getAPIDependentData() const = 0;
 
         /// \name get reference to texture name.
         ///
         /// Name field is for debug purpose only, it is not used by garnet library except logging.
         /// Set it to any value you want.
         //@{
-        const StrA & Name() const { return mName; }
-        StrA & Name() { return mName; }
+        const StrA & name() const { return mName; }
+        StrA & name() { return mName; }
         //@}
 
     protected :
@@ -258,14 +258,14 @@ namespace GN { namespace gfx
         /// Set texture descriptor. Subclass must call this function to set
         /// all texture properities to valid value.
         ///
-        bool SetDesc( const TextureDesc & desc )
+        bool setDesc( const TextureDesc & desc )
         {
             mDesc = desc;
 
-            if( !mDesc.Validate() ) return false;
+            if( !mDesc.validate() ) return false;
 
             // allocate mipmap size array
-            mMipSize.Resize( mDesc.levels );
+            mMipSize.resize( mDesc.levels );
 
             return true;
         }
@@ -274,28 +274,28 @@ namespace GN { namespace gfx
         /// setup mip size
         ///
         template<typename T>
-        void SetMipSize( size_t level, T sx, T sy, T sz )
+        void setMipSize( size_t level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
             GN_ASSERT( level > 0 ||
                 ( sx == (T)mDesc.width &&
                   sy == (T)mDesc.height &&
                   sz == (T)mDesc.depth ) );
-            mMipSize[level].Set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
+            mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 
         ///
         /// setup mip size
         ///
-        void SetMipSize( size_t level, const Vector3<UInt32> & s )
+        void setMipSize( size_t level, const Vector3<UInt32> & s )
         {
-            SetMipSize( level, s.x, s.y, s.z );
+            setMipSize( level, s.x, s.y, s.z );
         }
 
     private :
-        TextureDesc                  mDesc;    ///< descriptor
+        TextureDesc                    mDesc;    ///< descriptor
         DynaArray< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
-        StrA                         mName;    ///< texture name. Only for debug purpose.
+        StrA                           mName;    ///< texture name. Only for debug purpose.
     };
 
     ///
@@ -315,24 +315,24 @@ namespace GN { namespace gfx
         ///
         /// get vertex buffer descriptor
         ///
-        const VtxBufDesc & GetDesc() const { return mDesc; }
+        const VtxBufDesc & getDesc() const { return mDesc; }
 
         ///
         /// update vertex buffer content
         ///
-        virtual void Update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void update( size_t offset, size_t length, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
         ///
-        virtual void Readback( DynaArray<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 
         ///
         /// Set buffer properties
         ///
-        void SetDesc( const VtxBufDesc & desc )
+        void setDesc( const VtxBufDesc & desc )
         {
             GN_ASSERT( desc.length > 0 );
             mDesc = desc;
@@ -361,24 +361,24 @@ namespace GN { namespace gfx
         ///
         /// Get descriptor
         ///
-        const IdxBufDesc & GetDesc() const { return mDesc; }
+        const IdxBufDesc & getDesc() const { return mDesc; }
 
         ///
         /// update index buffer content
         ///
-        virtual void Update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
+        virtual void update( size_t startidx, size_t numidx, const void * data, SurfaceUpdateFlag flag = SurfaceUpdateFlag::DEFAULT ) = 0;
 
         ///
         /// Read buffer content.
         ///
-        virtual void Readback( DynaArray<UInt8> & data ) = 0;
+        virtual void readback( DynaArray<UInt8> & data ) = 0;
 
     protected:
 
         ///
         /// Set buffer properties
         ///
-        void SetDesc( const IdxBufDesc & desc )
+        void setDesc( const IdxBufDesc & desc )
         {
             GN_ASSERT( desc.numidx > 0 );
             mDesc = desc;

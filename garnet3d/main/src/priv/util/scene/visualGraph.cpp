@@ -7,7 +7,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util");
+static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // VisualGraph::Impl public methods
@@ -25,11 +25,11 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
     {
         AutoRef<UniformResource> & ur = mUniforms[type];
 
-        if( type.desc().global )
+        if( type.getDesc().global )
         {
-            ur = gdb.FindOrCreateResource<UniformResource>( type.desc().name );
-            AutoRef<Uniform> u( gdb.GetGpu().CreateUniform( type.desc().size ) );
-            ur->SetUniform( u );
+            ur = gdb.findOrCreateResource<UniformResource>( type.getDesc().name );
+            AutoRef<Uniform> u( gdb.getGpu().createUniform( type.getDesc().size ) );
+            ur->setUniform( u );
         }
     }
 }
@@ -41,7 +41,7 @@ GN::util::VisualGraph::Impl::~Impl()
 {
     for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
-        mUniforms[type].Clear();
+        mUniforms[type].clear();
     }
 }
 
@@ -57,7 +57,7 @@ GN::util::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
         return NULL;
     }
 
-    const StandardUniformDesc & desc = type.desc();
+    const StandardUniformDesc & desc = type.getDesc();
     if( !desc.global )
     {
         GN_ERROR(sLogger)( "Non-global parameter \"%s\" is not accessible through this function.", desc.name );
@@ -70,7 +70,7 @@ GN::util::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualGraph::Impl::Draw( Camera & camera )
+void GN::util::VisualGraph::Impl::draw( Camera & camera )
 {
     updateTransformation( camera );
     updateDefaultLighting();
@@ -80,7 +80,7 @@ void GN::util::VisualGraph::Impl::Draw( Camera & camera )
     std::for_each(
         mVisualNodes.begin(),
         mVisualNodes.end(),
-        std::mem_fun<void,VisualNode::Impl>( &VisualNode::Impl::Draw ) );
+        std::mem_fun<void,VisualNode::Impl>( &VisualNode::Impl::draw ) );
 }
 
 //
@@ -141,17 +141,17 @@ void GN::util::VisualGraph::Impl::updateTransformation( Camera & c )
     Matrix44f iv  = Matrix44f::sInverse( view );
     Matrix44f itv = Matrix44f::sInverse( Matrix44f::sTranspose( view ) );
 
-    mUniforms[StandardUniformType::MATRIX_PV]->GetUniform()->Update( pv );
-    mUniforms[StandardUniformType::MATRIX_PV_INV]->GetUniform()->Update( ipv );
-    mUniforms[StandardUniformType::MATRIX_PV_IT]->GetUniform()->Update( itpv );
+    mUniforms[StandardUniformType::MATRIX_PV]->uniform()->update( pv );
+    mUniforms[StandardUniformType::MATRIX_PV_INV]->uniform()->update( ipv );
+    mUniforms[StandardUniformType::MATRIX_PV_IT]->uniform()->update( itpv );
 
-    mUniforms[StandardUniformType::MATRIX_PROJ]->GetUniform()->Update( proj );
-    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->GetUniform()->Update( ip );
-    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->GetUniform()->Update( itp );
+    mUniforms[StandardUniformType::MATRIX_PROJ]->uniform()->update( proj );
+    mUniforms[StandardUniformType::MATRIX_PROJ_INV]->uniform()->update( ip );
+    mUniforms[StandardUniformType::MATRIX_PROJ_IT]->uniform()->update( itp );
 
-    mUniforms[StandardUniformType::MATRIX_VIEW]->GetUniform()->Update( view );
-    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->GetUniform()->Update( iv );
-    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->GetUniform()->Update( itv );
+    mUniforms[StandardUniformType::MATRIX_VIEW]->uniform()->update( view );
+    mUniforms[StandardUniformType::MATRIX_VIEW_INV]->uniform()->update( iv );
+    mUniforms[StandardUniformType::MATRIX_VIEW_IT]->uniform()->update( itv );
 }
 
 //
@@ -168,10 +168,10 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
     LightNode::Impl * light0 = mLightNodes.front();
 
     // update light color
-    const LightDesc & light0Desc = light0->GetDesc();
-    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->GetUniform()->Update( light0Desc.diffuse );
-    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->GetUniform()->Update( light0Desc.ambient );
-    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->GetUniform()->Update( light0Desc.specular );
+    const LightDesc & light0Desc = light0->getDesc();
+    mUniforms[StandardUniformType::LIGHT0_DIFFUSE]->uniform()->update( light0Desc.diffuse );
+    mUniforms[StandardUniformType::LIGHT0_AMBIENT]->uniform()->update( light0Desc.ambient );
+    mUniforms[StandardUniformType::LIGHT0_SPECULAR]->uniform()->update( light0Desc.specular );
 
     // update light position and direction
     SpatialNode * sn = light0->owner().entity().getNode<SpatialNode>();
@@ -183,10 +183,10 @@ void GN::util::VisualGraph::Impl::updateDefaultLighting()
         position = sn->getPosition();
 
         GN_TODO( "rotate light direction accordingly" );
-        direction.Set( 0, 0, 1.0f );
+        direction.set( 0, 0, 1.0f );
     }
-    mUniforms[StandardUniformType::LIGHT0_POSITION]->GetUniform()->Update( position );
-    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->GetUniform()->Update( direction );
+    mUniforms[StandardUniformType::LIGHT0_POSITION]->uniform()->update( position );
+    mUniforms[StandardUniformType::LIGHT0_DIRECTION]->uniform()->update( direction );
 }
 
 // *****************************************************************************
@@ -212,15 +212,15 @@ GN::util::VisualGraph::~VisualGraph()
 //
 //
 // -----------------------------------------------------------------------------
-GpuResourceDatabase & GN::util::VisualGraph::gdb() const
+GpuResourceDatabase & GN::util::VisualGraph::getGdb() const
 {
-    return mImpl->gdb();
+    return mImpl->getGdb();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::VisualGraph::Draw( Camera & camera )
+void GN::util::VisualGraph::draw( Camera & camera )
 {
-    mImpl->Draw( camera );
+    mImpl->draw( camera );
 }

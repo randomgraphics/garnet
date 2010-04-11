@@ -27,8 +27,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        InputDInput()          { Clear(); buildKeyMap(); }
-        virtual ~InputDInput() { Quit(); }
+        InputDInput()          { clear(); buildKeyMap(); }
+        virtual ~InputDInput() { quit(); }
         //@}
 
         // ********************************
@@ -37,10 +37,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mLibrary = 0;
             mDInput = 0;
@@ -57,9 +57,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        bool AttachToWindow( HandleType, HandleType );
+        bool attachToWindow( HandleType, HandleType );
 
-        void ProcessInputEvents();
+        void processInputEvents();
 
         // ********************************
         // from BasicInputMsw

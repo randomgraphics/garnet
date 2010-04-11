@@ -25,8 +25,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        BasicInputMsw()          { Clear(); }
-        virtual ~BasicInputMsw() { Quit(); }
+        BasicInputMsw()          { clear(); }
+        virtual ~BasicInputMsw() { quit(); }
         //@}
 
         // ********************************
@@ -35,10 +35,10 @@ namespace GN { namespace input
 
         //@{
     public:
-        bool Init();
-        void Quit();
+        bool init();
+        void quit();
     private:
-        void Clear()
+        void clear()
         {
             mXInputLibrary = 0;
             mXInputGetState = 0;
@@ -52,9 +52,9 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        void ProcessInputEvents();
-        bool AttachToWindow( HandleType, HandleType );
-        void GetMousePosition( int & x, int & y ) const;
+        void processInputEvents();
+        bool attachToWindow( HandleType, HandleType );
+        void getMousePosition( int & x, int & y ) const;
 
         // ********************************
         // protected functions

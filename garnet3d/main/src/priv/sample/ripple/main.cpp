@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::util;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.tool.meshViewer");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
 
 class MyApp : public SampleApp
 {
@@ -26,12 +26,12 @@ public:
 
     MyApp() : mSprite(NULL) {}
 
-    bool OnInit()
+    bool onInit()
     {
-        Gpu & gpu = GetGpu();
+        Gpu & gpu = getGpu();
 
         mSprite = new SpriteRenderer(gpu);
-        if( !mSprite->Init() ) return false;
+        if( !mSprite->init() ) return false;
 
         const char * rippleCode =
             "struct VSIO                                                                  \n"
@@ -84,21 +84,21 @@ public:
 
         DynaArray<char> rippleCodeFromFile;
         const char * filename = "media/ripple.ps";
-        if( fs::PathExist( filename ) )
+        if( fs::pathExist( filename ) )
         {
             DiskFile f;
-            if( f.Open( filename, "rt" ) )
+            if( f.open( filename, "rt" ) )
             {
-                rippleCodeFromFile.Resize( f.Size() + 1 );
-                rippleCodeFromFile[f.Size()] = '\0';
-                if( f.Read( &rippleCodeFromFile[0], f.Size(), NULL ) )
+                rippleCodeFromFile.resize( f.size() + 1 );
+                rippleCodeFromFile[f.size()] = '\0';
+                if( f.read( &rippleCodeFromFile[0], f.size(), NULL ) )
                 {
                     rippleCode = &rippleCodeFromFile[0];
                 }
             }
         }
 
-        mContext.Clear();
+        mContext.clear();
 
         GpuProgramDesc gpd;
         gpd.lang = GpuProgramLanguage::HLSL9;
@@ -106,11 +106,11 @@ public:
         gpd.vs.entry = "vsmain";
         gpd.ps.source = rippleCode;
         gpd.ps.entry = "psmain";
-        mContext.gpuProgram.Attach( gpu.CreateGpuProgram( gpd ) );
+        mContext.gpuProgram.attach( gpu.createGpuProgram( gpd ) );
         if( !mContext.gpuProgram ) return false;
 
-        mContext.uniforms.Resize( 1 );
-        mContext.uniforms[0].Attach( gpu.CreateUniform( sizeof(mRipples) ) );
+        mContext.uniforms.resize( 1 );
+        mContext.uniforms[0].attach( gpu.createUniform( sizeof(mRipples) ) );
         if( !mContext.uniforms[0] ) return false;
 
         // initialize ripples
@@ -124,18 +124,18 @@ public:
         return true;
     }
 
-    void OnQuit()
+    void onQuit()
     {
-        SafeDelete( mSprite );
-        mContext.Clear();
+        safeDelete( mSprite );
+        mContext.clear();
     }
 
-    void OnKeyPress( input::KeyEvent key )
+    void onKeyPress( input::KeyEvent key )
     {
         if( key.code == KeyCode::MOUSEBTN_0 && key.status.down )
         {
             int mx, my;
-            gInput.GetMousePosition( mx, my );
+            gInput.getMousePosition( mx, my );
 
             mRipples[mNextRipple].x = (float)mx;
             mRipples[mNextRipple].y = (float)my;
@@ -145,7 +145,7 @@ public:
         }
     }
 
-    void OnUpdate()
+    void onUpdate()
     {
         for( size_t i = 0; i < GN_ARRAY_COUNT(mRipples); ++i )
         {
@@ -155,17 +155,17 @@ public:
             }
         }
 
-        mContext.uniforms[0]->Update( 0, sizeof(mRipples), mRipples );
+        mContext.uniforms[0]->update( 0, sizeof(mRipples), mRipples );
     }
 
-    void OnRender()
+    void onRender()
     {
-        Gpu & gpu = GetGpu();
+        Gpu & gpu = getGpu();
 
-        const DispDesc & dd = gpu.GetDispDesc();
+        const DispDesc & dd = gpu.getDispDesc();
 
-        gpu.BindContext( mContext );
-        mSprite->DrawSingleSolidSprite(
+        gpu.bindContext( mContext );
+        mSprite->drawSingleSolidSprite(
             0xFFFF0000,
             SpriteRenderer::USE_EXTERNAL_GPU_PROGRAM,
             0.0f, 0.0f, (float)dd.width, (float)dd.height, 0.0f );
@@ -175,5 +175,5 @@ public:
 int main( int argc, const char * argv[] )
 {
    MyApp app;
-   return app.Run( argc, argv );
+   return app.run( argc, argv );
 }

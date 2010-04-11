@@ -35,13 +35,13 @@ public:
     ///
     /// read TGA header
     ///
-    bool ReadHeader(
+    bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
     ///
     /// read TGA image
     ///
-    bool ReadImage( void * o_data );
+    bool readImage( void * o_data );
 };
 
 // *****************************************************************************

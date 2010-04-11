@@ -5,7 +5,7 @@
 // local functions
 // *************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.util.gpu");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 
 ///
 /// Function type to create renderer.
@@ -95,7 +95,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    Gpu * CreateSingleThreadGpu( const GpuOptions & inputOptions )
+    Gpu * createSingleThreadGpu( const GpuOptions & inputOptions )
     {
         GN_GUARD;
 
@@ -118,7 +118,7 @@ namespace GN { namespace gfx
             case GpuAPI::D3D11 : return GNgfxCreateD3D11Gpu( ro );
             case GpuAPI::XENON : return GNgfxCreateXenonGpu( ro );
             case GpuAPI::FAKE  : GN_UNIMPL(); return 0;
-            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.ToRawEnum() ); return 0;
+            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
         }
 #else
         const char * dllName;
@@ -130,17 +130,17 @@ namespace GN { namespace gfx
             case GpuAPI::D3D11 : dllName = "GNgpuD3D11"; break;
             case GpuAPI::XENON : dllName = "GNgpuXenon"; break;
             case GpuAPI::FAKE  : GN_UNIMPL(); return 0;
-            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.ToRawEnum() ); return 0;
+            default : GN_ERROR(sLogger)( "Invalid API(%d)", ro.api.toRawEnum() ); return 0;
         }
         AutoObjPtr<SharedLib> dll( new SharedLib );
-        if( !dll->Load( dllName ) ) return 0;
-        creator = (CreateGpuFunc)dll->GetSymbol( "GNgfxCreateGpu" );
+        if( !dll->load( dllName ) ) return 0;
+        creator = (CreateGpuFunc)dll->getSymbol( "GNgfxCreateGpu" );
         if( !creator ) return 0;
         Gpu * r = creator( ro );
         if( 0 == r ) return 0;
         SharedLib * dllptr = dll;
-        r->SetUserData( GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
-        dll.Detach();
+        r->setUserData( GPU_DLL_GUID, &dllptr, sizeof(dllptr) );
+        dll.detach();
         return r;
 #endif
         GN_UNGUARD;
@@ -149,13 +149,13 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    Gpu * CreateMultiThreadGpu( const GpuOptions & ro )
+    Gpu * createMultiThreadGpu( const GpuOptions & ro )
     {
         GN_GUARD;
 
         MultiThreadGpu * r = new MultiThreadGpu;
         MultiThreadGpuOptions mo; // use default multithread options
-        if( !r->Init( ro, mo ) ) delete r, r = NULL;
+        if( !r->init( ro, mo ) ) delete r, r = NULL;
         return r;
 
         GN_UNGUARD;
@@ -164,15 +164,15 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void DeleteGpu( Gpu * r )
+    void deleteGpu( Gpu * r )
     {
         GN_GUARD;
 
         if( r )
         {
-            bool hasdll = r->HasUserData( GPU_DLL_GUID );
+            bool hasdll = r->hasUserData( GPU_DLL_GUID );
             SharedLib * dll = NULL;
-            if( hasdll ) r->GetUserData( GPU_DLL_GUID, &dll, sizeof(dll) );
+            if( hasdll ) r->getUserData( GPU_DLL_GUID, &dll, sizeof(dll) );
             delete r;
             if( hasdll ) delete dll;
         }

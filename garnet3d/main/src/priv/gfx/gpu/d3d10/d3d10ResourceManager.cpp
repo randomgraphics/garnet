@@ -8,7 +8,7 @@
 //#include "d3d10Quad.h"
 //#include "d3d10Line.h"
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpu.D3D10");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.D3D10");
 
 // *****************************************************************************
 // init/shutdown
@@ -63,15 +63,15 @@ void GN::gfx::D3D10Gpu::resourceQuit()
 //
 // -----------------------------------------------------------------------------
 GN::Blob *
-GN::gfx::D3D10Gpu::CompileGpuProgram( const GpuProgramDesc & gpd )
+GN::gfx::D3D10Gpu::compileGpuProgram( const GpuProgramDesc & gpd )
 {
     GN_GUARD;
 
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->Init( gpd ) ) return NULL;
+    if( !s->init( gpd ) ) return NULL;
 
     // success
-    return s.Detach();
+    return s.detach();
 
     GN_UNGUARD;
 }
@@ -80,25 +80,25 @@ GN::gfx::D3D10Gpu::CompileGpuProgram( const GpuProgramDesc & gpd )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram *
-GN::gfx::D3D10Gpu::CreateGpuProgram( const void * data, size_t length )
+GN::gfx::D3D10Gpu::createGpuProgram( const void * data, size_t length )
 {
     GN_GUARD;
 
     AutoRef<SelfContainedGpuProgramDesc> s( new SelfContainedGpuProgramDesc );
-    if( !s->Init( data, length ) ) return NULL;
+    if( !s->init( data, length ) ) return NULL;
 
-    const GpuProgramDesc & desc = s->desc();
+    const GpuProgramDesc & desc = s->getDesc();
 
     if( GpuProgramLanguage::HLSL10 == desc.lang ||
         GpuProgramLanguage::HLSL9 == desc.lang )
     {
         AutoRef<D3D10GpuProgram> prog( new D3D10GpuProgram(*this) );
-        if( !prog->Init( desc ) ) return NULL;
-        return prog.Detach();
+        if( !prog->init( desc ) ) return NULL;
+        return prog.detach();
     }
     else
     {
-        GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang.ToRawEnum() );
+        GN_ERROR(sLogger)( "Unsupported or invalid GPU program language: %d", desc.lang.toRawEnum() );
         return NULL;
     }
 
@@ -109,7 +109,7 @@ GN::gfx::D3D10Gpu::CreateGpuProgram( const void * data, size_t length )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Uniform *
-GN::gfx::D3D10Gpu::CreateUniform( size_t size )
+GN::gfx::D3D10Gpu::createUniform( size_t size )
 {
     return new SysMemUniform( size );
 }
@@ -118,13 +118,13 @@ GN::gfx::D3D10Gpu::CreateUniform( size_t size )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D10Gpu::CreateTexture( const TextureDesc & desc )
+GN::gfx::D3D10Gpu::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D10Texture> p( new D3D10Texture(*this) );
-    if( !p->Init( desc ) ) return 0;
-    return p.Detach();
+    if( !p->init( desc ) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -132,15 +132,15 @@ GN::gfx::D3D10Gpu::CreateTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::CreateVtxBuf( const VtxBufDesc & desc )
+GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D10VtxBuf> buf( new D3D10VtxBuf(*this) );
 
-    if( !buf->Init( desc ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
-    return buf.Detach();
+    return buf.detach();
 
     GN_UNGUARD;
 }
@@ -148,15 +148,15 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Gpu::CreateVtxBuf( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D10Gpu::CreateIdxBuf( const IdxBufDesc & desc )
+GN::gfx::IdxBuf * GN::gfx::D3D10Gpu::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D10IdxBuf> buf( new D3D10IdxBuf(*this) );
 
-    if( !buf->Init( desc ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
-    return buf.Detach();
+    return buf.detach();
 
     GN_UNGUARD;
 }

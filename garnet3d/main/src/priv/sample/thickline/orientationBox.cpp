@@ -9,7 +9,7 @@ using namespace GN::d3d9;
 // utilities
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.orientationbox");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.orientationbox");
 
 //
 //
@@ -19,9 +19,9 @@ static void LOG_ERROR(const char * format, ...)
     GN::StrA s;
     va_list arglist;
     va_start( arglist, format );
-    s.FormatV( format, arglist );
+    s.formatv( format, arglist );
     va_end( arglist );
-    GN_ERROR(sLogger)( "%s\n", s.ToRawPtr() );
+    GN_ERROR(sLogger)( "%s\n", s.cptr() );
 }
 
 #define SAFE_RELEASE( x ) if(x) { (x)->Release(); (x) = NULL; } else void(0)
@@ -114,7 +114,7 @@ IDirect3DTexture9 * CreateAxisTexture(
 #endif
 
     // done
-    return tex.Detach();
+    return tex.detach();
 }
 
 // *****************************************************************************

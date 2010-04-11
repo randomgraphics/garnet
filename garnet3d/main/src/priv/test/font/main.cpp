@@ -13,24 +13,24 @@ wchar_t              textw[256];
 bool initTTF()
 {
     // create font
-    AutoRef<FontFace> ff( CreateFontFace(ffc) );
+    AutoRef<FontFace> ff( createFontFace(ffc) );
     if( !ff ) return false;
 
     // initialize bitmap font renderer
-    ttf.Quit();
-    return ttf.Init( sr, ff );
+    ttf.quit();
+    return ttf.init( sr, ff );
 }
 
-bool Init( Gpu & gpu )
+bool init( Gpu & gpu )
 {
     // create sprite renderer
     sr = new SpriteRenderer( gpu );
-    if( !sr->Init() ) return false;
+    if( !sr->init() ) return false;
 
     // initialize ascii font
-    AutoRef<FontFace> ff( CreateSimpleAsciiFontFace() );
+    AutoRef<FontFace> ff( createSimpleAsciiFontFace() );
     if( !ff ) return false;
-    if( !ascii.Init( sr, ff ) ) return false;
+    if( !ascii.init( sr, ff ) ) return false;
 
     // initialize TTF font
     if( !initTTF() ) return false;
@@ -42,14 +42,14 @@ bool Init( Gpu & gpu )
     return true;
 }
 
-void Quit( Gpu & )
+void quit( Gpu & )
 {
-    ascii.Quit();
-    ttf.Quit();
-    SafeDelete( sr );
+    ascii.quit();
+    ttf.quit();
+    safeDelete( sr );
 }
 
-void OnKeyPress( KeyEvent ke )
+void onKeyPress( KeyEvent ke )
 {
     if( !ke.status.down ) return;
 
@@ -92,47 +92,47 @@ void OnKeyPress( KeyEvent ke )
     }
 }
 
-void Draw( Gpu &, const wchar_t * fps )
+void draw( Gpu &, const wchar_t * fps )
 {
-    ascii.DrawText( fps, 10, 13 );
+    ascii.drawText( fps, 10, 13 );
 
-    if( ttf.Ok() )
+    if( ttf.ok() )
     {
-        ttf.DrawText( textw, 100, 100 );
-        ttf.DrawText( L"Hello!", 200, 200 );
+        ttf.drawText( textw, 100, 100 );
+        ttf.drawText( L"Hello!", 200, 200 );
     }
 }
 
-int Run( Gpu & gpu )
+int run( Gpu & gpu )
 {
-    if( !Init( gpu ) ) { Quit( gpu ); return -1; }
+    if( !init( gpu ) ) { quit( gpu ); return -1; }
 
     bool gogogo = true;
 
     FpsCalculator fps;
-    GetLogger("GN.util.fps")->SetLevel( Logger::VERBOSE ); // enable FPS logger
+    getLogger("GN.util.fps")->setLevel( Logger::VERBOSE ); // enable FPS logger
 
     while( gogogo )
     {
-        gpu.ProcessRenderWindowMessages( false );
+        gpu.processRenderWindowMessages( false );
 
         Input & in = gInput;
 
-        in.ProcessInputEvents();
+        in.processInputEvents();
 
-        if( in.GetKeyStatus( KeyCode::ESCAPE ).down )
+        if( in.getKeyStatus( KeyCode::ESCAPE ).down )
         {
             gogogo = false;
         }
 
-        gpu.ClearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
-        Draw( gpu, fps.getFpsString() );
-        gpu.Present();
+        gpu.clearScreen( Vector4f(0,0.5f,0.5f,1.0f) );
+        draw( gpu, fps.fpsString() );
+        gpu.present();
 
         fps.onFrame();
     }
 
-    Quit( gpu );
+    quit( gpu );
 
     return 0;
 }
@@ -141,21 +141,21 @@ struct InputInitiator
 {
     InputInitiator( Gpu & r )
     {
-        InitializeInputSystem( InputAPI::NATIVE );
-        const DispDesc & dd = r.GetDispDesc();
-        gInput.AttachToWindow( dd.displayHandle, dd.windowHandle );
-        gInput.sigKeyPress.Connect( OnKeyPress );
+        initializeInputSystem( InputAPI::NATIVE );
+        const DispDesc & dd = r.getDispDesc();
+        gInput.attachToWindow( dd.displayHandle, dd.windowHandle );
+        gInput.sigKeyPress.connect( onKeyPress );
     }
 
     ~InputInitiator()
     {
-        ShutdownInputSystem();
+        shutdownInputSystem();
     }
 };
 
 int main( int argc, const char * argv[] )
 {
-    EnableCRTMemoryCheck();
+    enableCRTMemoryCheck();
 
     CommandLineArguments cmdargs( argc, argv );
     switch( cmdargs.status )
@@ -178,16 +178,16 @@ int main( int argc, const char * argv[] )
 
     Gpu * r;
     if( cmdargs.useMultiThreadGpu )
-        r = CreateMultiThreadGpu( cmdargs.rendererOptions );
+        r = createMultiThreadGpu( cmdargs.rendererOptions );
     else
-        r = CreateSingleThreadGpu( cmdargs.rendererOptions );
+        r = createSingleThreadGpu( cmdargs.rendererOptions );
     if( NULL == r ) return -1;
 
     InputInitiator ii(*r);
 
-    int result = Run( *r );
+    int result = run( *r );
 
-    DeleteGpu( r );
+    deleteGpu( r );
 
     return result;
 }

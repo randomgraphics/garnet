@@ -80,13 +80,13 @@ public:
     ///
     /// Read DDS header
     ///
-    bool ReadHeader(
+    bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
     ///
     /// Read DDS image
     ///
-    bool ReadImage( void * o_data ) const;
+    bool readImage( void * o_data ) const;
 };
 
 // *****************************************************************************

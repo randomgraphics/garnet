@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 
 // *****************************************************************************
 // local classes and functions
@@ -15,13 +15,13 @@ static GN::Logger * sLogger = GN::GetLogger("GN.gfx.gpures");
 // -----------------------------------------------------------------------------
 static StrA sResolveResourcePath( const StrA & basedir, const StrA & path )
 {
-    if( path.Size() > 1 && path[0] == '@' )
+    if( path.size() > 1 && path[0] == '@' )
     {
         return path;
     }
     else
     {
-        return fs::ResolvePath( basedir, path );
+        return fs::resolvePath( basedir, path );
     }
 }
 
@@ -76,11 +76,11 @@ sApplyRenderStates(
 template<typename T>
 static bool sGetRequiredIntAttrib( T & result, const XmlElement & node, const char * attribName )
 {
-    const XmlAttrib * a = node.FindAttrib( attribName );
-    if( !a || 0 == String2Integer<T>( result, a->value.ToRawPtr() ) )
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a || 0 == string2Integer<T>( result, a->value.cptr() ) )
     {
         GN_ERROR(sLogger)( "Integer attribute \"%s\" of element <%s> is either missing or invalid.",
-            attribName, node.name.ToRawPtr() );
+            attribName, node.name.cptr() );
         return false;
     }
     else
@@ -100,15 +100,15 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
 
-    result.Clear();
-    result.SetCaps( size * 2 );
+    result.clear();
+    result.setCaps( size * 2 );
 
     for( size_t i = 0; i < size; ++i, ++data )
     {
         UInt8 u8 = *data;
 
-        result.Append( TABLE[u8>>4] );
-        result.Append( TABLE[u8&0xF] );
+        result.append( TABLE[u8>>4] );
+        result.append( TABLE[u8&0xF] );
     }
 }
 
@@ -124,17 +124,17 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     };
 
-    data.Clear();
+    data.clear();
 
-    if( 0 != (s.Size() % 2) )
+    if( 0 != (s.size() % 2) )
     {
         GN_ERROR(sLogger)( "Invalid binary string." );
         return false;
     }
 
-    data.Resize( s.Size() / 2 );
+    data.resize( s.size() / 2 );
 
-    for( size_t i = 0; i < data.Size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i )
     {
         char hi = s[i*2];
         char lo = s[i*2+1];
@@ -182,23 +182,23 @@ static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResourceDesc::Clear()
+void GN::gfx::ModelResourceDesc::clear()
 {
-    effect.Clear();
-    textures.Clear();
-    uniforms.Clear();
-    mesh.Clear();
-    subset.Clear();
+    effect.clear();
+    textures.clear();
+    uniforms.clear();
+    mesh.clear();
+    subset.clear();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char * basedir )
+bool GN::gfx::ModelResourceDesc::loadFromXml( const XmlNode & root, const char * basedir )
 {
-    Clear();
+    clear();
 
-    const XmlElement * rootElement = root.ToElement();
+    const XmlElement * rootElement = root.toElement();
     if( !rootElement || rootElement->name != "model" )
     {
         GN_ERROR(sLogger)( "Root node must be a XML element named <model>." );
@@ -210,7 +210,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
     bool subsetFound = false;
     for( const XmlNode * n = rootElement->child; n != NULL; n = n->next )
     {
-        const XmlElement * e = n->ToElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "effect" == e->name )
@@ -221,7 +221,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
             }
             else
             {
-                const XmlAttrib * a = e->FindAttrib( "ref" );
+                const XmlAttrib * a = e->findAttrib( "ref" );
                 if( !a )
                 {
                     GN_ERROR(sLogger)( "\"ref\" attribute of <effect> element is missing." );
@@ -240,7 +240,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
             }
             else
             {
-                const XmlAttrib * a = e->FindAttrib( "ref" );
+                const XmlAttrib * a = e->findAttrib( "ref" );
                 if( !a )
                 {
                     GN_ERROR(sLogger)( "\"ref\" attribute of <mesh> element is missing." );
@@ -271,7 +271,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
         }
         else if( "texture" == e->name )
         {
-            const XmlAttrib * a = e->FindAttrib( "shaderParameter" );
+            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <texture> element is missing." );
@@ -280,7 +280,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
 
             ModelTextureDesc & td = textures[a->value];
 
-            a = e->FindAttrib( "ref" );
+            a = e->findAttrib( "ref" );
             if( a )
             {
                 td.resourceName = sResolveResourcePath( basedir, a->value );
@@ -292,7 +292,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
         }
         else if( "uniform" == e->name )
         {
-            const XmlAttrib * a = e->FindAttrib( "shaderParameter" );
+            const XmlAttrib * a = e->findAttrib( "shaderParameter" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"shaderParameter\" attribute of <uniform> element is missing." );
@@ -301,19 +301,19 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
 
             ModelUniformDesc & ud = uniforms[a->value];
 
-            a = e->FindAttrib( "size" );
+            a = e->findAttrib( "size" );
             if( !a )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is missing." );
                 return false;
             }
-            if( 0 == String2Integer( ud.size, a->value ) )
+            if( 0 == string2Integer( ud.size, a->value ) )
             {
                 GN_ERROR(sLogger)( "\"size\" attribute of <uniform> element is not a valid integer." );
                 return false;
             }
 
-            const XmlElement * binnode = e->FindChildElement( "initialValue" );
+            const XmlElement * binnode = e->findChildElement( "initialValue" );
             if( binnode && !sBinaryDecode( ud.initialValue, binnode->text ) )
             {
                 GN_ERROR(sLogger)( "Invalid uniform initial data." );
@@ -322,7 +322,7 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
         }
         else
         {
-            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.ToRawPtr() );
+            GN_WARN(sLogger)( "Ignore unrecognized element <%s>.", e->name.cptr() );
         }
     }
 
@@ -339,9 +339,9 @@ bool GN::gfx::ModelResourceDesc::LoadFromXml( const XmlNode & root, const char *
 //
 //
 // -----------------------------------------------------------------------------
-XmlElement * GN::gfx::ModelResourceDesc::SaveToXml( XmlNode & root, const char * basedir ) const
+XmlElement * GN::gfx::ModelResourceDesc::saveToXml( XmlNode & root, const char * basedir ) const
 {
-    XmlElement * rootElement = root.ToElement();
+    XmlElement * rootElement = root.toElement();
     if( !rootElement )
     {
         GN_ERROR(sLogger)( "Root node must be a XML element." );
@@ -356,127 +356,127 @@ XmlElement * GN::gfx::ModelResourceDesc::SaveToXml( XmlNode & root, const char *
 
     XmlDocument & doc = rootElement->doc;
 
-    XmlElement * modelNode = doc.CreateElement(NULL);
+    XmlElement * modelNode = doc.createElement(NULL);
     modelNode->name = "model";
 
     // create effect node
-    XmlElement * effectNode = doc.CreateElement(modelNode);
+    XmlElement * effectNode = doc.createElement(modelNode);
     effectNode->name = "effect";
-    if( effect.Empty() )
+    if( effect.empty() )
     {
         GN_ERROR(sLogger)( "Effect name can not be empty." );
         return NULL;
     }
     else
     {
-        XmlAttrib * a = doc.CreateAttrib( effectNode );
+        XmlAttrib * a = doc.createAttrib( effectNode );
         a->name = "ref";
-        a->value = fs::RelPath( effect, basedir );
+        a->value = fs::relPath( effect, basedir );
     }
 
     // create mesh node
-    XmlElement * meshNode = doc.CreateElement(modelNode);
+    XmlElement * meshNode = doc.createElement(modelNode);
     meshNode->name = "mesh";
-    if( mesh.Empty() )
+    if( mesh.empty() )
     {
         GN_ERROR(sLogger)( "Mesh name can not be empty." );
         return NULL;
     }
     else
     {
-        XmlAttrib * a = doc.CreateAttrib( meshNode );
+        XmlAttrib * a = doc.createAttrib( meshNode );
         a->name = "ref";
-        a->value = fs::RelPath( mesh, basedir );
+        a->value = fs::relPath( mesh, basedir );
     }
 
     // create subset node
-    XmlElement * subsetNode = doc.CreateElement(modelNode);
+    XmlElement * subsetNode = doc.createElement(modelNode);
     subsetNode->name = "subset";
-    if( !subset.IsWholeMesh() )
+    if( !subset.isWholeMesh() )
     {
-        XmlAttrib * a = doc.CreateAttrib( subsetNode );
+        XmlAttrib * a = doc.createAttrib( subsetNode );
         a->name = "basevtx";
-        a->value = StringFormat( "%u", subset.basevtx );
+        a->value = stringFormat( "%u", subset.basevtx );
 
-        a = doc.CreateAttrib( subsetNode );
+        a = doc.createAttrib( subsetNode );
         a->name = "numvtx";
-        a->value = StringFormat( "%u", subset.numvtx );
+        a->value = stringFormat( "%u", subset.numvtx );
 
-        a = doc.CreateAttrib( subsetNode );
+        a = doc.createAttrib( subsetNode );
         a->name = "startidx";
-        a->value = StringFormat( "%u", subset.startidx );
+        a->value = stringFormat( "%u", subset.startidx );
 
-        a = doc.CreateAttrib( subsetNode );
+        a = doc.createAttrib( subsetNode );
         a->name = "numidx";
-        a->value = StringFormat( "%u", subset.numidx );
+        a->value = stringFormat( "%u", subset.numidx );
     }
 
     // create texture nodes
-    for( const StringMap<char,ModelTextureDesc>::KeyValuePair * i = textures.First();
+    for( const StringMap<char,ModelTextureDesc>::KeyValuePair * i = textures.first();
          i != NULL;
-         i = textures.Next( i ) )
+         i = textures.next( i ) )
     {
         const StrA             & texname = i->key;
         const ModelTextureDesc & texdesc = i->value;
 
-        XmlElement * textureNode = doc.CreateElement(modelNode);
+        XmlElement * textureNode = doc.createElement(modelNode);
         textureNode->name = "texture";
 
-        XmlAttrib * a = doc.CreateAttrib( textureNode );
+        XmlAttrib * a = doc.createAttrib( textureNode );
         a->name = "shaderParameter";
         a->value = texname;
-        if( texdesc.resourceName.Empty() )
+        if( texdesc.resourceName.empty() )
         {
-            //texdesc.desc.SaveToXml( basedir );
+            //texdesc.desc.saveToXml( basedir );
             GN_UNIMPL();
             return NULL;
         }
         else
         {
-            a = doc.CreateAttrib( textureNode );
+            a = doc.createAttrib( textureNode );
             a->name = "ref";
-            a->value = fs::RelPath( texdesc.resourceName, basedir );
+            a->value = fs::relPath( texdesc.resourceName, basedir );
         }
     }
 
     // create uniform nodes
-    for( const StringMap<char,ModelUniformDesc>::KeyValuePair * i = uniforms.First();
+    for( const StringMap<char,ModelUniformDesc>::KeyValuePair * i = uniforms.first();
          i != NULL;
-         i = uniforms.Next( i ) )
+         i = uniforms.next( i ) )
     {
         const StrA             & uniname = i->key;
         const ModelUniformDesc & unidesc = i->value;
 
-        XmlElement * uniformNode = doc.CreateElement(modelNode);
+        XmlElement * uniformNode = doc.createElement(modelNode);
         uniformNode->name = "uniform";
 
-        XmlAttrib * a = doc.CreateAttrib( uniformNode );
+        XmlAttrib * a = doc.createAttrib( uniformNode );
         a->name = "shaderParameter";
         a->value = uniname;
 
-        if( unidesc.resourceName.Empty() )
+        if( unidesc.resourceName.empty() )
         {
-            a = doc.CreateAttrib( uniformNode );
+            a = doc.createAttrib( uniformNode );
             a->name = "size";
-            a->value = StringFormat( "%u", unidesc.size );
+            a->value = stringFormat( "%u", unidesc.size );
 
-            if( !unidesc.initialValue.Empty() )
+            if( !unidesc.initialValue.empty() )
             {
-                XmlElement * bin = doc.CreateElement( uniformNode );
+                XmlElement * bin = doc.createElement( uniformNode );
                 bin->name = "initialValue";
-                sBinaryEncode( bin->text, unidesc.initialValue.ToRawPtr(), unidesc.initialValue.Size() );
+                sBinaryEncode( bin->text, unidesc.initialValue.cptr(), unidesc.initialValue.size() );
             }
         }
         else
         {
-            a = doc.CreateAttrib( uniformNode );
+            a = doc.createAttrib( uniformNode );
             a->name = "ref";
-            a->value = fs::RelPath( unidesc.resourceName, basedir );
+            a->value = fs::relPath( unidesc.resourceName, basedir );
         }
     }
 
     // done
-    modelNode->SetParent( &root );
+    modelNode->setParent( &root );
     return modelNode;
 }
 
@@ -507,18 +507,18 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     size_t            effectParameterIndex,
     TextureResource * newTexture )
 {
-    if( mResource.Get() == newTexture ) return;
+    if( mResource.get() == newTexture ) return;
 
     // disconnect from old handle
-    if( mResource ) mResource->sigTextureChanged.Disconnect( this );
+    if( mResource ) mResource->sigTextureChanged.disconnect( this );
 
     Texture * tex;
     if( newTexture )
     {
         // connect to new handle
-        newTexture->sigTextureChanged.Connect( this, &TextureItem::onTextureChange );
+        newTexture->sigTextureChanged.connect( this, &TextureItem::onTextureChange );
 
-        tex = newTexture->GetTexture();
+        tex = newTexture->texture();
     }
     else
     {
@@ -528,7 +528,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mResource.Set( newTexture );
+    mResource.set( newTexture );
 
     updateContext( tex );
 }
@@ -540,7 +540,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::onTextureChange( TextureResource
 {
     GN_ASSERT( &r == mResource );
 
-    updateContext( r.GetTexture() );
+    updateContext( mResource->texture() );
 }
 
 //
@@ -554,20 +554,20 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 
     EffectResource * effect = mOwner->mEffect.resource;
 
-    GN_ASSERT( mOwner->mPasses.Size() == effect->GetNumPasses() );
+    GN_ASSERT( mOwner->mPasses.size() == effect->numPasses() );
 
-    const EffectResource::TextureProperties & prop = effect->GetTextureProperties( mEffectParameterIndex );
+    const EffectResource::TextureProperties & prop = effect->textureProperties( mEffectParameterIndex );
 
-    for( size_t i = 0; i < prop.bindings.Size(); ++i )
+    for( size_t i = 0; i < prop.bindings.size(); ++i )
     {
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
-        GN_ASSERT( location.pass < mOwner->mPasses.Size() );
+        GN_ASSERT( location.pass < mOwner->mPasses.size() );
         GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
         TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
 
-        binding.texture.Set( tex );
+        binding.texture.set( tex );
         binding.sampler = prop.sampler;
     }
 }
@@ -599,18 +599,18 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     size_t            effectParameterIndex,
     UniformResource * newUniform )
 {
-    if( mResource.Get() == newUniform ) return;
+    if( mResource.get() == newUniform ) return;
 
     // disconnect from old handle
-    if( mResource ) mResource->sigUniformChanged.Disconnect( this );
+    if( mResource ) mResource->sigUniformChanged.disconnect( this );
 
     Uniform * uniform;
     if( newUniform )
     {
         // connect to new handle
-        newUniform->sigUniformChanged.Connect( this, &UniformItem::onUniformChange );
+        newUniform->sigUniformChanged.connect( this, &UniformItem::onUniformChange );
 
-        uniform = newUniform->GetUniform();
+        uniform = newUniform->uniform();
     }
     else
     {
@@ -620,7 +620,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
     // update stored handle value
     mOwner = &owner;
     mEffectParameterIndex = effectParameterIndex;
-    mResource.Set( newUniform );
+    mResource.set( newUniform );
 
     updateContext( uniform );
 }
@@ -632,7 +632,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( UniformResource
 {
     GN_ASSERT( &r == mResource );
 
-    updateContext( r.GetUniform() );
+    updateContext( mResource->uniform() );
 }
 
 //
@@ -646,25 +646,25 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 
     EffectResource * effect = mOwner->mEffect.resource;
 
-    GN_ASSERT( mOwner->mPasses.Size() == effect->GetNumPasses() );
+    GN_ASSERT( mOwner->mPasses.size() == effect->numPasses() );
 
-    const EffectResource::UniformProperties & prop = effect->GetUniformProperties( mEffectParameterIndex );
+    const EffectResource::UniformProperties & prop = effect->uniformProperties( mEffectParameterIndex );
 
-    for( size_t i = 0; i < prop.bindings.Size(); ++i )
+    for( size_t i = 0; i < prop.bindings.size(); ++i )
     {
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
-        GN_ASSERT( location.pass < mOwner->mPasses.Size() );
+        GN_ASSERT( location.pass < mOwner->mPasses.size() );
         GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
 
         GpuContext & gc = mOwner->mPasses[location.pass].gc;
 
-        if( location.stage >= gc.uniforms.Size() )
+        if( location.stage >= gc.uniforms.size() )
         {
-            gc.uniforms.Resize( location.stage + 1 );
+            gc.uniforms.resize( location.stage + 1 );
         }
 
-        gc.uniforms[location.stage].Set( uniform );
+        gc.uniforms[location.stage].set( uniform );
     }
 }
 
@@ -679,13 +679,13 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::Reset( const ModelResourceDesc * desc )
+bool GN::gfx::ModelResource::Impl::reset( const ModelResourceDesc * desc )
 {
-    Clear();
+    clear();
 
     if( desc && !fromDesc( *desc ) )
     {
-        Clear();
+        clear();
         return false;
     }
 
@@ -696,9 +696,9 @@ bool GN::gfx::ModelResource::Impl::Reset( const ModelResourceDesc * desc )
 //
 // -----------------------------------------------------------------------------
 AutoRef<ModelResource>
-GN::gfx::ModelResource::Impl::MakeClone( const char * nameOfTheClone ) const
+GN::gfx::ModelResource::Impl::makeClone( const char * nameOfTheClone ) const
 {
-    AutoRef<ModelResource> clone = GetGdb().CreateResource<ModelResource>( nameOfTheClone );
+    AutoRef<ModelResource> clone = getGdb().createResource<ModelResource>( nameOfTheClone );
 
     if( !clone ) return AutoRef<ModelResource>::NULLREF;
 
@@ -710,9 +710,9 @@ GN::gfx::ModelResource::Impl::MakeClone( const char * nameOfTheClone ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::SetTextureResource( const char * effectParameterName, GpuResource * texture )
+bool GN::gfx::ModelResource::Impl::setTextureResource( const char * effectParameterName, GpuResource * texture )
 {
-    if( texture && !GetGdb().ValidResource( TextureResource::GetGuid(), texture ) )
+    if( texture && !getGdb().validResource( TextureResource::guid(), texture ) )
     {
         GN_ERROR(sLogger)( "Invalid texture resource pointer.", modelName() );
         return false;
@@ -725,14 +725,14 @@ bool GN::gfx::ModelResource::Impl::SetTextureResource( const char * effectParame
         return false;
     }
 
-    size_t parameterIndex = effect->FindTexture( effectParameterName );
+    size_t parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
         return false;
     }
 
-    mTextures[parameterIndex].setResource( *this, parameterIndex, GpuResource::CastTo<TextureResource>(texture) );
+    mTextures[parameterIndex].setResource( *this, parameterIndex, GpuResource::castTo<TextureResource>(texture) );
 
     return true;
 }
@@ -741,7 +741,7 @@ bool GN::gfx::ModelResource::Impl::SetTextureResource( const char * effectParame
 //
 // -----------------------------------------------------------------------------
 AutoRef<TextureResource>
-GN::gfx::ModelResource::Impl::GetTextureResource( const char * effectParameterName ) const
+GN::gfx::ModelResource::Impl::textureResource( const char * effectParameterName ) const
 {
     EffectResource * effect = mEffect.resource;
     if( NULL == effect )
@@ -750,7 +750,7 @@ GN::gfx::ModelResource::Impl::GetTextureResource( const char * effectParameterNa
         return AutoRef<TextureResource>::NULLREF;
     }
 
-    size_t parameterIndex = effect->FindTexture( effectParameterName );
+    size_t parameterIndex = effect->findTexture( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid texture name for model %s!", effectParameterName, modelName() );
@@ -763,9 +763,9 @@ GN::gfx::ModelResource::Impl::GetTextureResource( const char * effectParameterNa
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::SetUniformResource( const char * effectParameterName, GpuResource * uniform )
+bool GN::gfx::ModelResource::Impl::setUniformResource( const char * effectParameterName, GpuResource * uniform )
 {
-    if( uniform && !GetGdb().ValidResource( UniformResource::GetGuid(), uniform ) )
+    if( uniform && !getGdb().validResource( UniformResource::guid(), uniform ) )
     {
         GN_ERROR(sLogger)( "Invalid uniform resource pointer.", modelName() );
         return false;
@@ -778,14 +778,14 @@ bool GN::gfx::ModelResource::Impl::SetUniformResource( const char * effectParame
         return false;
     }
 
-    size_t parameterIndex = effect->FindUniform( effectParameterName );
+    size_t parameterIndex = effect->findUniform( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName, modelName() );
         return false;
     }
 
-    mUniforms[parameterIndex].setResource( *this, parameterIndex, GpuResource::CastTo<UniformResource>(uniform) );
+    mUniforms[parameterIndex].setResource( *this, parameterIndex, GpuResource::castTo<UniformResource>(uniform) );
 
     return true;
 }
@@ -794,7 +794,7 @@ bool GN::gfx::ModelResource::Impl::SetUniformResource( const char * effectParame
 //
 // -----------------------------------------------------------------------------
 AutoRef<UniformResource>
-GN::gfx::ModelResource::Impl::GetUniformResource( const char * effectParameterName ) const
+GN::gfx::ModelResource::Impl::uniformResource( const char * effectParameterName ) const
 {
     EffectResource * effect = mEffect.resource;
     if( NULL == effect )
@@ -803,24 +803,24 @@ GN::gfx::ModelResource::Impl::GetUniformResource( const char * effectParameterNa
         if( !dummy )
         {
             GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
-            dummy = GetGdb().CreateResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( GetGdb().GetGpu().CreateUniform( sizeof(float) ) );
-            dummy->SetUniform( u );
+            dummy = getGdb().createResource<UniformResource>( NULL );
+            AutoRef<Uniform> u( getGdb().getGpu().createUniform( sizeof(float) ) );
+            dummy->setUniform( u );
         }
 
         return dummy;
     }
 
-    size_t parameterIndex = effect->FindUniform( effectParameterName );
+    size_t parameterIndex = effect->findUniform( effectParameterName );
     if( EffectResource::PARAMETER_NOT_FOUND == parameterIndex )
     {
         AutoRef<UniformResource> & dummy = mDummyUniforms[effectParameterName?effectParameterName:"NULL_PARAMETER"];
         if( !dummy )
         {
             GN_ERROR(sLogger)( "%s is not a valid uniform name for model %s!", effectParameterName?effectParameterName:"<NULL name>", modelName() );
-            dummy = GetGdb().CreateResource<UniformResource>( NULL );
-            AutoRef<Uniform> u( GetGdb().GetGpu().CreateUniform( sizeof(float) ) );
-            dummy->SetUniform( u );
+            dummy = getGdb().createResource<UniformResource>( NULL );
+            AutoRef<Uniform> u( getGdb().getGpu().createUniform( sizeof(float) ) );
+            dummy->setUniform( u );
         }
         return dummy;
     }
@@ -831,28 +831,28 @@ GN::gfx::ModelResource::Impl::GetUniformResource( const char * effectParameterNa
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::SetMeshResource(
+bool GN::gfx::ModelResource::Impl::setMeshResource(
     GpuResource              * resource,
     const MeshResourceSubset * subset )
 {
     // check mesh resource pointer
-    if( resource && !GetGdb().ValidResource( MeshResource::GetGuid(), resource ) )
+    if( resource && !getGdb().validResource( MeshResource::guid(), resource ) )
     {
         GN_ERROR(sLogger)( "invalid mesh resource pointer" );
         return false;
     }
 
-    MeshResource * mesh = GpuResource::CastTo<MeshResource>(resource);
+    MeshResource * mesh = GpuResource::castTo<MeshResource>(resource);
 
     // bind mesh signal with the old mesh
     if( mMesh.resource != mesh )
     {
-        if( mMesh.resource ) mMesh.resource->sigMeshChanged.Disconnect( this );
-        if( mesh ) mesh->sigMeshChanged.Connect( this, &Impl::onMeshChanged );
+        if( mMesh.resource ) mMesh.resource->sigMeshChanged.disconnect( this );
+        if( mesh ) mesh->sigMeshChanged.connect( this, &Impl::onMeshChanged );
     }
 
     // update mesh resource pointer
-    mMesh.resource.Set( mesh );
+    mMesh.resource.set( mesh );
 
     // update mesh subset
     if( subset )
@@ -861,17 +861,17 @@ bool GN::gfx::ModelResource::Impl::SetMeshResource(
     }
     else
     {
-        mMesh.subset.Clear();
+        mMesh.subset.clear();
     }
 
     // update GPU contexts
-    for( size_t i = 0; i < mPasses.Size(); ++i )
+    for( size_t i = 0; i < mPasses.size(); ++i )
     {
         RenderPass & pass = mPasses[i];
 
         if( mMesh.resource )
         {
-            mMesh.resource->ApplyToContext( pass.gc );
+            mMesh.resource->applyToContext( pass.gc );
         }
     }
 
@@ -882,7 +882,7 @@ bool GN::gfx::ModelResource::Impl::SetMeshResource(
 //
 // -----------------------------------------------------------------------------
 AutoRef<MeshResource>
-GN::gfx::ModelResource::Impl::GetMeshResource( MeshResourceSubset * subset ) const
+GN::gfx::ModelResource::Impl::meshResource( MeshResourceSubset * subset ) const
 {
     if( subset )*subset = mMesh.subset;
     return mMesh.resource;
@@ -891,45 +891,45 @@ GN::gfx::ModelResource::Impl::GetMeshResource( MeshResourceSubset * subset ) con
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ModelResource::Impl::SetEffectResource( GpuResource * resource )
+bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 {
-    if( resource && !GetGdb().ValidResource( EffectResource::GetGuid(), resource ) )
+    if( resource && !getGdb().validResource( EffectResource::guid(), resource ) )
     {
         GN_ERROR(sLogger)( "Invalid effect resource pointer.", modelName() );
         return false;
     }
 
-    EffectResource * effect = GpuResource::CastTo<EffectResource>(resource);
+    EffectResource * effect = GpuResource::castTo<EffectResource>(resource);
 
     // rebind changing signal
     if( effect != mEffect.resource )
     {
-        if( mEffect.resource ) mEffect.resource->sigEffectChanged.Disconnect( this );
-        if( effect ) effect->sigEffectChanged.Connect( this, &Impl::onEffectChanged );
+        if( mEffect.resource ) mEffect.resource->sigEffectChanged.disconnect( this );
+        if( effect ) effect->sigEffectChanged.connect( this, &Impl::onEffectChanged );
     }
 
     // update effect resource pointer
-    mEffect.resource.Set( effect );
+    mEffect.resource.set( effect );
 
     // initialize passes array
-    size_t numpasses = effect ? effect->GetNumPasses() : 0;
-    mPasses.Resize( numpasses );
-    for( size_t i = 0; i < mPasses.Size(); ++i )
+    size_t numpasses = effect ? effect->numPasses() : 0;
+    mPasses.resize( numpasses );
+    for( size_t i = 0; i < mPasses.size(); ++i )
     {
         RenderPass & pass = mPasses[i];
 
-        pass.gc.Clear();
-        effect->ApplyToContext( i, pass.gc );
+        pass.gc.clear();
+        effect->applyToContext( i, pass.gc );
 
-        pass.renderstates = effect->GetRenderStates( i );
+        pass.renderstates = effect->renderStates( i );
     }
 
     // reapply mesh
-    GN_VERIFY( SetMeshResource( mMesh.resource, &mMesh.subset ) );
+    GN_VERIFY( setMeshResource( mMesh.resource, &mMesh.subset ) );
 
     // reapply textures
-    size_t numtextures = effect ? effect->GetNumTextures() : 0;
-    mTextures.Resize( numtextures );
+    size_t numtextures = effect ? effect->numTextures() : 0;
+    mTextures.resize( numtextures );
     for( size_t i = 0; i < numtextures; ++i )
     {
         TextureItem & ti = mTextures[i];
@@ -938,9 +938,9 @@ bool GN::gfx::ModelResource::Impl::SetEffectResource( GpuResource * resource )
 
         if( !texres )
         {
-            const EffectResource::TextureProperties & tp = mEffect.resource->GetTextureProperties( i );
-            StrA texname = StringFormat( "%s.texture.%s", modelName(), tp.parameterName.ToRawPtr() );
-            texres = GetGdb().FindOrCreateResource<TextureResource>( texname );
+            const EffectResource::TextureProperties & tp = mEffect.resource->textureProperties( i );
+            StrA texname = stringFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+            texres = getGdb().findOrCreateResource<TextureResource>( texname );
             if( !texres ) return false;
         }
 
@@ -949,8 +949,8 @@ bool GN::gfx::ModelResource::Impl::SetEffectResource( GpuResource * resource )
     }
 
     // reapply uniforms
-    size_t numuniforms = effect ? effect->GetNumUniforms() : 0;
-    mUniforms.Resize( numuniforms );
+    size_t numuniforms = effect ? effect->numUniforms() : 0;
+    mUniforms.resize( numuniforms );
     for( size_t i = 0; i < numuniforms; ++i )
     {
         UniformItem & ui = mUniforms[i];
@@ -959,17 +959,17 @@ bool GN::gfx::ModelResource::Impl::SetEffectResource( GpuResource * resource )
 
         if( !unires )
         {
-            const EffectResource::UniformProperties & up = mEffect.resource->GetUniformProperties( i );
-            StrA uniname = StringFormat( "%s.uniform.%s", modelName(), up.parameterName.ToRawPtr() );
-            unires = GetGdb().FindOrCreateResource<UniformResource>( uniname );
+            const EffectResource::UniformProperties & up = mEffect.resource->uniformProperties( i );
+            StrA uniname = stringFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
+            unires = getGdb().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
-            AutoRef<Uniform> u = unires->GetUniform();
+            AutoRef<Uniform> u = unires->uniform();
             if( !u && up.size > 0 )
             {
-                u.Attach( GetGdb().GetGpu().CreateUniform( up.size ) );
+                u.attach( getGdb().getGpu().createUniform( up.size ) );
                 if( !u ) return false;
             }
-            unires->SetUniform( u );
+            unires->setUniform( u );
         }
 
         ui.setResource( *this, i, NULL );
@@ -982,18 +982,18 @@ bool GN::gfx::ModelResource::Impl::SetEffectResource( GpuResource * resource )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::Draw() const
+void GN::gfx::ModelResource::Impl::draw() const
 {
     MeshResource * mesh = mMesh.resource;
     if( NULL == mesh ) return;
 
-    const MeshResourceDesc & meshdesc = mesh->GetDesc();
+    const MeshResourceDesc & meshdesc = mesh->getDesc();
 
-    Gpu & g = GetGdb().GetGpu();
+    Gpu & g = getGdb().getGpu();
 
-    const GpuContext & currentContext = g.GetContext();
+    const GpuContext & currentContext = g.getContext();
 
-    for( size_t i = 0; i < mPasses.Size(); ++i )
+    for( size_t i = 0; i < mPasses.size(); ++i )
     {
         GpuContext & gc = mPasses[i].gc;
 
@@ -1017,16 +1017,16 @@ void GN::gfx::ModelResource::Impl::Draw() const
     }
 
     // draw
-    for( size_t i = 0; i < mPasses.Size(); ++i )
+    for( size_t i = 0; i < mPasses.size(); ++i )
     {
         const GpuContext & gc = mPasses[i].gc;
 
-        g.BindContext( gc );
+        g.bindContext( gc );
 
         // do rendering
         if( gc.idxbuf )
         {
-            g.DrawIndexed(
+            g.drawIndexed(
                 meshdesc.prim,
                 subset.numidx,
                 subset.basevtx,
@@ -1036,7 +1036,7 @@ void GN::gfx::ModelResource::Impl::Draw() const
         }
         else
         {
-            g.Draw(
+            g.draw(
                 meshdesc.prim,
                 subset.numvtx,
                 subset.basevtx );
@@ -1054,71 +1054,71 @@ void GN::gfx::ModelResource::Impl::Draw() const
 // -----------------------------------------------------------------------------
 bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 {
-    GpuResourceDatabase & db = GetGdb();
+    GpuResourceDatabase & db = getGdb();
 
     // initialize effect
-    if( !desc.effect.Empty() )
+    if( !desc.effect.empty() )
     {
-        AutoRef<EffectResource> effect = db.FindResource<EffectResource>( desc.effect );
+        AutoRef<EffectResource> effect = db.findResource<EffectResource>( desc.effect );
         if( 0 == effect )
         {
-            effect = EffectResource::LoadFromFile( db, desc.effect );
+            effect = EffectResource::loadFromFile( db, desc.effect );
             if( 0 == effect )
             {
-                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.ToRawPtr() );
+                GN_ERROR(sLogger)( "%s is not a valid effect resource name.", desc.effect.cptr() );
                 return false;
             }
         }
-        if( !SetEffectResource( effect ) ) return false;
+        if( !setEffectResource( effect ) ) return false;
     }
 
     // initialize mesh
-    if( !desc.mesh.Empty() )
+    if( !desc.mesh.empty() )
     {
-        AutoRef<MeshResource> mesh = db.FindResource<MeshResource>( desc.mesh );
+        AutoRef<MeshResource> mesh = db.findResource<MeshResource>( desc.mesh );
         if( 0 == mesh )
         {
-            mesh = MeshResource::LoadFromFile( db, desc.mesh );
+            mesh = MeshResource::loadFromFile( db, desc.mesh );
             if( 0 == mesh )
             {
-                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.ToRawPtr() );
+                GN_ERROR(sLogger)( "%s is not a valid mesh resource name.", desc.mesh.cptr() );
                 return false;
             }
         }
-        if( !SetMeshResource( mesh, &desc.subset ) ) return false;
+        if( !setMeshResource( mesh, &desc.subset ) ) return false;
     }
 
     // setup textures
-    GN_ASSERT( mTextures.Size() == (mEffect.resource ? mEffect.resource->GetNumTextures() : 0) );
-    for( size_t i = 0; i < mTextures.Size(); ++i )
+    GN_ASSERT( mTextures.size() == (mEffect.resource ? mEffect.resource->numTextures() : 0) );
+    for( size_t i = 0; i < mTextures.size(); ++i )
     {
         TextureItem & t = mTextures[i];
 
-        const EffectResource::TextureProperties & tp = mEffect.resource->GetTextureProperties( i );
+        const EffectResource::TextureProperties & tp = mEffect.resource->textureProperties( i );
 
-        const ModelResourceDesc::ModelTextureDesc * td = desc.textures.Find( tp.parameterName );
+        const ModelResourceDesc::ModelTextureDesc * td = desc.textures.find( tp.parameterName );
 
         AutoRef<TextureResource> texres;
 
         if( td )
         {
-            if( !td->resourceName.Empty() )
+            if( !td->resourceName.empty() )
             {
-                texres = TextureResource::LoadFromFile( db, td->resourceName );
+                texres = TextureResource::loadFromFile( db, td->resourceName );
             }
             else
             {
-                StrA texname = StringFormat( "%s.texture.%s", modelName(), tp.parameterName.ToRawPtr() );
-                texres = db.FindOrCreateResource<TextureResource>( texname );
-                if( texres ) texres->Reset( &td->desc );
+                StrA texname = stringFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
+                texres = db.findOrCreateResource<TextureResource>( texname );
+                if( texres ) texres->reset( &td->desc );
             }
         }
         else
         {
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
-                tp.parameterName.ToRawPtr(),
-                mEffect.resource->Name(),
+                tp.parameterName.cptr(),
+                mEffect.resource->name(),
                 modelName() );
 
             return false;
@@ -1129,52 +1129,52 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // setup uniforms
-    GN_ASSERT( mUniforms.Size() == (mEffect.resource?mEffect.resource->GetNumUniforms() : 0) );
-    for( size_t i = 0; i < mUniforms.Size(); ++i )
+    GN_ASSERT( mUniforms.size() == (mEffect.resource?mEffect.resource->numUniforms() : 0) );
+    for( size_t i = 0; i < mUniforms.size(); ++i )
     {
         UniformItem & u = mUniforms[i];
 
-        const EffectResource::UniformProperties & up = mEffect.resource->GetUniformProperties( i );
+        const EffectResource::UniformProperties & up = mEffect.resource->uniformProperties( i );
 
-        const ModelResourceDesc::ModelUniformDesc * ud = desc.uniforms.Find( up.parameterName );
+        const ModelResourceDesc::ModelUniformDesc * ud = desc.uniforms.find( up.parameterName );
 
         AutoRef<UniformResource> unires;
         if( ud )
         {
-            if( !ud->resourceName.Empty() )
+            if( !ud->resourceName.empty() )
             {
-                unires = db.FindResource<UniformResource>( ud->resourceName );
+                unires = db.findResource<UniformResource>( ud->resourceName );
                 if( !unires )
                 {
                     GN_ERROR(sLogger)( "Invalid uniform resource name '%s' in model '%s'.",
-                        ud->resourceName.ToRawPtr(),
+                        ud->resourceName.cptr(),
                         modelName() );
                 }
             }
             else
             {
-                StrA uniname = StringFormat( "%s.uniform.%s", modelName(), up.parameterName.ToRawPtr() );
+                StrA uniname = stringFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
 
-                const void * initialValue = ud->initialValue.ToRawPtr();
-                if( !ud->initialValue.Empty() && ud->initialValue.Size() != ud->size )
+                const void * initialValue = ud->initialValue.cptr();
+                if( !ud->initialValue.empty() && ud->initialValue.size() != ud->size )
                 {
                     GN_ERROR(sLogger)(
                         "Incorrect initial data size of uniform '%s in model '%s'.",
-                        up.parameterName.ToRawPtr(),
+                        up.parameterName.cptr(),
                         modelName() );
                     initialValue = NULL;
                 }
 
-                unires = db.FindOrCreateResource<UniformResource>( uniname );
-                if( unires ) unires->Reset( ud->size, initialValue );
+                unires = db.findOrCreateResource<UniformResource>( uniname );
+                if( unires ) unires->reset( ud->size, initialValue );
             }
         }
         else
         {
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
-                up.parameterName.ToRawPtr(),
-                mEffect.resource->Name(),
+                up.parameterName.cptr(),
+                mEffect.resource->name(),
                 modelName() );
 
             return false;
@@ -1191,24 +1191,24 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::ModelResource::Impl::Clear()
+void GN::gfx::ModelResource::Impl::clear()
 {
     if( mEffect.resource )
     {
-        mEffect.resource->sigEffectChanged.Disconnect( this );
-        mEffect.resource.Clear();
+        mEffect.resource->sigEffectChanged.disconnect( this );
+        mEffect.resource.clear();
     }
 
     if( mMesh.resource )
     {
-        mMesh.resource->sigMeshChanged.Disconnect( this );
-        mMesh.resource.Clear();
+        mMesh.resource->sigMeshChanged.disconnect( this );
+        mMesh.resource.clear();
     }
 
-    mPasses.Clear();
-    mTextures.Clear();
-    mUniforms.Clear();
-    mDummyUniforms.Clear();
+    mPasses.clear();
+    mTextures.clear();
+    mUniforms.clear();
+    mDummyUniforms.clear();
 }
 
 //
@@ -1216,21 +1216,21 @@ void GN::gfx::ModelResource::Impl::Clear()
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
 {
-    Clear();
+    clear();
 
-    GN_VERIFY( SetEffectResource( other.mEffect.resource ) );
-    GN_ASSERT( mPasses.Size() == other.mPasses.Size() );
+    GN_VERIFY( setEffectResource( other.mEffect.resource ) );
+    GN_ASSERT( mPasses.size() == other.mPasses.size() );
 
-    GN_VERIFY( SetMeshResource( other.mMesh.resource, &other.mMesh.subset ) );
+    GN_VERIFY( setMeshResource( other.mMesh.resource, &other.mMesh.subset ) );
 
-    GN_ASSERT( mTextures.Size() == other.mTextures.Size() );
-    for( size_t i = 0; i < other.mTextures.Size(); ++i )
+    GN_ASSERT( mTextures.size() == other.mTextures.size() );
+    for( size_t i = 0; i < other.mTextures.size(); ++i )
     {
         mTextures[i].setResource( *this, i, other.mTextures[i].getResource() );
     }
 
-    GN_ASSERT( mUniforms.Size() == other.mUniforms.Size() );
-    for( size_t i = 0; i < other.mUniforms.Size(); ++i )
+    GN_ASSERT( mUniforms.size() == other.mUniforms.size() );
+    for( size_t i = 0; i < other.mUniforms.size(); ++i )
     {
         mUniforms[i].setResource( *this, i, other.mUniforms[i].getResource() );
     }
@@ -1243,7 +1243,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( EffectResource & r )
 {
     GN_ASSERT( &r == mEffect.resource );
 
-    GN_VERIFY( SetEffectResource( &r ) );
+    GN_VERIFY( setEffectResource( &r ) );
 }
 
 //
@@ -1253,7 +1253,7 @@ void GN::gfx::ModelResource::Impl::onMeshChanged( MeshResource & r )
 {
     GN_ASSERT( &r == mMesh.resource );
 
-    GN_VERIFY( SetMeshResource( &r, &mMesh.subset ) );
+    GN_VERIFY( setMeshResource( &r, &mMesh.subset ) );
 }
 
 // *****************************************************************************
@@ -1281,11 +1281,11 @@ public:
 // -----------------------------------------------------------------------------
 bool GN::gfx::registerModelResourceFactory( GpuResourceDatabase & db )
 {
-    if( db.HasResourceFactory( ModelResource::GetGuid() ) ) return true;
+    if( db.hasResourceFactory( ModelResource::guid() ) ) return true;
 
     GpuResourceFactory factory = { &ModelResourceInternal::sCreateInstance };
 
-    return db.RegisterResourceFactory( ModelResource::GetGuid(), "Model Resource", factory );
+    return db.registerResourceFactory( ModelResource::guid(), "Model Resource", factory );
 }
 
 //
@@ -1308,7 +1308,7 @@ GN::gfx::ModelResource::~ModelResource()
 //
 //
 // -----------------------------------------------------------------------------
-const Guid & GN::gfx::ModelResource::GetGuid()
+const Guid & GN::gfx::ModelResource::guid()
 {
     static const Guid MODEL_GUID = { 0x24a6e5eb, 0xeb76, 0x440f, { 0xaa, 0x9d, 0x6a, 0x59, 0x34, 0x2f, 0x89, 0x2e } };
     return MODEL_GUID;
@@ -1318,7 +1318,7 @@ const Guid & GN::gfx::ModelResource::GetGuid()
 //
 // -----------------------------------------------------------------------------
 AutoRef<ModelResource>
-GN::gfx::ModelResource::LoadFromFile(
+GN::gfx::ModelResource::loadFromFile(
     GpuResourceDatabase & db,
     const char          * filename )
 {
@@ -1329,22 +1329,22 @@ GN::gfx::ModelResource::LoadFromFile(
     }
 
     // Reuse existing resource, if possible
-    AutoRef<ModelResource> m( db.FindResource<ModelResource>( filename ) );
+    AutoRef<ModelResource> m( db.findResource<ModelResource>( filename ) );
     if( m ) return m;
 
     // convert to full (absolute) path
-    StrA abspath = fs::ResolvePath( fs::GetCurrentDir(), filename );
+    StrA abspath = fs::resolvePath( fs::getCurrentDir(), filename );
     filename = abspath;
 
     // Try search for existing resource again with full path
-    m = db.FindResource<ModelResource>( filename );
+    m = db.findResource<ModelResource>( filename );
     if( m ) return m;
 
     ModelResourceDesc desc;
-    if( !LoadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
+    if( !loadFromXmlFile( desc, filename ) ) return AutoRef<ModelResource>::NULLREF;
 
-    m = db.CreateResource<ModelResource>( abspath );
-    if( !m || !m->Reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;
+    m = db.createResource<ModelResource>( abspath );
+    if( !m || !m->reset( &desc ) ) return AutoRef<ModelResource>::NULLREF;
 
     return m;
 }
@@ -1352,14 +1352,14 @@ GN::gfx::ModelResource::LoadFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-bool                        GN::gfx::ModelResource::Reset( const ModelResourceDesc * desc ) { return mImpl->Reset( desc ); }
-AutoRef<ModelResource>      GN::gfx::ModelResource::MakeClone( const char * nameOfTheClone ) const { return mImpl->MakeClone( nameOfTheClone ); }
-void                        GN::gfx::ModelResource::SetTextureResource( const char * effectParameterName, GpuResource * texture ) { mImpl->SetTextureResource( effectParameterName, texture ); }
-AutoRef<TextureResource>    GN::gfx::ModelResource::GetTextureResource( const char * effectParameterName ) const { return mImpl->GetTextureResource( effectParameterName ); }
-void                        GN::gfx::ModelResource::SetUniformResource( const char * effectParameterName, GpuResource * uniform ) { mImpl->SetUniformResource( effectParameterName, uniform ); }
-AutoRef<UniformResource>    GN::gfx::ModelResource::GetUniformResource( const char * effectParameterName ) const { return mImpl->GetUniformResource( effectParameterName ); }
-void                        GN::gfx::ModelResource::SetMeshResource( GpuResource * mesh, const MeshResourceSubset * subset ) { mImpl->SetMeshResource( mesh, subset ); }
-AutoRef<MeshResource>       GN::gfx::ModelResource::GetMeshResource( MeshResourceSubset * subset ) const { return mImpl->GetMeshResource( subset ); }
-void                        GN::gfx::ModelResource::SetEffectResource( GpuResource * effect ) { mImpl->SetEffectResource( effect ); }
-AutoRef<EffectResource>     GN::gfx::ModelResource::GetEffectResource() const { return mImpl->GetEffectResource(); }
-void                        GN::gfx::ModelResource::Draw() const { mImpl->Draw(); }
+bool                        GN::gfx::ModelResource::reset( const ModelResourceDesc * desc ) { return mImpl->reset( desc ); }
+AutoRef<ModelResource>      GN::gfx::ModelResource::makeClone( const char * nameOfTheClone ) const { return mImpl->makeClone( nameOfTheClone ); }
+void                        GN::gfx::ModelResource::setTextureResource( const char * effectParameterName, GpuResource * texture ) { mImpl->setTextureResource( effectParameterName, texture ); }
+AutoRef<TextureResource>    GN::gfx::ModelResource::textureResource( const char * effectParameterName ) const { return mImpl->textureResource( effectParameterName ); }
+void                        GN::gfx::ModelResource::setUniformResource( const char * effectParameterName, GpuResource * uniform ) { mImpl->setUniformResource( effectParameterName, uniform ); }
+AutoRef<UniformResource>    GN::gfx::ModelResource::uniformResource( const char * effectParameterName ) const { return mImpl->uniformResource( effectParameterName ); }
+void                        GN::gfx::ModelResource::setMeshResource( GpuResource * mesh, const MeshResourceSubset * subset ) { mImpl->setMeshResource( mesh, subset ); }
+AutoRef<MeshResource>       GN::gfx::ModelResource::meshResource( MeshResourceSubset * subset ) const { return mImpl->meshResource( subset ); }
+void                        GN::gfx::ModelResource::setEffectResource( GpuResource * effect ) { mImpl->setEffectResource( effect ); }
+AutoRef<EffectResource>     GN::gfx::ModelResource::effectResource() const { return mImpl->effectResource(); }
+void                        GN::gfx::ModelResource::draw() const { mImpl->draw(); }

@@ -11,13 +11,13 @@ class StringMapTest : public CxxTest::TestSuite
     {
         UInt64 operator()( const std::string & s ) const
         {
-            return GN::StringHash( s.c_str() );
+            return GN::stringHash( s.c_str() );
         }
     };
 
     typedef GN::HashMap<std::string, size_t, StlStringHash> StrHashMap;
 
-    struct Dictionary
+    struct WordTable
     {
         const char * const * table;
         size_t               count;
@@ -37,7 +37,7 @@ class StringMapTest : public CxxTest::TestSuite
         Perf strmap;
         Perf hashmap;
 
-        void Print() const
+        void print() const
         {
             printf( "GN::Dictionary  - insert : %llu\n", dict.insert );
             printf( "std::map        - insert : %llu\n", stlmap.insert );
@@ -56,9 +56,9 @@ class StringMapTest : public CxxTest::TestSuite
         }
     };
 
-    static Dictionary dict();
+    static WordTable words();
 
-    void doPerfTest( const Dictionary & d )
+    void doPerfTest( const WordTable & w )
     {
         using namespace GN;
 
@@ -70,121 +70,121 @@ class StringMapTest : public CxxTest::TestSuite
 
         for( int i = 0; i < 10; ++i )
         {
-            // GN::Dictionary insertion
-            GN::Dictionary<std::string,size_t> dict;
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            // Dictionary insertion
+            Dictionary<std::string,size_t> dict;
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                dict.Insert( d.table[i], i );
+                dict.insert( w.table[i], i );
             }
-            perfs.dict.insert += c.GetCycleCount() - t;
+            perfs.dict.insert += c.getCycleCount() - t;
 
             // std::map insersion
             std::map<std::string,size_t> stlmap;
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                stlmap.insert( std::make_pair( d.table[i], i ) );
+                stlmap.insert( std::make_pair( w.table[i], i ) );
             }
-            perfs.stlmap.insert += c.GetCycleCount() - t;
+            perfs.stlmap.insert += c.getCycleCount() - t;
 
             // StringMap insertion
             StringMap<char,size_t> mymap;
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                mymap.Insert( d.table[i], i );
+                mymap.insert( w.table[i], i );
             }
-            perfs.strmap.insert += c.GetCycleCount() - t;
+            perfs.strmap.insert += c.getCycleCount() - t;
 
             // HashMap insertion
-            StrHashMap hmap(d.count);
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            StrHashMap hmap(w.count);
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                hmap.Insert( d.table[i], i );
+                hmap.insert( w.table[i], i );
             }
-            perfs.hashmap.insert += c.GetCycleCount() - t;
+            perfs.hashmap.insert += c.getCycleCount() - t;
 
             // generate random searching set
             DynaArray<std::string> strings( 10000 );
-            for( size_t i = 0; i < strings.Size(); ++i )
+            for( size_t i = 0; i < strings.size(); ++i )
             {
-                size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
-                if( n >= d.count ) n = d.count - 1;
-                strings[i] = d.table[n];
+                size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)w.count );
+                if( n >= w.count ) n = w.count - 1;
+                strings[i] = w.table[n];
             }
 
-            // GN::Dictionary find
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < strings.Size(); ++i )
+            // Dictionary find
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.size(); ++i )
             {
-                dict.Find( strings[i] );
+                dict.find( strings[i] );
             }
-            perfs.dict.find += c.GetCycleCount() - t;
+            perfs.dict.find += c.getCycleCount() - t;
 
             // std::map find
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < strings.Size(); ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.size(); ++i )
             {
                 stlmap.find( strings[i] );
             }
-            perfs.stlmap.find += c.GetCycleCount() - t;
+            perfs.stlmap.find += c.getCycleCount() - t;
 
             // StringMap find
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < strings.Size(); ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.size(); ++i )
             {
-                mymap.Find( strings[i].c_str() );
+                mymap.find( strings[i].c_str() );
             }
-            perfs.strmap.find += c.GetCycleCount() - t;
+            perfs.strmap.find += c.getCycleCount() - t;
 
             // StrHashMap find
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < strings.Size(); ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < strings.size(); ++i )
             {
-                hmap.Find( strings[i] );
+                hmap.find( strings[i] );
             }
-            perfs.hashmap.find += c.GetCycleCount() - t;
+            perfs.hashmap.find += c.getCycleCount() - t;
 
-            // GN::Dictionary erasing
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            // Dictionary erasing
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                dict.Remove( d.table[i] );
+                dict.remove( w.table[i] );
             }
-            perfs.dict.remove += c.GetCycleCount() - t;
-            TS_ASSERT( dict.Empty() );
+            perfs.dict.remove += c.getCycleCount() - t;
+            TS_ASSERT( dict.empty() );
 
             // std::map erasing
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                stlmap.erase( d.table[i] );
+                stlmap.erase( w.table[i] );
             }
-            perfs.stlmap.remove += c.GetCycleCount() - t;
+            perfs.stlmap.remove += c.getCycleCount() - t;
             TS_ASSERT( stlmap.empty() );
 
             // StringMap erasing
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                mymap.Remove( d.table[i] );
+                mymap.remove( w.table[i] );
             }
-            perfs.strmap.remove += c.GetCycleCount() - t;
-            TS_ASSERT( mymap.Empty() );
+            perfs.strmap.remove += c.getCycleCount() - t;
+            TS_ASSERT( mymap.empty() );
 
             // StrHashMap erasing
-            t = c.GetCycleCount();
-            for( size_t i = 0; i < d.count; ++i )
+            t = c.getCycleCount();
+            for( size_t i = 0; i < w.count; ++i )
             {
-                hmap.Remove( d.table[i] );
+                hmap.remove( w.table[i] );
             }
-            perfs.hashmap.remove += c.GetCycleCount() - t;
-            TS_ASSERT( hmap.Empty() );
+            perfs.hashmap.remove += c.getCycleCount() - t;
+            TS_ASSERT( hmap.empty() );
         }
 
-        perfs.Print();
+        perfs.print();
     }
 
     void doPerfTestWithFixedNumberOfItems( size_t count )
@@ -193,20 +193,20 @@ class StringMapTest : public CxxTest::TestSuite
 
         printf( "num words = %d\n", count );
 
-        Dictionary d = dict();
+        WordTable w = words();
 
         DynaArray<const char *> strings( count );
-        for( size_t i = 0; i < strings.Size(); ++i )
+        for( size_t i = 0; i < strings.size(); ++i )
         {
-            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)d.count );
+            size_t n = (size_t)( (double)rand() / (double)RAND_MAX * (double)w.count );
             if( n >= count ) n = count - 1;
-            strings[i] = d.table[n];
+            strings[i] = w.table[n];
         }
 
-        d.table = &strings[0];
-        d.count = strings.Size();
+        w.table = &strings[0];
+        w.count = strings.size();
 
-        doPerfTest( d );
+        doPerfTest( w );
     }
 
 public:
@@ -217,7 +217,7 @@ public:
 
         StringMap<char,int> m;
 
-        GN::StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
+        StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
 
         // insert
         m["abc"] = 1;
@@ -225,17 +225,17 @@ public:
 
         // FindIter
         StringMap<char,int>::KeyValuePair * i;
-        i = m.FindPair( "abc" );
+        i = m.findPair( "abc" );
         TS_ASSERT_DIFFERS( i, NULL_PAIR );
         TS_ASSERT_EQUALS( i->key, "abc" );
         TS_ASSERT_EQUALS( i->value, 1 );
-        i = m.FindPair( "abcd" );
+        i = m.findPair( "abcd" );
         TS_ASSERT_EQUALS( i, NULL_PAIR );
 
-        // Find
-        TS_ASSERT_EQUALS( *m.Find( "abc" ), 1 );
-        TS_ASSERT_EQUALS( *m.Find( "abd" ), 2 );
-        TS_ASSERT_EQUALS( m.Find( "abcd" ), (int*)NULL );
+        // find
+        TS_ASSERT_EQUALS( *m.find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *m.find( "abd" ), 2 );
+        TS_ASSERT_EQUALS( m.find( "abcd" ), (int*)NULL );
     }
 
     void testIteration()
@@ -253,7 +253,7 @@ public:
         const int  values[] = { 1, 2, 3, 4 };
 
         int i = 0;
-        for( StringMap<char,int>::KeyValuePair * p = m.First(); p != NULL; p = m.Next( p ), ++i )
+        for( StringMap<char,int>::KeyValuePair * p = m.first(); p != NULL; p = m.next( p ), ++i )
         {
             TS_ASSERT_EQUALS( p->key, keys[i] );
             TS_ASSERT_EQUALS( p->value, values[i] );
@@ -270,14 +270,14 @@ public:
 
         StringMap<char,int> b;
         b = a;
-        TS_ASSERT_EQUALS( 2, b.Size() );
-        TS_ASSERT_EQUALS( *b.Find( "abc" ), 1 );
-        TS_ASSERT_EQUALS( *b.Find( "abd" ), 2 );
+        TS_ASSERT_EQUALS( 2, b.size() );
+        TS_ASSERT_EQUALS( *b.find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *b.find( "abd" ), 2 );
 
         StringMap<char,int> c( a );
-        TS_ASSERT_EQUALS( 2, c.Size() );
-        TS_ASSERT_EQUALS( *c.Find( "abc" ), 1 );
-        TS_ASSERT_EQUALS( *c.Find( "abd" ), 2 );
+        TS_ASSERT_EQUALS( 2, c.size() );
+        TS_ASSERT_EQUALS( *c.find( "abc" ), 1 );
+        TS_ASSERT_EQUALS( *c.find( "abd" ), 2 );
     }
 
     void testClear()
@@ -288,16 +288,16 @@ public:
 
         a["abc"] = 1;
         a["abd"] = 2;
-        TS_ASSERT_EQUALS( 2, a.Size() );
+        TS_ASSERT_EQUALS( 2, a.size() );
 
-        a.Clear();
-        TS_ASSERT_EQUALS( 0, a.Size() );
+        a.clear();
+        TS_ASSERT_EQUALS( 0, a.size() );
 
         a["abc"] = 3;
         a["abd"] = 4;
-        TS_ASSERT_EQUALS( 2, a.Size() );
-        TS_ASSERT_EQUALS( *a.Find( "abc" ), 3 );
-        TS_ASSERT_EQUALS( *a.Find( "abd" ), 4 );
+        TS_ASSERT_EQUALS( 2, a.size() );
+        TS_ASSERT_EQUALS( *a.find( "abc" ), 3 );
+        TS_ASSERT_EQUALS( *a.find( "abd" ), 4 );
     }
 
     void testCaseInsensitive()
@@ -309,10 +309,10 @@ public:
         m["a,b,c"] = 1;
         m["a,B,c"] = 2;
 
-        TS_ASSERT_EQUALS( 1, m.Size() );
-        TS_ASSERT_EQUALS( *m.Find( "a,b,C" ), 2 );
-        TS_ASSERT_EQUALS( *m.Find( "A,b,c" ), 2 );
-        TS_ASSERT_EQUALS(  m.Find( "A,b,c,d" ), (int*)NULL );
+        TS_ASSERT_EQUALS( 1, m.size() );
+        TS_ASSERT_EQUALS( *m.find( "a,b,C" ), 2 );
+        TS_ASSERT_EQUALS( *m.find( "A,b,c" ), 2 );
+        TS_ASSERT_EQUALS(  m.find( "A,b,c,d" ), (int*)NULL );
     }
 
     void testrRemove()
@@ -326,19 +326,19 @@ public:
         m["abc"] = 1;
         m["abd"] = 2;
 
-        m.Remove( "abe" );
-        TS_ASSERT_EQUALS( m.Size(), 2 ); // erase non-existing item should have no effect.
-        int * i = m.Find( "abc" );
-        m.Remove( "abd" );
-        TS_ASSERT_EQUALS( m.Size(), 1 ); // verify the one and only one item is removed.
-        TS_ASSERT_EQUALS( m.Find( "abd" ), (int*)NULL ); // verify correct item is erased.
-        TS_ASSERT_EQUALS( m.Find( "abc" ), i ); // verify that erase operation does not affect other iterators.
+        m.remove( "abe" );
+        TS_ASSERT_EQUALS( m.size(), 2 ); // erase non-existing item should have no effect.
+        int * i = m.find( "abc" );
+        m.remove( "abd" );
+        TS_ASSERT_EQUALS( m.size(), 1 ); // verify the one and only one item is removed.
+        TS_ASSERT_EQUALS( m.find( "abd" ), (int*)NULL ); // verify correct item is erased.
+        TS_ASSERT_EQUALS( m.find( "abc" ), i ); // verify that erase operation does not affect other iterators.
 
         // erase the very last item in string map, would leave the map empty.
-        m.Remove( "abc" );
-        TS_ASSERT( m.Empty() );
-        TS_ASSERT_EQUALS( m.Find( "abc" ), (int*)NULL );
-        TS_ASSERT_EQUALS( m.First(), NULL_PAIR );
+        m.remove( "abc" );
+        TS_ASSERT( m.empty() );
+        TS_ASSERT_EQUALS( m.find( "abc" ), (int*)NULL );
+        TS_ASSERT_EQUALS( m.first(), NULL_PAIR );
     }
 
     void testEmptyString()
@@ -347,21 +347,21 @@ public:
 
         StringMap<char,int> m;
 
-        GN::StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
+        StringMap<char,int>::KeyValuePair * NULL_PAIR = NULL;
 
-        TS_ASSERT_EQUALS( (int*)NULL, m.Find(NULL) );
-        TS_ASSERT_EQUALS( (int*)NULL, m.Find("") );
+        TS_ASSERT_EQUALS( (int*)NULL, m.find(NULL) );
+        TS_ASSERT_EQUALS( (int*)NULL, m.find("") );
 
         // try insert NULL string to string map (should do nothing)
         StringMap<char,int>::KeyValuePair * i;
-        i = m.Insert( NULL, 1 );
-        TS_ASSERT_EQUALS( 0, m.Size() );
+        i = m.insert( NULL, 1 );
+        TS_ASSERT_EQUALS( 0, m.size() );
         TS_ASSERT_EQUALS( NULL_PAIR, i );
 
         // insert empty string should work
-        i = m.Insert( "", 123 );
-        TS_ASSERT_EQUALS( 1, m.Size() );
-        TS_ASSERT_EQUALS( i, m.First() );
+        i = m.insert( "", 123 );
+        TS_ASSERT_EQUALS( 1, m.size() );
+        TS_ASSERT_EQUALS( i, m.first() );
         TS_ASSERT_EQUALS( i->key, "" );
         TS_ASSERT_EQUALS( i->value, 123 );
     }
@@ -369,9 +369,9 @@ public:
     void testPerfWith_25000_Items()
     {
         srand( (int)(0xFFFFFFFF & GN::Clock::sGetSystemCycleCount()) );
-        Dictionary d = dict();
-        printf( "num words = %d\n", d.count );
-        doPerfTest( d );
+        WordTable w = words();
+        printf( "num words = %w\n", w.count );
+        doPerfTest( w );
     }
 
     void testPerfWith_1000_Items()
@@ -393,8 +393,8 @@ public:
     }
 };
 
-StringMapTest::Dictionary
-StringMapTest::dict()
+StringMapTest::WordTable
+StringMapTest::words()
 {
     static const char * const TABLE[] =
     {
@@ -20109,7 +20109,7 @@ StringMapTest::dict()
         "rump",
         "rumple",
         "rumpus",
-        "Run",
+        "run",
         "runabout",
         "runaway",
         "rundown",
@@ -25881,7 +25881,7 @@ StringMapTest::dict()
         "zygote"
     };
 
-    Dictionary dict = { TABLE, GN_ARRAY_COUNT(TABLE) };
+    WordTable table = { TABLE, GN_ARRAY_COUNT(TABLE) };
 
-    return dict;
+    return table;
 }

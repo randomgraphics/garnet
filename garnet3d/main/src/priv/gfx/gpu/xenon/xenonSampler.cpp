@@ -72,7 +72,7 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9SamplerObject::Init( const SamplerDesc & desc )
+bool GN::gfx::D3D9SamplerObject::init( const SamplerDesc & desc )
 {
     GN_GUARD;
 
@@ -82,7 +82,7 @@ bool GN::gfx::D3D9SamplerObject::Init( const SamplerDesc & desc )
     mDesc = desc;
 
     // success
-    return Success();
+    return success();
 
     GN_UNGUARD;
 }
@@ -90,7 +90,7 @@ bool GN::gfx::D3D9SamplerObject::Init( const SamplerDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9SamplerObject::Quit()
+void GN::gfx::D3D9SamplerObject::quit()
 {
     GN_GUARD;
 

@@ -4,7 +4,7 @@
 
 #ifdef HAS_CEGUI
 
-static GN::Logger * sLogger = GN::GetLogger("GN.util.cegui");
+static GN::Logger * sLogger = GN::getLogger("GN.util.cegui");
 
 // *****************************************************************************
 // from Renderer
@@ -13,13 +13,13 @@ static GN::Logger * sLogger = GN::GetLogger("GN.util.cegui");
 //
 //
 // -----------------------------------------------------------------------------
-void CEGUI::GarnetTexture::LoadFromFile( const CEGUI::String & filename, const CEGUI::String & group )
+void CEGUI::GarnetTexture::loadFromFile( const CEGUI::String & filename, const CEGUI::String & group )
 {
     GN_GUARD;
 
     mFileName = filename;
     mGroup = group;
-    GN::SafeHeapFree( mMemBuffer );
+    GN::safeHeapFree( mMemBuffer );
 
     if( !reload() )
     {
@@ -36,11 +36,11 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 {
     GN_GUARD;
 
-    GN::SafeHeapFree( mMemBuffer );
+    GN::safeHeapFree( mMemBuffer );
 
     // store memory buffer
     GN_ASSERT( 0 == mMemBuffer );
-    mMemBuffer = GN::HeapMemory::Alloc( buffWidth * buffHeight * 4 );
+    mMemBuffer = GN::HeapMemory::alloc( buffWidth * buffHeight * 4 );
     if( 0 == mMemBuffer )
     {
 		GN_THROW_EX( RendererException(
@@ -90,7 +90,7 @@ bool CEGUI::GarnetTexture::reload()
         dispose();
 
         // create the texture
-        AutoRef<gfx::Texture> tex( gRenderer.Create2DTexture( mWidth, mHeight, 1, gfx::FMT_RGBA32 ) );
+        AutoRef<gfx::Texture> tex( gRenderer.create2DTexture( mWidth, mHeight, 1, gfx::FMT_RGBA32 ) );
         if( tex.empty() ) return false;
 
         // copy data from memory buffer
@@ -113,7 +113,7 @@ bool CEGUI::GarnetTexture::reload()
         }
 
         // unlock texture
-        tex->Unlock();
+        tex->unlock();
 
         // done
         mGarnetTexture = tex;
@@ -130,15 +130,15 @@ bool CEGUI::GarnetTexture::reload()
         CEGUI::RawDataContainer rdc;
         rp->loadRawDataContainer( mFileName, rdc, mGroup );
 
-        GN_TRACE(sLogger)( "Load GUI texture: name(%s), group(%s).", mFileName.c_str(), mFileName.c_str() );
+        GN_TRACE(sLogger)( "Load GUI texture: name(%s), group(%s).", mFileName.cptr(), mFileName.cptr() );
 
         // load texture
-        MemFile<UInt8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.c_str() );
-        mGarnetTexture.Attach( scene::createTextureFromFile( mf ) );
+        MemFile<UInt8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.cptr() );
+        mGarnetTexture.attach( scene::createTextureFromFile( mf ) );
         if( !mGarnetTexture ) return false;
 
         // update texture size
-        mGarnetTexture->GetBaseSize( &mWidth, &mHeight );
+        mGarnetTexture->getBaseSize( &mWidth, &mHeight );
     }
 
     // success

@@ -37,7 +37,7 @@ namespace GN { namespace util
         void                 setViewport( const Rect<UInt32> & );
         const Rect<UInt32> & getViewport() const { return mViewport; }
 
-        void                 Draw( Entity * const * entities, size_t count );
+        void                 draw( Entity * const * entities, size_t count );
 
         //@}
 
