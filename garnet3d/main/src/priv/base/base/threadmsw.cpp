@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
 #include <process.h>
 

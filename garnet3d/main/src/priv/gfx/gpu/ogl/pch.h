@@ -8,7 +8,7 @@
 
 #include "../gpupch.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif

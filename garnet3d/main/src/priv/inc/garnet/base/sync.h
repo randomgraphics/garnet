@@ -168,7 +168,7 @@ namespace GN
     //@}
 }
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 #include "syncmsw.inl"
 #elif GN_POSIX
 #include "syncposix.inl"

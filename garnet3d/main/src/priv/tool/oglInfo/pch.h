@@ -9,7 +9,7 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNwin.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -18,7 +18,7 @@
 
 #include <glew.h>
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 #include <wglew.h>
 #elif GN_POSIX
 #include <glxew.h>

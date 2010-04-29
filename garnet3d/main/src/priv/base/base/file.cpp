@@ -306,7 +306,7 @@ bool GN::TempFile::open( const StrA & prefix, const StrA & mode, Behavior beh )
 
     mBehavior = beh;
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
     // generate temporary file name
     AutoMallocPtr<const char> filename( _tempnam( NULL, "GN_" + prefix ) );

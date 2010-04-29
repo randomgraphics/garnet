@@ -114,8 +114,6 @@
 #define GN_OGL_CHECK_R( X )     GN_OGL_CHECK_R_DESC( X, "" )
 #define GN_OGL_CHECK( X )       GN_OGL_CHECK_DESC( X, "" )
 
-#if GN_MSWIN
-
 ///
 /// check return value of Windows function (general version)
 ///
@@ -186,8 +184,6 @@
 ///
 #define GN_DX_CHECK_RETURN( func, rval ) GN_DX_CHECK_DO( func, return rval; )
 
-#elif GN_POSIX
-
 ///
 /// check return value of XLib function (general version)
 ///
@@ -220,8 +216,6 @@
 /// check return value of XLib function, return if failed
 ///
 #define GN_X_CHECK_RETURN( func, rval ) GN_X_CHECK_DO( func, return rval; )
-
-#endif
 
 //@}
 
@@ -264,7 +258,7 @@ namespace GN
 	///
 	void breakIntoDebugger();
 
-#ifdef GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
     ///
     /// get OS error info (Windows specific)

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicInputMsw.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 
 static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
 

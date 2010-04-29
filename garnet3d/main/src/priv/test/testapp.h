@@ -217,7 +217,7 @@ private:
                 return SHOW_HELP;
             }
             else if( '-' == *a
-                #if GN_MSWIN
+                #if GN_MSWIN || GN_XENON
                 || '/' == *a
                 #endif
                 )

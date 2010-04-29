@@ -393,7 +393,7 @@ bool GN::util::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             return false;
         }
         else if( '-' == *a
-            #if GN_MSWIN
+            #if GN_MSWIN || GN_XENON
             || '/' == *a
             #endif
             )

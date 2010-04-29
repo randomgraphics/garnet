@@ -11,11 +11,11 @@
 // *****************************************************************************
 
 #define GN_MSVC  0 ///< If 1, means current compiler is msvc (or icl)
-#define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8.x
+#define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8+
 #define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
 #define GN_MINGW 0 ///< If 1, means current compiler is MingW
-#define GN_GCC   0 ///< If 1, means current compierl is gcc/g++
-#define GN_BCB   0 ///< If 1, means current compierl is boland c++ compiler
+#define GN_GCC   0 ///< If 1, means current compiler is gcc/g++
+#define GN_BCB   0 ///< If 1, means current compiler is boland c++ compiler
 
 /// \def GN_COMPILER
 /// Indicate current compiler
@@ -62,22 +62,17 @@
 // 辨识操作系统
 // *****************************************************************************
 
-#define GN_MSWIN  0 ///< If 1, means current platform is Windows serias
-#define GN_CYGWIN 0 ///< If 1, means current platform is Cygwin
-#define GN_POSIX  0 ///< If 1, means current platform is POSIX compatible, such as Cygwin
-#define GN_PC 0     ///< If 1, means PC
-#define GN_XBOX1 0  ///< If 1, means Xbox1
-#define GN_XENON 0  ///< if 1, means Xbox360
+#define GN_MSWIN    0 ///< If 1, means current platform is Microsoft Windows on PC (not Xbox)
+#define GN_XBOX1    0 ///< If 1, means Xbox1
+#define GN_XENON    0 ///< if 1, means Xbox360
+#define GN_POSIX    0 ///< If 1, means POSIX compatible platform, such as linux/unix and Cygwin
+#define GN_CYGWIN   0 ///< If 1, means Cygwin
 
 /// \def GN_OS
 /// Indicate current OS
 
 // Windows platform
 #if defined( _WIN32 )
-
-#undef GN_MSWIN
-#define GN_MSWIN 1
-
 #ifdef _XBOX_VER
 #if _XBOX_VER >= 200
 #undef GN_XENON
@@ -91,8 +86,8 @@
 #define GN_PLATFORM_NAME "xbox1"
 #endif
 #else
-#undef GN_PC
-#define GN_PC 1
+#undef GN_MSWIN
+#define GN_MSWIN 1
 #define GN_PLATFORM_NAME "mswin"
 #endif
 
@@ -105,9 +100,6 @@
 #undef GN_POSIX
 #define GN_POSIX  1 // cygwin also provides some posix compabilities
 
-#undef GN_PC
-#define GN_PC     1 // Cygwin is only available on PC.
-
 #define GN_PLATFORM_NAME "cygwin"
 
 // unix platform
@@ -115,9 +107,6 @@
 
 #undef GN_POSIX
 #define GN_POSIX 1
-
-#undef GN_PC
-#define GN_PC    1 // TODO: detect non-PC platform.
 
 #define GN_PLATFORM_NAME "posix"
 

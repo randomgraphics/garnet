@@ -158,7 +158,7 @@ namespace GN { namespace gfx
         ///
         void insertResource( XenonResource * p )
         {
-            mResourceList.append(p);
+            mResourceList.push_back(p);
         }
 
         ///

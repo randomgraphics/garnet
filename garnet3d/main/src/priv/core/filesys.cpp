@@ -9,11 +9,9 @@
 #endif
 
 #if GN_MSWIN
-#if GN_PC
 #include <shlwapi.h>
 #if GN_MSVC
 #pragma comment( lib, "shlwapi.lib" )
-#endif
 #endif
 #elif GN_POSIX
 #include <dirent.h>
@@ -76,7 +74,7 @@ static bool sIsAbsPath( const StrA & path )
 // local functions for win32 platform
 // *****************************************************************************
 
-#if GN_MSWIN && GN_PC
+#if GN_MSWIN
 
 //
 //
@@ -118,7 +116,7 @@ static bool sIsAbsPath( const StrA & path )
 // local functions for Xenon platform
 // *****************************************************************************
 
-#if GN_MSWIN && GN_XENON
+#if GN_XENON
 
 //
 //
@@ -642,7 +640,7 @@ public:
     FontFileSystem()
     {
         addRoot( "media::font" );
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
         char windir[MAX_PATH+1];
         GetWindowsDirectoryA( windir, MAX_PATH );
         addRoot( joinPath( windir, "fonts" ) );

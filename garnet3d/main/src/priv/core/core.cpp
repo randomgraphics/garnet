@@ -25,11 +25,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_PUBLIC void * HeapMemory::alloc( size_t sz )
     {
-        //#if GN_MSWIN
-        //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
-        //#else
         void * ptr = ::malloc( sz );
-        //#endif
         if ( 0 == ptr )
         {
             GN_ERROR(sHeapLogger)( "out of memory!" );
@@ -42,11 +38,7 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_PUBLIC void * HeapMemory::realloc( void * ptr, size_t sz )
     {
-        //#if GN_MSWIN
-        //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
-        //#else
         ptr = ::realloc( ptr, sz );
-        //#endif
         if ( 0 == ptr ) { GN_ERROR(sHeapLogger)( "out of memory!" ); }
         return ptr;
     }
@@ -56,10 +48,6 @@ namespace GN
     // -----------------------------------------------------------------------------
     GN_PUBLIC void HeapMemory::dealloc( void * ptr )
     {
-        //#if GN_MSWIN
-        //::HeapDealloc( ::GetProcessHeap(), 0, ptr );
-        //#else
         ::free( ptr );
-        //#endif
     }
 }

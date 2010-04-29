@@ -1,4 +1,4 @@
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
 #if GN_XENON
 #include <xtl.h>

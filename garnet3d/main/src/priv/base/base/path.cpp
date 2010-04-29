@@ -156,7 +156,7 @@ void GN::fs::relPath( StrA & result, const StrA & path, const StrA & base )
     {
         const char * s1 = p.parts[i];
         const char * s2 = b.parts[i];
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
         if( 0 != stringCompareI( s1, s2 ) ) break;
 #else
         if( 0 != stringCompare( s1, s2 ) ) break;
