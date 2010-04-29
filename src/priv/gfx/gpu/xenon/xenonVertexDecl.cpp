@@ -51,7 +51,7 @@ static inline D3DDECLUSAGE sVertexBindingToXenon( const char * binding )
     StrA lowerCaseBinding( binding );
     lowerCaseBinding.toLower();
 
-    D3DDECLUSAGE * decl = sConvertTable.map.find( lowerCaseBinding );
+    const D3DDECLUSAGE * decl = sConvertTable.map.find( lowerCaseBinding );
 
     return ( NULL == decl ) ? D3DDECLUSAGE_ERROR : *decl;
 }

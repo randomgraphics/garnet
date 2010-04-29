@@ -159,7 +159,7 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
     void processWindowMessages( WindowHandle window, bool blockWhileMinized )
     {
         GN_GUARD_SLOW;

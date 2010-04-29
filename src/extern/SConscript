@@ -1,1 +1,9 @@
-SConscript( dirs=['src'] )
+Import( 'GN' )
+
+# Collect sources
+sources = []
+sources.append( SConscript( 'src/SConscript' ) )
+#sources.append( SConscript( 'tbb/SConscript' ) )
+
+# Build extern library
+lib = GN.newTarget( 'stlib', 'GNextern', Flatten(sources) )

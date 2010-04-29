@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.2.23)
 // *****************************************************************************
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 
 namespace GN { namespace win
 {

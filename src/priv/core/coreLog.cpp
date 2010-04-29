@@ -13,7 +13,7 @@
 ///
 class ConsoleColor
 {
-#if GN_MSWIN & GN_PC
+#if GN_MSWIN
     HANDLE       mConsole;
     WORD         mAttrib;
 public:
@@ -105,7 +105,7 @@ public:
     }
 };
 typedef LocalMutexX11 LocalMutex;
-#elif GN_MSWIN
+#elif GN_MSWIN || GN_XENON
 typedef GN::Mutex LocalMutex;
 #else
 #error Unsupported platform
@@ -141,7 +141,7 @@ static GN::StrA sFormatPath( const char * path )
     {
         char c = *path;
 
-    #if GN_MSWIN
+    #if GN_MSWIN || GN_XENON
         s.append( '/' == c ? '\\' : c );
     #else
         s.append( '\\' == c ? '/' : c );
@@ -399,7 +399,7 @@ namespace GN
     {
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const char * msg )
         {
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
             char buf[16384];
             stringPrintf(
                 buf,
@@ -415,7 +415,7 @@ namespace GN
         }
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const wchar_t * msg )
         {
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
             if( NULL == msg ) msg = L"";
 

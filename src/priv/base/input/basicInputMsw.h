@@ -8,7 +8,7 @@
 
 #include "basicInputXInput.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 
 namespace GN { namespace input
 {

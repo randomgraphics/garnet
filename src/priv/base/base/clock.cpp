@@ -20,7 +20,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 
     GN::Clock::CycleType r;
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
     if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
     {
         GN_TRACE(sLogger)( "Current system do NOT support high-res "
@@ -51,7 +51,7 @@ GN::Clock::CycleType GN::Clock::sGetSystemCycleCount()
 {
     GN_GUARD_SLOW;
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
     CycleType r;
     if( 1000 != mSystemCycleFrequency )
     {

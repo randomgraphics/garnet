@@ -66,7 +66,7 @@ GN::assertFunc(
 
     if( RAB_BREAK_ALWAYS == gRuntimeAssertBehavior ) return true;
 
-#if GN_MSWIN && GN_PC
+#if GN_MSWIN
     char buf[1024];
     stringPrintf( buf, 1024,
         "%s(%d)\n"
@@ -103,7 +103,7 @@ void GN::breakIntoDebugger()
 #endif
 }
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
 //
 //

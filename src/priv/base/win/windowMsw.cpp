@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "windowMsw.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 
 GN::HashMap<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "inputMsw.h"
 
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN
 
 //
 //

@@ -26,7 +26,7 @@ int myInit( int argc, const char * argv[] )
         const char * a = argv[i];
 
         if( '-' == *a
-            #if GN_MSWIN
+            #if GN_MSWIN || GN_XENON
             || '/' == *a
             #endif
             )

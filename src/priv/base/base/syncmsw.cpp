@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_MSWIN
+#if GN_MSWIN || GN_XENON
 
 float const GN::INFINITE_TIME = 1e38f;
 
