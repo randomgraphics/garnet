@@ -89,8 +89,8 @@ namespace GN { namespace util
                 { "LIGHT0_SPECULAR"   , sizeof(GN::Vector4f)  , true , "Specular color of light 0" },
                 { "TIME"              , sizeof(float)         , true , "Time in seconds" },
             };
-
-            GN_ASSERT( *this <= GN_ARRAY_COUNT(DESCRIPTORS) );
+            GN_CASSERT( GN_ARRAY_COUNT(DESCRIPTORS) == NUM_STANDARD_UNIFORMS );
+            GN_ASSERT( *this < NUM_STANDARD_UNIFORMS );
             return DESCRIPTORS[*this];
         }
 

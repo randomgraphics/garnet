@@ -5,7 +5,7 @@
 using namespace GN;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util");
+//static GN::Logger * sLogger = GN::getLogger("GN.util");
 
 // *****************************************************************************
 // Camera::Impl public methods
