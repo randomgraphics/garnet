@@ -26,7 +26,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        enum { MAX_TYPES = 2^8-1 };
+        enum { MAX_TYPES = (2^8)-1 };
 
         explicit GpuResourceHandle( UInt32 u32 )
             : mU32( u32 )

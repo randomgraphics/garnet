@@ -309,6 +309,28 @@ template<int>    struct COMPILE_TIME_ASSERT_TEST {};
 ///
 #define GN_DEFINE_HANDLE( type ) typedef struct type##Struct {} * type
 
+namespace GN
+{
+    ///
+    /// Disable copy semantic of all descendants.
+    ///
+    class NoCopy
+    {
+    protected:
+        ///
+        /// Default constructor
+        ///
+        NoCopy() {}
+        ///
+        /// Destructor
+        ///
+        virtual ~NoCopy() {}
+    private:  // emphasize the following members are private
+        NoCopy( const NoCopy & );
+        const NoCopy & operator = ( const NoCopy& );
+    };
+}
+
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************

@@ -374,25 +374,6 @@ namespace GN
         ///
         void dismiss() { mDismissed = true; }
     };
-
-    ///
-    /// Disable copy semantic of all descendants.
-    ///
-    class NoCopy
-    {
-    protected:
-        ///
-        /// Default constructor
-        ///
-        NoCopy() {}
-        ///
-        /// Destructor
-        ///
-        virtual ~NoCopy() {}
-    private:  // emphasize the following members are private
-        NoCopy( const NoCopy & );
-        const NoCopy & operator = ( const NoCopy& );
-    };
 }
 
 // *****************************************************************************

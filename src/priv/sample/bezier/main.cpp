@@ -61,26 +61,26 @@ MeshResource * createMesh( GpuResourceDatabase & gdb )
     md.vtxfmt.elements[6].offset = GN_FIELD_OFFSET( BezierVertex, bc );
     md.vtxfmt.elements[6].bindTo( "bc" );
 
-    //                               v0 (0,0)
-    //                              / \
-    //                             /   \
-    //                            /     \
-    //                           /       \
-    //                          /         \
-    //                 (1/3,0) v1----------v2 (0,1/3)
-    //                        / \         / \
-    //                       /   \       /   \
-    //                      /     \     /     \
-    //                     /       \   /       \
-    //                    /         \ /         \
-    //           (2/3,0) v3----------v4----------v5 (0,2/3)
-    //                  / \         / \(1/3,1/3)/ \
-    //                 /   \       /   \       /   \
-    //                /     \     /     \     /     \
-    //               /       \   /       \   /       \
-    //              /         \ /         \ /         \
-    //             v6----------v7----------v8---------v9
-    //           (1,0)     (2/3,1/3)   (1/3,2/3)     (0,1)
+    //                               v0 (0,0)                        //
+    //                              / \                              //
+    //                             /   \                             //
+    //                            /     \                            //
+    //                           /       \                           //
+    //                          /         \                          //
+    //                 (1/3,0) v1----------v2 (0,1/3)                //
+    //                        / \         / \                        //
+    //                       /   \       /   \                       //
+    //                      /     \     /     \                      //
+    //                     /       \   /       \                     //
+    //                    /         \ /         \                    //
+    //           (2/3,0) v3----------v4----------v5 (0,2/3)          //
+    //                  / \         / \(1/3,1/3)/ \                  //
+    //                 /   \       /   \       /   \                 //
+    //                /     \     /     \     /     \                //
+    //               /       \   /       \   /       \               //
+    //              /         \ /         \ /         \              //
+    //             v6----------v7----------v8---------v9             //
+    //           (1,0)     (2/3,1/3)   (1/3,2/3)     (0,1)           //
 
     float a = 1.0f / 3.0f;
     float b = 2.0f / 3.0f;
@@ -373,7 +373,7 @@ class BezierApp : public SampleApp
         }
     }
 
-    void GN::util::SampleApp::onUpdate()
+    void onUpdate()
     {
         SpatialNode * spatialNode = bezier->getNode<SpatialNode>();
         const Vector3f & position = arcball.getTranslation();

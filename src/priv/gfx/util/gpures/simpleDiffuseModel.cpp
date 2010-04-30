@@ -19,8 +19,8 @@ static ModelResourceDesc sDiffuseModelDesc()
     if( 1 ) { \
         md.uniforms[name].size = sizeof(type); \
         md.uniforms[name].initialValue.resize( sizeof(type) ); \
-        type default = (defval); \
-        memcpy( md.uniforms[name].initialValue.cptr(), &default, sizeof(type) ); \
+        type def = (defval); \
+        memcpy( md.uniforms[name].initialValue.cptr(), &def, sizeof(type) ); \
     } else void(0)
 
     INIT_UNIFORM( "MATRIX_PVW"      , Matrix44f, Matrix44f::sIdentity() );
