@@ -362,7 +362,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		linkflags['stret']   += ['/OPT:REF']
 
 	elif 'gcc' == env['CC']:
-		ccflags['common']  += ['-Wall','-Werror']
+		ccflags['common']  += ['-Wall','-Werror', '-finput-charset=GBK']
 		ccflags['debug']   += ['-g']
 		ccflags['profile'] += ['-O3']
 		ccflags['retail']  += ['-O3']
