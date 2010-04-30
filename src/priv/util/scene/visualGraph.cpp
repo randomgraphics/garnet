@@ -21,7 +21,7 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
     , mGdb(gdb)
 {
     // initialize standard global uniforms
-    for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
+    for( StandardUniformType type = 0; (size_t)type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
         AutoRef<UniformResource> & ur = mUniforms[type];
 
@@ -39,7 +39,7 @@ GN::util::VisualGraph::Impl::Impl( VisualGraph & owner, GpuResourceDatabase & gd
 // -----------------------------------------------------------------------------
 GN::util::VisualGraph::Impl::~Impl()
 {
-    for( StandardUniformType type = 0; type < GN_ARRAY_COUNT(mUniforms); ++type )
+    for( StandardUniformType type = 0; (size_t)type < GN_ARRAY_COUNT(mUniforms); ++type )
     {
         mUniforms[type].clear();
     }
@@ -53,7 +53,7 @@ GN::util::VisualGraph::Impl::getGlobalUniform( StandardUniformType type ) const
 {
     if( type >= StandardUniformType::NUM_STANDARD_UNIFORMS )
     {
-        GN_ERROR(sLogger)( "Invalid uniform type: %d", type );
+        GN_ERROR(sLogger)( "Invalid uniform type: %d", (StandardUniformType::ENUM)type );
         return NULL;
     }
 

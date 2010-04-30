@@ -1388,7 +1388,7 @@ public:
     ///
     UInt32 add( const T & element )
     {
-        TypeMap::KeyValuePair * p = mMap.insert( element, 0xbad );
+        typename TypeMap::KeyValuePair * p = mMap.insert( element, 0xbad );
 
         if( p )
         {
