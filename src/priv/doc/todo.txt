@@ -4,8 +4,6 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
-  - Integrate with TBB
-    - port to xbox360
   - New command buffer implementation
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of

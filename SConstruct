@@ -207,7 +207,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		# construct build environment for other platforms
 
 		if 'mswin' == CONF_os:
-			tools = ['msvc','mslink','mslib','msvs']
+			tools = ['msvc','mslink','mslib','msvs','masm']
 		else:
 			tools = ['default']
 
