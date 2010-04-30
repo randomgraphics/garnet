@@ -46,7 +46,7 @@ inline T & GN::gfx::GpuResource::castTo( GpuResource & r )
 template<typename T>
 inline const T & GN::gfx::GpuResource::castTo( const GpuResource & r )
 {
-    GN_ASSERT( T::guid() == r.getGdb().getResourceType( this ) );
+    GN_ASSERT( T::guid() == r.getGdb().getResourceType( &r ) );
     return (const T&)r;
 }
 

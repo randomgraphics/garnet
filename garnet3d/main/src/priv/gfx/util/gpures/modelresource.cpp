@@ -117,12 +117,12 @@ static void sBinaryEncode( StrA & result, const UInt8 * data, size_t size )
 // -----------------------------------------------------------------------------
 static bool sBinaryDecode( DynaArray<UInt8> & data, const StrA & s )
 {
-    static UInt8 TABLE[] =
+    /*static UInt8 TABLE[] =
     {
 
         '0', '1', '2', '3', '4', '5', '6', '7',
         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-    };
+    };*/
 
     data.clear();
 

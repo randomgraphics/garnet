@@ -284,7 +284,7 @@ namespace GN
     template<class T, class ALLOCATOR = StlAllocator<T> >
     class DynaArray
     {
-        typedef typename ALLOCATOR::rebind<T>::other ElementAllocator;
+        typedef typename ALLOCATOR::template rebind<T>::other ElementAllocator;
 
         T              * mElements;
         size_t           mCount;

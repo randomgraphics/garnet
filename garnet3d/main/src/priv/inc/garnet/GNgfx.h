@@ -32,7 +32,7 @@ namespace GN
 
 // GPU resource database
 #include "gfx/gpures.h"
-#include "gfx/simplemodel.h" // commonly used model class wrapper
+#include "gfx/simpleModel.h" // commonly used model class wrapper
 
 // utils
 #include "gfx/sprite.h"

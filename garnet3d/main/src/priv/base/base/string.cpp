@@ -82,9 +82,13 @@ size_t GN::string2SignedInteger( SInt64 & result, int bits, int base, const char
 
     char * e;
 
+#if GN_POSIX
+    SInt64 s64 = strtoq( s, &e, base );
+#else
     SInt64 s64 = _strtoi64( s, &e, base );
+#endif
 
-    if( 0 != errno || 0 == s64 && s == e ) return 0;
+    if( 0 != errno || ( 0 == s64 && s == e ) ) return 0;
 
     // check for overflow
     SInt64 maxval = ( 1LL << ( bits - 1 ) ) - 1;
@@ -109,9 +113,13 @@ size_t GN::string2UnsignedInteger( UInt64 & result, int bits, int base, const ch
     errno = 0;
 
     char * e;
+#if GN_POSIX
+    UInt64 u64 = strtouq( s, &e, base );
+#else
     UInt64 u64 = _strtoui64( s, &e, base );
+#endif
 
-    if( 0 != errno || 0 == u64 && s == e ) return 0;
+    if( 0 != errno || ( 0 == u64 && s == e ) ) return 0;
 
     // Note: _strtoui64 has bug that parses -1 as max unsigned integer.
     const char * ptr = s;
@@ -119,7 +127,7 @@ size_t GN::string2UnsignedInteger( UInt64 & result, int bits, int base, const ch
     if( ptr < e && *ptr == '-' ) return 0;
 
     // check for overflow
-    UInt64 maxval = ( 0xFFFFFFFFFFFFFFFF << (64-bits) ) >> (64-bits);
+    UInt64 maxval = ( ((UInt64)-1) << (64-bits) ) >> (64-bits);
     if( u64 > maxval ) return 0;
 
     // success
@@ -154,7 +162,7 @@ size_t GN::string2Double( double & i, const char * s )
     char * e;
     double d = strtod( s, &e );
 
-    if( 0 != errno || 0 == d && s == e )
+    if( 0 != errno || ( 0 == d && s == e ) )
     {
         return 0;
     }

@@ -87,6 +87,9 @@ namespace GN
     {
     public:
 
+        class Iterator;
+        class ConstIterator;
+
         class KeyValuePair
         {
             mutable TypelessDict::Iterator mTypelessIter;

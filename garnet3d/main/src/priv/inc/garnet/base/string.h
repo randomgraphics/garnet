@@ -1218,15 +1218,15 @@ namespace GN
                 , next(NULL)
                 , owner(NULL)
             {
-                if( NULL != key )
+                if( NULL != KeyValuePair::key )
                 {
-                    memcpy( (char*)key, text, textlen+1 );
+                    memcpy( (char*)KeyValuePair::key, text, textlen+1 );
                 }
             }
 
             ~Leaf()
             {
-                HeapMemory::dealloc( (void*)key );
+                HeapMemory::dealloc( (void*)KeyValuePair::key );
             }
         };
 

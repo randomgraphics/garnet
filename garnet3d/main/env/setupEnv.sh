@@ -15,9 +15,10 @@ export GN_BUILD_VARIANT=stdbg
 # ===========
 # setup scons
 # ===========
-echo SCons Directory : ${GARNET_ROOT}/env/scons
-PATH=${GARNET_ROOT}/env/scons/1.2.0/scripts:${PATH}
-SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/1.2.0/lib
+SCONS_ROOT=${GARNET_ROOT}/env/scons/1.2.0.d20091224
+echo SCons Directory: ${SCONS_ROOT}
+PATH=${SCONS_ROOT}/script:${PATH}
+SCONS_LIB_DIR=${SCONS_ROOT}/engine
 export PATH SCONS_LIB_DIR
 export SCONSFLAGS=-U
 

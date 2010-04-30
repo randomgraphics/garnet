@@ -208,7 +208,6 @@ GN::errno2str( int err )
         case ENOSYS       : return "Function not supported";
         case ENOTEMPTY    : return "Directory not empty";
         case EILSEQ       : return "Illegal byte sequence";
-        case STRUNCATE    : return "String was truncated";
         default           : return "Unknown error.";
     }
 }

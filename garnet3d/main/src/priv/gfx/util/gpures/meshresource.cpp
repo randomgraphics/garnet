@@ -316,7 +316,7 @@ GN::gfx::MeshResource::loadFromFile(
     if( !blob ) return AutoRef<MeshResource>::NULLREF;
 
     m = db.createResource<MeshResource>( abspath );
-    if( !m || !m->reset( &desc ) ) AutoRef<MeshResource>::NULLREF;
+    if( !m || !m->reset( &desc ) ) return AutoRef<MeshResource>::NULLREF;
 
     return m;
 }
