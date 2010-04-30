@@ -137,7 +137,7 @@ def generate(env):
     env['CCPCHFLAGS'] = SCons.Util.CLVar(['${(PCH and "/Yu%s /Fp%s"%(PCHSTOP or "",File(PCH))) or ""}'])
     env['CCCOMFLAGS'] = '$CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo$TARGET $CCPCHFLAGS $CCPDBFLAGS'
     env['CC']         = 'cl'
-    env['CCFLAGS']    = SCons.Util.CLVar('/D_XBOX /nologo')
+    env['CCFLAGS']    = SCons.Util.CLVar('/D_XBOX=1 /nologo')
     env['CCCOM']      = '$CC $CCFLAGS $CCCOMFLAGS'
     env['SHCC']       = '$CC'
     env['SHCCFLAGS']  = SCons.Util.CLVar('$CCFLAGS')

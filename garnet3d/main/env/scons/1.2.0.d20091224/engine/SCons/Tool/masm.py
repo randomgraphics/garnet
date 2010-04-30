@@ -60,7 +60,7 @@ def generate(env):
         static_obj.add_emitter(suffix, SCons.Defaults.StaticObjectEmitter)
         shared_obj.add_emitter(suffix, SCons.Defaults.SharedObjectEmitter)
 
-    env['AS']        = 'ml'
+    env['AS']        = 'ml' if env.Detect('ml') else 'ml64'
     env['ASFLAGS']   = SCons.Util.CLVar('/nologo')
     env['ASPPFLAGS'] = '$ASFLAGS'
     env['ASCOM']     = '$AS $ASFLAGS /c /Fo$TARGET $SOURCES'
@@ -68,7 +68,7 @@ def generate(env):
     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME'] = 1
 
 def exists(env):
-    return env.Detect('ml')
+    return env.Detect('ml') or env.Detect('ml64')
 
 # Local Variables:
 # tab-width:4
