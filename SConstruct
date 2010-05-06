@@ -1313,32 +1313,6 @@ for compiler, variants in ALL_targets.iteritems() :
 
 ################################################################################
 #
-# 生成msvc工程文件
-#
-################################################################################
-
-for compiler, variants in ALL_targets.iteritems():
-	for variant, targets in variants.iteritems():
-		MSVS_env = UTIL_newEnv( compiler, variant )
-		if 'MSVSProject' in MSVS_env['BUILDERS'] :
-			for name, x in targets.iteritems():
-				if 'stlib' == x.type or 'dylib' == x.type or 'prog' == x.type :
-					SConscript(
-					'msvc/SConscript',
-						exports={
-							'GN' : GN,
-							'env' : MSVS_env,
-							'compiler' : compiler,
-							'variant' : variant,
-							'name' : name,
-							'target' : x,
-							},
-						build_dir=os.path.join( UTIL_buildDir( compiler, variant ), "msvc" )
-						)
-ALIAS_add_non_default( 'msvc', '#msvc' )
-
-################################################################################
-#
 # 定义 help screen
 #
 ################################################################################
