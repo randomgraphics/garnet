@@ -278,17 +278,10 @@ void D3D9ViewFrustum::DrawRH( const XMMATRIX & worldViewRH, const XMMATRIX & pro
 
     // store render states
     D3D9RenderStateSaver rss( m_Device );
-    rss.StoreRenderState( D3DRS_ALPHABLENDENABLE );
-    rss.StoreRenderState( D3DRS_BLENDOP );
-    rss.StoreRenderState( D3DRS_SRCBLEND );
-    rss.StoreRenderState( D3DRS_DESTBLEND );
-    rss.StoreRenderState( D3DRS_SEPARATEALPHABLENDENABLE );
-    rss.StoreRenderState( D3DRS_ZWRITEENABLE );
-    rss.StoreRenderState( D3DRS_CULLMODE );
 
     // setup common states
     XMMATRIX wvp = worldViewRH * projRH;
-    m_Device->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+    rss.SetRS( D3DRS_CULLMODE, D3DCULL_NONE );
     m_Device->SetFVF( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE );
     m_Device->SetVertexShaderConstantF( 0, (const float*)&wvp, 4 );
     m_Device->SetVertexShaderConstantF( 4, (const float*)&invWV, 4 );
@@ -305,12 +298,12 @@ void D3D9ViewFrustum::DrawRH( const XMMATRIX & worldViewRH, const XMMATRIX & pro
     // draw transparent faces
     if( numTransVertices > 0 )
     {
-        m_Device->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
-        m_Device->SetRenderState( D3DRS_BLENDOP, D3DBLENDOP_ADD );
-        m_Device->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-        m_Device->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-        m_Device->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, FALSE );
-        m_Device->SetRenderState( D3DRS_ZWRITEENABLE, FALSE );
+        rss.SetRS( D3DRS_ALPHABLENDENABLE, TRUE );
+        rss.SetRS( D3DRS_BLENDOP, D3DBLENDOP_ADD );
+        rss.SetRS( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
+        rss.SetRS( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+        rss.SetRS( D3DRS_SEPARATEALPHABLENDENABLE, FALSE );
+        rss.SetRS( D3DRS_ZWRITEENABLE, FALSE );
         m_Device->SetStreamSource( 0, m_VbTrans, 0, sizeof(Vertex) );
         m_Device->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numTransVertices / 3 );
     }

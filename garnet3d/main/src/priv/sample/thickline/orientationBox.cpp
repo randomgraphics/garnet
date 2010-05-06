@@ -292,13 +292,6 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     m_Device->GetDepthStencilSurface( &oldz );
 
     D3D9RenderStateSaver stateSaver( m_Device );
-    stateSaver.StoreRenderState( D3DRS_CULLMODE );
-    stateSaver.StoreRenderState( D3DRS_ZENABLE );
-    stateSaver.StoreRenderState( D3DRS_ZFUNC );
-    stateSaver.StoreRenderState( D3DRS_ALPHABLENDENABLE );
-    stateSaver.StoreRenderState( D3DRS_BLENDOP );
-    stateSaver.StoreRenderState( D3DRS_SRCBLEND );
-    stateSaver.StoreRenderState( D3DRS_DESTBLEND );
 
     // calculate transformation matrix for the box
     float distance = 10.0f;
@@ -310,9 +303,9 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     XMMATRIX transform = world * view * proj;
 
     // draw the box to private render target
-    m_Device->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
-    m_Device->SetRenderState( D3DRS_ZENABLE, TRUE );
-    m_Device->SetRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
+    stateSaver.SetRS( D3DRS_CULLMODE, D3DCULL_NONE );
+    stateSaver.SetRS( D3DRS_ZENABLE, TRUE );
+    stateSaver.SetRS( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 
     m_Device->SetFVF( D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 );
     m_Device->SetVertexShaderConstantF( 0, (const float*)transform.m, 4 );
@@ -342,11 +335,11 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     m_Device->SetDepthStencilSurface( oldz );
     m_Device->SetViewport( &oldvp );
 
-    m_Device->SetRenderState( D3DRS_ZENABLE, FALSE );
-    m_Device->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
-    m_Device->SetRenderState( D3DRS_BLENDOP, D3DBLENDOP_ADD );
-    m_Device->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-    m_Device->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+    stateSaver.SetRS( D3DRS_ZENABLE, FALSE );
+    stateSaver.SetRS( D3DRS_ALPHABLENDENABLE, TRUE );
+    stateSaver.SetRS( D3DRS_BLENDOP, D3DBLENDOP_ADD );
+    stateSaver.SetRS( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
+    stateSaver.SetRS( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
 
 #if GN_XENON
     GN_UNIMPL_WARNING();
@@ -355,11 +348,11 @@ void D3D9OrientationBox::Draw( float x, float y, const XMMATRIX & viewRH )
     m_Device->SetVertexShader( NULL );
 
     m_Device->SetTexture( 0, m_RtTexture );
-    m_Device->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
-    m_Device->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
-    m_Device->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
-    m_Device->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
-    m_Device->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+    stateSaver.SetSS( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+    stateSaver.SetSS( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+    stateSaver.SetSS( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
+    stateSaver.SetTSS( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
+    stateSaver.SetTSS( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
     m_Device->SetPixelShader( NULL );
 
     // compose sprite vertex buffer

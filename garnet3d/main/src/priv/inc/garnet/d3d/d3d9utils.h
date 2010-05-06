@@ -230,45 +230,176 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
 
     class D3D9RenderStateSaver
     {
-        typedef HashMap<D3DRENDERSTATETYPE, DWORD> RenderStateMap;
+        struct RenderStateItem
+        {
+            DWORD oldValue;
+            DWORD currentValue;
+            bool  got;
+        };
 
+        static const UINT MAX_RS = 256;
+        static const UINT MAX_TSS = 64;
+        static const UINT MAX_SS = 16;
+        static const UINT MAX_STAGES = 16;
+
+        Logger           * m_Logger;
         IDirect3DDevice9 * m_Device;
-        RenderStateMap     m_Values;
+        RenderStateItem    m_Rs[MAX_RS];
+        RenderStateItem    m_Tss[MAX_STAGES][MAX_TSS];
+        RenderStateItem    m_Ss[MAX_STAGES][MAX_SS];
 
     public:
 
         D3D9RenderStateSaver( IDirect3DDevice9 * dev )
-            : m_Device(dev)
+            : m_Logger(getLogger("GN.d3d9"))
         {
+            ::memset( this, 0, sizeof(*this) );
+            m_Device = dev;
         }
 
         ~D3D9RenderStateSaver()
         {
-            RestoreAllRenderStates();
+            RestoreAll();
         }
 
-        void StoreRenderState( D3DRENDERSTATETYPE type )
+        IDirect3DDevice9 * GetDevice() const { return m_Device; }
+
+        void SetRS( D3DRENDERSTATETYPE type, DWORD value )
         {
-            if( m_Device && m_Values.find(type) == NULL )
+            if( NULL == m_Device ) return;
+
+            if( type >= MAX_RS )
             {
-                DWORD value;
-                if( SUCCEEDED( m_Device->GetRenderState( type, &value ) ) )
+                // Must be an invalid D3D9 render state type.
+                GN_ERROR(m_Logger)( "Invalid D3D render state: %d", type );
+                return;
+            }
+
+            if( !m_Rs[type].got )
+            {
+                // This is an new state that has never been set.
+                DWORD current;
+                if( SUCCEEDED( m_Device->GetRenderState( type, &current ) ) )
                 {
-                    m_Values[type] = value;
+                    m_Rs[type].oldValue     = current;
+                    m_Rs[type].currentValue = current;
+                    m_Rs[type].got          = true;
+                }
+                else
+                {
+                    GN_ERROR(m_Logger)( "Fail to get value of D3D render state: %d", type );
                 }
             }
+
+            if( !m_Rs[type].got || value != m_Rs[type].currentValue )
+            {
+                m_Device->SetRenderState( type, value );
+                m_Rs[type].currentValue = value;
+            }
         }
 
-        void RestoreAllRenderStates()
+        void SetTSS( DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
         {
-            RenderStateMap::KeyValuePair * i;
-            for( i = m_Values.first(); i != NULL; i = m_Values.next( i ) )
+            if( NULL == m_Device ) return;
+
+            if( stage >= MAX_STAGES || type >= MAX_TSS )
             {
-                D3DRENDERSTATETYPE type = i->key;
-                DWORD              value = i->value;
-                m_Device->SetRenderState( type, value );
+                GN_ERROR(m_Logger)( "Invalid D3D texture stage state: stage(%d), type(%d)", stage, type );
+                return;
             }
-            m_Values.clear();
+
+            if( !m_Tss[stage][type].got )
+            {
+                // This is an new state that has never been set.
+                DWORD current;
+                if( SUCCEEDED( m_Device->GetTextureStageState( stage, type, &current ) ) )
+                {
+                    m_Tss[stage][type].oldValue     = current;
+                    m_Tss[stage][type].currentValue = current;
+                    m_Tss[stage][type].got          = true;
+                }
+                else
+                {
+                    GN_ERROR(m_Logger)( "Fail to get value of D3D render state: %d", type );
+                }
+            }
+
+            if( !m_Tss[stage][type].got || value != m_Tss[stage][type].currentValue )
+            {
+                m_Device->SetTextureStageState( stage, type, value );
+                m_Tss[stage][type].currentValue = value;
+            }
+        }
+
+        void SetSS( DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value )
+        {
+            if( NULL == m_Device ) return;
+
+            if( stage >= MAX_STAGES || type >= MAX_TSS )
+            {
+                GN_ERROR(m_Logger)( "Invalid D3D sampler state: stage(%d), type(%d)", stage, type );
+                return;
+            }
+
+            if( !m_Ss[stage][type].got )
+            {
+                // This is an new state that has never been set.
+                DWORD current;
+                if( SUCCEEDED( m_Device->GetSamplerState( stage, type, &current ) ) )
+                {
+                    m_Ss[stage][type].oldValue     = current;
+                    m_Ss[stage][type].currentValue = current;
+                    m_Ss[stage][type].got         = true;
+                }
+                else
+                {
+                    GN_ERROR(m_Logger)( "Fail to get value of D3D render state: %d", type );
+                }
+            }
+
+            if( !m_Ss[stage][type].got || value != m_Ss[stage][type].currentValue )
+            {
+                m_Device->SetSamplerState( stage, type, value );
+                m_Ss[stage][type].currentValue = value;
+            }
+        }
+
+        void RestoreAll()
+        {
+            if( NULL == m_Device ) return;
+
+            // restore RS
+            for( UINT i = 0; i < MAX_RS; ++i )
+            {
+                if( m_Rs[i].got && m_Rs[i].currentValue != m_Rs[i].oldValue )
+                {
+
+                    m_Device->SetRenderState( (D3DRENDERSTATETYPE)i, m_Rs[i].oldValue );
+                }
+                m_Rs[i].got = false;
+            }
+
+            // restore TSS and SS
+            for( UINT s = 0; s < MAX_STAGES; ++s )
+            {
+                for( UINT i = 0; i < MAX_TSS; ++i )
+                {
+                    if( m_Tss[s][i].got && m_Tss[s][i].currentValue != m_Tss[s][i].oldValue )
+                    {
+                        m_Device->SetTextureStageState( s, (D3DTEXTURESTAGESTATETYPE)i, m_Tss[s][i].oldValue );
+                    }
+                    m_Tss[s][i].got = false;
+                }
+
+                for( UINT i = 0; i < MAX_SS; ++i )
+                {
+                    if( m_Ss[s][i].got && m_Ss[s][i].currentValue != m_Ss[s][i].oldValue )
+                    {
+                        m_Device->SetSamplerState( s, (D3DSAMPLERSTATETYPE)i, m_Tss[s][i].oldValue );
+                    }
+                    m_Ss[s][i].got = false;
+                }
+            }
         }
     };
 
