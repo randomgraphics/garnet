@@ -68,7 +68,7 @@ namespace GN { namespace util
     };
 
     ///
-    /// world class that manages instance of all entities
+    /// world class that manages instance of all entities and nodes
     ///
     class World
     {
@@ -89,16 +89,22 @@ namespace GN { namespace util
 
         //@}
 
-        void          reset(); ///< reset the world to its initial state
+        // Reset the world to its initial state:
+        //  - Delete all nodes
+        //  - Delete all entities
+        void reset();
 
-        Entity      * createEntity( const char * name = NULL );
-        void          deleteEntity( const char * name );
-        void          deleteEntity( int id );
-        void          deleteEntity( Entity * entity );
-        void          deleteAllEntities();
-        Entity      * findEntity( const char * name );
-        Entity      * findEntity( int id );
-        Entity      * findOrCreateEntity( const char * name );
+        // Entity management
+        //@{
+
+        Entity * createEntity( const char * name = NULL );
+        void     deleteEntity( const char * name );
+        void     deleteEntity( int id );
+        void     deleteEntity( Entity * entity );
+        void     deleteAllEntities();
+        Entity * findEntity( const char * name );
+        Entity * findEntity( int id );
+        Entity * findOrCreateEntity( const char * name );
 
         //@}
 
@@ -155,6 +161,7 @@ namespace GN { namespace util
 
         Entity & mEntity;
     };
+
 
     // *************************************************************************
     // Camera class

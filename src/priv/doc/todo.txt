@@ -19,14 +19,12 @@ TODO
     - XML_Encoding: http://www.vivtek.com/expat/api.html#XML_Encoding
   - skin mesh test case: porting DXSDK sample.
   - Cg shader
-  - Endian swap:
-    - Swap vertex buffer endian based on vertex format
-    - Swap index buffer endian based on index format.
+    - Add Cg binary to repository.
   - Dictionary template that replaces GN::Dictionary
   - replace STL containers:
   	- queue, list, set
   - FontFace unit should be integer instead of float, since it is supposed to
-    represent rasterized font metrics.
+    represent post-rasterized font metrics.
 
 - p1
   - Runtime option managers that could be modified by:
@@ -94,7 +92,7 @@ ISSUES
 - Capital function name or not?
   - RESOLVED: No. Function/Method name starts with lower case character.
   - pros:
-    - function/method name is never same as type name: Gpu & getGpu()
+    - function/method name is never same as type name: Gpu & gpu()
     - won't conflict with Windows API macro like CreateFile.
   - cons: more renaming works when porting other codes into garnet library.
 
