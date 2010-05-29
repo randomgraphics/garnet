@@ -1,6 +1,6 @@
 expat   : Expat 2.0.0
 ft2     : Freetype 2.1.10 (http://www.freetype.org)
-glew    : glew-1.3.1 (http://glew.sourceforge.net)
+glew    : glew-1.5.4 (http://glew.sourceforge.net)
 jpeg    : jpeg-6b (http://www.ijg.org)
 lua     : lua-5.1 (http://www.lua.org)
 pcre    : pcre-6.4 (http://www.pcre.org/)

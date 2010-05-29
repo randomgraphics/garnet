@@ -112,7 +112,7 @@ CONF_enableCg  = float( ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] ) )
 CONF_xedeploy = float( ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] ) )
 
 # installation directory
-CONF_sdkroot = ARGUMENTS.get( 'sdkroot', os.path.join( '#bin', 'sdk' ) )
+CONF_sdkroot = ARGUMENTS.get( 'sdkroot', os.path.join( '#build.bin', 'sdk' ) )
 
 ################################################################################
 #
@@ -277,6 +277,11 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 	cxxflags   = generate_empty_options()
 	linkflags  = generate_empty_options()
 
+	cpppath['common'] = [
+		'src/extern/inc',
+		UTIL_buildDir( compiler, variant ) + '/src/priv/inc',
+		'src/priv/inc']
+
 	# 定制不同编译模式的编译选项
 	cppdefines['common']  += ['UNICODE','_UNICODE']
 	cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
@@ -319,7 +324,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 
 		cxxflags['common']  += ['/EHa']
 
-		ccflags['common']  += ['/W4', '/WX', '/Ot', '/Oi'] # favor speed, enable intrinsic functions.
+		ccflags['common']  += ['/W4', '/WX', '/Ot', '/Oi', '/Z7', '/Yd'] # favor speed, enable intrinsic functions.
 		ccflags['debug']   += ['/GR', '/RTCscu']
 		ccflags['profile'] += ['/Ox'] # maximum optimization.
 		ccflags['retail']  += ['/Ox', '/GL']
@@ -343,7 +348,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 
 	elif 'icl' == env['CC']:
-		ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope']
+		ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope','/Zi','/debug:full']
 		ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
 		ccflags['profile'] += ['/O2','/MD']
 		ccflags['retail']  += ['/O2','/MD']
@@ -409,7 +414,6 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	ccflags = ccflags.replace( '/WX', '' )
 	ccflags = ccflags.replace( '-Werror', '')
 	env.Replace( CCFLAGS = Split( ccflags ) )
-	env.Append( CPPPATH = ['src/extern/inc'] )
 	c = env.Configure(
 		conf_dir = confDir,
 		log_file = os.path.join(confDir,'config.log') )
@@ -959,14 +963,8 @@ def BUILD_getSuffix(): return ""
 def BUILD_newCompileEnv( cluster ):
 	env = BUILD_env.Clone()
 
-	env.Prepend( CPPPATH = [
-		'#src/extern/inc',
-	    BUILD_bldDir + '/src/priv/inc',
-		'src/priv/inc',
-		])
-
-	if 'icl' == env['CC']: env.Append( CCFLAGS = ['/Zi', '/debug:full'] )
-	elif 'cl' == env['CC']: env.Append( CCFLAGS = ['/Z7', '/Yd'] )
+	#if 'icl' == env['CC']: env.Append( CCFLAGS = ['/Zi', '/debug:full'] )
+	#elif 'cl' == env['CC']: env.Append( CCFLAGS = ['/Z7', '/Yd'] )
 
 	a = cluster.extraCompileFlags
 	env.Append(
