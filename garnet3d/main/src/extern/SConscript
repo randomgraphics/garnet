@@ -5,4 +5,4 @@ sources = []
 sources.append( SConscript( 'src/SConscript' ) )
 
 # Build extern library
-lib = GN.newTarget( 'stlib', 'GNextern', Flatten(sources) )
+GN.newTarget( 'stlib', 'GNextern', Flatten(sources) )

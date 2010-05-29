@@ -27,6 +27,7 @@ TODO
     represent post-rasterized font metrics.
 
 - p1
+  - avoid using /Yd in build script for cl.exe
   - Runtime option managers that could be modified by:
     - Environment variable
     - Registry
