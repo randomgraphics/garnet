@@ -16,12 +16,12 @@
 #include <windows.h>
 #endif
 
-#include <glew.h>
+#include <GL/glew.h>
 
 #if GN_MSWIN
-#include <wglew.h>
+#include <GL/wglew.h>
 #elif GN_POSIX
-#include <glxew.h>
+#include <GL/glxew.h>
 #endif
 
 // *****************************************************************************

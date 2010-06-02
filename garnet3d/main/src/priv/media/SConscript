@@ -15,8 +15,8 @@ class doCopy:
         for x in sources:
             src = str(x.srcnode().path)
             relpath = GN.relpath( src, MEDIA_DIR )
-            dstdir = os.path.join( bldDir, 'media', relpath )
-            dst = env.InstallAs( dstdir, src )
+            dst = os.path.join( bldDir, 'media', relpath )
+            Command( dst, src, Copy( "$TARGET", "$SOURCE" ) )
             targets.append( dst )
             if self.xedeploy :
                 env.AddPostAction(

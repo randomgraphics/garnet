@@ -282,6 +282,8 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 		UTIL_buildDir( compiler, variant ) + '/src/priv/inc',
 		'src/priv/inc']
 
+	libpath['common'] = ['src/extern/lib/' + compiler.os + '.' + compiler.cpu]
+
 	# 定制不同编译模式的编译选项
 	cppdefines['common']  += ['UNICODE','_UNICODE']
 	cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
@@ -340,7 +342,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			ccflags['profile'] += ['/MD']
 			ccflags['retail']  += ['/MD']
 
-		linkflags['common']  += ['/NODEFAULTLIB:libcp.lib', '/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+		linkflags['common']  += ['/NODEFAULTLIB:libcp.lib', '/FIXED:NO'] # this is for vtune and magellan to do instrumentation
 		linkflags['debug']   += ['/MANIFEST']
 		linkflags['profile'] += ['/OPT:REF', '/MANIFEST']
 		linkflags['stprof']  += ['/OPT:REF']
@@ -422,9 +424,9 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# 是否支持Cg shader
 	# =================
 	if CONF_enableCg :
-		conf['has_cg']      = c.CheckLibWithHeader( 'cg', 'cg/cg.h', 'C', 'cgCreateContext();' )
-		conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['cg/cg.h','cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
-		conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['cg/cg.h','cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
+		conf['has_cg']      = c.CheckLibWithHeader( 'cg', ['Cg/cg.h'], 'C', 'cgCreateContext();' )
+		conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['Cg/cg.h','Cg/cgD3D9.h'], 'C', "cgD3D9SetDevice(0);" )
+		conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['Cg/cg.h','Cg/cgGL.h'], 'C', "cgGLRegisterStates(0);" )
 	else:
 		conf['has_cg']      = 0
 		conf['has_cg_d3d9'] = 0
@@ -433,11 +435,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ==============
 	# 是否支持OpenGL
 	# ==============
-	if c.CheckLibWithHeader( 'opengl32', ['glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
-		c.CheckLibWithHeader( 'glu32', ['glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+	if c.CheckLibWithHeader( 'opengl32', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'glu32', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
 		conf['has_ogl'] = True
-	elif c.CheckLibWithHeader( 'GL', ['glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
-		c.CheckLibWithHeader( 'GLU', ['glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
+	elif c.CheckLibWithHeader( 'GL', ['GL/glew.h'], 'C', 'glVertex3f(0,0,0);' ) and \
+		c.CheckLibWithHeader( 'GLU', ['GL/glew.h','GL/glu.h'], 'C', 'gluOrtho2D(0,0,0,0);' ) :
 		conf['has_ogl'] = True
 	else :
 		conf['has_ogl'] = False
@@ -874,10 +876,6 @@ BUILD_binDir = None
 
 #define all targets
 
-TARGET_headers= [
-	'GNinc',
-	]
-
 TARGET_stlibs = [
 	'GNextern',
 	'GNbase',
@@ -962,9 +960,6 @@ def BUILD_getSuffix(): return ""
 #
 def BUILD_newCompileEnv( cluster ):
 	env = BUILD_env.Clone()
-
-	#if 'icl' == env['CC']: env.Append( CCFLAGS = ['/Zi', '/debug:full'] )
-	#elif 'cl' == env['CC']: env.Append( CCFLAGS = ['/Z7', '/Yd'] )
 
 	a = cluster.extraCompileFlags
 	env.Append(
@@ -1124,6 +1119,7 @@ def BUILD_dynamicLib( name, target ):
 	stdlibs = []
 	if not target.ignoreDefaultDependencies:
 		stdlibs += TARGET_stlibs
+		# dynamic libraries other than GNcore depend on GNcore.
 		if 'GNcore' != name : stdlibs += ['GNcore']
 
 	BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -1246,11 +1242,10 @@ for compiler, variants in ALL_targets.iteritems() :
 
 		progs = TARGET_tests + TARGET_samples + TARGET_tools
 
-		# Everything should depend on the header target
+		# Everything should depend on the external binary target
 		for n in ( TARGET_stlibs + TARGET_shlibs + progs ):
-			if 'GNinc' != n:
-				for t in getTargets(n):
-					Depends( t, 'GNinc' )
+			for t in getTargets(n):
+				Depends( t, 'GNexternBin' )
 
 		# Make binaries depend on their by-products, such as manifest and PDB, to make sure
 		# those files are copied to binary directory, before execution of the binaries.
@@ -1288,7 +1283,7 @@ for compiler, variants in ALL_targets.iteritems() :
 			srcroot = Dir(srcroot).path
 			files = getTargets('GNmedia')
 			for src in files:
-				relpath = GN.relpath( src[0].path, srcroot )
+				relpath = GN.relpath( src, srcroot )
 				dst     = os.path.join( INSTALL_root, dstroot, relpath )
 				InstallAs( dst, src )
 

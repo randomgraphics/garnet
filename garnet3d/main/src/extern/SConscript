@@ -6,3 +6,6 @@ sources.append( SConscript( 'src/SConscript' ) )
 
 # Build extern library
 GN.newTarget( 'stlib', 'GNextern', Flatten(sources) )
+
+# Build binary library
+SConscript( 'bin/SConscript' )
