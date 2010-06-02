@@ -1295,7 +1295,7 @@ for compiler, variants in ALL_targets.iteritems() :
 					dst     = os.path.join( INSTALL_root, dstroot, relpath )
 					InstallAs( dst, src )
 
-		installTargets( 'bin',        TARGET_shlibs + TARGET_tools + TARGET_samples )
+		installTargets( 'bin',        TARGET_shlibs + TARGET_tools + TARGET_samples + ['GNexternBin'] )
 		installTargets( 'lib',        TARGET_stlibs + TARGET_shlibs )
 		installTargets( 'doc',        ['GNdoc'] )
 		installMedia  ( 'media',      os.path.join( UTIL_buildDir( compiler, variant ), 'media' ) )
