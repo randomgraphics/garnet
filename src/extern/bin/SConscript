@@ -1,0 +1,17 @@
+Import( 'GN' )
+
+import os.path
+
+def CopyExternalBinaries( env, sources, blddir ):
+	targets = []
+	for x in sources:
+		dst = os.path.join( blddir, 'bin', os.path.basename( x.path )  )
+		Command( dst, x.srcnode(), Copy( "$TARGET", "$SOURCE" ) )
+		targets.append( dst )
+	return targets
+
+sources = GN.glob( GN.compiler.os + "." + GN.compiler.cpu + "\*.*", True )
+
+cluster = GN.newCustomSourceCluster( sources, CopyExternalBinaries )
+
+GN.newCustomTarget( 'GNexternBin', [cluster] )
