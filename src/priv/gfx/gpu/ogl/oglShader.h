@@ -56,7 +56,7 @@ namespace GN { namespace gfx
         virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const = 0;
 
         ///
-        /// Enable shader
+        /// Enable the program
         ///
         virtual void enable() const = 0;
 
@@ -255,8 +255,9 @@ namespace GN { namespace gfx
     // Cg shader
     // *************************************************************************
 
-#if 0 // def HAS_CG_OGL
+#ifdef HAS_CG_OGL
 
+#if 0
     ///
     /// Basic Cg Shader class
     ///
@@ -344,10 +345,76 @@ namespace GN { namespace gfx
         ///
         OGLPxlShaderCg( OGLGpu & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
     };
+#endif
+
+    ///
+    /// Cg shader
+    ///
+    class OGLGpuProgramCg : public OGLBasicGpuProgram, public StdClass
+    {
+        GN_DECLARE_STDCLASS( OGLGpuProgramCg, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        OGLGpuProgramCg( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::CG ) { clear(); }
+        virtual ~OGLGpuProgramCg() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from OGLBasicGpuProgram
+        // ********************************
+    public:
+
+        //@{
+
+        virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const;
+
+        virtual void enable() const;
+
+        virtual void disable() const;
+
+        virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const;
+
+        virtual void applyTextures( const TextureBinding * textures, size_t count ) const;
+
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
 
 #endif
 
-}}
+    }
+}
 
 // *****************************************************************************
 //                                     EOF

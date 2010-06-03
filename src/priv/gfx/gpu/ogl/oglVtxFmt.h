@@ -113,7 +113,6 @@ namespace GN { namespace gfx
         };
 
         VertexFormat               mFormat;
-        const OGLBasicGpuProgram * mProgram;
         bool                       mValid;
         DynaArray<AttribBinding>   mAttribBindings;
         DynaArray<StateBinding>    mStateBindings;
@@ -124,8 +123,8 @@ namespace GN { namespace gfx
     private:
 
         // setup state binding
-        bool setupStateBindings();
-        bool getVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex );
+        bool setupStateBindings( const OGLBasicGpuProgram * gpuProgram );
+        bool getStandardVertexBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex );
 
         static void sSetVertexPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
         static void sSetNormalPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );

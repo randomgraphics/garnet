@@ -40,9 +40,8 @@ bool GN::gfx::OGLVtxFmt::init( const VertexFormat & format, const OGLBasicGpuPro
     GN_STDCLASS_INIT( GN::gfx::OGLVtxFmt, () );
 
     mFormat = format;
-    mProgram = program;
 
-    mValid = setupStateBindings();
+    mValid = setupStateBindings( program );
 
     // success
     return success();
@@ -163,7 +162,7 @@ GN::gfx::OGLVtxFmt::bindRawMemoryBuffer( const void * data, size_t stride ) cons
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::setupStateBindings()
+bool GN::gfx::OGLVtxFmt::setupStateBindings( const OGLBasicGpuProgram * gpuProgram )
 {
     GN_GUARD;
 
@@ -186,13 +185,12 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     {
         const VertexElement & e = mFormat.elements[i];
 
-        AttribBinding ab;
-        ab.info.self = this;
-        ab.info.stream = e.stream;
-        ab.info.offset = e.offset;
-
         // get binding information
-        if( !getVertexBindingDesc( vbd, e.binding, e.bindingIndex ) )
+        if(
+            // try get vertex binding information from GPU program first
+            ( NULL == gpuProgram || !gpuProgram->getBindingDesc( vbd, e.binding, e.bindingIndex ) ) &&
+            // then try standard/predefined binding.
+            !getStandardVertexBindingDesc( vbd, e.binding, e.bindingIndex ) )
         {
             GN_WARN(sLogger)(
                 "Vertex element (name=%s index=%d) is ignored, since it is neither used by "
@@ -201,6 +199,11 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
                 e.bindingIndex );
             continue;
         }
+
+        AttribBinding ab;
+        ab.info.self = this;
+        ab.info.stream = e.stream;
+        ab.info.offset = e.offset;
 
         switch( vbd.semantic )
         {
@@ -354,7 +357,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
+bool GN::gfx::OGLVtxFmt::getStandardVertexBindingDesc(
     OGLVertexBindingDesc & vbd,
     const char           * bindingName,
     UInt8                  bindingIndex )
@@ -363,18 +366,6 @@ bool GN::gfx::OGLVtxFmt::getVertexBindingDesc(
     vbd.semantic = (OGLVertexSemantic)-1;
     vbd.index = (UInt8)-1;
 #endif
-
-    //
-    // try get binding information from GPU program
-    //
-    if( mProgram && mProgram->getBindingDesc( vbd, bindingName, bindingIndex ) )
-    {
-        return true;
-    }
-
-    //
-    // then try stanadard/predefined bindings
-    //
 
     UInt32 maxAttributes = getGpu().getOGLCaps().maxVertexAttributes;
     UInt32 maxTextures = getGpu().caps().maxTextures;
