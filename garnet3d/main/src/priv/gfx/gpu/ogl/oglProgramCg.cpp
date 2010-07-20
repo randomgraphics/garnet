@@ -43,14 +43,50 @@ static OGLVertexBindingDesc
 sGetCgVertexAttributeBinding( CGparameter param )
 {
     OGLVertexBindingDesc binding;
+    memset( &binding, 0, sizeof(binding) );
 
     CGresource res = cgGetParameterBaseResource( param );
     switch( res )
     {
         case CG_POSITION0:
+            binding.semantic = VERTEX_SEMANTIC_VERTEX;
+            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            break;
+
+        case CG_NORMAL0:
+            binding.semantic = VERTEX_SEMANTIC_NORMAL;
+            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            break;
+
+        case CG_DIFFUSE0:
+            binding.semantic = VERTEX_SEMANTIC_COLOR;
+            binding.index = 0;
+            break;
+
+        case CG_SPECULAR0:
+            binding.semantic = VERTEX_SEMANTIC_COLOR;
+            binding.index = 1;
+            break;
+
+        case CG_COLOR0:
+            binding.semantic = VERTEX_SEMANTIC_COLOR;
+            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            break;
+
+        case CG_TEXCOORD0:
+            binding.semantic = VERTEX_SEMANTIC_TEXCOORD;
+            binding.index = (UInt8)cgGetParameterResourceIndex( param );
+            break;
+
+        case CG_FOGCOORD:
+        case CG_FOG0:
+            binding.semantic = VERTEX_SEMANTIC_FOG;
+            binding.index = 0;
             break;
 
         case CG_ATTR0:
+            binding.semantic = VERTEX_SEMANTIC_ATTRIBUTE;
+            binding.index = (UInt8)cgGetParameterResourceIndex( param );
             break;
 
         default:
@@ -58,26 +94,22 @@ sGetCgVertexAttributeBinding( CGparameter param )
             break;
     }
 
-    // TODO: get real binding information
-    binding.semantic = VERTEX_SEMANTIC_VERTEX;
-    binding.index = 0;
-
     return binding;
 }
 
 // *****************************************************************************
-// GN::gfx::OGLGpuProgramCg - Initialize and shutdown
+// GN::gfx::OGLGpuProgramCG - Initialize and shutdown
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpuProgramCg::init( const GpuProgramDesc & desc )
+bool GN::gfx::OGLGpuProgramCG::init( const GpuProgramDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramCg, () );
+    GN_STDCLASS_INIT( GN::gfx::OGLGpuProgramCG, () );
 
     CGcontext cgc = getGpu().getCgContext();
     if( NULL == cgc )
@@ -99,6 +131,7 @@ bool GN::gfx::OGLGpuProgramCg::init( const GpuProgramDesc & desc )
     if( NULL != desc.vs.source )
     {
         if( !mVs.init( cgc, vsprof, desc.vs.source, desc.vs.entry, NULL ) ) return failure();
+        GN_CG_CHECK_RV( cgGLLoadProgram( mVs.getProgram() ), failure() );
         enumCgParameters( mVs.getProgram() );
     }
 
@@ -106,6 +139,7 @@ bool GN::gfx::OGLGpuProgramCg::init( const GpuProgramDesc & desc )
     if( NULL != desc.ps.source )
     {
         if( !mPs.init( cgc, psprof, desc.ps.source, desc.ps.entry, NULL ) ) return failure();
+        GN_CG_CHECK_RV( cgGLLoadProgram( mPs.getProgram() ), failure() );
         enumCgParameters( mPs.getProgram() );
     }
 
@@ -146,12 +180,12 @@ bool GN::gfx::OGLGpuProgramCg::init( const GpuProgramDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCg::quit()
+void GN::gfx::OGLGpuProgramCG::quit()
 {
     GN_GUARD;
 
     mParam.setUniformArray( NULL, 0, 0 );
-    mParam.setTexureArray( NULL, 0, 0 );
+    mParam.setTextureArray( NULL, 0, 0 );
     mParam.setAttributeArray( NULL, 0, 0 );
 
     mUniforms.clear();
@@ -168,16 +202,16 @@ void GN::gfx::OGLGpuProgramCg::quit()
 }
 
 // *****************************************************************************
-// GN::gfx::OGLGpuProgramCg - Public methods
+// GN::gfx::OGLGpuProgramCG - Public methods
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLGpuProgramCg::getBindingDesc(
+bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
     OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const
 {
-    for( OglCgAttribute * attr = mAttributes.begin(); attr != mAttributes.end(); ++attr )
+    for( const OglCgAttribute * attr = mAttributes.begin(); attr != mAttributes.end(); ++attr )
     {
         if( attr->desc.name == bindingName && attr->binding.index == bindingIndex )
         {
@@ -188,109 +222,128 @@ bool GN::gfx::OGLGpuProgramCg::getBindingDesc(
     }
 
     // not found
-    GN_ERROR( "Vertex bidning %s(%d) not found.", bindingName, bindingIndex );
+    GN_ERROR(sLogger)( "Vertex bidning %s(%d) not found.", bindingName, bindingIndex );
     return false;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCg::applyUniforms(
+void GN::gfx::OGLGpuProgramCG::applyUniforms(
     const Uniform * const * uniforms, size_t count ) const
 {
     for( size_t i = 0; i < std::min( count, mUniforms.size() ); ++i )
     {
         const OglCgUniform & desc = mUniforms[i];
-        const Uniform & u = uniforms[i];
 
-        for( CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
+        const Uniform * u = uniforms[i];
+
+        if( NULL == u )
         {
-            GN_CG_CHECK( desc.setValueFuncPtr( *param, (int)desc.count, u.getval() ) );
+            GN_ERROR(sLogger)( "Null uniform pointer." );
+            continue;
         }
+
+        for( const CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
+        {
+            GN_CG_CHECK( desc.setValueFuncPtr( *param, (int)desc.count, u->getval() ) );
+        }
+    }
+
+    if( count != mUniforms.size() )
+    {
+        GN_ERROR(sLogger)( "%s uniforms: expected(%d), actual(%d).",
+            count > mUniforms.size() ? "Too many" : "Not enough",
+            mUniforms.size(),
+            count );
     }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCg::applyTextures( const TextureBinding * textures, size_t count ) const
+void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, size_t count ) const
 {
+    GN_UNUSED_PARAM( textures );
+    GN_UNUSED_PARAM( count );
     GN_UNIMPL_WARNING();
 }
 
 // *****************************************************************************
-// GN::gfx::OGLGpuProgramCg - Private methods
+// GN::gfx::OGLGpuProgramCG - Private methods
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCg::enumCgParameters( CGprogram prog )
+void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog )
 {
-    CGprofile profile = cgGetProgramProfile( prog );
+    bool vs = cgGetProgramProfile( prog ) == mVs.getProfile();
 
-    for( CGparameter param = cgGetFirstLeafParameter( prog, CG_PROGRAM );
+    for( CGparameter param = cgGetFirstParameter( prog, CG_GLOBAL );
          param != 0;
-         param = cgGetNextLeafParameter( param ) )
+         param = cgGetNextParameter( param ) )
     {
+        // Ignore non-input parameters
+        CGenum direction = cgGetParameterDirection( param );
+        if( CG_IN != direction && CG_INOUT != direction ) return;
+
         const char * name = cgGetParameterName( param );
 
         CGenum var = cgGetParameterVariability( param );
 
-        if( CG_UNIFORM == var )
+        CGparameterclass paramclass = cgGetParameterClass( param );
+
+        if( CG_PARAMETERCLASS_SAMPLER == paramclass )
         {
-            CGparameterclass paramclass = cgGetParameterClass( param );
-            if( CG_PARAMETERCLASS_SAMPLER == paramclass )
+            // This is a texture parameter
+
+            OglCgTexture * existingTexture = std::find_if( mTextures.begin(), mTextures.end(), FindCgParameterByName(name) );
+
+            if( existingTexture )
             {
-                // A texture parameter
+                GN_TODO( "verify that the texture dimension is same." );
 
-                OglCgTexture * existingTexture = std::find_if( mTextures.begin(), mTextures.end(), FindCgParameterByName(name) );
-
-                if( existingTexture )
-                {
-                    GN_TODO( "verify that the texture dimension is same." );
-
-                    existingTexture->handles.append( param );
-                }
-                else
-                {
-                    // This is a new texture parameter.
-                    // Note: texture.desc.name should be updated after all parameters are found.
-                    OglCgTexture texture;
-                    texture.handles.append( param );
-                    texture.name = name;
-                    mTextures.append( texture );
-                }
+                existingTexture->handles.append( param );
             }
             else
             {
-                // A uniform parameter
-
-                OglCgUniform * existingUniform = std::find_if( mUniforms.begin(), mUniforms.end(), FindCgParameterByName(name) );
-
-                if( existingUniform )
-                {
-                    GN_TODO( "Verify that the uniform type and size is same" );
-
-                    existingUniform->handles.append( prog );
-                }
-                else
-                {
-                    // This is a new uniform parameter.
-                    // Note: uniform.desc.name should be updated after all parameters are found.
-                    OglCgUniform uniform;
-                    uniform.handles.append( param );
-                    uniform.name = name;
-                    uniform.count = sGetCgParameterCount( param );
-                    uniform.setValueFuncPtr = GetCgSetParameterFuncPtr( param );
-                    uniform.desc.size = uniform.count * 4;
-                    mUniforms.append( uniform );
-                }
+                // This is a new texture parameter.
+                // Note: texture.desc.name should be updated after all parameters are found.
+                OglCgTexture texture;
+                texture.handles.append( param );
+                texture.name = name;
+                mTextures.append( texture );
             }
         }
-        else if( CG_VARYING == var && CG_PROFILE_VERTEX == profile )
+        else if( CG_UNIFORM == var )
         {
-            // Note: we care about varying variables only on vertex stage.
+            // This is a uniform parameter.
+
+            OglCgUniform * existingUniform = std::find_if( mUniforms.begin(), mUniforms.end(), FindCgParameterByName(name) );
+
+            if( existingUniform )
+            {
+                GN_TODO( "Verify that the uniform type and size is same" );
+
+                existingUniform->handles.append( param );
+            }
+            else
+            {
+                // This is a new uniform parameter.
+                // Note: uniform.desc.name should be updated after all parameters are found.
+                OglCgUniform uniform;
+                uniform.handles.append( param );
+                uniform.name = name;
+                uniform.count = sGetCgParameterCount( param );
+                uniform.setValueFuncPtr = GetCgSetParameterFuncPtr( param );
+                uniform.desc.size = uniform.count * 4;
+                mUniforms.append( uniform );
+            }
+        }
+        else if( vs && CG_VARYING == var )
+        {
+            // This is a vertex parameter
 
             // must be a new attribute.
             GN_ASSERT( mAttributes.end() == std::find_if( mAttributes.begin(), mAttributes.end(), FindCgParameterByName(name) ) );
@@ -307,21 +360,19 @@ void GN::gfx::OGLGpuProgramCg::enumCgParameters( CGprogram prog )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::OGLGpuProgramCg::SetCgTypelessParameterValue
-GN::gfx::OGLGpuProgramCg::GetCgSetParameterFuncPtr( CGparameter param )
+GN::gfx::OGLGpuProgramCG::SetCgTypelessParameterValue
+GN::gfx::OGLGpuProgramCG::GetCgSetParameterFuncPtr( CGparameter param )
 {
     switch( cgGetParameterBaseType( param ) )
     {
         case CG_FLOAT:
         case CG_HALF:
         case CG_FIXED:
-            (SetCgTypelessParameterValue)cgSetParameterValuefr;
-            return
+            return (SetCgTypelessParameterValue)cgSetParameterValuefr;
 
         case CG_BOOL:
         case CG_INT:
-            (SetCgTypelessParameterValue)cgSetParameterValueir;
-             break;
+            return (SetCgTypelessParameterValue)cgSetParameterValueir;
 
         default:
             GN_UNEXPECTED();

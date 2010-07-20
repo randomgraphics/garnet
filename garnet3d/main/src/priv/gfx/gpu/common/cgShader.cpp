@@ -37,8 +37,8 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 bool GN::gfx::CgShader::init(
     CGcontext context,
     CGprofile profile,
-    const StrA & code,
-    const StrA & entry,
+    const char * code,
+    const char * entry,
     const char ** args )
 {
     GN_GUARD;
@@ -47,7 +47,7 @@ bool GN::gfx::CgShader::init(
     GN_STDCLASS_INIT( GN::gfx::CgShader, () );
 
     // create program
-    mProgram = cgCreateProgram( context, CG_SOURCE, code.cptr(), profile, entry.cptr(), args );
+    mProgram = cgCreateProgram( context, CG_SOURCE, code, profile, entry ? entry : "main", args );
     if( !mProgram )
     {
         CGerror err;

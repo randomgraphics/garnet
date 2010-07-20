@@ -258,102 +258,12 @@ namespace GN { namespace gfx
 
 #ifdef HAS_CG_OGL
 
-#if 0
-    ///
-    /// Cg Shader class
-    ///
-    class OGLShaderCg : public StdClass
-    {
-        GN_DECLARE_STDCLASS( OGLShaderCg, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLShaderCg( OGLGpu & r, ShaderType t, CGGLenum profileClass )
-            : OGLShader( t, LANG_CG )
-            , OGLResource( r )
-            , mProfileClass( profileClass ) { clear(); }
-        virtual ~OGLBasicShaderCg() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( const StrA & code, const StrA & hints );
-        void quit();
-    private:
-        void clear() {}
-        //@}
-
-        // ********************************
-        // from OGLShader
-        // ********************************
-    public:
-
-        virtual void disable() const;
-        virtual void apply() const;
-        virtual void applyDirtyUniforms() const;
-
-        // ********************************
-        // from Shader
-        // ********************************
-    private:
-
-        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        const CGGLenum mProfileClass;
-        CGprofile      mProfile;
-        CgShader       mShader;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-        inline void applyUniform( const Uniform & ) const;
-    };
-
-    ///
-    /// OGL Cg vertex shader.
-    ///
-    class OGLVtxShaderCg : public OGLBasicShaderCg
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLVtxShaderCg( OGLGpu & r ) : OGLBasicShaderCg( r, SHADER_VS, CG_GL_VERTEX ) {}
-    };
-
-    ///
-    /// OGL Cg pixel shader.
-    ///
-    class OGLPxlShaderCg : public OGLBasicShaderCg
-    {
-    public:
-        ///
-        /// ctor
-        ///
-        OGLPxlShaderCg( OGLGpu & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
-    };
-#endif
-
     ///
     /// Cg shader
     ///
-    class OGLGpuProgramCg : public OGLBasicGpuProgram, public StdClass
+    class OGLGpuProgramCG : public OGLBasicGpuProgram, public StdClass
     {
-        GN_DECLARE_STDCLASS( OGLGpuProgramCg, StdClass );
+        GN_DECLARE_STDCLASS( OGLGpuProgramCG, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -361,8 +271,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLGpuProgramCg( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::CG ) { clear(); }
-        virtual ~OGLGpuProgramCg() { quit(); }
+        OGLGpuProgramCG( OGLGpu & r ) : OGLBasicGpuProgram( r, GpuProgramLanguage::CG ) { clear(); }
+        virtual ~OGLGpuProgramCG() { quit(); }
         //@}
 
         // ********************************

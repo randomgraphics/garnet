@@ -105,6 +105,15 @@ GN::gfx::OGLGpu::createGpuProgram( const void * data, size_t length )
             return prog.detach();
         }
 
+        #ifdef HAS_CG_OGL
+        case GpuProgramLanguage::CG:
+        {
+            AutoRef<OGLGpuProgramCG> prog( new OGLGpuProgramCG(*this) );
+            if( !prog->init( desc ) ) return NULL;
+            return prog.detach();
+        }
+        #endif
+
         default:
             GN_ERROR(sLogger)( "invalid or unsupported GPU program language: %s", desc.lang.toString() );
             return NULL;
