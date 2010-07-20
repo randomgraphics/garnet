@@ -207,7 +207,10 @@ namespace GN { namespace gfx
         CGprogram mProgram;
         CGcontext mContext;
         CGprofile mProfile;
-        StrA      mCode;
+
+#if GN_BUILD_DEBUG
+        StrA mCode;
+#endif
 
         // ********************************
         // private functions
