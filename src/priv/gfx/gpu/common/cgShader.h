@@ -148,8 +148,8 @@ namespace GN { namespace gfx
         bool init(
             CGcontext context,
             CGprofile profile,
-            const StrA & code,
-            const StrA & entry,
+            const char * code,
+            const char * entry,
             const char ** args = NULL );
         void quit();
     private:
