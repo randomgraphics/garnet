@@ -341,15 +341,12 @@ GN::gfx::EffectResource::Impl::initTechniques(
 {
     int currentQuality = (int)0x80000000; // minimal signed integer
 
-    for( const StringMap<char,EffectTechniqueDesc>::KeyValuePair * iter = effectDesc.techniques.first();
-         iter != NULL;
-         iter = effectDesc.techniques.next( iter ) )
+    for( const EffectTechniqueDesc * techDesc = effectDesc.techniques.first();
+         techDesc != NULL;
+         techDesc = effectDesc.techniques.next( techDesc ) )
     {
-        const StrA                & techName = iter->key;
-        const EffectTechniqueDesc & techDesc = iter->value;
-
         // ignore the technique with lower quality
-        if( techDesc.quality <= currentQuality )
+        if( techDesc->quality <= currentQuality )
         {
             continue;
         }
@@ -357,9 +354,9 @@ GN::gfx::EffectResource::Impl::initTechniques(
         DynaArray<RenderPass> passes = mPasses;
         mPasses.clear();
 
-        if( initTech( effectDesc, techName, techDesc ) )
+        if( initTech( effectDesc, techDesc->name, *techDesc ) )
         {
-            currentQuality = techDesc.quality;
+            currentQuality = techDesc->quality;
         }
         else
         {

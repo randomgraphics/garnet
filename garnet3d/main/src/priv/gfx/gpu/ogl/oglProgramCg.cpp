@@ -132,7 +132,8 @@ bool GN::gfx::OGLGpuProgramCG::init( const GpuProgramDesc & desc )
     {
         if( !mVs.init( cgc, vsprof, desc.vs.source, desc.vs.entry, NULL ) ) return failure();
         GN_CG_CHECK_RV( cgGLLoadProgram( mVs.getProgram() ), failure() );
-        enumCgParameters( mVs.getProgram() );
+        enumCgParameters( mVs.getProgram(), CG_GLOBAL );
+        enumCgParameters( mVs.getProgram(), CG_PROGRAM );
     }
 
     // Initialize fragment shader
@@ -140,7 +141,8 @@ bool GN::gfx::OGLGpuProgramCG::init( const GpuProgramDesc & desc )
     {
         if( !mPs.init( cgc, psprof, desc.ps.source, desc.ps.entry, NULL ) ) return failure();
         GN_CG_CHECK_RV( cgGLLoadProgram( mPs.getProgram() ), failure() );
-        enumCgParameters( mPs.getProgram() );
+        enumCgParameters( mPs.getProgram(), CG_GLOBAL );
+        enumCgParameters( mPs.getProgram(), CG_PROGRAM );
     }
 
     // Fix up all char * pointers in parameter array
@@ -211,9 +213,11 @@ void GN::gfx::OGLGpuProgramCG::quit()
 bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
     OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const
 {
+    StrA fullBindingName = stringFormat( "%s%d", bindingName, bindingIndex );
+
     for( const OglCgAttribute * attr = mAttributes.begin(); attr != mAttributes.end(); ++attr )
     {
-        if( attr->desc.name == bindingName && attr->binding.index == bindingIndex )
+        if( attr->desc.name == fullBindingName )
         {
             // found it.
             result = attr->binding;
@@ -221,8 +225,7 @@ bool GN::gfx::OGLGpuProgramCG::getBindingDesc(
         }
     }
 
-    // not found
-    GN_ERROR(sLogger)( "Vertex bidning %s(%d) not found.", bindingName, bindingIndex );
+    // not found (expected behavior, no error message here)
     return false;
 }
 
@@ -276,11 +279,11 @@ void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, s
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog )
+void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_space )
 {
     bool vs = cgGetProgramProfile( prog ) == mVs.getProfile();
 
-    for( CGparameter param = cgGetFirstParameter( prog, CG_GLOBAL );
+    for( CGparameter param = cgGetFirstParameter( prog, name_space );
          param != 0;
          param = cgGetNextParameter( param ) )
     {
@@ -350,7 +353,7 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog )
 
             OglCgAttribute attr;
             attr.handles.append( param );
-            attr.name = name;
+            attr.name = cgGetResourceString( cgGetParameterResource( param ) );
             attr.binding = sGetCgVertexAttributeBinding( param );
             mAttributes.append( attr );
         }

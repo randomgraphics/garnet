@@ -116,8 +116,6 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["glsl"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl9"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl9"].gpd.vs.source = DIFFUSE_VS_HLSL9;
@@ -131,8 +129,14 @@ static AutoRef<EffectResource> sRegisterDiffuseEffect( GpuResourceDatabase & gdb
     ed.gpuprograms["hlsl9"].uniforms["lightColor"] = "LIGHT0_DIFFUSE";
     ed.gpuprograms["hlsl9"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl9"].textures["t0"] = "ALBEDO_TEXTURE";
-    ed.techniques["hlsl9"].passes.resize( 1 );
-    ed.techniques["hlsl9"].passes[0].gpuprogram = "hlsl9";
+
+    ed.techniques.resize( 2 );
+    ed.techniques[0].name = "glsl";
+    ed.techniques[0].passes.resize( 1 );
+    ed.techniques[0].passes[0].gpuprogram = "glsl";
+    ed.techniques[1].name = "hlsl9";
+    ed.techniques[1].passes.resize( 1 );
+    ed.techniques[1].passes[0].gpuprogram = "hlsl9";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@DIFFUSE" );
 
@@ -194,8 +198,6 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].gpd.ps.source = WIREFRAME_PS_GLSL;
     ed.gpuprograms["glsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["glsl"].uniforms["color"] = "COLOR";
-    ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.source = WIREFRAME_VS_HLSL9;
@@ -204,8 +206,14 @@ static AutoRef<EffectResource> sRegisterWireframeEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].gpd.ps.entry  = "main";
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["hlsl"].uniforms["color"] = "COLOR";
-    ed.techniques["hlsl"].passes.resize( 1 );
-    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
+
+    ed.techniques.resize( 2 );
+    ed.techniques[0].name = "glsl";
+    ed.techniques[0].passes.resize( 1 );
+    ed.techniques[0].passes[0].gpuprogram = "glsl";
+    ed.techniques[1].name = "hlsl";
+    ed.techniques[1].passes.resize( 1 );
+    ed.techniques[1].passes[0].gpuprogram = "hlsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@WIREFRAME" );
 
@@ -327,8 +335,6 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["glsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["glsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["glsl"].textures["t1"] = "NORMAL_TEXTURE";
-    ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
 
     ed.gpuprograms["hlsl"].gpd.lang = GpuProgramLanguage::HLSL9;
     ed.gpuprograms["hlsl"].gpd.vs.source = NORMALMAP_VS_HLSL9;
@@ -343,8 +349,14 @@ static AutoRef<EffectResource> sRegisterNormalMapEffect( GpuResourceDatabase & g
     ed.gpuprograms["hlsl"].uniforms["albedoColor"] = "ALBEDO_COLOR";
     ed.gpuprograms["hlsl"].textures["t0"] = "ALBEDO_TEXTURE";
     ed.gpuprograms["hlsl"].textures["t1"] = "NORMAL_TEXTURE";
-    ed.techniques["hlsl"].passes.resize( 1 );
-    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
+
+    ed.techniques.resize( 2 );
+    ed.techniques[0].name = "glsl";
+    ed.techniques[0].passes.resize( 1 );
+    ed.techniques[0].passes[0].gpuprogram = "glsl";
+    ed.techniques[1].name = "hlsl";
+    ed.techniques[1].passes.resize( 1 );
+    ed.techniques[1].passes[0].gpuprogram = "hlsl";
 
     AutoRef<EffectResource> e = gdb.createResource<EffectResource>( "@NORMAL_MAP" );
 

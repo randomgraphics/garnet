@@ -23,7 +23,7 @@ static const GLenum FILL_MODE_TO_OGL[] =
 
 static const GLenum CULL_MODE_TO_OGL[] =
 {
-    GL_FALSE, // CULL_NONE
+    0,        // not used.
     GL_FRONT, // CULL_FRONT
     GL_BACK,  // CULL_BACK
 };
@@ -252,7 +252,15 @@ GN::gfx::OGLGpu::bindContextRenderStates(
         glPolygonMode( GL_FRONT_AND_BACK, FILL_MODE_TO_OGL[newContext.rs.fillMode] );
 
         // cull mode
-        glCullFace( CULL_MODE_TO_OGL[newContext.rs.cullMode] );
+        if( GpuContext::CULL_NONE == newContext.rs.cullMode )
+        {
+            glDisable( GL_CULL_FACE );
+        }
+        else
+        {
+            glEnable( GL_CULL_FACE );
+            glCullFace( CULL_MODE_TO_OGL[newContext.rs.cullMode] );
+        }
 
         // front face
         glFrontFace( FRONT_FACE_TO_OGL[newContext.rs.frontFace] );

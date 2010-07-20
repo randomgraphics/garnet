@@ -76,11 +76,11 @@ void initEffectDesc( EffectResourceDesc & ed )
     ed.gpuprograms["hlsl"].uniforms["pvw"] = "MATRIX_PVW";
     ed.gpuprograms["hlsl"].textures["s0"] = "ALBEDO_TEXTURE";
 
-    ed.techniques["glsl"].passes.resize( 1 );
-    ed.techniques["glsl"].passes[0].gpuprogram = "glsl";
-
-    ed.techniques["hlsl"].passes.resize( 1 );
-    ed.techniques["hlsl"].passes[0].gpuprogram = "hlsl";
+    ed.techniques.resize( 2 );
+    ed.techniques[0].passes.resize( 1 );
+    ed.techniques[0].passes[0].gpuprogram = "glsl";
+    ed.techniques[1].passes.resize( 1 );
+    ed.techniques[1].passes[0].gpuprogram = "hlsl";
 }
 
 void initMeshDesc( MeshResourceDesc & md )

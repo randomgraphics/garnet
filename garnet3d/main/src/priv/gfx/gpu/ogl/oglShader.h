@@ -398,7 +398,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        void enumCgParameters( CGprogram prog );
+        void enumCgParameters( CGprogram prog, CGenum name_space );
         SetCgTypelessParameterValue GetCgSetParameterFuncPtr( CGparameter param );
     };
 
