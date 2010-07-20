@@ -463,11 +463,18 @@ static void sParseTechnique( EffectResourceDesc & desc, const XmlElement & node 
 {
     GN_ASSERT( "technique" == node.name );
 
-    // get techique name
-    const char * techName = sGetItemName( node, "technique" );
-    if( NULL == techName ) return;
-
     EffectResourceDesc::EffectTechniqueDesc td;
+
+    // get techique name
+    XmlAttrib * techNameAttrib = node.findAttrib( "name" );
+    if( NULL == techNameAttrib || techNameAttrib->value.empty() )
+    {
+        td.name = "<UNNAMED>";
+    }
+    if( td.name.empty() )
+    {
+        td.name = techNameAttrib->value;
+    }
 
     // get technique quality, default is 100
     td.quality = sGetIntAttrib( node, "quality", 100 );
@@ -483,7 +490,7 @@ static void sParseTechnique( EffectResourceDesc & desc, const XmlElement & node 
         else sPostError( *e, "Unknown node. Ignored" );
     }
 
-    desc.techniques[techName] = td;
+    desc.techniques.append( td );
 }
 
 //

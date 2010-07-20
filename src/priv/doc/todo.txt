@@ -4,6 +4,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - Need a mapping in model defintion that maps vertex streams to shader sementics?
   - New command buffer implementation
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of

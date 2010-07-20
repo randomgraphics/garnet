@@ -41,6 +41,33 @@ float4 main( in float4 ipos: POSITION0, in float3 itex : TEXCOORD0 ) : COLOR0
 			</ps>
 		</gpuprogram>
 
+		<!-- GLSL shaders -->
+		<gpuprogram name="glsl" lang="GLSL">
+			<uniref uniform="pvw" shaderParameter="pvw"/>
+			<texref texture="cube" shaderParameter="t0"/>
+			<vs entry="main">
+<![CDATA[
+uniform mat4 pvw;
+varying vec3 texcoords;
+void main()
+{
+	gl_Position = pvw * gl_Vertex;
+	texcoords   = sign( gl_Vertex.xyz );
+}
+ ]]>
+			</vs>
+			<ps entry="main">
+<![CDATA[
+varying vec3 texcoords;
+uniform samplerCube t0;
+void main()
+{
+   gl_FragColor = textureCube( t0, texcoords );
+}
+]]>
+			</ps>
+		</gpuprogram>
+
 		<!-- Cg shaders -->
 		<gpuprogram name="cg" lang="CG">
 			<uniref uniform="pvw" shaderParameter="pvw"/>
@@ -84,6 +111,9 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
         />
 		<technique name="d3d">
 			<pass gpuprogram="d3d"/>
+		</technique>
+		<technique name="glsl">
+			<pass gpuprogram="glsl"/>
 		</technique>
 		<technique name="cg">
 			<pass gpuprogram="cg"/>

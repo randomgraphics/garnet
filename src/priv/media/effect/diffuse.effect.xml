@@ -11,7 +11,7 @@
     </parameters>
     <gpuprograms>
 
-        <!-- D3D gpuprograms -->
+        <!-- GLSL gpuprograms -->
 
         <gpuprogram name="glsl" lang="GLSL">
             <prerequisites/>

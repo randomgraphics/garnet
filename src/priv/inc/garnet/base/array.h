@@ -563,10 +563,14 @@ namespace GN
         /** do nothing if position is invalid */
         void      eraseIdx( size_t position ) { return doErase( position ); }
         void      erasePtr( const T * p ) { return doErase( p - mElements ); }
+        const T * first() const { return mElements; }
+        T       * first() { return mElements; }
         const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         /** do nothing if position is invalid */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
+        const T * next( const T * t ) const { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
+        T       * next( const T * t ) { return ( mCount > 0 && mElements <= t && t < (mElements+mCount-1) ) ? ( t + 1 ) : NULL; }
         void      reserve( size_t count ) { doReserve( count ); }
         void      resize( size_t count ) { doResize( count ); }
         void      popBack() { doErase( mCount - 1 ); }

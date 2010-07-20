@@ -463,6 +463,7 @@ namespace GN { namespace gfx
         ///
         struct EffectTechniqueDesc
         {
+            StrA                      name;         ///< Optional technique name.
             int                       quality;      ///< user defined rendering quality. Effect class uses
                                                     ///< the technique with the hightest quality as default technique.
             DynaArray<EffectPassDesc> passes;       ///< pass list.
@@ -476,10 +477,10 @@ namespace GN { namespace gfx
         // data
         // *****************************
 
-        StringMap<char,EffectTextureDesc>      textures;     ///< Texture list
-        StringMap<char,EffectUniformDesc>      uniforms;     ///< Uniform list
-        StringMap<char,EffectGpuProgramDesc>   gpuprograms;  ///< GPU program list
-        StringMap<char,EffectTechniqueDesc>    techniques;   ///< Technique list. Technique name must be unique.
+        StringMap<char,EffectTextureDesc>     textures;     ///< Texture list
+        StringMap<char,EffectUniformDesc>     uniforms;     ///< Uniform list
+        StringMap<char,EffectGpuProgramDesc>  gpuprograms;  ///< GPU program list
+        DynaArray<EffectTechniqueDesc>        techniques;   ///< Technique list.
         EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
 
         // *****************************
