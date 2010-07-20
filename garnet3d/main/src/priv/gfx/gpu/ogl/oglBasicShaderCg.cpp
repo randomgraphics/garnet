@@ -13,12 +13,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
+bool GN::gfx::OglShaderCg::init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderCg, () );
+    GN_STDCLASS_INIT( GN::gfx::OglShaderCg, () );
 
     // get the latest profile
     mProfile = cgGLGetLatestProfile( mProfileClass );
@@ -47,7 +47,7 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::quit()
+void GN::gfx::OglShaderCg::quit()
 {
     GN_GUARD;
 
@@ -66,7 +66,7 @@ void GN::gfx::OGLBasicShaderCg::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::disable() const
+void GN::gfx::OglShaderCg::disable() const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( ok() );
@@ -77,7 +77,7 @@ void GN::gfx::OGLBasicShaderCg::disable() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::apply() const
+void GN::gfx::OglShaderCg::apply() const
 {
     GN_GUARD_SLOW;
 
@@ -102,7 +102,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
+void GN::gfx::OglShaderCg::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
     const std::set<UInt32> dirtySet = getDirtyUniforms();
@@ -122,7 +122,7 @@ void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
+bool GN::gfx::OglShaderCg::queryDeviceUniform(
     const char * name, HandleType & userData ) const
 {
     GN_GUARD;
@@ -142,7 +142,7 @@ bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
+void GN::gfx::OglShaderCg::applyUniform( const Uniform & u ) const
 {
     GN_GUARD_SLOW;
 

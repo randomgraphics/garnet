@@ -12,6 +12,42 @@
 
 namespace GN { namespace gfx
 {
+    class OglGpuProgramParameterDesc : public GpuProgramParameterDesc
+    {
+    public:
+
+        void setUniformArray(
+            const GpuProgramUniformParameterDesc * array,
+            size_t                                 count,
+            size_t                                 stride )
+        {
+            mUniformArray       = array;
+            mUniformCount       = count;
+            mUniformArrayStride = stride;
+        }
+
+        void setTextureArray(
+            const GpuProgramTextureParameterDesc * array,
+            size_t                                 count,
+            size_t                                 stride )
+        {
+            mTextureArray       = array;
+            mTextureCount       = count;
+            mTextureArrayStride = stride;
+        }
+
+        void setAttributeArray(
+            const GpuProgramAttributeParameterDesc * array,
+            size_t                                   count,
+            size_t                                   stride )
+        {
+            mAttributeArray       = array;
+            mAttributeCount       = count;
+            mAttributeArrayStride = stride;
+        }
+    };
+
+
     // *************************************************************************
     // Basic program object
     // *************************************************************************
@@ -188,41 +224,6 @@ namespace GN { namespace gfx
             StrA                             name;     ///< attribyte name
         };
 
-        class GLSLParameterDesc : public GpuProgramParameterDesc
-        {
-        public:
-
-            void setUniformArray(
-                const GpuProgramUniformParameterDesc * array,
-                size_t                                 count,
-                size_t                                 stride )
-            {
-                mUniformArray       = array;
-                mUniformCount       = count;
-                mUniformArrayStride = stride;
-            }
-
-            void setTextureArray(
-                const GpuProgramTextureParameterDesc * array,
-                size_t                                 count,
-                size_t                                 stride )
-            {
-                mTextureArray       = array;
-                mTextureCount       = count;
-                mTextureArrayStride = stride;
-            }
-
-            void setAttributeArray(
-                const GpuProgramAttributeParameterDesc * array,
-                size_t                                   count,
-                size_t                                   stride )
-            {
-                mAttributeArray       = array;
-                mAttributeCount       = count;
-                mAttributeArrayStride = stride;
-            }
-        };
-
         // GLSL program and shader object handles
         GLhandleARB mProgram;
         GLhandleARB mVS;
@@ -238,7 +239,7 @@ namespace GN { namespace gfx
         DynaArray<GLSLAttributeDesc>         mAttributes;
 
         // parameter descriptor
-        GLSLParameterDesc                    mParamDesc;
+        OglGpuProgramParameterDesc           mParamDesc;
 
         // ********************************
         // private functions
@@ -259,11 +260,11 @@ namespace GN { namespace gfx
 
 #if 0
     ///
-    /// Basic Cg Shader class
+    /// Cg Shader class
     ///
-    class OGLBasicShaderCg : public OGLShader, public OGLResource, public StdClass
+    class OGLShaderCg : public StdClass
     {
-        GN_DECLARE_STDCLASS( OGLBasicShaderCg, StdClass );
+        GN_DECLARE_STDCLASS( OGLShaderCg, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -271,7 +272,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLBasicShaderCg( OGLGpu & r, ShaderType t, CGGLenum profileClass )
+        OGLShaderCg( OGLGpu & r, ShaderType t, CGGLenum profileClass )
             : OGLShader( t, LANG_CG )
             , OGLResource( r )
             , mProfileClass( profileClass ) { clear(); }
@@ -370,11 +371,19 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init();
+        bool init( const GpuProgramDesc & desc );
         void quit();
     private:
         void clear() {}
         //@}
+
+        // ********************************
+        // from GpuProgram
+        // ********************************
+
+    public:
+
+        virtual const GpuProgramParameterDesc & getParameterDesc() const { return mParam; }
 
         // ********************************
         // from OGLBasicGpuProgram
@@ -385,9 +394,20 @@ namespace GN { namespace gfx
 
         virtual bool getBindingDesc( OGLVertexBindingDesc & result, const char * bindingName, UInt8 bindingIndex ) const;
 
-        virtual void enable() const;
+        virtual void enable() const
+        {
+            GN_CG_CHECK( cgGLEnableProfile( mVs.getProfile() ) );
+            GN_CG_CHECK( cgGLBindProgram( mVs.getProgram() ) );
 
-        virtual void disable() const;
+            GN_CG_CHECK( cgGLEnableProfile( mPs.getProfile() ) );
+            GN_CG_CHECK( cgGLBindProgram( mPs.getProgram() ) );
+        }
+
+        virtual void disable() const
+        {
+            GN_CG_CHECK( cgGLDisableProfile( mVs.getProfile() ) );
+            GN_CG_CHECK( cgGLDisableProfile( mPs.getProfile() ) );
+        }
 
         virtual void applyUniforms( const Uniform * const * uniforms, size_t count ) const;
 
@@ -401,20 +421,80 @@ namespace GN { namespace gfx
     public:
 
         // ********************************
+        // private types
+        // ********************************
+    private:
+
+        typedef void (CGENTRY *SetCgTypelessParameterValue)(CGparameter param, int n, const void * vals);
+
+        struct OglCgParameter
+        {
+            DynaArray<CGparameter> handles; // in case that the parameter is used in more than one programs.
+            StrA                   name;
+        };
+
+        struct OglCgUniform : public OglCgParameter
+        {
+            GpuProgramUniformParameterDesc desc;
+
+            // Total number of elements. For example, float2x3 blah[4][5] contains 2x3x4x5=120 elements.
+            size_t count;
+
+            // The function pointer that sets the uniform value.
+            SetCgTypelessParameterValue setValueFuncPtr;
+        };
+
+        struct OglCgTexture : public OglCgParameter
+        {
+            GpuProgramTextureParameterDesc desc;
+        };
+
+        struct OglCgAttribute : public OglCgParameter
+        {
+            GpuProgramAttributeParameterDesc desc;
+            OGLVertexBindingDesc             binding;
+        };
+
+        class FindCgParameterByName
+        {
+            const char * mName;
+
+        public:
+
+            FindCgParameterByName( const char * name ) : mName(name)
+            {
+            }
+
+            bool operator()( const OglCgParameter & param )
+            {
+                return param.name == mName;
+            }
+        };
+
+        // ********************************
         // private variables
         // ********************************
     private:
+
+        CgShader                   mVs;
+        CgShader                   mPs;
+        DynaArray<OglCgUniform>    mUniforms;
+        DynaArray<OglCgTexture>    mTextures;
+        DynaArray<OglCgAttribute>  mAttributes;
+        OglGpuProgramParameterDesc mParam;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        void enumCgParameters( CGprogram prog );
+        SetCgTypelessParameterValue GetCgSetParameterFuncPtr( CGparameter param );
     };
 
 #endif
 
-    }
-}
+}}
 
 // *****************************************************************************
 //                                     EOF
