@@ -69,10 +69,10 @@ bool GN::gfx::CgShader::init(
         return failure();
     }
 
-    GN_TRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
+    GN_VTRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
 
     // show compile result
-    GN_TRACE(sLogger)(
+    GN_VTRACE(sLogger)(
         "\n\n"
         "==================== Cg compile success =================\n"
         "%s\n"

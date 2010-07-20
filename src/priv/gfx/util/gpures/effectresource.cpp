@@ -4,7 +4,7 @@
 using namespace GN;
 using namespace GN::gfx;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures.EffectResource");
 
 typedef GN::gfx::EffectResourceDesc::ShaderPrerequisites ShaderPrerequisites;
 typedef GN::gfx::EffectResourceDesc::EffectUniformDesc EffectUniformDesc;
@@ -13,6 +13,8 @@ typedef GN::gfx::EffectResourceDesc::EffectGpuProgramDesc EffectGpuProgramDesc;
 typedef GN::gfx::EffectResourceDesc::EffectRenderStateDesc EffectRenderStateDesc;
 typedef GN::gfx::EffectResourceDesc::EffectPassDesc EffectPassDesc;
 typedef GN::gfx::EffectResourceDesc::EffectTechniqueDesc EffectTechniqueDesc;
+
+#define LOAD_GPU_PROGRAM_ONDEMAND 1
 
 // *****************************************************************************
 // Local stuff
@@ -109,16 +111,16 @@ sMergeRenderStates(
 // -----------------------------------------------------------------------------
 static bool
 sCheckShaderTextures(
-    const EffectResourceDesc & effectDesc,
-    const EffectGpuProgramDesc   & shaderDesc,
-    const char               * shaderName,
-    const GpuProgram         & program )
+    const EffectResourceDesc   & effectDesc,
+    const EffectGpuProgramDesc & programDesc,
+    const char                 * programName,
+    const GpuProgram           & program )
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc.textures.first();
+    for( const StringMap<char,StrA>::KeyValuePair * iter = programDesc.textures.first();
          iter != NULL;
-         iter = shaderDesc.textures.next( iter ) )
+         iter = programDesc.textures.next( iter ) )
     {
         const StrA & shaderParameterName = iter->key;
         const StrA & textureName = iter->value;
@@ -127,14 +129,14 @@ sCheckShaderTextures(
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
                 shaderParameterName.cptr(),
-                shaderName );
+                programName );
             return false;
         }
         else if( NULL == effectDesc.textures.find( textureName ) )
         {
             GN_ERROR(sLogger)( "Invalid texture named '%s' is referenced in shader '%s'.",
                 shaderParameterName.cptr(),
-                shaderName );
+                programName );
             return false;
         }
     }
@@ -148,15 +150,15 @@ sCheckShaderTextures(
 static bool
 sCheckShaderUniforms(
     const EffectResourceDesc   & effectDesc,
-    const EffectGpuProgramDesc & shaderDesc,
-    const char                 * shaderName,
+    const EffectGpuProgramDesc & programDesc,
+    const char                 * programName,
     const GpuProgram           & program )
 {
     const GpuProgramParameterDesc & param = program.getParameterDesc();
 
-    for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc.uniforms.first();
+    for( const StringMap<char,StrA>::KeyValuePair * iter = programDesc.uniforms.first();
          iter != NULL;
-         iter = shaderDesc.uniforms.next( iter ) )
+         iter = programDesc.uniforms.next( iter ) )
     {
         const StrA & shaderParameterName = iter->key;
         const StrA & uniformName = iter->value;
@@ -165,14 +167,14 @@ sCheckShaderUniforms(
         {
             GN_ERROR(sLogger)( "Invalid GPU program parameter named '%s' is referenced in shader '%s'.",
                 shaderParameterName.cptr(),
-                shaderName );
+                programName );
             return false;
         }
         else if( NULL == effectDesc.uniforms.find( uniformName ) )
         {
             GN_ERROR(sLogger)( "Invalid uniform named '%s' is referenced in shader '%s'.",
                 shaderParameterName.cptr(),
-                shaderName );
+                programName );
             return false;
         }
     }
@@ -270,7 +272,9 @@ void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext
 // -----------------------------------------------------------------------------
 bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
 {
+#if !LOAD_GPU_PROGRAM_ONDEMAND
     if( !initGpuPrograms( desc ) ) return false;
+#endif
     if( !initTechniques( desc ) ) return false;
     if( !initTextures( desc ) ) return false;
     if( !initUniforms( desc ) ) return false;
@@ -297,38 +301,52 @@ bool
 GN::gfx::EffectResource::Impl::initGpuPrograms(
     const EffectResourceDesc & effectDesc )
 {
-    Gpu & gpu = getGdb().getGpu();
-
     for( const StringMap<char,EffectGpuProgramDesc>::KeyValuePair * iter = effectDesc.gpuprograms.first();
          iter != NULL;
          iter = effectDesc.gpuprograms.next( iter ) )
     {
-        const StrA                 & shaderName = iter->key;
-        const EffectGpuProgramDesc & shaderDesc = iter->value;
-
-        // check shader requirements.
-        // Note: it is expected scenario that some shaders are not supported by current hardware.
-        //       So here only a verbose, instead of error, message is issued.
-        if( !sCheckGpuCaps( gpu, shaderDesc ) )
-        {
-            GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing GPU caps.", shaderName.cptr() );
-            continue;
-        }
-
-        // create GPU program
-        GpuProgramItem gpitem;
-        gpitem.name = shaderName;
-        gpitem.prog.attach( gpu.createGpuProgram( shaderDesc.gpd ) );
-        if( !gpitem.prog ) continue;
-
-        // check textures and uniforms
-        if( !sCheckShaderTextures( effectDesc, shaderDesc, shaderName, *gpitem.prog ) ) continue;
-        if( !sCheckShaderUniforms( effectDesc, shaderDesc, shaderName, *gpitem.prog ) ) continue;
-
-        // add to GPU program array
-        if( gpitem.prog ) mPrograms.append( gpitem );
+        const StrA                 & programName = iter->key;
+        const EffectGpuProgramDesc & programDesc = iter->value;
+        initGpuProgram( effectDesc, programName, programDesc );
     }
 
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::EffectResource::Impl::initGpuProgram(
+    const EffectResourceDesc   & effectDesc,
+    const StrA                 & programName,
+    const EffectGpuProgramDesc & programDesc )
+{
+    GN_VERBOSE(sLogger)( "Initialize GPU program: name=%s, language=%s", programName.cptr(), programDesc.gpd.lang.toString() );
+
+    Gpu & gpu = getGdb().getGpu();
+
+    // check GPU program requirements.
+    // Note: it is expected scenario that some shaders are not supported by current hardware.
+    //       So here only a verbose, instead of error, message is issued.
+    if( !sCheckGpuCaps( gpu, programDesc ) )
+    {
+        GN_VERBOSE(sLogger)( "shader '%s' is skipped due to missing GPU caps.", programName.cptr() );
+        return false;
+    }
+
+    // create GPU program
+    GpuProgramItem gpitem;
+    gpitem.name = programName;
+    gpitem.prog.attach( gpu.createGpuProgram( programDesc.gpd ) );
+    if( !gpitem.prog ) return false;
+
+    // check textures and uniforms
+    if( !sCheckShaderTextures( effectDesc, programDesc, programName, *gpitem.prog ) ) return false;
+    if( !sCheckShaderUniforms( effectDesc, programDesc, programName, *gpitem.prog ) ) return false;
+
+    // add to GPU program array
+    mPrograms.append( gpitem );
     return true;
 }
 
@@ -394,29 +412,29 @@ GN::gfx::EffectResource::Impl::initTech(
     {
         const EffectPassDesc & passDesc = techDesc.passes[ipass];
 
-        const StrA & shaderName = passDesc.gpuprogram; // shader techName alias for easy referencing
+        const StrA & programName = passDesc.gpuprogram; // shader techName alias for easy referencing
 
         RenderPass & p = mPasses[ipass];
 
         // look up GPU program
-        p.gpuProgramIndex = findGpuProgram( shaderName );
+        p.gpuProgramIndex = findGpuProgram( effectDesc, programName );
         if( PARAMETER_NOT_FOUND == p.gpuProgramIndex )
         {
             // Shader is not found. Let's find out why. See if it is expected.
 
             // Look up GPU program description
-            const EffectGpuProgramDesc * shaderDesc = effectDesc.gpuprograms.find( shaderName );
-            if( NULL == shaderDesc )
+            const EffectGpuProgramDesc * programDesc = effectDesc.gpuprograms.find( programName );
+            if( NULL == programDesc )
             {
                 GN_ERROR(sLogger)(
                     "Technique '%s' referencs non-exist shader name '%s' in pass %u",
                     techName.cptr(),
-                    shaderName.cptr(),
+                    programName.cptr(),
                     ipass );
             }
 
             // check GPU caps against shader requirments
-            else if( !sCheckGpuCaps( gpu, *shaderDesc ) )
+            else if( !sCheckGpuCaps( gpu, *programDesc ) )
             {
                 // Note: it is expected scenario that some shaders are not supported by current hardware.
                 //       So here only a verbose, instead of error, message is issued.
@@ -424,7 +442,7 @@ GN::gfx::EffectResource::Impl::initTech(
                     "Technique '%s' is skipped because shader '%s', which is referenced by the technique in pass %u, "
                     "is not supported by current graphics hardware.",
                     techName.cptr(),
-                    shaderName.cptr(),
+                    programName.cptr(),
                     ipass );
                 return false;
             }
@@ -432,7 +450,7 @@ GN::gfx::EffectResource::Impl::initTech(
             {
                 GN_ERROR(sLogger)(
                     "Shader '%s' referenced by technique '%s' in pass %u is not properly initialized",
-                    shaderName.cptr(),
+                    programName.cptr(),
                     techName.cptr(),
                     ipass );
             }
@@ -468,11 +486,11 @@ GN::gfx::EffectResource::Impl::initTextures(
         {
             const GpuProgramItem & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
-            const EffectGpuProgramDesc * shaderDesc = effectDesc.gpuprograms.find( gpitem.name );
+            const EffectGpuProgramDesc * programDesc = effectDesc.gpuprograms.find( gpitem.name );
 
-            for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc->textures.first();
+            for( const StringMap<char,StrA>::KeyValuePair * iter = programDesc->textures.first();
                  iter != NULL;
-                 iter = shaderDesc->textures.next( iter ) )
+                 iter = programDesc->textures.next( iter ) )
             {
                 const StrA & shaderParameterName = iter->key;
                 const StrA & textureName = iter->value;
@@ -524,11 +542,11 @@ GN::gfx::EffectResource::Impl::initUniforms(
         {
             const GpuProgramItem          & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
             const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
-            const EffectGpuProgramDesc    * shaderDesc = effectDesc.gpuprograms.find( gpitem.name );
+            const EffectGpuProgramDesc    * programDesc = effectDesc.gpuprograms.find( gpitem.name );
 
-            for( const StringMap<char,StrA>::KeyValuePair * iter = shaderDesc->uniforms.first();
+            for( const StringMap<char,StrA>::KeyValuePair * iter = programDesc->uniforms.first();
                  iter != NULL;
-                 iter = shaderDesc->uniforms.next( iter ) )
+                 iter = programDesc->uniforms.next( iter ) )
             {
                 const StrA & shaderParameterName = iter->key;
                 const StrA & uniformName = iter->value;
@@ -560,12 +578,24 @@ GN::gfx::EffectResource::Impl::initUniforms(
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::EffectResource::Impl::findGpuProgram( const StrA & shaderName ) const
+size_t GN::gfx::EffectResource::Impl::findGpuProgram(
+    const EffectResourceDesc & effectDesc,
+    const StrA               & programName )
 {
     for( size_t i = 0; i < mPrograms.size(); ++i )
     {
-        if( mPrograms[i].name == shaderName ) return i;
+        if( mPrograms[i].name == programName ) return i;
     }
+
+#if LOAD_GPU_PROGRAM_ONDEMAND
+    const EffectGpuProgramDesc * programDesc = effectDesc.gpuprograms.find( programName );
+    if( NULL != programDesc && initGpuProgram( effectDesc, programName, *programDesc ) )
+    {
+        GN_ASSERT( mPrograms.size() > 0 );
+        return mPrograms.size() - 1;
+    }
+#endif
+
     return PARAMETER_NOT_FOUND;
 }
 

@@ -99,6 +99,11 @@ namespace GN { namespace gfx
 
         bool initGpuPrograms( const EffectResourceDesc & effectDesc );
 
+        bool initGpuProgram(
+            const GN::gfx::EffectResourceDesc                       & effectDesc,
+            const StrA                                              & programName,
+            const GN::gfx::EffectResourceDesc::EffectGpuProgramDesc & programDesc );
+
         bool initTechniques( const EffectResourceDesc & effectDesc );
 
         bool initTech(
@@ -110,7 +115,9 @@ namespace GN { namespace gfx
 
         bool initUniforms( const EffectResourceDesc & effectDesc );
 
-        size_t findGpuProgram( const StrA & shaderName ) const;
+        size_t findGpuProgram(
+            const EffectResourceDesc & passDesc,
+            const StrA               & programName );
     };
 
     ///
