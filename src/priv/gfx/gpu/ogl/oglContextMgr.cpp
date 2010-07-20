@@ -106,6 +106,12 @@ bool GN::gfx::OGLGpu::contextInit()
 void GN::gfx::OGLGpu::contextQuit()
 {
     // reset context
+    if( NULL != mRenderContext )
+    {
+        GpuContext emptyContext;
+        emptyContext.clear();
+        bindContext( emptyContext );
+    }
     mContext.clear();
 
     // delete all vertex formats

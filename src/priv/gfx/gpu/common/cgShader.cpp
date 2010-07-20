@@ -86,7 +86,9 @@ bool GN::gfx::CgShader::init(
     // success
     mContext = context;
     mProfile = profile;
+#if GN_BUILD_DEBUG
     mCode = code;
+#endif
     return success();
 
     GN_UNGUARD;
@@ -98,6 +100,13 @@ bool GN::gfx::CgShader::init(
 void GN::gfx::CgShader::quit()
 {
     GN_GUARD;
+
+    if( 0 != mProgram )
+    {
+        GN_ASSERT( cgIsProgram( mProgram ) );
+        cgDestroyProgram( mProgram );
+        mProgram = 0;
+    }
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
