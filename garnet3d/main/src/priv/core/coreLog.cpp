@@ -42,10 +42,13 @@ public:
                 break;
 
             case GN::Logger::INFO:
+                attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+                break;
+
             case GN::Logger::VERBOSE:
             case GN::Logger::VVERBOSE:
             default:
-                attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+                attrib = FOREGROUND_GREEN;
                 break;
         }
         SetConsoleTextAttribute( mConsole, attrib );
