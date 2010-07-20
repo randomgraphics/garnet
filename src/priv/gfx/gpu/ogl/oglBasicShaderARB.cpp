@@ -1,3 +1,9 @@
+// Note:
+//
+// This is an obsolete source file that is not included in build.
+// It is kept for referencing and referencing only.
+
+
 #include "pch.h"
 #include "oglShader.h"
 #include "oglGpu.h"

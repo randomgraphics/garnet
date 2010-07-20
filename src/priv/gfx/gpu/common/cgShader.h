@@ -162,6 +162,11 @@ namespace GN { namespace gfx
     public:
 
         ///
+        /// Get Cg profile
+        ///
+        CGprofile getProfile() const { return mProfile; }
+
+        ///
         /// get program handle
         ///
         CGprogram getProgram() const { return mProgram; }
