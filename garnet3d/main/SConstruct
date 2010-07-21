@@ -590,6 +590,19 @@ class GarnetEnv :
 	def copy_to_devkit( self, targetDir ) : return UTIL_copy_to_devkit( targetDir )
 	def getenv( self, name, defval=None ) : return UTIL_getenv( name, defval )
 
+	# Get list of D3D libraries that needs to be linked with
+	def getD3DLibs( self ):
+		libs = []
+		dbg = ( self.variant == "debug" or self.variant == "stdbg" )
+		if( dbg ):
+			if( self.conf['has_d3d11'] )  : libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9d', 'd3d10', 'd3dx10d', 'd3d11', 'd3dx11']
+			elif( self.conf['has_d3d10'] ): libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9d', 'd3d10', 'd3dx10d']
+			elif( self.conf['has_d3d9'] ) : libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9d']
+		else:
+			if( self.conf['has_d3d11'] )  : libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9' , 'd3d10', 'd3dx10' , 'd3d11', 'd3dx11']
+			elif( self.conf['has_d3d10'] ): libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9' , 'd3d10', 'd3dx10' ]
+			elif( self.conf['has_d3d9'] ) : libs += ['dxgi', 'dxguid', 'd3d9', 'd3dx9' ]
+
 	# 生成从target到base的相对路径
 	def relpath( self, target, base ):
 		"""

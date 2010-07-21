@@ -4,8 +4,17 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - runtime tweakable parameters: client/server communication
+    - basic features:
+      - NOT for fast changing variables.
+      - numeric types: float, integer, enumeration, boolean
+        - application defined range or value set
+      - geometric types: vec2, vec3, vec4, mat4x4, mat3x3
+      - dual way variable changing notification
+      - compile time switch to remove tweakable code entirely
+      - separate client (tuner) and server (variables)
   - Need a mapping in model defintion that maps vertex streams to shader sementics?
-  - New command buffer implementation
+  - New command buffer implementation (copy xstudio implementation)
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of
       using "@")
@@ -19,8 +28,7 @@ TODO
   - support chinese in XML parser
     - XML_Encoding: http://www.vivtek.com/expat/api.html#XML_Encoding
   - skin mesh test case: porting DXSDK sample.
-  - Cg shader
-    - Add Cg binary to repository.
+  - Cg shader for D3D11 API.
   - Dictionary template that replaces GN::Dictionary
   - replace STL containers:
   	- queue, list, set
@@ -28,13 +36,13 @@ TODO
     represent post-rasterized font metrics.
 
 - p1
+  - New build system based on GNU make.
   - avoid using /Yd in build script for cl.exe
   - Runtime option managers that could be modified by:
     - Environment variable
     - Registry
     - Config file
     - Command line arguments
-  - A tweakable variable template for easy parameter tuning.
   - Scene framework:
     - add light entity to SimpleWorldDesc
     - experiment with scene framework that supports ultra large world

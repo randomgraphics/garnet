@@ -1,8 +1,7 @@
 #include "pch.h"
+#include <d3dcompiler.h>
 
 #if GN_MSVC
-#pragma comment( lib, "d3d10.lib" )
-#pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "d3dcompiler.lib" )
 #endif // GN_MSVC
 
@@ -16,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d11.d3d11ShaderUtils");
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA sAddLineCount( const GN::StrA & in )
+static GN::StrA sAddLineCountD3D11( const GN::StrA & in )
 {
     using namespace GN;
 
@@ -41,7 +40,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32 sRefineFlags( UInt32 flags )
+static UInt32 sRefineFlagsD3D11( UInt32 flags )
 {
 #if GN_BUILD_DEBUG
     flags |= D3D10_SHADER_DEBUG;
@@ -52,7 +51,7 @@ static UInt32 sRefineFlags( UInt32 flags )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
+static void sPrintShaderCompileErrorD3D11( const char * code, ID3D10Blob * err )
 {
     GN_GUARD;
 
@@ -62,7 +61,7 @@ static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCountD3D11(code).cptr() : "Shader code: <EMPTY>",
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
     GN_UNGUARD;
@@ -71,7 +70,7 @@ static void sPrintShaderCompileError( const char * code, ID3D10Blob * err )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
+static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3D10Blob * bin )
 {
     GN_GUARD;
 
@@ -95,8 +94,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3D10Blob * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).cptr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCountD3D11(hlsl).cptr(),
+        sAddLineCountD3D11((const char*)asm_->GetBufferPointer()).cptr() );
 
     GN_UNGUARD;
 }
@@ -138,11 +137,7 @@ ID3D10Blob * GN::d3d11::compileShader(
     }
 #endif
 
-    // Note: D3DX11CompileFromMemory() is a more up to date compiler than
-    //       D3D11CompileShader(), since D3D11CompileShader() ships
-    //       with runtime only, but D3DXCompileFromMemory() ships with
-    //       each DXSDK update.
-    if( FAILED( D3DX11CompileFromMemory(
+    if( FAILED( D3DCompile(
         source,
         len,
         filename.cptr(),
@@ -150,18 +145,16 @@ ID3D10Blob * GN::d3d11::compileShader(
         0, // includes
         entry,
         profile,
-        sRefineFlags(flags),
+        sRefineFlagsD3D11(flags),
         0, // effect compile flags
-        0, // thread pump
         &bin,
-        &err,
-        0 ) ) )
+        &err ) ) )
     {
-        sPrintShaderCompileError( source, err );
+        sPrintShaderCompileErrorD3D11( source, err );
         return NULL;
     }
 
-    sPrintShaderCompileInfo( source, bin );
+    sPrintShaderCompileInfoD3D11( source, bin );
 
     return bin.detach();
 }
