@@ -39,7 +39,7 @@
 #define GN_DEFINE_STATIC_PROFILER( name )
 #define GN_START_PROFILER( name )
 #define GN_STOP_PROFILER( name )
-#define GN_SCOPE_PROFILER( name )
+#define GN_SCOPE_PROFILER( name, desc )
 
 #endif
 //@}

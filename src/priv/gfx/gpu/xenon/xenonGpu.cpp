@@ -2,21 +2,6 @@
 #include "xenonGpu.h"
 #include "xenonResource.h"
 
-#if GN_MSVC
-
-#if GN_BUILD_DEBUG
-#pragma comment(lib, "d3d9d.lib")
-#pragma comment(lib, "d3dx9d.lib")
-#elif GN_BUILD_PROFILE
-#pragma comment(lib, "d3d9i.lib")
-#pragma comment(lib, "d3dx9i.lib")
-#else
-#pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "d3dx9.lib")
-#endif
-
-#endif
-
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.xenon");
 
 // *****************************************************************************

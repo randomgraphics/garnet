@@ -539,6 +539,7 @@ void GN::gfx::ModelResource::Impl::TextureItem::setResource(
 void GN::gfx::ModelResource::Impl::TextureItem::onTextureChange( TextureResource & r )
 {
     GN_ASSERT( &r == mResource );
+    GN_UNUSED_PARAM( r );
 
     updateContext( mResource->texture() );
 }
@@ -631,6 +632,7 @@ void GN::gfx::ModelResource::Impl::UniformItem::setResource(
 void GN::gfx::ModelResource::Impl::UniformItem::onUniformChange( UniformResource & r )
 {
     GN_ASSERT( &r == mResource );
+    GN_UNUSED_PARAM( r );
 
     updateContext( mResource->uniform() );
 }

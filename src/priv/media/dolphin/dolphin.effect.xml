@@ -20,9 +20,9 @@
 			<uniref uniform="pvw"       shaderParameter="g_matWorldViewProj"/>
 			<uniref uniform="viewworld" shaderParameter="g_matWorldView"/>
 			<uniref uniform="weights"   shaderParameter="g_vBlendWeights"/>
-      <texref texture="skin"      shaderParameter="DiffuseSampler"/>
-      <texref texture="caustic"   shaderParameter="CausticsSampler"/>
-      <vs entry="main">
+			<texref texture="skin"      shaderParameter="DiffuseSampler"/>
+			<texref texture="caustic"   shaderParameter="CausticsSampler"/>
+			<vs entry="main">
 <![CDATA[
 uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
 uniform float4x4 g_matWorldViewProj  ;  // world-view-projection matrix

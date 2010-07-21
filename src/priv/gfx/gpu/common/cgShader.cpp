@@ -5,7 +5,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.cg");
 
-static GN::StrA sAddLineCount( const GN::StrA & in )
+static GN::StrA sAddLineCountCG( const GN::StrA & in )
 {
     using namespace GN;
 
@@ -63,7 +63,7 @@ bool GN::gfx::CgShader::init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                sAddLineCount( code ).cptr(),
+                sAddLineCountCG( code ).cptr(),
                 cgGetLastListing(context) );
         }
         return failure();
@@ -80,8 +80,8 @@ bool GN::gfx::CgShader::init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        sAddLineCount( code ).cptr(),
-        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
+        sAddLineCountCG( code ).cptr(),
+        sAddLineCountCG( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
 
     // success
     mContext = context;

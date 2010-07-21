@@ -5,7 +5,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.d3d9ShaderUtils");
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA sAddLineCount( const GN::StrA & in )
+static GN::StrA sAddLineCountD3D9( const GN::StrA & in )
 {
     using namespace GN;
 
@@ -30,7 +30,7 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 //
 //
 // -----------------------------------------------------------------------------
-static UInt32 sRefineFlags( UInt32 flags )
+static UInt32 sRefineFlagsD3D9( UInt32 flags )
 {
 #if GN_BUILD_DEBUG
     flags |= D3DXSHADER_DEBUG;
@@ -41,7 +41,7 @@ static UInt32 sRefineFlags( UInt32 flags )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFER err )
+static void sPrintShaderCompileErrorD3D9( HRESULT hr, const char * code, LPD3DXBUFFER err )
 {
     GN_GUARD;
 
@@ -53,7 +53,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
+        code ? sAddLineCountD3D9(code).cptr() : "Shader code: <EMPTY>",
         hr, GN::getDXErrorInfo(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 
@@ -63,7 +63,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
+static void sPrintShaderCompileInfoD3D9( const char * hlsl, ID3DXBuffer * bin )
 {
     GN_GUARD;
 
@@ -86,8 +86,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        sAddLineCount(hlsl).cptr(),
-        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
+        sAddLineCountD3D9(hlsl).cptr(),
+        sAddLineCountD3D9((const char*)asm_->GetBufferPointer()).cptr() );
 
     GN_UNGUARD;
 }
@@ -146,17 +146,17 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVS( LPDIRECT3DDEVICE9 dev, con
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err,
             constTable )) )
     {
-        sPrintShaderCompileError( hr, code, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
     }
 
     // print compile info
-    sPrintShaderCompileInfo( code, bin );
+    sPrintShaderCompileInfoD3D9( code, bin );
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
@@ -190,17 +190,17 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::compileAndCreateVSFromFile( LPDIRECT3DDEVICE9 
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err,
             constTable )) )
     {
-        sPrintShaderCompileError( hr, file, err );
+        sPrintShaderCompileErrorD3D9( hr, file, err );
         return 0;
     }
 
     // print compile info
-    sPrintShaderCompileInfo( file, bin );
+    sPrintShaderCompileInfoD3D9( file, bin );
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
@@ -240,11 +240,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVS( LPDIRECT3DDEVICE9 dev, co
     if( FAILED(hr = D3DXAssembleShader(
             code, (UINT)len,
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err )) )
     {
-        sPrintShaderCompileError( hr, code, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
     }
 
@@ -278,11 +278,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d9::assembleAndCreateVSFromFile( LPDIRECT3DDEVICE9
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
             fs::toNativeDiskFilePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err )) )
     {
-        sPrintShaderCompileError( hr, file, err );
+        sPrintShaderCompileErrorD3D9( hr, file, err );
         return 0;
     }
 
@@ -318,17 +318,17 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePS( LPDIRECT3DDEVICE9 dev, cons
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err,
             constTable )) )
     {
-        sPrintShaderCompileError( hr, code, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
     };
 
     // print compile info
-    sPrintShaderCompileInfo( code, bin );
+    sPrintShaderCompileInfoD3D9( code, bin );
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
@@ -362,17 +362,17 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::compileAndCreatePSFromFile( LPDIRECT3DDEVICE9 d
             NULL, NULL, // no macros, no includes,
             entry,
             stringEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err,
             constTable )) )
     {
-        sPrintShaderCompileError( hr, file, err );
+        sPrintShaderCompileErrorD3D9( hr, file, err );
         return 0;
     };
 
     // print compile info
-    sPrintShaderCompileInfo( file, bin );
+    sPrintShaderCompileInfoD3D9( file, bin );
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
@@ -412,11 +412,11 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePS( LPDIRECT3DDEVICE9 dev, con
     if( FAILED(hr = D3DXAssembleShader(
             code, (UINT)len,
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err )) )
     {
-        sPrintShaderCompileError( hr, code, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
     };
 
@@ -450,11 +450,11 @@ LPDIRECT3DPIXELSHADER9 GN::d3d9::assembleAndCreatePSFromFile( LPDIRECT3DDEVICE9 
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
             fs::toNativeDiskFilePath(file).cptr(),
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             &bin,
             &err )) )
     {
-        sPrintShaderCompileError( hr, file, err );
+        sPrintShaderCompileErrorD3D9( hr, file, err );
         return 0;
     };
 
@@ -492,12 +492,12 @@ LPD3DXEFFECT GN::d3d9::compileAndCreateEffect( LPDIRECT3DDEVICE9 dev, const char
             dev,
             code, (UINT)(len?len:stringLength(code)), //tmpfile.cptr(),
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags),
+            sRefineFlagsD3D9(flags),
             pool,
             &result,
             &err )) )
     {
-        sPrintShaderCompileError( hr, code, err );
+        sPrintShaderCompileErrorD3D9( hr, code, err );
         return 0;
     };
 
