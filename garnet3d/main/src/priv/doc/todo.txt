@@ -4,6 +4,9 @@ TODO
 - 程序中标注TODO的地方
 
 - p0
+  - optimize scons performance:
+    - use timestamp instead of MD5
+    - don't copy source files to build directory.
   - runtime tweakable parameters: client/server communication
     - basic features:
       - NOT for fast changing variables.
