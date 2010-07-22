@@ -237,7 +237,10 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			                 }
 			)
 
+	# setup default decider
+	env.Decider( 'timestamp-match' );
 
+	# setup signature file
 	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
 
 	# setup builder for gcc precompiled header
@@ -969,7 +972,7 @@ def ALIAS_add_non_default( alias, targets ):
 def BUILD_getSuffix(): return ""
 
 #
-# Create new compile environment
+# Create new compile environment for C/C++ compile
 #
 def BUILD_newCompileEnv( cluster ):
 	env = BUILD_env.Clone()

@@ -49,11 +49,15 @@ def GenConfigHeader( target, source, env ):
 	return 0
 
 def ConfigHeaderBuilder( env, sources, blddir ):
-	targets = [os.path.join(blddir, 'src/priv/inc/garnet/base/gnconfig.h')]
-	env.AlwaysBuild( targets ) # TODO: need a better decider
-	env.Command( targets[0], None, GenConfigHeader )
-	return targets
+	# Note: use a intermediate file and MD5 decider to avoid rebuilding final gnconfig.h in every build.
+	target = [os.path.join(blddir, 'src/priv/inc/garnet/base/gnconfig.h')]
+	temp   = [os.path.join(blddir, 'tmp/gnconfig.h')]
+	env.AlwaysBuild( temp )
+	env.Command( temp[0], None, GenConfigHeader )
+	env.Decider( 'MD5' )
+	env.Command( target[0], temp[0], Copy( "$TARGET", "$SOURCE" ) )
+	return target
 
 cluster = GN.newCustomSourceCluster( [], ConfigHeaderBuilder )
 
-GN.newCustomTarget( 'GNinc', [cluster] )
+target = GN.newCustomTarget( 'GNinc', [cluster] )
