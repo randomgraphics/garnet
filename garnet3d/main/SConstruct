@@ -237,8 +237,11 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			                 }
 			)
 
+	# cache implicit dependencies
+	env.SetOption( 'implicit_cache', 1 );
+
 	# setup default decider
-	env.Decider( 'timestamp-match' );
+	env.Decider( 'MD5-timestamp' );
 
 	# setup signature file
 	env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
