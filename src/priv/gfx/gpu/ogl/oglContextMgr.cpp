@@ -141,11 +141,11 @@ GN::gfx::OGLGpu::bindContextImpl(
 {
     GN_GUARD_SLOW;
 
+    if( !bindContextRenderTargets( newContext, skipDirtyCheck ) ) return false;
+
     if( !bindContextShaders( newContext, skipDirtyCheck ) ) return false;
 
     if( !bindContextRenderStates( newContext, skipDirtyCheck ) ) return false;
-
-    if( !bindContextRenderTargets( newContext, skipDirtyCheck ) ) return false;
 
     if( !bindContextResources( newContext, skipDirtyCheck ) ) return false;
 
