@@ -3,6 +3,8 @@
 
 #if GN_MSWIN
 
+using namespace GN;
+
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
 
 // ****************************************************************************
@@ -115,8 +117,6 @@ static int sChoosePixelFormat( HDC hdc )
     GN_UNGUARD;
 }
 
-
-
 //
 //
 // ------------------------------------------------------------------------
@@ -169,6 +169,166 @@ static bool sSetupPixelFormat( HDC hdc )
 }
 
 // *****************************************************************************
+// OpenGL debug output utilities
+// *****************************************************************************
+
+class OGLDebugOutputAMD
+{
+    static const char * category2string( GLenum category )
+    {
+        switch( category )
+        {
+            case GL_DEBUG_CATEGORY_API_ERROR_AMD          : return "API Error";
+            case GL_DEBUG_CATEGORY_WINDOW_SYSTEM_AMD      : return "Window System";
+            case GL_DEBUG_CATEGORY_DEPRECATION_AMD        : return "Deprecation";
+            case GL_DEBUG_CATEGORY_UNDEFINED_BEHAVIOR_AMD : return "Undefined Behavior";
+            case GL_DEBUG_CATEGORY_PERFORMANCE_AMD        : return "Performance";
+            case GL_DEBUG_CATEGORY_SHADER_COMPILER_AMD    : return "Shader Compiler";
+            case GL_DEBUG_CATEGORY_APPLICATION_AMD        : return "Application";
+            case GL_DEBUG_CATEGORY_OTHER_AMD              : return "Other";
+            default                                       : return "INVALID_CATEGORY";
+        }
+    }
+
+    static const char * severity2string( GLenum severity )
+    {
+        switch( severity )
+        {
+            case GL_DEBUG_SEVERITY_HIGH_AMD   : return "High";
+            case GL_DEBUG_SEVERITY_MEDIUM_AMD : return "Medium";
+            case GL_DEBUG_SEVERITY_LOW_AMD    : return "Low";
+            default                           : return "INVALID_SEVERITY";
+        }
+    }
+
+    static void APIENTRY messageCallback(
+        GLuint id,
+        GLenum category,
+        GLenum severity,
+        GLsizei length,
+        const GLchar * message,
+        GLvoid * userParam )
+    {
+        GN_UNUSED_PARAM( length );
+        GN_UNUSED_PARAM( userParam );
+
+        // Determine log level
+        Logger::LogLevel logLevel;
+        switch( category )
+        {
+            case GL_DEBUG_CATEGORY_API_ERROR_AMD          :
+            case GL_DEBUG_CATEGORY_UNDEFINED_BEHAVIOR_AMD :
+                logLevel = Logger::ERROR_;
+                break;
+
+            case GL_DEBUG_CATEGORY_APPLICATION_AMD        :
+                logLevel = Logger::INFO;
+                break;
+
+            case GL_DEBUG_CATEGORY_DEPRECATION_AMD        :
+            case GL_DEBUG_CATEGORY_PERFORMANCE_AMD        :
+                switch( severity )
+                {
+                    case GL_DEBUG_SEVERITY_HIGH_AMD   :
+                    case GL_DEBUG_SEVERITY_MEDIUM_AMD :
+                        logLevel = Logger::WARN;
+                        break;
+
+                    case GL_DEBUG_SEVERITY_LOW_AMD    : // Performance warnings from redundant state changes
+                        logLevel = Logger::VVERBOSE;
+                        break;
+
+                    default:
+                        logLevel = Logger::ERROR_;
+                        break;
+                }
+                break;
+
+            case GL_DEBUG_CATEGORY_WINDOW_SYSTEM_AMD      :
+            case GL_DEBUG_CATEGORY_SHADER_COMPILER_AMD    :
+            case GL_DEBUG_CATEGORY_OTHER_AMD              :
+                switch( severity )
+                {
+                    case GL_DEBUG_SEVERITY_HIGH_AMD   :
+                        logLevel = Logger::ERROR_;
+                        break;
+
+                    case GL_DEBUG_SEVERITY_MEDIUM_AMD :
+                        logLevel = Logger::WARN;
+                        break;
+
+                    case GL_DEBUG_SEVERITY_LOW_AMD    : // Performance warnings from redundant state changes
+                        logLevel = Logger::VVERBOSE;
+                        break;
+
+                    default:
+                        logLevel = Logger::ERROR_;
+                        break;
+                }
+                break;
+
+            default:
+                // Invalid category
+                logLevel = Logger::ERROR_;
+                break;
+        }
+
+        GN_LOG(sLogger, logLevel)(
+            "OpenGL debug output (id=[%d] category=[%s] severity=[%s]): %s",
+            id, category2string(category), severity2string(severity), message );
+    }
+
+public:
+
+    static bool available()
+    {
+        return !!GLEW_AMD_debug_output;
+    }
+
+    static void initialize()
+    {
+#if GN_BUILD_DEBUG
+
+        // setup the callback
+        glDebugMessageCallbackAMD( &messageCallback, NULL );
+
+        // enable all messages
+        GN_OGL_CHECK( glDebugMessageEnableAMD( 0, 0, 0, 0, GL_TRUE ) );
+#endif
+    }
+};
+
+class OGLTempContext
+{
+    HGLRC hrc;
+
+public:
+
+    OGLTempContext() : hrc(0)
+    {
+    }
+
+    bool init( HDC hdc )
+    {
+        GN_MSW_CHECK_RETURN( hrc = ::wglCreateContext( hdc ), false );
+
+        GN_MSW_CHECK_RETURN( ::wglMakeCurrent( hdc, hrc ), false );
+
+        return true;
+    }
+
+    void quit()
+    {
+        if( hrc )
+        {
+            ::wglMakeCurrent(0, 0);
+            ::wglDeleteContext(hrc);
+            hrc = 0;
+        }
+    }
+};
+
+// *****************************************************************************
 // device management
 // *****************************************************************************
 
@@ -192,16 +352,48 @@ bool GN::gfx::OGLGpu::dispInit()
 
     if( !sSetupPixelFormat(mDeviceContext) ) return false;
 
-    GN_MSW_CHECK_RETURN(
-        mRenderContext = ::wglCreateContext( mDeviceContext ),
-        false );
+    // create a temporary context first
+    OGLTempContext tempContext;
+    if( !tempContext.init( mDeviceContext ) ) return false;
 
+    const GpuOptions & ro = getOptions();
+
+    // Try creating a formal context using wglCreateContextAttribsARB
+    PFNWGLCREATECONTEXTATTRIBSARBPROC createContextFunc = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+    if( createContextFunc )
+    {
+        bool useDebugContext = ro.debug;
+        GLint attributes[] =
+        {
+            WGL_CONTEXT_FLAGS_ARB, useDebugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0,
+            0,
+        };
+
+        GN_MSW_CHECK_RETURN(
+            mRenderContext = createContextFunc( mDeviceContext, NULL, attributes ),
+            false );
+    }
+    else
+    {
+        GN_MSW_CHECK_RETURN(
+            mRenderContext = ::wglCreateContext( mDeviceContext ),
+            false );
+    }
+
+    // release the temporary context
+    tempContext.quit();
+
+    // activate the formal context
     GN_MSW_CHECK_RETURN( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     // init GLEW
     glewInit();
 
-    const GpuOptions & ro = getOptions();
+    // Setup the debug output
+    if( ro.debug && OGLDebugOutputAMD::available() )
+    {
+        OGLDebugOutputAMD::initialize();
+    }
 
     // modify fullscreen render window properties
     if( ro.fullscreen )
