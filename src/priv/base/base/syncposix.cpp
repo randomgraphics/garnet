@@ -85,7 +85,7 @@ public:
 
     //@{
 public:
-    bool init( bool initialSignaled, bool autoreset, const char * name )
+    bool init( SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name )
     {
         GN_GUARD;
 
@@ -129,10 +129,10 @@ public:
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool wait( float seconds )
+    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
     {
         GN_UNIMPL_WARNING();
-        return true;
+        return WaitResult::COMPLETED;
     }
 
     // ********************************
@@ -207,10 +207,10 @@ private:
     // ********************************
 public:
 
-    virtual bool wait( float seconds )
+    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
     {
         GN_UNIMPL_WARNING();
-        return true;
+        return WaitResult::COMPLETED;
     }
 
     virtual void wake( size_t count )
@@ -237,15 +237,15 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::SyncEvent * GN::createSyncEvent(
-    bool initialSignaled,
-    bool autoreset,
+    SyncEvent::InitialState initialState,
+    SyncEvent::ResetMode resetMode,
     const char * name )
 {
     GN_GUARD;
 
     AutoObjPtr<SyncEventPOSIX> s( new SyncEventPOSIX );
 
-    if( !s->init( initialSignaled, autoreset, name ) ) return 0;
+    if( !s->init( initialState, resetMode, name ) ) return 0;
 
     return s.detach();
 
