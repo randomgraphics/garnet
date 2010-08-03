@@ -2,7 +2,7 @@
 
 #if GN_MSWIN || GN_XENON
 
-float const GN::INFINITE_TIME = 1e38f;
+const GN::TimeInNanoSecond GN::INFINITE_TIME = (UInt64)(-1);
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 
@@ -13,13 +13,34 @@ using namespace GN;
 // *****************************************************************************
 
 
-///
-/// convert seconds to milliseconds on MS windows platform
-///
-UInt32 sec2usec( float time )
+//
+// convert time from nanoseconds to milliseconds on MS windows platform
+// Note: this function is also used in threadmsw.cpp.
+// -----------------------------------------------------------------------------
+UInt32 ns2ms( TimeInNanoSecond time )
 {
     if( INFINITE_TIME == time ) return INFINITE;
-    else return (UInt32)( time * 1000.0f );
+    else return (UInt32)( time / 1000000 );
+}
+
+//
+// convert Win32 wait result to WaitResult enumeration
+// -----------------------------------------------------------------------------
+static inline WaitResult sWaitResultFromWin32( DWORD result )
+{
+    if( WAIT_ABANDONED == result )
+    {
+        return WaitResult::KILLED;
+    }
+    else if( WAIT_TIMEOUT == result )
+    {
+        return WaitResult::TIMEOUT;
+    }
+    else
+    {
+        GN_ASSERT( WAIT_OBJECT_0 == result );
+        return WaitResult::COMPLETED;
+    }
 }
 
 // *****************************************************************************
@@ -28,7 +49,6 @@ UInt32 sec2usec( float time )
 
 //
 //
-// -----------------------------------------------------------------------------
 GN::Mutex::Mutex()
 {
     GN_CASSERT( sizeof(CRITICAL_SECTION) <= sizeof(mInternal) );
@@ -96,7 +116,7 @@ public:
 
     //@{
 public:
-    bool init( bool initialSignaled, bool autoreset, const char * name )
+    bool init( SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name )
     {
         GN_GUARD;
 
@@ -104,7 +124,7 @@ public:
         GN_STDCLASS_INIT( SyncEventMsw, () );
 
         GN_MSW_CHECK_RETURN(
-            mHandle = CreateEventA( 0, !autoreset, initialSignaled, name ),
+            mHandle = CreateEventA( 0, MANUAL_RESET == resetMode, SIGNALED == initialState, name ),
             failure() );
 
         // success
@@ -144,9 +164,9 @@ public:
         GN_MSW_CHECK( ResetEvent( mHandle ) );
     }
 
-    virtual bool wait( float seconds )
+    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
     {
-        return WAIT_OBJECT_0 == WaitForSingleObject( mHandle, sec2usec( seconds ) );
+        return sWaitResultFromWin32( WaitForSingleObject( mHandle, ns2ms( timeoutTime ) ) );
     }
 
     // ********************************
@@ -225,9 +245,9 @@ private:
     // ********************************
 public:
 
-    virtual bool wait( float seconds )
+    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
     {
-        return WAIT_OBJECT_0 == WaitForSingleObject( mHandle, sec2usec( seconds ) );
+        return sWaitResultFromWin32( WaitForSingleObject( mHandle, ns2ms( timeoutTime ) ) );
     }
 
     virtual void wake( size_t count )
@@ -257,15 +277,15 @@ private:
 //
 // -----------------------------------------------------------------------------
 GN::SyncEvent * GN::createSyncEvent(
-    bool initialSignaled,
-    bool autoreset,
+    SyncEvent::InitialState initialState,
+    SyncEvent::ResetMode resetMode,
     const char * name )
 {
     GN_GUARD;
 
     AutoObjPtr<SyncEventMsw> s( new SyncEventMsw );
 
-    if( !s->init( initialSignaled, autoreset, name ) ) return 0;
+    if( !s->init( initialState, resetMode, name ) ) return 0;
 
     return s.detach();
 

@@ -8,10 +8,33 @@
 
 namespace GN
 {
+    // Wait time definition
+    //@{
+
+    /// Define wait time, in 10^(-9) seconds
+    typedef UInt64 TimeInNanoSecond;
+
     ///
-    /// special float number that indicates infinite time.
+    /// special TimeInNanoSecond number that indicates infinite time.
     ///
-    extern const float INFINITE_TIME; // = 1.0e38f;
+    extern const TimeInNanoSecond INFINITE_TIME; // = (UInt64)(-1);
+
+    ///
+    /// Define wait result
+    ///
+    struct WaitResult
+    {
+        enum Enum
+        {
+            COMPLETED, ///< Wait operation completes successfully
+            KILLED,    ///< Wait operation aborted because the primitive is killed.
+            TIMEOUT,   ///< Wait operation is time out.
+        };
+
+        GN_DEFINE_ENUM_CLASS_HELPERS( WaitResult, Enum );
+    };
+
+    //@}
 
     /// \name atomic operations
     //@{
@@ -138,9 +161,25 @@ namespace GN
     struct SyncEvent : public NoCopy
     {
         //@{
-        virtual void signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
-        virtual void unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
-        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
+
+        enum InitialState
+        {
+            SIGNALED,
+            UNSIGNALED,
+        };
+
+        enum ResetMode
+        {
+            AUTO_RESET,
+            MANUAL_RESET,
+        };
+
+        //@}
+
+        //@{
+        virtual void       signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
+        virtual void       unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
+        virtual WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
         //@}
     };
 
@@ -149,19 +188,19 @@ namespace GN
     ///
     struct Semaphore : public NoCopy
     {
-        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
-        virtual void wake( size_t count = 1 ) = 0; ///< wake up specified number of threads that is waiting for this semaphore.
+        virtual WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
+        virtual void       wake( size_t count = 1 ) = 0; ///< wake up specified number of threads that is waiting for this semaphore.
 
         /// \name aliases for P/V operations
         //@{
-        bool P( float seconds = INFINITE_TIME ) { return wait( seconds ); }
-        void V() { return wake(); }
+        WaitResult P( TimeInNanoSecond timeoutTime = INFINITE_TIME ) { return wait( timeoutTime ); }
+        void       V() { return wake(); }
         //@}
     };
 
     //@{
 
-    SyncEvent * createSyncEvent( bool initialSignaled, bool autoreset, const char * name = 0 );
+    SyncEvent * createSyncEvent( SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name = 0 );
 
     Semaphore * createSemaphore( size_t maxcount, size_t initialcount, const char * name = 0 );
 

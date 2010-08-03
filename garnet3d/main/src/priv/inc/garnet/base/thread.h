@@ -45,9 +45,11 @@ namespace GN
         virtual void resume() = 0; //< resume suspended and sleeping thread.
 
         ///
-        /// wait for termination of the thread.
+        /// Wait for termination of the thread.
         ///
-        virtual bool waitForTermination( float seconds = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
+        /// Note: when this function returns, the thread object should have been deleted.
+        ///
+        virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
 
         //@}
     };
@@ -61,7 +63,7 @@ namespace GN
         bool initialSuspended = false,
         const char * name = 0 );
 
-    void sleepCurrentThread( float seconds );
+    void sleepCurrentThread( TimeInNanoSecond sleepTime );
 
     ///
     /// Generate a thread object that represents the calling thread.

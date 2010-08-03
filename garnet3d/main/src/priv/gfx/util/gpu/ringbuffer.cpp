@@ -22,8 +22,8 @@ bool GN::gfx::RingBuffer::init( size_t ringBufferSize )
     if( NULL == mBegin ) { GN_ERROR(sLogger)( "fail to allocate ring buffer." ); return failure(); }
     mEnd = mBegin + mSize;
     mReadPtr = mWritePtr = mBegin;
-    mNotFull = createSyncEvent( false, true, NULL );  // initial unsignaled, auto-reset
-    mNotEmpty = createSyncEvent( false, true, NULL ); // initial unsignaled, auto-reset
+    mNotFull = createSyncEvent( SyncEvent::UNSIGNALED, SyncEvent::AUTO_RESET, NULL );
+    mNotEmpty = createSyncEvent( SyncEvent::UNSIGNALED, SyncEvent::AUTO_RESET, NULL );
     if( NULL == mNotFull || NULL == mNotEmpty )
     {
         GN_ERROR(sLogger)( "fail to create ring buffer sync events." );

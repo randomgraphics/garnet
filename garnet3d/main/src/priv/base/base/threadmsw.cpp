@@ -14,7 +14,7 @@ using namespace GN;
 
 
 // defined in syncmsw.cpp
-extern UInt32 sec2usec( float time );
+extern UInt32 ns2ms( TimeInNanoSecond ns );
 
 static int sPriorityTable[] =
 {
@@ -210,17 +210,17 @@ public:
         }
     }
 
-    virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
+    virtual WaitResult waitForTermination( TimeInNanoSecond timeoutTime, UInt32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
 
-        UInt32 ret = ::WaitForSingleObject( mHandle, sec2usec( seconds ) );
+        UInt32 ret = ::WaitForSingleObject( mHandle, ns2ms( timeoutTime ) );
 
         if( WAIT_TIMEOUT == ret )
         {
             GN_TRACE(sLogger)( "time out!" );
-            return false;
+            return WaitResult::TIMEOUT;
         }
         else if( WAIT_OBJECT_0 == ret )
         {
@@ -228,12 +228,13 @@ public:
             {
                 GN_MSW_CHECK( GetExitCodeThread( mHandle, (LPDWORD)threadProcReturnValue ) );
             }
-            return true;
+            return WaitResult::COMPLETED;
         }
         else
         {
+            // The thread is killed before the thread procedure returns.
             GN_ERROR(sLogger)( getWin32LastErrorInfo() );
-            return false;
+            return WaitResult::KILLED;
         }
     }
 
@@ -307,9 +308,9 @@ GN::createThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleepCurrentThread( float seconds )
+void GN::sleepCurrentThread( TimeInNanoSecond sleepTime )
 {
-   ::Sleep( sec2usec( seconds ) );
+   ::Sleep( ns2ms( sleepTime ) );
 }
 
 //

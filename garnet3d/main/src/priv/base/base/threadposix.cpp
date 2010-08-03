@@ -148,7 +148,7 @@ public:
         GN_UNIMPL_WARNING();
     }
 
-    virtual bool waitForTermination( float seconds, UInt32 * threadProcReturnValue )
+    virtual bool waitForTermination( TimeInNanoSecond timeoutTime, UInt32 * threadProcReturnValue )
     {
         // can't wait for self termination
         GN_ASSERT( !isCurrentThread() );
@@ -225,7 +225,7 @@ GN::createThread(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleepCurrentThread( float seconds )
+void GN::sleepCurrentThread( TimeInNanoSecond sleepTime )
 {
     GN_UNIMPL_WARNING();
 }
