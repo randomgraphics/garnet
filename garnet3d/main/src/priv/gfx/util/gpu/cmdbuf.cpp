@@ -7,7 +7,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.RingBuffer");
 // GN::CommandBuffer - Initialize and shutdown
 // *****************************************************************************
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
 bool GN::CommandBuffer::init( size_t bufferSize )
@@ -19,25 +19,46 @@ bool GN::CommandBuffer::init( size_t bufferSize )
 
     GN_ASSERT( NULL == m_Buffer );
 
+    if( bufferSize < 16 )
+    {
+        GN_WARN(sLogger)( "The command buffer size is adjusted to 16 bytes." );
+        bufferSize = 16;
+    }
+
     // allocate ring buffer
     m_Buffer = (UInt8*)HeapMemory::alloc( bufferSize * 2 ); // allocate double sized buffer, to handle rewind issue
     if( NULL == m_Buffer ) return failure();
     m_Size = bufferSize;
 
     // initialize read and write counters
-    //   *   used bytes = (write - read)
-    //   *   free bytes = m_Size - (write - read)
-    m_ReadenFence  = 0;
-    m_WrittenFence = 0;
-    m_ReadToken = NULL;
-    m_WriteToken = NULL;
+    //   *   used bytes = (written - readen)
+    //   *   free bytes = m_Size - (written - readen)
+    m_ReadenCursor  = 0;
+    m_WrittenCursor = 0;
+    m_ReadingToken = NULL;
+    m_WritingToken = NULL;
     memoryBarrier();
 
     // initialize internal events
-    m_ConsumptionEvent = createSyncEvent( SyncEvent::UNSIGNALED, SyncEvent::AUTO_RESET );
-    m_NotEmpty = createSyncEvent(SyncEvent::UNSIGNALED, SyncEvent::MANUAL_RESET);
-    m_Exit = createSyncEvent(SyncEvent::UNSIGNALED, SyncEvent::MANUAL_RESET);
-    if( NULL == m_ConsumptionEvent || NULL == m_NotEmpty || NULL == m_Exit) return failure();
+    if( !m_ConsumptionEvent.create( SyncEvent::UNSIGNALED, SyncEvent::AUTO_RESET ) ||
+        !m_NotEmpty.create(SyncEvent::UNSIGNALED, SyncEvent::MANUAL_RESET) )
+    {
+        return failure();
+    }
+
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+    // initialize fence array
+    size_t maxFenceCount = m_Size / 16;
+    m_Fences = (FenceInternal*)HeapMemory::alloc( maxFenceCount * sizeof(FenceInternal) );
+    if( NULL == m_Fences ) return failure();
+    for( size_t i = 0; i < maxFenceCount; ++i )
+    {
+        m_Fences[i].event = NULL;
+        m_Fences[i].prev = (i > 0) ? &m_Fences[i-1] : NULL;
+        m_Fences[i].next = ((i+1) < maxFenceCount) ? &m_Fences[i+1] : NULL;
+    }
+    m_NextFreeFence = m_Fences;
+#endif
 
     // success
     return success();
@@ -52,22 +73,36 @@ void GN::CommandBuffer::quit()
 {
     GN_GUARD;
 
-    // Invalidate fence, to unblock any thread that are waiting for consumption fence.
-    // Note that fence value is 16 byte aligned. so -1 would never be a valid fence.
-    m_ReadenFence = (Fence)-1;
+    // Invalidate tokenID, to unblock any thread that are waiting for consumption tokenID.
+    // Note that tokenID value is 16 byte aligned. so -1 would never be a valid tokenID.
+    m_ReadenCursor = (UInt32)-1;
+
+    // delete events
+    m_NotEmpty.destroy();
+    m_ConsumptionEvent.destroy();
 
     // TODO:
-    //  - Block producers
-    //  - Cancel consumers
+    //  - Wait for current producer and consumer
+    //  - Cancel incoming producers and consumers
     //  - Clear initialize flag
 
     // deallocate ring buffer
     if( NULL != m_Buffer ) ::free(m_Buffer), m_Buffer = NULL;
 
-    // delete events
-    safeDelete( m_NotEmpty );
-    safeDelete( m_ConsumptionEvent );
-    safeDelete( m_Exit );
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+    // deallocate fence array
+    if( NULL != m_Fences )
+    {
+        size_t maxFenceCount = m_Size / 16;
+        for( size_t i = 0; i < maxFenceCount; ++i )
+        {
+            safeDelete( m_Fences[i].event );
+        }
+        HeapMemory::dealloc( m_Fences );
+        m_Fences = NULL;
+        m_NextFreeFence = NULL;
+    }
+#endif
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -79,26 +114,37 @@ void GN::CommandBuffer::quit()
 // GN::CommandBuffer - Public Methods
 // *****************************************************************************
 
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::CommandBuffer::Fence GN::CommandBuffer::insertFence()
+{
+}
+
 //
 //
 // -----------------------------------------------------------------------------
 GN::CommandBuffer::OperationResult
-GN::CommandBuffer::waitForConsumptionFence( Fence fence )
+GN::CommandBuffer::waitForFence( Fence fence )
 {
-    for(;;)
+    /*for(;;)
     {
-        Fence rf = m_ReadenFence;
+        UInt32 rf = m_ReadenCursor;
         memoryBarrier();
 
-        if( rf >= fence )
+        if( rf >= tokenID )
         {
-            return (Fence)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
+            return (UInt32)-1 == rf ? OPERATION_CANCELLED : OPERATION_SUCCEEDED;
         }
 
         // TODO: use a event to save some CPU.
         ::Sleep(1);
-    }
+    }*/
 }
+
+#endif
 
 //
 //
@@ -121,7 +167,7 @@ GN::CommandBuffer::beginProduce(
 
     m_ProducerLock.lock();
 
-    if( NULL != m_WriteToken )
+    if( NULL != m_WritingToken )
     {
         m_ProducerLock.unlock();
         return OPERATION_FAILED;
@@ -129,28 +175,27 @@ GN::CommandBuffer::beginProduce(
 
     for(;;)
     {
-        // cache read/write fence to local variable
-        size_t rf = m_ReadenFence;
-        size_t wf = m_WrittenFence;
+        // cache read/write tokenID to local variable
+        size_t rc = m_ReadenCursor;
+        size_t wc = m_WrittenCursor;
         memoryBarrier();
 
-        size_t usedBytes = wf - rf;
+        size_t usedBytes = wc - rc;
         size_t freeBytes = m_Size - usedBytes;
 
         if( freeBytes >= cmdsize )
         {
-            m_WriteToken = (TokenInternal*)(m_Buffer + ( wf % m_Size )); // TODO: align buffer size to power of 2 to save this mod operation.);
-            m_WriteToken->commandId = command;
-            m_WriteToken->parameterSize = parameterSize;
-            m_WriteToken->fence = wf + cmdsize;
-            m_WriteToken->completionEvent = optionalCompletionEvent;
+            m_WritingToken = (TokenInternal*)(m_Buffer + ( wc % m_Size )); // TODO: align buffer size to power of 2 to save this mod operation.);
+            m_WritingToken->commandId = command;
+            m_WritingToken->parameterSize = (UInt16)parameterSize;
+            m_WritingToken->endOffset = (UInt32)(wc + cmdsize);
+            m_WritingToken->completionEvent = optionalCompletionEvent;
 
             if( token )
             {
-                token->fence = m_WriteToken->fence;
-                token->commandId = command;
+                token->commandID = command;
                 token->parameterSize = parameterSize;
-                token->pParameterBuffer = (void*)(m_WriteToken+1);
+                token->pParameterBuffer = (void*)(m_WritingToken+1);
             }
 
             // production succeeds.
@@ -158,7 +203,7 @@ GN::CommandBuffer::beginProduce(
         }
 
         // There's no enough space in ring buffer, wait for consumption
-        else if( !m_ConsumptionEvent->wait() )
+        else if( !m_ConsumptionEvent.wait() )
         {
             m_ProducerLock.unlock();
             return OPERATION_FAILED;
@@ -173,84 +218,79 @@ void GN::CommandBuffer::endProduce()
 {
     // Enter production lock again, which prevents all thread except the one
     // who calls beginProduce().
-    CritSec::Helper lock( m_ProducerLock );
+    ScopeMutex<Mutex> lock( m_ProducerLock );
 
-    if( NULL == m_WriteToken )
+    if( NULL == m_WritingToken )
     {
         // This means endProduce() is called without beginProduce().
         return;
     }
 
-    // Updating written fence and m_NotEmpty event should be an
+    // Updating written tokenID and m_NotEmpty event should be an
     // atomic operation.
-    EnterCriticalSection( &m_DataLock );
+    m_DataLock.lock();
     {
-        GN_ASSERT( m_WrittenFence + m_WriteToken->parameterSize + sizeof(TokenInternal) == m_WriteToken->fence );
-        m_WrittenFence = m_WriteToken->fence;
-        m_WriteToken = NULL;
-        SetEvent( m_NotEmpty );
+        GN_ASSERT( m_WrittenCursor + m_WritingToken->parameterSize + sizeof(TokenInternal) == m_WritingToken->endOffset );
+        m_WrittenCursor = m_WritingToken->endOffset;
+        m_WritingToken = NULL;
+        m_NotEmpty.signal();
     }
-    LeaveCriticalSection( &m_DataLock );
+    m_DataLock.unlock();
 
     // Leave the production lock which is entered in beginProduce()
-    LeaveCriticalSection( &m_ProducerLock );
+    m_ProducerLock.unlock();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::CommandBuffer::OperationResult
-GN::CommandBuffer::beginConsume( Token * token, int waitTime )
+GN::CommandBuffer::beginConsume( Token * token, TimeInNanoSecond timeoutTime )
 {
     if( NULL == token )
     {
         return OPERATION_FAILED;
     }
 
-    EnterCriticalSection( &m_ConsumerLock );
+    m_ConsumerLock.lock();
 
     GN::CommandBuffer::OperationResult hr = OPERATION_SUCCEEDED;
 
-    if( NULL != m_ReadToken )
+    if( NULL != m_ReadingToken )
     {
         // beginConsume is called more than once without endConsume.
         hr = OPERATION_FAILED;
     }
 
     // wait for production of next command
-    if( SUCCEEDED(hr) )
+    if( OPERATION_SUCCEEDED == hr )
     {
-        Fence wf;
         for(;;)
         {
             // cache production fences
-            wf = m_WrittenFence;
-            MemoryBarrier();
+            UInt32 wc = m_WrittenCursor;
+            memoryBarrier();
 
-            size_t usedBytes = wf - m_ReadenFence;
+            size_t usedBytes = wc - m_ReadenCursor;
 
             if( usedBytes < sizeof(TokenInternal) )
             {
-                HANDLE handles[2] = { m_NotEmpty, m_Exit };
-                DWORD waitResult = WaitForMultipleObjects( 2, handles, FALSE, waitTime );
+                WaitResult waitResult = m_NotEmpty.wait( timeoutTime );
 
-                if( WAIT_TIMEOUT == waitResult )
+                if( WaitResult::TIMEOUT == waitResult )
                 {
-                    hr = E_PENDING;
+                    hr = OPERATION_TIMEOUT;
                     break;
                 }
-                else if( ( WAIT_OBJECT_0 + 1 ) == waitResult ||
-                         ( WAIT_ABANDONED_0 + 0 ) == waitResult ||
-                         ( WAIT_ABANDONED_0 + 1 ) == waitResult )
+                else if( WaitResult::KILLED == waitResult )
                 {
                     // exit signal is received
                     hr = OPERATION_CANCELLED;
                     break;
                 }
-                else if( WAIT_OBJECT_0 != waitResult )
+                else
                 {
-                    hr = HRESULT_FROM_WIN32( GetLastError() );
-                    break;
+                    GN_ASSERT( WaitResult::COMPLETED == waitResult );
                 }
             }
             else
@@ -260,29 +300,28 @@ GN::CommandBuffer::beginConsume( Token * token, int waitTime )
         }
     }
 
-    if( SUCCEEDED(hr) )
+    if( OPERATION_SUCCEEDED == hr )
     {
         // get command header and parameter
-        m_ReadToken = (TokenInternal*)( m_Buffer + (m_ReadenFence % m_Size) );
-        size_t cmdsize = m_ReadToken->parameterSize + sizeof(TokenInternal);
+        m_ReadingToken = (TokenInternal*)( m_Buffer + (m_ReadenCursor % m_Size) );
 
-#if DBG
+#if GN_BUILD_ENABLE_ASSERT
         // full command including all parameters should have been written to command buffer.
-        Fence wf = m_WrittenFence;
-        MemoryBarrier();
-        GN_ASSERT( wf - m_ReadenFence >= cmdsize );
+        UInt32 wc = m_WrittenCursor;
+        memoryBarrier();
+        size_t cmdsize = m_ReadingToken->parameterSize + sizeof(TokenInternal);
+        GN_ASSERT( wc - m_ReadenCursor >= cmdsize );
 #endif
 
         // update output token
-        token->fence = m_ReadenFence + cmdsize;
-        token->commandId = m_ReadToken->commandId;
-        token->parameterSize = m_ReadToken->parameterSize;
-        token->pParameterBuffer = (void**)(m_ReadToken+1);
+        token->commandID = m_ReadingToken->commandId;
+        token->parameterSize = m_ReadingToken->parameterSize;
+        token->pParameterBuffer = (void**)(m_ReadingToken+1);
     }
 
-    if( FAILED(hr) )
+    if( OPERATION_SUCCEEDED != hr )
     {
-        LeaveCriticalSection( &m_ConsumerLock );
+        m_ConsumerLock.unlock();
     }
 
     return hr;
@@ -295,31 +334,35 @@ void GN::CommandBuffer::endConsume()
 {
     // Enter consumer lock again here, to prevent all thread other than the
     // one that calls beginConsume()
-    CritSec::Helper lock( m_ConsumerLock );
+    ScopeMutex<Mutex>lock( m_ConsumerLock );
 
-    if( NULL == m_ReadToken )
+    if( NULL == m_ReadingToken )
     {
         // endConsume() is called without beginConsume()
         return;
     }
 
-    m_ReadenFence += m_ReadToken->parameterSize + sizeof(TokenInternal);
-    m_ReadToken = NULL;
-    SetEvent( m_ConsumptionEvent );
+    SyncEvent * completionEvent = m_ReadingToken->completionEvent;
+    m_ReadenCursor += m_ReadingToken->parameterSize + sizeof(TokenInternal);
+    m_ReadingToken = NULL;
+    m_ConsumptionEvent.signal();
 
-    // Checking written fence and updating m_NotEmpty event should be an
+    // Checking written tokenID and updating m_NotEmpty event should be an
     // atomic operation.
-    EnterCriticalSection( &m_DataLock );
+    m_DataLock.lock();
     {
-        Fence wf = m_WrittenFence;
-        MemoryBarrier();
-        if( wf == m_ReadenFence )
+        UInt32 wf = m_WrittenCursor;
+        memoryBarrier();
+        if( wf == m_ReadenCursor )
         {
-            ResetEvent( m_NotEmpty );
+            m_NotEmpty.unsignal();
         }
     }
-    LeaveCriticalSection( &m_DataLock );
+    m_DataLock.unlock();
+
+    // trigger completion event
+    if( completionEvent ) completionEvent->signal();
 
     // Leave the critical section that is entered in beginConsume()
-    LeaveCriticalSection( &m_ConsumerLock );
-}*/
+    m_ConsumerLock.unlock();
+}

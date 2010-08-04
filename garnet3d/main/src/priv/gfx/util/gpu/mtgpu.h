@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
-#include "ringbuffer.h"
+#include "cmdbuf.h"
 
 namespace GN { namespace gfx
 {
@@ -61,7 +61,7 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mThread   = NULL;
+            mThread = NULL;
             mGpu = NULL;
         }
         //@}
@@ -73,97 +73,8 @@ namespace GN { namespace gfx
 
         //@{
 
-        void waitForIdle() { return waitForFence( mFrontEndFence ); }
-        void waitForFence( UInt32 fence );
-        UInt32 getCurrentFence() const { return mFrontEndFence; }
-
-        size_t getRingBufferSize() const { return mRingBuffer.size(); }
-
-        UInt8 * beginPostCommand( UInt32 cmd, size_t length ); ///< always return non-NULL valid pointer.
-        void    endPostCommand() { mRingBuffer.endProduce(); }
-
-        void postCommand0( UInt32 cmd )
-        {
-            beginPostCommand( cmd, 0 );
-            endPostCommand();
-        }
-
-        template<typename T1>
-        void postCommand1( UInt32 cmd, const T1 & p1 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) );
-            memcpy( buf, &p1, sizeof(T1) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2>
-        void postCommand2( UInt32 cmd, const T1 & p1, const T2 & p2 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2, typename T3>
-        void postCommand3( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
-            memcpy( buf, &p3, sizeof(T3) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2, typename T3, typename T4>
-        void postCommand4( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
-            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
-            memcpy( buf, &p4, sizeof(T4) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2, typename T3, typename T4, typename T5>
-        void postCommand5( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
-            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
-            memcpy( buf, &p4, sizeof(T4) ); buf += sizeof(T4);
-            memcpy( buf, &p5, sizeof(T5) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-        void postCommand6( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) + sizeof(T6) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
-            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
-            memcpy( buf, &p4, sizeof(T4) ); buf += sizeof(T4);
-            memcpy( buf, &p5, sizeof(T5) ); buf += sizeof(T5);
-            memcpy( buf, &p6, sizeof(T6) );
-            endPostCommand();
-        }
-
-        template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-        void postCommand7( UInt32 cmd, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7 )
-        {
-            UInt8 * buf = beginPostCommand( cmd, sizeof(T1) + sizeof(T2) + sizeof(T3) + sizeof(T4) + sizeof(T5) + sizeof(T6) + sizeof(T7) );
-            memcpy( buf, &p1, sizeof(T1) ); buf += sizeof(T1);
-            memcpy( buf, &p2, sizeof(T2) ); buf += sizeof(T2);
-            memcpy( buf, &p3, sizeof(T3) ); buf += sizeof(T3);
-            memcpy( buf, &p4, sizeof(T4) ); buf += sizeof(T4);
-            memcpy( buf, &p5, sizeof(T5) ); buf += sizeof(T5);
-            memcpy( buf, &p5, sizeof(T6) ); buf += sizeof(T6);
-            memcpy( buf, &p6, sizeof(T7) );
-            endPostCommand();
-        }
+        CommandBuffer & cmdbuf() { return mCommandBuffer; }
+        void waitForIdle();
 
         //@}
 
@@ -172,10 +83,10 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        RingBuffer      mRingBuffer;
+        CommandBuffer   mCommandBuffer;
         volatile UInt32 mGpuCreationStatus; ///< 0: creation failed, 1: creation succeeded, 2: creation is not finished yet.
-        volatile UInt32 mFrontEndFence;
-        volatile UInt32 mBackEndFence;
+        SyncEvent       mWaitForIdleFence;
+        SyncEvent       mPresentFence;
         Thread        * mThread;
 
         // ********************************
@@ -185,13 +96,12 @@ namespace GN { namespace gfx
 
         MultiThreadGpuOptions mMultithreadOptions;
         GpuOptions            mGpuOptions;
-        DispDesc                   mDispDesc;
-        void *                     mD3DDevice;
-        void *                     mOGLRC;
+        DispDesc              mDispDesc;
+        void *                mD3DDevice;
+        void *                mOGLRC;
         GpuCaps               mCaps;
         GpuSignals          * mSignals;
         GpuContext            mGpuContext;
-        UInt32                     mLastPresentFence;
 
         // ********************************
         // back-end variables

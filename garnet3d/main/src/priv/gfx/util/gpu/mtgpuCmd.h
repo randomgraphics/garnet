@@ -9,6 +9,8 @@ namespace GN { namespace gfx
 /// Gpu command enumerations.
 ///
 enum GpuCommand {
+    CMD_SHUTDOWN,
+    CMD_FENCE,
     CMD_GET_GPU_OPTIONS,///< get GPU options
     CMD_GET_DISP_DESC,///< get display descriptor
     CMD_GET_D3D_DEVICE,

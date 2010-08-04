@@ -6,6 +6,9 @@
 /// \author  chenli@@REDMOND (2010.8.2)
 // *****************************************************************************
 
+// Note: built-in fence is not implemented yet.
+#define GN_COMMAND_BUFFER_BUILT_IN_FENCE 0
+
 namespace GN
 {
     ///
@@ -21,6 +24,11 @@ namespace GN
 
     public:
 
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+        typedef UInt32 Fence;
+        static const Fence INVALID_FENCE = 0;
+#endif
+
         enum OperationResult
         {
             OPERATION_SUCCEEDED,    // Operation is done successfully
@@ -29,12 +37,9 @@ namespace GN
             OPERATION_CANCELLED,    // Operation is cancelled.
         };
 
-        typedef UInt32 Fence;
-
         struct Token
         {
-            Fence  fence;            ///< Token fence
-            UInt16 commandId;        ///< command ID ( 2 bytes )
+            UInt16 commandID;        ///< command ID
             UInt16 parameterSize;    ///< parameter buffer size.
             void * pParameterBuffer; ///< command
         };
@@ -61,91 +66,153 @@ namespace GN
         void clear()
         {
             m_Buffer = NULL;
-            m_ReadenFence = (Fence)-1;
-            m_ConsumptionEvent = NULL;
-            m_NotEmpty = NULL;
-            m_Exit = NULL;
+            m_ReadenCursor = (UInt32)-1;
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+            m_Fences = NULL;
+#endif
         }
         //@}
-
-        // ********************************
-        // Control API
-        // ********************************
-    public:
-
-        // Wait for all commands before specific fence are consumed
-        // Return:
-        //      OPERATION_SUCCEEDED, if the command is consumed.
-        //      OPERATION_CANCELLED, if the command buffer is shutting down.
-        OperationResult waitForConsumptionFence( Fence fence );
 
         // ********************************
         // Producer
         // ********************************
     public:
 
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+
+        typedef UInt32 Fence;
+
+        static const Fence INVALID_FENCE = 0;
+
+        /// Insert a new fence to the command buffer.
+        ///
+        /// Return:
+        ///     Fence ID, if succeeds.
+        ///     INVALID_FENCE, if failed.
+        Fence insertFence();
+
+        // Wait for commands before specific fence are all consumed
+        // Return:
+        //      OPERATION_SUCCEEDED, if all commands before the token are consumed.
+        //      OPERATION_CANCELLED, if the command buffer is shutting down.
+        //
+        // Note: calling this from consumer thread would dead lock the application.
+        OperationResult waitForFence( Fence fence );
+
+#endif
+
         // Return:
         //      OPERATION_SUCCEEDED, if production succeeds.
         //      OPERATION_CANCELLED if command buffer is shutting down.
         //      OPERATION_FAILED for other failures, like not paired with endProduce().
-        OperationResult beginProduce( UInt16 command, UInt16 parameterSize, _Out_opt_ Token * token = NULL, _In_opt_ SyncEvent * optionalCompletionEvent = NULL );
+        OperationResult beginProduce( UInt16 command, UInt16 parameterSize, _Out_opt_ Token * token, _In_opt_ SyncEvent * optionalCompletionEvent = NULL );
         void            endProduce();
 
-        OperationResult postCommand( UInt16 command, _Out_opt_ Fence * fence = NULL )
+        OperationResult postCommand0( UInt16 command, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
-            OperationResult hr = beginProduce( command, 0, &token );
+            OperationResult hr = beginProduce( command, 0, &token, optionalCompletionEvent );
             if( OPERATION_SUCCEEDED == hr )
             {
-                if( fence ) *fence = token.fence;
                 endProduce();
             }
             return hr;
         }
 
         template<typename T1>
-        OperationResult postCommand( UInt16 command, const T1 * p1, _Out_opt_ Fence * fence = NULL )
+        OperationResult postCommand1( UInt16 command, const T1 & p1, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
-            OperationResult hr = beginProduce( command, sizeof(*p1), &token );
+            OperationResult hr = beginProduce( command, sizeof(p1), &token, optionalCompletionEvent );
             if( OPERATION_SUCCEEDED == hr )
             {
                 UInt8 * buf = (UInt8*)token.pParameterBuffer;
-                memcpy( buf, p1, sizeof(*p1) );
-                if( fence ) *fence = token.fence;
+                memcpy( buf, &p1, sizeof(p1) );
                 endProduce();
             }
             return hr;
         }
 
         template<typename T1, typename T2>
-        OperationResult postCommand( UInt16 command, const T1 * p1, const T2 * p2, _Out_opt_ Fence * fence = NULL )
+        OperationResult postCommand2( UInt16 command, const T1 & p1, const T2 & p2, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
-            OperationResult hr = beginProduce( command, sizeof(*p1)+sizeof(*p2), &token );
+            OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2), &token, optionalCompletionEvent );
             if( OPERATION_SUCCEEDED == hr )
             {
                 UInt8 * buf = (UInt8*)token.pParameterBuffer;
-                memcpy( buf, p1, sizeof(*p1) ); buf += sizeof(*p1);
-                memcpy( buf, p2, sizeof(*p2) );
-                if( fence ) *fence = token.fence;
+                memcpy( buf, &p1, sizeof(p1) ); buf += sizeof(p1);
+                memcpy( buf, &p2, sizeof(p2) );
                 endProduce();
             }
             return hr;
         }
 
         template<typename T1, typename T2, typename T3>
-        OperationResult postCommand( UInt16 command, const T1 * p1, const T2 * p2, const T3 * p3, _Out_opt_ Fence * fence = NULL )
+        OperationResult postCommand3( UInt16 command, const T1 & p1, const T2 & p2, const T3 & p3, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
         {
             Token token;
-            OperationResult hr = beginProduce( command, sizeof(*p1)+sizeof(*p2)+sizeof(*p3), &token );
+            OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3), &token, optionalCompletionEvent );
             if( OPERATION_SUCCEEDED == hr )
             {
                 UInt8 * buf = (UInt8*)token.pParameterBuffer;
-                memcpy( buf, p1, sizeof(*p1) ); buf += sizeof(*p1);
-                memcpy( buf, p2, sizeof(*p2) ); buf += sizeof(*p2);
-                memcpy( buf, p3, sizeof(*p3) );
-                if( fence ) *fence = token.fence;
+                memcpy( buf, &p1, sizeof(p1) ); buf += sizeof(p1);
+                memcpy( buf, &p2, sizeof(p2) ); buf += sizeof(p2);
+                memcpy( buf, &p3, sizeof(p3) );
+                endProduce();
+            }
+            return hr;
+        }
+
+        template<typename T1, typename T2, typename T3, typename T4>
+        OperationResult postCommand4( UInt16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        {
+            Token token;
+            OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4), &token, optionalCompletionEvent );
+            if( OPERATION_SUCCEEDED == hr )
+            {
+                UInt8 * buf = (UInt8*)token.pParameterBuffer;
+                memcpy( buf, &p1, sizeof(p1) ); buf += sizeof(p1);
+                memcpy( buf, &p2, sizeof(p2) ); buf += sizeof(p2);
+                memcpy( buf, &p3, sizeof(p3) ); buf += sizeof(p3);
+                memcpy( buf, &p4, sizeof(p4) );
+                endProduce();
+            }
+            return hr;
+        }
+
+        template<typename T1, typename T2, typename T3, typename T4, typename T5>
+        OperationResult postCommand5( UInt16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        {
+            Token token;
+            OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4)+sizeof(p5), &token, optionalCompletionEvent );
+            if( OPERATION_SUCCEEDED == hr )
+            {
+                UInt8 * buf = (UInt8*)token.pParameterBuffer;
+                memcpy( buf, &p1, sizeof(p1) ); buf += sizeof(p1);
+                memcpy( buf, &p2, sizeof(p2) ); buf += sizeof(p2);
+                memcpy( buf, &p3, sizeof(p3) ); buf += sizeof(p3);
+                memcpy( buf, &p4, sizeof(p4) ); buf += sizeof(p4);
+                memcpy( buf, &p5, sizeof(p5) );
+                endProduce();
+            }
+            return hr;
+        }
+
+        template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+        OperationResult postCommand6( UInt16 command, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, _In_opt_ SyncEvent * optionalCompletionEvent = NULL )
+        {
+            Token token;
+            OperationResult hr = beginProduce( command, sizeof(p1)+sizeof(p2)+sizeof(p3)+sizeof(p4)+sizeof(p5)+sizeof(p6), &token, optionalCompletionEvent );
+            if( OPERATION_SUCCEEDED == hr )
+            {
+                UInt8 * buf = (UInt8*)token.pParameterBuffer;
+                memcpy( buf, &p1, sizeof(p1) ); buf += sizeof(p1);
+                memcpy( buf, &p2, sizeof(p2) ); buf += sizeof(p2);
+                memcpy( buf, &p3, sizeof(p3) ); buf += sizeof(p3);
+                memcpy( buf, &p4, sizeof(p4) ); buf += sizeof(p4);
+                memcpy( buf, &p5, sizeof(p5) ); buf += sizeof(p5);
+                memcpy( buf, &p6, sizeof(p6) );
                 endProduce();
             }
             return hr;
@@ -161,14 +228,14 @@ namespace GN
         //      OPERATION_TIMEOUT if timed out
         //      OPERATION_CANCELLED if command buffer is shutting down.
         //      OPERATION_FAILED for other failures, like not paired with endConsume().
-        OperationResult beginConsume( _Out_ Token * token, int waitTime );
+        OperationResult beginConsume( _Out_ Token * token, TimeInNanoSecond timeoutTime = INFINITE_TIME );
         void            endConsume();
 
 
         // The event is in signaled state, as long as the buffer is not empty.
         // Please DO NOT change state of this event manually, or it'll break command
         // buffer's internal logic.
-        SyncEvent * GetNotEmptyEvent() const { return m_NotEmpty; }
+        const SyncEvent & GetNotEmptyEvent() const { return m_NotEmpty; }
 
         // utilities to parse command parameter buffer
 
@@ -214,27 +281,42 @@ namespace GN
         // Command token
         struct TokenInternal
         {
-            UInt16      commandId;      ///< command ID ( 2 bytes )
-            UInt16      parameterSize;  ///< command parameter size. this header is not included.
-            Fence       fence;
-            SyncEvent * completionEvent;
+            UInt16      commandId;           ///< command ID ( 2 bytes )
+            UInt16      parameterSize;       ///< command parameter size. this header is not included.
+            UInt32      endOffset;           ///< Ring buffer offset in bytes of the end of the command.
+            SyncEvent * completionEvent;     ///< Optional event that gets signaled when the command is consumed.
 #if !GN_X64
             UInt32      _padding; // pad to 16 bytes to get a good cache alignment
 #endif
         };
         GN_CASSERT( 16 == sizeof(TokenInternal) );
 
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+        union FenceInternal
+        {
+            UInt32          offset; //< The offset of the command in the command buffer.
+            SyncEvent     * event;  //< The completion event pointer.
+            FenceInternal * prev;   //< Points to the previous free fence in the free list.
+            FenceInternal * next;   //< Points to the next free fence in the free list.
+        };
+#endif
+
         // ring buffer
         UInt8 *          m_Buffer;
         size_t           m_Size;
         UInt8 *          m_End;
-        volatile Fence   m_ReadenFence;
-        volatile Fence   m_WrittenFence;
-        TokenInternal *  m_ReadToken;
-        TokenInternal *  m_WriteToken;
-        SyncEvent *      m_ConsumptionEvent; // auto-reset event that is signaled whenever a command is consumed, and unsignaled when buffer is full.
-        SyncEvent *      m_NotEmpty;         // manual-reset event that remains signaled when command buffer is not empty.
-        SyncEvent *      m_Exit;             // manual-reset event that is signaled when command buffer is shutting down.
+        volatile UInt32  m_ReadenCursor;     // Ring buffer offset pointing to the next byte that will be used for consumption.
+        volatile UInt32  m_WrittenCursor;    // Ring buffer offset pointing to the next byte that will be used for production.
+        TokenInternal *  m_ReadingToken;     // Pointer to the current consuming token. Should be NULL outside of beginConsume() and endConsume().
+        TokenInternal *  m_WritingToken;     // Pointer to the current producing token. Should be NULL outside of beginProdue() and endProduce().
+        SyncEvent        m_ConsumptionEvent; // auto-reset event that is signaled whenever a command is consumed, and unsignaled when buffer is full.
+        SyncEvent        m_NotEmpty;         // manual-reset event that remains signaled when command buffer is not empty.
+
+#if GN_COMMAND_BUFFER_BUILT_IN_FENCE
+        // Fence
+        FenceInternal *  m_Fences;
+        FenceInternal *  m_NextFreeFence;
+#endif
 
         Mutex m_ProducerLock; // To serialize multiple producers.
         Mutex m_ConsumerLock; // To serialize multiple consumers.
@@ -244,6 +326,9 @@ namespace GN
         // private functions
         // ********************************
     private:
+
+        // Internal version of produce function that support producing token command
+        OperationResult beginProduceInternal( UInt16 command, UInt16 parameterSize, _Out_opt_ Token * token = NULL, _In_opt_ SyncEvent * optionalCompletionEvent = NULL );
     };
 }
 

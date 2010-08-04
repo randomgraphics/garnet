@@ -158,8 +158,10 @@ namespace GN
     ///
     /// sync event
     ///
-    struct SyncEvent : public NoCopy
+    class SyncEvent : public NoCopy
     {
+    public:
+
         //@{
 
         enum InitialState
@@ -177,10 +179,31 @@ namespace GN
         //@}
 
         //@{
-        virtual void       signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
-        virtual void       unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
-        virtual WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
+        SyncEvent();
+        ~SyncEvent();
         //@}
+
+        //@{
+
+        bool create(SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name = 0);
+
+        void destroy();
+
+        void signal();   ///< signal the event, wake one thread that is waiting for it.
+
+        void unsignal(); ///< unsignal the event, block any threads that wait for it.
+
+        /// Returns:
+        ///     WaitResult::COMPLETED   : the event is signaled
+        ///     WaitResult::KILLED      : the event is destroied before signaled.
+        ///     WaitResult::TIMEOUT     : time out before the event is signaled.
+        WaitResult wait( TimeInNanoSecond timeoutTime = INFINITE_TIME ) const;
+
+        //@}
+
+    private:
+        class Impl;
+        Impl * mImpl;
     };
 
     ///
@@ -199,8 +222,6 @@ namespace GN
     };
 
     //@{
-
-    SyncEvent * createSyncEvent( SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name = 0 );
 
     Semaphore * createSemaphore( size_t maxcount, size_t initialcount, const char * name = 0 );
 

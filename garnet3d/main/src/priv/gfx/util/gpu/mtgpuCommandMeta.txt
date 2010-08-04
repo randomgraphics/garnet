@@ -1,3 +1,6 @@
+SHUTDOWN
+FENCE
+
 GET_GPU_OPTIONS            ///< get GPU options
 GET_DISP_DESC              ///< get display descriptor
 GET_D3D_DEVICE
