@@ -8,6 +8,8 @@
 namespace GN { namespace gfx
 {
 
+void func_SHUTDOWN( Gpu &, void *, size_t );
+void func_FENCE( Gpu &, void *, size_t );
 void func_GET_GPU_OPTIONS( Gpu &, void *, size_t );
 void func_GET_DISP_DESC( Gpu &, void *, size_t );
 void func_GET_D3D_DEVICE( Gpu &, void *, size_t );
@@ -52,6 +54,8 @@ void func_IDXBUF_READBACK( Gpu &, void *, size_t );
 void func_GET_SIGNALS( Gpu &, void *, size_t );
 
 const GpuCommandHandler g_gpuCommandHandlers[] = {
+&func_SHUTDOWN,
+&func_FENCE,
 &func_GET_GPU_OPTIONS,
 &func_GET_DISP_DESC,
 &func_GET_D3D_DEVICE,

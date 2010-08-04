@@ -57,13 +57,15 @@ bool GN::gfx::MultiThreadGpu::init(
     GN_STDCLASS_INIT( GN::gfx::MultiThreadGpu, () );
 
     // initialize ring buffer
-    if( !mRingBuffer.init( mo.commandBufferSize ) ) return failure();
+    if( !mCommandBuffer.init( mo.commandBufferSize ) ) return failure();
 
-    // initialize local variables
-    mGpuCreationStatus = 2;
-    mFrontEndFence = 0;
-    mBackEndFence = 0;
-    mLastPresentFence = 0;
+    // initialize sync objects
+    mGpuCreationStatus = 2; // 2 is "not done yet";
+    if( !mWaitForIdleFence.create( SyncEvent::UNSIGNALED, SyncEvent::AUTO_RESET ) ||
+        !mPresentFence.create( SyncEvent::SIGNALED, SyncEvent::AUTO_RESET ) )
+    {
+        return failure();
+    }
 
     // create thread
     ThreadProcedure proc = makeDelegate( this, &GN::gfx::MultiThreadGpu::threadProc );
@@ -76,12 +78,12 @@ bool GN::gfx::MultiThreadGpu::init(
 
     // initialize front end variables
     mMultithreadOptions = mo;
-    postCommand1( CMD_GET_GPU_OPTIONS, &mGpuOptions );
-    postCommand1( CMD_GET_DISP_DESC, &mDispDesc );
-    postCommand1( CMD_GET_D3D_DEVICE, &mD3DDevice );
-    postCommand1( CMD_GET_OGL_RC, &mOGLRC );
-    postCommand1( CMD_GET_CAPS, &mCaps );
-    postCommand1( CMD_GET_SIGNALS, &mSignals );
+    mCommandBuffer.postCommand1( CMD_GET_GPU_OPTIONS, &mGpuOptions );
+    mCommandBuffer.postCommand1( CMD_GET_DISP_DESC, &mDispDesc );
+    mCommandBuffer.postCommand1( CMD_GET_D3D_DEVICE, &mD3DDevice );
+    mCommandBuffer.postCommand1( CMD_GET_OGL_RC, &mOGLRC );
+    mCommandBuffer.postCommand1( CMD_GET_CAPS, &mCaps );
+    mCommandBuffer.postCommand1( CMD_GET_SIGNALS, &mSignals );
     waitForIdle();
 
     // success
@@ -102,18 +104,13 @@ void GN::gfx::MultiThreadGpu::quit()
 
     if( mThread )
     {
-        // When ring buffer receives quit message, it will
-        // ignore all existing messages in it, and return
-        // immediatly. So before posting quit message,
-        // waitForIdle() must be called.
-        waitForIdle();
-        mRingBuffer.postQuitMessage();
+        mCommandBuffer.postCommand0( CMD_SHUTDOWN );
         mThread->waitForTermination();
         delete mThread;
         mThread = NULL;
     }
 
-    mRingBuffer.quit();
+    mCommandBuffer.quit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -128,38 +125,10 @@ void GN::gfx::MultiThreadGpu::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::MultiThreadGpu::waitForFence( UInt32 fence )
+void GN::gfx::MultiThreadGpu::waitForIdle()
 {
-    while( (SInt32)(fence - mBackEndFence) > 0 )
-    {
-        sleepCurrentThread( 0 );
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-UInt8 * GN::gfx::MultiThreadGpu::beginPostCommand( UInt32 cmd, size_t length )
-{
-    // align data size to command header size
-    size_t paramsize = math::alignToPowerOf2( length, sizeof(CommandHeader) );
-
-    // push command header
-    CommandHeader * header = (CommandHeader *)mRingBuffer.beginProduce( sizeof(CommandHeader) );
-    if( NULL == header ) return NULL;
-    header->cid   = (UInt16)cmd;
-    header->size  = (UInt16)paramsize;
-    header->fence = ++mFrontEndFence;
-    endPostCommand();
-
-    // return pointer to parameter buffer
-    UInt8 * result = (UInt8*)mRingBuffer.beginProduce( paramsize );
-    if( NULL == result )
-    {
-        GN_THROW( "Fail to push command parameters into command ring buffer." );
-    }
-
-    return result;
+    mCommandBuffer.postCommand0( CMD_FENCE, &mWaitForIdleFence );
+    mWaitForIdleFence.wait();
 }
 
 // *****************************************************************************
@@ -182,30 +151,21 @@ UInt32 GN::gfx::MultiThreadGpu::threadProc( void * param )
     }
     mGpuCreationStatus = 1;
 
-    // enter command loop
+    // command loop
     for(;;)
     {
-        // get command header
-        const void * headerptr = (const CommandHeader*)mRingBuffer.beginConsume( sizeof(CommandHeader) );
-        if( NULL == headerptr ) break; // receives quit message
-        CommandHeader header;
-        memcpy( &header, headerptr, sizeof(header) );
-        mRingBuffer.endConsume();
+        CommandBuffer::Token token;
+        if( CommandBuffer::OPERATION_SUCCEEDED != mCommandBuffer.beginConsume( &token ) )
+        {
+            GN_UNEXPECTED_EX( "Command consumption failed unexpectedly." );
+            break;
+        }
 
-        // Note: after calling of endConsume(), pointer headerptr is not valid any more. Since front end
-        //       thread may overwrite its content.
+        g_gpuCommandHandlers[token.commandID]( *mGpu, token.pParameterBuffer, token.parameterSize );
 
-        // get command parameter
-        void * param = mRingBuffer.beginConsume( header.size );
-        if( NULL == param ) break; // receives quit message
+        mCommandBuffer.endConsume();
 
-        // execute the command
-        g_gpuCommandHandlers[header.cid]( *mGpu, param, header.size );
-
-        // update fence
-        mBackEndFence = header.fence;
-
-        mRingBuffer.endConsume();
+        if( CMD_SHUTDOWN == token.commandID ) break;
     }
 
     // delete the GPU
@@ -227,7 +187,7 @@ bool GN::gfx::MultiThreadGpu::checkTextureFormatSupport( ColorFormat format, Tex
 {
     MultiThreadGpu * nonConstPtr = const_cast<GN::gfx::MultiThreadGpu*>(this);
     bool result;
-    nonConstPtr->postCommand3( CMD_CHECK_TEXTURE_FORMAT_SUPPORT, &result, format, usages );
+    nonConstPtr->mCommandBuffer.postCommand3( CMD_CHECK_TEXTURE_FORMAT_SUPPORT, &result, format, usages );
     nonConstPtr->waitForIdle();
     return result;
 }
@@ -239,7 +199,7 @@ ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usage
 {
     MultiThreadGpu * nonConstPtr = const_cast<GN::gfx::MultiThreadGpu*>(this);
     ColorFormat result;
-    nonConstPtr->postCommand2( CMD_GET_DEFAULT_TEXTURE_FORMAT, &result, usages );
+    nonConstPtr->mCommandBuffer.postCommand2( CMD_GET_DEFAULT_TEXTURE_FORMAT, &result, usages );
     nonConstPtr->waitForIdle();
     return result;
 }
@@ -250,7 +210,7 @@ ColorFormat GN::gfx::MultiThreadGpu::getDefaultTextureFormat( TextureUsage usage
 Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 {
     Blob * cgp;
-    postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
+    mCommandBuffer.postCommand2( CMD_COMPILE_GPU_PROGRAM, &cgp, &desc );
     waitForIdle();
     return cgp;
 }
@@ -261,7 +221,7 @@ Blob * GN::gfx::MultiThreadGpu::compileGpuProgram( const GpuProgramDesc & desc )
 GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpuProgramBinary, size_t length )
 {
     GpuProgram * gp = NULL;
-    postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
+    mCommandBuffer.postCommand3( CMD_CREATE_GPU_PROGRAM, &gp, compiledGpuProgramBinary, length );
     waitForIdle();
     if( NULL == gp ) return NULL;
 
@@ -277,7 +237,7 @@ GpuProgram * GN::gfx::MultiThreadGpu::createGpuProgram( const void * compiledGpu
 Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
 {
     Uniform * uni = NULL;
-    postCommand2( CMD_CREATE_UNIFORM, &uni, size );
+    mCommandBuffer.postCommand2( CMD_CREATE_UNIFORM, &uni, size );
     waitForIdle();
     if( NULL == uni ) return NULL;
 
@@ -293,7 +253,7 @@ Uniform * GN::gfx::MultiThreadGpu::createUniform( size_t size )
 Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
 {
     Texture * tex = NULL;
-    postCommand2( CMD_CREATE_TEXTURE, &tex, &desc );
+    mCommandBuffer.postCommand2( CMD_CREATE_TEXTURE, &tex, &desc );
     waitForIdle();
     if( NULL == tex ) return NULL;
 
@@ -309,7 +269,7 @@ Texture * GN::gfx::MultiThreadGpu::createTexture( const TextureDesc & desc )
 VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
 {
     VtxBuf * vb = NULL;
-    postCommand2( CMD_CREATE_VTXBUF, &vb, &desc );
+    mCommandBuffer.postCommand2( CMD_CREATE_VTXBUF, &vb, &desc );
     waitForIdle();
     if( NULL == vb ) return NULL;
 
@@ -325,7 +285,7 @@ VtxBuf * GN::gfx::MultiThreadGpu::createVtxBuf( const VtxBufDesc & desc )
 IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
 {
     IdxBuf * ib = NULL;
-    postCommand2( CMD_CREATE_IDXBUF, &ib, &desc );
+    mCommandBuffer.postCommand2( CMD_CREATE_IDXBUF, &ib, &desc );
     waitForIdle();
     if( NULL == ib ) return NULL;
 
@@ -341,9 +301,14 @@ IdxBuf * GN::gfx::MultiThreadGpu::createIdxBuf( const IdxBufDesc & desc )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
 {
-    GpuContext * rc = (GpuContext*)beginPostCommand( CMD_BIND_CONTEXT, sizeof(inputrc) );
+    CommandBuffer::Token token;
+    if( CommandBuffer::OPERATION_SUCCEEDED != mCommandBuffer.beginProduce( CMD_BIND_CONTEXT, sizeof(inputrc), &token ) )
+    {
+        return;
+    }
 
     // copy GPU context to command buffer by inplace new operator
+    GpuContext * rc = (GpuContext*)token.pParameterBuffer;
     new (rc) GpuContext(inputrc);
 
     // Replace wrapper resource pointers with real resource pointers.
@@ -389,7 +354,7 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
     sReplaceAutoRefPtr( rc->depthstencil.texture, ds ? ds->getRealTexture() : NULL );
 
     // done
-    endPostCommand();
+    mCommandBuffer.endProduce();
     mGpuContext = inputrc;
 }
 
@@ -398,7 +363,7 @@ void GN::gfx::MultiThreadGpu::bindContext( const GpuContext & inputrc )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::rebindContext()
 {
-    postCommand0( CMD_BIND_CONTEXT );
+    mCommandBuffer.postCommand0( CMD_BIND_CONTEXT );
 }
 
 //
@@ -415,15 +380,20 @@ const GpuContext & GN::gfx::MultiThreadGpu::getContext() const
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::present()
 {
-    // we cache only one frame, at most, in command buffer.
-    if( mMultithreadOptions.cacheOneFrameAtMost && 0 != mLastPresentFence )
+    SyncEvent * fence;
+    if( mMultithreadOptions.cacheOneFrameAtMost )
     {
-        waitForFence( mLastPresentFence );
+        // wait for the previous present to complete, to ensure that
+        // we cache only one full frame in the command buffer.
+        mPresentFence.wait();
+        fence = &mPresentFence;
+    }
+    else
+    {
+        fence = NULL;
     }
 
-    postCommand0( CMD_PRESENT );
-
-    mLastPresentFence = mFrontEndFence;
+    mCommandBuffer.postCommand0( CMD_PRESENT, fence );
 }
 
 //
@@ -435,7 +405,7 @@ void GN::gfx::MultiThreadGpu::clearScreen(
     UInt8            s,
     BitFields        flags )
 {
-    postCommand4( CMD_CLEAR_SCREEN, c, z, s, flags );
+    mCommandBuffer.postCommand4( CMD_CLEAR_SCREEN, c, z, s, flags );
 }
 
 //
@@ -449,7 +419,7 @@ void GN::gfx::MultiThreadGpu::drawIndexed(
     size_t        numvtx,
     size_t        startidx )
 {
-    postCommand6( CMD_DRAW_INDEXED, prim, numidx, basevtx, startvtx, numvtx, startidx );
+    mCommandBuffer.postCommand6( CMD_DRAW_INDEXED, prim, numidx, basevtx, startvtx, numvtx, startidx );
 }
 
 //
@@ -460,7 +430,7 @@ void GN::gfx::MultiThreadGpu::draw(
     size_t        numvtx,
     size_t        startvtx )
 {
-    postCommand3( CMD_DRAW, prim, numvtx, startvtx );
+    mCommandBuffer.postCommand3( CMD_DRAW, prim, numvtx, startvtx );
 }
 
 //
@@ -494,7 +464,7 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(
     }
     memcpy( tmpib, indexData, ibsize );
 
-    postCommand6( CMD_DRAW_INDEXED_UP, prim, numidx, numvtx, tmpvb, strideInBytes, tmpib );
+    mCommandBuffer.postCommand6( CMD_DRAW_INDEXED_UP, prim, numidx, numvtx, tmpvb, strideInBytes, tmpib );
 }
 
 //
@@ -514,7 +484,7 @@ void GN::gfx::MultiThreadGpu::drawUp(
         return;
     }
     memcpy( vb, vertexData, sz );
-    postCommand4( CMD_DRAW_UP, prim, numvtx, vb, strideInBytes );
+    mCommandBuffer.postCommand4( CMD_DRAW_UP, prim, numvtx, vb, strideInBytes );
 }
 
 //
@@ -541,17 +511,22 @@ GN::gfx::MultiThreadGpu::drawLines(
     }
     memcpy( tmpbuf, positions, length );
 
-    DrawLineParams * dlp = (DrawLineParams*)beginPostCommand( CMD_DRAW_LINES, sizeof(*dlp) );
-    dlp->options   = options;
-    dlp->positions = tmpbuf;
-    dlp->stride    = stride;
-    dlp->numpoints = numpoints;
-    dlp->rgba      = rgba;
-    dlp->model     = model;
-    dlp->view      = view;
-    dlp->proj      = proj;
+    CommandBuffer::Token token;
+    if( CommandBuffer::OPERATION_SUCCEEDED == mCommandBuffer.beginProduce( CMD_DRAW_LINES, sizeof(DrawLineParams), &token ) )
+    {
+        DrawLineParams * dlp = (DrawLineParams*)token.pParameterBuffer;
 
-    endPostCommand();
+        dlp->options   = options;
+        dlp->positions = tmpbuf;
+        dlp->stride    = stride;
+        dlp->numpoints = numpoints;
+        dlp->rgba      = rgba;
+        dlp->model     = model;
+        dlp->view      = view;
+        dlp->proj      = proj;
+
+        mCommandBuffer.endProduce();
+    }
 }
 
 //
@@ -559,7 +534,7 @@ GN::gfx::MultiThreadGpu::drawLines(
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::getBackBufferContent( BackBufferContent & result )
 {
-    postCommand1( CMD_GET_BACK_BUFFER_CONTENT, &result );
+    mCommandBuffer.postCommand1( CMD_GET_BACK_BUFFER_CONTENT, &result );
     waitForIdle();
 }
 
@@ -568,7 +543,7 @@ void GN::gfx::MultiThreadGpu::getBackBufferContent( BackBufferContent & result )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimized )
 {
-    postCommand1( CMD_PROCESS_RENDER_WINDOW_MESSAGES, blockWhileMinimized );
+    mCommandBuffer.postCommand1( CMD_PROCESS_RENDER_WINDOW_MESSAGES, blockWhileMinimized );
 }
 
 //
@@ -576,7 +551,7 @@ void GN::gfx::MultiThreadGpu::processRenderWindowMessages( bool blockWhileMinimi
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::enableParameterCheck( bool enable )
 {
-    postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
+    mCommandBuffer.postCommand1( CMD_ENABLE_PARAMETER_CHECK, enable );
 }
 
 //
@@ -584,7 +559,7 @@ void GN::gfx::MultiThreadGpu::enableParameterCheck( bool enable )
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadGpu::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
-    postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
+    mCommandBuffer.postCommand2( CMD_DUMP_NEXT_FRAME, startBatchIndex, numBatches );
 }
 
 //
@@ -617,6 +592,22 @@ bool GN::gfx::MultiThreadGpu::hasUserData( const Guid & id ) const
 
 namespace GN { namespace gfx
 {
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_SHUTDOWN( Gpu &, void *, size_t )
+    {
+        // do nothing
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void func_FENCE( Gpu &, void *, size_t )
+    {
+        // do nothing
+    }
+
     //
     //
     // -------------------------------------------------------------------------

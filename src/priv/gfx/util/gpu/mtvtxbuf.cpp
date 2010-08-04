@@ -41,7 +41,7 @@ void GN::gfx::MultiThreadVtxBuf::quit()
 
     if( mVtxBuf )
     {
-        mGpu.postCommand1( CMD_VTXBUF_DESTROY, mVtxBuf );
+        mGpu.cmdbuf().postCommand1( CMD_VTXBUF_DESTROY, mVtxBuf );
         mVtxBuf = NULL;
     }
 
@@ -73,7 +73,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
     }
     memcpy( tmpbuf, data, length );
 
-    mGpu.postCommand5( CMD_VTXBUF_UPDATE, mVtxBuf, offset, length, tmpbuf, flag );
+    mGpu.cmdbuf().postCommand5( CMD_VTXBUF_UPDATE, mVtxBuf, offset, length, tmpbuf, flag );
 }
 
 //
@@ -81,7 +81,7 @@ void GN::gfx::MultiThreadVtxBuf::update( size_t offset, size_t length, const voi
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadVtxBuf::readback( DynaArray<UInt8> & data )
 {
-    mGpu.postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
+    mGpu.cmdbuf().postCommand2( CMD_VTXBUF_READBACK, mVtxBuf, &data );
 }
 
 // *****************************************************************************

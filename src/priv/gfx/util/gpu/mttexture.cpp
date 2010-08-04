@@ -65,7 +65,7 @@ void GN::gfx::MultiThreadTexture::quit()
 
     if( mTexture )
     {
-        mGpu.postCommand1( CMD_TEXTURE_DESTROY, mTexture );
+        mGpu.cmdbuf().postCommand1( CMD_TEXTURE_DESTROY, mTexture );
         mTexture = NULL;
     }
 
@@ -109,17 +109,22 @@ void GN::gfx::MultiThreadTexture::updateMipmap(
     }
     memcpy( tmpbuf, data, dataSize );
 
-    UpdateMipmapParam * ump = (UpdateMipmapParam*)mGpu.beginPostCommand( CMD_TEXTURE_UPDATE_MIPMAP, sizeof(*ump) );
-    ump->tex        = mTexture;
-    ump->face       = face;
-    ump->level      = level;
-    ump->area       = area ? *area : Box<UInt32>( 0, 0, 0, mipsize.x, mipsize.y, mipsize.z );
-    ump->rowPitch   = rowPitch;
-    ump->slicePitch = slicePitch;
-    ump->data       = tmpbuf;
-    ump->flag       = flag;
+    UpdateMipmapParam * ump;
+    CommandBuffer::Token token;
+    if( CommandBuffer::OPERATION_SUCCEEDED == mGpu.cmdbuf().beginProduce( CMD_TEXTURE_UPDATE_MIPMAP, sizeof(*ump), &token ) )
+    {
+        ump = (UpdateMipmapParam*)token.pParameterBuffer;
+        ump->tex        = mTexture;
+        ump->face       = face;
+        ump->level      = level;
+        ump->area       = area ? *area : Box<UInt32>( 0, 0, 0, mipsize.x, mipsize.y, mipsize.z );
+        ump->rowPitch   = rowPitch;
+        ump->slicePitch = slicePitch;
+        ump->data       = tmpbuf;
+        ump->flag       = flag;
 
-    mGpu.endPostCommand();
+        mGpu.cmdbuf().endProduce();
+    }
 }
 
 //

@@ -2,7 +2,7 @@
 
 #if GN_POSIX
 
-float const GN::INFINITE_TIME = 1e38f;
+GN::TimeInNanoSecond const GN::INFINITE_TIME = (GN::TimeInNanoSecond)-1;
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Sync");
 
@@ -65,9 +65,9 @@ void GN::Mutex::unlock()
 ///
 /// sync event on POSIX system.
 ///
-class SyncEventPOSIX : public SyncEvent, public StdClass
+class SyncEvent::Impl : public StdClass
 {
-    GN_DECLARE_STDCLASS( SyncEventPOSIX, StdClass );
+    GN_DECLARE_STDCLASS( Impl, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -75,8 +75,8 @@ class SyncEventPOSIX : public SyncEvent, public StdClass
 
     //@{
 public:
-    SyncEventPOSIX()          { clear(); }
-    virtual ~SyncEventPOSIX() { quit(); }
+    Impl()          { clear(); }
+    virtual ~Impl() { quit(); }
     //@}
 
     // ********************************
@@ -90,7 +90,7 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SyncEventPOSIX, () );
+        GN_STDCLASS_INIT( Impl, () );
 
         GN_UNIMPL();
 
@@ -119,20 +119,20 @@ private:
     // ********************************
 public:
 
-    virtual void signal()
+    void signal()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual void unsignal()
+    void unsignal()
     {
         GN_UNIMPL_WARNING();
     }
 
-    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
+    WaitResult wait( TimeInNanoSecond timeoutTime )
     {
         GN_UNIMPL_WARNING();
-        return WaitResult::COMPLETED;
+        return WaitResult::KILLED;
     }
 
     // ********************************
@@ -145,6 +145,14 @@ private:
     // ********************************
 private:
 };
+
+GN::SyncEvent::SyncEvent() : mImpl(NULL) { mImpl = new Impl(); }
+GN::SyncEvent::~SyncEvent() { delete mImpl; }
+bool GN::SyncEvent::create(SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name ) { return mImpl->init(initialState, resetMode, name); }
+void GN::SyncEvent::destroy() { return mImpl->quit(); }
+void GN::SyncEvent::signal() { return mImpl->signal(); }
+void GN::SyncEvent::unsignal() { return mImpl->unsignal(); }
+GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { return mImpl->wait( timeoutTime ); }
 
 // *****************************************************************************
 // semaphore class
@@ -232,25 +240,6 @@ private:
 // *****************************************************************************
 // public functions
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::SyncEvent * GN::createSyncEvent(
-    SyncEvent::InitialState initialState,
-    SyncEvent::ResetMode resetMode,
-    const char * name )
-{
-    GN_GUARD;
-
-    AutoObjPtr<SyncEventPOSIX> s( new SyncEventPOSIX );
-
-    if( !s->init( initialState, resetMode, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}
 
 //
 //

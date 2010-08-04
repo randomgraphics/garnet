@@ -28,9 +28,9 @@ UInt32 ns2ms( TimeInNanoSecond time )
 // -----------------------------------------------------------------------------
 static inline WaitResult sWaitResultFromWin32( DWORD result )
 {
-    if( WAIT_ABANDONED == result )
+    if( WAIT_OBJECT_0 == result )
     {
-        return WaitResult::KILLED;
+        return WaitResult::COMPLETED;
     }
     else if( WAIT_TIMEOUT == result )
     {
@@ -38,8 +38,7 @@ static inline WaitResult sWaitResultFromWin32( DWORD result )
     }
     else
     {
-        GN_ASSERT( WAIT_OBJECT_0 == result );
-        return WaitResult::COMPLETED;
+        return WaitResult::KILLED;
     }
 }
 
@@ -90,15 +89,15 @@ void GN::Mutex::unlock()
 }
 
 // *****************************************************************************
-// syncevent class
+// SyncEvent class
 // *****************************************************************************
 
 ///
 /// sync event on MS Windows.
 ///
-class SyncEventMsw : public SyncEvent, public StdClass
+class SyncEvent::Impl : public StdClass
 {
-    GN_DECLARE_STDCLASS( SyncEventMsw, StdClass );
+    GN_DECLARE_STDCLASS( SyncEvent::Impl, StdClass );
 
     // ********************************
     // ctor/dtor
@@ -106,8 +105,8 @@ class SyncEventMsw : public SyncEvent, public StdClass
 
     //@{
 public:
-    SyncEventMsw()          { clear(); }
-    virtual ~SyncEventMsw() { quit(); }
+    Impl()          { clear(); }
+    virtual ~Impl() { quit(); }
     //@}
 
     // ********************************
@@ -121,7 +120,7 @@ public:
         GN_GUARD;
 
         // standard init procedure
-        GN_STDCLASS_INIT( SyncEventMsw, () );
+        GN_STDCLASS_INIT( SyncEvent::Impl, () );
 
         GN_MSW_CHECK_RETURN(
             mHandle = CreateEventA( 0, MANUAL_RESET == resetMode, SIGNALED == initialState, name ),
@@ -152,19 +151,17 @@ private:
     // ********************************
 public:
 
-    virtual void signal()
+    void signal()
     {
-        GN_ASSERT( mHandle );
         GN_MSW_CHECK( SetEvent( mHandle ) );
     }
 
-    virtual void unsignal()
+    void unsignal()
     {
-        GN_ASSERT( mHandle );
         GN_MSW_CHECK( ResetEvent( mHandle ) );
     }
 
-    virtual WaitResult wait( TimeInNanoSecond timeoutTime )
+    WaitResult wait( TimeInNanoSecond timeoutTime ) const
     {
         return sWaitResultFromWin32( WaitForSingleObject( mHandle, ns2ms( timeoutTime ) ) );
     }
@@ -181,6 +178,33 @@ private:
     // ********************************
 private:
 };
+
+GN::SyncEvent::SyncEvent() : mImpl(NULL) { mImpl = new Impl(); }
+GN::SyncEvent::~SyncEvent() { delete mImpl; }
+bool GN::SyncEvent::create(SyncEvent::InitialState initialState, SyncEvent::ResetMode resetMode, const char * name ) { return mImpl->init(initialState, resetMode, name); }
+void GN::SyncEvent::destroy() { return mImpl->quit(); }
+void GN::SyncEvent::signal() { return mImpl->signal(); }
+void GN::SyncEvent::unsignal() { return mImpl->unsignal(); }
+GN::WaitResult GN::SyncEvent::wait( TimeInNanoSecond timeoutTime ) const { return mImpl->wait( timeoutTime ); }
+
+/*
+//
+// -----------------------------------------------------------------------------
+GN::SyncEvent * GN::createSyncEvent(
+    SyncEvent::InitialState initialState,
+    SyncEvent::ResetMode resetMode,
+    const char * name )
+{
+    GN_GUARD;
+
+    AutoObjPtr<SyncEventMsw> s( new SyncEventMsw );
+
+    if( !s->init( initialState, resetMode, name ) ) return 0;
+
+    return s.detach();
+
+    GN_UNGUARD;
+}*/
 
 // *****************************************************************************
 // semaphore class
@@ -272,25 +296,6 @@ private:
 // *****************************************************************************
 // public functions
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::SyncEvent * GN::createSyncEvent(
-    SyncEvent::InitialState initialState,
-    SyncEvent::ResetMode resetMode,
-    const char * name )
-{
-    GN_GUARD;
-
-    AutoObjPtr<SyncEventMsw> s( new SyncEventMsw );
-
-    if( !s->init( initialState, resetMode, name ) ) return 0;
-
-    return s.detach();
-
-    GN_UNGUARD;
-}
 
 //
 //

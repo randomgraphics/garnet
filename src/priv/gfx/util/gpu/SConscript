@@ -8,7 +8,6 @@ sources = [
 	'mtshader.cpp',
 	'mttexture.cpp',
 	'mtvtxbuf.cpp',
-	'ringbuffer.cpp',
 	'gpuCreator.cpp',
 ]
 

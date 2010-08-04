@@ -66,7 +66,7 @@ void GN::gfx::MultiThreadUniform::quit()
 
     if( mUniform )
     {
-        mGpu.postCommand1( CMD_UNIFORM_DESTROY, mUniform );
+        mGpu.cmdbuf().postCommand1( CMD_UNIFORM_DESTROY, mUniform );
         mUniform = NULL;
     }
 
@@ -96,19 +96,20 @@ void GN::gfx::MultiThreadUniform::update( size_t offset, size_t length, const vo
 
     memcpy( mFrontEndData + offset, data, length );
 
-    size_t cmdsize = sizeof(UniformUpdateParam) + length;
-    if( cmdsize <= mGpu.getRingBufferSize() )
+    UInt16 cmdsize = (UInt16)( sizeof(UniformUpdateParam) + length );
+    CommandBuffer::Token token;
+    if( CommandBuffer::OPERATION_SUCCEEDED == mGpu.cmdbuf().beginProduce( CMD_UNIFORM_UPDATE, cmdsize, &token ) )
     {
-        UniformUpdateParam * p = (UniformUpdateParam*)mGpu.beginPostCommand( CMD_UNIFORM_UPDATE, cmdsize );
-        if( NULL == p ) return;
+        UniformUpdateParam * p = (UniformUpdateParam*)token.pParameterBuffer;
 
         p->uniform = mUniform;
         p->offset  = offset;
         p->length  = length;
         p->data    = p + 1;
+
         memcpy( p->data, data, length );
 
-        mGpu.endPostCommand();
+        mGpu.cmdbuf().endProduce();
     }
     else
     {
@@ -138,7 +139,7 @@ bool GN::gfx::MultiThreadGpuProgram::init( GpuProgram * gp )
     // get parameter informations
     volatile GpuProgramInitParam gpip;
     gpip.gp = mGpuProgram;
-    mGpu.postCommand1( CMD_GPU_PROGRAM_INIT, &gpip );
+    mGpu.cmdbuf().postCommand1( CMD_GPU_PROGRAM_INIT, &gpip );
     mGpu.waitForIdle();
     mParamDesc = gpip.params;
 
@@ -157,7 +158,7 @@ void GN::gfx::MultiThreadGpuProgram::quit()
 
     if( mGpuProgram )
     {
-        mGpu.postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
+        mGpu.cmdbuf().postCommand1( CMD_GPU_PROGRAM_DESTROY, mGpuProgram );
     }
 
     // standard quit procedure
