@@ -132,7 +132,7 @@ public:
         context.colortargets[0].texture = c0;
         gpu.bindContext( context );
         gpu.clearScreen( Vector4f(0, 0, 1, 1 ) ); // clear to green
-        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, 0, 0, RT_WIDTH, RT_HEIGHT );
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::TRANSPARENT_2D_IMAGE, 0, 0, RT_WIDTH, RT_HEIGHT );
     }
 
     void drawToDepthTexture()
@@ -164,7 +164,7 @@ public:
         context.colortargets.clear();
         context.depthstencil.clear();
         gpu.bindContext( context );
-        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, x, y, RT_WIDTH, RT_HEIGHT );
+        sr.drawSingleTexturedSprite( tex, GN::gfx::SpriteRenderer::TRANSPARENT_2D_IMAGE, x, y, RT_WIDTH, RT_HEIGHT );
     }
 
     void render()

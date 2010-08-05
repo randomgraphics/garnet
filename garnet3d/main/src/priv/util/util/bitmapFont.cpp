@@ -207,7 +207,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
     {
         mSpriteRenderer->drawSingleSolidSprite(
             GN_RGBA32( 0, 0, 0, 128 ),
-            GN::gfx::SpriteRenderer::DEFAULT_OPTIONS, // option
+            SpriteRenderer::TRANSPARENT_2D_IMAGE,
             bbox.x,
             bbox.y,
             bbox.w,
@@ -223,7 +223,7 @@ void GN::util::BitmapFont::drawText( const TextDesc & td )
 
         if( 0 == numchars ) continue;
 
-        mSpriteRenderer->drawBegin( mTextures[i], SpriteRenderer::DEFAULT_OPTIONS );
+        mSpriteRenderer->drawBegin( mTextures[i], SpriteRenderer::TRANSPARENT_2D_IMAGE );
 
         ci = mCharList[i];
 
