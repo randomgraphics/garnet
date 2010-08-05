@@ -138,6 +138,7 @@ public:
         {
             gc.colortargets[0].face = i;
             gpu.bindContext( gc );
+            gpu.clearScreen();
             sr.drawSingleTexturedSprite( faces[i], 0, 1, 1, 510.0f, 510.0f );
         }
 

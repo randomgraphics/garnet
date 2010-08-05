@@ -14,7 +14,6 @@ TODO
       - compile time switch to remove tweakable code entirely
       - separate client (tuner) and server (variables)
   - Need a mapping in model defintion that maps vertex streams to shader sementics?
-  - New command buffer implementation (copy xstudio implementation)
   - scene framework and gpu resource database:
     - better way to resolve standard/built-in effects and textures (instead of
       using "@")
@@ -36,6 +35,7 @@ TODO
     represent post-rasterized font metrics.
 
 - p1
+  - Unit test for the CommandBuffer class.
   - New build system based on GNU make.
   - avoid using /Yd in build script for cl.exe
   - Runtime option managers that could be modified by:
