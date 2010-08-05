@@ -60,7 +60,7 @@ void draw( Gpu & )
 
     sr->drawSingleTexturedSprite(
         tex,
-        GN::gfx::SpriteRenderer::DEFAULT_OPTIONS,
+        GN::gfx::SpriteRenderer::TRANSPARENT_2D_IMAGE,
         pos_x, pos_y, // x1, y1
         (float)td.width, (float)td.height ); // z
 }
