@@ -43,7 +43,7 @@ static GN::StrA sAddLineCountD3D11( const GN::StrA & in )
 static UInt32 sRefineFlagsD3D11( UInt32 flags )
 {
 #if GN_BUILD_DEBUG
-    flags |= D3D10_SHADER_DEBUG;
+    flags |= D3DCOMPILE_DEBUG;
 #endif
     return flags;
 }
@@ -51,7 +51,7 @@ static UInt32 sRefineFlagsD3D11( UInt32 flags )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileErrorD3D11( const char * code, ID3D10Blob * err )
+static void sPrintShaderCompileErrorD3D11( const char * code, ID3DBlob * err )
 {
     GN_GUARD;
 
@@ -70,7 +70,7 @@ static void sPrintShaderCompileErrorD3D11( const char * code, ID3D10Blob * err )
 //
 //
 // -----------------------------------------------------------------------------
-static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3D10Blob * bin )
+static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3DBlob * bin )
 {
     GN_GUARD;
 
@@ -79,9 +79,9 @@ static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3D10Blob * bin )
     using namespace GN;
 
     // get ASM code
-    AutoComPtr<ID3D10Blob> asm_;
+    AutoComPtr<ID3DBlob> asm_;
 
-    D3D10DisassembleShader(
+    D3DDisassemble(
         bin->GetBufferPointer(),
         bin->GetBufferSize(),
         false,
@@ -107,14 +107,14 @@ static void sPrintShaderCompileInfoD3D11( const char * hlsl, ID3D10Blob * bin )
 //
 //
 // -----------------------------------------------------------------------------
-ID3D10Blob * GN::d3d11::compileShader(
+ID3DBlob * GN::d3d11::compileShader(
     const char   * profile,
     const char   * source,
     size_t         len,
     UInt32         flags,
     const char   * entry )
 {
-    AutoComPtr<ID3D10Blob> bin, err;
+    AutoComPtr<ID3DBlob> bin, err;
 
     if( NULL == source )
     {
@@ -169,11 +169,11 @@ ID3D11VertexShader * GN::d3d11::compileAndCreateVS(
     UInt32         flags,
     const char   * entry,
     const char   * profile,
-    ID3D10Blob  ** signature )
+    ID3DBlob  ** signature )
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3DBlob> bin( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return NULL;
 
     ID3D11VertexShader * vs = createDumpableVS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
@@ -196,11 +196,11 @@ ID3D11GeometryShader * GN::d3d11::compileAndCreateGS(
     UInt32         flags,
     const char   * entry,
     const char   * profile,
-    ID3D10Blob  ** signature )
+    ID3DBlob  ** signature )
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3DBlob> bin( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return NULL;
 
     ID3D11GeometryShader * gs = createDumpableGS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );
@@ -223,11 +223,11 @@ ID3D11PixelShader * GN::d3d11::compileAndCreatePS(
     UInt32         flags,
     const char   * entry,
     const char   * profile,
-    ID3D10Blob  ** signature )
+    ID3DBlob  ** signature )
 {
     GN_GUARD;
 
-    AutoComPtr<ID3D10Blob> bin( compileShader( profile, source, len, flags, entry ) );
+    AutoComPtr<ID3DBlob> bin( compileShader( profile, source, len, flags, entry ) );
     if( !bin ) return NULL;
 
     ID3D11PixelShader * ps = createDumpablePS( dev, bin->GetBufferPointer(), bin->GetBufferSize() );

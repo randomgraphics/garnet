@@ -186,12 +186,6 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			MSVC_VERSION   = "8.0",
 			MSVS8_PLATFORM = 'Xbox 360',
 			ENV            = {
-			                 	'PATH'        : UTIL_getenv('PATH'),
-			                 	'LANG'        : UTIL_getenv('LANG'),
-			                 	'LANGUAGE'    : UTIL_getenv('LANGUAGE'),
-			                 	'INCLUDE'     : UTIL_getenv('INCLUDE'),
-			                 	'LIB'         : UTIL_getenv('LIB'),
-
 			                 	# Required by Xenon C++ compiler version 15.00.8153.
 			                 	# Or else the compiler will report error D8037
 								'SystemDrive' : UTIL_getenv('SystemDrive'),
@@ -199,7 +193,7 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 				}
 			)
 
-		# attach xenon builds to the environment
+		# attach xenon build tools to the environment
 		xenon.generate( env )
 
 	else:
@@ -228,14 +222,14 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			tools          = tools,
 			MSVS8_PLATFORM = msvs_platform,
 			MSVC_BATCH     = batch,
-			ENV            = {
-			                 	'PATH'     : UTIL_getenv('PATH'),
-			                 	'LANG'     : UTIL_getenv('LANG'),
-			                 	'LANGUAGE' : UTIL_getenv('LANGUAGE'),
-			                 	'INCLUDE'  : UTIL_getenv('INCLUDE'),
-			                 	'LIB'      : UTIL_getenv('LIB'),
-			                 }
 			)
+
+	# Import environment variables that are used by C/C++ compiler.
+ 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+ 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
+ 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
+ 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+ 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
 	# cache implicit dependencies
 	env.SetOption( 'implicit_cache', 1 );
