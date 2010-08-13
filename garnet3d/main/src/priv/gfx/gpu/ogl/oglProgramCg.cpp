@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "oglShader.h"
 #include "oglGpu.h"
+#include "oglTexture.h"
 
 #ifdef HAS_CG_OGL
 
@@ -267,9 +268,17 @@ void GN::gfx::OGLGpuProgramCG::applyUniforms(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, size_t count ) const
 {
-    GN_UNUSED_PARAM( textures );
-    GN_UNUSED_PARAM( count );
-    GN_UNIMPL_WARNING();
+    for( size_t i = 0; i < mTextures.size(); ++i )
+    {
+        const OglCgTexture & desc = mTextures[i];
+
+        GLuint ogltex = ( i < count ) ? ((const OGLTexture*)(textures[i].texture.get()))->getOGLTexture() : 0;
+
+        for( const CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
+        {
+            GN_CG_CHECK( cgGLSetTextureParameter( *param, ogltex ) );
+        }
+    }
 }
 
 // *****************************************************************************
@@ -303,7 +312,7 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
 
             OglCgTexture * existingTexture = std::find_if( mTextures.begin(), mTextures.end(), FindCgParameterByName(name) );
 
-            if( existingTexture )
+            if( existingTexture != mTextures.end() )
             {
                 GN_TODO( "verify that the texture dimension is same." );
 
@@ -325,7 +334,7 @@ void GN::gfx::OGLGpuProgramCG::enumCgParameters( CGprogram prog, CGenum name_spa
 
             OglCgUniform * existingUniform = std::find_if( mUniforms.begin(), mUniforms.end(), FindCgParameterByName(name) );
 
-            if( existingUniform )
+            if( existingUniform != mUniforms.end() )
             {
                 GN_TODO( "Verify that the uniform type and size is same" );
 
