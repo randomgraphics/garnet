@@ -277,6 +277,7 @@ void GN::gfx::OGLGpuProgramCG::applyTextures( const TextureBinding * textures, s
         for( const CGparameter * param = desc.handles.begin(); param != desc.handles.end(); ++param )
         {
             GN_CG_CHECK( cgGLSetTextureParameter( *param, ogltex ) );
+            GN_CG_CHECK( cgGLEnableTextureParameter( *param ) );
         }
     }
 }
