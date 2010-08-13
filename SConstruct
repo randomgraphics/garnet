@@ -193,6 +193,18 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 				}
 			)
 
+		xedk = UTIL_getenv('XEDK');
+
+		inc = os.path.join( xedk, "include" ) + ";" + os.path.join( xedk, "include\\sys" );
+		lib = os.path.join( xedk, "lib\\xbox" );
+
+		# Import environment variables that are used by C/C++ compiler.
+	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+	 	env.PrependENVPath( 'INCLUDE'  , inc );
+	 	env.PrependENVPath( 'LIB'      , lib );
+	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+
 		# attach xenon build tools to the environment
 		xenon.generate( env )
 
@@ -224,12 +236,12 @@ def UTIL_newEnvEx( compiler, variant, batch ):
 			MSVC_BATCH     = batch,
 			)
 
-	# Import environment variables that are used by C/C++ compiler.
- 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
- 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
- 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
- 	env['ENV']['LANG']     = UTIL_getenv('LANG');
- 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
+		# Import environment variables that are used by C/C++ compiler.
+	 	env.PrependENVPath( 'PATH'     , UTIL_getenv('PATH') );
+	 	env.PrependENVPath( 'INCLUDE'  , UTIL_getenv('INCLUDE') );
+	 	env.PrependENVPath( 'LIB'      , UTIL_getenv('LIB') );
+	 	env['ENV']['LANG']     = UTIL_getenv('LANG');
+	 	env['ENV']['LANGUAGE'] = UTIL_getenv('LANGUAGE');
 
 	# cache implicit dependencies
 	env.SetOption( 'implicit_cache', 1 );
