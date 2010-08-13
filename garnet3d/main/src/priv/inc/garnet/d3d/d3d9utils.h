@@ -238,14 +238,18 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
         };
 
         static const UINT MAX_RS = 256;
+#if !GN_XENON
         static const UINT MAX_TSS = 64;
+#endif
         static const UINT MAX_SS = 16;
         static const UINT MAX_STAGES = 16;
 
         Logger           * m_Logger;
         IDirect3DDevice9 * m_Device;
         RenderStateItem    m_Rs[MAX_RS];
+#if !GN_XENON
         RenderStateItem    m_Tss[MAX_STAGES][MAX_TSS];
+#endif
         RenderStateItem    m_Ss[MAX_STAGES][MAX_SS];
 
     public:
@@ -298,6 +302,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             }
         }
 
+#if !GN_XENON
         void SetTSS( DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
         {
             if( NULL == m_Device ) return;
@@ -330,12 +335,13 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
                 m_Tss[stage][type].currentValue = value;
             }
         }
+#endif
 
         void SetSS( DWORD stage, D3DSAMPLERSTATETYPE type, DWORD value )
         {
             if( NULL == m_Device ) return;
 
-            if( stage >= MAX_STAGES || type >= MAX_TSS )
+            if( stage >= MAX_STAGES || type >= MAX_SS )
             {
                 GN_ERROR(m_Logger)( "Invalid D3D sampler state: stage(%d), type(%d)", stage, type );
                 return;
@@ -382,6 +388,7 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
             // restore TSS and SS
             for( UINT s = 0; s < MAX_STAGES; ++s )
             {
+#if !GN_XENON
                 for( UINT i = 0; i < MAX_TSS; ++i )
                 {
                     if( m_Tss[s][i].got && m_Tss[s][i].currentValue != m_Tss[s][i].oldValue )
@@ -390,12 +397,12 @@ namespace GN { /* namespace for D3D9 utils */ namespace d3d9
                     }
                     m_Tss[s][i].got = false;
                 }
-
+#endif
                 for( UINT i = 0; i < MAX_SS; ++i )
                 {
                     if( m_Ss[s][i].got && m_Ss[s][i].currentValue != m_Ss[s][i].oldValue )
                     {
-                        m_Device->SetSamplerState( s, (D3DSAMPLERSTATETYPE)i, m_Tss[s][i].oldValue );
+                        m_Device->SetSamplerState( s, (D3DSAMPLERSTATETYPE)i, m_Ss[s][i].oldValue );
                     }
                     m_Ss[s][i].got = false;
                 }
