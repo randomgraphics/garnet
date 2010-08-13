@@ -15,13 +15,16 @@
 	-->
 
 	<gpuprograms>
+
+		<!-- D3D9 HLSL program -->
+
 		<gpuprogram name="hlsl9" lang="hlsl9">
 			<uniref uniform="view" shaderParameter="view"/>
 			<uniref uniform="proj" shaderParameter="proj"/>
 			<uniref uniform="caustic" shaderParameter="caustic"/>
 			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
 			<texref texture="caustic" shaderParameter="CausticsSampler"/>
-		<vs entry="main">
+			<vs entry="main">
 <![CDATA[
 uniform float4x4 view;
 uniform float4x4 proj;
@@ -70,7 +73,110 @@ VSOUT main(
 }
 ]]>
 			</vs>
-      <ps entry="main">
+			<ps entry="main">
+<![CDATA[
+
+struct VSOUT
+{
+    float4 vPosition         : POSITION;
+    float4 vMisc             : TEXCOORD0;     // COLOR0.x = light, COLOR0.y = fog
+    float2 vBaseTexCoords    : TEXCOORD1;
+    float2 vCausticTexCoords : TEXCOORD2;
+};
+
+sampler   DiffuseSampler  : register(s0);
+sampler   CausticsSampler : register(s1);
+
+void main(
+	VSOUT Input,
+	out float4 oC0 : COLOR0,
+	out float4 oC1 : COLOR1 )
+{
+	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
+	const float3 g_vAmbient  = { 0.25f, 0.25f, 0.25f };
+
+    // Decompress input values
+    float3 vLightColor       = Input.vMisc.xxx;
+    float  fFogValue         = Input.vMisc.y;
+    float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
+    float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
+
+    // Fetch from the textures
+    float4 vDiffuse  = tex2D( DiffuseSampler,  vBaseTexCoords );
+    float4 vCaustics = tex2D( CausticsSampler, vCausticTexCoords );
+
+    // Combine lighting, base texture and water caustics texture
+    float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient, 1 );
+    float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
+
+    // Return color blended with fog
+    oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+
+    // Write depth to 2nd render target
+    oC1 = Input.vMisc.z / Input.vMisc.w;
+}
+]]>
+			</ps>
+		</gpuprogram>
+
+		<!-- Cg program -->
+
+		<gpuprogram name="cg" lang="cg">
+			<uniref uniform="view" shaderParameter="view"/>
+			<uniref uniform="proj" shaderParameter="proj"/>
+			<uniref uniform="caustic" shaderParameter="caustic"/>
+			<texref texture="seafloor" shaderParameter="DiffuseSampler"/>
+			<texref texture="caustic" shaderParameter="CausticsSampler"/>
+			<vs entry="main">
+<![CDATA[
+uniform float4x4 view;
+uniform float4x4 proj;
+uniform float4   caustic;
+
+struct VSOUT
+{
+    float4 vPosition         : POSITION;
+    float4 vMisc             : TEXCOORD0; // x = light, y = fog, zw = pos.zw
+    float2 vBaseTexCoords    : TEXCOORD1;
+    float2 vCausticTexCoords : TEXCOORD2;
+};
+
+VSOUT main(
+	in  float4 ipos : POSITION0,
+	in  float3 inml : NORMAL0,
+	in  float2 itex : TEXCOORD0 )
+{
+	const float3 lightdir = { 0, 1, 0 };
+	const float4 fogrange = { 0.5,50.0, 1.0/(50.0-1.0), 0 }; // ( x, fog_end, (1/(fog_end-fog_start)), x )
+
+	// Transform to view space (world matrix is identity)
+	float4 vpos = mul( view, ipos );
+
+	// Transform to projection space
+	float4 opos =  mul( proj, vpos );
+
+	// Lighting calculation
+	float fLightValue = max( dot( inml, lightdir ), 0 );
+
+	// Generate water caustic tex coords from vertex xz position
+	float2 vCausticTexCoords = caustic.xy * vpos.xz + caustic.zw;
+
+	// Fog calculation:
+	float fFogValue = clamp( (fogrange.y - vpos.z) * fogrange.z, 0, 1 );
+
+	// Compress output values
+	VSOUT o;
+	o.vPosition         = opos;
+	o.vMisc.x           = fLightValue;
+	o.vMisc.y           = fFogValue;
+	o.vMisc.zw          = opos.zw;
+	o.vBaseTexCoords    = itex;
+	o.vCausticTexCoords = vCausticTexCoords;
+	return o;
+}
+]]>
+			</vs>
+			<ps entry="main">
 <![CDATA[
 
 struct VSOUT
@@ -129,6 +235,9 @@ void main(
 		/>
 		<technique name="hlsl9">
 			<pass gpuprogram="hlsl9"/>
+		</technique>
+		<technique name="cg">
+			<pass gpuprogram="cg"/>
 		</technique>
 	</techniques>
 </effect>

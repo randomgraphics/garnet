@@ -8,6 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures");
 typedef GN::gfx::EffectResourceDesc::ShaderPrerequisites ShaderPrerequisites;
 typedef GN::gfx::EffectResourceDesc::EffectUniformDesc EffectUniformDesc;
 typedef GN::gfx::EffectResourceDesc::EffectTextureDesc EffectTextureDesc;
+typedef GN::gfx::EffectResourceDesc::EffectAttributeDesc EffectAttributeDesc;
 typedef GN::gfx::EffectResourceDesc::EffectGpuProgramDesc EffectGpuProgramDesc;
 typedef GN::gfx::EffectResourceDesc::EffectRenderStateDesc EffectRenderStateDesc;
 typedef GN::gfx::EffectResourceDesc::EffectPassDesc EffectPassDesc;
@@ -236,6 +237,18 @@ static void sParseUniform( EffectResourceDesc & desc, const XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
+static void sParseAttribute( EffectResourceDesc & desc, const XmlElement & node )
+{
+    const char * name = sGetItemName( node, "attribute" );
+    if( !name ) return;
+
+    EffectResourceDesc::EffectAttributeDesc & ad = desc.attributes[name];
+
+    GN_UNUSED_PARAM( ad );
+}
+//
+//
+// -----------------------------------------------------------------------------
 static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 {
     for( const XmlNode * n = root.child; n; n = n->next )
@@ -245,6 +258,7 @@ static void sParseParameters( EffectResourceDesc & desc, const XmlNode & root )
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
+        else if( "attribute" == e->name ) sParseAttribute( desc, *e );
         else sPostError( *e, stringFormat( "Unknown parameter '%s'. Ignored", e->name.cptr() ) );
     }
 }
@@ -275,6 +289,20 @@ static void sParseUniref( EffectResourceDesc::EffectGpuProgramDesc & sd, const X
     if( !shaderParameter ) return sPostError( node, "Attribute 'shaderParameter' not found" );
 
     sd.uniforms[shaderParameter] = uniform;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sParseAttref( EffectResourceDesc::EffectGpuProgramDesc & sd, const XmlElement & node )
+{
+    const char * attribute = sGetAttrib( node, "attribute" );
+    if( !attribute ) return sPostError( node, "XML attribute 'attribute' not found" );
+
+    const char * shaderSemantic = sGetAttrib( node, "shaderSemantic" );
+    if( !shaderSemantic ) return sPostError( node, "Attribute 'shaderSemantic' not found" );
+
+    sd.attributes[shaderSemantic] = attribute;
 }
 
 //
@@ -357,6 +385,7 @@ static void sParseGpuProgram( EffectResourceDesc & desc, const XmlElement & node
 
         if( "texref" == e->name ) sParseTexref( sd, *e );
         else if( "uniref" == e->name ) sParseUniref( sd, *e );
+        else if( "attref" == e->name ) sParseAttref( sd, *e );
         else if( "prerequisites" == e->name ) sParsePrerequisites( sd.prerequisites, *e );
         else if( "vs" == e->name ) sParseCode( sd, sd.gpd.vs, *e );
         else if( "gs" == e->name ) sParseCode( sd, sd.gpd.gs, *e );
@@ -538,8 +567,15 @@ static void sCopyShaderSourcePtr(
 //
 //
 // -----------------------------------------------------------------------------
-static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDesc & from )
+static void sCopyEffectResourceDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDesc & from )
 {
+    to.prerequisites = from.prerequisites;
+    to.gpd = from.gpd;
+    to.textures = from.textures;
+    to.uniforms = from.uniforms;
+    to.attributes = from.attributes;
+
+    // copy shader desc
     to.shaderSourceBuffer = from.shaderSourceBuffer;
 
     #define COPY_SHADER_PTR( x ) sCopyShaderSourcePtr( to.gpd.x, to.shaderSourceBuffer, from.gpd.x, from.shaderSourceBuffer );
@@ -557,7 +593,7 @@ static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDe
 }
 
 // *****************************************************************************
-// Public methods
+// EffectGpuProgramDesc Public methods
 // *****************************************************************************
 
 //
@@ -566,11 +602,7 @@ static void sCopyShaderDesc( EffectGpuProgramDesc & to, const EffectGpuProgramDe
 GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::EffectGpuProgramDesc(
     const EffectGpuProgramDesc & rhs )
 {
-    prerequisites = rhs.prerequisites;
-    gpd = rhs.gpd;
-    textures = rhs.textures;
-    uniforms = rhs.uniforms;
-    sCopyShaderDesc( *this, rhs );
+    sCopyEffectResourceDesc( *this, rhs );
 }
 
 //
@@ -580,13 +612,13 @@ GN::gfx::EffectResourceDesc::EffectGpuProgramDesc &
 GN::gfx::EffectResourceDesc::EffectGpuProgramDesc::operator=(
     const EffectGpuProgramDesc & rhs )
 {
-    prerequisites = rhs.prerequisites;
-    gpd = rhs.gpd;
-    textures = rhs.textures;
-    uniforms = rhs.uniforms;
-    sCopyShaderDesc( *this, rhs );
+    sCopyEffectResourceDesc( *this, rhs );
     return *this;
 }
+
+// *****************************************************************************
+// EffectResourceDesc Public methods
+// *****************************************************************************
 
 //
 //
@@ -595,6 +627,7 @@ void GN::gfx::EffectResourceDesc::clear()
 {
     textures.clear();
     uniforms.clear();
+    attributes.clear();
     gpuprograms.clear();
     techniques.clear();
 

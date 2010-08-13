@@ -357,15 +357,23 @@ namespace GN { namespace gfx
         };
 
         ///
+        /// Attribute descritor
+        ///
+        struct EffectAttributeDesc
+        {
+        };
+
+        ///
         /// Shader descriptor
         ///
         struct EffectGpuProgramDesc
         {
-            ShaderPrerequisites prerequisites;      ///< prerequisites of the shader.
-            GpuProgramDesc      gpd;                ///< GPU Program descriptor
-            DynaArray<char>     shaderSourceBuffer; ///< optional buffer used to store store shader source.
-            StringMap<char,StrA> textures;           ///< textures. Key is shader parameter name, value is user-visible texture name.
-            StringMap<char,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is user-visible uniform name.
+            ShaderPrerequisites  prerequisites;      ///< prerequisites of the shader.
+            GpuProgramDesc       gpd;                ///< GPU Program descriptor
+            DynaArray<char>      shaderSourceBuffer; ///< optional buffer used to store store shader source.
+            StringMap<char,StrA> textures;           ///< textures. Key is shader parameter name, value is name of one texture in EffectResourceDesc.textures.
+            StringMap<char,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is name of one uniform in EffectResourceDesc.textures.
+            StringMap<char,StrA> attributes;         ///< attributes. Key is shader semantic, value is name of one attribute in EffectResourceDesc.attributes.
 
             /// default constructor
             EffectGpuProgramDesc() {}
@@ -479,6 +487,7 @@ namespace GN { namespace gfx
 
         StringMap<char,EffectTextureDesc>     textures;     ///< Texture list
         StringMap<char,EffectUniformDesc>     uniforms;     ///< Uniform list
+        StringMap<char,EffectAttributeDesc>   attributes;   ///< attribute list
         StringMap<char,EffectGpuProgramDesc>  gpuprograms;  ///< GPU program list
         DynaArray<EffectTechniqueDesc>        techniques;   ///< Technique list.
         EffectRenderStateDesc                 renderstates; ///< Root render state descriptor for the effect.
