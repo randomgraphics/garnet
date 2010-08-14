@@ -551,9 +551,9 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
 {
     GN_ASSERT( mOwner );
 
-    GN_ASSERT( mOwner->mEffect.resource );
+    GN_ASSERT( mOwner->mEffectResource );
 
-    EffectResource * effect = mOwner->mEffect.resource;
+    EffectResource * effect = mOwner->mEffectResource;
 
     GN_ASSERT( mOwner->mPasses.size() == effect->numPasses() );
 
@@ -564,9 +564,9 @@ void GN::gfx::ModelResource::Impl::TextureItem::updateContext( Texture * tex )
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
         GN_ASSERT( location.pass < mOwner->mPasses.size() );
-        GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
+        GN_ASSERT( location.offset < GpuContext::MAX_TEXTURES );
 
-        TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.stage];
+        TextureBinding & binding = mOwner->mPasses[location.pass].gc.textures[location.offset];
 
         binding.texture.set( tex );
         binding.sampler = prop.sampler;
@@ -644,9 +644,9 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
 {
     GN_ASSERT( mOwner );
 
-    GN_ASSERT( mOwner->mEffect.resource );
+    GN_ASSERT( mOwner->mEffectResource );
 
-    EffectResource * effect = mOwner->mEffect.resource;
+    EffectResource * effect = mOwner->mEffectResource;
 
     GN_ASSERT( mOwner->mPasses.size() == effect->numPasses() );
 
@@ -657,16 +657,16 @@ void GN::gfx::ModelResource::Impl::UniformItem::updateContext( Uniform * uniform
         const EffectResource::BindingLocation & location = prop.bindings[i];
 
         GN_ASSERT( location.pass < mOwner->mPasses.size() );
-        GN_ASSERT( location.stage < GpuContext::MAX_TEXTURES );
+        GN_ASSERT( location.offset < GpuContext::MAX_TEXTURES );
 
         GpuContext & gc = mOwner->mPasses[location.pass].gc;
 
-        if( location.stage >= gc.uniforms.size() )
+        if( location.offset >= gc.uniforms.size() )
         {
-            gc.uniforms.resize( location.stage + 1 );
+            gc.uniforms.resize( location.offset + 1 );
         }
 
-        gc.uniforms[location.stage].set( uniform );
+        gc.uniforms[location.offset].set( uniform );
     }
 }
 
@@ -720,7 +720,7 @@ bool GN::gfx::ModelResource::Impl::setTextureResource( const char * effectParame
         return false;
     }
 
-    EffectResource * effect = mEffect.resource;
+    EffectResource * effect = mEffectResource;
     if( NULL == effect )
     {
         GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
@@ -745,7 +745,7 @@ bool GN::gfx::ModelResource::Impl::setTextureResource( const char * effectParame
 AutoRef<TextureResource>
 GN::gfx::ModelResource::Impl::textureResource( const char * effectParameterName ) const
 {
-    EffectResource * effect = mEffect.resource;
+    EffectResource * effect = mEffectResource;
     if( NULL == effect )
     {
         GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
@@ -773,7 +773,7 @@ bool GN::gfx::ModelResource::Impl::setUniformResource( const char * effectParame
         return false;
     }
 
-    EffectResource * effect = mEffect.resource;
+    EffectResource * effect = mEffectResource;
     if( NULL == effect )
     {
         GN_ERROR(sLogger)( "Model %s is not referencing any effect!", modelName() );
@@ -798,7 +798,7 @@ bool GN::gfx::ModelResource::Impl::setUniformResource( const char * effectParame
 AutoRef<UniformResource>
 GN::gfx::ModelResource::Impl::uniformResource( const char * effectParameterName ) const
 {
-    EffectResource * effect = mEffect.resource;
+    EffectResource * effect = mEffectResource;
     if( NULL == effect )
     {
         AutoRef<UniformResource> & dummy = mDummyUniforms["NULL_EFFECT"];
@@ -847,23 +847,23 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     MeshResource * mesh = GpuResource::castTo<MeshResource>(resource);
 
     // bind mesh signal with the old mesh
-    if( mMesh.resource != mesh )
+    if( mMeshResource != mesh )
     {
-        if( mMesh.resource ) mMesh.resource->sigMeshChanged.disconnect( this );
+        if( mMeshResource ) mMeshResource->sigMeshChanged.disconnect( this );
         if( mesh ) mesh->sigMeshChanged.connect( this, &Impl::onMeshChanged );
     }
 
     // update mesh resource pointer
-    mMesh.resource.set( mesh );
+    mMeshResource.set( mesh );
 
     // update mesh subset
     if( subset )
     {
-        mMesh.subset = *subset;
+        mMeshSubset = *subset;
     }
     else
     {
-        mMesh.subset.clear();
+        mMeshSubset.clear();
     }
 
     // update GPU contexts
@@ -871,11 +871,13 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
     {
         RenderPass & pass = mPasses[i];
 
-        if( mMesh.resource )
+        if( mMeshResource )
         {
-            mMesh.resource->applyToContext( pass.gc );
+            mMeshResource->applyToContext( pass.gc );
         }
     }
+
+    updateVertexFormat();
 
     return true;
 }
@@ -886,8 +888,8 @@ bool GN::gfx::ModelResource::Impl::setMeshResource(
 AutoRef<MeshResource>
 GN::gfx::ModelResource::Impl::meshResource( MeshResourceSubset * subset ) const
 {
-    if( subset )*subset = mMesh.subset;
-    return mMesh.resource;
+    if( subset )*subset = mMeshSubset;
+    return mMeshResource;
 }
 
 //
@@ -904,14 +906,14 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     EffectResource * effect = GpuResource::castTo<EffectResource>(resource);
 
     // rebind changing signal
-    if( effect != mEffect.resource )
+    if( effect != mEffectResource )
     {
-        if( mEffect.resource ) mEffect.resource->sigEffectChanged.disconnect( this );
+        if( mEffectResource ) mEffectResource->sigEffectChanged.disconnect( this );
         if( effect ) effect->sigEffectChanged.connect( this, &Impl::onEffectChanged );
     }
 
     // update effect resource pointer
-    mEffect.resource.set( effect );
+    mEffectResource.set( effect );
 
     // initialize passes array
     size_t numpasses = effect ? effect->numPasses() : 0;
@@ -927,7 +929,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
     }
 
     // reapply mesh
-    GN_VERIFY( setMeshResource( mMesh.resource, &mMesh.subset ) );
+    GN_VERIFY( setMeshResource( mMeshResource, &mMeshSubset ) );
 
     // reapply textures
     size_t numtextures = effect ? effect->numTextures() : 0;
@@ -940,7 +942,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
         if( !texres )
         {
-            const EffectResource::TextureProperties & tp = mEffect.resource->textureProperties( i );
+            const EffectResource::TextureProperties & tp = mEffectResource->textureProperties( i );
             StrA texname = stringFormat( "%s.texture.%s", modelName(), tp.parameterName.cptr() );
             texres = getGdb().findOrCreateResource<TextureResource>( texname );
             if( !texres ) return false;
@@ -961,7 +963,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 
         if( !unires )
         {
-            const EffectResource::UniformProperties & up = mEffect.resource->uniformProperties( i );
+            const EffectResource::UniformProperties & up = mEffectResource->uniformProperties( i );
             StrA uniname = stringFormat( "%s.uniform.%s", modelName(), up.parameterName.cptr() );
             unires = getGdb().findOrCreateResource<UniformResource>( uniname );
             if( !unires ) return false;
@@ -978,6 +980,9 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
         ui.setResource( *this, i, unires );
     }
 
+    // update vertex format
+    updateVertexFormat();
+
     return true;
 }
 
@@ -986,7 +991,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource( GpuResource * resource )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::draw() const
 {
-    MeshResource * mesh = mMesh.resource;
+    MeshResource * mesh = mMeshResource;
     if( NULL == mesh ) return;
 
     const MeshResourceDesc & meshdesc = mesh->getDesc();
@@ -1008,7 +1013,7 @@ void GN::gfx::ModelResource::Impl::draw() const
     }
 
     // determine the subset
-    MeshResourceSubset subset = mMesh.subset;
+    MeshResourceSubset subset = mMeshSubset;
     if( 0 == subset.basevtx && 0 == subset.numvtx )
     {
         subset.numvtx = meshdesc.numvtx;
@@ -1091,12 +1096,12 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // setup textures
-    GN_ASSERT( mTextures.size() == (mEffect.resource ? mEffect.resource->numTextures() : 0) );
+    GN_ASSERT( mTextures.size() == (mEffectResource ? mEffectResource->numTextures() : 0) );
     for( size_t i = 0; i < mTextures.size(); ++i )
     {
         TextureItem & t = mTextures[i];
 
-        const EffectResource::TextureProperties & tp = mEffect.resource->textureProperties( i );
+        const EffectResource::TextureProperties & tp = mEffectResource->textureProperties( i );
 
         const ModelResourceDesc::ModelTextureDesc * td = desc.textures.find( tp.parameterName );
 
@@ -1120,7 +1125,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec texture parameter '%s' in effect '%s' is not defined in model '%s'.",
                 tp.parameterName.cptr(),
-                mEffect.resource->name(),
+                mEffectResource->name(),
                 modelName() );
 
             return false;
@@ -1131,12 +1136,12 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
     }
 
     // setup uniforms
-    GN_ASSERT( mUniforms.size() == (mEffect.resource?mEffect.resource->numUniforms() : 0) );
+    GN_ASSERT( mUniforms.size() == (mEffectResource?mEffectResource->numUniforms() : 0) );
     for( size_t i = 0; i < mUniforms.size(); ++i )
     {
         UniformItem & u = mUniforms[i];
 
-        const EffectResource::UniformProperties & up = mEffect.resource->uniformProperties( i );
+        const EffectResource::UniformProperties & up = mEffectResource->uniformProperties( i );
 
         const ModelResourceDesc::ModelUniformDesc * ud = desc.uniforms.find( up.parameterName );
 
@@ -1176,7 +1181,7 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
             GN_ERROR(sLogger)(
                 "Effec uniform parameter '%s' in effect '%s' is not defined in model '%s'.",
                 up.parameterName.cptr(),
-                mEffect.resource->name(),
+                mEffectResource->name(),
                 modelName() );
 
             return false;
@@ -1195,16 +1200,16 @@ bool GN::gfx::ModelResource::Impl::fromDesc( const ModelResourceDesc & desc )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::clear()
 {
-    if( mEffect.resource )
+    if( mEffectResource )
     {
-        mEffect.resource->sigEffectChanged.disconnect( this );
-        mEffect.resource.clear();
+        mEffectResource->sigEffectChanged.disconnect( this );
+        mEffectResource.clear();
     }
 
-    if( mMesh.resource )
+    if( mMeshResource )
     {
-        mMesh.resource->sigMeshChanged.disconnect( this );
-        mMesh.resource.clear();
+        mMeshResource->sigMeshChanged.disconnect( this );
+        mMeshResource.clear();
     }
 
     mPasses.clear();
@@ -1220,10 +1225,10 @@ void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
 {
     clear();
 
-    GN_VERIFY( setEffectResource( other.mEffect.resource ) );
+    GN_VERIFY( setEffectResource( other.mEffectResource ) );
     GN_ASSERT( mPasses.size() == other.mPasses.size() );
 
-    GN_VERIFY( setMeshResource( other.mMesh.resource, &other.mMesh.subset ) );
+    GN_VERIFY( setMeshResource( other.mMeshResource, &other.mMeshSubset ) );
 
     GN_ASSERT( mTextures.size() == other.mTextures.size() );
     for( size_t i = 0; i < other.mTextures.size(); ++i )
@@ -1243,7 +1248,7 @@ void GN::gfx::ModelResource::Impl::copyFrom( const Impl & other )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onEffectChanged( EffectResource & r )
 {
-    GN_ASSERT( &r == mEffect.resource );
+    GN_ASSERT( &r == mEffectResource );
 
     GN_VERIFY( setEffectResource( &r ) );
 }
@@ -1253,9 +1258,94 @@ void GN::gfx::ModelResource::Impl::onEffectChanged( EffectResource & r )
 // -----------------------------------------------------------------------------
 void GN::gfx::ModelResource::Impl::onMeshChanged( MeshResource & r )
 {
-    GN_ASSERT( &r == mMesh.resource );
+    GN_ASSERT( &r == mMeshResource );
 
-    GN_VERIFY( setMeshResource( &r, &mMesh.subset ) );
+    GN_VERIFY( setMeshResource( &r, &mMeshSubset ) );
+}
+
+/*static void UpdateVertexBinding( VertexElement & ve, const char * fullBindingName )
+{
+    const char * p = fullBindingName;
+    while( *(p+1) ) ++p; // Move p to point to the last character.
+
+    ve.bindingIndex = 0;
+    while( '0' <= *p && *p <= '9' ) --p;
+    ++p;
+    const char * bindingEnd = p;
+    while( '0' <= *p && *p <= '9' )
+    {
+        ve.bindingIndex = ve.bindingIndex * 10 + (*p - '0');
+    }
+
+    memset( ve.binding, 0, sizeof(ve.binding) );
+    memcpy( ve.binding, fullBindingName, math::getmin<size_t>( sizeof(ve.binding), bindingEnd - fullBindingName ) );
+    ve.binding[sizeof(ve.binding)-1] = '0';
+}*/
+
+//
+// Update vertex format based on current effect and mesh
+// -----------------------------------------------------------------------------
+void GN::gfx::ModelResource::Impl::updateVertexFormat()
+{
+    for( size_t i = 0; i < mPasses.size(); ++i )
+    {
+        VertexFormat & vtxfmt = mPasses[i].gc.vtxfmt;
+
+        if( NULL != mMeshResource )
+        {
+            vtxfmt = mMeshResource->getDesc().vtxfmt;
+
+            // TODO: remapping based on effect resource attribute list
+            /*
+            if( NULL != mEffectResource && NULL != mPasses[i].gc.gpuProgram )
+            {
+                const GpuProgramParameterDesc & gppdesc = mPasses[i].gc.gpuProgram->getParameterDesc();
+
+                for( size_t i = 0; i < vtxfmt.numElements; ++i )
+                {
+                    VertexElement & ve = vtxfmt.elements[i];
+
+                    StrA attributeName = stringFormat( "%s%d", ve.binding, ve.bindingIndex );
+
+                    size_t ai = mEffectResource->findAttribute( attributeName );
+                    if( EffectResource::PARAMETER_NOT_FOUND != ai )
+                    {
+                        // do remap
+                        const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
+                        for( size_t p = 0; p < ap.bindings.size(); ++p )
+                        {
+                            const EffectResource::BindingLocation & bl = ap.bindings[p];
+
+                            if( bl.pass == i && bl.offset < gppdesc.attributes.count() )
+                            {
+                                const char * newName = gppdesc.attributes[bl.offset].name;
+                                UpdateVertexBinding( ve, newName );
+                            }
+                        }
+                    }
+                    else if( ve.bindingIndex == 0 && EffectResource::PARAMETER_NOT_FOUND != ( ai = mEffectResource->findAttribute( ve.binding ) ) )
+                    {
+                        // remap again
+                        const EffectResource::AttributeProperties & ap = mEffectResource->attributeProperties( ai );
+                        for( size_t p = 0; p < ap.bindings.size(); ++p )
+                        {
+                            const EffectResource::BindingLocation & bl = ap.bindings[p];
+
+                            if( bl.pass == i && bl.offset < gppdesc.attributes.count() )
+                            {
+                                const char * newName = gppdesc.attributes[bl.offset].name;
+                                UpdateVertexBinding( ve, newName );
+                            }
+                        }
+                    }
+                }
+            }*/
+        }
+        else
+        {
+            vtxfmt.clear();
+        }
+    }
 }
 
 // *****************************************************************************

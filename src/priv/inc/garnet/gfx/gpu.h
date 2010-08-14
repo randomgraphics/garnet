@@ -319,7 +319,7 @@ namespace GN { namespace gfx
     struct VertexElement
     {
         ColorFormat format;       ///< format of the element
-        char        binding[16];  ///< binding to GPU program (null terminated string).
+        char        binding[16];  ///< binding to one of GPU program attributes (null terminated string).
                                   ///< Checking of invalidate binding is not performed here, but when the whole
                                   ///< render context is being applied to renderer.
         UInt8       bindingIndex; ///< Binding index.
@@ -337,13 +337,13 @@ namespace GN { namespace gfx
             size_t len = stringLength( variableName );
             if( 0 == len )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))( "Empty binding string is not allowed." );
+                GN_ERROR(getLogger("GN.gfx.gpu"))( "Empty binding string is not allowed." );
                 return;
             }
 
             if( len >= GN_ARRAY_COUNT(binding) )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(getLogger("GN.gfx.gpu"))(
                     "Binding string (%s) is too long. Maxinum length is 16 characters including ending zero.",
                     variableName );
             }
@@ -352,7 +352,7 @@ namespace GN { namespace gfx
 
             if( index > 255 )
             {
-                GN_ERROR(getLogger("GN.gfx.VertexElement"))(
+                GN_ERROR(getLogger("GN.gfx.gpu"))(
                     "Binding index (%d) is too large. Maxinum value is 255.",
                     index );
                 bindingIndex = 0;
@@ -426,6 +426,11 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// clear the vertex format
+        ///
+        void clear() { numElements = 0; }
+
+        ///
         /// Calculate number of streams.
         ///
         size_t inline calcNumStreams() const
@@ -472,16 +477,14 @@ namespace GN { namespace gfx
             vf.numElements = 2;
 
             vf.elements[0].bindTo( "POSITION", 0 );
-            vf.elements[0].format       = ColorFormat::FLOAT2;
-            vf.elements[0].bindingIndex = 0;
-            vf.elements[0].stream       = 0;
-            vf.elements[0].offset       = 0;
+            vf.elements[0].format = ColorFormat::FLOAT2;
+            vf.elements[0].stream = 0;
+            vf.elements[0].offset = 0;
 
             vf.elements[1].bindTo( "TEXCOORD", 0 );
-            vf.elements[1].format       = ColorFormat::FLOAT2;
-            vf.elements[1].bindingIndex = 0;
-            vf.elements[1].stream       = 0;
-            vf.elements[1].offset       = 8;
+            vf.elements[1].format = ColorFormat::FLOAT2;
+            vf.elements[1].stream = 0;
+            vf.elements[1].offset = 8;
 
             return vf;
         }
@@ -503,22 +506,19 @@ namespace GN { namespace gfx
             vf.numElements = 3;
 
             vf.elements[0].bindTo( "POSITION", 0 );
-            vf.elements[0].format       = ColorFormat::FLOAT3;
-            vf.elements[0].bindingIndex = 0;
-            vf.elements[0].stream       = 0;
-            vf.elements[0].offset       = 0;
+            vf.elements[0].format = ColorFormat::FLOAT3;
+            vf.elements[0].stream = 0;
+            vf.elements[0].offset = 0;
 
             vf.elements[1].bindTo( "NORMAL", 0 );
-            vf.elements[1].format       = ColorFormat::FLOAT3;
-            vf.elements[1].bindingIndex = 0;
-            vf.elements[1].stream       = 0;
-            vf.elements[1].offset       = 12;
+            vf.elements[1].format = ColorFormat::FLOAT3;
+            vf.elements[1].stream = 0;
+            vf.elements[1].offset = 12;
 
             vf.elements[2].bindTo( "TEXCOORD", 0 );
-            vf.elements[2].format       = ColorFormat::FLOAT2;
-            vf.elements[2].bindingIndex = 0;
-            vf.elements[2].stream       = 0;
-            vf.elements[2].offset       = 24;
+            vf.elements[2].format = ColorFormat::FLOAT2;
+            vf.elements[2].stream = 0;
+            vf.elements[2].offset = 24;
 
             return vf;
         }
@@ -1019,7 +1019,8 @@ namespace GN { namespace gfx
             {
                 vtxbufs[i].clear();
             }
-            vtxfmt.numElements = 0;
+
+            vtxfmt.clear();
 
             idxbuf.clear();
 

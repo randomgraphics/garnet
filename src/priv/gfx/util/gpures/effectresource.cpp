@@ -9,6 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpures.EffectResource");
 typedef GN::gfx::EffectResourceDesc::ShaderPrerequisites ShaderPrerequisites;
 typedef GN::gfx::EffectResourceDesc::EffectUniformDesc EffectUniformDesc;
 typedef GN::gfx::EffectResourceDesc::EffectTextureDesc EffectTextureDesc;
+typedef GN::gfx::EffectResourceDesc::EffectAttributeDesc EffectAttributeDesc;
 typedef GN::gfx::EffectResourceDesc::EffectGpuProgramDesc EffectGpuProgramDesc;
 typedef GN::gfx::EffectResourceDesc::EffectRenderStateDesc EffectRenderStateDesc;
 typedef GN::gfx::EffectResourceDesc::EffectPassDesc EffectPassDesc;
@@ -248,6 +249,24 @@ size_t GN::gfx::EffectResource::Impl::findUniform( const char * name ) const
 //
 //
 // -----------------------------------------------------------------------------
+size_t GN::gfx::EffectResource::Impl::findAttribute( const char * name ) const
+{
+    if( NULL == name || 0 == *name ) return PARAMETER_NOT_FOUND;
+
+    for( size_t i = 0; i < mAttributes.size(); ++i )
+    {
+        if( name == mAttributes[i].parameterName )
+        {
+            return i;
+        }
+    }
+
+    return PARAMETER_NOT_FOUND;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext & gc ) const
 {
     if( passIndex >= mPasses.size() )
@@ -261,6 +280,8 @@ void GN::gfx::EffectResource::Impl::applyToContext( size_t passIndex, GpuContext
     const GpuProgramItem & gpitem = mPrograms[pass.gpuProgramIndex];
 
     gc.gpuProgram = gpitem.prog;
+
+    GN_TODO( "apply render states" );
 }
 
 // *****************************************************************************
@@ -278,6 +299,7 @@ bool GN::gfx::EffectResource::Impl::init( const EffectResourceDesc & desc )
     if( !initTechniques( desc ) ) return false;
     if( !initTextures( desc ) ) return false;
     if( !initUniforms( desc ) ) return false;
+    // TODO: if( !initAttributes( desc ) ) return false;
 
     // success
     return true;
@@ -292,6 +314,7 @@ void GN::gfx::EffectResource::Impl::clear()
     mPasses.clear();
     mTextures.clear();
     mUniforms.clear();
+    mAttributes.clear();
 }
 
 //
@@ -500,7 +523,7 @@ GN::gfx::EffectResource::Impl::initTextures(
                 if( textureName == tp.parameterName )
                 {
                     BindingLocation b = { ipass, gpparam.textures[shaderParameterName] };
-                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
                     tp.bindings.append( b );
                 }
             }
@@ -556,7 +579,7 @@ GN::gfx::EffectResource::Impl::initUniforms(
                 if( uniformName == up.parameterName )
                 {
                     BindingLocation b = { ipass, gpparam.uniforms[shaderParameterName] };
-                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.stage );
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
                     up.bindings.append( b );
                 }
             }
@@ -570,6 +593,59 @@ GN::gfx::EffectResource::Impl::initUniforms(
         }
 
         mUniforms.append( up );
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool
+GN::gfx::EffectResource::Impl::initAttributes(
+    const EffectResourceDesc  & effectDesc )
+{
+    for( const StringMap<char,EffectAttributeDesc>::KeyValuePair * iter = effectDesc.attributes.first();
+         iter != NULL;
+         iter = effectDesc.attributes.next( iter ) )
+    {
+        AttributeProperties ap;
+
+        ap.parameterName = iter->key;
+
+        // setup attribute binding point array
+        for( size_t ipass = 0; ipass < mPasses.size(); ++ipass )
+        {
+            const GpuProgramItem          & gpitem = mPrograms[mPasses[ipass].gpuProgramIndex];
+            const GpuProgramParameterDesc & gpparam = gpitem.prog->getParameterDesc();
+            const EffectGpuProgramDesc    * programDesc = effectDesc.gpuprograms.find( gpitem.name );
+
+            for( const StringMap<char,StrA>::KeyValuePair * iter = programDesc->attributes.first();
+                 iter != NULL;
+                 iter = programDesc->attributes.next( iter ) )
+            {
+                const StrA & shaderParameterName = iter->key;
+                const StrA & attributeName = iter->value;
+
+                GN_ASSERT( NULL != effectDesc.attributes.find( attributeName ) );
+
+                if( attributeName == ap.parameterName )
+                {
+                    BindingLocation b = { ipass, gpparam.attributes[shaderParameterName] };
+                    GN_ASSERT( GPU_PROGRAM_PARAMETER_NOT_FOUND != b.offset );
+                    ap.bindings.append( b );
+                }
+            }
+        }
+
+        if( ap.bindings.empty() )
+        {
+            GN_WARN(sLogger)( "Unused attribute parameter '%s' in effect '%s'.",
+                ap.parameterName.cptr(),
+                effectName() );
+        }
+
+        mAttributes.append( ap );
     }
 
     return true;
@@ -737,6 +813,10 @@ const GN::gfx::EffectResource::TextureProperties & GN::gfx::EffectResource::text
 size_t GN::gfx::EffectResource::numUniforms() const { return mImpl->numUniforms(); }
 size_t GN::gfx::EffectResource::findUniform( const char * name ) const { return mImpl->findUniform( name ); }
 const GN::gfx::EffectResource::UniformProperties & GN::gfx::EffectResource::uniformProperties( size_t i ) const { return mImpl->uniformProperties( i ); }
+
+size_t GN::gfx::EffectResource::numAttributes() const { return mImpl->numAttributes(); }
+size_t GN::gfx::EffectResource::findAttribute( const char * name ) const { return mImpl->findAttribute( name ); }
+const GN::gfx::EffectResource::AttributeProperties & GN::gfx::EffectResource::attributeProperties( size_t i ) const { return mImpl->attributeProperties( i ); }
 
 const EffectResourceDesc::EffectRenderStateDesc & GN::gfx::EffectResource::renderStates( size_t pass ) const { return mImpl->renderStates( pass ); }
 
