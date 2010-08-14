@@ -44,7 +44,7 @@ namespace GN { namespace gfx
         AutoRef<MeshResource>       meshResource( MeshResourceSubset * subset ) const;
 
         bool                        setEffectResource( GpuResource * resource );
-        AutoRef<EffectResource>     effectResource() const { return mEffect.resource; }
+        AutoRef<EffectResource>     effectResource() const { return mEffectResource; }
 
         void                        draw() const;
 
@@ -110,23 +110,6 @@ namespace GN { namespace gfx
         ///
         /// comments...
         ///
-        struct EffectItem
-        {
-            AutoRef<EffectResource> resource;
-        };
-
-        ///
-        /// comments...
-        ///
-        struct MeshItem
-        {
-            AutoRef<MeshResource> resource;
-            MeshResourceSubset    subset;
-        };
-
-        ///
-        /// comments...
-        ///
         struct RenderPass
         {
             mutable GpuContext                        gc;
@@ -139,8 +122,9 @@ namespace GN { namespace gfx
     private:
 
         ModelResource             & mOwner;
-        EffectItem                  mEffect;
-        MeshItem                    mMesh;
+        AutoRef<EffectResource>     mEffectResource;
+        AutoRef<MeshResource>       mMeshResource;
+        MeshResourceSubset          mMeshSubset;
         DynaArray<RenderPass>       mPasses;
         DynaArray<TextureItem>      mTextures;
         DynaArray<UniformItem>      mUniforms;
@@ -162,6 +146,7 @@ namespace GN { namespace gfx
 
         void onEffectChanged( EffectResource & );
         void onMeshChanged( MeshResource & );
+        void updateVertexFormat();
     };
 
     ///

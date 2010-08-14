@@ -373,7 +373,7 @@ namespace GN { namespace gfx
             DynaArray<char>      shaderSourceBuffer; ///< optional buffer used to store store shader source.
             StringMap<char,StrA> textures;           ///< textures. Key is shader parameter name, value is name of one texture in EffectResourceDesc.textures.
             StringMap<char,StrA> uniforms;           ///< uniforms. Key is shader parameter name, value is name of one uniform in EffectResourceDesc.textures.
-            StringMap<char,StrA> attributes;         ///< attributes. Key is shader semantic, value is name of one attribute in EffectResourceDesc.attributes.
+            StringMap<char,StrA> attributes;         ///< attributes. Key is shader parameter name, value is name of one attribute in EffectResourceDesc.attributes.
 
             /// default constructor
             EffectGpuProgramDesc() {}
@@ -549,8 +549,8 @@ namespace GN { namespace gfx
 
         struct BindingLocation
         {
-            size_t pass;
-            size_t stage;
+            size_t pass;   // index of the pass
+            size_t offset; // index in the GPU program parameter array
         };
 
         struct ParameterProperties
@@ -567,6 +567,10 @@ namespace GN { namespace gfx
         struct UniformProperties : public ParameterProperties
         {
             size_t size; ///< uniform size in bytes
+        };
+
+        struct AttributeProperties : public ParameterProperties
+        {
         };
 
         static const size_t PARAMETER_NOT_FOUND = 0xFFFFFFFF;
@@ -594,6 +598,11 @@ namespace GN { namespace gfx
         size_t                        findUniform( const char * name ) const;
         bool                          hasUniform( const char * name ) const { return PARAMETER_NOT_FOUND != findUniform( name ); }
         const UniformProperties     & uniformProperties( size_t i ) const;
+
+        size_t                        numAttributes() const;
+        size_t                        findAttribute( const char * name ) const;
+        bool                          hasAttribute( const char * name ) const { return PARAMETER_NOT_FOUND != findAttribute( name ); }
+        const AttributeProperties   & attributeProperties( size_t i ) const;
 
         const EffectResourceDesc::EffectRenderStateDesc &
                                       renderStates( size_t pass ) const;

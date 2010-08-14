@@ -50,6 +50,10 @@ namespace GN { namespace gfx
         size_t                        findUniform( const char * name ) const;
         const UniformProperties     & uniformProperties( size_t i ) const { return mUniforms[i]; }
 
+        size_t                        numAttributes() const { return mAttributes.size(); }
+        size_t                        findAttribute( const char * name ) const;
+        const AttributeProperties   & attributeProperties( size_t i ) const { return mAttributes[i]; }
+
         const EffectResourceDesc::EffectRenderStateDesc &
                                       renderStates( size_t pass ) const { GN_ASSERT( pass < mPasses.size() ); return mPasses[pass].renderstates; }
 
@@ -85,6 +89,7 @@ namespace GN { namespace gfx
         DynaArray<RenderPass>           mPasses;
         DynaArray<TextureProperties>    mTextures;
         DynaArray<UniformProperties>    mUniforms;
+        DynaArray<AttributeProperties>  mAttributes;
 
         // ********************************
         // private functions
@@ -114,6 +119,8 @@ namespace GN { namespace gfx
         bool initTextures( const EffectResourceDesc & effectDesc );
 
         bool initUniforms( const EffectResourceDesc & effectDesc );
+
+        bool initAttributes( const EffectResourceDesc & effectDesc );
 
         size_t findGpuProgram(
             const EffectResourceDesc & passDesc,
